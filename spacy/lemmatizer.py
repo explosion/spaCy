@@ -44,6 +44,11 @@ class Lemmatizer(object):
             return True
         elif univ_pos == 'verb' and morphology.get('VerbForm') == 'inf':
             return True
+        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
+        # morphology
+        elif univ_pos == 'verb' and (morphology.get('VerbForm') == 'fin' and \
+                                     morphology.get('Tense') == 'pres'):
+            return True
         elif univ_pos == 'adj' and morphology.get('Degree') == 'pos':
             return True
         elif VerbForm_inf in morphology:

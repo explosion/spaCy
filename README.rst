@@ -229,7 +229,7 @@ Compile from source
 The other way to install spaCy is to clone its
 `GitHub repository <https://github.com/explosion/spaCy>`_ and build it from
 source. That is the common way if you want to make changes to the code base.
-You'll need to make sure that you have a development enviroment consisting of a
+You'll need to make sure that you have a development environment consisting of a
 Python distribution including header files, a compiler,
 `pip <https://pip.pypa.io/en/latest/installing/>`__, `virtualenv <https://virtualenv.pypa.io/>`_
 and `git <https://git-scm.com>`_ installed. The compiler part is the trickiest.

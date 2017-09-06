@@ -38,6 +38,7 @@ p
         +item #[+a("#summary") Summary]
         +item #[+a("#features") New features]
         +item #[+a("#features-pipelines") Improved processing pipelines]
+        +item #[+a("#features-text-classification") Text classification]
         +item #[+a("#features-hash-ids") Hash values instead of integer IDs]
         +item #[+a("#features-serializer") Saving, loading and serialization]
         +item #[+a("#features-displacy") displaCy visualizer]
@@ -101,6 +102,26 @@ p
 +infobox
     |  #[strong API:] #[+api("language") #[code Language]]
     |  #[strong Usage:] #[+a("/docs/usage/language-processing-pipeline") Processing text]
+
++h(3, "features-text-classification") Text classification
+
++aside-code("Example").
+    from spacy.lang.en import English
+    nlp = English(pipeline=['tensorizer', 'tagger', 'textcat'])
+
+p
+    |  spaCy v2.0 lets you add text categorization models to spaCy pipelines.
+    |  The model supports classification with multiple, non-mutually exclusive
+    |  labels – so multiple labels can apply at once. You can change the model
+    |  architecture rather easily, but by default, the #[code TextCategorizer]
+    |  class uses a convolutional neural network to assign position-sensitive
+    |  vectors to each word in the document.
+
++infobox
+    |  #[strong API:] #[+api("textcategorizer") #[code TextCategorizer]],
+    |  #[+api("doc#attributes") #[code Doc.cats]],
+    |  #[+api("goldparse#attributes") #[code GoldParse.cats]]#[br]
+    |  #[strong Usage:] #[+a("/docs/usage/text-classification") Text classification]
 
 +h(3, "features-hash-ids") Hash values instead of integer IDs
 
@@ -217,11 +238,11 @@ p
 +h(3, "features-models") Neural network models for English, German, French, Spanish and multi-language NER
 
 +aside-code("Example", "bash").
-    python -m spacy download en # default English model
-    python -m spacy download de # default German model
-    python -m spacy download fr # default French model
-    python -m spacy download es # default Spanish model
-    python -m spacy download xx_ent_wiki_sm # multi-language NER
+    spacy download en # default English model
+    spacy download de # default German model
+    spacy download fr # default French model
+    spacy download es # default Spanish model
+    spacy download xx_ent_wiki_sm # multi-language NER
 
 p
     |  spaCy v2.0 comes with new and improved neural network models for English,

@@ -25,7 +25,6 @@ def test_tag_names(EN):
     doc = EN(text, disable=['parser'])
     assert type(doc[2].pos) == int
     assert isinstance(doc[2].pos_, six.text_type)
-    assert type(doc[2].dep) == int
     assert isinstance(doc[2].dep_, six.text_type)
     assert doc[2].tag_ == u'NNS'
 

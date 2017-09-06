@@ -42,15 +42,148 @@ from .compat import json_dumps
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
+from ._ml import build_text_classifier, build_tagger_model
 from .parts_of_speech import X
 
 
-class TokenVectorEncoder(object):
+class SentenceSegmenter(object):
+    '''A simple spaCy hook, to allow custom sentence boundary detection logic
+    (that doesn't require the dependency parse).
+
+    To change the sentence boundary detection strategy, pass a generator
+    function `strategy` on initialization, or assign a new strategy to
+    the .strategy attribute.
+
+    Sentence detection strategies should be generators that take `Doc` objects
+    and yield `Span` objects for each sentence.
+    '''
+    name = 'sbd'
+
+    def __init__(self, vocab, strategy=None):
+        self.vocab = vocab
+        if strategy is None or strategy == 'on_punct':
+            strategy = self.split_on_punct
+        self.strategy = strategy
+
+    def __call__(self, doc):
+        doc.user_hooks['sents'] = self.strategy
+
+    @staticmethod
+    def split_on_punct(doc):
+        start = 0
+        seen_period = False
+        for i, word in enumerate(doc):
+            if seen_period and not word.is_punct:
+                yield doc[start : word.i]
+                start = word.i
+                seen_period = False
+            elif word.text in ['.', '!', '?']:
+                seen_period = True
+        if start < len(doc):
+            yield doc[start : len(doc)]
+
+
+class BaseThincComponent(object):
+    name = None
+
+    @classmethod
+    def Model(cls, *shape, **kwargs):
+        raise NotImplementedError
+
+    def __init__(self, vocab, model=True, **cfg):
+        raise NotImplementedError
+
+    def __call__(self, doc):
+        scores = self.predict([doc])
+        self.set_annotations([doc], scores)
+        return doc
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        for docs in cytoolz.partition_all(batch_size, stream):
+            docs = list(docs)
+            scores = self.predict(docs)
+            self.set_annotations(docs, scores)
+            yield from docs
+
+    def predict(self, docs):
+        raise NotImplementedError
+
+    def set_annotations(self, docs, scores):
+        raise NotImplementedError
+
+    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
+        raise NotImplementedError
+
+    def get_loss(self, docs, golds, scores):
+        raise NotImplementedError
+
+    def begin_training(self, gold_tuples=tuple(), pipeline=None):
+        token_vector_width = pipeline[0].model.nO
+        if self.model is True:
+            self.model = self.Model(1, token_vector_width)
+
+    def use_params(self, params):
+        with self.model.use_params(params):
+            yield
+
+    def to_bytes(self, **exclude):
+        serialize = OrderedDict((
+            ('cfg', lambda: json_dumps(self.cfg)),
+            ('model', lambda: self.model.to_bytes()),
+            ('vocab', lambda: self.vocab.to_bytes())
+        ))
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        def load_model(b):
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            self.model.from_bytes(b)
+
+        deserialize = OrderedDict((
+            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('model', load_model),
+            ('vocab', lambda b: self.vocab.from_bytes(b))
+        ))
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
+    def to_disk(self, path, **exclude):
+        serialize = OrderedDict((
+            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg))),
+            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
+            ('vocab', lambda p: self.vocab.to_disk(p))
+        ))
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, **exclude):
+        def load_model(p):
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            self.model.from_bytes(p.open('rb').read())
+
+        deserialize = OrderedDict((
+            ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
+            ('model', load_model),
+            ('vocab', lambda p: self.vocab.from_disk(p)),
+        ))
+        util.from_disk(path, deserialize, exclude)
+        return self
+
+
+def _load_cfg(path):
+    if path.exists():
+        return ujson.load(path.open())
+    else:
+        return {}
+
+
+class TokenVectorEncoder(BaseThincComponent):
     """Assign position-sensitive vectors to tokens, using a CNN or RNN."""
     name = 'tensorizer'
 
     @classmethod
-    def Model(cls, width=128, embed_size=7500, **cfg):
+    def Model(cls, width=128, embed_size=4000, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
@@ -79,6 +212,7 @@ class TokenVectorEncoder(object):
         self.vocab = vocab
         self.doc2feats = doc2feats()
         self.model = model
+        self.cfg = dict(cfg)
 
     def __call__(self, doc):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
@@ -144,7 +278,7 @@ class TokenVectorEncoder(object):
         # TODO: implement
         raise NotImplementedError
 
-    def begin_training(self, gold_tuples, pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer.
 
@@ -155,74 +289,34 @@ class TokenVectorEncoder(object):
         if self.model is True:
             self.model = self.Model()
 
-    def use_params(self, params):
-        """Replace weights of models in the pipeline with those provided in the
-        params dictionary.
 
-        params (dict): A dictionary of parameters keyed by model ID.
-        """
-        with self.model.use_params(params):
-            yield
-
-    def to_bytes(self, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda: self.model.to_bytes()),
-            ('vocab', lambda: self.vocab.to_bytes())
-        ))
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(self, bytes_data, **exclude):
-        if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda b: self.model.from_bytes(b)),
-            ('vocab', lambda b: self.vocab.from_bytes(b))
-        ))
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('vocab', lambda p: self.vocab.to_disk(p))
-        ))
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, **exclude):
-        if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
-            ('vocab', lambda p: self.vocab.from_disk(p))
-        ))
-        util.from_disk(path, deserialize, exclude)
-        return self
-
-
-class NeuralTagger(object):
+class NeuralTagger(BaseThincComponent):
     name = 'tagger'
-    def __init__(self, vocab, model=True):
+    def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self.cfg = dict(cfg)
 
     def __call__(self, doc):
-        tags = self.predict([doc.tensor])
+        tags = self.predict(([doc], [doc.tensor]))
         self.set_annotations([doc], tags)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
+            docs = list(docs)
             tokvecs = [d.tensor for d in docs]
-            tag_ids = self.predict(tokvecs)
+            tag_ids = self.predict((docs, tokvecs))
             self.set_annotations(docs, tag_ids)
             yield from docs
 
-    def predict(self, tokvecs):
-        scores = self.model(tokvecs)
+    def predict(self, docs_tokvecs):
+        scores = self.model(docs_tokvecs)
         scores = self.model.ops.flatten(scores)
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
+        tokvecs = docs_tokvecs[1]
         guesses = self.model.ops.unflatten(guesses,
                     [tv.shape[0] for tv in tokvecs])
         return guesses
@@ -235,6 +329,8 @@ class NeuralTagger(object):
         cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
+            if hasattr(doc_tag_ids, 'get'):
+                doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0 and doc.c[j].pos == 0:
@@ -243,16 +339,18 @@ class NeuralTagger(object):
         doc.is_tagged = True
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+        if losses is not None and self.name not in losses:
+            losses[self.name] = 0.
         docs, tokvecs = docs_tokvecs
 
         if self.model.nI is None:
             self.model.nI = tokvecs[0].shape[1]
-
-        tag_scores, bp_tag_scores = self.model.begin_update(tokvecs, drop=drop)
+        tag_scores, bp_tag_scores = self.model.begin_update(docs_tokvecs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
 
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
-
+        if losses is not None:
+            losses[self.name] += loss
         return d_tokvecs
 
     def get_loss(self, docs, golds, scores):
@@ -276,7 +374,7 @@ class NeuralTagger(object):
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
-    def begin_training(self, gold_tuples, pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = {}
         for raw_text, annots_brackets in gold_tuples:
@@ -300,10 +398,8 @@ class NeuralTagger(object):
 
     @classmethod
     def Model(cls, n_tags, token_vector_width):
-        return with_flatten(
-            chain(Maxout(token_vector_width, token_vector_width),
-                  Softmax(n_tags, token_vector_width)))
-
+        return build_tagger_model(n_tags, token_vector_width)
+ 
     def use_params(self, params):
         with self.model.use_params(params):
             yield
@@ -321,7 +417,8 @@ class NeuralTagger(object):
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width', 128)
+                token_vector_width = util.env_opt('token_vector_width',
+                        self.cfg.get('token_vector_width', 128))
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
             self.model.from_bytes(b)
 
@@ -348,13 +445,15 @@ class NeuralTagger(object):
                 use_bin_type=True,
                 encoding='utf8'))),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
+            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg)))
         ))
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, **exclude):
         def load_model(p):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width', 128)
+                token_vector_width = util.env_opt('token_vector_width',
+                        self.cfg.get('token_vector_width', 128))
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
             self.model.from_bytes(p.open('rb').read())
 
@@ -370,6 +469,7 @@ class NeuralTagger(object):
             ('vocab', lambda p: self.vocab.from_disk(p)),
             ('tag_map', load_tag_map),
             ('model', load_model),
+            ('cfg', lambda p: self.cfg.update(_load_cfg(p)))
         ))
         util.from_disk(path, deserialize, exclude)
         return self
@@ -377,15 +477,23 @@ class NeuralTagger(object):
 
 class NeuralLabeller(NeuralTagger):
     name = 'nn_labeller'
-    def __init__(self, vocab, model=True):
+    def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
-        self.labels = {}
+        self.cfg = dict(cfg)
+
+    @property
+    def labels(self):
+        return self.cfg.setdefault('labels', {})
+
+    @labels.setter
+    def labels(self, value):
+        self.cfg['labels'] = value
 
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, gold_tuples, pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None):
         gold_tuples = nonproj.preprocess_training_data(gold_tuples)
         for raw_text, annots_brackets in gold_tuples:
             for annots, brackets in annots_brackets:
@@ -399,10 +507,8 @@ class NeuralLabeller(NeuralTagger):
 
     @classmethod
     def Model(cls, n_tags, token_vector_width):
-        return with_flatten(
-            chain(Maxout(token_vector_width, token_vector_width),
-                  Softmax(n_tags, token_vector_width)))
-
+        return build_tagger_model(n_tags, token_vector_width)
+    
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
         cdef int idx = 0
@@ -423,7 +529,7 @@ class NeuralLabeller(NeuralTagger):
         return float(loss), d_scores
 
 
-class SimilarityHook(object):
+class SimilarityHook(BaseThincComponent):
     """
     Experimental
 
@@ -439,9 +545,10 @@ class SimilarityHook(object):
     Where W is a vector of dimension weights, initialized to 1.
     """
     name = 'similarity'
-    def __init__(self, vocab, model=True):
+    def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self.cfg = dict(cfg)
 
     @classmethod
     def Model(cls, length):
@@ -467,7 +574,7 @@ class SimilarityHook(object):
 
         return d_tensor1s, d_tensor2s
 
-    def begin_training(self, _, pipeline=None):
+    def begin_training(self, _=tuple(), pipeline=None):
         """
         Allocate model, using width from tensorizer in pipeline.
 
@@ -477,48 +584,77 @@ class SimilarityHook(object):
         if self.model is True:
             self.model = self.Model(pipeline[0].model.nO)
 
-    def use_params(self, params):
-        """Replace weights of models in the pipeline with those provided in the
-        params dictionary.
 
-        params (dict): A dictionary of parameters keyed by model ID.
-        """
-        with self.model.use_params(params):
-            yield
+class TextCategorizer(BaseThincComponent):
+    name = 'textcat'
 
-    def to_bytes(self, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda: self.model.to_bytes()),
-            ('vocab', lambda: self.vocab.to_bytes())
-        ))
-        return util.to_bytes(serialize, exclude)
+    @classmethod
+    def Model(cls, nr_class=1, width=64, **cfg):
+        return build_text_classifier(nr_class, width, **cfg)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def __init__(self, vocab, model=True, **cfg):
+        self.vocab = vocab
+        self.model = model
+        self.cfg = dict(cfg)
+
+    @property
+    def labels(self):
+        return self.cfg.get('labels', ['LABEL'])
+
+    @labels.setter
+    def labels(self, value):
+        self.cfg['labels'] = value
+
+    def __call__(self, doc):
+        scores = self.predict([doc])
+        self.set_annotations([doc], scores)
+        return doc
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        for docs in cytoolz.partition_all(batch_size, stream):
+            docs = list(docs)
+            scores = self.predict(docs)
+            self.set_annotations(docs, scores)
+            yield from docs
+
+    def predict(self, docs):
+        scores = self.model(docs)
+        scores = self.model.ops.asarray(scores)
+        return scores
+
+    def set_annotations(self, docs, scores):
+        for i, doc in enumerate(docs):
+            for j, label in enumerate(self.labels):
+                doc.cats[label] = float(scores[i, j])
+
+    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
+        docs, tensors = docs_tensors
+        scores, bp_scores = self.model.begin_update(docs, drop=drop)
+        loss, d_scores = self.get_loss(docs, golds, scores)
+        d_tensors = bp_scores(d_scores, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += loss
+        return d_tensors
+
+    def get_loss(self, docs, golds, scores):
+        truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
+        for i, gold in enumerate(golds):
+            for j, label in enumerate(self.labels):
+                truths[i, j] = label in gold.cats
+        truths = self.model.ops.asarray(truths)
+        d_scores = (scores-truths) / scores.shape[0]
+        mean_square_error = ((scores-truths)**2).sum(axis=1).mean()
+        return mean_square_error, d_scores
+
+    def begin_training(self, gold_tuples=tuple(), pipeline=None):
+        if pipeline and getattr(pipeline[0], 'name', None) == 'tensorizer':
+            token_vector_width = pipeline[0].model.nO
+        else:
+            token_vector_width = 64
         if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda b: self.model.from_bytes(b)),
-            ('vocab', lambda b: self.vocab.from_bytes(b))
-        ))
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('vocab', lambda p: self.vocab.to_disk(p))
-        ))
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, **exclude):
-        if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
-            ('vocab', lambda p: self.vocab.from_disk(p))
-        ))
-        util.from_disk(path, deserialize, exclude)
-        return self
+            self.model = self.Model(len(self.labels), token_vector_width,
+                                    **self.cfg)
 
 
 cdef class EntityRecognizer(LinearParser):
@@ -568,6 +704,14 @@ cdef class NeuralEntityRecognizer(NeuralParser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
+
+    def predict_confidences(self, docs):
+        tensors = [d.tensor for d in docs]
+        samples = []
+        for i in range(10):
+            states = self.parse_batch(docs, tensors, drop=0.3)
+            for state in states:
+                samples.append(self._get_entities(state))
 
     def __reduce__(self):
         return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)

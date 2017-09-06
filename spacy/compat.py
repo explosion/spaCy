@@ -5,6 +5,7 @@ import six
 import ftfy
 import sys
 import ujson
+import itertools
 
 from thinc.neural.util import copy_array
 
@@ -35,6 +36,7 @@ CudaStream = CudaStream
 cupy = cupy
 fix_text = ftfy.fix_text
 copy_array = copy_array
+izip = getattr(itertools, 'izip', zip)
 
 is_python2 = six.PY2
 is_python3 = six.PY3
@@ -44,20 +46,30 @@ is_osx = sys.platform == 'darwin'
 
 
 if is_python2:
+    import imp
     bytes_ = str
     unicode_ = unicode
     basestring_ = basestring
     input_ = raw_input
-    json_dumps = lambda data: ujson.dumps(data, indent=2).decode('utf8')
+    json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False).decode('utf8')
     path2str = lambda path: str(path).decode('utf8')
 
 elif is_python3:
+    import importlib.util
     bytes_ = bytes
     unicode_ = str
     basestring_ = str
     input_ = input
-    json_dumps = lambda data: ujson.dumps(data, indent=2)
+    json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False)
     path2str = lambda path: str(path)
+
+
+def b_to_str(b_str):
+    if is_python2:
+        return b_str
+    # important: if no encoding is set, string becomes "b'...'"
+    return str(b_str, encoding='utf8')
+
 
 def getattr_(obj, name, *default):
     if is_python3 and isinstance(name, bytes):
@@ -92,3 +104,12 @@ def normalize_string_keys(old):
     return new
 
 
+def import_file(name, loc):
+    loc = str(loc)
+    if is_python2:
+        return imp.load_source(name, loc)
+    else:
+        spec = importlib.util.spec_from_file_location(name, str(loc))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module

@@ -32,10 +32,12 @@ from ..compat import json_dumps
     resume=("Whether to resume training", "flag", "R", bool),
     no_tagger=("Don't train tagger", "flag", "T", bool),
     no_parser=("Don't train parser", "flag", "P", bool),
-    no_entities=("Don't train NER", "flag", "N", bool)
+    no_entities=("Don't train NER", "flag", "N", bool),
+    gold_preproc=("Use gold preprocessing", "flag", "G", bool),
 )
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
-          use_gpu=-1, resume=False, no_tagger=False, no_parser=False, no_entities=False):
+          use_gpu=-1, resume=False, no_tagger=False, no_parser=False, no_entities=False,
+          gold_preproc=False):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
@@ -69,7 +71,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                                    util.env_opt('batch_to', 64),
                                    util.env_opt('batch_compound', 1.001))
     gold_preproc = util.env_opt('gold_preproc', False)
-    noise_level = util.env_opt('noise_level', 0.25)
+    noise_level = util.env_opt('noise_level', 0.0)
 
     if resume:
         prints(output_path / 'model19.pickle', title="Resuming training")
@@ -95,15 +97,14 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 for batch in minibatch(train_docs, size=batch_sizes):
                     docs, golds = zip(*batch)
                     nlp.update(docs, golds, sgd=optimizer,
-                               drop=next(dropout_rates), losses=losses)
+                               drop=next(dropout_rates), losses=losses,
+                               update_shared=True)
                     pbar.update(sum(len(doc) for doc in docs))
 
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / ('model%d' % i)
                 nlp.to_disk(epoch_model_path)
-                with (output_path / ('model%d.pickle' % i)).open('wb') as file_:
-                    dill.dump(nlp, file_, -1)
                 nlp_loaded = lang_class(pipeline=pipeline)
                 nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
                 scorer = nlp_loaded.evaluate(

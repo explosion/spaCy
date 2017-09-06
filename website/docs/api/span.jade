@@ -37,7 +37,7 @@ p Create a Span object from the #[code slice doc[start : end]].
 
     +row
         +cell #[code vector]
-        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
         +cell A meaning representation of the span.
 
     +footrow
@@ -145,10 +145,46 @@ p
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
++h(2, "to_array") Span.to_array
+    +tag method
+    +tag-new(2)
+
+p
+    |  Given a list of #[code M] attribute IDs, export the tokens to a numpy
+    |  #[code ndarray] of shape #[code (N, M)], where #[code N] is the length of
+    |  the document. The values will be 32-bit integers.
+
++aside-code("Example").
+    from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
+    doc = nlp(u'I like New York in Autumn.')
+    span = doc[2:3]
+    # All strings mapped to integers, for easy export to numpy
+    np_array = span.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attr_ids]
+        +cell list
+        +cell A list of attribute ID ints.
+
+    +footrow
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[long, ndim=2]]
+        +cell
+            |  A feature matrix, with one row per word, and one column per
+            |  attribute indicated in the input #[code attr_ids].
+
 +h(2, "merge") Span.merge
     +tag method
 
 p Retokenize the document, such that the span is merged into a single token.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    span = doc[2:3]
+    span.merge()
+    assert len(doc) == 6
+    assert doc[2].text == 'New York'
 
 +table(["Name", "Type", "Description"])
     +row
@@ -169,7 +205,7 @@ p Retokenize the document, such that the span is merged into a single token.
 
 p
     |  The token within the span that's highest in the parse tree. If there's a
-    |  tie, the earlist is prefered.
+    |  tie, the earliest is preferred.
 
 +aside-code("Example").
     doc = nlp(u'I like New York in Autumn.')
@@ -270,7 +306,7 @@ p
 +table(["Name", "Type", "Description"])
     +footrow
         +cell returns
-        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
         +cell A 1D numpy array representing the span's semantics.
 
 +h(2, "vector_norm") Span.vector_norm

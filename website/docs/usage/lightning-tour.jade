@@ -10,8 +10,8 @@ p
 +h(2, "models") Install models and process text
 
 +code(false, "bash").
-    python -m spacy download en
-    python -m spacy download de
+    spacy download en
+    spacy download de
 
 +code.
     import spacy
@@ -37,11 +37,11 @@ p
     assert doc[1].text == u'emoji'
     assert doc[-1].text == u'🍑'
     assert doc[17:19].text == u'outranking eggplant'
-    assert doc.noun_chunks[0].text == u'Peach emoji'
+    assert list(doc.noun_chunks)[0].text == u'Peach emoji'
 
     sentences = list(doc.sents)
     assert len(sentences) == 3
-    assert sentences[0].text == u'Peach is the superior emoji.'
+    assert sentences[1].text == u'Peach is the superior emoji.'
 
 +infobox
     |  #[strong API:] #[+api("doc") #[code Doc]], #[+api("token") #[code Token]]
@@ -181,7 +181,7 @@ p
     from spacy.vocab import Vocab
 
     nlp = spacy.load('en')
-    moby_dick = open('moby_dick.txt', 'r')
+    moby_dick = open('moby_dick.txt', 'r').read()
     doc = nlp(moby_dick)
     doc.to_disk('/moby_dick.bin')
 

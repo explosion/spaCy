@@ -117,6 +117,7 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self.sentiment = 0.0
+        self.cats = {}
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
@@ -237,6 +238,29 @@ cdef class Doc:
     def doc(self):
         return self
 
+    def char_span(self, int start_idx, int end_idx, label=0, vector=None):
+        """Create a `Span` object from the slice `doc.text[start : end]`.
+
+        doc (Doc): The parent document.
+        start (int): The index of the first character of the span.
+        end (int): The index of the first character after the span.
+        label (uint64 or string): A label to attach to the Span, e.g. for named entities.
+        vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
+        RETURNS (Span): The newly constructed object.
+        """
+        if not isinstance(label, int):
+            label = self.vocab.strings.add(label)
+        cdef int start = token_by_start(self.c, self.length, start_idx)
+        if start == -1:
+            return None
+        cdef int end = token_by_end(self.c, self.length, end_idx)
+        if end == -1:
+            return None
+        # Currently we have the token index, we want the range-end index
+        end += 1
+        cdef Span span = Span(self, start, end, label=label, vector=vector)
+        return span
+
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.
@@ -279,8 +303,14 @@ cdef class Doc:
                 return self.user_hooks['vector'](self)
             if self._vector is not None:
                 return self._vector
-            elif self.has_vector and len(self):
-                self._vector = sum(t.vector for t in self) / len(self)
+            elif not len(self):
+                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                return self._vector
+            elif self.has_vector:
+                vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                for token in self.c[:self.length]:
+                    vector += self.vocab.get_vector(token.lex.orth)
+                self._vector = vector / len(self)
                 return self._vector
             elif self.tensor is not None:
                 self._vector = self.tensor.mean(axis=0)

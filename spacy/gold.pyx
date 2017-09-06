@@ -381,7 +381,8 @@ cdef class GoldParse:
                    make_projective=make_projective)
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
-                 deps=None, entities=None, make_projective=False):
+                 deps=None, entities=None, make_projective=False,
+                 cats=tuple()):
         """Create a GoldParse.
 
         doc (Doc): The document the annotations refer to.
@@ -392,6 +393,12 @@ cdef class GoldParse:
         entities (iterable): A sequence of named entity annotations, either as
             BILUO tag strings, or as `(start_char, end_char, label)` tuples,
             representing the entity positions.
+        cats (iterable): A sequence of labels for text classification. Each
+            label may be a string or an int, or a `(start_char, end_char, label)`
+            tuple, indicating that the label is applied to only part of the
+            document (usually a sentence). Unlike entity annotations, label
+            annotations can overlap, i.e. a single word can be covered by
+            multiple labelled spans.
         RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
@@ -399,11 +406,11 @@ cdef class GoldParse:
         if tags is None:
             tags = [None for _ in doc]
         if heads is None:
-            heads = [token.i for token in doc]
+            heads = [None for token in doc]
         if deps is None:
             deps = [None for _ in doc]
         if entities is None:
-            entities = ['-' for _ in doc]
+            entities = [None for _ in doc]
         elif len(entities) == 0:
             entities = ['O' for _ in doc]
         elif not isinstance(entities[0], basestring):
@@ -419,8 +426,10 @@ cdef class GoldParse:
         self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
         self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.sent_start = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
+        self.cats = list(cats)
         self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)
@@ -474,8 +483,12 @@ cdef class GoldParse:
         """
         return not nonproj.is_nonproj_tree(self.heads)
 
+    @property
+    def sent_starts(self):
+        return [self.c.sent_start[i] for i in range(self.length)]
 
-def biluo_tags_from_offsets(doc, entities):
+
+def biluo_tags_from_offsets(doc, entities, missing='O'):
     """Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
     scheme (BILUO).
 
@@ -527,7 +540,7 @@ def biluo_tags_from_offsets(doc, entities):
             if i in entity_chars:
                 break
         else:
-            biluo[token.i] = 'O'
+            biluo[token.i] = missing
     return biluo
 
 

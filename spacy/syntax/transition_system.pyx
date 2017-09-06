@@ -99,6 +99,9 @@ cdef class TransitionSystem:
     def preprocess_gold(self, GoldParse gold):
         raise NotImplementedError
 
+    def is_gold_parse(self, StateClass state, GoldParse gold):
+        raise NotImplementedError
+
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
 
@@ -107,6 +110,8 @@ cdef class TransitionSystem:
 
     def is_valid(self, StateClass stcls, move_name):
         action = self.lookup_transition(move_name)
+        if action.move == 0:
+            return False
         return action.is_valid(stcls.c, action.label)
 
     cdef int set_valid(self, int* is_valid, const StateC* st) nogil:
@@ -136,6 +141,10 @@ cdef class TransitionSystem:
                 "Could not find a gold-standard action to supervise "
                 "the entity recognizer\n"
                 "The transition system has %d actions." % (self.n_moves))
+
+    def get_class_name(self, int clas):
+        act = self.c[clas]
+        return self.move_name(act.move, act.label)
 
     def add_action(self, int action, label_name):
         cdef attr_t label_id
