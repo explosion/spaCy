@@ -1,5 +1,6 @@
 import pytest
 
+@pytest.mark.xfail
 @pytest.mark.models('en')
 def test_issue1305(EN):
     '''Test lemmatization of English VBZ'''
