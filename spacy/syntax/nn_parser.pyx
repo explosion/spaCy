@@ -393,8 +393,7 @@ cdef class Parser:
 
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
-            # TODO: This is incorrect! Unhack when training next model
-            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
+            tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
 
         nr_state = len(docs)
         nr_class = self.moves.n_moves
@@ -533,7 +532,7 @@ cdef class Parser:
             golds = [golds]
         if USE_FINE_TUNE:
             my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            tokvecs += self.model[0].ops.flatten(my_tokvecs)
+            tokvecs = self.model[0].ops.flatten(my_tokvecs)
 
         cuda_stream = get_cuda_stream()
 
@@ -706,7 +705,7 @@ cdef class Parser:
                         lower, stream, drop=dropout)
         return state2vec, upper
 
-    nr_feature = 13
+    nr_feature = 8
 
     def get_token_ids(self, states):
         cdef StateClass state
