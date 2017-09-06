@@ -70,7 +70,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
                                    util.env_opt('batch_to', 64),
                                    util.env_opt('batch_compound', 1.001))
-    gold_preproc = util.env_opt('gold_preproc', False)
+    gold_preproc = util.env_opt('gold_preproc', True)
     noise_level = util.env_opt('noise_level', 0.0)
 
     if resume:
