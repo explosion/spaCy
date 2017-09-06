@@ -229,20 +229,18 @@ def drop_layer(layer, factor=2.):
 def Tok2Vec(width, embed_size, preprocess=None):
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
-        norm = get_col(cols.index(NORM))     >> HashEmbed(width, embed_size, name='embed_lower')
-        prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2, name='embed_prefix')
-        suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
-        shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
+        norm = HashEmbed(width, embed_size, column=cols.index(NORM), name='embed_norm')
+        prefix = HashEmbed(width, embed_size//2, column=cols.index(PREFIX), name='embed_prefix')
+        suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX), name='embed_suffix')
+        shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE), name='embed_shape')
 
         embed = (norm | prefix | suffix | shape ) >> LN(Maxout(width, width*4, pieces=3))
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
                 >> uniqued(embed, column=5)
-                >> drop_layer(
-                    Residual(
-                        (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
-                    )
+                >> Residual(
+                    (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
                 ) ** 4, pad=4
             )
         )
@@ -372,6 +370,7 @@ def fine_tune(embedding, combine=None):
             "fine_tune currently only supports addition. Set combine=None")
     def fine_tune_fwd(docs_tokvecs, drop=0.):
         docs, tokvecs = docs_tokvecs
+
         lengths = model.ops.asarray([len(doc) for doc in docs], dtype='i')
 
         vecs, bp_vecs = embedding.begin_update(docs, drop=drop)
@@ -556,7 +555,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
 
         cnn_model = (
             # TODO Make concatenate support lists
-            concatenate_lists(trained_vectors, static_vectors) 
+            concatenate_lists(trained_vectors, static_vectors)
             >> with_flatten(
                 LN(Maxout(width, width*2))
                 >> Residual(
