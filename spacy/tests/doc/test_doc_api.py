@@ -216,6 +216,13 @@ def test_doc_api_has_vector(en_tokenizer, text_file, text, vectors):
     doc = en_tokenizer(text)
     assert doc.has_vector
 
+def test_lowest_common_ancestor(en_tokenizer):
+    tokens = en_tokenizer('the lazy dog slept')
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
+    lca = doc.get_lca_matrix()
+    assert(lca[1, 1] == 1)
+    assert(lca[0, 1] == 2)
+    assert(lca[1, 2] == 2)
 
 def test_parse_tree(en_tokenizer):
     """Tests doc.print_tree() method."""
