@@ -99,6 +99,10 @@ def sv_tokenizer():
 def bn_tokenizer():
     return util.get_lang_class('bn').Defaults.create_tokenizer()
 
+@pytest.fixture
+def ga_tokenizer():
+    return util.get_lang_class('ga').Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def he_tokenizer():
