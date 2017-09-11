@@ -10,15 +10,16 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class IrishDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'ga'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    stop_words = set(STOP_WORDS)
+
 class Irish(Language):
     lang = 'ga'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'ga'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
+    Defaults = IrishDefaults
 
 
 __all__ = ['Irish']
