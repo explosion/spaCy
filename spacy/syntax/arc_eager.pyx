@@ -20,7 +20,7 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
-from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE, IS_PUNCT
 from ..lexeme cimport Lexeme
 from ..structs cimport TokenC
 
@@ -286,7 +286,7 @@ cdef class Break:
         return 0
 
 cdef int _get_root(int word, const GoldParseC* gold) nogil:
-    while gold.heads[word] != word and not gold.has_dep[word] and word >= 0:
+    while gold.heads[word] != word and gold.has_dep[word] and word >= 0:
         word = gold.heads[word]
     if not gold.has_dep[word]:
         return -1
@@ -350,6 +350,20 @@ cdef class ArcEager(TransitionSystem):
     property action_types:
         def __get__(self):
             return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
+
+    def is_gold_parse(self, StateClass state, GoldParse gold):
+        predicted = set()
+        truth = set()
+        for i in range(gold.length):
+            if gold.cand_to_gold[i] is None:
+                continue
+            if state.safe_get(i).dep:
+                predicted.add((i, state.H(i), self.strings[state.safe_get(i).dep]))
+            else:
+                predicted.add((i, state.H(i), 'ROOT'))
+            id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
+            truth.add((id_, head, dep))
+        return truth == predicted
 
     def has_gold(self, GoldParse gold, start=0, end=None):
         end = end or len(gold.heads)
@@ -502,9 +516,11 @@ cdef class ArcEager(TransitionSystem):
                     "before training and after parsing. Either pass make_projective=True "
                     "to the GoldParse class, or use PseudoProjectivity.preprocess_training_data")
             else:
+                print(gold.orig_annot)
                 print(gold.words)
                 print(gold.heads)
                 print(gold.labels)
+                print(gold.sent_starts)
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the dependency "
                     "parser.\n"

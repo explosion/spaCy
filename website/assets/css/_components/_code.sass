@@ -35,6 +35,13 @@
     font: normal normal 1.1rem/#{2} $font-code
     padding: 1em 2em
 
+    &[data-prompt]:before,
+        content: attr(data-prompt)
+        margin-right: 0.65em
+        display: inline-block
+        vertical-align: middle
+        opacity: 0.5
+
 
 //- Inline code
 

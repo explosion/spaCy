@@ -406,11 +406,11 @@ cdef class GoldParse:
         if tags is None:
             tags = [None for _ in doc]
         if heads is None:
-            heads = [token.i for token in doc]
+            heads = [None for token in doc]
         if deps is None:
             deps = [None for _ in doc]
         if entities is None:
-            entities = ['-' for _ in doc]
+            entities = [None for _ in doc]
         elif len(entities) == 0:
             entities = ['O' for _ in doc]
         elif not isinstance(entities[0], basestring):
@@ -426,6 +426,7 @@ cdef class GoldParse:
         self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
         self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.sent_start = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
         self.cats = list(cats)
@@ -481,6 +482,10 @@ cdef class GoldParse:
         dependency tree.
         """
         return not nonproj.is_nonproj_tree(self.heads)
+
+    @property
+    def sent_starts(self):
+        return [self.c.sent_start[i] for i in range(self.length)]
 
 
 def biluo_tags_from_offsets(doc, entities, missing='O'):

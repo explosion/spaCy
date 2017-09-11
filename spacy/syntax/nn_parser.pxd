@@ -14,4 +14,8 @@ cdef class Parser:
     cdef readonly TransitionSystem moves
     cdef readonly object cfg
 
+    cdef void _parse_step(self, StateC* state,
+            const float* feat_weights,
+            int nr_class, int nr_feat, int nr_piece) nogil
+
     #cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil

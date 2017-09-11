@@ -9,6 +9,7 @@ cdef struct GoldParseC:
     int* tags
     int* heads
     int* has_dep
+    int* sent_start
     attr_t* labels
     int** brackets
     Transition* ner

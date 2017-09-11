@@ -113,7 +113,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def has_gold(self, GoldParse gold, start=0, end=None):
         end = end or len(gold.ner)
-        if all([tag == '-' for tag in gold.ner[start:end]]):
+        if all([tag in ('-', None) for tag in gold.ner[start:end]]):
             return False
         else:
             return True

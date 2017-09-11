@@ -28,7 +28,9 @@ MOD_NAMES = [
     'spacy.pipeline',
     'spacy.syntax.stateclass',
     'spacy.syntax._state',
+    'spacy.syntax._beam_utils',
     'spacy.tokenizer',
+    'spacy._cfile',
     'spacy.syntax.parser',
     'spacy.syntax.nn_parser',
     'spacy.syntax.beam_parser',
@@ -187,6 +189,7 @@ def setup_package():
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
+            scripts=['bin/spacy'],
             install_requires=[
                 'numpy>=1.7',
                 'murmurhash>=0.28,<0.29',

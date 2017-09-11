@@ -99,6 +99,9 @@ cdef class TransitionSystem:
     def preprocess_gold(self, GoldParse gold):
         raise NotImplementedError
 
+    def is_gold_parse(self, StateClass state, GoldParse gold):
+        raise NotImplementedError
+
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
 
@@ -145,7 +148,7 @@ cdef class TransitionSystem:
 
     def add_action(self, int action, label_name):
         cdef attr_t label_id
-        if not isinstance(label_name, int):
+        if not isinstance(label_name, (int, long)):
             label_id = self.strings.add(label_name)
         else:
             label_id = label_name

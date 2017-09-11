@@ -46,6 +46,43 @@ from ._ml import build_text_classifier, build_tagger_model
 from .parts_of_speech import X
 
 
+class SentenceSegmenter(object):
+    '''A simple spaCy hook, to allow custom sentence boundary detection logic
+    (that doesn't require the dependency parse).
+
+    To change the sentence boundary detection strategy, pass a generator
+    function `strategy` on initialization, or assign a new strategy to
+    the .strategy attribute.
+
+    Sentence detection strategies should be generators that take `Doc` objects
+    and yield `Span` objects for each sentence.
+    '''
+    name = 'sbd'
+
+    def __init__(self, vocab, strategy=None):
+        self.vocab = vocab
+        if strategy is None or strategy == 'on_punct':
+            strategy = self.split_on_punct
+        self.strategy = strategy
+
+    def __call__(self, doc):
+        doc.user_hooks['sents'] = self.strategy
+
+    @staticmethod
+    def split_on_punct(doc):
+        start = 0
+        seen_period = False
+        for i, word in enumerate(doc):
+            if seen_period and not word.is_punct:
+                yield doc[start : word.i]
+                start = word.i
+                seen_period = False
+            elif word.text in ['.', '!', '?']:
+                seen_period = True
+        if start < len(doc):
+            yield doc[start : len(doc)]
+
+
 class BaseThincComponent(object):
     name = None
 
@@ -91,16 +128,21 @@ class BaseThincComponent(object):
 
     def to_bytes(self, **exclude):
         serialize = OrderedDict((
+            ('cfg', lambda: json_dumps(self.cfg)),
             ('model', lambda: self.model.to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes())
         ))
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
-        if self.model is True:
-            self.model = self.Model()
+        def load_model(b):
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            self.model.from_bytes(b)
+
         deserialize = OrderedDict((
-            ('model', lambda b: self.model.from_bytes(b)),
+            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('model', load_model),
             ('vocab', lambda b: self.vocab.from_bytes(b))
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -108,19 +150,22 @@ class BaseThincComponent(object):
 
     def to_disk(self, path, **exclude):
         serialize = OrderedDict((
+            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg))),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('vocab', lambda p: self.vocab.to_disk(p)),
-            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg)))
+            ('vocab', lambda p: self.vocab.to_disk(p))
         ))
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, **exclude):
-        if self.model is True:
-            self.model = self.Model()
+        def load_model(p):
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            self.model.from_bytes(p.open('rb').read())
+
         deserialize = OrderedDict((
-            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
+            ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
+            ('model', load_model),
             ('vocab', lambda p: self.vocab.from_disk(p)),
-            ('cfg', lambda p: self.cfg.update(_load_cfg(p)))
         ))
         util.from_disk(path, deserialize, exclude)
         return self
@@ -138,7 +183,7 @@ class TokenVectorEncoder(BaseThincComponent):
     name = 'tensorizer'
 
     @classmethod
-    def Model(cls, width=128, embed_size=7500, **cfg):
+    def Model(cls, width=128, embed_size=4000, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
@@ -284,6 +329,8 @@ class NeuralTagger(BaseThincComponent):
         cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
+            if hasattr(doc_tag_ids, 'get'):
+                doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0 and doc.c[j].pos == 0:
@@ -292,6 +339,8 @@ class NeuralTagger(BaseThincComponent):
         doc.is_tagged = True
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+        if losses is not None and self.name not in losses:
+            losses[self.name] = 0.
         docs, tokvecs = docs_tokvecs
 
         if self.model.nI is None:
@@ -300,6 +349,8 @@ class NeuralTagger(BaseThincComponent):
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
 
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
+        if losses is not None:
+            losses[self.name] += loss
         return d_tokvecs
 
     def get_loss(self, docs, golds, scores):
@@ -366,7 +417,8 @@ class NeuralTagger(BaseThincComponent):
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width', 128)
+                token_vector_width = util.env_opt('token_vector_width',
+                        self.cfg.get('token_vector_width', 128))
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
             self.model.from_bytes(b)
 
@@ -400,7 +452,8 @@ class NeuralTagger(BaseThincComponent):
     def from_disk(self, path, **exclude):
         def load_model(p):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width', 128)
+                token_vector_width = util.env_opt('token_vector_width',
+                        self.cfg.get('token_vector_width', 128))
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
             self.model.from_bytes(p.open('rb').read())
 
@@ -595,12 +648,13 @@ class TextCategorizer(BaseThincComponent):
         return mean_square_error, d_scores
 
     def begin_training(self, gold_tuples=tuple(), pipeline=None):
-        if pipeline:
+        if pipeline and getattr(pipeline[0], 'name', None) == 'tensorizer':
             token_vector_width = pipeline[0].model.nO
         else:
             token_vector_width = 64
         if self.model is True:
-            self.model = self.Model(len(self.labels), token_vector_width)
+            self.model = self.Model(len(self.labels), token_vector_width,
+                                    **self.cfg)
 
 
 cdef class EntityRecognizer(LinearParser):
