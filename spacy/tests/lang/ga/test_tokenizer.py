@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 
-SV_TOKEN_EXCEPTION_TESTS = [
+GA_TOKEN_EXCEPTION_TESTS = [
     ('B\'fhearr fanacht as amharc', ['B\'', 'fhearr', 'fanacht', 'as', 'amharc']),
     ('Daoine a bhfuil Gaeilge acu, m.sh. tusa agus mise', ['Daoine', 'a', 'bhfuil', 'Gaeilge', 'acu', ',', 'm.sh.', 'tusa', 'agus', 'mise'])
 ]
