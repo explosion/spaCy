@@ -5,7 +5,7 @@ import pytest
 
 
 GA_TOKEN_EXCEPTION_TESTS = [
-    ('B\'fhearr fanacht as amharc', ['B\'', 'fhearr', 'fanacht', 'as', 'amharc']),
+    ("B'fhearr fanacht as amharc", ["B'", "fhearr", "fanacht", "as", "amharc"]),
     ('Daoine a bhfuil Gaeilge acu, m.sh. tusa agus mise', ['Daoine', 'a', 'bhfuil', 'Gaeilge', 'acu', ',', 'm.sh.', 'tusa', 'agus', 'mise'])
 ]
 
