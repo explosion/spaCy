@@ -394,7 +394,6 @@ cdef class Parser:
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
             tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
-        tokvecs = self._pad_tokvecs(tokvecs)
         nr_state = len(docs)
         nr_class = self.moves.n_moves
         nr_dim = tokvecs.shape[1]
@@ -454,7 +453,6 @@ cdef class Parser:
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
             tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
-        tokvecs = self._pad_tokvecs(tokvecs)
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
                                                      cuda_stream, 0.0)
@@ -527,7 +525,6 @@ cdef class Parser:
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvec_lists = docs_tokvecs
-        tokvecs = self.model[0].ops.flatten(tokvec_lists)
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
@@ -535,7 +532,6 @@ cdef class Parser:
             tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
             tokvecs = self.model[0].ops.flatten(tokvecs)
 
-        tokvecs = self._pad_tokvecs(tokvecs)
 
         cuda_stream = get_cuda_stream()
 
@@ -586,7 +582,6 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
-        d_tokvecs = self._unpad_tokvecs(d_tokvecs)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
         if USE_FINE_TUNE:
             d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
@@ -643,7 +638,6 @@ cdef class Parser:
         d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
         self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, lengths)
-        d_tokvecs = self._unpad_tokvecs(d_tokvecs)
         if USE_FINE_TUNE:
             d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs

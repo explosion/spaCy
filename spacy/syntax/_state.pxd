@@ -119,12 +119,10 @@ cdef cppclass StateC:
             # TODO error =/
             pass
         for i in range(n):
-            # Token vectors should be padded, so that there's a vector for
-            # missing values at the start.
             if ids[i] >= 0:
-                ids[i] += this.offset + 1
+                ids[i] += this.offset
             else:
-                ids[i] = 0
+                ids[i] = -1
 
     int S(int i) nogil const:
         if i >= this._s_i:
