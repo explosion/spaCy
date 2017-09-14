@@ -347,15 +347,9 @@ class Language(object):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        gold_tuples (iterable): Gold-standard training data.
+        get_gold_tuples (function): Function returning gold data
         **cfg: Config parameters.
-        YIELDS (tuple): A trainer and an optimizer.
-
-        EXAMPLE:
-            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
-            >>>    for epoch in trainer.epochs(gold):
-            >>>        for docs, golds in epoch:
-            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        returns: An optimizer
         """
         if self.parser:
             self.pipeline.append(NeuralLabeller(self.vocab))

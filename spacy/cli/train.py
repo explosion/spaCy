@@ -72,8 +72,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                                    util.env_opt('batch_compound', 1.001))
 
     if resume:
-        prints(output_path / 'model19.pickle', title="Resuming training")
-        nlp = dill.load((output_path / 'model19.pickle').open('rb'))
+        prints(output_path / 'model9.pickle', title="Resuming training")
+        nlp = dill.load((output_path / 'model9.pickle').open('rb'))
     else:
         nlp = lang_class(pipeline=pipeline)
     corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
@@ -88,7 +88,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
             if resume:
                 i += 20
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
-                train_docs = corpus.train_docs(nlp, projectivize=True,
+                train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
                                                gold_preproc=gold_preproc, max_length=0)
                 losses = {}
                 for batch in minibatch(train_docs, size=batch_sizes):
