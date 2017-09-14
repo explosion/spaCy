@@ -14,8 +14,8 @@ class Chinese(Language):
         except ImportError:
             raise ImportError("The Chinese tokenizer requires the Jieba library: "
                               "https://github.com/fxsjy/jieba")
-        words = list(jieba.cut(text, cut_all=True))
-        words=[x for x in words if x]
+        words = list(jieba.cut(text, cut_all=False))
+        words = [x for x in words if x]
         return Doc(self.vocab, words=words, spaces=[False]*len(words))
 
 
