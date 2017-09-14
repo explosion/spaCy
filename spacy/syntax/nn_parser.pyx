@@ -394,7 +394,7 @@ cdef class Parser:
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
             tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
-
+        tokvecs = self._pad_tokvecs(tokvecs)
         nr_state = len(docs)
         nr_class = self.moves.n_moves
         nr_dim = tokvecs.shape[1]
@@ -454,6 +454,7 @@ cdef class Parser:
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
             tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
+        tokvecs = self._pad_tokvecs(tokvecs)
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
                                                      cuda_stream, 0.0)
@@ -534,6 +535,8 @@ cdef class Parser:
             tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
             tokvecs = self.model[0].ops.flatten(tokvecs)
 
+        tokvecs = self._pad_tokvecs(tokvecs)
+
         cuda_stream = get_cuda_stream()
 
         states, golds, max_steps = self._init_gold_batch(docs, golds)
@@ -583,6 +586,7 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
+        d_tokvecs = self._unpad_tokvecs(d_tokvecs)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
         if USE_FINE_TUNE:
             d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
@@ -639,9 +643,19 @@ cdef class Parser:
         d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
         self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, lengths)
+        d_tokvecs = self._unpad_tokvecs(d_tokvecs)
         if USE_FINE_TUNE:
             d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
+
+    def _pad_tokvecs(self, tokvecs):
+        # Add a vector for missing values at the start of tokvecs
+        xp = get_array_module(tokvecs)
+        pad = xp.zeros((1, tokvecs.shape[1]), dtype=tokvecs.dtype)
+        return xp.vstack((pad, tokvecs))
+
+    def _unpad_tokvecs(self, d_tokvecs):
+        return d_tokvecs[1:]
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
