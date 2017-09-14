@@ -7,6 +7,7 @@ import re
 import ujson
 import random
 import cytoolz
+import itertools
 
 from .syntax import nonproj
 from .util import ensure_path
@@ -146,9 +147,13 @@ def minibatch(items, size=8):
     '''Iterate over batches of items. `size` may be an iterator,
     so that batch-size can vary on each step.
     '''
+    if isinstance(size, int):
+        size_ = itertools.repeat(8)
+    else:
+        size_ = size
     items = iter(items)
     while True:
-        batch_size = next(size) #if hasattr(size, '__next__') else size
+        batch_size = next(size_)
         batch = list(cytoolz.take(int(batch_size), items))
         if len(batch) == 0:
             break
