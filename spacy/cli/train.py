@@ -80,6 +80,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     n_train_words = corpus.count_train()
 
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
+    nlp._optimizer = None
 
     print("Itn.\tLoss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
