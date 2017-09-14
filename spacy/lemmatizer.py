@@ -25,7 +25,6 @@ class Lemmatizer(object):
         elif univ_pos == PUNCT:
             univ_pos = 'punct'
         # See Issue #435 for example of where this logic is requied.
-        print("Check base form", string)
         if self.is_base_form(univ_pos, morphology):
             return set([string.lower()])
         lemmas = lemmatize(string, self.index.get(univ_pos, {}),
