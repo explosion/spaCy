@@ -419,7 +419,7 @@ cdef class Parser:
         cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
             if not has_hidden:
-                for i in cython.parallel.prange(
+                for i in range(
                         next_step.size(), num_threads=6, nogil=True):
                     self._parse_step(next_step[i],
                         feat_weights, nr_class, nr_feat, nr_piece)
