@@ -78,34 +78,6 @@ def add_tuples(X, drop=0.):
     return (vals1+vals2, length), add_tuples_bwd
 
 
-def AddHistory(layer, decay=0.0001):
-    ops = layer.ops
-    nonlocals = []
-    def history_fwd(X, drop=0.):
-        if not nonlocals:
-            if hasattr(layer, 'nO'):
-                nO = layer.nO
-            else:
-                nO = layer._layers[-1].nO
-            nonlocals.append(ops.allocate((nO, X.shape[1])))
-            model.history = nonlocals[0]
-        average_inputs = nonlocals[0]
-        hist = ops.xp.tensordot(X, average_inputs, axes=[[1], [1]])
-        X_hist = ops.xp.hstack((X, hist))
-        Y, bp_Y = layer.begin_update(X_hist, drop=drop)
-        amax = Y.argmax(axis=1)
-        average_inputs *= 1-decay
-        ops.scatter_add(average_inputs, amax, X * decay)
-        def history_bwd(dY, sgd=None):
-            dX_hist = bp_Y(dY, sgd=sgd)
-            dX = dX_hist[:, :X.shape[1]]
-            return ops.xp.ascontiguousarray(dX)
-        return Y, history_bwd
-    model = wrap(history_fwd, layer)
-    model.history = None
-    return model
-
-
 def _zero_init(model):
     def _zero_init_impl(self, X, y):
         self.W.fill(0)
