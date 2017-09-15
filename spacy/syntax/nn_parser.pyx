@@ -262,8 +262,8 @@ cdef class Parser:
                 upper.is_noop = True
             else:
                 upper = chain(
-                    clone(Maxout(hidden_width), (depth-1)),
-                    zero_init(Affine(nr_class, drop_factor=0.0))
+                    clone(Maxout(hidden_width), depth-1),
+                    zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
         # TODO: This is an unfortunate hack atm!
