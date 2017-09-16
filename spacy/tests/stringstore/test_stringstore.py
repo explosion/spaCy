@@ -6,6 +6,16 @@ from ...strings import StringStore
 import pytest
 
 
+def test_string_hash(stringstore):
+    '''Test that string hashing is stable across platforms'''
+    ss = stringstore
+    assert ss.add('apple') == 8566208034543834098
+    heart = '\U0001f499'
+    print(heart)
+    h = ss.add(heart)
+    assert h == 11841826740069053588L
+ 
+
 def test_stringstore_from_api_docs(stringstore):
     apple_hash = stringstore.add('apple')
     assert apple_hash == 8566208034543834098
