@@ -101,9 +101,10 @@ cdef cppclass StateC:
         elif n == 6:
             if this.B(0) >= 0:
                 ids[0] = this.B(0)
+                ids[1] = this.B(0)-1
             else:
                 ids[0] = -1
-            ids[1] = this.B(0)
+                ids[1] = -1
             ids[2] = this.B(1)
             ids[3] = this.E(0)
             if ids[3] >= 1:
