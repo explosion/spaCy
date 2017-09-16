@@ -21,7 +21,7 @@ from thinc.api import FeatureExtracter, with_getitem
 from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
 from thinc.neural._classes.attention import ParametricAttention
 from thinc.linear.linear import LinearModel
-from thinc.api import uniqued, wrap, flatten_add_lengths
+from thinc.api import uniqued, wrap, flatten_add_lengths, noop
 
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP, CLUSTER
@@ -226,7 +226,7 @@ def drop_layer(layer, factor=2.):
     return model
 
 
-def Tok2Vec(width, embed_size, preprocess=None):
+def Tok2Vec(width, embed_size, preprocess=True, pretrained_dims=0):
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
         norm = HashEmbed(width, embed_size, column=cols.index(NORM), name='embed_norm')
@@ -234,18 +234,30 @@ def Tok2Vec(width, embed_size, preprocess=None):
         suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX), name='embed_suffix')
         shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE), name='embed_shape')
 
-        embed = (norm | prefix | suffix | shape ) >> LN(Maxout(width, width*4, pieces=3))
-        tok2vec = (
-            with_flatten(
-                asarray(Model.ops, dtype='uint64')
-                >> uniqued(embed, column=5)
-                >> Residual(
-                    (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
-                ) ** 4, pad=4
+        trained_vectors = (
+            FeatureExtracter(cols)
+            >> with_flatten(
+                uniqued(
+                    (norm | prefix | suffix | shape)
+                    >> LN(Maxout(width, width*4, pieces=3)), column=5)
             )
         )
-        if preprocess not in (False, None):
-            tok2vec = preprocess >> tok2vec
+        if pretrained_dims:
+            embed = concatenate_lists(trained_vectors, SpacyVectors)
+        else:
+            embed = trained_vectors
+        convolution = Residual(ExtractWindow(nW=1) >> LN(Maxout(width, width*3, pieces=3)))
+
+        tok2vec = (
+            embed
+            >> with_flatten(
+                Affine(width, width+pretrained_dims)
+                >> convolution
+                >> convolution
+                >> convolution
+                >> convolution,
+                pad=1)
+        )
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
         tok2vec.embed = embed
@@ -457,10 +469,11 @@ def getitem(i):
 
 def build_tagger_model(nr_class, token_vector_width, **cfg):
     embed_size = util.env_opt('embed_size', 7500)
+    pretrained_dims = cfg.get('pretrained_dims', 0)
     with Model.define_operators({'>>': chain, '+': add}):
         # Input: (doc, tensor) tuples
-        private_tok2vec = Tok2Vec(token_vector_width, embed_size, preprocess=doc2feats())
-
+        private_tok2vec = Tok2Vec(token_vector_width, embed_size,
+                                  pretrained_dims=pretrained_dims)
         model = (
             fine_tune(private_tok2vec)
             >> with_flatten(
