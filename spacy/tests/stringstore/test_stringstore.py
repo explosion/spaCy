@@ -13,7 +13,7 @@ def test_string_hash(stringstore):
     heart = '\U0001f499'
     print(heart)
     h = ss.add(heart)
-    assert h == 11841826740069053588L
+    assert h == 11841826740069053588
  
 
 def test_stringstore_from_api_docs(stringstore):
