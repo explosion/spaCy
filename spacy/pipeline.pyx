@@ -41,7 +41,7 @@ from .syntax import nonproj
 from .compat import json_dumps
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
-from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
+from ._ml import rebatch, Tok2Vec, flatten
 from ._ml import build_text_classifier, build_tagger_model
 from .parts_of_speech import X
 
@@ -137,6 +137,7 @@ class BaseThincComponent(object):
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
             if self.model is True:
+                self.cfg['pretrained_dims'] = self.vocab.vectors_length
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(b)
 
@@ -159,6 +160,7 @@ class BaseThincComponent(object):
     def from_disk(self, path, **exclude):
         def load_model(p):
             if self.model is True:
+                self.cfg['pretrained_dims'] = self.vocab.vectors_length
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
@@ -193,7 +195,7 @@ class TokenVectorEncoder(BaseThincComponent):
         """
         width = util.env_opt('token_vector_width', width)
         embed_size = util.env_opt('embed_size', embed_size)
-        return Tok2Vec(width, embed_size, preprocess=None)
+        return Tok2Vec(width, embed_size, **cfg)
 
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
@@ -210,7 +212,6 @@ class TokenVectorEncoder(BaseThincComponent):
             >>> tok2vec.model = tok2vec.Model(128, 5000)
         """
         self.vocab = vocab
-        self.doc2feats = doc2feats()
         self.model = model
         self.cfg = dict(cfg)
 
@@ -245,8 +246,7 @@ class TokenVectorEncoder(BaseThincComponent):
         docs (iterable): A sequence of `Doc` objects.
         RETURNS (object): Vector representations for each token in the documents.
         """
-        feats = self.doc2feats(docs)
-        tokvecs = self.model(feats)
+        tokvecs = self.model(docs)
         return tokvecs
 
     def set_annotations(self, docs, tokvecses):
@@ -270,8 +270,7 @@ class TokenVectorEncoder(BaseThincComponent):
         """
         if isinstance(docs, Doc):
             docs = [docs]
-        feats = self.doc2feats(docs)
-        tokvecs, bp_tokvecs = self.model.begin_update(feats, drop=drop)
+        tokvecs, bp_tokvecs = self.model.begin_update(docs, drop=drop)
         return tokvecs, bp_tokvecs
 
     def get_loss(self, docs, golds, scores):
@@ -285,9 +284,8 @@ class TokenVectorEncoder(BaseThincComponent):
         gold_tuples (iterable): Gold-standard training data.
         pipeline (list): The pipeline the model is part of.
         """
-        self.doc2feats = doc2feats()
         if self.model is True:
-            self.model = self.Model()
+            self.model = self.Model(**self.cfg)
 
 
 class NeuralTagger(BaseThincComponent):
@@ -394,12 +392,14 @@ class NeuralTagger(BaseThincComponent):
                                           exc=vocab.morphology.exc)
         token_vector_width = pipeline[0].model.nO
         if self.model is True:
-            self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
+            self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
+                                    pretrained_dims=self.vocab.vectors_length)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width):
-        return build_tagger_model(n_tags, token_vector_width)
- 
+    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
+        return build_tagger_model(n_tags, token_vector_width,
+                                  pretrained_dims)
+
     def use_params(self, params):
         with self.model.use_params(params):
             yield
@@ -419,7 +419,8 @@ class NeuralTagger(BaseThincComponent):
             if self.model is True:
                 token_vector_width = util.env_opt('token_vector_width',
                         self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
+                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
+                                        pretrained_dims=self.vocab.vectors_length)
             self.model.from_bytes(b)
 
         def load_tag_map(b):
@@ -428,7 +429,7 @@ class NeuralTagger(BaseThincComponent):
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
- 
+
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('tag_map', load_tag_map),
@@ -454,7 +455,8 @@ class NeuralTagger(BaseThincComponent):
             if self.model is True:
                 token_vector_width = util.env_opt('token_vector_width',
                         self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
+                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
+                                        pretrained_dims=self.vocab.vectors_length)
             self.model.from_bytes(p.open('rb').read())
 
         def load_tag_map(p):
@@ -503,12 +505,14 @@ class NeuralLabeller(NeuralTagger):
                         self.labels[dep] = len(self.labels)
         token_vector_width = pipeline[0].model.nO
         if self.model is True:
-            self.model = self.Model(len(self.labels), token_vector_width)
+            self.model = self.Model(len(self.labels), token_vector_width,
+                                    pretrained_dims=self.vocab.vectors_length)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width):
-        return build_tagger_model(n_tags, token_vector_width)
-    
+    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
+        return build_tagger_model(n_tags, token_vector_width,
+                                  pretrained_dims)
+
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
         cdef int idx = 0
@@ -653,6 +657,7 @@ class TextCategorizer(BaseThincComponent):
         else:
             token_vector_width = 64
         if self.model is True:
+            self.cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model = self.Model(len(self.labels), token_vector_width,
                                     **self.cfg)
 
