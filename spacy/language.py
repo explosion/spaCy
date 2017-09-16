@@ -304,13 +304,12 @@ class Language(object):
                 self._optimizer = Adam(Model.ops, 0.001)
             sgd = self._optimizer
         tok2vec = self.pipeline[0]
-        feats = tok2vec.doc2feats(docs)
         grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
         pipes = list(self.pipeline[1:])
         random.shuffle(pipes)
-        tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
+        tokvecses, bp_tokvecses = tok2vec.model.begin_update(docs, drop=drop)
         all_d_tokvecses = [tok2vec.model.ops.allocate(tv.shape) for tv in tokvecses]
         for proc in pipes:
             if not hasattr(proc, 'update'):
