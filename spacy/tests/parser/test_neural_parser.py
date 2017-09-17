@@ -26,7 +26,7 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    return Tok2Vec(8, 100, preprocess=doc2feats())
+    return Tok2Vec(8, 100)
 
 
 @pytest.fixture
