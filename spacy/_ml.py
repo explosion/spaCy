@@ -467,9 +467,8 @@ def getitem(i):
         return X[i], None
     return layerize(getitem_fwd)
 
-def build_tagger_model(nr_class, token_vector_width, **cfg):
-    embed_size = util.env_opt('embed_size', 7500)
-    pretrained_dims = cfg.get('pretrained_dims', 0)
+def build_tagger_model(nr_class, token_vector_width, pretrained_dims=0, **cfg):
+    embed_size = util.env_opt('embed_size', 4000)
     with Model.define_operators({'>>': chain, '+': add}):
         # Input: (doc, tensor) tuples
         private_tok2vec = Tok2Vec(token_vector_width, embed_size,
