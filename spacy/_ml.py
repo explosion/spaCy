@@ -226,7 +226,7 @@ def drop_layer(layer, factor=2.):
     return model
 
 
-def Tok2Vec(width, embed_size, preprocess=True, pretrained_dims=0):
+def Tok2Vec(width, embed_size, pretrained_dims=0):
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
         norm = HashEmbed(width, embed_size, column=cols.index(NORM), name='embed_norm')
@@ -242,7 +242,7 @@ def Tok2Vec(width, embed_size, preprocess=True, pretrained_dims=0):
                     >> LN(Maxout(width, width*4, pieces=3)), column=5)
             )
         )
-        if pretrained_dims:
+        if pretrained_dims >= 1:
             embed = concatenate_lists(trained_vectors, SpacyVectors)
         else:
             embed = trained_vectors
