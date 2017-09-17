@@ -65,7 +65,7 @@ cdef class Vocab:
                 self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors(self.strings, 300)
+        self.vectors = Vectors(self.strings)
 
     property lang:
         def __get__(self):
@@ -336,7 +336,7 @@ cdef class Vocab:
                 return None
             else:
                 return self.vectors.to_bytes(exclude='strings.json')
- 
+
         getters = OrderedDict((
             ('strings', lambda: self.strings.to_bytes()),
             ('lexemes', lambda: self.lexemes_to_bytes()),
