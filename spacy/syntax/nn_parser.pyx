@@ -262,8 +262,8 @@ cdef class Parser:
                 upper.is_noop = True
             else:
                 upper = chain(
-                    clone(Maxout(hidden_width), (depth-1)),
-                    zero_init(Affine(nr_class, drop_factor=0.0))
+                    clone(Maxout(hidden_width), depth-1),
+                    zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
         # TODO: This is an unfortunate hack atm!
@@ -395,7 +395,6 @@ cdef class Parser:
             tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
         else:
             tokvecs = self.model[0].ops.flatten(tokvecses)
-
         nr_state = len(docs)
         nr_class = self.moves.n_moves
         nr_dim = tokvecs.shape[1]
@@ -421,7 +420,7 @@ cdef class Parser:
         cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
             if not has_hidden:
-                for i in cython.parallel.prange(
+                for i in range(
                         next_step.size(), num_threads=6, nogil=True):
                     self._parse_step(next_step[i],
                         feat_weights, nr_class, nr_feat, nr_piece)
@@ -528,7 +527,6 @@ cdef class Parser:
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvec_lists = docs_tokvecs
-        tokvecs = self.model[0].ops.flatten(tokvec_lists)
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
@@ -609,7 +607,7 @@ cdef class Parser:
         assert min(lengths) >= 1
         if USE_FINE_TUNE:
             my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            tokvecs += self.model[0].ops.flatten(my_tokvecs)
+            tokvecs = self.model[0].ops.flatten(my_tokvecs)
         else:
             tokvecs = self.model[0].ops.flatten(tokvecs)
         states = self.moves.init_batch(docs)
@@ -646,6 +644,15 @@ cdef class Parser:
         if USE_FINE_TUNE:
             d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
+
+    def _pad_tokvecs(self, tokvecs):
+        # Add a vector for missing values at the start of tokvecs
+        xp = get_array_module(tokvecs)
+        pad = xp.zeros((1, tokvecs.shape[1]), dtype=tokvecs.dtype)
+        return xp.vstack((pad, tokvecs))
+
+    def _unpad_tokvecs(self, d_tokvecs):
+        return d_tokvecs[1:]
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long

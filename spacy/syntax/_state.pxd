@@ -121,6 +121,8 @@ cdef cppclass StateC:
         for i in range(n):
             if ids[i] >= 0:
                 ids[i] += this.offset
+            else:
+                ids[i] = -1
 
     int S(int i) nogil const:
         if i >= this._s_i:
@@ -163,9 +165,9 @@ cdef cppclass StateC:
 
     int E(int i) nogil const:
         if this._e_i <= 0 or this._e_i >= this.length:
-            return 0
+            return -1
         if i < 0 or i >= this._e_i:
-            return 0
+            return -1
         return this._ents[this._e_i - (i+1)].start
 
     int L(int i, int idx) nogil const:
