@@ -252,11 +252,8 @@ def Tok2Vec(width, embed_size, pretrained_dims=0):
             embed
             >> with_flatten(
                 Affine(width, width+pretrained_dims)
-                >> convolution
-                >> convolution
-                >> convolution
-                >> convolution,
-                pad=1)
+                >> convolution ** 4,
+                pad=4)
         )
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
