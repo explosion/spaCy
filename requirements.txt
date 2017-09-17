@@ -13,7 +13,6 @@ requests>=2.13.0,<3.0.0
 regex==2017.4.5
 ftfy>=4.4.2,<5.0.0
 pytest>=3.0.6,<4.0.0
-pip>=9.0.0,<10.0.0
 mock>=2.0.0,<3.0.0
 msgpack-python
 msgpack-numpy

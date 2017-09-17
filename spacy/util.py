@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import os
 import ujson
-import pip
+import pkg_resources
 import importlib
 import regex as re
 from pathlib import Path
@@ -180,9 +180,9 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    packages = pip.get_installed_distributions()
+    packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
-        if package.project_name.replace('-', '_') == name:
+        if package.replace('-', '_') == name:
             return True
     return False
 

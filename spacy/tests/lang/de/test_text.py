@@ -25,15 +25,15 @@ Umfang kläglich dünnen Beine flimmerten ihm hilflos vor den Augen.
     assert len(tokens) == 109
 
 
-@pytest.mark.parametrize('text,length', [
-    ("Donaudampfschifffahrtsgesellschaftskapitänsanwärterposten", 1),
-    ("Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz", 1),
-    ("Kraftfahrzeug-Haftpflichtversicherung", 3),
-    ("Vakuum-Mittelfrequenz-Induktionsofen", 5)
+@pytest.mark.parametrize('text', [
+    "Donaudampfschifffahrtsgesellschaftskapitänsanwärterposten",
+    "Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz",
+    "Kraftfahrzeug-Haftpflichtversicherung",
+    "Vakuum-Mittelfrequenz-Induktionsofen"
     ])
-def test_tokenizer_handles_long_words(de_tokenizer, text, length):
+def test_tokenizer_handles_long_words(de_tokenizer, text):
     tokens = de_tokenizer(text)
-    assert len(tokens) == length
+    assert len(tokens) == 1
 
 
 @pytest.mark.parametrize('text,length', [
