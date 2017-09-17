@@ -825,6 +825,7 @@ cdef class Parser:
         if 'model' not in exclude:
             path = util.ensure_path(path)
             if self.model is True:
+                self.cfg['pretrained_dims'] = self.vocab.vectors_length
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
