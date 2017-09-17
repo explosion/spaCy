@@ -23,7 +23,7 @@ cdef class Vectors:
     cdef public object keys
     cdef public int i
 
-    def __init__(self, strings, data_or_width):
+    def __init__(self, strings, data_or_width=0):
         self.strings = StringStore()
         if isinstance(data_or_width, int):
             self.data = data = numpy.zeros((len(strings), data_or_width),
