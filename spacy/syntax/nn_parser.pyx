@@ -871,6 +871,7 @@ cdef class Parser:
             if self.model is True:
                 self.model, cfg = self.Model(self.moves.n_moves,
                                     pretrained_dims=self.vocab.vectors_length)
+                cfg['pretrained_dims'] = self.vocab.vectors_length
             else:
                 cfg = {}
             cfg['pretrained_dims'] = self.vocab.vectors_length
