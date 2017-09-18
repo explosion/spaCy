@@ -364,6 +364,9 @@ class Language(object):
             device.use()
             Model.ops = CupyOps()
             Model.Ops = CupyOps
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(
+                    self.vocab.vectors.data)
         else:
             device = None
         for proc in self.pipeline:
