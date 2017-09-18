@@ -660,7 +660,7 @@ cdef class Doc:
         """
         with path.open('rb') as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, **exclude)
+        return self.from_bytes(bytes_data, **exclude)
 
     def to_bytes(self, **exclude):
         """Serialize, i.e. export the document contents to a binary string.
