@@ -242,20 +242,24 @@ def Tok2Vec(width, embed_size, pretrained_dims=0):
                     >> LN(Maxout(width, width*4, pieces=3)), column=5)
             )
         )
-        if pretrained_dims >= 1:
-            embed = concatenate_lists(trained_vectors, SpacyVectors)
-        else:
-            embed = trained_vectors
         convolution = Residual(ExtractWindow(nW=1) >> LN(Maxout(width, width*3, pieces=3)))
 
-        tok2vec = (
-            embed
-            >> with_flatten(
-                (Affine(width, width+pretrained_dims)
-                 if pretrained_dims else noop())
-                >> convolution ** 4,
-                pad=4)
-        )
+        if pretrained_dims >= 1:
+            embed = concatenate_lists(trained_vectors, SpacyVectors)
+            tok2vec = (
+                embed
+                >> with_flatten(
+                    Affine(width, width+pretrained_dims)
+                    >> convolution ** 4,
+                    pad=4)
+            )
+        else:
+            embed = trained_vectors
+            tok2vec = (
+                embed
+                >> with_flatten(convolution ** 4, pad=4)
+            )
+
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
         tok2vec.embed = embed
