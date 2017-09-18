@@ -285,7 +285,9 @@ class TokenVectorEncoder(BaseThincComponent):
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
-            self.model = self.Model(**self.cfg)
+            self.model = self.Model(
+                pretrained_dims=self.vocab.vectors_length,
+                **self.cfg)
 
 
 class NeuralTagger(BaseThincComponent):
