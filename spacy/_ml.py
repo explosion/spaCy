@@ -251,7 +251,8 @@ def Tok2Vec(width, embed_size, pretrained_dims=0):
         tok2vec = (
             embed
             >> with_flatten(
-                Affine(width, width+pretrained_dims)
+                (Affine(width, width+pretrained_dims)
+                 if pretrained_dims else noop())
                 >> convolution ** 4,
                 pad=4)
         )
