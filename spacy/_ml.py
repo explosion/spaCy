@@ -227,6 +227,8 @@ def drop_layer(layer, factor=2.):
 
 
 def Tok2Vec(width, embed_size, pretrained_dims=0):
+    if pretrained_dims is None:
+        pretrained_dims = 0
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
         norm = HashEmbed(width, embed_size, column=cols.index(NORM), name='embed_norm')
