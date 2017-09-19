@@ -214,6 +214,7 @@ class TokenVectorEncoder(BaseThincComponent):
         self.vocab = vocab
         self.model = model
         self.cfg = dict(cfg)
+        self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
 
     def __call__(self, doc):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
@@ -458,7 +459,7 @@ class NeuralTagger(BaseThincComponent):
                 token_vector_width = util.env_opt('token_vector_width',
                         self.cfg.get('token_vector_width', 128))
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                        pretrained_dims=self.vocab.vectors_length)
+                                        **self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
         def load_tag_map(p):
@@ -470,10 +471,10 @@ class NeuralTagger(BaseThincComponent):
                 exc=self.vocab.morphology.exc)
 
         deserialize = OrderedDict((
+            ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
             ('vocab', lambda p: self.vocab.from_disk(p)),
             ('tag_map', load_tag_map),
             ('model', load_model),
-            ('cfg', lambda p: self.cfg.update(_load_cfg(p)))
         ))
         util.from_disk(path, deserialize, exclude)
         return self
