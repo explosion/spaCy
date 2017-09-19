@@ -307,6 +307,8 @@ cdef class Parser:
             cfg['beam_width'] = util.env_opt('beam_width', 1)
         if 'beam_density' not in cfg:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
+        if 'pretrained_dims' not in cfg:
+            cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
