@@ -422,6 +422,7 @@ cdef class PhraseMatcher:
     cdef attr_t* _phrase_key
 
     cdef public object _callbacks
+    cdef public object _patterns
 
     def __init__(self, Vocab vocab, max_length=10):
         self.mem = Pool()
@@ -435,6 +436,9 @@ cdef class PhraseMatcher:
             abstract_patterns.append([{tag: True} for tag in get_bilou(length)])
         self.matcher.add('Candidate', None, *abstract_patterns)
         self._callbacks = {}
+
+    def __reduce__(self):
+        return (self.__class__, (self.vocab,), None, None)
 
     def add(self, key, on_match, *docs):
         cdef Doc doc
