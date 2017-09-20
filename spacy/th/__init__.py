@@ -26,5 +26,3 @@ class Thai(Language):
 								"https://github.com/wannaphongcom/pythainlp/")
 		words = [x for x in list(word_tokenize(text,"newmm"))]
 		return Doc(self.vocab, words=words, spaces=[False]*len(words))
-
-__all__ = ['Thai']
