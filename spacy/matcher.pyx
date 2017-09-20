@@ -466,7 +466,7 @@ cdef class PhraseMatcher:
                 self._phrase_key[i] = lexeme.orth
             phrase_hash = hash64(self._phrase_key,
                                  self.max_length * sizeof(attr_t), 0)
-            self.phrase_ids[phrase_hash] = ent_id
+            self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
         matches = []
