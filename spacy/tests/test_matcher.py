@@ -101,7 +101,8 @@ def test_matcher_match_multi(matcher):
 def test_matcher_phrase_matcher(en_vocab):
     words = ["Google", "Now"]
     doc = get_doc(en_vocab, words)
-    matcher = PhraseMatcher(en_vocab, [doc])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add('COMPANY', None, doc)
     words = ["I", "like", "Google", "Now", "best"]
     doc = get_doc(en_vocab, words)
     assert len(matcher(doc)) == 1
