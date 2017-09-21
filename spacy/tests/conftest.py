@@ -15,6 +15,7 @@ from ..fi import Finnish
 from ..bn import Bengali
 from ..he import Hebrew
 from ..nb import Norwegian
+from ..th import Thai
 
 
 from ..tokens import Doc
@@ -100,6 +101,11 @@ def he_tokenizer():
 @pytest.fixture
 def nb_tokenizer():
     return Norwegian.Defaults.create_tokenizer()
+
+@pytest.fixture
+def th_tokenizer():
+    pythainlp = pytest.importorskip("pythainlp")
+    return Thai.Defaults.create_tokenizer()
 
 @pytest.fixture
 def stringstore():
