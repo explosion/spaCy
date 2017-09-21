@@ -297,6 +297,7 @@ class NeuralTagger(BaseThincComponent):
         self.model = model
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
 
     def __call__(self, doc):
         tags = self.predict(([doc], [doc.tensor]))
@@ -393,15 +394,12 @@ class NeuralTagger(BaseThincComponent):
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
-        token_vector_width = pipeline[0].model.nO
         if self.model is True:
-            self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                    pretrained_dims=self.vocab.vectors_length)
+            self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
-        return build_tagger_model(n_tags, token_vector_width,
-                                  pretrained_dims)
+    def Model(cls, n_tags, **cfg):
+        return build_tagger_model(n_tags, **cfg)
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -422,8 +420,7 @@ class NeuralTagger(BaseThincComponent):
             if self.model is True:
                 token_vector_width = util.env_opt('token_vector_width',
                         self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                        pretrained_dims=self.vocab.vectors_length)
+                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             self.model.from_bytes(b)
 
         def load_tag_map(b):
@@ -457,10 +454,7 @@ class NeuralTagger(BaseThincComponent):
     def from_disk(self, path, **exclude):
         def load_model(p):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width',
-                        self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                        **self.cfg)
+                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
         def load_tag_map(p):
@@ -514,9 +508,8 @@ class NeuralLabeller(NeuralTagger):
                                     pretrained_dims=self.vocab.vectors_length)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
-        return build_tagger_model(n_tags, token_vector_width,
-                                  pretrained_dims)
+    def Model(cls, n_tags, **cfg):
+        return build_tagger_model(n_tags, **cfg)
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
