@@ -55,7 +55,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
         prints(dev_path, title="Development data not found", exits=1)
 
 
-    pipeline = ['token_vectors', 'tags', 'dependencies', 'entities']
+    pipeline = ['tags', 'dependencies', 'entities']
     if no_tagger and 'tags' in pipeline: pipeline.remove('tags')
     if no_parser and 'dependencies' in pipeline: pipeline.remove('dependencies')
     if no_entities and 'entities' in pipeline: pipeline.remove('entities')

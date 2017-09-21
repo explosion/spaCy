@@ -226,8 +226,8 @@ def drop_layer(layer, factor=2.):
     return model
 
 
-def Tok2Vec(width, embed_size, pretrained_dims=0, **kwargs):
-    assert pretrained_dims is not None
+def Tok2Vec(width, embed_size, **kwargs):
+    pretrained_dims = kwargs.get('pretrained_dims', 0)
     cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 3)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
@@ -474,20 +474,18 @@ def getitem(i):
         return X[i], None
     return layerize(getitem_fwd)
 
+
 def build_tagger_model(nr_class, token_vector_width, pretrained_dims=0, **cfg):
     embed_size = util.env_opt('embed_size', 4000)
     with Model.define_operators({'>>': chain, '+': add}):
-        # Input: (doc, tensor) tuples
-        private_tok2vec = Tok2Vec(token_vector_width, embed_size,
-                                  pretrained_dims=pretrained_dims)
-        model = (
-            fine_tune(private_tok2vec)
-            >> with_flatten(
-                Maxout(token_vector_width, token_vector_width)
-                >> Softmax(nr_class, token_vector_width)
-            )
+        tok2vec = Tok2Vec(token_vector_width, embed_size,
+                          pretrained_dims=pretrained_dims)
+        model = with_flatten(
+            tok2vec
+            >> Softmax(nr_class, token_vector_width)
         )
     model.nI = None
+    model.tok2vec = tok2vec
     return model
 
 

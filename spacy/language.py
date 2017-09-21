@@ -303,31 +303,17 @@ class Language(object):
             if self._optimizer is None:
                 self._optimizer = Adam(Model.ops, 0.001)
             sgd = self._optimizer
-        tok2vec = self.pipeline[0]
         grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
-        pipes = list(self.pipeline[1:])
+        pipes = list(self.pipeline)
         random.shuffle(pipes)
-        tokvecses, bp_tokvecses = tok2vec.model.begin_update(docs, drop=drop)
-        all_d_tokvecses = [tok2vec.model.ops.allocate(tv.shape) for tv in tokvecses]
         for proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
-            d_tokvecses = proc.update((docs, tokvecses), golds,
-                                      drop=drop, sgd=get_grads, losses=losses)
-            if update_shared and d_tokvecses is not None:
-                for i, d_tv in enumerate(d_tokvecses):
-                    all_d_tokvecses[i] += d_tv
-        if update_shared and bp_tokvecses is not None:
-            bp_tokvecses(all_d_tokvecses, sgd=sgd)
+            proc.update(docs, golds, drop=drop, sgd=get_grads, losses=losses)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
-        # Clear the tensor variable, to free GPU memory.
-        # If we don't do this, the memory leak gets pretty
-        # bad, because we may be holding part of a batch.
-        for doc in docs:
-            doc.tensor = None
 
     def preprocess_gold(self, docs_golds):
         """Can be called before training to pre-process gold data. By default,
@@ -371,8 +357,6 @@ class Language(object):
         **cfg: Config parameters.
         returns: An optimizer
         """
-        if self.parser:
-            self.pipeline.append(NeuralLabeller(self.vocab))
         # Populate vocab
         if get_gold_tuples is not None:
             for _, annots_brackets in get_gold_tuples():
@@ -418,7 +402,6 @@ class Language(object):
         assert len(docs) == len(golds)
         for doc, gold in zip(docs, golds):
             scorer.score(doc, gold)
-            doc.tensor = None
         return scorer
 
     @contextmanager

@@ -48,7 +48,7 @@ from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
-from .._ml import Residual, drop_layer
+from .._ml import Residual, drop_layer, flatten
 from ..compat import json_dumps
 
 from . import _parse_features
@@ -244,8 +244,9 @@ cdef class Parser:
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
         embed_size = util.env_opt('embed_size', 4000)
-        tensors = fine_tune(Tok2Vec(token_vector_width, embed_size,
-                                    pretrained_dims=cfg.get('pretrained_dims')))
+        tok2vec = Tok2Vec(token_vector_width, embed_size,
+                          pretrained_dims=cfg.get('pretrained_dims', 0))
+        tok2vec = chain(tok2vec, flatten)
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -277,7 +278,7 @@ cdef class Parser:
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces
         }
-        return (tensors, lower, upper), cfg
+        return (tok2vec, lower, upper), cfg
 
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """
@@ -309,7 +310,6 @@ cdef class Parser:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         if 'pretrained_dims' not in cfg:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        cfg.setdefault('cnn_maxout_pieces', 2)
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
@@ -335,11 +335,11 @@ cdef class Parser:
             beam_density = self.cfg.get('beam_density', 0.0)
         cdef Beam beam
         if beam_width == 1:
-            states = self.parse_batch([doc], [doc.tensor])
+            states = self.parse_batch([doc])
             self.set_annotations([doc], states)
             return doc
         else:
-            beam = self.beam_parse([doc], [doc.tensor],
+            beam = self.beam_parse([doc], 
                         beam_width=beam_width, beam_density=beam_density)[0]
             output = self.moves.get_beam_annot(beam)
             state = <StateClass>beam.at(0)
@@ -368,11 +368,10 @@ cdef class Parser:
         cdef Beam beam
         for docs in cytoolz.partition_all(batch_size, docs):
             docs = list(docs)
-            tokvecs = [doc.tensor for doc in docs]
             if beam_width == 1:
-                parse_states = self.parse_batch(docs, tokvecs)
+                parse_states = self.parse_batch(docs)
             else:
-                beams = self.beam_parse(docs, tokvecs,
+                beams = self.beam_parse(docs,
                             beam_width=beam_width, beam_density=beam_density)
                 parse_states = []
                 for beam in beams:
@@ -380,7 +379,7 @@ cdef class Parser:
             self.set_annotations(docs, parse_states)
             yield from docs
 
-    def parse_batch(self, docs, tokvecses):
+    def parse_batch(self, docs):
         cdef:
             precompute_hiddens state2vec
             StateClass state
@@ -391,21 +390,15 @@ cdef class Parser:
             int nr_class, nr_feat, nr_piece, nr_dim, nr_state
         if isinstance(docs, Doc):
             docs = [docs]
-        if isinstance(tokvecses, np.ndarray):
-            tokvecses = [tokvecses]
 
-        if USE_FINE_TUNE:
-            tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
-        else:
-            tokvecs = self.model[0].ops.flatten(tokvecses)
+        cuda_stream = get_cuda_stream()
+        (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
+                                                                            0.0)
+
         nr_state = len(docs)
         nr_class = self.moves.n_moves
         nr_dim = tokvecs.shape[1]
         nr_feat = self.nr_feature
-
-        cuda_stream = get_cuda_stream()
-        state2vec, vec2scores = self.get_batch_model(nr_state, tokvecs,
-                                                     cuda_stream, 0.0)
         nr_piece = state2vec.nP
 
         states = self.moves.init_batch(docs)
@@ -448,19 +441,15 @@ cdef class Parser:
                     next_step.push_back(st)
         return states
 
-    def beam_parse(self, docs, tokvecses, int beam_width=3, float beam_density=0.001):
+    def beam_parse(self, docs, int beam_width=3, float beam_density=0.001):
         cdef Beam beam
         cdef np.ndarray scores
         cdef Doc doc
         cdef int nr_class = self.moves.n_moves
         cdef StateClass stcls, output
-        if USE_FINE_TUNE:
-            tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
-        else:
-            tokvecs = self.model[0].ops.flatten(tokvecses)
         cuda_stream = get_cuda_stream()
-        state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
-                                                     cuda_stream, 0.0)
+        (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
+                                                                            0.0)
         beams = []
         cdef int offset = 0
         cdef int j = 0
@@ -520,30 +509,24 @@ cdef class Parser:
         free(scores)
         free(token_ids)
 
-    def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.5:
-            return self.update_beam(docs_tokvecs, golds,
+            return self.update_beam(docs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
                     drop=drop, sgd=sgd, losses=losses)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        docs, tokvec_lists = docs_tokvecs
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
-        if USE_FINE_TUNE:
-            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            tokvecs = self.model[0].ops.flatten(my_tokvecs)
-        else:
-            tokvecs = self.model[0].ops.flatten(docs_tokvecs[1])
 
         cuda_stream = get_cuda_stream()
 
         states, golds, max_steps = self._init_gold_batch(docs, golds)
-        state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
-                                                      0.0)
+        (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
+                                                                            0.0)
         todo = [(s, g) for (s, g) in zip(states, golds)
                 if not s.is_final() and g is not None]
         if not todo:
@@ -587,13 +570,9 @@ cdef class Parser:
             if n_steps >= max_steps:
                 break
         self._make_updates(d_tokvecs,
-            backprops, sgd, cuda_stream)
-        d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
-        if USE_FINE_TUNE:
-            d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
-        return d_tokvecs
+            bp_tokvecs, backprops, sgd, cuda_stream)
 
-    def update_beam(self, docs_tokvecs, golds, width=None, density=None,
+    def update_beam(self, docs, golds, width=None, density=None,
             drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
@@ -605,26 +584,20 @@ cdef class Parser:
             density = self.cfg.get('beam_density', 0.0)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        docs, tokvecs = docs_tokvecs
         lengths = [len(d) for d in docs]
         assert min(lengths) >= 1
-        if USE_FINE_TUNE:
-            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            tokvecs = self.model[0].ops.flatten(my_tokvecs)
-        else:
-            tokvecs = self.model[0].ops.flatten(tokvecs)
         states = self.moves.init_batch(docs)
         for gold in golds:
             self.moves.preprocess_gold(gold)
 
         cuda_stream = get_cuda_stream()
-        state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream, 0.0)
+        (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream, 0.0)
 
         states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature, 500,
-                                        states, tokvecs, golds,
+                                        states, golds,
                                         state2vec, vec2scores,
                                         width, density,
-                                        sgd=sgd, drop=drop, losses=losses)
+                                        drop=drop, losses=losses)
         backprop_lower = []
         cdef float batch_size = len(docs)
         for i, d_scores in enumerate(states_d_scores):
@@ -642,20 +615,7 @@ cdef class Parser:
             else:
                 backprop_lower.append((ids, d_vector, bp_vectors))
         d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
-        self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
-        d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, lengths)
-        if USE_FINE_TUNE:
-            d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
-        return d_tokvecs
-
-    def _pad_tokvecs(self, tokvecs):
-        # Add a vector for missing values at the start of tokvecs
-        xp = get_array_module(tokvecs)
-        pad = xp.zeros((1, tokvecs.shape[1]), dtype=tokvecs.dtype)
-        return xp.vstack((pad, tokvecs))
-
-    def _unpad_tokvecs(self, d_tokvecs):
-        return d_tokvecs[1:]
+        self._make_updates(d_tokvecs, bp_tokvecs, backprop_lower, sgd, cuda_stream)
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
@@ -693,7 +653,7 @@ cdef class Parser:
             max_moves = max(max_moves, len(oracle_actions))
         return states, golds, max_moves
 
-    def _make_updates(self, d_tokvecs, backprops, sgd, cuda_stream=None):
+    def _make_updates(self, d_tokvecs, bp_tokvecs, backprops, sgd, cuda_stream=None):
         # Tells CUDA to block, so our async copies complete.
         if cuda_stream is not None:
             cuda_stream.synchronize()
@@ -704,6 +664,7 @@ cdef class Parser:
             d_state_features *= mask.reshape(ids.shape + (1,))
             self.model[0].ops.scatter_add(d_tokvecs, ids * mask,
                 d_state_features)
+        bp_tokvecs(d_tokvecs, sgd=sgd)
 
     @property
     def move_names(self):
@@ -713,11 +674,12 @@ cdef class Parser:
             names.append(name)
         return names
 
-    def get_batch_model(self, batch_size, tokvecs, stream, dropout):
-        _, lower, upper = self.model
-        state2vec = precompute_hiddens(batch_size, tokvecs,
+    def get_batch_model(self, docs, stream, dropout):
+        tok2vec, lower, upper = self.model
+        tokvecs, bp_tokvecs = tok2vec.begin_update(docs, drop=dropout)
+        state2vec = precompute_hiddens(len(docs), tokvecs,
                         lower, stream, drop=dropout)
-        return state2vec, upper
+        return (tokvecs, bp_tokvecs), state2vec, upper
 
     nr_feature = 8
 

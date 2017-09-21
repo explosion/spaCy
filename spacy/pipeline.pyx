@@ -299,27 +299,25 @@ class NeuralTagger(BaseThincComponent):
         self.cfg.setdefault('cnn_maxout_pieces', 2)
 
     def __call__(self, doc):
-        tags = self.predict(([doc], [doc.tensor]))
+        tags = self.predict([doc])
         self.set_annotations([doc], tags)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
             docs = list(docs)
-            tokvecs = [d.tensor for d in docs]
-            tag_ids = self.predict((docs, tokvecs))
+            tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
             yield from docs
 
-    def predict(self, docs_tokvecs):
-        scores = self.model(docs_tokvecs)
+    def predict(self, docs):
+        scores = self.model(docs)
         scores = self.model.ops.flatten(scores)
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
-        tokvecs = docs_tokvecs[1]
         guesses = self.model.ops.unflatten(guesses,
-                    [tv.shape[0] for tv in tokvecs])
+                    [len(d) for d in docs])
         return guesses
 
     def set_annotations(self, docs, batch_tag_ids):
@@ -339,20 +337,15 @@ class NeuralTagger(BaseThincComponent):
                 idx += 1
         doc.is_tagged = True
 
-    def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        docs, tokvecs = docs_tokvecs
 
-        if self.model.nI is None:
-            self.model.nI = tokvecs[0].shape[1]
-        tag_scores, bp_tag_scores = self.model.begin_update(docs_tokvecs, drop=drop)
+        tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
 
-        d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
         if losses is not None:
             losses[self.name] += loss
-        return d_tokvecs
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -399,9 +392,9 @@ class NeuralTagger(BaseThincComponent):
                                     pretrained_dims=self.vocab.vectors_length)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
+    def Model(cls, n_tags, token_vector_width, pretrained_dims=0, **cfg):
         return build_tagger_model(n_tags, token_vector_width,
-                                  pretrained_dims)
+                                  pretrained_dims, **cfg)
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -573,15 +566,10 @@ class SimilarityHook(BaseThincComponent):
             yield self(doc)
 
     def predict(self, doc1, doc2):
-        return self.model.predict([(doc1.tensor, doc2.tensor)])
+        return self.model.predict([(doc1, doc2)])
 
-    def update(self, doc1_tensor1_doc2_tensor2, golds, sgd=None, drop=0.):
-        doc1s, tensor1s, doc2s, tensor2s = doc1_tensor1_doc2_tensor2
-        sims, bp_sims = self.model.begin_update(zip(tensor1s, tensor2s),
-                                                drop=drop)
-        d_tensor1s, d_tensor2s = bp_sims(golds, sgd=sgd)
-
-        return d_tensor1s, d_tensor2s
+    def update(self, doc1_doc2, golds, sgd=None, drop=0.):
+        sims, bp_sims = self.model.begin_update(doc1_doc2, drop=drop)
 
     def begin_training(self, _=tuple(), pipeline=None):
         """
@@ -636,15 +624,13 @@ class TextCategorizer(BaseThincComponent):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
-    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
-        docs, tensors = docs_tensors
+    def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         loss, d_scores = self.get_loss(docs, golds, scores)
-        d_tensors = bp_scores(d_scores, sgd=sgd)
+        bp_scores(d_scores, sgd=sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
-        return d_tensors
 
     def get_loss(self, docs, golds, scores):
         truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
