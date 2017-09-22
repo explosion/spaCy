@@ -4,6 +4,7 @@ from thinc.neural import Model, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
+import thinc.extra.load_nlp
 import random
 import cytoolz
 
@@ -31,6 +32,7 @@ from . import util
 import numpy
 import io
 
+VECTORS_KEY = 'spacy_pretrained_vectors'
 
 @layerize
 def _flatten_add_lengths(seqs, pad=0, drop=0.):

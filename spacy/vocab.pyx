@@ -27,6 +27,7 @@ from .vectors import Vectors
 from . import util
 from . import attrs
 from . import symbols
+from ._ml import link_vectors_to_models
 
 
 cdef class Vocab:
@@ -323,6 +324,7 @@ cdef class Vocab:
             self.lexemes_from_bytes(file_.read())
         if self.vectors is not None:
             self.vectors.from_disk(path, exclude='strings.json')
+        link_vectors_to_models(self)
         return self
 
     def to_bytes(self, **exclude):
@@ -362,6 +364,7 @@ cdef class Vocab:
             ('vectors', lambda b: serialize_vectors(b))
         ))
         util.from_bytes(bytes_data, setters, exclude)
+        link_vectors_to_models(self)
         return self
 
     def lexemes_to_bytes(self):
@@ -436,6 +439,7 @@ def unpickle_vocab(sstore, morphology, data_dir,
     vocab.lex_attr_getters = lex_attr_getters
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
+    link_vectors_to_models(vocab)
     return vocab
 
 
