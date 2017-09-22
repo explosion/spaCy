@@ -40,7 +40,9 @@ p
             {
                 ORTH: u'me'}])
     assert [w.text for w in nlp(u'gimme that')] == [u'gim', u'me', u'that']
-    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'me', u'that']
+    # Pronoun lemma is returned as -PRON-
+    # More details please see: https://spacy.io/docs/usage/troubleshooting#pron-lemma
+    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'-PRON-', u'that']
 
 p
     |  The special case doesn't have to match an entire whitespace-delimited
@@ -57,7 +59,7 @@ p
 +code.
     nlp.tokenizer.add_special_case(u'...gimme...?',
         [{
-            ORTH: u'...gimme...?', LEMMA: u'give', TAG: u'VB'}])
+            ORTH: u'...gimme...?', LEMMA: u'give', POS: u'VB'}])
     assert len(nlp(u'...gimme...?')) == 1
 
 p
@@ -172,12 +174,14 @@ p
 
     prefix_re = re.compile(r'''[\[\(&quot;']''')
     suffix_re = re.compile(r'''[\]\)&quot;']''')
+    infix_re = re.compile(r'''[-~]''')
     def create_tokenizer(nlp):
-        return Tokenizer(nlp.vocab,
+        return Tokenizer(nlp.vocab, rules={},
                 prefix_search=prefix_re.search,
-                suffix_search=suffix_re.search)
+                suffix_search=suffix_re.search,
+                infix_finditer=infix_re.finditer)
 
-    nlp = spacy.load('en', tokenizer=create_make_doc)
+    nlp = spacy.load('en', create_make_doc=create_tokenizer)
 
 p
     |  If you need to subclass the tokenizer instead, the relevant methods to
