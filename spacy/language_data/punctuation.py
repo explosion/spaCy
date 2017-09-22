@@ -36,7 +36,7 @@ _HYPHENS = r"""
 
 LIST_ELLIPSES = [
     r'\.\.+',
-    "…"
+    "… ……"
 ]
 
 
