@@ -35,14 +35,14 @@ numpy.random.seed(0)
     n_iter=("number of iterations", "option", "n", int),
     n_sents=("number of sentences", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
-    resume=("Whether to resume training", "flag", "R", bool),
+    vectors=("Model to load vectors from", "option", "v"),
     no_tagger=("Don't train tagger", "flag", "T", bool),
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
 )
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
-          use_gpu=-1, resume=False, no_tagger=False, no_parser=False, no_entities=False,
+          use_gpu=-1, vectors=None, no_tagger=False, no_parser=False, no_entities=False,
           gold_preproc=False):
     """
     Train a model. Expects data in spaCy's JSON format.
@@ -78,25 +78,20 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
     n_train_words = corpus.count_train()
 
-    if not resume:
-        lang_class = util.get_lang_class(lang)
-        nlp = lang_class(pipeline=pipeline)
-        optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
-    else:
-        print("Load resume")
-        util.use_gpu(use_gpu)
-        nlp = _resume_model(lang, pipeline, corpus)
-        optimizer = nlp.resume_training(device=use_gpu)
-        lang_class = nlp.__class__
-
+    lang_class = util.get_lang_class(lang)
+    nlp = lang_class(pipeline=pipeline)
+    if vectors:
+        util.load_model(vectors, vocab=nlp.vocab)
+    optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
 
     print("Itn.\tLoss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
+        train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
+                                       gold_preproc=gold_preproc, max_length=0)
+        train_docs = list(train_docs)
         for i in range(n_iter):
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
-                train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
-                                               gold_preproc=gold_preproc, max_length=0)
                 losses = {}
                 for batch in minibatch(train_docs, size=batch_sizes):
                     docs, golds = zip(*batch)
@@ -109,8 +104,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 util.set_env_log(False)
                 epoch_model_path = output_path / ('model%d' % i)
                 nlp.to_disk(epoch_model_path)
-                #nlp_loaded = lang_class(pipeline=pipeline)
-                #nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
+                nlp_loaded = lang_class(pipeline=pipeline)
+                nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
                 scorer = nlp.evaluate(
                             corpus.dev_docs(
                                 nlp,
@@ -128,26 +123,6 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                     dill.dump(nlp, file_, -1)
         except:
             pass
-
-
-def _resume_model(lang, pipeline, corpus):
-    nlp = util.load_model(lang)
-    pipes = {getattr(pipe, 'name', None) for pipe in nlp.pipeline}
-    for name in pipeline:
-        if name not in pipes:
-            factory = nlp.Defaults.factories[name]
-            for pipe in factory(nlp):
-                if hasattr(pipe, 'begin_training'):
-                    pipe.begin_training(corpus.train_tuples,
-                                        pipeline=nlp.pipeline)
-                nlp.pipeline.append(pipe)
-    nlp.meta['pipeline'] = pipeline
-    if nlp.vocab.vectors.data.shape[1] >= 1:
-        nlp.vocab.vectors.data = Model.ops.asarray(
-                                    nlp.vocab.vectors.data)
-
-    return nlp
-
 
 def _render_parses(i, to_render):
     to_render[0].user_data['title'] = "Batch %d" % i

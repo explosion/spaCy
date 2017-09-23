@@ -43,6 +43,7 @@ from .compat import json_dumps
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten
 from ._ml import build_text_classifier, build_tagger_model
+from ._ml import link_vectors_to_models
 from .parts_of_speech import X
 
 
@@ -121,6 +122,7 @@ class BaseThincComponent(object):
         token_vector_width = pipeline[0].model.nO
         if self.model is True:
             self.model = self.Model(1, token_vector_width)
+            link_vectors_to_models(self.vocab)
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -143,8 +145,8 @@ class BaseThincComponent(object):
 
         deserialize = OrderedDict((
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
-            ('model', load_model),
             ('vocab', lambda b: self.vocab.from_bytes(b))
+            ('model', load_model),
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -152,8 +154,8 @@ class BaseThincComponent(object):
     def to_disk(self, path, **exclude):
         serialize = OrderedDict((
             ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg))),
+            ('vocab', lambda p: self.vocab.to_disk(p)),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('vocab', lambda p: self.vocab.to_disk(p))
         ))
         util.to_disk(path, serialize, exclude)
 
@@ -166,8 +168,8 @@ class BaseThincComponent(object):
 
         deserialize = OrderedDict((
             ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
-            ('model', load_model),
             ('vocab', lambda p: self.vocab.from_disk(p)),
+            ('model', load_model),
         ))
         util.from_disk(path, deserialize, exclude)
         return self
@@ -215,7 +217,7 @@ class TokenVectorEncoder(BaseThincComponent):
         self.model = model
         self.cfg = dict(cfg)
         self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault('cnn_maxout_pieces', 3)
 
     def __call__(self, doc):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
@@ -287,7 +289,9 @@ class TokenVectorEncoder(BaseThincComponent):
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
+            self.cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model = self.Model(**self.cfg)
+            link_vectors_to_models(self.vocab)
 
 
 class NeuralTagger(BaseThincComponent):
@@ -297,6 +301,7 @@ class NeuralTagger(BaseThincComponent):
         self.model = model
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
 
     def __call__(self, doc):
         tags = self.predict([doc])
@@ -388,8 +393,9 @@ class NeuralTagger(BaseThincComponent):
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
         if self.model is True:
-            self.model = self.Model(self.vocab.morphology.n_tags,
-                                    pretrained_dims=self.vocab.vectors_length)
+            self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+            self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+            link_vectors_to_models(self.vocab)
 
     @classmethod
     def Model(cls, n_tags, **cfg):
@@ -414,8 +420,7 @@ class NeuralTagger(BaseThincComponent):
             if self.model is True:
                 token_vector_width = util.env_opt('token_vector_width',
                         self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                        pretrained_dims=self.vocab.vectors_length)
+                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             self.model.from_bytes(b)
 
         def load_tag_map(b):
@@ -449,10 +454,7 @@ class NeuralTagger(BaseThincComponent):
     def from_disk(self, path, **exclude):
         def load_model(p):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width',
-                        self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                        **self.cfg)
+                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
         def load_tag_map(p):
@@ -480,6 +482,7 @@ class NeuralLabeller(NeuralTagger):
         self.model = model
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
 
     @property
     def labels(self):
@@ -502,13 +505,13 @@ class NeuralLabeller(NeuralTagger):
                         self.labels[dep] = len(self.labels)
         token_vector_width = pipeline[0].model.nO
         if self.model is True:
-            self.model = self.Model(len(self.labels), token_vector_width,
-                                    pretrained_dims=self.vocab.vectors_length)
+            self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+            self.model = self.Model(len(self.labels), **self.cfg)
+            link_vectors_to_models(self.vocab)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
-        return build_tagger_model(n_tags, token_vector_width,
-                                  pretrained_dims)
+    def Model(cls, n_tags, **cfg):
+        return build_tagger_model(n_tags, **cfg)
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -579,6 +582,7 @@ class SimilarityHook(BaseThincComponent):
         """
         if self.model is True:
             self.model = self.Model(pipeline[0].model.nO)
+            link_vectors_to_models(self.vocab)
 
 
 class TextCategorizer(BaseThincComponent):
@@ -650,6 +654,7 @@ class TextCategorizer(BaseThincComponent):
             self.cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model = self.Model(len(self.labels), token_vector_width,
                                     **self.cfg)
+            link_vectors_to_models(self.vocab)
 
 
 cdef class EntityRecognizer(LinearParser):

@@ -348,7 +348,6 @@ class Language(object):
         self._optimizer.device = device
         return self._optimizer
 
-
     def begin_training(self, get_gold_tuples=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.

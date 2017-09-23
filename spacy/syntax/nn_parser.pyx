@@ -49,6 +49,7 @@ from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
 from .._ml import Residual, drop_layer, flatten
+from .._ml import link_vectors_to_models
 from ..compat import json_dumps
 
 from . import _parse_features
@@ -310,6 +311,7 @@ cdef class Parser:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         if 'pretrained_dims' not in cfg:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+        cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
@@ -339,7 +341,7 @@ cdef class Parser:
             self.set_annotations([doc], states)
             return doc
         else:
-            beam = self.beam_parse([doc], 
+            beam = self.beam_parse([doc],
                         beam_width=beam_width, beam_density=beam_density)[0]
             output = self.moves.get_beam_annot(beam)
             state = <StateClass>beam.at(0)
@@ -754,6 +756,7 @@ cdef class Parser:
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
+            link_vectors_to_models(self.vocab)
             self.cfg.update(cfg)
 
     def preprocess_gold(self, docs_golds):
@@ -835,8 +838,7 @@ cdef class Parser:
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if self.model is True:
-                self.model, cfg = self.Model(self.moves.n_moves,
-                                    pretrained_dims=self.vocab.vectors_length)
+                self.model, cfg = self.Model(**self.cfg)
                 cfg['pretrained_dims'] = self.vocab.vectors_length
             else:
                 cfg = {}
