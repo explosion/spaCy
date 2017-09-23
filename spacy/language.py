@@ -34,6 +34,7 @@ from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS
 from . import util
 from .scorer import Scorer
+from ._ml import link_vectors_to_models
 
 
 class BaseDefaults(object):
@@ -370,6 +371,7 @@ class Language(object):
                     self.vocab.vectors.data)
         else:
             device = None
+        link_vectors_to_models(self.vocab)
         for proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
                 context = proc.begin_training(get_gold_tuples(),
