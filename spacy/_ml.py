@@ -270,7 +270,7 @@ def Tok2Vec(width, embed_size, **kwargs):
         tok2vec = (
             FeatureExtracter(cols)
             >> with_flatten(
-                embed >> (convolution * 4), pad=4)
+                embed >> (convolution ** 4), pad=4)
         )
 
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
