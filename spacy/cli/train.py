@@ -11,6 +11,8 @@ import tqdm
 from thinc.neural._classes.model import Model
 from thinc.neural.optimizers import linear_decay
 from timeit import default_timer as timer
+import random
+import numpy.random
 
 from ..tokens.doc import Doc
 from ..scorer import Scorer
@@ -20,6 +22,9 @@ from ..util import prints
 from .. import util
 from .. import displacy
 from ..compat import json_dumps
+
+random.seed(0)
+numpy.random.seed(0)
 
 
 @plac.annotations(
