@@ -370,6 +370,7 @@ cdef class Parser:
             docs = list(docs)
             if beam_width == 1:
                 parse_states = self.parse_batch(docs)
+                beams = []
             else:
                 beams = self.beam_parse(docs,
                             beam_width=beam_width, beam_density=beam_density)
