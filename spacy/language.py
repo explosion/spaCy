@@ -491,7 +491,6 @@ class Language(object):
         """
         path = util.ensure_path(path)
         serializers = OrderedDict((
-            ('vocab', lambda p: self.vocab.to_disk(p)),
             ('tokenizer', lambda p: self.tokenizer.to_disk(p, vocab=False)),
             ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
         ))
@@ -503,6 +502,7 @@ class Language(object):
             if not hasattr(proc, 'to_disk'):
                 continue
             serializers[proc.name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+        serializers['vocab'] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, {p: False for p in disable})
 
     def from_disk(self, path, disable=tuple()):
