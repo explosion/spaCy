@@ -146,6 +146,8 @@ cdef class Morphology:
                 self.add_special_case(tag_str, form_str, attrs)
 
     def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
+        if orth not in self.strings:
+            return orth
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
             return self.strings.add(py_string.lower())
