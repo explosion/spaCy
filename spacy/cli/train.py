@@ -105,10 +105,10 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = lang_class(pipeline=pipeline)
                 nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
-                scorer = nlp.evaluate(
-                            corpus.dev_docs(
-                                nlp,
-                                gold_preproc=gold_preproc))
+                scorer = nlp_loaded.evaluate(
+                            list(corpus.dev_docs(
+                                nlp_loaded,
+                                gold_preproc=gold_preproc)))
                 acc_loc =(output_path / ('model%d' % i) / 'accuracy.json')
                 with acc_loc.open('w') as file_:
                     file_.write(json_dumps(scorer.scores))
