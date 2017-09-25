@@ -87,8 +87,8 @@ p
     |  algorithm in Python, optimized for readability rather than performance:
 
 +code.
-    def tokenizer_pseudo_code(text, find_prefix, find_suffix,
-                              find_infixes, special_cases):
+    def tokenizer_pseudo_code(text, special_cases,
+                              find_prefix, find_suffix, find_infixes):
         tokens = []
         for substring in text.split(' '):
             suffixes = []
@@ -140,7 +140,7 @@ p
 
 p
     |  Let's imagine you wanted to create a tokenizer for a new language. There
-    |  are four things you would need to define:
+    |  are five things you would need to define:
 
 +list("numbers")
     +item
@@ -162,6 +162,11 @@ p
         |  A function #[code infixes_finditer], to handle non-whitespace
         |  separators, such as hyphens etc.
 
+    +item
+        |  (Optional) A boolean function #[code token_match] matching strings
+        |  that should never be split, overriding the previous rules.
+        |  Useful for things like URLs or numbers.
+
 p
     |  You shouldn't usually need to create a #[code Tokenizer] subclass.
     |  Standard usage is to use #[code re.compile()] to build a regular
@@ -175,11 +180,15 @@ p
     prefix_re = re.compile(r'''[\[\(&quot;']''')
     suffix_re = re.compile(r'''[\]\)&quot;']''')
     infix_re = re.compile(r'''[-~]''')
+    simple_url_re = re.compile(r'''^https?://''')
     def create_tokenizer(nlp):
-        return Tokenizer(nlp.vocab, rules={},
+        return Tokenizer(nlp.vocab,
+                rules={},
                 prefix_search=prefix_re.search,
                 suffix_search=suffix_re.search,
-                infix_finditer=infix_re.finditer)
+                infix_finditer=infix_re.finditer,
+                token_match=simple_url_re.match
+                )
 
     nlp = spacy.load('en', create_make_doc=create_tokenizer)
 
