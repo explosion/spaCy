@@ -88,17 +88,30 @@ class BaseThincComponent(object):
 
     @classmethod
     def Model(cls, *shape, **kwargs):
+        '''Initialize a model for the pipe.'''
         raise NotImplementedError
 
     def __init__(self, vocab, model=True, **cfg):
+        '''Create a new pipe instance.'''
         raise NotImplementedError
 
     def __call__(self, doc):
+        '''Apply the pipe to one document. The document is
+        modified in-place, and returned.
+        
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        '''
         scores = self.predict([doc])
         self.set_annotations([doc], scores)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
+        '''Apply the pipe to a stream of documents.
+
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        '''
         for docs in cytoolz.partition_all(batch_size, stream):
             docs = list(docs)
             scores = self.predict(docs)
@@ -106,27 +119,42 @@ class BaseThincComponent(object):
             yield from docs
 
     def predict(self, docs):
+        '''Apply the pipeline's model to a batch of docs, without
+        modifying them.
+        '''
         raise NotImplementedError
 
     def set_annotations(self, docs, scores):
+        '''Modify a batch of documents, using pre-computed scores.'''
         raise NotImplementedError
 
-    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        '''Learn from a batch of documents and gold-standard information,
+        updating the pipe's model.
+
+        Delegates to predict() and get_loss().
+        '''
         raise NotImplementedError
 
     def get_loss(self, docs, golds, scores):
+        '''Find the loss and gradient of loss for the batch of
+        documents and their predicted scores.'''
         raise NotImplementedError
 
     def begin_training(self, gold_tuples=tuple(), pipeline=None):
-        token_vector_width = pipeline[0].model.nO
+        '''Initialize the pipe for training, using data exampes if available.
+        If no model has been initialized yet, the model is added.'''
         if self.model is True:
-            self.model = self.Model(1, token_vector_width)
+            self.model = self.Model(**self.cfg)
 
     def use_params(self, params):
+        '''Modify the pipe's model, to use the given parameter values.
+        '''
         with self.model.use_params(params):
             yield
 
     def to_bytes(self, **exclude):
+        '''Serialize the pipe to a bytestring.'''
         serialize = OrderedDict((
             ('cfg', lambda: json_dumps(self.cfg)),
             ('model', lambda: self.model.to_bytes()),
@@ -135,6 +163,7 @@ class BaseThincComponent(object):
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
+        '''Load the pipe from a bytestring.'''
         def load_model(b):
             if self.model is True:
                 self.cfg['pretrained_dims'] = self.vocab.vectors_length
@@ -150,6 +179,7 @@ class BaseThincComponent(object):
         return self
 
     def to_disk(self, path, **exclude):
+        '''Serialize the pipe to disk.'''
         serialize = OrderedDict((
             ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg))),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
@@ -158,6 +188,7 @@ class BaseThincComponent(object):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, **exclude):
+        '''Load the pipe from disk.'''
         def load_model(p):
             if self.model is True:
                 self.cfg['pretrained_dims'] = self.vocab.vectors_length
