@@ -8,6 +8,7 @@ import cytoolz
 from pathlib import Path
 import dill
 import tqdm
+from thinc.neural._classes.model import Model
 from thinc.neural.optimizers import linear_decay
 from timeit import default_timer as timer
 
@@ -17,6 +18,7 @@ from ..gold import GoldParse, merge_sents
 from ..gold import GoldCorpus, minibatch
 from ..util import prints
 from .. import util
+from .. import about
 from .. import displacy
 from ..compat import json_dumps
 
@@ -29,15 +31,16 @@ from ..compat import json_dumps
     n_iter=("number of iterations", "option", "n", int),
     n_sents=("number of sentences", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
-    resume=("Whether to resume training", "flag", "R", bool),
+    vectors=("Model to load vectors from", "option", "v"),
     no_tagger=("Don't train tagger", "flag", "T", bool),
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
+    meta_path=("Optional path to meta.json. All relevant properties will be overwritten.", "option", "m", Path)
 )
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
-          use_gpu=-1, resume=False, no_tagger=False, no_parser=False, no_entities=False,
-          gold_preproc=False):
+          use_gpu=-1, vectors=None, no_tagger=False, no_parser=False, no_entities=False,
+          gold_preproc=False, meta_path=None):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
@@ -46,13 +49,19 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     output_path = util.ensure_path(output_dir)
     train_path = util.ensure_path(train_data)
     dev_path = util.ensure_path(dev_data)
+    meta_path = util.ensure_path(meta_path)
     if not output_path.exists():
         output_path.mkdir()
     if not train_path.exists():
         prints(train_path, title="Training data not found", exits=1)
     if dev_path and not dev_path.exists():
         prints(dev_path, title="Development data not found", exits=1)
-
+    if meta_path is not None and not meta_path.exists():
+        prints(meta_path, title="meta.json not found", exits=1)
+    meta = util.read_json(meta_path) if meta_path else {}
+    if not isinstance(meta, dict):
+        prints("Expected dict but got: {}".format(type(meta)),
+               title="Not a valid meta.json format", exits=1)
 
     pipeline = ['token_vectors', 'tags', 'dependencies', 'entities']
     if no_tagger and 'tags' in pipeline: pipeline.remove('tags')
@@ -69,26 +78,23 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
                                    util.env_opt('batch_to', 64),
                                    util.env_opt('batch_compound', 1.001))
-
-    if not resume:
-        lang_class = util.get_lang_class(lang)
-        nlp = lang_class(pipeline=pipeline)
-    else:
-        print("Load resume")
-        nlp = _resume_model(lang, pipeline)
-        lang_class = nlp.__class__
-
     corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
     n_train_words = corpus.count_train()
+
+    lang_class = util.get_lang_class(lang)
+    nlp = lang_class(pipeline=pipeline)
+    if vectors:
+        util.load_model(vectors, vocab=nlp.vocab)
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
 
     print("Itn.\tLoss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
+        train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
+                                       gold_preproc=gold_preproc, max_length=0)
+        train_docs = list(train_docs)
         for i in range(n_iter):
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
-                train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
-                                               gold_preproc=gold_preproc, max_length=0)
                 losses = {}
                 for batch in minibatch(train_docs, size=batch_sizes):
                     docs, golds = zip(*batch)
@@ -103,32 +109,30 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = lang_class(pipeline=pipeline)
                 nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
-                scorer = nlp_loaded.evaluate(
+                scorer = nlp.evaluate(
                             corpus.dev_docs(
-                                nlp_loaded,
+                                nlp,
                                 gold_preproc=gold_preproc))
-                acc_loc =(output_path / ('model%d' % i) / 'accuracy.json')
-                with acc_loc.open('w') as file_:
-                    file_.write(json_dumps(scorer.scores))
+                meta_loc = output_path / ('model%d' % i) / 'meta.json'
+                meta['accuracy'] = scorer.scores
+                meta['lang'] = nlp.lang
+                meta['pipeline'] = pipeline
+                meta['spacy_version'] = '>=%s' % about.__version__
+                meta.setdefault('name', 'model%d' % i)
+                meta.setdefault('version', '0.0.0')
+
+                with meta_loc.open('w') as file_:
+                    file_.write(json_dumps(meta))
                 util.set_env_log(True)
             print_progress(i, losses, scorer.scores)
     finally:
         print("Saving model...")
-        with (output_path / 'model-final.pickle').open('wb') as file_:
-            with nlp.use_params(optimizer.averages):
-                dill.dump(nlp, file_, -1)
-
-
-def _resume_model(lang, pipeline):
-    nlp = util.load_model(lang)
-    pipes = {getattr(pipe, 'name', None) for pipe in nlp.pipeline}
-    for name in pipeline:
-        if name not in pipes:
-            factory = nlp.Defaults.factories[name]
-            nlp.pipeline.extend(factory(nlp))
-    nlp.meta['pipeline'] = pipeline
-    return nlp
-
+        try:
+            with (output_path / 'model-final.pickle').open('wb') as file_:
+                with nlp.use_params(optimizer.averages):
+                    dill.dump(nlp, file_, -1)
+        except:
+            pass
 
 def _render_parses(i, to_render):
     to_render[0].user_data['title'] = "Batch %d" % i

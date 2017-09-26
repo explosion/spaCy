@@ -43,11 +43,12 @@ from .compat import json_dumps
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten
 from ._ml import build_text_classifier, build_tagger_model
+from ._ml import link_vectors_to_models
 from .parts_of_speech import X
 
 
 class SentenceSegmenter(object):
-    '''A simple spaCy hook, to allow custom sentence boundary detection logic
+    """A simple spaCy hook, to allow custom sentence boundary detection logic
     (that doesn't require the dependency parse).
 
     To change the sentence boundary detection strategy, pass a generator
@@ -56,7 +57,7 @@ class SentenceSegmenter(object):
 
     Sentence detection strategies should be generators that take `Doc` objects
     and yield `Span` objects for each sentence.
-    '''
+    """
     name = 'sbd'
 
     def __init__(self, vocab, strategy=None):
@@ -88,17 +89,30 @@ class BaseThincComponent(object):
 
     @classmethod
     def Model(cls, *shape, **kwargs):
+        """Initialize a model for the pipe."""
         raise NotImplementedError
 
     def __init__(self, vocab, model=True, **cfg):
+        """Create a new pipe instance."""
         raise NotImplementedError
 
     def __call__(self, doc):
+        """Apply the pipe to one document. The document is
+        modified in-place, and returned.
+
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        """
         scores = self.predict([doc])
         self.set_annotations([doc], scores)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
+        """Apply the pipe to a stream of documents.
+
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        """
         for docs in cytoolz.partition_all(batch_size, stream):
             docs = list(docs)
             scores = self.predict(docs)
@@ -106,27 +120,43 @@ class BaseThincComponent(object):
             yield from docs
 
     def predict(self, docs):
+        """Apply the pipeline's model to a batch of docs, without
+        modifying them.
+        """
         raise NotImplementedError
 
     def set_annotations(self, docs, scores):
+        """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
 
-    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model.
+
+        Delegates to predict() and get_loss().
+        """
         raise NotImplementedError
 
     def get_loss(self, docs, golds, scores):
+        """Find the loss and gradient of loss for the batch of
+        documents and their predicted scores."""
         raise NotImplementedError
 
     def begin_training(self, gold_tuples=tuple(), pipeline=None):
-        token_vector_width = pipeline[0].model.nO
+        """Initialize the pipe for training, using data exampes if available.
+        If no model has been initialized yet, the model is added."""
         if self.model is True:
-            self.model = self.Model(1, token_vector_width)
+            self.model = self.Model(**self.cfg)
+        link_vectors_to_models(self.vocab)
 
     def use_params(self, params):
+        """Modify the pipe's model, to use the given parameter values.
+        """
         with self.model.use_params(params):
             yield
 
     def to_bytes(self, **exclude):
+        """Serialize the pipe to a bytestring."""
         serialize = OrderedDict((
             ('cfg', lambda: json_dumps(self.cfg)),
             ('model', lambda: self.model.to_bytes()),
@@ -135,6 +165,7 @@ class BaseThincComponent(object):
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
+        """Load the pipe from a bytestring."""
         def load_model(b):
             if self.model is True:
                 self.cfg['pretrained_dims'] = self.vocab.vectors_length
@@ -143,21 +174,23 @@ class BaseThincComponent(object):
 
         deserialize = OrderedDict((
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
-            ('model', load_model),
             ('vocab', lambda b: self.vocab.from_bytes(b))
+            ('model', load_model),
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(self, path, **exclude):
+        """Serialize the pipe to disk."""
         serialize = OrderedDict((
             ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg))),
+            ('vocab', lambda p: self.vocab.to_disk(p)),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('vocab', lambda p: self.vocab.to_disk(p))
         ))
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, **exclude):
+        """Load the pipe from disk."""
         def load_model(p):
             if self.model is True:
                 self.cfg['pretrained_dims'] = self.vocab.vectors_length
@@ -166,8 +199,8 @@ class BaseThincComponent(object):
 
         deserialize = OrderedDict((
             ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
-            ('model', load_model),
             ('vocab', lambda p: self.vocab.from_disk(p)),
+            ('model', load_model),
         ))
         util.from_disk(path, deserialize, exclude)
         return self
@@ -215,6 +248,7 @@ class TokenVectorEncoder(BaseThincComponent):
         self.model = model
         self.cfg = dict(cfg)
         self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+        self.cfg.setdefault('cnn_maxout_pieces', 3)
 
     def __call__(self, doc):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
@@ -286,9 +320,9 @@ class TokenVectorEncoder(BaseThincComponent):
         pipeline (list): The pipeline the model is part of.
         """
         if self.model is True:
-            self.model = self.Model(
-                pretrained_dims=self.vocab.vectors_length,
-                **self.cfg)
+            self.cfg['pretrained_dims'] = self.vocab.vectors_length
+            self.model = self.Model(**self.cfg)
+            link_vectors_to_models(self.vocab)
 
 
 class NeuralTagger(BaseThincComponent):
@@ -297,6 +331,8 @@ class NeuralTagger(BaseThincComponent):
         self.vocab = vocab
         self.model = model
         self.cfg = dict(cfg)
+        self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
 
     def __call__(self, doc):
         tags = self.predict(([doc], [doc.tensor]))
@@ -393,15 +429,14 @@ class NeuralTagger(BaseThincComponent):
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
-        token_vector_width = pipeline[0].model.nO
         if self.model is True:
-            self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                    pretrained_dims=self.vocab.vectors_length)
+            self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+            self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+            link_vectors_to_models(self.vocab)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
-        return build_tagger_model(n_tags, token_vector_width,
-                                  pretrained_dims)
+    def Model(cls, n_tags, **cfg):
+        return build_tagger_model(n_tags, **cfg)
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -422,8 +457,7 @@ class NeuralTagger(BaseThincComponent):
             if self.model is True:
                 token_vector_width = util.env_opt('token_vector_width',
                         self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                        pretrained_dims=self.vocab.vectors_length)
+                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             self.model.from_bytes(b)
 
         def load_tag_map(b):
@@ -442,6 +476,7 @@ class NeuralTagger(BaseThincComponent):
         return self
 
     def to_disk(self, path, **exclude):
+        self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
             ('tag_map', lambda p: p.open('wb').write(msgpack.dumps(
@@ -456,10 +491,7 @@ class NeuralTagger(BaseThincComponent):
     def from_disk(self, path, **exclude):
         def load_model(p):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width',
-                        self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width,
-                                        **self.cfg)
+                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
         def load_tag_map(p):
@@ -486,6 +518,8 @@ class NeuralLabeller(NeuralTagger):
         self.vocab = vocab
         self.model = model
         self.cfg = dict(cfg)
+        self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
 
     @property
     def labels(self):
@@ -508,13 +542,13 @@ class NeuralLabeller(NeuralTagger):
                         self.labels[dep] = len(self.labels)
         token_vector_width = pipeline[0].model.nO
         if self.model is True:
-            self.model = self.Model(len(self.labels), token_vector_width,
-                                    pretrained_dims=self.vocab.vectors_length)
+            self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+            self.model = self.Model(len(self.labels), **self.cfg)
+            link_vectors_to_models(self.vocab)
 
     @classmethod
-    def Model(cls, n_tags, token_vector_width, pretrained_dims=0):
-        return build_tagger_model(n_tags, token_vector_width,
-                                  pretrained_dims)
+    def Model(cls, n_tags, **cfg):
+        return build_tagger_model(n_tags, **cfg)
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -562,7 +596,7 @@ class SimilarityHook(BaseThincComponent):
         return Siamese(Pooling(max_pool, mean_pool), CauchySimilarity(length))
 
     def __call__(self, doc):
-        '''Install similarity hook'''
+        """Install similarity hook"""
         doc.user_hooks['similarity'] = self.predict
         return doc
 
@@ -590,6 +624,7 @@ class SimilarityHook(BaseThincComponent):
         """
         if self.model is True:
             self.model = self.Model(pipeline[0].model.nO)
+            link_vectors_to_models(self.vocab)
 
 
 class TextCategorizer(BaseThincComponent):
@@ -663,6 +698,7 @@ class TextCategorizer(BaseThincComponent):
             self.cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model = self.Model(len(self.labels), token_vector_width,
                                     **self.cfg)
+            link_vectors_to_models(self.vocab)
 
 
 cdef class EntityRecognizer(LinearParser):

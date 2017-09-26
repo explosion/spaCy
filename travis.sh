@@ -17,7 +17,7 @@ fi
 
 if [ "${VIA}" == "compile" ]; then
   pip install -r requirements.txt
-  python setup.py build_ext --inplace
+  python setup.py clean --all
   pip install -e .
 fi
 

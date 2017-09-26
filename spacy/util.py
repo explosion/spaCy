@@ -14,6 +14,7 @@ import numpy
 import io
 import dill
 from collections import OrderedDict
+from thinc.neural._classes.model import Model
 
 import msgpack
 import msgpack_numpy
@@ -557,3 +558,14 @@ def minify_html(html):
     RETURNS (unicode): "Minified" HTML.
     """
     return html.strip().replace('    ', '').replace('\n', '')
+
+
+def use_gpu(gpu_id):
+    import cupy.cuda.device
+    from thinc.neural.ops import CupyOps
+    device = cupy.cuda.device.Device(gpu_id)
+    device.use()
+    Model.ops = CupyOps()
+    Model.Ops = CupyOps
+    return device
+
