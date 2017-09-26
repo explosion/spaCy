@@ -19,6 +19,10 @@ miljardste biljoenste biljardste triljoenste triljardste
 
 
 def like_num(text):
+    # This only does the most basic check for whether a token is a digit
+    # or matches one of the number words. In order to handle numbers like
+    # "drieëntwintig", more work is required.
+    # See this discussion: https://github.com/explosion/spaCy/pull/1177
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True
