@@ -34,7 +34,6 @@ def test_matcher_from_api_docs(en_vocab):
     assert len(patterns[0])
 
 
-@pytest.mark.xfail
 def test_matcher_from_usage_docs(en_vocab):
     text = "Wow 😀 This is really cool! 😂 😂"
     doc = get_doc(en_vocab, words=text.split(' '))
@@ -46,7 +45,8 @@ def test_matcher_from_usage_docs(en_vocab):
         if doc.vocab.strings[match_id] == 'HAPPY':
             doc.sentiment += 0.1
         span = doc[start : end]
-        token = span.merge(norm='happy emoji')
+        token = span.merge()
+        token.vocab[token.text].norm_ = 'happy emoji'
 
     matcher = Matcher(en_vocab)
     matcher.add('HAPPY', label_sentiment, *pos_patterns)
@@ -98,11 +98,11 @@ def test_matcher_match_multi(matcher):
                             (doc.vocab.strings['Java'], 5, 6)]
 
 
-@pytest.mark.xfail
 def test_matcher_phrase_matcher(en_vocab):
     words = ["Google", "Now"]
     doc = get_doc(en_vocab, words)
-    matcher = PhraseMatcher(en_vocab, [doc])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add('COMPANY', None, doc)
     words = ["I", "like", "Google", "Now", "best"]
     doc = get_doc(en_vocab, words)
     assert len(matcher(doc)) == 1
