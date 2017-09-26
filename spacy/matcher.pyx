@@ -436,11 +436,11 @@ cdef class PhraseMatcher:
             abstract_patterns.append([{tag: True} for tag in get_bilou(length)])
         self.matcher.add('Candidate', None, *abstract_patterns)
         self._callbacks = {}
-        
+
     def __len__(self):
         raise NotImplementedError
-        
-    def __contains__(self):
+
+    def __contains__(self, key):
         raise NotImplementedError
 
     def __reduce__(self):
