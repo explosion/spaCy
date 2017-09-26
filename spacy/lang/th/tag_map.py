@@ -2,7 +2,7 @@
 # data from Korakot Chaovavanich (https://www.facebook.com/photo.php?fbid=390564854695031&set=p.390564854695031&type=3&permPage=1&ifg=1)
 from __future__ import unicode_literals
 
-from ..symbols import *
+from ...symbols import *
 
 TAG_MAP = {
     #NOUN
