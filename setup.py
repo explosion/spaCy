@@ -195,7 +195,7 @@ def setup_package():
                 'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.8.1,<6.9.0',
+                'thinc>=6.8.2,<6.9.0',
                 'plac<1.0.0,>=0.9.6',
                 'six',
                 'pathlib',
