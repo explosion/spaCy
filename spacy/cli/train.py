@@ -41,11 +41,12 @@ numpy.random.seed(0)
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
+    version=("Model version", "option", "v", str),
     meta_path=("Optional path to meta.json. All relevant properties will be overwritten.", "option", "m", Path)
 )
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
           use_gpu=-1, vectors=None, no_tagger=False, no_parser=False, no_entities=False,
-          gold_preproc=False, meta_path=None):
+          gold_preproc=False, version="0.0.0", meta_path=None):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
@@ -126,7 +127,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 meta['pipeline'] = pipeline
                 meta['spacy_version'] = '>=%s' % about.__version__
                 meta.setdefault('name', 'model%d' % i)
-                meta.setdefault('version', '0.0.0')
+                meta.setdefault('version', version)
 
                 with meta_loc.open('w') as file_:
                     file_.write(json_dumps(meta))
