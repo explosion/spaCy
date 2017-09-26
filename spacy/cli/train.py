@@ -41,7 +41,7 @@ numpy.random.seed(0)
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
-    version=("Model version", "option", "v", str),
+    version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json. All relevant properties will be overwritten.", "option", "m", Path)
 )
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
