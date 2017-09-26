@@ -439,6 +439,9 @@ cdef class PhraseMatcher:
         
     def __len__(self):
         raise NotImplementedError
+        
+    def __contains__(self):
+        raise NotImplementedError
 
     def __reduce__(self):
         return (self.__class__, (self.vocab,), None, None)
