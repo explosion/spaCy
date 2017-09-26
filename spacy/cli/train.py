@@ -130,7 +130,6 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
 
                 with meta_loc.open('w') as file_:
                     file_.write(json_dumps(meta))
->>>>>>> origin/develop
                 util.set_env_log(True)
             print_progress(i, losses, scorer.scores)
     finally:
