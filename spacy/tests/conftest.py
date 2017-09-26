@@ -110,6 +110,7 @@ def nb_tokenizer():
 
 @pytest.fixture
 def th_tokenizer():
+    pythainlp = pytest.importorskip("pythainlp")
     return util.get_lang_class('th').Defaults.create_tokenizer()
 
 
