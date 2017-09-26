@@ -17,6 +17,7 @@ fi
 
 if [ "${VIA}" == "compile" ]; then
   pip install -r requirements.txt
+  export PYTHONPATH=`pwd`
   python setup.py build_ext --inplace
   pip install -e .
 fi
