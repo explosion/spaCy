@@ -6,7 +6,7 @@ from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ..tokens import Doc
+from ...tokens import Doc
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
