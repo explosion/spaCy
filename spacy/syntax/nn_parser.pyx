@@ -419,21 +419,23 @@ cdef class Parser:
         c_token_ids = <int*>token_ids.data
         c_is_valid = <int*>is_valid.data
         cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
+        cdef int nr_step
         while not next_step.empty():
+            nr_step = next_step.size()
             if not has_hidden:
-                for i in cython.parallel.prange(
-                        next_step.size(), num_threads=6, nogil=True):
+                for i in cython.parallel.prange(nr_step, num_threads=6,
+                                                nogil=True):
                     self._parse_step(next_step[i],
                         feat_weights, nr_class, nr_feat, nr_piece)
             else:
-                for i in range(next_step.size()):
+                for i in range(nr_step):
                     st = next_step[i]
                     st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
                     self.moves.set_valid(&c_is_valid[i*nr_class], st)
                 vectors = state2vec(token_ids[:next_step.size()])
                 scores = vec2scores(vectors)
                 c_scores = <float*>scores.data
-                for i in range(next_step.size()):
+                for i in range(nr_step):
                     st = next_step[i]
                     guess = arg_max_if_valid(
                         &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
