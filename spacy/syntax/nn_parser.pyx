@@ -318,6 +318,7 @@ cdef class Parser:
                 for label in labels:
                     self.moves.add_action(action, label)
         self.model = model
+        self._multitasks = []
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
@@ -419,7 +420,7 @@ cdef class Parser:
         cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
             if not has_hidden:
-                for i in range(
+                for i in cython.parallel.prange(
                         next_step.size(), num_threads=6, nogil=True):
                     self._parse_step(next_step[i],
                         feat_weights, nr_class, nr_feat, nr_piece)
@@ -745,7 +746,7 @@ cdef class Parser:
                 # order, or the model goes out of synch
                 self.cfg.setdefault('extra_labels', []).append(label)
 
-    def begin_training(self, gold_tuples, **cfg):
+    def begin_training(self, gold_tuples, pipeline=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
         gold_tuples = nonproj.preprocess_training_data(gold_tuples)
@@ -756,8 +757,19 @@ cdef class Parser:
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
+            self.init_multitask_objectives(gold_tuples, pipeline, **cfg)
             link_vectors_to_models(self.vocab)
             self.cfg.update(cfg)
+
+    def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
+        '''Setup models for secondary objectives, to benefit from multi-task
+        learning. This method is intended to be overridden by subclasses.
+
+        For instance, the dependency parser can benefit from sharing
+        an input representation with a label prediction model. These auxiliary
+        models are discarded after training.
+        '''
+        pass
 
     def preprocess_gold(self, docs_golds):
         for doc, gold in docs_golds:
