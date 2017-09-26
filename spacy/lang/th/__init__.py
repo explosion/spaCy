@@ -12,7 +12,6 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
-
 class ThaiDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: 'th'
