@@ -7,6 +7,7 @@ from __future__ import unicode_literals, print_function
 
 from collections import Counter, OrderedDict
 import ujson
+import json
 import contextlib
 
 from libc.math cimport exp
@@ -829,7 +830,7 @@ cdef class Parser:
             ('upper_model', lambda: self.model[2].to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes()),
             ('moves', lambda: self.moves.to_bytes(strings=False)),
-            ('cfg', lambda: ujson.dumps(self.cfg))
+            ('cfg', lambda: json.dumps(self.cfg, indent=2, sort_keys=True))
         ))
         if 'model' in exclude:
             exclude['tok2vec_model'] = True
@@ -842,7 +843,7 @@ cdef class Parser:
         deserializers = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
-            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('cfg', lambda b: self.cfg.update(json.loads(b))),
             ('tok2vec_model', lambda b: None),
             ('lower_model', lambda b: None),
             ('upper_model', lambda b: None)
