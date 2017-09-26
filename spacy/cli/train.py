@@ -11,6 +11,8 @@ import tqdm
 from thinc.neural._classes.model import Model
 from thinc.neural.optimizers import linear_decay
 from timeit import default_timer as timer
+import random
+import numpy.random
 
 from ..tokens.doc import Doc
 from ..scorer import Scorer
@@ -21,6 +23,9 @@ from .. import util
 from .. import about
 from .. import displacy
 from ..compat import json_dumps
+
+random.seed(0)
+numpy.random.seed(0)
 
 
 @plac.annotations(
@@ -63,7 +68,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
         prints("Expected dict but got: {}".format(type(meta)),
                title="Not a valid meta.json format", exits=1)
 
-    pipeline = ['token_vectors', 'tags', 'dependencies', 'entities']
+    pipeline = ['tags', 'dependencies', 'entities']
     if no_tagger and 'tags' in pipeline: pipeline.remove('tags')
     if no_parser and 'dependencies' in pipeline: pipeline.remove('dependencies')
     if no_entities and 'entities' in pipeline: pipeline.remove('entities')
@@ -99,8 +104,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 for batch in minibatch(train_docs, size=batch_sizes):
                     docs, golds = zip(*batch)
                     nlp.update(docs, golds, sgd=optimizer,
-                               drop=next(dropout_rates), losses=losses,
-                               update_shared=True)
+                               drop=next(dropout_rates), losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
 
             with nlp.use_params(optimizer.averages):
@@ -109,10 +113,13 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = lang_class(pipeline=pipeline)
                 nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
-                scorer = nlp.evaluate(
-                            corpus.dev_docs(
-                                nlp,
-                                gold_preproc=gold_preproc))
+                scorer = nlp_loaded.evaluate(
+                            list(corpus.dev_docs(
+                                nlp_loaded,
+                                gold_preproc=gold_preproc)))
+                acc_loc =(output_path / ('model%d' % i) / 'accuracy.json')
+                with acc_loc.open('w') as file_:
+                    file_.write(json_dumps(scorer.scores))
                 meta_loc = output_path / ('model%d' % i) / 'meta.json'
                 meta['accuracy'] = scorer.scores
                 meta['lang'] = nlp.lang

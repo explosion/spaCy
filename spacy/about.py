@@ -3,12 +3,13 @@
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
 __title__ = 'spacy-nightly'
-__version__ = '2.0.0a14'
+__version__ = '2.0.0a15'
 __summary__ = 'Industrial-strength Natural Language Processing (NLP) with Python and Cython'
 __uri__ = 'https://spacy.io'
 __author__ = 'Explosion AI'
 __email__ = 'contact@explosion.ai'
 __license__ = 'MIT'
+__release__ = False
 
 __docs_models__ = 'https://spacy.io/docs/usage/models'
 __download_url__ = 'https://github.com/explosion/spacy-models/releases/download'

@@ -13,6 +13,7 @@ cdef class Parser:
     cdef public object model
     cdef readonly TransitionSystem moves
     cdef readonly object cfg
+    cdef public object _multitasks
 
     cdef void _parse_step(self, StateC* state,
             const float* feat_weights,
