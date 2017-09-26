@@ -279,8 +279,7 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None,
-            update_shared=False):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
