@@ -174,7 +174,7 @@ class BaseThincComponent(object):
 
         deserialize = OrderedDict((
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
-            ('vocab', lambda b: self.vocab.from_bytes(b))
+            ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('model', load_model),
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -322,7 +322,7 @@ class TokenVectorEncoder(BaseThincComponent):
         if self.model is True:
             self.cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model = self.Model(**self.cfg)
-            link_vectors_to_models(self.vocab)
+        link_vectors_to_models(self.vocab)
 
 
 class NeuralTagger(BaseThincComponent):
@@ -335,27 +335,25 @@ class NeuralTagger(BaseThincComponent):
         self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
 
     def __call__(self, doc):
-        tags = self.predict(([doc], [doc.tensor]))
+        tags = self.predict([doc])
         self.set_annotations([doc], tags)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
             docs = list(docs)
-            tokvecs = [d.tensor for d in docs]
-            tag_ids = self.predict((docs, tokvecs))
+            tag_ids = self.predict(docs)
             self.set_annotations(docs, tag_ids)
             yield from docs
 
-    def predict(self, docs_tokvecs):
-        scores = self.model(docs_tokvecs)
+    def predict(self, docs):
+        scores = self.model(docs)
         scores = self.model.ops.flatten(scores)
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
-        tokvecs = docs_tokvecs[1]
         guesses = self.model.ops.unflatten(guesses,
-                    [tv.shape[0] for tv in tokvecs])
+                    [len(d) for d in docs])
         return guesses
 
     def set_annotations(self, docs, batch_tag_ids):
@@ -375,20 +373,16 @@ class NeuralTagger(BaseThincComponent):
                 idx += 1
         doc.is_tagged = True
 
-    def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
-        docs, tokvecs = docs_tokvecs
 
-        if self.model.nI is None:
-            self.model.nI = tokvecs[0].shape[1]
-        tag_scores, bp_tag_scores = self.model.begin_update(docs_tokvecs, drop=drop)
+        tag_scores, bp_tag_scores = self.model.begin_update(docs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
+        bp_tag_scores(d_tag_scores, sgd=sgd)
 
-        d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
         if losses is not None:
             losses[self.name] += loss
-        return d_tokvecs
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -432,7 +426,7 @@ class NeuralTagger(BaseThincComponent):
         if self.model is True:
             self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
-            link_vectors_to_models(self.vocab)
+        link_vectors_to_models(self.vocab)
 
     @classmethod
     def Model(cls, n_tags, **cfg):
@@ -514,9 +508,25 @@ class NeuralTagger(BaseThincComponent):
 
 class NeuralLabeller(NeuralTagger):
     name = 'nn_labeller'
-    def __init__(self, vocab, model=True, **cfg):
+    def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
         self.vocab = vocab
         self.model = model
+        if target == 'dep':
+            self.make_label = self.make_dep
+        elif target == 'tag':
+            self.make_label = self.make_tag
+        elif target == 'ent':
+            self.make_label = self.make_ent
+        elif target == 'dep_tag_offset':
+            self.make_label = self.make_dep_tag_offset
+        elif target == 'ent_tag':
+            self.make_label = self.make_ent_tag
+        elif hasattr(target, '__call__'):
+            self.make_label = target
+        else:
+            raise ValueError(
+                "NeuralLabeller target should be function or one of "
+                "['dep', 'tag', 'ent', 'dep_tag_offset', 'ent_tag']")
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
         self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
@@ -532,42 +542,77 @@ class NeuralLabeller(NeuralTagger):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, tok2vec=None):
         gold_tuples = nonproj.preprocess_training_data(gold_tuples)
         for raw_text, annots_brackets in gold_tuples:
             for annots, brackets in annots_brackets:
                 ids, words, tags, heads, deps, ents = annots
-                for dep in deps:
-                    if dep not in self.labels:
-                        self.labels[dep] = len(self.labels)
-        token_vector_width = pipeline[0].model.nO
+                for i in range(len(ids)):
+                    label = self.make_label(i, words, tags, heads, deps, ents)
+                    if label is not None and label not in self.labels:
+                        self.labels[label] = len(self.labels)
+        print(len(self.labels))
         if self.model is True:
-            self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-            self.model = self.Model(len(self.labels), **self.cfg)
-            link_vectors_to_models(self.vocab)
+            self.model = chain(
+                tok2vec,
+                Softmax(len(self.labels), 128)
+            )
+        link_vectors_to_models(self.vocab)
 
     @classmethod
-    def Model(cls, n_tags, **cfg):
-        return build_tagger_model(n_tags, **cfg)
+    def Model(cls, n_tags, tok2vec=None, **cfg):
+        return build_tagger_model(n_tags, tok2vec=tok2vec, **cfg)
 
     def get_loss(self, docs, golds, scores):
-        scores = self.model.ops.flatten(scores)
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
         for gold in golds:
-            for tag in gold.labels:
-                if tag is None or tag not in self.labels:
+            for i in range(len(gold.labels)):
+                label = self.make_label(i, gold.words, gold.tags, gold.heads,
+                                        gold.labels, gold.ents)
+                if label is None or label not in self.labels:
                     correct[idx] = guesses[idx]
                 else:
-                    correct[idx] = self.labels[tag]
+                    correct[idx] = self.labels[label]
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
         d_scores /= d_scores.shape[0]
         loss = (d_scores**2).sum()
-        d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
+
+    @staticmethod
+    def make_dep(i, words, tags, heads, deps, ents):
+        if deps[i] is None or heads[i] is None:
+            return None
+        return deps[i]
+
+    @staticmethod
+    def make_tag(i, words, tags, heads, deps, ents):
+        return tags[i]
+
+    @staticmethod
+    def make_ent(i, words, tags, heads, deps, ents):
+        if ents is None:
+            return None
+        return ents[i]
+
+    @staticmethod
+    def make_dep_tag_offset(i, words, tags, heads, deps, ents):
+        if deps[i] is None or heads[i] is None:
+            return None
+        offset = heads[i] - i
+        offset = min(offset, 2)
+        offset = max(offset, -2)
+        return '%s-%s:%d' % (deps[i], tags[i], offset)
+
+    @staticmethod
+    def make_ent_tag(i, words, tags, heads, deps, ents):
+        if ents is None or ents[i] is None:
+            return None
+        else:
+            return '%s-%s' % (tags[i], ents[i])
 
 
 class SimilarityHook(BaseThincComponent):
@@ -605,15 +650,10 @@ class SimilarityHook(BaseThincComponent):
             yield self(doc)
 
     def predict(self, doc1, doc2):
-        return self.model.predict([(doc1.tensor, doc2.tensor)])
+        return self.model.predict([(doc1, doc2)])
 
-    def update(self, doc1_tensor1_doc2_tensor2, golds, sgd=None, drop=0.):
-        doc1s, tensor1s, doc2s, tensor2s = doc1_tensor1_doc2_tensor2
-        sims, bp_sims = self.model.begin_update(zip(tensor1s, tensor2s),
-                                                drop=drop)
-        d_tensor1s, d_tensor2s = bp_sims(golds, sgd=sgd)
-
-        return d_tensor1s, d_tensor2s
+    def update(self, doc1_doc2, golds, sgd=None, drop=0.):
+        sims, bp_sims = self.model.begin_update(doc1_doc2, drop=drop)
 
     def begin_training(self, _=tuple(), pipeline=None):
         """
@@ -669,15 +709,13 @@ class TextCategorizer(BaseThincComponent):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
-    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
-        docs, tensors = docs_tensors
+    def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         loss, d_scores = self.get_loss(docs, golds, scores)
-        d_tensors = bp_scores(d_scores, sgd=sgd)
+        bp_scores(d_scores, sgd=sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
-        return d_tensors
 
     def get_loss(self, docs, golds, scores):
         truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
@@ -739,6 +777,14 @@ cdef class NeuralDependencyParser(NeuralParser):
     name = 'parser'
     TransitionSystem = ArcEager
 
+    def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
+        for target in ['dep', 'ent']:
+            labeller = NeuralLabeller(self.vocab, target=target)
+            tok2vec = self.model[0]
+            labeller.begin_training(gold_tuples, pipeline=pipeline, tok2vec=tok2vec)
+            pipeline.append(labeller)
+            self._multitasks.append(labeller)
+
     def __reduce__(self):
         return (NeuralDependencyParser, (self.vocab, self.moves, self.model), None, None)
 
@@ -749,13 +795,13 @@ cdef class NeuralEntityRecognizer(NeuralParser):
 
     nr_feature = 6
 
-    def predict_confidences(self, docs):
-        tensors = [d.tensor for d in docs]
-        samples = []
-        for i in range(10):
-            states = self.parse_batch(docs, tensors, drop=0.3)
-            for state in states:
-                samples.append(self._get_entities(state))
+    def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
+        for target in []:
+            labeller = NeuralLabeller(self.vocab, target=target)
+            tok2vec = self.model[0]
+            labeller.begin_training(gold_tuples, pipeline=pipeline, tok2vec=tok2vec)
+            pipeline.append(labeller)
+            self._multitasks.append(labeller)
 
     def __reduce__(self):
         return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)

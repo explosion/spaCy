@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
+from .lex_attrs import LEX_ATTRS
 from .lemmatizer import LOOKUP
 from .syntax_iterators import SYNTAX_ITERATORS
 
@@ -17,6 +18,7 @@ from ...util import update_exc, add_lookups
 
 class FrenchDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: 'fr'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
 

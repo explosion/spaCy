@@ -29,9 +29,9 @@ _units = ('km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm 
           'kg g mg µg t lb oz m/s km/h kmh mph hPa Pa mbar mb MB kb KB gb GB tb '
           'TB T G M K %')
 _currency = r'\$ £ € ¥ ฿ US\$ C\$ A\$'
-_punct = r'… , : ; \! \? ¿ ¡ \( \) \[ \] \{ \} < > _ # \* &'
+_punct = r'… …… , : ; \! \? ¿ ¡ \( \) \[ \] \{ \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ ·'
 _quotes = r'\' \'\' " ” “ `` ` ‘ ´ ‚ , „ » «'
-_hyphens = '- – — -- ---'
+_hyphens = '- – — -- --- —— ~'
 _other_symbols = r'[\p{So}]'
 
 UNITS = merge_chars(_units)

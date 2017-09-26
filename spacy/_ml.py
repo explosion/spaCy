@@ -240,7 +240,6 @@ def link_vectors_to_models(vocab):
     # (unideal, I know)
     thinc.extra.load_nlp.VECTORS[(ops.device, VECTORS_KEY)] = data
 
-
 def Tok2Vec(width, embed_size, **kwargs):
     pretrained_dims = kwargs.get('pretrained_dims', 0)
     cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 3)
@@ -271,7 +270,7 @@ def Tok2Vec(width, embed_size, **kwargs):
         tok2vec = (
             FeatureExtracter(cols)
             >> with_flatten(
-                embed >> (convolution * 4), pad=4)
+                embed >> (convolution ** 4), pad=4)
         )
 
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
@@ -513,17 +512,17 @@ def build_tagger_model(nr_class, **cfg):
         token_vector_width = util.env_opt('token_vector_width', 128)
     pretrained_dims = cfg.get('pretrained_dims', 0)
     with Model.define_operators({'>>': chain, '+': add}):
-        # Input: (doc, tensor) tuples
-        private_tok2vec = Tok2Vec(token_vector_width, embed_size,
-                                  pretrained_dims=pretrained_dims)
+        if 'tok2vec' in cfg:
+            tok2vec = cfg['tok2vec']
+        else:
+            tok2vec = Tok2Vec(token_vector_width, embed_size,
+                              pretrained_dims=pretrained_dims)
         model = (
-            fine_tune(private_tok2vec)
-            >> with_flatten(
-                Maxout(token_vector_width, token_vector_width)
-                >> Softmax(nr_class, token_vector_width)
-            )
+            tok2vec
+            >> with_flatten(Softmax(nr_class, token_vector_width))
         )
     model.nI = None
+    model.tok2vec = tok2vec
     return model
 
 
