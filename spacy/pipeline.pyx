@@ -553,9 +553,10 @@ class NeuralLabeller(NeuralTagger):
                         self.labels[label] = len(self.labels)
         print(len(self.labels))
         if self.model is True:
+            token_vector_width = util.env_opt('token_vector_width')
             self.model = chain(
                 tok2vec,
-                Softmax(len(self.labels), 128)
+                Softmax(len(self.labels), token_vector_width)
             )
         link_vectors_to_models(self.vocab)
 
