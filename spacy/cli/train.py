@@ -44,7 +44,7 @@ numpy.random.seed(0)
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json. All relevant properties will be overwritten.", "option", "m", Path)
 )
-def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
+def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
           use_gpu=-1, vectors=None, no_tagger=False, no_parser=False, no_entities=False,
           gold_preproc=False, version="0.0.0", meta_path=None):
     """
@@ -82,7 +82,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                                   util.env_opt('dropout_to', 0.2),
                                   util.env_opt('dropout_decay', 0.0))
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
-                                   util.env_opt('batch_to', 32),
+                                   util.env_opt('batch_to', 16),
                                    util.env_opt('batch_compound', 1.001))
     corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
     n_train_words = corpus.count_train()
