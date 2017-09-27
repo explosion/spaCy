@@ -779,7 +779,7 @@ cdef class NeuralDependencyParser(NeuralParser):
     TransitionSystem = ArcEager
 
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
-        for target in ['dep', 'ent']:
+        for target in []:
             labeller = NeuralLabeller(self.vocab, target=target)
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline, tok2vec=tok2vec)
