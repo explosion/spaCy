@@ -505,7 +505,7 @@ def getitem(i):
     return layerize(getitem_fwd)
 
 def build_tagger_model(nr_class, **cfg):
-    embed_size = util.env_opt('embed_size', 1000)
+    embed_size = util.env_opt('embed_size', 7000)
     if 'token_vector_width' in cfg:
         token_vector_width = cfg['token_vector_width']
     else:
