@@ -245,7 +245,7 @@ cdef class Parser:
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
-        embed_size = util.env_opt('embed_size', 1000)
+        embed_size = util.env_opt('embed_size', 7000)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
