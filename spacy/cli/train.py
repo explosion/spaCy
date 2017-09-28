@@ -94,7 +94,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
 
-    print("Itn.\tLoss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
+    print("Itn.\tP.Loss\tN.Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
         train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
                                        gold_preproc=gold_preproc, max_length=0)
@@ -158,12 +158,14 @@ def print_progress(itn, losses, dev_scores, wps=0.0):
                 'ents_p', 'ents_r', 'ents_f', 'wps']:
         scores[col] = 0.0
     scores['dep_loss'] = losses.get('parser', 0.0)
+    scores['ner_loss'] = losses.get('ner', 0.0)
     scores['tag_loss'] = losses.get('tagger', 0.0)
     scores.update(dev_scores)
     scores['wps'] = wps
     tpl = '\t'.join((
         '{:d}',
         '{dep_loss:.3f}',
+        '{ner_loss:.3f}',
         '{uas:.3f}',
         '{ents_p:.3f}',
         '{ents_r:.3f}',
