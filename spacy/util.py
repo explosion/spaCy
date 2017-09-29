@@ -181,10 +181,9 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
-        if package.lower().replace('-', '_') == name:
+        if package.replace('-', '_') == name:
             return True
     return False
 
@@ -195,7 +194,6 @@ def get_package_path(name):
     name (unicode): Package name.
     RETURNS (Path): Path to installed package.
     """
-    name = name.lower()  # use lowercase version to be safe
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
