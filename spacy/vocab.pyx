@@ -262,7 +262,7 @@ cdef class Vocab:
         Words can be looked up by string or int ID.
 
         RETURNS:
-            A word vector. Size and shape determed by the
+            A word vector. Size and shape determined by the
             vocab.vectors instance. Usually, a numpy ndarray
             of shape (300,) and dtype float32.
 

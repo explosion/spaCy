@@ -16,7 +16,16 @@ from .compat import basestring_
 
 
 cdef class Vectors:
-    '''Store, save and load word vectors.'''
+    '''Store, save and load word vectors.
+
+    Vectors data is kept in the vectors.data attribute, which should be an
+    instance of numpy.ndarray (for CPU vectors)
+    or cupy.ndarray (for GPU vectors).
+
+    vectors.key2row is a dictionary mapping word hashes to rows
+    in the vectors.data table. The array `vectors.keys` keeps
+    the keys in order, such that keys[vectors.key2row[key]] == key.
+    '''
     cdef public object data
     cdef readonly StringStore strings
     cdef public object key2row
@@ -44,6 +53,11 @@ cdef class Vectors:
         return (Vectors, (self.strings, self.data))
 
     def __getitem__(self, key):
+        '''Get a vector by key. If key is a string, it is hashed
+        to an integer ID using the vectors.strings table.
+
+        If the integer key is not found in the table, a KeyError is raised.
+        '''
         if isinstance(key, basestring):
             key = self.strings[key]
         i = self.key2row[key]
@@ -53,23 +67,30 @@ cdef class Vectors:
             return self.data[i]
 
     def __setitem__(self, key, vector):
+        '''Set a vector for the given key. If key is a string, it is hashed
+        to an integer ID using the vectors.strings table.
+        '''
         if isinstance(key, basestring):
             key = self.strings.add(key)
         i = self.key2row[key]
         self.data[i] = vector
 
     def __iter__(self):
+        '''Yield vectors from the table.'''
         yield from self.data
 
     def __len__(self):
+        '''Return the number of vectors that have been assigned.'''
         return self.i
 
     def __contains__(self, key):
+        '''Check whether a key has a vector entry in the table.'''
         if isinstance(key, basestring_):
             key = self.strings[key]
         return key in self.key2row
 
     def add(self, key, vector=None):
+        '''Add a key to the table, optionally setting a vector value as well.'''
         if isinstance(key, basestring_):
             key = self.strings.add(key)
         if key not in self.key2row:
@@ -87,6 +108,7 @@ cdef class Vectors:
         return i
 
     def items(self):
+        '''Iterate over (string key, vector) pairs, in order.'''
         for i, key in enumerate(self.keys):
             string = self.strings[key]
             yield string, self.data[i]
