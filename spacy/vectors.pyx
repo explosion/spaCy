@@ -24,7 +24,12 @@ cdef class Vectors:
     cdef public int i
 
     def __init__(self, strings, data_or_width=0):
-        self.strings = StringStore()
+        if isinstance(strings, StringStore):
+            self.strings = strings
+        else:
+            self.strings = StringStore()
+            for string in strings:
+                self.strings.add(string)
         if isinstance(data_or_width, int):
             self.data = data = numpy.zeros((len(strings), data_or_width),
                                            dtype='f')
@@ -82,7 +87,8 @@ cdef class Vectors:
         return i
 
     def items(self):
-        for i, string in enumerate(self.strings):
+        for i, key in enumerate(self.keys):
+            string = self.strings[key]
             yield string, self.data[i]
 
     @property
