@@ -4,5 +4,6 @@ from .link import link
 from .package import package
 from .profile import profile
 from .train import train
+from .evaluate import evaluate
 from .convert import convert
 from .model import model
