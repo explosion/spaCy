@@ -324,6 +324,7 @@ cdef class Vocab:
             self.lexemes_from_bytes(file_.read())
         if self.vectors is not None:
             self.vectors.from_disk(path, exclude='strings.json')
+        link_vectors_to_models(self)
         return self
 
     def to_bytes(self, **exclude):
