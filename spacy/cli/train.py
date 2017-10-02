@@ -70,9 +70,9 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
                title="Not a valid meta.json format", exits=1)
 
     pipeline = ['tagger', 'parser', 'ner']
-    if no_tagger and 'tags' in pipeline: pipeline.remove('tags')
-    if no_parser and 'dependencies' in pipeline: pipeline.remove('dependencies')
-    if no_entities and 'entities' in pipeline: pipeline.remove('entities')
+    if no_tagger and 'tagger' in pipeline: pipeline.remove('tagger')
+    if no_parser and 'parser' in pipeline: pipeline.remove('parser')
+    if no_entities and 'ner' in pipeline: pipeline.remove('ner')
 
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
