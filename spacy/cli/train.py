@@ -69,7 +69,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
         prints("Expected dict but got: {}".format(type(meta)),
                title="Not a valid meta.json format", exits=1)
 
-    pipeline = ['tags', 'dependencies', 'entities']
+    pipeline = ['tagger', 'parser', 'ner']
     if no_tagger and 'tags' in pipeline: pipeline.remove('tags')
     if no_parser and 'dependencies' in pipeline: pipeline.remove('dependencies')
     if no_entities and 'entities' in pipeline: pipeline.remove('entities')
