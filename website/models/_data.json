@@ -44,6 +44,8 @@
         "las": "Labelled dependencies",
         "tags_acc": "Part-of-speech tags",
         "ents_f": "Entities (F-score)",
+        "ents_p": "Entities (precision)",
+        "ents_r": "Entities (recall)",
         "pipeline": "Processing pipeline components in order",
         "sources": "Sources of training data"
     },
@@ -59,7 +61,9 @@
         "uas": "UAS",
         "las": "LAS",
         "tags_acc": "POS",
-        "ents_f": "NER F"
+        "ents_f": "NER F",
+        "ents_p": "NER P",
+        "ents_r": "NER R"
     },
 
     "LANGUAGES": {
