@@ -14,7 +14,7 @@ from ..util import prints
 CONVERTERS = {
     '.conllu': conllu2json,
     '.conll': conllu2json,
-    '.iob': iob2json
+    '.iob': iob2json,
 }
 
 

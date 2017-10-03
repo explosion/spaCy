@@ -1,5 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
+from cytoolz import partition_all, concat
 
 from ...compat import json_dumps, path2str
 from ...util import prints
@@ -10,11 +11,9 @@ def iob2json(input_path, output_path, n_sents=10, *a, **k):
     """
     Convert IOB files into JSON format for use with train cli.
     """
-    # TODO: This isn't complete yet -- need to map from IOB to
-    # BILUO
     with input_path.open('r', encoding='utf8') as file_:
-        docs = read_iob(file_)
-
+        sentences = read_iob(file_)
+    docs = merge_sentences(sentences, n_sents)
     output_filename = input_path.parts[-1].replace(".iob", ".json")
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
@@ -23,9 +22,9 @@ def iob2json(input_path, output_path, n_sents=10, *a, **k):
            title="Generated output file %s" % path2str(output_file))
 
 
-def read_iob(file_):
+def read_iob(raw_sents):
     sentences = []
-    for line in file_:
+    for line in raw_sents:
         if not line.strip():
             continue
         tokens = [t.split('|') for t in line.split()]
@@ -43,3 +42,15 @@ def read_iob(file_):
     paragraphs = [{'sentences': [sent]} for sent in sentences]
     docs = [{'id': 0, 'paragraphs': [para]} for para in paragraphs]
     return docs
+
+def merge_sentences(docs, n_sents):
+    counter = 0
+    merged = []
+    for group in partition_all(n_sents, docs):
+        group = list(group)
+        first = group.pop(0)
+        to_extend = first['paragraphs'][0]['sentences']
+        for sent in group[1:]:
+            to_extend.extend(sent['paragraphs'][0]['sentences'])
+        merged.append(first)
+    return merged
