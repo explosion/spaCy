@@ -2,11 +2,15 @@
 
 include _includes/_mixins
 
+- title = IS_MODELS ? LANGUAGES[current.source] || title : title
+- social_img = SITE_URL + "/assets/img/social/preview_" + (preview || ALPHA ? "alpha" : "default") + ".jpg"
+
 doctype html
 html(lang="en")
     title
-        if SECTION == "docs" && SUBSECTION && SUBSECTION != "index"
-            | #{title} | #{SITENAME} #{SUBSECTION == "api" ? "API" : "Usage"} Documentation
+        if SECTION == "api" || SECTION == "usage" || SECTION == "models"
+            - var title_section = (SECTION == "api") ? "API" : SECTION.charAt(0).toUpperCase() + SECTION.slice(1)
+            | #{title} | #{SITENAME} #{title_section} Documentation
 
         else if SECTION != "index"
             | #{title} | #{SITENAME}
@@ -24,22 +28,19 @@ html(lang="en")
     meta(property="og:url" content="#{SITE_URL}/#{current.path.join('/')}")
     meta(property="og:title" content="#{title} - spaCy")
     meta(property="og:description" content=description)
-    meta(property="og:image" content=getSocialImg())
+    meta(property="og:image" content=social_img)
 
     meta(name="twitter:card" content="summary_large_image")
     meta(name="twitter:site" content="@" + SOCIAL.twitter)
     meta(name="twitter:title" content="#{title} - spaCy")
     meta(name="twitter:description" content=description)
-    meta(name="twitter:image" content=getSocialImg())
+    meta(name="twitter:image" content=social_img)
 
     link(rel="shortcut icon" href="/assets/img/favicon.ico")
     link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
 
-    if ALPHA && SECTION == "docs"
+    if SECTION == "api"
         link(href="/assets/css/style_green.css?v#{V_CSS}" rel="stylesheet")
-
-    else if SUBSECTION == "usage"
-        link(href="/assets/css/style_red.css?v#{V_CSS}" rel="stylesheet")
 
     else
         link(href="/assets/css/style.css?v#{V_CSS}" rel="stylesheet")
@@ -48,7 +49,7 @@ html(lang="en")
         include _includes/_svg
         include _includes/_navigation
 
-        if SECTION == "docs"
+        if !landing
             include _includes/_page-docs
 
         else

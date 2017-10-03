@@ -1,19 +1,15 @@
 //- 💫 INCLUDES > TOP NAVIGATION
 
-include _mixins
-
 nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : null)
-    a(href='/') #[+logo]
-
-    if SUBSECTION != "index"
-        .u-text-label.u-padding-small.u-hidden-xs=SUBSECTION
+    a(href="/" aria-label=SITENAME) #[+logo]
 
     ul.c-nav__menu
-        - var NAV = ALPHA ? { "Usage": "/docs/usage", "Reference": "/docs/api" } : NAVIGATION
-
-        each url, item in NAV
-            li.c-nav__menu__item(class=(url == "/") ? "u-hidden-xs" : null)
+        - var current_url = '/' + current.path[0]
+        each url, item in NAVIGATION
+            li.c-nav__menu__item(class=(current_url == url) ? "is-active" : null)
                 +a(url)=item
 
-        li.c-nav__menu__item
-            +a(gh("spaCy"))(aria-label="GitHub").u-hidden-xs #[+icon("github", 20)]
+        li.c-nav__menu__item.u-hidden-xs
+            +a(gh("spaCy"))(aria-label="GitHub") #[+icon("github", 20)]
+
+    progress.c-progress.js-progress(value="0" max="1")
