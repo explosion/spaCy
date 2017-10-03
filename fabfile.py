@@ -32,6 +32,10 @@ def make():
             local('pip install -r requirements.txt')
             local('python setup.py build_ext --inplace')
 
+def sdist():
+    with virtualenv(VENV_DIR):
+        with lcd(path.dirname(__file__)):
+            local('python setup.py sdist')
 
 def clean():
     with lcd(path.dirname(__file__)):
