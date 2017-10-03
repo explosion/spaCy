@@ -167,7 +167,15 @@
 
     "visualizers": {
         "title": "Visualizers",
-        "next": "resources"
+        "tag_new": 2,
+        "teaser": "Visualize dependencies and entities in your browser and notebook, or export HTML.",
+        "next": "resources",
+        "menu": {
+            "Dependencies": "dep",
+            "Entities": "ent",
+            "Jupyter Notebooks": "jupyter",
+            "Rendering HTML": "html"
+        }
     },
 
     "resources": {
