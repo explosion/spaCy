@@ -1,0 +1,91 @@
+//- 💫 DOCS > USAGE > VECTORS & SIMILARITY > CUSTOM VECTORS
+
+p
+    |  By default, #[+api("token#vector") #[code Token.vector]] returns the
+    |  vector for its underlying #[+api("lexeme") #[code Lexeme]], while
+    |  #[+api("doc#vector") #[code Doc.vector]] and
+    |  #[+api("span#vector") #[code Span.vector]] return an average of the
+    |  vectors of their tokens. You can customize these
+    |  behaviours by modifying the #[code doc.user_hooks],
+    |  #[code doc.user_span_hooks] and #[code doc.user_token_hooks]
+    |  dictionaries.
+
++infobox
+    |  For more details on #[strong adding hooks] and #[strong overwriting] the
+    |  built-in #[code Doc], #[code Span] and #[code Token] methods, see the
+    |  usage guide on #[+a("/usage/processing-pipelines#user-hooks") user hooks].
+
++h(3, "custom-vectors-add") Adding vectors
+    +tag-new(2)
+
+p
+    |  The new #[+api("vectors") #[code Vectors]] class makes it easy to add
+    |  your own vectors to spaCy. Just like the #[+api("vocab") #[code Vocab]],
+    |  it is initialised with a #[+api("stringstore") #[code StringStore]] or
+    |  a list of strings.
+
++code("Adding vectors one-by-one").
+    from spacy.strings import StringStore
+    from spacy.vectors import Vectors
+
+    vector_data = {'dog': numpy.random.uniform(-1, 1, (300,)),
+                   'cat': numpy.random.uniform(-1, 1, (300,)),
+                   'orange': numpy.random.uniform(-1, 1, (300,))}
+
+    vectors = Vectors(StringStore(), 300)
+    for word, vector in vector_data.items():
+        vectors.add(word, vector)
+
+p
+    |  You can also add the vector values directly on initialisation:
+
++code("Adding vectors on initialisation").
+    from spacy.vectors import Vectors
+
+    vector_table = numpy.zeros((3, 300), dtype='f')
+    vectors = Vectors([u'dog', u'cat', u'orange'], vector_table)
+
++h(3, "custom-loading-glove") Loading GloVe vectors
+    +tag-new(2)
+
+p
+    |  spaCy comes with built-in support for loading
+    |  #[+a("https://nlp.stanford.edu/projects/glove/") GloVe] vectors from
+    |  a directory. The #[+api("vectors#from_glove") #[code Vectors.from_glove]]
+    |  method assumes a binary format, the vocab provided in a
+    |  #[code vocab.txt], and the naming scheme of
+    |  #[code vectors.{size}.[fd].bin]. For example:
+
++aside-code("Directory structure", "yaml").
+    └── vectors
+        ├── vectors.128.f.bin  # vectors file
+        └── vocab.txt          # vocabulary
+
++table(["File name", "Dimensions", "Data type"])
+    +row
+        +cell #[code vectors.128.f.bin]
+        +cell 128
+        +cell float32
+
+    +row
+        +cell #[code vectors.300.d.bin]
+        +cell 300
+        +cell float64 (double)
+
++code.
+    from spacy.vectors import Vectors
+
+    vectors = Vectors([], 128)
+    vectors.from_glove('/path/to/vectors')
+
++h(3, "custom-loading-other") Loading other vectors
+    +tag-new(2)
+
+p
+    |  You can also choose to load in vectors from other sources, like the
+    |  #[+a("https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md") fastText vectors]
+    |  for 294 languages, trained on Wikipedia. After reading in the file,
+    |  the vectors are added to the #[code Vocab] using the
+    |  #[+api("vocab#set_vector") #[code set_vector]] method.
+
++github("spacy", "examples/vectors_fast_text.py")

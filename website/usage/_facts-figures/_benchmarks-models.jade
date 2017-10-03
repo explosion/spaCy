@@ -1,0 +1,48 @@
+//- 💫 DOCS > USAGE > FACTS & FIGURES > BENCHMARKS > MODEL COMPARISON
+
+p
+    |  In this section, we provide benchmark accuracies for the pre-trained
+    |  model pipelines we distribute with spaCy. Evaluations are conducted
+    |  end-to-end from raw text, with no "gold standard" pre-processing, over
+    |  text from a mix of genres where possible.
+
++under-construction
+
++aside("Methodology")
+    |  The evaluation was conducted on raw text with no gold standard
+    |  information. The parser, tagger and entity recognizer were trained on the
+    |  #[+a("https://www.gabormelli.com/RKB/OntoNotes_Corpus") OntoNotes 5]
+    |  corpus, the word vectors on #[+a("http://commoncrawl.org") Common Crawl].
+
++table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
+    +row
+        +cell #[+a("/models/en#en_core_web_sm") #[code en_core_web_sm]] 2.0.0a5
+        each data in ["2.x", "neural"]
+            +cell.u-text-right=data
+        +cell.u-text-right 91.4
+        +cell.u-text-right 85.5
+        +cell.u-text-right 97.0
+        +cell.u-text-right 8.2k
+        +cell.u-text-right #[strong 36 MB]
+
+    +row
+        +cell #[+a("/models/en#en_core_web_lg") #[code en_core_web_lg]] 2.0.0a0
+        each data in ["2.x", "neural"]
+            +cell.u-text-right=data
+        +cell.u-text-right #[strong 91.9]
+        +cell.u-text-right #[strong 86.4]
+        +cell.u-text-right #[strong 97.2]
+        +cell.u-text-right #[em n/a]
+        +cell.u-text-right 667 MB
+
+    +row("divider")
+        +cell #[code en_core_web_sm] 1.2.0
+        each data in ["1.x", "linear", 86.6, 78.5, 96.6]
+            +cell.u-text-right=data
+        +cell.u-text-right #[strong 25.7k]
+        +cell.u-text-right 50 MB
+
+    +row
+        +cell #[code en_core_web_md] 1.2.1
+        each data in ["1.x", "linear", 90.6, 81.4, 96.7, "18.8k", "1 GB"]
+            +cell.u-text-right=data

@@ -1,0 +1,73 @@
+//- 💫 DOCS > USAGE > EXAMPLES
+
+include ../_includes/_mixins
+
++section("matching")
+    +h(3, "matcher") Using spaCy's rule-based matcher
+
+    p
+        |  This example shows how to use spaCy's rule-based
+        |  #[+api("matcher") #[code Matcher]] to find and label entities across
+        |  documents.
+
+    +github("spacy", "examples/matcher_example.py")
+
+    +h(3, "phrase-matcher") Using spaCy's phrase matcher
+        +tag-new(2)
+
+    p
+        |  This example shows how to use the new
+        |  #[+api("phrasematcher") #[code PhraseMatcher]] to efficiently find
+        |  entities from a large terminology list.
+
+    +github("spacy", "examples/phrase_matcher.py")
+
++section("training")
+    +h(3, "new-entity-type") Training an additional entity type
+
+    p
+        |  This script shows how to add a new entity type to an existing
+        |  pre-trained NER model. To keep the example short and simple, only
+        |  four sentences are provided as examples. In practice, you'll need
+        |  many more — a few hundred would be a good start.
+
+    +github("spacy", "examples/training/train_new_entity_type.py")
+
+    +h(3, "ner-standalone") Training an NER system from scratch
+
+    p
+        |  This example is written to be self-contained and reasonably
+        |  transparent. To achieve that, it duplicates some of spaCy's internal
+        |  functionality.
+
+    +github("spacy", "examples/training/train_ner_standalone.py")
+
+    +h(3, "textcat") Training spaCy's text classifier
+        +tag-new(2)
+
+    p
+        |  This example shows how to use and train spaCy's new
+        |  #[+api("textcategorizer") #[code TextCategorizer]] pipeline component
+        |  on IMDB movie reviews.
+
+    +github("spacy", "examples/training/train_textcat.py")
+
++section("deep-learning")
+    +h(3, "keras") Text classification with Keras
+
+    p
+        |  In this example, we're using spaCy to pre-process text for use with
+        |  a #[+a("https://keras.io") Keras] text classification model.
+
+    +github("spacy", "examples/deep_learning_keras.py")
+
+    +h(3, "keras-parikh-entailment") A decomposable attention model for Natural Language Inference
+
+    p
+        |  This example contains an implementation of the entailment prediction
+        |  model described by #[+a("https://arxiv.org/pdf/1606.01933.pdf") Parikh et al. (2016)].
+        |  The model is notable for its competitive performance with very few
+        |  parameters, and was implemented using #[+a("https://keras.io") Keras]
+        |  and spaCy.
+
+    +github("spacy", "examples/keras_parikh_entailment/__main__.py", "examples/keras_parikh_entailment")
