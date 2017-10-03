@@ -7,8 +7,6 @@ keys/
 # Website
 website/www/
 website/_deploy.sh
-website/package.json
-website/announcement.jade
 website/.gitignore
 
 # Cython / C extensions
