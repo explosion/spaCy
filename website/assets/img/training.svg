@@ -1,7 +1,7 @@
 <svg class="o-svg" xmlns="http://www.w3.org/2000/svg" width="827" height="168" viewBox="-10 -10 837 178">
     <style>
-        .svg__training__text { fill: #1a1e23; font: 18px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
-        .svg__training__text-code {  fill: #1a1e23; font: bold 16px "Source Code Pro", Monaco, "Courier New", monospace }
+        .svg__training__text { fill: #1a1e23; font: 18px Arial, sans-serif }
+        .svg__training__text-code {  fill: #1a1e23; font: bold 16px Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace }
     </style>
     <defs>
     <linearGradient id="a" x1="0%" x2="0%" y1="100%" y2="0%">

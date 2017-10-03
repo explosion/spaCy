@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="612" height="280" viewBox="-10 -10 622 360">
     <style>
-        .svg__trainloop__text { fill: #1a1e23; font: 18px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
-        .svg__trainloop__text-small { fill: #1a1e23; font: 16px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__trainloop__text { fill: #1a1e23; font: 18px Arial, sans-serif }
+        .svg__trainloop__text-small { fill: #1a1e23; font: 16px Arial, sans-serif }
     </style>
     <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M121 264h31.8"/>
     <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M158.8 264l-8 4 2-4-2-4z"/>
