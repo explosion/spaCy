@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t, uint64_t
+import numpy
 
 from ..vocab cimport EMPTY_LEXEME
 from ..structs cimport Entity
@@ -37,6 +38,13 @@ cdef class StateClass:
     @property
     def token_vector_lenth(self):
         return self.doc.tensor.shape[1]
+
+    @property
+    def history(self):
+        hist = numpy.ndarray((8,), dtype='i')
+        for i in range(8):
+            hist[i] = self.c.get_hist(i+1)
+        return hist
 
     def is_final(self):
         return self.c.is_final()
