@@ -70,8 +70,8 @@ from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 from . import _beam_utils
 
 USE_HISTORY = True
-HIST_SIZE = 2
-HIST_DIMS = 16
+HIST_SIZE = 8 # Max 8
+HIST_DIMS = 8
 
 def get_templates(*args, **kwargs):
     return []
@@ -276,8 +276,8 @@ cdef class Parser:
                     upper.is_noop = True
             elif USE_HISTORY:
                 upper = chain(
-                    HistoryFeatures(nr_class=nr_class, hist_size=8, nr_dim=8),
-                    Maxout(hidden_width, hidden_width+8*8),
+                    HistoryFeatures(nr_class=nr_class, hist_size=HIST_SIZE, nr_dim=HIST_DIMS),
+                    Maxout(hidden_width, hidden_width+HIST_SIZE*HIST_DIMS),
                     zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
