@@ -388,7 +388,7 @@ class Language(object):
         self._optimizer.device = device
         return self._optimizer
 
-    def evaluate(self, docs_golds):
+    def evaluate(self, docs_golds, verbose=False):
         scorer = Scorer()
         docs, golds = zip(*docs_golds)
         docs = list(docs)
@@ -401,7 +401,9 @@ class Language(object):
                 docs = list(pipe.pipe(docs))
         assert len(docs) == len(golds)
         for doc, gold in zip(docs, golds):
-            scorer.score(doc, gold)
+            if verbose:
+                print(doc)
+            scorer.score(doc, gold, verbose=verbose)
         return scorer
 
     @contextmanager
