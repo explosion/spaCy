@@ -12,12 +12,16 @@ body
     animation: fadeIn 0.25s ease
     background: $color-back
     color: $color-front
+    //scroll-behavior: smooth
 
 
 //- Paragraphs
 
 p
     @extend .o-block, .u-text
+
+p:empty
+    margin-bottom: 0
 
 
 //- Links
