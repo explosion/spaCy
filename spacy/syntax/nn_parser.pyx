@@ -51,6 +51,7 @@ from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
+from .._ml import HistoryFeatures
 from ..compat import json_dumps
 
 from . import _parse_features
@@ -68,7 +69,7 @@ from ..gold cimport GoldParse
 from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 from . import _beam_utils
 
-USE_FINE_TUNE = True
+USE_HISTORY = True
 
 def get_templates(*args, **kwargs):
     return []
@@ -261,18 +262,35 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             if depth == 0:
-                upper = chain()
-                upper.is_noop = True
-            else:
+                hist_size = 8
+                nr_dim = 8
+                if USE_HISTORY:
+                    upper = chain(
+                        HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
+                                        nr_dim=nr_dim),
+                        zero_init(Affine(nr_class, nr_class+hist_size*nr_dim,
+                                          drop_factor=0.0)))
+                    upper.is_noop = False
+                else:
+                    upper = chain()
+                    upper.is_noop = True
+            elif USE_HISTORY:
                 upper = chain(
-                    clone(Maxout(hidden_width), depth-1),
+                    HistoryFeatures(nr_class=nr_class, hist_size=8, nr_dim=8),
+                    Maxout(hidden_width, hidden_width+8*8),
                     zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
+            else:
+                upper = chain(
+                    Maxout(hidden_width, hidden_width),
+                    zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
+                )
+                upper.is_noop = False
+ 
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
-        upper.begin_training(upper.ops.allocate((500, hidden_width)))
         cfg = {
             'nr_class': nr_class,
             'depth': depth,
@@ -428,12 +446,18 @@ cdef class Parser:
                     self._parse_step(next_step[i],
                         feat_weights, nr_class, nr_feat, nr_piece)
             else:
+                hists = []
                 for i in range(nr_step):
                     st = next_step[i]
                     st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
                     self.moves.set_valid(&c_is_valid[i*nr_class], st)
+                    hists.append([st.get_hist(j+1) for j in range(8)])
+                hists = numpy.asarray(hists)
                 vectors = state2vec(token_ids[:next_step.size()])
-                scores = vec2scores(vectors)
+                if USE_HISTORY:
+                    scores = vec2scores((vectors, hists))
+                else:
+                    scores = vec2scores(vectors)
                 c_scores = <float*>scores.data
                 for i in range(nr_step):
                     st = next_step[i]
@@ -441,6 +465,7 @@ cdef class Parser:
                         &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
                     action = self.moves.c[guess]
                     action.do(st, action.label)
+                    st.push_hist(guess)
             this_step, next_step = next_step, this_step
             next_step.clear()
             for st in this_step:
@@ -551,7 +576,11 @@ cdef class Parser:
             if drop != 0:
                 mask = vec2scores.ops.get_dropout_mask(vector.shape, drop)
                 vector *= mask
-            scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
+            hists = numpy.asarray([st.history for st in states], dtype='i')
+            if USE_HISTORY:
+                scores, bp_scores = vec2scores.begin_update((vector, hists), drop=drop)
+            else:
+                scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
 
             d_scores = self.get_batch_loss(states, golds, scores)
             d_scores /= len(docs)
@@ -570,7 +599,8 @@ cdef class Parser:
             else:
                 backprops.append((token_ids, d_vector, bp_vector))
             self.transition_batch(states, scores)
-            todo = [st for st in todo if not st[0].is_final()]
+            todo = [(st, gold) for (st, gold) in todo
+                    if not st.is_final()]
             if losses is not None:
                 losses[self.name] += (d_scores**2).sum()
             n_steps += 1
@@ -706,12 +736,15 @@ cdef class Parser:
         cdef StateClass state
         cdef int[500] is_valid # TODO: Unhack
         cdef float* c_scores = &scores[0, 0]
+        hists = []
         for state in states:
             self.moves.set_valid(is_valid, state.c)
             guess = arg_max_if_valid(c_scores, is_valid, scores.shape[1])
             action = self.moves.c[guess]
             action.do(state.c, action.label)
             c_scores += scores.shape[1]
+            hists.append(guess)
+        return hists
 
     def get_batch_loss(self, states, golds, float[:, ::1] scores):
         cdef StateClass state
