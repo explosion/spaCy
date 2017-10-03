@@ -344,6 +344,59 @@ p
         +cell Gradient L2 norm constraint.
         +cell #[code 1.0]
 
++h(3, "evaluate") Evaluate
+    +tag-new(2)
+
+p
+    |  Evaluate a model's accuracy and speed on JSON-formatted annotated data.
+    |  Will print the results and optionally export
+    |  #[+a("/usage/visualizers") displaCy visualizations] of a sample set of
+    |  parses to #[code .html] files. Visualizations for the dependency parse
+    |  and NER will be exported as separate files if the respective component
+    |  is present in the model's pipeline.
+
++code(false, "bash", "$", false, false, true).
+    spacy evaluate [model] [data_path] [--displacy-path] [--displacy-limit] [--gpu-id] [--gold-preproc]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code model]
+        +cell positional
+        +cell
+            |  Model to evaluate. Can be a package or shortcut link name, or a
+            |  path to a model data directory.
+
+    +row
+        +cell #[code data_path]
+        +cell positional
+        +cell Location of JSON-formatted evaluation data.
+
+    +row
+        +cell #[code --displacy-path], #[code -dp]
+        +cell option
+        +cell
+            |  Directory to output rendered parses as HTML. If not set, no
+            |  visualizations will be generated.
+
+    +row
+        +cell #[code --displacy-limit], #[code -dl]
+        +cell option
+        +cell
+            |  Number of parses to generate per file. Defaults to #[code 25].
+            |  Keep in mind that a significantly higher number might cause the
+            |  #[code .html] files to render slowly.
+
+    +row
+        +cell #[code --gpu-id], #[code -g]
+        +cell option
+        +cell GPU to use, if any. Defaults to #[code -1] for CPU.
+
+    +row
+        +cell #[code --gold-preproc], #[code -G]
+        +cell flag
+        +cell Use gold preprocessing.
+
+
 +h(3, "package") Package
 
 p
