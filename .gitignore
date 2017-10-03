@@ -1,7 +1,7 @@
 # spaCy
 spacy/data/
 corpora/
-models/
+/models/
 keys/
 
 # Website
