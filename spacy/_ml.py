@@ -1,10 +1,12 @@
 import ujson
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.neural import Model, Maxout, Softmax, Affine
+from thinc.neural._classes.model import Model
+from thinc.neural._classes.maxout import Maxout
+from thinc.neural._classes.softmax import Softmax
+from thinc.neural._classes.affine import Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
-import thinc.extra.load_nlp
 import random
 import cytoolz
 
@@ -13,7 +15,7 @@ from thinc.neural._classes.static_vectors import StaticVectors
 from thinc.neural._classes.batchnorm import BatchNorm as BN
 from thinc.neural._classes.layernorm import LayerNorm as LN
 from thinc.neural._classes.resnet import Residual
-from thinc.neural import ReLu
+from thinc.neural._classes.relu import ReLu
 from thinc.neural._classes.selu import SELU
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
@@ -23,6 +25,7 @@ from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
 from thinc.neural._classes.attention import ParametricAttention
 from thinc.linear.linear import LinearModel
 from thinc.api import uniqued, wrap, flatten_add_lengths, noop
+import thinc.extra.load_nlp
 
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP, CLUSTER
