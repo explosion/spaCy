@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from .cli.info import info as cli_info
 from .glossary import explain
 from .deprecated import resolve_load_name
-from .about import __version__
+#from .about import __version__
 from . import util
 
 
