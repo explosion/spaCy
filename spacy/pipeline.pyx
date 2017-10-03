@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 from thinc.api import chain, layerize, with_getitem
-from thinc.neural import Model, Softmax
 import numpy
 cimport numpy as np
 import cytoolz
@@ -14,7 +13,10 @@ import ujson
 import msgpack
 
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.neural import Model, Maxout, Softmax, Affine
+from thinc.neural._classes.model import Model
+from thinc.neural._classes.maxout import Maxout
+from thinc.neural._classes.softmax import Softmax
+from thinc.neural._classes.affine import Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.util import to_categorical
 
