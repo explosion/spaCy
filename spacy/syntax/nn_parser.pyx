@@ -38,10 +38,9 @@ from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
 from thinc.api import layerize, chain, noop, clone, with_flatten
-from thinc.neural import Model, Affine, ReLu, Maxout
-from thinc.neural._classes.batchnorm import BatchNorm as BN
-from thinc.neural._classes.selu import SELU
-from thinc.neural._classes.layernorm import LayerNorm
+from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, SELU
+from thinc.misc import LayerNorm
+
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 

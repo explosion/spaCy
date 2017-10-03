@@ -20,9 +20,10 @@ import plac
 from pathlib import Path
 import random
 import json
+import tqdm
+
 from thinc.neural.optimizers import Adam
 from thinc.neural.ops import NumpyOps
-import tqdm
 
 from spacy.vocab import Vocab
 from spacy.pipeline import TokenVectorEncoder, NeuralEntityRecognizer
@@ -34,6 +35,7 @@ from spacy.gold import iob_to_biluo
 from spacy.gold import minibatch
 from spacy.scorer import Scorer
 import spacy.util
+
 
 try:
     unicode
@@ -55,20 +57,17 @@ def init_vocab():
 
 
 class Pipeline(object):
-    def __init__(self, vocab=None, tokenizer=None, tensorizer=None, entity=None):
+    def __init__(self, vocab=None, tokenizer=None, entity=None):
         if vocab is None:
             vocab = init_vocab()
         if tokenizer is None:
             tokenizer = Tokenizer(vocab, {}, None, None, None)
-        if tensorizer is None:
-            tensorizer = TokenVectorEncoder(vocab)
         if entity is None:
             entity = NeuralEntityRecognizer(vocab)
         self.vocab = vocab
         self.tokenizer = tokenizer
-        self.tensorizer = tensorizer
         self.entity = entity
-        self.pipeline = [tensorizer, self.entity]
+        self.pipeline = [self.entity]
 
     def begin_training(self):
         for model in self.pipeline:
@@ -102,10 +101,8 @@ class Pipeline(object):
         golds = [self.make_gold(input_, annot) for input_, annot in
                  zip(inputs, annots)]
 
-        tensors, bp_tensors = self.tensorizer.update(docs, golds, drop=drop)
-        d_tensors = self.entity.update((docs, tensors), golds, drop=drop,
-                                      sgd=sgd, losses=losses)
-        bp_tensors(d_tensors, sgd=sgd)
+        self.entity.update(docs, golds, drop=drop,
+                           sgd=sgd, losses=losses)
         return losses
 
     def evaluate(self, examples):
@@ -123,7 +120,6 @@ class Pipeline(object):
         elif not path.is_dir():
             raise IOError("Can't save pipeline to %s\nNot a directory" % path)
         self.vocab.to_disk(path / 'vocab')
-        self.tensorizer.to_disk(path / 'tensorizer')
         self.entity.to_disk(path / 'ner')
 
     def from_disk(self, path):
@@ -133,7 +129,6 @@ class Pipeline(object):
         if not path.is_dir():
             raise IOError("Cannot load pipeline from %s\nNot a directory" % path)
         self.vocab = self.vocab.from_disk(path / 'vocab')
-        self.tensorizer = self.tensorizer.from_disk(path / 'tensorizer')
         self.entity = self.entity.from_disk(path / 'ner')
 
 

@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 from thinc.api import chain, layerize, with_getitem
-from thinc.neural import Model, Softmax
 import numpy
 cimport numpy as np
 import cytoolz
@@ -14,16 +13,17 @@ import ujson
 import msgpack
 
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.neural import Model, Maxout, Softmax, Affine
-from thinc.neural._classes.hash_embed import HashEmbed
+from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, SELU
+from thinc.i2v import HashEmbed
+from thinc.t2v import Pooling, max_pool, mean_pool, sum_pool
+from thinc.t2t import ExtractWindow, ParametricAttention
+from thinc.misc import Residual
+from thinc.misc import BatchNorm as BN
+from thinc.misc import LayerNorm as LN
+
 from thinc.neural.util import to_categorical
 
-from thinc.neural.pooling import Pooling, max_pool, mean_pool
 from thinc.neural._classes.difference import Siamese, CauchySimilarity
-
-from thinc.neural._classes.convolution import ExtractWindow
-from thinc.neural._classes.resnet import Residual
-from thinc.neural._classes.batchnorm import BatchNorm as BN
 
 from .tokens.doc cimport Doc
 from .syntax.parser cimport Parser as LinearParser

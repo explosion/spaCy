@@ -32,18 +32,25 @@ numpy.random.seed(0)
     model=("Model name or path", "positional", None, str),
     data_path=("Location of JSON-formatted evaluation data", "positional", None, str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
+    gpu_id=("Use GPU", "option", "g", int),
 )
-def evaluate(cmd, model, data_path, gold_preproc=False):
+def evaluate(cmd, model, data_path, gpu_id=-1, gold_preproc=False):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
-    util.set_env_log(True)
+    util.use_gpu(gpu_id)
+    util.set_env_log(False)
     data_path = util.ensure_path(data_path)
     if not data_path.exists():
         prints(data_path, title="Evaluation data not found", exits=1)
     corpus = GoldCorpus(data_path, data_path)
     nlp = util.load_model(model)
-    scorer = nlp.evaluate(list(corpus.dev_docs(nlp, gold_preproc=gold_preproc)))
+    dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
+    begin = timer()
+    scorer = nlp.evaluate(dev_docs, verbose=False)
+    end = timer()
+    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+    print('Time', end-begin, 'words', nwords, 'w.p.s', nwords/(end-begin))
     print_results(scorer)
 
 
