@@ -21,6 +21,7 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 from thinc.api import FeatureExtracter, with_getitem
 from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
 from thinc.neural._classes.attention import ParametricAttention
+from thinc.neural._classes.embed import Embed
 from thinc.linear.linear import LinearModel
 from thinc.api import uniqued, wrap, flatten_add_lengths, noop
 
@@ -210,6 +211,27 @@ class PrecomputableMaxouts(Model):
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return dXf
         return Yfp, backward
+
+
+def HistoryFeatures(nr_class, hist_size=8, nr_dim=8):
+    '''Wrap a model, adding features representing action history.'''
+    embed = Embed(nr_dim, nr_dim, nr_class)
+    ops = embed.ops
+    def add_history_fwd(vectors_hists, drop=0.):
+        vectors, hist_ids = vectors_hists
+        flat_hists, bp_hists = embed.begin_update(hist_ids.flatten(), drop=drop)
+        hists = flat_hists.reshape((hist_ids.shape[0],
+                                    hist_ids.shape[1] * flat_hists.shape[1]))
+        outputs = ops.xp.hstack((vectors, hists))
+
+        def add_history_bwd(d_outputs, sgd=None):
+            d_vectors = d_outputs[:, :vectors.shape[1]]
+            d_hists = d_outputs[:, vectors.shape[1]:]
+            bp_hists(d_hists.reshape((d_hists.shape[0]*hist_size,
+                int(d_hists.shape[1]/hist_size))), sgd=sgd)
+            return embed.ops.xp.ascontiguousarray(d_vectors)
+        return outputs, add_history_bwd
+    return wrap(add_history_fwd, embed)
 
 
 def drop_layer(layer, factor=2.):
