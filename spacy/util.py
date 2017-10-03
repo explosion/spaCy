@@ -563,7 +563,10 @@ def minify_html(html):
 
 
 def use_gpu(gpu_id):
-    import cupy.cuda.device
+    try:
+        import cupy.cuda.device
+    except ImportError:
+        return None
     from thinc.neural.ops import CupyOps
     device = cupy.cuda.device.Device(gpu_id)
     device.use()

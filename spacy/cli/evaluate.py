@@ -39,7 +39,7 @@ def evaluate(cmd, model, data_path, gpu_id=-1, gold_preproc=False):
     Train a model. Expects data in spaCy's JSON format.
     """
     util.use_gpu(gpu_id)
-    util.set_env_log(True)
+    util.set_env_log(False)
     data_path = util.ensure_path(data_path)
     if not data_path.exists():
         prints(data_path, title="Evaluation data not found", exits=1)
