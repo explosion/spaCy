@@ -5,7 +5,7 @@ steps:
     artifact_paths: "dist/*.tar.gz"
   - wait
   - trigger: "spacy-sdist-against-models"
-    label: ":spacy: :build:"
+    label: ":dizzy: :hammer:"
     build:
       env:
         SPACY_VERSION: "{$SPACY_VERSION}"
