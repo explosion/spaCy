@@ -6,5 +6,6 @@ steps:
   - wait
   - trigger: "spacy-sdist-against-models"
     label: ":spacy: :build:"
-    env:
-      SPACY_VERSION: "{$SPACY_VERSION}"
+    build:
+      env:
+        SPACY_VERSION: "{$SPACY_VERSION}"
