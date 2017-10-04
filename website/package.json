@@ -1,0 +1,20 @@
+{
+  "name": "spacy.io",
+  "private": true,
+  "version": "2.0.0",
+  "description": "spacy.io website",
+  "author": "Explosion AI",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "harp": "^0.24.0",
+    "uglify-js": "^2.7.3"
+  },
+  "dependencies": {},
+  "scripts": {
+    "compile": "NODE_ENV=deploy harp compile",
+    "compile_js": "babel www/assets/js/main.js --out-file www/assets/js/main.js --presets=es2015",
+    "uglify": "uglifyjs www/assets/js/main.js --output www/assets/js/main.js",
+    "build": "npm run compile && npm run compile_js && npm run uglify"
+  }
+}

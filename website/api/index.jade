@@ -1,0 +1,14 @@
+//- 💫 DOCS > API > ARCHITECTURE
+
+include ../_includes/_mixins
+
++section("basics")
+    include ../usage/_spacy-101/_architecture
+
++section("nn-model")
+    +h(2, "nn-model") Neural network model architecture
+    include _architecture/_nn-model
+
++section("cython")
+    +h(2, "cython") Cython conventions
+    include _architecture/_cython
