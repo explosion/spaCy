@@ -15,7 +15,7 @@ p Create the rule-based #[code PhraseMatcher].
 
 +aside-code("Example").
     from spacy.matcher import PhraseMatcher
-    matcher = Matcher(nlp.vocab, max_length=6)
+    matcher = PhraseMatcher(nlp.vocab, max_length=6)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -41,9 +41,9 @@ p Create the rule-based #[code PhraseMatcher].
 p Find all token sequences matching the supplied patterns on the #[code Doc].
 
 +aside-code("Example").
-    from spacy.matcher import Matcher
+    from spacy.matcher import PhraseMatcher
 
-    matcher = Matcher(nlp.vocab)
+    matcher = PhraseMatcher(nlp.vocab)
     matcher.add('OBAMA', None, nlp(u"Barack Obama"))
     doc = nlp(u"Barack Obama lifts America one last time in emotional farewell")
     matches = matcher(doc)
