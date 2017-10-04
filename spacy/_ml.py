@@ -31,8 +31,8 @@ import numpy
 import io
 
 # TODO: Unset this once we don't want to support models previous models.
-#import thinc.neural._classes.layernorm
-#thinc.neural._classes.layernorm.set_compat_six_eight(True)
+import thinc.neural._classes.layernorm
+thinc.neural._classes.layernorm.set_compat_six_eight(True)
 
 VECTORS_KEY = 'spacy_pretrained_vectors'
 
