@@ -1,7 +1,5 @@
 steps:
-  -
-    command:
-      - "$HOME/.local/bin/fab env clean make test"
+  - command: "$HOME/.local/bin/fab env clean make test"
     label: ":dizzy: :python:"
     artifact_paths: "dist/*.tar.gz"
   - wait
