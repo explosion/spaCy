@@ -642,7 +642,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))
             >> logistic
         )
-
+    model.nO = nr_class
     model.lsuv = False
     return model
 
