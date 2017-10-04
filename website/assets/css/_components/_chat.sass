@@ -24,9 +24,9 @@
         transform: translateX(110%)
 
     &:before
-        @include position(absolute, top, left, 1rem, 2rem)
+        @include position(absolute, top, left, 1.25rem, 2rem)
         content: attr(data-title)
-        font: bold 1.4rem $font-code
+        font: bold 1.4rem $font-secondary
         text-transform: uppercase
         color: $color-back
 
@@ -88,13 +88,18 @@
             background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTguOTg0IDYuNDIybC01LjU3OCA1LjU3OCA1LjU3OCA1LjU3OC0xLjQwNiAxLjQwNi01LjU3OC01LjU3OC01LjU3OCA1LjU3OC0xLjQwNi0xLjQwNiA1LjU3OC01LjU3OC01LjU3OC01LjU3OCAxLjQwNi0xLjQwNiA1LjU3OCA1LjU3OCA1LjU3OC01LjU3OHoiPjwvcGF0aD48L3N2Zz4=)
 
 .c-chat__button
-    @include position(fixed, bottom, right, 0, 2rem)
-    padding: 1rem 1.5rem
-    background: $color-front
+    @include position(fixed, bottom, right, 1.5rem, 1.5rem)
+    z-index: 5
     color: $color-back
-    border-top-left-radius: 4px
-    border-top-right-radius: 4px
-    z-index: 20
-    border-color: $color-theme
-    border-style: solid
-    border-width: 1px 1px 0 1px
+    background: $color-front
+    border-radius: 1em
+    padding: 0.5rem 1.15rem 0.35rem
+    opacity: 0.7
+    transition: opacity 0.2s ease
+
+    &:hover
+        opacity: 1
+
+
+.gitter-open-chat-button
+    display: none

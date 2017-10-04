@@ -1,0 +1,61 @@
+//- 💫 DOCS > USAGE > TRAINING > NER
+
+p
+    |  All #[+a("/models") spaCy models] support online learning, so
+    |  you can update a pre-trained model with new examples. To update the
+    |  model, you first need to create an instance of
+    |  #[+api("goldparse") #[code GoldParse]], with the entity labels
+    |  you want to learn. You'll usually need to provide many examples to
+    |  meaningfully improve the system — a few hundred is a good start, although
+    |  more is better.
+
+p
+    |  You should avoid iterating over the same few examples multiple times, or
+    |  the model is likely to "forget" how to annotate other examples. If you
+    |  iterate over the same few examples, you're effectively changing the loss
+    |  function. The optimizer will find a way to minimize the loss on your
+    |  examples, without regard for the consequences on the examples it's no
+    |  longer paying attention to. One way to avoid this
+    |  #[+a("https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting", true) "catastrophic forgetting" problem]
+    |  is to "remind"
+    |  the model of other examples by augmenting your annotations with sentences
+    |  annotated with entities automatically recognised by the original model.
+    |  Ultimately, this is an empirical process: you'll need to
+    |  #[strong experiment on your own data] to find a solution that works best
+    |  for you.
+
++h(3, "example-new-entity-type") Example: Training an additional entity type
+
+p
+    |  This script shows how to add a new entity type to an existing pre-trained
+    |  NER model. To keep the example short and simple, only a few sentences are
+    |  provided as examples. In practice, you'll need many more — a few hundred
+    |  would be a good start. You will also likely need to mix in examples of
+    |  other entity types, which might be obtained by running the entity
+    |  recognizer over unlabelled sentences, and adding their annotations to the
+    |  training set.
+
+p
+    |  The actual training is performed by looping over the examples, and
+    |  calling #[+api("language#update") #[code nlp.update()]]. The
+    |  #[code update] method steps through the words of the input. At each word,
+    |  it makes a prediction. It then consults the annotations provided on the
+    |  #[+api("goldparse") #[code GoldParse]] instance, to see whether it was
+    |  right. If it was wrong, it adjusts its weights so that the correct
+    |  action will score higher next time.
+
++github("spacy", "examples/training/train_new_entity_type.py")
+
++h(3, "example-ner-from-scratch") Example: Training an NER system from scratch
+
+p
+    |  This example is written to be self-contained and reasonably transparent.
+    |  To achieve that, it duplicates some of spaCy's internal functionality.
+    |  Specifically, in this example, we don't use spaCy's built-in
+    |  #[+api("language") #[code Language]] class to wire together the
+    |  #[+api("vocab") #[code Vocab]], #[+api("tokenizer") #[code Tokenizer]]
+    |  and #[+api("entityrecognizer") #[code EntityRecognizer]]. Instead, we
+    |  write our own simle #[code Pipeline] class, so that it's easier to see
+    |  how the pieces interact.
+
++github("spacy", "examples/training/train_ner_standalone.py")

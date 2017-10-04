@@ -15,6 +15,15 @@
         align-items: center
         justify-content: center
 
+    &.o-grid--vcenter
+        align-items: center
+
+    &.o-grid--space
+        justify-content: space-between
+
+    &.o-grid--nowrap
+        flex-wrap: nowrap
+
 
 //- Grid column
 
@@ -22,7 +31,6 @@
     $grid-gutter: 2rem
 
     margin-top: $grid-gutter
-    overflow: hidden
 
     @include breakpoint(min, lg)
         display: flex
