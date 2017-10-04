@@ -622,7 +622,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> with_flatten(
                 LN(Maxout(width, vectors_width))
                 >> Residual(
-                    (ExtractWindow(nW=1) >> zero_init(Maxout(width, width*3)))
+                    (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
                 ) ** 2, pad=2
             )
             >> flatten_add_lengths
