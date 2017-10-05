@@ -57,7 +57,6 @@ def test_en_lemmatizer_punct(en_lemmatizer):
 def test_en_lemmatizer_lemma_assignment(EN):
     text = "Bananas in pyjamas are geese."
     doc = EN.make_doc(text)
-    EN.tensorizer(doc)
     assert all(t.lemma_ == '' for t in doc)
     EN.tagger(doc)
     assert all(t.lemma_ != '' for t in doc)
