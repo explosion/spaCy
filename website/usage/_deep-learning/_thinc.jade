@@ -1,0 +1,66 @@
+//- 💫 DOCS > USAGE > DEEP LEARNING > THINC
+
+p
+    |  #[+a(gh("thinc")) Thinc] is the machine learning library powering spaCy.
+    |  It's a practical toolkit for implementing models that follow the
+    |  #[+a("https://explosion.ai/blog/deep-learning-formula-nlp", true) "Embed, encode, attend, predict"]
+    |  architecture. It's designed to be easy to install, efficient for CPU
+    |  usage and optimised for NLP and deep learning with text – in particular,
+    |  hierarchically structured input and variable-length sequences.
+
+p
+    |  spaCy's built-in pipeline components can all be powered by any object
+    |  that follows Thinc's #[code Model] API. If a wrapper is not yet available
+    |  for the library you're using, you should create a
+    |  #[code thinc.neural.Model] subclass that implements a #[code begin_update]
+    |  method. You'll also want to implement #[code to_bytes], #[code from_bytes],
+    |  #[code to_disk] and #[code from_disk] methods, to save and load your
+    |  model. Here's the tempate you'll need to fill in:
+
+    +code("Thinc Model API").
+        class ThincModel(thinc.neural.Model):
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def begin_update(self, X, drop=0.):
+                def backprop(dY, sgd=None):
+                    return dX
+                return Y, backprop
+
+            def to_disk(self, path, **exclude):
+                return None
+
+            def from_disk(self, path, **exclude):
+                return self
+
+            def to_bytes(self, **exclude):
+                return bytes
+
+            def from_bytes(self, msgpacked_bytes, **exclude):
+                return self
+
+p
+    |  The #[code begin_update] method should return a callback, that takes the
+    |  gradient with respect to the output, and returns the gradient with
+    |  respect to the input.  It's usually convenient to implement the callback
+    |  as a nested function, so you can refer to any intermediate variables from
+    |  the forward computation in the enclosing scope.
+
++h(3, "how-thinc-works") How Thinc works
+
+p
+    |  Neural networks are all about composing small functions that we know how
+    |  to differentiate into larger functions that we know how to differentiate.
+    |  To differentiate a function efficiently, you usually need to store
+    |  intermediate results, computed during the "forward pass", to reuse them
+    |  during the backward pass. Most libraries require the data passed through
+    |  the network to accumulate these intermediate result. This is the "tape"
+    |  in tape-based differentiation.
+
+p
+    |  In Thinc, a model that computes #[code y = f(x)] is required to also
+    |  return a callback that computes #[code dx = f&apos;(dy)]. The same
+    |  intermediate state needs to be tracked, but this becomes an
+    |  implementation detail for the model to take care of – usually, the
+    |  callback is implemented as a closure, so the intermediate results can be
+    |  read from the enclosing scope.

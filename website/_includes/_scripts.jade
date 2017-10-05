@@ -1,27 +1,46 @@
 //- 💫 INCLUDES > SCRIPTS
 
-script(src="/assets/js/main.js?v#{V_JS}")
-script(src="/assets/js/prism.js")
+if quickstart
+        script(src="/assets/js/quickstart.min.js")
 
-if SECTION == "docs"
-    if quickstart
-        script(src="/assets/js/quickstart.js")
-        script var qs = new Quickstart("#qs")
+if IS_PAGE
+    script(src="/assets/js/in-view.min.js")
 
-    script.
-        ((window.gitter = {}).chat = {}).options = {
-            useStyles: false,
-            activationElement: '.js-gitter-button',
-            targetElement: '.js-gitter',
-            room: '!{SOCIAL.gitter}'
-        };
-
-    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
+if HAS_MODELS
+    script(src="/assets/js/chart.min.js")
 
 if environment == "deploy"
-    script
+    script(async src="https://www.google-analytics.com/analytics.js")
+
+script(src="/assets/js/prism.min.js")
+script(src="/assets/js/main.js?v#{V_JS}")
+
+script
+    | new ProgressBar('.js-progress');
+
+    if changelog
+        | new Changelog('!{SOCIAL.github}', 'spacy');
+
+    if quickstart
+        | new Quickstart("#qs");
+
+    if IS_PAGE
+        | new SectionHighlighter('data-section', 'data-nav');
+        | new GitHubEmbed('!{SOCIAL.github}', 'data-gh-embed');
+        | ((window.gitter = {}).chat = {}).options = {
+        |     useStyles: false,
+        |     activationElement: '.js-gitter-button',
+        |     targetElement: '.js-gitter',
+        |     room: '!{SOCIAL.gitter}'
+        | };
+
+    if HAS_MODELS
+        | new ModelLoader('!{MODELS_REPO}', !{JSON.stringify(CURRENT_MODELS)}, !{JSON.stringify(MODEL_LICENSES)}, !{JSON.stringify(MODEL_ACCURACY)});
+
+    if environment == "deploy"
         | window.ga=window.ga||function(){
         | (ga.q=ga.q||[]).push(arguments)}; ga.l=+new Date;
         | ga('create', '#{ANALYTICS}', 'auto'); ga('send', 'pageview');
 
-    script(async src="https://www.google-analytics.com/analytics.js")
+if IS_PAGE
+    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
