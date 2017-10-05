@@ -277,6 +277,7 @@ cdef class Parser:
                 upper = chain(
                     HistoryFeatures(nr_class=nr_class, hist_size=HIST_SIZE, nr_dim=HIST_DIMS),
                     Maxout(hidden_width, hidden_width+HIST_SIZE*HIST_DIMS),
+                    clone(Maxout(hidden_width, hidden_width), depth-2),
                     zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
@@ -286,7 +287,7 @@ cdef class Parser:
                     zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
- 
+
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
