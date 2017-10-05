@@ -551,7 +551,6 @@ class NeuralLabeller(NeuralTagger):
                     label = self.make_label(i, words, tags, heads, deps, ents)
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
-        print(len(self.labels))
         if self.model is True:
             token_vector_width = util.env_opt('token_vector_width')
             self.model = chain(
@@ -720,11 +719,17 @@ class TextCategorizer(BaseThincComponent):
 
     def get_loss(self, docs, golds, scores):
         truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
+        not_missing = numpy.ones((len(golds), len(self.labels)), dtype='f')
         for i, gold in enumerate(golds):
             for j, label in enumerate(self.labels):
-                truths[i, j] = label in gold.cats
+                if label in gold.cats:
+                    truths[i, j] = gold.cats[label]
+                else:
+                    not_missing[i, j] = 0.
         truths = self.model.ops.asarray(truths)
+        not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores-truths) / scores.shape[0]
+        d_scores *= not_missing
         mean_square_error = ((scores-truths)**2).sum(axis=1).mean()
         return mean_square_error, d_scores
 
