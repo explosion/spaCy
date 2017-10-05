@@ -47,3 +47,20 @@ def test_tagger_lemmatizer_lemma_assignment(EN):
     assert all(t.lemma_ == '' for t in doc)
     EN.tagger(doc)
     assert all(t.lemma_ != '' for t in doc)
+
+
+from ...symbols import POS, VERB, VerbForm_part
+from ...vocab import Vocab
+from ...lemmatizer import Lemmatizer
+from ..util import get_doc
+def test_tagger_lemmatizer_exceptions():
+    index = {"verb": ("cope","cop")}
+    exc = {"verb": {"coping": ("cope",)}}
+    rules = {"verb": [["ing", ""]]}
+    tag_map = {'VBG': {POS: VERB, VerbForm_part: True}}
+    lemmatizer = Lemmatizer(index, exc, rules)
+    vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
+    doc = get_doc(vocab, ["coping"])
+    doc[0].tag_ = 'VBG'
+    assert doc[0].text == "coping"
+    assert doc[0].lemma_ == "cope"
