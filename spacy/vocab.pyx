@@ -27,6 +27,7 @@ from .vectors import Vectors
 from . import util
 from . import attrs
 from . import symbols
+from ._ml import link_vectors_to_models
 
 
 cdef class Vocab:
@@ -65,7 +66,7 @@ cdef class Vocab:
                 self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors(self.strings, 300)
+        self.vectors = Vectors(self.strings)
 
     property lang:
         def __get__(self):
@@ -261,7 +262,7 @@ cdef class Vocab:
         Words can be looked up by string or int ID.
 
         RETURNS:
-            A word vector. Size and shape determed by the
+            A word vector. Size and shape determined by the
             vocab.vectors instance. Usually, a numpy ndarray
             of shape (300,) and dtype float32.
 
@@ -323,6 +324,7 @@ cdef class Vocab:
             self.lexemes_from_bytes(file_.read())
         if self.vectors is not None:
             self.vectors.from_disk(path, exclude='strings.json')
+        link_vectors_to_models(self)
         return self
 
     def to_bytes(self, **exclude):
@@ -336,7 +338,7 @@ cdef class Vocab:
                 return None
             else:
                 return self.vectors.to_bytes(exclude='strings.json')
- 
+
         getters = OrderedDict((
             ('strings', lambda: self.strings.to_bytes()),
             ('lexemes', lambda: self.lexemes_to_bytes()),
@@ -436,6 +438,7 @@ def unpickle_vocab(sstore, morphology, data_dir,
     vocab.lex_attr_getters = lex_attr_getters
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
+    link_vectors_to_models(vocab)
     return vocab
 
 

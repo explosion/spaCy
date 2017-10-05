@@ -101,9 +101,10 @@ cdef cppclass StateC:
         elif n == 6:
             if this.B(0) >= 0:
                 ids[0] = this.B(0)
+                ids[1] = this.B(0)-1
             else:
                 ids[0] = -1
-            ids[1] = this.B(0)
+                ids[1] = -1
             ids[2] = this.B(1)
             ids[3] = this.E(0)
             if ids[3] >= 1:
@@ -120,6 +121,8 @@ cdef cppclass StateC:
         for i in range(n):
             if ids[i] >= 0:
                 ids[i] += this.offset
+            else:
+                ids[i] = -1
 
     int S(int i) nogil const:
         if i >= this._s_i:
@@ -162,9 +165,9 @@ cdef cppclass StateC:
 
     int E(int i) nogil const:
         if this._e_i <= 0 or this._e_i >= this.length:
-            return 0
+            return -1
         if i < 0 or i >= this._e_i:
-            return 0
+            return -1
         return this._ents[this._e_i - (i+1)].start
 
     int L(int i, int idx) nogil const:

@@ -34,6 +34,7 @@ from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS
 from . import util
 from .scorer import Scorer
+from ._ml import link_vectors_to_models
 
 
 class BaseDefaults(object):
@@ -278,8 +279,7 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None,
-            update_shared=False):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -303,32 +303,17 @@ class Language(object):
             if self._optimizer is None:
                 self._optimizer = Adam(Model.ops, 0.001)
             sgd = self._optimizer
-        tok2vec = self.pipeline[0]
-        feats = tok2vec.doc2feats(docs)
         grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
-        pipes = list(self.pipeline[1:])
+        pipes = list(self.pipeline)
         random.shuffle(pipes)
-        tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
-        all_d_tokvecses = [tok2vec.model.ops.allocate(tv.shape) for tv in tokvecses]
         for proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
-            d_tokvecses = proc.update((docs, tokvecses), golds,
-                                      drop=drop, sgd=get_grads, losses=losses)
-            if update_shared and d_tokvecses is not None:
-                for i, d_tv in enumerate(d_tokvecses):
-                    all_d_tokvecses[i] += d_tv
-        if update_shared and bp_tokvecses is not None:
-            bp_tokvecses(all_d_tokvecses, sgd=sgd)
+            proc.update(docs, golds, drop=drop, sgd=get_grads, losses=losses)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
-        # Clear the tensor variable, to free GPU memory.
-        # If we don't do this, the memory leak gets pretty
-        # bad, because we may be holding part of a batch.
-        for doc in docs:
-            doc.tensor = None
 
     def preprocess_gold(self, docs_golds):
         """Can be called before training to pre-process gold data. By default,
@@ -343,36 +328,49 @@ class Language(object):
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, get_gold_tuples, **cfg):
+    def resume_training(self, **cfg):
+        if cfg.get('device', -1) >= 0:
+            device = util.use_gpu(cfg['device'])
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(
+                    self.vocab.vectors.data)
+        else:
+            device = None
+        learn_rate = util.env_opt('learn_rate', 0.001)
+        beta1 = util.env_opt('optimizer_B1', 0.9)
+        beta2 = util.env_opt('optimizer_B2', 0.999)
+        eps = util.env_opt('optimizer_eps', 1e-08)
+        L2 = util.env_opt('L2_penalty', 1e-6)
+        max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+        self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
+                              beta2=beta2, eps=eps)
+        self._optimizer.max_grad_norm = max_grad_norm
+        self._optimizer.device = device
+        return self._optimizer
+
+    def begin_training(self, get_gold_tuples=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        gold_tuples (iterable): Gold-standard training data.
+        get_gold_tuples (function): Function returning gold data
         **cfg: Config parameters.
-        YIELDS (tuple): A trainer and an optimizer.
-
-        EXAMPLE:
-            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
-            >>>    for epoch in trainer.epochs(gold):
-            >>>        for docs, golds in epoch:
-            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        returns: An optimizer
         """
-        if self.parser:
-            self.pipeline.append(NeuralLabeller(self.vocab))
         # Populate vocab
-        for _, annots_brackets in get_gold_tuples():
-            for annots, _ in annots_brackets:
-                for word in annots[1]:
-                    _ = self.vocab[word]
+        if get_gold_tuples is not None:
+            for _, annots_brackets in get_gold_tuples():
+                for annots, _ in annots_brackets:
+                    for word in annots[1]:
+                        _ = self.vocab[word]
         contexts = []
         if cfg.get('device', -1) >= 0:
-            import cupy.cuda.device
-            device = cupy.cuda.device.Device(cfg['device'])
-            device.use()
-            Model.ops = CupyOps()
-            Model.Ops = CupyOps
+            device = util.use_gpu(cfg['device'])
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(
+                    self.vocab.vectors.data)
         else:
             device = None
+        link_vectors_to_models(self.vocab)
         for proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
                 context = proc.begin_training(get_gold_tuples(),
@@ -390,7 +388,7 @@ class Language(object):
         self._optimizer.device = device
         return self._optimizer
 
-    def evaluate(self, docs_golds):
+    def evaluate(self, docs_golds, verbose=False):
         scorer = Scorer()
         docs, golds = zip(*docs_golds)
         docs = list(docs)
@@ -403,8 +401,9 @@ class Language(object):
                 docs = list(pipe.pipe(docs))
         assert len(docs) == len(golds)
         for doc, gold in zip(docs, golds):
-            scorer.score(doc, gold)
-            doc.tensor = None
+            if verbose:
+                print(doc)
+            scorer.score(doc, gold, verbose=verbose)
         return scorer
 
     @contextmanager
@@ -493,7 +492,6 @@ class Language(object):
         """
         path = util.ensure_path(path)
         serializers = OrderedDict((
-            ('vocab', lambda p: self.vocab.to_disk(p)),
             ('tokenizer', lambda p: self.tokenizer.to_disk(p, vocab=False)),
             ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
         ))
@@ -505,6 +503,7 @@ class Language(object):
             if not hasattr(proc, 'to_disk'):
                 continue
             serializers[proc.name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+        serializers['vocab'] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, {p: False for p in disable})
 
     def from_disk(self, path, disable=tuple()):

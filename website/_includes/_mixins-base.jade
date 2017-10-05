@@ -1,5 +1,13 @@
 //- 💫 MIXINS > BASE
 
+//- Section
+    id - [string] anchor assigned to section (used for breadcrumb navigation)
+
+mixin section(id)
+    section.o-section(id="section-" + id data-section=id)
+        block
+
+
 //- Aside wrapper
     label - [string] aside label
 
@@ -11,34 +19,26 @@ mixin aside-wrapper(label)
 
             block
 
-//- Date
-    input - [string] date in the format YYYY-MM-DD
 
-mixin date(input)
-    - var date = new Date(input)
-    - var months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ]
-
-    time(datetime=JSON.parse(JSON.stringify(date)))&attributes(attributes)=months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear()
-
-
-//- SVG from map
-    file   - [string] SVG file name in /assets/img/
+//- SVG from map (uses embedded SVG sprite)
     name   - [string] SVG symbol id
     width  - [integer] width in px
     height - [integer] height in px (default: same as width)
 
-mixin svg(file, name, width, height)
+mixin svg(name, width, height)
     svg(aria-hidden="true" viewBox="0 0 #{width} #{height || width}" width=width height=(height || width))&attributes(attributes)
-        use(xlink:href="/assets/img/#{file}.svg##{name}")
+        use(xlink:href="#svg_#{name}")
 
 
 //- Icon
-    name - [string] icon name, should be SVG symbol ID
-    size - [integer] icon width and height (default: 20)
+    name   - [string] icon name (will be used as symbol id: #svg_{name})
+    width  - [integer] icon width (default: 20)
+    height - [integer] icon height (defaults to width)
 
-mixin icon(name, size)
-    - var size = size || 20
-    +svg("icons", name, size).o-icon(style="min-width: #{size}px")&attributes(attributes)
+mixin icon(name, width, height)
+    - var width = width || 20
+    - var height = height || width
+    +svg(name, width, height).o-icon(style="min-width: #{width}px")&attributes(attributes)
 
 
 //- Pro/Con/Neutral icon
@@ -46,8 +46,8 @@ mixin icon(name, size)
     size - [integer] icon size (optional)
 
 mixin procon(icon, size)
-    - colors = { pro: "green", con: "red", neutral: "yellow" }
-    +icon(icon, size)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
+    - colors = { pro: "green", con: "red", neutral: "subtle" }
+    +icon("circle", size || 16)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
 
 
 //- Headlines Helper Mixin
@@ -80,8 +80,7 @@ mixin headline(level)
 
 mixin permalink(id)
     if id
-        a.u-permalink(id=id href="##{id}")
-            +icon("anchor").u-permalink__icon
+        a.u-permalink(href="##{id}")
             block
 
     else
@@ -109,7 +108,7 @@ mixin quickstart(groups, headline, description, hide_results)
                     .c-quickstart__fields
                         for option in group.options
                             input.c-quickstart__input(class="c-quickstart__input--" + (group.input_style ? group.input_style : group.multiple ? "check" : "radio") type=group.multiple ? "checkbox" : "radio" name=group.id id="qs-#{option.id}" value=option.id checked=option.checked)
-                            label.c-quickstart__label(for="qs-#{option.id}")!=option.title
+                            label.c-quickstart__label.u-text-tiny(for="qs-#{option.id}")!=option.title
                                 if option.meta
                                     |  #[span.c-quickstart__label__meta (#{option.meta})]
                                 if option.help
@@ -122,12 +121,10 @@ mixin quickstart(groups, headline, description, hide_results)
                 code.c-code-block__content.c-quickstart__code(data-qs-results="")
                     block
 
-    .c-quickstart__info.u-text-tiny.o-block.u-text-right
-        |  Like this widget? Check out #[+a("https://github.com/ines/quickstart").u-link quickstart.js]!
-
 
 //- Quickstart code item
-    data [object] - Rendering conditions (keyed by option group ID, value: option)
+    data  - [object] Rendering conditions (keyed by option group ID, value: option)
+    style - [string] modifier ID for line style
 
 mixin qs(data, style)
     - args = {}
@@ -148,6 +145,13 @@ mixin terminal(label)
         +code.x-terminal__code
             block
 
+//- Chart.js
+    id - [string] chart ID, will be assigned as #chart_{id}
+
+mixin chart(id)
+    figure.o-block&attributes(attributes)
+        canvas(id="chart_#{id}" width="800" height="400" style="max-width: 100%")
+
 
 //- Gitter chat button and widget
     button - [string] text shown on button
@@ -156,26 +160,24 @@ mixin terminal(label)
 mixin gitter(button, label)
     aside.js-gitter.c-chat.is-collapsed(data-title=(label || button))
 
-    button.js-gitter-button.c-chat__button.u-text-small
-        +icon("chat").o-icon--inline
+    button.js-gitter-button.c-chat__button.u-text-tag
+        +icon("chat", 16).o-icon--inline
         !=button
 
 
 //- Badge
-    name - [string] "pipy" or "conda"
+    image - [string] path to badge image
+    url   - [string] badge link
 
-mixin badge(name)
-    - site = BADGES[name]
-
-    if site
-        +a(site.link).u-padding-small
-            img(src=site.badge alt="{name} version" height="20")
+mixin badge(image, url)
+    +a(url).u-padding-small.u-hide-link&attributes(attributes)
+        img.o-badge(src=image alt=url height="20")
 
 
-//- Logo
+//- spaCy logo
 
 mixin logo()
-    +svg("graphics", "spacy", 675, 215).o-logo&attributes(attributes)
+    +svg("spacy", 675, 215).o-logo&attributes(attributes)
 
 
 //- Landing
@@ -186,18 +188,56 @@ mixin landing-header()
             .c-landing__content
                 block
 
+mixin landing-banner(headline, label)
+    .c-landing__banner.u-padding.o-block.u-color-light
+        +grid.c-landing__banner__content.o-no-block
+            +grid-col("third")
+                h3.u-heading.u-heading-1
+                    if label
+                        div
+                            span.u-text-label.u-text-label--light=label
+                    !=headline
 
-mixin landing-badge(url, graphic, alt, size)
-    +a(url)(aria-label=alt title=alt).c-landing__badge
-        +svg("graphics", graphic, size || 225)
+            +grid-col("two-thirds").c-landing__banner__text
+                block
+
+
+mixin landing-logos(title, logos)
+    .o-content.u-text-center&attributes(attributes)
+        h3.u-heading.u-text-label.u-color-dark=title
+
+        each row, i in logos
+            - var is_last = i == logos.length - 1
+            +grid("center").o-inline-list.o-no-block(class=is_last ? "o-no-block" : null)
+                each details, name in row
+                    +a(details[0]).u-padding-medium
+                        +icon(name, details[1], details[2])
+
+                if is_last
+                    block
 
 
 //- Under construction (temporary)
     Marks sections that still need to be completed for the v2.0 release.
 
 mixin under-construction()
-    +infobox("🚧 Under construction")
+    +infobox("Under construction", "🚧")
         |  This section is still being written and will be updated for the v2.0
         |  release. Is there anything that you think should definitely mentioned or
         |  explained here? Any examples you'd like to see? #[strong Let us know]
         |  on the #[+a(gh("spacy") + "/issues/1105") v2.0 alpha thread] on GitHub!
+
+
+//- Alpha infobox (temporary)
+    Added in the templates to notify user that they're visiting the alpha site.
+
+mixin alpha-info()
+    +infobox("You are viewing the spaCy v2.0.0 alpha docs", "⚠️")
+        strong This page is part of the alpha documentation for spaCy v2.0.
+        |  It does not reflect the state of the latest stable release.
+        |  Because v2.0 is still under development, the implementation
+        |  may differ from the intended state described here. See the
+        |  #[+a(gh("spaCy") + "/releases/tag/v2.0.0-alpha") release notes]
+        |  for details on how to install and test the new version. To
+        |  read the official docs for spaCy v1.x,
+        |  #[+a("https://spacy.io/docs") go here].

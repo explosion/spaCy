@@ -147,10 +147,10 @@ def get_token_ids(states, int n_tokens):
 
 nr_update = 0
 def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
-                states, tokvecs, golds,
+                states, golds,
                 state2vec, vec2scores, 
                 int width, float density,
-                sgd=None, losses=None, drop=0.):
+                losses=None, drop=0.):
     global nr_update
     cdef MaxViolation violn
     nr_update += 1

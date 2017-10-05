@@ -1,4 +1,4 @@
-cpdef enum symbol_t:
+cdef enum symbol_t:
     NIL
     IS_ALPHA
     IS_ASCII

@@ -38,7 +38,8 @@ class Lemmatizer(object):
         avoid lemmatization entirely.
         """
         morphology = {} if morphology is None else morphology
-        others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
+        others = [key for key in morphology
+                  if key not in (POS, 'Number', 'POS', 'VerbForm', 'Tense')]
         true_morph_key = morphology.get('morph', 0)
         if univ_pos == 'noun' and morphology.get('Number') == 'sing':
             return True
@@ -47,7 +48,9 @@ class Lemmatizer(object):
         # This maps 'VBP' to base form -- probably just need 'IS_BASE'
         # morphology
         elif univ_pos == 'verb' and (morphology.get('VerbForm') == 'fin' and \
-                                     morphology.get('Tense') == 'pres'):
+                                     morphology.get('Tense') == 'pres' and \
+                                     morphology.get('Number') is None and \
+                                     not others):
             return True
         elif univ_pos == 'adj' and morphology.get('Degree') == 'pos':
             return True

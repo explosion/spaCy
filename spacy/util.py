@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import os
 import ujson
-import pip
+import pkg_resources
 import importlib
 import regex as re
 from pathlib import Path
@@ -14,6 +14,7 @@ import numpy
 import io
 import dill
 from collections import OrderedDict
+from thinc.neural._classes.model import Model
 
 import msgpack
 import msgpack_numpy
@@ -180,9 +181,10 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    packages = pip.get_installed_distributions()
+    name = name.lower()  # compare package name against lowercase name
+    packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
-        if package.project_name.replace('-', '_') == name:
+        if package.lower().replace('-', '_') == name:
             return True
     return False
 
@@ -193,6 +195,7 @@ def get_package_path(name):
     name (unicode): Package name.
     RETURNS (Path): Path to installed package.
     """
+    name = name.lower()  # use lowercase version to be safe
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
@@ -557,3 +560,17 @@ def minify_html(html):
     RETURNS (unicode): "Minified" HTML.
     """
     return html.strip().replace('    ', '').replace('\n', '')
+
+
+def use_gpu(gpu_id):
+    try:
+        import cupy.cuda.device
+    except ImportError:
+        return None
+    from thinc.neural.ops import CupyOps
+    device = cupy.cuda.device.Device(gpu_id)
+    device.use()
+    Model.ops = CupyOps()
+    Model.Ops = CupyOps
+    return device
+

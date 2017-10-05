@@ -6,6 +6,8 @@ import msgpack
 import msgpack_numpy
 msgpack_numpy.patch()
 cimport numpy as np
+from thinc.neural.util import get_array_module
+from thinc.neural._classes.model import Model
 
 from .typedefs cimport attr_t
 from .strings cimport StringStore
@@ -14,15 +16,29 @@ from .compat import basestring_
 
 
 cdef class Vectors:
-    '''Store, save and load word vectors.'''
+    '''Store, save and load word vectors.
+
+    Vectors data is kept in the vectors.data attribute, which should be an
+    instance of numpy.ndarray (for CPU vectors)
+    or cupy.ndarray (for GPU vectors).
+
+    vectors.key2row is a dictionary mapping word hashes to rows
+    in the vectors.data table. The array `vectors.keys` keeps
+    the keys in order, such that keys[vectors.key2row[key]] == key.
+    '''
     cdef public object data
     cdef readonly StringStore strings
     cdef public object key2row
     cdef public object keys
     cdef public int i
 
-    def __init__(self, strings, data_or_width):
-        self.strings = StringStore()
+    def __init__(self, strings, data_or_width=0):
+        if isinstance(strings, StringStore):
+            self.strings = strings
+        else:
+            self.strings = StringStore()
+            for string in strings:
+                self.strings.add(string)
         if isinstance(data_or_width, int):
             self.data = data = numpy.zeros((len(strings), data_or_width),
                                            dtype='f')
@@ -31,12 +47,17 @@ cdef class Vectors:
         self.i = 0
         self.data = data
         self.key2row = {}
-        self.keys = np.ndarray((self.data.shape[0],), dtype='uint64') 
+        self.keys = np.ndarray((self.data.shape[0],), dtype='uint64')
 
     def __reduce__(self):
         return (Vectors, (self.strings, self.data))
 
     def __getitem__(self, key):
+        '''Get a vector by key. If key is a string, it is hashed
+        to an integer ID using the vectors.strings table.
+
+        If the integer key is not found in the table, a KeyError is raised.
+        '''
         if isinstance(key, basestring):
             key = self.strings[key]
         i = self.key2row[key]
@@ -46,23 +67,30 @@ cdef class Vectors:
             return self.data[i]
 
     def __setitem__(self, key, vector):
+        '''Set a vector for the given key. If key is a string, it is hashed
+        to an integer ID using the vectors.strings table.
+        '''
         if isinstance(key, basestring):
             key = self.strings.add(key)
         i = self.key2row[key]
         self.data[i] = vector
 
     def __iter__(self):
+        '''Yield vectors from the table.'''
         yield from self.data
 
     def __len__(self):
+        '''Return the number of vectors that have been assigned.'''
         return self.i
 
     def __contains__(self, key):
+        '''Check whether a key has a vector entry in the table.'''
         if isinstance(key, basestring_):
             key = self.strings[key]
         return key in self.key2row
 
     def add(self, key, vector=None):
+        '''Add a key to the table, optionally setting a vector value as well.'''
         if isinstance(key, basestring_):
             key = self.strings.add(key)
         if key not in self.key2row:
@@ -80,7 +108,9 @@ cdef class Vectors:
         return i
 
     def items(self):
-        for i, string in enumerate(self.strings):
+        '''Iterate over (string key, vector) pairs, in order.'''
+        for i, key in enumerate(self.keys):
+            string = self.strings[key]
             yield string, self.data[i]
 
     @property
@@ -118,9 +148,14 @@ cdef class Vectors:
             self.data
 
     def to_disk(self, path, **exclude):
+        xp = get_array_module(self.data)
+        if xp is numpy:
+            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
+        else:
+            save_array = lambda arr, file_: xp.save(file_, arr)
         serializers = OrderedDict((
-            ('vectors', lambda p: numpy.save(p.open('wb'), self.data, allow_pickle=False)),
-            ('keys', lambda p: numpy.save(p.open('wb'), self.keys, allow_pickle=False)),
+            ('vectors', lambda p: save_array(self.data, p.open('wb'))),
+            ('keys', lambda p: xp.save(p.open('wb'), self.keys))
         ))
         return util.to_disk(path, serializers, exclude)
 
@@ -133,8 +168,9 @@ cdef class Vectors:
                     self.key2row[key] = i
 
         def load_vectors(path):
+            xp = Model.ops.xp
             if path.exists():
-                self.data = numpy.load(path)
+                self.data = xp.load(path)
 
         serializers = OrderedDict((
             ('keys', load_keys),

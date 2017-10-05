@@ -105,8 +105,11 @@ def generate_pipeline():
            "parser, ner. For more information, see the docs on processing pipelines.",
            title="Enter your model's pipeline components")
     pipeline = util.get_raw_input("Pipeline components", True)
-    replace = {'True': True, 'False': False}
-    return replace[pipeline] if pipeline in replace else pipeline.split(', ')
+    subs = {'True': True, 'False': False}
+    if pipeline in subs:
+        return subs[pipeline]
+    else:
+        return [p.strip() for p in pipeline.split(',')]
 
 
 def validate_meta(meta, keys):

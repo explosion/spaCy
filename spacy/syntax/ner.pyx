@@ -161,8 +161,7 @@ cdef class BiluoPushDown(TransitionSystem):
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
         if name == '-' or name == None:
-            move_str = 'M'
-            label = 0
+            return Transition(clas=0, move=MISSING, label=0, score=0)
         elif name == '!O':
             return Transition(clas=0, move=ISNT, label=0, score=0)
         elif '-' in name:
@@ -219,6 +218,31 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             raise Exception(move)
         return t
+
+    #def add_action(self, int action, label_name):
+    #    cdef attr_t label_id
+    #    if not isinstance(label_name, (int, long)):
+    #        label_id = self.strings.add(label_name)
+    #    else:
+    #        label_id = label_name
+    #    if action == OUT and label_id != 0:
+    #        return
+    #    if action == MISSING or action == ISNT:
+    #        return
+    #    # Check we're not creating a move we already have, so that this is
+    #    # idempotent
+    #    for trans in self.c[:self.n_moves]:
+    #        if trans.move == action and trans.label == label_id:
+    #            return 0
+    #    if self.n_moves >= self._size:
+    #        self._size *= 2
+    #        self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
+    #    self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
+    #    assert self.c[self.n_moves].label == label_id
+    #    self.n_moves += 1
+    #    return 1
+
+
 
     cdef int initialize_state(self, StateC* st) nogil:
         # This is especially necessary when we use limited training data.

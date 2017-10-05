@@ -1,0 +1,239 @@
+//- 💫 DOCS > API > STRINGSTORE
+
+include ../_includes/_mixins
+
+p
+    |  Look up strings by 64-bit hashes. As of v2.0, spaCy uses hash values
+    |  instead of integer IDs. This ensures that strings always map to the
+    |  same ID, even from different #[code StringStores].
+
++h(2, "init") StringStore.__init__
+    +tag method
+
+p
+    |  Create the #[code StringStore].
+
++aside-code("Example").
+    from spacy.strings import StringStore
+    stringstore = StringStore([u'apple', u'orange'])
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code strings]
+        +cell iterable
+        +cell A sequence of unicode strings to add to the store.
+
+    +row("foot")
+        +cell returns
+        +cell #[code StringStore]
+        +cell The newly constructed object.
+
++h(2, "len") StringStore.__len__
+    +tag method
+
+p Get the number of strings in the store.
+
++aside-code("Example").
+    stringstore = StringStore([u'apple', u'orange'])
+    assert len(stringstore) == 2
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of strings in the store.
+
++h(2, "getitem") StringStore.__getitem__
+    +tag method
+
+p Retrieve a string from a given hash, or vice versa.
+
++aside-code("Example").
+    stringstore = StringStore([u'apple', u'orange'])
+    apple_hash = stringstore[u'apple']
+    assert apple_hash == 8566208034543834098
+    assert stringstore[apple_hash] == u'apple'
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string_or_id]
+        +cell bytes, unicode or uint64
+        +cell The value to encode.
+
+    +row("foot")
+        +cell returns
+        +cell unicode or int
+        +cell The value to be retrieved.
+
++h(2, "contains") StringStore.__contains__
+    +tag method
+
+p Check whether a string is in the store.
+
++aside-code("Example").
+    stringstore = StringStore([u'apple', u'orange'])
+    assert u'apple' in stringstore
+    assert not u'cherry' in stringstore
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to check.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the store contains the string.
+
++h(2, "iter") StringStore.__iter__
+    +tag method
+
+p
+    |  Iterate over the strings in the store, in order. Note that a newly
+    |  initialised store will always include an empty string #[code ''] at
+    |  position #[code 0].
+
++aside-code("Example").
+    stringstore = StringStore([u'apple', u'orange'])
+    all_strings = [s for s in stringstore]
+    assert all_strings == [u'apple', u'orange']
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell unicode
+        +cell A string in the store.
+
++h(2, "add") StringStore.add
+    +tag method
+    +tag-new(2)
+
+p Add a string to the #[code StringStore].
+
++aside-code("Example").
+    stringstore = StringStore([u'apple', u'orange'])
+    banana_hash = stringstore.add(u'banana')
+    assert len(stringstore) == 3
+    assert banana_hash == 2525716904149915114
+    assert stringstore[banana_hash] == u'banana'
+    assert stringstore[u'banana'] == banana_hash
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to add.
+
+    +row("foot")
+        +cell returns
+        +cell uint64
+        +cell The string's hash value.
+
+
++h(2, "to_disk") StringStore.to_disk
+    +tag method
+    +tag-new(2)
+
+p Save the current state to a directory.
+
++aside-code("Example").
+    stringstore.to_disk('/path/to/strings')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
++h(2, "from_disk") StringStore.from_disk
+    +tag method
+    +tag-new(2)
+
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    from spacy.strings import StringStore
+    stringstore = StringStore().from_disk('/path/to/strings')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +row("foot")
+        +cell returns
+        +cell #[code StringStore]
+        +cell The modified #[code StringStore] object.
+
++h(2, "to_bytes") StringStore.to_bytes
+    +tag method
+
+p Serialize the current state to a binary string.
+
++aside-code("Example").
+    store_bytes = stringstore.to_bytes()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being serialized.
+
+    +row("foot")
+        +cell returns
+        +cell bytes
+        +cell The serialized form of the #[code StringStore] object.
+
++h(2, "from_bytes") StringStore.from_bytes
+    +tag method
+
+p Load state from a binary string.
+
++aside-code("Example").
+    fron spacy.strings import StringStore
+    store_bytes = stringstore.to_bytes()
+    new_store = StringStore().from_bytes(store_bytes)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code bytes_data]
+        +cell bytes
+        +cell The data to load from.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being loaded.
+
+    +row("foot")
+        +cell returns
+        +cell #[code StringStore]
+        +cell The #[code StringStore] object.
+
++h(2, "util") Utilities
+
++h(3, "hash_string") strings.hash_string
+    +tag function
+
+p Get a 64-bit hash for a given string.
+
++aside-code("Example").
+    from spacy.strings import hash_string
+    assert hash_string(u'apple') == 8566208034543834098
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to hash.
+
+    +row("foot")
+        +cell returns
+        +cell uint64
+        +cell The hash.

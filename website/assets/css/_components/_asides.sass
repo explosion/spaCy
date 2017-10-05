@@ -10,6 +10,8 @@
 
 .c-aside__content
     background: $color-front
+    border-top-left-radius: $border-radius
+    border-bottom-left-radius: $border-radius
     z-index: 10
 
     @include breakpoint(min, md)
@@ -21,12 +23,12 @@
         &:after
             $triangle-size: 2rem
 
-            @include position(absolute, bottom, left, -$triangle-size / 2, 0)
+            @include position(absolute, bottom, left, -$triangle-size / 2, $border-radius / 2)
             @include size(0)
             border-color: transparent
             border-style: solid
             border-top-color: $color-dark
-            border-width: $triangle-size / 2 0 0 $triangle-size
+            border-width: $triangle-size / 2 0 0 calc(#{$triangle-size} - #{$border-radius / 2})
             content: ""
 
     @include breakpoint(max, sm)

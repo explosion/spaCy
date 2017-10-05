@@ -8,4 +8,5 @@ include _includes/_mixins
         | does not exist!
 
     h2.c-landing__title.u-heading-3.u-padding-small
-        a(href="javascript:history.go(-1)") Click here to go back.
+        +button(false, true, "secondary-light")(href="javascript:history.go(-1)")
+            |  Click here to go back

@@ -1,5 +1,5 @@
 # Reserve 64 values for flag features
-cpdef enum attr_id_t:
+cdef enum attr_id_t:
     NULL_ATTR
     IS_ALPHA
     IS_ASCII

@@ -1,0 +1,61 @@
+//- 💫 DOCS > USAGE > PROCESSING PIPELINES > ATTRIBUTE HOOKS
+
+p
+    |  Hooks let you customize some of the behaviours of the #[code Doc],
+    |  #[code Span] or #[code Token] objects by adding a component to the
+    |  pipeline. For instance, to customize the
+    |  #[+api("doc#similarity") #[code Doc.similarity]] method, you can add a
+    |  component that sets a custom function to
+    |  #[code doc.user_hooks['similarity']]. The built-in #[code Doc.similarity]
+    |  method will check the #[code user_hooks] dict, and delegate to your
+    |  function if you've set one. Similar results can be achieved by setting
+    |  functions to #[code Doc.user_span_hooks] and #[code Doc.user_token_hooks].
+
++code("Polymorphic similarity example").
+    span.similarity(doc)
+    token.similarity(span)
+    doc1.similarity(doc2)
+
+p
+    |  By default, this just averages the vectors for each document, and
+    |  computes their cosine. Obviously, spaCy should make it easy for you to
+    |  install your own similarity model. This introduces a tricky design
+    |  challenge. The current solution is to add three more dicts to the
+    |  #[code Doc] object:
+
++aside("Implementation note")
+    |  The hooks live on the #[code Doc] object because the #[code Span] and
+    |  #[code Token] objects are created lazily, and don't own any data. They
+    |  just proxy to their parent #[code Doc]. This turns out to be convenient
+    |  here — we only have to worry about installing hooks in one place.
+
++table(["Name", "Description"])
+    +row
+        +cell #[code user_hooks]
+        +cell Customise behaviour of #[code doc.vector], #[code doc.has_vector], #[code doc.vector_norm] or #[code doc.sents]
+
+    +row
+        +cell #[code user_token_hooks]
+        +cell Customise behaviour of #[code token.similarity], #[code token.vector], #[code token.has_vector], #[code token.vector_norm] or #[code token.conjuncts]
+
+    +row
+        +cell #[code user_span_hooks]
+        +cell Customise behaviour of #[code span.similarity], #[code span.vector], #[code span.has_vector], #[code span.vector_norm] or #[code span.root]
+
+p
+    |  To sum up, here's an example of hooking in custom #[code .similarity()]
+    |  methods:
+
++code("Add custom similarity hooks").
+    class SimilarityModel(object):
+        def __init__(self, model):
+            self._model = model
+
+        def __call__(self, doc):
+            doc.user_hooks['similarity'] = self.similarity
+            doc.user_span_hooks['similarity'] = self.similarity
+            doc.user_token_hooks['similarity'] = self.similarity
+
+        def similarity(self, obj1, obj2):
+            y = self._model([obj1.vector, obj2.vector])
+            return float(y[0])

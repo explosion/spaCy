@@ -1,28 +1,27 @@
 import ujson
+from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, SELU
+from thinc.i2v import HashEmbed, StaticVectors
+from thinc.t2t import ExtractWindow, ParametricAttention
+from thinc.t2v import Pooling, max_pool, mean_pool, sum_pool
+from thinc.misc import Residual
+from thinc.misc import BatchNorm as BN
+from thinc.misc import LayerNorm as LN
+
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.neural import Model, Maxout, Softmax, Affine
-from thinc.neural._classes.hash_embed import HashEmbed
+from thinc.api import FeatureExtracter, with_getitem
+from thinc.api import uniqued, wrap, flatten_add_lengths, noop
+
+from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
+
 import random
 import cytoolz
 
-from thinc.neural._classes.convolution import ExtractWindow
-from thinc.neural._classes.static_vectors import StaticVectors
-from thinc.neural._classes.batchnorm import BatchNorm as BN
-from thinc.neural._classes.layernorm import LayerNorm as LN
-from thinc.neural._classes.resnet import Residual
-from thinc.neural import ReLu
-from thinc.neural._classes.selu import SELU
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
-from thinc.api import FeatureExtracter, with_getitem
-from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
-from thinc.neural._classes.attention import ParametricAttention
-from thinc.linear.linear import LinearModel
-from thinc.api import uniqued, wrap, flatten_add_lengths
-
+import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP, CLUSTER
 from .tokens.doc import Doc
@@ -31,6 +30,11 @@ from . import util
 import numpy
 import io
 
+# TODO: Unset this once we don't want to support models previous models.
+import thinc.neural._classes.layernorm
+thinc.neural._classes.layernorm.set_compat_six_eight(True)
+
+VECTORS_KEY = 'spacy_pretrained_vectors'
 
 @layerize
 def _flatten_add_lengths(seqs, pad=0, drop=0.):
@@ -225,31 +229,78 @@ def drop_layer(layer, factor=2.):
     model.predict = layer
     return model
 
+def link_vectors_to_models(vocab):
+    vectors = vocab.vectors
+    ops = Model.ops
+    for word in vocab:
+        if word.orth in vectors.key2row:
+            word.rank = vectors.key2row[word.orth]
+        else:
+            word.rank = 0
+    data = ops.asarray(vectors.data)
+    # Set an entry here, so that vectors are accessed by StaticVectors
+    # (unideal, I know)
+    thinc.extra.load_nlp.VECTORS[(ops.device, VECTORS_KEY)] = data
 
-def Tok2Vec(width, embed_size, preprocess=None):
+def Tok2Vec(width, embed_size, **kwargs):
+    pretrained_dims = kwargs.get('pretrained_dims', 0)
+    cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 3)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
-    with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
+    with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add,
+                                 '*': reapply}):
         norm = HashEmbed(width, embed_size, column=cols.index(NORM), name='embed_norm')
         prefix = HashEmbed(width, embed_size//2, column=cols.index(PREFIX), name='embed_prefix')
         suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX), name='embed_suffix')
         shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE), name='embed_shape')
+        if pretrained_dims is not None and pretrained_dims >= 1:
+            glove = StaticVectors(VECTORS_KEY, width, column=cols.index(ID))
 
-        embed = (norm | prefix | suffix | shape ) >> LN(Maxout(width, width*4, pieces=3))
-        tok2vec = (
-            with_flatten(
-                asarray(Model.ops, dtype='uint64')
-                >> uniqued(embed, column=5)
-                >> Residual(
-                    (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
-                ) ** 4, pad=4
-            )
+            embed = uniqued(
+                (glove | norm | prefix | suffix | shape)
+                >> LN(Maxout(width, width*5, pieces=3)), column=5)
+        else:
+            embed = uniqued(
+                (norm | prefix | suffix | shape)
+                >> LN(Maxout(width, width*4, pieces=3)), column=5)
+
+
+        convolution = Residual(
+            ExtractWindow(nW=1)
+            >> LN(Maxout(width, width*3, pieces=cnn_maxout_pieces))
         )
-        if preprocess not in (False, None):
-            tok2vec = preprocess >> tok2vec
+
+        tok2vec = (
+            FeatureExtracter(cols)
+            >> with_flatten(
+                embed >> (convolution ** 4), pad=4)
+        )
+
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
         tok2vec.embed = embed
     return tok2vec
+
+
+def reapply(layer, n_times):
+    def reapply_fwd(X, drop=0.):
+        backprops = []
+        for i in range(n_times):
+            Y, backprop = layer.begin_update(X, drop=drop)
+            X = Y
+            backprops.append(backprop)
+        def reapply_bwd(dY, sgd=None):
+            dX = None
+            for backprop in reversed(backprops):
+                dY = backprop(dY, sgd=sgd)
+                if dX is None:
+                    dX = dY
+                else:
+                    dX += dY
+            return dX
+        return Y, reapply_bwd
+    return wrap(reapply_fwd, layer)
+
+
 
 
 def asarray(ops, dtype):
@@ -455,20 +506,25 @@ def getitem(i):
         return X[i], None
     return layerize(getitem_fwd)
 
-def build_tagger_model(nr_class, token_vector_width, **cfg):
-    embed_size = util.env_opt('embed_size', 7500)
+def build_tagger_model(nr_class, **cfg):
+    embed_size = util.env_opt('embed_size', 7000)
+    if 'token_vector_width' in cfg:
+        token_vector_width = cfg['token_vector_width']
+    else:
+        token_vector_width = util.env_opt('token_vector_width', 128)
+    pretrained_dims = cfg.get('pretrained_dims', 0)
     with Model.define_operators({'>>': chain, '+': add}):
-        # Input: (doc, tensor) tuples
-        private_tok2vec = Tok2Vec(token_vector_width, embed_size, preprocess=doc2feats())
-
+        if 'tok2vec' in cfg:
+            tok2vec = cfg['tok2vec']
+        else:
+            tok2vec = Tok2Vec(token_vector_width, embed_size,
+                              pretrained_dims=pretrained_dims)
         model = (
-            fine_tune(private_tok2vec)
-            >> with_flatten(
-                Maxout(token_vector_width, token_vector_width)
-                >> Softmax(nr_class, token_vector_width)
-            )
+            tok2vec
+            >> with_flatten(Softmax(nr_class, token_vector_width))
         )
     model.nI = None
+    model.tok2vec = tok2vec
     return model
 
 
@@ -514,6 +570,7 @@ def foreach(layer, drop_factor=1.0):
 
 def build_text_classifier(nr_class, width=64, **cfg):
     nr_vector = cfg.get('nr_vector', 5000)
+    pretrained_dims = cfg.get('pretrained_dims', 0)
     with Model.define_operators({'>>': chain, '+': add, '|': concatenate,
                                  '**': clone}):
         if cfg.get('low_data'):
@@ -521,7 +578,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
                 SpacyVectors
                 >> flatten_add_lengths
                 >> with_getitem(0,
-                    Affine(width, 300)
+                    Affine(width, pretrained_dims)
                 )
                 >> ParametricAttention(width)
                 >> Pooling(sum_pool)
@@ -548,18 +605,24 @@ def build_text_classifier(nr_class, width=64, **cfg):
             )
         )
 
-        static_vectors = (
-            SpacyVectors
-            >> with_flatten(Affine(width, 300))
-        )
-
-        cnn_model = (
+        if pretrained_dims:
+            static_vectors = (
+                SpacyVectors
+                >> with_flatten(Affine(width, pretrained_dims))
+            )
             # TODO Make concatenate support lists
-            concatenate_lists(trained_vectors, static_vectors)
+            vectors = concatenate_lists(trained_vectors, static_vectors)
+            vectors_width = width*2
+        else:
+            vectors = trained_vectors
+            vectors_width = width
+            static_vectors = None
+        cnn_model = (
+            vectors
             >> with_flatten(
-                LN(Maxout(width, width*2))
+                LN(Maxout(width, vectors_width))
                 >> Residual(
-                    (ExtractWindow(nW=1) >> zero_init(Maxout(width, width*3)))
+                    (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
                 ) ** 2, pad=2
             )
             >> flatten_add_lengths
@@ -579,7 +642,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))
             >> logistic
         )
-
+    model.nO = nr_class
     model.lsuv = False
     return model
 

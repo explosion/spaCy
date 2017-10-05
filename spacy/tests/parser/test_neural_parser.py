@@ -26,7 +26,7 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    return Tok2Vec(8, 100, preprocess=doc2feats())
+    return Tok2Vec(8, 100)
 
 
 @pytest.fixture
@@ -61,33 +61,22 @@ def test_predict_doc(parser, tok2vec, model, doc):
     parser(doc)
 
 
-def test_update_doc(parser, tok2vec, model, doc, gold):
+def test_update_doc(parser, model, doc, gold):
     parser.model = model
-    tokvecs, bp_tokvecs = tok2vec.begin_update([doc])
-    d_tokvecs = parser.update(([doc], tokvecs), [gold])
-    assert d_tokvecs[0].shape == tokvecs[0].shape
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
-    bp_tokvecs(d_tokvecs, sgd=optimize)
-    assert d_tokvecs[0].sum() == 0.
+    parser.update([doc], [gold], sgd=optimize)
 
 
-def test_predict_doc_beam(parser, tok2vec, model, doc):
-    doc.tensor = tok2vec([doc])[0]
+def test_predict_doc_beam(parser, model, doc):
     parser.model = model
     parser(doc, beam_width=32, beam_density=0.001)
-    for word in doc:
-        print(word.text, word.head, word.dep_)
 
 
-def test_update_doc_beam(parser, tok2vec, model, doc, gold):
+def test_update_doc_beam(parser, model, doc, gold):
     parser.model = model
-    tokvecs, bp_tokvecs = tok2vec.begin_update([doc])
-    d_tokvecs = parser.update_beam(([doc], tokvecs), [gold])
-    assert d_tokvecs[0].shape == tokvecs[0].shape
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
-    bp_tokvecs(d_tokvecs, sgd=optimize)
-    assert d_tokvecs[0].sum() == 0.
+    parser.update_beam([doc], [gold], sgd=optimize)
 
 

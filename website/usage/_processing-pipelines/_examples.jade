@@ -1,0 +1,126 @@
+//- 💫 DOCS > USAGE > PROCESSING PIPELINES > EXAMPLES
+
+p
+    |  To see real-world examples of pipeline factories and components in action,
+    |  you can have a look at the source of spaCy's built-in components, e.g.
+    |  the #[+api("tagger") #[code Tagger]], #[+api("parser") #[code Parser]] or
+    |  #[+api("entityrecognizer") #[code EntityRecongnizer]].
+
++h(3, "example1") Example: Custom sentence segmentation logic
+
+p
+    |  Let's say you want to implement custom logic to improve spaCy's sentence
+    |  boundary detection. Currently, sentence segmentation is based on the
+    |  dependency parse, which doesn't always produce ideal results. The custom
+    |  logic should therefore be applied #[strong after] tokenization, but
+    |  #[strong before] the dependency parsing – this way, the parser can also
+    |  take advantage of the sentence boundaries.
+
++code.
+    def sbd_component(doc):
+        for i, token in enumerate(doc[:-2]):
+            # define sentence start if period + titlecase token
+            if token.text == '.' and doc[i+1].is_title:
+                doc[i+1].sent_start = True
+        return doc
+
+p
+    |  In this case, we simply want to add the component to the existing
+    |  pipeline of the English model. We can do this by inserting it at index 0
+    |  of #[code nlp.pipeline]:
+
++code.
+    nlp = spacy.load('en')
+    nlp.pipeline.insert(0, sbd_component)
+
+p
+    |  When you call #[code nlp] on some text, spaCy will tokenize it to create
+    |  a #[code Doc] object, and first call #[code sbd_component] on it, followed
+    |  by the model's default pipeline.
+
++h(3, "example2") Example: Sentiment model
+
+p
+    |  Let's say you have trained your own document sentiment model on English
+    |  text. After tokenization, you want spaCy to first execute the
+    |  #[strong default tensorizer], followed by a custom
+    |  #[strong sentiment component] that adds a #[code .sentiment]
+    |  property to the #[code Doc], containing your model's sentiment precition.
+
+p
+    |  Your component class will have a #[code from_disk()] method that spaCy
+    |  calls to load the model data. When called, the component will compute
+    |  the sentiment score, add it to the #[code Doc] and return the modified
+    |  document. Optionally, the component can include an #[code update()] method
+    |  to allow training the model.
+
++code.
+    import pickle
+    from pathlib import Path
+
+    class SentimentComponent(object):
+        def __init__(self, vocab):
+            self.weights = None
+
+        def __call__(self, doc):
+            doc.sentiment = sum(self.weights*doc.vector) # set sentiment property
+            return doc
+
+        def from_disk(self, path): # path = model path + factory ID ('sentiment')
+            self.weights = pickle.load(Path(path) / 'weights.bin') # load weights
+            return self
+
+        def update(self, doc, gold): # update weights – allows training!
+            prediction = sum(self.weights*doc.vector)
+            self.weights -= 0.001*doc.vector*(prediction-gold.sentiment)
+
+p
+    |  The factory will initialise the component with the #[code Vocab] object.
+    |  To be able to add it to your model's pipeline as #[code 'sentiment'],
+    |  it also needs to be registered via
+    |  #[+api("spacy#set_factory") #[code set_factory()]].
+
++code.
+    def sentiment_factory(vocab):
+        component = SentimentComponent(vocab) # initialise component
+        return component
+
+    spacy.set_factory('sentiment', sentiment_factory)
+
+p
+    |  The above code should be #[strong shipped with your model]. You can use
+    |  the #[+api("cli#package") #[code package]] command to create all required
+    |  files and directories. The model package will include an
+    |  #[+src(gh("spacy-dev-resources", "templates/model/en_model_name/__init__.py")) #[code __init__.py]]
+    |  with a #[code load()] method, that will initialise the language class with
+    |  the model's pipeline and call the #[code from_disk()] method to load
+    |  the model data.
+
+p
+    |  In the model package's meta.json, specify the language class and pipeline
+    |  IDs:
+
++code("meta.json (excerpt)", "json").
+    {
+        "name": "sentiment_model",
+        "lang": "en",
+        "version": "1.0.0",
+        "spacy_version": "&gt;=2.0.0,&lt;3.0.0",
+        "pipeline": ["tensorizer", "sentiment"]
+    }
+
+p
+    |  When you load your new model, spaCy will call the model's #[code load()]
+    |  method. This will return a #[code Language] object with a pipeline
+    |  containing the default tensorizer, and the sentiment component returned
+    |  by your custom #[code "sentiment"] factory.
+
++code.
+    nlp = spacy.load('en_sentiment_model')
+    doc = nlp(u'I love pizza')
+    assert doc.sentiment
+
++infobox("Saving and loading models")
+    |  For more information and a detailed guide on how to package your model,
+    |  see the documentation on
+    |  #[+a("/usage/training#saving-loading") saving and loading models].
