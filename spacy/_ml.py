@@ -257,6 +257,8 @@ class Embed(Model):
 
 def HistoryFeatures(nr_class, hist_size=8, nr_dim=8):
     '''Wrap a model, adding features representing action history.'''
+    if hist_size == 0:
+        return layerize(noop())
     embed_tables = [Embed(nr_dim, nr_class, column=i, name='embed%d')
                     for i in range(hist_size)]
     embed = concatenate(*embed_tables)
