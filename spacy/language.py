@@ -1,12 +1,9 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
-import dill
 
-import numpy
 from thinc.neural import Model
-from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.optimizers import Adam, SGD
+from thinc.neural.optimizers import Adam
 import random
 import ujson
 from collections import OrderedDict
@@ -17,24 +14,20 @@ from .vocab import Vocab
 from .tagger import Tagger
 from .lemmatizer import Lemmatizer
 from .syntax.parser import get_templates
-from .syntax import nonproj
 
-from .pipeline import NeuralDependencyParser, EntityRecognizer
-from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
-from .pipeline import NeuralLabeller
-from .pipeline import SimilarityHook
-from .pipeline import TextCategorizer
-from . import about
+from .pipeline import NeuralDependencyParser, TokenVectorEncoder, NeuralTagger
+from .pipeline import NeuralEntityRecognizer, SimilarityHook, TextCategorizer
 
 from .compat import json_dumps, izip
+from .scorer import Scorer
+from ._ml import link_vectors_to_models
 from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS
 from . import util
-from .scorer import Scorer
-from ._ml import link_vectors_to_models
+from . import about
 
 
 class BaseDefaults(object):
@@ -289,7 +282,7 @@ class Language(object):
         return self.pipeline.pop(self.pipe_names.index(name))
 
     def __call__(self, text, disable=[]):
-        """'Apply the pipeline to some text. The text can span multiple sentences,
+        """Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
@@ -387,7 +380,7 @@ class Language(object):
 
         get_gold_tuples (function): Function returning gold data
         **cfg: Config parameters.
-        returns: An optimizer
+        RETURNS: An optimizer
         """
         # Populate vocab
         if get_gold_tuples is not None:
