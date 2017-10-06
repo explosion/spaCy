@@ -508,9 +508,9 @@ cdef class Parser:
                 if self.cfg.get('hist_size', 0):
                     hists = numpy.asarray([st.history[:self.cfg['hist_size']]
                                            for st in states], dtype='i')
-                    scores = vec2scores(vectors, drop=drop)
+                    scores = vec2scores((vectors, hists))
                 else:
-                    scores = vec2scores(vectors, drop=drop)
+                    scores = vec2scores(vectors)
                 j = 0
                 c_scores = <float*>scores.data
                 for i in range(beam.size):
@@ -723,7 +723,7 @@ cdef class Parser:
                                        lower, stream, drop=0.0)
         return (tokvecs, bp_tokvecs), state2vec, upper
 
-    nr_feature = 8
+    nr_feature = 2
 
     def get_token_ids(self, states):
         cdef StateClass state
