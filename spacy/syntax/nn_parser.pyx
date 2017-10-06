@@ -239,10 +239,10 @@ cdef class Parser:
     """
     @classmethod
     def Model(cls, nr_class, **cfg):
-        depth = util.env_opt('parser_hidden_depth', cfg.get('parser_hidden_depth', 1))
+        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
         token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 128))
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 200))
-        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('parser_maxout_pieces', 3))
+        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 3))
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
@@ -295,7 +295,7 @@ cdef class Parser:
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
         cfg = {
             'nr_class': nr_class,
-            'depth': depth,
+            'hidden_depth': depth,
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
@@ -727,7 +727,7 @@ cdef class Parser:
                                        lower, stream, drop=0.0)
         return (tokvecs, bp_tokvecs), state2vec, upper
 
-    nr_feature = 2
+    nr_feature = 8
 
     def get_token_ids(self, states):
         cdef StateClass state
