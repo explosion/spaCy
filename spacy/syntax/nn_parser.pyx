@@ -529,8 +529,6 @@ cdef class Parser:
             const float* feat_weights,
             int nr_class, int nr_feat, int nr_piece) nogil:
         '''This only works with no hidden layers -- fast but inaccurate'''
-        #for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
-        #    self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
         token_ids = <int*>calloc(nr_feat, sizeof(int))
         scores = <float*>calloc(nr_class * nr_piece, sizeof(float))
         is_valid = <int*>calloc(nr_class, sizeof(int))
