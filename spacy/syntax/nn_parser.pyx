@@ -684,6 +684,7 @@ cdef class Parser:
                 while state.B(0) < start and not state.is_final():
                     action = self.moves.c[oracle_actions.pop(0)]
                     action.do(state.c, action.label)
+                    state.c.push_hist(action.clas)
                     n_moves += 1
                 has_gold = self.moves.has_gold(gold, start=start,
                                                end=start+max_length)
