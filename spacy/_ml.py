@@ -231,6 +231,8 @@ class Embed(Model):
     name = 'embed'
 
     def __init__(self, nO, nV=None, **kwargs):
+        if nV is not None:
+            nV += 1
         Model.__init__(self, **kwargs)
         if 'name' in kwargs:
             self.name = kwargs['name']

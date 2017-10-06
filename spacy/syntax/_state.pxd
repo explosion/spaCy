@@ -297,7 +297,7 @@ cdef cppclass StateC:
              + hash64(<void*>&this._hist, sizeof(RingBufferC), 1)
 
     void push_hist(int act) nogil:
-        ring_push(&this._hist, act)
+        ring_push(&this._hist, act+1)
 
     int get_hist(int i) nogil:
         return ring_get(&this._hist, i)
