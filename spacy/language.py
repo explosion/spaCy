@@ -195,6 +195,7 @@ class Language(object):
         """Create a pipeline component from a factory.
 
         name (unicode): Factory name to look up in `Language.factories`.
+        config (dict): Configuration parameters to initialise component.
         RETURNS (callable): Pipeline component.
         """
         if name not in self.factories:
@@ -274,7 +275,7 @@ class Language(object):
         """Remove a component from the pipeline.
 
         name (unicode): Name of the component to remove.
-        RETURNS (tuple): A (name, component) tuple of the removed component.
+        RETURNS (tuple): A `(name, component)` tuple of the removed component.
         """
         if name not in self.pipe_names:
             msg = "Can't find '{}' in pipeline. Available names: {}"
