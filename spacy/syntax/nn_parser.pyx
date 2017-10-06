@@ -246,7 +246,6 @@ cdef class Parser:
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
-        print("Create parser model", locals())
         if hist_size >= 1 and depth == 0:
             raise ValueError("Inconsistent hyper-params: "
                 "history_feats >= 1 but parser_hidden_depth==0")
