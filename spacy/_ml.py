@@ -217,6 +217,7 @@ class PrecomputableMaxouts(Model):
 from thinc import describe
 from thinc.neural._classes.embed import _uniform_init
 
+
 @describe.attributes(
     nV=describe.Dimension("Number of vectors"),
     nO=describe.Dimension("Size of output"),
@@ -240,12 +241,12 @@ class Embed(Model):
     def predict(self, ids):
         if ids.ndim == 2:
             ids = ids[:, self.column]
-        return self.ops.xp.ascontiguousarray(self.vectors[ids])
+        return self.ops.xp.ascontiguousarray(self.vectors[ids], dtype='f')
 
     def begin_update(self, ids, drop=0.):
         if ids.ndim == 2:
             ids = ids[:, self.column]
-        vectors = self.ops.xp.ascontiguousarray(self.vectors[ids])
+        vectors = self.ops.xp.ascontiguousarray(self.vectors[ids], dtype='f')
         def backprop_embed(d_vectors, sgd=None):
             n_vectors = d_vectors.shape[0]
             self.ops.scatter_add(self.d_vectors, ids, d_vectors)
@@ -267,8 +268,13 @@ def HistoryFeatures(nr_class, hist_size=8, nr_dim=8):
         vectors, hist_ids = vectors_hists
         hist_feats, bp_hists = embed.begin_update(hist_ids)
         outputs = ops.xp.hstack((vectors, hist_feats))
+        mask = ops.get_dropout_mask(outputs.shape, drop)
+        if mask is not None:
+            outputs *= mask
 
         def add_history_bwd(d_outputs, sgd=None):
+            if mask is not None:
+                d_outputs *= mask
             d_vectors = d_outputs[:, :vectors.shape[1]]
             d_hists = d_outputs[:, vectors.shape[1]:]
             bp_hists(d_hists, sgd=sgd)
