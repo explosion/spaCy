@@ -43,6 +43,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Michael Wallin, [@wallinm1](https://github.com/wallinm1)
 * Miguel Almeida, [@mamoit](https://github.com/mamoit)
 * Oleg Zd, [@olegzd](https://github.com/olegzd)
+* Orion Montoya, [@mdcclv](https://github.com/mdcclv)
 * Paul O'Leary McCann, [@polm](https://github.com/polm)
 * Pokey Rule, [@pokey](https://github.com/pokey)
 * Raphaël Bournhonesque, [@raphael0202](https://github.com/raphael0202)
