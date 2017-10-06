@@ -68,14 +68,10 @@ from ..gold cimport GoldParse
 from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 from . import _beam_utils
 
-USE_HISTORY = True
-HIST_SIZE = 8 # Max 8
-HIST_DIMS = 8
 
 def get_templates(*args, **kwargs):
     return []
 
-USE_FTRL = True
 DEBUG = False
 def set_debug(val):
     global DEBUG
@@ -248,6 +244,8 @@ cdef class Parser:
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
         embed_size = util.env_opt('embed_size', 7000)
+        hist_size = util.env_opt('history_feats', cfg.get('history_feats', 0))
+        hist_width = util.env_opt('history_width', cfg.get('history_width', 0))
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
@@ -263,20 +261,21 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             if depth == 0:
-                if USE_HISTORY:
+                if hist_size:
                     upper = chain(
-                        HistoryFeatures(nr_class=nr_class, hist_size=HIST_SIZE,
-                                        nr_dim=HIST_DIMS),
-                        zero_init(Affine(nr_class, nr_class+HIST_SIZE*HIST_DIMS,
+                        HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
+                                        nr_dim=hist_width),
+                        zero_init(Affine(nr_class, nr_class+hist_size*hist_size,
                                           drop_factor=0.0)))
                     upper.is_noop = False
                 else:
                     upper = chain()
                     upper.is_noop = True
-            elif USE_HISTORY:
+            elif hist_size:
                 upper = chain(
-                    HistoryFeatures(nr_class=nr_class, hist_size=HIST_SIZE, nr_dim=HIST_DIMS),
-                    Maxout(hidden_width, hidden_width+HIST_SIZE*HIST_DIMS),
+                    HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
+                                    nr_dim=hist_width),
+                    Maxout(hidden_width, hidden_width+hist_size*hist_width),
                     clone(Maxout(hidden_width, hidden_width), depth-2),
                     zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
@@ -296,7 +295,9 @@ cdef class Parser:
             'depth': depth,
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
-            'maxout_pieces': parser_maxout_pieces
+            'maxout_pieces': parser_maxout_pieces,
+            'hist_size': hist_size,
+            'hist_width': hist_width
         }
         return (tok2vec, lower, upper), cfg
 
@@ -369,7 +370,7 @@ cdef class Parser:
             _cleanup(beam)
             return output
 
-    def pipe(self, docs, int batch_size=1000, int n_threads=2,
+    def pipe(self, docs, int batch_size=256, int n_threads=2,
              beam_width=None, beam_density=None):
         """
         Process a stream of documents.
@@ -454,7 +455,7 @@ cdef class Parser:
                     hists.append([st.get_hist(j+1) for j in range(8)])
                 hists = numpy.asarray(hists)
                 vectors = state2vec(token_ids[:next_step.size()])
-                if USE_HISTORY:
+                if self.cfg.get('hist_size'):
                     scores = vec2scores((vectors, hists))
                 else:
                     scores = vec2scores(vectors)
@@ -577,7 +578,7 @@ cdef class Parser:
                 mask = vec2scores.ops.get_dropout_mask(vector.shape, drop)
                 vector *= mask
             hists = numpy.asarray([st.history for st in states], dtype='i')
-            if USE_HISTORY:
+            if self.cfg.get('hist_size', 0):
                 scores, bp_scores = vec2scores.begin_update((vector, hists), drop=drop)
             else:
                 scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
