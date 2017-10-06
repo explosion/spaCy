@@ -246,6 +246,9 @@ cdef class Parser:
         embed_size = util.env_opt('embed_size', 7000)
         hist_size = util.env_opt('history_feats', cfg.get('history_feats', 0))
         hist_width = util.env_opt('history_width', cfg.get('history_width', 0))
+        if hist_size >= 1 and depth == 0:
+            raise ValueError("Inconsistent hyper-params: "
+                "history_feats >= 1 but parser_hidden_depth==0")
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
@@ -261,16 +264,15 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             if depth == 0:
-                if hist_size:
-                    upper = chain(
-                        HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
-                                        nr_dim=hist_width),
-                        zero_init(Affine(nr_class, nr_class+hist_size*hist_size,
-                                          drop_factor=0.0)))
-                    upper.is_noop = False
-                else:
-                    upper = chain()
-                    upper.is_noop = True
+                upper = chain()
+                upper.is_noop = True
+            elif hist_size and depth == 1:
+                upper = chain(
+                    HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
+                                    nr_dim=hist_width),
+                    zero_init(Affine(nr_class, hidden_width+hist_size*hist_width,
+                                     drop_factor=0.0)))
+                upper.is_noop = False
             elif hist_size:
                 upper = chain(
                     HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
@@ -282,7 +284,7 @@ cdef class Parser:
                 upper.is_noop = False
             else:
                 upper = chain(
-                    Maxout(hidden_width, hidden_width),
+                    clone(Maxout(hidden_width, hidden_width), depth-1),
                     zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
