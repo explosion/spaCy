@@ -98,6 +98,20 @@ def test_matcher_match_multi(matcher):
                             (doc.vocab.strings['Java'], 5, 6)]
 
 
+def test_matcher_empty_dict(en_vocab):
+    '''Test matcher allows empty token specs, meaning match on any token.'''
+    matcher = Matcher(en_vocab)
+    abc = ["a", "b", "c"]
+    doc = get_doc(matcher.vocab, abc)
+    matcher.add('A.C', None, [{'ORTH': 'a'}, {}, {'ORTH': 'c'}])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    assert matches[0][1:] == (0, 3)
+    matcher.add('A.', None, [{'ORTH': 'a'}, {}])
+    matches = matcher(doc)
+    assert matches[0][1:] == (0, 2)
+ 
+
 def test_matcher_phrase_matcher(en_vocab):
     words = ["Google", "Now"]
     doc = get_doc(en_vocab, words)

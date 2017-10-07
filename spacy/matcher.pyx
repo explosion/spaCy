@@ -17,7 +17,7 @@ from libcpp.pair cimport pair
 from murmurhash.mrmr cimport hash64
 from libc.stdint cimport int32_t
 
-from .attrs cimport ID, ENT_TYPE
+from .attrs cimport ID, NULL_ATTR, ENT_TYPE
 from . import attrs
 from .tokens.doc cimport get_token_attr
 from .tokens.doc cimport Doc
@@ -142,6 +142,10 @@ def _convert_strings(token_specs, string_store):
     tokens = []
     op = ONE
     for spec in token_specs:
+        if not spec:
+            # Signifier for 'any token'
+            tokens.append((ONE, [(NULL_ATTR, 0)]))
+            continue
         token = []
         ops = (ONE,)
         for attr, value in spec.items():
@@ -295,7 +299,7 @@ cdef class Matcher:
         """Find all token sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
-        RETURNS (list): A list of `(key, label_id, start, end)` tuples,
+        RETURNS (list): A list of `(key, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
