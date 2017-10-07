@@ -140,7 +140,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
                 with nlp.use_params(optimizer.averages):
                     dill.dump(nlp, file_, -1)
         except:
-            pass
+            print("Error saving model")
+
 
 def _render_parses(i, to_render):
     to_render[0].user_data['title'] = "Batch %d" % i

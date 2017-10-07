@@ -124,9 +124,9 @@ p Check whether the matcher contains rules for a match ID.
 
 +aside-code("Example").
     matcher = PhraseMatcher(nlp.vocab)
-    assert len(matcher) == 0
+    assert 'OBAMA' not in matcher
     matcher.add('OBAMA', None, nlp(u"Barack Obama"))
-    assert len(matcher) == 1
+    assert 'OBAMA' in matcher
 
 +table(["Name", "Type", "Description"])
     +row

@@ -6,13 +6,13 @@ p
     |  end-to-end from raw text, with no "gold standard" pre-processing, over
     |  text from a mix of genres where possible.
 
-+under-construction
-
 +aside("Methodology")
     |  The evaluation was conducted on raw text with no gold standard
     |  information. The parser, tagger and entity recognizer were trained on the
     |  #[+a("https://www.gabormelli.com/RKB/OntoNotes_Corpus") OntoNotes 5]
     |  corpus, the word vectors on #[+a("http://commoncrawl.org") Common Crawl].
+
++h(4, "benchmarks-models-english") English
 
 +table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
     +row
@@ -46,3 +46,25 @@ p
         +cell #[code en_core_web_md] 1.2.1
         each data in ["1.x", "linear", 90.6, 81.4, 96.7, "18.8k", "1 GB"]
             +cell.u-text-right=data
+
++h(4, "benchmarks-models-spanish") Spanish
+
++table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
+    +row
+        +cell #[+a("/models/es#es_core_web_sm") #[code es_core_web_sm]] 2.0.0a0
+        +cell.u-text-right 2.x
+        +cell.u-text-right neural
+        +cell.u-text-right #[strong 90.1]
+        +cell.u-text-right 89.0
+        +cell.u-text-right #[strong 96.7]
+        +cell.u-text-right #[em n/a]
+        +cell.u-text-right #[strong 36 MB]
+
+    +row("divider")
+        +cell #[code es_core_web_md] 1.1.0
+        each data in ["1.x", "linear", 87.5]
+            +cell.u-text-right=data
+        +cell #[strong 94.2]
+        +cell #[strong 96.7]
+        +cell.u-text-right #[em n/a]
+        +cell.u-text-right 377 MB
