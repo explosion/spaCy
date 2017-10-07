@@ -43,6 +43,20 @@ p
         +cell #[code Language]
         +cell A #[code Language] object with the loaded model.
 
+p
+    |  Essentially, #[code spacy.load()] is a convenience wrapper that reads
+    |  the language ID and pipeline components from a model's #[code meta.json],
+    |  initialises the #[code Language] class, loads in the model data and
+    |  returns it.
+
++code("Abstract example").
+    cls = util.get_lang_class(lang)         #  get Language class for ID, e.g. 'en'
+    nlp = cls()                             #  initialise the Language class
+    for name in pipeline:
+        component = nlp.create_pipe(name)   #  create each pipeline component
+        nlp.add_pipe(component)             #  add component to pipeline
+    nlp.from_disk(model_data_path)          #  load in model data
+
 +infobox("Deprecation note", "⚠️")
     .o-block
         |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
