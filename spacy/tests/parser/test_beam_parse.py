@@ -1,10 +1,11 @@
-import spacy
+# coding: utf8
+from __future__ import unicode_literals
+
 import pytest
 
-@pytest.mark.models
-def test_beam_parse():
-    nlp = spacy.load('en_core_web_sm')
-    doc = nlp(u'Australia is a country', disable=['ner'])
-    ents = nlp.entity(doc, beam_width=2)
-    print(ents)
 
+@pytest.mark.models('en')
+def test_beam_parse(EN):
+    doc = EN(u'Australia is a country', disable=['ner'])
+    ents = EN.entity(doc, beam_width=2)
+    print(ents)
