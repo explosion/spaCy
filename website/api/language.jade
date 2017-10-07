@@ -53,23 +53,6 @@ p Initialise a #[code Language] object.
         +cell #[code Language]
         +cell The newly constructed object.
 
-+infobox("Deprecation note", "⚠️")
-    .o-block
-        |  To make the processing pipelines and their components more
-        |  transparent, the #[code pipeline] and #[code disable] arguments on
-        |  initialisation are now deprecated. Instead, pipeline components can
-        |  now be added, removed and rearranged using the new #[code Language]
-        |  methods, for example #[+api("language#add_pipe") #[code add_pipe]] or
-        |  #[+api("language#create_pipe") #[code create_pipe]]. This is also how
-        |  #[+api("spacy#load") #[code spacy.load()]] creates the
-        |  #[code Language] instance it returns.
-
-    +code-new.
-        nlp = English()
-        parser = nlp.create_pipe('parser')
-        nlp.add_pipe(parser)
-    +code-old nlp = English(pipeline=['parser'])
-
 +h(2, "call") Language.__call__
     +tag method
 
