@@ -50,8 +50,8 @@ p
     |  returns it.
 
 +code("Abstract example").
-    cls = util.get_lang_class(lang)         #  get Language class for ID, e.g. 'en'
-    nlp = cls()                             #  initialise the Language class
+    cls = util.get_lang_class(lang)         #  get language for ID, e.g. 'en'
+    nlp = cls()                             #  initialise the language
     for name in pipeline:
         component = nlp.create_pipe(name)   #  create each pipeline component
         nlp.add_pipe(component)             #  add component to pipeline
@@ -155,37 +155,3 @@ p
         +cell returns
         +cell unicode
         +cell The explanation, or #[code None] if not found in the glossary.
-
-+h(3, "spacy.set_factory") spacy.set_factory
-    +tag function
-    +tag-new(2)
-
-p
-    |  Set a factory that returns a custom
-    |  #[+a("/usage/processing-pipelines") processing pipeline]
-    |  component. Factories are useful for creating stateful components, especially ones which depend on shared data.
-
-+aside-code("Example").
-    def my_factory(vocab):
-        def my_component(doc):
-            return doc
-        return my_component
-
-    spacy.set_factory('my_factory', my_factory)
-    nlp = Language(pipeline=['my_factory'])
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code factory_id]
-        +cell unicode
-        +cell
-            |  Unique name of factory. If added to a new pipeline, spaCy will
-            |  look up the factory for this ID and use it to create the
-            |  component.
-
-    +row
-        +cell #[code factory]
-        +cell callable
-        +cell
-            |  Callable that takes a #[code Vocab] object and returns a pipeline
-            |  component.
