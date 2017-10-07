@@ -4,7 +4,14 @@ include ../_includes/_mixins
 
 p
     |  Usually you'll load this once per process as #[code nlp] and pass the
-    |  instance around your application.
+    |  instance around your application. The #[code Language] class is created
+    |  when you call #[+api("spacy#load") #[code spacy.load()]] and contains
+    |  the shared vocabulary and #[+a("/usage/adding-languages") language data],
+    |  optional model data loaded from a #[+a("/models") model package] or
+    |  a path, and a #[+a("/usage/processing-pipelines") processing pipeline]
+    |  containing components like the tagger or parser that are called on a
+    |  document in order. You can also add your own processing pipeline
+    |  components that take a #[code Doc] object, modify it and return it.
 
 +h(2, "init") Language.__init__
     +tag method
@@ -12,9 +19,9 @@ p
 p Initialise a #[code Language] object.
 
 +aside-code("Example").
+    from spacy.vocab import Vocab
     from spacy.language import Language
-    nlp = Language(pipeline=['token_vectors', 'tags',
-                             'dependencies'])
+    nlp = Language(Vocab())
 
     from spacy.lang.en import English
     nlp = English()
@@ -35,14 +42,6 @@ p Initialise a #[code Language] object.
             |  Usually a #[code Tokenizer].
 
     +row
-        +cell #[code pipeline]
-        +cell list
-        +cell
-            |  A list of annotation processes or IDs of annotation, processes,
-            |  e.g. a #[code Tagger] object, or #[code 'tagger']. IDs are looked
-            |  up in #[code Language.Defaults.factories].
-
-    +row
         +cell #[code meta]
         +cell dict
         +cell
@@ -53,6 +52,23 @@ p Initialise a #[code Language] object.
         +cell returns
         +cell #[code Language]
         +cell The newly constructed object.
+
++infobox("Deprecation note", "⚠️")
+    .o-block
+        |  To make the processing pipelines and their components more
+        |  transparent, the #[code pipeline] and #[code disable] arguments on
+        |  initialisation are now deprecated. Instead, pipeline components can
+        |  now be added, removed and rearranged using the new #[code Language]
+        |  methods, for example #[+api("language#add_pipe") #[code add_pipe]] or
+        |  #[+api("language#create_pipe") #[code create_pipe]]. This is also how
+        |  #[+api("spacy#load") #[code spacy.load()]] creates the
+        |  #[code Language] instance it returns.
+
+    +code-new.
+        nlp = English()
+        parser = nlp.create_pipe('parser')
+        nlp.add_pipe(parser)
+    +code-old nlp = English(pipeline=['parser'])
 
 +h(2, "call") Language.__call__
     +tag method
@@ -235,7 +251,6 @@ p
     |  Can be called before training to pre-process gold data. By default, it
     |  handles nonprojectivity and adds missing tags to the tag map.
 
-
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code docs_golds]
@@ -246,6 +261,177 @@ p
         +cell yields
         +cell tuple
         +cell Tuples of #[code Doc] and #[code GoldParse] objects.
+
++h(2, "create_pipe") Language.create_pipe
+    +tag method
+    +tag-new(2)
+
+p Create a pipeline component from a factory.
+
++aside-code("Example").
+    parser = nlp.create_pipe('parser')
+    nlp.add_pipe(parser)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell
+            |  Factory name to look up in
+            |  #[+api("language#class-attributes") #[code Language.factories]].
+
+    +row
+        +cell #[code config]
+        +cell dict
+        +cell Configuration parameters to initialise component.
+
+    +row("foot")
+        +cell returns
+        +cell callable
+        +cell The pipeline component.
+
++h(2, "add_pipe") Language.add_pipe
+    +tag method
+    +tag-new(2)
+
+p
+    |  Add a component to the processing pipeline. Valid components are
+    |  callables that take a #[code Doc] object, modify it and return it. Only
+    |  one of #[code before], #[code after], #[code first] or #[code last] can
+    |  be set. Default behaviour is #[code last=True].
+
++aside-code("Example").
+    def component(doc):
+        # modify Doc and return it
+        return doc
+
+    nlp.add_pipe(component, before='ner')
+    nlp.add_pipe(component, name='custom_name', last=True)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code component]
+        +cell callable
+        +cell The pipeline component.
+
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell
+            |  Name of pipeline component. Overwrites existing
+            |  #[code component.name] attribute if available. If no #[code name]
+            |  is set and the component exposes no name attribute,
+            |  #[code component.__name__] is used. An error is raised if the
+            |  name already exists in the pipeline.
+
+    +row
+        +cell #[code before]
+        +cell unicode
+        +cell Component name to insert component directly before.
+
+    +row
+        +cell #[code after]
+        +cell unicode
+        +cell Component name to insert component directly after:
+
+    +row
+        +cell #[code first]
+        +cell bool
+        +cell Insert component first / not first in the pipeline.
+
+    +row
+        +cell #[code last]
+        +cell bool
+        +cell Insert component last / not last in the pipeline.
+
++h(2, "get_pipe") Language.get_pipe
+    +tag method
+    +tag-new(2)
+
+p Get a pipeline component for a given component name.
+
++aside-code("Example").
+    parser = nlp.get_pipe('parser')
+    custom_component = nlp.get_pipe('custom_component')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the pipeline component to get.
+
+    +row("foot")
+        +cell returns
+        +cell callable
+        +cell The pipeline component.
+
++h(2, "replace_pipe") Language.replace_pipe
+    +tag method
+    +tag-new(2)
+
+p Replace a component in the pipeline.
+
++aside-code("Example").
+    nlp.replace_pipe('parser', my_custom_parser)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the component to replace.
+
+    +row
+        +cell #[code component]
+        +cell callable
+        +cell The pipeline component to inser.
+
+
++h(2, "rename_pipe") Language.rename_pipe
+    +tag method
+    +tag-new(2)
+
+p
+    |  Rename a component in the pipeline. Useful to create custom names for
+    |  pre-defined and pre-loaded components. To change the default name of
+    |  a component added to the pipeline, you can also use the #[code name]
+    |  argument on #[+api("language#add_pipe") #[code add_pipe]].
+
++aside-code("Example").
+    nlp.rename_pipe('parser', 'spacy_parser')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code old_name]
+        +cell unicode
+        +cell Name of the component to rename.
+
+    +row
+        +cell #[code new_name]
+        +cell unicode
+        +cell New name of the component.
+
++h(2, "remove_pipe") Language.remove_pipe
+    +tag method
+    +tag-new(2)
+
+p
+    |  Remove a component from the pipeline. Returns the removed component name
+    |  and component function.
+
++aside-code("Example").
+    name, component = nlp.remove_pipe('parser')
+    assert name == 'parser'
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the component to remove.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell A #[code (name, component)] tuple of the removed component.
 
 +h(2, "to_disk") Language.to_disk
     +tag method
@@ -399,7 +585,15 @@ p Load state from a binary string.
     +row
         +cell #[code pipeline]
         +cell list
-        +cell Sequence of annotation functions.
+        +cell
+            |  List of #[code (name, component)] tuples describing the current
+            |  processing pipeline, in order.
+
+    +row
+        +cell #[code pipe_names]
+            +tag-new(2)
+        +cell list
+        +cell List of pipeline component names, in order.
 
     +row
         +cell #[code meta]
@@ -424,3 +618,12 @@ p Load state from a binary string.
         +cell
             |  Two-letter language ID, i.e.
             |  #[+a("https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes") ISO code].
+
+    +row
+        +cell #[code factories]
+            +tag-new(2)
+        +cell dict
+        +cell
+            |  Factories that create pre-defined pipeline components, e.g. the
+            |  tagger, parser or entity recognizer, keyed by their component
+            |  name.
