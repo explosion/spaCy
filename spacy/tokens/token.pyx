@@ -20,10 +20,24 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUST
 from ..attrs cimport LEMMA, POS, TAG, DEP
 from ..compat import is_config
 from .. import about
+from .underscore import Underscore
 
 
 cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace, etc."""
+    @classmethod
+    def set_extension(cls, name, default=None, method=None,
+                      getter=None, setter=None):
+        Underscore.span_extensions[name] = (default, method, getter, setter) 
+
+    @classmethod
+    def get_extension(cls, name):
+        return Underscore.span_extensions.get(name)
+
+    @classmethod
+    def has_extension(cls, name):
+        return name in Underscore.span_extensions
+
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
         """Construct a `Token` object.
 
@@ -86,6 +100,11 @@ cdef class Token:
             return my >= their
         else:
             raise ValueError(op)
+
+    @property
+    def _(self):
+        return Underscore(Underscore.token_extensions, self,
+                          start=self.idx, end=None)
 
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         """Check the value of a boolean flag.
