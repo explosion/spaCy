@@ -21,6 +21,7 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
     moves = <const Transition*>_moves
     dest.clone(src)
     moves[clas].do(dest.c, moves[clas].label)
+    dest.c.push_hist(clas)
 
 
 cdef int _check_final_state(void* _state, void* extra_args) except -1:
@@ -148,8 +149,8 @@ def get_token_ids(states, int n_tokens):
 nr_update = 0
 def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
                 states, golds,
-                state2vec, vec2scores, 
-                int width, float density,
+                state2vec, vec2scores,
+                int width, float density, int hist_feats,
                 losses=None, drop=0.):
     global nr_update
     cdef MaxViolation violn
@@ -180,7 +181,11 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         # Now that we have our flat list of states, feed them through the model
         token_ids = get_token_ids(states, nr_feature)
         vectors, bp_vectors = state2vec.begin_update(token_ids, drop=drop)
-        scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
+        if hist_feats:
+            hists = numpy.asarray([st.history[:hist_feats] for st in states], dtype='i')
+            scores, bp_scores = vec2scores.begin_update((vectors, hists), drop=drop)
+        else:
+            scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
 
         # Store the callbacks for the backward pass
         backprops.append((token_ids, bp_vectors, bp_scores))

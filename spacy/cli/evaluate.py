@@ -42,7 +42,8 @@ def evaluate(cmd, model, data_path, gpu_id=-1, gold_preproc=False,
     Evaluate a model. To render a sample of parses in a HTML file, set an output
     directory as the displacy_path argument.
     """
-    util.use_gpu(gpu_id)
+    if gpu_id >= 0:
+        util.use_gpu(gpu_id)
     util.set_env_log(False)
     data_path = util.ensure_path(data_path)
     displacy_path = util.ensure_path(displacy_path)
