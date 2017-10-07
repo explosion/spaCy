@@ -739,6 +739,14 @@ cdef class Parser:
             for i in range(doc.length):
                 doc.c[i] = state.c._sent[i]
             self.moves.finalize_doc(doc)
+            for hook in self.postprocesses:
+                for doc in docs:
+                    hook(doc)
+
+    @property
+    def postprocesses(self):
+        # Available for subclasses, e.g. to deprojectivize
+        return []
 
     def add_label(self, label):
         for action in self.moves.action_types:

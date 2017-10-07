@@ -97,7 +97,7 @@ class Language(object):
         'tokenizer': lambda nlp: nlp.Defaults.create_tokenizer(nlp),
         'tensorizer': lambda nlp, **cfg: TokenVectorEncoder(nlp.vocab, **cfg),
         'tagger': lambda nlp, **cfg: NeuralTagger(nlp.vocab, **cfg),
-        'parser': lambda nlp, **cfg: NeuralDependencyParser(nlp.vocab, **cfg),  # nonproj.deprojectivize,
+        'parser': lambda nlp, **cfg: NeuralDependencyParser(nlp.vocab, **cfg),
         'ner': lambda nlp, **cfg: NeuralEntityRecognizer(nlp.vocab, **cfg),
         'similarity': lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         'textcat': lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg)
