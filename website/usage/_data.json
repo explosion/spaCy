@@ -103,11 +103,10 @@
         "title": "Language Processing Pipelines",
         "next": "vectors-similarity",
         "menu": {
-            "How pipelines work": "pipelines",
-            "Examples": "examples",
+            "How Pipelines Work": "pipelines",
+            "Custom Components": "custom-components",
             "Multi-threading": "multithreading",
-            "User Hooks": "user-hooks",
-            "Serialization": "serialization"
+            "Serialization": "serialization",
         }
     },
 
