@@ -75,6 +75,131 @@ p
     |  other pattern types. You shouldn't have to create different matchers for
     |  each of those processes.
 
++h(4, "adding-patterns-attributes") Available token attributes
+
+p
+    |  The available token pattern keys are uppercase versions of the
+    |  #[+api("token#attributes") #[code Token] attributes]. The most relevant
+    |  ones for rule-based matching are:
+
++table(["Attribute", "Description"])
+    +row
+        +cell #[code ORTH]
+        +cell The exact verbatim text of a token.
+
+    +row
+        +cell.u-nowrap #[code LOWER], #[code UPPER]
+        +cell The lowercase, uppercase form of the token text.
+
+    +row
+        +cell.u-nowrap #[code IS_ALPHA], #[code IS_ASCII], #[code IS_DIGIT]
+        +cell
+            |  Token text consists of alphanumeric characters, ASCII characters,
+            |  digits.
+
+    +row
+        +cell.u-nowrap #[code IS_LOWER], #[code IS_UPPER], #[code IS_TITLE]
+        +cell Token text is in lowercase, uppercase, titlecase.
+
+    +row
+        +cell.u-nowrap #[code IS_PUNCT], #[code IS_SPACE], #[code IS_STOP]
+        +cell Token is punctuation, whitespace, stop word.
+
+    +row
+        +cell.u-nowrap #[code LIKE_NUM], #[code LIKE_URL], #[code LIKE_EMAIL]
+        +cell Token text resembles a number, URL, email.
+
+    +row
+        +cell.u-nowrap
+            |  #[code POS], #[code TAG], #[code DEP], #[code LEMMA],
+            |  #[code SHAPE]
+        +cell
+            |  The token's simple and extended part-of-speech tag, dependency
+            |  label, lemma, shape.
+
++h(4, "adding-patterns-wildcard") Using wildcard token patterns
+    +tag-new(2)
+
+p
+    |  While the token attributes offer many options to write highly specific
+    |  patterns, you can also use an empty dictionary, #[code {}] as a wildcard
+    |  representing #[strong any token]. This is useful if you know the context
+    |  of what you're trying to match, but very little about the specific token
+    |  and its characters. For example, let's say you're trying to extract
+    |  people's user names from your data. All you know is that they are listed
+    |  as "User name: {username}". The name itself may contain any character,
+    |  but no whitespace – so you'll know it will be handled as one token.
+
++code.
+    [{'ORTH': 'User'}, {'ORTH': 'name'}, {'ORTH': ':'}, {}]
+
++h(4, "quantifiers") Using operators and quantifiers
+
+p
+    |  The matcher also lets you use quantifiers, specified as the #[code 'OP']
+    |  key. Quantifiers let you define sequences of tokens to be mached, e.g.
+    |  one or more punctuation marks, or specify optional tokens. Note that there
+    |  are no nested or scoped quantifiers – instead, you can build those
+    |  behaviours with #[code on_match] callbacks.
+
++aside("Problems with quantifiers")
+    |  Using quantifiers may lead to unexpected results when matching
+    |  variable-length patterns, for example if the next token would also be
+    |  matched by the previous token. This problem should be resolved in a future
+    |  release. For more information, see
+    |  #[+a(gh("spaCy") + "/issues/864") this issue].
+
++table([ "OP", "Description", "Example"])
+    +row
+        +cell #[code !]
+        +cell match exactly 0 times
+        +cell negation
+
+    +row
+        +cell #[code *]
+        +cell match 0 or more times
+        +cell optional, variable number
+
+    +row
+        +cell #[code +]
+        +cell match 1 or more times
+        +cell mandatory, variable number
+
+    +row
+        +cell #[code ?]
+        +cell match 0 or 1 times
+        +cell optional, max one
+
++h(3, "adding-phrase-patterns") Adding phrase patterns
+
+p
+    |  If you need to match large terminology lists, you can also use the
+    |  #[+api("phrasematcher") #[code PhraseMatcher]] and create
+    |  #[+api("doc") #[code Doc]] objects instead of token patterns, which is
+    |  much more efficient overall. The #[code Doc] patterns can contain single
+    |  or multiple tokens.
+
++code.
+    import spacy
+    from spacy.matcher import PhraseMatcher
+
+    nlp = spacy.load('en')
+    matcher = PhraseMatcher(nlp.vocab)
+    terminology_list = ['Barack Obama', 'Angela Merkel', 'Washington, D.C.']
+    patterns = [nlp(text) for text in terminology_list]
+    matcher.add('TerminologyList', None, *patterns)
+
+    doc = nlp(u"German Chancellor Angela Merkel and US President Barack Obama "
+              u"converse in the Oval Office inside the White House in Washington, D.C.")
+    matches = matcher(doc)
+
+p
+    |  Since spaCy is used for processing both the patterns and the text to be
+    |  matched, you won't have to worry about specific tokenization – for
+    |  example, you can simply pass in #[code nlp(u"Washington, D.C.")] and
+    |  won't have to write a complex token pattern covering the exact
+    |  tokenization of the term.
+
 +h(3, "on_match") Adding #[code on_match] rules
 
 p
@@ -182,43 +307,6 @@ p
         +cell
             |  A list of #[code (match_id, start, end)] tuples, describing the
             |  matches. A match tuple describes a span #[code doc[start:end]].
-
-+h(3, "quantifiers") Using operators and quantifiers
-
-p
-    |  The matcher also lets you use quantifiers, specified as the #[code 'OP']
-    |  key. Quantifiers let you define sequences of tokens to be mached, e.g.
-    |  one or more punctuation marks, or specify optional tokens. Note that there
-    |  are no nested or scoped quantifiers – instead, you can build those
-    |  behaviours with #[code on_match] callbacks.
-
-+aside("Problems with quantifiers")
-    |  Using quantifiers may lead to unexpected results when matching
-    |  variable-length patterns, for example if the next token would also be
-    |  matched by the previous token. This problem should be resolved in a future
-    |  release. For more information, see
-    |  #[+a(gh("spaCy") + "/issues/864") this issue].
-
-+table([ "OP", "Description", "Example"])
-    +row
-        +cell #[code !]
-        +cell match exactly 0 times
-        +cell negation
-
-    +row
-        +cell #[code *]
-        +cell match 0 or more times
-        +cell optional, variable number
-
-    +row
-        +cell #[code +]
-        +cell match 1 or more times
-        +cell mandatory, variable number
-
-    +row
-        +cell #[code ?]
-        +cell match 0 or 1 times
-        +cell optional, max one
 
 +h(3, "example1") Example: Using linguistic annotations
 
