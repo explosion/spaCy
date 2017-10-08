@@ -239,7 +239,7 @@ cdef class Parser:
     """
     @classmethod
     def Model(cls, nr_class, **cfg):
-        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 2))
+        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
         token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 128))
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 128))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 1))
