@@ -264,7 +264,8 @@ def HistoryFeatures(nr_class, hist_size=8, nr_dim=8):
         return layerize(noop())
     embed_tables = [Embed(nr_dim, nr_class, column=i, name='embed%d')
                     for i in range(hist_size)]
-    embed = concatenate(*embed_tables)
+    embed = chain(concatenate(*embed_tables),
+                  LN(Maxout(hist_size*nr_dim, hist_size*nr_dim)))
     ops = embed.ops
     def add_history_fwd(vectors_hists, drop=0.):
         vectors, hist_ids = vectors_hists
