@@ -250,6 +250,8 @@ cdef class Break:
             return False
         elif st.B_(0).l_edge < 0:
             return False
+        elif st._sent[st.B_(0).l_edge].sent_start < 0:
+            return False
         else:
             return True
 
