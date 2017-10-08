@@ -111,6 +111,30 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self.doc[i]
 
+    def as_doc(self):
+        '''Create a Doc object view of the Span's data.
+
+        This is mostly useful for C-typed interfaces. 
+        '''
+        cdef Doc doc = Doc(self.doc.vocab)
+        doc.length = self.end-self.start
+        doc.c = &self.doc.c[self.start]
+        doc.mem = self.doc.mem
+        doc.is_parsed = self.doc.is_parsed
+        doc.is_tagged = self.doc.is_tagged
+        doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
+        doc.user_hooks = self.doc.user_hooks
+        doc.user_span_hooks = self.doc.user_span_hooks
+        doc.user_token_hooks = self.doc.user_token_hooks
+        doc.vector = self.vector
+        doc.vector_norm = self.vector_norm
+        for key, value in self.doc.cats.items():
+            if hasattr(key, '__len__') and len(key) == 3:
+                cat_start, cat_end, cat_label = key
+                if cat_start == self.start_char and cat_end == self.end_char:
+                    doc.cats[cat_label] = value
+        return doc
+
     def merge(self, *args, **attributes):
         """Retokenize the document, such that the span is merged into a single
         token.
