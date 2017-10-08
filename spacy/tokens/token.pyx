@@ -281,13 +281,21 @@ cdef class Token:
         def __get__(self):
             return self.c.sent_start
 
-        def __set__(self, bint value):
+        def __set__(self, value):
             if self.doc.is_parsed:
                 raise ValueError(
                     'Refusing to write to token.sent_start if its document is parsed, '
                     'because this may cause inconsistent state. '
                     'See https://github.com/spacy-io/spaCy/issues/235 for workarounds.')
-            self.c.sent_start = value
+            if value is None:
+                self.c.sent_start = 0
+            elif value is True:
+                self.c.sent_start = 1
+            elif value is False:
+                self.c.sent_start = -1
+            else:
+                raise ValueError("Invalid value for token.sent_start -- must be one of "
+                                 "None, True, False")
 
     property lefts:
         def __get__(self):
