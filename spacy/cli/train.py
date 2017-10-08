@@ -78,11 +78,11 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
     # at the beginning of training.
-    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.6),
-                                  util.env_opt('dropout_to', 0.1),
-                                  util.env_opt('dropout_decay', 1e-5))
+    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
+                                  util.env_opt('dropout_to', 0.2),
+                                  util.env_opt('dropout_decay', 0.0))
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
-                                   util.env_opt('batch_to', 4),
+                                   util.env_opt('batch_to', 16),
                                    util.env_opt('batch_compound', 1.001))
     corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
     n_train_words = corpus.count_train()
