@@ -107,6 +107,7 @@
             "Custom Components": "custom-components",
             "Multi-threading": "multithreading",
             "Serialization": "serialization",
+            "Developing Extensions": "extensions"
         }
     },
 
