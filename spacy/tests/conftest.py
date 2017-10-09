@@ -80,9 +80,13 @@ def fi_tokenizer():
 
 @pytest.fixture
 def ja_tokenizer():
-    janome = pytest.importorskip("janome")
+    pytest.importorskip("MeCab")
     return Japanese.Defaults.create_tokenizer()
 
+@pytest.fixture
+def japanese():
+    pytest.importorskip("MeCab")
+    return Japanese()
 
 @pytest.fixture
 def sv_tokenizer():
