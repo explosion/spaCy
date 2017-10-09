@@ -71,6 +71,11 @@ cdef enum action_t:
     ADVANCE_ZERO
     PANIC
 
+# A "match expression" conists of one or more token patterns
+# Each token pattern consists of a quantifier and 0+ (attr, value) pairs.
+# A state is an (int, pattern pointer) pair, where the int is the start
+# position, and the pattern pointer shows where we're up to
+# in the pattern.
 
 cdef struct AttrValueC:
     attr_id_t attr
@@ -130,7 +135,10 @@ cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
     elif pattern.quantifier in (ONE, ZERO_ONE):
         return ACCEPT if (pattern+1).nr_attr == 0 else ADVANCE
     elif pattern.quantifier == ZERO_PLUS:
-        return REPEAT
+        # This is a bandaid over the 'shadowing' problem described here:
+        # https://github.com/explosion/spaCy/issues/864
+        next_action = get_action(pattern+1, token)
+        return REPEAT if next_action is REJECT else next_action
     else:
         return PANIC
 

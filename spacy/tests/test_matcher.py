@@ -111,7 +111,17 @@ def test_matcher_empty_dict(en_vocab):
     matches = matcher(doc)
     assert matches[0][1:] == (0, 2)
  
-
+def test_matcher_operator_shadow(en_vocab):
+    matcher = Matcher(en_vocab)
+    abc = ["a", "b", "c"]
+    doc = get_doc(matcher.vocab, abc)
+    matcher.add('A.C', None, [{'ORTH': 'a'},
+                              {"IS_ALPHA": True, "OP": "+"},
+                              {'ORTH': 'c'}])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    assert matches[0][1:] == (0, 3)
+ 
 def test_matcher_phrase_matcher(en_vocab):
     words = ["Google", "Now"]
     doc = get_doc(en_vocab, words)
