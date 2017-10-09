@@ -21,7 +21,6 @@ import thinc.neural._classes.layernorm
 thinc.neural._classes.layernorm.set_compat_six_eight(False)
 
 
-
 def train_textcat(tokenizer, textcat,
                   train_texts, train_cats, dev_texts, dev_cats,
                   n_iter=20):
@@ -57,18 +56,20 @@ def evaluate(tokenizer, textcat, texts, cats):
     for i, doc in enumerate(textcat.pipe(docs)):
         gold = cats[i]
         for label, score in doc.cats.items():
-            if score >= 0.5 and label in gold:
+            if label not in gold:
+                continue
+            if score >= 0.5 and gold[label] >= 0.5:
                 tp += 1.
-            elif score >= 0.5 and label not in gold:
+            elif score >= 0.5 and gold[label] < 0.5:
                 fp += 1.
-            elif score < 0.5 and label not in gold:
+            elif score < 0.5 and gold[label] < 0.5:
                 tn += 1
-            if score < 0.5 and label in gold:
+            elif score < 0.5 and gold[label] >= 0.5:
                 fn += 1
     precis = tp / (tp + fp)
     recall = tp / (tp + fn)
     fscore = 2 * (precis * recall) / (precis + recall)
-    return {'textcat_p': precis, 'textcat_r': recall, 'textcat_f': fscore}  
+    return {'textcat_p': precis, 'textcat_r': recall, 'textcat_f': fscore}
 
 
 def load_data(limit=0):
@@ -80,7 +81,7 @@ def load_data(limit=0):
     train_data = train_data[-limit:]
 
     texts, labels = zip(*train_data)
-    cats = [(['POSITIVE'] if y else []) for y in labels]
+    cats = [{'POSITIVE': bool(y)} for y in labels]
 
     split = int(len(train_data) * 0.8)
 
@@ -97,7 +98,7 @@ def main(model_loc=None):
     textcat = TextCategorizer(tokenizer.vocab, labels=['POSITIVE'])
 
     print("Load IMDB data")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=1000)
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=2000)
 
     print("Itn.\tLoss\tP\tR\tF")
     progress = '{i:d} {loss:.3f} {textcat_p:.3f} {textcat_r:.3f} {textcat_f:.3f}'
