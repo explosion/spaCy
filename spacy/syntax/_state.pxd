@@ -307,6 +307,8 @@ cdef cppclass StateC:
             this._stack[this._s_i] = this.B(0)
         this._s_i += 1
         this._b_i += 1
+        if this.B_(0).sent_start == 1:
+            this.set_break(this.B(0))
         if this._b_i > this._break:
             this._break = -1
 
@@ -383,7 +385,7 @@ cdef cppclass StateC:
 
     void set_break(int i) nogil:
         if 0 <= i < this.length:
-            this._sent[i].sent_start = True
+            this._sent[i].sent_start = 1
             this._break = this._b_i
 
     void clone(const StateC* src) nogil:

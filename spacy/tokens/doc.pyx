@@ -485,7 +485,7 @@ cdef class Doc:
             cdef int i
             start = 0
             for i in range(1, self.length):
-                if self.c[i].sent_start:
+                if self.c[i].sent_start == 1:
                     yield Span(self, start, i)
                     start = i
             if start != self.length:
