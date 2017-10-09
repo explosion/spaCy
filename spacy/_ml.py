@@ -743,5 +743,3 @@ def concatenate_lists(*layers, **kwargs): # pragma: no cover
         return ys, concatenate_lists_bwd
     model = wrap(concatenate_lists_fwd, concat)
     return model
-
-

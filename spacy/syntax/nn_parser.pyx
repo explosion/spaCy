@@ -51,7 +51,7 @@ from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
 from .._ml import HistoryFeatures
-from ..compat import json_dumps
+from ..compat import json_dumps, copy_array
 
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
@@ -781,12 +781,22 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
 
     def add_label(self, label):
+        resized = False
         for action in self.moves.action_types:
             added = self.moves.add_action(action, label)
             if added:
                 # Important that the labels be stored as a list! We need the
                 # order, or the model goes out of synch
                 self.cfg.setdefault('extra_labels', []).append(label)
+                resized = True
+        if self.model not in (True, False, None) and resized:
+            # Weights are stored in (nr_out, nr_in) format, so we're basically
+            # just adding rows here.
+            smaller = self.model[-1]._layers[-1]
+            larger = Affine(self.moves.n_moves, smaller.nI)
+            copy_array(larger.W[:smaller.nO], smaller.W)
+            copy_array(larger.b[:smaller.nO], smaller.b)
+            self.model[-1]._layers[-1] = larger
 
     def begin_training(self, gold_tuples, pipeline=None, **cfg):
         if 'model' in cfg:
