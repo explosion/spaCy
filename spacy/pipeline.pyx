@@ -28,6 +28,7 @@ from thinc.neural._classes.difference import Siamese, CauchySimilarity
 from .tokens.doc cimport Doc
 from .syntax.parser cimport Parser as LinearParser
 from .syntax.nn_parser cimport Parser as NeuralParser
+from .syntax import nonproj
 from .syntax.parser import get_templates as get_feature_templates
 from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
@@ -773,10 +774,18 @@ cdef class DependencyParser(LinearParser):
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
 
+    @property
+    def postprocesses(self):
+        return [nonproj.deprojectivize]
+
 
 cdef class NeuralDependencyParser(NeuralParser):
     name = 'parser'
     TransitionSystem = ArcEager
+
+    @property
+    def postprocesses(self):
+        return [nonproj.deprojectivize]
 
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
         for target in []:
@@ -817,6 +826,11 @@ cdef class BeamDependencyParser(BeamParser):
         Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
+
+    @property
+    def postprocesses(self):
+        return [nonproj.deprojectivize]
+
 
 
 __all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'BeamDependencyParser',
