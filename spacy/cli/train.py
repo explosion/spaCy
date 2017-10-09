@@ -172,7 +172,6 @@ def _render_parses(i, to_render):
 
 
 def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
-    print(locals())
     scores = {}
     for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc',
                 'ents_p', 'ents_r', 'ents_f', 'cpu_wps', 'gpu_wps']:
