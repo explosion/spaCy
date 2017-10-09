@@ -114,15 +114,33 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = lang_class(pipeline=pipeline)
                 nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
-                scorer = nlp_loaded.evaluate(
-                            list(corpus.dev_docs(
+                dev_docs = list(corpus.dev_docs(
                                 nlp_loaded,
-                                gold_preproc=gold_preproc)))
+                                gold_preproc=gold_preproc))
+                nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+                start_time = timer()
+                scorer = nlp_loaded.evaluate(dev_docs)
+                end_time = timer()
+                if use_gpu < 0:
+                    gpu_wps = None
+                    cpu_wps = nwords/(end_time-start_time)
+                else:
+                    gpu_wps = nwords/(end_time-start_time)
+                    with Model.use_device('cpu'):
+                        nlp_loaded = lang_class(pipeline=pipeline)
+                        nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
+                        dev_docs = list(corpus.dev_docs(
+                                        nlp_loaded, gold_preproc=gold_preproc))
+                        start_time = timer()
+                        scorer = nlp_loaded.evaluate(dev_docs)
+                        end_time = timer()
+                        cpu_wps = nwords/(end_time-start_time)
                 acc_loc =(output_path / ('model%d' % i) / 'accuracy.json')
                 with acc_loc.open('w') as file_:
                     file_.write(json_dumps(scorer.scores))
                 meta_loc = output_path / ('model%d' % i) / 'meta.json'
                 meta['accuracy'] = scorer.scores
+                meta['speed'] = {'nwords': nwords, 'cpu':cpu_wps, 'gpu': gpu_wps}
                 meta['lang'] = nlp.lang
                 meta['pipeline'] = pipeline
                 meta['spacy_version'] = '>=%s' % about.__version__
@@ -132,7 +150,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
                 with meta_loc.open('w') as file_:
                     file_.write(json_dumps(meta))
                 util.set_env_log(True)
-            print_progress(i, losses, scorer.scores)
+            print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
     finally:
         print("Saving model...")
         try:
@@ -153,16 +171,18 @@ def _render_parses(i, to_render):
         file_.write(html)
 
 
-def print_progress(itn, losses, dev_scores, wps=0.0):
+def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
+    print(locals())
     scores = {}
     for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc',
-                'ents_p', 'ents_r', 'ents_f', 'wps']:
+                'ents_p', 'ents_r', 'ents_f', 'cpu_wps', 'gpu_wps']:
         scores[col] = 0.0
     scores['dep_loss'] = losses.get('parser', 0.0)
     scores['ner_loss'] = losses.get('ner', 0.0)
     scores['tag_loss'] = losses.get('tagger', 0.0)
     scores.update(dev_scores)
-    scores['wps'] = wps
+    scores['cpu_wps'] = cpu_wps
+    scores['gpu_wps'] = gpu_wps or 0.0
     tpl = '\t'.join((
         '{:d}',
         '{dep_loss:.3f}',
@@ -173,7 +193,9 @@ def print_progress(itn, losses, dev_scores, wps=0.0):
         '{ents_f:.3f}',
         '{tags_acc:.3f}',
         '{token_acc:.3f}',
-        '{wps:.1f}'))
+        '{cpu_wps:.1f}',
+        '{gpu_wps:.1f}',
+    ))
     print(tpl.format(itn, **scores))
 
 
