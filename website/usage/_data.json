@@ -195,6 +195,7 @@
         "teaser": "Full code examples you can modify and run.",
         "next": "resources",
         "menu": {
+            "Pipeline": "pipeline",
             "Matching": "matching",
             "Training": "training",
             "Deep Learning": "deep-learning"
