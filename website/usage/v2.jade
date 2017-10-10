@@ -484,15 +484,16 @@ p
     p
         |  If you've been using custom pipeline components, check out the new
         |  guide on #[+a("/usage/language-processing-pipelines") processing pipelines].
-        |  Appending functions to the pipeline still works – but you might be able
-        |  to make this more convenient by registering "component factories".
-        |  Components of the processing pipeline can now be disabled by passing a
-        |  list of their names to the #[code disable] keyword argument on loading
-        |  or processing.
+        |  Appending functions to the pipeline still works – but the
+        |  #[+api("language#add_pipe") #[code add_pipe]] methods now makes this
+        |  much more convenient. Components of the processing pipeline can now
+        |  be disabled by passing a list of their names to the #[code disable]
+        |  keyword argument on load, or by simply demoving them from the
+        |  pipeline alltogether.
 
     +code-new.
         nlp = spacy.load('en', disable=['tagger', 'ner'])
-        doc = nlp(u"I don't want parsed", disable=['parser'])
+        nlp.remove_pipe('parser')
     +code-old.
         nlp = spacy.load('en', tagger=False, entity=False)
         doc = nlp(u"I don't want parsed", parse=False)
