@@ -224,7 +224,14 @@ class Language(object):
             >>> nlp.add_pipe(component, name='custom_name', last=True)
         """
         if name is None:
-            name = getattr(component, 'name', component.__name__)
+            if hasattr(component, 'name'):
+                name = component.name
+            elif hasattr(component, '__name__'):
+                name = component.__name__
+            elif hasattr(component, '__class__') and hasattr(component.__class__, '__name__'):
+                name = component.__class__.__name__
+            else:
+                name = repr(component)
         if name in self.pipe_names:
             raise ValueError("'{}' already exists in pipeline.".format(name))
         if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
