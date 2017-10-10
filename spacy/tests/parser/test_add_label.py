@@ -22,14 +22,14 @@ def vocab():
 @pytest.fixture
 def parser(vocab):
     parser = NeuralDependencyParser(vocab)
-    parser.cfg['token_vector_width'] = 4
-    parser.cfg['hidden_width'] = 6
+    parser.cfg['token_vector_width'] = 8
+    parser.cfg['hidden_width'] = 30
     parser.cfg['hist_size'] = 0
     parser.add_label('left')
     parser.begin_training([], **parser.cfg)
     sgd = Adam(NumpyOps(), 0.001)
 
-    for i in range(30):
+    for i in range(10):
         losses = {}
         doc = Doc(vocab, words=['a', 'b', 'c', 'd'])
         gold = GoldParse(doc, heads=[1, 1, 3, 3],
@@ -37,6 +37,8 @@ def parser(vocab):
         parser.update([doc], [gold], sgd=sgd, losses=losses)
     return parser
 
+def test_init_parser(parser):
+    pass
 
 def test_add_label(parser):
     doc = Doc(parser.vocab, words=['a', 'b', 'c', 'd'])
