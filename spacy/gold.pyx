@@ -387,7 +387,7 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
                  deps=None, entities=None, make_projective=False,
-                 cats=tuple()):
+                 cats=None):
         """Create a GoldParse.
 
         doc (Doc): The document the annotations refer to.
@@ -398,12 +398,15 @@ cdef class GoldParse:
         entities (iterable): A sequence of named entity annotations, either as
             BILUO tag strings, or as `(start_char, end_char, label)` tuples,
             representing the entity positions.
-        cats (iterable): A sequence of labels for text classification. Each
-            label may be a string or an int, or a `(start_char, end_char, label)`
+        cats (dict): Labels for text classification. Each key in the dictionary
+            may be a string or an int, or a `(start_char, end_char, label)`
             tuple, indicating that the label is applied to only part of the
             document (usually a sentence). Unlike entity annotations, label
             annotations can overlap, i.e. a single word can be covered by
-            multiple labelled spans.
+            multiple labelled spans. The TextCategorizer component expects
+            true examples of a label to have the value 1.0, and negative examples
+            of a label to have the value 0.0. Labels not in the dictionary are
+            treated as missing -- the gradient for those labels will be zero.
         RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
@@ -434,7 +437,7 @@ cdef class GoldParse:
         self.c.sent_start = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
-        self.cats = list(cats)
+        self.cats = {} if cats is None else dict(cats)
         self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)

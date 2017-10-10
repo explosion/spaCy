@@ -51,7 +51,7 @@ from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
 from .._ml import HistoryFeatures
-from ..compat import json_dumps
+from ..compat import json_dumps, copy_array
 
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
@@ -239,13 +239,13 @@ cdef class Parser:
     """
     @classmethod
     def Model(cls, nr_class, **cfg):
-        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 2))
+        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 0))
         token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 128))
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 128))
-        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 1))
+        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 3))
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
-        hist_size = util.env_opt('history_feats', cfg.get('hist_size', 4))
-        hist_width = util.env_opt('history_width', cfg.get('hist_width', 16))
+        hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
+        hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size >= 1 and depth == 0:
             raise ValueError("Inconsistent hyper-params: "
                 "history_feats >= 1 but parser_hidden_depth==0")
@@ -789,12 +789,22 @@ cdef class Parser:
         return []
 
     def add_label(self, label):
+        resized = False
         for action in self.moves.action_types:
             added = self.moves.add_action(action, label)
             if added:
                 # Important that the labels be stored as a list! We need the
                 # order, or the model goes out of synch
                 self.cfg.setdefault('extra_labels', []).append(label)
+                resized = True
+        if self.model not in (True, False, None) and resized:
+            # Weights are stored in (nr_out, nr_in) format, so we're basically
+            # just adding rows here.
+            smaller = self.model[-1]._layers[-1]
+            larger = Affine(self.moves.n_moves, smaller.nI)
+            copy_array(larger.W[:smaller.nO], smaller.W)
+            copy_array(larger.b[:smaller.nO], smaller.b)
+            self.model[-1]._layers[-1] = larger
 
     def begin_training(self, gold_tuples, pipeline=None, **cfg):
         if 'model' in cfg:
