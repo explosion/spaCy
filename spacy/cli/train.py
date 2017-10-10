@@ -114,10 +114,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
                 util.set_env_log(False)
                 epoch_model_path = output_path / ('model%d' % i)
                 nlp.to_disk(epoch_model_path)
-                nlp_loaded = lang_class(pipeline=pipeline)
-                for name in pipeline:
-                    nlp_loaded.add_pipe(nlp.create_pipe(name), name=name)
-                nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
+                nlp_loaded = util.load_model_from_path(epoch_model_path)
                 dev_docs = list(corpus.dev_docs(
                                 nlp_loaded,
                                 gold_preproc=gold_preproc))
@@ -131,11 +128,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
                 else:
                     gpu_wps = nwords/(end_time-start_time)
                     with Model.use_device('cpu'):
-                        nlp_loaded = lang_class(pipeline=pipeline)
-                        for name in pipeline:
-                            nlp_loaded.add_pipe(nlp.create_pipe(name), name=name)
-
-                        nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
+                        nlp_loaded = util.load_model_from_path(epoch_model_path)
                         dev_docs = list(corpus.dev_docs(
                                         nlp_loaded, gold_preproc=gold_preproc))
                         start_time = timer()
