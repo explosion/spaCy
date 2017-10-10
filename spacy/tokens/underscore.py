@@ -1,3 +1,5 @@
+import functools
+
 class Underscore(object):
     doc_extensions = {}
     span_extensions = {}
@@ -22,7 +24,7 @@ class Underscore(object):
         if getter is not None:
             return getter(self._obj)
         elif method is not None:
-            return method
+            return functools.partial(method, self._obj)
         else:
             return self._doc.user_data.get(self._get_key(name), default)
 
