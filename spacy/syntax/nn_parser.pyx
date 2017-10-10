@@ -800,11 +800,20 @@ cdef class Parser:
         if self.model not in (True, False, None) and resized:
             # Weights are stored in (nr_out, nr_in) format, so we're basically
             # just adding rows here.
-            smaller = self.model[-1]._layers[-1]
-            larger = Affine(self.moves.n_moves, smaller.nI)
-            copy_array(larger.W[:smaller.nO], smaller.W)
-            copy_array(larger.b[:smaller.nO], smaller.b)
-            self.model[-1]._layers[-1] = larger
+            if self.model[-1].is_noop:
+                smaller = self.model[1]
+                dims = dict(self.model[1]._dims)
+                dims['nO'] = self.moves.n_moves
+                larger = self.model[1].__class__(**dims)
+                copy_array(larger.W[:, :smaller.nO], smaller.W)
+                copy_array(larger.b[:smaller.nO], smaller.b)
+                self.model = (self.model[0], larger, self.model[2])
+            else:
+                smaller = self.model[-1]._layers[-1]
+                larger = Affine(self.moves.n_moves, smaller.nI)
+                copy_array(larger.W[:smaller.nO], smaller.W)
+                copy_array(larger.b[:smaller.nO], smaller.b)
+                self.model[-1]._layers[-1] = larger
 
     def begin_training(self, gold_tuples, pipeline=None, **cfg):
         if 'model' in cfg:
