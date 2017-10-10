@@ -28,7 +28,7 @@ cdef class Token:
     @classmethod
     def set_extension(cls, name, default=None, method=None,
                       getter=None, setter=None):
-        Underscore.span_extensions[name] = (default, method, getter, setter) 
+        Underscore.token_extensions[name] = (default, method, getter, setter)
 
     @classmethod
     def get_extension(cls, name):
@@ -285,7 +285,7 @@ cdef class Token:
         def __get__(self):
             if 'vector_norm' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector_norm'](self)
-            vector = self.vector 
+            vector = self.vector
             return numpy.sqrt((vector ** 2).sum())
 
     property n_lefts:
