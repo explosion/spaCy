@@ -126,7 +126,7 @@ def word_shape(text):
 LEX_ATTRS = {
     attrs.LOWER: lambda string: string.lower(),
     attrs.NORM: lambda string: string.lower(),
-    attrs.PREFIX: lambda string: string[:3],
+    attrs.PREFIX: lambda string: string[0],
     attrs.SUFFIX: lambda string: string[-3:],
     attrs.CLUSTER: lambda string: 0,
     attrs.IS_ALPHA: lambda string: string.isalpha(),
