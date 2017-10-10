@@ -11,7 +11,7 @@ p
 
 p
     |  When you load a model, spaCy first consults the model's
-    |  #[+a("/usage/saving-loading#models-generating") meta.json]. The
+    |  #[+a("/usage/saving-loading#models-generating") #[code meta.json]]. The
     |  meta typically includes the model details, the ID of a language class,
     |  and an optional list of pipeline components. spaCy then does the
     |  following:
@@ -21,24 +21,26 @@ p
         "name": "example_model",
         "lang": "en"
         "description": "Example model for spaCy",
-        "pipeline": ["tensorizer", "tagger"]
+        "pipeline": ["tagger", "parser"]
     }
 
 +list("numbers")
     +item
-        |  Look up #[strong pipeline IDs] in the available
-        |  #[strong pipeline factories].
-    +item
-        |  Initialise the #[strong pipeline components] by calling their
-        |  factories with the #[code Vocab] as an argument. This gives each
-        |  factory and component access to the pipeline's shared data, like
-        |  strings, morphology and annotation scheme.
-    +item
         |  Load the #[strong language class and data] for the given ID via
-        |  #[+api("util.get_lang_class") #[code get_lang_class]].
+        |  #[+api("util.get_lang_class") #[code get_lang_class]] and initialise
+        |  it. The #[code Language] class contains the shared vocabulary,
+        |  tokenization rules and the language-specific annotation scheme.
     +item
-        |  Pass the path to the #[strong model data] to the #[code Language]
-        |  class and return it.
+        |  Iterate over the #[strong pipeline names] and create each component
+        |  using #[+api("language#create_pipe") #[code create_pipe]], which
+        |  looks them up in #[code Language.factories].
+    +item
+        |  Add each pipeline component to the pipeline in order, using
+        |  #[+api("language#add_pipe") #[code add_pipe]].
+    +item
+        |  Make the #[strong model data] available to the #[code Language] class
+        |  by calling #[+api("language#from_disk") #[code from_disk]] with the
+        |  path to the model data ditectory.
 
 p
     |  So when you call this...
@@ -47,12 +49,12 @@ p
     nlp = spacy.load('en')
 
 p
-    | ... the model tells spaCy to use the pipeline
+    | ... the model tells spaCy to use the language #[code "en"] and the pipeline
     |  #[code.u-break ["tensorizer", "tagger", "parser", "ner"]]. spaCy will
-    |  then look up each string in its internal factories registry and
-    |  initialise the individual components. It'll then load
-    |  #[code spacy.lang.en.English], pass it the path to the model's data
-    |  directory, and return it for you to use as the #[code nlp] object.
+    |  then initialise #[code spacy.lang.en.English], and create each pipeline
+    |  component and add it to the processing pipeline. It'll then load in the
+    |  model's data from its data ditectory and return the modified
+    |  #[code Language] class for you to use as the #[code nlp] object.
 
 p
     |  Fundamentally, a #[+a("/models") spaCy model] consists of three
@@ -73,9 +75,12 @@ p
     pipeline = ['tensorizer', 'tagger', 'parser', 'ner']
     data_path = 'path/to/en_core_web_sm/en_core_web_sm-2.0.0'
 
-    cls = spacy.util.get_lang_class(lang)  # 1. get Language instance, e.g. English()
-    nlp = cls(pipeline=pipeline)           # 2. initialise it with the pipeline
-    nlp.from_disk(model_data_path)         # 3. load in the binary data
+    cls = spacy.util.get_lang_class(lang)   # 1. get Language instance, e.g. English()
+    nlp = cls()                             # 2. initialise it
+    for name in pipeline:
+        component = nlp.create_pipe(name)   # 3. create the pipeline components
+        nlp.add_pipe(component)             # 4. add the component to the pipeline
+    nlp.from_disk(model_data_path)          # 5. load in the binary data
 
 p
     |  When you call #[code nlp] on a text, spaCy will #[strong tokenize] it and
@@ -87,124 +92,23 @@ p
     |  document, which is then processed by the component next in the pipeline.
 
 +code("The pipeline under the hood").
-    doc = nlp.make_doc(u'This is a sentence')
-    for proc in nlp.pipeline:
-        doc = proc(doc)
-
-+h(3, "creating") Creating pipeline components and factories
+    doc = nlp.make_doc(u'This is a sentence')   # create a Doc from raw text
+    for name, proc in nlp.pipeline:             # iterate over components in order
+        doc = proc(doc)                         # apply each component
 
 p
-    |  spaCy lets you customise the pipeline with your own components. Components
-    |  are functions that receive a #[code Doc] object, modify and return it.
-    |  If your component is stateful, you'll want to create a new one for each
-    |  pipeline. You can do that by defining and registering a factory which
-    |  receives the shared #[code Vocab] object and returns a component.
-
-+h(4, "creating-component") Creating a  component
-
-p
-    |  A component receives a #[code Doc] object and
-    |  #[strong performs the actual processing] – for example, using the current
-    |  weights to make a prediction and set some annotation on the document. By
-    |  adding a component to the pipeline, you'll get access to the #[code Doc]
-    |  at any point #[strong during] processing – instead of only being able to
-    |  modify it afterwards.
-
-+aside-code("Example").
-    def my_component(doc):
-        # do something to the doc here
-        return doc
-
-+table(["Argument", "Type", "Description"])
-    +row
-        +cell #[code doc]
-        +cell #[code Doc]
-        +cell The #[code Doc] object processed by the previous component.
-
-    +row("foot")
-        +cell returns
-        +cell #[code Doc]
-        +cell The #[code Doc] object processed by this pipeline component.
-
-p
-    |  When creating a new #[code Language] class, you can pass it a list of
-    |  pipeline component functions to execute in that order. You can also
-    |  add it to an existing pipeline by modifying #[code nlp.pipeline] – just
-    |  be careful not to overwrite a pipeline or its components by accident!
+    |  The current processing pipeline is available as #[code nlp.pipeline],
+    |  which returns a list of #[code (name, component)] tuples, or
+    |  #[code nlp.pipe_names], which only returns a list of human-readable
+    |  component names.
 
 +code.
-    # Create a new Language object with a pipeline
-    from spacy.language import Language
-    nlp = Language(pipeline=[my_component])
+    nlp.pipeline
+    # [('tagger', &lt;spacy.pipeline.Tagger&gt;), ('parser', &lt;spacy.pipeline.DependencyParser&gt;), ('ner', &lt;spacy.pipeline.EntityRecognizer&gt;)]
+    nlp.pipe_names
+    # ['tagger', 'parser', 'ner']
 
-    # Modify an existing pipeline
-    nlp = spacy.load('en')
-    nlp.pipeline.append(my_component)
-
-+h(4, "creating-factory") Creating a factory
-
-p
-    |  A factory is a #[strong function that returns a pipeline component].
-    |  It's called with the #[code Vocab] object, to give it access to the
-    |  shared data between components – for example, the strings, morphology,
-    |  vectors or annotation scheme. Factories are useful for creating
-    |  #[strong stateful components], especially ones which
-    |  #[strong depend on shared data].
-
-+aside-code("Example").
-    def my_factory(vocab):
-        # load some state
-        def my_component(doc):
-            # process the doc
-            return doc
-        return my_component
-
-+table(["Argument", "Type", "Description"])
-    +row
-        +cell #[code vocab]
-        +cell #[code Vocab]
-        +cell
-            |  Shared data between components, including strings, morphology,
-            |  vectors etc.
-
-    +row("foot")
-        +cell returns
-        +cell callable
-        +cell The pipeline component.
-
-p
-    |  By creating a factory, you're essentially telling spaCy how to get the
-    |  pipeline component #[strong once the vocab is available]. Factories need to
-    |  be registered via #[+api("spacy#set_factory") #[code set_factory()]] and
-    |  by assigning them a unique ID. This ID can be added to the pipeline as a
-    |  string. When creating a pipeline, you're free to mix strings and
-    |  callable components:
-
-+code.
-    spacy.set_factory('my_factory', my_factory)
-    nlp = Language(pipeline=['my_factory', my_other_component])
-
-p
-    |  If spaCy comes across a string in the pipeline, it will try to resolve it
-    |  by looking it up in the available factories. The factory will then be
-    |  initialised with the #[code Vocab]. Providing factory names instead of
-    |  callables also makes it easy to specify them in the model's
-    |  #[+a("/usage/saving-loading#models-generating") meta.json]. If you're
-    |  training your own model and want to use one of spaCy's default components,
-    |  you won't have to worry about finding and implementing it either – to use
-    |  the default tagger, simply add #[code "tagger"] to the pipeline, and
-    |  #[strong spaCy will know what to do].
-
-+infobox("Important note")
-    |  Because factories are #[strong resolved on initialisation] of the
-    |  #[code Language] class, it's #[strong not possible] to add them to the
-    |  pipeline afterwards, e.g. by modifying #[code nlp.pipeline]. This only
-    |  works with individual component functions. To use factories, you need to
-    |  create a new #[code Language] object, or generate a
-    |  #[+a("/usage/training#models-generating") model package] with
-    |  a custom pipeline.
-
-+h(3, "disabling") Disabling pipeline components
++h(3, "disabling") Disabling and modifying pipeline components
 
 p
     |  If you don't need a particular component of the pipeline – for
@@ -217,16 +121,19 @@ p
 +code.
     nlp = spacy.load('en', disable['parser', 'tagger'])
     nlp = English().from_disk('/model', disable=['tensorizer', 'ner'])
-    doc = nlp(u"I don't want parsed", disable=['parser'])
 
 p
-    |  Note that you can't write directly to #[code nlp.pipeline], as this list
-    |  holds the #[em actual components], not the IDs. However, if you know the
-    |  order of the components, you can still slice the list:
+    |  You can also use the #[+api("language#remove_pipe") #[code remove_pipe]]
+    |  method to remove pipeline components from an existing pipeline, the
+    |  #[+api("language#rename_pipe") #[code rename_pipe]] method to rename them,
+    |  or the #[+api("language#replace_pipe") #[code replace_pipe]] method
+    |  to replace them with a custom component entirely (more details on this
+    |  in the section on #[+a("#custom-components") custom components].
 
 +code.
-    nlp = spacy.load('en')
-    nlp.pipeline = nlp.pipeline[:2] # only use the first two components
+    nlp.remove_pipe('parser')
+    nlp.rename_pipe('ner', 'entityrecognizer')
+    nlp.replace_pipe('tagger', my_custom_tagger)
 
 +infobox("Important note: disabling pipeline components")
     .o-block
@@ -234,12 +141,14 @@ p
         |  processing pipeline components, the #[code parser], #[code tagger]
         |  and #[code entity] keyword arguments have been replaced with
         |  #[code disable], which takes a list of pipeline component names.
-        |  This lets you disable both default and custom components when loading
+        |  This lets you disable pre-defined components when loading
         |  a model, or initialising a Language class via
         |  #[+api("language-from_disk") #[code from_disk]].
+
     +code-new.
-        nlp = spacy.load('en', disable=['tagger', 'ner'])
-        doc = nlp(u"I don't want parsed", disable=['parser'])
+        nlp = spacy.load('en', disable=['ner'])
+        nlp.remove_pipe('parser')
+        doc = nlp(u"I don't want parsed")
     +code-old.
         nlp = spacy.load('en', tagger=False, entity=False)
         doc = nlp(u"I don't want parsed", parse=False)

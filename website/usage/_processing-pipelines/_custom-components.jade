@@ -1,0 +1,151 @@
+//- 💫 DOCS > USAGE > PROCESSING PIPELINES > CUSTOM COMPONENTS
+
+p
+    |  A component receives a #[code Doc] object and
+    |  #[strong performs the actual processing] – for example, using the current
+    |  weights to make a prediction and set some annotation on the document. By
+    |  adding a component to the pipeline, you'll get access to the #[code Doc]
+    |  at any point #[strong during] processing – instead of only being able to
+    |  modify it afterwards.
+
++aside-code("Example").
+    def my_component(doc):
+        # do something to the doc here
+        return doc
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The #[code Doc] object processed by the previous component.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell The #[code Doc] object processed by this pipeline component.
+
+p
+    |  Custom components can be added to the pipeline using the
+    |  #[+api("language#add_pipe") #[code add_pipe]] method. Optionally, you
+    |  can either specify a component to add it before or after, tell spaCy
+    |  to add it first or last in the pipeline, or define a custom name.
+    |  If no name is set and no #[code name] attribute is present on your
+    |  component, the function name, e.g. #[code component.__name__] is used.
+
++code("Adding pipeline components").
+    def my_component(doc):
+        print("After tokenization, this doc has %s tokens." % len(doc))
+        if len(doc) &lt; 10:
+            print("This is a pretty short document.")
+        return doc
+
+    nlp = spacy.load('en')
+    nlp.pipeline.add_pipe(my_component, name='print_info', first=True)
+    print(nlp.pipe_names) # ['print_info', 'tagger', 'parser', 'ner']
+    doc = nlp(u"This is a sentence.")
+
+p
+    |  Of course, you can also wrap your component as a class to allow
+    |  initialising it with custom settings and hold state within the component.
+    |  This is useful for #[strong stateful components], especially ones which
+    |  #[strong depend on shared data].
+
++code.
+    class MyComponent(object):
+        name = 'print_info'
+
+        def __init__(vocab, short_limit=10):
+            self.vocab = nlp.vocab
+            self.short_limit = short_limit
+
+        def __call__(doc):
+            if len(doc) &lt; self.short_limit:
+                print("This is a pretty short document.")
+            return doc
+
+    my_component = MyComponent(nlp.vocab, short_limit=25)
+    nlp.add_pipe(my_component, first=True)
+
++h(3, "custom-components-attributes")
+    |  Setting attributes on the #[code Doc], #[code Span] and #[code Token]
+
++aside("Why ._?")
+    |  Writing to a #[code ._] attribute instead of to the #[code Doc] directly
+    |  keeps a clearer separation and makes it easier to ensure backwards
+    |  compatibility. For example, if you've implemented your own #[code .coref]
+    |  property and spaCy claims it one day, it'll break your code. Similarly,
+    |  just by looking at the code, you'll immediately know what's built-in and
+    |  what's custom – for example, #[code doc.sentiment] is spaCy, while
+    |  #[code doc._.sent_score] isn't.
+
++under-construction
+
++h(3, "custom-components-user-hooks") Other user hooks
+
+p
+    |  While it's generally recommended to use the #[code Doc._], #[code Span._]
+    |  and #[code Token._] proxies to add your own custom attributes, spaCy
+    |  offers a few exceptions to allow #[strong customising the built-in methods]
+    |  like #[+api("doc#similarity") #[code Doc.similarity]] or
+    |  #[+api("doc#vector") #[code Doc.vector]]. with your own hooks, which can
+    |  rely on statistical models you train yourself. For instance, you can
+    |  provide your own on-the-fly sentence segmentation algorithm or document
+    |  similarity method.
+
+p
+    |  Hooks let you customize some of the behaviours of the #[code Doc],
+    |  #[code Span] or #[code Token] objects by adding a component to the
+    |  pipeline. For instance, to customize the
+    |  #[+api("doc#similarity") #[code Doc.similarity]] method, you can add a
+    |  component that sets a custom function to
+    |  #[code doc.user_hooks['similarity']]. The built-in #[code Doc.similarity]
+    |  method will check the #[code user_hooks] dict, and delegate to your
+    |  function if you've set one. Similar results can be achieved by setting
+    |  functions to #[code Doc.user_span_hooks] and #[code Doc.user_token_hooks].
+
++aside("Implementation note")
+    |  The hooks live on the #[code Doc] object because the #[code Span] and
+    |  #[code Token] objects are created lazily, and don't own any data. They
+    |  just proxy to their parent #[code Doc]. This turns out to be convenient
+    |  here — we only have to worry about installing hooks in one place.
+
++table(["Name", "Customises"])
+    +row
+        +cell #[code user_hooks]
+        +cell
+            +api("doc#vector") #[code Doc.vector]
+            +api("doc#has_vector") #[code Doc.has_vector]
+            +api("doc#vector_norm") #[code Doc.vector_norm]
+            +api("doc#sents") #[code Doc.sents]
+
+    +row
+        +cell #[code user_token_hooks]
+        +cell
+            +api("token#similarity") #[code Token.similarity]
+            +api("token#vector") #[code Token.vector]
+            +api("token#has_vector") #[code Token.has_vector]
+            +api("token#vector_norm") #[code Token.vector_norm]
+            +api("token#conjuncts") #[code Token.conjuncts]
+
+    +row
+        +cell #[code user_span_hooks]
+        +cell
+            +api("span#similarity") #[code Span.similarity]
+            +api("span#vector") #[code Span.vector]
+            +api("span#has_vector") #[code Span.has_vector]
+            +api("span#vector_norm") #[code Span.vector_norm]
+            +api("span#root") #[code Span.root]
+
++code("Add custom similarity hooks").
+    class SimilarityModel(object):
+        def __init__(self, model):
+            self._model = model
+
+        def __call__(self, doc):
+            doc.user_hooks['similarity'] = self.similarity
+            doc.user_span_hooks['similarity'] = self.similarity
+            doc.user_token_hooks['similarity'] = self.similarity
+
+        def similarity(self, obj1, obj2):
+            y = self._model([obj1.vector, obj2.vector])
+            return float(y[0])
