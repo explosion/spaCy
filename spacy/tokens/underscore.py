@@ -37,5 +37,14 @@ class Underscore(object):
         else:
             self._doc.user_data[self._get_key(name)] = value
 
+    def set(self, name, value):
+        return self.__setattr__(name, value)
+
+    def get(self, name):
+        return self.__getattr__(name)
+
+    def has(self, name):
+        return name in self._extensions
+
     def _get_key(self, name):
         return ('._.', name, self._start, self._end)
