@@ -1,12 +1,11 @@
 //- 💫 DOCS > USAGE > PROCESSING PIPELINES > CUSTOM COMPONENTS
 
 p
-    |  A component receives a #[code Doc] object and
-    |  #[strong performs the actual processing] – for example, using the current
-    |  weights to make a prediction and set some annotation on the document. By
-    |  adding a component to the pipeline, you'll get access to the #[code Doc]
-    |  at any point #[strong during] processing – instead of only being able to
-    |  modify it afterwards.
+    |  A component receives a #[code Doc] object and can modify it – for example,
+    |  by using the current weights to make a prediction and set some annotation
+    |  on the document. By adding a component to the pipeline, you'll get access
+    |  to the #[code Doc] at any point #[strong during processing] – instead of
+    |  only being able to modify it afterwards.
 
 +aside-code("Example").
     def my_component(doc):
@@ -27,10 +26,10 @@ p
 p
     |  Custom components can be added to the pipeline using the
     |  #[+api("language#add_pipe") #[code add_pipe]] method. Optionally, you
-    |  can either specify a component to add it before or after, tell spaCy
-    |  to add it first or last in the pipeline, or define a custom name.
-    |  If no name is set and no #[code name] attribute is present on your
-    |  component, the function name, e.g. #[code component.__name__] is used.
+    |  can either specify a component to add it #[strong before or after], tell
+    |  spaCy to add it #[strong first or last] in the pipeline, or define a
+    |  #[strong custom name]. If no name is set and no #[code name] attribute
+    |  is present on your component, the function name is used.
 
 +code("Adding pipeline components").
     def my_component(doc):
@@ -67,7 +66,19 @@ p
     nlp.add_pipe(my_component, first=True)
 
 +h(3, "custom-components-attributes")
-    |  Setting attributes on the #[code Doc], #[code Span] and #[code Token]
+    |  Extension attributes on #[code Doc], #[code Span] and #[code Token]
+    +tag-new(2)
+
+p
+    |  As of v2.0, spaCy allows you to set any custom attributes and methods
+    |  on the #[code Doc], #[code Span] and #[code Token], which become
+    |  available as #[code Doc._], #[code Span._] and #[code Token._] – for
+    |  example, #[code Token._.my_attr]. This lets you store additional
+    |  information relevant to your application, add new features and
+    |  functionality to spaCy, and implement your own models trained with other
+    |  machine learning libraries. It also lets you take advantage of spaCy's
+    |  data structures and the #[code Doc] object as the "single source of
+    |  truth".
 
 +aside("Why ._?")
     |  Writing to a #[code ._] attribute instead of to the #[code Doc] directly
@@ -78,9 +89,218 @@ p
     |  what's custom – for example, #[code doc.sentiment] is spaCy, while
     |  #[code doc._.sent_score] isn't.
 
-+under-construction
+p
+    |  There are three main types of extensions, which can be defined using the
+    |  #[+api("doc#set_extension") #[code Doc.set_extension]],
+    |  #[+api("span#set_extension") #[code Span.set_extension]] and
+    |  #[+api("token#set_extension") #[code Token.set_extension]] methods.
 
-+h(3, "custom-components-user-hooks") Other user hooks
++list("numbers")
+    +item #[strong Attribute extensions].
+        |  Set a default value for an attribute, which can be overwritten
+        |  manually at any time. Attribute extensions work like "normal"
+        |  variables and are the quickest way to store arbitrary information
+        |  on a #[code Doc], #[code Span] or #[code Token].
+
+        +code-wrapper
+            +code.
+                Doc.set_extension('hello', default=True)
+                assert doc._.hello
+                doc._.hello = False
+
+    +item #[strong Property extensions].
+        |  Define a getter and an optional setter function. If no setter is
+        |  provided, the extension is immutable. Since the getter and setter
+        |  functions are only called when you #[em retrieve] the attribute,
+        |  you can also access values of previously added attribute extensions.
+        |  For example, a #[code Doc] getter can average over #[code Token]
+        |   attributes. For #[code Span] extensions, you'll almost always want
+        |  to use a property – otherwise, you'd have to write to
+        |  #[em every possible] #[code Span] in the #[code Doc] to set up the
+        |  values correctly.
+
+        +code-wrapper
+            +code.
+                Doc.set_extension('hello', getter=get_hello_value, setter=set_hello_value)
+                assert doc._.hello
+                doc._.hello = 'Hi!'
+
+    +item #[strong Method extensions].
+        |  Assign a function that becomes available as an object method. Method
+        |  extensions are always immutable. For more details and implementation
+        |  ideas, see
+        |  #[+a("/usage/examples#custom-components-attr-methods") these examples].
+
+        +code-wrapper
+            +code.o-no-block.
+                Doc.set_extension('hello', method=lambda doc, name: 'Hi {}!'.format(name))
+                assert doc._.hello('Bob') == 'Hi Bob!'
+
+p
+    |  Before you can access a custom extension, you need to register it using
+    |  the #[code set_extension] method on the object you want
+    |  to add it to, e.g. the #[code Doc]. Keep in mind that extensions are
+    |  always #[strong added globally] and not just on a particular instance.
+    |  If an attribute of the same name
+    |  already exists, or if you're trying to access an attribute that hasn't
+    |  been registered, spaCy will raise an #[code AttributeError].
+
++code("Example").
+    from spacy.tokens.token import Token
+    from spacy.tokens.doc import Doc
+    from spacy.tokens.span import Span
+
+    fruits = ['apple', 'pear', 'banana', 'orange', 'strawberry']
+    is_fruit_getter = lambda token: token.text in fruits
+    has_fruit_getter = lambda obj: any([t.text in fruits for t in obj])
+
+    Token.set_extension('is_fruit', getter=is_fruit_getter)
+    Doc.set_extension('has_fruit', getter=has_fruit_getter)
+    Span.set_extension('has_fruit', getter=has_fruit_getter)
+
++aside-code("Usage example").
+    doc = nlp(u"I have an apple and a melon")
+    assert doc[3]._.is_fruit      # get Token attributes
+    assert not doc[0]._.is_fruit
+    assert doc._.has_fruit        # get Doc attributes
+    assert doc[1:4]._.has_fruit   # get Span attributes
+
+p
+    |  Once you've registered your custom attribute, you can also use the
+    |  built-in #[code set], #[code get] and #[code has] methods to modify and
+    |  retrieve the attributes. This is especially useful it you want to pass in
+    |  a string instead of calling #[code doc._.my_attr].
+
++table(["Method", "Description", "Valid for", "Example"])
+    +row
+        +cell #[code ._.set()]
+        +cell Set a value for an attribute.
+        +cell Attributes, mutable properties.
+        +cell #[code.u-break token._.set('my_attr', True)]
+
+    +row
+        +cell #[code ._.get()]
+        +cell Get the value of an attribute.
+        +cell Attributes, mutable properties, immutable properties, methods.
+        +cell #[code.u-break my_attr = span._.get('my_attr')]
+
+    +row
+        +cell #[code ._.has()]
+        +cell Check if an attribute exists.
+        +cell Attributes, mutable properties, immutable properties, methods.
+        +cell #[code.u-break doc._.has('my_attr')]
+
++infobox("How the ._ is implemented")
+    |  Extension definitions – the defaults, methods, getters and setters you
+    |  pass in to #[code set_extension] are stored in class attributes on the
+    |  #[code Underscore] class. If you write to an extension attribute, e.g.
+    |  #[code doc._.hello = True], the data is stored within the
+    |  #[+api("doc#attributes") #[code Doc.user_data]] dictionary. To keep the
+    |  underscore data separate from your other dictionary entries, the string
+    |  #[code "._."] is placed before the name, in a tuple.
+
++h(4, "component-example1") Example: Custom sentence segmentation logic
+
+p
+    |  Let's say you want to implement custom logic to improve spaCy's sentence
+    |  boundary detection. Currently, sentence segmentation is based on the
+    |  dependency parse, which doesn't always produce ideal results. The custom
+    |  logic should therefore be applied #[strong after] tokenization, but
+    |  #[strong before] the dependency parsing – this way, the parser can also
+    |  take advantage of the sentence boundaries.
+
++code.
+    def sbd_component(doc):
+        for i, token in enumerate(doc[:-2]):
+            # define sentence start if period + titlecase token
+            if token.text == '.' and doc[i+1].is_title:
+                doc[i+1].sent_start = True
+        return doc
+
+    nlp = spacy.load('en')
+    nlp.add_pipe(sbd_component, before='parser')  # insert before the parser
+
++h(4, "component-example2")
+    |  Example: Pipeline component for entity matching and tagging with
+    |  custom attributes
+
+p
+    |  This example shows how to create a spaCy extension that takes a
+    |  terminology list (in this case, single- and multi-word company names),
+    |  matches the occurences in a document, labels them as #[code ORG] entities,
+    |  merges the tokens and sets custom #[code is_tech_org] and
+    |  #[code has_tech_org] attributes. For efficient matching, the example uses
+    |  the #[+api("phrasematcher") #[code PhraseMatcher]] which accepts
+    |  #[code Doc] objects as match patterns and works well for large
+    |  terminology lists. It also ensures your patterns will always match, even
+    |  when you customise spaCy's tokenization rules. When you call #[code nlp]
+    |  on a text, the custom pipeline component is applied to the #[code Doc]
+
++github("spacy", "examples/pipeline/custom_component_entities.py", false, 500)
+
+p
+    |  Wrapping this functionality in a
+    |  pipeline component allows you to reuse the module with different
+    |  settings, and have all pre-processing taken care of when you call
+    |  #[code nlp] on your text and receive a #[code Doc] object.
+
++h(4, "component-example3")
+    |  Example: Pipeline component for GPE entities and country meta data via a
+    |  REST API
+
+p
+    |  This example shows the implementation of a pipeline component
+    |  that fetches country meta data via the
+    |  #[+a("https://restcountries.eu") REST Countries API] sets entity
+    |  annotations for countries, merges entities into one token and
+    |  sets custom attributes on the #[code Doc], #[code Span] and
+    |  #[code Token] – for example, the capital, latitude/longitude coordinates
+    |  and even the country flag.
+
++github("spacy", "examples/pipeline/custom_component_countries_api.py", false, 500)
+
+p
+    |  In this case, all data can be fetched on initialisation in one request.
+    |  However, if you're working with text that contains incomplete country
+    |  names, spelling mistakes or foreign-language versions, you could also
+    |  implement a #[code like_country]-style getter function that makes a
+    |  request to the search API endpoint and returns the best-matching
+    |  result.
+
++h(4, "custom-components-usage-ideas") Other usage ideas
+
++list
+    +item
+        |  #[strong Adding new features and hooking in models]. For example,
+        |  a sentiment analysis model, or your preferred solution for
+        |  lemmatization or sentiment analysis. spaCy's built-in tagger,
+        |  parser and entity recognizer respect annotations that were already
+        |  set on the #[code Doc] in a previous step of the pipeline.
+    +item
+        |  #[strong Integrating other libraries and APIs]. For example, your
+        |  pipeline component can write additional information and data
+        |  directly to the #[code Doc] or #[code Token] as custom attributes,
+        |  while making sure no information is lost in the process. This can
+        |  be output generated by other libraries and models, or an external
+        |  service with a REST API.
+    +item
+        |  #[strong Debugging and logging]. For example, a component which
+        |  stores and/or exports relevant information about the current state
+        |  of the processed document, and insert it at any point of your
+        |  pipeline.
+
++infobox("Developing third-party extensions")
+    |  The new pipeline management and custom attributes finally make it easy
+    |  to develop your own spaCy extensions and plugins and share them with
+    |  others. Extensions can claim their own #[code ._] namespace and exist as
+    |  standalone packages. If you're developing a tool or library and want to
+    |  make it easy for others to use it with spaCy and add it to their
+    |  pipeline, all you have to do is expose a function that takes a
+    |  #[code Doc], modifies it and returns it. For more details and
+    |  #[strong best practices], see the section on
+    |  #[+a("#extensions") developing spaCy extensions].
+
++h(3, "custom-components-user-hooks") User hooks
 
 p
     |  While it's generally recommended to use the #[code Doc._], #[code Span._]

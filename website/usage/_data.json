@@ -105,9 +105,9 @@
         "menu": {
             "How Pipelines Work": "pipelines",
             "Custom Components": "custom-components",
+            "Developing Extensions": "extensions",
             "Multi-threading": "multithreading",
-            "Serialization": "serialization",
-            "Developing Extensions": "extensions"
+            "Serialization": "serialization"
         }
     },
 
