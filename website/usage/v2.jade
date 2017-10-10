@@ -102,30 +102,36 @@ p
     +h(3, "features-pipelines") Improved processing pipelines
 
     +aside-code("Example").
-        # Modify an existing pipeline
-        nlp = spacy.load('en')
-        nlp.pipeline.append(my_component)
+        # Set custom attributes
+        Doc.set_extension('my_attr', default=False)
+        Token.set_extension('my_attr', getter=my_token_getter)
+        assert doc._.my_attr, token._.my_attr
 
-        # Register a factory to create a component
-        spacy.set_factory('my_factory', my_factory)
-        nlp = Language(pipeline=['my_factory', mycomponent])
+        # Add components to the pipeline
+        my_component = lambda doc: doc
+        nlp.add_pipe(my_component)
 
     p
         |  It's now much easier to #[strong customise the pipeline] with your own
-        |  components, functions that receive a #[code Doc] object, modify and
-        |  return it. If your component is stateful, you can define and register a
-        |  factory which receives the shared #[code Vocab] object and returns a
-        |  component. spaCy's default components can be added to your pipeline by
-        |  using their string IDs. This way, you won't have to worry about finding
-        |  and implementing them – simply add #[code "tagger"] to the pipeline,
-        |  and spaCy will know what to do.
+        |  components: functions that receive a #[code Doc] object, modify and
+        |  return it. Extensions let you write any
+        |  #[strong attributes, properties and methods] to the #[code Doc],
+        |  #[code Token] and #[code Span]. You can add data, implement new
+        |  features, integrate other libraries with spaCy or plug in your own
+        |  machine learning models.
 
     +image
         include ../assets/img/pipeline.svg
 
     +infobox
-        |  #[+label-inline API:] #[+api("language") #[code Language]]
-        |  #[+label-inline Usage:] #[+a("/usage/language-processing-pipeline") Processing text]
+        |  #[+label-inline API:] #[+api("language") #[code Language]],
+        |  #[+api("doc#set_extension") #[code Doc.set_extension]],
+        |  #[+api("span#set_extension") #[code Span.set_extension]],
+        |  #[+api("token#set_extension") #[code Token.set_extension]]
+        |  #[+label-inline Usage:]
+        |  #[+a("/usage/processing-pipelines") Processing pipelines]
+        |  #[+label-inline Code:]
+        |  #[+src("/usage/examples#section-pipeline") Pipeline examples]
 
     +h(3, "features-text-classification") Text classification
 
