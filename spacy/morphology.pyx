@@ -42,7 +42,7 @@ cdef class Morphology:
         self.tag_names = tuple(sorted(tag_map.keys()))
         self.reverse_index = {}
 
-        self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
+        self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags+1, sizeof(RichTagC))
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             self.tag_map[tag_str] = dict(attrs)
             attrs = _normalize_props(attrs)
@@ -52,6 +52,10 @@ cdef class Morphology:
             self.rich_tags[i].morph = 0
             self.rich_tags[i].pos = attrs[POS]
             self.reverse_index[self.rich_tags[i].name] = i
+        # Add a 'null' tag, which we can reference when assign morphology to
+        # untagged tokens.
+        self.rich_tags[self.n_tags].id = self.n_tags
+
         self._cache = PreshMapArray(self.n_tags)
         self.exc = {}
         if exc is not None:
@@ -61,6 +65,11 @@ cdef class Morphology:
     def __reduce__(self):
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
                              self.exc), None, None)
+
+    cdef int assign_untagged(self, TokenC* token) except -1:
+        '''Set morphological attributes on a token without a POS tag.'''
+        if token.lemma == 0:
+            token.lemma = self.lemmatize(0, token.lex.orth, {})
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
         if isinstance(tag, basestring):
@@ -72,7 +81,7 @@ cdef class Morphology:
             token.tag = tag
 
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1:
-        if tag_id >= self.n_tags:
+        if tag_id > self.n_tags:
             raise ValueError("Unknown tag ID: %s" % tag_id)
         # TODO: It's pretty arbitrary to put this logic here. I guess the justification
         # is that this is where the specific word and the tag interact. Still,
@@ -150,8 +159,6 @@ cdef class Morphology:
             return orth
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
-            return self.strings.add(py_string.lower())
-        if univ_pos not in (NOUN, VERB, ADJ, PUNCT):
             return self.strings.add(py_string.lower())
         cdef set lemma_strings
         cdef unicode lemma_string

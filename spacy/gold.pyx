@@ -213,7 +213,7 @@ class GoldCorpus(object):
         train_tuples = self.train_tuples
         if projectivize:
             train_tuples = nonproj.preprocess_training_data(
-                               self.train_tuples)
+                               self.train_tuples, label_freq_cutoff=100)
         random.shuffle(train_tuples)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
