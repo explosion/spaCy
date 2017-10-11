@@ -10,10 +10,11 @@ class Lemmatizer(object):
     def load(cls, path, index=None, exc=None, rules=None):
         return cls(index or {}, exc or {}, rules or {})
 
-    def __init__(self, index, exceptions, rules):
-        self.index = index
-        self.exc = exceptions
-        self.rules = rules
+    def __init__(self, index=None, exceptions=None, rules=None, lookup=None):
+        self.index = index if index is not None else {}
+        self.exc = exceptions if exceptions is not None else {}
+        self.rules = rules if rules is not None else {}
+        self.lookup_table = lookup if lookup is not None else {}
 
     def __call__(self, string, univ_pos, morphology=None):
         if univ_pos == NOUN:
@@ -79,6 +80,11 @@ class Lemmatizer(object):
     def punct(self, string, morphology=None):
         return self(string, 'punct', morphology)
 
+    def lookup(self, string):
+        if string in self.lookup_table:
+            return self.lookup_table[string]
+        return string
+
 
 def lemmatize(string, index, exceptions, rules):
     string = string.lower()
@@ -102,18 +108,3 @@ def lemmatize(string, index, exceptions, rules):
     if not forms:
         forms.append(string)
     return set(forms)
-
-
-class LookupLemmatizer(Lemmatizer):
-    @classmethod
-    def load(cls, path, lookup):
-        return cls(lookup or {})
-
-    def __init__(self, lookup):
-        self.lookup = lookup
-
-    def __call__(self, string, univ_pos, morphology=None):
-        try:
-            return set([self.lookup[string]])
-        except:
-            return set([string])
