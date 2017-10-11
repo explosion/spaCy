@@ -33,7 +33,8 @@ from . import about
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules)
+        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules,
+                          cls.lemma_lookup)
 
     @classmethod
     def create_vocab(cls, nlp=None):
@@ -77,6 +78,7 @@ class BaseDefaults(object):
     lemma_rules = {}
     lemma_exc = {}
     lemma_index = {}
+    lemma_lookup = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
