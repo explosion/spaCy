@@ -2,6 +2,44 @@
 
 include ../_includes/_mixins
 
++section("pipeline")
+    +h(3, "custom-components-entities") Custom pipeline components and attribute extensions
+        +tag-new(2)
+
+    p
+        |  This example shows the implementation of a pipeline component
+        |  that sets entity annotations based on a list of single or
+        |  multiple-word company names, merges entities into one token and
+        |  sets custom attributes on the #[code Doc], #[code Span] and
+        |  #[code Token].
+
+    +github("spacy", "examples/pipeline/custom_component_entities.py")
+
+    +h(3, "custom-components-api")
+        |  Custom pipeline components and attribute extensions via a REST API
+        +tag-new(2)
+
+    p
+        |  This example shows the implementation of a pipeline component
+        |  that fetches country meta data via the
+        |  #[+a("https://restcountries.eu") REST Countries API] sets entity
+        |  annotations for countries, merges entities into one token and
+        |  sets custom attributes on the #[code Doc], #[code Span] and
+        |  #[code Token] – for example, the capital, latitude/longitude
+        |  coordinates and the country flag.
+
+    +github("spacy", "examples/pipeline/custom_component_countries_api.py")
+
+    +h(3, "custom-components-attr-methods") Custom method extensions
+        +tag-new(2)
+
+    p
+        |  A collection of snippets showing examples of extensions adding
+        |  custom methods to the #[code Doc], #[code Token] and
+        |  #[code Span].
+
+    +github("spacy", "examples/pipeline/custom_attr_methods.py")
+
 +section("matching")
     +h(3, "matcher") Using spaCy's rule-based matcher
 

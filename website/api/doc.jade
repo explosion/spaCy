@@ -138,6 +138,109 @@ p Get the number of tokens in the document.
         +cell int
         +cell The number of tokens in the document.
 
++h(2, "set_extension") Doc.set_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Define a custom attribute on the #[code Doc] which becomes available via
+    |  #[code Doc._]. For details, see the documentation on
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attributes].
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    city_getter = lambda doc: doc.text in ('New York', 'Paris', 'Berlin')
+    Doc.set_extension('has_city', getter=city_getter)
+    doc = nlp(u'I like New York')
+    assert doc._.has_city
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell
+            |  Name of the attribute to set by the extension. For example,
+            |  #[code 'my_attr'] will be available as #[code doc._.my_attr].
+
+    +row
+        +cell #[code default]
+        +cell -
+        +cell
+            |  Optional default value of the attribute if no getter or method
+            |  is defined.
+
+    +row
+        +cell #[code method]
+        +cell callable
+        +cell
+            |  Set a custom method on the object, for example
+            |  #[code doc._.compare(other_doc)].
+
+    +row
+        +cell #[code getter]
+        +cell callable
+        +cell
+            |  Getter function that takes the object and returns an attribute
+            |  value. Is called when the user accesses the #[code ._] attribute.
+
+    +row
+        +cell #[code setter]
+        +cell callable
+        +cell
+            |  Setter function that takes the #[code Doc] and a value, and
+            |  modifies the object. Is called when the user writes to the
+            |  #[code Doc._] attribute.
+
++h(2, "get_extension") Doc.get_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Look up a previously registered extension by name. Returns a 4-tuple
+    |  #[code.u-break (default, method, getter, setter)] if the extension is
+    |  registered. Raises a #[code KeyError] otherwise.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    Doc.set_extension('is_city', default=False)
+    extension = Doc.get_extension('is_city')
+    assert extension == (False, None, None, None)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell
+            |  A #[code.u-break (default, method, getter, setter)] tuple of the
+            |  extension.
+
++h(2, "has_extension") Doc.has_extension
+    +tag classmethod
+    +tag-new(2)
+
+p Check whether an extension has been registered on the #[code Doc] class.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    Doc.set_extension('is_city', default=False)
+    assert Doc.has_extension('is_city')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension to check.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the extension has been registered.
+
 +h(2, "char_span") Doc.char_span
     +tag method
     +tag-new(2)

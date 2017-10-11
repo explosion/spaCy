@@ -51,6 +51,109 @@ p The number of unicode characters in the token, i.e. #[code token.text].
         +cell int
         +cell The number of unicode characters in the token.
 
++h(2, "set_extension") Token.set_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Define a custom attribute on the #[code Token] which becomes available
+    |  via #[code Token._]. For details, see the documentation on
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attributes].
+
++aside-code("Example").
+    from spacy.tokens import Token
+    fruit_getter = lambda token: token.text in ('apple', 'pear', 'banana')
+    Token.set_extension('is_fruit', getter=fruit_getter)
+    doc = nlp(u'I have an apple')
+    assert doc[3]._.is_fruit
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell
+            |  Name of the attribute to set by the extension. For example,
+            |  #[code 'my_attr'] will be available as #[code token._.my_attr].
+
+    +row
+        +cell #[code default]
+        +cell -
+        +cell
+            |  Optional default value of the attribute if no getter or method
+            |  is defined.
+
+    +row
+        +cell #[code method]
+        +cell callable
+        +cell
+            |  Set a custom method on the object, for example
+            |  #[code token._.compare(other_token)].
+
+    +row
+        +cell #[code getter]
+        +cell callable
+        +cell
+            |  Getter function that takes the object and returns an attribute
+            |  value. Is called when the user accesses the #[code ._] attribute.
+
+    +row
+        +cell #[code setter]
+        +cell callable
+        +cell
+            |  Setter function that takes the #[code Token] and a value, and
+            |  modifies the object. Is called when the user writes to the
+            |  #[code Token._] attribute.
+
++h(2, "get_extension") Token.get_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Look up a previously registered extension by name. Returns a 4-tuple
+    |  #[code.u-break (default, method, getter, setter)] if the extension is
+    |  registered. Raises a #[code KeyError] otherwise.
+
++aside-code("Example").
+    from spacy.tokens import Token
+    Token.set_extension('is_fruit', default=False)
+    extension = Token.get_extension('is_fruit')
+    assert extension == (False, None, None, None)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell
+            |  A #[code.u-break (default, method, getter, setter)] tuple of the
+            |  extension.
+
++h(2, "has_extension") Token.has_extension
+    +tag classmethod
+    +tag-new(2)
+
+p Check whether an extension has been registered on the #[code Token] class.
+
++aside-code("Example").
+    from spacy.tokens import Token
+    Token.set_extension('is_fruit', default=False)
+    assert Token.has_extension('is_fruit')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension to check.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the extension has been registered.
+
 +h(2, "check_flag") Token.check_flag
     +tag method
 

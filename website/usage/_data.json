@@ -105,9 +105,9 @@
         "menu": {
             "How Pipelines Work": "pipelines",
             "Custom Components": "custom-components",
+            "Developing Extensions": "extensions",
             "Multi-threading": "multithreading",
-            "Serialization": "serialization",
-            "Developing Extensions": "extensions"
+            "Serialization": "serialization"
         }
     },
 
@@ -195,6 +195,7 @@
         "teaser": "Full code examples you can modify and run.",
         "next": "resources",
         "menu": {
+            "Pipeline": "pipeline",
             "Matching": "matching",
             "Training": "training",
             "Deep Learning": "deep-learning"
