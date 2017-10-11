@@ -46,7 +46,7 @@ def test_span_underscore_getter_setter():
 
 
 def test_token_underscore_method():
-    token = Mock(doc=Mock(), idx=7, say_cheese=lambda: 'cheese')
+    token = Mock(doc=Mock(), idx=7, say_cheese=lambda token: 'cheese')
     Underscore.token_extensions['hello'] = (None, token.say_cheese,
                                             None, None)
     token._ = Underscore(Underscore.token_extensions, token, start=token.idx)
