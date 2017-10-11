@@ -11,7 +11,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...lemmatizerlookup import Lemmatizer
 from ...attrs import LANG
 from ...util import update_exc
 
@@ -26,10 +25,7 @@ class IndonesianDefaults(Language.Defaults):
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
     syntax_iterators = dict(SYNTAX_ITERATORS)
-
-    @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(LOOKUP)
+    lemma_lookup = dict(LOOKUP)
 
 
 class Indonesian(Language):

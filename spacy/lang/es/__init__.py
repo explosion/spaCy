@@ -10,7 +10,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
-from ...lemmatizerlookup import Lemmatizer
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
@@ -23,10 +22,7 @@ class SpanishDefaults(Language.Defaults):
     tag_map = dict(TAG_MAP)
     stop_words = set(STOP_WORDS)
     sytax_iterators = dict(SYNTAX_ITERATORS)
-
-    @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(LOOKUP)
+    lemma_lookup = dict(LOOKUP)
 
 
 class Spanish(Language):

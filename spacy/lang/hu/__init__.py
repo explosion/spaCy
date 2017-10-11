@@ -9,7 +9,6 @@ from .lemmatizer import LOOKUP
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
-from ...lemmatizerlookup import Lemmatizer
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
@@ -24,10 +23,7 @@ class HungarianDefaults(Language.Defaults):
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
     token_match = TOKEN_MATCH
-
-    @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(LOOKUP)
+    lemma_lookup = dict(LOOKUP)
 
 
 class Hungarian(Language):
