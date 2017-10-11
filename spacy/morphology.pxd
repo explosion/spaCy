@@ -35,6 +35,8 @@ cdef class Morphology:
     cdef RichTagC* rich_tags
     cdef PreshMapArray _cache
 
+    cdef int assign_untagged(self, TokenC* token) except -1
+
     cdef int assign_tag(self, TokenC* token, tag) except -1
 
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
