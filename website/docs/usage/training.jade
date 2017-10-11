@@ -33,12 +33,14 @@ p
     from spacy.vocab import Vocab
     from spacy.pipeline import EntityRecognizer
     from spacy.tokens import Doc
+    from spacy.gold import GoldParse
 
     vocab = Vocab()
     entity = EntityRecognizer(vocab, entity_types=['PERSON', 'LOC'])
 
     doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
-    entity.update(doc, ['O', 'O', 'B-PERSON', 'L-PERSON', 'O'])
+    gold = GoldParse(doc, entities=['O', 'O', 'B-PERSON', 'L-PERSON', 'O'])
+    entity.update(doc, gold)
 
     entity.model.end_training()
 
@@ -65,13 +67,14 @@ p.o-inline-list
     from spacy.vocab import Vocab
     from spacy.pipeline import DependencyParser
     from spacy.tokens import Doc
+    from spacy.gold import GoldParse
 
     vocab = Vocab()
     parser = DependencyParser(vocab, labels=['nsubj', 'compound', 'dobj', 'punct'])
 
     doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
-    parser.update(doc, [(1, 'nsubj'), (1, 'ROOT'), (3, 'compound'), (1, 'dobj'),
-                        (1, 'punct')])
+    gold = GoldParse(doc, [1,1,3,1,1], ['nsubj', 'ROOT', 'compound', 'dobj', 'punct'])
+    parser.update(doc, gold)
 
     parser.model.end_training()
 
@@ -120,7 +123,7 @@ p
 
 +code.
     from spacy.vocab import Vocab
-    from spacy.pipeline import Tagger
+    from spacy.tagger import Tagger
     from spacy.tagger import P2_orth, P1_orth
     from spacy.tagger import P2_cluster, P1_cluster, W_orth, N1_orth, N2_orth
 
