@@ -809,7 +809,7 @@ cdef class Parser:
     def begin_training(self, gold_tuples, pipeline=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        gold_tuples = nonproj.preprocess_training_data(gold_tuples)
+        gold_tuples = nonproj.preprocess_training_data(gold_tuples, label_freq_cutoff=100)
         actions = self.moves.get_actions(gold_parses=gold_tuples)
         for action, labels in actions.items():
             for label in labels:
