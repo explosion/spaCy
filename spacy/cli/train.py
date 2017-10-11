@@ -68,6 +68,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=10, n_sents=0,
     if not isinstance(meta, dict):
         prints("Expected dict but got: {}".format(type(meta)),
                title="Not a valid meta.json format", exits=1)
+    meta.setdefault('lang', lang)
+    meta.setdefault('name', 'unnamed')
 
     pipeline = ['tagger', 'parser', 'ner']
     if no_tagger and 'tagger' in pipeline: pipeline.remove('tagger')
