@@ -55,7 +55,7 @@ cdef class Morphology:
         # Add a 'null' tag, which we can reference when assign morphology to
         # untagged tokens.
         self.rich_tags[self.n_tags].id = self.n_tags
- 
+
         self._cache = PreshMapArray(self.n_tags)
         self.exc = {}
         if exc is not None:
