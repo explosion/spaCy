@@ -22,11 +22,11 @@ class GermanDefaults(Language.Defaults):
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
                                          NORM_EXCEPTIONS, BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    infixes = tuple(TOKENIZER_INFIXES)
-    tag_map = dict(TAG_MAP)
-    stop_words = set(STOP_WORDS)
-    syntax_iterators = dict(SYNTAX_ITERATORS)
-    lemma_lookup = dict(LOOKUP)
+    infixes = TOKENIZER_INFIXES
+    tag_map = TAG_MAP
+    stop_words = STOP_WORDS
+    syntax_iterators = SYNTAX_ITERATORS
+    lemma_lookup = LOOKUP
 
 
 class German(Language):

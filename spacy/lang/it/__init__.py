@@ -16,8 +16,8 @@ class ItalianDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'it'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    lemma_lookup = dict(LOOKUP)
+    stop_words = STOP_WORDS
+    lemma_lookup = LOOKUP
 
 
 class Italian(Language):

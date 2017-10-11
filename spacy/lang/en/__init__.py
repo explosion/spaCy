@@ -24,14 +24,14 @@ class EnglishDefaults(Language.Defaults):
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
                                          BASE_NORMS, NORM_EXCEPTIONS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    tag_map = dict(TAG_MAP)
-    stop_words = set(STOP_WORDS)
-    morph_rules = dict(MORPH_RULES)
-    lemma_rules = dict(LEMMA_RULES)
-    lemma_index = dict(LEMMA_INDEX)
-    lemma_exc = dict(LEMMA_EXC)
-    lemma_lookup = dict(LOOKUP)
-    syntax_iterators = dict(SYNTAX_ITERATORS)
+    tag_map = TAG_MAP
+    stop_words = STOP_WORDS
+    morph_rules = MORPH_RULES
+    lemma_rules = LEMMA_RULES
+    lemma_index = LEMMA_INDEX
+    lemma_exc = LEMMA_EXC
+    lemma_lookup = LOOKUP
+    syntax_iterators = SYNTAX_ITERATORS
 
 
 class English(Language):

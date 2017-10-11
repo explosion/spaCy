@@ -18,9 +18,9 @@ class SwedishDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'sv'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    lemma_rules = dict(LEMMA_RULES)
-    lemma_lookup = dict(LOOKUP)
+    stop_words = STOP_WORDS
+    lemma_rules = LEMMA_RULES
+    lemma_lookup = LOOKUP
 
 
 class Swedish(Language):

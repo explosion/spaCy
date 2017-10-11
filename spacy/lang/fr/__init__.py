@@ -21,12 +21,12 @@ class FrenchDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'fr'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    infixes = tuple(TOKENIZER_INFIXES)
-    suffixes = tuple(TOKENIZER_SUFFIXES)
+    stop_words = STOP_WORDS
+    infixes = TOKENIZER_INFIXES
+    suffixes = TOKENIZER_SUFFIXES
     token_match = TOKEN_MATCH
-    syntax_iterators = dict(SYNTAX_ITERATORS)
-    lemma_lookup = dict(LOOKUP)
+    syntax_iterators = SYNTAX_ITERATORS
+    lemma_lookup = LOOKUP
 
 
 class French(Language):

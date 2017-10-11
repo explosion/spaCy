@@ -16,7 +16,7 @@ class FinnishDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'fi'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
+    stop_words = STOP_WORDS
 
 
 class Finnish(Language):

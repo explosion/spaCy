@@ -18,12 +18,12 @@ class HungarianDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'hu'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    prefixes = tuple(TOKENIZER_PREFIXES)
-    suffixes = tuple(TOKENIZER_SUFFIXES)
-    infixes = tuple(TOKENIZER_INFIXES)
+    stop_words = STOP_WORDS
+    prefixes = TOKENIZER_PREFIXES
+    suffixes = TOKENIZER_SUFFIXES
+    infixes = TOKENIZER_INFIXES
     token_match = TOKEN_MATCH
-    lemma_lookup = dict(LOOKUP)
+    lemma_lookup = LOOKUP
 
 
 class Hungarian(Language):

@@ -20,12 +20,12 @@ class IndonesianDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'id'
     lex_attr_getters.update(LEX_ATTRS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    prefixes = tuple(TOKENIZER_PREFIXES)
-    suffixes = tuple(TOKENIZER_SUFFIXES)
-    infixes = tuple(TOKENIZER_INFIXES)
-    syntax_iterators = dict(SYNTAX_ITERATORS)
-    lemma_lookup = dict(LOOKUP)
+    stop_words = STOP_WORDS
+    prefixes = TOKENIZER_PREFIXES
+    suffixes = TOKENIZER_SUFFIXES
+    infixes = TOKENIZER_INFIXES
+    syntax_iterators = SYNTAX_ITERATORS
+    lemma_lookup = LOOKUP
 
 
 class Indonesian(Language):

@@ -17,8 +17,8 @@ class ThaiDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: 'th'
     tokenizer_exceptions = dict(TOKENIZER_EXCEPTIONS)
-    tag_map = dict(TAG_MAP)
-    stop_words = set(STOP_WORDS)
+    tag_map = TAG_MAP
+    stop_words = STOP_WORDS
 
 
 class Thai(Language):
