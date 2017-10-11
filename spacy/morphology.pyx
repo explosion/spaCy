@@ -68,7 +68,8 @@ cdef class Morphology:
 
     cdef int assign_untagged(self, TokenC* token) except -1:
         '''Set morphological attributes on a token without a POS tag.'''
-        token.lemma = self.lemmatize(0, token.lex.orth, {})
+        if token.lemma == 0:
+            token.lemma = self.lemmatize(0, token.lex.orth, {})
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
         if isinstance(tag, basestring):
