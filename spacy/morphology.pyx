@@ -67,9 +67,13 @@ cdef class Morphology:
                              self.exc), None, None)
 
     cdef int assign_untagged(self, TokenC* token) except -1:
-        '''Set morphological attributes on a token without a POS tag.'''
+        """Set morphological attributes on a token without a POS tag. Uses
+        the lemmatizer's lookup() method, which looks up the string in the
+        table provided by the language data as lemma_lookup (if available)."""
         if token.lemma == 0:
-            token.lemma = self.lemmatize(0, token.lex.orth, {})
+            orth_str = self.strings[token.lex.orth]
+            lemma = self.lemmatizer.lookup(orth_str)
+            token.lemma = self.strings.add(lemma)
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
         if isinstance(tag, basestring):
