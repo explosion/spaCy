@@ -16,8 +16,7 @@ _num_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
               'sembilanbelas', 'duapuluh', 'seratus', 'seribu', 'sejuta',
               'ribu', 'rb', 'juta', 'jt', 'miliar', 'biliun', 'triliun',
               'kuadriliun', 'kuintiliun', 'sekstiliun', 'septiliun', 'oktiliun',
-              'noniliun', 'desiliun',
-              ]
+              'noniliun', 'desiliun']
 
 
 def like_num(text):

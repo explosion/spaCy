@@ -11,7 +11,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
-from ...lemmatizerlookup import Lemmatizer
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
@@ -21,17 +20,13 @@ class FrenchDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: 'fr'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
-
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    infixes = tuple(TOKENIZER_INFIXES)
-    suffixes = tuple(TOKENIZER_SUFFIXES)
+    stop_words = STOP_WORDS
+    infixes = TOKENIZER_INFIXES
+    suffixes = TOKENIZER_SUFFIXES
     token_match = TOKEN_MATCH
-    syntax_iterators = dict(SYNTAX_ITERATORS)
-
-    @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(LOOKUP)
+    syntax_iterators = SYNTAX_ITERATORS
+    lemma_lookup = LOOKUP
 
 
 class French(Language):

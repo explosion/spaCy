@@ -4,12 +4,12 @@ import pytest
 
 from ...vocab import Vocab
 from ...tokens.doc import Doc
-from ...lemmatizerlookup import Lemmatizer
+from ...lemmatizer import Lemmatizer
 
 
 @pytest.fixture
 def lemmatizer():
-    return Lemmatizer({'dogs': 'dog', 'boxen': 'box', 'mice': 'mouse'})
+    return Lemmatizer(lookup={'dogs': 'dog', 'boxen': 'box', 'mice': 'mouse'})
 
 
 @pytest.fixture

@@ -456,24 +456,11 @@ p
     }
 
 p
-    |  To add a lookup lemmatizer to your language, import the #[code LOOKUP]
-    |  table and #[code Lemmatizer], and create a new classmethod:
+    |  To provide a lookup lemmatizer for your language, import the lookup table
+    |  and add it to the #[code Language] class as #[code lemma_lookup]:
 
-
-+code("__init__py (excerpt)").
-    # other imports here, plus lookup table and lookup lemmatizer
-    from .lemmatizer import LOOKUP
-    from ...lemmatizerlookup import Lemmatizer
-
-    class Xxxxx(Language):
-        lang = 'xx'
-
-        class Defaults(Language.Defaults):
-            # other language defaults here
-
-            @classmethod
-            def create_lemmatizer(cls, nlp=None):
-                return Lemmatizer(LOOKUP)
++code.
+    lemma_lookup = dict(LOOKUP)
 
 +h(3, "tag-map") Tag map
 
