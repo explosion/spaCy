@@ -16,12 +16,10 @@ from ...util import update_exc
 class BengaliDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: 'bn'
-
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    tag_map = TAG_MAP
-    stop_words = STOP_WORDS
-    lemma_rules = LEMMA_RULES
-
+    tag_map = dict(TAG_MAP)
+    stop_words = set(STOP_WORDS)
+    lemma_rules = dict(LEMMA_RULES)
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)

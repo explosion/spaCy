@@ -23,7 +23,6 @@ class EnglishDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'en'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
                                          BASE_NORMS, NORM_EXCEPTIONS)
-
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     tag_map = dict(TAG_MAP)
     stop_words = set(STOP_WORDS)
