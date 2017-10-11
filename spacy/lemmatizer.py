@@ -24,6 +24,8 @@ class Lemmatizer(object):
             univ_pos = 'adj'
         elif univ_pos == PUNCT:
             univ_pos = 'punct'
+        else:
+            return set([string.lower()])
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
             return set([string.lower()])

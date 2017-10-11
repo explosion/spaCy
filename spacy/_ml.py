@@ -311,7 +311,7 @@ def link_vectors_to_models(vocab):
 
 def Tok2Vec(width, embed_size, **kwargs):
     pretrained_dims = kwargs.get('pretrained_dims', 0)
-    cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 3)
+    cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 2)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add,
                                  '*': reapply}):

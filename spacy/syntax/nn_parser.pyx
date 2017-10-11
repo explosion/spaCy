@@ -239,13 +239,13 @@ cdef class Parser:
     """
     @classmethod
     def Model(cls, nr_class, **cfg):
-        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 0))
-        token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 128))
-        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 128))
-        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 3))
+        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
+        token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 64))
+        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
+        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 2))
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
-        hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
-        hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
+        hist_size = util.env_opt('history_feats', cfg.get('hist_size', 4))
+        hist_width = util.env_opt('history_width', cfg.get('hist_width', 16))
         if hist_size >= 1 and depth == 0:
             raise ValueError("Inconsistent hyper-params: "
                 "history_feats >= 1 but parser_hidden_depth==0")
@@ -800,11 +800,20 @@ cdef class Parser:
         if self.model not in (True, False, None) and resized:
             # Weights are stored in (nr_out, nr_in) format, so we're basically
             # just adding rows here.
-            smaller = self.model[-1]._layers[-1]
-            larger = Affine(self.moves.n_moves, smaller.nI)
-            copy_array(larger.W[:smaller.nO], smaller.W)
-            copy_array(larger.b[:smaller.nO], smaller.b)
-            self.model[-1]._layers[-1] = larger
+            if self.model[-1].is_noop:
+                smaller = self.model[1]
+                dims = dict(self.model[1]._dims)
+                dims['nO'] = self.moves.n_moves
+                larger = self.model[1].__class__(**dims)
+                copy_array(larger.W[:, :smaller.nO], smaller.W)
+                copy_array(larger.b[:smaller.nO], smaller.b)
+                self.model = (self.model[0], larger, self.model[2])
+            else:
+                smaller = self.model[-1]._layers[-1]
+                larger = Affine(self.moves.n_moves, smaller.nI)
+                copy_array(larger.W[:smaller.nO], smaller.W)
+                copy_array(larger.b[:smaller.nO], smaller.b)
+                self.model[-1]._layers[-1] = larger
 
     def begin_training(self, gold_tuples, pipeline=None, **cfg):
         if 'model' in cfg:
