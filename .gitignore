@@ -102,3 +102,6 @@ Desktop.ini
 
 # Other
 *.tgz
+
+#PyCharm files
+.idea/
