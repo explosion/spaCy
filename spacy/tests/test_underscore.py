@@ -10,6 +10,7 @@ def test_create_doc_underscore():
     assert uscore._start is None
     assert uscore._end is None
 
+
 def test_doc_underscore_getattr_setattr():
     doc = Mock()
     doc.doc = doc
@@ -20,6 +21,7 @@ def test_doc_underscore_getattr_setattr():
     doc._.hello = True
     assert doc._.hello == True
 
+
 def test_create_span_underscore():
     span = Mock(doc=Mock(), start=0, end=2)
     uscore = Underscore(Underscore.span_extensions, span,
@@ -27,6 +29,7 @@ def test_create_span_underscore():
     assert uscore._doc is span.doc
     assert uscore._start is span.start
     assert uscore._end is span.end
+
 
 def test_span_underscore_getter_setter():
     span = Mock(doc=Mock(), start=0, end=2)
@@ -36,7 +39,7 @@ def test_span_underscore_getter_setter():
                                                                     value))
     span._ = Underscore(Underscore.span_extensions, span,
                         start=span.start, end=span.end)
- 
+
     assert span._.hello == (0, 'hi')
     span._.hello = 1
     assert span._.hello == (1, 'hi')
