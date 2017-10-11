@@ -100,3 +100,18 @@ def lemmatize(string, index, exceptions, rules):
     if not forms:
         forms.append(string)
     return set(forms)
+
+
+class LookupLemmatizer(Lemmatizer):
+    @classmethod
+    def load(cls, path, lookup):
+        return cls(lookup or {})
+
+    def __init__(self, lookup):
+        self.lookup = lookup
+
+    def __call__(self, string, univ_pos, morphology=None):
+        try:
+            return set([self.lookup[string]])
+        except:
+            return set([string])
