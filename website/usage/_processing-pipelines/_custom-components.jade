@@ -146,9 +146,7 @@ p
     |  been registered, spaCy will raise an #[code AttributeError].
 
 +code("Example").
-    from spacy.tokens.token import Token
-    from spacy.tokens.doc import Doc
-    from spacy.tokens.span import Span
+    from spacy.tokens import Doc, Span, Token
 
     fruits = ['apple', 'pear', 'banana', 'orange', 'strawberry']
     is_fruit_getter = lambda token: token.text in fruits

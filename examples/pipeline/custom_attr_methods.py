@@ -6,8 +6,7 @@ they're called on is passed in as the first argument."""
 from __future__ import unicode_literals
 
 from spacy.lang.en import English
-from spacy.tokens.doc import Doc
-from spacy.tokens.span import Span
+from spacy.tokens import Doc, Span
 from spacy import displacy
 from pathlib import Path
 

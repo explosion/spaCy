@@ -126,7 +126,7 @@ p
     |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attributes].
 
 +aside-code("Example").
-    from spacy.tokens.span import Span
+    from spacy.tokens import Span
     city_getter = lambda span: span.text in ('New York', 'Paris', 'Berlin')
     Span.set_extension('has_city', getter=city_getter)
     doc = nlp(u'I like New York in Autumn')
@@ -179,7 +179,7 @@ p
     |  registered. Raises a #[code KeyError] otherwise.
 
 +aside-code("Example").
-    from spacy.tokens.span import Span
+    from spacy.tokens import Span
     Span.set_extension('is_city', default=False)
     extension = Span.get_extension('is_city')
     assert extension == (False, None, None, None)
@@ -204,7 +204,7 @@ p
 p Check whether an extension has been registered on the #[code Span] class.
 
 +aside-code("Example").
-    from spacy.tokens.span import Span
+    from spacy.tokens import Span
     Span.set_extension('is_city', default=False)
     assert Span.has_extension('is_city')
 

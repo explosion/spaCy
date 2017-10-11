@@ -61,7 +61,7 @@ p
     |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attributes].
 
 +aside-code("Example").
-    from spacy.tokens.token import Token
+    from spacy.tokens import Token
     fruit_getter = lambda token: token.text in ('apple', 'pear', 'banana')
     Token.set_extension('is_fruit', getter=fruit_getter)
     doc = nlp(u'I have an apple')
@@ -114,7 +114,7 @@ p
     |  registered. Raises a #[code KeyError] otherwise.
 
 +aside-code("Example").
-    from spacy.tokens.token import Token
+    from spacy.tokens import Token
     Token.set_extension('is_fruit', default=False)
     extension = Token.get_extension('is_fruit')
     assert extension == (False, None, None, None)
@@ -139,7 +139,7 @@ p
 p Check whether an extension has been registered on the #[code Token] class.
 
 +aside-code("Example").
-    from spacy.tokens.token import Token
+    from spacy.tokens import Token
     Token.set_extension('is_fruit', default=False)
     assert Token.has_extension('is_fruit')
 

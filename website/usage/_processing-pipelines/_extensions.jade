@@ -46,7 +46,7 @@ p
 
         +code-wrapper
             +code-new.
-                from spacy.tokens.doc import Doc
+                from spacy.tokens import Doc
                 def __init__(attr='my_attr'):
                     Doc.set_extension(attr, getter=self.get_doc_attr)
             +code-old.

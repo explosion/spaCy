@@ -5,9 +5,7 @@ import requests
 
 from spacy.lang.en import English
 from spacy.matcher import PhraseMatcher
-from spacy.tokens.doc import Doc
-from spacy.tokens.span import Span
-from spacy.tokens.token import Token
+from spacy.tokens import Doc, Span, Token
 
 
 class RESTCountriesComponent(object):

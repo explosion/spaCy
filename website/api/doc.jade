@@ -148,7 +148,7 @@ p
     |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attributes].
 
 +aside-code("Example").
-    from spacy.tokens.doc import Doc
+    from spacy.tokens import Doc
     city_getter = lambda doc: doc.text in ('New York', 'Paris', 'Berlin')
     Doc.set_extension('has_city', getter=city_getter)
     doc = nlp(u'I like New York')
@@ -201,7 +201,7 @@ p
     |  registered. Raises a #[code KeyError] otherwise.
 
 +aside-code("Example").
-    from spacy.tokens.doc import Doc
+    from spacy.tokens import Doc
     Doc.set_extension('is_city', default=False)
     extension = Doc.get_extension('is_city')
     assert extension == (False, None, None, None)
@@ -226,7 +226,7 @@ p
 p Check whether an extension has been registered on the #[code Doc] class.
 
 +aside-code("Example").
-    from spacy.tokens.doc import Doc
+    from spacy.tokens import Doc
     Doc.set_extension('is_city', default=False)
     assert Doc.has_extension('is_city')
 
