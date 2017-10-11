@@ -239,13 +239,13 @@ cdef class Parser:
     """
     @classmethod
     def Model(cls, nr_class, **cfg):
-        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 0))
-        token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 128))
-        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 128))
-        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 3))
+        depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
+        token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 64))
+        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
+        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 2))
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
-        hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
-        hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
+        hist_size = util.env_opt('history_feats', cfg.get('hist_size', 4))
+        hist_width = util.env_opt('history_width', cfg.get('hist_width', 16))
         if hist_size >= 1 and depth == 0:
             raise ValueError("Inconsistent hyper-params: "
                 "history_feats >= 1 but parser_hidden_depth==0")
