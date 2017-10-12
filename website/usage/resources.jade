@@ -41,6 +41,23 @@ include ../_includes/_mixins
     .u-text-right
         +button("https://github.com/search?o=desc&q=spacy&s=stars&type=Repositories&utf8=%E2%9C%93", false, "primary", "small") See more projects on GitHub
 
++section("extensions")
+    +h(2, "extensions") Extensions & Pipeline Components
+
+    p
+        |  This section lists spaCy extensions and components you can plug into
+        |  your processing pipeline. For more details, see the docs on
+        |  #[+a("/usage/processing-pipelines#custom-components") custom components]
+        |  and #[+a("/usage/processing-pipelines#extensions") extensions].
+
+    +grid
+        +card("spacymoji", "https://github.com/ines/spacymoji", "Ines Montani", "github")
+            |  Pipeline component for emoji handling and adding emoji meta data
+            |  to #[code Doc], #[code Token] and #[code Span] attributes.
+
+    .u-text-right
+        +button("https://github.com/search?o=desc&q=spacy-extensions&s=stars&type=Repositories&utf8=%E2%9C%93", false, "primary", "small") See more extensions on GitHub
+
 +section("demos")
     +h(2, "demos") Demos & Visualizations
 

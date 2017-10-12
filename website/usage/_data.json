@@ -183,6 +183,7 @@
         "teaser": "Libraries, demos, books, courses and research systems featuring spaCy.",
         "menu": {
             "Third-party libraries": "libraries",
+            "Extensions": "extensions",
             "Demos & Visualizations": "demos",
             "Books & Courses": "books",
             "Jupyter Notebooks": "notebooks",
