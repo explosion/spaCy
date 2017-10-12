@@ -17,13 +17,13 @@ class Lemmatizer(object):
         self.lookup_table = lookup if lookup is not None else {}
 
     def __call__(self, string, univ_pos, morphology=None):
-        if univ_pos == NOUN:
+        if univ_pos in (NOUN, 'NOUN', 'noun'):
             univ_pos = 'noun'
-        elif univ_pos == VERB:
+        elif univ_pos in (VERB, 'VERB', 'verb'):
             univ_pos = 'verb'
-        elif univ_pos == ADJ:
+        elif univ_pos in (ADJ, 'ADJ', 'adj'):
             univ_pos = 'adj'
-        elif univ_pos == PUNCT:
+        elif univ_pos in (PUNCT, 'PUNCT', 'punct'):
             univ_pos = 'punct'
         else:
             return set([string.lower()])
