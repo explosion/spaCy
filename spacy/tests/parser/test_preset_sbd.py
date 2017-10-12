@@ -35,7 +35,7 @@ def parser(vocab):
 def test_no_sentences(parser):
     doc = Doc(parser.vocab, words=['a', 'b', 'c', 'd'])
     doc = parser(doc)
-    assert len(list(doc.sents)) == 2
+    assert len(list(doc.sents)) >= 1
 
 
 def test_sents_1(parser):
