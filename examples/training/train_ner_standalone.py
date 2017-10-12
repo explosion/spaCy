@@ -6,7 +6,7 @@ To achieve that, it duplicates some of spaCy's internal functionality.
 
 Specifically, in this example, we don't use spaCy's built-in Language class to
 wire together the Vocab, Tokenizer and EntityRecognizer. Instead, we write
-our own simle Pipeline class, so that it's easier to see how the pieces
+our own simple Pipeline class, so that it's easier to see how the pieces
 interact.
 
 Input data:
@@ -149,7 +149,8 @@ def report_scores(i, loss, scores):
     precision = '%.2f' % scores['ents_p']
     recall = '%.2f' % scores['ents_r']
     f_measure = '%.2f' % scores['ents_f']
-    print('Epoch %d: %d %s %s %s' % (i, int(loss), precision, recall, f_measure))
+    print('Epoch %d: %d %s %s %s' % (
+        i, int(loss), precision, recall, f_measure))
 
 
 def read_examples(path):
