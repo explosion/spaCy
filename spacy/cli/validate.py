@@ -5,7 +5,7 @@ import requests
 import pkg_resources
 from pathlib import Path
 
-from ..compat import path2str
+from ..compat import path2str, locale_escape
 from ..util import prints, get_data_path, read_json
 from .. import about
 
@@ -94,7 +94,7 @@ def get_model_row(compat, name, data, type='package'):
     tpl_red = '\x1b[38;5;1m{}\x1b[0m'
     tpl_green = '\x1b[38;5;2m{}\x1b[0m'
     if data['compat']:
-        comp = tpl_green.format('✔')
+        comp = tpl_green.format(locale_escape('✔', errors='ignore'))
         version = tpl_green.format(data['version'])
     else:
         comp = '--> {}'.format(compat.get(data['name'], ['n/a'])[0])
