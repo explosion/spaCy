@@ -7,3 +7,4 @@ from .train import train
 from .evaluate import evaluate
 from .convert import convert
 from .model import model
+from .validate import validate
