@@ -8,17 +8,19 @@ from .language_data import *
 
 
 class RussianTokenizer(object):
-    try:
-        from pymorphy2 import MorphAnalyzer
-    except ImportError:
-        raise ImportError(
-            "The Russian tokenizer requires the pymorphy2 library: "
-            "try to fix it with "
-            "pip install pymorphy2==0.8")
-
-    _morph = MorphAnalyzer()
+    _morph = None
 
     def __init__(self, spacy_tokenizer, cls, nlp=None):
+        try:
+            from pymorphy2 import MorphAnalyzer
+        except ImportError:
+            raise ImportError(
+                "The Russian tokenizer requires the pymorphy2 library: "
+                "try to fix it with "
+                "pip install pymorphy2==0.8")
+
+        RussianTokenizer._morph = RussianTokenizer._create_morph(MorphAnalyzer)
+
         self.vocab = nlp.vocab if nlp else cls.create_vocab(nlp)
         self._spacy_tokenizer = spacy_tokenizer
 
@@ -35,6 +37,12 @@ class RussianTokenizer(object):
     @classmethod
     def _normalize(cls, word):
         return cls._morph.parse(word)[0].normal_form
+
+    @classmethod
+    def _create_morph(cls, morph_analyzer_class):
+        if not cls._morph:
+            cls._morph = morph_analyzer_class()
+        return cls._morph
 
 
 class RussianDefaults(Language.Defaults):
