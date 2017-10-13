@@ -102,3 +102,7 @@ Desktop.ini
 
 # Other
 *.tgz
+
+
+# JetBrains PyCharm
+.idea/

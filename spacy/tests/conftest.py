@@ -16,7 +16,7 @@ from ..bn import Bengali
 from ..he import Hebrew
 from ..nb import Norwegian
 from ..th import Thai
-
+from ..ru import Russian
 
 from ..tokens import Doc
 from ..strings import StringStore
@@ -53,6 +53,7 @@ def en_vocab():
 def en_parser():
     return English.Defaults.create_parser()
 
+
 @pytest.fixture
 def es_tokenizer():
     return Spanish.Defaults.create_tokenizer()
@@ -83,10 +84,12 @@ def ja_tokenizer():
     pytest.importorskip("MeCab")
     return Japanese.Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def japanese():
     pytest.importorskip("MeCab")
     return Japanese()
+
 
 @pytest.fixture
 def sv_tokenizer():
@@ -102,14 +105,29 @@ def bn_tokenizer():
 def he_tokenizer():
     return Hebrew.Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def nb_tokenizer():
     return Norwegian.Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def th_tokenizer():
     pythainlp = pytest.importorskip("pythainlp")
     return Thai.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def ru_tokenizer():
+    pytest.importorskip("pymorphy2")
+    return Russian.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def russian():
+    pytest.importorskip("pymorphy2")
+    return Russian()
+
 
 @pytest.fixture
 def stringstore():
@@ -118,7 +136,7 @@ def stringstore():
 
 @pytest.fixture
 def en_entityrecognizer():
-     return English.Defaults.create_entity()
+    return English.Defaults.create_entity()
 
 
 @pytest.fixture
@@ -129,6 +147,7 @@ def lemmatizer():
 @pytest.fixture
 def text_file():
     return StringIO()
+
 
 @pytest.fixture
 def text_file_b():
@@ -149,11 +168,11 @@ def DE():
 
 def pytest_addoption(parser):
     parser.addoption("--models", action="store_true",
-        help="include tests that require full models")
+                     help="include tests that require full models")
     parser.addoption("--vectors", action="store_true",
-        help="include word vectors tests")
+                     help="include word vectors tests")
     parser.addoption("--slow", action="store_true",
-        help="include slow tests")
+                     help="include slow tests")
 
 
 def pytest_runtest_setup(item):
