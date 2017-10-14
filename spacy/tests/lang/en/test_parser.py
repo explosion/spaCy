@@ -45,3 +45,33 @@ def test_parser_noun_chunks_pp_chunks(en_tokenizer):
     assert len(chunks) == 2
     assert chunks[0].text_with_ws == "A phrase "
     assert chunks[1].text_with_ws == "another phrase "
+
+
+def test_parser_noun_chunks_appositional_modifiers(en_tokenizer):
+    text = "Sam, my brother, arrived to the house."
+    heads = [5, -1, 1, -3, -4, 0, -1, 1, -2, -4]
+    tags = ['NNP', ',', 'PRP$', 'NN', ',', 'VBD', 'IN', 'DT', 'NN', '.']
+    deps = ['nsubj', 'punct', 'poss', 'appos', 'punct', 'ROOT', 'prep', 'det', 'pobj', 'punct']
+
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], tags=tags, deps=deps, heads=heads)
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 3
+    assert chunks[0].text_with_ws == "Sam "
+    assert chunks[1].text_with_ws == "my brother "
+    assert chunks[2].text_with_ws == "the house "
+
+
+def test_parser_noun_chunks_dative(en_tokenizer):
+    text = "She gave Bob a raise."
+    heads = [1, 0, -1, 1, -3, -4]
+    tags = ['PRP', 'VBD', 'NNP', 'DT', 'NN', '.']
+    deps = ['nsubj', 'ROOT', 'dative', 'det', 'dobj', 'punct']
+
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], tags=tags, deps=deps, heads=heads)
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 3
+    assert chunks[0].text_with_ws == "She "
+    assert chunks[1].text_with_ws == "Bob "
+    assert chunks[2].text_with_ws == "a raise "
