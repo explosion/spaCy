@@ -44,6 +44,40 @@ p
     |  Improvements and pull requests to the recipe and setup are always
     |  appreciated.
 
++h(3, "upgrading") Upgrading spaCy
+
++aside("Upgrading from v1 to v2")
+    |  Although we've tried to keep breaking changes to a minimum, upgrading
+    |  from spaCy v1.x to v2.x may still require some changes to your code base.
+    |  For details see the sections on
+    |  #[+a("/usage/v2#incompat") backwards incompatibilities] and
+    |  #[+a("/usage/v2#migrating") migrating]. Also remember to download the new
+    |  models, and retrain your own models.
+
+p
+    |  When updating to a newer version of spaCy, it's generally recommended to
+    |  start with a clean virtual environment. If you're upgrading to a new
+    |  major version, make sure you have the latest #[strong compatible models]
+    |  installed, and that there are no old shortcut links or incompatible model
+    |  packages left over in your environment, as this can often lead to unexpected
+    |  results and errors.  If you've trained your own models, keep in mind that
+    |  your train and runtime inputs must match. This means you'll have to
+    |  #[strong retrain your models] with the new version.
+
+p
+    |  As of v2.0, spaCy also provides a #[+api("cli#validate") #[code validate]]
+    |  command, which lets you verify that all installed models are compatible
+    |  with your spaCy version. If incompatible models are found, tips and
+    |  installation instructions are printed. The command is also useful to
+    |  detect out-of-sync model links resulting from links created in different
+    |  virtual environments. It's recommended to run the command with
+    |  #[code python -m] to make sure you're executing the correct version of
+    |  spaCy.
+
++code(false, "bash").
+    pip install -U spacy
+    python -m spacy validate
+
 +h(3, "gpu") Run spaCy with GPU
 
 p
