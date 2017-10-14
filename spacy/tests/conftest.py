@@ -117,6 +117,13 @@ def he_tokenizer():
 def nb_tokenizer():
     return util.get_lang_class('nb').Defaults.create_tokenizer()
 
+
+@pytest.fixture
+def ja_tokenizer():
+    janome = pytest.importorskip("janome")
+    return util.get_lang_class('ja').Defaults.create_tokenizer()
+
+
 @pytest.fixture
 def th_tokenizer():
     pythainlp = pytest.importorskip("pythainlp")
