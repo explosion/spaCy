@@ -190,7 +190,7 @@ mixin github(repo, file, alt_file, height)
             code.c-code-block__content(data-gh-embed="#{repo}/#{branch}/#{file}")
 
         footer.o-grid.u-text
-            .o-block-small.u-flex-full #[+icon("github")] #[code=repo + '/' + (alt_file || file)]
+            .o-block-small.u-flex-full.u-padding-small #[+icon("github")] #[code.u-break.u-break--all=repo + '/' + (alt_file || file)]
             div
                 +button(gh(repo, alt_file || file), false, "primary", "small") View on GitHub
 
