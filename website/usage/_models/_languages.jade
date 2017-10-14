@@ -40,10 +40,13 @@ p
                     +src(gh("spaCy", "spacy/lang/" + code)) #[code lang/#{code}]
 
 +infobox("Dependencies")
-    |  Some language tokenizers require external dependencies. To use #[strong Chinese],
-    |  you need to have #[+a("https://github.com/fxsjy/jieba") Jieba] installed.
-    |  The #[strong Japanese] tokenizer requires
-    |  #[+a("https://github.com/mocobeta/janome") Janome].
+    .o-block-small Some language tokenizers require external dependencies.
+
+    +list.o-no-block
+        +item #[strong Chinese]: #[+a("https://github.com/fxsjy/jieba") Jieba]
+        +item #[strong Japanese]: #[+a("https://github.com/mocobeta/janome") Janome]
+        +item #[strong Thai]: #[+a("https://github.com/wannaphongcom/pythainlp") pythainlp]
+        +item #[strong Russian]: #[+a("https://github.com/kmike/pymorphy2") pymorphy2]
 
 +h(3, "multi-language") Multi-language support
     +tag-new(2)
