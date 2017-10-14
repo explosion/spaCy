@@ -11,8 +11,12 @@ from ..strings import StringStore
 from .. import util
 
 
+# These languages are used for generic tokenizer tests – only add a language
+# here if it's using spaCy's tokenizer (not a different library)
+# TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'sv', 'th','xx']
+              'it', 'nb', 'nl', 'pl', 'pt', 'sv', 'xx']
+
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_md'],
            'fr': ['fr_depvec_web_lg'],
@@ -41,6 +45,7 @@ def FR(request):
 #def tokenizer(request):
     #lang = util.get_lang_class(request.param)
     #return lang.Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def tokenizer():
@@ -87,9 +92,11 @@ def hu_tokenizer():
 def fi_tokenizer():
     return util.get_lang_class('fi').Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def id_tokenizer():
     return util.get_lang_class('id').Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def sv_tokenizer():
@@ -104,6 +111,7 @@ def bn_tokenizer():
 @pytest.fixture
 def he_tokenizer():
     return util.get_lang_class('he').Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def nb_tokenizer():
@@ -128,6 +136,7 @@ def en_entityrecognizer():
 @pytest.fixture
 def text_file():
     return StringIO()
+
 
 @pytest.fixture
 def text_file_b():
