@@ -248,7 +248,8 @@ cdef class Tokenizer:
 
                         start = infix_end
                     span = string[start:]
-                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
+                    if span:
+                        tokens.push_back(self.vocab.get(tokens.mem, span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             lexeme = deref(it)
