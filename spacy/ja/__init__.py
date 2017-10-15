@@ -16,6 +16,13 @@ from collections import namedtuple
 
 ShortUnitWord = namedtuple('ShortUnitWord', ['surface', 'base_form', 'part_of_speech'])
 
+class JapaneseDoc(Doc):
+    def __init__(self, detailed_tokens, vocab, words=None, spaces=None, orths_and_spaces=None):
+        super(JapaneseDoc, self).__init__(vocab, words, spaces, orths_and_spaces)
+        # This saves tokenizer output so mecab doesn't have to be called again
+        # when determining POS tags.
+        self.detailed_tokens = detailed_tokens
+
 def try_mecab_import():
     """Mecab is required for Japanese support, so check for it.
 
@@ -34,8 +41,9 @@ class JapaneseTokenizer(object):
         self.tokenizer = MeCab.Tagger()
 
     def __call__(self, text):
-        words = [x.surface for x in detailed_tokens(self.tokenizer, text)]
-        return Doc(self.vocab, words=words, spaces=[False]*len(words))
+        dtokens = detailed_tokens(self.tokenizer, text)
+        words = [x.surface for x in dtokens]
+        return JapaneseDoc(dtokens, self.vocab, words=words, spaces=[False]*len(words))
 
 def resolve_pos(token):
     """If necessary, add a field to the POS tag for UD mapping.
@@ -91,7 +99,7 @@ class JapaneseTagger(object):
         # 1. get raw JP tags
         # 2. add features to tags as necessary for UD
 
-        dtokens = detailed_tokens(self.tokenizer, tokens.text)
+        dtokens = tokens.detailed_tokens
         rawtags = list(map(resolve_pos, dtokens))
         self.tagger.tag_from_strings(tokens, rawtags)
 
@@ -112,8 +120,7 @@ class Japanese(Language):
     Defaults = JapaneseDefaults
 
     def make_doc(self, text):
-        words = [str(t) for t in self.tokenizer(text)]
-        doc = Doc(self.vocab, words=words, spaces=[False]*len(words))
+        jdoc = self.tokenizer(text)
         tagger = JapaneseDefaults.create_tagger(self.tokenizer)
-        tagger(doc)
-        return doc
+        tagger(jdoc)
+        return jdoc
