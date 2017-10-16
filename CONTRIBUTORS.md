@@ -3,6 +3,7 @@
 This is a list of everyone who has made significant contributions to spaCy, in alphabetical order. Thanks a lot for the great work!
 
 * Adam Bittlingmayer, [@bittlingmayer](https://github.com/bittlingmayer)
+* Alexey Kim, [@yuukos](https://github.com/yuukos)
 * Alexis Eidelman, [@AlexisEidelman](https://github.com/AlexisEidelman)
 * Andreas Grivas, [@andreasgrv](https://github.com/andreasgrv)
 * Andrew Poliakov, [@pavlin99th](https://github.com/pavlin99th)
