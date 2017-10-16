@@ -8,6 +8,7 @@ import random
 import ujson
 from collections import OrderedDict
 import itertools
+import weakref
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -510,8 +511,33 @@ class Language(object):
             else:
                 # Apply the function, but yield the doc
                 docs = _pipe(proc, docs)
+        # Track weakrefs of "recent" documents, so that we can see when they
+        # expire from memory. When they do, we know we don't need old strings.
+        # This way, we avoid maintaining an unbounded growth in string entries
+        # in the string store.
+        recent_refs = weakref.WeakSet()
+        old_refs = weakref.WeakSet()
+        original_strings_data = self.vocab.strings.to_bytes()
+        StringStore = self.vocab.strings.__class__
+        recent_strings = StringStore().from_bytes(original_strings_data)
+        nr_seen = 0
         for doc in docs:
             yield doc
+            for word in doc:
+                recent_strings.add(word.text)
+            recent_refs.add(doc)
+            if nr_seen < 1000:
+                old_refs.add(doc)
+                nr_seen += 1
+            elif len(old_refs) == 0:
+                # All the docs in the 'old' set have expired, so the only
+                # difference between the backup strings and the current
+                # string-store should be obsolete. We therefore swap out the
+                # old strings data.
+                old_refs, recent_refs = recent_refs, old_refs
+                self.vocab.strings._reset_and_load(recent_strings)
+                recent_strings = StringStore().from_bytes(original_strings_data)
+                nr_seen = 0
 
     def to_disk(self, path, disable=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
