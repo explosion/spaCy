@@ -526,7 +526,7 @@ class Language(object):
             for word in doc:
                 recent_strings.add(word.text)
             recent_refs.add(doc)
-            if nr_seen < 1000:
+            if nr_seen < 10000:
                 old_refs.add(doc)
                 nr_seen += 1
             elif len(old_refs) == 0:
