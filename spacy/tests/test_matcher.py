@@ -195,7 +195,7 @@ def test_operator_combos(matcher):
         ('aaa', 'a+ a a b', False),
         ('aaab', 'a+ a a', True),
         ('aaab', 'a+', True),
-        ('aaab', 'a+ a b', False), # <-- This is the weird semantics
+        ('aaab', 'a+ a b', True),
     ]
     for string, pattern_str, result in cases:
         matcher = Matcher(matcher.vocab)
