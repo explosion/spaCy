@@ -138,7 +138,10 @@ cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
         # This is a bandaid over the 'shadowing' problem described here:
         # https://github.com/explosion/spaCy/issues/864
         next_action = get_action(pattern+1, token)
-        return REPEAT if next_action is REJECT else next_action
+        if next_action is REJECT:
+            return REPEAT
+        else:
+            return ADVANCE_ZERO
     else:
         return PANIC
 
@@ -228,29 +231,28 @@ cdef class Matcher:
         return len(self._patterns)
 
     def add(self, key, on_match, *patterns):
-        """Add a match-rule to the matcher.
-        A match-rule consists of: an ID key, an on_match callback, and one or
-        more patterns.
+        """Add a match-rule to the matcher. A match-rule consists of: an ID key,
+        an on_match callback, and one or more patterns.
 
-	If the key exists, the patterns are appended to the previous ones, and
-	the previous on_match callback is replaced. The `on_match` callback will
-	receive the arguments `(matcher, doc, i, matches)`. You can also set
-	`on_match` to `None` to not perform any actions.
+        If the key exists, the patterns are appended to the previous ones, and
+        the previous on_match callback is replaced. The `on_match` callback will
+        receive the arguments `(matcher, doc, i, matches)`. You can also set
+        `on_match` to `None` to not perform any actions.
 
-	A pattern consists of one or more `token_specs`, where a `token_spec`
-	is a dictionary mapping attribute IDs to values, and optionally a
-	quantifier operator under the key "op". The available quantifiers are:
+        A pattern consists of one or more `token_specs`, where a `token_spec`
+        is a dictionary mapping attribute IDs to values, and optionally a
+        quantifier operator under the key "op". The available quantifiers are:
 
-	'!': Negate the pattern, by requiring it to match exactly 0 times.
-	'?': Make the pattern optional, by allowing it to match 0 or 1 times.
-	'+': Require the pattern to match 1 or more times.
-	'*': Allow the pattern to zero or more times.
+        '!': Negate the pattern, by requiring it to match exactly 0 times.
+        '?': Make the pattern optional, by allowing it to match 0 or 1 times.
+        '+': Require the pattern to match 1 or more times.
+        '*': Allow the pattern to zero or more times.
 
-	The + and * operators are usually interpretted "greedily", i.e. longer
-	matches are returned where possible. However, if you specify two '+'
-	and '*' patterns in a row and their matches overlap, the first
-	operator will behave non-greedily. This quirk in the semantics
-	makes the matcher more efficient, by avoiding the need for back-tracking.
+        The + and * operators are usually interpretted "greedily", i.e. longer
+        matches are returned where possible. However, if you specify two '+'
+        and '*' patterns in a row and their matches overlap, the first
+        operator will behave non-greedily. This quirk in the semantics
+        makes the matcher more efficient, by avoiding the need for back-tracking.
         """
         for pattern in patterns:
             if len(pattern) == 0:
