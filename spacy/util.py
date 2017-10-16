@@ -494,7 +494,7 @@ def from_disk(path, readers, exclude):
     path = ensure_path(path)
     for key, reader in readers.items():
         if key not in exclude:
-            reader(path / key)
+            reader(path2str(path / key))
     return path
 
 
