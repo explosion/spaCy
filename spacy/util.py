@@ -584,4 +584,3 @@ def use_gpu(gpu_id):
     Model.ops = CupyOps()
     Model.Ops = CupyOps
     return device
-
