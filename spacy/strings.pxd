@@ -21,11 +21,9 @@ ctypedef union Utf8Str:
 
 cdef class StringStore:
     cdef Pool mem
-    cdef bint is_frozen
 
     cdef vector[hash_t] keys
     cdef public PreshMap _map
-    cdef public PreshMap _oov
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string)
     cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length)
