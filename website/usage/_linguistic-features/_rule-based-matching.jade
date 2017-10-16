@@ -142,33 +142,30 @@ p
     |  are no nested or scoped quantifiers – instead, you can build those
     |  behaviours with #[code on_match] callbacks.
 
-+aside("Problems with quantifiers")
-    |  Using quantifiers may lead to unexpected results when matching
-    |  variable-length patterns, for example if the next token would also be
-    |  matched by the previous token. This problem should be resolved in a future
-    |  release. For more information, see
-    |  #[+a(gh("spaCy") + "/issues/864") this issue].
-
-+table([ "OP", "Description", "Example"])
++table([ "OP", "Description"])
     +row
         +cell #[code !]
-        +cell match exactly 0 times
-        +cell negation
+        +cell Negate the pattern, by requiring it to match exactly 0 times.
 
     +row
         +cell #[code *]
-        +cell match 0 or more times
-        +cell optional, variable number
+        +cell Make the pattern optional, by allowing it to match 0 or 1 times.
 
     +row
         +cell #[code +]
-        +cell match 1 or more times
-        +cell mandatory, variable number
+        +cell Require the pattern to match 1 or more times.
 
     +row
         +cell #[code ?]
-        +cell match 0 or 1 times
-        +cell optional, max one
+        +cell Allow the pattern to zero or more times.
+
+p
+    |  The #[code +] and #[code *] operators are usually interpretted
+    |  "greedily", i.e. longer matches are returned where possible. However, if
+    |  you specify two #[code +] and #[code *] patterns in a row and their
+    |  matches overlap, the first operator will behave non-greedily. This quirk
+    |  in the semantics makes the matcher more efficient, by avoiding the need
+    |  for back-tracking.
 
 +h(3, "adding-phrase-patterns") Adding phrase patterns
 
