@@ -159,6 +159,10 @@ p
 +h(3, "lightning-tour-word-vectors") Get word vectors and similarity
     +tag-model("word vectors")
 
+p
+    |  For the best results, you should run this example using the
+    |  #[+a("/models/en#en_vectors_web_lg") #[code en_vectors_web_lg]] model
+
 +code.
     doc = nlp(u"Apple and banana are similar. Pasta and hippo aren't.")
     apple = doc[0]
