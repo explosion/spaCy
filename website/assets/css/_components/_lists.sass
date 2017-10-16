@@ -9,6 +9,8 @@
 
             .c-list__item:before
                 content: counter(li, #{$counter}) '.'
+                font-size: 1em
+                padding-right: 1rem
 
 
 //- List Item
@@ -21,13 +23,14 @@
     &:before
         content: '\25CF'
         display: inline-block
-        font-size: 1em
+        font-size: 0.6em
         font-weight: bold
-        padding-right: 1.25rem
+        padding-right: 1em
         margin-left: -3.75rem
         text-align: right
         width: 2.5rem
         counter-increment: li
+        box-sizing: content-box
 
 
 //- List icon

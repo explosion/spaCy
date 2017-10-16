@@ -2,17 +2,33 @@
 from __future__ import unicode_literals
 
 import pytest
+from ....tokens.doc import Doc
 
 
 @pytest.fixture
 def en_lemmatizer(EN):
     return EN.Defaults.create_lemmatizer()
 
+@pytest.mark.models('en')
+def test_doc_lemmatization(EN):
+    doc = Doc(EN.vocab, words=['bleed'])
+    doc[0].tag_ = 'VBP'
+    assert doc[0].lemma_ == 'bleed'
 
 @pytest.mark.models('en')
 @pytest.mark.parametrize('text,lemmas', [("aardwolves", ["aardwolf"]),
                                          ("aardwolf", ["aardwolf"]),
                                          ("planets", ["planet"]),
+                                         ("ring", ["ring"]),
+                                         ("axes", ["axis", "axe", "ax"])])
+def test_en_lemmatizer_noun_lemmas(en_lemmatizer, text, lemmas):
+    assert en_lemmatizer.noun(text) == set(lemmas)
+
+
+@pytest.mark.models('en')
+@pytest.mark.parametrize('text,lemmas', [("bleed", ["bleed"]),
+                                         ("feed", ["feed"]),
+                                         ("need", ["need"]),
                                          ("ring", ["ring"]),
                                          ("axes", ["axis", "axe", "ax"])])
 def test_en_lemmatizer_noun_lemmas(en_lemmatizer, text, lemmas):
@@ -41,7 +57,5 @@ def test_en_lemmatizer_punct(en_lemmatizer):
 def test_en_lemmatizer_lemma_assignment(EN):
     text = "Bananas in pyjamas are geese."
     doc = EN.make_doc(text)
-    EN.tensorizer(doc)
-    assert all(t.lemma_ == '' for t in doc)
     EN.tagger(doc)
     assert all(t.lemma_ != '' for t in doc)

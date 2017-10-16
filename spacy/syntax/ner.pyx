@@ -2,7 +2,10 @@
 from __future__ import unicode_literals
 
 from thinc.typedefs cimport weight_t
+from thinc.extra.search cimport Beam
 from collections import OrderedDict
+import numpy
+from thinc.neural.ops import NumpyOps
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -110,7 +113,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def has_gold(self, GoldParse gold, start=0, end=None):
         end = end or len(gold.ner)
-        if all([tag == '-' for tag in gold.ner[start:end]]):
+        if all([tag in ('-', None) for tag in gold.ner[start:end]]):
             return False
         else:
             return True
@@ -122,11 +125,45 @@ cdef class BiluoPushDown(TransitionSystem):
             gold.c.ner[i] = self.lookup_transition(gold.ner[i])
         return gold
 
+    def get_beam_annot(self, Beam beam):
+        entities = {}
+        probs = beam.probs
+        for i in range(beam.size):
+            stcls = <StateClass>beam.at(i)
+            if stcls.is_final():
+                self.finalize_state(stcls.c)
+                prob = probs[i]
+                for j in range(stcls.c._e_i):
+                    start = stcls.c._ents[j].start
+                    end = stcls.c._ents[j].end
+                    label = stcls.c._ents[j].label
+                    entities.setdefault((start, end, label), 0.0)
+                    entities[(start, end, label)] += prob
+        return entities
+
+    def get_beam_parses(self, Beam beam):
+        parses = []
+        probs = beam.probs
+        for i in range(beam.size):
+            stcls = <StateClass>beam.at(i)
+            if stcls.is_final():
+                self.finalize_state(stcls.c)
+                prob = probs[i]
+                parse = []
+                for j in range(stcls.c._e_i):
+                    start = stcls.c._ents[j].start
+                    end = stcls.c._ents[j].end
+                    label = stcls.c._ents[j].label
+                    parse.append((start, end, self.strings[label]))
+                parses.append((prob, parse))
+        return parses
+
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
         if name == '-' or name == None:
-            move_str = 'M'
-            label = 0
+            return Transition(clas=0, move=MISSING, label=0, score=0)
+        elif name == '!O':
+            return Transition(clas=0, move=ISNT, label=0, score=0)
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
             # Hacky way to denote 'not this entity'
@@ -181,6 +218,29 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             raise Exception(move)
         return t
+
+    def add_action(self, int action, label_name):
+        cdef attr_t label_id
+        if not isinstance(label_name, (int, long)):
+            label_id = self.strings.add(label_name)
+        else:
+            label_id = label_name
+        if action == OUT and label_id != 0:
+            return
+        if action == MISSING or action == ISNT:
+            return
+        # Check we're not creating a move we already have, so that this is
+        # idempotent
+        for trans in self.c[:self.n_moves]:
+            if trans.move == action and trans.label == label_id:
+                return 0
+        if self.n_moves >= self._size:
+            self._size *= 2
+            self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
+        self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
+        assert self.c[self.n_moves].label == label_id
+        self.n_moves += 1
+        return 1
 
     cdef int initialize_state(self, StateC* st) nogil:
         # This is especially necessary when we use limited training data.
@@ -308,6 +368,9 @@ cdef class In:
         elif g_act == UNIT:
             # I, Gold U --> True iff next tag == O
             return next_act != OUT
+        # Support partial supervision in the form of "not this label"
+        elif g_act == ISNT:
+            return 0
         else:
             return 1
 
@@ -349,6 +412,9 @@ cdef class Last:
             return 0
         elif g_act == UNIT:
             # L, Gold U --> True
+            return 0
+        # Support partial supervision in the form of "not this label"
+        elif g_act == ISNT:
             return 0
         else:
             return 1
@@ -418,7 +484,9 @@ cdef class Out:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
-        if g_act == MISSING or g_act == ISNT:
+        if g_act == ISNT and g_tag == 0:
+            return 1
+        elif g_act == MISSING or g_act == ISNT:
             return 0
         elif g_act == BEGIN:
             # O, Gold B --> False

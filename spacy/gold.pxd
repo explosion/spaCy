@@ -9,6 +9,7 @@ cdef struct GoldParseC:
     int* tags
     int* heads
     int* has_dep
+    int* sent_start
     attr_t* labels
     int** brackets
     Transition* ner
@@ -29,6 +30,7 @@ cdef class GoldParse:
     cdef public list ner
     cdef public list ents
     cdef public dict brackets
+    cdef public object cats
 
     cdef readonly list cand_to_gold
     cdef readonly list gold_to_cand

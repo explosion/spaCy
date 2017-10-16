@@ -1,14 +1,12 @@
 # spaCy
 spacy/data/
 corpora/
-models/
+/models/
 keys/
 
 # Website
 website/www/
 website/_deploy.sh
-website/package.json
-website/announcement.jade
 website/.gitignore
 
 # Cython / C extensions
@@ -40,7 +38,6 @@ venv/
 
 # Distribution / packaging
 env/
-bin/
 build/
 develop-eggs/
 dist/

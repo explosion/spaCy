@@ -9,7 +9,7 @@
 //- Table row
 
 .c-table__row
-    &:nth-child(odd)
+    &:nth-child(odd):not(.c-table__row--head)
         background: rgba($color-subtle-light, 0.35)
 
     &.c-table__row--foot
@@ -38,7 +38,6 @@
 .c-table__head-cell
     font-weight: bold
     color: $color-theme
-    background: $color-back
     padding: 1rem 0.5rem
     border-bottom: 2px solid $color-theme
 

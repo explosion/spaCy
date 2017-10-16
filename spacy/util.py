@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import os
 import ujson
-import pip
+import pkg_resources
 import importlib
 import regex as re
 from pathlib import Path
@@ -14,6 +14,7 @@ import numpy
 import io
 import dill
 from collections import OrderedDict
+from thinc.neural._classes.model import Model
 
 import msgpack
 import msgpack_numpy
@@ -22,7 +23,7 @@ import ujson
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
-from .compat import copy_array, normalize_string_keys, getattr_
+from .compat import copy_array, normalize_string_keys, getattr_, import_file
 
 
 LANGUAGES = {}
@@ -112,15 +113,13 @@ def load_model(name, **overrides):
 
 def load_model_from_link(name, **overrides):
     """Load a model from a shortcut link, or directory in spaCy data path."""
-    init_file = get_data_path() / name / '__init__.py'
-    spec = importlib.util.spec_from_file_location(name, init_file)
+    path = get_data_path() / name / '__init__.py'
     try:
-        cls = importlib.util.module_from_spec(spec)
+        cls = import_file(name, path)
     except AttributeError:
         raise IOError(
             "Cant' load '%s'. If you're using a shortcut link, make sure it "
             "points to a valid model package (not just a data directory)." % name)
-    spec.loader.exec_module(cls)
     return cls.load(**overrides)
 
 
@@ -136,7 +135,18 @@ def load_model_from_path(model_path, meta=False, **overrides):
     if not meta:
         meta = get_model_meta(model_path)
     cls = get_lang_class(meta['lang'])
-    nlp = cls(pipeline=meta.get('pipeline', True), meta=meta, **overrides)
+    nlp = cls(meta=meta, **overrides)
+    pipeline = meta.get('pipeline', [])
+    disable = overrides.get('disable', [])
+    if pipeline is True:
+        pipeline = nlp.Defaults.pipe_names
+    elif pipeline in (False, None):
+        pipeline = []
+    for name in pipeline:
+        if name not in disable:
+            config = meta.get('pipeline_args', {}).get(name, {})
+            component = nlp.create_pipe(name, config=config)
+            nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path)
 
 
@@ -171,8 +181,8 @@ def get_model_meta(path):
         raise IOError("Could not read meta.json from %s" % meta_path)
     meta = read_json(meta_path)
     for setting in ['lang', 'name', 'version']:
-        if setting not in meta:
-            raise ValueError('No %s setting found in model meta.json' % setting)
+        if setting not in meta or not meta[setting]:
+            raise ValueError("No valid '%s' setting found in model meta.json" % setting)
     return meta
 
 
@@ -182,9 +192,10 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    packages = pip.get_installed_distributions()
+    name = name.lower()  # compare package name against lowercase name
+    packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
-        if package.project_name.replace('-', '_') == name:
+        if package.lower().replace('-', '_') == name:
             return True
     return False
 
@@ -195,6 +206,7 @@ def get_package_path(name):
     name (unicode): Package name.
     RETURNS (Path): Path to installed package.
     """
+    name = name.lower()  # use lowercase version to be safe
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
@@ -559,3 +571,17 @@ def minify_html(html):
     RETURNS (unicode): "Minified" HTML.
     """
     return html.strip().replace('    ', '').replace('\n', '')
+
+
+def use_gpu(gpu_id):
+    try:
+        import cupy.cuda.device
+    except ImportError:
+        return None
+    from thinc.neural.ops import CupyOps
+    device = cupy.cuda.device.Device(gpu_id)
+    device.use()
+    Model.ops = CupyOps()
+    Model.Ops = CupyOps
+    return device
+

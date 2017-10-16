@@ -20,10 +20,24 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUST
 from ..attrs cimport LEMMA, POS, TAG, DEP
 from ..compat import is_config
 from .. import about
+from .underscore import Underscore
 
 
 cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace, etc."""
+    @classmethod
+    def set_extension(cls, name, default=None, method=None,
+                      getter=None, setter=None):
+        Underscore.token_extensions[name] = (default, method, getter, setter)
+
+    @classmethod
+    def get_extension(cls, name):
+        return Underscore.span_extensions.get(name)
+
+    @classmethod
+    def has_extension(cls, name):
+        return name in Underscore.span_extensions
+
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
         """Construct a `Token` object.
 
@@ -62,22 +76,35 @@ cdef class Token:
 
     def __richcmp__(self, Token other, int op):
         # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
+        cdef Doc my_doc = self.doc
+        cdef Doc other_doc = other.doc
         my = self.idx
         their = other.idx if other is not None else None
         if op == 0:
             return my < their
         elif op == 2:
-            return my == their
+            if my_doc is other_doc:
+                return my == their
+            else:
+                return False
         elif op == 4:
             return my > their
         elif op == 1:
             return my <= their
         elif op == 3:
-            return my != their
+            if my_doc is other_doc:
+                return my != their
+            else:
+                return True
         elif op == 5:
             return my >= their
         else:
             raise ValueError(op)
+
+    @property
+    def _(self):
+        return Underscore(Underscore.token_extensions, self,
+                          start=self.idx, end=None)
 
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         """Check the value of a boolean flag.
@@ -258,7 +285,7 @@ cdef class Token:
         def __get__(self):
             if 'vector_norm' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector_norm'](self)
-            vector = self.vector 
+            vector = self.vector
             return numpy.sqrt((vector ** 2).sum())
 
     property n_lefts:
@@ -273,13 +300,21 @@ cdef class Token:
         def __get__(self):
             return self.c.sent_start
 
-        def __set__(self, bint value):
+        def __set__(self, value):
             if self.doc.is_parsed:
                 raise ValueError(
                     'Refusing to write to token.sent_start if its document is parsed, '
                     'because this may cause inconsistent state. '
                     'See https://github.com/spacy-io/spaCy/issues/235 for workarounds.')
-            self.c.sent_start = value
+            if value is None:
+                self.c.sent_start = 0
+            elif value is True:
+                self.c.sent_start = 1
+            elif value is False:
+                self.c.sent_start = -1
+            else:
+                raise ValueError("Invalid value for token.sent_start -- must be one of "
+                                 "None, True, False")
 
     property lefts:
         def __get__(self):

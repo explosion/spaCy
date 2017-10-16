@@ -67,12 +67,6 @@ def test_tokenizer_splits_uneven_wrap_interact(de_tokenizer, text):
     assert len(tokens) == 4
 
 
-@pytest.mark.parametrize('text', ["blau-rot"])
-def test_tokenizer_splits_hyphens(de_tokenizer, text):
-    tokens = de_tokenizer(text)
-    assert len(tokens) == 3
-
-
 @pytest.mark.parametrize('text', ["0.1-13.5", "0.0-0.1", "103.27-300"])
 def test_tokenizer_splits_numeric_range(de_tokenizer, text):
     tokens = de_tokenizer(text)
@@ -100,17 +94,21 @@ def test_tokenizer_splits_ellipsis_infix(de_tokenizer, text):
     assert len(tokens) == 3
 
 
+@pytest.mark.parametrize('text', ['Islam-Konferenz', 'Ost-West-Konflikt'])
+def test_tokenizer_keeps_hyphens(de_tokenizer, text):
+    tokens = de_tokenizer(text)
+    assert len(tokens) == 1
+
+
 def test_tokenizer_splits_double_hyphen_infix(de_tokenizer):
     tokens = de_tokenizer("Viele Regeln--wie die Bindestrich-Regeln--sind kompliziert.")
-    assert len(tokens) == 12
+    assert len(tokens) == 10
     assert tokens[0].text == "Viele"
     assert tokens[1].text == "Regeln"
     assert tokens[2].text == "--"
     assert tokens[3].text == "wie"
     assert tokens[4].text == "die"
-    assert tokens[5].text == "Bindestrich"
-    assert tokens[6].text == "-"
-    assert tokens[7].text == "Regeln"
-    assert tokens[8].text == "--"
-    assert tokens[9].text == "sind"
-    assert tokens[10].text == "kompliziert"
+    assert tokens[5].text == "Bindestrich-Regeln"
+    assert tokens[6].text == "--"
+    assert tokens[7].text == "sind"
+    assert tokens[8].text == "kompliziert"

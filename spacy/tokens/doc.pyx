@@ -30,7 +30,7 @@ from ..util import normalize_slice
 from ..compat import is_config
 from .. import about
 from .. import util
-
+from .underscore import Underscore
 
 DEF PADDING = 5
 
@@ -64,6 +64,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
+
 def _get_chunker(lang):
     try:
         cls = util.get_lang_class(lang)
@@ -72,6 +73,7 @@ def _get_chunker(lang):
     except KeyError:
         return None
     return cls.Defaults.syntax_iterators.get(u'noun_chunks')
+
 
 cdef class Doc:
     """A sequence of Token objects. Access sentences and named entities, export
@@ -87,6 +89,21 @@ cdef class Doc:
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'], spaces=[True, False, False])
     """
+    @classmethod
+    def set_extension(cls, name, default=None, method=None,
+                      getter=None, setter=None):
+        nr_defined = sum(t is not None for t in (default, getter, setter, method))
+        assert nr_defined == 1
+        Underscore.doc_extensions[name] = (default, method, getter, setter) 
+
+    @classmethod
+    def get_extension(cls, name):
+        return Underscore.doc_extensions.get(name)
+
+    @classmethod
+    def has_extension(cls, name):
+        return name in Underscore.doc_extensions
+
     def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
         """Create a Doc object.
 
@@ -117,6 +134,7 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self.sentiment = 0.0
+        self.cats = {}
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
@@ -157,6 +175,10 @@ cdef class Doc:
         if self.length == 0:
             self.is_tagged = True
             self.is_parsed = True
+
+    @property
+    def _(self):
+        return Underscore(Underscore.doc_extensions, self)
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
@@ -237,6 +259,29 @@ cdef class Doc:
     def doc(self):
         return self
 
+    def char_span(self, int start_idx, int end_idx, label=0, vector=None):
+        """Create a `Span` object from the slice `doc.text[start : end]`.
+
+        doc (Doc): The parent document.
+        start (int): The index of the first character of the span.
+        end (int): The index of the first character after the span.
+        label (uint64 or string): A label to attach to the Span, e.g. for named entities.
+        vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
+        RETURNS (Span): The newly constructed object.
+        """
+        if not isinstance(label, int):
+            label = self.vocab.strings.add(label)
+        cdef int start = token_by_start(self.c, self.length, start_idx)
+        if start == -1:
+            return None
+        cdef int end = token_by_end(self.c, self.length, end_idx)
+        if end == -1:
+            return None
+        # Currently we have the token index, we want the range-end index
+        end += 1
+        cdef Span span = Span(self, start, end, label=label, vector=vector)
+        return span
+
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.
@@ -279,8 +324,14 @@ cdef class Doc:
                 return self.user_hooks['vector'](self)
             if self._vector is not None:
                 return self._vector
-            elif self.has_vector and len(self):
-                self._vector = sum(t.vector for t in self) / len(self)
+            elif not len(self):
+                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                return self._vector
+            elif self.has_vector:
+                vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                for token in self.c[:self.length]:
+                    vector += self.vocab.get_vector(token.lex.orth)
+                self._vector = vector / len(self)
                 return self._vector
             elif self.tensor is not None:
                 self._vector = self.tensor.mean(axis=0)
@@ -455,7 +506,7 @@ cdef class Doc:
             cdef int i
             start = 0
             for i in range(1, self.length):
-                if self.c[i].sent_start:
+                if self.c[i].sent_start == 1:
                     yield Span(self, start, i)
                     start = i
             if start != self.length:
@@ -482,6 +533,8 @@ cdef class Doc:
         assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
+        # Set morphological attributes, e.g. by lemma, if possible
+        self.vocab.morphology.assign_untagged(t)
         self._py_tokens.append(None)
         return t.idx + t.lex.length + t.spacy
 
@@ -630,7 +683,7 @@ cdef class Doc:
         """
         with path.open('rb') as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, **exclude)
+        return self.from_bytes(bytes_data, **exclude)
 
     def to_bytes(self, **exclude):
         """Serialize, i.e. export the document contents to a binary string.

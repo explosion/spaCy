@@ -1,13 +1,16 @@
 //- 💫 CSS > COMPONENTS > QUICKSTART
 
 .c-quickstart
-    border: 1px solid $color-subtle
-    border-radius: 2px
+    border-radius: $border-radius
     display: none
     background: $color-subtle-light
 
     &:not([style]) + .c-quickstart__info
         display: none
+
+    .c-code-block
+        border-top-left-radius: 0
+        border-top-right-radius: 0
 
 .c-quickstart__content
     padding: 2rem 3rem
@@ -72,7 +75,6 @@
     flex: 100%
 
 .c-quickstart__legend
-    color: $color-subtle-dark
     margin-right: 2rem
     padding-top: 0.75rem
     flex: 1 1 35%
@@ -95,4 +97,4 @@
         padding: 1.5rem 0
 
 .c-quickstart__code
-    font-size: 1.6rem
+    font-size: 1.4rem

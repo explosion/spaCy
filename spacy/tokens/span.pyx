@@ -7,7 +7,7 @@ import numpy
 import numpy.linalg
 from libc.math cimport sqrt
 
-from .doc cimport token_by_start, token_by_end
+from .doc cimport token_by_start, token_by_end, get_token_attr
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t, hash_t
 from ..attrs cimport attr_id_t
@@ -17,10 +17,24 @@ from ..attrs cimport IS_PUNCT, IS_SPACE
 from ..lexeme cimport Lexeme
 from ..compat import is_config
 from .. import about
+from .underscore import Underscore
 
 
 cdef class Span:
     """A slice from a Doc object."""
+    @classmethod
+    def set_extension(cls, name, default=None, method=None,
+                      getter=None, setter=None):
+        Underscore.span_extensions[name] = (default, method, getter, setter)
+
+    @classmethod
+    def get_extension(cls, name):
+        return Underscore.span_extensions.get(name)
+
+    @classmethod
+    def has_extension(cls, name):
+        return name in Underscore.span_extensions
+
     def __cinit__(self, Doc doc, int start, int end, attr_t label=0, vector=None,
                   vector_norm=None):
         """Create a `Span` object from the slice `doc[start : end]`.
@@ -111,6 +125,34 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self.doc[i]
 
+    @property
+    def _(self):
+        return Underscore(Underscore.span_extensions, self,
+                          start=self.start_char, end=self.end_char)
+    def as_doc(self):
+        '''Create a Doc object view of the Span's data.
+
+        This is mostly useful for C-typed interfaces.
+        '''
+        cdef Doc doc = Doc(self.doc.vocab)
+        doc.length = self.end-self.start
+        doc.c = &self.doc.c[self.start]
+        doc.mem = self.doc.mem
+        doc.is_parsed = self.doc.is_parsed
+        doc.is_tagged = self.doc.is_tagged
+        doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
+        doc.user_hooks = self.doc.user_hooks
+        doc.user_span_hooks = self.doc.user_span_hooks
+        doc.user_token_hooks = self.doc.user_token_hooks
+        doc.vector = self.vector
+        doc.vector_norm = self.vector_norm
+        for key, value in self.doc.cats.items():
+            if hasattr(key, '__len__') and len(key) == 3:
+                cat_start, cat_end, cat_label = key
+                if cat_start == self.start_char and cat_end == self.end_char:
+                    doc.cats[cat_label] = value
+        return doc
+
     def merge(self, *args, **attributes):
         """Retokenize the document, such that the span is merged into a single
         token.
@@ -134,6 +176,29 @@ cdef class Span:
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+
+    cpdef np.ndarray to_array(self, object py_attr_ids):
+        """Given a list of M attribute IDs, export the tokens to a numpy
+        `ndarray` of shape `(N, M)`, where `N` is the length of the document.
+        The values will be 32-bit integers.
+
+        attr_ids (list[int]): A list of attribute ID ints.
+        RETURNS (numpy.ndarray[long, ndim=2]): A feature matrix, with one row
+            per word, and one column per attribute indicated in the input
+            `attr_ids`.
+        """
+        cdef int i, j
+        cdef attr_id_t feature
+        cdef np.ndarray[attr_t, ndim=2] output
+        # Make an array from the attributes --- otherwise our inner loop is Python
+        # dict iteration.
+        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
+        cdef int length = self.end - self.start
+        output = numpy.ndarray(shape=(length, len(attr_ids)), dtype=numpy.uint64)
+        for i in range(self.start, self.end):
+            for j, feature in enumerate(attr_ids):
+                output[i-self.start, j] = get_token_attr(&self.doc.c[i], feature)
+        return output
 
     cpdef int _recalculate_indices(self) except -1:
         if self.end > self.doc.length \

@@ -1,0 +1,22 @@
+//- 💫 DOCS > API > GOLDCORPUS
+
+include ../_includes/_mixins
+
+p
+    |  This class manages annotations for tagging, dependency parsing and NER.
+
++h(2, "init") GoldCorpus.__init__
+    +tag method
+
+p Create a #[code GoldCorpus].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code train_path]
+        +cell unicode or #[code Path]
+        +cell File or directory of training data.
+
+    +row
+        +cell #[code dev_path]
+        +cell unicode or #[code Path]
+        +cell File or directory of development data.

@@ -61,13 +61,13 @@ cdef struct TokenC:
     attr_t sense
     int head
     attr_t dep
-    bint sent_start
 
     uint32_t l_kids
     uint32_t r_kids
     uint32_t l_edge
     uint32_t r_edge
 
+    int sent_start
     int ent_iob
     attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     hash_t ent_id

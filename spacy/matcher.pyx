@@ -17,7 +17,7 @@ from libcpp.pair cimport pair
 from murmurhash.mrmr cimport hash64
 from libc.stdint cimport int32_t
 
-from .attrs cimport ID, ENT_TYPE
+from .attrs cimport ID, NULL_ATTR, ENT_TYPE
 from . import attrs
 from .tokens.doc cimport get_token_attr
 from .tokens.doc cimport Doc
@@ -142,6 +142,10 @@ def _convert_strings(token_specs, string_store):
     tokens = []
     op = ONE
     for spec in token_specs:
+        if not spec:
+            # Signifier for 'any token'
+            tokens.append((ONE, [(NULL_ATTR, 0)]))
+            continue
         token = []
         ops = (ONE,)
         for attr, value in spec.items():
@@ -295,7 +299,7 @@ cdef class Matcher:
         """Find all token sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
-        RETURNS (list): A list of `(key, label_id, start, end)` tuples,
+        RETURNS (list): A list of `(key, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
@@ -421,47 +425,69 @@ cdef class PhraseMatcher:
     cdef int max_length
     cdef attr_t* _phrase_key
 
-    def __init__(self, Vocab vocab, phrases, max_length=10):
+    cdef public object _callbacks
+    cdef public object _patterns
+
+    def __init__(self, Vocab vocab, max_length=10):
         self.mem = Pool()
         self._phrase_key = <attr_t*>self.mem.alloc(max_length, sizeof(attr_t))
         self.max_length = max_length
         self.vocab = vocab
-        self.matcher = Matcher(self.vocab, {})
+        self.matcher = Matcher(self.vocab)
         self.phrase_ids = PreshMap()
-        for phrase in phrases:
-            if len(phrase) < max_length:
-                self.add(phrase)
-
         abstract_patterns = []
         for length in range(1, max_length):
             abstract_patterns.append([{tag: True} for tag in get_bilou(length)])
-        self.matcher.add('Candidate', 'MWE', {}, abstract_patterns, acceptor=self.accept_match)
+        self.matcher.add('Candidate', None, *abstract_patterns)
+        self._callbacks = {}
 
-    def add(self, Doc tokens):
-        cdef int length = tokens.length
-        assert length < self.max_length
-        tags = get_bilou(length)
-        assert len(tags) == length, length
+    def __len__(self):
+        raise NotImplementedError
 
+    def __contains__(self, key):
+        raise NotImplementedError
+
+    def __reduce__(self):
+        return (self.__class__, (self.vocab,), None, None)
+
+    def add(self, key, on_match, *docs):
+        cdef Doc doc
+        for doc in docs:
+            if len(doc) >= self.max_length:
+                msg = (
+                    "Pattern length (%d) >= phrase_matcher.max_length (%d). "
+                    "Length can be set on initialization, up to 10."
+                )
+                raise ValueError(msg % (len(doc), self.max_length))
+        cdef hash_t ent_id = self.matcher._normalize_key(key)
+        self._callbacks[ent_id] = on_match
+
+        cdef int length
         cdef int i
-        for i in range(self.max_length):
-            self._phrase_key[i] = 0
-        for i, tag in enumerate(tags):
-            lexeme = self.vocab[tokens.c[i].lex.orth]
-            lexeme.set_flag(tag, True)
-            self._phrase_key[i] = lexeme.orth
-        cdef hash_t key = hash64(self._phrase_key, self.max_length * sizeof(attr_t), 0)
-        self.phrase_ids[key] = True
+        cdef hash_t phrase_hash
+        for doc in docs:
+            length = doc.length
+            tags = get_bilou(length)
+            for i in range(self.max_length):
+                self._phrase_key[i] = 0
+            for i, tag in enumerate(tags):
+                lexeme = self.vocab[doc.c[i].lex.orth]
+                lexeme.set_flag(tag, True)
+                self._phrase_key[i] = lexeme.orth
+            phrase_hash = hash64(self._phrase_key,
+                                 self.max_length * sizeof(attr_t), 0)
+            self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
         matches = []
-        for ent_id, label, start, end in self.matcher(doc):
-            cand = doc[start : end]
-            start = cand[0].idx
-            end = cand[-1].idx + len(cand[-1])
-            matches.append((start, end, cand.root.tag_, cand.text, 'MWE'))
-        for match in matches:
-            doc.merge(*match)
+        for _, start, end in self.matcher(doc):
+            ent_id = self.accept_match(doc, start, end)
+            if ent_id is not None:
+                matches.append((ent_id, start, end))
+        for i, (ent_id, start, end) in enumerate(matches):
+            on_match = self._callbacks.get(ent_id)
+            if on_match is not None:
+                on_match(self, doc, i, matches)
         return matches
 
     def pipe(self, stream, batch_size=1000, n_threads=2):
@@ -469,7 +495,7 @@ cdef class PhraseMatcher:
             self(doc)
             yield doc
 
-    def accept_match(self, Doc doc, attr_t ent_id, attr_t label, int start, int end):
+    def accept_match(self, Doc doc, int start, int end):
         assert (end - start) < self.max_length
         cdef int i, j
         for i in range(self.max_length):
@@ -477,7 +503,8 @@ cdef class PhraseMatcher:
         for i, j in enumerate(range(start, end)):
             self._phrase_key[i] = doc.c[j].lex.orth
         cdef hash_t key = hash64(self._phrase_key, self.max_length * sizeof(attr_t), 0)
-        if self.phrase_ids.get(key):
-            return (ent_id, label, start, end)
+        ent_id = <hash_t>self.phrase_ids.get(key)
+        if ent_id == 0:
+            return None
         else:
-            return False
+            return ent_id

@@ -1,42 +1,40 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
-import dill
 
-import numpy
 from thinc.neural import Model
-from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.optimizers import Adam, SGD
+from thinc.neural.optimizers import Adam
 import random
 import ujson
 from collections import OrderedDict
+import itertools
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
 from .lemmatizer import Lemmatizer
 from .syntax.parser import get_templates
-from .syntax import nonproj
 
-from .pipeline import NeuralDependencyParser, EntityRecognizer
-from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
-from .pipeline import NeuralLabeller
-from .pipeline import SimilarityHook
+from .pipeline import NeuralDependencyParser, TokenVectorEncoder, NeuralTagger
+from .pipeline import NeuralEntityRecognizer, SimilarityHook, TextCategorizer
 
-from .compat import json_dumps
+from .compat import json_dumps, izip
+from .scorer import Scorer
+from ._ml import link_vectors_to_models
 from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS
 from . import util
-from .scorer import Scorer
+from . import about
 
 
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules)
+        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules,
+                          cls.lemma_lookup)
 
     @classmethod
     def create_vocab(cls, nlp=None):
@@ -66,58 +64,7 @@ class BaseDefaults(object):
                          prefix_search=prefix_search, suffix_search=suffix_search,
                          infix_finditer=infix_finditer, token_match=token_match)
 
-    @classmethod
-    def create_tagger(cls, nlp=None, **cfg):
-        if nlp is None:
-            return NeuralTagger(cls.create_vocab(nlp), **cfg)
-        else:
-            return NeuralTagger(nlp.vocab, **cfg)
-
-    @classmethod
-    def create_parser(cls, nlp=None, **cfg):
-        if nlp is None:
-            return NeuralDependencyParser(cls.create_vocab(nlp), **cfg)
-        else:
-            return NeuralDependencyParser(nlp.vocab, **cfg)
-
-    @classmethod
-    def create_entity(cls, nlp=None, **cfg):
-        if nlp is None:
-            return NeuralEntityRecognizer(cls.create_vocab(nlp), **cfg)
-        else:
-            return NeuralEntityRecognizer(nlp.vocab, **cfg)
-
-    @classmethod
-    def create_pipeline(cls, nlp=None, disable=tuple()):
-        meta = nlp.meta if nlp is not None else {}
-        # Resolve strings, like "cnn", "lstm", etc
-        pipeline = []
-        for entry in cls.pipeline:
-            if entry in disable or getattr(entry, 'name', entry) in disable:
-                continue
-            factory = cls.Defaults.factories[entry]
-            pipeline.append(factory(nlp, **meta.get(entry, {})))
-        return pipeline
-
-    factories = {
-        'make_doc': create_tokenizer,
-        'tensorizer': lambda nlp, **cfg: [TokenVectorEncoder(nlp.vocab, **cfg)],
-        'tagger': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
-        'parser': lambda nlp, **cfg: [
-            NeuralDependencyParser(nlp.vocab, **cfg),
-            nonproj.deprojectivize],
-        'ner': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
-        # Temporary compatibility -- delete after pivot
-        'token_vectors': lambda nlp, **cfg: [TokenVectorEncoder(nlp.vocab, **cfg)],
-        'tags': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
-        'dependencies': lambda nlp, **cfg: [
-            NeuralDependencyParser(nlp.vocab, **cfg),
-            nonproj.deprojectivize,
-        ],
-        'entities': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
-        'similarity': lambda nlp, **cfg: [SimilarityHook(nlp.vocab, **cfg)]
-    }
-
+    pipe_names = ['tensorizer', 'tagger', 'parser', 'ner']
     token_match = TOKEN_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
@@ -131,6 +78,7 @@ class BaseDefaults(object):
     lemma_rules = {}
     lemma_exc = {}
     lemma_index = {}
+    lemma_lookup = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
@@ -147,8 +95,17 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
-    def __init__(self, vocab=True, make_doc=True, pipeline=None, meta={},
-            disable=tuple(), **kwargs):
+    factories = {
+        'tokenizer': lambda nlp: nlp.Defaults.create_tokenizer(nlp),
+        'tensorizer': lambda nlp, **cfg: TokenVectorEncoder(nlp.vocab, **cfg),
+        'tagger': lambda nlp, **cfg: NeuralTagger(nlp.vocab, **cfg),
+        'parser': lambda nlp, **cfg: NeuralDependencyParser(nlp.vocab, **cfg),
+        'ner': lambda nlp, **cfg: NeuralEntityRecognizer(nlp.vocab, **cfg),
+        'similarity': lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
+        'textcat': lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg)
+    }
+
+    def __init__(self, vocab=True, make_doc=True, meta={}, **kwargs):
         """Initialise a Language object.
 
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
@@ -165,7 +122,7 @@ class Language(object):
             models to add model meta data.
         RETURNS (Language): The newly constructed object.
         """
-        self.meta = dict(meta)
+        self._meta = dict(meta)
         if vocab is True:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get('vocab', {}))
@@ -174,60 +131,168 @@ class Language(object):
             factory = self.Defaults.create_tokenizer
             make_doc = factory(self, **meta.get('tokenizer', {}))
         self.tokenizer = make_doc
-        if pipeline is True:
-            self.pipeline = self.Defaults.create_pipeline(self, disable)
-        elif pipeline:
-            # Careful not to do getattr(p, 'name', None) here
-            # If we had disable=[None], we'd disable everything!
-            self.pipeline = [p for p in pipeline
-                             if p not in disable
-                             and getattr(p, 'name', p) not in disable]
-            # Resolve strings, like "cnn", "lstm", etc
-            for i, entry in enumerate(self.pipeline):
-                if entry in self.Defaults.factories:
-                    factory = self.Defaults.factories[entry]
-                    self.pipeline[i] = factory(self, **meta.get(entry, {}))
-        else:
-            self.pipeline = []
-        flat_list = []
-        for pipe in self.pipeline:
-            if isinstance(pipe, list):
-                flat_list.extend(pipe)
-            else:
-                flat_list.append(pipe)
-        self.pipeline = flat_list
+        self.pipeline = []
+        self._optimizer = None
+
+    @property
+    def meta(self):
+        self._meta.setdefault('lang', self.vocab.lang)
+        self._meta.setdefault('name', '')
+        self._meta.setdefault('version', '0.0.0')
+        self._meta.setdefault('spacy_version', about.__version__)
+        self._meta.setdefault('description', '')
+        self._meta.setdefault('author', '')
+        self._meta.setdefault('email', '')
+        self._meta.setdefault('url', '')
+        self._meta.setdefault('license', '')
+        self._meta['pipeline'] = self.pipe_names
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
 
     # Conveniences to access pipeline components
     @property
     def tensorizer(self):
-        return self.get_component('tensorizer')
+        return self.get_pipe('tensorizer')
 
     @property
     def tagger(self):
-        return self.get_component('tagger')
+        return self.get_pipe('tagger')
 
     @property
     def parser(self):
-        return self.get_component('parser')
+        return self.get_pipe('parser')
 
     @property
     def entity(self):
-        return self.get_component('ner')
+        return self.get_pipe('ner')
 
     @property
     def matcher(self):
-        return self.get_component('matcher')
+        return self.get_pipe('matcher')
 
-    def get_component(self, name): 
-        if self.pipeline in (True, None):
-            return None
-        for proc in self.pipeline:
-            if hasattr(proc, 'name') and proc.name.endswith(name):
-                return proc
-        return None
+    @property
+    def pipe_names(self):
+        """Get names of available pipeline components.
+
+        RETURNS (list): List of component name strings, in order.
+        """
+        return [pipe_name for pipe_name, _ in self.pipeline]
+
+    def get_pipe(self, name):
+        """Get a pipeline component for a given component name.
+
+        name (unicode): Name of pipeline component to get.
+        RETURNS (callable): The pipeline component.
+        """
+        for pipe_name, component in self.pipeline:
+            if pipe_name == name:
+                return component
+        msg = "No component '{}' found in pipeline. Available names: {}"
+        raise KeyError(msg.format(name, self.pipe_names))
+
+    def create_pipe(self, name, config=dict()):
+        """Create a pipeline component from a factory.
+
+        name (unicode): Factory name to look up in `Language.factories`.
+        config (dict): Configuration parameters to initialise component.
+        RETURNS (callable): Pipeline component.
+        """
+        if name not in self.factories:
+            raise KeyError("Can't find factory for '{}'.".format(name))
+        factory = self.factories[name]
+        return factory(self, **config)
+
+    def add_pipe(self, component, name=None, before=None, after=None,
+                 first=None, last=None):
+        """Add a component to the processing pipeline. Valid components are
+        callables that take a `Doc` object, modify it and return it. Only one of
+        before, after, first or last can be set. Default behaviour is "last".
+
+        component (callable): The pipeline component.
+        name (unicode): Name of pipeline component. Overwrites existing
+            component.name attribute if available. If no name is set and
+            the component exposes no name attribute, component.__name__ is
+            used. An error is raised if the name already exists in the pipeline.
+        before (unicode): Component name to insert component directly before.
+        after (unicode): Component name to insert component directly after.
+        first (bool): Insert component first / not first in the pipeline.
+        last (bool): Insert component last / not last in the pipeline.
+
+        EXAMPLE:
+            >>> nlp.add_pipe(component, before='ner')
+            >>> nlp.add_pipe(component, name='custom_name', last=True)
+        """
+        if name is None:
+            if hasattr(component, 'name'):
+                name = component.name
+            elif hasattr(component, '__name__'):
+                name = component.__name__
+            elif hasattr(component, '__class__') and hasattr(component.__class__, '__name__'):
+                name = component.__class__.__name__
+            else:
+                name = repr(component)
+        if name in self.pipe_names:
+            raise ValueError("'{}' already exists in pipeline.".format(name))
+        if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
+            msg = ("Invalid constraints. You can only set one of the "
+                   "following: before, after, first, last.")
+            raise ValueError(msg)
+        pipe = (name, component)
+        if last or not any([first, before, after]):
+            self.pipeline.append(pipe)
+        elif first:
+            self.pipeline.insert(0, pipe)
+        elif before and before in self.pipe_names:
+            self.pipeline.insert(self.pipe_names.index(before), pipe)
+        elif after and after in self.pipe_names:
+            self.pipeline.insert(self.pipe_names.index(after), pipe)
+        else:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            unfound = before or after
+            raise ValueError(msg.format(unfound, self.pipe_names))
+
+    def replace_pipe(self, name, component):
+        """Replace a component in the pipeline.
+
+        name (unicode): Name of the component to replace.
+        component (callable): Pipeline component.
+        """
+        if name not in self.pipe_names:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            raise ValueError(msg.format(name, self.pipe_names))
+        self.pipeline[self.pipe_names.index(name)] = (name, component)
+
+    def rename_pipe(self, old_name, new_name):
+        """Rename a pipeline component.
+
+        old_name (unicode): Name of the component to rename.
+        new_name (unicode): New name of the component.
+        """
+        if old_name not in self.pipe_names:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            raise ValueError(msg.format(old_name, self.pipe_names))
+        if new_name in self.pipe_names:
+            msg = "'{}' already exists in pipeline. Existing names: {}"
+            raise ValueError(msg.format(new_name, self.pipe_names))
+        i = self.pipe_names.index(old_name)
+        self.pipeline[i] = (new_name, self.pipeline[i][1])
+
+    def remove_pipe(self, name):
+        """Remove a component from the pipeline.
+
+        name (unicode): Name of the component to remove.
+        RETURNS (tuple): A `(name, component)` tuple of the removed component.
+        """
+        if name not in self.pipe_names:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            raise ValueError(msg.format(name, self.pipe_names))
+        return self.pipeline.pop(self.pipe_names.index(name))
 
     def __call__(self, text, disable=[]):
-        """'Apply the pipeline to some text. The text can span multiple sentences,
+        """Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
@@ -241,8 +306,7 @@ class Language(object):
             ('An', 'NN')
         """
         doc = self.make_doc(text)
-        for proc in self.pipeline:
-            name = getattr(proc, 'name', None)
+        for name, proc in self.pipeline:
             if name in disable:
                 continue
             doc = proc(doc)
@@ -266,28 +330,26 @@ class Language(object):
             >>>        for docs, golds in epoch:
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
-        tok2vec = self.pipeline[0]
-        feats = tok2vec.doc2feats(docs)
+        if len(docs) != len(golds):
+            raise IndexError("Update expects same number of docs and golds "
+                "Got: %d, %d" % (len(docs), len(golds)))
+        if len(docs) == 0:
+            return
+        if sgd is None:
+            if self._optimizer is None:
+                self._optimizer = Adam(Model.ops, 0.001)
+            sgd = self._optimizer
         grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
-        pipes = list(self.pipeline[1:])
+        pipes = list(self.pipeline)
         random.shuffle(pipes)
-        for proc in pipes:
+        for name, proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
-            tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
-            d_tokvecses = proc.update((docs, tokvecses), golds,
-                                      drop=drop, sgd=get_grads, losses=losses)
-            if d_tokvecses is not None:
-                bp_tokvecses(d_tokvecses, sgd=sgd)
+            proc.update(docs, golds, drop=drop, sgd=get_grads, losses=losses)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
-        # Clear the tensor variable, to free GPU memory.
-        # If we don't do this, the memory leak gets pretty
-        # bad, because we may be holding part of a batch.
-        for doc in docs:
-            doc.tensor = None
 
     def preprocess_gold(self, docs_golds):
         """Can be called before training to pre-process gold data. By default,
@@ -296,43 +358,56 @@ class Language(object):
         docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
         YIELDS (tuple): Tuples of preprocessed `Doc` and `GoldParse` objects.
         """
-        for proc in self.pipeline:
+        for name, proc in self.pipeline:
             if hasattr(proc, 'preprocess_gold'):
                 docs_golds = proc.preprocess_gold(docs_golds)
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, get_gold_tuples, **cfg):
+    def resume_training(self, **cfg):
+        if cfg.get('device', -1) >= 0:
+            device = util.use_gpu(cfg['device'])
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(
+                    self.vocab.vectors.data)
+        else:
+            device = None
+        learn_rate = util.env_opt('learn_rate', 0.001)
+        beta1 = util.env_opt('optimizer_B1', 0.9)
+        beta2 = util.env_opt('optimizer_B2', 0.999)
+        eps = util.env_opt('optimizer_eps', 1e-08)
+        L2 = util.env_opt('L2_penalty', 1e-6)
+        max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+        self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
+                              beta2=beta2, eps=eps)
+        self._optimizer.max_grad_norm = max_grad_norm
+        self._optimizer.device = device
+        return self._optimizer
+
+    def begin_training(self, get_gold_tuples=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        gold_tuples (iterable): Gold-standard training data.
+        get_gold_tuples (function): Function returning gold data
         **cfg: Config parameters.
-        YIELDS (tuple): A trainer and an optimizer.
-
-        EXAMPLE:
-            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
-            >>>    for epoch in trainer.epochs(gold):
-            >>>        for docs, golds in epoch:
-            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        RETURNS: An optimizer
         """
-        if self.parser:
-            self.pipeline.append(NeuralLabeller(self.vocab))
         # Populate vocab
-        for _, annots_brackets in get_gold_tuples():
-            for annots, _ in annots_brackets:
-                for word in annots[1]:
-                    _ = self.vocab[word]
+        if get_gold_tuples is not None:
+            for _, annots_brackets in get_gold_tuples():
+                for annots, _ in annots_brackets:
+                    for word in annots[1]:
+                        _ = self.vocab[word]
         contexts = []
         if cfg.get('device', -1) >= 0:
-            import cupy.cuda.device
-            device = cupy.cuda.device.Device(cfg['device'])
-            device.use()
-            Model.ops = CupyOps()
-            Model.Ops = CupyOps
+            device = util.use_gpu(cfg['device'])
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(
+                    self.vocab.vectors.data)
         else:
             device = None
-        for proc in self.pipeline:
+        link_vectors_to_models(self.vocab)
+        for name, proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
                 context = proc.begin_training(get_gold_tuples(),
                                               pipeline=self.pipeline)
@@ -343,18 +418,28 @@ class Language(object):
         eps = util.env_opt('optimizer_eps', 1e-08)
         L2 = util.env_opt('L2_penalty', 1e-6)
         max_grad_norm = util.env_opt('grad_norm_clip', 1.)
-        optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
-                         beta2=beta2, eps=eps)
-        optimizer.max_grad_norm = max_grad_norm
-        optimizer.device = device
-        return optimizer
+        self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
+                              beta2=beta2, eps=eps)
+        self._optimizer.max_grad_norm = max_grad_norm
+        self._optimizer.device = device
+        return self._optimizer
 
-    def evaluate(self, docs_golds):
-        docs, golds = zip(*docs_golds)
+    def evaluate(self, docs_golds, verbose=False):
         scorer = Scorer()
-        for doc, gold in zip(self.pipe(docs, batch_size=32), golds):
-            scorer.score(doc, gold)
-            doc.tensor = None
+        docs, golds = zip(*docs_golds)
+        docs = list(docs)
+        golds = list(golds)
+        for name, pipe in self.pipeline:
+            if not hasattr(pipe, 'pipe'):
+                for doc in docs:
+                    pipe(doc)
+            else:
+                docs = list(pipe.pipe(docs))
+        assert len(docs) == len(golds)
+        for doc, gold in zip(docs, golds):
+            if verbose:
+                print(doc)
+            scorer.score(doc, gold, verbose=verbose)
         return scorer
 
     @contextmanager
@@ -370,7 +455,7 @@ class Language(object):
             >>> with nlp.use_params(optimizer.averages):
             >>>     nlp.to_disk('/tmp/checkpoint')
         """
-        contexts = [pipe.use_params(params) for pipe
+        contexts = [pipe.use_params(params) for name, pipe
                     in self.pipeline if hasattr(pipe, 'use_params')]
         # TODO: Having trouble with contextlib
         # Workaround: these aren't actually context managers atm.
@@ -386,11 +471,16 @@ class Language(object):
             except StopIteration:
                 pass
 
-    def pipe(self, texts, n_threads=2, batch_size=1000, disable=[]):
+    def pipe(self, texts, as_tuples=False, n_threads=2, batch_size=1000,
+            disable=[]):
         """Process texts as a stream, and yield `Doc` objects in order. Supports
         GIL-free multi-threading.
 
         texts (iterator): A sequence of texts to process.
+        as_tuples (bool):
+            If set to True, inputs should be a sequence of
+            (text, context) tuples. Output will then be a sequence of
+            (doc, context) tuples. Defaults to False.
         n_threads (int): The number of worker threads to use. If -1, OpenMP will
             decide how many to use at run time. Default is 2.
         batch_size (int): The number of texts to buffer.
@@ -402,10 +492,17 @@ class Language(object):
             >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
             >>>         assert doc.is_parsed
         """
+        if as_tuples:
+            text_context1, text_context2 = itertools.tee(texts)
+            texts = (tc[0] for tc in text_context1)
+            contexts = (tc[1] for tc in text_context2)
+            docs = self.pipe(texts, n_threads=n_threads, batch_size=batch_size,
+                             disable=disable)
+            for doc, context in izip(docs, contexts):
+                yield (doc, context)
+            return
         docs = (self.make_doc(text) for text in texts)
-        docs = texts
-        for proc in self.pipeline:
-            name = getattr(proc, 'name', None)
+        for name, proc in self.pipeline:
             if name in disable:
                 continue
             if hasattr(proc, 'pipe'):
@@ -430,18 +527,18 @@ class Language(object):
         """
         path = util.ensure_path(path)
         serializers = OrderedDict((
-            ('vocab', lambda p: self.vocab.to_disk(p)),
             ('tokenizer', lambda p: self.tokenizer.to_disk(p, vocab=False)),
             ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
         ))
-        for proc in self.pipeline:
+        for name, proc in self.pipeline:
             if not hasattr(proc, 'name'):
                 continue
-            if proc.name in disable:
+            if name in disable:
                 continue
             if not hasattr(proc, 'to_disk'):
                 continue
-            serializers[proc.name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+            serializers[name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+        serializers['vocab'] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, {p: False for p in disable})
 
     def from_disk(self, path, disable=tuple()):
@@ -464,14 +561,12 @@ class Language(object):
             ('tokenizer', lambda p: self.tokenizer.from_disk(p, vocab=False)),
             ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
         ))
-        for proc in self.pipeline:
-            if not hasattr(proc, 'name'):
-                continue
-            if proc.name in disable:
+        for name, proc in self.pipeline:
+            if name in disable:
                 continue
             if not hasattr(proc, 'to_disk'):
                 continue
-            deserializers[proc.name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
+            deserializers[name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
         exclude = {p: False for p in disable}
         if not (path / 'vocab').exists():
             exclude['vocab'] = True
@@ -490,8 +585,8 @@ class Language(object):
             ('tokenizer', lambda: self.tokenizer.to_bytes(vocab=False)),
             ('meta', lambda: ujson.dumps(self.meta))
         ))
-        for i, proc in enumerate(self.pipeline):
-            if getattr(proc, 'name', None) in disable:
+        for i, (name, proc) in enumerate(self.pipeline):
+            if name in disable:
                 continue
             if not hasattr(proc, 'to_bytes'):
                 continue
@@ -510,8 +605,8 @@ class Language(object):
             ('tokenizer', lambda b: self.tokenizer.from_bytes(b, vocab=False)),
             ('meta', lambda b: self.meta.update(ujson.loads(b)))
         ))
-        for i, proc in enumerate(self.pipeline):
-            if getattr(proc, 'name', None) in disable:
+        for i, (name, proc) in enumerate(self.pipeline):
+            if name in disable:
                 continue
             if not hasattr(proc, 'from_bytes'):
                 continue

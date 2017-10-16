@@ -1,0 +1,58 @@
+//- 💫 DOCS > USAGE > FACTS & FIGURES > FEATURE COMPARISON
+
+p
+    |  Here's a quick comparison of the functionalities offered by spaCy,
+    |  #[+a("https://github.com/tensorflow/models/tree/master/research/syntaxnet") SyntaxNet],
+    |  #[+a("http://www.nltk.org/py-modindex.html") NLTK] and
+    |  #[+a("http://stanfordnlp.github.io/CoreNLP/") CoreNLP].
+
++table(["", "spaCy", "SyntaxNet", "NLTK", "CoreNLP"])
+    +row
+        +cell Programming language
+        each lang in ["Python", "C++", "Python", "Java"]
+            +cell.u-text-small.u-text-center=lang
+
+    +row
+        +cell Neural network models
+            each icon in ["pro", "pro", "con", "pro"]
+                +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Integrated word vectors
+        each icon in ["pro", "con", "con", "con"]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Multi-language support
+        each icon in ["pro", "pro", "pro", "pro"]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Tokenization
+        each icon in ["pro", "pro", "pro", "pro"]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Part-of-speech tagging
+        each icon in ["pro", "pro", "pro", "pro"]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Sentence segmentation
+        each icon in ["pro", "pro", "pro", "pro"]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Dependency parsing
+        each icon in ["pro", "pro", "con", "pro"]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Entity recognition
+        each icon in ["pro", "con", "pro", "pro"]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Coreference resolution
+        each icon in ["con", "con", "con", "pro"]
+            +cell.u-text-center #[+procon(icon)]
