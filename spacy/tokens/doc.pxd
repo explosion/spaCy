@@ -54,6 +54,8 @@ cdef class Doc:
 
     cdef public object noun_chunks_iterator
 
+    cdef object __weakref__
+
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1
 
     cpdef np.ndarray to_array(self, object features)
