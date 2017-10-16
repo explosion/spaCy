@@ -27,3 +27,4 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "Вс.", LEMMA: "Воскресенье"}
     ],
 }
+

@@ -25,14 +25,28 @@ class RussianTokenizer(object):
         self._spacy_tokenizer = spacy_tokenizer
 
     def __call__(self, text):
-        words = [self._normalize(RussianTokenizer._get_word(token))
-                 for token in self._spacy_tokenizer(text)]
+        get_norm = RussianTokenizer._get_norm
+        has_space = RussianTokenizer._has_space
 
-        return Doc(self.vocab, words, [False] * len(words))
+        words_with_space_flags = [(get_norm(token), has_space(token, text))
+                                  for token in self._spacy_tokenizer(text)]
+
+        words, spaces = map(lambda s: list(s), zip(*words_with_space_flags))
+
+        return Doc(self.vocab, words, spaces)
 
     @staticmethod
     def _get_word(token):
         return token.lemma_ if len(token.lemma_) > 0 else token.text
+
+    @staticmethod
+    def _has_space(token, text):
+        pos_after_token = token.idx + len(token.text)
+        return pos_after_token < len(text) and text[pos_after_token] == ' '
+
+    @classmethod
+    def _get_norm(cls, token):
+        return cls._normalize(cls._get_word(token))
 
     @classmethod
     def _normalize(cls, word):
