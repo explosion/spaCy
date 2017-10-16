@@ -86,8 +86,6 @@ cdef class StringStore:
         """
         self.mem = Pool()
         self._map = PreshMap()
-        self._oov = PreshMap()
-        self.is_frozen = freeze
         if strings is not None:
             for string in strings:
                 self.add(string)
@@ -243,21 +241,12 @@ cdef class StringStore:
             self.add(word)
         return self
 
-    def set_frozen(self, bint is_frozen):
-        # TODO
-        self.is_frozen = is_frozen
-
-    def flush_oov(self):
-        self._oov = PreshMap()
-
-    def _reset_and_load(self, strings, freeze=False):
+    def _reset_and_load(self, strings):
         self.mem = Pool()
         self._map = PreshMap()
-        self._oov = PreshMap()
         self.keys.clear()
         for string in strings:
             self.add(string)
-        self.is_frozen = freeze
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
@@ -272,18 +261,6 @@ cdef class StringStore:
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
-        value = <Utf8Str*>self._oov.get(key)
-        if value is not NULL:
-            return value
-        if self.is_frozen:
-            # OOV store uses 32 bit hashes. Pretty ugly :(
-            key32 = hash32_utf8(utf8_string, length)
-            # Important: Make the OOV store own the memory. That way it's trivial
-            # to flush them all.
-            value = _allocate(self._oov.mem, <unsigned char*>utf8_string, length)
-            self._oov.set(key32, value)
-            return NULL
-
         value = _allocate(self.mem, <unsigned char*>utf8_string, length)
         self._map.set(key, value)
         self.keys.push_back(key)

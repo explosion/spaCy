@@ -140,7 +140,6 @@ cdef class Doc:
         self.user_span_hooks = {}
         self.tensor = numpy.zeros((0,), dtype='float32')
         self.user_data = {}
-        self._py_tokens = []
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
         cdef unicode orth
@@ -209,10 +208,7 @@ cdef class Doc:
         if i < 0:
             i = self.length + i
         bounds_check(i, self.length, PADDING)
-        if self._py_tokens[i] is not None:
-            return self._py_tokens[i]
-        else:
-            return Token.cinit(self.vocab, &self.c[i], i, self)
+        return Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __iter__(self):
         """Iterate over `Token`  objects, from which the annotations can be
@@ -226,10 +222,7 @@ cdef class Doc:
         """
         cdef int i
         for i in range(self.length):
-            if self._py_tokens[i] is not None:
-                yield self._py_tokens[i]
-            else:
-                yield Token.cinit(self.vocab, &self.c[i], i, self)
+            yield Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __len__(self):
         """The number of tokens in the document.
@@ -535,7 +528,6 @@ cdef class Doc:
         self.length += 1
         # Set morphological attributes, e.g. by lemma, if possible
         self.vocab.morphology.assign_untagged(t)
-        self._py_tokens.append(None)
         return t.idx + t.lex.length + t.spacy
 
     @cython.boundscheck(False)
@@ -841,7 +833,6 @@ cdef class Doc:
         # Set the left/right children, left/right edges
         set_children_from_heads(self.c, self.length)
         # Clear the cached Python objects
-        self._py_tokens = [None] * self.length
         # Return the merged Python object
         return self[start]
 
