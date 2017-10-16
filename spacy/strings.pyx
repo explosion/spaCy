@@ -261,10 +261,6 @@ cdef class StringStore:
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
-        value = <Utf8Str*>self._oov.get(key)
-        if value is not NULL:
-            return value
-
         value = _allocate(self.mem, <unsigned char*>utf8_string, length)
         self._map.set(key, value)
         self.keys.push_back(key)
