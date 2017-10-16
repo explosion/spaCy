@@ -116,6 +116,109 @@ p Get the number of tokens in the span.
         +cell int
         +cell The number of tokens in the span.
 
++h(2, "set_extension") Span.set_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Define a custom attribute on the #[code Span] which becomes available via
+    |  #[code Span._]. For details, see the documentation on
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attributes].
+
++aside-code("Example").
+    from spacy.tokens import Span
+    city_getter = lambda span: span.text in ('New York', 'Paris', 'Berlin')
+    Span.set_extension('has_city', getter=city_getter)
+    doc = nlp(u'I like New York in Autumn')
+    assert doc[1:4]._.has_city
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell
+            |  Name of the attribute to set by the extension. For example,
+            |  #[code 'my_attr'] will be available as #[code span._.my_attr].
+
+    +row
+        +cell #[code default]
+        +cell -
+        +cell
+            |  Optional default value of the attribute if no getter or method
+            |  is defined.
+
+    +row
+        +cell #[code method]
+        +cell callable
+        +cell
+            |  Set a custom method on the object, for example
+            |  #[code span._.compare(other_span)].
+
+    +row
+        +cell #[code getter]
+        +cell callable
+        +cell
+            |  Getter function that takes the object and returns an attribute
+            |  value. Is called when the user accesses the #[code ._] attribute.
+
+    +row
+        +cell #[code setter]
+        +cell callable
+        +cell
+            |  Setter function that takes the #[code Span] and a value, and
+            |  modifies the object. Is called when the user writes to the
+            |  #[code Span._] attribute.
+
++h(2, "get_extension") Span.get_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Look up a previously registered extension by name. Returns a 4-tuple
+    |  #[code.u-break (default, method, getter, setter)] if the extension is
+    |  registered. Raises a #[code KeyError] otherwise.
+
++aside-code("Example").
+    from spacy.tokens import Span
+    Span.set_extension('is_city', default=False)
+    extension = Span.get_extension('is_city')
+    assert extension == (False, None, None, None)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell
+            |  A #[code.u-break (default, method, getter, setter)] tuple of the
+            |  extension.
+
++h(2, "has_extension") Span.has_extension
+    +tag classmethod
+    +tag-new(2)
+
+p Check whether an extension has been registered on the #[code Span] class.
+
++aside-code("Example").
+    from spacy.tokens import Span
+    Span.set_extension('is_city', default=False)
+    assert Span.has_extension('is_city')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension to check.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the extension has been registered.
+
 +h(2, "similarity") Span.similarity
     +tag method
     +tag-model("vectors")

@@ -149,6 +149,10 @@ mixin code(label, language, prompt, height, icon, wrap)
 
 //- Code blocks to display old/new versions
 
+mixin code-wrapper()
+    span.u-inline-block.u-padding-top.u-width-full
+        block
+
 mixin code-old()
     +code(false, false, false, false, "reject").o-block-small
         block

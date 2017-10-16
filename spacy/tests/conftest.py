@@ -58,8 +58,9 @@ def en_vocab():
 
 
 @pytest.fixture
-def en_parser():
-    return util.get_lang_class('en').Defaults.create_parser()
+def en_parser(en_vocab):
+    nlp = util.get_lang_class('en')(en_vocab)
+    return nlp.create_pipe('parser')
 
 
 @pytest.fixture

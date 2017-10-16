@@ -10,20 +10,23 @@ class Lemmatizer(object):
     def load(cls, path, index=None, exc=None, rules=None):
         return cls(index or {}, exc or {}, rules or {})
 
-    def __init__(self, index, exceptions, rules):
-        self.index = index
-        self.exc = exceptions
-        self.rules = rules
+    def __init__(self, index=None, exceptions=None, rules=None, lookup=None):
+        self.index = index if index is not None else {}
+        self.exc = exceptions if exceptions is not None else {}
+        self.rules = rules if rules is not None else {}
+        self.lookup_table = lookup if lookup is not None else {}
 
     def __call__(self, string, univ_pos, morphology=None):
-        if univ_pos == NOUN:
+        if univ_pos in (NOUN, 'NOUN', 'noun'):
             univ_pos = 'noun'
-        elif univ_pos == VERB:
+        elif univ_pos in (VERB, 'VERB', 'verb'):
             univ_pos = 'verb'
-        elif univ_pos == ADJ:
+        elif univ_pos in (ADJ, 'ADJ', 'adj'):
             univ_pos = 'adj'
-        elif univ_pos == PUNCT:
+        elif univ_pos in (PUNCT, 'PUNCT', 'punct'):
             univ_pos = 'punct'
+        else:
+            return set([string.lower()])
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
             return set([string.lower()])
@@ -76,6 +79,11 @@ class Lemmatizer(object):
 
     def punct(self, string, morphology=None):
         return self(string, 'punct', morphology)
+
+    def lookup(self, string):
+        if string in self.lookup_table:
+            return self.lookup_table[string]
+        return string
 
 
 def lemmatize(string, index, exceptions, rules):

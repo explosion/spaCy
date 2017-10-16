@@ -1,0 +1,110 @@
+//- 💫 DOCS > USAGE > PROCESSING PIPELINES > DEVELOPING EXTENSIONS
+
+p
+    |  We're very excited about all the new possibilities for community
+    |  extensions and plugins in spaCy v2.0, and we can't wait to see what
+    |  you build with it! To get you started, here are a few tips, tricks and
+    |  best practices:
+
++list
+    +item
+        |  Make sure to choose a #[strong descriptive and specific name] for
+        |  your pipeline component class, and set it as its #[code name]
+        |  attribute. Avoid names that are too common or likely to clash with
+        |  built-in or a user's other custom components. While it's fine to call
+        |  your package "spacy_my_extension", avoid component names including
+        |  "spacy", since this can easily lead to confusion.
+
+        +code-wrapper
+            +code-new name = 'myapp_lemmatizer'
+            +code-old name = 'lemmatizer'
+
+    +item
+        |  When writing to #[code Doc], #[code Token] or #[code Span] objects,
+        |  #[strong use getter functions] wherever possible, and avoid setting
+        |  values explicitly. Tokens and spans don't own any data themselves,
+        |  so you should provide a function that allows them to compute the
+        |  values instead of writing static properties to individual objects.
+
+        +code-wrapper
+            +code-new.
+                is_fruit = lambda token: token.text in ('apple', 'orange')
+                Token.set_extension('is_fruit', getter=is_fruit)
+            +code-old.
+                token._.set_extension('is_fruit', default=False)
+                if token.text in ('apple', 'orange'):
+                    token._.set('is_fruit', True)
+
+    +item
+        |  Always add your custom attributes to the #[strong global] #[code Doc]
+        |  #[code Token] or #[code Span] objects, not a particular instance of
+        |  them. Add the attributes #[strong as early as possible], e.g. in
+        |  your extension's #[code __init__] method or in the global scope of
+        |  your module. This means that in the case of namespace collisions,
+        |  the user will see an error immediately, not just when they run their
+        |  pipeline.
+
+        +code-wrapper
+            +code-new.
+                from spacy.tokens import Doc
+                def __init__(attr='my_attr'):
+                    Doc.set_extension(attr, getter=self.get_doc_attr)
+            +code-old.
+                def __call__(doc):
+                    doc.set_extension('my_attr', getter=self.get_doc_attr)
+
+    +item
+        |  If your extension is setting properties on the #[code Doc],
+        |  #[code Token] or #[code Span], include an option to
+        |  #[strong let the user to change those attribute names]. This makes
+        |  it easier to avoid namespace collisions and accommodate users with
+        |  different naming preferences. We recommend adding an #[code attrs]
+        |  argument to the #[code __init__] method of your class so you can
+        |  write the names to class attributes and reuse them across your
+        |  component.
+
+        +code-wrapper
+            +code-new Doc.set_extension(self.doc_attr, default='some value')
+            +code-old Doc.set_extension('my_doc_attr', default='some value')
+
+    +item
+        |  Ideally, extensions should be #[strong standalone packages] with
+        |  spaCy and optionally, other packages specified as a dependency. They
+        |  can freely assign to their own #[code ._] namespace, but should stick
+        |  to that. If your extension's only job is to provide a better
+        |  #[code .similarity] implementation, and your docs state this
+        |  explicitly, there's no problem with writing to the
+        |  #[+a("#custom-components-user-hooks") #[code user_hooks]], and
+        |  overwriting spaCy's built-in method. However, a third-party
+        |  extension should #[strong never silently overwrite built-ins], or
+        |  attributes set by other extensions.
+
+    +item
+        |  If you're looking to publish a model that depends on a custom
+        |  pipeline component, you can either #[strong require it] in the model
+        |  package's dependencies, or – if the component is specific and
+        |  lightweight – choose to #[strong ship it with your model package]
+        |  and add it to the #[code Language] instance returned by the
+        |  model's #[code load()] method. For examples of this, check out the
+        |  implementations of spaCy's
+        |  #[+api("util#load_model_from_init_py") #[code load_model_from_init_py()]]
+        |  and  #[+api("util#load_model_from_path") #[code load_model_from_path()]]
+        |  utility functions.
+
+        +code-wrapper
+            +code-new.
+                nlp.add_pipe(my_custom_component)
+                return nlp.from_disk(model_path)
+
+    +item
+        |  Once you're ready to share your extension with others, make sure to
+        |  #[strong add docs and installation instructions] (you can
+        |  always link to this page for more info). Make it easy for others to
+        |  install and use your extension, for example by uploading it to
+        |  #[+a("https://pypi.python.org") PyPi]. If you're sharing your code on
+        |  GitHub, don't forget to tag it
+        |  with #[+a("https://github.com/search?q=topic%3Aspacy") #[code spacy]]
+        |  and #[+a("https://github.com/search?q=topic%3Aspacy-pipeline") #[code spacy-pipeline]]
+        |  to help people find it. If you post it on Twitter, feel free to tag
+        |  #[+a("https://twitter.com/" + SOCIAL.twitter) @#{SOCIAL.twitter}]
+        |  so we can check it out.

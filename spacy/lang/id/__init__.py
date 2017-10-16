@@ -11,7 +11,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...lemmatizerlookup import Lemmatizer
 from ...attrs import LANG
 from ...util import update_exc
 
@@ -19,19 +18,14 @@ from ...util import update_exc
 class IndonesianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: 'id'
-
     lex_attr_getters.update(LEX_ATTRS)
-
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = set(STOP_WORDS)
-    prefixes = tuple(TOKENIZER_PREFIXES)
-    suffixes = tuple(TOKENIZER_SUFFIXES)
-    infixes = tuple(TOKENIZER_INFIXES)
-    syntax_iterators = dict(SYNTAX_ITERATORS)
-
-    @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(LOOKUP)
+    stop_words = STOP_WORDS
+    prefixes = TOKENIZER_PREFIXES
+    suffixes = TOKENIZER_SUFFIXES
+    infixes = TOKENIZER_INFIXES
+    syntax_iterators = SYNTAX_ITERATORS
+    lemma_lookup = LOOKUP
 
 
 class Indonesian(Language):

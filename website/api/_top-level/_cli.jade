@@ -113,6 +113,22 @@ p
         +cell flag
         +cell Show help message and available arguments.
 
++h(3, "validate") Validate
+    +tag-new(2)
+
+p
+    |  Find all models installed in the current environment (both packages and
+    |  shortcut links) and check whether they are compatible with the currently
+    |  installed version of spaCy. Should be run after upgrading spaCy via
+    |  #[code pip install -U spacy] to ensure that all installed models are
+    |  can be used with the new version. The command is also useful to detect
+    |  out-of-sync model links resulting from links created in different virtual
+    |  environments. Prints a list of models, the installed versions, the latest
+    |  compatible version (if out of date) and the commands for updating.
+
++code(false, "bash", "$").
+    spacy validate
+
 +h(3, "convert") Convert
 
 p

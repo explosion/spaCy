@@ -17,10 +17,24 @@ from ..attrs cimport IS_PUNCT, IS_SPACE
 from ..lexeme cimport Lexeme
 from ..compat import is_config
 from .. import about
+from .underscore import Underscore
 
 
 cdef class Span:
     """A slice from a Doc object."""
+    @classmethod
+    def set_extension(cls, name, default=None, method=None,
+                      getter=None, setter=None):
+        Underscore.span_extensions[name] = (default, method, getter, setter)
+
+    @classmethod
+    def get_extension(cls, name):
+        return Underscore.span_extensions.get(name)
+
+    @classmethod
+    def has_extension(cls, name):
+        return name in Underscore.span_extensions
+
     def __cinit__(self, Doc doc, int start, int end, attr_t label=0, vector=None,
                   vector_norm=None):
         """Create a `Span` object from the slice `doc[start : end]`.
@@ -111,10 +125,14 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self.doc[i]
 
+    @property
+    def _(self):
+        return Underscore(Underscore.span_extensions, self,
+                          start=self.start_char, end=self.end_char)
     def as_doc(self):
         '''Create a Doc object view of the Span's data.
 
-        This is mostly useful for C-typed interfaces. 
+        This is mostly useful for C-typed interfaces.
         '''
         cdef Doc doc = Doc(self.doc.vocab)
         doc.length = self.end-self.start

@@ -30,7 +30,7 @@ from ..util import normalize_slice
 from ..compat import is_config
 from .. import about
 from .. import util
-
+from .underscore import Underscore
 
 DEF PADDING = 5
 
@@ -64,6 +64,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
+
 def _get_chunker(lang):
     try:
         cls = util.get_lang_class(lang)
@@ -72,6 +73,7 @@ def _get_chunker(lang):
     except KeyError:
         return None
     return cls.Defaults.syntax_iterators.get(u'noun_chunks')
+
 
 cdef class Doc:
     """A sequence of Token objects. Access sentences and named entities, export
@@ -87,6 +89,21 @@ cdef class Doc:
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'], spaces=[True, False, False])
     """
+    @classmethod
+    def set_extension(cls, name, default=None, method=None,
+                      getter=None, setter=None):
+        nr_defined = sum(t is not None for t in (default, getter, setter, method))
+        assert nr_defined == 1
+        Underscore.doc_extensions[name] = (default, method, getter, setter) 
+
+    @classmethod
+    def get_extension(cls, name):
+        return Underscore.doc_extensions.get(name)
+
+    @classmethod
+    def has_extension(cls, name):
+        return name in Underscore.doc_extensions
+
     def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
         """Create a Doc object.
 
@@ -158,6 +175,10 @@ cdef class Doc:
         if self.length == 0:
             self.is_tagged = True
             self.is_parsed = True
+
+    @property
+    def _(self):
+        return Underscore(Underscore.doc_extensions, self)
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
@@ -512,6 +533,8 @@ cdef class Doc:
         assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
+        # Set morphological attributes, e.g. by lemma, if possible
+        self.vocab.morphology.assign_untagged(t)
         self._py_tokens.append(None)
         return t.idx + t.lex.length + t.spacy
 
