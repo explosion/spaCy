@@ -12,7 +12,7 @@ from thinc.neural._classes.model import Model
 from .typedefs cimport attr_t
 from .strings cimport StringStore
 from . import util
-from .compat import basestring_
+from .compat import basestring_, path2str
 
 
 cdef class Vectors:
@@ -162,7 +162,7 @@ cdef class Vectors:
     def from_disk(self, path, **exclude):
         def load_keys(path):
             if path.exists():
-                self.keys = numpy.load(path)
+                self.keys = numpy.load(path2str(path))
                 for i, key in enumerate(self.keys):
                     self.keys[i] = key
                     self.key2row[key] = i
