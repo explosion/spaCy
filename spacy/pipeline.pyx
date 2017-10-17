@@ -69,6 +69,7 @@ class SentenceSegmenter(object):
 
     def __call__(self, doc):
         doc.user_hooks['sents'] = self.strategy
+        return doc
 
     @staticmethod
     def split_on_punct(doc):
