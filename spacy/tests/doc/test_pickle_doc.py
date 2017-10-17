@@ -41,3 +41,14 @@ def test_user_data_unpickles():
     b = pickle.dumps(doc)
     doc2 = pickle.loads(b)
     assert doc2.user_data[(0, 1)] == False
+
+
+def test_hooks_unpickle():
+    def inner_func(d1, d2):
+        return 'hello!'
+    nlp = Language()
+    doc = nlp(u'Hello')
+    doc.user_hooks['similarity'] = inner_func
+    b = pickle.dumps(doc)
+    doc2 = pickle.loads(b)
+    assert doc2.similarity(None) == 'hello!'
