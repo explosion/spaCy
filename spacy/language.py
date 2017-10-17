@@ -585,7 +585,7 @@ class Language(object):
         deserializers = OrderedDict((
             ('vocab', lambda p: self.vocab.from_disk(p)),
             ('tokenizer', lambda p: self.tokenizer.from_disk(p, vocab=False)),
-            ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
+            ('meta.json', lambda p: self.meta.update(ujson.load(p.open('r'))))
         ))
         for name, proc in self.pipeline:
             if name in disable:
