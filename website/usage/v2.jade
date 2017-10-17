@@ -206,7 +206,7 @@ p
         |  e.g. #[code from spacy.lang.en import English].
 
     +infobox
-        |  #[+label-inline API:] #[+api("spacy#load") #[code spacy.load]], #[+api("binder") #[code Binder]]
+        |  #[+label-inline API:] #[+api("spacy#load") #[code spacy.load]]
         |  #[+label-inline Usage:] #[+a("/usage/saving-loading") Saving and loading]
 
     +h(3, "features-displacy") displaCy visualizer with Jupyter support
@@ -387,7 +387,11 @@ p
 
         +row
             +cell #[code Doc.read_bytes]
-            +cell #[+api("binder") #[code Binder]]
+            +cell
+                |  #[+api("doc#to_bytes") #[code Doc.to_bytes]]
+                |  #[+api("doc#from_bytes") #[code Doc.from_bytes]]
+                |  #[+api("doc#to_disk") #[code Doc.to_disk]]
+                |  #[+api("doc#from_disk") #[code Doc.from_disk]]
 
         +row
             +cell #[code Token.is_ancestor_of]

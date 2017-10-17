@@ -31,8 +31,7 @@
             "StringStore": "stringstore",
             "Vectors": "vectors",
             "GoldParse": "goldparse",
-            "GoldCorpus": "goldcorpus",
-            "Binder": "binder"
+            "GoldCorpus": "goldcorpus"
         }
     },
 
@@ -191,13 +190,6 @@
         "tag": "class",
         "tag_new": 2,
         "source": "spacy/gold.pyx"
-    },
-
-    "binder": {
-        "title": "Binder",
-        "tag": "class",
-        "tag_new": 2,
-        "source": "spacy/tokens/binder.pyx"
     },
 
     "vectors": {
