@@ -27,7 +27,7 @@ from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYP
 from ..attrs cimport SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..util import normalize_slice
-from ..compat import is_config
+from ..compat import is_config, copy_reg, pickle
 from .. import about
 from .. import util
 from .underscore import Underscore
@@ -104,7 +104,8 @@ cdef class Doc:
     def has_extension(cls, name):
         return name in Underscore.doc_extensions
 
-    def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
+    def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
+                 orths_and_spaces=None):
         """Create a Doc object.
 
         vocab (Vocab): A vocabulary object, which must match any models you want
@@ -114,6 +115,8 @@ cdef class Doc:
         spaces (list or None): A list of boolean values, of the same length as
             words. True means that the word is followed by a space, False means
             it is not. If `None`, defaults to `[True]*len(words)`
+        user_data (dict or None): Optional extra data to attach to the Doc.
+ 
         RETURNS (Doc): The newly constructed object.
         """
         self.vocab = vocab
@@ -139,7 +142,7 @@ cdef class Doc:
         self.user_token_hooks = {}
         self.user_span_hooks = {}
         self.tensor = numpy.zeros((0,), dtype='float32')
-        self.user_data = {}
+        self.user_data = {} if user_data is None else user_data
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
         cdef unicode orth
@@ -913,4 +916,17 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
+
+
+def pickle_doc(doc):
+    bytes_data = doc.to_bytes(exclude='vocab')
+    return (unpickle_doc, (doc.vocab, doc.user_data, bytes_data))
+
+
+def unpickle_doc(vocab, user_data, bytes_data):
+    doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data)
+    return doc
+
+
+copy_reg.pickle(Doc, pickle_doc, unpickle_doc)
 
