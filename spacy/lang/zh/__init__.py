@@ -10,7 +10,7 @@ class Chinese(Language):
 
     def make_doc(self, text):
         try:
-            from jieba
+            import jieba
         except ImportError:
             raise ImportError("The Chinese tokenizer requires the Jieba library: "
                               "https://github.com/fxsjy/jieba")
