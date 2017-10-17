@@ -15,6 +15,7 @@ import io
 import dill
 from collections import OrderedDict
 from thinc.neural._classes.model import Model
+import functools
 
 import msgpack
 import msgpack_numpy
@@ -336,12 +337,16 @@ def add_lookups(default_func, *lookups):
     *lookups (dict): Lookup dictionary mapping string to attribute value.
     RETURNS (callable): Lexical attribute getter.
     """
-    def get_attr(string):
-        for lookup in lookups:
-            if string in lookup:
-                return lookup[string]
-        return default_func(string)
-    return get_attr
+    # This is implemented as functools.partial instead of a closure, to allow
+    # pickle to work.
+    return functools.partial(_get_attr_unless_lookup, default_func, lookups)
+
+
+def _get_attr_unless_lookup(default_func, lookups, string):
+    for lookup in lookups:
+        if string in lookup:
+            return lookup[string]
+    return default_func(string)
 
 
 def update_exc(base_exceptions, *addition_dicts):
