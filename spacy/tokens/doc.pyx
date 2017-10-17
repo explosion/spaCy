@@ -919,7 +919,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
 
 
 def pickle_doc(doc):
-    bytes_data = doc.to_bytes(exclude='vocab')
+    bytes_data = doc.to_bytes(vocab=False)
     return (unpickle_doc, (doc.vocab, doc.user_data, bytes_data))
 
 
