@@ -5,6 +5,7 @@ import bz2
 import ujson
 import re
 import numpy
+import dill
 
 from libc.string cimport memset, memcpy
 from libc.stdint cimport int32_t
@@ -419,7 +420,7 @@ def pickle_vocab(vocab):
     morph = vocab.morphology
     length = vocab.length
     data_dir = vocab.data_dir
-    lex_attr_getters = vocab.lex_attr_getters
+    lex_attr_getters = dill.dumps(vocab.lex_attr_getters)
 
     lexemes_data = vocab.lexemes_to_bytes()
 
@@ -435,7 +436,7 @@ def unpickle_vocab(sstore, morphology, data_dir,
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.data_dir = data_dir
-    vocab.lex_attr_getters = lex_attr_getters
+    vocab.lex_attr_getters = dill.loads(lex_attr_getters)
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
     link_vectors_to_models(vocab)
