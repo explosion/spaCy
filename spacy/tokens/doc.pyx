@@ -939,12 +939,19 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
 
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(vocab=False, user_data=False)
-    return (unpickle_doc, (doc.vocab, doc.user_data, bytes_data))
+    hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
+                      doc.user_token_hooks)
+    return (unpickle_doc, (doc.vocab, dill.dumps(hooks_and_data), bytes_data))
 
 
-def unpickle_doc(vocab, user_data, bytes_data):
+def unpickle_doc(vocab, hooks_and_data, bytes_data):
+    user_data, doc_hooks, span_hooks, token_hooks = dill.loads(hooks_and_data)
+ 
     doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data,
                                                      exclude='user_data')
+    doc.user_hooks.update(doc_hooks)
+    doc.user_span_hooks.update(span_hooks)
+    doc.user_token_hooks.update(token_hooks)
     return doc
 
 
