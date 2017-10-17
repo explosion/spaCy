@@ -327,6 +327,30 @@ p
         +cell bool
         +cell Insert component last / not last in the pipeline.
 
++h(2, "has_pipe") Language.has_pipe
+    +tag method
+    +tag-new(2)
+
+p
+    |  Check whether a component is present in the pipeline. Equivalent to
+    |  #[code name in nlp.pipe_names].
+
++aside-code("Example").
+    nlp.add_pipe(lambda doc: doc, name='component')
+    assert 'component' in nlp.pipe_names
+    assert nlp.has_pipe('component')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the pipeline component to check.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether a component of that name exists in the pipeline.
+
 +h(2, "get_pipe") Language.get_pipe
     +tag method
     +tag-new(2)

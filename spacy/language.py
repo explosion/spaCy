@@ -255,6 +255,15 @@ class Language(object):
             unfound = before or after
             raise ValueError(msg.format(unfound, self.pipe_names))
 
+    def has_pipe(self, name):
+        """Check if a component name is present in the pipeline. Equivalent to
+        `name in nlp.pipe_names`.
+
+        name (unicode): Name of the component.
+        RETURNS (bool): Whether a component of that name exists in the pipeline.
+        """
+        return name in self.pipe_names
+
     def replace_pipe(self, name, component):
         """Replace a component in the pipeline.
 
