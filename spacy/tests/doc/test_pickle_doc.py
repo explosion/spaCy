@@ -24,3 +24,20 @@ def test_list_of_docs_pickles_efficiently():
     assert many_unpickled[0].text == '0'
     assert many_unpickled[-1].text == '99'
     assert len(many_unpickled) == 100
+
+
+def test_user_data_from_disk():
+    nlp = Language()
+    doc = nlp(u'Hello')
+    doc.user_data[(0, 1)] = False
+    b = doc.to_bytes()
+    doc2 = doc.__class__(doc.vocab).from_bytes(b)
+    assert doc2.user_data[(0, 1)] == False
+
+def test_user_data_unpickles():
+    nlp = Language()
+    doc = nlp(u'Hello')
+    doc.user_data[(0, 1)] = False
+    b = pickle.dumps(doc)
+    doc2 = pickle.loads(b)
+    assert doc2.user_data[(0, 1)] == False
