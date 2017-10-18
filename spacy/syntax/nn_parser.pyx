@@ -289,8 +289,6 @@ cdef class Parser:
                     zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
                 )
                 upper.is_noop = False
-                print(upper._layers)
-                print(upper._layers[0]._layers)
 
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
