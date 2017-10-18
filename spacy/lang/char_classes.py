@@ -33,7 +33,7 @@ _currency = r'\$ £ € ¥ ฿ US\$ C\$ A\$'
 # These expressions contain various unicode variations, including characters
 # used in Chinese (see #1333, #1340, #1351) – unless there are cross-language
 # conflicts, spaCy's base tokenizer should handle all of those by default
-_punct = r'… …… , : ; \! \? ¿ ¡ \( \) \[ \] \{ \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ ·'
+_punct = r'… …… , : ; \! \? ¿ ¡ \( \) \[ \] \{ \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · ।'
 _quotes = r'\' \'\' " ” “ `` ` ‘ ´ ‘‘ ’’ ‚ , „ » « 「 」 『 』 （ ） 〔 〕 【 】 《 》 〈 〉'
 _hyphens = '- – — -- --- —— ~'
 
