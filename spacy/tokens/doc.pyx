@@ -16,6 +16,7 @@ from .token cimport Token
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
+from ..attrs import IDS
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
@@ -474,10 +475,13 @@ cdef class Doc:
 
     @cython.boundscheck(False)
     cpdef np.ndarray to_array(self, object py_attr_ids):
-        """
-        Given a list of M attribute IDs, export the tokens to a numpy
-        `ndarray` of shape (N, M), where `N` is the length
-        of the document. The values will be 32-bit integers.
+        """Export given token attributes to a numpy `ndarray`.
+
+	If `attr_ids` is a sequence of M attributes, the output array will
+	be of shape `(N, M)`, where N is the length of the `Doc`
+	(in tokens). If `attr_ids` is a single attribute, the output shape will
+	be (N,). You can specify attributes by integer ID (e.g. spacy.attrs.LEMMA)
+	or string name (e.g. 'LEMMA' or 'lemma').
 
         Example:
             from spacy import attrs
@@ -486,22 +490,29 @@ cdef class Doc:
             np_array = doc.to_array([attrs.LOWER, attrs.POS, attrs.ENT_TYPE, attrs.IS_ALPHA])
 
         Arguments:
-            attr_ids (list[int]): A list of attribute ID ints.
+            attr_ids (list[]): A list of attributes (int IDs or string names).
 
         Returns:
             feat_array (numpy.ndarray[long, ndim=2]):
               A feature matrix, with one row per word, and one column per attribute
-              indicated in the input attr_ids.
+              indicated in the input `attr_ids`.
         """
         cdef int i, j
         cdef attr_id_t feature
         cdef np.ndarray[attr_t, ndim=2] output
         cdef np.ndarray[attr_t, ndim=1] output_1D
+        # Handle scalar/list inputs of strings/ints for py_attr_ids
+        if( type(py_attr_ids) is not list and type(py_attr_ids) is not tuple ):
+            py_attr_ids = [ py_attr_ids ]
+        py_attr_ids_input = []
+        for py_attr_id in py_attr_ids:
+            if( type(py_attr_id) is int ):
+                py_attr_ids_input.append(py_attr_id)
+            else:
+                py_attr_ids_input.append(IDS[py_attr_id.upper()])
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        if( type(py_attr_ids) is not list ):
-            py_attr_ids = [ py_attr_ids ]
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.int32)
+        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids_input, dtype=numpy.int32)
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
