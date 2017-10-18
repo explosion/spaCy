@@ -395,7 +395,7 @@ cdef class Parser:
         for batch in cytoolz.partition_all(batch_size, docs):
             batch = list(batch)
             by_length = sorted(list(batch), key=lambda doc: len(doc))
-            for subbatch in cytoolz.partition_all(32, by_length):
+            for subbatch in cytoolz.partition_all(8, by_length):
                 subbatch = list(subbatch)
                 if beam_width == 1:
                     parse_states = self.parse_batch(subbatch)
@@ -412,57 +412,80 @@ cdef class Parser:
     def parse_batch(self, docs):
         cdef:
             precompute_hiddens state2vec
-            StateClass state
+            StateClass stcls
             Pool mem
             const float* feat_weights
             StateC* st
-            vector[StateC*] next_step, this_step
-            int nr_class, nr_feat, nr_piece, nr_dim, nr_state
+            vector[StateC*] states
+            int guess, nr_class, nr_feat, nr_piece, nr_dim, nr_state, nr_step
+            int j
         if isinstance(docs, Doc):
             docs = [docs]
 
         cuda_stream = get_cuda_stream()
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
                                                                             0.0)
-
         nr_state = len(docs)
         nr_class = self.moves.n_moves
         nr_dim = tokvecs.shape[1]
         nr_feat = self.nr_feature
         nr_piece = state2vec.nP
 
-        states = self.moves.init_batch(docs)
-        for state in states:
-            if not state.c.is_final():
-                next_step.push_back(state.c)
-
+        state_objs = self.moves.init_batch(docs)
+        for stcls in state_objs:
+            if not stcls.c.is_final():
+                states.push_back(stcls.c)
+                
         feat_weights = state2vec.get_feat_weights()
         cdef int i
-        cdef np.ndarray token_ids = numpy.zeros((nr_state, nr_feat), dtype='i')
-        cdef np.ndarray is_valid = numpy.zeros((nr_state, nr_class), dtype='i')
-        cdef np.ndarray scores
         cdef np.ndarray hidden_weights = numpy.ascontiguousarray(vec2scores._layers[-1].W.T)
         cdef np.ndarray hidden_bias = vec2scores._layers[-1].b
 
         hW = <float*>hidden_weights.data
         hb = <float*>hidden_bias.data
         cdef int nr_hidden = hidden_weights.shape[0]
-        c_token_ids = <int*>token_ids.data
-        c_is_valid = <int*>is_valid.data
-        cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
-        cdef int nr_step
-        while not next_step.empty():
-            nr_step = next_step.size()
-            for i in cython.parallel.prange(nr_step, num_threads=3,
-                                            nogil=True):
-                self._parse_step(next_step[i],
-                    feat_weights, hW, hb, nr_class, nr_hidden, nr_feat, nr_piece)
-            this_step, next_step = next_step, this_step
-            next_step.clear()
-            for st in this_step:
-                if not st.is_final():
-                    next_step.push_back(st)
-        return states
+       
+        with nogil:
+            for i in cython.parallel.prange(states.size(), num_threads=2,
+                                            schedule='guided'):
+                self._parseC(states[i],
+                    feat_weights, hW, hb,
+                    nr_class, nr_hidden, nr_feat, nr_piece)
+        return state_objs
+
+    cdef void _parseC(self, StateC* state, 
+            const float* feat_weights, const float* hW, const float* hb,
+            int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
+        token_ids = <int*>calloc(nr_feat, sizeof(int))
+        is_valid = <int*>calloc(nr_class, sizeof(int))
+        vectors = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
+        scores = <float*>calloc(nr_class, sizeof(float))
+        
+        while not state.is_final():
+            state.set_context_tokens(token_ids, nr_feat)
+            memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
+            memset(scores, 0, nr_class * sizeof(float))
+            sum_state_features(vectors,
+                feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
+            V = vectors
+            W = hW
+            for i in range(nr_hidden):
+                feature = V[0] if V[0] >= V[1] else V[1]
+                for j in range(nr_class):
+                    scores[j] += feature * W[j]
+                W += nr_class
+                V += nr_piece
+            for i in range(nr_class):
+                scores[i] += hb[i]
+            self.moves.set_valid(is_valid, state)
+            guess = arg_max_if_valid(scores, is_valid, nr_class)
+            action = self.moves.c[guess]
+            action.do(state, action.label)
+            state.push_hist(guess)
+        free(token_ids)
+        free(is_valid)
+        free(vectors)
+        free(scores)
 
     def beam_parse(self, docs, int beam_width=3, float beam_density=0.001):
         cdef Beam beam
@@ -514,36 +537,6 @@ cdef class Parser:
                 beam.check_done(_check_final_state, NULL)
             beams.append(beam)
         return beams
-
-    cdef void _parse_step(self, StateC* state,
-            const float* feat_weights, const float* hW, const float* hb,
-            int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
-        '''This only works with no hidden layers -- fast but inaccurate'''
-        token_ids = <int*>calloc(nr_feat, sizeof(int))
-        vector = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
-        scores = <float*>calloc(nr_class, sizeof(float))
-        is_valid = <int*>calloc(nr_class, sizeof(int))
-
-        state.set_context_tokens(token_ids, nr_feat)
-        sum_state_features(vector,
-            feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
-        for i in range(nr_hidden):
-            feature = Vec.max(&vector[i*nr_piece], nr_piece)
-            for j in range(nr_class):
-                scores[j] += feature * hW[j]
-            hW += nr_class
-        for i in range(nr_class):
-            scores[i] += hb[i]
-        self.moves.set_valid(is_valid, state)
-        guess = arg_max_if_valid(scores, is_valid, nr_class)
-        action = self.moves.c[guess]
-        action.do(state, action.label)
-        state.push_hist(guess)
-
-        free(is_valid)
-        free(scores)
-        free(vector)
-        free(token_ids)
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
