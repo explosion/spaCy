@@ -422,9 +422,9 @@ cdef class Parser:
         hW = <float*>hidden_weights.data
         hb = <float*>hidden_bias.data
         cdef int nr_hidden = hidden_weights.shape[0]
-       
+        cdef int nr_task = states.size()
         with nogil:
-            for i in cython.parallel.prange(states.size(), num_threads=2,
+            for i in cython.parallel.prange(nr_task, num_threads=2,
                                             schedule='guided'):
                 self._parseC(states[i],
                     feat_weights, hW, hb,
