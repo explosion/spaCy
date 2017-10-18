@@ -87,11 +87,11 @@ U.S. Federal law. Any choice of law rules will not apply.
 7. Please place an “x” on one of the applicable statement below. Please do NOT
 mark both statements:
 
-    * [x] I am signing on behalf of myself as an individual and no other person
+    * [ ] I am signing on behalf of myself as an individual and no other person
     or entity, including my employer, has or will have rights with respect my
     contributions.
 
-    * [ ] I am signing on behalf of my employer or a legal entity and I have the
+    * [x] I am signing on behalf of my employer or a legal entity and I have the
     actual authority to contractually bind that entity.
 
 ## Contributor Details
@@ -99,8 +99,8 @@ mark both statements:
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
 | Name                           | Alexey Kim           |
-| Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
+| Company name (if applicable)   | Expasoft Ltd.        |
+| Title or role (if applicable)  | Developer            |
 | Date                           | 13-12-2017           |
 | GitHub username                | yuukos               |
-| Website (optional)             |                      |
+| Website (optional)             | https://expasoft.ru/ |
