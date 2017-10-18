@@ -27,6 +27,13 @@ def link(cmd, origin, link_name, force=False, model_path=None):
     if not model_path.exists():
         prints("The data should be located in %s" % path2str(model_path),
                title="Can't locate model data", exits=1)
+    data_path = util.get_data_path()
+    if not data_path or not data_path.exists():
+        spacy_loc = Path(__file__).parent.parent
+        prints("Make sure a directory `/data` exists within your spaCy "
+               "installation and try again. The data directory should be "
+               "located here:", path2str(spacy_loc), exits=1,
+               title="Can't find the spaCy data path to create model symlink")
     link_path = util.get_data_path() / link_name
     if link_path.exists() and not force:
         prints("To overwrite an existing link, use the --force flag.",
