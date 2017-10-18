@@ -186,7 +186,13 @@ cdef class Tokenizer:
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
-            return False
+            # See 'flush_cache' below for hand-wringing about
+            # how to handle this.
+            cached = <_Cached*>self._specials.get(key)
+            if cached == NULL:
+                return False
+            else:
+                self._cache.set(key, cached)
         cdef int i
         if cached.is_lex:
             for i in range(cached.length):
@@ -201,9 +207,15 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
-        self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
+        special_case = <const _Cached*>self._specials.get(orig_key)
+        if special_case is not NULL:
+            for i in range(special_case.length):
+                tokens.push_back(&special_case.data.tokens[i], False)
+            self._cache.set(orig_key, <void*>special_case)
+        else: 
+            span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
+            self._attach_tokens(tokens, span, &prefixes, &suffixes)
+            self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
@@ -300,7 +312,8 @@ cdef class Tokenizer:
 
                         start = infix_end
                     span = string[start:]
-                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
+                    if span:
+                        tokens.push_back(self.vocab.get(tokens.mem, span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             lexeme = deref(it)
@@ -389,5 +402,29 @@ cdef class Tokenizer:
         cached.data.tokens = self.vocab.make_fused_token(substrings)
         key = hash_string(string)
         self._specials.set(key, cached)
-        self._cache.set(key, cached)
         self._rules[string] = substrings
+        # After changing the tokenization rules, the previous tokenization
+        # may be stale.
+        self.flush_cache()
+
+    def flush_cache(self):
+        '''Flush the tokenizer's cache. May not free memory immediately.
+        
+        This is called automatically after `add_special_case`, but if you
+        write to the prefix or suffix functions, you'll have to call this
+        yourself. You may also need to flush the tokenizer cache after
+        changing the lex_attr_getter functions.
+        '''
+        cdef hash_t key
+        for key in self._cache.keys():
+            special_case = self._specials.get(key)
+            # Don't free data shared with special-case rules
+            if special_case is not NULL:
+                continue
+            cached = <_Cached*>self._cache.get(key)
+            if cached is not NULL:
+                self.mem.free(cached)
+        self._cache = PreshMap(1000)
+        # We could here readd the data from specials --- but if we loop over
+        # a bunch of special-cases, we'll get a quadratic behaviour. The extra
+        # lookup isn't so bad? Tough to tell.

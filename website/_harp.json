@@ -12,7 +12,7 @@
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
 
-        "SPACY_VERSION": "1.8",
+        "SPACY_VERSION": "1.9",
         "LATEST_NEWS": {
             "url": "/docs/usage/models",
             "title": "The first official Spanish model is here!"

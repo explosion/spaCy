@@ -67,7 +67,7 @@ p
     python -m spacy download en_core_web_md
 
     # download exact model version (doesn't create shortcut link)
-    python -m spacy download en_core_web_md-1.2.0 --direct
+    python -m spacy download en_core_web_md-1.2.1 --direct
 
 p
     |  The download command will #[+a("#download-pip") install the model] via
@@ -96,10 +96,10 @@ p
 
 +code(false, "bash").
     # with external URL
-    pip install #{gh("spacy-models")}/releases/download/en_core_web_md-1.2.0/en_core_web_md-1.2.0.tar.gz
+    pip install #{gh("spacy-models")}/releases/download/en_core_web_md-1.2.1/en_core_web_md-1.2.1.tar.gz
 
     # with local file
-    pip install /Users/you/en_core_web_md-1.2.0.tar.gz
+    pip install /Users/you/en_core_web_md-1.2.1.tar.gz
 
 p
     |  By default, this will install the model into your #[code site-packages]
@@ -198,12 +198,43 @@ p
     nlp = en_core_web_md.load()
     doc = nlp(u'This is a sentence.')
 
++h(3, "models-download") Downloading and requiring model dependencies
+
+p
+    |  spaCy's built-in #[+api("cli#download") #[code download]] command
+    |  is mostly intended as a convenient, interactive wrapper. It performs
+    |  compatibility checks and prints detailed error messages and warnings.
+    |  However, if you're downloading models as part of an automated build
+    |  process, this only adds an unnecessary layer of complexity. If you know
+    |  which models your application needs, you should be specifying them directly.
+
++aside("Prevent re-downloading models")
+    |  If you're installing a model from a URL, pip will usually re-download and
+    |  re-install the package, even if you already have a matching
+    |  version installed. To prevent this, simply add #[code #egg=] and the
+    |  package name after the URL, e.g. #[code #egg=en_core_web_sm] or
+    |  #[code #egg=en_core_web_sm-1.2.0]. This tells pip which package and version
+    |  you're trying to download, and will skip the package if a matching
+    |  installation is found.
+
+p
+    |  Because all models are valid Python packages, you can add them to your
+    |  application's #[code requirements.txt]. If you're running your own
+    |  internal PyPi installation, you can simply upload the models there. pip's
+    |  #[+a("https://pip.pypa.io/en/latest/reference/pip_install/#requirements-file-format") requirements file format]
+    |  supports both package names to download via a PyPi server, as well as direct
+    |  URLs.
+
++code("requirements.txt", "text").
+    spacy&gt;=1.8.0,&lt;2.0.0
+    -e #{gh("spacy-models")}/releases/download/en_core_web_sm-1.2.0/en_core_web_sm-1.2.0.tar.gz#egg=en_core_web_sm-1.2.0
+
 +h(2, "own-models") Using your own models
 
 p
     |  If you've trained your own model, for example for
     |  #[+a("/docs/usage/adding-languages") additional languages] or
-    |  #[+a("/docs/usage/train-ner") custom named entities], you can save its
+    |  #[+a("/docs/usage/training-ner") custom named entities], you can save its
     |  state using the #[code Language.save_to_directory()] method. To make the
     |  model more convenient to deploy, we recommend wrapping it as a Python
     |  package.

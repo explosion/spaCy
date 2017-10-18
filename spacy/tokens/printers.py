@@ -64,8 +64,9 @@ def parse_tree(doc, light=False, flat=False):
     >>> trees = doc.print_tree()
     [{'modifiers': [{'modifiers': [], 'NE': 'PERSON', 'word': 'Bob', 'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Bob'}, {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice', 'arc': 'dobj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Alice'}, {'modifiers': [{'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det', 'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}], 'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN', 'POS_fine': 'NN', 'lemma': 'pizza'}, {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct', 'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}], 'NE': '', 'word': 'brought', 'arc': 'ROOT', 'POS_coarse': 'VERB', 'POS_fine': 'VBD', 'lemma': 'bring'}, {'modifiers': [{'modifiers': [], 'NE': 'PERSON', 'word': 'Alice', 'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Alice'}, {'modifiers': [{'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det', 'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}], 'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN', 'POS_fine': 'NN', 'lemma': 'pizza'}, {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct', 'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}], 'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB', 'POS_fine': 'VBD', 'lemma': 'eat'}]
     """
+    doc_clone = Doc(doc.vocab, words=[w.text for w in doc])
     doc_clone  = Doc(doc.vocab, words=[w.text for w in doc])
     doc_clone.from_array([HEAD, TAG, DEP, ENT_IOB, ENT_TYPE],
-                         doc.to_array([HEAD, TAG, DEP, ENT_IOB, ENT_TYPE]))
+        doc.to_array([HEAD, TAG, DEP, ENT_IOB, ENT_TYPE]))
     merge_ents(doc_clone)  # merge the entities into single tokens first
     return [POS_tree(sent.root, light=light, flat=flat) for sent in doc_clone.sents]

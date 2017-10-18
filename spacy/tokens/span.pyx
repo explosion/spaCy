@@ -130,6 +130,58 @@ cdef class Span:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
+    def get_lca_matrix(self):
+        '''
+        Calculates the lowest common ancestor matrix
+        for a given Spacy span.
+        Returns LCA matrix containing the integer index
+        of the ancestor, or -1 if no common ancestor is
+        found (ex if span excludes a necessary ancestor).
+        Apologies about the recursion, but the
+        impact on performance is negligible given
+        the natural limitations on the depth of a typical human sentence.
+        '''
+
+        def __pairwise_lca(token_j, token_k, lca_matrix, margins):
+            offset = margins[0]
+            token_k_head = token_k.head if token_k.head.i in range(*margins) else token_k
+            token_j_head = token_j.head if token_j.head.i in range(*margins) else token_j
+            token_j_i = token_j.i - offset
+            token_k_i = token_k.i - offset
+
+            if lca_matrix[token_j_i][token_k_i] != -2:
+                return lca_matrix[token_j_i][token_k_i]
+            elif token_j == token_k:
+                lca_index = token_j_i
+            elif token_k_head == token_j:
+                lca_index = token_j_i
+            elif token_j_head == token_k:
+                lca_index = token_k_i
+            elif (token_j_head == token_j) and (token_k_head == token_k):
+                lca_index = -1
+            else:
+                lca_index = __pairwise_lca(token_j_head, token_k_head, lca_matrix, margins)
+
+            lca_matrix[token_j_i][token_k_i] = lca_index
+            lca_matrix[token_k_i][token_j_i] = lca_index
+
+            return lca_index
+
+        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
+        lca_matrix.fill(-2)
+        margins = [self.start, self.end]
+
+        for j in range(len(self)):
+            token_j = self[j]
+            for k in range(len(self)):
+                token_k = self[k]
+                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix, margins)
+                lca_matrix[k][j] = lca_matrix[j][k]
+
+        return lca_matrix
+
+
+
     cpdef int _recalculate_indices(self) except -1:
         if self.end > self.doc.length \
         or self.doc.c[self.start].idx != self.start_char \
@@ -230,7 +282,7 @@ cdef class Span:
             # so it's okay once we have the Span objects. See Issue #375
             spans = []
             for start, end, label in self.doc.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+                spans.append(Span(self.doc, start, end, label=label))
             for span in spans:
                 yield span
 

@@ -28,7 +28,7 @@ p
         |  #[a(href="#word-vectors") word vectors].
 
     +item
-        |  #[strong Set up] a #[a(href="#model-directory") model direcory] and #[strong train] the #[a(href="#train-tagger-parser") tagger and parser].
+        |  #[strong Set up] a #[a(href="#model-directory") model directory] and #[strong train] the #[a(href="#train-tagger-parser") tagger and parser].
 
 p
     |  For some languages, you may also want to develop a solution for
@@ -303,7 +303,7 @@ p
 p
     |  Because languages can vary in quite arbitrary ways, spaCy avoids
     |  organising the language data into an explicit inheritance hierarchy.
-    |  Instead, reuseable functions and data are collected as atomic pieces in
+    |  Instead, reusable functions and data are collected as atomic pieces in
     |  the #[code spacy.language_data] package.
 
 +aside-code("Example").
@@ -525,13 +525,13 @@ p
     |   └── oov_prob      # optional
     ├── pos/              # optional
     |   ├── model         # via nlp.tagger.model.dump(path)
-    |   └── config.json   # via Langage.train
+    |   └── config.json   # via Language.train
     ├── deps/             # optional
     |   ├── model         # via nlp.parser.model.dump(path)
-    |   └── config.json   # via Langage.train
+    |   └── config.json   # via Language.train
     └── ner/              # optional
         ├── model         # via nlp.entity.model.dump(path)
-        └── config.json   # via Langage.train
+        └── config.json   # via Language.train
 
 p
     |  This creates a spaCy data directory with a vocabulary model, ready to be

@@ -21,7 +21,7 @@ p
 +h(2, "special-cases") Adding special case tokenization rules
 
 p
-    |  Most domains have at least some idiosyncracies that require custom
+    |  Most domains have at least some idiosyncrasies that require custom
     |  tokenization rules. Here's how to add a special case rule to an existing
     |  #[+api("tokenizer") #[code Tokenizer]] instance:
 
@@ -40,7 +40,9 @@ p
             {
                 ORTH: u'me'}])
     assert [w.text for w in nlp(u'gimme that')] == [u'gim', u'me', u'that']
-    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'me', u'that']
+    # Pronoun lemma is returned as -PRON-
+    # More details please see: https://spacy.io/docs/usage/troubleshooting#pron-lemma
+    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'-PRON-', u'that']
 
 p
     |  The special case doesn't have to match an entire whitespace-delimited
@@ -85,8 +87,8 @@ p
     |  algorithm in Python, optimized for readability rather than performance:
 
 +code.
-    def tokenizer_pseudo_code(text, find_prefix, find_suffix,
-                              find_infixes, special_cases):
+    def tokenizer_pseudo_code(text, special_cases,
+                              find_prefix, find_suffix, find_infixes):
         tokens = []
         for substring in text.split(' '):
             suffixes = []
@@ -138,7 +140,7 @@ p
 
 p
     |  Let's imagine you wanted to create a tokenizer for a new language. There
-    |  are four things you would need to define:
+    |  are five things you would need to define:
 
 +list("numbers")
     +item
@@ -160,6 +162,11 @@ p
         |  A function #[code infixes_finditer], to handle non-whitespace
         |  separators, such as hyphens etc.
 
+    +item
+        |  (Optional) A boolean function #[code token_match] matching strings
+        |  that should never be split, overriding the previous rules.
+        |  Useful for things like URLs or numbers.
+
 p
     |  You shouldn't usually need to create a #[code Tokenizer] subclass.
     |  Standard usage is to use #[code re.compile()] to build a regular
@@ -172,12 +179,18 @@ p
 
     prefix_re = re.compile(r'''[\[\(&quot;']''')
     suffix_re = re.compile(r'''[\]\)&quot;']''')
+    infix_re = re.compile(r'''[-~]''')
+    simple_url_re = re.compile(r'''^https?://''')
     def create_tokenizer(nlp):
         return Tokenizer(nlp.vocab,
+                rules={},
                 prefix_search=prefix_re.search,
-                suffix_search=suffix_re.search)
+                suffix_search=suffix_re.search,
+                infix_finditer=infix_re.finditer,
+                token_match=simple_url_re.match
+                )
 
-    nlp = spacy.load('en', tokenizer=create_make_doc)
+    nlp = spacy.load('en', create_make_doc=create_tokenizer)
 
 p
     |  If you need to subclass the tokenizer instead, the relevant methods to
@@ -214,7 +227,7 @@ p
         def __call__(self, text):
             words = text.split(' ')
             # All tokens 'own' a subsequent space character in this tokenizer
-            spaces = [True] * len(word)
+            spaces = [True] * len(words)
             return Doc(self.vocab, words=words, spaces=spaces)
 
 p

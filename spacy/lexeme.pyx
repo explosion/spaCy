@@ -159,6 +159,10 @@ cdef class Lexeme:
         def __get__(self):
             return self.c.id
 
+    property lex_id:
+        def __get__(self):
+            return self.c.id
+
     property repvec:
         def __get__(self):
             raise AttributeError("lex.repvec has been renamed to lex.vector")
@@ -172,6 +176,11 @@ cdef class Lexeme:
     property orth_:
         def __get__(self):
             return self.vocab.strings[self.c.orth]
+
+    property text:
+        def __get__(self):
+            return self.vocab.strings[self.c.orth]
+
 
     property lower:
         def __get__(self): return self.c.lower

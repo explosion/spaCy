@@ -9,7 +9,7 @@ def english_noun_chunks(obj):
     Detect base noun phrases from a dependency parse.
     Works on both Doc and Span.
     """
-    labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
+    labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'dative', 'appos',
               'attr', 'ROOT']
     doc = obj.doc # Ensure works on both Doc and Span.
     np_deps = [doc.vocab.strings[label] for label in labels]
@@ -117,4 +117,5 @@ def es_noun_chunks(obj):
         token = next_token(token)
 
 
-CHUNKERS = {'en': english_noun_chunks, 'de': german_noun_chunks, 'es': es_noun_chunks}
+CHUNKERS = {'en': english_noun_chunks, 'de': german_noun_chunks, 'es': es_noun_chunks,
+            None: english_noun_chunks, '': english_noun_chunks}

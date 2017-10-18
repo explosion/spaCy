@@ -29,6 +29,7 @@ Profile.prof
 .python-version
 __pycache__/
 *.py[cod]
+.env*/
 .env/
 .env2/
 .env3/
@@ -101,3 +102,7 @@ Desktop.ini
 
 # Other
 *.tgz
+
+
+# JetBrains PyCharm
+.idea/
