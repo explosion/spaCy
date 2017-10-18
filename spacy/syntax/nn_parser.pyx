@@ -241,54 +241,32 @@ cdef class Parser:
     @classmethod
     def Model(cls, nr_class, **cfg):
         depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
+        if depth != 1:
+            raise ValueError("Currently parser depth is hard-coded to 1.")
+        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 2))
+        if parser_maxout_pieces != 2:
+            raise ValueError("Currently parser_maxout_pieces is hard-coded to 2")
         token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 128))
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 200))
-        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 2))
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
-        if hist_size >= 1 and depth == 0:
-            raise ValueError("Inconsistent hyper-params: "
-                "history_feats >= 1 but parser_hidden_depth==0")
+        if hist_size != 0:
+            raise ValueError("Currently history size is hard-coded to 0")
+        if hist_width != 0: 
+            raise ValueError("Currently history width is hard-coded to 0")
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
-        if parser_maxout_pieces == 1:
-            lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
-                        nF=cls.nr_feature,
-                        nI=token_vector_width)
-        else:
-            lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
-                        nF=cls.nr_feature,
-                        nP=parser_maxout_pieces,
-                        nI=token_vector_width)
+        lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
+                    nF=cls.nr_feature, nP=parser_maxout_pieces,
+                    nI=token_vector_width)
 
         with Model.use_device('cpu'):
-            if depth == 0:
-                upper = chain()
-                upper.is_noop = True
-            elif hist_size and depth == 1:
-                upper = chain(
-                    HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
-                                    nr_dim=hist_width),
-                    zero_init(Affine(nr_class, hidden_width+hist_size*hist_width,
-                                     drop_factor=0.0)))
-                upper.is_noop = False
-            elif hist_size:
-                upper = chain(
-                    HistoryFeatures(nr_class=nr_class, hist_size=hist_size,
-                                    nr_dim=hist_width),
-                    LayerNorm(Maxout(hidden_width, hidden_width+hist_size*hist_width)),
-                    clone(LayerNorm(Maxout(hidden_width, hidden_width)), depth-2),
-                    zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
-                )
-                upper.is_noop = False
-            else:
-                upper = chain(
-                    clone(LayerNorm(Maxout(hidden_width, hidden_width)), depth-1),
-                    zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
-                )
-                upper.is_noop = False
+            upper = chain(
+                clone(LayerNorm(Maxout(hidden_width, hidden_width)), depth-1),
+                zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
+            )
 
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
@@ -957,31 +935,6 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
             if best == -1 or scores[i] > scores[best]:
                 best = i
     return best
-
-
-cdef int arg_maxout_if_valid(const weight_t* scores, const int* is_valid,
-                             int n, int nP) nogil:
-    cdef int best = -1
-    cdef float best_score = 0
-    for i in range(n):
-        if is_valid[i] >= 1:
-            for j in range(nP):
-                if best == -1 or scores[i*nP+j] > best_score:
-                    best = i
-                    best_score = scores[i*nP+j]
-    return best
-
-
-cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,
-                       int nr_class) except -1:
-    cdef weight_t score = 0
-    cdef int mode = -1
-    cdef int i
-    for i in range(nr_class):
-        if actions[i].move == move and (mode == -1 or scores[i] >= score):
-            mode = i
-            score = scores[i]
-    return mode
 
 
 # These are passed as callbacks to thinc.search.Beam
