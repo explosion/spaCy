@@ -1,3 +1,5 @@
+<!-- This agreement was mistakenly submitted as an update to the CONTRIBUTOR_AGREEMENT.md template. Commit: 8a2d22222dec5cf910df5a378cbcd9ea2ab53ec4. It was therefore moved over manually. -->
+
 # spaCy contributor agreement
 
 This spaCy Contributor Agreement (**"SCA"**) is based on the
