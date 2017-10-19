@@ -47,13 +47,13 @@ First, install [Keras](https://keras.io/), [spaCy](https://spacy.io) and the spa
 English models (about 1GB of data):
 
 ```bash
-pip install https://github.com/fchollet/keras/archive/master.zip
+pip install https://github.com/fchollet/keras/archive/1.2.2.zip
 pip install spacy
 python -m spacy.en.download
 ```
 
 ⚠️ **Important:** In order for the example to run, you'll need to install Keras from 
-the master branch (and not via `pip install keras`). For more info on this, see 
+the 1.2.2 release (and not via `pip install keras`). For more info on this, see 
 [#727](https://github.com/explosion/spaCy/issues/727).
 
 You'll also want to get Keras working on your GPU. This will depend on your
