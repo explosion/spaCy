@@ -153,7 +153,7 @@ cdef class precompute_hiddens:
             if bp_nonlinearity is not None:
                 d_state_vector = bp_nonlinearity(d_state_vector, sgd)
             # This will usually be on GPU
-            if isinstance(d_state_vector, numpy.ndarray):
+            if not isinstance(d_state_vector, self.ops.xp.ndarray):
                 d_state_vector = self.ops.xp.array(d_state_vector)
             d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
             return d_tokens
@@ -244,8 +244,8 @@ cdef class Parser:
         if depth != 1:
             raise ValueError("Currently parser depth is hard-coded to 1.")
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', cfg.get('maxout_pieces', 2))
-        if parser_maxout_pieces != 2:
-            raise ValueError("Currently parser_maxout_pieces is hard-coded to 2")
+        #if parser_maxout_pieces != 2:
+        #    raise ValueError("Currently parser_maxout_pieces is hard-coded to 2")
         token_vector_width = util.env_opt('token_vector_width', cfg.get('token_vector_width', 128))
         hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 200))
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
@@ -258,9 +258,13 @@ cdef class Parser:
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
-        lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
-                    nF=cls.nr_feature, nP=parser_maxout_pieces,
-                    nI=token_vector_width)
+        if parser_maxout_pieces >= 2:
+            lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
+                nF=cls.nr_feature, nP=parser_maxout_pieces,
+                nI=token_vector_width)
+        else:
+            lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
+                nF=cls.nr_feature, nI=token_vector_width)
 
         with Model.use_device('cpu'):
             upper = chain(
@@ -413,7 +417,7 @@ cdef class Parser:
         for stcls in state_objs:
             if not stcls.c.is_final():
                 states.push_back(stcls.c)
-                
+
         feat_weights = state2vec.get_feat_weights()
         cdef int i
         cdef np.ndarray hidden_weights = numpy.ascontiguousarray(vec2scores._layers[-1].W.T)
@@ -438,7 +442,7 @@ cdef class Parser:
         is_valid = <int*>calloc(nr_class, sizeof(int))
         vectors = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
         scores = <float*>calloc(nr_class, sizeof(float))
-        
+
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
             memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
@@ -448,7 +452,12 @@ cdef class Parser:
             V = vectors
             W = hW
             for i in range(nr_hidden):
-                feature = V[0] if V[0] >= V[1] else V[1]
+                if nr_piece == 1:
+                    feature = V[0]
+                elif nr_piece == 2:
+                    feature = V[0] if V[0] >= V[1] else V[1]
+                else:
+                    feature = Vec.max(V, nr_piece)
                 for j in range(nr_class):
                     scores[j] += feature * W[j]
                 W += nr_class
