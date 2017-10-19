@@ -30,8 +30,6 @@ from . import util
 import numpy
 import io
 
-from blis.py import einsum
-
 # TODO: Unset this once we don't want to support models previous models.
 import thinc.neural._classes.layernorm
 thinc.neural._classes.layernorm.set_compat_six_eight(False)
@@ -107,7 +105,9 @@ def _preprocess_doc(docs, drop=0.):
 def _init_for_precomputed(W, ops):
     if (W**2).sum() != 0.:
         return
+    W = W.reshape((W.shape[0] * W.shape[1], W.shape[2]))
     ops.xavier_uniform_init(W, inplace=True)
+    return W
 
 
 @describe.on_data(_set_dimensions_if_needed)
@@ -116,7 +116,7 @@ def _init_for_precomputed(W, ops):
     nF=Dimension("Number of features"),
     nO=Dimension("Output size"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nI, obj.nF * obj.nO),
+        lambda obj: (obj.nI, obj.nF, obj.nO),
         lambda W, ops: _init_for_precomputed(W, ops)),
     b=Biases("Bias vector",
         lambda obj: (obj.nO,)),
@@ -131,7 +131,7 @@ class PrecomputableAffine(Model):
         self.nF = nF
 
     @property
-    def nIF(self):
+    def nFI(self):
         return self.nI * self.nF
 
     @property
@@ -145,87 +145,34 @@ class PrecomputableAffine(Model):
         # Yf: (b, f, o)
         # dY: (b, o)
         # dYf: (b, f, o)
-        # W: (i, fo)
-        # Yf = numpy.einsum('bi,i_fo->b_fo', X, self.W)
-        Yf = einsum('ab,bc->ac', X, self.W).reshape((nN, self.nF, self.nO))
-        #Yf = self.ops.xp.dot(X, self.W).reshape((nN, self.nF, self.nO))
+        # W: (i, f, o)
+        W = self.W.reshape((self.nI, self.nFO))
+        Yf = self.ops.xp.dot(X, W)
+        Yf = Yf.reshape((Yf.shape[0], self.nF, self.nO))
+        #Yf = einsum('ab,bc->ac', X, W)
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
-            nB = ids.shape[0]
             Xf = X[ids]
-            Xf = Xf.reshape((nB, self.nIF))
-
-            dW_re = self.d_W.reshape((self.nIF, self.nO))
-            W_re = self.W.reshape((self.nIF, self.nO))
-            # bo,if_o->bif
-            dXf = einsum('ab,cb->ac', dY, W_re)
-            #dXf = self.ops.xp.dot(dY, W_re.T)
-            # b_if,bo->if_o
-            einsum('ab,ac->bc', Xf, dY, out=dW_re)
-            #self.ops.xp.dot(Xf.T, dY, out=dW_re)
+            # bo,fi_o->b_if -> b_fi
+            W_o_fi = self._transpose(self.W, shape=(self.nO, self.nFI))
+            dXf = self.ops.xp.dot(dY, W_o_fi).reshape((Xf.shape[0], self.nF, self.nI))
+            # bo,b_fi->o_fi
+            dW = Xf.reshape((Xf.shape[0], self.nFI))
+            dW = self.ops.xp.dot(Xf.T, dY)
+            dW = dW.reshape((self.nO, self.nF, self.nI))
+            self.d_W += dW.transpose((2, 1, 0))
             self.d_b += dY.sum(axis=0)
 
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            dXf = dXf.reshape((nB, self.nI, self.nF))
-            dXf = dXf.transpose((0, 2, 1))
-            return self.ops.xp.ascontiguousarray(dXf)
+            return dXf
         return Yf, backward
 
+    def _transpose(self, weights, shape):
+        weights = weights.transpose((2, 1, 0))
+        weights = self.ops.xp.ascontiguousarray(weights)
+        return weights.reshape(shape)
 
-@describe.on_data(_set_dimensions_if_needed)
-@describe.attributes(
-    nI=Dimension("Input size"),
-    nF=Dimension("Number of features"),
-    nP=Dimension("Number of pieces"),
-    nO=Dimension("Output size"),
-    W=Synapses("Weights matrix",
-        lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI),
-        lambda W, ops: ops.xavier_uniform_init(W)),
-    b=Biases("Bias vector",
-        lambda obj: (obj.nO, obj.nP)),
-    d_W=Gradient("W"),
-    d_b=Gradient("b")
-)
-class PrecomputableMaxouts(Model):
-    def __init__(self, nO=None, nI=None, nF=None, nP=3, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.nO = nO
-        self.nP = nP
-        self.nI = nI
-        self.nF = nF
-
-    def begin_update(self, X, drop=0.):
-        # X: (b, i)
-        # Yfp: (b, f, o, p)
-        # Xf: (f, b, i)
-        # dYp: (b, o, p)
-        # W: (f, o, p, i)
-        # b: (o, p)
-
-        # bi,opfi->bfop
-        # bop,fopi->bfi
-        # bop,fbi->opfi : fopi
-
-        tensordot = self.ops.xp.tensordot
-        ascontiguous = self.ops.xp.ascontiguousarray
-
-        Yfp = tensordot(X, self.W, axes=[[1], [3]])
-
-        def backward(dYp_ids, sgd=None):
-            dYp, ids = dYp_ids
-            Xf = X[ids]
-
-            dXf = tensordot(dYp, self.W, axes=[[1, 2], [1,2]])
-            dW = tensordot(dYp, Xf, axes=[[0], [0]])
-
-            self.d_W += dW.transpose((2, 0, 1, 3))
-            self.d_b += dYp.sum(axis=0)
-
-            if sgd is not None:
-                sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return dXf
-        return Yfp, backward
 
 # Thinc's Embed class is a bit broken atm, so drop this here.
 from thinc import describe
@@ -380,6 +327,8 @@ def reapply(layer, n_times):
             return dX
         return Y, reapply_bwd
     return wrap(reapply_fwd, layer)
+
+
 
 
 def asarray(ops, dtype):
