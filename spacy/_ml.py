@@ -148,6 +148,7 @@ class PrecomputableAffine(Model):
         # W: (i, fo)
         # Yf = numpy.einsum('bi,i_fo->b_fo', X, self.W)
         Yf = einsum('ab,bc->ac', X, self.W).reshape((nN, self.nF, self.nO))
+        #Yf = self.ops.xp.dot(X, self.W).reshape((nN, self.nF, self.nO))
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
             nB = ids.shape[0]
@@ -155,12 +156,14 @@ class PrecomputableAffine(Model):
             Xf = Xf.reshape((nB, self.nIF))
 
             dW_re = self.d_W.reshape((self.nIF, self.nO))
-            W_re = self.d_W.reshape((self.nIF, self.nO))
+            W_re = self.W.reshape((self.nIF, self.nO))
             # bo,if_o->bif
             dXf = einsum('ab,cb->ac', dY, W_re)
+            #dXf = self.ops.xp.dot(dY, W_re.T)
             # b_if,bo->if_o
             einsum('ab,ac->bc', Xf, dY, out=dW_re)
-            # self.d_b += dY.sum(axis=0)
+            #self.ops.xp.dot(Xf.T, dY, out=dW_re)
+            self.d_b += dY.sum(axis=0)
 
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
@@ -208,7 +211,6 @@ class PrecomputableMaxouts(Model):
         ascontiguous = self.ops.xp.ascontiguousarray
 
         Yfp = tensordot(X, self.W, axes=[[1], [3]])
-        Yfp += self.b
 
         def backward(dYp_ids, sgd=None):
             dYp, ids = dYp_ids
@@ -378,8 +380,6 @@ def reapply(layer, n_times):
             return dX
         return Y, reapply_bwd
     return wrap(reapply_fwd, layer)
-
-
 
 
 def asarray(ops, dtype):

@@ -101,6 +101,7 @@ cdef class precompute_hiddens:
     cdef public object ops
     cdef np.ndarray _features
     cdef np.ndarray _cached
+    cdef np.ndarray bias
     cdef object _cuda_stream
     cdef object _bp_hiddens
 
@@ -118,6 +119,7 @@ cdef class precompute_hiddens:
         self.nO = cached.shape[2]
         self.nP = getattr(lower_model, 'nP', 1)
         self.ops = lower_model.ops
+        self.bias = lower_model.b
         self._is_synchronized = False
         self._cuda_stream = cuda_stream
         self._cached = cached
@@ -147,6 +149,7 @@ cdef class precompute_hiddens:
         sum_state_features(<float*>state_vector.data,
             feat_weights, &ids[0,0],
             token_ids.shape[0], self.nF, self.nO*self.nP)
+        state_vector += self.bias.ravel()
         state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
         def backward(d_state_vector, sgd=None):
@@ -161,14 +164,15 @@ cdef class precompute_hiddens:
 
     def _nonlinearity(self, state_vector):
         if self.nP == 1:
-            return state_vector, None
+            mask = state_vector >= 0.
+            return state_vector * mask, lambda dY, sgd=None: dY * mask
         state_vector = state_vector.reshape(
             (state_vector.shape[0], state_vector.shape[1]//self.nP, self.nP))
         best, which = self.ops.maxout(state_vector)
-        def backprop(d_best, sgd=None):
-            return self.ops.backprop_maxout(d_best, which, self.nP)
-        return best, backprop
 
+        def backprop_maxout(d_best, sgd=None):
+            return self.ops.backprop_maxout(d_best, which, self.nP)
+        return best, backprop_maxout
 
 
 cdef void sum_state_features(float* output,
@@ -425,18 +429,20 @@ cdef class Parser:
 
         hW = <float*>hidden_weights.data
         hb = <float*>hidden_bias.data
+        bias = <float*>state2vec.bias.data
         cdef int nr_hidden = hidden_weights.shape[0]
         cdef int nr_task = states.size()
         with nogil:
             for i in cython.parallel.prange(nr_task, num_threads=2,
                                             schedule='guided'):
                 self._parseC(states[i],
-                    feat_weights, hW, hb,
+                    feat_weights, bias, hW, hb,
                     nr_class, nr_hidden, nr_feat, nr_piece)
         return state_objs
 
     cdef void _parseC(self, StateC* state, 
-            const float* feat_weights, const float* hW, const float* hb,
+            const float* feat_weights, const float* bias,
+            const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
         token_ids = <int*>calloc(nr_feat, sizeof(int))
         is_valid = <int*>calloc(nr_class, sizeof(int))
@@ -449,11 +455,13 @@ cdef class Parser:
             memset(scores, 0, nr_class * sizeof(float))
             sum_state_features(vectors,
                 feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
+            for i in range(nr_hidden * nr_piece):
+                vectors[i] += bias[i]
             V = vectors
             W = hW
             for i in range(nr_hidden):
                 if nr_piece == 1:
-                    feature = V[0]
+                    feature = V[0] if V[0] >= 0. else 0.
                 elif nr_piece == 2:
                     feature = V[0] if V[0] >= V[1] else V[1]
                 else:
