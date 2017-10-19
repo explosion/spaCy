@@ -10,6 +10,7 @@ from collections import OrderedDict
 import itertools
 import weakref
 import functools
+import tqdm
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -447,11 +448,9 @@ class Language(object):
         golds = list(golds)
         for name, pipe in self.pipeline:
             if not hasattr(pipe, 'pipe'):
-                for doc in docs:
-                    pipe(doc)
+                docs = (pipe(doc) for doc in docs)
             else:
-                docs = list(pipe.pipe(docs))
-        assert len(docs) == len(golds)
+                docs = pipe.pipe(docs, batch_size=256)
         for doc, gold in zip(docs, golds):
             if verbose:
                 print(doc)

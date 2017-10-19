@@ -15,8 +15,6 @@ cdef class Parser:
     cdef readonly object cfg
     cdef public object _multitasks
 
-    cdef void _parse_step(self, StateC* state,
-            const float* feat_weights,
-            int nr_class, int nr_feat, int nr_piece) nogil
-
-    #cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil
+    cdef void _parseC(self, StateC* state, 
+            const float* feat_weights, const float* hW, const float* hb,
+            int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil
