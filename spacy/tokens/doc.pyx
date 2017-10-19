@@ -554,13 +554,19 @@ cdef class Doc:
         cdef int i, j
         cdef attr_id_t feature
         cdef np.ndarray[attr_t, ndim=2] output
+        cdef np.ndarray[attr_t, ndim=1] output_1D
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
+        if( type(py_attr_ids) is not list and type(py_attr_ids) is not tuple ):
+            py_attr_ids = [ py_attr_ids ]
         cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
+        if( len(attr_ids) == 1 ):
+            output_1D = output.reshape((self.length))
+            return output_1D
         return output
 
     def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
