@@ -47,7 +47,7 @@ from thinc.neural.util import get_array_module
 
 from .. import util
 from ..util import get_async, get_cuda_stream
-from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
+from .._ml import zero_init, PrecomputableAffine
 from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
@@ -153,8 +153,7 @@ cdef class precompute_hiddens:
         state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
         def backward(d_state_vector, sgd=None):
-            if bp_nonlinearity is not None:
-                d_state_vector = bp_nonlinearity(d_state_vector, sgd)
+            d_state_vector = bp_nonlinearity(d_state_vector, sgd)
             # This will usually be on GPU
             if not isinstance(d_state_vector, self.ops.xp.ndarray):
                 d_state_vector = self.ops.xp.array(d_state_vector)
@@ -165,14 +164,18 @@ cdef class precompute_hiddens:
     def _nonlinearity(self, state_vector):
         if self.nP == 1:
             mask = state_vector >= 0.
-            return state_vector * mask, lambda dY, sgd=None: dY * mask
-        state_vector = state_vector.reshape(
-            (state_vector.shape[0], state_vector.shape[1]//self.nP, self.nP))
-        best, which = self.ops.maxout(state_vector)
+            state_vector *= mask
+        else:
+            state_vector = state_vector.reshape(
+                (state_vector.shape[0], self.nO, self.nP))
+            state_vector, mask = self.ops.maxout(state_vector)
 
-        def backprop_maxout(d_best, sgd=None):
-            return self.ops.backprop_maxout(d_best, which, self.nP)
-        return best, backprop_maxout
+        def backprop_nonlinearity(d_best, sgd=None):
+            if self.nP == 1:
+                return d_best * mask
+            else:
+                return self.ops.backprop_maxout(d_best, mask, self.nP)
+        return state_vector, backprop_nonlinearity
 
 
 cdef void sum_state_features(float* output,
@@ -262,13 +265,8 @@ cdef class Parser:
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
-        if parser_maxout_pieces >= 2:
-            lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
-                nF=cls.nr_feature, nP=parser_maxout_pieces,
-                nI=token_vector_width)
-        else:
-            lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
-                nF=cls.nr_feature, nI=token_vector_width)
+        lower = PrecomputableAffine(hidden_width * parser_maxout_pieces,
+                    nF=cls.nr_feature, nI=token_vector_width)
 
         with Model.use_device('cpu'):
             upper = chain(
