@@ -30,6 +30,8 @@ from . import util
 import numpy
 import io
 
+from blis.py import einsum
+
 # TODO: Unset this once we don't want to support models previous models.
 import thinc.neural._classes.layernorm
 thinc.neural._classes.layernorm.set_compat_six_eight(False)
@@ -105,9 +107,7 @@ def _preprocess_doc(docs, drop=0.):
 def _init_for_precomputed(W, ops):
     if (W**2).sum() != 0.:
         return
-    reshaped = W.reshape((W.shape[1], W.shape[0] * W.shape[2]))
-    ops.xavier_uniform_init(reshaped)
-    W[:] = reshaped.reshape(W.shape)
+    ops.xavier_uniform_init(W, inplace=True)
 
 
 @describe.on_data(_set_dimensions_if_needed)
@@ -116,7 +116,7 @@ def _init_for_precomputed(W, ops):
     nF=Dimension("Number of features"),
     nO=Dimension("Output size"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nF, obj.nO, obj.nI),
+        lambda obj: (obj.nI, obj.nF * obj.nO),
         lambda W, ops: _init_for_precomputed(W, ops)),
     b=Biases("Bias vector",
         lambda obj: (obj.nO,)),
@@ -130,31 +130,43 @@ class PrecomputableAffine(Model):
         self.nI = nI
         self.nF = nF
 
+    @property
+    def nIF(self):
+        return self.nI * self.nF
+
+    @property
+    def nFO(self):
+        return self.nF * self.nO
+
     def begin_update(self, X, drop=0.):
+        nN = X.shape[0]
         # X: (b, i)
-        # Yf: (b, f, i)
+        # Xf: (b, f, i)
+        # Yf: (b, f, o)
         # dY: (b, o)
         # dYf: (b, f, o)
-        #Yf = numpy.einsum('bi,foi->bfo', X, self.W)
-        Yf = self.ops.xp.tensordot(
-                X, self.W, axes=[[1], [2]])
-        Yf += self.b
+        # W: (i, fo)
+        # Yf = numpy.einsum('bi,i_fo->b_fo', X, self.W)
+        Yf = einsum('ab,bc->ac', X, self.W).reshape((nN, self.nF, self.nO))
         def backward(dY_ids, sgd=None):
-            tensordot = self.ops.xp.tensordot
             dY, ids = dY_ids
+            nB = ids.shape[0]
             Xf = X[ids]
+            Xf = Xf.reshape((nB, self.nIF))
 
-            #dXf = numpy.einsum('bo,foi->bfi', dY, self.W)
-            dXf = tensordot(dY, self.W, axes=[[1], [1]])
-            #dW = numpy.einsum('bo,bfi->ofi', dY, Xf)
-            dW = tensordot(dY, Xf, axes=[[0], [0]])
-            # ofi -> foi
-            self.d_W += dW.transpose((1, 0, 2))
-            self.d_b += dY.sum(axis=0)
+            dW_re = self.d_W.reshape((self.nIF, self.nO))
+            W_re = self.d_W.reshape((self.nIF, self.nO))
+            # bo,if_o->bif
+            dXf = einsum('ab,cb->ac', dY, W_re)
+            # b_if,bo->if_o
+            einsum('ab,ac->bc', Xf, dY, out=dW_re)
+            # self.d_b += dY.sum(axis=0)
 
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return dXf
+            dXf = dXf.reshape((nB, self.nI, self.nF))
+            dXf = dXf.transpose((0, 2, 1))
+            return self.ops.xp.ascontiguousarray(dXf)
         return Yf, backward
 
 
