@@ -18,10 +18,11 @@ IDS = {
     "LIKE_EMAIL": LIKE_EMAIL,
     "IS_STOP": IS_STOP,
     "IS_OOV": IS_OOV,
-    "FLAG14": FLAG14,
-    "FLAG15": FLAG15,
-    "FLAG16": FLAG16,
-    "FLAG17": FLAG17,
+    "IS_BRACKET": IS_BRACKET,
+    "IS_QUOTE": IS_QUOTE,
+    "IS_LEFT_PUNCT": IS_LEFT_PUNCT,
+    "IS_RIGHT_PUNCT": IS_RIGHT_PUNCT,
+
     "FLAG18": FLAG18,
     "FLAG19": FLAG19,
     "FLAG20": FLAG20,
@@ -457,7 +458,10 @@ IDS = {
     "quantmod": quantmod,
     "rcmod": rcmod,
     "root": root,
-    "xcomp": xcomp
+    "xcomp": xcomp,
+
+    "acl": acl,
+    "LAW": LAW
 }
 
 def sort_nums(x):
