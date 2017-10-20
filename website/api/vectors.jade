@@ -12,7 +12,7 @@ p
 
 p
     |  Create a new vector store. To keep the vector table empty, pass
-    |  #[code data_or_width=0]. You can also create the vector table and add
+    |  #[code width=0]. You can also create the vector table and add
     |  vectors one by one, or set the vector values directly on initialisation.
 
 +aside-code("Example").
@@ -21,11 +21,11 @@ p
 
     empty_vectors = Vectors(StringStore())
 
-    vectors = Vectors([u'cat'], 300)
+    vectors = Vectors([u'cat'], width=300)
     vectors[u'cat'] = numpy.random.uniform(-1, 1, (300,))
 
     vector_table = numpy.zeros((3, 300), dtype='f')
-    vectors = Vectors(StringStore(), vector_table)
+    vectors = Vectors(StringStore(), data=vector_table)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -36,9 +36,12 @@ p
             |  that maps strings to hash values, and vice versa.
 
     +row
-        +cell #[code data_or_width]
-        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']] or int
-        +cell Vector data or number of dimensions.
+        +cell #[code data]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+
+    +row
+        +cell #[code width]
+        +cell Number of dimensions.
 
     +row("foot")
         +cell returns
