@@ -136,7 +136,8 @@ cdef class precompute_hiddens:
         return self.begin_update(X)[0]
 
     def begin_update(self, token_ids, drop=0.):
-        cdef np.ndarray state_vector = numpy.zeros((token_ids.shape[0], self.nO*self.nP), dtype='f')
+        cdef np.ndarray state_vector = numpy.zeros(
+            (token_ids.shape[0], self.nO, self.nP), dtype='f')
         # This is tricky, but (assuming GPU available);
         # - Input to forward on CPU
         # - Output from forward on CPU
@@ -166,16 +167,13 @@ cdef class precompute_hiddens:
             mask = state_vector >= 0.
             state_vector *= mask
         else:
-            state_vector = state_vector.reshape(
-                (state_vector.shape[0], self.nO, self.nP))
             state_vector, mask = self.ops.maxout(state_vector)
 
         def backprop_nonlinearity(d_best, sgd=None):
             if self.nP == 1:
                 return d_best * mask
             else:
-                d_vector = self.ops.backprop_maxout(d_best, mask, self.nP)
-                return d_vector.reshape((d_vector.shape[0], self.nO*self.nP))
+                return self.ops.backprop_maxout(d_best, mask, self.nP)
         return state_vector, backprop_nonlinearity
 
 
@@ -266,8 +264,9 @@ cdef class Parser:
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
-        lower = PrecomputableAffine(hidden_width * parser_maxout_pieces,
-                    nF=cls.nr_feature, nI=token_vector_width)
+        lower = PrecomputableAffine(hidden_width,
+                    nF=cls.nr_feature, nI=token_vector_width,
+                    nP=parser_maxout_pieces)
         lower.nP = parser_maxout_pieces
 
         with Model.use_device('cpu'):
