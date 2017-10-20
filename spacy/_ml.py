@@ -111,7 +111,7 @@ def _preprocess_doc(docs, drop=0.):
     nF=Dimension("Number of features"),
     nO=Dimension("Output size"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nI, obj.nF, obj.nO)),
+        lambda obj: (obj.nF, obj.nO, obj.nI)),
     b=Biases("Bias vector",
         lambda obj: (obj.nO,)),
     d_W=Gradient("W"),
@@ -124,48 +124,26 @@ class PrecomputableAffine(Model):
         self.nI = nI
         self.nF = nF
 
-    @property
-    def nFI(self):
-        return self.nI * self.nF
-
-    @property
-    def nFO(self):
-        return self.nF * self.nO
-
     def begin_update(self, X, drop=0.):
-        nN = X.shape[0]
-        # X: (b, i)
-        # Xf: (b, f, i)
-        # Yf: (b, f, o)
-        # dY: (b, o)
-        # dYf: (b, f, o)
-        # W: (i, f, o)
-        W = self.W.reshape((self.nI, self.nFO))
-        Yf = self.ops.xp.dot(X, W)
-        Yf = Yf.reshape((Yf.shape[0], self.nF, self.nO))
-        #Yf = einsum('ab,bc->ac', X, W)
+        tensordot = self.ops.xp.tensordot
+        ascontiguous = self.ops.xp.ascontiguousarray
+
+        Yf = tensordot(X, self.W, axes=[[1], [2]])
+
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
             Xf = X[ids]
-            # bo,fi_o->b_if -> b_fi
-            W_o_fi = self._transpose(self.W, shape=(self.nO, self.nFI))
-            dXf = self.ops.xp.dot(dY, W_o_fi).reshape((Xf.shape[0], self.nF, self.nI))
-            # bo,b_fi->o_fi
-            dW = Xf.reshape((Xf.shape[0], self.nFI))
-            dW = self.ops.xp.dot(Xf.T, dY)
-            dW = dW.reshape((self.nO, self.nF, self.nI))
-            self.d_W += dW.transpose((2, 1, 0))
+
+            dXf = tensordot(dY, self.W, axes=[[1], [1]])
+            dW = tensordot(dY, Xf, axes=[[0], [0]])
+
+            self.d_W += dW.transpose((1, 0, 2))
             self.d_b += dY.sum(axis=0)
 
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return dXf
         return Yf, backward
-
-    def _transpose(self, weights, shape):
-        weights = weights.transpose((2, 1, 0))
-        weights = self.ops.xp.ascontiguousarray(weights)
-        return weights.reshape(shape)
 
     @staticmethod
     def init_weights(model):
@@ -179,7 +157,7 @@ class PrecomputableAffine(Model):
         '''
         if (model.W**2).sum() != 0.:
             return
-        model.ops.normal_init(model.W, model.nFI, inplace=True)
+        model.ops.normal_init(model.W, model.nF * model.nI, inplace=True)
 
         ids = numpy.zeros((5000, model.nF), dtype='i')
         ids += numpy.asarray(numpy.random.uniform(0, 1000, ids.shape), dtype='i')
