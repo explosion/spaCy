@@ -13,7 +13,8 @@ from thinc.api import uniqued, wrap, flatten_add_lengths, noop
 
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module
+from thinc.neural.util import get_array_module, copy_array
+from thinc.neural._lsuv import svd_orthonormal
 
 import random
 import cytoolz
@@ -22,6 +23,7 @@ from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
+from thinc.neural._lsuv import svd_orthonormal
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP, CLUSTER
 from .tokens.doc import Doc
@@ -102,22 +104,14 @@ def _preprocess_doc(docs, drop=0.):
     return (keys, vals, lengths), None
 
 
-def _init_for_precomputed(W, ops):
-    if (W**2).sum() != 0.:
-        return
-    W = W.reshape((W.shape[0] * W.shape[1], W.shape[2]))
-    ops.xavier_uniform_init(W, inplace=True)
-    return W
-
-
-@describe.on_data(_set_dimensions_if_needed)
+@describe.on_data(_set_dimensions_if_needed,
+    lambda model, X, y: model.init_weights(model))
 @describe.attributes(
     nI=Dimension("Input size"),
     nF=Dimension("Number of features"),
     nO=Dimension("Output size"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nI, obj.nF, obj.nO),
-        lambda W, ops: _init_for_precomputed(W, ops)),
+        lambda obj: (obj.nI, obj.nF, obj.nO)),
     b=Biases("Bias vector",
         lambda obj: (obj.nO,)),
     d_W=Gradient("W"),
@@ -172,6 +166,52 @@ class PrecomputableAffine(Model):
         weights = weights.transpose((2, 1, 0))
         weights = self.ops.xp.ascontiguousarray(weights)
         return weights.reshape(shape)
+
+    @staticmethod
+    def init_weights(model):
+        '''This is like the 'layer sequential unit variance', but instead
+        of taking the actual inputs, we randomly generate whitened data.
+
+        Why's this all so complicated? We have a huge number of inputs,
+        and the maxout unit makes guessing the dynamics tricky. Instead
+        we set the maxout weights to values that empirically result in
+        whitened outputs given whitened inputs.
+        '''
+        if (model.W**2).sum() != 0.:
+            return
+        model.ops.normal_init(model.W, model.nFI, inplace=True)
+
+        ids = numpy.zeros((5000, model.nF), dtype='i')
+        ids += numpy.asarray(numpy.random.uniform(0, 1000, ids.shape), dtype='i')
+        tokvecs = numpy.zeros((5000, model.nI), dtype='f')
+        tokvecs += numpy.random.normal(loc=0., scale=1.,
+                    size=tokvecs.size).reshape(tokvecs.shape)
+
+        def predict(ids, tokvecs):
+            hiddens = model(tokvecs)
+            vector = model.ops.allocate((hiddens.shape[0], model.nO))
+            model.ops.scatter_add(vector, ids, hiddens)
+            vector += model.b
+            if model.nP >= 2:
+                vector = vector.reshape((ids.shape[0], model.nO//model.nP, model.nP))
+                return model.ops.maxout(vector)[0]
+            else:
+                return vector * (vector >= 0)
+
+        tol_var = 0.01
+        tol_mean = 0.01
+        t_max = 10
+        t_i = 0
+        for t_i in range(t_max):
+            acts1 = predict(ids, tokvecs)
+            var = numpy.var(acts1)
+            mean = numpy.mean(acts1)
+            if abs(var - 1.0) >= tol_var:
+                model.W /= numpy.sqrt(var)
+            elif abs(mean) >= tol_mean:
+                model.b -= mean
+            else:
+                break
 
 
 # Thinc's Embed class is a bit broken atm, so drop this here.
