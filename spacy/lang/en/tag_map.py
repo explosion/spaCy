@@ -55,11 +55,11 @@ TAG_MAP = {
     "WP":       {POS: NOUN, "PronType": "int|rel"},
     "WP$":      {POS: ADJ, "Poss": "yes", "PronType": "int|rel"},
     "WRB":      {POS: ADV, "PronType": "int|rel"},
-    "SP":       {POS: SPACE},
     "ADD":      {POS: X},
     "NFP":      {POS: PUNCT},
     "GW":       {POS: X},
     "XX":       {POS: X},
     "BES":      {POS: VERB},
-    "HVS":      {POS: VERB}
+    "HVS":      {POS: VERB},
+    "_SP":       {POS: SPACE},
 }
