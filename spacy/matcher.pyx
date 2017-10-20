@@ -391,7 +391,7 @@ cdef class Matcher:
                     matches.append((ent_id, start, end))
         # Look for open patterns that are actually satisfied
         for state in partials:
-            while state.second.quantifier in (ZERO, ZERO_PLUS):
+            while state.second.quantifier in (ZERO, ZERO_ONE, ZERO_PLUS):
                 state.second += 1
                 if state.second.nr_attr == 0:
                     start = state.first
