@@ -336,28 +336,40 @@ p
     +tag method
 
 p
-    |  Export the document annotations to a numpy array of shape #[code N*M]
-    |  where #[code N] is the length of the document and #[code M] is the number
-    |  of attribute IDs to export. The values will be 32-bit integers.
+    |  Export given token attributes to a numpy #[code ndarray].
+    |  If #[code attr_ids] is a sequence of #[code M] attributes,
+    |  the output array will  be of shape #[code (N, M)], where #[code N]
+    |  is the length of the #[code Doc] (in tokens). If #[code attr_ids] is
+    |  a single attribute, the output shape will be #[code (N,)]. You can
+    |  specify attributes by integer ID (e.g. #[code spacy.attrs.LEMMA])
+    |  or string name (e.g. 'LEMMA' or 'lemma'). The values will be 64-bit
+    |  integers.
 
 +aside-code("Example").
     from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
     doc = nlp(text)
     # All strings mapped to integers, for easy export to numpy
     np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
+    np_array = doc.to_array("POS")
 
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code attr_ids]
-        +cell list
-        +cell A list of attribute ID ints.
+        +cell list or int or string
+        +cell
+            | A list of attributes (int IDs or string names) or
+            | a single attribute (int ID or string name)
 
     +row("foot")
         +cell returns
-        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
+        +cell
+            | #[code.u-break numpy.ndarray[ndim=2, dtype='uint64']] or
+            | #[code.u-break numpy.ndarray[ndim=1, dtype='uint64']] or
         +cell
             |  The exported attributes as a 2D numpy array, with one row per
-            |  token and one column per attribute.
+            |  token and one column per attribute (when #[code attr_ids] is a
+            |  list), or as a 1D numpy array, with one item per attribute (when
+            |  #[code attr_ids] is a single value).
 
 +h(2, "from_array") Doc.from_array
     +tag method
