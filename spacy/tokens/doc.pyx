@@ -499,10 +499,10 @@ cdef class Doc:
         """
         cdef int i, j
         cdef attr_id_t feature
-        cdef np.ndarray[attr_t, ndim=1] attr_ids, output_1D
+        cdef np.ndarray[attr_t, ndim=1] attr_ids
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
-	    if not hasattr(py_attr_ids, '__iter__'):
+        if not hasattr(py_attr_ids, '__iter__'):
             py_attr_ids = [py_attr_ids]
 	
         # Allow strings, e.g. 'lemma' or 'LEMMA'
