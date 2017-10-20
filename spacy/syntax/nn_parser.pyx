@@ -116,8 +116,8 @@ cdef class precompute_hiddens:
         else:
             cached = gpu_cached
         self.nF = cached.shape[1]
-        self.nO = cached.shape[2]
         self.nP = getattr(lower_model, 'nP', 1)
+        self.nO = cached.shape[2] // self.nP
         self.ops = lower_model.ops
         self.bias = lower_model.b
         self._is_synchronized = False
@@ -174,7 +174,8 @@ cdef class precompute_hiddens:
             if self.nP == 1:
                 return d_best * mask
             else:
-                return self.ops.backprop_maxout(d_best, mask, self.nP)
+                d_vector = self.ops.backprop_maxout(d_best, mask, self.nP)
+                return d_vector.reshape((d_vector.shape[0], self.nO*self.nP))
         return state_vector, backprop_nonlinearity
 
 
@@ -267,6 +268,7 @@ cdef class Parser:
         tok2vec = chain(tok2vec, flatten)
         lower = PrecomputableAffine(hidden_width * parser_maxout_pieces,
                     nF=cls.nr_feature, nI=token_vector_width)
+        lower.nP = parser_maxout_pieces
 
         with Model.use_device('cpu'):
             upper = chain(
