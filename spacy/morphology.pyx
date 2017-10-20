@@ -426,3 +426,7 @@ IDS = {
 
 
 NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
+# Unfortunate hack here, to work around problem with long cpdef enum
+# (which is generating an enormous amount of C++ in Cython 0.24+)
+# We keep the enum cdef, and just make sure the names are available to Python
+locals().update(IDS)
