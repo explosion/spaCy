@@ -252,7 +252,7 @@ cdef class Vocab:
         """
         if new_dim is None:
             new_dim = self.vectors.data.shape[1]
-        self.vectors = Vectors(self.strings, new_dim)
+        self.vectors = Vectors(self.strings, width=new_dim)
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary.
