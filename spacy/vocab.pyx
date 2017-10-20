@@ -63,7 +63,6 @@ cdef class Vocab:
             for string in strings:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
-        print("Create morphology", list(self.strings), tag_map)
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors(self.strings, width=0)
 
