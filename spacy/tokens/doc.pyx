@@ -506,7 +506,7 @@ cdef class Doc:
             py_attr_ids = [py_attr_ids]
 	
         # Allow strings, e.g. 'lemma' or 'LEMMA'
-        py_attr_ids = [(IDS[id_.toupper()] if hasattr(id_, 'upper') else id_)
+        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
                        for id_ in py_attr_ids]
         # Make an array from the attributes --- otherwise inner loop would be Python
         # dict iteration.
