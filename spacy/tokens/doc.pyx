@@ -477,11 +477,11 @@ cdef class Doc:
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Export given token attributes to a numpy `ndarray`.
 
-	If `attr_ids` is a sequence of M attributes, the output array will
-	be of shape `(N, M)`, where N is the length of the `Doc`
-	(in tokens). If `attr_ids` is a single attribute, the output shape will
-	be (N,). You can specify attributes by integer ID (e.g. spacy.attrs.LEMMA)
-	or string name (e.g. 'LEMMA' or 'lemma').
+        If `attr_ids` is a sequence of M attributes, the output array will
+        be of shape `(N, M)`, where N is the length of the `Doc`
+        (in tokens). If `attr_ids` is a single attribute, the output shape will
+        be (N,). You can specify attributes by integer ID (e.g. spacy.attrs.LEMMA)
+        or string name (e.g. 'LEMMA' or 'lemma').
 
         Example:
             from spacy import attrs
@@ -499,28 +499,25 @@ cdef class Doc:
         """
         cdef int i, j
         cdef attr_id_t feature
+        cdef np.ndarray[attr_t, ndim=1] attr_ids, output_1D
         cdef np.ndarray[attr_t, ndim=2] output
-        cdef np.ndarray[attr_t, ndim=1] output_1D
         # Handle scalar/list inputs of strings/ints for py_attr_ids
-        if( type(py_attr_ids) is not list and type(py_attr_ids) is not tuple ):
-            py_attr_ids = [ py_attr_ids ]
-        py_attr_ids_input = []
-        for py_attr_id in py_attr_ids:
-            if( type(py_attr_id) is int ):
-                py_attr_ids_input.append(py_attr_id)
-            else:
-                py_attr_ids_input.append(IDS[py_attr_id.upper()])
-        # Make an array from the attributes --- otherwise our inner loop is Python
+	    if not hasattr(py_attr_ids, '__iter__'):
+            py_attr_ids = [py_attr_ids]
+	
+        # Allow strings, e.g. 'lemma' or 'LEMMA'
+        convert_id = lambda id_:  IDS[id_.upper()] if hasattr(id_, 'upper') else id_
+        # Make an array from the attributes --- otherwise inner loop would be Python
         # dict iteration.
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids_input, dtype=numpy.int32)
+        attr_ids = numpy.asarray((convert_id(id_) for id_ in py_attr_ids),
+                                 dtype=numpy.int32)
+									   
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
-        if( len(attr_ids) == 1 ):
-            output_1D = output.reshape((self.length))
-            return output_1D
-        return output
+        # Handle 1d case
+        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
     def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
         """
