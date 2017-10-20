@@ -506,12 +506,11 @@ cdef class Doc:
             py_attr_ids = [py_attr_ids]
 	
         # Allow strings, e.g. 'lemma' or 'LEMMA'
-        convert_id = lambda id_:  IDS[id_.upper()] if hasattr(id_, 'upper') else id_
+        py_attr_ids = [(IDS[id_.toupper()] if hasattr(id_, 'upper') else id_)
+                       for id_ in py_attr_ids]
         # Make an array from the attributes --- otherwise inner loop would be Python
         # dict iteration.
-        attr_ids = numpy.asarray((convert_id(id_) for id_ in py_attr_ids),
-                                 dtype=numpy.int32)
-									   
+        attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.int32)									   
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
