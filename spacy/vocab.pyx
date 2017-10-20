@@ -400,6 +400,7 @@ cdef class Vocab:
         cdef int j = 0
         cdef SerializedLexemeC lex_data
         chunk_size = sizeof(lex_data.data)
+        cdef void* ptr
         cdef unsigned char* bytes_ptr = bytes_data
         for i in range(0, len(bytes_data), chunk_size):
             lexeme = <LexemeC*>self.mem.alloc(1, sizeof(LexemeC))
@@ -407,6 +408,9 @@ cdef class Vocab:
                 lex_data.data[j] = bytes_ptr[i+j]
             Lexeme.c_from_bytes(lexeme, lex_data)
 
+            ptr = self.strings._map.get(lexeme.orth)
+            if ptr == NULL:
+                continue
             py_str = self.strings[lexeme.orth]
             assert self.strings[py_str] == lexeme.orth, (py_str, lexeme.orth)
             key = hash_string(py_str)
