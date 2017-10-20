@@ -110,17 +110,19 @@ def _preprocess_doc(docs, drop=0.):
     nI=Dimension("Input size"),
     nF=Dimension("Number of features"),
     nO=Dimension("Output size"),
+    nP=Dimension("Maxout pieces"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nF, obj.nO, obj.nI)),
+        lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI)),
     b=Biases("Bias vector",
-        lambda obj: (obj.nO,)),
+        lambda obj: (obj.nO, obj.nP)),
     d_W=Gradient("W"),
     d_b=Gradient("b")
 )
 class PrecomputableAffine(Model):
-    def __init__(self, nO=None, nI=None, nF=None, **kwargs):
+    def __init__(self, nO=None, nI=None, nF=None, nP=None, **kwargs):
         Model.__init__(self, **kwargs)
         self.nO = nO
+        self.nP = nP
         self.nI = nI
         self.nF = nF
 
@@ -128,16 +130,16 @@ class PrecomputableAffine(Model):
         tensordot = self.ops.xp.tensordot
         ascontiguous = self.ops.xp.ascontiguousarray
 
-        Yf = tensordot(X, self.W, axes=[[1], [2]])
+        Yf = tensordot(X, self.W, axes=[[1], [3]])
 
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
             Xf = X[ids]
 
-            dXf = tensordot(dY, self.W, axes=[[1], [1]])
+            dXf = tensordot(dY, self.W, axes=[[1,2], [1,2]])
             dW = tensordot(dY, Xf, axes=[[0], [0]])
-
-            self.d_W += dW.transpose((1, 0, 2))
+            # (o, p, f, i) --> (f, o, p, i)
+            self.d_W += dW.transpose((2, 0, 1, 3))
             self.d_b += dY.sum(axis=0)
 
             if sgd is not None:
@@ -167,11 +169,10 @@ class PrecomputableAffine(Model):
 
         def predict(ids, tokvecs):
             hiddens = model(tokvecs)
-            vector = model.ops.allocate((hiddens.shape[0], model.nO))
+            vector = model.ops.allocate((hiddens.shape[0], model.nO, model.nP))
             model.ops.scatter_add(vector, ids, hiddens)
             vector += model.b
             if model.nP >= 2:
-                vector = vector.reshape((ids.shape[0], model.nO//model.nP, model.nP))
                 return model.ops.maxout(vector)[0]
             else:
                 return vector * (vector >= 0)
