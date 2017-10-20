@@ -32,7 +32,7 @@ cdef class Vectors:
     cdef public object keys
     cdef public int i
 
-    def __init__(self, strings, data=None, width=0):
+    def __init__(self, strings, width=0, data=None):
         if isinstance(strings, StringStore):
             self.strings = strings
         else:
@@ -46,6 +46,10 @@ cdef class Vectors:
         self.i = 0
         self.key2row = {}
         self.keys = numpy.zeros((self.data.shape[0],), dtype='uint64')
+        for i, string in enumerate(self.strings):
+            if i >= self.data.shape[0]:
+                break
+            self.add(self.strings[string], self.data[i])
 
     def __reduce__(self):
         return (Vectors, (self.strings, self.data))
