@@ -467,3 +467,4 @@ cdef enum symbol_t:
 # We therefore wait until the next data version to add them.
 # acl
 
+    LAW

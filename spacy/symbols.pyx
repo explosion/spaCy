@@ -458,6 +458,7 @@ IDS = {
     "rcmod": rcmod,
     "root": root,
     "xcomp": xcomp
+    "LAW": LAW
 }
 
 def sort_nums(x):
