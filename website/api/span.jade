@@ -302,6 +302,25 @@ p Retokenize the document, such that the span is merged into a single token.
         +cell #[code Token]
         +cell The newly merged token.
 
++h(2, "as_doc") Span.as_doc
+
+p
+    |  Create a #[code Doc] object view of the #[code Span]'s data. Mostly
+    |  useful for C-typed interfaces.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    span = doc[2:4]
+    doc2 = span.as_doc()
+    assert doc2.text == 'New York'
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell A #[code Doc] object of the #[code Span]'s content.
+
+
 +h(2, "root") Span.root
     +tag property
     +tag-model("parse")
