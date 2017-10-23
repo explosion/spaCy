@@ -284,7 +284,7 @@ p Retokenize the document, such that the span is merged into a single token.
 
 +aside-code("Example").
     doc = nlp(u'I like New York in Autumn.')
-    span = doc[2:3]
+    span = doc[2:4]
     span.merge()
     assert len(doc) == 6
     assert doc[2].text == 'New York'
