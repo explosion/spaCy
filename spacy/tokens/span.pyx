@@ -129,6 +129,7 @@ cdef class Span:
     def _(self):
         return Underscore(Underscore.span_extensions, self,
                           start=self.start_char, end=self.end_char)
+
     def as_doc(self):
         '''Create a Doc object view of the Span's data.
 
