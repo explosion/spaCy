@@ -100,7 +100,7 @@ def test_spans_are_hashable(en_tokenizer):
     assert hash(span1) != hash(span2)
     span3 = tokens[0:2]
     assert hash(span3) == hash(span1)
- 
+
 
 def test_spans_by_character(doc):
     span1 = doc[1:-2]
@@ -117,3 +117,9 @@ def test_span_to_array(doc):
     assert arr[0, 0] == span[0].orth
     assert arr[0, 1] == len(span[0])
 
+
+@pytest.mark.xfail
+def test_span_as_doc(doc):
+    span = doc[4:10]
+    span_doc = span.as_doc()
+    assert span.text == span_doc.text

@@ -154,13 +154,16 @@
 
     "tokenizer": {
         "title": "Tokenizer",
+        "teaser": "Segment text into words, punctuations marks etc.",
         "tag": "class",
         "source": "spacy/tokenizer.pyx"
     },
 
     "lemmatizer": {
         "title": "Lemmatizer",
-        "tag": "class"
+        "teaser": "Assign the base forms of words.",
+        "tag": "class",
+        "source": "spacy/lemmatizer.py"
     },
 
     "tagger": {

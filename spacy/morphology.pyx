@@ -172,7 +172,7 @@ cdef class Morphology:
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
             return self.strings.add(py_string.lower())
-        cdef set lemma_strings
+        cdef list lemma_strings
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
         lemma_string = sorted(lemma_strings)[0]

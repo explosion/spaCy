@@ -181,7 +181,7 @@ mixin codepen(slug, height, default_tab)
     alt_file - [string] alternative file path used in footer and link button
     height   - [integer] height of code preview in px
 
-mixin github(repo, file, alt_file, height)
+mixin github(repo, file, alt_file, height, language)
     - var branch = ALPHA ? "develop" : "master"
     - var height = height || 250
 
