@@ -79,9 +79,9 @@ cdef class Tokenizer:
                 "String is too long: %d characters. Max is 2**30." % len(string)
             )
         cdef int length = len(string)
-        cdef Doc tokens = Doc(self.vocab)
+        cdef Doc doc = Doc(self.vocab)
         if length == 0:
-            return tokens
+            return doc
         cdef int i = 0
         cdef int start = 0
         cdef bint cache_hit
@@ -100,11 +100,11 @@ cdef class Tokenizer:
                     # we don't have to create the slice when we hit the cache.
                     span = string[start:i]
                     key = hash_string(span)
-                    cache_hit = self._try_cache(key, tokens)
+                    cache_hit = self._try_cache(key, doc)
                     if not cache_hit:
-                        self._tokenize(tokens, span, key)
+                        self._tokenize(doc, span, key)
                 if uc == ' ':
-                    tokens.c[tokens.length - 1].spacy = True
+                    doc.c[doc.length - 1].spacy = True
                     start = i + 1
                 else:
                     start = i
@@ -113,11 +113,11 @@ cdef class Tokenizer:
         if start < i:
             span = string[start:]
             key = hash_string(span)
-            cache_hit = self._try_cache(key, tokens)
+            cache_hit = self._try_cache(key, doc)
             if not cache_hit:
-                self._tokenize(tokens, span, key)
-            tokens.c[tokens.length - 1].spacy = string[-1] == ' ' and not in_ws
-        return tokens
+                self._tokenize(doc, span, key)
+            doc.c[doc.length - 1].spacy = string[-1] == ' ' and not in_ws
+        return doc
 
     def pipe(self, texts, batch_size=1000, n_threads=2):
         """Tokenize a stream of texts.
@@ -248,7 +248,8 @@ cdef class Tokenizer:
 
                         start = infix_end
                     span = string[start:]
-                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
+                    if span:
+                        tokens.push_back(self.vocab.get(tokens.mem, span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             lexeme = deref(it)

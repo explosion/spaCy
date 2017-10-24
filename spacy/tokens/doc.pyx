@@ -9,6 +9,7 @@ import numpy
 import numpy.linalg
 import struct
 import dill
+import msgpack
 
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
@@ -20,17 +21,17 @@ from .token cimport Token
 from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
-from ..attrs import intify_attrs
+from ..attrs import intify_attrs, IDS
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..attrs cimport SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..util import normalize_slice
-from ..compat import is_config
+from ..compat import is_config, copy_reg, pickle
 from .. import about
 from .. import util
-
+from .underscore import Underscore
 
 DEF PADDING = 5
 
@@ -64,6 +65,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
+
 def _get_chunker(lang):
     try:
         cls = util.get_lang_class(lang)
@@ -72,6 +74,7 @@ def _get_chunker(lang):
     except KeyError:
         return None
     return cls.Defaults.syntax_iterators.get(u'noun_chunks')
+
 
 cdef class Doc:
     """A sequence of Token objects. Access sentences and named entities, export
@@ -87,7 +90,23 @@ cdef class Doc:
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'], spaces=[True, False, False])
     """
-    def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
+    @classmethod
+    def set_extension(cls, name, default=None, method=None,
+                      getter=None, setter=None):
+        nr_defined = sum(t is not None for t in (default, getter, setter, method))
+        assert nr_defined == 1
+        Underscore.doc_extensions[name] = (default, method, getter, setter) 
+
+    @classmethod
+    def get_extension(cls, name):
+        return Underscore.doc_extensions.get(name)
+
+    @classmethod
+    def has_extension(cls, name):
+        return name in Underscore.doc_extensions
+
+    def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
+                 orths_and_spaces=None):
         """Create a Doc object.
 
         vocab (Vocab): A vocabulary object, which must match any models you want
@@ -97,6 +116,8 @@ cdef class Doc:
         spaces (list or None): A list of boolean values, of the same length as
             words. True means that the word is followed by a space, False means
             it is not. If `None`, defaults to `[True]*len(words)`
+        user_data (dict or None): Optional extra data to attach to the Doc.
+ 
         RETURNS (Doc): The newly constructed object.
         """
         self.vocab = vocab
@@ -117,12 +138,12 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self.sentiment = 0.0
+        self.cats = {}
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
         self.tensor = numpy.zeros((0,), dtype='float32')
-        self.user_data = {}
-        self._py_tokens = []
+        self.user_data = {} if user_data is None else user_data
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
         cdef unicode orth
@@ -158,6 +179,10 @@ cdef class Doc:
             self.is_tagged = True
             self.is_parsed = True
 
+    @property
+    def _(self):
+        return Underscore(Underscore.doc_extensions, self)
+
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
 
@@ -187,10 +212,7 @@ cdef class Doc:
         if i < 0:
             i = self.length + i
         bounds_check(i, self.length, PADDING)
-        if self._py_tokens[i] is not None:
-            return self._py_tokens[i]
-        else:
-            return Token.cinit(self.vocab, &self.c[i], i, self)
+        return Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __iter__(self):
         """Iterate over `Token`  objects, from which the annotations can be
@@ -204,10 +226,7 @@ cdef class Doc:
         """
         cdef int i
         for i in range(self.length):
-            if self._py_tokens[i] is not None:
-                yield self._py_tokens[i]
-            else:
-                yield Token.cinit(self.vocab, &self.c[i], i, self)
+            yield Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __len__(self):
         """The number of tokens in the document.
@@ -236,6 +255,29 @@ cdef class Doc:
     @property
     def doc(self):
         return self
+
+    def char_span(self, int start_idx, int end_idx, label=0, vector=None):
+        """Create a `Span` object from the slice `doc.text[start : end]`.
+
+        doc (Doc): The parent document.
+        start (int): The index of the first character of the span.
+        end (int): The index of the first character after the span.
+        label (uint64 or string): A label to attach to the Span, e.g. for named entities.
+        vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
+        RETURNS (Span): The newly constructed object.
+        """
+        if not isinstance(label, int):
+            label = self.vocab.strings.add(label)
+        cdef int start = token_by_start(self.c, self.length, start_idx)
+        if start == -1:
+            return None
+        cdef int end = token_by_end(self.c, self.length, end_idx)
+        if end == -1:
+            return None
+        # Currently we have the token index, we want the range-end index
+        end += 1
+        cdef Span span = Span(self, start, end, label=label, vector=vector)
+        return span
 
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
@@ -279,8 +321,14 @@ cdef class Doc:
                 return self.user_hooks['vector'](self)
             if self._vector is not None:
                 return self._vector
-            elif self.has_vector and len(self):
-                self._vector = sum(t.vector for t in self) / len(self)
+            elif not len(self):
+                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                return self._vector
+            elif self.has_vector:
+                vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                for token in self.c[:self.length]:
+                    vector += self.vocab.get_vector(token.lex.orth)
+                self._vector = vector / len(self)
                 return self._vector
             elif self.tensor is not None:
                 self._vector = self.tensor.mean(axis=0)
@@ -455,7 +503,7 @@ cdef class Doc:
             cdef int i
             start = 0
             for i in range(1, self.length):
-                if self.c[i].sent_start:
+                if self.c[i].sent_start == 1:
                     yield Span(self, start, i)
                     start = i
             if start != self.length:
@@ -482,16 +530,21 @@ cdef class Doc:
         assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
-        self._py_tokens.append(None)
+        # Set morphological attributes, e.g. by lemma, if possible
+        self.vocab.morphology.assign_untagged(t)
         return t.idx + t.lex.length + t.spacy
 
     @cython.boundscheck(False)
     cpdef np.ndarray to_array(self, object py_attr_ids):
-        """Given a list of M attribute IDs, export the tokens to a numpy
-        `ndarray` of shape `(N, M)`, where `N` is the length of the document.
-        The values will be 32-bit integers.
+        """Export given token attributes to a numpy `ndarray`.
 
-        attr_ids (list[int]): A list of attribute ID ints.
+	If `attr_ids` is a sequence of M attributes, the output array will
+	be of shape `(N, M)`, where N is the length of the `Doc`
+	(in tokens). If `attr_ids` is a single attribute, the output shape will
+	be (N,). You can specify attributes by integer ID (e.g. spacy.attrs.LEMMA)
+	or string name (e.g. 'LEMMA' or 'lemma').
+
+        attr_ids (list[]): A list of attributes (int IDs or string names).
         RETURNS (numpy.ndarray[long, ndim=2]): A feature matrix, with one row
             per word, and one column per attribute indicated in the input
             `attr_ids`.
@@ -504,15 +557,25 @@ cdef class Doc:
         """
         cdef int i, j
         cdef attr_id_t feature
+        cdef np.ndarray[attr_t, ndim=1] attr_ids
         cdef np.ndarray[attr_t, ndim=2] output
+        # Handle scalar/list inputs of strings/ints for py_attr_ids
+        if not hasattr(py_attr_ids, '__iter__'):
+            py_attr_ids = [py_attr_ids]
+
+        # Allow strings, e.g. 'lemma' or 'LEMMA'
+        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
+                       for id_ in py_attr_ids]
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
+        attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
-        return output
+        # Handle 1d case
+        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
+
 
     def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
@@ -611,6 +674,54 @@ cdef class Doc:
         self.is_tagged = bool(TAG in attrs or POS in attrs)
         return self
 
+    def get_lca_matrix(self):
+        '''
+        Calculates the lowest common ancestor matrix
+        for a given Spacy doc.
+        Returns LCA matrix containing the integer index
+        of the ancestor, or -1 if no common ancestor is
+        found (ex if span excludes a necessary ancestor).
+        Apologies about the recursion, but the
+        impact on performance is negligible given
+        the natural limitations on the depth of a typical human sentence.
+        '''
+        # Efficiency notes:
+        #
+        # We can easily improve the performance here by iterating in Cython.
+        # To loop over the tokens in Cython, the easiest way is:
+        # for token in doc.c[:doc.c.length]:
+        #     head = token + token.head
+        # Both token and head will be TokenC* here. The token.head attribute
+        # is an integer offset.
+        def __pairwise_lca(token_j, token_k, lca_matrix):
+            if lca_matrix[token_j.i][token_k.i] != -2:
+                return lca_matrix[token_j.i][token_k.i]
+            elif token_j == token_k:
+                lca_index = token_j.i
+            elif token_k.head == token_j:
+                lca_index = token_j.i
+            elif token_j.head == token_k:
+                lca_index = token_k.i
+            elif (token_j.head == token_j) and (token_k.head == token_k):
+                lca_index = -1
+            else:
+                lca_index = __pairwise_lca(token_j.head, token_k.head, lca_matrix)
+            lca_matrix[token_j.i][token_k.i] = lca_index
+            lca_matrix[token_k.i][token_j.i] = lca_index
+
+            return lca_index
+
+        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
+        lca_matrix.fill(-2)
+        for j in range(len(self)):
+            token_j = self[j]
+            for k in range(j, len(self)):
+                token_k = self[k]
+                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix)
+                lca_matrix[k][j] = lca_matrix[j][k]
+
+        return lca_matrix
+
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
 
@@ -630,7 +741,7 @@ cdef class Doc:
         """
         with path.open('rb') as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, **exclude)
+        return self.from_bytes(bytes_data, **exclude)
 
     def to_bytes(self, **exclude):
         """Serialize, i.e. export the document contents to a binary string.
@@ -639,14 +750,22 @@ cdef class Doc:
             all annotations.
         """
         array_head = [LENGTH,SPACY,TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE]
+        # Msgpack doesn't distinguish between lists and tuples, which is
+        # vexing for user data. As a best guess, we *know* that within
+        # keys, we must have tuples. In values we just have to hope
+        # users don't mind getting a list instead of a tuple.
         serializers = {
             'text': lambda: self.text,
             'array_head': lambda: array_head,
             'array_body': lambda: self.to_array(array_head),
             'sentiment': lambda: self.sentiment,
             'tensor': lambda: self.tensor,
-            'user_data': lambda: self.user_data
         }
+        if 'user_data' not in exclude and self.user_data:
+            user_data_keys, user_data_values = list(zip(*self.user_data.items()))
+            serializers['user_data_keys'] = lambda: msgpack.dumps(user_data_keys)
+            serializers['user_data_values'] = lambda: msgpack.dumps(user_data_values)
+
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -663,10 +782,20 @@ cdef class Doc:
             'array_body': lambda b: None,
             'sentiment': lambda b: None,
             'tensor': lambda b: None,
-            'user_data': lambda user_data: self.user_data.update(user_data)
+            'user_data_keys': lambda b: None,
+            'user_data_values': lambda b: None,
         }
 
         msg = util.from_bytes(bytes_data, deserializers, exclude)
+        # Msgpack doesn't distinguish between lists and tuples, which is
+        # vexing for user data. As a best guess, we *know* that within
+        # keys, we must have tuples. In values we just have to hope
+        # users don't mind getting a list instead of a tuple.
+        if 'user_data' not in exclude and 'user_data_keys' in msg:
+            user_data_keys = msgpack.loads(msg['user_data_keys'], use_list=False)
+            user_data_values = msgpack.loads(msg['user_data_values'])
+            for key, value in zip(user_data_keys, user_data_values):
+                self.user_data[key] = value
 
         cdef attr_t[:, :] attrs
         cdef int i, start, end, has_space
@@ -788,7 +917,6 @@ cdef class Doc:
         # Set the left/right children, left/right edges
         set_children_from_heads(self.c, self.length)
         # Clear the cached Python objects
-        self._py_tokens = [None] * self.length
         # Return the merged Python object
         return self[start]
 
@@ -869,4 +997,25 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
+
+
+def pickle_doc(doc):
+    bytes_data = doc.to_bytes(vocab=False, user_data=False)
+    hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
+                      doc.user_token_hooks)
+    return (unpickle_doc, (doc.vocab, dill.dumps(hooks_and_data), bytes_data))
+
+
+def unpickle_doc(vocab, hooks_and_data, bytes_data):
+    user_data, doc_hooks, span_hooks, token_hooks = dill.loads(hooks_and_data)
+ 
+    doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data,
+                                                     exclude='user_data')
+    doc.user_hooks.update(doc_hooks)
+    doc.user_span_hooks.update(span_hooks)
+    doc.user_token_hooks.update(token_hooks)
+    return doc
+
+
+copy_reg.pickle(Doc, pickle_doc, unpickle_doc)
 

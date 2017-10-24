@@ -33,6 +33,7 @@ cdef class Doc:
     cdef public object _vector_norm
 
     cdef public object tensor
+    cdef public object cats
     cdef public object user_data
 
     cdef TokenC* c
@@ -53,7 +54,9 @@ cdef class Doc:
 
     cdef public object noun_chunks_iterator
 
-    cdef int push_back(self, LexemeOrToken lex_or_tok, bint trailing_space) except -1
+    cdef object __weakref__
+
+    cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1
 
     cpdef np.ndarray to_array(self, object features)
 

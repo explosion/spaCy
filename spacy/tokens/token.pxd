@@ -19,10 +19,7 @@ cdef class Token:
         if offset < 0 or offset >= doc.length:
             msg = "Attempt to access token at %d, max length %d"
             raise IndexError(msg % (offset, doc.length))
-        if doc._py_tokens[offset] != None:
-            return doc._py_tokens[offset]
         cdef Token self = Token.__new__(Token, vocab, doc, offset)
-        doc._py_tokens[offset] = self
         return self
 
     #cdef inline TokenC struct_from_attrs(Vocab vocab, attrs):

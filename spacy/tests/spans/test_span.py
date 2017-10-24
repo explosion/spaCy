@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ..util import get_doc
+from ...attrs import ORTH, LENGTH
 
 import pytest
 
@@ -54,6 +55,17 @@ def test_spans_span_sent(doc):
     assert doc[6:7].sent.root.left_edge.text == 'This'
 
 
+def test_spans_lca_matrix(en_tokenizer):
+    """Test span's lca matrix generation"""
+    tokens = en_tokenizer('the lazy dog slept')
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
+    lca = doc[:2].get_lca_matrix()
+    assert(lca[0, 0] == 0)
+    assert(lca[0, 1] == -1)
+    assert(lca[1, 0] == -1)
+    assert(lca[1, 1] == 1)
+
+
 def test_spans_default_sentiment(en_tokenizer):
     """Test span.sentiment property's default averaging behaviour"""
     text = "good stuff bad stuff"
@@ -89,3 +101,19 @@ def test_spans_are_hashable(en_tokenizer):
     span3 = tokens[0:2]
     assert hash(span3) == hash(span1)
  
+
+def test_spans_by_character(doc):
+    span1 = doc[1:-2]
+    span2 = doc.char_span(span1.start_char, span1.end_char, label='GPE')
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == 'GPE'
+
+
+def test_span_to_array(doc):
+    span = doc[1:-2]
+    arr = span.to_array([ORTH, LENGTH])
+    assert arr.shape == (len(span), 2)
+    assert arr[0, 0] == span[0].orth
+    assert arr[0, 1] == len(span[0])
+

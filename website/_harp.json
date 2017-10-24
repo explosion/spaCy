@@ -11,12 +11,9 @@
         "COMPANY": "Explosion AI",
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
+        "MODELS_REPO": "explosion/spacy-models",
 
-        "SPACY_VERSION": "1.8",
-        "LATEST_NEWS": {
-            "url": "https://github.com/explosion/spaCy/releases/tag/v2.0.0-alpha",
-            "title": "Test spaCy v2.0.0 alpha!"
-        },
+        "SPACY_VERSION": "2.0",
 
         "SOCIAL": {
             "twitter": "spacy_io",
@@ -27,25 +24,23 @@
         },
 
         "NAVIGATION": {
-            "Home": "/",
-            "Usage": "/docs/usage",
-            "Reference": "/docs/api",
-            "Demos": "/docs/usage/showcase",
-            "Blog": "https://explosion.ai/blog"
+            "Usage": "/usage",
+            "Models": "/models",
+            "API": "/api"
         },
 
         "FOOTER": {
             "spaCy": {
-                "Usage": "/docs/usage",
-                "API Reference": "/docs/api",
-                "Tutorials": "/docs/usage/tutorials",
-                "Showcase": "/docs/usage/showcase"
+                "Usage": "/usage",
+                "Models": "/models",
+                "API Reference": "/api",
+                "Resources": "/usage/resources"
             },
             "Support": {
                 "Issue Tracker": "https://github.com/explosion/spaCy/issues",
                 "StackOverflow": "http://stackoverflow.com/questions/tagged/spacy",
-                "Reddit usergroup": "https://www.reddit.com/r/spacynlp/",
-                "Gitter chat": "https://gitter.im/explosion/spaCy"
+                "Reddit Usergroup": "https://www.reddit.com/r/spacynlp/",
+                "Gitter Chat": "https://gitter.im/explosion/spaCy"
             },
             "Connect": {
                 "Twitter": "https://twitter.com/spacy_io",
@@ -74,21 +69,11 @@
                 {"id": "venv", "title": "virtualenv", "help": "Use a virtual environment and install spaCy into a user directory" },
                 {"id": "gpu", "title": "GPU", "help": "Run spaCy on GPU to make it faster. Requires an NVDIA graphics card with CUDA 2+. See section below for more info."}]
             },
-            { "id": "model", "title": "Models", "multiple": true, "options": [
-                { "id": "en", "title": "English", "meta": "50MB" },
-                { "id": "de", "title": "German", "meta": "645MB" },
-                { "id": "fr", "title": "French", "meta": "1.33GB" },
-                { "id": "es", "title": "Spanish", "meta": "377MB"}]
-            }
+            { "id": "model", "title": "Models", "multiple": true }
         ],
 
         "QUICKSTART_MODELS": [
-            { "id": "lang", "title": "Language", "options": [
-                { "id": "en", "title": "English", "checked": true },
-                { "id": "de", "title": "German" },
-                { "id": "fr", "title": "French" },
-                { "id": "es", "title": "Spanish" }]
-            },
+            { "id": "lang", "title": "Language"},
             { "id": "load", "title": "Loading style", "options": [
                 { "id": "spacy", "title": "Use spacy.load()", "checked": true, "help": "Use spaCy's built-in loader to load the model by name." },
                 {  "id": "module", "title": "Import as module", "help": "Import the model explicitly as a Python module." }]
@@ -98,50 +83,15 @@
             }
         ],
 
-        "MODELS": {
-            "en": [
-                { "id": "en_core_web_sm", "lang": "English", "feats": [1, 1, 1, 1], "size": "50 MB", "license": "CC BY-SA", "def": true },
-                { "id": "en_core_web_md", "lang": "English", "feats": [1, 1, 1, 1], "size": "1 GB", "license": "CC BY-SA" },
-                { "id": "en_depent_web_md", "lang": "English", "feats": [1, 1, 1, 0], "size": "328 MB", "license": "CC BY-SA" },
-                { "id": "en_vectors_glove_md", "lang": "English", "feats": [1, 0, 0, 1], "size": "727 MB", "license": "CC BY-SA" }
-            ],
-            "de": [
-                { "id": "de_core_news_md", "lang": "German", "feats": [1, 1, 1, 1], "size": "645 MB", "license": "CC BY-SA" }
-            ],
-            "fr": [
-                { "id": "fr_depvec_web_lg", "lang": "French", "feats": [1, 1, 0, 1], "size": "1.33 GB", "license": "CC BY-NC" }
-            ],
-            "es": [
-                { "id": "es_core_web_md", "lang": "Spanish", "feats": [1, 1, 1, 1], "size": "377 MB", "license": "CC BY-SA"}
-            ]
-        },
-
-        "EXAMPLE_SENTENCES": {
-            "en": "This is a sentence.",
-            "de": "Dies ist ein Satz.",
-            "fr": "C'est une phrase.",
-            "es": "Esto es una frase."
-        },
-
         "ALPHA": true,
-        "V_CSS": "1.6",
-        "V_JS": "1.2",
+        "V_CSS": "2.0a1",
+        "V_JS": "2.0a0",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {
             "user": "spacy.us12",
             "id": "83b0498b1e7fa3c91ce68c3f1",
             "list": "89ad33e698"
-        },
-        "BADGES": {
-            "pipy": {
-                "badge": "https://img.shields.io/pypi/v/spacy.svg?style=flat-square",
-                "link": "https://pypi.python.org/pypi/spacy"
-            },
-            "conda": {
-                "badge": "https://anaconda.org/conda-forge/spacy/badges/version.svg",
-                "link": "https://anaconda.org/conda-forge/spacy"
-            }
         }
     }
 }

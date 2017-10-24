@@ -1,0 +1,77 @@
+//- 💫 INCLUDES > MODELS PAGE TEMPLATE
+
+for id in CURRENT_MODELS
+    +section(id)
+        +grid("vcenter").o-no-block(id=id)
+            +grid-col("two-thirds")
+                +h(2)
+                    +a("#" + id).u-permalink=id
+
+            +grid-col("third").u-text-right
+                .u-color-subtle.u-text-tiny
+                    +button(gh("spacy-models") + "/releases", true, "secondary", "small")(data-tpl=id data-tpl-key="download")
+                        |  Release details
+                    .u-padding-small Latest: #[code(data-tpl=id data-tpl-key="version") n/a]
+
+        +aside-code("Installation", "bash", "$").
+            spacy download #{id}
+
+        - var comps = getModelComponents(id)
+
+        p(data-tpl=id data-tpl-key="description")
+
+        div(data-tpl=id data-tpl-key="error" style="display: none")
+            +infobox
+                |  Unable to load model details from GitHub. To find out more
+                |  about this model, see the overview of the
+                |  #[+a(gh("spacy-models") + "/releases") latest model releases].
+
+        +table(data-tpl=id data-tpl-key="table")
+            +row
+                +cell #[+label Language]
+                +cell #[+tag=comps.lang] #{LANGUAGES[comps.lang]}
+            for comp, label in {"Type": comps.type, "Genre": comps.genre}
+                +row
+                    +cell #[+label=label]
+                    +cell #[+tag=comp] #{MODEL_META[comp]}
+            +row
+                +cell #[+label Size]
+                +cell #[+tag=comps.size] #[span(data-tpl=id data-tpl-key="size") #[em n/a]]
+
+            each label in ["Pipeline", "Sources", "Author", "License"]
+                - var field = label.toLowerCase()
+                +row
+                    +cell.u-nowrap
+                        +label=label
+                            if MODEL_META[field]
+                                |  #[+help(MODEL_META[field]).u-color-subtle]
+                    +cell
+                        span(data-tpl=id data-tpl-key=field) #[em n/a]
+
+            +row(data-tpl=id data-tpl-key="compat-wrapper" style="display: none")
+                +cell
+                    +label Compat #[+help("Latest compatible model version for your spaCy installation").u-color-subtle]
+                +cell
+                    .o-field.u-float-left
+                        select.o-field__select.u-text-small(data-tpl=id data-tpl-key="compat")
+                    .o-empty(data-tpl=id data-tpl-key="compat-versions") &nbsp;
+
+        section(data-tpl=id data-tpl-key="accuracy-wrapper" style="display: none")
+            +grid.o-no-block
+                +grid-col("third")
+                    +h(4) Accuracy
+                    +table.o-block-small
+                        for label, field in MODEL_ACCURACY
+                            +row(style="display: none")
+                                +cell.u-nowrap
+                                    +label=label
+                                        if MODEL_META[field]
+                                            |  #[+help(MODEL_META[field]).u-color-subtle]
+                                +cell.u-text-right(data-tpl=id data-tpl-key=field)
+                                    |  n/a
+
+                +grid-col("two-thirds")
+                    +h(4) Comparison
+                    +chart(id).u-padding-small
+
+        p.u-text-small.u-color-dark(data-tpl=id data-tpl-key="notes")

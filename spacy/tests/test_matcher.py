@@ -34,7 +34,6 @@ def test_matcher_from_api_docs(en_vocab):
     assert len(patterns[0])
 
 
-@pytest.mark.xfail
 def test_matcher_from_usage_docs(en_vocab):
     text = "Wow 😀 This is really cool! 😂 😂"
     doc = get_doc(en_vocab, words=text.split(' '))
@@ -46,7 +45,8 @@ def test_matcher_from_usage_docs(en_vocab):
         if doc.vocab.strings[match_id] == 'HAPPY':
             doc.sentiment += 0.1
         span = doc[start : end]
-        token = span.merge(norm='happy emoji')
+        token = span.merge()
+        token.vocab[token.text].norm_ = 'happy emoji'
 
     matcher = Matcher(en_vocab)
     matcher.add('HAPPY', label_sentiment, *pos_patterns)
@@ -98,11 +98,36 @@ def test_matcher_match_multi(matcher):
                             (doc.vocab.strings['Java'], 5, 6)]
 
 
-@pytest.mark.xfail
+def test_matcher_empty_dict(en_vocab):
+    '''Test matcher allows empty token specs, meaning match on any token.'''
+    matcher = Matcher(en_vocab)
+    abc = ["a", "b", "c"]
+    doc = get_doc(matcher.vocab, abc)
+    matcher.add('A.C', None, [{'ORTH': 'a'}, {}, {'ORTH': 'c'}])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    assert matches[0][1:] == (0, 3)
+    matcher = Matcher(en_vocab)
+    matcher.add('A.', None, [{'ORTH': 'a'}, {}])
+    matches = matcher(doc)
+    assert matches[0][1:] == (0, 2)
+ 
+def test_matcher_operator_shadow(en_vocab):
+    matcher = Matcher(en_vocab)
+    abc = ["a", "b", "c"]
+    doc = get_doc(matcher.vocab, abc)
+    matcher.add('A.C', None, [{'ORTH': 'a'},
+                              {"IS_ALPHA": True, "OP": "+"},
+                              {'ORTH': 'c'}])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    assert matches[0][1:] == (0, 3)
+ 
 def test_matcher_phrase_matcher(en_vocab):
     words = ["Google", "Now"]
     doc = get_doc(en_vocab, words)
-    matcher = PhraseMatcher(en_vocab, [doc])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add('COMPANY', None, doc)
     words = ["I", "like", "Google", "Now", "best"]
     doc = get_doc(en_vocab, words)
     assert len(matcher(doc)) == 1
@@ -151,3 +176,39 @@ def test_matcher_match_one_plus(matcher):
                                          {'ORTH': 'Philippe', 'OP': '+'}])
     m = matcher(doc)
     assert len(m) == 1
+
+
+def test_operator_combos(matcher):
+    cases = [
+        ('aaab', 'a a a b', True),
+        ('aaab', 'a+ b', True),
+        ('aaab', 'a+ a+ b', True),
+        ('aaab', 'a+ a+ a b', True),
+        ('aaab', 'a+ a+ a+ b', True),
+        ('aaab', 'a+ a a b', True),
+        ('aaab', 'a+ a a', True),
+        ('aaab', 'a+', True),
+        ('aaa', 'a+ b', False),
+        ('aaa', 'a+ a+ b', False),
+        ('aaa', 'a+ a+ a+ b', False),
+        ('aaa', 'a+ a b', False),
+        ('aaa', 'a+ a a b', False),
+        ('aaab', 'a+ a a', True),
+        ('aaab', 'a+', True),
+        ('aaab', 'a+ a b', True),
+    ]
+    for string, pattern_str, result in cases:
+        matcher = Matcher(matcher.vocab)
+        doc = get_doc(matcher.vocab, words=list(string))
+        pattern = []
+        for part in pattern_str.split():
+            if part.endswith('+'):
+                pattern.append({'ORTH': part[0], 'op': '+'})
+            else:
+                pattern.append({'ORTH': part})
+        matcher.add('PATTERN', None, pattern)
+        matches = matcher(doc)
+        if result:
+            assert matches, (string, pattern_str)
+        else:
+            assert not matches, (string, pattern_str)

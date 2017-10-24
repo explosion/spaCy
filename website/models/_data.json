@@ -1,0 +1,100 @@
+{
+    "sidebar": {
+        "Models": {
+            "Overview": "./"
+        },
+
+        "Language models": {
+            "English": "en",
+            "German": "de",
+            "Spanish": "es",
+            "French": "fr",
+            "Multi-Language": "xx"
+        }
+    },
+
+    "index": {
+        "title": "Models Overview",
+        "teaser": "Downloadable statistical models for spaCy to predict and assign linguistic features.",
+        "quickstart": true,
+        "menu": {
+            "Quickstart": "quickstart",
+            "Installation": "install",
+            "Naming Conventions": "conventions"
+        }
+    },
+
+    "MODELS": {
+        "en": ["en_core_web_sm", "en_core_web_lg", "en_vectors_web_lg"],
+        "de": ["de_dep_news_sm"],
+        "es": ["es_core_web_sm"],
+        "fr": [],
+        "xx": ["xx_ent_wiki_sm"]
+    },
+
+    "MODEL_META": {
+        "core": "Vocabulary, syntax, entities, vectors",
+        "dep": "Vocabulary, syntax",
+        "ent": "Named entities",
+        "vectors": "Word vectors",
+        "web": "written text (blogs, news, comments)",
+        "news": "written text (news, media)",
+        "wiki": "Wikipedia",
+        "uas": "Unlabelled dependencies",
+        "las": "Labelled dependencies",
+        "tags_acc": "Part-of-speech tags",
+        "ents_f": "Entities (F-score)",
+        "ents_p": "Entities (precision)",
+        "ents_r": "Entities (recall)",
+        "pipeline": "Processing pipeline components in order",
+        "sources": "Sources of training data"
+    },
+
+    "MODEL_LICENSES": {
+        "CC BY-SA": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-NC": "https://creativecommons.org/licenses/by-nc/3.0/",
+        "CC BY-NC 3.0": "https://creativecommons.org/licenses/by-nc/3.0/"
+    },
+
+    "MODEL_ACCURACY": {
+        "uas": "UAS",
+        "las": "LAS",
+        "tags_acc": "POS",
+        "ents_f": "NER F",
+        "ents_p": "NER P",
+        "ents_r": "NER R"
+    },
+
+    "LANGUAGES": {
+        "en": "English",
+        "de": "German",
+        "fr": "French",
+        "es": "Spanish",
+        "it": "Italian",
+        "pt": "Portuguese",
+        "nl": "Dutch",
+        "sv": "Swedish",
+        "fi": "Finnish",
+        "nb": "Norwegian Bokmål",
+        "da": "Danish",
+        "hu": "Hungarian",
+        "pl": "Polish",
+        "he": "Hebrew",
+        "bn": "Bengali",
+        "hi": "Hindi",
+        "id": "Indonesian",
+        "th": "Thai",
+        "zh": "Chinese",
+        "ja": "Japanese",
+        "xx": "Multi-language"
+    },
+
+    "EXAMPLE_SENTENCES": {
+        "en": "This is a sentence.",
+        "de": "Dies ist ein Satz.",
+        "fr": "C'est une phrase.",
+        "es": "Esto es una frase.",
+        "xx": "This is a sentence about Facebook."
+    }
+}

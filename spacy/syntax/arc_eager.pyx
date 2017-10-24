@@ -10,6 +10,8 @@ from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 from cymem.cymem cimport Pool
 from collections import OrderedDict
+from thinc.extra.search cimport Beam
+import numpy
 
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
@@ -18,7 +20,7 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
-from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE, IS_PUNCT
 from ..lexeme cimport Lexeme
 from ..structs cimport TokenC
 
@@ -116,7 +118,7 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_start
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and st.B_(0).sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -176,7 +178,7 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return not st.B_(0).sent_start
+        return st.B_(0).sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -210,7 +212,8 @@ cdef class LeftArc:
 cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return not st.B_(0).sent_start
+        # If there's (perhaps partial) parse pre-set, don't allow cycle.
+        return st.B_(0).sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -245,6 +248,10 @@ cdef class Break:
         elif st.at_break():
             return False
         elif st.stack_depth() < 1:
+            return False
+        elif st.B_(0).l_edge < 0:
+            return False
+        elif st._sent[st.B_(0).l_edge].sent_start < 0:
             return False
         else:
             return True
@@ -284,7 +291,7 @@ cdef class Break:
         return 0
 
 cdef int _get_root(int word, const GoldParseC* gold) nogil:
-    while gold.heads[word] != word and not gold.has_dep[word] and word >= 0:
+    while gold.heads[word] != word and gold.has_dep[word] and word >= 0:
         word = gold.heads[word]
     if not gold.has_dep[word]:
         return -1
@@ -349,6 +356,20 @@ cdef class ArcEager(TransitionSystem):
         def __get__(self):
             return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
 
+    def is_gold_parse(self, StateClass state, GoldParse gold):
+        predicted = set()
+        truth = set()
+        for i in range(gold.length):
+            if gold.cand_to_gold[i] is None:
+                continue
+            if state.safe_get(i).dep:
+                predicted.add((i, state.H(i), self.strings[state.safe_get(i).dep]))
+            else:
+                predicted.add((i, state.H(i), 'ROOT'))
+            id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
+            truth.add((id_, head, dep))
+        return truth == predicted
+
     def has_gold(self, GoldParse gold, start=0, end=None):
         end = end or len(gold.heads)
         if all([tag is None for tag in gold.heads[start:end]]):
@@ -360,7 +381,7 @@ cdef class ArcEager(TransitionSystem):
         if not self.has_gold(gold):
             return None
         for i in range(gold.length):
-            if gold.heads[i] is None: # Missing values
+            if gold.heads[i] is None or gold.labels[i] is None: # Missing values
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
             else:
@@ -383,6 +404,7 @@ cdef class ArcEager(TransitionSystem):
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
+        return Transition(clas=0, move=MISSING, label=0)
 
     def move_name(self, int move, attr_t label):
         label_str = self.strings[label]
@@ -425,14 +447,19 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int initialize_state(self, StateC* st) nogil:
         for i in range(st.length):
-            st._sent[i].l_edge = i
-            st._sent[i].r_edge = i
+            if st._sent[i].dep == 0:
+                st._sent[i].l_edge = i
+                st._sent[i].r_edge = i
+                st._sent[i].head = 0
+                st._sent[i].dep = 0
+                st._sent[i].l_kids = 0
+                st._sent[i].r_kids = 0
         st.fast_forward()
 
     cdef int finalize_state(self, StateC* st) nogil:
         cdef int i
         for i in range(st.length):
-            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+            if st._sent[i].head == 0:
                 st._sent[i].dep = self.root_label
 
     def finalize_doc(self, doc):
@@ -499,9 +526,11 @@ cdef class ArcEager(TransitionSystem):
                     "before training and after parsing. Either pass make_projective=True "
                     "to the GoldParse class, or use PseudoProjectivity.preprocess_training_data")
             else:
+                print(gold.orig_annot)
                 print(gold.words)
                 print(gold.heads)
                 print(gold.labels)
+                print(gold.sent_starts)
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the dependency "
                     "parser.\n"
@@ -510,3 +539,23 @@ cdef class ArcEager(TransitionSystem):
                     "State at failure:\n"
                     "%s" % (self.n_moves, stcls.print_state(gold.words)))
         assert n_gold >= 1
+
+    def get_beam_annot(self, Beam beam):
+        length = (<StateClass>beam.at(0)).c.length
+        heads = [{} for _ in range(length)]
+        deps = [{} for _ in range(length)]
+        probs = beam.probs
+        for i in range(beam.size):
+            stcls = <StateClass>beam.at(i)
+            self.finalize_state(stcls.c)
+            if stcls.is_final():
+                prob = probs[i]
+                for j in range(stcls.c.length):
+                    head = j + stcls.c._sent[j].head
+                    dep = stcls.c._sent[j].dep
+                    heads[j].setdefault(head, 0.0)
+                    heads[j][head] += prob
+                    deps[j].setdefault(dep, 0.0)
+                    deps[j][dep] += prob
+        return heads, deps
+

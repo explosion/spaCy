@@ -122,21 +122,35 @@ def word_shape(text):
             shape.append(shape_char)
     return ''.join(shape)
 
+def lower(string): return string.lower()
+def prefix(string): return string[0]
+def suffix(string): return string[-3:]
+def cluster(string): return 0
+def is_alpha(string): return string.isalpha()
+def is_digit(string): return string.isdigit()
+def is_lower(string): return string.islower()
+def is_space(string): return string.isspace()
+def is_title(string): return string.istitle()
+def is_upper(string): return string.isupper()
+def is_stop(string, stops=set()): return string in stops
+def is_oov(string): return True
+def get_prob(string): return -20.
 
 LEX_ATTRS = {
-    attrs.LOWER: lambda string: string.lower(),
-    attrs.NORM: lambda string: string.lower(),
-    attrs.PREFIX: lambda string: string[0],
-    attrs.SUFFIX: lambda string: string[-3:],
-    attrs.CLUSTER: lambda string: 0,
-    attrs.IS_ALPHA: lambda string: string.isalpha(),
-    attrs.IS_DIGIT: lambda string: string.isdigit(),
-    attrs.IS_LOWER: lambda string: string.islower(),
-    attrs.IS_SPACE: lambda string: string.isspace(),
-    attrs.IS_TITLE: lambda string: string.istitle(),
-    attrs.IS_UPPER: lambda string: string.isupper(),
-    attrs.IS_STOP: lambda string: False,
-    attrs.IS_OOV: lambda string: True,
+    attrs.LOWER: lower,
+    attrs.NORM: lower,
+    attrs.PREFIX: prefix,
+    attrs.SUFFIX: suffix,
+    attrs.CLUSTER: cluster,
+    attrs.IS_ALPHA: is_alpha,
+    attrs.IS_DIGIT: is_digit,
+    attrs.IS_LOWER: is_lower,
+    attrs.IS_SPACE: is_space,
+    attrs.IS_TITLE: is_title,
+    attrs.IS_UPPER: is_upper,
+    attrs.IS_STOP: is_stop,
+    attrs.IS_OOV: is_oov,
+    attrs.PROB: get_prob,
     attrs.LIKE_EMAIL: like_email,
     attrs.LIKE_NUM: like_num,
     attrs.IS_PUNCT: is_punct,

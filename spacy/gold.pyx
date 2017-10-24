@@ -7,6 +7,7 @@ import re
 import ujson
 import random
 import cytoolz
+import itertools
 
 from .syntax import nonproj
 from .util import ensure_path
@@ -146,9 +147,13 @@ def minibatch(items, size=8):
     '''Iterate over batches of items. `size` may be an iterator,
     so that batch-size can vary on each step.
     '''
+    if isinstance(size, int):
+        size_ = itertools.repeat(8)
+    else:
+        size_ = size
     items = iter(items)
     while True:
-        batch_size = next(size) #if hasattr(size, '__next__') else size
+        batch_size = next(size_)
         batch = list(cytoolz.take(int(batch_size), items))
         if len(batch) == 0:
             break
@@ -208,7 +213,7 @@ class GoldCorpus(object):
         train_tuples = self.train_tuples
         if projectivize:
             train_tuples = nonproj.preprocess_training_data(
-                               self.train_tuples)
+                               self.train_tuples, label_freq_cutoff=100)
         random.shuffle(train_tuples)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
@@ -381,7 +386,8 @@ cdef class GoldParse:
                    make_projective=make_projective)
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
-                 deps=None, entities=None, make_projective=False):
+                 deps=None, entities=None, make_projective=False,
+                 cats=None):
         """Create a GoldParse.
 
         doc (Doc): The document the annotations refer to.
@@ -392,6 +398,15 @@ cdef class GoldParse:
         entities (iterable): A sequence of named entity annotations, either as
             BILUO tag strings, or as `(start_char, end_char, label)` tuples,
             representing the entity positions.
+        cats (dict): Labels for text classification. Each key in the dictionary
+            may be a string or an int, or a `(start_char, end_char, label)`
+            tuple, indicating that the label is applied to only part of the
+            document (usually a sentence). Unlike entity annotations, label
+            annotations can overlap, i.e. a single word can be covered by
+            multiple labelled spans. The TextCategorizer component expects
+            true examples of a label to have the value 1.0, and negative examples
+            of a label to have the value 0.0. Labels not in the dictionary are
+            treated as missing -- the gradient for those labels will be zero.
         RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
@@ -399,11 +414,11 @@ cdef class GoldParse:
         if tags is None:
             tags = [None for _ in doc]
         if heads is None:
-            heads = [token.i for token in doc]
+            heads = [None for token in doc]
         if deps is None:
             deps = [None for _ in doc]
         if entities is None:
-            entities = ['-' for _ in doc]
+            entities = [None for _ in doc]
         elif len(entities) == 0:
             entities = ['O' for _ in doc]
         elif not isinstance(entities[0], basestring):
@@ -419,8 +434,10 @@ cdef class GoldParse:
         self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
         self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.sent_start = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
+        self.cats = {} if cats is None else dict(cats)
         self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)
@@ -474,8 +491,12 @@ cdef class GoldParse:
         """
         return not nonproj.is_nonproj_tree(self.heads)
 
+    @property
+    def sent_starts(self):
+        return [self.c.sent_start[i] for i in range(self.length)]
 
-def biluo_tags_from_offsets(doc, entities):
+
+def biluo_tags_from_offsets(doc, entities, missing='O'):
     """Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
     scheme (BILUO).
 
@@ -527,7 +548,7 @@ def biluo_tags_from_offsets(doc, entities):
             if i in entity_chars:
                 break
         else:
-            biluo[token.i] = 'O'
+            biluo[token.i] = missing
     return biluo
 
 
