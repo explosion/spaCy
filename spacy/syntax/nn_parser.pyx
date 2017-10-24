@@ -22,7 +22,7 @@ cimport numpy as np
 
 from libcpp.vector cimport vector
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
-from cpython.exc cimport PyErr_CheckSignals
+from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport malloc, calloc, free
@@ -429,6 +429,7 @@ cdef class Parser:
                 self._parseC(states[i],
                     feat_weights, hW, hb,
                     nr_class, nr_hidden, nr_feat, nr_piece)
+        PyErr_CheckSignals()
         return state_objs
 
     cdef void _parseC(self, StateC* state, 
@@ -438,6 +439,10 @@ cdef class Parser:
         is_valid = <int*>calloc(nr_class, sizeof(int))
         vectors = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
         scores = <float*>calloc(nr_class, sizeof(float))
+        if not (token_ids and is_valid and vectors and scores):
+            with gil:
+                PyErr_SetFromErrno(MemoryError)
+                PyErr_CheckSignals()
         
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
