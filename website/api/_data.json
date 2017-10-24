@@ -160,7 +160,9 @@
 
     "lemmatizer": {
         "title": "Lemmatizer",
-        "tag": "class"
+        "teaser": "Assign the base forms of words.",
+        "tag": "class",
+        "source": "spacy/lemmatizer.py"
     },
 
     "tagger": {
