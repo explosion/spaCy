@@ -91,16 +91,16 @@ mark both statements:
     or entity, including my employer, has or will have rights with respect to my
     contributions.
 
-    * [ ] I am signing on behalf of my employer or a legal entity and I have the
+    * [x] I am signing on behalf of my employer or a legal entity and I have the
     actual authority to contractually bind that entity.
 
 ## Contributor Details
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
-| Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
-| Website (optional)             |                      |
+| Name                           | Ines Montani         |
+| Company name (if applicable)   | Explosion AI         |
+| Title or role (if applicable)  | Founder              |
+| Date                           | 2017/10/18           |
+| GitHub username                | ines                 |
+| Website (optional)             | https://explosion.ai |

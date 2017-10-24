@@ -87,7 +87,7 @@ U.S. Federal law. Any choice of law rules will not apply.
 7. Please place an “x” on one of the applicable statement below. Please do NOT
 mark both statements:
 
-    * [ ] I am signing on behalf of myself as an individual and no other person
+    * [x] I am signing on behalf of myself as an individual and no other person
     or entity, including my employer, has or will have rights with respect to my
     contributions.
 
@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           | John Haley           |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
+| Date                           | 19/10/2017           |
+| GitHub username                | johnhaley81          |
 | Website (optional)             |                      |
