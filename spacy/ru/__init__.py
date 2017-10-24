@@ -1,4 +1,13 @@
 # encoding: utf8
+
+#
+#   Developed by Expasoft Ltd.
+#   Website: https://expasoft.ru/
+#
+#   Developer: Alexey Kim
+#   GitHub: @yuukos
+#
+
 from __future__ import unicode_literals, print_function
 
 from ..language import Language
