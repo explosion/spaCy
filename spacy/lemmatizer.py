@@ -26,10 +26,10 @@ class Lemmatizer(object):
         elif univ_pos in (PUNCT, 'PUNCT', 'punct'):
             univ_pos = 'punct'
         else:
-            return set([string.lower()])
+            return list(set([string.lower()]))
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
-            return set([string.lower()])
+            return list(set([string.lower()]))
         lemmas = lemmatize(string, self.index.get(univ_pos, {}),
                            self.exc.get(univ_pos, {}),
                            self.rules.get(univ_pos, []))
@@ -108,4 +108,4 @@ def lemmatize(string, index, exceptions, rules):
         forms.extend(oov_forms)
     if not forms:
         forms.append(string)
-    return set(forms)
+    return list(set(forms))
