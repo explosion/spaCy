@@ -3,7 +3,7 @@ import pytest
 from ...vocab import Vocab
 from ...tokens.doc import Doc
 
-@pytest.mark.xfail
+
 def test_issue1375():
     '''Test that token.nbor() raises IndexError for out-of-bounds access.'''
     doc = Doc(Vocab(), words=['0', '1', '2'])
