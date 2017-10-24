@@ -86,6 +86,25 @@ include _annotation/_dep-labels
 
 include _annotation/_named-entities
 
++h(3, "biluo") BILUO Scheme
+
+p
+    |  spaCy translates the character offsets into this scheme, in order to
+    |  decide the cost of each action given the current state of the entity
+    |  recogniser. The costs are then used to calculate the gradient of the
+    |  loss, to train the model. The exact algorithm is a pastiche of
+    |  well-known methods, and is not currently described in any single
+    |  publication. The model is a greedy transition-based parser guided by a
+    |  linear model whose weights are learned using the averaged perceptron
+    |  loss, via the #[+a("http://www.aclweb.org/anthology/C12-1059") dynamic oracle]
+    |  imitation learning strategy. The transition system is equivalent to the
+    |  BILOU tagging scheme.
+
++aside("Why BILUO, not IOB?")
+    |  There are several coding schemes for encoding entity annotations as
+    |  token tags.  These coding schemes are equally expressive, but not
+    |  necessarily equally learnable.
+    |  #[+a("http://www.aclweb.org/anthology/W09-1119") Ratinov and Roth]
     |  showed that the minimal #[strong Begin], #[strong In], #[strong Out]
     |  scheme was more difficult to learn than the #[strong BILUO] scheme that
     |  we use, which explicitly marks boundary tokens.
@@ -114,29 +133,39 @@ include _annotation/_named-entities
 +h(2, "json-input") JSON input format for training
 
 p
-    |  spaCy takes training data in the following format:
+    |  spaCy takes training data in JSON format. The built-in
+    |  #[+a("/docs/usage/cli#convert") #[code convert] command] helps you
+    |  convert the #[code .conllu] format used by the
+    |  #[+a("https://github.com/UniversalDependencies") Universal Dependencies corpora]
+    |  to spaCy's training format.
+
++aside("Annotating entities")
+    |  Named entities are provided in the #[+a("#biluo") BILUO]
+    |  notation. Tokens outside an entity are set to #[code "O"] and tokens
+    |  that are part of an entity are set to the entity label, prefixed by the
+    |  BILUO marker. For example #[code "B-ORG"] describes the first token of
+    |  a multi-token #[code ORG] entity and #[code "U-PERSON"] a single
+    |  token representing a #[code PERSON] entity
 
 +code("Example structure").
-    doc: {
-        id: string,
-        paragraphs: [{
-            raw: string,
-            sents: [int],
-            tokens: [{
-                start: int,
-                tag: string,
-                head: int,
-                dep: string
-            }],
-            ner: [{
-                start: int,
-                end: int,
-                label: string
-            }],
-            brackets: [{
-                start: int,
-                end: int,
-                label: string
+    [{
+        "id": int,                      # ID of the document within the corpus
+        "paragraphs": [{                # list of paragraphs in the corpus
+            "raw": string,              # raw text of the paragraph
+            "sentences": [{             # list of sentences in the paragraph
+                "tokens": [{            # list of tokens in the sentence
+                    "id": int,          # index of the token in the document
+                    "dep": string,      # dependency label
+                    "head": int,        # offset of token head relative to token index
+                    "tag": string,      # part-of-speech tag
+                    "orth": string,     # verbatim text of the token
+                    "ner": string       # BILUO label, e.g. "O" or "B-ORG"
+                }],
+                "brackets": [{          # phrase structure (NOT USED by current models)
+                    "first": int,       # index of first token
+                    "last": int,        # index of last token
+                    "label": string     # phrase label
+                }]
             }]
         }]
-    }
+    }]
