@@ -100,7 +100,7 @@ def test_spans_are_hashable(en_tokenizer):
     assert hash(span1) != hash(span2)
     span3 = tokens[0:2]
     assert hash(span3) == hash(span1)
- 
+
 
 def test_spans_by_character(doc):
     span1 = doc[1:-2]
