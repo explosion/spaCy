@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from ..util import get_doc
+from ...tokens import Doc
+from ...vocab import Vocab
 
 import pytest
 import numpy
@@ -204,17 +206,11 @@ def test_doc_api_right_edge(en_tokenizer):
     assert doc[6].right_edge.text == ','
 
 
-@pytest.mark.xfail
-@pytest.mark.parametrize('text,vectors', [
-    ("apple orange pear", ["apple -1 -1 -1", "orange -1 -1 0", "pear -1 0 -1"])
-])
-def test_doc_api_has_vector(en_tokenizer, text_file, text, vectors):
-    text_file.write('\n'.join(vectors))
-    text_file.seek(0)
-    vector_length = en_tokenizer.vocab.load_vectors(text_file)
-    assert vector_length == 3
-
-    doc = en_tokenizer(text)
+def test_doc_api_has_vector():
+    vocab = Vocab()
+    vocab.clear_vectors(2)
+    vocab.vectors.add('kitten', numpy.asarray([0., 2.], dtype='f'))
+    doc = Doc(vocab, words=['kitten'])
     assert doc.has_vector
 
 def test_lowest_common_ancestor(en_tokenizer):
