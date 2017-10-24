@@ -62,12 +62,9 @@ cdef class Vocab:
         if strings:
             for string in strings:
                 _ = self[string]
-        for name in tag_map.keys():
-            if name:
-                self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors(self.strings)
+        self.vectors = Vectors(self.strings, width=0)
 
     property lang:
         def __get__(self):
@@ -255,7 +252,7 @@ cdef class Vocab:
         """
         if new_dim is None:
             new_dim = self.vectors.data.shape[1]
-        self.vectors = Vectors(self.strings, new_dim)
+        self.vectors = Vectors(self.strings, width=new_dim)
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary.
@@ -338,7 +335,7 @@ cdef class Vocab:
             if self.vectors is None:
                 return None
             else:
-                return self.vectors.to_bytes(exclude='strings.json')
+                return self.vectors.to_bytes()
 
         getters = OrderedDict((
             ('strings', lambda: self.strings.to_bytes()),
@@ -358,7 +355,7 @@ cdef class Vocab:
             if self.vectors is None:
                 return None
             else:
-                return self.vectors.from_bytes(b, exclude='strings')
+                return self.vectors.from_bytes(b)
         setters = OrderedDict((
             ('strings', lambda b: self.strings.from_bytes(b)),
             ('lexemes', lambda b: self.lexemes_from_bytes(b)),
