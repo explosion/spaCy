@@ -42,6 +42,7 @@ TAG_MAP = {
     "RBR":      {POS: ADV, "Degree": "comp"},
     "RBS":      {POS: ADV, "Degree": "sup"},
     "RP":       {POS: PART},
+    "SP":       {POS: SPACE},
     "SYM":      {POS: SYM},
     "TO":       {POS: PART, "PartType": "inf", "VerbForm": "inf"},
     "UH":       {POS: INTJ},

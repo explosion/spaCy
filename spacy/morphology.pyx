@@ -38,7 +38,7 @@ cdef class Morphology:
         self.strings = string_store
         # Add special space symbol. We prefix with underscore, to make sure it
         # always sorts to the end.
-        space_attrs = tag_map.pop('SP', {POS: SPACE})
+        space_attrs = tag_map.get('SP', {POS: SPACE})
         if '_SP' not in tag_map:
             self.strings.add('_SP')
             tag_map = dict(tag_map)
