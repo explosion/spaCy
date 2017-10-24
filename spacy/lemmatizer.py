@@ -7,8 +7,8 @@ from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 class Lemmatizer(object):
     @classmethod
-    def load(cls, path, index=None, exc=None, rules=None):
-        return cls(index or {}, exc or {}, rules or {})
+    def load(cls, path, index=None, exc=None, rules=None, lookup=None):
+        return cls(index or {}, exc or {}, rules or {}, lookup or {})
 
     def __init__(self, index=None, exceptions=None, rules=None, lookup=None):
         self.index = index if index is not None else {}
