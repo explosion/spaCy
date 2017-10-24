@@ -27,8 +27,9 @@ cdef class Tokenizer:
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1
     cdef int _tokenize(self, Doc tokens, unicode span, hash_t key) except -1
     cdef unicode _split_affixes(self, Pool mem, unicode string, vector[LexemeC*] *prefixes,
-                             vector[LexemeC*] *suffixes)
+                             vector[LexemeC*] *suffixes, int* has_special)
     cdef int _attach_tokens(self, Doc tokens, unicode string,
                             vector[LexemeC*] *prefixes, vector[LexemeC*] *suffixes) except -1
 
-    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1
+    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int has_special,
+                          int n) except -1
