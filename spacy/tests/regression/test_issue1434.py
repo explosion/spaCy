@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
-from spacy.tokens import Doc
-from spacy.vocab import Vocab
-from spacy.matcher import Matcher
-from spacy.lang.lex_attrs import LEX_ATTRS
+from ...vocab import Vocab
+from ...lang.lex_attrs import LEX_ATTRS
+from ...tokens import Doc
+from ...matcher import Matcher
 
 
 def test_issue1434():
