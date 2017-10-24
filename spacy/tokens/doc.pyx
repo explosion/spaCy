@@ -21,7 +21,7 @@ from .token cimport Token
 from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
-from ..attrs import intify_attrs
+from ..attrs import intify_attrs, IDS
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
@@ -536,11 +536,15 @@ cdef class Doc:
 
     @cython.boundscheck(False)
     cpdef np.ndarray to_array(self, object py_attr_ids):
-        """Given a list of M attribute IDs, export the tokens to a numpy
-        `ndarray` of shape `(N, M)`, where `N` is the length of the document.
-        The values will be 32-bit integers.
+        """Export given token attributes to a numpy `ndarray`.
 
-        attr_ids (list[int]): A list of attribute ID ints.
+	If `attr_ids` is a sequence of M attributes, the output array will
+	be of shape `(N, M)`, where N is the length of the `Doc`
+	(in tokens). If `attr_ids` is a single attribute, the output shape will
+	be (N,). You can specify attributes by integer ID (e.g. spacy.attrs.LEMMA)
+	or string name (e.g. 'LEMMA' or 'lemma').
+
+        attr_ids (list[]): A list of attributes (int IDs or string names).
         RETURNS (numpy.ndarray[long, ndim=2]): A feature matrix, with one row
             per word, and one column per attribute indicated in the input
             `attr_ids`.
@@ -553,15 +557,25 @@ cdef class Doc:
         """
         cdef int i, j
         cdef attr_id_t feature
+        cdef np.ndarray[attr_t, ndim=1] attr_ids
         cdef np.ndarray[attr_t, ndim=2] output
+        # Handle scalar/list inputs of strings/ints for py_attr_ids
+        if not hasattr(py_attr_ids, '__iter__'):
+            py_attr_ids = [py_attr_ids]
+
+        # Allow strings, e.g. 'lemma' or 'LEMMA'
+        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
+                       for id_ in py_attr_ids]
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
+        attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
-        return output
+        # Handle 1d case
+        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
+
 
     def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
