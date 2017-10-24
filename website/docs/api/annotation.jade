@@ -86,6 +86,31 @@ include _annotation/_dep-labels
 
 include _annotation/_named-entities
 
+    |  showed that the minimal #[strong Begin], #[strong In], #[strong Out]
+    |  scheme was more difficult to learn than the #[strong BILUO] scheme that
+    |  we use, which explicitly marks boundary tokens.
+
++table(["Tag", "Description"])
+    +row
+        +cell #[code #[span.u-color-theme B] EGIN]
+        +cell The first token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme I] N]
+        +cell An inner token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme L] AST]
+        +cell The final token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme U] NIT]
+        +cell A single-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme O] UT]
+        +cell A non-entity token.
+
 +h(2, "json-input") JSON input format for training
 
 p
