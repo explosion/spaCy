@@ -127,6 +127,7 @@ class Language(object):
         RETURNS (Language): The newly constructed object.
         """
         self._meta = dict(meta)
+        self._path = None
         if vocab is True:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get('vocab', {}))
@@ -141,6 +142,10 @@ class Language(object):
     def __reduce__(self):
         bytes_data = self.to_bytes(vocab=False)
         return (unpickle_language, (self.vocab, self.meta, bytes_data))
+
+    @property
+    def path(self):
+        return self._path
 
     @property
     def meta(self):
@@ -611,6 +616,7 @@ class Language(object):
         if not (path / 'vocab').exists():
             exclude['vocab'] = True
         util.from_disk(path, deserializers, exclude)
+        self._path = path
         return self
 
     def to_bytes(self, disable=[], **exclude):
