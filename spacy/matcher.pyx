@@ -471,7 +471,13 @@ cdef class PhraseMatcher:
         self._callbacks = {}
 
     def __len__(self):
-        raise NotImplementedError
+        """Get the number of rules added to the matcher. Note that this only
+        returns the number of rules (identical with the number of IDs), not the
+        number of individual patterns.
+
+        RETURNS (int): The number of rules.
+        """
+        return len(self.phrase_ids)
 
     def __contains__(self, key):
         raise NotImplementedError
