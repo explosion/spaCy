@@ -16,7 +16,7 @@ call can cannot ca could
 
 did do does doing done down due during
 
-each eight either eleven else elsewhere empty enough etc even ever every
+each eight either eleven else elsewhere empty enough even ever every
 everyone everything everywhere except
 
 few fifteen fifty first five for former formerly forty four from front full
@@ -27,7 +27,7 @@ get give go
 had has have he hence her here hereafter hereby herein hereupon hers herself
 him himself his how however hundred
 
-i if in inc indeed into is it its itself
+i if in indeed into is it its itself
 
 keep
 

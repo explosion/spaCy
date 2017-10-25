@@ -1,3 +1,5 @@
+<!-- This agreement was mistakenly submitted as an update to the CONTRIBUTOR_AGREEMENT.md template. Commit: 8a2d22222dec5cf910df5a378cbcd9ea2ab53ec4. It was therefore moved over manually. -->
+
 # spaCy contributor agreement
 
 This spaCy Contributor Agreement (**"SCA"**) is based on the
@@ -87,8 +89,8 @@ U.S. Federal law. Any choice of law rules will not apply.
 7. Please place an “x” on one of the applicable statement below. Please do NOT
 mark both statements:
 
-    * [ ] I am signing on behalf of myself as an individual and no other person
-    or entity, including my employer, has or will have rights with respect to my
+    * [x] I am signing on behalf of myself as an individual and no other person
+    or entity, including my employer, has or will have rights with respect my
     contributions.
 
     * [ ] I am signing on behalf of my employer or a legal entity and I have the
@@ -98,9 +100,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           | Shuvanon Razik       |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
+| Date                           | 3/12/2017            |
+| GitHub username                | shuvanon             |
 | Website (optional)             |                      |
