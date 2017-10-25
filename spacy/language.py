@@ -700,7 +700,7 @@ class DisabledPipes(list):
     def restore(self):
         '''Restore the pipeline to its state when DisabledPipes was created.'''
         current, self.nlp.pipeline = self.nlp.pipeline, self.original_pipeline
-        unexpected = [name for name in current if not self.nlp.has_pipe(name)]
+        unexpected = [name for name, pipe in current if not self.nlp.has_pipe(name)]
         if unexpected:
             # Don't change the pipeline if we're raising an error.
             self.nlp.pipeline = current
