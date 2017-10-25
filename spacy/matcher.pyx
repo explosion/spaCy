@@ -230,7 +230,7 @@ cdef class Matcher:
         key (unicode): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
-        return len(self._patterns)
+        return key in self._patterns
 
     def add(self, key, on_match, *patterns):
         """Add a match-rule to the matcher. A match-rule consists of: an ID key,
