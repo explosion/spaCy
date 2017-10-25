@@ -304,6 +304,21 @@ p Modify the pipe's model, to use the given parameter values.
             |  The parameter values to use in the model. At the end of the
             |  context, the original parameters are restored.
 
++h(2, "add_label") #{CLASSNAME}.add_label
+    +tag method
+
+p Add a new label to the pipe.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    #{VARNAME}.add_label('MY_LABEL')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code label]
+        +cell unicode
+        +cell The label to add.
+
 +h(2, "to_disk") #{CLASSNAME}.to_disk
     +tag method
 
