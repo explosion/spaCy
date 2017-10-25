@@ -230,7 +230,7 @@ cdef class Matcher:
         key (unicode): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
-        return key in self._patterns
+        return self._normalize_key(key) in self._patterns
 
     def add(self, key, on_match, *patterns):
         """Add a match-rule to the matcher. A match-rule consists of: an ID key,
@@ -490,7 +490,7 @@ cdef class PhraseMatcher:
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
         cdef hash_t ent_id = self.matcher._normalize_key(key)
-        return ent_id in self.phrase_ids
+        return ent_id in self._callbacks
 
     def __reduce__(self):
         return (self.__class__, (self.vocab,), None, None)

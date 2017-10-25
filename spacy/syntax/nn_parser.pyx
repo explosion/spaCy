@@ -48,7 +48,7 @@ from thinc.neural.util import get_array_module
 from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
-from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
+from .._ml import Tok2Vec, doc2feats, rebatch
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
 from .._ml import HistoryFeatures
@@ -253,7 +253,7 @@ cdef class Parser:
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size != 0:
             raise ValueError("Currently history size is hard-coded to 0")
-        if hist_width != 0: 
+        if hist_width != 0:
             raise ValueError("Currently history width is hard-coded to 0")
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
@@ -413,7 +413,7 @@ cdef class Parser:
         for stcls in state_objs:
             if not stcls.c.is_final():
                 states.push_back(stcls.c)
-                
+
         feat_weights = state2vec.get_feat_weights()
         cdef int i
         cdef np.ndarray hidden_weights = numpy.ascontiguousarray(vec2scores._layers[-1].W.T)
@@ -432,7 +432,7 @@ cdef class Parser:
         PyErr_CheckSignals()
         return state_objs
 
-    cdef void _parseC(self, StateC* state, 
+    cdef void _parseC(self, StateC* state,
             const float* feat_weights, const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
         token_ids = <int*>calloc(nr_feat, sizeof(int))
@@ -443,7 +443,7 @@ cdef class Parser:
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
-        
+
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
             memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
