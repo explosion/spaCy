@@ -480,7 +480,13 @@ cdef class PhraseMatcher:
         return len(self.phrase_ids)
 
     def __contains__(self, key):
-        raise NotImplementedError
+        """Check whether the matcher contains rules for a match ID.
+
+        key (unicode): The match ID.
+        RETURNS (bool): Whether the matcher contains rules for this match ID.
+        """
+        cdef hash_t ent_id = self.matcher._normalize_key(key)
+        return ent_id in self.phrase_ids
 
     def __reduce__(self):
         return (self.__class__, (self.vocab,), None, None)
