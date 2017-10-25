@@ -112,9 +112,10 @@ def _preprocess_doc(docs, drop=0.):
     nO=Dimension("Output size"),
     nP=Dimension("Maxout pieces"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI)),
+        lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI) if obj.nP >= 2
+                    else (obj.nF, obj.nO, obj.nI)),
     b=Biases("Bias vector",
-        lambda obj: (obj.nO, obj.nP)),
+        lambda obj: (obj.nO, obj.nP) if obj.nP >= 2 else (obj.nO,)),
     d_W=Gradient("W"),
     d_b=Gradient("b")
 )
@@ -129,17 +130,24 @@ class PrecomputableAffine(Model):
     def begin_update(self, X, drop=0.):
         tensordot = self.ops.xp.tensordot
         ascontiguous = self.ops.xp.ascontiguousarray
-
-        Yf = tensordot(X, self.W, axes=[[1], [3]])
+        if self.nP == 1:
+            Yf = tensordot(X, self.W, axes=[[1], [2]])
+        else:
+            Yf = tensordot(X, self.W, axes=[[1], [3]])
 
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
             Xf = X[ids]
-
-            dXf = tensordot(dY, self.W, axes=[[1,2], [1,2]])
+            if self.nP == 1:
+                dXf = tensordot(dY, self.W, axes=[[1], [1]])
+            else:
+                dXf = tensordot(dY, self.W, axes=[[1,2], [1,2]])
             dW = tensordot(dY, Xf, axes=[[0], [0]])
             # (o, p, f, i) --> (f, o, p, i)
-            self.d_W += dW.transpose((2, 0, 1, 3))
+            if self.nP == 1:
+                self.d_W += dW.transpose((1, 0, 2))
+            else:
+                self.d_W += dW.transpose((2, 0, 1, 3))
             self.d_b += dY.sum(axis=0)
 
             if sgd is not None:
@@ -169,7 +177,10 @@ class PrecomputableAffine(Model):
 
         def predict(ids, tokvecs):
             hiddens = model(tokvecs)
-            vector = model.ops.allocate((hiddens.shape[0], model.nO, model.nP))
+            if model.nP == 1:
+                vector = model.ops.allocate((hiddens.shape[0], model.nO))
+            else:
+                vector = model.ops.allocate((hiddens.shape[0], model.nO, model.nP))
             model.ops.scatter_add(vector, ids, hiddens)
             vector += model.b
             if model.nP >= 2:

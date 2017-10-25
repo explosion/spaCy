@@ -2,6 +2,8 @@ from libc.string cimport memcpy, memset, memmove
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint32_t, uint64_t
 
+from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
+
 from murmurhash.mrmr cimport hash64
 
 from ..vocab cimport EMPTY_LEXEME
@@ -55,6 +57,11 @@ cdef cppclass StateC:
         this.shifted = <bint*>calloc(length + (PADDING * 2), sizeof(bint))
         this._sent = <TokenC*>calloc(length + (PADDING * 2), sizeof(TokenC))
         this._ents = <Entity*>calloc(length + (PADDING * 2), sizeof(Entity))
+        if not (this._buffer and this._stack and this.shifted
+                and this._sent and this._ents):
+            with gil:
+                PyErr_SetFromErrno(MemoryError)
+                PyErr_CheckSignals()
         memset(&this._hist, 0, sizeof(this._hist))
         this.offset = 0
         cdef int i

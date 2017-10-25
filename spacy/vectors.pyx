@@ -32,22 +32,24 @@ cdef class Vectors:
     cdef public object keys
     cdef public int i
 
-    def __init__(self, strings, data_or_width=0):
+    def __init__(self, strings, width=0, data=None):
         if isinstance(strings, StringStore):
             self.strings = strings
         else:
             self.strings = StringStore()
             for string in strings:
                 self.strings.add(string)
-        if isinstance(data_or_width, int):
-            self.data = data = numpy.zeros((len(strings), data_or_width),
-                                           dtype='f')
+        if data is not None:
+            self.data = numpy.asarray(data, dtype='f')
         else:
-            data = data_or_width
+            self.data = numpy.zeros((len(self.strings), width), dtype='f')
         self.i = 0
-        self.data = data
         self.key2row = {}
-        self.keys = np.ndarray((self.data.shape[0],), dtype='uint64')
+        self.keys = numpy.zeros((self.data.shape[0],), dtype='uint64')
+        for i, string in enumerate(self.strings):
+            if i >= self.data.shape[0]:
+                break
+            self.add(self.strings[string], self.data[i])
 
     def __reduce__(self):
         return (Vectors, (self.strings, self.data))

@@ -127,6 +127,9 @@ cdef class Token:
         i (int): The relative position of the token to get. Defaults to 1.
         RETURNS (Token): The token at position `self.doc[self.i+i]`.
         """
+        if self.i+i < 0 or (self.i+i >= len(self.doc)):
+            msg = "Error accessing doc[%d].nbor(%d), for doc of length %d"
+            raise IndexError(msg % (self.i, i, len(self.doc)))
         return self.doc[self.i+i]
 
     def similarity(self, other):

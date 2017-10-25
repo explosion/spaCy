@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ..matcher import Matcher, PhraseMatcher
 from .util import get_doc
+from ..tokens import Doc
 
 import pytest
 
@@ -212,3 +213,24 @@ def test_operator_combos(matcher):
             assert matches, (string, pattern_str)
         else:
             assert not matches, (string, pattern_str)
+
+
+def test_matcher_end_zero_plus(matcher):
+    '''Test matcher works when patterns end with * operator. (issue 1450)'''
+    matcher = Matcher(matcher.vocab)
+    matcher.add(
+        "TSTEND",
+        None,
+        [
+            {'ORTH': "a"},
+            {'ORTH': "b", 'OP': "*"}
+        ]
+    )
+    nlp = lambda string: Doc(matcher.vocab, words=string.split())
+    assert len(matcher(nlp(u'a'))) == 1
+    assert len(matcher(nlp(u'a b'))) == 1
+    assert len(matcher(nlp(u'a b'))) == 1
+    assert len(matcher(nlp(u'a c'))) == 1
+    assert len(matcher(nlp(u'a b c'))) == 1
+    assert len(matcher(nlp(u'a b b c'))) == 1
+    assert len(matcher(nlp(u'a b b'))) == 1

@@ -69,6 +69,7 @@ cdef enum action_t:
     REPEAT
     ACCEPT
     ADVANCE_ZERO
+    ACCEPT_PREV
     PANIC
 
 # A "match expression" conists of one or more token patterns
@@ -120,24 +121,27 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
 
 
 cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
+    lookahead = &pattern[1]
     for attr in pattern.attrs[:pattern.nr_attr]:
         if get_token_attr(token, attr.attr) != attr.value:
             if pattern.quantifier == ONE:
                 return REJECT
             elif pattern.quantifier == ZERO:
-                return ACCEPT if (pattern+1).nr_attr == 0 else ADVANCE
+                return ACCEPT if lookahead.nr_attr == 0 else ADVANCE
             elif pattern.quantifier in (ZERO_ONE, ZERO_PLUS):
-                return ACCEPT if (pattern+1).nr_attr == 0 else ADVANCE_ZERO
+                return ACCEPT_PREV if lookahead.nr_attr == 0 else ADVANCE_ZERO
             else:
                 return PANIC
     if pattern.quantifier == ZERO:
         return REJECT
+    elif lookahead.nr_attr == 0:
+        return ACCEPT
     elif pattern.quantifier in (ONE, ZERO_ONE):
-        return ACCEPT if (pattern+1).nr_attr == 0 else ADVANCE
+        return ADVANCE
     elif pattern.quantifier == ZERO_PLUS:
         # This is a bandaid over the 'shadowing' problem described here:
         # https://github.com/explosion/spaCy/issues/864
-        next_action = get_action(pattern+1, token)
+        next_action = get_action(lookahead, token)
         if next_action is REJECT:
             return REPEAT
         else:
@@ -345,6 +349,9 @@ cdef class Matcher:
                 while action == ADVANCE_ZERO:
                     state.second += 1
                     action = get_action(state.second, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
+
                 if action == REPEAT:
                     # Leave the state in the queue, and advance to next slot
                     # (i.e. we don't overwrite -- we want to greedily match more
@@ -356,14 +363,15 @@ cdef class Matcher:
                     partials[q] = state
                     partials[q].second += 1
                     q += 1
-                elif action == ACCEPT:
+                elif action in (ACCEPT, ACCEPT_PREV):
                     # TODO: What to do about patterns starting with ZERO? Need to
                     # adjust the start position.
                     start = state.first
-                    end = token_i+1
+                    end = token_i+1 if action == ACCEPT else token_i
                     ent_id = state.second[1].attrs[0].value
                     label = state.second[1].attrs[1].value
                     matches.append((ent_id, start, end))
+
             partials.resize(q)
             # Check whether we open any new patterns on this token
             for pattern in self.patterns:
@@ -383,15 +391,15 @@ cdef class Matcher:
                     state.first = token_i
                     state.second = pattern + 1
                     partials.push_back(state)
-                elif action == ACCEPT:
+                elif action in (ACCEPT, ACCEPT_PREV):
                     start = token_i
-                    end = token_i+1
+                    end = token_i+1 if action == ACCEPT else token_i
                     ent_id = pattern[1].attrs[0].value
                     label = pattern[1].attrs[1].value
                     matches.append((ent_id, start, end))
         # Look for open patterns that are actually satisfied
         for state in partials:
-            while state.second.quantifier in (ZERO, ZERO_PLUS):
+            while state.second.quantifier in (ZERO, ZERO_ONE, ZERO_PLUS):
                 state.second += 1
                 if state.second.nr_attr == 0:
                     start = state.first

@@ -56,8 +56,7 @@ def train_ner(nlp, train_data, output_dir):
         losses = {}
         for batch in minibatch(get_gold_parses(nlp.make_doc, train_data), size=3):
             docs, golds = zip(*batch)
-            nlp.update(docs, golds, losses=losses, sgd=optimizer, update_shared=True,
-                       drop=0.35)
+            nlp.update(docs, golds, losses=losses, sgd=optimizer, drop=0.35)
         print(losses)
     if not output_dir:
         return
@@ -100,9 +99,10 @@ def main(model_name, output_directory=None):
         )
 
     ]
-    nlp.pipeline.append(TokenVectorEncoder(nlp.vocab))
-    nlp.pipeline.append(NeuralEntityRecognizer(nlp.vocab))
-    nlp.pipeline[-1].add_label('ANIMAL')
+    nlp.add_pipe(TokenVectorEncoder(nlp.vocab))
+    ner = NeuralEntityRecognizer(nlp.vocab)
+    ner.add_label('ANIMAL')
+    nlp.add_pipe(ner)
     train_ner(nlp, train_data, output_directory)
 
     # Test that the entity is recognized

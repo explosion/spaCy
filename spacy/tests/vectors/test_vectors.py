@@ -35,18 +35,18 @@ def vocab(en_vocab, vectors):
 
 
 def test_init_vectors_with_data(strings, data):
-    v = Vectors(strings, data)
+    v = Vectors(strings, data=data)
     assert v.shape == data.shape
 
 def test_init_vectors_with_width(strings):
-    v = Vectors(strings, 3)
+    v = Vectors(strings, width=3)
     for string in strings:
         v.add(string)
     assert v.shape == (len(strings), 3)
 
 
 def test_get_vector(strings, data):
-    v = Vectors(strings, data)
+    v = Vectors(strings, data=data)
     for string in strings:
         v.add(string)
     assert list(v[strings[0]]) == list(data[0])
@@ -56,7 +56,7 @@ def test_get_vector(strings, data):
 
 def test_set_vector(strings, data):
     orig = data.copy()
-    v = Vectors(strings, data)
+    v = Vectors(strings, data=data)
     for string in strings:
         v.add(string)
     assert list(v[strings[0]]) == list(orig[0])
