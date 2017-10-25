@@ -692,7 +692,7 @@ class DisabledPipes(list):
         self.extend(nlp.remove_pipe(name) for name in names)
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self, *args):
         self.restore()
