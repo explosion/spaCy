@@ -255,6 +255,10 @@ cdef class Matcher:
         and '*' patterns in a row and their matches overlap, the first
         operator will behave non-greedily. This quirk in the semantics
         makes the matcher more efficient, by avoiding the need for back-tracking.
+
+        key (unicode): The match ID.
+        on_match (callable): Callback executed on match.
+        *patterns (list): List of token descritions.
         """
         for pattern in patterns:
             if len(pattern) == 0:
@@ -492,6 +496,13 @@ cdef class PhraseMatcher:
         return (self.__class__, (self.vocab,), None, None)
 
     def add(self, key, on_match, *docs):
+        """Add a match-rule to the matcher. A match-rule consists of: an ID key,
+        an on_match callback, and one or more patterns.
+
+        key (unicode): The match ID.
+        on_match (callable): Callback executed on match.
+        *docs (Doc): `Doc` objects representing match patterns.
+        """
         cdef Doc doc
         for doc in docs:
             if len(doc) >= self.max_length:
@@ -520,6 +531,13 @@ cdef class PhraseMatcher:
             self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
+        """Find all sequences matching the supplied patterns on the `Doc`.
+
+        doc (Doc): The document to match over.
+        RETURNS (list): A list of `(key, start, end)` tuples,
+            describing the matches. A match tuple describes a span
+            `doc[start:end]`. The `label_id` and `key` are both integers.
+        """
         matches = []
         for _, start, end in self.matcher(doc):
             ent_id = self.accept_match(doc, start, end)
@@ -532,6 +550,14 @@ cdef class PhraseMatcher:
         return matches
 
     def pipe(self, stream, batch_size=1000, n_threads=2):
+        """Match a stream of documents, yielding them in turn.
+
+        docs (iterable): A stream of documents.
+        batch_size (int): The number of documents to accumulate into a working set.
+        n_threads (int): The number of threads with which to work on the buffer
+            in parallel, if the `Matcher` implementation supports multi-threading.
+        YIELDS (Doc): Documents, in order.
+        """
         for doc in stream:
             self(doc)
             yield doc
