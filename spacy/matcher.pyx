@@ -198,7 +198,6 @@ cdef class Matcher:
     cdef public object _patterns
     cdef public object _entities
     cdef public object _callbacks
-    cdef public object _acceptors
 
     def __init__(self, vocab):
         """Create the Matcher.
@@ -209,7 +208,6 @@ cdef class Matcher:
         """
         self._patterns = {}
         self._entities = {}
-        self._acceptors = {}
         self._callbacks = {}
         self.vocab = vocab
         self.mem = Pool()
