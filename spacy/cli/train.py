@@ -144,7 +144,10 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                     file_.write(json_dumps(scorer.scores))
                 meta_loc = output_path / ('model%d' % i) / 'meta.json'
                 meta['accuracy'] = scorer.scores
-                meta['speed'] = {'nwords': nwords, 'cpu':cpu_wps, 'gpu': gpu_wps}
+                meta['speed'] = {'nwords': nwords, 'cpu': cpu_wps,
+                                 'gpu': gpu_wps}
+                meta['vectors'] = {'entries': nlp.vocab.vectors_length,
+                                   'width': 0}
                 meta['lang'] = nlp.lang
                 meta['pipeline'] = pipeline
                 meta['spacy_version'] = '>=%s' % about.__version__
