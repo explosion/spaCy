@@ -199,6 +199,7 @@
             "Information Extraction": "information-extraction",
             "Pipeline": "pipeline",
             "Training": "training",
+            "Vectors & Similarity": "vectors",
             "Deep Learning": "deep-learning"
         }
     }

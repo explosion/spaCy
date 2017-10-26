@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf8
-"""Load vectors for a language trained using FastText
+"""Load vectors for a language trained using fastText
 https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
 """
 from __future__ import unicode_literals
@@ -10,7 +10,8 @@ import numpy
 import from spacy.language import Language
 
 
-@plac.annotations(vectors_loc=("Path to vectors", "positional", None, str))
+@plac.annotations(
+    vectors_loc=("Path to vectors", "positional", None, str))
 def main(vectors_loc):
     nlp = Language()
 

@@ -119,6 +119,18 @@ include ../_includes/_mixins
 
     +github("spacy", "examples/training/train_textcat.py")
 
++section("vectors")
+    +h(3, "fasttext") Loading pre-trained FastText vectors
+
+    p
+        |  This simple snippet is all you need to be able to use the Facebook's
+        |  #[+a("https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md") fastText vectors]
+        |  (294 languages, pre-trained on Wikipedia) with spaCy.  Once they're
+        |  loaded, the vectors will be available via spaCy's built-in
+        |  #[code similarity()] methods.
+
+    +github("spacy", "examples/vectors_fast_text.py")
+
 +section("deep-learning")
     +h(3, "keras") Text classification with Keras
 
