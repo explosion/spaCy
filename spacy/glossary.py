@@ -3,6 +3,16 @@ from __future__ import unicode_literals
 
 
 def explain(term):
+    """Get a description for a given POS tag, dependency label or entity type.
+
+    term (unicode): The term to explain.
+    RETURNS (unicode): The explanation, or `None` if not found in the glossary.
+
+    EXAMPLE:
+        >>> spacy.explain(u'NORP')
+        >>> doc = nlp(u'Hello world')
+        >>> print([w.text, w.tag_, spacy.explain(w.tag_) for w in doc])
+    """
     if term in GLOSSARY:
         return GLOSSARY[term]
 
