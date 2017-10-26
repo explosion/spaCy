@@ -1,11 +1,11 @@
 """
-Print part-of-speech tagged, true-cased, (very roughly) sentence-separated
-text, with each "sentence" on a newline, and spaces between tokens. Supports
-multi-processing.
+Example of multi-processing with joblib. Here, we're exporting
+part-of-speech-tagged, true-cased, (very roughly) sentence-separated text, with
+each "sentence" on a newline, and spaces between tokens.
 
 Last updated for: spaCy 2.0.0a18
 """
-from __future__ import print_function, unicode_literals, division
+from __future__ import print_function, unicode_literals
 from toolz import partition_all
 from pathlib import Path
 from joblib import Parallel, delayed
