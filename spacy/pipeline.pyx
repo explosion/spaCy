@@ -83,7 +83,7 @@ class SentenceSegmenter(object):
             yield doc[start : len(doc)]
 
 
-class BaseThincComponent(object):
+class Pipe(object):
     name = None
 
     @classmethod
@@ -214,7 +214,7 @@ def _load_cfg(path):
         return {}
 
 
-class Tensorizer(BaseThincComponent):
+class Tensorizer(Pipe):
     """Assign position-sensitive vectors to tokens, using a CNN or RNN."""
     name = 'tensorizer'
 
@@ -326,7 +326,7 @@ class Tensorizer(BaseThincComponent):
         link_vectors_to_models(self.vocab)
 
 
-class Tagger(BaseThincComponent):
+class Tagger(Pipe):
     name = 'tagger'
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
@@ -623,7 +623,7 @@ class MultitaskObjective(Tagger):
             return '%s-%s' % (tags[i], ents[i])
 
 
-class SimilarityHook(BaseThincComponent):
+class SimilarityHook(Pipe):
     """
     Experimental
 
@@ -675,7 +675,7 @@ class SimilarityHook(BaseThincComponent):
             link_vectors_to_models(self.vocab)
 
 
-class TextCategorizer(BaseThincComponent):
+class TextCategorizer(Pipe):
     name = 'textcat'
 
     @classmethod
