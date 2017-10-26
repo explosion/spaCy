@@ -61,6 +61,15 @@ include ../_includes/_mixins
     +github("spacy", "examples/phrase_matcher.py")
 
 +section("training")
+    +h(3, "training-ner") Training spaCy's Named Entity Recognizer
+
+    p
+        |  This example shows how to update spaCy's entity recognizer
+        |  with your own examples, starting off with an existing, pre-trained
+        |  model, or from scratch using a blank #[code Language] class.
+
+    +github("spacy", "examples/training/train_ner.py")
+
     +h(3, "new-entity-type") Training an additional entity type
 
     p
@@ -70,15 +79,6 @@ include ../_includes/_mixins
         |  many more — a few hundred would be a good start.
 
     +github("spacy", "examples/training/train_new_entity_type.py")
-
-    +h(3, "ner-standalone") Training an NER system from scratch
-
-    p
-        |  This example is written to be self-contained and reasonably
-        |  transparent. To achieve that, it duplicates some of spaCy's internal
-        |  functionality.
-
-    +github("spacy", "examples/training/train_ner_standalone.py")
 
     +h(3, "textcat") Training spaCy's text classifier
         +tag-new(2)
