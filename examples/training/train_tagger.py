@@ -1,18 +1,21 @@
-"""A quick example for training a part-of-speech tagger, without worrying
-about the tokenization, or other language-specific customizations."""
-
-from __future__ import unicode_literals
-from __future__ import print_function
+#!/usr/bin/env python
+# coding: utf8
+"""
+A simple example for training a part-of-speech tagger with a custom tag map.
+To allow us to update the tag map with our custom one, this example starts off
+with a blank Language class and modifies its defaults.
+"""
+from __future__ import unicode_literals, print_function
 
 import plac
+import random
 from pathlib import Path
 
-from spacy.vocab import Vocab
-from spacy.tagger import Tagger
+import spacy
+from spacy.util import get_lang_class
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
 
-import random
 
 # You need to define a mapping from your data's part-of-speech tag names to the
 # Universal Part-of-Speech tag set, as spaCy includes an enum of these tags.
@@ -28,54 +31,67 @@ TAG_MAP = {
 
 # Usually you'll read this in, of course. Data formats vary.
 # Ensure your strings are unicode.
-DATA = [
-    (
-        ["I", "like", "green", "eggs"],
-        ["N", "V", "J", "N"]
-    ),
-    (
-        ["Eat", "blue", "ham"],
-        ["V", "J", "N"]
-    )
+TRAIN_DATA = [
+    (["I", "like", "green", "eggs"], ["N", "V", "J", "N"]),
+    (["Eat", "blue", "ham"], ["V", "J", "N"])
 ]
 
 
-def ensure_dir(path):
-    if not path.exists():
-        path.mkdir()
+@plac.annotations(
+    lang=("ISO Code of language to use", "option", "l", str),
+    output_dir=("Optional output directory", "option", "o", Path),
+    n_iter=("Number of training iterations", "option", "n", int))
+def main(lang='en', output_dir=None, n_iter=25):
+    """Create a new model, set up the pipeline and train the tagger. In order to
+    train the tagger with a custom tag map, we're creating a new Language
+    instance with a custom vocab.
+    """
+    lang_cls = get_lang_class(lang)  # get Language class
+    lang_cls.Defaults.tag_map.update(TAG_MAP)  # add tag map to defaults
+    nlp = lang_cls()  # initialise Language class
 
+    # add the parser to the pipeline
+    # nlp.create_pipe works for built-ins that are registered with spaCy
+    tagger = nlp.create_pipe('tagger')
+    nlp.add_pipe(tagger)
 
-def main(output_dir=None):
+    optimizer = nlp.begin_training(lambda: [])
+    for i in range(n_iter):
+        random.shuffle(TRAIN_DATA)
+        losses = {}
+        for words, tags in TRAIN_DATA:
+            doc = Doc(nlp.vocab, words=words)
+            gold = GoldParse(doc, tags=tags)
+            nlp.update([doc], [gold], sgd=optimizer, losses=losses)
+        print(losses)
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    print('Tags', [(t.text, t.tag_, t.pos_) for t in doc])
+
+    # save model to output directory
     if output_dir is not None:
         output_dir = Path(output_dir)
-        ensure_dir(output_dir)
-        ensure_dir(output_dir / "pos")
-        ensure_dir(output_dir / "vocab")
+        if not output_dir.exists():
+            output_dir.mkdir()
+        nlp.to_disk(output_dir)
+        print("Saved model to", output_dir)
 
-    vocab = Vocab(tag_map=TAG_MAP)
-    # The default_templates argument is where features are specified. See
-    # spacy/tagger.pyx for the defaults.
-    tagger = Tagger(vocab)
-    for i in range(25):
-        for words, tags in DATA:
-            doc = Doc(vocab, words=words)
-            gold = GoldParse(doc, tags=tags)
-            tagger.update(doc, gold)
-        random.shuffle(DATA)
-    tagger.model.end_training()
-    doc = Doc(vocab, orths_and_spaces=zip(["I", "like", "blue", "eggs"], [True] * 4))
-    tagger(doc)
-    for word in doc:
-        print(word.text, word.tag_, word.pos_)
-    if output_dir is not None:
-        tagger.model.dump(str(output_dir / 'pos' / 'model'))
-        with (output_dir / 'vocab' / 'strings.json').open('w') as file_:
-            tagger.vocab.strings.dump(file_)
+        # test the save model
+        print("Loading from", output_dir)
+        nlp2 = spacy.load(output_dir)
+        doc = nlp2(test_text)
+        print('Tags', [(t.text, t.tag_, t.pos_) for t in doc])
 
 
 if __name__ == '__main__':
     plac.call(main)
-    # I V VERB
-    # like V VERB
-    # blue N NOUN
-    # eggs N NOUN
+
+    # Expected output:
+    # [
+    #   ('I', 'N', 'NOUN'),
+    #   ('like', 'V', 'VERB'),
+    #   ('blue', 'J', 'ADJ'),
+    #   ('eggs', 'N', 'NOUN')
+    # ]
