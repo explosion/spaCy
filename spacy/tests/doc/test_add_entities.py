@@ -10,7 +10,8 @@ import pytest
 def test_doc_add_entities_set_ents_iob(en_vocab):
     text = ["This", "is", "a", "lion"]
     doc = get_doc(en_vocab, text)
-    ner = EntityRecognizer(en_vocab, features=[(2,), (3,)])
+    ner = EntityRecognizer(en_vocab)
+    ner.begin_training([])
     ner(doc)
 
     assert len(list(doc.ents)) == 0

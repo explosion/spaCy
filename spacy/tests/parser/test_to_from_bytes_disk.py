@@ -1,11 +1,11 @@
 import pytest
 
-from ...pipeline import NeuralDependencyParser
+from ...pipeline import DependencyParser
 
 
 @pytest.fixture
 def parser(en_vocab):
-    parser = NeuralDependencyParser(en_vocab)
+    parser = DependencyParser(en_vocab)
     parser.add_label('nsubj')
     parser.model, cfg = parser.Model(parser.moves.n_moves)
     parser.cfg.update(cfg)
@@ -14,7 +14,7 @@ def parser(en_vocab):
 
 @pytest.fixture
 def blank_parser(en_vocab):
-    parser = NeuralDependencyParser(en_vocab)
+    parser = DependencyParser(en_vocab)
     return parser
 
 
