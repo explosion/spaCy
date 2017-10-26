@@ -60,7 +60,7 @@ def main(model=None, output_dir=None, n_iter=1000):
         parser = nlp.get_pipe('parser')
 
     # add labels to the parser
-    for _, heads, deps in TRAIN_DATA:
+    for _, _, deps in TRAIN_DATA:
         for dep in deps:
             parser.add_label(dep)
 
