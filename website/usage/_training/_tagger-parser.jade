@@ -1,6 +1,56 @@
 //- 💫 DOCS > USAGE > TRAINING > TAGGER & PARSER
 
-+under-construction
++h(3, "example-train-parser") Updating the parser
+
+p
+    |  This example shows how to train spaCy's dependency parser, starting off
+    |  with an existing model or a blank model. You'll need a set of
+    |  #[strong training examples] and the respective #[strong heads] and
+    |  #[strong dependency label] for each token of the example texts.
+
++github("spacy", "examples/training/train_parser.py")
+
++h(4) Step by step guide
+
++list("numbers")
+    +item
+        |  #[strong Load the model] you want to start with, or create an
+        |  #[strong empty model] using
+        |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
+        |  language. If you're using a blank model, don't forget to add the
+        |  parser to the pipeline. If you're using an existing model,
+        |  make sure to disable all other pipeline components during training
+        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
+        |  This way, you'll only be training the parser.
+
+    +item
+        |  #[strong Add the dependency labels] to the parser using the
+        |  #[+api("dependencyparser#add_label") #[code add_label]] method. If
+        |  you're starting off with a pre-trained spaCy model, this is usually
+        |  not necessary – but it doesn't hurt either, just to be safe.
+
+    +item
+        |  #[strong Shuffle and loop over] the examples and create a
+        |  #[code Doc] and #[code GoldParse] object for each example. Make sure
+        |  to pass in the #[code heads] and #[code deps] when you create the
+        |  #[code GoldParse].
+
+    +item
+        |  For each example, #[strong update the model]
+        |  by calling #[+api("language#update") #[code nlp.update]], which steps
+        |  through the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations provided on the
+        |  #[code GoldParse] instance, to see whether it was
+        |  right. If it was wrong, it adjusts its weights so that the correct
+        |  action will score higher next time.
+
+    +item
+        |  #[strong Save] the trained model using
+        |  #[+api("language#to_disk") #[code nlp.to_disk]].
+
+    +item
+        |  #[strong Test] the model to make sure the parser works as expected.
+
 
 +h(3, "training-json") JSON format for training
 
