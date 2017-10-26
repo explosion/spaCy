@@ -212,7 +212,8 @@ cdef class LeftArc:
 cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.B_(0).sent_start != 1
+        # If there's (perhaps partial) parse pre-set, don't allow cycle.
+        return st.B_(0).sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -446,14 +447,19 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int initialize_state(self, StateC* st) nogil:
         for i in range(st.length):
-            st._sent[i].l_edge = i
-            st._sent[i].r_edge = i
+            if st._sent[i].dep == 0:
+                st._sent[i].l_edge = i
+                st._sent[i].r_edge = i
+                st._sent[i].head = 0
+                st._sent[i].dep = 0
+                st._sent[i].l_kids = 0
+                st._sent[i].r_kids = 0
         st.fast_forward()
 
     cdef int finalize_state(self, StateC* st) nogil:
         cdef int i
         for i in range(st.length):
-            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+            if st._sent[i].head == 0:
                 st._sent[i].dep = self.root_label
 
     def finalize_doc(self, doc):

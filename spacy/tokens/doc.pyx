@@ -21,7 +21,7 @@ from .token cimport Token
 from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
-from ..attrs import intify_attrs
+from ..attrs import intify_attrs, IDS
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
@@ -536,11 +536,15 @@ cdef class Doc:
 
     @cython.boundscheck(False)
     cpdef np.ndarray to_array(self, object py_attr_ids):
-        """Given a list of M attribute IDs, export the tokens to a numpy
-        `ndarray` of shape `(N, M)`, where `N` is the length of the document.
-        The values will be 32-bit integers.
+        """Export given token attributes to a numpy `ndarray`.
 
-        attr_ids (list[int]): A list of attribute ID ints.
+	If `attr_ids` is a sequence of M attributes, the output array will
+	be of shape `(N, M)`, where N is the length of the `Doc`
+	(in tokens). If `attr_ids` is a single attribute, the output shape will
+	be (N,). You can specify attributes by integer ID (e.g. spacy.attrs.LEMMA)
+	or string name (e.g. 'LEMMA' or 'lemma').
+
+        attr_ids (list[]): A list of attributes (int IDs or string names).
         RETURNS (numpy.ndarray[long, ndim=2]): A feature matrix, with one row
             per word, and one column per attribute indicated in the input
             `attr_ids`.
@@ -553,15 +557,25 @@ cdef class Doc:
         """
         cdef int i, j
         cdef attr_id_t feature
+        cdef np.ndarray[attr_t, ndim=1] attr_ids
         cdef np.ndarray[attr_t, ndim=2] output
+        # Handle scalar/list inputs of strings/ints for py_attr_ids
+        if not hasattr(py_attr_ids, '__iter__'):
+            py_attr_ids = [py_attr_ids]
+
+        # Allow strings, e.g. 'lemma' or 'LEMMA'
+        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
+                       for id_ in py_attr_ids]
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
+        attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
-        return output
+        # Handle 1d case
+        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
+
 
     def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
@@ -659,6 +673,54 @@ cdef class Doc:
         self.is_parsed = bool(HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(TAG in attrs or POS in attrs)
         return self
+
+    def get_lca_matrix(self):
+        '''
+        Calculates the lowest common ancestor matrix
+        for a given Spacy doc.
+        Returns LCA matrix containing the integer index
+        of the ancestor, or -1 if no common ancestor is
+        found (ex if span excludes a necessary ancestor).
+        Apologies about the recursion, but the
+        impact on performance is negligible given
+        the natural limitations on the depth of a typical human sentence.
+        '''
+        # Efficiency notes:
+        #
+        # We can easily improve the performance here by iterating in Cython.
+        # To loop over the tokens in Cython, the easiest way is:
+        # for token in doc.c[:doc.c.length]:
+        #     head = token + token.head
+        # Both token and head will be TokenC* here. The token.head attribute
+        # is an integer offset.
+        def __pairwise_lca(token_j, token_k, lca_matrix):
+            if lca_matrix[token_j.i][token_k.i] != -2:
+                return lca_matrix[token_j.i][token_k.i]
+            elif token_j == token_k:
+                lca_index = token_j.i
+            elif token_k.head == token_j:
+                lca_index = token_j.i
+            elif token_j.head == token_k:
+                lca_index = token_k.i
+            elif (token_j.head == token_j) and (token_k.head == token_k):
+                lca_index = -1
+            else:
+                lca_index = __pairwise_lca(token_j.head, token_k.head, lca_matrix)
+            lca_matrix[token_j.i][token_k.i] = lca_index
+            lca_matrix[token_k.i][token_j.i] = lca_index
+
+            return lca_index
+
+        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
+        lca_matrix.fill(-2)
+        for j in range(len(self)):
+            token_j = self[j]
+            for k in range(j, len(self)):
+                token_k = self[k]
+                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix)
+                lca_matrix[k][j] = lca_matrix[j][k]
+
+        return lca_matrix
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.

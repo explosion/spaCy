@@ -101,7 +101,7 @@ def generate_meta():
 def generate_pipeline():
     prints("If set to 'True', the default pipeline is used. If set to 'False', "
            "the pipeline will be disabled. Components should be specified as a "
-           "comma-separated list of component names, e.g. tensorizer, tagger, "
+           "comma-separated list of component names, e.g. tagger, "
            "parser, ner. For more information, see the docs on processing pipelines.",
            title="Enter your model's pipeline components")
     pipeline = util.get_raw_input("Pipeline components", True)

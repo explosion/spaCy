@@ -33,8 +33,7 @@ class Japanese(Language):
     Defaults = JapaneseDefaults
 
     def make_doc(self, text):
-        words = self.tokenizer(text)
-        return Doc(self.vocab, words=words, spaces=[False]*len(words))
+        return self.tokenizer(text)
 
 
 __all__ = ['Japanese']

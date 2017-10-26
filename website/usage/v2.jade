@@ -497,6 +497,7 @@ p
 
     +code-new.
         nlp = spacy.load('en', disable=['tagger', 'ner'])
+        doc = nlp(u"I don't want parsed", disable['parser'])
         nlp.remove_pipe('parser')
     +code-old.
         nlp = spacy.load('en', tagger=False, entity=False)

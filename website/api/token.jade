@@ -587,11 +587,31 @@ p The L2 norm of the token's vector representation.
         +cell Is the token punctuation?
 
     +row
+        +cell #[code is_left_punct]
+        +cell bool
+        +cell Is the token a left punctuation mark, e.g. #[code (]?
+
+    +row
+        +cell #[code is_right_punct]
+        +cell bool
+        +cell Is the token a right punctuation mark, e.g. #[code )]?
+
+    +row
         +cell #[code is_space]
         +cell bool
         +cell
             |  Does the token consist of whitespace characters? Equivalent to
             |  #[code token.text.isspace()].
+
+    +row
+        +cell #[code is_bracket]
+        +cell bool
+        +cell Is the token a bracket?
+
+    +row
+        +cell #[code is_quote]
+        +cell bool
+        +cell Is the token a quotation mark?
 
     +row
         +cell #[code like_url]

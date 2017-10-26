@@ -20,7 +20,8 @@ cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment
     boundaries.
     """
-    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, token_match=None):
+    def __init__(self, Vocab vocab, rules=None, prefix_search=None,
+            suffix_search=None, infix_finditer=None, token_match=None):
         """Create a `Tokenizer`, to create `Doc` objects given unicode text.
 
         vocab (Vocab): A storage container for lexical types.
@@ -48,8 +49,9 @@ cdef class Tokenizer:
         self.infix_finditer = infix_finditer
         self.vocab = vocab
         self._rules = {}
-        for chunk, substrings in sorted(rules.items()):
-            self.add_special_case(chunk, substrings)
+        if rules is not None:
+            for chunk, substrings in sorted(rules.items()):
+                self.add_special_case(chunk, substrings)
 
     def __reduce__(self):
         args = (self.vocab,
@@ -61,11 +63,8 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):
+        # TODO: deprecation warning
         return Doc(self.vocab, words=strings)
-        #raise NotImplementedError(
-        #    "Method deprecated in 1.0.\n"
-        #    "Old: tokenizer.tokens_from_list(strings)\n"
-        #    "New: Doc(tokenizer.vocab, words=strings)")
 
     @cython.boundscheck(False)
     def __call__(self, unicode string):
@@ -148,14 +147,18 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
+        cdef int has_special
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
+        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes,
+                                   &has_special)
         self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
+        self._save_cached(&tokens.c[orig_size], orig_key, has_special,
+                          tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes):
+                                vector[const LexemeC*] *suffixes,
+                                int* has_special):
         cdef size_t i
         cdef unicode prefix
         cdef unicode suffix
@@ -174,6 +177,7 @@ cdef class Tokenizer:
                 if minus_pre and self._specials.get(hash_string(minus_pre)) != NULL:
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
+                    has_special[0] = 1
                     break
                 if self.token_match and self.token_match(string):
                     break
@@ -185,6 +189,7 @@ cdef class Tokenizer:
                 if minus_suf and (self._specials.get(hash_string(minus_suf)) != NULL):
                     string = minus_suf
                     suffixes.push_back(self.vocab.get(mem, suffix))
+                    has_special[0] = 1
                     break
             if pre_len and suf_len and (pre_len + suf_len) <= len(string):
                 string = string[pre_len:-suf_len]
@@ -197,6 +202,7 @@ cdef class Tokenizer:
                 string = minus_suf
                 suffixes.push_back(self.vocab.get(mem, suffix))
             if string and (self._specials.get(hash_string(string)) != NULL):
+                has_special[0] = 1
                 break
         return string
 
@@ -256,11 +262,15 @@ cdef class Tokenizer:
             preinc(it)
             tokens.push_back(lexeme, False)
 
-    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1:
+    cdef int _save_cached(self, const TokenC* tokens, hash_t key,
+                          int has_special, int n) except -1:
         cdef int i
         for i in range(n):
             if tokens[i].lex.id == 0:
                 return 0
+        # See https://github.com/explosion/spaCy/issues/1250
+        if has_special:
+            return 0
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
         cached.is_lex = True

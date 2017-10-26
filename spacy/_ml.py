@@ -462,46 +462,6 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
     return vectors, backward
 
 
-def fine_tune(embedding, combine=None):
-    if combine is not None:
-        raise NotImplementedError(
-            "fine_tune currently only supports addition. Set combine=None")
-    def fine_tune_fwd(docs_tokvecs, drop=0.):
-        docs, tokvecs = docs_tokvecs
-
-        lengths = model.ops.asarray([len(doc) for doc in docs], dtype='i')
-
-        vecs, bp_vecs = embedding.begin_update(docs, drop=drop)
-        flat_tokvecs = embedding.ops.flatten(tokvecs)
-        flat_vecs = embedding.ops.flatten(vecs)
-        output = embedding.ops.unflatten(
-                   (model.mix[0] * flat_tokvecs + model.mix[1] * flat_vecs), lengths)
-
-        def fine_tune_bwd(d_output, sgd=None):
-            flat_grad = model.ops.flatten(d_output)
-            model.d_mix[0] += flat_tokvecs.dot(flat_grad.T).sum()
-            model.d_mix[1] += flat_vecs.dot(flat_grad.T).sum()
-
-            bp_vecs([d_o * model.mix[1] for d_o in d_output], sgd=sgd)
-            if sgd is not None:
-                sgd(model._mem.weights, model._mem.gradient, key=model.id)
-            return [d_o * model.mix[0] for d_o in d_output]
-        return output, fine_tune_bwd
-
-    def fine_tune_predict(docs_tokvecs):
-        docs, tokvecs = docs_tokvecs
-        vecs = embedding(docs)
-        return [model.mix[0]*tv+model.mix[1]*v
-                for tv, v in zip(tokvecs, vecs)]
-
-    model = wrap(fine_tune_fwd, embedding)
-    model.mix = model._mem.add((model.id, 'mix'), (2,))
-    model.mix.fill(0.5)
-    model.d_mix = model._mem.add_gradient((model.id, 'd_mix'), (model.id, 'mix'))
-    model.predict = fine_tune_predict
-    return model
-
-
 @layerize
 def flatten(seqs, drop=0.):
     if isinstance(seqs[0], numpy.ndarray):

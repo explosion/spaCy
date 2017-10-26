@@ -229,6 +229,7 @@ p
         +cell Config parameters.
 
 +h(2, "preprocess_gold") Language.preprocess_gold
+    +tag method
 
 p
     |  Can be called before training to pre-process gold data. By default, it
@@ -608,6 +609,14 @@ p Load state from a binary string.
         +cell
             |  Custom meta data for the Language class. If a model is loaded,
             |  contains meta data of the model.
+
+    +row
+        +cell #[code path]
+            +tag-new(2)
+        +cell #[code Path]
+        +cell
+            |  Path to the model data directory, if a model is loaded. Otherwise
+            |  #[code None].
 
 +h(2, "class-attributes") Class attributes
 

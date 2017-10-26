@@ -22,7 +22,7 @@ cimport numpy as np
 
 from libcpp.vector cimport vector
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
-from cpython.exc cimport PyErr_CheckSignals
+from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport malloc, calloc, free
@@ -48,7 +48,7 @@ from thinc.neural.util import get_array_module
 from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine
-from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
+from .._ml import Tok2Vec, doc2feats, rebatch
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
 from .._ml import HistoryFeatures
@@ -262,7 +262,7 @@ cdef class Parser:
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size != 0:
             raise ValueError("Currently history size is hard-coded to 0")
-        if hist_width != 0: 
+        if hist_width != 0:
             raise ValueError("Currently history width is hard-coded to 0")
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
@@ -440,6 +440,7 @@ cdef class Parser:
                 self._parseC(states[i],
                     feat_weights, bias, hW, hb,
                     nr_class, nr_hidden, nr_feat, nr_piece)
+        PyErr_CheckSignals()
         return state_objs
 
     cdef void _parseC(self, StateC* state, 
@@ -450,6 +451,10 @@ cdef class Parser:
         is_valid = <int*>calloc(nr_class, sizeof(int))
         vectors = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
         scores = <float*>calloc(nr_class, sizeof(float))
+        if not (token_ids and is_valid and vectors and scores):
+            with gil:
+                PyErr_SetFromErrno(MemoryError)
+                PyErr_CheckSignals()
 
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)

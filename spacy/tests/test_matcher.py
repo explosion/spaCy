@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ..matcher import Matcher, PhraseMatcher
 from .util import get_doc
+from ..tokens import Doc
 
 import pytest
 
@@ -63,6 +64,12 @@ def test_matcher_init(en_vocab, words):
     assert matcher(doc) == []
 
 
+def test_matcher_contains(matcher):
+    matcher.add('TEST', None, [{'ORTH': 'test'}])
+    assert 'TEST' in matcher
+    assert 'TEST2' not in matcher
+
+
 def test_matcher_no_match(matcher):
     words = ["I", "like", "cheese", "."]
     doc = get_doc(matcher.vocab, words)
@@ -111,7 +118,8 @@ def test_matcher_empty_dict(en_vocab):
     matcher.add('A.', None, [{'ORTH': 'a'}, {}])
     matches = matcher(doc)
     assert matches[0][1:] == (0, 2)
- 
+
+
 def test_matcher_operator_shadow(en_vocab):
     matcher = Matcher(en_vocab)
     abc = ["a", "b", "c"]
@@ -122,7 +130,8 @@ def test_matcher_operator_shadow(en_vocab):
     matches = matcher(doc)
     assert len(matches) == 1
     assert matches[0][1:] == (0, 3)
- 
+
+
 def test_matcher_phrase_matcher(en_vocab):
     words = ["Google", "Now"]
     doc = get_doc(en_vocab, words)
@@ -131,6 +140,22 @@ def test_matcher_phrase_matcher(en_vocab):
     words = ["I", "like", "Google", "Now", "best"]
     doc = get_doc(en_vocab, words)
     assert len(matcher(doc)) == 1
+
+
+def test_phrase_matcher_length(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    assert len(matcher) == 0
+    matcher.add('TEST', None, get_doc(en_vocab, ['test']))
+    assert len(matcher) == 1
+    matcher.add('TEST2', None, get_doc(en_vocab, ['test2']))
+    assert len(matcher) == 2
+
+
+def test_phrase_matcher_contains(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add('TEST', None, get_doc(en_vocab, ['test']))
+    assert 'TEST' in matcher
+    assert 'TEST2' not in matcher
 
 
 def test_matcher_match_zero(matcher):
@@ -212,3 +237,24 @@ def test_operator_combos(matcher):
             assert matches, (string, pattern_str)
         else:
             assert not matches, (string, pattern_str)
+
+
+def test_matcher_end_zero_plus(matcher):
+    '''Test matcher works when patterns end with * operator. (issue 1450)'''
+    matcher = Matcher(matcher.vocab)
+    matcher.add(
+        "TSTEND",
+        None,
+        [
+            {'ORTH': "a"},
+            {'ORTH': "b", 'OP': "*"}
+        ]
+    )
+    nlp = lambda string: Doc(matcher.vocab, words=string.split())
+    assert len(matcher(nlp(u'a'))) == 1
+    assert len(matcher(nlp(u'a b'))) == 1
+    assert len(matcher(nlp(u'a b'))) == 1
+    assert len(matcher(nlp(u'a c'))) == 1
+    assert len(matcher(nlp(u'a b c'))) == 1
+    assert len(matcher(nlp(u'a b b c'))) == 1
+    assert len(matcher(nlp(u'a b b'))) == 1

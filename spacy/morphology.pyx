@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from libc.string cimport memset
 
-from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
+from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT, SPACE
 from .attrs cimport POS, IS_SPACE
 from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
@@ -36,14 +36,22 @@ cdef class Morphology:
     def __init__(self, StringStore string_store, tag_map, lemmatizer, exc=None):
         self.mem = Pool()
         self.strings = string_store
+        # Add special space symbol. We prefix with underscore, to make sure it
+        # always sorts to the end.
+        space_attrs = tag_map.get('SP', {POS: SPACE})
+        if '_SP' not in tag_map:
+            self.strings.add('_SP')
+            tag_map = dict(tag_map)
+            tag_map['_SP'] = space_attrs
+        self.tag_names = tuple(sorted(tag_map.keys()))
         self.tag_map = {}
         self.lemmatizer = lemmatizer
         self.n_tags = len(tag_map)
-        self.tag_names = tuple(sorted(tag_map.keys()))
         self.reverse_index = {}
 
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags+1, sizeof(RichTagC))
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
+            self.strings.add(tag_str)
             self.tag_map[tag_str] = dict(attrs)
             attrs = _normalize_props(attrs)
             attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
@@ -93,7 +101,7 @@ cdef class Morphology:
         # the statistical model fails.
         # Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
-            tag_id = self.reverse_index[self.strings.add('SP')]
+            tag_id = self.reverse_index[self.strings.add('_SP')]
         rich_tag = self.rich_tags[tag_id]
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
@@ -164,7 +172,7 @@ cdef class Morphology:
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
             return self.strings.add(py_string.lower())
-        cdef set lemma_strings
+        cdef list lemma_strings
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
         lemma_string = sorted(lemma_strings)[0]
@@ -426,3 +434,7 @@ IDS = {
 
 
 NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
+# Unfortunate hack here, to work around problem with long cpdef enum
+# (which is generating an enormous amount of C++ in Cython 0.24+)
+# We keep the enum cdef, and just make sure the names are available to Python
+locals().update(IDS)
