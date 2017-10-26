@@ -16,7 +16,6 @@ from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
 from .lemmatizer import Lemmatizer
-from .syntax.parser import get_templates
 
 from .pipeline import DependencyParser, Tensorizer, Tagger
 from .pipeline import EntityRecognizer, SimilarityHook, TextCategorizer
