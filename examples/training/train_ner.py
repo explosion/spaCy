@@ -13,6 +13,7 @@ Last updated for: spaCy 2.0.0a18
 """
 from __future__ import unicode_literals, print_function
 
+import plac
 import random
 from pathlib import Path
 
@@ -27,15 +28,12 @@ TRAIN_DATA = [
 ]
 
 
+@plac.annotations(
+    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    output_dir=("Optional output directory", "option", "o", Path),
+    n_iter=("Number of training iterations", "option", "n", int))
 def main(model=None, output_dir=None, n_iter=100):
-    """Load the model, set up the pipeline and train the entity recognizer.
-
-    model (unicode): Model name to start off with. If None, a blank English
-        Language class is created.
-    output_dir (unicode / Path): Optional output directory. If None, no model
-        will be saved.
-    n_iter (int): Number of iterations during training.
-    """
+    """Load the model, set up the pipeline and train the entity recognizer."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
@@ -114,5 +112,4 @@ def reformat_train_data(tokenizer, examples):
 
 
 if __name__ == '__main__':
-    import plac
     plac.call(main)
