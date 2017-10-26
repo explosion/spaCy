@@ -20,11 +20,10 @@ p
         |  #[strong Load the model] you want to start with, or create an
         |  #[strong empty model] using
         |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
-        |  language. If you're using a blank model, don't forget to add the
-        |  parser to the pipeline. If you're using an existing model,
-        |  make sure to disable all other pipeline components during training
-        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
-        |  This way, you'll only be training the parser.
+        |  language. If you're using an existing model, make sure to disable all
+        |  other pipeline components during training using
+        |  #[+api("language#disable_pipes") #[code nlp.disable_pipes]]. This
+        |  way, you'll only be training the text classifier.
 
     +item
         |  #[strong Add the text classifier] to the pipeline, and add the labels
