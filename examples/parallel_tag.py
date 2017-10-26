@@ -1,7 +1,9 @@
 """
-Example of multi-processing with joblib. Here, we're exporting
+Example of multi-processing with Joblib. Here, we're exporting
 part-of-speech-tagged, true-cased, (very roughly) sentence-separated text, with
-each "sentence" on a newline, and spaces between tokens.
+each "sentence" on a newline, and spaces between tokens. Data is loaded from
+the IMDB movie reviews dataset and will be loaded automatically via Thinc's
+built-in dataset loader.
 
 Last updated for: spaCy 2.0.0a18
 """

@@ -71,6 +71,19 @@ include ../_includes/_mixins
 
     +github("spacy", "examples/pipeline/custom_attr_methods.py")
 
+    +h(3, "parallel-tag") Multi-processing with Joblib
+
+    p
+        |  This example shows how to use multiple cores to process text using
+        |  spaCy and #[+a("https://pythonhosted.org/joblib/") Joblib]. We're
+        |  exporting part-of-speech-tagged, true-cased, (very roughly)
+        |  sentence-separated text, with each "sentence" on a newline, and
+        |  spaces between tokens. Data is loaded from the IMDB movie reviews
+        |  dataset and will be loaded automatically via Thinc's built-in dataset
+        |  loader.
+
+    +github("spacy", "examples/parallel_tag.py")
+
 +section("training")
     +h(3, "training-ner") Training spaCy's Named Entity Recognizer
 
