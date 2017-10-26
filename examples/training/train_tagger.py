@@ -4,6 +4,13 @@
 A simple example for training a part-of-speech tagger with a custom tag map.
 To allow us to update the tag map with our custom one, this example starts off
 with a blank Language class and modifies its defaults.
+
+For more details, see the documentation:
+* Training: https://alpha.spacy.io/usage/training
+* POS Tagging: https://alpha.spacy.io/usage/linguistic-features#pos-tagging
+
+Developed for: spaCy 2.0.0a18
+Last updated for: spaCy 2.0.0a18
 """
 from __future__ import unicode_literals, print_function
 
