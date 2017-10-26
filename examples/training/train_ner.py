@@ -44,7 +44,7 @@ def main(model=None, output_dir=None, n_iter=100):
         print("Created blank 'en' model")
 
     # create the built-in pipeline components and add them to the pipeline
-    # ner.create_pipe works for built-ins that are registered with spaCy!
+    # nlp.create_pipe works for built-ins that are registered with spaCy
     if 'ner' not in nlp.pipe_names:
         ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, last=True)
@@ -86,8 +86,9 @@ def main(model=None, output_dir=None, n_iter=100):
 
         # test the saved model
         print("Loading from", output_dir)
+        nlp2 = spacy.load(output_dir)
         for text, _ in TRAIN_DATA:
-            doc = nlp(text)
+            doc = nlp2(text)
             print('Entities', [(ent.text, ent.label_) for ent in doc.ents])
             print('Tokens', [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 
