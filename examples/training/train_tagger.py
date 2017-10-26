@@ -50,7 +50,7 @@ def main(lang='en', output_dir=None, n_iter=25):
     lang_cls.Defaults.tag_map.update(TAG_MAP)  # add tag map to defaults
     nlp = lang_cls()  # initialise Language class
 
-    # add the parser to the pipeline
+    # add the tagger to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
     tagger = nlp.create_pipe('tagger')
     nlp.add_pipe(tagger)

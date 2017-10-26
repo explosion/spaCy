@@ -1,6 +1,6 @@
 //- 💫 DOCS > USAGE > TRAINING > TAGGER & PARSER
 
-+h(3, "example-train-parser") Updating the parser
++h(3, "example-train-parser") Updating the Dependency Parser
 
 p
     |  This example shows how to train spaCy's dependency parser, starting off
@@ -51,6 +51,49 @@ p
     +item
         |  #[strong Test] the model to make sure the parser works as expected.
 
++h(3, "example-train-tagger") Updating the Part-of-speech Tagger
+
+p
+    |  In this example, we're training spaCy's part-of-speech tagger with a
+    |  custom tag map. We start off with a blank #[code Language] class, update
+    |  its defaults with our custom tags and then train the tagger. You'll need
+    |  a set of #[strong training examples] and the respective
+    |  #[strong custom tags], as well as a dictionary mapping those tags to the
+    |  #[+a("http://universaldependencies.github.io/docs/u/pos/index.html") Universal Dependencies scheme].
+
++github("spacy", "examples/training/train_tagger.py")
+
++h(4) Step by step guide
+
++list("numbers")
+    +item
+        |  #[strong Create] a new #[code Language] class and before initialising
+        |  it, update the #[code tag_map] in its #[code Defaults] with your
+        |  custom tags.
+
+    +item
+        |  #[strong Create a new tagger] component and add it to the pipeline.
+
+    +item
+        |  #[strong Shuffle and loop over] the examples and create a
+        |  #[code Doc] and #[code GoldParse] object for each example. Make sure
+        |  to pass in the #[code tags] when you create the #[code GoldParse].
+
+    +item
+        |  For each example, #[strong update the model]
+        |  by calling #[+api("language#update") #[code nlp.update]], which steps
+        |  through the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations provided on the
+        |  #[code GoldParse] instance, to see whether it was
+        |  right. If it was wrong, it adjusts its weights so that the correct
+        |  action will score higher next time.
+
+    +item
+        |  #[strong Save] the trained model using
+        |  #[+api("language#to_disk") #[code nlp.to_disk]].
+
+    +item
+        |  #[strong Test] the model to make sure the parser works as expected.
 
 +h(3, "training-json") JSON format for training
 

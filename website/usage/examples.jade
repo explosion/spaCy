@@ -80,7 +80,7 @@ include ../_includes/_mixins
 
     +github("spacy", "examples/training/train_new_entity_type.py")
 
-    +h(3, "parser") Training spaCy's parser
+    +h(3, "parser") Training spaCy's Dependency Parser
 
     p
         |  This example shows how to update spaCy's dependency parser,
@@ -88,6 +88,15 @@ include ../_includes/_mixins
         |  using a blank #[code Language] class.
 
     +github("spacy", "examples/training/train_parser.py")
+
+    +h(3, "tagger") Training spaCy's Part-of-speech Tagger
+
+    p
+        |  In this example, we're training spaCy's part-of-speech tagger with a
+        |  custom tag map, mapping our own tags to the mapping those tags to the
+        |  #[+a("http://universaldependencies.github.io/docs/u/pos/index.html") Universal Dependencies scheme].
+
+    +github("spacy", "examples/training/train_tagger.py")
 
     +h(3, "textcat") Training spaCy's text classifier
         +tag-new(2)
