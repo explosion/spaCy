@@ -34,7 +34,6 @@ from pathlib import Path
 
 import spacy
 from spacy.gold import GoldParse, minibatch
-from spacy.pipeline import NeuralEntityRecognizer
 
 
 # new entity label
@@ -77,10 +76,14 @@ def main(model=None, new_model_name='animal', output_dir=None):
         print("Created blank 'en' model")
 
     # Add entity recognizer to model if it's not in the pipeline
+    # nlp.create_pipe works for built-ins that are registered with spaCy
     if 'ner' not in nlp.pipe_names:
-        nlp.add_pipe(NeuralEntityRecognizer(nlp.vocab))
+        ner = nlp.create_pipe('ner')
+        nlp.add_pipe(ner)
+    # otherwise, get it, so we can add labels to it
+    else:
+        ner = nlp.get_pipe('ner')
 
-    ner = nlp.get_pipe('ner')  # get entity recognizer
     ner.add_label(LABEL)   # add new entity label to entity recognizer
 
     # get names of other pipes to disable them during training
