@@ -151,7 +151,7 @@ class Language(object):
     @property
     def meta(self):
         self._meta.setdefault('lang', self.vocab.lang)
-        self._meta.setdefault('name', '')
+        self._meta.setdefault('name', 'model')
         self._meta.setdefault('version', '0.0.0')
         self._meta.setdefault('spacy_version', about.__version__)
         self._meta.setdefault('description', '')
