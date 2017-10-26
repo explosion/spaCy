@@ -113,9 +113,12 @@ include ../_includes/_mixins
         +tag-new(2)
 
     p
-        |  This example shows how to use and train spaCy's new
-        |  #[+api("textcategorizer") #[code TextCategorizer]] pipeline component
-        |  on IMDB movie reviews.
+        |  This example shows how to train a multi-label convolutional neural
+        |  network text classifier on IMDB movie reviews, using spaCy's new
+        |  #[+api("textcategorizer") #[code TextCategorizer]] component. The
+        |  dataset will be loaded automatically via Thinc's built-in dataset
+        |  loader. Predictions are available via
+        |  #[+api("doc#attributes") #[code Doc.cats]].
 
     +github("spacy", "examples/training/train_textcat.py")
 

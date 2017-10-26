@@ -2,7 +2,7 @@
 # coding: utf8
 """Train a multi-label convolutional neural network text classifier on the
 IMDB dataset, using the TextCategorizer component. The dataset will be loaded
-automatically via Thinc's built-in dataset loader. The model is then added to
+automatically via Thinc's built-in dataset loader. The model is added to
 spacy.pipeline, and predictions are available via `doc.cats`.
 
 For more details, see the documentation:
@@ -41,7 +41,7 @@ def main(model=None, output_dir=None, n_iter=20):
     if 'textcat' not in nlp.pipe_names:
         # textcat = nlp.create_pipe('textcat')
         textcat = TextCategorizer(nlp.vocab, labels=['POSITIVE'])
-        nlp.add_pipe(textcat, first=True)
+        nlp.add_pipe(textcat, last=True)
     # otherwise, get it, so we can add labels to it
     else:
         textcat = nlp.get_pipe('textcat')
