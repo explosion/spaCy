@@ -2,6 +2,37 @@
 
 include ../_includes/_mixins
 
++section("information-extraction")
+    +h(3, "phrase-matcher") Using spaCy's phrase matcher
+        +tag-new(2)
+
+    p
+        |  This example shows how to use the new
+        |  #[+api("phrasematcher") #[code PhraseMatcher]] to efficiently find
+        |  entities from a large terminology list.
+
+    +github("spacy", "examples/information_extraction/phrase_matcher.py")
+
+    +h(3, "entity-relations") Extracting entity relations
+
+    p
+        |  A simple example of extracting relations between phrases and
+        |  entities using spaCy's named entity recognizer and the dependency
+        |  parse. Here, we extract money and currency values (entities labelled
+        |  as #[code MONEY]) and then check the dependency tree to find the
+        |  noun phrase they are referring to – for example: "$9.4 million"
+        |  &rarr; "Net income".
+
+    +github("spacy", "examples/information_extraction/entity_relations.py")
+
+    +h(3, "subtrees") Navigating the parse tree and subtrees
+
+    p
+        |  This example shows how to navigate the parse tree including subtrees
+        |  attached to a word.
+
+    +github("spacy", "examples/information_extraction/parse_subtrees.py")
+
 +section("pipeline")
     +h(3, "custom-components-entities") Custom pipeline components and attribute extensions
         +tag-new(2)
@@ -39,26 +70,6 @@ include ../_includes/_mixins
         |  #[code Span].
 
     +github("spacy", "examples/pipeline/custom_attr_methods.py")
-
-+section("matching")
-    +h(3, "matcher") Using spaCy's rule-based matcher
-
-    p
-        |  This example shows how to use spaCy's rule-based
-        |  #[+api("matcher") #[code Matcher]] to find and label entities across
-        |  documents.
-
-    +github("spacy", "examples/matcher_example.py")
-
-    +h(3, "phrase-matcher") Using spaCy's phrase matcher
-        +tag-new(2)
-
-    p
-        |  This example shows how to use the new
-        |  #[+api("phrasematcher") #[code PhraseMatcher]] to efficiently find
-        |  entities from a large terminology list.
-
-    +github("spacy", "examples/phrase_matcher.py")
 
 +section("training")
     +h(3, "training-ner") Training spaCy's Named Entity Recognizer
