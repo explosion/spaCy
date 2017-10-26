@@ -66,7 +66,7 @@ def main(model=None, output_dir=None, n_iter=1000):
 
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'parser']
-    with nlp.disable_pipes(*other_pipes) as disabled:  # only train parser
+    with nlp.disable_pipes(*other_pipes):  # only train parser
         optimizer = nlp.begin_training(lambda: [])
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)

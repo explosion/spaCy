@@ -52,7 +52,7 @@ def main(model=None, output_dir=None, n_iter=100):
 
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
-    with nlp.disable_pipes(*other_pipes) as disabled:  # only train NER
+    with nlp.disable_pipes(*other_pipes):  # only train NER
         optimizer = nlp.begin_training(get_data)
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
