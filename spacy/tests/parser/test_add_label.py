@@ -9,7 +9,7 @@ from ...attrs import NORM
 from ...gold import GoldParse
 from ...vocab import Vocab
 from ...tokens import Doc
-from ...pipeline import NeuralDependencyParser
+from ...pipeline import DependencyParser
 
 numpy.random.seed(0)
 
@@ -21,7 +21,7 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    parser = NeuralDependencyParser(vocab)
+    parser = DependencyParser(vocab)
     parser.cfg['token_vector_width'] = 8
     parser.cfg['hidden_width'] = 30
     parser.cfg['hist_size'] = 0

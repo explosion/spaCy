@@ -16,10 +16,9 @@ from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
 from .lemmatizer import Lemmatizer
-from .syntax.parser import get_templates
 
-from .pipeline import NeuralDependencyParser, TokenVectorEncoder, NeuralTagger
-from .pipeline import NeuralEntityRecognizer, SimilarityHook, TextCategorizer
+from .pipeline import DependencyParser, Tensorizer, Tagger
+from .pipeline import EntityRecognizer, SimilarityHook, TextCategorizer
 
 from .compat import json_dumps, izip, copy_reg
 from .scorer import Scorer
@@ -75,9 +74,6 @@ class BaseDefaults(object):
     infixes = tuple(TOKENIZER_INFIXES)
     tag_map = dict(TAG_MAP)
     tokenizer_exceptions = {}
-    parser_features = get_templates('parser')
-    entity_features = get_templates('ner')
-    tagger_features = Tagger.feature_templates # TODO -- fix this
     stop_words = set()
     lemma_rules = {}
     lemma_exc = {}
@@ -102,9 +98,9 @@ class Language(object):
     factories = {
         'tokenizer': lambda nlp: nlp.Defaults.create_tokenizer(nlp),
         'tensorizer': lambda nlp, **cfg: TokenVectorEncoder(nlp.vocab, **cfg),
-        'tagger': lambda nlp, **cfg: NeuralTagger(nlp.vocab, **cfg),
-        'parser': lambda nlp, **cfg: NeuralDependencyParser(nlp.vocab, **cfg),
-        'ner': lambda nlp, **cfg: NeuralEntityRecognizer(nlp.vocab, **cfg),
+        'tagger': lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        'parser': lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
+        'ner': lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         'similarity': lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         'textcat': lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg)
     }

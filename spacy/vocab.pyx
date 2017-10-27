@@ -16,7 +16,6 @@ from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
 from .typedefs cimport attr_t
-from .cfile cimport CFile
 from .tokens.token cimport Token
 from .attrs cimport PROB, LANG
 from .structs cimport SerializedLexemeC
