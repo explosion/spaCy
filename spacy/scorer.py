@@ -74,8 +74,11 @@ class Scorer(object):
     @property
     def scores(self):
         return {
-            'uas': self.uas, 'las': self.las,
-            'ents_p': self.ents_p, 'ents_r': self.ents_r, 'ents_f': self.ents_f,
+            'uas': self.uas,
+            'las': self.las,
+            'ents_p': self.ents_p,
+            'ents_r': self.ents_r,
+            'ents_f': self.ents_f,
             'tags_acc': self.tags_acc,
             'token_acc': self.token_acc
         }
@@ -85,7 +88,8 @@ class Scorer(object):
 
         gold_deps = set()
         gold_tags = set()
-        gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
+        gold_ents = set(tags_to_entities([annot[-1]
+                        for annot in gold.orig_annot]))
         for id_, word, tag, head, dep, ner in gold.orig_annot:
             gold_tags.add((id_, tag))
             if dep not in (None, "") and dep.lower() not in punct_labels:
