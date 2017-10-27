@@ -30,6 +30,10 @@ try:
 except ImportError:
     cupy = None
 
+try:
+    from thinc.optimizers import Optimizer
+except ImportError:
+    from thinc.optimizers import Adam as Optimizer
 
 pickle = pickle
 copy_reg = copy_reg

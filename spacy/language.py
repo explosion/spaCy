@@ -3,7 +3,6 @@ from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 
 from thinc.neural import Model
-from thinc.neural.optimizers import Adam
 import random
 import ujson
 from collections import OrderedDict
@@ -21,6 +20,7 @@ from .syntax.parser import get_templates
 from .pipeline import NeuralDependencyParser, TokenVectorEncoder, NeuralTagger
 from .pipeline import NeuralEntityRecognizer, SimilarityHook, TextCategorizer
 
+from .compat import Optimizer
 from .compat import json_dumps, izip, copy_reg
 from .scorer import Scorer
 from ._ml import link_vectors_to_models
@@ -359,7 +359,8 @@ class Language(object):
             return
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = Adam(Model.ops, 0.001)
+                self._optimizer = Optimizer(Model.ops, 0.001,
+                                            beta1=0.9, beta2=0.0, nesterov=True)
             sgd = self._optimizer
         grads = {}
         def get_grads(W, dW, key=None):
@@ -400,8 +401,8 @@ class Language(object):
         eps = util.env_opt('optimizer_eps', 1e-08)
         L2 = util.env_opt('L2_penalty', 1e-6)
         max_grad_norm = util.env_opt('grad_norm_clip', 1.)
-        self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
-                              beta2=beta2, eps=eps)
+        self._optimizer = Optimizer(Model.ops, learn_rate, L2=L2, beta1=beta1,
+                                    beta2=beta2, eps=eps, nesterov=True)
         self._optimizer.max_grad_norm = max_grad_norm
         self._optimizer.device = device
         return self._optimizer
@@ -440,7 +441,7 @@ class Language(object):
         eps = util.env_opt('optimizer_eps', 1e-08)
         L2 = util.env_opt('L2_penalty', 1e-6)
         max_grad_norm = util.env_opt('grad_norm_clip', 1.)
-        self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
+        self._optimizer = Optimizer(Model.ops, learn_rate, L2=L2, beta1=beta1,
                               beta2=beta2, eps=eps)
         self._optimizer.max_grad_norm = max_grad_norm
         self._optimizer.device = device
