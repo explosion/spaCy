@@ -475,14 +475,16 @@ cdef class Span:
             span, in the syntactic dependency parse.
         """
         # TODO: implement
-        raise NotImplementedError()
+        def __get__(self):
+            raise NotImplementedError()
 
     property n_rights:
         """RETURNS (int): The number of rightward immediate children of the
             span, in the syntactic dependency parse.
         """
         # TODO: implement
-        raise NotImplementedError()
+        def __get__(self):
+            raise NotImplementedError()
 
     property subtree:
         """Tokens that descend from tokens in the span, but fall outside it.
