@@ -42,7 +42,7 @@ from .syntax import nonproj
 from .compat import json_dumps
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
-from ._ml import rebatch, Tok2Vec, flatten
+from ._ml import Tok2Vec, flatten
 from ._ml import build_text_classifier, build_tagger_model
 from ._ml import link_vectors_to_models
 from .parts_of_speech import X

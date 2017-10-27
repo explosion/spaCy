@@ -47,7 +47,7 @@ from thinc.neural.util import get_array_module
 from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine
-from .._ml import Tok2Vec, doc2feats, rebatch
+from .._ml import Tok2Vec, doc2feats
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
 from .._ml import HistoryFeatures
