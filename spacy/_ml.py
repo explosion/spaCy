@@ -127,24 +127,34 @@ class PrecomputableAffine(Model):
         self.nF = nF
 
     def begin_update(self, X, drop=0.):
-        tensordot = self.ops.xp.tensordot
-        ascontiguous = self.ops.xp.ascontiguousarray
-
-        Yf = tensordot(X, self.W, axes=[[1], [3]])
+        Yf = self.ops.dot(X,
+                 self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
+ 
+        Yf = Yf.reshape((X.shape[0], self.nF, self.nO, self.nP))
 
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
             Xf = X[ids]
+            Xf = Xf.reshape((Xf.shape[0], self.nF * self.nI))
 
-            dXf = tensordot(dY, self.W, axes=[[1,2], [1,2]])
-            dW = tensordot(dY, Xf, axes=[[0], [0]])
-            # (o, p, f, i) --> (f, o, p, i)
-            self.d_W += dW.transpose((2, 0, 1, 3))
             self.d_b += dY.sum(axis=0)
+            dY = dY.reshape((dY.shape[0], self.nO*self.nP))
+
+            Wopfi = self.W.transpose((1, 2, 0, 3))
+            Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
+            Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
+            dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
+            
+            # Reuse the buffer
+            dWopfi = Wopfi; dWopfi.fill(0.)
+            self.ops.xp.dot(dY.T, Xf, out=dWopfi)
+            dWopfi = dWopfi.reshape((self.nO, self.nP, self.nF, self.nI))
+            # (o, p, f, i) --> (f, o, p, i)
+            self.d_W += dWopfi.transpose((2, 0, 1, 3))
 
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return dXf
+            return dXf.reshape((dXf.shape[0], self.nF, self.nI))
         return Yf, backward
 
     @staticmethod
@@ -168,9 +178,9 @@ class PrecomputableAffine(Model):
                     size=tokvecs.size).reshape(tokvecs.shape)
 
         def predict(ids, tokvecs):
-            hiddens = model(tokvecs)
+            hiddens = model(tokvecs) # (b, f, o, p)
             vector = model.ops.allocate((hiddens.shape[0], model.nO, model.nP))
-            model.ops.scatter_add(vector, ids, hiddens)
+            model.ops.xp.add.at(vector, ids, hiddens)
             vector += model.b
             if model.nP >= 2:
                 return model.ops.maxout(vector)[0]
@@ -318,8 +328,7 @@ def Tok2Vec(width, embed_size, **kwargs):
 
         tok2vec = (
             FeatureExtracter(cols)
-            >> with_flatten(
-                embed >> (convolution ** 4), pad=4)
+            >> with_flatten(embed >> (convolution ** 4), pad=4)
         )
 
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
