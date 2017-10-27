@@ -348,56 +348,10 @@ def reapply(layer, n_times):
     return wrap(reapply_fwd, layer)
 
 
-
-
 def asarray(ops, dtype):
     def forward(X, drop=0.):
         return ops.asarray(X, dtype=dtype), None
     return layerize(forward)
-
-
-def foreach(layer):
-    def forward(Xs, drop=0.):
-        results = []
-        backprops = []
-        for X in Xs:
-            result, bp = layer.begin_update(X, drop=drop)
-            results.append(result)
-            backprops.append(bp)
-        def backward(d_results, sgd=None):
-            dXs = []
-            for d_result, backprop in zip(d_results, backprops):
-                dXs.append(backprop(d_result, sgd))
-            return dXs
-        return results, backward
-    model = layerize(forward)
-    model._layers.append(layer)
-    return model
-
-
-def rebatch(size, layer):
-    ops = layer.ops
-    def forward(X, drop=0.):
-        if X.shape[0] < size:
-            return layer.begin_update(X)
-        parts = _divide_array(X, size)
-        results, bp_results = zip(*[layer.begin_update(p, drop=drop)
-                                    for p in parts])
-        y = ops.flatten(results)
-        def backward(dy, sgd=None):
-            d_parts = [bp(y, sgd=sgd) for bp, y in
-                       zip(bp_results, _divide_array(dy, size))]
-            try:
-                dX = ops.flatten(d_parts)
-            except TypeError:
-                dX = None
-            except ValueError:
-                dX = None
-            return dX
-        return y, backward
-    model = layerize(forward)
-    model._layers.append(layer)
-    return model
 
 
 def _divide_array(X, size):
@@ -508,10 +462,12 @@ def preprocess_doc(docs, drop=0.):
     vals = ops.allocate(keys.shape[0]) + 1
     return (keys, vals, lengths), None
 
+
 def getitem(i):
     def getitem_fwd(X, drop=0.):
         return X[i], None
     return layerize(getitem_fwd)
+
 
 def build_tagger_model(nr_class, **cfg):
     embed_size = util.env_opt('embed_size', 7000)
@@ -550,29 +506,6 @@ def SpacyVectors(docs, drop=0.):
         vectors = doc.vocab.vectors.data[indices]
         batch.append(vectors)
     return batch, None
-
-
-def foreach(layer, drop_factor=1.0):
-    '''Map a layer across elements in a list'''
-    def foreach_fwd(Xs, drop=0.):
-        drop *= drop_factor
-        ys = []
-        backprops = []
-        for X in Xs:
-            y, bp_y = layer.begin_update(X, drop=drop)
-            ys.append(y)
-            backprops.append(bp_y)
-        def foreach_bwd(d_ys, sgd=None):
-            d_Xs = []
-            for d_y, bp_y in zip(d_ys, backprops):
-                if bp_y is not None and bp_y is not None:
-                    d_Xs.append(d_y, sgd=sgd)
-                else:
-                    d_Xs.append(None)
-            return d_Xs
-        return ys, foreach_bwd
-    model = wrap(foreach_fwd, layer)
-    return model
 
 
 def build_text_classifier(nr_class, width=64, **cfg):
