@@ -122,6 +122,20 @@ include ../_includes/_mixins
 
     +github("spacy", "examples/training/train_tagger.py")
 
+    +h(3, "intent-parser") Training a custom parser for chat intent semantics
+
+    p
+        |  spaCy's parser component can be used to trained to predict any type
+        |  of tree structure over your input text. You can also predict trees
+        |  over whole documents or chat logs, with connections between the
+        |  sentence-roots used to annotate discourse structure. In this example,
+        |  we'll build a message parser for a common "chat intent": finding
+        |  local businesses. Our message semantics will have the following types
+        |  of relations: #[code ROOT], #[code PLACE], #[code QUALITY],
+        |  #[code ATTRIBUTE], #[code TIME] and #[code LOCATION].
+
+    +github("spacy", "examples/training/train_intent_parser.py")
+
     +h(3, "textcat") Training spaCy's text classifier
         +tag-new(2)
 

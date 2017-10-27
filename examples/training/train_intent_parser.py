@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Using the parser to recognise your own semantics spaCy's parser component
-can be used to trained to predict any type of tree structure over your input
-text. You can also predict trees over whole documents or chat logs, with
-connections between the sentence-roots used to annotate discourse structure.
+"""Using the parser to recognise your own semantics
 
-In this example, we'll build a message parser for a common "chat intent":
-finding local businesses. Our message semantics will have the following types
-of relations: INTENT, PLACE, QUALITY, ATTRIBUTE, TIME, LOCATION. For example:
+spaCy's parser component can be used to trained to predict any type of tree
+structure over your input text. You can also predict trees over whole documents
+or chat logs, with connections between the sentence-roots used to annotate
+discourse structure. In this example, we'll build a message parser for a common
+"chat intent": finding local businesses. Our message semantics will have the
+following types of relations: ROOT, PLACE, QUALITY, ATTRIBUTE, TIME, LOCATION.
 
 "show me the best hotel in berlin"
 ('show', 'ROOT', 'show')
