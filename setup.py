@@ -67,7 +67,7 @@ LINK_OPTIONS = {
 
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
-USE_OPENMP_DEFAULT = '1' if sys.platform != 'darwin' else None
+USE_OPENMP_DEFAULT = '0' if sys.platform != 'darwin' else None
 if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     if sys.platform == 'darwin':
         COMPILE_OPTIONS['other'].append('-fopenmp')
