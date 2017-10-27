@@ -90,7 +90,7 @@ def main(model=None, output_dir=None, n_iter=1000):
         nlp.to_disk(output_dir)
         print("Saved model to", output_dir)
 
-        # test the save model
+        # test the saved model
         print("Loading from", output_dir)
         nlp2 = spacy.load(output_dir)
         doc = nlp2(test_text)

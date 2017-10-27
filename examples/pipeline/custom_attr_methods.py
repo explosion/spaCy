@@ -10,7 +10,7 @@ they're called on is passed in as the first argument.
 Developed for: spaCy 2.0.0a17
 Last updated for: spaCy 2.0.0a18
 """
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import plac
 from spacy.lang.en import English
