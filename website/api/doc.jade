@@ -332,6 +332,26 @@ p
         +cell dict
         +cell A dictionary mapping attributes to integer counts.
 
++h(2, "get_lca_matrix") Doc.get_lca_matrix
+    +tag method
+
+p
+    |  Calculates the lowest common ancestor matrix for a given #[code Doc].
+    |  Returns LCA matrix containing the integer index of the ancestor, or
+    |  #[code -1] if no common ancestor is found, e.g. if span excludes a
+    |  necessary ancestor.
+
++aside-code("Example").
+    doc = nlp(u"This is a test")
+    matrix = doc.get_lca_matrix()
+    # array([[0, 1, 1, 1], [1, 1, 1, 1], [1, 1, 2, 3], [1, 1, 3, 3]], dtype=int32)
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
+        +cell The lowest common ancestor matrix of the #[code Doc].
+
 +h(2, "to_array") Doc.to_array
     +tag method
 
