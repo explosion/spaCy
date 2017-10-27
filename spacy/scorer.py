@@ -85,7 +85,6 @@ class Scorer(object):
 
     def score(self, tokens, gold, verbose=False, punct_labels=('p', 'punct')):
         assert len(tokens) == len(gold)
-
         gold_deps = set()
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[-1]

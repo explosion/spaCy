@@ -8,12 +8,11 @@ from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 import regex as re
-
-from .strings cimport hash_string
-from . import util
 cimport cython
 
 from .tokens.doc cimport Doc
+from .strings cimport hash_string
+from . import util
 
 
 cdef class Tokenizer:
@@ -21,7 +20,7 @@ cdef class Tokenizer:
     boundaries.
     """
     def __init__(self, Vocab vocab, rules=None, prefix_search=None,
-            suffix_search=None, infix_finditer=None, token_match=None):
+                 suffix_search=None, infix_finditer=None, token_match=None):
         """Create a `Tokenizer`, to create `Doc` objects given unicode text.
 
         vocab (Vocab): A storage container for lexical types.
@@ -74,9 +73,8 @@ cdef class Tokenizer:
         RETURNS (Doc): A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
-            raise ValueError(
-                "String is too long: %d characters. Max is 2**30." % len(string)
-            )
+            msg = "String is too long: %d characters. Max is 2**30."
+            raise ValueError(msg % len(string))
         cdef int length = len(string)
         cdef Doc doc = Doc(self.vocab)
         if length == 0:
@@ -122,8 +120,8 @@ cdef class Tokenizer:
         """Tokenize a stream of texts.
 
         texts: A sequence of unicode texts.
-        batch_size (int): The number of texts to accumulate in an internal buffer.
-        n_threads (int): The number of threads to use, if the implementation
+        batch_size (int): Number of texts to accumulate in an internal buffer.
+        n_threads (int): Number of threads to use, if the implementation
             supports multi-threading. The default tokenizer is single-threaded.
         YIELDS (Doc): A sequence of Doc objects, in order.
         """
@@ -232,8 +230,8 @@ cdef class Tokenizer:
                 if not matches:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
                 else:
-                    # let's say we have dyn-o-mite-dave
-                    # the regex finds the start and end positions of the hyphens
+                    # let's say we have dyn-o-mite-dave - the regex finds the
+                    # start and end positions of the hyphens
                     start = 0
                     for match in matches:
                         infix_start = match.start()
@@ -293,8 +291,8 @@ cdef class Tokenizer:
         return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
-        """Find the length of a prefix that should be segmented from the string,
-        or None if no prefix rules match.
+        """Find the length of a prefix that should be segmented from the
+        string, or None if no prefix rules match.
 
         string (unicode): The string to segment.
         RETURNS (int): The length of the prefix if present, otherwise `None`.
@@ -305,8 +303,8 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
-        """Find the length of a suffix that should be segmented from the string,
-        or None if no suffix rules match.
+        """Find the length of a suffix that should be segmented from the
+        string, or None if no suffix rules match.
 
         string (unicode): The string to segment.
         Returns (int): The length of the suffix if present, otherwise `None`.
@@ -326,8 +324,8 @@ cdef class Tokenizer:
 
         string (unicode): The string to specially tokenize.
         token_attrs (iterable): A sequence of dicts, where each dict describes
-            a token and its attributes. The `ORTH` fields of the attributes must
-            exactly match the string when they are concatenated.
+            a token and its attributes. The `ORTH` fields of the attributes
+            must exactly match the string when they are concatenated.
         """
         substrings = list(substrings)
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
@@ -343,7 +341,7 @@ cdef class Tokenizer:
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or `Path`-like objects.
+            it doesn't exist. Paths may be either strings or Path-like objects.
         """
         with path.open('wb') as file_:
             file_.write(self.to_bytes(**exclude))

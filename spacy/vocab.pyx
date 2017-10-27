@@ -17,8 +17,8 @@ from .compat import copy_reg, basestring_
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
 from .vectors import Vectors
-from . import util
 from ._ml import link_vectors_to_models
+from . import util
 
 
 cdef class Vocab:

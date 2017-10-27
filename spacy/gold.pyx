@@ -2,7 +2,6 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
-import io
 import re
 import ujson
 import random
@@ -10,9 +9,8 @@ import cytoolz
 import itertools
 
 from .syntax import nonproj
-from .util import ensure_path
-from . import util
 from .tokens import Doc
+from . import util
 
 
 def tags_to_entities(tags):
@@ -310,7 +308,7 @@ def _corrupt(c, noise_level):
 
 
 def read_json_file(loc, docs_filter=None, limit=None):
-    loc = ensure_path(loc)
+    loc = util.ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
             yield from read_json_file(loc / filename, limit=limit)

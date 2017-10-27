@@ -1,22 +1,22 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
-from contextlib import contextmanager
-import copy
 
-from thinc.neural import Model
-from thinc.neural.optimizers import Adam
 import random
 import ujson
-from collections import OrderedDict
 import itertools
 import weakref
 import functools
+from collections import OrderedDict
+from contextlib import contextmanager
+from copy import copy
+from thinc.neural import Model
+from thinc.neural.optimizers import Adam
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
-from .pipeline import DependencyParser, Tensorizer, Tagger
-from .pipeline import EntityRecognizer, SimilarityHook, TextCategorizer
+from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
+from .pipeline import SimilarityHook, TextCategorizer
 from .compat import json_dumps, izip
 from .scorer import Scorer
 from ._ml import link_vectors_to_models
@@ -649,7 +649,7 @@ class Language(object):
         serializers = OrderedDict((
             ('vocab', lambda: self.vocab.to_bytes()),
             ('tokenizer', lambda: self.tokenizer.to_bytes(vocab=False)),
-            ('meta', lambda: ujson.dumps(self.meta))
+            ('meta', lambda: json_dumps(self.meta))
         ))
         for i, (name, proc) in enumerate(self.pipeline):
             if name in disable:
@@ -689,7 +689,7 @@ class DisabledPipes(list):
         # Important! Not deep copy -- we just want the container (but we also
         # want to support people providing arbitrarily typed nlp.pipeline
         # objects.)
-        self.original_pipeline = copy.copy(nlp.pipeline)
+        self.original_pipeline = copy(nlp.pipeline)
         list.__init__(self)
         self.extend(nlp.remove_pipe(name) for name in names)
 

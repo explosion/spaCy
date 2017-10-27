@@ -476,7 +476,7 @@ cdef class Span:
         """
         # TODO: implement
         def __get__(self):
-            raise NotImplementedError()
+            raise NotImplementedError
 
     property n_rights:
         """RETURNS (int): The number of rightward immediate children of the
@@ -484,7 +484,7 @@ cdef class Span:
         """
         # TODO: implement
         def __get__(self):
-            raise NotImplementedError()
+            raise NotImplementedError
 
     property subtree:
         """Tokens that descend from tokens in the span, but fall outside it.
