@@ -14,17 +14,18 @@ from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from .. import parts_of_speech
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_OOV
-from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
-from ..attrs cimport LEMMA, POS, TAG, DEP
+from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
+from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL
+from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
+from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..compat import is_config
 from .. import about
 from .underscore import Underscore
 
 
 cdef class Token:
-    """An individual token – i.e. a word, punctuation symbol, whitespace, etc."""
+    """An individual token – i.e. a word, punctuation symbol, whitespace,
+    etc."""
     @classmethod
     def set_extension(cls, name, default=None, method=None,
                       getter=None, setter=None):
@@ -171,10 +172,11 @@ cdef class Token:
             return self.orth_
 
     property text_with_ws:
-        """The text content of the token with a trailing whitespace character if
-        it has one.
+        """The text content of the token with a trailing whitespace character
+        if it has one.
 
-        RETURNS (unicode): The text content of the span (with trailing whitespace).
+        RETURNS (unicode): The text content of the span (with trailing
+            whitespace).
         """
         def __get__(self):
             cdef unicode orth = self.vocab.strings[self.c.lex.orth]
@@ -306,9 +308,8 @@ cdef class Token:
         def __set__(self, value):
             if self.doc.is_parsed:
                 raise ValueError(
-                    'Refusing to write to token.sent_start if its document is parsed, '
-                    'because this may cause inconsistent state. '
-                    'See https://github.com/spacy-io/spaCy/issues/235 for workarounds.')
+                    "Refusing to write to token.sent_start if its document "
+                    "is parsed, because this may cause inconsistent state.")
             if value is None:
                 self.c.sent_start = 0
             elif value is True:
@@ -316,13 +317,12 @@ cdef class Token:
             elif value is False:
                 self.c.sent_start = -1
             else:
-                raise ValueError("Invalid value for token.sent_start -- must be one of "
-                                 "None, True, False")
+                raise ValueError("Invalid value for token.sent_start. Must be "
+                                 "one of: None, True, False")
 
     property lefts:
         def __get__(self):
-            """
-            The leftward immediate children of the word, in the syntactic
+            """The leftward immediate children of the word, in the syntactic
             dependency parse.
             """
             cdef int nr_iter = 0
@@ -334,13 +334,12 @@ cdef class Token:
                 nr_iter += 1
                 # This is ugly, but it's a way to guard out infinite loops
                 if nr_iter >= 10000000:
-                    raise RuntimeError(
-                        "Possibly infinite loop encountered while looking for token.lefts")
+                    raise RuntimeError("Possibly infinite loop encountered "
+                                       "while looking for token.lefts")
 
     property rights:
         def __get__(self):
-            """
-            The rightward immediate children of the word, in the syntactic
+            """The rightward immediate children of the word, in the syntactic
             dependency parse.
             """
             cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
@@ -352,27 +351,26 @@ cdef class Token:
                 ptr -= 1
                 nr_iter += 1
                 if nr_iter >= 10000000:
-                    raise RuntimeError(
-                        "Possibly infinite loop encountered while looking for token.rights")
+                    raise RuntimeError("Possibly infinite loop encountered "
+                                       "while looking for token.rights")
             tokens.reverse()
             for t in tokens:
                 yield t
 
     property children:
-        """
-        A sequence of the token's immediate syntactic children.
+        """A sequence of the token's immediate syntactic children.
 
-        Yields: Token A child token such that child.head==self
+        YIELDS (Token): A child token such that child.head==self
         """
         def __get__(self):
             yield from self.lefts
             yield from self.rights
 
     property subtree:
-        """
-        A sequence of all the token's syntactic descendents.
+        """A sequence of all the token's syntactic descendents.
 
-        Yields: Token A descendent token such that self.is_ancestor(descendent)
+        YIELDS (Token): A descendent token such that
+            `self.is_ancestor(descendent)`.
         """
         def __get__(self):
             for word in self.lefts:
@@ -456,13 +454,15 @@ cdef class Token:
             if self.c.head > 0: # left dependent
                 old_head.c.l_kids -= 1
                 if self.c.l_edge == old_head.c.l_edge:
-                    # the token dominates the left edge so the left edge of the head
-                    # may change when the token is reattached
-                    # it may not change if the new head is a descendant of the current head
+                    # the token dominates the left edge so the left edge of
+                    # the  head may change when the token is reattached, it may
+                    # not change if the new head is a descendant of the current
+                    # head
 
                     new_edge = self.c.l_edge
-                    # the new l_edge is the left-most l_edge on any of the other dependents
-                    # where the l_edge is left of the head, otherwise it is the head
+                    # the new l_edge is the left-most l_edge on any of the
+                    # other dependents where the l_edge is left of the head,
+                    # otherwise it is the head
                     if not is_desc:
                         new_edge = old_head.i
                         for child in old_head.children:
@@ -472,14 +472,15 @@ cdef class Token:
                                 new_edge = child.c.l_edge
                         old_head.c.l_edge = new_edge
 
-                    # walk up the tree from old_head and assign new l_edge to ancestors
-                    # until an ancestor already has an l_edge that's further left
+                    # walk up the tree from old_head and assign new l_edge to
+                    # ancestors until an ancestor already has an l_edge that's
+                    # further left
                     for anc in old_head.ancestors:
                         if anc.c.l_edge <= new_edge:
                             break
                         anc.c.l_edge = new_edge
 
-            elif self.c.head < 0: # right dependent
+            elif self.c.head < 0:  # right dependent
                 old_head.c.r_kids -= 1
                 # do the same thing as for l_edge
                 if self.c.r_edge == old_head.c.r_edge:
@@ -500,7 +501,7 @@ cdef class Token:
                         anc.c.r_edge = new_edge
 
             # update number of deps of new head
-            if rel_newhead_i > 0: # left dependent
+            if rel_newhead_i > 0:  # left dependent
                 new_head.c.l_kids += 1
                 # walk up the tree from new head and set l_edge to self.l_edge
                 # until you hit a token with an l_edge further to the left
@@ -511,7 +512,7 @@ cdef class Token:
                             break
                         anc.c.l_edge = self.c.l_edge
 
-            elif rel_newhead_i < 0: # right dependent
+            elif rel_newhead_i < 0:  # right dependent
                 new_head.c.r_kids += 1
                 # do the same as for l_edge
                 if self.c.r_edge > new_head.c.r_edge:
@@ -572,8 +573,8 @@ cdef class Token:
 
     property ent_iob_:
         """IOB code of named entity tag. "B" means the token begins an entity,
-        "I" means it is inside an entity, "O" means it is outside an entity, and
-        "" means no entity tag is set.
+        "I" means it is inside an entity, "O" means it is outside an entity,
+        and "" means no entity tag is set.
 
         RETURNS (unicode): IOB code of named entity tag.
         """
@@ -582,8 +583,7 @@ cdef class Token:
             return iob_strings[self.c.ent_iob]
 
     property ent_id:
-        """ID of the entity the token is an instance of, if any. Usually
-        assigned by patterns in the Matcher.
+        """ID of the entity the token is an instance of, if any.
 
         RETURNS (uint64): ID of the entity.
         """
@@ -594,8 +594,7 @@ cdef class Token:
             self.c.ent_id = key
 
     property ent_id_:
-        """ID of the entity the token is an instance of, if any. Usually
-        assigned by patterns in the Matcher.
+        """ID of the entity the token is an instance of, if any.
 
         RETURNS (unicode): ID of the entity.
         """
@@ -606,34 +605,70 @@ cdef class Token:
             self.c.ent_id = self.vocab.strings.add(name)
 
     property whitespace_:
+        """Trailing space character if present.
+
+        RETURNS (unicode): The whitespace character.
+        """
         def __get__(self):
             return ' ' if self.c.spacy else ''
 
     property orth_:
+        """Verbatim text content (identical to `Token.text`). Existst mostly
+        for consistency with the other attributes.
+
+        RETURNS (unicode): The token text.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lex.orth]
 
     property lower_:
+        """Lowercase form of the token text. Equivalent to
+        `Token.text.lower()`.
+
+        RETURNS (unicode): The lowercase token text.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lex.lower]
 
     property norm_:
+        """The token's norm, i.e. a normalised form of the token text.
+        Usually set in the language's tokenizer exceptions or norm exceptions.
+
+        RETURNS (unicode): The norm.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lex.norm]
 
     property shape_:
+        """Transform of the tokens's string, to show orthographic features.
+        For example, "Xxxx" or "dd".
+
+        RETURNS (unicode): The token shape.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lex.shape]
 
     property prefix_:
+        """A length-N substring from the start of the token. Defaults to `N=1`.
+
+        RETURNS (unicode): The token's prefix.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lex.prefix]
 
     property suffix_:
+        """A length-N substring from the end of the token. Defaults to `N=3`.
+
+        RETURNS (unicode): The token's suffix.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lex.suffix]
 
     property lang_:
+        """Language of the parent document's vocabulary, e.g. 'en'.
+
+        RETURNS (unicode): The language code.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lex.lang]
 
@@ -648,65 +683,152 @@ cdef class Token:
             self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
+        """Coarse-grained part-of-speech.
+
+        RETURNS (unicode): The part-of-speech tag.
+        """
         def __get__(self):
             return parts_of_speech.NAMES[self.c.pos]
 
     property tag_:
+        """Fine-grained part-of-speech.
+
+        RETURNS (unicode): The part-of-speech tag.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.tag]
         def __set__(self, tag):
             self.tag = self.vocab.strings.add(tag)
 
     property dep_:
+        """Syntactic dependency relation.
+
+        RETURNS (unicode): The dependency label.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.dep]
         def __set__(self, unicode label):
             self.c.dep = self.vocab.strings.add(label)
 
     property is_oov:
+        """Is the token out-of-vocabulary?
+
+        RETURNS (bool): Whether the token is out-of-vocabulary.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)
 
     property is_stop:
+        """Is the token part of a "stop list"? (defined by the language data)
+
+        RETURNS (bool): Whether the token is a stop word.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_STOP)
 
     property is_alpha:
+        """Does the token consist of alphabetic characters? Equivalent to
+        `token.text.isalpha()`.
+
+        RETURNS (bool): Whether the token consists of alpha characters.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_ALPHA)
 
     property is_ascii:
+        """Does the token consist of ASCII characters? Equivalent to
+        `[any(ord(c) >= 128 for c in token.text)]`.
+
+        RETURNS (bool): Whether the token consists of ASCII characters.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_ASCII)
 
     property is_digit:
+        """Does the token consist of digits? Equivalent to
+        `token.text.isdigit()`.
+
+        RETURNS (bool): Whether the token consists of digits.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_DIGIT)
 
     property is_lower:
+        """Is the token in lowercase? Equivalent to `token.text.islower()`.
+
+        RETURNS (bool): Whether the token is in lowercase.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_LOWER)
 
+    property is_upper:
+        """Is the token in uppercase? Equivalent to `token.text.isupper()`.
+
+        RETURNS (bool): Whether the token is in uppercase.
+        """
+        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_UPPER)
+
     property is_title:
+        """Is the token in titlecase? Equivalent to `token.text.istitle()`.
+
+        RETURNS (bool): Whether the token is in titlecase.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_TITLE)
 
     property is_punct:
+        """Is the token punctuation?
+
+        RETURNS (bool): Whether the token is punctuation.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_PUNCT)
 
     property is_space:
+        """Does the token consist of whitespace characters? Equivalent to
+        `token.text.isspace()`.
+
+        RETURNS (bool): Whether the token consists of whitespace characters.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_SPACE)
 
     property is_bracket:
+        """Is the token a bracket?
+
+        RETURNS (bool): Whether the token is a bracket.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_BRACKET)
 
     property is_quote:
+        """Is the token a quotation mark?
+
+        RETURNS (bool): Whether the token is a quotation mark.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_QUOTE)
 
     property is_left_punct:
+        """Is the token a left punctuation mark, e.g. "("?
+
+        RETURNS (bool): Whether the token is a left punctuation mark.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
 
     property is_right_punct:
+        """Is the token a left punctuation mark, e.g. "("?
+
+        RETURNS (bool): Whether the token is a left punctuation mark.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
 
     property like_url:
+        """Does the token resemble a URL?
+
+        RETURNS (bool): Whether the token resembles a URL.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_URL)
 
     property like_num:
+        """Does the token represent a number? e.g. "10.9", "10", "ten", etc.
+
+        RETURNS (bool): Whether the token resembles a number.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_NUM)
 
     property like_email:
+        """Does the token resemble an email address?
+
+        RETURNS (bool): Whether the token resembles an email address.
+        """
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)

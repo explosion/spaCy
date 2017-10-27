@@ -248,6 +248,28 @@ p
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
++h(2, "get_lca_matrix") Span.get_lca_matrix
+    +tag method
+
+p
+    |  Calculates the lowest common ancestor matrix for a given #[code Span].
+    |  Returns LCA matrix containing the integer index of the ancestor, or
+    |  #[code -1] if no common ancestor is found, e.g. if span excludes a
+    |  necessary ancestor.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn')
+    span = doc[1:4]
+    matrix = span.get_lca_matrix()
+    # array([[0, 0, 0], [0, 1, 2], [0, 2, 2]], dtype=int32)
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
+        +cell The lowest common ancestor matrix of the #[code Span].
+
+
 +h(2, "to_array") Span.to_array
     +tag method
     +tag-new(2)
@@ -494,6 +516,18 @@ p
         +cell
             |  The text content of the span with a trailing whitespace character
             |  if the last token has one.
+
+    +row
+        +cell #[code orth]
+        +cell int
+        +cell ID of the verbatim text content.
+
+    +row
+        +cell #[code orth_]
+        +cell unicode
+        +cell
+            |  Verbatim text content (identical to #[code Span.text]). Existst
+            |  mostly for consistency with the other attributes.
 
     +row
         +cell #[code label]

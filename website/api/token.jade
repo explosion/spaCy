@@ -490,14 +490,34 @@ p The L2 norm of the token's vector representation.
         +cell Base form of the token, with no inflectional suffixes.
 
     +row
+        +cell #[code norm]
+        +cell int
+        +cell
+            |  The token's norm, i.e. a normalised form of the token text.
+            |  Usually set in the language's
+            |  #[+a("/usage/adding-languages#tokenizer-exceptions") tokenizer exceptions] or
+            |  #[+a("/usage/adding-languages#norm-exceptions") norm exceptions].
+
+    +row
+        +cell #[code norm_]
+        +cell unicode
+        +cell
+            |  The token's norm, i.e. a normalised form of the token text.
+            |  Usually set in the language's
+            |  #[+a("/usage/adding-languages#tokenizer-exceptions") tokenizer exceptions] or
+            |  #[+a("/usage/adding-languages#norm-exceptions") norm exceptions].
+
+    +row
         +cell #[code lower]
         +cell int
-        +cell Lower-case form of the token.
+        +cell Lowercase form of the token.
 
     +row
         +cell #[code lower_]
         +cell unicode
-        +cell Lower-case form of the token.
+        +cell
+            |  Lowercase form of the token text. Equivalent to
+            |  #[code Token.text.lower()].
 
     +row
         +cell #[code shape]
@@ -537,7 +557,9 @@ p The L2 norm of the token's vector representation.
     +row
         +cell #[code suffix_]
         +cell unicode
-        +cell Length-N substring from the end of the token. Defaults to #[code N=3].
+        +cell
+            |  Length-N substring from the end of the token. Defaults to
+            |  #[code N=3].
 
     +row
         +cell #[code is_alpha]
@@ -672,6 +694,7 @@ p The L2 norm of the token's vector representation.
         +cell #[code lang]
         +cell int
         +cell Language of the parent document's vocabulary.
+
     +row
         +cell #[code lang_]
         +cell unicode

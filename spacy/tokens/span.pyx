@@ -35,15 +35,16 @@ cdef class Span:
     def has_extension(cls, name):
         return name in Underscore.span_extensions
 
-    def __cinit__(self, Doc doc, int start, int end, attr_t label=0, vector=None,
-                  vector_norm=None):
+    def __cinit__(self, Doc doc, int start, int end, attr_t label=0,
+                  vector=None, vector_norm=None):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
         label (uint64): A label to attach to the Span, e.g. for named entities.
-        vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
+        vector (ndarray[ndim=1, dtype='float32']): A meaning representation
+            of the span.
         RETURNS (Span): The newly constructed object.
         """
         if not (0 <= start <= end <= len(doc)):
@@ -162,7 +163,8 @@ cdef class Span:
             attributes are inherited from the syntactic root token of the span.
         RETURNS (Token): The newly merged token.
         """
-        return self.doc.merge(self.start_char, self.end_char, *args, **attributes)
+        return self.doc.merge(self.start_char, self.end_char, *args,
+                              **attributes)
 
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
@@ -179,24 +181,19 @@ cdef class Span:
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     def get_lca_matrix(self):
-        '''
-        Calculates the lowest common ancestor matrix
-        for a given Spacy span.
-        Returns LCA matrix containing the integer index
-        of the ancestor, or -1 if no common ancestor is
-        found (ex if span excludes a necessary ancestor).
-        Apologies about the recursion, but the
-        impact on performance is negligible given
-        the natural limitations on the depth of a typical human sentence.
-        '''
-
+        """Calculates the lowest common ancestor matrix for a given `Span`.
+        Returns LCA matrix containing the integer index of the ancestor, or -1
+        if no common ancestor is found (ex if span excludes a necessary
+        ancestor). Apologies about the recursion, but the impact on
+        performance is negligible given the natural limitations on the depth
+        of a typical human sentence.
+        """
         def __pairwise_lca(token_j, token_k, lca_matrix, margins):
             offset = margins[0]
             token_k_head = token_k.head if token_k.head.i in range(*margins) else token_k
             token_j_head = token_j.head if token_j.head.i in range(*margins) else token_j
             token_j_i = token_j.i - offset
             token_k_i = token_k.i - offset
-
             if lca_matrix[token_j_i][token_k_i] != -2:
                 return lca_matrix[token_j_i][token_k_i]
             elif token_j == token_k:
@@ -209,23 +206,19 @@ cdef class Span:
                 lca_index = -1
             else:
                 lca_index = __pairwise_lca(token_j_head, token_k_head, lca_matrix, margins)
-
             lca_matrix[token_j_i][token_k_i] = lca_index
             lca_matrix[token_k_i][token_j_i] = lca_index
-
             return lca_index
 
         lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
         lca_matrix.fill(-2)
         margins = [self.start, self.end]
-
         for j in range(len(self)):
             token_j = self[j]
             for k in range(len(self)):
                 token_k = self[k]
                 lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix, margins)
                 lca_matrix[k][j] = lca_matrix[j][k]
-
         return lca_matrix
 
     cpdef np.ndarray to_array(self, object py_attr_ids):
@@ -349,7 +342,8 @@ cdef class Span:
         """The text content of the span with a trailing whitespace character if
         the last token has one.
 
-        RETURNS (unicode): The text content of the span (with trailing whitespace).
+        RETURNS (unicode): The text content of the span (with trailing
+            whitespace).
         """
         def __get__(self):
             return u''.join([t.text_with_ws for t in self])
@@ -358,7 +352,8 @@ cdef class Span:
         """Yields base noun-phrase `Span` objects, if the document has been
         syntactically parsed. A base noun phrase, or "NP chunk", is a noun
         phrase that does not permit other NPs to be nested within it – so no
-        NP-level coordination, no prepositional phrases, and no relative clauses.
+        NP-level coordination, no prepositional phrases, and no relative
+        clauses.
 
         YIELDS (Span): Base noun-phrase `Span` objects
         """
@@ -366,7 +361,8 @@ cdef class Span:
             if not self.doc.is_parsed:
                 raise ValueError(
                     "noun_chunks requires the dependency parse, which "
-                    "requires data to be installed. For more info, see the "
+                    "requires a statistical model to be installed and loaded. "
+                    "For more info, see the "
                     "documentation: \n%s\n" % about.__docs_models__)
             # Accumulate the result before beginning to iterate over it. This prevents
             # the tokenisation from being changed out from under us during the iteration.
@@ -385,9 +381,9 @@ cdef class Span:
 
         RETURNS (Token): The root token.
 
-        EXAMPLE: The root token has the shortest path to the root of the sentence
-            (or is the root itself). If multiple words are equally high in the
-            tree, the first word is taken. For example:
+        EXAMPLE: The root token has the shortest path to the root of the
+            sentence (or is the root itself). If multiple words are equally
+            high in the tree, the first word is taken. For example:
 
             >>> toks = nlp(u'I like New York in Autumn.')
 
@@ -437,11 +433,11 @@ cdef class Span:
                 if self.doc.c[i].head == 0:
                     return self.doc[i]
             # If we don't have a sentence root, we do something that's not so
-            # algorithmically clever, but I think should be quite fast, especially
-            # for short spans.
+            # algorithmically clever, but I think should be quite fast,
+            # especially for short spans.
             # For each word, we count the path length, and arg min this measure.
-            # We could use better tree logic to save steps here...But I think this
-            # should be okay.
+            # We could use better tree logic to save steps here...But I
+            # think this should be okay.
             cdef int current_best = self.doc.length
             cdef int root = -1
             for i in range(self.start, self.end):
@@ -463,7 +459,7 @@ cdef class Span:
         YIELDS (Token):A left-child of a token of the span.
         """
         def __get__(self):
-            for token in reversed(self): # Reverse, so we get the tokens in order
+            for token in reversed(self): # Reverse, so we get tokens in order
                 for left in token.lefts:
                     if left.i < self.start:
                         yield left
@@ -493,7 +489,7 @@ cdef class Span:
                 yield from word.subtree
 
     property ent_id:
-        """An (integer) entity ID. Usually assigned by patterns in the `Matcher`.
+        """An (integer) entity ID.
 
         RETURNS (uint64): The entity ID.
         """
@@ -503,8 +499,8 @@ cdef class Span:
         def __set__(self, hash_t key):
             # TODO
             raise NotImplementedError(
-                "Can't yet set ent_id from Span. Vote for this feature on the issue "
-                "tracker: http://github.com/explosion/spaCy/issues")
+                "Can't yet set ent_id from Span. Vote for this feature on "
+                "the issue tracker: http://github.com/explosion/spaCy/issues")
 
     property ent_id_:
         """A (string) entity ID. Usually assigned by patterns in the `Matcher`.
@@ -517,13 +513,16 @@ cdef class Span:
         def __set__(self, hash_t key):
             # TODO
             raise NotImplementedError(
-                "Can't yet set ent_id_ from Span. Vote for this feature on the issue "
-                "tracker: http://github.com/explosion/spaCy/issues")
+                "Can't yet set ent_id_ from Span. Vote for this feature on the "
+                "issue tracker: http://github.com/explosion/spaCy/issues")
 
     property orth_:
-        # TODO: docstring
+        """Verbatim text content (identical to Span.text). Exists mostly for
+        consistency with other attributes.
+
+        RETURNS (unicode): The span's text."""
         def __get__(self):
-            return ''.join([t.string for t in self]).strip()
+            return ''.join([t.orth_ for t in self]).strip()
 
     property lemma_:
         """The span's lemma.
@@ -534,19 +533,19 @@ cdef class Span:
             return ' '.join([t.lemma_ for t in self]).strip()
 
     property upper_:
-        # TODO: docstring
+        """Deprecated. Use Span.text.upper() instead."""
         def __get__(self):
-            return ''.join([t.string.upper() for t in self]).strip()
+            return ''.join([t.text_with_ws.upper() for t in self]).strip()
 
     property lower_:
-        # TODO: docstring
+        """Deprecated. Use Span.text.lower() instead."""
         def __get__(self):
-            return ''.join([t.string.lower() for t in self]).strip()
+            return ''.join([t.text_with_ws.lower() for t in self]).strip()
 
     property string:
-        # TODO: docstring
+        """Deprecated: Use Span.text instead."""
         def __get__(self):
-            return ''.join([t.string for t in self])
+            return ''.join([t.text_with_ws for t in self])
 
     property label_:
         """The span's label.
@@ -570,7 +569,8 @@ cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
         n += 1
         if n >= sent_length:
             raise RuntimeError(
-                "Array bounds exceeded while searching for root word. This likely "
-                "means the parse tree is in an invalid state. Please report this "
-                "issue here: http://github.com/explosion/spaCy/issues")
+                "Array bounds exceeded while searching for root word. This "
+                "likely means the parse tree is in an invalid state. Please "
+                "report this issue here: "
+                "http://github.com/explosion/spaCy/issues")
     return n
