@@ -16,10 +16,12 @@ from .. import about
     input_dir=("directory with model data", "positional", None, str),
     output_dir=("output parent directory", "positional", None, str),
     meta_path=("path to meta.json", "option", "m", str),
-    create_meta=("create meta.json, even if one exists in directory", "flag", "c", bool),
-    force=("force overwriting of existing folder in output directory", "flag", "f", bool)
-)
-def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False, force=False):
+    create_meta=("create meta.json, even if one exists in directory", "flag",
+                 "c", bool),
+    force=("force overwriting of existing folder in output directory", "flag",
+           "f", bool))
+def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False,
+            force=False):
     """
     Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
@@ -52,13 +54,15 @@ def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False, force
     package_path = main_path / model_name
 
     create_dirs(package_path, force)
-    shutil.copytree(path2str(input_path), path2str(package_path / model_name_v))
+    shutil.copytree(path2str(input_path),
+                    path2str(package_path / model_name_v))
     create_file(main_path / 'meta.json', json_dumps(meta))
     create_file(main_path / 'setup.py', template_setup)
     create_file(main_path / 'MANIFEST.in', template_manifest)
     create_file(package_path / '__init__.py', template_init)
-    prints(main_path, "To build the package, run `python setup.py sdist` in this "
-           "directory.", title="Successfully created package '%s'" % model_name_v)
+    prints(main_path, "To build the package, run `python setup.py sdist` in "
+           "this directory.",
+           title="Successfully created package '%s'" % model_name_v)
 
 
 def create_dirs(package_path, force):
@@ -66,9 +70,10 @@ def create_dirs(package_path, force):
         if force:
             shutil.rmtree(path2str(package_path))
         else:
-            prints(package_path, "Please delete the directory and try again, or "
-                   "use the --force flag to overwrite existing directories.",
-                   title="Package directory already exists", exits=1)
+            prints(package_path, "Please delete the directory and try again, "
+                   "or use the --force flag to overwrite existing "
+                   "directories.", title="Package directory already exists",
+                   exits=1)
     Path.mkdir(package_path, parents=True)
 
 
@@ -82,7 +87,8 @@ def generate_meta(model_path):
     settings = [('lang', 'Model language', 'en'),
                 ('name', 'Model name', 'model'),
                 ('version', 'Model version', '0.0.0'),
-                ('spacy_version', 'Required spaCy version', '>=%s,<3.0.0' % about.__version__),
+                ('spacy_version', 'Required spaCy version',
+                 '>=%s,<3.0.0' % about.__version__),
                 ('description', 'Model description', False),
                 ('author', 'Author', False),
                 ('email', 'Author email', False),

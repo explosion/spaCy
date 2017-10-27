@@ -7,10 +7,9 @@ from pathlib import Path
 from .converters import conllu2json, iob2json, conll_ner2json
 from ..util import prints
 
-# Converters are matched by file extension. To add a converter, add a new entry
-# to this dict with the file extension mapped to the converter function imported
-# from /converters.
-
+# Converters are matched by file extension. To add a converter, add a new
+# entry to this dict with the file extension mapped to the converter function
+# imported from /converters.
 CONVERTERS = {
     'conllu': conllu2json,
     'conll': conllu2json,
@@ -24,8 +23,7 @@ CONVERTERS = {
     output_dir=("output directory for converted file", "positional", None, str),
     n_sents=("Number of sentences per doc", "option", "n", int),
     converter=("Name of converter (auto, iob, conllu or ner)", "option", "c", str),
-    morphology=("Enable appending morphology to tags", "flag", "m", bool)
-)
+    morphology=("Enable appending morphology to tags", "flag", "m", bool))
 def convert(cmd, input_file, output_dir, n_sents=1, morphology=False,
             converter='auto'):
     """
@@ -40,7 +38,7 @@ def convert(cmd, input_file, output_dir, n_sents=1, morphology=False,
         prints(output_path, title="Output directory not found", exits=1)
     if converter == 'auto':
         converter = input_path.suffix[1:]
-    if not converter in CONVERTERS:
+    if converter not in CONVERTERS:
             prints("Can't find converter for %s" % converter,
                 title="Unknown format", exits=1)
     func = CONVERTERS[converter]

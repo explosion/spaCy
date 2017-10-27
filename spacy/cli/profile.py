@@ -27,15 +27,15 @@ def read_inputs(loc):
 
 @plac.annotations(
     lang=("model/language", "positional", None, str),
-    inputs=("Location of input file", "positional", None, read_inputs)
-)
+    inputs=("Location of input file", "positional", None, read_inputs))
 def profile(cmd, lang, inputs=None):
     """
     Profile a spaCy pipeline, to find out which functions take the most time.
     """
-    nlp = spacy.load(lang) 
+    nlp = spacy.load(lang)
     texts = list(cytoolz.take(10000, inputs))
-    cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
+    cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(),
+                    "Profile.prof")
     s = pstats.Stats("Profile.prof")
     s.strip_dirs().sort_stats("time").print_stats()
 
