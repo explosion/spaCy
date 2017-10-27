@@ -12,7 +12,7 @@ IS_JUPYTER = is_in_jupyter()
 
 
 def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
-          options={}, manual=False):
+           options={}, manual=False):
     """Render displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
@@ -21,7 +21,7 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
     minify (bool): Minify HTML markup.
     jupyter (bool): Experimental, use Jupyter's `display()` to output markup.
     options (dict): Visualiser-specific options, e.g. colors.
-    manual (bool): Don't parse `Doc` and instead, expect a dict or list of dicts.
+    manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     RETURNS (unicode): Rendered HTML markup.
     """
     factories = {'dep': (DependencyRenderer, parse_deps),
@@ -35,7 +35,7 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
     parsed = [converter(doc, options) for doc in docs] if not manual else docs
     _html['parsed'] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html['parsed']
-    if jupyter: # return HTML rendered by IPython display()
+    if jupyter:  # return HTML rendered by IPython display()
         from IPython.core.display import display, HTML
         return display(HTML(html))
     return html
@@ -50,13 +50,15 @@ def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     options (dict): Visualiser-specific options, e.g. colors.
-    manual (bool): Don't parse `Doc` and instead, expect a dict or list of dicts.
+    manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
     """
     from wsgiref import simple_server
-    render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
+    render(docs, style=style, page=page, minify=minify, options=options,
+           manual=manual)
     httpd = simple_server.make_server('0.0.0.0', port, app)
-    prints("Using the '%s' visualizer" % style, title="Serving on port %d..." % port)
+    prints("Using the '%s' visualizer" % style,
+           title="Serving on port %d..." % port)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
@@ -67,7 +69,8 @@ def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
 
 def app(environ, start_response):
     # headers and status need to be bytes in Python 2, see #1227
-    headers = [(b_to_str(b'Content-type'), b_to_str(b'text/html; charset=utf-8'))]
+    headers = [(b_to_str(b'Content-type'),
+                b_to_str(b'text/html; charset=utf-8'))]
     start_response(b_to_str(b'200 OK'), headers)
     res = _html['parsed'].encode(encoding='utf-8')
     return [res]
@@ -89,9 +92,9 @@ def parse_deps(orig_doc, options={}):
             end = word.i + 1
             while end < len(doc) and doc[end].is_punct:
                 end += 1
-            span = doc[start : end]
+            span = doc[start:end]
             spans.append((span.start_char, span.end_char, word.tag_,
-                            word.lemma_, word.ent_type_))
+                          word.lemma_, word.ent_type_))
         for span_props in spans:
             doc.merge(*span_props)
     words = [{'text': w.text, 'tag': w.tag_} for w in doc]
@@ -113,6 +116,7 @@ def parse_ents(doc, options={}):
     RETURNS (dict): Generated entities keyed by text (original text) and ents.
     """
     ents = [{'start': ent.start_char, 'end': ent.end_char, 'label': ent.label_}
-             for ent in doc.ents]
-    title = doc.user_data.get('title', None) if hasattr(doc, 'user_data') else None
+            for ent in doc.ents]
+    title = (doc.user_data.get('title', None)
+             if hasattr(doc, 'user_data') else None)
     return {'text': doc.text, 'ents': ents, 'title': title}
