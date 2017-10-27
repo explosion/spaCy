@@ -441,6 +441,37 @@ p
         +cell tuple
         +cell A #[code (name, component)] tuple of the removed component.
 
++h(2, "disable_pipes") Language.disable_pipes
+    +tag contextmanager
+    +tag-new(2)
+
+p
+    |  Disable one or more pipeline components. If used as a context manager,
+    |  the pipeline will be restored to the initial state at the end of the
+    |  block. Otherwise, a #[code DisabledPipes] object is returned, that has a
+    |  #[code .restore()] method you can use to undo your changes.
+
++aside-code("Example").
+    with nlp.disable_pipes('tagger', 'parser'):
+        optimizer = nlp.begin_training(gold_tuples)
+
+    disabled = nlp.disable_pipes('tagger', 'parser')
+    optimizer = nlp.begin_training(gold_tuples)
+    disabled.restore()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code *disabled]
+        +cell unicode
+        +cell Names of pipeline components to disable.
+
+    +row("foot")
+        +cell returns
+        +cell #[code DisabledPipes]
+        +cell
+            |  The disabled pipes that can be restored by calling the object's
+            |  #[code .restore()] method.
+
 +h(2, "to_disk") Language.to_disk
     +tag method
     +tag-new(2)

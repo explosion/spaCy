@@ -42,7 +42,7 @@ integration. It's commercial open-source software, released under the MIT licens
 ===================  ===
 `spaCy 101`_         New to spaCy? Here's everything you need to know!
 `Usage Guides`_      How to use spaCy and its features.
-`New in v2.0`_       New features, backwards incompatibilitiies and migration guide.
+`New in v2.0`_       New features, backwards incompatibilities and migration guide.
 `API Reference`_     The detailed reference for spaCy's API.
 `Models`_            Download statistical language models for spaCy.
 `Resources`_         Libraries, extensions, demos, books and courses.

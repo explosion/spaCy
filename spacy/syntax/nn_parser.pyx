@@ -53,9 +53,6 @@ from .._ml import link_vectors_to_models
 from .._ml import HistoryFeatures
 from ..compat import json_dumps, copy_array
 
-from . import _parse_features
-from ._parse_features cimport CONTEXT_SIZE
-from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from . import nonproj

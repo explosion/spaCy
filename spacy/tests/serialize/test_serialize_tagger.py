@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ..util import make_tempdir
-from ...pipeline import NeuralTagger as Tagger
+from ...pipeline import Tagger
 
 import pytest
 

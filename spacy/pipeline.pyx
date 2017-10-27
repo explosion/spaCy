@@ -26,11 +26,8 @@ from thinc.neural.util import to_categorical
 from thinc.neural._classes.difference import Siamese, CauchySimilarity
 
 from .tokens.doc cimport Doc
-from .syntax.parser cimport Parser as LinearParser
-from .syntax.nn_parser cimport Parser as NeuralParser
+from .syntax.nn_parser cimport Parser
 from .syntax import nonproj
-from .syntax.parser import get_templates as get_feature_templates
-from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
 from .syntax.arc_eager cimport ArcEager
 from .tagger import Tagger
@@ -86,7 +83,7 @@ class SentenceSegmenter(object):
             yield doc[start : len(doc)]
 
 
-class BaseThincComponent(object):
+class Pipe(object):
     name = None
 
     @classmethod
@@ -217,7 +214,7 @@ def _load_cfg(path):
         return {}
 
 
-class TokenVectorEncoder(BaseThincComponent):
+class Tensorizer(Pipe):
     """Assign position-sensitive vectors to tokens, using a CNN or RNN."""
     name = 'tensorizer'
 
@@ -329,7 +326,7 @@ class TokenVectorEncoder(BaseThincComponent):
         link_vectors_to_models(self.vocab)
 
 
-class NeuralTagger(BaseThincComponent):
+class Tagger(Pipe):
     name = 'tagger'
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
@@ -420,8 +417,6 @@ class NeuralTagger(BaseThincComponent):
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
-        if 'SP' not in new_tag_map:
-            new_tag_map['SP'] = orig_tag_map.get('SP', {POS: X})
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
@@ -513,7 +508,11 @@ class NeuralTagger(BaseThincComponent):
         return self
 
 
-class NeuralLabeller(NeuralTagger):
+class MultitaskObjective(Tagger):
+    '''Assist training of a parser or tagger, by training a side-objective.
+
+    Experimental
+    '''
     name = 'nn_labeller'
     def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
         self.vocab = vocab
@@ -532,7 +531,7 @@ class NeuralLabeller(NeuralTagger):
             self.make_label = target
         else:
             raise ValueError(
-                "NeuralLabeller target should be function or one of "
+                "MultitaskObjective target should be function or one of "
                 "['dep', 'tag', 'ent', 'dep_tag_offset', 'ent_tag']")
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
@@ -622,7 +621,7 @@ class NeuralLabeller(NeuralTagger):
             return '%s-%s' % (tags[i], ents[i])
 
 
-class SimilarityHook(BaseThincComponent):
+class SimilarityHook(Pipe):
     """
     Experimental
 
@@ -674,7 +673,7 @@ class SimilarityHook(BaseThincComponent):
             link_vectors_to_models(self.vocab)
 
 
-class TextCategorizer(BaseThincComponent):
+class TextCategorizer(Pipe):
     name = 'textcat'
 
     @classmethod
@@ -752,45 +751,7 @@ class TextCategorizer(BaseThincComponent):
             link_vectors_to_models(self.vocab)
 
 
-cdef class EntityRecognizer(LinearParser):
-    """Annotate named entities on Doc objects."""
-    TransitionSystem = BiluoPushDown
-
-    feature_templates = get_feature_templates('ner')
-
-    def add_label(self, label):
-        LinearParser.add_label(self, label)
-        if isinstance(label, basestring):
-            label = self.vocab.strings[label]
-
-
-cdef class BeamEntityRecognizer(BeamParser):
-    """Annotate named entities on Doc objects."""
-    TransitionSystem = BiluoPushDown
-
-    feature_templates = get_feature_templates('ner')
-
-    def add_label(self, label):
-        LinearParser.add_label(self, label)
-        if isinstance(label, basestring):
-            label = self.vocab.strings[label]
-
-
-cdef class DependencyParser(LinearParser):
-    TransitionSystem = ArcEager
-    feature_templates = get_feature_templates('basic')
-
-    def add_label(self, label):
-        LinearParser.add_label(self, label)
-        if isinstance(label, basestring):
-            label = self.vocab.strings[label]
-
-    @property
-    def postprocesses(self):
-        return [nonproj.deprojectivize]
-
-
-cdef class NeuralDependencyParser(NeuralParser):
+cdef class DependencyParser(Parser):
     name = 'parser'
     TransitionSystem = ArcEager
 
@@ -800,17 +761,17 @@ cdef class NeuralDependencyParser(NeuralParser):
 
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
         for target in []:
-            labeller = NeuralLabeller(self.vocab, target=target)
+            labeller = MultitaskObjective(self.vocab, target=target)
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline, tok2vec=tok2vec)
             pipeline.append(labeller)
             self._multitasks.append(labeller)
 
     def __reduce__(self):
-        return (NeuralDependencyParser, (self.vocab, self.moves, self.model), None, None)
+        return (DependencyParser, (self.vocab, self.moves, self.model), None, None)
 
 
-cdef class NeuralEntityRecognizer(NeuralParser):
+cdef class EntityRecognizer(Parser):
     name = 'ner'
     TransitionSystem = BiluoPushDown
 
@@ -818,31 +779,14 @@ cdef class NeuralEntityRecognizer(NeuralParser):
 
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
         for target in []:
-            labeller = NeuralLabeller(self.vocab, target=target)
+            labeller = MultitaskObjective(self.vocab, target=target)
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline, tok2vec=tok2vec)
             pipeline.append(labeller)
             self._multitasks.append(labeller)
 
     def __reduce__(self):
-        return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)
+        return (EntityRecognizer, (self.vocab, self.moves, self.model), None, None)
 
 
-cdef class BeamDependencyParser(BeamParser):
-    TransitionSystem = ArcEager
-
-    feature_templates = get_feature_templates('basic')
-
-    def add_label(self, label):
-        Parser.add_label(self, label)
-        if isinstance(label, basestring):
-            label = self.vocab.strings[label]
-
-    @property
-    def postprocesses(self):
-        return [nonproj.deprojectivize]
-
-
-
-__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'BeamDependencyParser',
-           'BeamEntityRecognizer', 'TokenVectorEnoder']
+__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer']

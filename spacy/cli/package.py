@@ -43,7 +43,7 @@ def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False, force
         prints(meta_path, title="Reading meta.json from file")
         meta = util.read_json(meta_path)
     else:
-        meta = generate_meta()
+        meta = generate_meta(input_dir)
     meta = validate_meta(meta, ['lang', 'name', 'version'])
 
     model_name = meta['lang'] + '_' + meta['name']
@@ -77,7 +77,8 @@ def create_file(file_path, contents):
     file_path.open('w', encoding='utf-8').write(contents)
 
 
-def generate_meta():
+def generate_meta(model_path):
+    meta = {}
     settings = [('lang', 'Model language', 'en'),
                 ('name', 'Model name', 'model'),
                 ('version', 'Model version', '0.0.0'),
@@ -87,29 +88,19 @@ def generate_meta():
                 ('email', 'Author email', False),
                 ('url', 'Author website', False),
                 ('license', 'License', 'CC BY-NC 3.0')]
-    prints("Enter the package settings for your model.", title="Generating meta.json")
-    meta = {}
+    nlp = util.load_model_from_path(Path(model_path))
+    meta['pipeline'] = nlp.pipe_names
+    meta['vectors'] = {'width': nlp.vocab.vectors_length,
+                       'entries': len(nlp.vocab.vectors)}
+    prints("Enter the package settings for your model. The following "
+           "information will be read from your model data: pipeline, vectors.",
+           title="Generating meta.json")
     for setting, desc, default in settings:
         response = util.get_raw_input(desc, default)
         meta[setting] = default if response == '' and default else response
-    meta['pipeline'] = generate_pipeline()
     if about.__title__ != 'spacy':
         meta['parent_package'] = about.__title__
     return meta
-
-
-def generate_pipeline():
-    prints("If set to 'True', the default pipeline is used. If set to 'False', "
-           "the pipeline will be disabled. Components should be specified as a "
-           "comma-separated list of component names, e.g. tagger, "
-           "parser, ner. For more information, see the docs on processing pipelines.",
-           title="Enter your model's pipeline components")
-    pipeline = util.get_raw_input("Pipeline components", True)
-    subs = {'True': True, 'False': False}
-    if pipeline in subs:
-        return subs[pipeline]
-    else:
-        return [p.strip() for p in pipeline.split(',')]
 
 
 def validate_meta(meta, keys):

@@ -16,4 +16,5 @@ p
     |  before a logistic activation is applied elementwise. The value of each
     |  output neuron is the probability that some class is present.
 
+//- This class inherits from Pipe, so this page uses the template in pipe.jade.
 !=partial("pipe", { subclass: "TextCategorizer", short: "textcat", pipeline_id: "textcat" })

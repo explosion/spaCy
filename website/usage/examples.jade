@@ -2,6 +2,37 @@
 
 include ../_includes/_mixins
 
++section("information-extraction")
+    +h(3, "phrase-matcher") Using spaCy's phrase matcher
+        +tag-new(2)
+
+    p
+        |  This example shows how to use the new
+        |  #[+api("phrasematcher") #[code PhraseMatcher]] to efficiently find
+        |  entities from a large terminology list.
+
+    +github("spacy", "examples/information_extraction/phrase_matcher.py")
+
+    +h(3, "entity-relations") Extracting entity relations
+
+    p
+        |  A simple example of extracting relations between phrases and
+        |  entities using spaCy's named entity recognizer and the dependency
+        |  parse. Here, we extract money and currency values (entities labelled
+        |  as #[code MONEY]) and then check the dependency tree to find the
+        |  noun phrase they are referring to – for example: "$9.4 million"
+        |  &rarr; "Net income".
+
+    +github("spacy", "examples/information_extraction/entity_relations.py")
+
+    +h(3, "subtrees") Navigating the parse tree and subtrees
+
+    p
+        |  This example shows how to navigate the parse tree including subtrees
+        |  attached to a word.
+
+    +github("spacy", "examples/information_extraction/parse_subtrees.py")
+
 +section("pipeline")
     +h(3, "custom-components-entities") Custom pipeline components and attribute extensions
         +tag-new(2)
@@ -40,27 +71,29 @@ include ../_includes/_mixins
 
     +github("spacy", "examples/pipeline/custom_attr_methods.py")
 
-+section("matching")
-    +h(3, "matcher") Using spaCy's rule-based matcher
+    +h(3, "multi-processing") Multi-processing with Joblib
 
     p
-        |  This example shows how to use spaCy's rule-based
-        |  #[+api("matcher") #[code Matcher]] to find and label entities across
-        |  documents.
+        |  This example shows how to use multiple cores to process text using
+        |  spaCy and #[+a("https://pythonhosted.org/joblib/") Joblib]. We're
+        |  exporting part-of-speech-tagged, true-cased, (very roughly)
+        |  sentence-separated text, with each "sentence" on a newline, and
+        |  spaces between tokens. Data is loaded from the IMDB movie reviews
+        |  dataset and will be loaded automatically via Thinc's built-in dataset
+        |  loader.
 
-    +github("spacy", "examples/matcher_example.py")
-
-    +h(3, "phrase-matcher") Using spaCy's phrase matcher
-        +tag-new(2)
-
-    p
-        |  This example shows how to use the new
-        |  #[+api("phrasematcher") #[code PhraseMatcher]] to efficiently find
-        |  entities from a large terminology list.
-
-    +github("spacy", "examples/phrase_matcher.py")
+    +github("spacy", "examples/pipeline/multi_processing.py")
 
 +section("training")
+    +h(3, "training-ner") Training spaCy's Named Entity Recognizer
+
+    p
+        |  This example shows how to update spaCy's entity recognizer
+        |  with your own examples, starting off with an existing, pre-trained
+        |  model, or from scratch using a blank #[code Language] class.
+
+    +github("spacy", "examples/training/train_ner.py")
+
     +h(3, "new-entity-type") Training an additional entity type
 
     p
@@ -71,24 +104,62 @@ include ../_includes/_mixins
 
     +github("spacy", "examples/training/train_new_entity_type.py")
 
-    +h(3, "ner-standalone") Training an NER system from scratch
+    +h(3, "parser") Training spaCy's Dependency Parser
 
     p
-        |  This example is written to be self-contained and reasonably
-        |  transparent. To achieve that, it duplicates some of spaCy's internal
-        |  functionality.
+        |  This example shows how to update spaCy's dependency parser,
+        |  starting off with an existing, pre-trained model, or from scratch
+        |  using a blank #[code Language] class.
 
-    +github("spacy", "examples/training/train_ner_standalone.py")
+    +github("spacy", "examples/training/train_parser.py")
+
+    +h(3, "tagger") Training spaCy's Part-of-speech Tagger
+
+    p
+        |  In this example, we're training spaCy's part-of-speech tagger with a
+        |  custom tag map, mapping our own tags to the mapping those tags to the
+        |  #[+a("http://universaldependencies.github.io/docs/u/pos/index.html") Universal Dependencies scheme].
+
+    +github("spacy", "examples/training/train_tagger.py")
+
+    +h(3, "intent-parser") Training a custom parser for chat intent semantics
+
+    p
+        |  spaCy's parser component can be used to trained to predict any type
+        |  of tree structure over your input text. You can also predict trees
+        |  over whole documents or chat logs, with connections between the
+        |  sentence-roots used to annotate discourse structure. In this example,
+        |  we'll build a message parser for a common "chat intent": finding
+        |  local businesses. Our message semantics will have the following types
+        |  of relations: #[code ROOT], #[code PLACE], #[code QUALITY],
+        |  #[code ATTRIBUTE], #[code TIME] and #[code LOCATION].
+
+    +github("spacy", "examples/training/train_intent_parser.py")
 
     +h(3, "textcat") Training spaCy's text classifier
         +tag-new(2)
 
     p
-        |  This example shows how to use and train spaCy's new
-        |  #[+api("textcategorizer") #[code TextCategorizer]] pipeline component
-        |  on IMDB movie reviews.
+        |  This example shows how to train a multi-label convolutional neural
+        |  network text classifier on IMDB movie reviews, using spaCy's new
+        |  #[+api("textcategorizer") #[code TextCategorizer]] component. The
+        |  dataset will be loaded automatically via Thinc's built-in dataset
+        |  loader. Predictions are available via
+        |  #[+api("doc#attributes") #[code Doc.cats]].
 
     +github("spacy", "examples/training/train_textcat.py")
+
++section("vectors")
+    +h(3, "fasttext") Loading pre-trained fastText vectors
+
+    p
+        |  This simple snippet is all you need to be able to use the Facebook's
+        |  #[+a("https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md") fastText vectors]
+        |  (294 languages, pre-trained on Wikipedia) with spaCy.  Once they're
+        |  loaded, the vectors will be available via spaCy's built-in
+        |  #[code similarity()] methods.
+
+    +github("spacy", "examples/vectors_fast_text.py")
 
 +section("deep-learning")
     +h(3, "keras") Text classification with Keras
@@ -108,4 +179,4 @@ include ../_includes/_mixins
         |  parameters, and was implemented using #[+a("https://keras.io") Keras]
         |  and spaCy.
 
-    +github("spacy", "examples/keras_parikh_entailment/__main__.py", "examples/keras_parikh_entailment")
+    +github("spacy", "examples/keras_parikh_entailment/__main__.py", false, "examples/keras_parikh_entailment")

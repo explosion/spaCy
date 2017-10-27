@@ -1,21 +1,45 @@
-# coding: utf-8
-from __future__ import unicode_literals
+#!/usr/bin/env python
+# coding: utf8
+"""Example of a spaCy v2.0 pipeline component that requests all countries via
+the REST Countries API, merges country names into one token, assigns entity
+labels and sets attributes on country tokens, e.g. the capital and lat/lng
+coordinates. Can be extended with more details from the API.
+
+* REST Countries API: https://restcountries.eu (Mozilla Public License MPL 2.0)
+* Custom pipeline components: https://alpha.spacy.io//usage/processing-pipelines#custom-components
+
+Developed for: spaCy 2.0.0a17
+Last updated for: spaCy 2.0.0a18
+"""
+from __future__ import unicode_literals, print_function
 
 import requests
-
+import plac
 from spacy.lang.en import English
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc, Span, Token
 
 
-class RESTCountriesComponent(object):
-    """Example of a spaCy v2.0 pipeline component that requests all countries
-    via the REST Countries API, merges country names into one token, assigns
-    entity labels and sets attributes on country tokens, e.g. the capital and
-    lat/lng coordinates. Can be extended with more details from the API.
+def main():
+    # For simplicity, we start off with only the blank English Language class
+    # and no model or pre-defined pipeline loaded.
+    nlp = English()
+    rest_countries = RESTCountriesComponent(nlp)  # initialise component
+    nlp.add_pipe(rest_countries) # add it to the pipeline
+    doc = nlp(u"Some text about Colombia and the Czech Republic")
+    print('Pipeline', nlp.pipe_names)  # pipeline contains component name
+    print('Doc has countries', doc._.has_country)  # Doc contains countries
+    for token in doc:
+        if token._.is_country:
+            print(token.text, token._.country_capital, token._.country_latlng,
+                token._.country_flag)  # country data
+    print('Entities', [(e.text, e.label_) for e in doc.ents])  # entities
 
-    REST Countries API: https://restcountries.eu
-    API License: Mozilla Public License MPL 2.0
+
+class RESTCountriesComponent(object):
+    """spaCy v2.0 pipeline component that requests all countries via
+    the REST Countries API, merges country names into one token, assigns entity
+    labels and sets attributes on country tokens.
     """
     name = 'rest_countries' # component name, will show up in the pipeline
 
@@ -90,19 +114,12 @@ class RESTCountriesComponent(object):
         return any([t._.get('is_country') for t in tokens])
 
 
-# For simplicity, we start off with only the blank English Language class and
-# no model or pre-defined pipeline loaded.
+if __name__ == '__main__':
+    plac.call(main)
 
-nlp = English()
-rest_countries = RESTCountriesComponent(nlp)  # initialise component
-nlp.add_pipe(rest_countries) # add it to the pipeline
-
-doc = nlp(u"Some text about Colombia and the Czech Republic")
-
-print('Pipeline', nlp.pipe_names)  # pipeline contains component name
-print('Doc has countries', doc._.has_country)  # Doc contains countries
-for token in doc:
-    if token._.is_country:
-        print(token.text, token._.country_capital, token._.country_latlng,
-              token._.country_flag)  # country data
-print('Entities', [(e.text, e.label_) for e in doc.ents])  # all countries are entities
+    # Expected output:
+    # Pipeline ['rest_countries']
+    # Doc has countries True
+    # Colombia Bogotá [4.0, -72.0] https://restcountries.eu/data/col.svg
+    # Czech Republic Prague [49.75, 15.5] https://restcountries.eu/data/cze.svg
+    # Entities [('Colombia', 'GPE'), ('Czech Republic', 'GPE')]

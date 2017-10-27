@@ -6,7 +6,7 @@ import numpy
 
 from ..._ml import chain, Tok2Vec, doc2feats
 from ...vocab import Vocab
-from ...pipeline import TokenVectorEncoder
+from ...pipeline import Tensorizer
 from ...syntax.arc_eager import ArcEager
 from ...syntax.nn_parser import Parser
 from ...tokens.doc import Doc

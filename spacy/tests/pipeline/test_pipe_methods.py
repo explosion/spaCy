@@ -82,3 +82,21 @@ def test_remove_pipe(nlp, name):
     assert not len(nlp.pipeline)
     assert removed_name == name
     assert removed_component == new_pipe
+
+
+@pytest.mark.parametrize('name', ['my_component'])
+def test_disable_pipes_method(nlp, name):
+    nlp.add_pipe(new_pipe, name=name)
+    assert nlp.has_pipe(name)
+    disabled = nlp.disable_pipes(name)
+    assert not nlp.has_pipe(name)
+    disabled.restore()
+
+
+@pytest.mark.parametrize('name', ['my_component'])
+def test_disable_pipes_context(nlp, name):
+    nlp.add_pipe(new_pipe, name=name)
+    assert nlp.has_pipe(name)
+    with nlp.disable_pipes(name):
+        assert not nlp.has_pipe(name)
+    assert nlp.has_pipe(name)

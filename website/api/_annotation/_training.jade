@@ -13,7 +13,9 @@ p
     |  that are part of an entity are set to the entity label, prefixed by the
     |  BILUO marker. For example #[code "B-ORG"] describes the first token of
     |  a multi-token #[code ORG] entity and #[code "U-PERSON"] a single
-    |  token representing a #[code PERSON] entity
+    |  token representing a #[code PERSON] entity. The
+    |  #[+api("goldparse#biluo_tags_from_offsets") #[code biluo_tags_from_offsets]]
+    |  function can help you convert entity offsets to the right format.
 
 +code("Example structure").
     [{
