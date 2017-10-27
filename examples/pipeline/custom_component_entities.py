@@ -1,9 +1,43 @@
-# coding: utf-8
-from __future__ import unicode_literals
+#!/usr/bin/env python
+# coding: utf8
+"""Example of a spaCy v2.0 pipeline component that sets entity annotations
+based on list of single or multiple-word company names. Companies are
+labelled as ORG and their spans are merged into one token. Additionally,
+._.has_tech_org and ._.is_tech_org is set on the Doc/Span and Token
+respectively.
 
+* Custom pipeline components: https://alpha.spacy.io//usage/processing-pipelines#custom-components
+
+Developed for: spaCy 2.0.0a17
+Last updated for: spaCy 2.0.0a18
+"""
+from __future__ import unicode_literals, print_function
+
+import plac
 from spacy.lang.en import English
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc, Span, Token
+
+
+@plac.annotations(
+    text=("Text to process", "positional", None, str),
+    companies=("Names of technology companies", "positional", None, str))
+def main(text="Alphabet Inc. is the company behind Google.", *companies):
+    # For simplicity, we start off with only the blank English Language class
+    # and no model or pre-defined pipeline loaded.
+    nlp = English()
+    if not companies:  # set default companies if none are set via args
+        companies = ['Alphabet Inc.', 'Google', 'Netflix', 'Apple']  # etc.
+    component = TechCompanyRecognizer(nlp, companies)  # initialise component
+    nlp.add_pipe(component, last=True)  # add last to the pipeline
+
+    doc = nlp(text)
+    print('Pipeline', nlp.pipe_names)  # pipeline contains component name
+    print('Tokens', [t.text for t in doc])  # company names from the list are merged
+    print('Doc has_tech_org', doc._.has_tech_org)  # Doc contains tech orgs
+    print('Token 0 is_tech_org', doc[0]._.is_tech_org)  # "Alphabet Inc." is a tech org
+    print('Token 1 is_tech_org', doc[1]._.is_tech_org)  # "is" is not
+    print('Entities', [(e.text, e.label_) for e in doc.ents])  # all orgs are entities
 
 
 class TechCompanyRecognizer(object):
@@ -67,19 +101,13 @@ class TechCompanyRecognizer(object):
         return any([t._.get('is_tech_org') for t in tokens])
 
 
-# For simplicity, we start off with only the blank English Language class and
-# no model or pre-defined pipeline loaded.
+if __name__ == '__main__':
+    plac.call(main)
 
-nlp = English()
-companies = ['Alphabet Inc.', 'Google', 'Netflix', 'Apple']  # etc.
-component = TechCompanyRecognizer(nlp, companies)  # initialise component
-nlp.add_pipe(component, last=True)  # add it to the pipeline as the last element
-
-doc = nlp(u"Alphabet Inc. is the company behind Google.")
-
-print('Pipeline', nlp.pipe_names)  # pipeline contains component name
-print('Tokens', [t.text for t in doc])  # company names from the list are merged
-print('Doc has_tech_org', doc._.has_tech_org)  # Doc contains tech orgs
-print('Token 0 is_tech_org', doc[0]._.is_tech_org)  # "Alphabet Inc." is a tech org
-print('Token 1 is_tech_org', doc[1]._.is_tech_org)  # "is" is not
-print('Entities', [(e.text, e.label_) for e in doc.ents])  # all orgs are entities
+    # Expected output:
+    # Pipeline ['tech_companies']
+    # Tokens ['Alphabet Inc.', 'is', 'the', 'company', 'behind', 'Google', '.']
+    # Doc has_tech_org True
+    # Token 0 is_tech_org True
+    # Token 1 is_tech_org False
+    # Entities [('Alphabet Inc.', 'ORG'), ('Google', 'ORG')]

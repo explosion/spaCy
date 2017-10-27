@@ -94,7 +94,6 @@ def _zero_init(model):
 @layerize
 def _preprocess_doc(docs, drop=0.):
     keys = [doc.to_array([LOWER]) for doc in docs]
-    keys = [a[:, 0] for a in keys]
     ops = Model.ops
     lengths = ops.asarray([arr.shape[0] for arr in keys])
     keys = ops.xp.concatenate(keys)
@@ -521,7 +520,6 @@ def zero_init(model):
 @layerize
 def preprocess_doc(docs, drop=0.):
     keys = [doc.to_array([LOWER]) for doc in docs]
-    keys = [a[:, 0] for a in keys]
     ops = Model.ops
     lengths = ops.asarray([arr.shape[0] for arr in keys])
     keys = ops.xp.concatenate(keys)

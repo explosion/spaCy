@@ -24,38 +24,108 @@ p
     |  #[strong experiment on your own data] to find a solution that works best
     |  for you.
 
-+h(3, "example-new-entity-type") Example: Training an additional entity type
++h(3, "example-train-ner") Updating the Named Entity Recognizer
 
 p
-    |  This script shows how to add a new entity type to an existing pre-trained
-    |  NER model. To keep the example short and simple, only a few sentences are
+    |  This example shows how to update spaCy's entity recognizer
+    |  with your own examples, starting off with an existing, pre-trained
+    |  model, or from scratch using a blank #[code Language] class. To do
+    |  this, you'll need #[strong example texts] and the
+    |  #[strong character offsets] and #[strong labels] of each entity contained
+    |  in the texts.
+
+    +github("spacy", "examples/training/train_ner.py")
+
++h(4) Step by step guide
+
++list("numbers")
+    +item
+        |  #[strong Reformat the training data] to match spaCy's
+        |  #[+a("/api/annotation#json-input") JSON format]. The built-in
+        |  #[+api("goldparse#biluo_tags_from_offsets") #[code biluo_tags_from_offsets]]
+        |  function can help you with this.
+
+    +item
+        |  #[strong Load the model] you want to start with, or create an
+        |  #[strong empty model] using
+        |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
+        |  language. If you're using a blank model, don't forget to add the
+        |  entity recognizer to the pipeline. If you're using an existing model,
+        |  make sure to disable all other pipeline components during training
+        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
+        |  This way, you'll only be training the entity recognizer.
+
+    +item
+        |  #[strong Shuffle and loop over] the examples and create a
+        |  #[code Doc] and #[code GoldParse] object for each example.
+
+    +item
+        |  For each example, #[strong update the model]
+        |  by calling #[+api("language#update") #[code nlp.update]], which steps
+        |  through the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations provided on the
+        |  #[code GoldParse] instance, to see whether it was
+        |  right. If it was wrong, it adjusts its weights so that the correct
+        |  action will score higher next time.
+
+    +item
+        |  #[strong Save] the trained model using
+        |  #[+api("language#to_disk") #[code nlp.to_disk]].
+
+    +item
+        |  #[strong Test] the model to make sure the entities in the training
+        |  data are recognised correctly.
+
++h(3, "example-new-entity-type") Training an additional entity type
+
+p
+    |  This script shows how to add a new entity type #[code ANIMAL] to an
+    |  existing pre-trained NER model, or an empty #[code Language] class. To
+    |  keep the example short and simple, only a few sentences are
     |  provided as examples. In practice, you'll need many more — a few hundred
     |  would be a good start. You will also likely need to mix in examples of
     |  other entity types, which might be obtained by running the entity
     |  recognizer over unlabelled sentences, and adding their annotations to the
     |  training set.
 
-p
-    |  The actual training is performed by looping over the examples, and
-    |  calling #[+api("language#update") #[code nlp.update()]]. The
-    |  #[code update] method steps through the words of the input. At each word,
-    |  it makes a prediction. It then consults the annotations provided on the
-    |  #[+api("goldparse") #[code GoldParse]] instance, to see whether it was
-    |  right. If it was wrong, it adjusts its weights so that the correct
-    |  action will score higher next time.
-
 +github("spacy", "examples/training/train_new_entity_type.py")
 
-+h(3, "example-ner-from-scratch") Example: Training an NER system from scratch
++h(4) Step by step guide
 
-p
-    |  This example is written to be self-contained and reasonably transparent.
-    |  To achieve that, it duplicates some of spaCy's internal functionality.
-    |  Specifically, in this example, we don't use spaCy's built-in
-    |  #[+api("language") #[code Language]] class to wire together the
-    |  #[+api("vocab") #[code Vocab]], #[+api("tokenizer") #[code Tokenizer]]
-    |  and #[+api("entityrecognizer") #[code EntityRecognizer]]. Instead, we
-    |  write our own simle #[code Pipeline] class, so that it's easier to see
-    |  how the pieces interact.
++list("numbers")
+    +item
+        |  Create #[code Doc] and #[code GoldParse] objects for
+        |  #[strong each example in your training data].
 
-+github("spacy", "examples/training/train_ner_standalone.py")
+    +item
+        |  #[strong Load the model] you want to start with, or create an
+        |  #[strong empty model] using
+        |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
+        |  language. If you're using a blank model, don't forget to add the
+        |  entity recognizer to the pipeline. If you're using an existing model,
+        |  make sure to disable all other pipeline components during training
+        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
+        |  This way, you'll only be training the entity recognizer.
+
+    +item
+        |  #[strong Add the new entity label] to the entity recognizer using the
+        |  #[+api("entityrecognizer#add_label") #[code add_label]] method. You
+        |  can access the entity recognizer in the pipeline via
+        |  #[code nlp.get_pipe('ner')].
+
+    +item
+        |  #[strong Loop over] the examples and call
+        |  #[+api("language#update") #[code nlp.update]], which steps through
+        |  the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations provided on the
+        |  #[code GoldParse] instance, to see whether it was right. If it was
+        |  wrong, it adjusts its weights so that the correct action will score
+        |  higher next time.
+
+    +item
+        |  #[strong Save] the trained model using
+        |  #[+api("language#to_disk") #[code nlp.to_disk]].
+
+    +item
+        |  #[strong Test] the model to make sure the new entity is recognised
+        |  correctly.
