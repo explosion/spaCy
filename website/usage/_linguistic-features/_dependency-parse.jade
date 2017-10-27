@@ -111,11 +111,13 @@ p
 
 p
     |  A few more convenience attributes are provided for iterating around the
-    |  local tree from the token. The #[code .lefts] and #[code .rights]
-    |  attributes provide sequences of syntactic children that occur before and
-    |  after the token. Both sequences are in sentences order. There are also
-    |  two integer-typed attributes, #[code .n_rights] and #[code .n_lefts],
-    |  that give the number of left and right children.
+    |  local tree from the token. The #[+api("token#lefts") #[code Token.lefts]]
+    |  and #[+api("token#rights") #[code Token.rights]] attributes provide
+    |  sequences of syntactic children that occur before and after the token.
+    |  Both sequences are in sentence order. There are also two integer-typed
+    |  attributes, #[+api("token#n_rights") #[code Token.n_rights]] and
+    |  #[+api("token#n_lefts") #[code Token.n_lefts]], that give the number of
+    |  left and right children.
 
 +code.
     doc = nlp(u'bright red apples on the tree')
@@ -126,10 +128,11 @@ p
 
 p
     |  You can get a whole phrase by its syntactic head using the
-    |  #[code .subtree] attribute. This returns an ordered sequence of tokens.
-    |  You can walk up the tree with the #[code .ancestors] attribute, and
-    |  check dominance with the #[+api("token#is_ancestor") #[code .is_ancestor()]]
-    |  method.
+    |  #[+api("token#subtree") #[code Token.subtree]] attribute. This returns an
+    |  ordered  sequence of tokens. You can walk up the tree with the
+    |  #[+api("token#ancestors") #[code Token.ancestors]] attribute, and
+    |  check dominance with
+    |  #[+api("token#is_ancestor") #[code Token.is_ancestor()]].
 
 +aside("Projective vs. non-projective")
     |  For the #[+a("/models/en") default English model], the

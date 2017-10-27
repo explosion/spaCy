@@ -302,6 +302,80 @@ p A sequence of the token's immediate syntactic children.
         +cell #[code Token]
         +cell A child token such that #[code child.head==self].
 
++h(2, "lefts") Token.lefts
+    +tag property
+    +tag-model("parse")
+
+p
+    |  The leftward immediate children of the word, in the syntactic dependency
+    |  parse.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    lefts = [t.text for t in doc[3].lefts]
+    assert lefts == [u'New']
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code Token]
+        +cell A left-child of the token.
+
++h(2, "rights") Token.rights
+    +tag property
+    +tag-model("parse")
+
+p
+    |  The rightward immediate children of the word, in the syntactic
+    |  dependency parse.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    rights = [t.text for t in doc[3].rights]
+    assert rights == [u'in']
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code Token]
+        +cell A right-child of the token.
+
++h(2, "n_lefts") Token.n_lefts
+    +tag property
+    +tag-model("parse")
+
+p
+    |  The number of leftward immediate children of the word, in the syntactic
+    |  dependency parse.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    assert doc[3].n_lefts == 1
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of left-child tokens.
+
++h(2, "n_rights") Token.n_rights
+    +tag property
+    +tag-model("parse")
+
+p
+    |  The number of rightward immediate children of the word, in the syntactic
+    |  dependency parse.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    assert doc[3].n_rights == 1
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of right-child tokens.
+
 +h(2, "subtree") Token.subtree
     +tag property
     +tag-model("parse")
@@ -713,9 +787,30 @@ p The L2 norm of the token's vector representation.
     +row
         +cell #[code sentiment]
         +cell float
-        +cell A scalar value indicating the positivity or negativity of the token.
+        +cell
+            |  A scalar value indicating the positivity or negativity of the
+            |  token.
 
     +row
         +cell #[code lex_id]
         +cell int
-        +cell ID of the token's lexical type.
+        +cell Sequential ID of the token's lexical type.
+
+    +row
+        +cell #[code rank]
+        +cell int
+        +cell
+            |  Sequential ID of the token's lexical type, used to index into
+            |  tagles, e.g. for word vectors.
+
+    +row
+        +cell #[code cluster]
+        +cell int
+        +cell Brown cluster ID.
+
+    +row
+        +cell #[code _]
+        +cell #[code Underscore]
+        +cell
+            |  User space for adding custom
+            |  #[+a("/usage/processing-pipelines#custom-components-attributes") attribute extensions].

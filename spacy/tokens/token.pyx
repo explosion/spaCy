@@ -145,37 +145,32 @@ cdef class Token:
             return self.doc.user_token_hooks['similarity'](self)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        return (numpy.dot(self.vector, other.vector) /
+                (self.vector_norm * other.vector_norm))
 
     property lex_id:
-        """ID of the token's lexical type.
-
-        RETURNS (int): ID of the token's lexical type."""
+        """RETURNS (int): Sequential ID of the token's lexical type."""
         def __get__(self):
             return self.c.lex.id
 
     property rank:
-        # TODO: add docstring
+        """RETURNS (int): Sequential ID of the token's lexical type, used to
+        index into tables, e.g. for word vectors."""
         def __get__(self):
             return self.c.lex.id
 
     property string:
+        """Deprecated: Use Token.text_with_ws instead."""
         def __get__(self):
             return self.text_with_ws
 
     property text:
-        """A unicode representation of the token text.
-
-        RETURNS (unicode): The original verbatim text of the token.
-        """
+        """RETURNS (unicode): The original verbatim text of the token."""
         def __get__(self):
             return self.orth_
 
     property text_with_ws:
-        """The text content of the token with a trailing whitespace character
-        if it has one.
-
-        RETURNS (unicode): The text content of the span (with trailing
+        """RETURNS (unicode): The text content of the span (with trailing
             whitespace).
         """
         def __get__(self):
@@ -186,74 +181,104 @@ cdef class Token:
                 return orth
 
     property prob:
+        """RETURNS (float): Smoothed log probability estimate of token type."""
         def __get__(self):
             return self.c.lex.prob
 
     property sentiment:
+        """RETURNS (float): A scalar value indicating the positivity or
+            negativity of the token."""
         def __get__(self):
             if 'sentiment' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['sentiment'](self)
             return self.c.lex.sentiment
 
     property lang:
+        """RETURNS (uint64): ID of the language of the parent document's
+            vocabulary.
+        """
         def __get__(self):
             return self.c.lex.lang
 
     property idx:
+        """RETURNS (int): The character offset of the token within the parent
+            document.
+        """
         def __get__(self):
             return self.c.idx
 
     property cluster:
+        """RETURNS (int): Brown cluster ID."""
         def __get__(self):
             return self.c.lex.cluster
 
     property orth:
+        """RETURNS (uint64): ID of the verbatim text content."""
         def __get__(self):
             return self.c.lex.orth
 
     property lower:
+        """RETURNS (uint64): ID of the lowercase token text."""
         def __get__(self):
             return self.c.lex.lower
 
     property norm:
+        """RETURNS (uint64): ID of the token's norm, i.e. a normalised form of
+            the token text. Usually set in the language's tokenizer exceptions
+            or norm exceptions.
+        """
         def __get__(self):
             return self.c.lex.norm
 
     property shape:
+        """RETURNS (uint64): ID of the token's shape, a transform of the
+            tokens's string, to show orthographic features (e.g. "Xxxx", "dd").
+        """
         def __get__(self):
             return self.c.lex.shape
 
     property prefix:
+        """RETURNS (uint64): ID of a length-N substring from the start of the
+            token. Defaults to `N=1`.
+        """
         def __get__(self):
             return self.c.lex.prefix
 
     property suffix:
+        """RETURNS (uint64): ID of a length-N substring from the end of the
+            token. Defaults to `N=3`.
+        """
         def __get__(self):
             return self.c.lex.suffix
 
     property lemma:
-        """Base form of the word, with no inflectional suffixes.
-
-        RETURNS (uint64): Token lemma.
+        """RETURNS (uint64): ID of the base form of the word, with no
+            inflectional suffixes.
         """
         def __get__(self):
             return self.c.lemma
+
         def __set__(self, attr_t lemma):
             self.c.lemma = lemma
 
     property pos:
+        """RETURNS (uint64): ID of coarse-grained part-of-speech tag."""
         def __get__(self):
             return self.c.pos
 
     property tag:
+        """RETURNS (uint64): ID of fine-grained part-of-speech tag."""
         def __get__(self):
             return self.c.tag
+
         def __set__(self, attr_t tag):
             self.vocab.morphology.assign_tag(self.c, tag)
 
     property dep:
+        """RETURNS (uint64): ID of syntactic dependency label."""
         def __get__(self):
             return self.c.dep
+
         def __set__(self, attr_t label):
             self.c.dep = label
 
@@ -294,14 +319,21 @@ cdef class Token:
             return numpy.sqrt((vector ** 2).sum())
 
     property n_lefts:
+        """RETURNS (int): The number of leftward immediate children of the
+            word, in the syntactic dependency parse.
+        """
         def __get__(self):
             return self.c.l_kids
 
     property n_rights:
+        """RETURNS (int): The number of rightward immediate children of the
+            word, in the syntactic dependency parse.
+        """
         def __get__(self):
             return self.c.r_kids
 
     property sent_start:
+        # TODO: fix and document
         def __get__(self):
             return self.c.sent_start
 
@@ -321,10 +353,12 @@ cdef class Token:
                                  "one of: None, True, False")
 
     property lefts:
+        """The leftward immediate children of the word, in the syntactic
+        dependency parse.
+
+        YIELDS (Token): A left-child of the token.
+        """
         def __get__(self):
-            """The leftward immediate children of the word, in the syntactic
-            dependency parse.
-            """
             cdef int nr_iter = 0
             cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
             while ptr < self.c:
@@ -338,10 +372,12 @@ cdef class Token:
                                        "while looking for token.lefts")
 
     property rights:
+        """The rightward immediate children of the word, in the syntactic
+        dependency parse.
+
+        YIELDS (Token): A right-child of the token.
+        """
         def __get__(self):
-            """The rightward immediate children of the word, in the syntactic
-            dependency parse.
-            """
             cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
             tokens = []
             cdef int nr_iter = 0
@@ -420,18 +456,17 @@ cdef class Token:
         """
         if self.doc is not descendant.doc:
             return False
-        return any( ancestor.i == self.i for ancestor in descendant.ancestors )
+        return any(ancestor.i == self.i for ancestor in descendant.ancestors)
 
     property head:
         """The syntactic parent, or "governor", of this token.
 
-        RETURNS (Token): The token head.
+        RETURNS (Token): The token predicted by the parser to be the head of
+            the current token.
         """
         def __get__(self):
-            """The token predicted by the parser to be the head of the current
-            token.
-            """
             return self.doc[self.i + self.c.head]
+
         def __set__(self, Token new_head):
             # this function sets the head of self to new_head
             # and updates the counters for left/right dependents
@@ -451,7 +486,7 @@ cdef class Token:
             cdef Token anc, child
 
             # update number of deps of old head
-            if self.c.head > 0: # left dependent
+            if self.c.head > 0:  # left dependent
                 old_head.c.l_kids -= 1
                 if self.c.l_edge == old_head.c.l_edge:
                     # the token dominates the left edge so the left edge of
@@ -543,12 +578,10 @@ cdef class Token:
                             yield from word.conjuncts
 
     property ent_type:
-        """Named entity type.
-
-        RETURNS (uint64): Named entity type.
-        """
+        """RETURNS (uint64): Named entity type."""
         def __get__(self):
             return self.c.ent_type
+
         def __set__(self, ent_type):
             self.c.ent_type = ent_type
 
@@ -562,12 +595,10 @@ cdef class Token:
             return self.c.ent_iob
 
     property ent_type_:
-        """Named entity type.
-
-        RETURNS (unicode): Named entity type.
-        """
+        """RETURNS (unicode): Named entity type."""
         def __get__(self):
             return self.vocab.strings[self.c.ent_type]
+
         def __set__(self, ent_type):
             self.c.ent_type = self.vocab.strings.add(ent_type)
 
@@ -583,9 +614,8 @@ cdef class Token:
             return iob_strings[self.c.ent_iob]
 
     property ent_id:
-        """ID of the entity the token is an instance of, if any.
-
-        RETURNS (uint64): ID of the entity.
+        """RETURNS (uint64): ID of the entity the token is an instance of,
+            if any.
         """
         def __get__(self):
             return self.c.ent_id
@@ -594,9 +624,8 @@ cdef class Token:
             self.c.ent_id = key
 
     property ent_id_:
-        """ID of the entity the token is an instance of, if any.
-
-        RETURNS (unicode): ID of the entity.
+        """RETURNS (unicode): ID of the entity the token is an instance of,
+            if any.
         """
         def __get__(self):
             return self.vocab.strings[self.c.ent_id]
@@ -605,230 +634,192 @@ cdef class Token:
             self.c.ent_id = self.vocab.strings.add(name)
 
     property whitespace_:
-        """Trailing space character if present.
-
-        RETURNS (unicode): The whitespace character.
+        """RETURNS (unicode): The trailing whitespace character, if present.
         """
         def __get__(self):
             return ' ' if self.c.spacy else ''
 
     property orth_:
-        """Verbatim text content (identical to `Token.text`). Existst mostly
-        for consistency with the other attributes.
-
-        RETURNS (unicode): The token text.
+        """RETURNS (unicode): Verbatim text content (identical to
+            `Token.text`). Existst mostly for consistency with the other
+            attributes.
         """
         def __get__(self):
             return self.vocab.strings[self.c.lex.orth]
 
     property lower_:
-        """Lowercase form of the token text. Equivalent to
-        `Token.text.lower()`.
-
-        RETURNS (unicode): The lowercase token text.
+        """RETURNS (unicode): The lowercase token text. Equivalent to
+            `Token.text.lower()`.
         """
         def __get__(self):
             return self.vocab.strings[self.c.lex.lower]
 
     property norm_:
-        """The token's norm, i.e. a normalised form of the token text.
-        Usually set in the language's tokenizer exceptions or norm exceptions.
-
-        RETURNS (unicode): The norm.
+        """RETURNS (unicode): The token's norm, i.e. a normalised form of the
+            token text. Usually set in the language's tokenizer exceptions or
+            norm exceptions.
         """
         def __get__(self):
             return self.vocab.strings[self.c.lex.norm]
 
     property shape_:
-        """Transform of the tokens's string, to show orthographic features.
-        For example, "Xxxx" or "dd".
-
-        RETURNS (unicode): The token shape.
+        """RETURNS (unicode): Transform of the tokens's string, to show
+            orthographic features. For example, "Xxxx" or "dd".
         """
         def __get__(self):
             return self.vocab.strings[self.c.lex.shape]
 
     property prefix_:
-        """A length-N substring from the start of the token. Defaults to `N=1`.
-
-        RETURNS (unicode): The token's prefix.
+        """RETURNS (unicode): A length-N substring from the start of the token.
+            Defaults to `N=1`.
         """
         def __get__(self):
             return self.vocab.strings[self.c.lex.prefix]
 
     property suffix_:
-        """A length-N substring from the end of the token. Defaults to `N=3`.
-
-        RETURNS (unicode): The token's suffix.
+        """RETURNS (unicode): A length-N substring from the end of the token.
+            Defaults to `N=3`.
         """
         def __get__(self):
             return self.vocab.strings[self.c.lex.suffix]
 
     property lang_:
-        """Language of the parent document's vocabulary, e.g. 'en'.
-
-        RETURNS (unicode): The language code.
+        """RETURNS (unicode): Language of the parent document's vocabulary,
+            e.g. 'en'.
         """
         def __get__(self):
             return self.vocab.strings[self.c.lex.lang]
 
     property lemma_:
-        """Base form of the word, with no inflectional suffixes.
-
-        RETURNS (unicode): Token lemma.
+        """RETURNS (unicode): The token lemma, i.e. the base form of the word,
+            with no inflectional suffixes.
         """
         def __get__(self):
             return self.vocab.strings[self.c.lemma]
+
         def __set__(self, unicode lemma_):
             self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
-        """Coarse-grained part-of-speech.
-
-        RETURNS (unicode): The part-of-speech tag.
-        """
+        """RETURNS (unicode): Coarse-grained part-of-speech tag."""
         def __get__(self):
             return parts_of_speech.NAMES[self.c.pos]
 
     property tag_:
-        """Fine-grained part-of-speech.
-
-        RETURNS (unicode): The part-of-speech tag.
-        """
+        """RETURNS (unicode): Fine-grained part-of-speech tag."""
         def __get__(self):
             return self.vocab.strings[self.c.tag]
+
         def __set__(self, tag):
             self.tag = self.vocab.strings.add(tag)
 
     property dep_:
-        """Syntactic dependency relation.
-
-        RETURNS (unicode): The dependency label.
-        """
+        """RETURNS (unicode): The syntactic dependency label."""
         def __get__(self):
             return self.vocab.strings[self.c.dep]
+
         def __set__(self, unicode label):
             self.c.dep = self.vocab.strings.add(label)
 
     property is_oov:
-        """Is the token out-of-vocabulary?
-
-        RETURNS (bool): Whether the token is out-of-vocabulary.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)
+        """RETURNS (bool): Whether the token is out-of-vocabulary."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_OOV)
 
     property is_stop:
-        """Is the token part of a "stop list"? (defined by the language data)
-
-        RETURNS (bool): Whether the token is a stop word.
+        """RETURNS (bool): Whether the token is a stop word, i.e. part of a
+            "stop list" defined by the language data.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_STOP)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_STOP)
 
     property is_alpha:
-        """Does the token consist of alphabetic characters? Equivalent to
-        `token.text.isalpha()`.
-
-        RETURNS (bool): Whether the token consists of alpha characters.
+        """RETURNS (bool): Whether the token consists of alpha characters.
+            Equivalent to `token.text.isalpha()`.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_ALPHA)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_ALPHA)
 
     property is_ascii:
-        """Does the token consist of ASCII characters? Equivalent to
-        `[any(ord(c) >= 128 for c in token.text)]`.
-
-        RETURNS (bool): Whether the token consists of ASCII characters.
+        """RETURNS (bool): Whether the token consists of ASCII characters.
+            Equivalent to `[any(ord(c) >= 128 for c in token.text)]`.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_ASCII)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_ASCII)
 
     property is_digit:
-        """Does the token consist of digits? Equivalent to
-        `token.text.isdigit()`.
-
-        RETURNS (bool): Whether the token consists of digits.
+        """RETURNS (bool): Whether the token consists of digits. Equivalent to
+            `token.text.isdigit()`.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_DIGIT)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_DIGIT)
 
     property is_lower:
-        """Is the token in lowercase? Equivalent to `token.text.islower()`.
-
-        RETURNS (bool): Whether the token is in lowercase.
+        """RETURNS (bool): Whether the token is in lowercase. Equivalent to
+            `token.text.islower()`.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_LOWER)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_LOWER)
 
     property is_upper:
-        """Is the token in uppercase? Equivalent to `token.text.isupper()`.
-
-        RETURNS (bool): Whether the token is in uppercase.
+        """RETURNS (bool): Whether the token is in uppercase. Equivalent to
+            `token.text.isupper()`
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_UPPER)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_UPPER)
 
     property is_title:
-        """Is the token in titlecase? Equivalent to `token.text.istitle()`.
-
-        RETURNS (bool): Whether the token is in titlecase.
+        """RETURNS (bool): Whether the token is in titlecase. Equivalent to
+            `token.text.istitle()`.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_TITLE)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_TITLE)
 
     property is_punct:
-        """Is the token punctuation?
-
-        RETURNS (bool): Whether the token is punctuation.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_PUNCT)
+        """RETURNS (bool): Whether the token is punctuation."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_PUNCT)
 
     property is_space:
-        """Does the token consist of whitespace characters? Equivalent to
-        `token.text.isspace()`.
-
-        RETURNS (bool): Whether the token consists of whitespace characters.
+        """RETURNS (bool): Whether the token consists of whitespace characters.
+            Equivalent to `token.text.isspace()`.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_SPACE)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_SPACE)
 
     property is_bracket:
-        """Is the token a bracket?
-
-        RETURNS (bool): Whether the token is a bracket.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_BRACKET)
+        """RETURNS (bool): Whether the token is a bracket."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_BRACKET)
 
     property is_quote:
-        """Is the token a quotation mark?
-
-        RETURNS (bool): Whether the token is a quotation mark.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_QUOTE)
+        """RETURNS (bool): Whether the token is a quotation mark."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_QUOTE)
 
     property is_left_punct:
-        """Is the token a left punctuation mark, e.g. "("?
-
-        RETURNS (bool): Whether the token is a left punctuation mark.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
+        """RETURNS (bool): Whether the token is a left punctuation mark."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
 
     property is_right_punct:
-        """Is the token a left punctuation mark, e.g. "("?
-
-        RETURNS (bool): Whether the token is a left punctuation mark.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
+        """RETURNS (bool): Whether the token is a left punctuation mark."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
 
     property like_url:
-        """Does the token resemble a URL?
-
-        RETURNS (bool): Whether the token resembles a URL.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_URL)
+        """RETURNS (bool): Whether the token resembles a URL."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, LIKE_URL)
 
     property like_num:
-        """Does the token represent a number? e.g. "10.9", "10", "ten", etc.
-
-        RETURNS (bool): Whether the token resembles a number.
+        """RETURNS (bool): Whether the token resembles a number, e.g. "10.9",
+            "10", "ten", etc.
         """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_NUM)
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, LIKE_NUM)
 
     property like_email:
-        """Does the token resemble an email address?
-
-        RETURNS (bool): Whether the token resembles an email address.
-        """
-        def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)
+        """RETURNS (bool): Whether the token resembles an email address."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)

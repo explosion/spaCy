@@ -128,14 +128,17 @@ cdef class Span:
 
     @property
     def _(self):
+        """User space for adding custom attribute extensions."""
         return Underscore(Underscore.span_extensions, self,
                           start=self.start_char, end=self.end_char)
 
     def as_doc(self):
-        '''Create a Doc object view of the Span's data.
+        # TODO: fix
+        """Create a `Doc` object view of the Span's data. This is mostly
+        useful for C-typed interfaces.
 
-        This is mostly useful for C-typed interfaces.
-        '''
+        RETURNS (Doc): The `Doc` view of the span.
+        """
         cdef Doc doc = Doc(self.doc.vocab)
         doc.length = self.end-self.start
         doc.c = &self.doc.c[self.start]
@@ -259,10 +262,7 @@ cdef class Span:
             self.end = end + 1
 
     property sent:
-        """The sentence span that this span is a part of.
-
-        RETURNS (Span): The sentence span that the span is a part of.
-        """
+        """RETURNS (Span): The sentence span that the span is a part of."""
         def __get__(self):
             if 'sent' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['sent'](self)
@@ -275,13 +275,10 @@ cdef class Span:
                 n += 1
                 if n >= self.doc.length:
                     raise RuntimeError
-            return self.doc[root.l_edge : root.r_edge + 1]
+            return self.doc[root.l_edge:root.r_edge + 1]
 
     property has_vector:
-        """A boolean value indicating whether a word vector is associated with
-        the object.
-
-        RETURNS (bool): Whether a word vector is associated with the object.
+        """RETURNS (bool): Whether a word vector is associated with the object.
         """
         def __get__(self):
             if 'has_vector' in self.doc.user_span_hooks:
@@ -303,10 +300,7 @@ cdef class Span:
             return self._vector
 
     property vector_norm:
-        """The L2 norm of the document's vector representation.
-
-        RETURNS (float): The L2 norm of the vector representation.
-        """
+        """RETURNS (float): The L2 norm of the vector representation."""
         def __get__(self):
             if 'vector_norm' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
@@ -320,7 +314,9 @@ cdef class Span:
             return self._vector_norm
 
     property sentiment:
-        # TODO: docstring
+        """RETURNS (float): A scalar value indicating the positivity or
+            negativity of the span.
+        """
         def __get__(self):
             if 'sentiment' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['sentiment'](self)
@@ -328,10 +324,7 @@ cdef class Span:
                 return sum([token.sentiment for token in self]) / len(self)
 
     property text:
-        """A unicode representation of the span text.
-
-        RETURNS (unicode): The original verbatim text of the span.
-        """
+        """RETURNS (unicode): The original verbatim text of the span."""
         def __get__(self):
             text = self.text_with_ws
             if self[-1].whitespace_:
@@ -364,10 +357,11 @@ cdef class Span:
                     "requires a statistical model to be installed and loaded. "
                     "For more info, see the "
                     "documentation: \n%s\n" % about.__docs_models__)
-            # Accumulate the result before beginning to iterate over it. This prevents
-            # the tokenisation from being changed out from under us during the iteration.
-            # The tricky thing here is that Span accepts its tokenisation changing,
-            # so it's okay once we have the Span objects. See Issue #375
+            # Accumulate the result before beginning to iterate over it. This
+            # prevents the tokenisation from being changed out from under us
+            # during the iteration. The tricky thing here is that Span accepts
+            # its tokenisation changing, so it's okay once we have the Span
+            # objects. See Issue #375
             spans = []
             cdef attr_t label
             for start, end, label in self.doc.noun_chunks_iterator(self):
@@ -459,7 +453,7 @@ cdef class Span:
         YIELDS (Token):A left-child of a token of the span.
         """
         def __get__(self):
-            for token in reversed(self): # Reverse, so we get tokens in order
+            for token in reversed(self):  # Reverse, so we get tokens in order
                 for left in token.lefts:
                     if left.i < self.start:
                         yield left
@@ -476,6 +470,20 @@ cdef class Span:
                     if right.i >= self.end:
                         yield right
 
+    property n_lefts:
+        """RETURNS (int): The number of leftward immediate children of the
+            span, in the syntactic dependency parse.
+        """
+        # TODO: implement
+        raise NotImplementedError()
+
+    property n_rights:
+        """RETURNS (int): The number of rightward immediate children of the
+            span, in the syntactic dependency parse.
+        """
+        # TODO: implement
+        raise NotImplementedError()
+
     property subtree:
         """Tokens that descend from tokens in the span, but fall outside it.
 
@@ -489,29 +497,21 @@ cdef class Span:
                 yield from word.subtree
 
     property ent_id:
-        """An (integer) entity ID.
-
-        RETURNS (uint64): The entity ID.
-        """
+        """RETURNS (uint64): The entity ID."""
         def __get__(self):
             return self.root.ent_id
 
         def __set__(self, hash_t key):
-            # TODO
             raise NotImplementedError(
                 "Can't yet set ent_id from Span. Vote for this feature on "
                 "the issue tracker: http://github.com/explosion/spaCy/issues")
 
     property ent_id_:
-        """A (string) entity ID. Usually assigned by patterns in the `Matcher`.
-
-        RETURNS (unicode): The entity ID.
-        """
+        """RETURNS (unicode): The (string) entity ID."""
         def __get__(self):
             return self.root.ent_id_
 
         def __set__(self, hash_t key):
-            # TODO
             raise NotImplementedError(
                 "Can't yet set ent_id_ from Span. Vote for this feature on the "
                 "issue tracker: http://github.com/explosion/spaCy/issues")
@@ -525,10 +525,7 @@ cdef class Span:
             return ''.join([t.orth_ for t in self]).strip()
 
     property lemma_:
-        """The span's lemma.
-
-        RETURNS (unicode): The span's lemma.
-        """
+        """RETURNS (unicode): The span's lemma."""
         def __get__(self):
             return ' '.join([t.lemma_ for t in self]).strip()
 
@@ -543,15 +540,12 @@ cdef class Span:
             return ''.join([t.text_with_ws.lower() for t in self]).strip()
 
     property string:
-        """Deprecated: Use Span.text instead."""
+        """Deprecated: Use Span.text_with_ws instead."""
         def __get__(self):
             return ''.join([t.text_with_ws for t in self])
 
     property label_:
-        """The span's label.
-
-        RETURNS (unicode): The span's label.
-        """
+        """RETURNS (unicode): The span's label."""
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 

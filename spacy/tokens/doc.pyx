@@ -326,7 +326,8 @@ cdef class Doc:
             if self._vector is not None:
                 return self._vector
             elif not len(self):
-                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                self._vector = numpy.zeros((self.vocab.vectors_length,),
+                                           dtype='f')
                 return self._vector
             elif self.has_vector:
                 vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
@@ -338,7 +339,8 @@ cdef class Doc:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:
-                return numpy.zeros((self.vocab.vectors_length,), dtype='float32')
+                return numpy.zeros((self.vocab.vectors_length,),
+                                   dtype='float32')
 
         def __set__(self, value):
             self._vector = value
@@ -424,7 +426,8 @@ cdef class Doc:
         def __set__(self, ents):
             # TODO:
             # 1. Allow negative matches
-            # 2. Ensure pre-set NERs are not over-written during statistical prediction
+            # 2. Ensure pre-set NERs are not over-written during statistical
+            #    prediction
             # 3. Test basic data-driven ORTH gazetteer
             # 4. Test more nuanced date and currency regex
             cdef int i
@@ -433,7 +436,7 @@ cdef class Doc:
                 # At this point we don't know whether the NER has run over the
                 # Doc. If the ent_iob is missing, leave it missing.
                 if self.c[i].ent_iob != 0:
-                    self.c[i].ent_iob = 2 # Means O. Non-O are set from ents.
+                    self.c[i].ent_iob = 2  # Means O. Non-O are set from ents.
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
@@ -574,18 +577,19 @@ cdef class Doc:
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
                        for id_ in py_attr_ids]
-        # Make an array from the attributes --- otherwise our inner loop is Python
-        # dict iteration.
+        # Make an array from the attributes --- otherwise our inner loop is
+        # Python dict iteration.
         attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
+        output = numpy.ndarray(shape=(self.length, len(attr_ids)),
+                               dtype=numpy.uint64)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
-
-    def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
+    def count_by(self, attr_id_t attr_id, exclude=None,
+                 PreshCounter counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
         `{attribute (int): count (ints)}` frequencies, keyed by the values of
         the given attribute ID.
@@ -708,7 +712,8 @@ cdef class Doc:
             elif (token_j.head == token_j) and (token_k.head == token_k):
                 lca_index = -1
             else:
-                lca_index = __pairwise_lca(token_j.head, token_k.head, lca_matrix)
+                lca_index = __pairwise_lca(token_j.head, token_k.head,
+                                           lca_matrix)
             lca_matrix[token_j.i][token_k.i] = lca_index
             lca_matrix[token_k.i][token_j.i] = lca_index
 
@@ -728,7 +733,7 @@ cdef class Doc:
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or `Path`-like objects.
+            it doesn't exist. Paths may be either strings or Path-like objects.
         """
         with path.open('wb') as file_:
             file_.write(self.to_bytes(**exclude))
@@ -751,7 +756,7 @@ cdef class Doc:
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
         """
-        array_head = [LENGTH,SPACY,TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE]
+        array_head = [LENGTH, SPACY, TAG, LEMMA, HEAD, DEP, ENT_IOB, ENT_TYPE]
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -794,7 +799,8 @@ cdef class Doc:
         # keys, we must have tuples. In values we just have to hope
         # users don't mind getting a list instead of a tuple.
         if 'user_data' not in exclude and 'user_data_keys' in msg:
-            user_data_keys = msgpack.loads(msg['user_data_keys'], use_list=False)
+            user_data_keys = msgpack.loads(msg['user_data_keys'],
+                                           use_list=False)
             user_data_values = msgpack.loads(msg['user_data_values'])
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
@@ -853,7 +859,8 @@ cdef class Doc:
                 "Doc.merge received %d non-keyword arguments. Expected either "
                 "3 arguments (deprecated), or 0 (use keyword arguments). "
                 "Arguments supplied:\n%s\n"
-                "Keyword arguments: %s\n" % (len(args), repr(args), repr(attributes)))
+                "Keyword arguments: %s\n" % (len(args), repr(args),
+                                             repr(attributes)))
 
         # More deprecated attribute handling =/
         if 'label' in attributes:
