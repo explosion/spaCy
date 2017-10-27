@@ -1,5 +1,6 @@
+# coding: utf8
 from __future__ import unicode_literals
-from libc.stdint cimport int32_t, uint64_t
+
 import numpy
 from collections import OrderedDict
 import msgpack
@@ -9,23 +10,20 @@ cimport numpy as np
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
 
-from .typedefs cimport attr_t
 from .strings cimport StringStore
-from . import util
 from .compat import basestring_, path2str
+from . import util
 
 
 cdef class Vectors:
-    '''Store, save and load word vectors.
+    """Store, save and load word vectors.
 
     Vectors data is kept in the vectors.data attribute, which should be an
-    instance of numpy.ndarray (for CPU vectors)
-    or cupy.ndarray (for GPU vectors).
-
-    vectors.key2row is a dictionary mapping word hashes to rows
-    in the vectors.data table. The array `vectors.keys` keeps
-    the keys in order, such that keys[vectors.key2row[key]] == key.
-    '''
+    instance of numpy.ndarray (for CPU vectors) or cupy.ndarray
+    (for GPU vectors). `vectors.key2row` is a dictionary mapping word hashes to
+    rows in the vectors.data table. The array `vectors.keys` keeps the keys in
+    order, such that `keys[vectors.key2row[key]] == key`.
+    """
     cdef public object data
     cdef readonly StringStore strings
     cdef public object key2row
@@ -33,6 +31,16 @@ cdef class Vectors:
     cdef public int i
 
     def __init__(self, strings, width=0, data=None):
+        """Create a new vector store. To keep the vector table empty, pass
+        `width=0`. You can also create the vector table and add vectors one by
+        one, or set the vector values directly on initialisation.
+
+        strings (StringStore or list): List of strings or StringStore that maps
+            strings to hash values, and vice versa.
+        width (int): Number of dimensions.
+        data (numpy.ndarray): The vector data.
+        RETURNS (Vectors): The newly created object.
+        """
         if isinstance(strings, StringStore):
             self.strings = strings
         else:
@@ -55,11 +63,13 @@ cdef class Vectors:
         return (Vectors, (self.strings, self.data))
 
     def __getitem__(self, key):
-        '''Get a vector by key. If key is a string, it is hashed
-        to an integer ID using the vectors.strings table.
+        """Get a vector by key. If key is a string, it is hashed to an integer
+        ID using the vectors.strings table. If the integer key is not found in
+        the table, a KeyError is raised.
 
-        If the integer key is not found in the table, a KeyError is raised.
-        '''
+        key (unicode / int): The key to get the vector for.
+        RETURNS (numpy.ndarray): The vector for the key.
+        """
         if isinstance(key, basestring):
             key = self.strings[key]
         i = self.key2row[key]
@@ -69,30 +79,47 @@ cdef class Vectors:
             return self.data[i]
 
     def __setitem__(self, key, vector):
-        '''Set a vector for the given key. If key is a string, it is hashed
+        """Set a vector for the given key. If key is a string, it is hashed
         to an integer ID using the vectors.strings table.
-        '''
+
+        key (unicode / int): The key to set the vector for.
+        vector (numpy.ndarray): The vector to set.
+        """
         if isinstance(key, basestring):
             key = self.strings.add(key)
         i = self.key2row[key]
         self.data[i] = vector
 
     def __iter__(self):
-        '''Yield vectors from the table.'''
+        """Yield vectors from the table.
+
+        YIELDS (numpy.ndarray): A vector.
+        """
         yield from self.data
 
     def __len__(self):
-        '''Return the number of vectors that have been assigned.'''
+        """Return the number of vectors that have been assigned.
+
+        RETURNS (int): The number of vectors in the data.
+        """
         return self.i
 
     def __contains__(self, key):
-        '''Check whether a key has a vector entry in the table.'''
+        """Check whether a key has a vector entry in the table.
+
+        key (unicode / int): The key to check.
+        RETURNS (bool): Whether the key has a vector entry.
+        """
         if isinstance(key, basestring_):
             key = self.strings[key]
         return key in self.key2row
 
     def add(self, key, vector=None):
-        '''Add a key to the table, optionally setting a vector value as well.'''
+        """Add a key to the table, optionally setting a vector value as well.
+
+        key (unicode / int): The key to add.
+        vector (numpy.ndarray): An optional vector to add.
+        """
         if isinstance(key, basestring_):
             key = self.strings.add(key)
         if key not in self.key2row:
@@ -110,24 +137,36 @@ cdef class Vectors:
         return i
 
     def items(self):
-        '''Iterate over (string key, vector) pairs, in order.'''
+        """Iterate over `(string key, vector)` pairs, in order.
+
+        YIELDS (tuple): A key/vector pair.
+        """
         for i, key in enumerate(self.keys):
             string = self.strings[key]
             yield string, self.data[i]
 
     @property
     def shape(self):
+        """Get `(rows, dims)` tuples of number of rows and number of dimensions
+        in the vector table.
+
+        RETURNS (tuple): A `(rows, dims)` pair.
+        """
         return self.data.shape
 
     def most_similar(self, key):
+        # TODO: implement
         raise NotImplementedError
 
     def from_glove(self, path):
-        '''Load GloVe vectors from a directory. Assumes binary format,
+        """Load GloVe vectors from a directory. Assumes binary format,
         that the vocab is in a vocab.txt, and that vectors are named
         vectors.{size}.[fd].bin, e.g. vectors.128.f.bin for 128d float32
         vectors, vectors.300.d.bin for 300d float64 (double) vectors, etc.
-        By default GloVe outputs 64-bit vectors.'''
+        By default GloVe outputs 64-bit vectors.
+
+        path (unicode / Path): The path to load the GloVe vectors from.
+        """
         path = util.ensure_path(path)
         for name in path.iterdir():
             if name.parts[-1].startswith('vectors'):
@@ -150,9 +189,15 @@ cdef class Vectors:
             self.data
 
     def to_disk(self, path, **exclude):
+        """Save the current state to a directory.
+
+        path (unicode / Path): A path to a directory, which will be created if
+            it doesn't exists. Either a string or a Path-like object.
+        """
         xp = get_array_module(self.data)
         if xp is numpy:
-            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
+            save_array = lambda arr, file_: xp.save(file_, arr,
+                                                    allow_pickle=False)
         else:
             save_array = lambda arr, file_: xp.save(file_, arr)
         serializers = OrderedDict((
@@ -162,6 +207,12 @@ cdef class Vectors:
         return util.to_disk(path, serializers, exclude)
 
     def from_disk(self, path, **exclude):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode / Path): Directory path, string or Path-like object.
+        RETURNS (Vectors): The modified object.
+        """
         def load_keys(path):
             if path.exists():
                 self.keys = numpy.load(path2str(path))
@@ -182,6 +233,11 @@ cdef class Vectors:
         return self
 
     def to_bytes(self, **exclude):
+        """Serialize the current state to a binary string.
+
+        **exclude: Named attributes to prevent from being serialized.
+        RETURNS (bytes): The serialized form of the `Vectors` object.
+        """
         def serialize_weights():
             if hasattr(self.data, 'to_bytes'):
                 return self.data.to_bytes()
@@ -194,6 +250,12 @@ cdef class Vectors:
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, data, **exclude):
+        """Load state from a binary string.
+
+        data (bytes): The data to load from.
+        **exclude: Named attributes to prevent from being loaded.
+        RETURNS (Vectors): The `Vectors` object.
+        """
         def deserialize_weights(b):
             if hasattr(self.data, 'from_bytes'):
                 self.data.from_bytes()
