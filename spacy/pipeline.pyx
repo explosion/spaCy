@@ -3,26 +3,17 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from thinc.api import chain, layerize, with_getitem
 import numpy
 cimport numpy as np
 import cytoolz
-import util
 from collections import OrderedDict
 import ujson
 import msgpack
 
-from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, SELU
-from thinc.i2v import HashEmbed
-from thinc.t2v import Pooling, max_pool, mean_pool, sum_pool
-from thinc.t2t import ExtractWindow, ParametricAttention
-from thinc.misc import Residual
-from thinc.misc import BatchNorm as BN
-from thinc.misc import LayerNorm as LN
-
+from thinc.api import chain
+from thinc.v2v import Softmax
+from thinc.t2v import Pooling, max_pool, mean_pool
 from thinc.neural.util import to_categorical
-
 from thinc.neural._classes.difference import Siamese, CauchySimilarity
 
 from .tokens.doc cimport Doc
@@ -30,29 +21,23 @@ from .syntax.nn_parser cimport Parser
 from .syntax import nonproj
 from .syntax.ner cimport BiluoPushDown
 from .syntax.arc_eager cimport ArcEager
-from .tagger import Tagger
-from .syntax.stateclass cimport StateClass
-from .gold cimport GoldParse
 from .morphology cimport Morphology
 from .vocab cimport Vocab
 from .syntax import nonproj
 from .compat import json_dumps
 
-from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
-from ._ml import rebatch, Tok2Vec, flatten
-from ._ml import build_text_classifier, build_tagger_model
-from ._ml import link_vectors_to_models
+from .attrs import POS
 from .parts_of_speech import X
+from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
+from ._ml import link_vectors_to_models
+from . import util
 
 
 class SentenceSegmenter(object):
     """A simple spaCy hook, to allow custom sentence boundary detection logic
-    (that doesn't require the dependency parse).
-
-    To change the sentence boundary detection strategy, pass a generator
-    function `strategy` on initialization, or assign a new strategy to
-    the .strategy attribute.
-
+    (that doesn't require the dependency parse). To change the sentence
+    boundary detection strategy, pass a generator function `strategy` on
+    initialization, or assign a new strategy to the .strategy attribute.
     Sentence detection strategies should be generators that take `Doc` objects
     and yield `Span` objects for each sentence.
     """
@@ -74,16 +59,20 @@ class SentenceSegmenter(object):
         seen_period = False
         for i, word in enumerate(doc):
             if seen_period and not word.is_punct:
-                yield doc[start : word.i]
+                yield doc[start:word.i]
                 start = word.i
                 seen_period = False
             elif word.text in ['.', '!', '?']:
                 seen_period = True
         if start < len(doc):
-            yield doc[start : len(doc)]
+            yield doc[start:len(doc)]
 
 
 class Pipe(object):
+    """This class is not instantiated directly. Components inherit from it, and
+    it defines the interface that components should follow to function as
+    components in a spaCy analysis pipeline.
+    """
     name = None
 
     @classmethod
@@ -149,8 +138,7 @@ class Pipe(object):
         link_vectors_to_models(self.vocab)
 
     def use_params(self, params):
-        """Modify the pipe's model, to use the given parameter values.
-        """
+        """Modify the pipe's model, to use the given parameter values."""
         with self.model.use_params(params):
             yield
 
@@ -235,8 +223,8 @@ class Tensorizer(Pipe):
         """Construct a new statistical model. Weights are not allocated on
         initialisation.
 
-        vocab (Vocab): A `Vocab` instance. The model must share the same `Vocab`
-            instance with the `Doc` objects it will process.
+        vocab (Vocab): A `Vocab` instance. The model must share the same
+            `Vocab` instance with the `Doc` objects it will process.
         model (Model): A `Model` instance or `True` allocate one later.
         **cfg: Config parameters.
 
@@ -280,7 +268,7 @@ class Tensorizer(Pipe):
         """Return a single tensor for a batch of documents.
 
         docs (iterable): A sequence of `Doc` objects.
-        RETURNS (object): Vector representations for each token in the documents.
+        RETURNS (object): Vector representations for each token in the docs.
         """
         tokvecs = self.model(docs)
         return tokvecs
@@ -289,7 +277,7 @@ class Tensorizer(Pipe):
         """Set the tensor attribute for a batch of documents.
 
         docs (iterable): A sequence of `Doc` objects.
-        tokvecs (object): Vector representation for each token in the documents.
+        tokvecs (object): Vector representation for each token in the docs.
         """
         for doc, tokvecs in zip(docs, tokvecses):
             assert tokvecs.shape[0] == len(doc)
@@ -328,12 +316,14 @@ class Tensorizer(Pipe):
 
 class Tagger(Pipe):
     name = 'tagger'
+
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
-        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
+        self.cfg.setdefault('pretrained_dims',
+                            self.vocab.vectors.data.shape[1])
 
     def __call__(self, doc):
         tags = self.predict([doc])
@@ -353,8 +343,7 @@ class Tagger(Pipe):
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
-        guesses = self.model.ops.unflatten(guesses,
-                    [len(d) for d in docs])
+        guesses = self.model.ops.unflatten(guesses, [len(d) for d in docs])
         return guesses
 
     def set_annotations(self, docs, batch_tag_ids):
@@ -387,8 +376,8 @@ class Tagger(Pipe):
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
-        tag_index = {tag: i for i, tag in enumerate(self.vocab.morphology.tag_names)}
-
+        tag_index = {tag: i
+                     for i, tag in enumerate(self.vocab.morphology.tag_names)}
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
@@ -443,17 +432,18 @@ class Tagger(Pipe):
             serialize['model'] = self.model.to_bytes
         serialize['vocab'] = self.vocab.to_bytes
 
-        serialize['tag_map'] = lambda: msgpack.dumps(self.vocab.morphology.tag_map,
-                                                     use_bin_type=True,
-                                                     encoding='utf8')
+        serialize['tag_map'] = lambda: msgpack.dumps(
+            self.vocab.morphology.tag_map, use_bin_type=True, encoding='utf8')
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width',
-                        self.cfg.get('token_vector_width', 128))
-                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
+                token_vector_width = util.env_opt(
+                    'token_vector_width',
+                    self.cfg.get('token_vector_width', 128))
+                self.model = self.Model(self.vocab.morphology.n_tags,
+                                        **self.cfg)
             self.model.from_bytes(b)
 
         def load_tag_map(b):
@@ -509,11 +499,11 @@ class Tagger(Pipe):
 
 
 class MultitaskObjective(Tagger):
-    '''Assist training of a parser or tagger, by training a side-objective.
-
-    Experimental
-    '''
+    """Experimental: Assist training of a parser or tagger, by training a
+    side-objective.
+    """
     name = 'nn_labeller'
+
     def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
         self.vocab = vocab
         self.model = model
@@ -530,12 +520,12 @@ class MultitaskObjective(Tagger):
         elif hasattr(target, '__call__'):
             self.make_label = target
         else:
-            raise ValueError(
-                "MultitaskObjective target should be function or one of "
-                "['dep', 'tag', 'ent', 'dep_tag_offset', 'ent_tag']")
+            raise ValueError("MultitaskObjective target should be function or "
+                             "one of: dep, tag, ent, dep_tag_offset, ent_tag.")
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
-        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
+        self.cfg.setdefault('pretrained_dims',
+                            self.vocab.vectors.data.shape[1])
 
     @property
     def labels(self):
@@ -623,20 +613,19 @@ class MultitaskObjective(Tagger):
 
 class SimilarityHook(Pipe):
     """
-    Experimental
+    Experimental: A pipeline component to install a hook for supervised
+    similarity into `Doc` objects. Requires a `Tensorizer` to pre-process
+    documents. The similarity model can be any object obeying the Thinc `Model`
+    interface. By default, the model concatenates the elementwise mean and
+    elementwise max of the two tensors, and compares them using the
+    Cauchy-like similarity function from Chen (2013):
 
-    A pipeline component to install a hook for supervised similarity into
-    Doc objects. Requires a Tensorizer to pre-process documents. The similarity
-    model can be any object obeying the Thinc Model interface. By default,
-    the model concatenates the elementwise mean and elementwise max of the two
-    tensors, and compares them using the Cauchy-like similarity function
-    from Chen (2013):
-
-        similarity = 1. / (1. + (W * (vec1-vec2)**2).sum())
+        >>> similarity = 1. / (1. + (W * (vec1-vec2)**2).sum())
 
     Where W is a vector of dimension weights, initialized to 1.
     """
     name = 'similarity'
+
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
@@ -662,8 +651,7 @@ class SimilarityHook(Pipe):
         sims, bp_sims = self.model.begin_update(doc1_doc2, drop=drop)
 
     def begin_training(self, _=tuple(), pipeline=None):
-        """
-        Allocate model, using width from tensorizer in pipeline.
+        """Allocate model, using width from tensorizer in pipeline.
 
         gold_tuples (iterable): Gold-standard training data.
         pipeline (list): The pipeline the model is part of.
@@ -763,12 +751,14 @@ cdef class DependencyParser(Parser):
         for target in []:
             labeller = MultitaskObjective(self.vocab, target=target)
             tok2vec = self.model[0]
-            labeller.begin_training(gold_tuples, pipeline=pipeline, tok2vec=tok2vec)
+            labeller.begin_training(gold_tuples, pipeline=pipeline,
+                                    tok2vec=tok2vec)
             pipeline.append(labeller)
             self._multitasks.append(labeller)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.moves, self.model), None, None)
+        return (DependencyParser, (self.vocab, self.moves, self.model),
+                None, None)
 
 
 cdef class EntityRecognizer(Parser):
@@ -781,12 +771,14 @@ cdef class EntityRecognizer(Parser):
         for target in []:
             labeller = MultitaskObjective(self.vocab, target=target)
             tok2vec = self.model[0]
-            labeller.begin_training(gold_tuples, pipeline=pipeline, tok2vec=tok2vec)
+            labeller.begin_training(gold_tuples, pipeline=pipeline,
+                                    tok2vec=tok2vec)
             pipeline.append(labeller)
             self._multitasks.append(labeller)
 
     def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.moves, self.model), None, None)
+        return (EntityRecognizer, (self.vocab, self.moves, self.model),
+                None, None)
 
 
 __all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer']
