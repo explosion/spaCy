@@ -49,9 +49,8 @@ from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from .._ml import Tok2Vec, doc2feats, rebatch
-from .._ml import Residual, drop_layer, flatten
+from .._ml import Residual, flatten
 from .._ml import link_vectors_to_models
-from .._ml import HistoryFeatures
 from ..compat import json_dumps, copy_array
 
 from .stateclass cimport StateClass
@@ -77,7 +76,7 @@ def set_debug(val):
 
 
 cdef class precompute_hiddens:
-    '''Allow a model to be "primed" by pre-computing input features in bulk.
+    """Allow a model to be "primed" by pre-computing input features in bulk.
 
     This is used for the parser, where we want to take a batch of documents,
     and compute vectors for each (token, position) pair. These vectors can then
@@ -92,7 +91,7 @@ cdef class precompute_hiddens:
     so we can save the factor k. This also gives a nice CPU/GPU division:
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
-    '''
+    """
     cdef int nF, nO, nP
     cdef bint _is_synchronized
     cdef public object ops
@@ -280,23 +279,19 @@ cdef class Parser:
         return (tok2vec, lower, upper), cfg
 
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
-        """
-        Create a Parser.
+        """Create a Parser.
 
-        Arguments:
-            vocab (Vocab):
-                The vocabulary object. Must be shared with documents to be processed.
-                The value is set to the .vocab attribute.
-            moves (TransitionSystem):
-                Defines how the parse-state is created, updated and evaluated.
-                The value is set to the .moves attribute unless True (default),
-                in which case a new instance is created with Parser.Moves().
-            model (object):
-                Defines how the parse-state is created, updated and evaluated.
-                The value is set to the .model attribute unless True (default),
-                in which case a new instance is created with Parser.Model().
-            **cfg:
-                Arbitrary configuration parameters. Set to the .cfg attribute
+        vocab (Vocab): The vocabulary object. Must be shared with documents
+            to be processed. The value is set to the `.vocab` attribute.
+        moves (TransitionSystem): Defines how the parse-state is created,
+            updated and evaluated. The value is set to the .moves attribute
+            unless True (default), in which case a new instance is created with
+            `Parser.Moves()`.
+        model (object): Defines how the parse-state is created, updated and
+            evaluated. The value is set to the .model attribute unless True
+            (default), in which case a new instance is created with
+            `Parser.Model()`.
+        **cfg: Arbitrary configuration parameters. Set to the `.cfg` attribute
         """
         self.vocab = vocab
         if moves is True:
@@ -322,13 +317,10 @@ cdef class Parser:
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc doc, beam_width=None, beam_density=None):
-        """
-        Apply the parser or entity recognizer, setting the annotations onto the Doc object.
+        """Apply the parser or entity recognizer, setting the annotations onto
+        the `Doc` object.
 
-        Arguments:
-            doc (Doc): The document to be processed.
-        Returns:
-            None
+        doc (Doc): The document to be processed.
         """
         if beam_width is None:
             beam_width = self.cfg.get('beam_width', 1)
@@ -350,16 +342,13 @@ cdef class Parser:
 
     def pipe(self, docs, int batch_size=256, int n_threads=2,
              beam_width=None, beam_density=None):
-        """
-        Process a stream of documents.
+        """Process a stream of documents.
 
-        Arguments:
-            stream: The sequence of documents to process.
-            batch_size (int):
-                The number of documents to accumulate into a working set.
-            n_threads (int):
-                The number of threads with which to work on the buffer in parallel.
-        Yields (Doc): Documents, in order.
+        stream: The sequence of documents to process.
+        batch_size (int): Number of documents to accumulate into a working set.
+        n_threads (int): The number of threads with which to work on the buffer
+            in parallel.
+        YIELDS (Doc): Documents, in order.
         """
         if beam_width is None:
             beam_width = self.cfg.get('beam_width', 1)
