@@ -24,7 +24,6 @@ MOD_NAMES = [
     'spacy.vocab',
     'spacy.attrs',
     'spacy.morphology',
-    'spacy.tagger',
     'spacy.pipeline',
     'spacy.syntax.stateclass',
     'spacy.syntax._state',

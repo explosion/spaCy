@@ -4,17 +4,15 @@ from __future__ import unicode_literals
 
 from libc.string cimport memset
 
-from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT, SPACE
 from .attrs cimport POS, IS_SPACE
+from .attrs import LEMMA, intify_attrs
+from .parts_of_speech cimport SPACE
 from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
-from .attrs import LEMMA, intify_attrs
 
 
 def _normalize_props(props):
-    """
-    Transform deprecated string keys to correct names.
-    """
+    """Transform deprecated string keys to correct names."""
     out = {}
     for key, value in props.items():
         if key == POS:
@@ -77,7 +75,8 @@ cdef class Morphology:
     cdef int assign_untagged(self, TokenC* token) except -1:
         """Set morphological attributes on a token without a POS tag. Uses
         the lemmatizer's lookup() method, which looks up the string in the
-        table provided by the language data as lemma_lookup (if available)."""
+        table provided by the language data as lemma_lookup (if available).
+        """
         if token.lemma == 0:
             orth_str = self.strings[token.lex.orth]
             lemma = self.lemmatizer.lookup(orth_str)
@@ -95,11 +94,10 @@ cdef class Morphology:
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1:
         if tag_id > self.n_tags:
             raise ValueError("Unknown tag ID: %s" % tag_id)
-        # TODO: It's pretty arbitrary to put this logic here. I guess the justification
-        # is that this is where the specific word and the tag interact. Still,
-        # we should have a better way to enforce this rule, or figure out why
-        # the statistical model fails.
-        # Related to Issue #220
+        # TODO: It's pretty arbitrary to put this logic here. I guess the
+        # justification is that this is where the specific word and the tag
+        # interact. Still, we should have a better way to enforce this rule, or
+        # figure out why the statistical model fails. Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
             tag_id = self.reverse_index[self.strings.add('_SP')]
         rich_tag = self.rich_tags[tag_id]
@@ -123,14 +121,13 @@ cdef class Morphology:
         else:
             flags[0] &= ~(one << flag_id)
 
-    def add_special_case(self, unicode tag_str, unicode orth_str, attrs, force=False):
-        """
-        Add a special-case rule to the morphological analyser. Tokens whose
+    def add_special_case(self, unicode tag_str, unicode orth_str, attrs,
+                         force=False):
+        """Add a special-case rule to the morphological analyser. Tokens whose
         tag and orth match the rule will receive the specified properties.
 
-        Arguments:
-            tag (unicode): The part-of-speech tag to key the exception.
-            orth (unicode): The word-form to key the exception.
+        tag (unicode): The part-of-speech tag to key the exception.
+        orth (unicode): The word-form to key the exception.
         """
         self.exc[(tag_str, orth_str)] = dict(attrs)
         tag = self.strings.add(tag_str)
@@ -144,10 +141,9 @@ cdef class Morphology:
         elif force:
             memset(cached, 0, sizeof(cached[0]))
         else:
-            msg = ("Conflicting morphology exception for (%s, %s). Use force=True "
-                   "to overwrite.")
-            msg = msg % (tag_str, orth_str)
-            raise ValueError(msg)
+            raise ValueError(
+                "Conflicting morphology exception for (%s, %s). Use "
+                "force=True to overwrite." % (tag_str, orth_str))
 
         cached.tag = rich_tag
         # TODO: Refactor this to take arbitrary attributes.
@@ -218,7 +214,7 @@ IDS = {
     "Definite_two": Definite_two,
     "Definite_def": Definite_def,
     "Definite_red": Definite_red,
-    "Definite_cons": Definite_cons, # U20
+    "Definite_cons": Definite_cons,  # U20
     "Definite_ind": Definite_ind,
     "Degree_cmp": Degree_cmp,
     "Degree_comp": Degree_comp,
@@ -227,7 +223,7 @@ IDS = {
     "Degree_sup": Degree_sup,
     "Degree_abs": Degree_abs,
     "Degree_com": Degree_com,
-    "Degree_dim ": Degree_dim, # du
+    "Degree_dim ": Degree_dim,  # du
     "Gender_com": Gender_com,
     "Gender_fem": Gender_fem,
     "Gender_masc": Gender_masc,
@@ -242,15 +238,15 @@ IDS = {
     "Negative_neg": Negative_neg,
     "Negative_pos": Negative_pos,
     "Negative_yes": Negative_yes,
-    "Polarity_neg": Polarity_neg, # U20
-    "Polarity_pos": Polarity_pos, # U20
+    "Polarity_neg": Polarity_neg,  # U20
+    "Polarity_pos": Polarity_pos,  # U20
     "Number_com": Number_com,
     "Number_dual": Number_dual,
     "Number_none": Number_none,
     "Number_plur": Number_plur,
     "Number_sing": Number_sing,
-    "Number_ptan ": Number_ptan, # bg
-    "Number_count ": Number_count, # bg
+    "Number_ptan ": Number_ptan,  # bg
+    "Number_count ": Number_count,  # bg
     "NumType_card": NumType_card,
     "NumType_dist": NumType_dist,
     "NumType_frac": NumType_frac,
@@ -276,7 +272,7 @@ IDS = {
     "PronType_rel": PronType_rel,
     "PronType_tot": PronType_tot,
     "PronType_clit": PronType_clit,
-    "PronType_exc ": PronType_exc, # es, ca, it, fa,
+    "PronType_exc ": PronType_exc,  # es, ca, it, fa,
     "Reflex_yes": Reflex_yes,
     "Tense_fut": Tense_fut,
     "Tense_imp": Tense_imp,
@@ -292,19 +288,19 @@ IDS = {
     "VerbForm_partPres": VerbForm_partPres,
     "VerbForm_sup": VerbForm_sup,
     "VerbForm_trans": VerbForm_trans,
-    "VerbForm_conv": VerbForm_conv, # U20
-    "VerbForm_gdv ": VerbForm_gdv, # la,
+    "VerbForm_conv": VerbForm_conv,  # U20
+    "VerbForm_gdv ": VerbForm_gdv,  # la,
     "Voice_act": Voice_act,
     "Voice_cau": Voice_cau,
     "Voice_pass": Voice_pass,
-    "Voice_mid ": Voice_mid, # gkc,
-    "Voice_int ": Voice_int, # hb,
-    "Abbr_yes ": Abbr_yes, # cz, fi, sl, U,
-    "AdpType_prep ": AdpType_prep, # cz, U,
-    "AdpType_post ": AdpType_post, # U,
-    "AdpType_voc ": AdpType_voc, # cz,
-    "AdpType_comprep ": AdpType_comprep, # cz,
-    "AdpType_circ ": AdpType_circ, # U,
+    "Voice_mid ": Voice_mid,  # gkc,
+    "Voice_int ": Voice_int,  # hb,
+    "Abbr_yes ": Abbr_yes,  # cz, fi, sl, U,
+    "AdpType_prep ": AdpType_prep,  # cz, U,
+    "AdpType_post ": AdpType_post,  # U,
+    "AdpType_voc ": AdpType_voc,  # cz,
+    "AdpType_comprep ": AdpType_comprep,  # cz,
+    "AdpType_circ ": AdpType_circ,  # U,
     "AdvType_man": AdvType_man,
     "AdvType_loc": AdvType_loc,
     "AdvType_tim": AdvType_tim,
@@ -314,122 +310,122 @@ IDS = {
     "AdvType_sta": AdvType_sta,
     "AdvType_ex": AdvType_ex,
     "AdvType_adadj": AdvType_adadj,
-    "ConjType_oper ": ConjType_oper, # cz, U,
-    "ConjType_comp ": ConjType_comp, # cz, U,
-    "Connegative_yes ": Connegative_yes, # fi,
-    "Derivation_minen ": Derivation_minen, # fi,
-    "Derivation_sti ": Derivation_sti, # fi,
-    "Derivation_inen ": Derivation_inen, # fi,
-    "Derivation_lainen ": Derivation_lainen, # fi,
-    "Derivation_ja ": Derivation_ja, # fi,
-    "Derivation_ton ": Derivation_ton, # fi,
-    "Derivation_vs ": Derivation_vs, # fi,
-    "Derivation_ttain ": Derivation_ttain, # fi,
-    "Derivation_ttaa ": Derivation_ttaa, # fi,
-    "Echo_rdp ": Echo_rdp, # U,
-    "Echo_ech ": Echo_ech, # U,
-    "Foreign_foreign ": Foreign_foreign, # cz, fi, U,
-    "Foreign_fscript ": Foreign_fscript, # cz, fi, U,
-    "Foreign_tscript ": Foreign_tscript, # cz, U,
-    "Foreign_yes ": Foreign_yes, # sl,
-    "Gender_dat_masc ": Gender_dat_masc, # bq, U,
-    "Gender_dat_fem ": Gender_dat_fem, # bq, U,
-    "Gender_erg_masc ": Gender_erg_masc, # bq,
-    "Gender_erg_fem ": Gender_erg_fem, # bq,
-    "Gender_psor_masc ": Gender_psor_masc, # cz, sl, U,
-    "Gender_psor_fem ": Gender_psor_fem, # cz, sl, U,
-    "Gender_psor_neut ": Gender_psor_neut, # sl,
-    "Hyph_yes ": Hyph_yes, # cz, U,
-    "InfForm_one ": InfForm_one, # fi,
-    "InfForm_two ": InfForm_two, # fi,
-    "InfForm_three ": InfForm_three, # fi,
-    "NameType_geo ": NameType_geo, # U, cz,
-    "NameType_prs ": NameType_prs, # U, cz,
-    "NameType_giv ": NameType_giv, # U, cz,
-    "NameType_sur ": NameType_sur, # U, cz,
-    "NameType_nat ": NameType_nat, # U, cz,
-    "NameType_com ": NameType_com, # U, cz,
-    "NameType_pro ": NameType_pro, # U, cz,
-    "NameType_oth ": NameType_oth, # U, cz,
-    "NounType_com ": NounType_com, # U,
-    "NounType_prop ": NounType_prop, # U,
-    "NounType_class ": NounType_class, # U,
-    "Number_abs_sing ": Number_abs_sing, # bq, U,
-    "Number_abs_plur ": Number_abs_plur, # bq, U,
-    "Number_dat_sing ": Number_dat_sing, # bq, U,
-    "Number_dat_plur ": Number_dat_plur, # bq, U,
-    "Number_erg_sing ": Number_erg_sing, # bq, U,
-    "Number_erg_plur ": Number_erg_plur, # bq, U,
-    "Number_psee_sing ": Number_psee_sing, # U,
-    "Number_psee_plur ": Number_psee_plur, # U,
-    "Number_psor_sing ": Number_psor_sing, # cz, fi, sl, U,
-    "Number_psor_plur ": Number_psor_plur, # cz, fi, sl, U,
-    "NumForm_digit ": NumForm_digit, # cz, sl, U,
-    "NumForm_roman ": NumForm_roman, # cz, sl, U,
-    "NumForm_word ": NumForm_word, # cz, sl, U,
-    "NumValue_one ": NumValue_one, # cz, U,
-    "NumValue_two ": NumValue_two, # cz, U,
-    "NumValue_three ": NumValue_three, # cz, U,
-    "PartForm_pres ": PartForm_pres, # fi,
-    "PartForm_past ": PartForm_past, # fi,
-    "PartForm_agt ": PartForm_agt, # fi,
-    "PartForm_neg ": PartForm_neg, # fi,
-    "PartType_mod ": PartType_mod, # U,
-    "PartType_emp ": PartType_emp, # U,
-    "PartType_res ": PartType_res, # U,
-    "PartType_inf ": PartType_inf, # U,
-    "PartType_vbp ": PartType_vbp, # U,
-    "Person_abs_one ": Person_abs_one, # bq, U,
-    "Person_abs_two ": Person_abs_two, # bq, U,
-    "Person_abs_three ": Person_abs_three, # bq, U,
-    "Person_dat_one ": Person_dat_one, # bq, U,
-    "Person_dat_two ": Person_dat_two, # bq, U,
-    "Person_dat_three ": Person_dat_three, # bq, U,
-    "Person_erg_one ": Person_erg_one, # bq, U,
-    "Person_erg_two ": Person_erg_two, # bq, U,
-    "Person_erg_three ": Person_erg_three, # bq, U,
-    "Person_psor_one ": Person_psor_one, # fi, U,
-    "Person_psor_two ": Person_psor_two, # fi, U,
-    "Person_psor_three ": Person_psor_three, # fi, U,
-    "Polite_inf ": Polite_inf, # bq, U,
-    "Polite_pol ": Polite_pol, # bq, U,
-    "Polite_abs_inf ": Polite_abs_inf, # bq, U,
-    "Polite_abs_pol ": Polite_abs_pol, # bq, U,
-    "Polite_erg_inf ": Polite_erg_inf, # bq, U,
-    "Polite_erg_pol ": Polite_erg_pol, # bq, U,
-    "Polite_dat_inf ": Polite_dat_inf, # bq, U,
-    "Polite_dat_pol ": Polite_dat_pol, # bq, U,
-    "Prefix_yes ": Prefix_yes, # U,
-    "PrepCase_npr ": PrepCase_npr, # cz,
-    "PrepCase_pre ": PrepCase_pre, # U,
-    "PunctSide_ini ": PunctSide_ini, # U,
-    "PunctSide_fin ": PunctSide_fin, # U,
-    "PunctType_peri ": PunctType_peri, # U,
-    "PunctType_qest ": PunctType_qest, # U,
-    "PunctType_excl ": PunctType_excl, # U,
-    "PunctType_quot ": PunctType_quot, # U,
-    "PunctType_brck ": PunctType_brck, # U,
-    "PunctType_comm ": PunctType_comm, # U,
-    "PunctType_colo ": PunctType_colo, # U,
-    "PunctType_semi ": PunctType_semi, # U,
-    "PunctType_dash ": PunctType_dash, # U,
-    "Style_arch ": Style_arch, # cz, fi, U,
-    "Style_rare ": Style_rare, # cz, fi, U,
-    "Style_poet ": Style_poet, # cz, U,
-    "Style_norm ": Style_norm, # cz, U,
-    "Style_coll ": Style_coll, # cz, U,
-    "Style_vrnc ": Style_vrnc, # cz, U,
-    "Style_sing ": Style_sing, # cz, U,
-    "Style_expr ": Style_expr, # cz, U,
-    "Style_derg ": Style_derg, # cz, U,
-    "Style_vulg ": Style_vulg, # cz, U,
-    "Style_yes ": Style_yes, # fi, U,
-    "StyleVariant_styleShort ": StyleVariant_styleShort, # cz,
-    "StyleVariant_styleBound ": StyleVariant_styleBound, # cz, sl,
-    "VerbType_aux ": VerbType_aux, # U,
-    "VerbType_cop ": VerbType_cop, # U,
-    "VerbType_mod ": VerbType_mod, # U,
-    "VerbType_light ": VerbType_light, # U,
+    "ConjType_oper ": ConjType_oper,  # cz, U,
+    "ConjType_comp ": ConjType_comp,  # cz, U,
+    "Connegative_yes ": Connegative_yes,  # fi,
+    "Derivation_minen ": Derivation_minen,  # fi,
+    "Derivation_sti ": Derivation_sti,  # fi,
+    "Derivation_inen ": Derivation_inen,  # fi,
+    "Derivation_lainen ": Derivation_lainen,  # fi,
+    "Derivation_ja ": Derivation_ja,  # fi,
+    "Derivation_ton ": Derivation_ton,  # fi,
+    "Derivation_vs ": Derivation_vs,  # fi,
+    "Derivation_ttain ": Derivation_ttain,  # fi,
+    "Derivation_ttaa ": Derivation_ttaa,  # fi,
+    "Echo_rdp ": Echo_rdp,  # U,
+    "Echo_ech ": Echo_ech,  # U,
+    "Foreign_foreign ": Foreign_foreign,  # cz, fi, U,
+    "Foreign_fscript ": Foreign_fscript,  # cz, fi, U,
+    "Foreign_tscript ": Foreign_tscript,  # cz, U,
+    "Foreign_yes ": Foreign_yes,  # sl,
+    "Gender_dat_masc ": Gender_dat_masc,  # bq, U,
+    "Gender_dat_fem ": Gender_dat_fem,  # bq, U,
+    "Gender_erg_masc ": Gender_erg_masc,  # bq,
+    "Gender_erg_fem ": Gender_erg_fem,  # bq,
+    "Gender_psor_masc ": Gender_psor_masc,  # cz, sl, U,
+    "Gender_psor_fem ": Gender_psor_fem,  # cz, sl, U,
+    "Gender_psor_neut ": Gender_psor_neut,  # sl,
+    "Hyph_yes ": Hyph_yes,  # cz, U,
+    "InfForm_one ": InfForm_one,  # fi,
+    "InfForm_two ": InfForm_two,  # fi,
+    "InfForm_three ": InfForm_three,  # fi,
+    "NameType_geo ": NameType_geo,  # U, cz,
+    "NameType_prs ": NameType_prs,  # U, cz,
+    "NameType_giv ": NameType_giv,  # U, cz,
+    "NameType_sur ": NameType_sur,  # U, cz,
+    "NameType_nat ": NameType_nat,  # U, cz,
+    "NameType_com ": NameType_com,  # U, cz,
+    "NameType_pro ": NameType_pro,  # U, cz,
+    "NameType_oth ": NameType_oth,  # U, cz,
+    "NounType_com ": NounType_com,  # U,
+    "NounType_prop ": NounType_prop,  # U,
+    "NounType_class ": NounType_class,  # U,
+    "Number_abs_sing ": Number_abs_sing,  # bq, U,
+    "Number_abs_plur ": Number_abs_plur,  # bq, U,
+    "Number_dat_sing ": Number_dat_sing,  # bq, U,
+    "Number_dat_plur ": Number_dat_plur,  # bq, U,
+    "Number_erg_sing ": Number_erg_sing,  # bq, U,
+    "Number_erg_plur ": Number_erg_plur,  # bq, U,
+    "Number_psee_sing ": Number_psee_sing,  # U,
+    "Number_psee_plur ": Number_psee_plur,  # U,
+    "Number_psor_sing ": Number_psor_sing,  # cz, fi, sl, U,
+    "Number_psor_plur ": Number_psor_plur,  # cz, fi, sl, U,
+    "NumForm_digit ": NumForm_digit,  # cz, sl, U,
+    "NumForm_roman ": NumForm_roman,  # cz, sl, U,
+    "NumForm_word ": NumForm_word,  # cz, sl, U,
+    "NumValue_one ": NumValue_one,  # cz, U,
+    "NumValue_two ": NumValue_two,  # cz, U,
+    "NumValue_three ": NumValue_three,  # cz, U,
+    "PartForm_pres ": PartForm_pres,  # fi,
+    "PartForm_past ": PartForm_past,  # fi,
+    "PartForm_agt ": PartForm_agt,  # fi,
+    "PartForm_neg ": PartForm_neg,  # fi,
+    "PartType_mod ": PartType_mod,  # U,
+    "PartType_emp ": PartType_emp,  # U,
+    "PartType_res ": PartType_res,  # U,
+    "PartType_inf ": PartType_inf,  # U,
+    "PartType_vbp ": PartType_vbp,  # U,
+    "Person_abs_one ": Person_abs_one,  # bq, U,
+    "Person_abs_two ": Person_abs_two,  # bq, U,
+    "Person_abs_three ": Person_abs_three,  # bq, U,
+    "Person_dat_one ": Person_dat_one,  # bq, U,
+    "Person_dat_two ": Person_dat_two,  # bq, U,
+    "Person_dat_three ": Person_dat_three,  # bq, U,
+    "Person_erg_one ": Person_erg_one,  # bq, U,
+    "Person_erg_two ": Person_erg_two,  # bq, U,
+    "Person_erg_three ": Person_erg_three,  # bq, U,
+    "Person_psor_one ": Person_psor_one,  # fi, U,
+    "Person_psor_two ": Person_psor_two,  # fi, U,
+    "Person_psor_three ": Person_psor_three,  # fi, U,
+    "Polite_inf ": Polite_inf,  # bq, U,
+    "Polite_pol ": Polite_pol,  # bq, U,
+    "Polite_abs_inf ": Polite_abs_inf,  # bq, U,
+    "Polite_abs_pol ": Polite_abs_pol,  # bq, U,
+    "Polite_erg_inf ": Polite_erg_inf,  # bq, U,
+    "Polite_erg_pol ": Polite_erg_pol,  # bq, U,
+    "Polite_dat_inf ": Polite_dat_inf,  # bq, U,
+    "Polite_dat_pol ": Polite_dat_pol,  # bq, U,
+    "Prefix_yes ": Prefix_yes,  # U,
+    "PrepCase_npr ": PrepCase_npr,  # cz,
+    "PrepCase_pre ": PrepCase_pre,  # U,
+    "PunctSide_ini ": PunctSide_ini,  # U,
+    "PunctSide_fin ": PunctSide_fin,  # U,
+    "PunctType_peri ": PunctType_peri,  # U,
+    "PunctType_qest ": PunctType_qest,  # U,
+    "PunctType_excl ": PunctType_excl,  # U,
+    "PunctType_quot ": PunctType_quot,  # U,
+    "PunctType_brck ": PunctType_brck,  # U,
+    "PunctType_comm ": PunctType_comm,  # U,
+    "PunctType_colo ": PunctType_colo,  # U,
+    "PunctType_semi ": PunctType_semi,  # U,
+    "PunctType_dash ": PunctType_dash,  # U,
+    "Style_arch ": Style_arch,  # cz, fi, U,
+    "Style_rare ": Style_rare,  # cz, fi, U,
+    "Style_poet ": Style_poet,  # cz, U,
+    "Style_norm ": Style_norm,  # cz, U,
+    "Style_coll ": Style_coll,  # cz, U,
+    "Style_vrnc ": Style_vrnc,  # cz, U,
+    "Style_sing ": Style_sing,  # cz, U,
+    "Style_expr ": Style_expr,  # cz, U,
+    "Style_derg ": Style_derg,  # cz, U,
+    "Style_vulg ": Style_vulg,  # cz, U,
+    "Style_yes ": Style_yes,  # fi, U,
+    "StyleVariant_styleShort ": StyleVariant_styleShort,  # cz,
+    "StyleVariant_styleBound ": StyleVariant_styleBound,  # cz, sl,
+    "VerbType_aux ": VerbType_aux,  # U,
+    "VerbType_cop ": VerbType_cop,  # U,
+    "VerbType_mod ": VerbType_mod,  # U,
+    "VerbType_light ": VerbType_light,  # U,
 }
 
 

@@ -157,7 +157,7 @@ p The L2 norm of the lexeme's vector representation.
     +row
         +cell #[code vocab]
         +cell #[code Vocab]
-        +cell
+        +cell The lexeme's vocabulary.
 
     +row
         +cell #[code text]
@@ -165,19 +165,53 @@ p The L2 norm of the lexeme's vector representation.
         +cell Verbatim text content.
 
     +row
+        +cell #[code orth]
+        +cell int
+        +cell ID of the verbatim text content.
+
+    +row
+        +cell #[code orth_]
+        +cell unicode
+        +cell
+            |  Verbatim text content (identical to #[code Lexeme.text]). Existst
+            |  mostly for consistency with the other attributes.
+
+    +row
         +cell #[code lex_id]
         +cell int
         +cell ID of the lexeme's lexical type.
 
     +row
+        +cell #[code rank]
+        +cell int
+        +cell
+            |  Sequential ID of the lexemes's lexical type, used to index into
+            |  tables, e.g. for word vectors.
+
+    +row
+        +cell #[code flags]
+        +cell int
+        +cell Container of the lexeme's binary flags.
+
+    +row
+        +cell #[code norm]
+        +cell int
+        +cell The lexemes's norm, i.e. a normalised form of the lexeme text.
+
+    +row
+        +cell #[code norm_]
+        +cell unicode
+        +cell The lexemes's norm, i.e. a normalised form of the lexeme text.
+
+    +row
         +cell #[code lower]
         +cell int
-        +cell Lower-case form of the word.
+        +cell Lowercase form of the word.
 
     +row
         +cell #[code lower_]
         +cell unicode
-        +cell Lower-case form of the word.
+        +cell Lowercase form of the word.
 
     +row
         +cell #[code shape]
@@ -192,22 +226,30 @@ p The L2 norm of the lexeme's vector representation.
     +row
         +cell #[code prefix]
         +cell int
-        +cell Length-N substring from the start of the word. Defaults to #[code N=1].
+        +cell
+            |  Length-N substring from the start of the word. Defaults to
+            |  #[code N=1].
 
     +row
         +cell #[code prefix_]
         +cell unicode
-        +cell Length-N substring from the start of the word. Defaults to #[code N=1].
+        +cell
+            |  Length-N substring from the start of the word. Defaults to
+            |  #[code N=1].
 
     +row
         +cell #[code suffix]
         +cell int
-        +cell Length-N substring from the end of the word. Defaults to #[code N=3].
+        +cell
+            |  Length-N substring from the end of the word. Defaults to
+            |  #[code N=3].
 
     +row
         +cell #[code suffix_]
         +cell unicode
-        +cell Length-N substring from the start of the word. Defaults to #[code N=3].
+        +cell
+            |  Length-N substring from the start of the word. Defaults to
+            |  #[code N=3].
 
     +row
         +cell #[code is_alpha]
@@ -238,6 +280,13 @@ p The L2 norm of the lexeme's vector representation.
             |  #[code lexeme.text.islower()].
 
     +row
+        +cell #[code is_upper]
+        +cell bool
+        +cell
+            |  Is the lexeme in uppercase? Equivalent to
+            |  #[code lexeme.text.isupper()].
+
+    +row
         +cell #[code is_title]
         +cell bool
         +cell
@@ -250,11 +299,31 @@ p The L2 norm of the lexeme's vector representation.
         +cell Is the lexeme punctuation?
 
     +row
+        +cell #[code is_left_punct]
+        +cell bool
+        +cell Is the lexeme a left punctuation mark, e.g. #[code (]?
+
+    +row
+        +cell #[code is_right_punct]
+        +cell bool
+        +cell Is the lexeme a right punctuation mark, e.g. #[code )]?
+
+    +row
         +cell #[code is_space]
         +cell bool
         +cell
             |  Does the lexeme consist of whitespace characters? Equivalent to
             |  #[code lexeme.text.isspace()].
+
+    +row
+        +cell #[code is_bracket]
+        +cell bool
+        +cell Is the lexeme a bracket?
+
+    +row
+        +cell #[code is_quote]
+        +cell bool
+        +cell Is the lexeme a quotation mark?
 
     +row
         +cell #[code like_url]
@@ -285,6 +354,7 @@ p The L2 norm of the lexeme's vector representation.
         +cell #[code lang]
         +cell int
         +cell Language of the parent vocabulary.
+
     +row
         +cell #[code lang_]
         +cell unicode
@@ -293,9 +363,16 @@ p The L2 norm of the lexeme's vector representation.
     +row
         +cell #[code prob]
         +cell float
-        +cell Smoothed log probability estimate of lexeme's type.
+        +cell Smoothed log probability estimate of the lexeme's type.
+
+    +row
+        +cell #[code cluster]
+        +cell int
+        +cell Brown cluster ID.
 
     +row
         +cell #[code sentiment]
         +cell float
-        +cell A scalar value indicating the positivity or negativity of the lexeme.
+        +cell
+            |  A scalar value indicating the positivity or negativity of the
+            |  lexeme.

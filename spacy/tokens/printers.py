@@ -43,8 +43,8 @@ def POS_tree(root, light=False, flat=False):
 
 
 def parse_tree(doc, light=False, flat=False):
-    """Makes a copy of the doc, then construct a syntactic parse tree, similar to
-    the one used in displaCy. Generates the POS tree for all sentences in a doc.
+    """Make a copy of the doc and construct a syntactic parse tree similar to
+    displaCy. Generates the POS tree for all sentences in a doc.
 
     doc (Doc): The doc for parsing.
     RETURNS (dict): The parse tree.
@@ -66,8 +66,9 @@ def parse_tree(doc, light=False, flat=False):
             'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB',
             'POS_fine': 'VBD', 'lemma': 'eat'}
     """
-    doc_clone  = Doc(doc.vocab, words=[w.text for w in doc])
+    doc_clone = Doc(doc.vocab, words=[w.text for w in doc])
     doc_clone.from_array([HEAD, TAG, DEP, ENT_IOB, ENT_TYPE],
                          doc.to_array([HEAD, TAG, DEP, ENT_IOB, ENT_TYPE]))
     merge_ents(doc_clone)  # merge the entities into single tokens first
-    return [POS_tree(sent.root, light=light, flat=flat) for sent in doc_clone.sents]
+    return [POS_tree(sent.root, light=light, flat=flat)
+            for sent in doc_clone.sents]

@@ -91,15 +91,15 @@ def symlink_to(orig, dest):
 
 
 def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
-    return ((python2 == None or python2 == is_python2) and
-            (python3 == None or python3 == is_python3) and
-            (windows == None or windows == is_windows) and
-            (linux == None or linux == is_linux) and
-            (osx == None or osx == is_osx))
+    return ((python2 is None or python2 == is_python2) and
+            (python3 is None or python3 == is_python3) and
+            (windows is None or windows == is_windows) and
+            (linux is None or linux == is_linux) and
+            (osx is None or osx == is_osx))
 
 
 def normalize_string_keys(old):
-    '''Given a dictionary, make sure keys are unicode strings, not bytes.'''
+    """Given a dictionary, make sure keys are unicode strings, not bytes."""
     new = {}
     for key, value in old.items():
         if isinstance(key, bytes_):

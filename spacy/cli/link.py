@@ -12,8 +12,7 @@ from .. import util
 @plac.annotations(
     origin=("package name or local path to model", "positional", None, str),
     link_name=("name of shortuct link to create", "positional", None, str),
-    force=("force overwriting of existing link", "flag", "f", bool)
-)
+    force=("force overwriting of existing link", "flag", "f", bool))
 def link(cmd, origin, link_name, force=False, model_path=None):
     """
     Create a symlink for models within the spacy/data directory. Accepts
@@ -46,8 +45,9 @@ def link(cmd, origin, link_name, force=False, model_path=None):
         # This is quite dirty, but just making sure other errors are caught.
         prints("Creating a symlink in spacy/data failed. Make sure you have "
                "the required permissions and try re-running the command as "
-               "admin, or use a virtualenv. You can still import the model as a "
-               "module and call its load() method, or create the symlink manually.",
+               "admin, or use a virtualenv. You can still import the model as "
+               "a module and call its load() method, or create the symlink "
+               "manually.",
                "%s --> %s" % (path2str(model_path), path2str(link_path)),
                title="Error: Couldn't link model to '%s'" % link_name)
         raise

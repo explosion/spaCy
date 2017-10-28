@@ -1,39 +1,37 @@
 # coding: utf-8
-"""
-Implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
+"""Implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
 for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
 from __future__ import unicode_literals
+
 from copy import copy
 
-from ..tokens.doc cimport Doc
-from ..attrs import DEP, HEAD
 
 DELIMITER = '||'
 
 
 def ancestors(tokenid, heads):
-    # returns all words going from the word up the path to the root
-    # the path to root cannot be longer than the number of words in the sentence
-    # this function ends after at most len(heads) steps
-    # because it would otherwise loop indefinitely on cycles
+    # Returns all words going from the word up the path to the root. The path
+    # to root cannot be longer than the number of words in the  sentence. This
+    # function ends after at most len(heads) steps, because it would otherwise
+    # loop indefinitely on cycles.
     head = tokenid
     cnt = 0
     while heads[head] != head and cnt < len(heads):
         head = heads[head]
         cnt += 1
         yield head
-        if head == None:
+        if head is None:
             break
 
 
 def contains_cycle(heads):
-    # in an acyclic tree, the path from each word following
-    # the head relation upwards always ends at the root node
+    # in an acyclic tree, the path from each word following the head relation
+    # upwards always ends at the root node
     for tokenid in range(len(heads)):
         seen = set([tokenid])
-        for ancestor in ancestors(tokenid,heads):
+        for ancestor in ancestors(tokenid, heads):
             if ancestor in seen:
                 return seen
             seen.add(ancestor)
@@ -45,26 +43,26 @@ def is_nonproj_arc(tokenid, heads):
     # if there is a token k, h < k < d such that h is not
     # an ancestor of k. Same for h -> d, h > d
     head = heads[tokenid]
-    if head == tokenid: # root arcs cannot be non-projective
+    if head == tokenid:  # root arcs cannot be non-projective
         return False
-    elif head == None: # unattached tokens cannot be non-projective
+    elif head is None:  # unattached tokens cannot be non-projective
         return False
 
     start, end = (head+1, tokenid) if head < tokenid else (tokenid+1, head)
-    for k in range(start,end):
-        for ancestor in ancestors(k,heads):
-            if ancestor == None: # for unattached tokens/subtrees
+    for k in range(start, end):
+        for ancestor in ancestors(k, heads):
+            if ancestor is None:  # for unattached tokens/subtrees
                 break
-            elif ancestor == head: # normal case: k dominated by h
+            elif ancestor == head:  # normal case: k dominated by h
                 break
-        else: # head not in ancestors: d -> h is non-projective
+        else:  # head not in ancestors: d -> h is non-projective
             return True
     return False
 
 
 def is_nonproj_tree(heads):
     # a tree is non-projective if at least one arc is non-projective
-    return any( is_nonproj_arc(word,heads) for word in range(len(heads)) )
+    return any(is_nonproj_arc(word, heads) for word in range(len(heads)))
 
 
 def decompose(label):
@@ -81,32 +79,32 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
     for raw_text, sents in gold_tuples:
         prepro_sents = []
         for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            proj_heads,deco_labels = projectivize(heads,labels)
+            proj_heads, deco_labels = projectivize(heads, labels)
             # set the label to ROOT for each root dependent
-            deco_labels = [ 'ROOT' if head == i else deco_labels[i] for i,head in enumerate(proj_heads) ]
+            deco_labels = ['ROOT' if head == i else deco_labels[i]
+                           for i, head in enumerate(proj_heads)]
             # count label frequencies
             if label_freq_cutoff > 0:
                 for label in deco_labels:
                     if is_decorated(label):
-                        freqs[label] = freqs.get(label,0) + 1
-            prepro_sents.append(((ids,words,tags,proj_heads,deco_labels,iob), ctnts))
+                        freqs[label] = freqs.get(label, 0) + 1
+            prepro_sents.append(
+                ((ids, words, tags, proj_heads, deco_labels, iob), ctnts))
         preprocessed.append((raw_text, prepro_sents))
-
     if label_freq_cutoff > 0:
-        return _filter_labels(preprocessed,label_freq_cutoff,freqs)
+        return _filter_labels(preprocessed, label_freq_cutoff, freqs)
     return preprocessed
 
 
 def projectivize(heads, labels):
-    # use the algorithm by Nivre & Nilsson 2005
-    # assumes heads to be a proper tree, i.e. connected and cycle-free
-    # returns a new pair (heads,labels) which encode
-    # a projective and decorated tree
+    # Use the algorithm by Nivre & Nilsson 2005. Assumes heads to be a proper
+    # tree, i.e. connected and cycle-free. Returns a new pair (heads, labels)
+    # which encode a projective and decorated tree.
     proj_heads = copy(heads)
     smallest_np_arc = _get_smallest_nonproj_arc(proj_heads)
-    if smallest_np_arc == None: # this sentence is already projective
+    if smallest_np_arc is None:  # this sentence is already projective
         return proj_heads, copy(labels)
-    while smallest_np_arc != None:
+    while smallest_np_arc is not None:
         _lift(smallest_np_arc, proj_heads)
         smallest_np_arc = _get_smallest_nonproj_arc(proj_heads)
     deco_labels = _decorate(heads, proj_heads, labels)
@@ -114,24 +112,26 @@ def projectivize(heads, labels):
 
 
 def deprojectivize(tokens):
-    # reattach arcs with decorated labels (following HEAD scheme)
-    # for each decorated arc X||Y, search top-down, left-to-right,
-    # breadth-first until hitting a Y then make this the new head
+    # Reattach arcs with decorated labels (following HEAD scheme). For each
+    # decorated arc X||Y, search top-down, left-to-right, breadth-first until
+    # hitting a Y then make this the new head.
     for token in tokens:
         if is_decorated(token.dep_):
-            newlabel,headlabel = decompose(token.dep_)
-            newhead = _find_new_head(token,headlabel)
+            newlabel, headlabel = decompose(token.dep_)
+            newhead = _find_new_head(token, headlabel)
             token.head = newhead
             token.dep_ = newlabel
     return tokens
+
 
 def _decorate(heads, proj_heads, labels):
     # uses decoration scheme HEAD from Nivre & Nilsson 2005
     assert(len(heads) == len(proj_heads) == len(labels))
     deco_labels = []
-    for tokenid,head in enumerate(heads):
+    for tokenid, head in enumerate(heads):
         if head != proj_heads[tokenid]:
-            deco_labels.append('%s%s%s' % (labels[tokenid], DELIMITER, labels[head]))
+            deco_labels.append(
+                '%s%s%s' % (labels[tokenid], DELIMITER, labels[head]))
         else:
             deco_labels.append(labels[tokenid])
     return deco_labels
@@ -143,9 +143,9 @@ def _get_smallest_nonproj_arc(heads):
     # and ties are broken left to right
     smallest_size = float('inf')
     smallest_np_arc = None
-    for tokenid,head in enumerate(heads):
+    for tokenid, head in enumerate(heads):
         size = abs(tokenid-head)
-        if size < smallest_size and is_nonproj_arc(tokenid,heads):
+        if size < smallest_size and is_nonproj_arc(tokenid, heads):
             smallest_size = size
             smallest_np_arc = tokenid
     return smallest_np_arc
@@ -168,8 +168,10 @@ def _find_new_head(token, headlabel):
         next_queue = []
         for qtoken in queue:
             for child in qtoken.children:
-                if child.is_space: continue
-                if child == token: continue
+                if child.is_space:
+                    continue
+                if child == token:
+                    continue
                 if child.dep_ == headlabel:
                     return child
                 next_queue.append(child)
@@ -184,7 +186,10 @@ def _filter_labels(gold_tuples, cutoff, freqs):
     for raw_text, sents in gold_tuples:
         filtered_sents = []
         for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            filtered_labels = [ decompose(label)[0] if freqs.get(label,cutoff) < cutoff else label for label in labels ]
-            filtered_sents.append(((ids,words,tags,heads,filtered_labels,iob), ctnts))
+            filtered_labels = [decompose(label)[0]
+                               if freqs.get(label, cutoff) < cutoff
+                               else label for label in labels]
+            filtered_sents.append(
+                ((ids, words, tags, heads, filtered_labels, iob), ctnts))
         filtered.append((raw_text, filtered_sents))
     return filtered

@@ -264,7 +264,6 @@ GLOSSARY = {
     'nk':           'noun kernel element',
     'nmc':          'numerical component',
     'oa':           'accusative object',
-    'oa':           'second accusative object',
     'oc':           'clausal object',
     'og':           'genitive object',
     'op':           'prepositional object',

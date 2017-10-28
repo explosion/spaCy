@@ -134,11 +134,12 @@ p
 p
     |  Convert files into spaCy's #[+a("/api/annotation#json-input") JSON format]
     |  for use with the #[code train] command and other experiment management
-    |  functions. The right converter is chosen based on the file extension of
-    |  the input file. Currently only supports #[code .conllu].
+    |  functions. The converter can be specified on the command line, or
+    |  chosen based on the file extension of the input file.
 
 +code(false, "bash", "$", false, false, true).
-    spacy convert [input_file] [output_dir] [--n-sents] [--morphology]
+    spacy convert [input_file] [output_dir] [--converter] [--n-sents]
+    [--morphology]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -150,6 +151,11 @@ p
         +cell #[code output_dir]
         +cell positional
         +cell Output directory for converted JSON file.
+
+    +row
+        +cell #[code converter], #[code -c]
+        +cell option
+        +cell #[+tag-new(2)] Name of converter to use (see below).
 
     +row
         +cell #[code --n-sents], #[code -n]
@@ -165,6 +171,25 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
+p The following converters are available:
+
++table(["ID", "Description"])
+    +row
+        +cell #[code auto]
+        +cell Automatically pick converter based on file extension (default).
+
+    +row
+        +cell #[code conllu], #[code conll]
+        +cell Universal Dependencies #[code .conllu] or #[code .conll] format.
+
+    +row
+        +cell #[code ner]
+        +cell Tab-based named entity recognition format.
+
+    +row
+        +cell #[code iob]
+        +cell IOB named entity recognition format.
 
 +h(3, "train") Train
 

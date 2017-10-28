@@ -1,7 +1,7 @@
 # coding: utf8
 #cython: optimize.unpack_method_calls=False
-
 from __future__ import unicode_literals
+
 
 IDS = {
     "": NIL,
@@ -464,8 +464,10 @@ IDS = {
     "LAW": LAW
 }
 
+
 def sort_nums(x):
     return x[1]
+
 
 NAMES = [it[0] for it in sorted(IDS.items(), key=sort_nums)]
 # Unfortunate hack here, to work around problem with long cpdef enum

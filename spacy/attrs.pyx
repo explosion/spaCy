@@ -101,17 +101,12 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
     """
     Normalize a dictionary of attributes, converting them to ints.
 
-    Arguments:
-        stringy_attrs (dict):
-            Dictionary keyed by attribute string names. Values can be ints or strings.
-
-        strings_map (StringStore):
-            Defaults to None. If provided, encodes string values into ints.
-
-    Returns:
-        inty_attrs (dict):
-            Attributes dictionary with keys and optionally values converted to
-            ints.
+    stringy_attrs (dict): Dictionary keyed by attribute string names. Values
+        can be ints or strings.
+    strings_map (StringStore): Defaults to None. If provided, encodes string
+        values into ints.
+    RETURNS (dict): Attributes dictionary with keys and optionally values
+        converted to ints.
     """
     inty_attrs = {}
     if _do_deprecated:

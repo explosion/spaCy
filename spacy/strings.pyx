@@ -4,19 +4,15 @@ from __future__ import unicode_literals, absolute_import
 
 cimport cython
 from libc.string cimport memcpy
-from libc.stdint cimport uint64_t, uint32_t
-from murmurhash.mrmr cimport hash64, hash32
-from preshed.maps cimport map_iter, key_t
 from libc.stdint cimport uint32_t
+from murmurhash.mrmr cimport hash64, hash32
 import ujson
-import dill
 
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
-
 from .typedefs cimport hash_t
-from . import util
 from .compat import json_dumps
+from . import util
 
 
 cpdef hash_t hash_string(unicode string) except 0:
@@ -195,7 +191,7 @@ cdef class StringStore:
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or `Path`-like objects.
+            it doesn't exist. Paths may be either strings or Path-like objects.
         """
         path = util.ensure_path(path)
         strings = list(self)
@@ -225,7 +221,7 @@ cdef class StringStore:
         **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `StringStore` object.
         """
-        return ujson.dumps(list(self))
+        return json_dumps(list(self))
 
     def from_bytes(self, bytes_data, **exclude):
         """Load state from a binary string.

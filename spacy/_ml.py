@@ -1,23 +1,20 @@
-import ujson
-from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, SELU
+# coding: utf8
+from __future__ import unicode_literals
+
+import numpy
+from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow, ParametricAttention
-from thinc.t2v import Pooling, max_pool, mean_pool, sum_pool
+from thinc.t2v import Pooling, sum_pool
 from thinc.misc import Residual
-from thinc.misc import BatchNorm as BN
 from thinc.misc import LayerNorm as LN
-
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.api import FeatureExtracter, with_getitem
-from thinc.api import uniqued, wrap, flatten_add_lengths, noop
-
+from thinc.api import FeatureExtracter, with_getitem, flatten_add_lengths
+from thinc.api import uniqued, wrap, noop
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module, copy_array
 from thinc.neural._lsuv import svd_orthonormal
-
-import random
-import cytoolz
 
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
@@ -25,25 +22,21 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 from thinc.neural._lsuv import svd_orthonormal
 
-from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP, CLUSTER
-from .tokens.doc import Doc
+from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from . import util
 
-import numpy
-import io
-
-# TODO: Unset this once we don't want to support models previous models.
-import thinc.neural._classes.layernorm
-thinc.neural._classes.layernorm.set_compat_six_eight(False)
 
 VECTORS_KEY = 'spacy_pretrained_vectors'
+
 
 @layerize
 def _flatten_add_lengths(seqs, pad=0, drop=0.):
     ops = Model.ops
     lengths = ops.asarray([len(seq) for seq in seqs], dtype='i')
+
     def finish_update(d_X, sgd=None):
         return ops.unflatten(d_X, lengths, pad=pad)
+
     X = ops.flatten(seqs, pad=pad)
     return (X, lengths), finish_update
 
@@ -57,31 +50,12 @@ def _logistic(X, drop=0.):
     X = xp.minimum(X, 10., X)
     X = xp.maximum(X, -10., X)
     Y = 1. / (1. + xp.exp(-X))
+
     def logistic_bwd(dY, sgd=None):
         dX = dY * (Y * (1-Y))
         return dX
+
     return Y, logistic_bwd
-
-
-@layerize
-def add_tuples(X, drop=0.):
-    """Give inputs of sequence pairs, where each sequence is (vals, length),
-    sum the values, returning a single sequence.
-
-    If input is:
-    ((vals1, length), (vals2, length)
-    Output is:
-    (vals1+vals2, length)
-
-    vals are a single tensor for the whole batch.
-    """
-    (vals1, length1), (vals2, length2) = X
-    assert length1 == length2
-
-    def add_tuples_bwd(dY, sgd=None):
-        return (dY, dY)
-
-    return (vals1+vals2, length), add_tuples_bwd
 
 
 def _zero_init(model):
@@ -111,13 +85,11 @@ def _preprocess_doc(docs, drop=0.):
     nO=Dimension("Output size"),
     nP=Dimension("Maxout pieces"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI) if obj.nP >= 2
-                    else (obj.nF, obj.nO, obj.nI)),
+        lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI)),
     b=Biases("Bias vector",
-        lambda obj: (obj.nO, obj.nP) if obj.nP >= 2 else (obj.nO,)),
+        lambda obj: (obj.nO, obj.nP)),
     d_W=Gradient("W"),
-    d_b=Gradient("b")
-)
+    d_b=Gradient("b"))
 class PrecomputableAffine(Model):
     def __init__(self, nO=None, nI=None, nF=None, nP=None, **kwargs):
         Model.__init__(self, **kwargs)
@@ -203,89 +175,6 @@ class PrecomputableAffine(Model):
                 break
 
 
-# Thinc's Embed class is a bit broken atm, so drop this here.
-from thinc import describe
-from thinc.neural._classes.embed import _uniform_init
-
-
-@describe.attributes(
-    nV=describe.Dimension("Number of vectors"),
-    nO=describe.Dimension("Size of output"),
-    vectors=describe.Weights("Embedding table",
-        lambda obj: (obj.nV, obj.nO),
-        _uniform_init(-0.1, 0.1)
-    ),
-    d_vectors=describe.Gradient("vectors")
-)
-class Embed(Model):
-    name = 'embed'
-
-    def __init__(self, nO, nV=None, **kwargs):
-        if nV is not None:
-            nV += 1
-        Model.__init__(self, **kwargs)
-        if 'name' in kwargs:
-            self.name = kwargs['name']
-        self.column = kwargs.get('column', 0)
-        self.nO = nO
-        self.nV = nV
-
-    def predict(self, ids):
-        if ids.ndim == 2:
-            ids = ids[:, self.column]
-        return self.ops.xp.ascontiguousarray(self.vectors[ids], dtype='f')
-
-    def begin_update(self, ids, drop=0.):
-        if ids.ndim == 2:
-            ids = ids[:, self.column]
-        vectors = self.ops.xp.ascontiguousarray(self.vectors[ids], dtype='f')
-        def backprop_embed(d_vectors, sgd=None):
-            n_vectors = d_vectors.shape[0]
-            self.ops.scatter_add(self.d_vectors, ids, d_vectors)
-            if sgd is not None:
-                sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return None
-        return vectors, backprop_embed
-
-
-def HistoryFeatures(nr_class, hist_size=8, nr_dim=8):
-    '''Wrap a model, adding features representing action history.'''
-    if hist_size == 0:
-        return layerize(noop())
-    embed_tables = [Embed(nr_dim, nr_class, column=i, name='embed%d')
-                    for i in range(hist_size)]
-    embed = chain(concatenate(*embed_tables),
-                  LN(Maxout(hist_size*nr_dim, hist_size*nr_dim)))
-    ops = embed.ops
-    def add_history_fwd(vectors_hists, drop=0.):
-        vectors, hist_ids = vectors_hists
-        hist_feats, bp_hists = embed.begin_update(hist_ids, drop=drop)
-        outputs = ops.xp.hstack((vectors, hist_feats))
-
-        def add_history_bwd(d_outputs, sgd=None):
-            d_vectors = d_outputs[:, :vectors.shape[1]]
-            d_hists = d_outputs[:, vectors.shape[1]:]
-            bp_hists(d_hists, sgd=sgd)
-            return embed.ops.xp.ascontiguousarray(d_vectors)
-        return outputs, add_history_bwd
-    return wrap(add_history_fwd, embed)
-
-
-def drop_layer(layer, factor=2.):
-    def drop_layer_fwd(X, drop=0.):
-        if drop <= 0.:
-            return layer.begin_update(X, drop=drop)
-        else:
-            coinflip = layer.ops.xp.random.random()
-            if (coinflip / factor) >= drop:
-                return layer.begin_update(X, drop=drop)
-            else:
-                return X, lambda dX, sgd=None: dX
-
-    model = wrap(drop_layer_fwd, layer)
-    model.predict = layer
-    return model
-
 def link_vectors_to_models(vocab):
     vectors = vocab.vectors
     ops = Model.ops
@@ -299,16 +188,21 @@ def link_vectors_to_models(vocab):
     # (unideal, I know)
     thinc.extra.load_nlp.VECTORS[(ops.device, VECTORS_KEY)] = data
 
+
 def Tok2Vec(width, embed_size, **kwargs):
     pretrained_dims = kwargs.get('pretrained_dims', 0)
     cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 2)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
-    with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add,
-                                 '*': reapply}):
-        norm = HashEmbed(width, embed_size, column=cols.index(NORM), name='embed_norm')
-        prefix = HashEmbed(width, embed_size//2, column=cols.index(PREFIX), name='embed_prefix')
-        suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX), name='embed_suffix')
-        shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE), name='embed_shape')
+    with Model.define_operators({'>>': chain, '|': concatenate, '**': clone,
+                                 '+': add, '*': reapply}):
+        norm = HashEmbed(width, embed_size, column=cols.index(NORM),
+                         name='embed_norm')
+        prefix = HashEmbed(width, embed_size//2, column=cols.index(PREFIX),
+                           name='embed_prefix')
+        suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX),
+                           name='embed_suffix')
+        shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE),
+                          name='embed_shape')
         if pretrained_dims is not None and pretrained_dims >= 1:
             glove = StaticVectors(VECTORS_KEY, width, column=cols.index(ID))
 
@@ -319,7 +213,6 @@ def Tok2Vec(width, embed_size, **kwargs):
             embed = uniqued(
                 (norm | prefix | suffix | shape)
                 >> LN(Maxout(width, width*4, pieces=3)), column=5)
-
 
         convolution = Residual(
             ExtractWindow(nW=1)
@@ -344,6 +237,7 @@ def reapply(layer, n_times):
             Y, backprop = layer.begin_update(X, drop=drop)
             X = Y
             backprops.append(backprop)
+
         def reapply_bwd(dY, sgd=None):
             dX = None
             for backprop in reversed(backprops):
@@ -353,6 +247,7 @@ def reapply(layer, n_times):
                 else:
                     dX += dY
             return dX
+
         return Y, reapply_bwd
     return wrap(reapply_fwd, layer)
 
@@ -367,13 +262,14 @@ def _divide_array(X, size):
     parts = []
     index = 0
     while index < len(X):
-        parts.append(X[index : index + size])
+        parts.append(X[index:index + size])
         index += size
     return parts
 
 
 def get_col(idx):
     assert idx >= 0, idx
+
     def forward(X, drop=0.):
         assert idx >= 0, idx
         if isinstance(X, numpy.ndarray):
@@ -381,30 +277,28 @@ def get_col(idx):
         else:
             ops = CupyOps()
         output = ops.xp.ascontiguousarray(X[:, idx], dtype=X.dtype)
+
         def backward(y, sgd=None):
             assert idx >= 0, idx
             dX = ops.allocate(X.shape)
             dX[:, idx] += y
             return dX
+
         return output, backward
+
     return layerize(forward)
-
-
-def zero_init(model):
-    def _hook(self, X, y=None):
-        self.W.fill(0)
-    model.on_data_hooks.append(_hook)
-    return model
 
 
 def doc2feats(cols=None):
     if cols is None:
         cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
+
     def forward(docs, drop=0.):
         feats = []
         for doc in docs:
             feats.append(doc.to_array(cols))
         return feats, None
+
     model = layerize(forward)
     model.cols = cols
     return model
@@ -418,26 +312,12 @@ def print_shape(prefix):
 
 @layerize
 def get_token_vectors(tokens_attrs_vectors, drop=0.):
-    ops = Model.ops
     tokens, attrs, vectors = tokens_attrs_vectors
+
     def backward(d_output, sgd=None):
         return (tokens, d_output)
+
     return vectors, backward
-
-
-@layerize
-def flatten(seqs, drop=0.):
-    if isinstance(seqs[0], numpy.ndarray):
-        ops = NumpyOps()
-    elif hasattr(CupyOps.xp, 'ndarray') and isinstance(seqs[0], CupyOps.xp.ndarray):
-        ops = CupyOps()
-    else:
-        raise ValueError("Unable to flatten sequence of type %s" % type(seqs[0]))
-    lengths = [len(seq) for seq in seqs]
-    def finish_update(d_X, sgd=None):
-        return ops.unflatten(d_X, lengths)
-    X = ops.xp.vstack(seqs)
-    return X, finish_update
 
 
 @layerize
@@ -449,9 +329,11 @@ def logistic(X, drop=0.):
     X = xp.minimum(X, 10., X)
     X = xp.maximum(X, -10., X)
     Y = 1. / (1. + xp.exp(-X))
+
     def logistic_bwd(dY, sgd=None):
         dX = dY * (Y * (1-Y))
         return dX
+
     return Y, logistic_bwd
 
 
@@ -460,6 +342,7 @@ def zero_init(model):
         self.W.fill(0)
     model.on_data_hooks.append(_zero_init_impl)
     return model
+
 
 @layerize
 def preprocess_doc(docs, drop=0.):
@@ -501,8 +384,6 @@ def build_tagger_model(nr_class, **cfg):
 
 @layerize
 def SpacyVectors(docs, drop=0.):
-    xp = get_array_module(docs[0].vocab.vectors.data)
-    width = docs[0].vocab.vectors.data.shape[1]
     batch = []
     for doc in docs:
         indices = numpy.zeros((len(doc),), dtype='i')
@@ -525,9 +406,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             model = (
                 SpacyVectors
                 >> flatten_add_lengths
-                >> with_getitem(0,
-                    Affine(width, pretrained_dims)
-                )
+                >> with_getitem(0, Affine(width, pretrained_dims))
                 >> ParametricAttention(width)
                 >> Pooling(sum_pool)
                 >> Residual(ReLu(width, width)) ** 2
@@ -535,7 +414,6 @@ def build_text_classifier(nr_class, width=64, **cfg):
                 >> logistic
             )
             return model
-
 
         lower = HashEmbed(width, nr_vector, column=1)
         prefix = HashEmbed(width//2, nr_vector, column=2)
@@ -594,33 +472,40 @@ def build_text_classifier(nr_class, width=64, **cfg):
     model.lsuv = False
     return model
 
+
 @layerize
 def flatten(seqs, drop=0.):
     ops = Model.ops
     lengths = ops.asarray([len(seq) for seq in seqs], dtype='i')
+
     def finish_update(d_X, sgd=None):
         return ops.unflatten(d_X, lengths, pad=0)
+
     X = ops.flatten(seqs, pad=0)
     return X, finish_update
 
 
-def concatenate_lists(*layers, **kwargs): # pragma: no cover
-    '''Compose two or more models `f`, `g`, etc, such that their outputs are
+def concatenate_lists(*layers, **kwargs):  # pragma: no cover
+    """Compose two or more models `f`, `g`, etc, such that their outputs are
     concatenated, i.e. `concatenate(f, g)(x)` computes `hstack(f(x), g(x))`
-    '''
+    """
     if not layers:
         return noop()
     drop_factor = kwargs.get('drop_factor', 1.0)
     ops = layers[0].ops
     layers = [chain(layer, flatten) for layer in layers]
     concat = concatenate(*layers)
+
     def concatenate_lists_fwd(Xs, drop=0.):
         drop *= drop_factor
         lengths = ops.asarray([len(X) for X in Xs], dtype='i')
         flat_y, bp_flat_y = concat.begin_update(Xs, drop=drop)
         ys = ops.unflatten(flat_y, lengths)
+
         def concatenate_lists_bwd(d_ys, sgd=None):
             return bp_flat_y(ops.flatten(d_ys), sgd=sgd)
+
         return ys, concatenate_lists_bwd
+
     model = wrap(concatenate_lists_fwd, concat)
     return model
