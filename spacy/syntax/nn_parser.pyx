@@ -157,12 +157,14 @@ cdef void sum_state_features(float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
     cdef int idx, b, f, i
     cdef const float* feature
+    padding = cached - (F * O)
     for b in range(B):
         for f in range(F):
             if token_ids[f] < 0:
-                continue
-            idx = token_ids[f] * F * O + f*O
-            feature = &cached[idx]
+                feature = &padding[f*O]
+            else:
+                idx = token_ids[f] * F * O + f*O
+                feature = &cached[idx]
             for i in range(O):
                 output[i] += feature[i]
         output += O
