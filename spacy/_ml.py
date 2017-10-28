@@ -88,7 +88,11 @@ def _preprocess_doc(docs, drop=0.):
         lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI)),
     b=Biases("Bias vector",
         lambda obj: (obj.nO, obj.nP)),
+    pad=Synapses("Pad",
+        lambda obj: (1, obj.nF, obj.nO, obj.nP),
+        lambda M, ops: ops.normal_init(M, 1.)),
     d_W=Gradient("W"),
+    d_pad=Gradient("pad"),
     d_b=Gradient("b"))
 class PrecomputableAffine(Model):
     def __init__(self, nO=None, nI=None, nF=None, nP=None, **kwargs):
@@ -99,13 +103,14 @@ class PrecomputableAffine(Model):
         self.nF = nF
 
     def begin_update(self, X, drop=0.):
-        Yf = self.ops.dot(X,
-                 self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
- 
-        Yf = Yf.reshape((X.shape[0], self.nF, self.nO, self.nP))
+        Yf = self.ops.xp.dot(X,
+            self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
+        Yf = Yf.reshape((Yf.shape[0], self.nF, self.nO, self.nP))
+        Yf = self._add_padding(Yf)
 
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
+            dY, ids = self._backprop_padding(dY, ids)
             Xf = X[ids]
             Xf = Xf.reshape((Xf.shape[0], self.nF * self.nI))
 
@@ -116,7 +121,7 @@ class PrecomputableAffine(Model):
             Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
             Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
             dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
-            
+
             # Reuse the buffer
             dWopfi = Wopfi; dWopfi.fill(0.)
             self.ops.xp.dot(dY.T, Xf, out=dWopfi)
@@ -128,6 +133,17 @@ class PrecomputableAffine(Model):
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return dXf.reshape((dXf.shape[0], self.nF, self.nI))
         return Yf, backward
+    
+    def _add_padding(self, Yf):
+        Yf_padded = self.ops.xp.vstack((self.pad, Yf))
+        return Yf_padded[1:]
+
+    def _backprop_padding(self, dY, ids):
+        for i in range(ids.shape[0]):
+            for j in range(ids.shape[1]):
+                if ids[i, j] < 0:
+                    self.d_pad[0, j] += dY[i, j]
+        return dY, ids
 
     @staticmethod
     def init_weights(model):
