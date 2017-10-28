@@ -58,7 +58,9 @@ mixin api(path)
 
 mixin help(tooltip, icon_size)
     span(data-tooltip=tooltip)&attributes(attributes)
-        +icon("help", icon_size || 16).o-icon--inline
+        if tooltip
+            span.u-hidden(aria-role="tooltip")=tooltip
+        +icon("help_o", icon_size || 16).o-icon--inline
 
 
 //- Aside for text
@@ -147,18 +149,23 @@ mixin code(label, language, prompt, height, icon, wrap)
             block
 
 
-//- Code blocks to display old/new versions
+//- Wrapper for code blocks to display old/new versions
 
 mixin code-wrapper()
     span.u-inline-block.u-padding-top.u-width-full
         block
 
-mixin code-old()
-    +code(false, false, false, false, "reject").o-block-small
+//- Code blocks to display old/new versions
+    label - [string] ARIA label for block. Defaults to "correct"/"incorrect".
+
+mixin code-old(label)
+    - var label = label || 'incorrect'
+    +code(false, false, false, false, "reject").o-block-small(aria-label=label)
         block
 
-mixin code-new()
-    +code(false, false, false, false, "accept").o-block-small
+mixin code-new(label)
+    - var label = label || 'correct'
+    +code(false, false, false, false, "accept").o-block-small(aria-label=label)
         block
 
 
@@ -244,10 +251,16 @@ mixin label-inline()
 
 
 //- Tag
+    tooltip   - [string] optional tooltip text.
+    hide_icon - [boolean] hide tooltip icon
 
-mixin tag()
-    span.u-text-tag.u-text-tag--spaced(aria-hidden="true")&attributes(attributes)
+mixin tag(tooltip, hide_icon)
+    div.u-text-tag.u-text-tag--spaced(data-tooltip=tooltip)&attributes(attributes)
         block
+        if tooltip
+            if !hide_icon
+                |  #[+icon("help", 12).o-icon--tag]
+            |  #[span.u-hidden(aria-role="tooltip")=tooltip]
 
 
 //- "Requires model" tag with tooltip and list of capabilities
@@ -256,10 +269,7 @@ mixin tag()
 mixin tag-model(...capabs)
     - var intro = "To use this functionality, spaCy needs a model to be installed"
     - var ext = capabs.length ? " that supports the following capabilities: " + capabs.join(', ') : ""
-
-    span.u-nowrap
-        +tag Needs model
-        +help(intro + ext + ".").u-color-theme
+    +tag(intro + ext + ".") Needs model
 
 
 //- "New" tag to label features new in a specific version
@@ -269,8 +279,8 @@ mixin tag-model(...capabs)
 
 mixin tag-new(version)
     - var version = (typeof version == 'number') ? version.toFixed(1) : version
-    +tag(data-tooltip="This feature is new and was introduced in spaCy v#{version}.")
-        | v#{version}
+    - var tooltip = "This feature is new and was introduced in spaCy v" + version
+    +tag(tooltip, true) v#{version}
 
 
 //- List
