@@ -166,14 +166,18 @@ class PrecomputableAffine(Model):
                     size=tokvecs.size).reshape(tokvecs.shape)
 
         def predict(ids, tokvecs):
-            hiddens = model(tokvecs) # (b, f, o, p)
-            vector = model.ops.allocate((hiddens.shape[0], model.nO, model.nP))
-            model.ops.xp.add.at(vector, ids, hiddens)
-            vector += model.b
+            # nS ids. nW tokvecs
+            hiddens = model(tokvecs) # (nW, f, o, p)
+            # need nS vectors
+            vectors = model.ops.allocate((ids.shape[0], model.nO, model.nP))
+            for i, feats in enumerate(ids):
+                for j, id_ in enumerate(feats):
+                    vectors[i] += hiddens[id_, j]
+            vectors += model.b
             if model.nP >= 2:
-                return model.ops.maxout(vector)[0]
+                return model.ops.maxout(vectors)[0]
             else:
-                return vector * (vector >= 0)
+                return vectors * (vectors >= 0)
 
         tol_var = 0.01
         tol_mean = 0.01
