@@ -229,6 +229,7 @@ p
         +cell Config parameters.
 
 +h(2, "preprocess_gold") Language.preprocess_gold
+    +tag method
 
 p
     |  Can be called before training to pre-process gold data. By default, it
@@ -440,6 +441,37 @@ p
         +cell tuple
         +cell A #[code (name, component)] tuple of the removed component.
 
++h(2, "disable_pipes") Language.disable_pipes
+    +tag contextmanager
+    +tag-new(2)
+
+p
+    |  Disable one or more pipeline components. If used as a context manager,
+    |  the pipeline will be restored to the initial state at the end of the
+    |  block. Otherwise, a #[code DisabledPipes] object is returned, that has a
+    |  #[code .restore()] method you can use to undo your changes.
+
++aside-code("Example").
+    with nlp.disable_pipes('tagger', 'parser'):
+        optimizer = nlp.begin_training(gold_tuples)
+
+    disabled = nlp.disable_pipes('tagger', 'parser')
+    optimizer = nlp.begin_training(gold_tuples)
+    disabled.restore()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code *disabled]
+        +cell unicode
+        +cell Names of pipeline components to disable.
+
+    +row("foot")
+        +cell returns
+        +cell #[code DisabledPipes]
+        +cell
+            |  The disabled pipes that can be restored by calling the object's
+            |  #[code .restore()] method.
+
 +h(2, "to_disk") Language.to_disk
     +tag method
     +tag-new(2)
@@ -608,6 +640,14 @@ p Load state from a binary string.
         +cell
             |  Custom meta data for the Language class. If a model is loaded,
             |  contains meta data of the model.
+
+    +row
+        +cell #[code path]
+            +tag-new(2)
+        +cell #[code Path]
+        +cell
+            |  Path to the model data directory, if a model is loaded. Otherwise
+            |  #[code None].
 
 +h(2, "class-attributes") Class attributes
 

@@ -140,6 +140,10 @@ class ModelLoader {
         else return ({ ok: res.ok })
     }
 
+    convertNumber(num, separator = ',') {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+    }
+
     getModels(compat) {
         this.compat = compat;
         for (let modelId of this.modelIds) {
@@ -159,7 +163,7 @@ class ModelLoader {
         const template = new Templater(modelId);
         template.get('table').removeAttribute('data-loading');
         template.get('error').style.display = 'block';
-        for (let key of ['sources', 'pipeline', 'author', 'license']) {
+        for (let key of ['sources', 'pipeline', 'vectors', 'author', 'license']) {
             template.get(key).parentElement.parentElement.style.display = 'none';
         }
     }
@@ -167,13 +171,14 @@ class ModelLoader {
     /**
      * Update model details in tables. Currently quite hacky :(
      */
-    render({ lang, name, version, sources, pipeline, url, author, license, accuracy, size, description, notes }) {
+    render({ lang, name, version, sources, pipeline, vectors, url, author, license, accuracy, size, description, notes }) {
         const modelId = `${lang}_${name}`;
         const model = `${modelId}-${version}`;
         const template = new Templater(modelId);
 
         const getSources = s => (s instanceof Array) ? s.join(', ') : s;
         const getPipeline = p => p.map(comp => `<code>${comp}</code>`).join(', ');
+        const getVectors = v => `${this.convertNumber(v.entries)} (${v.width} dimensions)`;
         const getLink = (t, l) => `<a href="${l}" target="_blank">${t}</a>`;
 
         const keys = { version, size, description, notes }
@@ -182,6 +187,8 @@ class ModelLoader {
         if (sources) template.fill('sources', getSources(sources));
         if (pipeline && pipeline.length) template.fill('pipeline', getPipeline(pipeline), true);
         else template.get('pipeline').parentElement.parentElement.style.display = 'none';
+        if (vectors) template.fill('vectors', getVectors(vectors));
+        else template.get('vectors').parentElement.parentElement.style.display = 'none';
 
         if (author) template.fill('author', url ? getLink(author, url) : author, true);
         if (license) template.fill('license', this.licenses[license] ? getLink(license, this.licenses[license]) : license, true);

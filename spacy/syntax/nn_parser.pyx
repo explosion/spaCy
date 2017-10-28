@@ -47,15 +47,12 @@ from thinc.neural.util import get_array_module
 from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine
-from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
+from .._ml import Tok2Vec, doc2feats
 from .._ml import Residual, drop_layer, flatten
 from .._ml import link_vectors_to_models
 from .._ml import HistoryFeatures
 from ..compat import json_dumps, copy_array
 
-from . import _parse_features
-from ._parse_features cimport CONTEXT_SIZE
-from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from . import nonproj
@@ -261,7 +258,7 @@ cdef class Parser:
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size != 0:
             raise ValueError("Currently history size is hard-coded to 0")
-        if hist_width != 0: 
+        if hist_width != 0:
             raise ValueError("Currently history width is hard-coded to 0")
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
@@ -434,8 +431,7 @@ cdef class Parser:
         cdef int nr_hidden = hidden_weights.shape[0]
         cdef int nr_task = states.size()
         with nogil:
-            for i in cython.parallel.prange(nr_task, num_threads=2,
-                                            schedule='guided'):
+            for i in range(nr_task):
                 self._parseC(states[i],
                     feat_weights, bias, hW, hb,
                     nr_class, nr_hidden, nr_feat, nr_piece)
@@ -454,7 +450,6 @@ cdef class Parser:
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
-        
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
             memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
@@ -696,9 +691,10 @@ cdef class Parser:
         xp = get_array_module(d_tokvecs)
         for ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
-            mask = ids >= 0
-            d_state_features *= mask.reshape(ids.shape + (1,))
-            self.model[0].ops.scatter_add(d_tokvecs, ids * mask,
+            ids = ids.flatten()
+            d_state_features = d_state_features.reshape(
+                (ids.size, d_state_features.shape[2]))
+            self.model[0].ops.scatter_add(d_tokvecs, ids,
                 d_state_features)
         bp_tokvecs(d_tokvecs, sgd=sgd)
 

@@ -8,7 +8,7 @@ from ...attrs import NORM
 from ...gold import GoldParse
 from ...vocab import Vocab
 from ...tokens import Doc
-from ...pipeline import NeuralDependencyParser
+from ...pipeline import DependencyParser
 
 @pytest.fixture
 def vocab():
@@ -16,7 +16,7 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    parser = NeuralDependencyParser(vocab)
+    parser = DependencyParser(vocab)
     parser.cfg['token_vector_width'] = 4
     parser.cfg['hidden_width'] = 32
     #parser.add_label('right')

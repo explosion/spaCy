@@ -96,7 +96,6 @@ def _zero_init(model):
 @layerize
 def _preprocess_doc(docs, drop=0.):
     keys = [doc.to_array([LOWER]) for doc in docs]
-    keys = [a[:, 0] for a in keys]
     ops = Model.ops
     lengths = ops.asarray([arr.shape[0] for arr in keys])
     keys = ops.xp.concatenate(keys)
@@ -128,31 +127,34 @@ class PrecomputableAffine(Model):
         self.nF = nF
 
     def begin_update(self, X, drop=0.):
-        tensordot = self.ops.xp.tensordot
-        ascontiguous = self.ops.xp.ascontiguousarray
-        if self.nP == 1:
-            Yf = tensordot(X, self.W, axes=[[1], [2]])
-        else:
-            Yf = tensordot(X, self.W, axes=[[1], [3]])
+        Yf = self.ops.dot(X,
+                 self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
+ 
+        Yf = Yf.reshape((X.shape[0], self.nF, self.nO, self.nP))
 
         def backward(dY_ids, sgd=None):
             dY, ids = dY_ids
             Xf = X[ids]
-            if self.nP == 1:
-                dXf = tensordot(dY, self.W, axes=[[1], [1]])
-            else:
-                dXf = tensordot(dY, self.W, axes=[[1,2], [1,2]])
-            dW = tensordot(dY, Xf, axes=[[0], [0]])
-            # (o, p, f, i) --> (f, o, p, i)
-            if self.nP == 1:
-                self.d_W += dW.transpose((1, 0, 2))
-            else:
-                self.d_W += dW.transpose((2, 0, 1, 3))
+            Xf = Xf.reshape((Xf.shape[0], self.nF * self.nI))
+
             self.d_b += dY.sum(axis=0)
+            dY = dY.reshape((dY.shape[0], self.nO*self.nP))
+
+            Wopfi = self.W.transpose((1, 2, 0, 3))
+            Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
+            Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
+            dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
+            
+            # Reuse the buffer
+            dWopfi = Wopfi; dWopfi.fill(0.)
+            self.ops.xp.dot(dY.T, Xf, out=dWopfi)
+            dWopfi = dWopfi.reshape((self.nO, self.nP, self.nF, self.nI))
+            # (o, p, f, i) --> (f, o, p, i)
+            self.d_W += dWopfi.transpose((2, 0, 1, 3))
 
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return dXf
+            return dXf.reshape((dXf.shape[0], self.nF, self.nI))
         return Yf, backward
 
     @staticmethod
@@ -176,12 +178,9 @@ class PrecomputableAffine(Model):
                     size=tokvecs.size).reshape(tokvecs.shape)
 
         def predict(ids, tokvecs):
-            hiddens = model(tokvecs)
-            if model.nP == 1:
-                vector = model.ops.allocate((hiddens.shape[0], model.nO))
-            else:
-                vector = model.ops.allocate((hiddens.shape[0], model.nO, model.nP))
-            model.ops.scatter_add(vector, ids, hiddens)
+            hiddens = model(tokvecs) # (b, f, o, p)
+            vector = model.ops.allocate((hiddens.shape[0], model.nO, model.nP))
+            model.ops.xp.add.at(vector, ids, hiddens)
             vector += model.b
             if model.nP >= 2:
                 return model.ops.maxout(vector)[0]
@@ -329,8 +328,7 @@ def Tok2Vec(width, embed_size, **kwargs):
 
         tok2vec = (
             FeatureExtracter(cols)
-            >> with_flatten(
-                embed >> (convolution ** 4), pad=4)
+            >> with_flatten(embed >> (convolution ** 4), pad=4)
         )
 
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
@@ -359,56 +357,10 @@ def reapply(layer, n_times):
     return wrap(reapply_fwd, layer)
 
 
-
-
 def asarray(ops, dtype):
     def forward(X, drop=0.):
         return ops.asarray(X, dtype=dtype), None
     return layerize(forward)
-
-
-def foreach(layer):
-    def forward(Xs, drop=0.):
-        results = []
-        backprops = []
-        for X in Xs:
-            result, bp = layer.begin_update(X, drop=drop)
-            results.append(result)
-            backprops.append(bp)
-        def backward(d_results, sgd=None):
-            dXs = []
-            for d_result, backprop in zip(d_results, backprops):
-                dXs.append(backprop(d_result, sgd))
-            return dXs
-        return results, backward
-    model = layerize(forward)
-    model._layers.append(layer)
-    return model
-
-
-def rebatch(size, layer):
-    ops = layer.ops
-    def forward(X, drop=0.):
-        if X.shape[0] < size:
-            return layer.begin_update(X)
-        parts = _divide_array(X, size)
-        results, bp_results = zip(*[layer.begin_update(p, drop=drop)
-                                    for p in parts])
-        y = ops.flatten(results)
-        def backward(dy, sgd=None):
-            d_parts = [bp(y, sgd=sgd) for bp, y in
-                       zip(bp_results, _divide_array(dy, size))]
-            try:
-                dX = ops.flatten(d_parts)
-            except TypeError:
-                dX = None
-            except ValueError:
-                dX = None
-            return dX
-        return y, backward
-    model = layerize(forward)
-    model._layers.append(layer)
-    return model
 
 
 def _divide_array(X, size):
@@ -473,46 +425,6 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
     return vectors, backward
 
 
-def fine_tune(embedding, combine=None):
-    if combine is not None:
-        raise NotImplementedError(
-            "fine_tune currently only supports addition. Set combine=None")
-    def fine_tune_fwd(docs_tokvecs, drop=0.):
-        docs, tokvecs = docs_tokvecs
-
-        lengths = model.ops.asarray([len(doc) for doc in docs], dtype='i')
-
-        vecs, bp_vecs = embedding.begin_update(docs, drop=drop)
-        flat_tokvecs = embedding.ops.flatten(tokvecs)
-        flat_vecs = embedding.ops.flatten(vecs)
-        output = embedding.ops.unflatten(
-                   (model.mix[0] * flat_tokvecs + model.mix[1] * flat_vecs), lengths)
-
-        def fine_tune_bwd(d_output, sgd=None):
-            flat_grad = model.ops.flatten(d_output)
-            model.d_mix[0] += flat_tokvecs.dot(flat_grad.T).sum()
-            model.d_mix[1] += flat_vecs.dot(flat_grad.T).sum()
-
-            bp_vecs([d_o * model.mix[1] for d_o in d_output], sgd=sgd)
-            if sgd is not None:
-                sgd(model._mem.weights, model._mem.gradient, key=model.id)
-            return [d_o * model.mix[0] for d_o in d_output]
-        return output, fine_tune_bwd
-
-    def fine_tune_predict(docs_tokvecs):
-        docs, tokvecs = docs_tokvecs
-        vecs = embedding(docs)
-        return [model.mix[0]*tv+model.mix[1]*v
-                for tv, v in zip(tokvecs, vecs)]
-
-    model = wrap(fine_tune_fwd, embedding)
-    model.mix = model._mem.add((model.id, 'mix'), (2,))
-    model.mix.fill(0.5)
-    model.d_mix = model._mem.add_gradient((model.id, 'd_mix'), (model.id, 'mix'))
-    model.predict = fine_tune_predict
-    return model
-
-
 @layerize
 def flatten(seqs, drop=0.):
     if isinstance(seqs[0], numpy.ndarray):
@@ -552,17 +464,18 @@ def zero_init(model):
 @layerize
 def preprocess_doc(docs, drop=0.):
     keys = [doc.to_array([LOWER]) for doc in docs]
-    keys = [a[:, 0] for a in keys]
     ops = Model.ops
     lengths = ops.asarray([arr.shape[0] for arr in keys])
     keys = ops.xp.concatenate(keys)
     vals = ops.allocate(keys.shape[0]) + 1
     return (keys, vals, lengths), None
 
+
 def getitem(i):
     def getitem_fwd(X, drop=0.):
         return X[i], None
     return layerize(getitem_fwd)
+
 
 def build_tagger_model(nr_class, **cfg):
     embed_size = util.env_opt('embed_size', 7000)
@@ -601,29 +514,6 @@ def SpacyVectors(docs, drop=0.):
         vectors = doc.vocab.vectors.data[indices]
         batch.append(vectors)
     return batch, None
-
-
-def foreach(layer, drop_factor=1.0):
-    '''Map a layer across elements in a list'''
-    def foreach_fwd(Xs, drop=0.):
-        drop *= drop_factor
-        ys = []
-        backprops = []
-        for X in Xs:
-            y, bp_y = layer.begin_update(X, drop=drop)
-            ys.append(y)
-            backprops.append(bp_y)
-        def foreach_bwd(d_ys, sgd=None):
-            d_Xs = []
-            for d_y, bp_y in zip(d_ys, backprops):
-                if bp_y is not None and bp_y is not None:
-                    d_Xs.append(d_y, sgd=sgd)
-                else:
-                    d_Xs.append(None)
-            return d_Xs
-        return ys, foreach_bwd
-    model = wrap(foreach_fwd, layer)
-    return model
 
 
 def build_text_classifier(nr_class, width=64, **cfg):

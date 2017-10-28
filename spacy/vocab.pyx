@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import bz2
 import ujson
 import re
 import numpy
@@ -16,7 +15,6 @@ from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
 from .typedefs cimport attr_t
-from .cfile cimport CFile
 from .tokens.token cimport Token
 from .attrs cimport PROB, LANG
 from .structs cimport SerializedLexemeC

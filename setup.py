@@ -30,19 +30,14 @@ MOD_NAMES = [
     'spacy.syntax._state',
     'spacy.syntax._beam_utils',
     'spacy.tokenizer',
-    'spacy._cfile',
-    'spacy.syntax.parser',
     'spacy.syntax.nn_parser',
-    'spacy.syntax.beam_parser',
     'spacy.syntax.nonproj',
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
-    'spacy.syntax._parse_features',
     'spacy.gold',
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
-    'spacy.cfile',
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
@@ -67,7 +62,7 @@ LINK_OPTIONS = {
 
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
-USE_OPENMP_DEFAULT = '1' if sys.platform != 'darwin' else None
+USE_OPENMP_DEFAULT = '0' if sys.platform != 'darwin' else None
 if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     if sys.platform == 'darwin':
         COMPILE_OPTIONS['other'].append('-fopenmp')

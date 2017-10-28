@@ -4,22 +4,24 @@ The idea is to associate each word in the vocabulary with a tag, noting whether
 they begin, end, or are inside at least one pattern. An additional tag is used
 for single-word patterns. Complete patterns are also stored in a hash set.
 
-When we process a document, we look up the words in the vocabulary, to associate
-the words with the tags.  We then search for tag-sequences that correspond to
-valid candidates. Finally, we look up the candidates in the hash set.
+When we process a document, we look up the words in the vocabulary, to
+associate the words with the tags.  We then search for tag-sequences that
+correspond to valid candidates. Finally, we look up the candidates in the hash
+set.
 
-For instance, to search for the phrases "Barack Hussein Obama" and "Hilary Clinton", we
-would associate "Barack" and "Hilary" with the B tag, Hussein with the I tag,
-and Obama and Clinton with the L tag.
+For instance, to search for the phrases "Barack Hussein Obama" and "Hilary
+Clinton", we would associate "Barack" and "Hilary" with the B tag, Hussein with
+the I tag, and Obama and Clinton with the L tag.
 
 The document "Barack Clinton and Hilary Clinton" would have the tag sequence
-[{B}, {L}, {}, {B}, {L}], so we'd get two matches. However, only the second candidate
-is in the phrase dictionary, so only one is returned as a match.
+[{B}, {L}, {}, {B}, {L}], so we'd get two matches. However, only the second
+candidate is in the phrase dictionary, so only one is returned as a match.
 
-The algorithm is O(n) at run-time for document of length n because we're only ever
-matching over the tag patterns. So no matter how many phrases we're looking for,
-our pattern set stays very small (exact size depends on the maximum length we're
-looking for, as the query language currently has no quantifiers)
+The algorithm is O(n) at run-time for document of length n because we're only
+ever matching over the tag patterns. So no matter how many phrases we're
+looking for, our pattern set stays very small (exact size depends on the
+maximum length we're looking for, as the query language currently has no
+quantifiers).
 
 The example expects a .bz2 file from the Reddit corpus, and a patterns file,
 formatted in jsonl as a sequence of entries like this:
@@ -32,16 +34,32 @@ formatted in jsonl as a sequence of entries like this:
 {"text":"Argentina"}
 """
 from __future__ import print_function, unicode_literals, division
+
 from bz2 import BZ2File
 import time
-import math
-import codecs
-
 import plac
 import ujson
 
 from spacy.matcher import PhraseMatcher
 import spacy
+
+
+@plac.annotations(
+    patterns_loc=("Path to gazetteer", "positional", None, str),
+    text_loc=("Path to Reddit corpus file", "positional", None, str),
+    n=("Number of texts to read", "option", "n", int),
+    lang=("Language class to initialise", "option", "l", str))
+def main(patterns_loc, text_loc, n=10000, lang='en'):
+    nlp = spacy.blank('en')
+    nlp.vocab.lex_attr_getters = {}
+    phrases = read_gazetteer(nlp.tokenizer, patterns_loc)
+    count = 0
+    t1 = time.time()
+    for ent_id, text in get_matches(nlp.tokenizer, phrases,
+                                    read_text(text_loc, n=n)):
+        count += 1
+    t2 = time.time()
+    print("%d docs in %.3f s. %d matches" % (n, (t2 - t1), count))
 
 
 def read_gazetteer(tokenizer, loc, n=-1):
@@ -73,18 +91,6 @@ def get_matches(tokenizer, phrases, texts, max_length=6):
         matches = matcher(doc)
         for ent_id, start, end in matches:
             yield (ent_id, doc[start:end].text)
-
-
-def main(patterns_loc, text_loc, n=10000):
-    nlp = spacy.blank('en')
-    nlp.vocab.lex_attr_getters = {}
-    phrases = read_gazetteer(nlp.tokenizer, patterns_loc)
-    count = 0
-    t1 = time.time()
-    for ent_id, text in get_matches(nlp.tokenizer, phrases, read_text(text_loc, n=n)):
-        count += 1
-    t2 = time.time()
-    print("%d docs in %.3f s. %d matches" % (n, (t2 - t1), count))
 
 
 if __name__ == '__main__':
