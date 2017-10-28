@@ -8,7 +8,9 @@
             "English": "en",
             "German": "de",
             "Spanish": "es",
+            "Portuguese": "pt",
             "French": "fr",
+            "Italian": "it",
             "Multi-Language": "xx"
         }
     },
@@ -28,7 +30,9 @@
         "en": ["en_core_web_sm", "en_core_web_lg", "en_vectors_web_lg"],
         "de": ["de_dep_news_sm"],
         "es": ["es_core_web_sm"],
+        "pt": [],
         "fr": [],
+        "it": [],
         "xx": ["xx_ent_wiki_sm"]
     },
 
