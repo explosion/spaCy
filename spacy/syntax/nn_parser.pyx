@@ -680,7 +680,7 @@ cdef class Parser:
                                        lower, stream, drop=0.0)
         return (tokvecs, bp_tokvecs), state2vec, upper
 
-    nr_feature = 8
+    nr_feature = 13
 
     def get_token_ids(self, states):
         cdef StateClass state
