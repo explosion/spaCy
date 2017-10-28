@@ -28,7 +28,10 @@ p
     |  #[strong #[+procon("yes", "similar", false, 16)] similarity:] similar (higher is more similar) #[br]
     |  #[strong #[+procon("no", "dissimilar", false, 16)] similarity:] dissimilar (lower is less similar)
 
-+table(["", "dog", "cat", "banana"])
++table
+    +row("head")
+        for column in ["", "dog", "cat", "banana"]
+            +head-cell.u-text-center=column
     each cells, label in {"dog": [1, 0.8, 0.24], "cat": [0.8, 1, 0.28], "banana": [0.24, 0.28, 1]}
         +row
             +cell.u-text-label.u-color-theme=label
