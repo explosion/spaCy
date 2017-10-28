@@ -99,69 +99,69 @@ p
         +row
             +cell #[strong Tokenization]
             +cell Segmenting text into words, punctuations marks etc.
-            +cell #[+procon("con")]
+            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Part-of-speech] (POS) #[strong Tagging]
             +cell Assigning word types to tokens, like verb or noun.
-            +cell #[+procon("pro")]
+            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Dependency Parsing]
             +cell
                 |  Assigning syntactic dependency labels, describing the
                 |  relations between individual tokens, like subject or object.
-            +cell #[+procon("pro")]
+            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Lemmatization]
             +cell
                 |  Assigning the base forms of words. For example, the lemma of
                 |  "was" is "be", and the lemma of "rats" is "rat".
-            +cell #[+procon("pro")]
+            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Sentence Boundary Detection] (SBD)
             +cell Finding and segmenting individual sentences.
-            +cell #[+procon("pro")]
+            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Named Entity Recongition] (NER)
             +cell
                 |  Labelling named "real-world" objects, like persons, companies
                 |  or locations.
-            +cell #[+procon("pro")]
+            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Similarity]
             +cell
                 |  Comparing words, text spans and documents and how similar
                 |  they are to each other.
-            +cell #[+procon("pro")]
+            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Text Classification]
             +cell
                 |  Assigning categories or labels to a whole document, or parts
                 |  of a document.
-            +cell #[+procon("pro")]
+            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Rule-based Matching]
             +cell
                 |  Finding sequences of tokens based on their texts and
                 |  linguistic annotations, similar to regular expressions.
-            +cell #[+procon("con")]
+            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Training]
             +cell Updating and improving a statistical model's predictions.
-            +cell #[+procon("neutral")]
+            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Serialization]
             +cell Saving objects to files or byte strings.
-            +cell #[+procon("neutral")]
+            +cell #[+procon("no", "no", true)]
 
     +h(2, "annotations") Linguistic annotations
 

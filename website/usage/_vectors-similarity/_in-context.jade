@@ -36,15 +36,15 @@ p
 +table(["Context", "labrador.similarity(dog)"])
     +row
         +cell The #[strong labrador] barked.
-        +cell #[code 0.56] #[+procon("pro")]
+        +cell #[code 0.56] #[+procon("yes", "similar")]
 
     +row
         +cell The #[strong labrador] swam.
-        +cell #[code 0.48] #[+procon("con")]
+        +cell #[code 0.48] #[+procon("no", "dissimilar")]
 
     +row
         +cell the #[strong labrador] people live in canada.
-        +cell #[code 0.39] #[+procon("con")]
+        +cell #[code 0.39] #[+procon("no", "dissimilar")]
 
 p
     |  The same also works for whole documents. Here, the variance of the
@@ -81,8 +81,9 @@ p
         +row(counter ? null : "divider")
             +cell=label
             for cell in cells
-                +cell.u-text-center #[code=cell.toFixed(2)]
-                    |  #[+procon(cell < 0.7 ? "con" : cell != 1 ? "pro" : "neutral")]
+                +cell.u-text-center
+                    - var result = cell < 0.7 ? ["no", "dissimilar"] : cell != 1 ? ["yes", "similar"] : ["neutral", "identical"]
+                    |  #[code=cell.toFixed(2)] #[+procon(...result)]
         - counter++
 
 p
@@ -117,6 +118,7 @@ p
         +row(counter ? null : "divider")
             +cell=label
             for cell in cells
-                +cell.u-text-center #[code=cell.toFixed(2)]
-                    |  #[+procon(cell < 0.7 ? "con" : cell != 1 ? "pro" : "neutral")]
+                +cell.u-text-center
+                    - var result = cell < 0.7 ? ["no", "dissimilar"] : cell != 1 ? ["yes", "similar"] : ["neutral", "identical"]
+                    |  #[code=cell.toFixed(2)] #[+procon(...result)]
         - counter++

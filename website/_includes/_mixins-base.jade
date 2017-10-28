@@ -45,10 +45,11 @@ mixin icon(name, width, height)
     icon - [string] "pro", "con" or "neutral" (default: "neutral")
     size - [integer] icon size (optional)
 
-mixin procon(icon, size)
-    - colors = { pro: "green", con: "red", neutral: "subtle" }
-    +icon("circle", size || 16)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
-
+mixin procon(icon, label, show_label, size)
+    - var colors = { yes: "green", no: "red", neutral: "subtle" }
+    span.u-nowrap
+        +icon(icon, size || 20)(class="u-color-#{colors[icon] || 'subtle'}").o-icon--inline&attributes(attributes)
+        span.u-text-small(class=show_label ? null : "u-hidden")=(label || icon)
 
 //- Headlines Helper Mixin
     level - [integer] 1, 2, 3, 4, or 5

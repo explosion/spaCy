@@ -24,17 +24,18 @@ p
             print(token1.similarity(token2))
 
 +aside
-    |  #[strong #[+procon("neutral", 16)] similarity:] identical#[br]
-    |  #[strong #[+procon("pro", 16)] similarity:] similar (higher is more similar) #[br]
-    |  #[strong #[+procon("con", 16)] similarity:] dissimilar (lower is less similar)
+    |  #[strong #[+procon("neutral", "identical", false, 16)] similarity:] identical#[br]
+    |  #[strong #[+procon("yes", "similar", false, 16)] similarity:] similar (higher is more similar) #[br]
+    |  #[strong #[+procon("no", "dissimilar", false, 16)] similarity:] dissimilar (lower is less similar)
 
 +table(["", "dog", "cat", "banana"])
     each cells, label in {"dog": [1, 0.8, 0.24], "cat": [0.8, 1, 0.28], "banana": [0.24, 0.28, 1]}
         +row
             +cell.u-text-label.u-color-theme=label
             for cell in cells
-                +cell.u-text-center #[code=cell.toFixed(2)]
-                    |  #[+procon(cell < 0.5 ? "con" : cell != 1 ? "pro" : "neutral")]
+                +cell.u-text-center
+                    - var result = cell < 0.5 ? ["yes", "similar"] : cell != 1 ? ["no", "dissimilar"] : ["neutral", "identical"]
+                    |  #[code=cell.toFixed(2)] #[+procon(...result)]
 
 p
     |  In this case, the model's predictions are pretty on point. A dog is very

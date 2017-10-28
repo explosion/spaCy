@@ -30,15 +30,15 @@ p
 +table(["Text", "Entity", "Start", "End", "Label", ""])
     - var style = [0, 0, 1, 1, 1]
     +annotation-row(["Uber blew through $1 million a week", "Uber", 0, 4, "ORG"], style)
-        +cell #[+procon("pro")]
+        +cell #[+procon("yes", "right", true)]
     +annotation-row(["Android Pay expands to Canada", "Android", 0, 7, "PERSON"], style)
-        +cell #[+procon("con")]
+        +cell #[+procon("no", "wrong", true)]
     +annotation-row(["Android Pay expands to Canada", "Canada", 23, 30, "GPE"], style)
-        +cell #[+procon("pro")]
+        +cell #[+procon("yes", "right", true)]
     +annotation-row(["Spotify steps up Asia expansion", "Spotify", 0, 8, "ORG"], style)
-        +cell #[+procon("pro")]
+        +cell #[+procon("yes", "right", true)]
     +annotation-row(["Spotify steps up Asia expansion", "Asia", 17, 21, "NORP"], style)
-        +cell #[+procon("con")]
+        +cell #[+procon("no", "wrong", true)]
 
 p
     |  Alternatively, the
@@ -50,13 +50,13 @@ p
 +table(["Text", "Entity", "Start", "End", "Label", ""])
     - var style = [0, 0, 1, 1, 1]
     +annotation-row(["let me google this for you", "google", 7, 13, "ORG"], style)
-        +cell #[+procon("con")]
+        +cell #[+procon("no", "wrong", true)]
     +annotation-row(["Google Maps launches location sharing", "Google", 0, 6, "ORG"], style)
-        +cell #[+procon("con")]
+        +cell #[+procon("no", "wrong", true)]
     +annotation-row(["Google rebrands its business apps", "Google", 0, 6, "ORG"], style)
-        +cell #[+procon("pro")]
+        +cell #[+procon("yes", "right", true)]
     +annotation-row(["look what i found on google! 😂", "google", 21, 27, "ORG"], style)
-        +cell #[+procon("con")]
+        +cell #[+procon("no", "wrong", true)]
 
 p
     |  Based on the few examples above, you can already create six training
