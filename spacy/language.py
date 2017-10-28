@@ -1,31 +1,28 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
-from contextlib import contextmanager
-import copy
 
-from thinc.neural import Model
-from thinc.neural.optimizers import Adam
 import random
 import ujson
-from collections import OrderedDict
 import itertools
 import weakref
 import functools
-import tqdm
+from collections import OrderedDict
+from contextlib import contextmanager
+from copy import copy
+from thinc.neural import Model
+from thinc.neural.optimizers import Adam
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
-from .tagger import Tagger
 from .lemmatizer import Lemmatizer
-
-from .pipeline import DependencyParser, Tensorizer, Tagger
-from .pipeline import EntityRecognizer, SimilarityHook, TextCategorizer
-
-from .compat import json_dumps, izip, copy_reg
+from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
+from .pipeline import SimilarityHook, TextCategorizer
+from .compat import json_dumps, izip
 from .scorer import Scorer
 from ._ml import link_vectors_to_models
 from .attrs import IS_STOP
-from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
+from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS, is_stop
@@ -57,16 +54,18 @@ class BaseDefaults(object):
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
         token_match = cls.token_match
-        prefix_search = util.compile_prefix_regex(cls.prefixes).search \
-                        if cls.prefixes else None
-        suffix_search = util.compile_suffix_regex(cls.suffixes).search \
-                        if cls.suffixes else None
-        infix_finditer = util.compile_infix_regex(cls.infixes).finditer \
-                         if cls.infixes else None
+        prefix_search = (util.compile_prefix_regex(cls.prefixes).search
+                         if cls.prefixes else None)
+        suffix_search = (util.compile_suffix_regex(cls.suffixes).search
+                         if cls.suffixes else None)
+        infix_finditer = (util.compile_infix_regex(cls.infixes).finditer
+                          if cls.infixes else None)
         vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
         return Tokenizer(vocab, rules=rules,
-                         prefix_search=prefix_search, suffix_search=suffix_search,
-                         infix_finditer=infix_finditer, token_match=token_match)
+                         prefix_search=prefix_search,
+                         suffix_search=suffix_search,
+                         infix_finditer=infix_finditer,
+                         token_match=token_match)
 
     pipe_names = ['tensorizer', 'tagger', 'parser', 'ner']
     token_match = TOKEN_MATCH
@@ -98,7 +97,7 @@ class Language(object):
 
     factories = {
         'tokenizer': lambda nlp: nlp.Defaults.create_tokenizer(nlp),
-        'tensorizer': lambda nlp, **cfg: TokenVectorEncoder(nlp.vocab, **cfg),
+        'tensorizer': lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
         'tagger': lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
         'parser': lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         'ner': lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
@@ -218,14 +217,14 @@ class Language(object):
     def add_pipe(self, component, name=None, before=None, after=None,
                  first=None, last=None):
         """Add a component to the processing pipeline. Valid components are
-        callables that take a `Doc` object, modify it and return it. Only one of
-        before, after, first or last can be set. Default behaviour is "last".
+        callables that take a `Doc` object, modify it and return it. Only one
+        of before/after/first/last can be set. Default behaviour is "last".
 
         component (callable): The pipeline component.
         name (unicode): Name of pipeline component. Overwrites existing
             component.name attribute if available. If no name is set and
             the component exposes no name attribute, component.__name__ is
-            used. An error is raised if the name already exists in the pipeline.
+            used. An error is raised if a name already exists in the pipeline.
         before (unicode): Component name to insert component directly before.
         after (unicode): Component name to insert component directly after.
         first (bool): Insert component first / not first in the pipeline.
@@ -240,7 +239,8 @@ class Language(object):
                 name = component.name
             elif hasattr(component, '__name__'):
                 name = component.__name__
-            elif hasattr(component, '__class__') and hasattr(component.__class__, '__name__'):
+            elif (hasattr(component, '__class__') and
+                  hasattr(component.__class__, '__name__')):
                 name = component.__class__.__name__
             else:
                 name = repr(component)
@@ -269,7 +269,7 @@ class Language(object):
         `name in nlp.pipe_names`.
 
         name (unicode): Name of the component.
-        RETURNS (bool): Whether a component of that name exists in the pipeline.
+        RETURNS (bool): Whether a component of the name exists in the pipeline.
         """
         return name in self.pipe_names
 
@@ -332,15 +332,12 @@ class Language(object):
         return doc
 
     def disable_pipes(self, *names):
-        '''Disable one or more pipeline components.
-
-        If used as a context manager, the pipeline will be restored to the initial
-        state at the end of the block. Otherwise, a DisabledPipes object is
-        returned, that has a `.restore()` method you can use to undo your
-        changes.
+        """Disable one or more pipeline components. If used as a context
+        manager, the pipeline will be restored to the initial state at the end
+        of the block. Otherwise, a DisabledPipes object is returned, that has
+        a `.restore()` method you can use to undo your changes.
 
         EXAMPLE:
-
             >>> nlp.add_pipe('parser')
             >>> nlp.add_pipe('tagger')
             >>> with nlp.disable_pipes('parser', 'tagger'):
@@ -351,7 +348,7 @@ class Language(object):
             >>> assert not nlp.has_pipe('parser')
             >>> disabled.restore()
             >>> assert nlp.has_pipe('parser')
-        '''
+        """
         return DisabledPipes(self, *names)
 
     def make_doc(self, text):
@@ -367,14 +364,14 @@ class Language(object):
         RETURNS (dict): Results from the update.
 
         EXAMPLE:
-            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
+            >>> with nlp.begin_training(gold) as (trainer, optimizer):
             >>>    for epoch in trainer.epochs(gold):
             >>>        for docs, golds in epoch:
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
         if len(docs) != len(golds):
             raise IndexError("Update expects same number of docs and golds "
-                "Got: %d, %d" % (len(docs), len(golds)))
+                             "Got: %d, %d" % (len(docs), len(golds)))
         if len(docs) == 0:
             return
         if sgd is None:
@@ -382,8 +379,10 @@ class Language(object):
                 self._optimizer = Adam(Model.ops, 0.001)
             sgd = self._optimizer
         grads = {}
+
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
+
         pipes = list(self.pipeline)
         random.shuffle(pipes)
         for name, proc in pipes:
@@ -421,7 +420,7 @@ class Language(object):
         L2 = util.env_opt('L2_penalty', 1e-6)
         max_grad_norm = util.env_opt('grad_norm_clip', 1.)
         self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
-                              beta2=beta2, eps=eps)
+                               beta2=beta2, eps=eps)
         self._optimizer.max_grad_norm = max_grad_norm
         self._optimizer.device = device
         return self._optimizer
@@ -461,7 +460,7 @@ class Language(object):
         L2 = util.env_opt('L2_penalty', 1e-6)
         max_grad_norm = util.env_opt('grad_norm_clip', 1.)
         self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
-                              beta2=beta2, eps=eps)
+                               beta2=beta2, eps=eps)
         self._optimizer.max_grad_norm = max_grad_norm
         self._optimizer.device = device
         return self._optimizer
@@ -512,17 +511,17 @@ class Language(object):
                 pass
 
     def pipe(self, texts, as_tuples=False, n_threads=2, batch_size=1000,
-            disable=[]):
-        """Process texts as a stream, and yield `Doc` objects in order. Supports
-        GIL-free multi-threading.
+             disable=[]):
+        """Process texts as a stream, and yield `Doc` objects in order.
+        Supports GIL-free multi-threading.
 
         texts (iterator): A sequence of texts to process.
         as_tuples (bool):
             If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
-        n_threads (int): The number of worker threads to use. If -1, OpenMP will
-            decide how many to use at run time. Default is 2.
+        n_threads (int): The number of worker threads to use. If -1, OpenMP
+            will decide how many to use at run time. Default is 2.
         batch_size (int): The number of texts to buffer.
         disable (list): Names of the pipeline components to disable.
         YIELDS (Doc): Documents in the order of the original text.
@@ -546,7 +545,8 @@ class Language(object):
             if name in disable:
                 continue
             if hasattr(proc, 'pipe'):
-                docs = proc.pipe(docs, n_threads=n_threads, batch_size=batch_size)
+                docs = proc.pipe(docs, n_threads=n_threads,
+                                 batch_size=batch_size)
             else:
                 # Apply the function, but yield the doc
                 docs = _pipe(proc, docs)
@@ -583,7 +583,7 @@ class Language(object):
         will include the model.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or `Path`-like objects.
+            it doesn't exist. Paths may be strings or `Path`-like objects.
         disable (list): Names of pipeline components to disable and prevent
             from being saved.
 
@@ -649,7 +649,7 @@ class Language(object):
         serializers = OrderedDict((
             ('vocab', lambda: self.vocab.to_bytes()),
             ('tokenizer', lambda: self.tokenizer.to_bytes(vocab=False)),
-            ('meta', lambda: ujson.dumps(self.meta))
+            ('meta', lambda: json_dumps(self.meta))
         ))
         for i, (name, proc) in enumerate(self.pipeline):
             if name in disable:
@@ -682,14 +682,14 @@ class Language(object):
 
 
 class DisabledPipes(list):
-    '''Manager for temporary pipeline disabling.'''
+    """Manager for temporary pipeline disabling."""
     def __init__(self, nlp, *names):
         self.nlp = nlp
         self.names = names
         # Important! Not deep copy -- we just want the container (but we also
         # want to support people providing arbitrarily typed nlp.pipeline
         # objects.)
-        self.original_pipeline = copy.copy(nlp.pipeline)
+        self.original_pipeline = copy(nlp.pipeline)
         list.__init__(self)
         self.extend(nlp.remove_pipe(name) for name in names)
 
@@ -702,7 +702,8 @@ class DisabledPipes(list):
     def restore(self):
         '''Restore the pipeline to its state when DisabledPipes was created.'''
         current, self.nlp.pipeline = self.nlp.pipeline, self.original_pipeline
-        unexpected = [name for name, pipe in current if not self.nlp.has_pipe(name)]
+        unexpected = [name for name, pipe in current
+                      if not self.nlp.has_pipe(name)]
         if unexpected:
             # Don't change the pipeline if we're raising an error.
             self.nlp.pipeline = current

@@ -36,12 +36,14 @@ p
             |  that maps strings to hash values, and vice versa.
 
     +row
-        +cell #[code data]
-        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell #[code width]
+        +cell int
+        +cell Number of dimensions.
 
     +row
-        +cell #[code width]
-        +cell Number of dimensions.
+        +cell #[code data]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell The vector data.
 
     +row("foot")
         +cell returns
@@ -208,7 +210,7 @@ p
     +row("foot")
         +cell returns
         +cell tuple
-        +cell #[code (rows, dims)] pairs.
+        +cell A #[code (rows, dims)] pair.
 
 +h(2, "from_glove") Vectors.from_glove
     +tag method
@@ -238,10 +240,15 @@ p Save the current state to a directory.
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code path]
-        +cell unicode or #[code Path]
+        +cell unicode / #[code Path]
         +cell
             |  A path to a directory, which will be created if it doesn't exist.
             |  Paths may be either strings or #[code Path]-like objects.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being saved.
 
 +h(2, "from_disk") Vectors.from_disk
     +tag method
@@ -255,7 +262,7 @@ p Loads state from a directory. Modifies the object in place and returns it.
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code path]
-        +cell unicode or #[code Path]
+        +cell unicode / #[code Path]
         +cell
             |  A path to a directory. Paths may be either strings or
             |  #[code Path]-like objects.
@@ -297,7 +304,7 @@ p Load state from a binary string.
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code bytes_data]
+        +cell #[code data]
         +cell bytes
         +cell The data to load from.
 

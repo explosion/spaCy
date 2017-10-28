@@ -1,5 +1,5 @@
 # coding: utf8
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import requests
 import pkg_resources
@@ -29,8 +29,10 @@ def validate(cmd):
     model_links = get_model_links(current_compat)
     model_pkgs = get_model_pkgs(current_compat, all_models)
     incompat_links = {l for l, d in model_links.items() if not d['compat']}
-    incompat_models = {d['name'] for _, d in model_pkgs.items() if not d['compat']}
-    incompat_models.update([d['name'] for _, d in model_links.items() if not d['compat']])
+    incompat_models = {d['name'] for _, d in model_pkgs.items()
+                       if not d['compat']}
+    incompat_models.update([d['name'] for _, d in model_links.items()
+                            if not d['compat']])
     na_models = [m for m in incompat_models if m not in current_compat]
     update_models = [m for m in incompat_models if m in current_compat]
 
@@ -90,7 +92,6 @@ def get_model_pkgs(compat, all_models):
 
 
 def get_model_row(compat, name, data, type='package'):
-    tpl_row = '    {:<10}' + ('  {:<20}' * 4)
     tpl_red = '\x1b[38;5;1m{}\x1b[0m'
     tpl_green = '\x1b[38;5;2m{}\x1b[0m'
     if data['compat']:
@@ -110,7 +111,8 @@ def get_row(*args):
 def is_model_path(model_path):
     exclude = ['cache', 'pycache', '__pycache__']
     name = model_path.parts[-1]
-    return model_path.is_dir() and name not in exclude and not name.startswith('.')
+    return (model_path.is_dir() and name not in exclude
+            and not name.startswith('.'))
 
 
 def is_compat(compat, name, version):
@@ -118,6 +120,7 @@ def is_compat(compat, name, version):
 
 
 def reformat_version(version):
+    """Hack to reformat old versions ending on '-alpha' to match pip format."""
     if version.endswith('-alpha'):
         return version.replace('-alpha', 'a0')
     return version.replace('-alpha', 'a')

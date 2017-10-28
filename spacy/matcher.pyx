@@ -4,12 +4,6 @@
 from __future__ import unicode_literals
 
 import ujson
-
-from .typedefs cimport attr_t
-from .typedefs cimport hash_t
-from .attrs cimport attr_id_t
-from .structs cimport TokenC
-
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
@@ -17,14 +11,15 @@ from libcpp.pair cimport pair
 from murmurhash.mrmr cimport hash64
 from libc.stdint cimport int32_t
 
-from .attrs cimport ID, NULL_ATTR, ENT_TYPE
-from . import attrs
-from .tokens.doc cimport get_token_attr
-from .tokens.doc cimport Doc
+from .typedefs cimport attr_t
+from .typedefs cimport hash_t
+from .structs cimport TokenC
+from .tokens.doc cimport Doc, get_token_attr
 from .vocab cimport Vocab
 
+from .attrs import IDS
+from .attrs cimport attr_id_t, ID, NULL_ATTR
 from .attrs import FLAG61 as U_ENT
-
 from .attrs import FLAG60 as B2_ENT
 from .attrs import FLAG59 as B3_ENT
 from .attrs import FLAG58 as B4_ENT
@@ -34,7 +29,6 @@ from .attrs import FLAG55 as B7_ENT
 from .attrs import FLAG54 as B8_ENT
 from .attrs import FLAG53 as B9_ENT
 from .attrs import FLAG52 as B10_ENT
-
 from .attrs import FLAG51 as I3_ENT
 from .attrs import FLAG50 as I4_ENT
 from .attrs import FLAG49 as I5_ENT
@@ -43,7 +37,6 @@ from .attrs import FLAG47 as I7_ENT
 from .attrs import FLAG46 as I8_ENT
 from .attrs import FLAG45 as I9_ENT
 from .attrs import FLAG44 as I10_ENT
-
 from .attrs import FLAG43 as L2_ENT
 from .attrs import FLAG42 as L3_ENT
 from .attrs import FLAG41 as L4_ENT
@@ -153,7 +146,7 @@ cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
 def _convert_strings(token_specs, string_store):
     # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
     operators = {'!': (ZERO,), '*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
-            '?': (ZERO_ONE,), '1': (ONE,)}
+                 '?': (ZERO_ONE,), '1': (ONE,)}
     tokens = []
     op = ONE
     for spec in token_specs:
@@ -168,10 +161,10 @@ def _convert_strings(token_specs, string_store):
                 if value in operators:
                     ops = operators[value]
                 else:
-                    raise KeyError(
-                        "Unknown operator '%s'. Options: %s" % (value, ', '.join(operators.keys())))
+                    msg = "Unknown operator '%s'. Options: %s"
+                    raise KeyError(msg % (value, ', '.join(operators.keys())))
             if isinstance(attr, basestring):
-                attr = attrs.IDS.get(attr.upper())
+                attr = IDS.get(attr.upper())
             if isinstance(value, basestring):
                 value = string_store.add(value)
             if isinstance(value, bool):
@@ -186,7 +179,7 @@ def _convert_strings(token_specs, string_store):
 def merge_phrase(matcher, doc, i, matches):
     """Callback to merge a phrase on match."""
     ent_id, label, start, end = matches[i]
-    span = doc[start : end]
+    span = doc[start:end]
     span.merge(ent_type=label, ent_id=ent_id)
 
 
@@ -233,13 +226,13 @@ cdef class Matcher:
         return self._normalize_key(key) in self._patterns
 
     def add(self, key, on_match, *patterns):
-        """Add a match-rule to the matcher. A match-rule consists of: an ID key,
-        an on_match callback, and one or more patterns.
+        """Add a match-rule to the matcher. A match-rule consists of: an ID
+        key, an on_match callback, and one or more patterns.
 
         If the key exists, the patterns are appended to the previous ones, and
-        the previous on_match callback is replaced. The `on_match` callback will
-        receive the arguments `(matcher, doc, i, matches)`. You can also set
-        `on_match` to `None` to not perform any actions.
+        the previous on_match callback is replaced. The `on_match` callback
+        will receive the arguments `(matcher, doc, i, matches)`. You can also
+        set `on_match` to `None` to not perform any actions.
 
         A pattern consists of one or more `token_specs`, where a `token_spec`
         is a dictionary mapping attribute IDs to values, and optionally a
@@ -253,8 +246,8 @@ cdef class Matcher:
         The + and * operators are usually interpretted "greedily", i.e. longer
         matches are returned where possible. However, if you specify two '+'
         and '*' patterns in a row and their matches overlap, the first
-        operator will behave non-greedily. This quirk in the semantics
-        makes the matcher more efficient, by avoiding the need for back-tracking.
+        operator will behave non-greedily. This quirk in the semantics makes
+        the matcher more efficient, by avoiding the need for back-tracking.
 
         key (unicode): The match ID.
         on_match (callable): Callback executed on match.
@@ -268,7 +261,6 @@ cdef class Matcher:
         key = self._normalize_key(key)
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
-
         for pattern in patterns:
             specs = _convert_strings(pattern, self.vocab.strings)
             self.patterns.push_back(init_pattern(self.mem, key, specs))
@@ -315,9 +307,9 @@ cdef class Matcher:
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
-        batch_size (int): The number of documents to accumulate into a working set.
+        batch_size (int): Number of documents to accumulate into a working set.
         n_threads (int): The number of threads with which to work on the buffer
-            in parallel, if the `Matcher` implementation supports multi-threading.
+            in parallel, if the implementation supports multi-threading.
         YIELDS (Doc): Documents, in order.
         """
         for doc in docs:
@@ -325,7 +317,7 @@ cdef class Matcher:
             yield doc
 
     def __call__(self, Doc doc):
-        """Find all token sequences matching the supplied patterns on the `Doc`.
+        """Find all token sequences matching the supplied pattern.
 
         doc (Doc): The document to match over.
         RETURNS (list): A list of `(key, start, end)` tuples,
@@ -342,8 +334,8 @@ cdef class Matcher:
         for token_i in range(doc.length):
             token = &doc.c[token_i]
             q = 0
-            # Go over the open matches, extending or finalizing if able. Otherwise,
-            # we over-write them (q doesn't advance)
+            # Go over the open matches, extending or finalizing if able.
+            # Otherwise, we over-write them (q doesn't advance)
             for state in partials:
                 action = get_action(state.second, token)
                 if action == PANIC:
@@ -356,8 +348,8 @@ cdef class Matcher:
 
                 if action == REPEAT:
                     # Leave the state in the queue, and advance to next slot
-                    # (i.e. we don't overwrite -- we want to greedily match more
-                    # pattern.
+                    # (i.e. we don't overwrite -- we want to greedily match
+                    # more pattern.
                     q += 1
                 elif action == REJECT:
                     pass
@@ -366,8 +358,8 @@ cdef class Matcher:
                     partials[q].second += 1
                     q += 1
                 elif action in (ACCEPT, ACCEPT_PREV):
-                    # TODO: What to do about patterns starting with ZERO? Need to
-                    # adjust the start position.
+                    # TODO: What to do about patterns starting with ZERO? Need
+                    # to adjust the start position.
                     start = state.first
                     end = token_i+1 if action == ACCEPT else token_i
                     ent_id = state.second[1].attrs[0].value
@@ -388,8 +380,8 @@ cdef class Matcher:
                     state.second = pattern
                     partials.push_back(state)
                 elif action == ADVANCE:
-                    # TODO: What to do about patterns starting with ZERO? Need to
-                    # adjust the start position.
+                    # TODO: What to do about patterns starting with ZERO? Need
+                    # to adjust the start position.
                     state.first = token_i
                     state.second = pattern + 1
                     partials.push_back(state)
@@ -413,7 +405,6 @@ cdef class Matcher:
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
                 on_match(self, doc, i, matches)
-        # TODO: only return (match_id, start, end)
         return matches
 
     def _normalize_key(self, key):
@@ -441,7 +432,8 @@ def get_bilou(length):
     elif length == 8:
         return [B8_ENT, I8_ENT, I8_ENT, I8_ENT, I8_ENT, I8_ENT, I8_ENT, L8_ENT]
     elif length == 9:
-        return [B9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, L9_ENT]
+        return [B9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT,
+                L9_ENT]
     elif length == 10:
         return [B10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT,
                 I10_ENT, I10_ENT, L10_ENT]
@@ -454,10 +446,8 @@ cdef class PhraseMatcher:
     cdef Vocab vocab
     cdef Matcher matcher
     cdef PreshMap phrase_ids
-
     cdef int max_length
     cdef attr_t* _phrase_key
-
     cdef public object _callbacks
     cdef public object _patterns
 
@@ -470,7 +460,8 @@ cdef class PhraseMatcher:
         self.phrase_ids = PreshMap()
         abstract_patterns = []
         for length in range(1, max_length):
-            abstract_patterns.append([{tag: True} for tag in get_bilou(length)])
+            abstract_patterns.append([{tag: True}
+                                      for tag in get_bilou(length)])
         self.matcher.add('Candidate', None, *abstract_patterns)
         self._callbacks = {}
 
@@ -496,8 +487,8 @@ cdef class PhraseMatcher:
         return (self.__class__, (self.vocab,), None, None)
 
     def add(self, key, on_match, *docs):
-        """Add a match-rule to the matcher. A match-rule consists of: an ID key,
-        an on_match callback, and one or more patterns.
+        """Add a match-rule to the matcher. A match-rule consists of: an ID
+        key, an on_match callback, and one or more patterns.
 
         key (unicode): The match ID.
         on_match (callable): Callback executed on match.
@@ -513,7 +504,6 @@ cdef class PhraseMatcher:
                 raise ValueError(msg % (len(doc), self.max_length))
         cdef hash_t ent_id = self.matcher._normalize_key(key)
         self._callbacks[ent_id] = on_match
-
         cdef int length
         cdef int i
         cdef hash_t phrase_hash
@@ -553,9 +543,9 @@ cdef class PhraseMatcher:
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
-        batch_size (int): The number of documents to accumulate into a working set.
+        batch_size (int): Number of documents to accumulate into a working set.
         n_threads (int): The number of threads with which to work on the buffer
-            in parallel, if the `Matcher` implementation supports multi-threading.
+            in parallel, if the implementation supports multi-threading.
         YIELDS (Doc): Documents, in order.
         """
         for doc in stream:
@@ -569,7 +559,8 @@ cdef class PhraseMatcher:
             self._phrase_key[i] = 0
         for i, j in enumerate(range(start, end)):
             self._phrase_key[i] = doc.c[j].lex.orth
-        cdef hash_t key = hash64(self._phrase_key, self.max_length * sizeof(attr_t), 0)
+        cdef hash_t key = hash64(self._phrase_key,
+                                 self.max_length * sizeof(attr_t), 0)
         ent_id = <hash_t>self.phrase_ids.get(key)
         if ent_id == 0:
             return None

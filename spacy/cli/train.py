@@ -2,21 +2,14 @@
 from __future__ import unicode_literals, division, print_function
 
 import plac
-import json
-from collections import defaultdict
-import cytoolz
 from pathlib import Path
 import dill
 import tqdm
 from thinc.neural._classes.model import Model
-from thinc.neural.optimizers import linear_decay
 from timeit import default_timer as timer
 import random
 import numpy.random
 
-from ..tokens.doc import Doc
-from ..scorer import Scorer
-from ..gold import GoldParse, merge_sents
 from ..gold import GoldCorpus, minibatch
 from ..util import prints
 from .. import util
@@ -31,8 +24,10 @@ numpy.random.seed(0)
 @plac.annotations(
     lang=("model language", "positional", None, str),
     output_dir=("output directory to store model in", "positional", None, str),
-    train_data=("location of JSON-formatted training data", "positional", None, str),
-    dev_data=("location of JSON-formatted development data (optional)", "positional", None, str),
+    train_data=("location of JSON-formatted training data", "positional",
+                None, str),
+    dev_data=("location of JSON-formatted development data (optional)",
+              "positional", None, str),
     n_iter=("number of iterations", "option", "n", int),
     n_sents=("number of sentences", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
@@ -42,11 +37,12 @@ numpy.random.seed(0)
     no_entities=("Don't train NER", "flag", "N", bool),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     version=("Model version", "option", "V", str),
-    meta_path=("Optional path to meta.json. All relevant properties will be overwritten.", "option", "m", Path)
-)
+    meta_path=("Optional path to meta.json. All relevant properties will be "
+               "overwritten.", "option", "m", Path))
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
-          use_gpu=-1, vectors=None, no_tagger=False, no_parser=False, no_entities=False,
-          gold_preproc=False, version="0.0.0", meta_path=None):
+          use_gpu=-1, vectors=None, no_tagger=False, no_parser=False,
+          no_entities=False, gold_preproc=False, version="0.0.0",
+          meta_path=None):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
@@ -72,9 +68,12 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     meta.setdefault('name', 'unnamed')
 
     pipeline = ['tagger', 'parser', 'ner']
-    if no_tagger and 'tagger' in pipeline: pipeline.remove('tagger')
-    if no_parser and 'parser' in pipeline: pipeline.remove('parser')
-    if no_entities and 'ner' in pipeline: pipeline.remove('ner')
+    if no_tagger and 'tagger' in pipeline:
+        pipeline.remove('tagger')
+    if no_parser and 'parser' in pipeline:
+        pipeline.remove('parser')
+    if no_entities and 'ner' in pipeline:
+        pipeline.remove('ner')
 
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
@@ -139,7 +138,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                         scorer = nlp_loaded.evaluate(dev_docs)
                         end_time = timer()
                         cpu_wps = nwords/(end_time-start_time)
-                acc_loc =(output_path / ('model%d' % i) / 'accuracy.json')
+                acc_loc = (output_path / ('model%d' % i) / 'accuracy.json')
                 with acc_loc.open('w') as file_:
                     file_.write(json_dumps(scorer.scores))
                 meta_loc = output_path / ('model%d' % i) / 'meta.json'
@@ -157,7 +156,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                 with meta_loc.open('w') as file_:
                     file_.write(json_dumps(meta))
                 util.set_env_log(True)
-            print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
+            print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps,
+                           gpu_wps=gpu_wps)
     finally:
         print("Saving model...")
         try:

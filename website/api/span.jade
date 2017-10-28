@@ -248,6 +248,28 @@ p
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
++h(2, "get_lca_matrix") Span.get_lca_matrix
+    +tag method
+
+p
+    |  Calculates the lowest common ancestor matrix for a given #[code Span].
+    |  Returns LCA matrix containing the integer index of the ancestor, or
+    |  #[code -1] if no common ancestor is found, e.g. if span excludes a
+    |  necessary ancestor.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn')
+    span = doc[1:4]
+    matrix = span.get_lca_matrix()
+    # array([[0, 0, 0], [0, 1, 2], [0, 2, 2]], dtype=int32)
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
+        +cell The lowest common ancestor matrix of the #[code Span].
+
+
 +h(2, "to_array") Span.to_array
     +tag method
     +tag-new(2)
@@ -347,7 +369,7 @@ p
     +tag property
     +tag-model("parse")
 
-p Tokens that are to the left of the span, whose head is within the span.
+p Tokens that are to the left of the span, whose heads are within the span.
 
 +aside-code("Example").
     doc = nlp(u'I like New York in Autumn.')
@@ -364,7 +386,7 @@ p Tokens that are to the left of the span, whose head is within the span.
     +tag property
     +tag-model("parse")
 
-p Tokens that are to the right of the span, whose head is within the span.
+p Tokens that are to the right of the span, whose heads are within the span.
 
 +aside-code("Example").
     doc = nlp(u'I like New York in Autumn.')
@@ -376,6 +398,42 @@ p Tokens that are to the right of the span, whose head is within the span.
         +cell yields
         +cell #[code Token]
         +cell A right-child of a token of the span.
+
++h(2, "n_lefts") Span.n_lefts
+    +tag property
+    +tag-model("parse")
+
+p
+    |  The number of tokens that are to the left of the span, whose heads are
+    |  within the span.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    assert doc[3:7].n_lefts == 1
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of left-child tokens.
+
++h(2, "n_rights") Span.n_rights
+    +tag property
+    +tag-model("parse")
+
+p
+    |  The number of tokens that are to the right of the span, whose heads are
+    |  within the span.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    assert doc[2:4].n_rights == 1
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of right-child tokens.
 
 +h(2, "subtree") Span.subtree
     +tag property
@@ -496,6 +554,18 @@ p
             |  if the last token has one.
 
     +row
+        +cell #[code orth]
+        +cell int
+        +cell ID of the verbatim text content.
+
+    +row
+        +cell #[code orth_]
+        +cell unicode
+        +cell
+            |  Verbatim text content (identical to #[code Span.text]). Existst
+            |  mostly for consistency with the other attributes.
+
+    +row
         +cell #[code label]
         +cell int
         +cell The span's label.
@@ -519,3 +589,17 @@ p
         +cell #[code ent_id_]
         +cell unicode
         +cell The string ID of the named entity the token is an instance of.
+
+    +row
+        +cell #[code sentiment]
+        +cell float
+        +cell
+            |  A scalar value indicating the positivity or negativity of the
+            |  span.
+
+    +row
+        +cell #[code _]
+        +cell #[code Underscore]
+        +cell
+            |  User space for adding custom
+            |  #[+a("/usage/processing-pipelines#custom-components-attributes") attribute extensions].

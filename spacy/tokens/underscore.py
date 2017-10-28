@@ -1,4 +1,8 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 import functools
+
 
 class Underscore(object):
     doc_extensions = {}

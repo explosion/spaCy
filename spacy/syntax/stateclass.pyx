@@ -2,17 +2,8 @@
 # cython: infer_types=True
 from __future__ import unicode_literals
 
-from libc.string cimport memcpy, memset
-from libc.stdint cimport uint32_t, uint64_t
 import numpy
 
-from ..vocab cimport EMPTY_LEXEME
-from ..structs cimport Entity
-from ..lexeme cimport Lexeme
-from ..symbols cimport punct
-from ..attrs cimport IS_SPACE
-from ..attrs cimport attr_id_t
-from ..tokens.token cimport Token
 from ..tokens.doc cimport Doc
 
 
