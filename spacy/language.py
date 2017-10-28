@@ -379,8 +379,7 @@ class Language(object):
             return
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = Optimizer(Model.ops, 0.001,
-                                            beta1=0.9, beta2=0.0, nesterov=True)
+                self._optimizer = Adam(Model.ops, 0.001)
             sgd = self._optimizer
         grads = {}
         def get_grads(W, dW, key=None):
@@ -422,7 +421,7 @@ class Language(object):
         L2 = util.env_opt('L2_penalty', 1e-6)
         max_grad_norm = util.env_opt('grad_norm_clip', 1.)
         self._optimizer = Optimizer(Model.ops, learn_rate, L2=L2, beta1=beta1,
-                                    beta2=beta2, eps=eps, nesterov=True)
+                                    beta2=beta2, eps=eps)
         self._optimizer.max_grad_norm = max_grad_norm
         self._optimizer.device = device
         return self._optimizer
