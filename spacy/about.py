@@ -14,5 +14,5 @@ __release__ = False
 __docs_models__ = 'https://alpha.spacy.io/usage/models'
 __download_url__ = 'https://github.com/explosion/spacy-models/releases/download'
 __compatibility__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/compatibility.json'
-__shortcuts__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/shortcuts.json'
+__shortcuts__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/shortcuts-nightly.json'
 __model_files__ = 'https://raw.githubusercontent.com/explosion/spacy-dev-resources/develop/templates/model/'
