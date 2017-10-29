@@ -1,5 +1,4 @@
 # cython: infer_types=True
-# cython: profile=True
 # cython: cdivision=True
 # cython: boundscheck=False
 # coding: utf-8
@@ -27,8 +26,9 @@ from thinc.v2v import Model, Maxout, Affine
 from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
+from thinc.linalg cimport Vec, VecVec
 
-from .._ml import zero_init, PrecomputableMaxouts, Tok2Vec, flatten
+from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models
 from ..compat import json_dumps, copy_array
 from ..tokens.doc cimport Doc
@@ -74,6 +74,7 @@ cdef class precompute_hiddens:
     cdef public object ops
     cdef np.ndarray _features
     cdef np.ndarray _cached
+    cdef np.ndarray bias
     cdef object _cuda_stream
     cdef object _bp_hiddens
 
@@ -89,9 +90,10 @@ cdef class precompute_hiddens:
         else:
             cached = gpu_cached
         self.nF = cached.shape[1]
-        self.nO = cached.shape[2]
         self.nP = getattr(lower_model, 'nP', 1)
+        self.nO = cached.shape[2]
         self.ops = lower_model.ops
+        self.bias = lower_model.b
         self._is_synchronized = False
         self._cuda_stream = cuda_stream
         self._cached = cached
@@ -108,7 +110,7 @@ cdef class precompute_hiddens:
 
     def begin_update(self, token_ids, drop=0.):
         cdef np.ndarray state_vector = numpy.zeros(
-            (token_ids.shape[0], self.nO*self.nP), dtype='f')
+            (token_ids.shape[0], self.nO, self.nP), dtype='f')
         # This is tricky, but (assuming GPU available);
         # - Input to forward on CPU
         # - Output from forward on CPU
@@ -119,15 +121,15 @@ cdef class precompute_hiddens:
         feat_weights = self.get_feat_weights()
         cdef int[:, ::1] ids = token_ids
         sum_state_features(<float*>state_vector.data,
-                           feat_weights, &ids[0, 0],
-                           token_ids.shape[0], self.nF, self.nO*self.nP)
+            feat_weights, &ids[0,0],
+            token_ids.shape[0], self.nF, self.nO*self.nP)
+        state_vector += self.bias
         state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
         def backward(d_state_vector, sgd=None):
-            if bp_nonlinearity is not None:
-                d_state_vector = bp_nonlinearity(d_state_vector, sgd)
+            d_state_vector = bp_nonlinearity(d_state_vector, sgd)
             # This will usually be on GPU
-            if isinstance(d_state_vector, numpy.ndarray):
+            if not isinstance(d_state_vector, self.ops.xp.ndarray):
                 d_state_vector = self.ops.xp.array(d_state_vector)
             d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
             return d_tokens
@@ -135,27 +137,34 @@ cdef class precompute_hiddens:
 
     def _nonlinearity(self, state_vector):
         if self.nP == 1:
-            return state_vector, None
-        state_vector = state_vector.reshape(
-            (state_vector.shape[0], state_vector.shape[1]//self.nP, self.nP))
-        best, which = self.ops.maxout(state_vector)
+            state_vector = state_vector.reshape(state_vector.shape[:-1])
+            mask = state_vector >= 0.
+            state_vector *= mask
+        else:
+            state_vector, mask = self.ops.maxout(state_vector)
 
-        def backprop(d_best, sgd=None):
-            return self.ops.backprop_maxout(d_best, which, self.nP)
-
-        return best, backprop
+        def backprop_nonlinearity(d_best, sgd=None):
+            if self.nP == 1:
+                d_best *= mask
+                d_best = d_best.reshape((d_best.shape + (1,)))
+                return d_best
+            else:
+                return self.ops.backprop_maxout(d_best, mask, self.nP)
+        return state_vector, backprop_nonlinearity
 
 
 cdef void sum_state_features(float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
     cdef int idx, b, f, i
     cdef const float* feature
+    padding = cached - (F * O)
     for b in range(B):
         for f in range(F):
             if token_ids[f] < 0:
-                continue
-            idx = token_ids[f] * F * O + f*O
-            feature = &cached[idx]
+                feature = &padding[f*O]
+            else:
+                idx = token_ids[f] * F * O + f*O
+                feature = &cached[idx]
             for i in range(O):
                 output[i] += feature[i]
         output += O
@@ -220,13 +229,9 @@ cdef class Parser:
             raise ValueError("Currently parser depth is hard-coded to 1.")
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
-        if parser_maxout_pieces != 2:
-            raise ValueError("Currently parser_maxout_pieces is hard-coded "
-                             "to 2")
         token_vector_width = util.env_opt('token_vector_width',
-                                          cfg.get('token_vector_width', 128))
-        hidden_width = util.env_opt('hidden_width',
-                                    cfg.get('hidden_width', 200))
+                                           cfg.get('token_vector_width', 128))
+        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 200))
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
@@ -237,9 +242,10 @@ cdef class Parser:
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
-        lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
-                    nF=cls.nr_feature, nP=parser_maxout_pieces,
-                    nI=token_vector_width)
+        lower = PrecomputableAffine(hidden_width,
+                    nF=cls.nr_feature, nI=token_vector_width,
+                    nP=parser_maxout_pieces)
+        lower.nP = parser_maxout_pieces
 
         with Model.use_device('cpu'):
             upper = chain(
@@ -391,19 +397,20 @@ cdef class Parser:
 
         hW = <float*>hidden_weights.data
         hb = <float*>hidden_bias.data
+        bias = <float*>state2vec.bias.data
         cdef int nr_hidden = hidden_weights.shape[0]
         cdef int nr_task = states.size()
         with nogil:
-            for i in cython.parallel.prange(nr_task, num_threads=2,
-                                            schedule='guided'):
+            for i in range(nr_task):
                 self._parseC(states[i],
-                    feat_weights, hW, hb,
+                    feat_weights, bias, hW, hb,
                     nr_class, nr_hidden, nr_feat, nr_piece)
         PyErr_CheckSignals()
         return state_objs
 
-    cdef void _parseC(self, StateC* state,
-            const float* feat_weights, const float* hW, const float* hb,
+    cdef void _parseC(self, StateC* state, 
+            const float* feat_weights, const float* bias,
+            const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
         token_ids = <int*>calloc(nr_feat, sizeof(int))
         is_valid = <int*>calloc(nr_class, sizeof(int))
@@ -413,17 +420,24 @@ cdef class Parser:
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
-
+        cdef float feature
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
             memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
             memset(scores, 0, nr_class * sizeof(float))
             sum_state_features(vectors,
                 feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
+            for i in range(nr_hidden * nr_piece):
+                vectors[i] += bias[i]
             V = vectors
             W = hW
             for i in range(nr_hidden):
-                feature = V[0] if V[0] >= V[1] else V[1]
+                if nr_piece == 1:
+                    feature = V[0] if V[0] >= 0. else 0.
+                elif nr_piece == 2:
+                    feature = V[0] if V[0] >= V[1] else V[1]
+                else:
+                    feature = Vec.max(V, nr_piece)
                 for j in range(nr_class):
                     scores[j] += feature * W[j]
                 W += nr_class
@@ -644,9 +658,10 @@ cdef class Parser:
         xp = get_array_module(d_tokvecs)
         for ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
-            mask = ids >= 0
-            d_state_features *= mask.reshape(ids.shape + (1,))
-            self.model[0].ops.scatter_add(d_tokvecs, ids * mask,
+            ids = ids.flatten()
+            d_state_features = d_state_features.reshape(
+                (ids.size, d_state_features.shape[2]))
+            self.model[0].ops.scatter_add(d_tokvecs, ids,
                 d_state_features)
         bp_tokvecs(d_tokvecs, sgd=sgd)
 
@@ -665,7 +680,7 @@ cdef class Parser:
                                        lower, stream, drop=0.0)
         return (tokvecs, bp_tokvecs), state2vec, upper
 
-    nr_feature = 8
+    nr_feature = 13
 
     def get_token_ids(self, states):
         cdef StateClass state
