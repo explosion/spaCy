@@ -50,25 +50,27 @@
         "ents_f": "Entities (F-score)",
         "ents_p": "Entities (precision)",
         "ents_r": "Entities (recall)",
+        "cpu": "words per second on CPU",
+        "gpu": "words per second on GPU",
         "pipeline": "Processing pipeline components in order",
-        "sources": "Sources of training data"
+        "sources": "Sources of training data",
+        "benchmark_parser": "Parser accuracy",
+        "benchmark_ner": "NER accuracy",
+        "benchmark_speed": "Speed"
     },
 
     "MODEL_LICENSES": {
-        "CC BY-SA": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA":     "https://creativecommons.org/licenses/by-sa/3.0/",
         "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "CC BY-NC": "https://creativecommons.org/licenses/by-nc/3.0/",
+        "CC BY-NC":     "https://creativecommons.org/licenses/by-nc/3.0/",
         "CC BY-NC 3.0": "https://creativecommons.org/licenses/by-nc/3.0/",
-        "GPL": "http://www.gnu.de/documents/gpl.en.html"
+        "GPL":          "http://www.gnu.de/documents/gpl.en.html"
     },
 
-    "MODEL_ACCURACY": {
-        "uas": "UAS",
-        "las": "LAS",
-        "tags_acc": "POS",
-        "ents_f": "NER F",
-        "ents_p": "NER P",
-        "ents_r": "NER R"
+    "MODEL_BENCHMARKS": {
+        "parser": { "uas": "UAS", "las": "LAS", "tags_acc": "POS" },
+        "ner":    { "ents_f": "NER F", "ents_p": "NER P", "ents_r": "NER R" },
+        "speed":  { "nwords": "Words", "cpu": "w/s CPU", "gpu": "w/s GPU" }
     },
 
     "LANGUAGES": {

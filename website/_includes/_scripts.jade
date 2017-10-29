@@ -6,9 +6,6 @@ if quickstart
 if IS_PAGE
     script(src="/assets/js/in-view.min.js")
 
-if HAS_MODELS
-    script(src="/assets/js/chart.min.js")
-
 if environment == "deploy"
     script(async src="https://www.google-analytics.com/analytics.js")
 
@@ -35,7 +32,7 @@ script
         | };
 
     if HAS_MODELS
-        | new ModelLoader('!{MODELS_REPO}', !{JSON.stringify(CURRENT_MODELS)}, !{JSON.stringify(MODEL_LICENSES)}, !{JSON.stringify(MODEL_ACCURACY)});
+        | new ModelLoader('!{MODELS_REPO}', !{JSON.stringify(CURRENT_MODELS)}, !{JSON.stringify(MODEL_LICENSES)}, !{JSON.stringify(MODEL_BENCHMARKS)});
 
     if environment == "deploy"
         | window.ga=window.ga||function(){

@@ -26,7 +26,7 @@ for id in CURRENT_MODELS
                 |  about this model, see the overview of the
                 |  #[+a(gh("spacy-models") + "/releases") latest model releases].
 
-        +table(data-tpl=id data-tpl-key="table")
+        +table.o-block-small(data-tpl=id data-tpl-key="table")
             +row
                 +cell #[+label Language]
                 +cell #[+tag=comps.lang] #{LANGUAGES[comps.lang]}
@@ -56,22 +56,20 @@ for id in CURRENT_MODELS
                         select.o-field__select.u-text-small(data-tpl=id data-tpl-key="compat")
                     .o-empty(data-tpl=id data-tpl-key="compat-versions") &nbsp;
 
-        section(data-tpl=id data-tpl-key="accuracy-wrapper" style="display: none")
-            +grid.o-no-block
-                +grid-col("third")
-                    +h(4) Accuracy
-                    +table.o-block-small
-                        for label, field in MODEL_ACCURACY
-                            +row(style="display: none")
-                                +cell.u-nowrap
-                                    +label=label
-                                        if MODEL_META[field]
-                                            |  #[+help(MODEL_META[field]).u-color-subtle]
-                                +cell.u-text-right(data-tpl=id data-tpl-key=field)
-                                    |  n/a
-
-                +grid-col("two-thirds")
-                    +h(4) Comparison
-                    +chart(id).u-padding-small
+        section(data-tpl=id data-tpl-key="benchmarks" style="display: none")
+            +grid.o-block-small
+                for keys, label in MODEL_BENCHMARKS
+                    .u-flex-full.u-padding-small(data-tpl=id data-tpl-key=label.toLowerCase() style="display: none")
+                        +table.o-block-small
+                            +row("head")
+                                +head-cell(colspan="2")=(MODEL_META["benchmark_" + label] || label)
+                            for label, field in keys
+                                +row(style="display: none")
+                                    +cell.u-nowrap
+                                        +label=label
+                                            if MODEL_META[field]
+                                                |  #[+help(MODEL_META[field]).u-color-subtle]
+                                    +cell.u-text-right(data-tpl=id data-tpl-key=field)
+                                        |  n/a
 
         p.u-text-small.u-color-dark(data-tpl=id data-tpl-key="notes")

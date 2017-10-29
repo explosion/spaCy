@@ -108,22 +108,12 @@ class ModelLoader {
      * @param {Object} licenses - License IDs mapped to URLs.
      * @param {Object} accKeys - Available accuracy keys mapped to display labels.
      */
-    constructor(repo, models = [], licenses = {}, accKeys = {}) {
+    constructor(repo, models = [], licenses = {}, benchmarkKeys = {}) {
         this.url = `https://raw.githubusercontent.com/${repo}/master`;
         this.repo = `https://github.com/${repo}`;
         this.modelIds = models;
         this.licenses = licenses;
-        this.accKeys = accKeys;
-        this.chartColor = '#09a3d5';
-        this.chartOptions = {
-            type: 'bar',
-            options: { responsive: true, scales: {
-                yAxes: [{ label: 'Accuracy', ticks: { suggestedMin: 70 }}],
-                xAxes: [{ barPercentage: 0.425 }]
-            }}
-        }
-        Chart.defaults.global.legend.position = 'bottom';
-        Chart.defaults.global.defaultFontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'";
+        this.benchKeys = benchmarkKeys;
         this.init();
     }
 
@@ -171,7 +161,7 @@ class ModelLoader {
     /**
      * Update model details in tables. Currently quite hacky :(
      */
-    render({ lang, name, version, sources, pipeline, vectors, url, author, license, accuracy, size, description, notes }) {
+    render({ lang, name, version, sources, pipeline, vectors, url, author, license, accuracy, speed, size, description, notes }) {
         const modelId = `${lang}_${name}`;
         const model = `${modelId}-${version}`;
         const template = new Templater(modelId);
@@ -194,9 +184,29 @@ class ModelLoader {
         if (license) template.fill('license', this.licenses[license] ? getLink(license, this.licenses[license]) : license, true);
 
         template.get('download').setAttribute('href', `${this.repo}/releases/tag/${model}`);
-        if (accuracy) this.renderAccuracy(template, accuracy, modelId);
+
+        this.renderBenchmarks(template, accuracy, speed);
         this.renderCompat(template, modelId);
         template.get('table').removeAttribute('data-loading');
+    }
+
+    renderBenchmarks(template, accuracy = {}, speed = {}) {
+        if (!accuracy && !speed) return;
+        template.get('benchmarks').style.display = 'block';
+        this.renderTable(template, 'parser', accuracy, val => val.toFixed(2));
+        this.renderTable(template, 'ner', accuracy, val => val.toFixed(2));
+        this.renderTable(template, 'speed', speed, Math.round);
+    }
+
+    renderTable(template, id, benchmarks, convertVal = val => val) {
+        if (!this.benchKeys[id] || !Object.keys(this.benchKeys[id]).some(key => benchmarks[key])) return;
+        const keys = Object.keys(this.benchKeys[id]).map(k => benchmarks[k] ? k : false).filter(k => k);
+        template.get(id).style.display = 'block';
+        for (let key of keys) {
+            template
+                .fill(key, this.convertNumber(convertVal(benchmarks[key])))
+                .parentElement.style.display = 'table-row';
+        }
     }
 
     renderCompat(template, modelId) {
@@ -209,24 +219,6 @@ class ModelLoader {
                 if (result) template.fill('compat-versions', `<code>${modelId}-${result[0]}</code>`, true);
                 else template.fill('compat-versions', '');
             });
-    }
-
-    renderAccuracy(template, accuracy, modelId, compare=false) {
-        template.get('accuracy-wrapper').style.display = 'block';
-        const metaKeys = Object.keys(this.accKeys).map(k => accuracy[k] ? k : false).filter(k => k);
-        for (let key of metaKeys) {
-            template.fill(key, accuracy[key].toFixed(2)).parentElement.style.display = 'table-row';
-        }
-
-        this.chartOptions.options.legend = { display: compare }
-        new Chart(`chart_${modelId}`, Object.assign({}, this.chartOptions, { data: {
-            datasets: [{
-                label: modelId,
-                data: metaKeys.map(key => accuracy[key].toFixed(2)),
-                backgroundColor: this.chartColor
-            }],
-            labels: metaKeys.map(key => this.accKeys[key])
-        }}))
     }
 
     getLatestVersion(model, compat = {}) {
