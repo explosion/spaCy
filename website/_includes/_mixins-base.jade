@@ -149,9 +149,9 @@ mixin terminal(label)
 //- Chart.js
     id - [string] chart ID, will be assigned as #chart_{id}
 
-mixin chart(id)
+mixin chart(id, height)
     figure.o-block&attributes(attributes)
-        canvas(id="chart_#{id}" width="800" height="400" style="max-width: 100%")
+        canvas(id="chart_#{id}" width="800" height=(height || "400") style="max-width: 100%")
 
 
 //- Gitter chat button and widget
