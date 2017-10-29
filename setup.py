@@ -61,7 +61,7 @@ LINK_OPTIONS = {
 
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
-USE_OPENMP_DEFAULT = '1' if sys.platform != 'darwin' else None
+USE_OPENMP_DEFAULT = '0' if sys.platform != 'darwin' else None
 if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     if sys.platform == 'darwin':
         COMPILE_OPTIONS['other'].append('-fopenmp')
@@ -190,7 +190,7 @@ def setup_package():
                 'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.9.0,<6.10.0',
+                'thinc>=6.10.0,<6.11.0',
                 'plac<1.0.0,>=0.9.6',
                 'six',
                 'pathlib',

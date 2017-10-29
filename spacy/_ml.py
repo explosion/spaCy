@@ -13,12 +13,14 @@ from thinc.api import FeatureExtracter, with_getitem, flatten_add_lengths
 from thinc.api import uniqued, wrap, noop
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module
+from thinc.neural.util import get_array_module, copy_array
+from thinc.neural._lsuv import svd_orthonormal
 
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
+from thinc.neural._lsuv import svd_orthonormal
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from . import util
@@ -75,78 +77,25 @@ def _preprocess_doc(docs, drop=0.):
     return (keys, vals, lengths), None
 
 
-def _init_for_precomputed(W, ops):
-    if (W**2).sum() != 0.:
-        return
-    reshaped = W.reshape((W.shape[1], W.shape[0] * W.shape[2]))
-    ops.xavier_uniform_init(reshaped)
-    W[:] = reshaped.reshape(W.shape)
-
-
-@describe.on_data(_set_dimensions_if_needed)
+@describe.on_data(_set_dimensions_if_needed,
+    lambda model, X, y: model.init_weights(model))
 @describe.attributes(
     nI=Dimension("Input size"),
     nF=Dimension("Number of features"),
     nO=Dimension("Output size"),
+    nP=Dimension("Maxout pieces"),
     W=Synapses("Weights matrix",
-               lambda obj: (obj.nF, obj.nO, obj.nI),
-               lambda W, ops: _init_for_precomputed(W, ops)),
+        lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI)),
     b=Biases("Bias vector",
-             lambda obj: (obj.nO,)),
+        lambda obj: (obj.nO, obj.nP)),
+    pad=Synapses("Pad",
+        lambda obj: (1, obj.nF, obj.nO, obj.nP),
+        lambda M, ops: ops.normal_init(M, 1.)),
     d_W=Gradient("W"),
+    d_pad=Gradient("pad"),
     d_b=Gradient("b"))
 class PrecomputableAffine(Model):
-    def __init__(self, nO=None, nI=None, nF=None, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.nO = nO
-        self.nI = nI
-        self.nF = nF
-
-    def begin_update(self, X, drop=0.):
-        # X: (b, i)
-        # Yf: (b, f, i)
-        # dY: (b, o)
-        # dYf: (b, f, o)
-        # Yf = numpy.einsum('bi,foi->bfo', X, self.W)
-        Yf = self.ops.xp.tensordot(
-                X, self.W, axes=[[1], [2]])
-        Yf += self.b
-
-        def backward(dY_ids, sgd=None):
-            tensordot = self.ops.xp.tensordot
-            dY, ids = dY_ids
-            Xf = X[ids]
-
-            # dXf = numpy.einsum('bo,foi->bfi', dY, self.W)
-            dXf = tensordot(dY, self.W, axes=[[1], [1]])
-            # dW = numpy.einsum('bo,bfi->ofi', dY, Xf)
-            dW = tensordot(dY, Xf, axes=[[0], [0]])
-            # ofi -> foi
-            self.d_W += dW.transpose((1, 0, 2))
-            self.d_b += dY.sum(axis=0)
-
-            if sgd is not None:
-                sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return dXf
-
-        return Yf, backward
-
-
-@describe.on_data(_set_dimensions_if_needed)
-@describe.attributes(
-    nI=Dimension("Input size"),
-    nF=Dimension("Number of features"),
-    nP=Dimension("Number of pieces"),
-    nO=Dimension("Output size"),
-    W=Synapses("Weights matrix",
-               lambda obj: (obj.nF, obj.nO, obj.nP, obj.nI),
-               lambda W, ops: ops.xavier_uniform_init(W)),
-    b=Biases("Bias vector",
-             lambda obj: (obj.nO, obj.nP)),
-    d_W=Gradient("W"),
-    d_b=Gradient("b"))
-class PrecomputableMaxouts(Model):
-    def __init__(self, nO=None, nI=None, nF=None, nP=3, **kwargs):
+    def __init__(self, nO=None, nI=None, nF=None, nP=None, **kwargs):
         Model.__init__(self, **kwargs)
         self.nO = nO
         self.nP = nP
@@ -154,31 +103,96 @@ class PrecomputableMaxouts(Model):
         self.nF = nF
 
     def begin_update(self, X, drop=0.):
-        # X: (b, i)
-        # Yfp: (b, f, o, p)
-        # Xf: (f, b, i)
-        # dYp: (b, o, p)
-        # W: (f, o, p, i)
-        # b: (o, p)
-        # bi,opfi->bfop
-        # bop,fopi->bfi
-        # bop,fbi->opfi : fopi
-        tensordot = self.ops.xp.tensordot
-        Yfp = tensordot(X, self.W, axes=[[1], [3]])
-        Yfp += self.b
+        Yf = self.ops.xp.dot(X,
+            self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
+        Yf = Yf.reshape((Yf.shape[0], self.nF, self.nO, self.nP))
+        Yf = self._add_padding(Yf)
 
-        def backward(dYp_ids, sgd=None):
-            dYp, ids = dYp_ids
+        def backward(dY_ids, sgd=None):
+            dY, ids = dY_ids
+            dY, ids = self._backprop_padding(dY, ids)
             Xf = X[ids]
-            dXf = tensordot(dYp, self.W, axes=[[1, 2], [1, 2]])
-            dW = tensordot(dYp, Xf, axes=[[0], [0]])
-            self.d_W += dW.transpose((2, 0, 1, 3))
-            self.d_b += dYp.sum(axis=0)
+            Xf = Xf.reshape((Xf.shape[0], self.nF * self.nI))
+
+            self.d_b += dY.sum(axis=0)
+            dY = dY.reshape((dY.shape[0], self.nO*self.nP))
+
+            Wopfi = self.W.transpose((1, 2, 0, 3))
+            Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
+            Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
+            dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
+
+            # Reuse the buffer
+            dWopfi = Wopfi; dWopfi.fill(0.)
+            self.ops.xp.dot(dY.T, Xf, out=dWopfi)
+            dWopfi = dWopfi.reshape((self.nO, self.nP, self.nF, self.nI))
+            # (o, p, f, i) --> (f, o, p, i)
+            self.d_W += dWopfi.transpose((2, 0, 1, 3))
+
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
-            return dXf
+            return dXf.reshape((dXf.shape[0], self.nF, self.nI))
+        return Yf, backward
+    
+    def _add_padding(self, Yf):
+        Yf_padded = self.ops.xp.vstack((self.pad, Yf))
+        return Yf_padded[1:]
 
-        return Yfp, backward
+    def _backprop_padding(self, dY, ids):
+        for i in range(ids.shape[0]):
+            for j in range(ids.shape[1]):
+                if ids[i, j] < 0:
+                    self.d_pad[0, j] += dY[i, j]
+        return dY, ids
+
+    @staticmethod
+    def init_weights(model):
+        '''This is like the 'layer sequential unit variance', but instead
+        of taking the actual inputs, we randomly generate whitened data.
+
+        Why's this all so complicated? We have a huge number of inputs,
+        and the maxout unit makes guessing the dynamics tricky. Instead
+        we set the maxout weights to values that empirically result in
+        whitened outputs given whitened inputs.
+        '''
+        if (model.W**2).sum() != 0.:
+            return
+        model.ops.normal_init(model.W, model.nF * model.nI, inplace=True)
+
+        ids = numpy.zeros((5000, model.nF), dtype='i')
+        ids += numpy.asarray(numpy.random.uniform(0, 1000, ids.shape), dtype='i')
+        tokvecs = numpy.zeros((5000, model.nI), dtype='f')
+        tokvecs += numpy.random.normal(loc=0., scale=1.,
+                    size=tokvecs.size).reshape(tokvecs.shape)
+
+        def predict(ids, tokvecs):
+            # nS ids. nW tokvecs
+            hiddens = model(tokvecs) # (nW, f, o, p)
+            # need nS vectors
+            vectors = model.ops.allocate((ids.shape[0], model.nO, model.nP))
+            for i, feats in enumerate(ids):
+                for j, id_ in enumerate(feats):
+                    vectors[i] += hiddens[id_, j]
+            vectors += model.b
+            if model.nP >= 2:
+                return model.ops.maxout(vectors)[0]
+            else:
+                return vectors * (vectors >= 0)
+
+        tol_var = 0.01
+        tol_mean = 0.01
+        t_max = 10
+        t_i = 0
+        for t_i in range(t_max):
+            acts1 = predict(ids, tokvecs)
+            var = numpy.var(acts1)
+            mean = numpy.mean(acts1)
+            if abs(var - 1.0) >= tol_var:
+                model.W /= numpy.sqrt(var)
+            elif abs(mean) >= tol_mean:
+                model.b -= mean
+            else:
+                break
 
 
 def link_vectors_to_models(vocab):
@@ -228,9 +242,10 @@ def Tok2Vec(width, embed_size, **kwargs):
         tok2vec = (
             FeatureExtracter(cols)
             >> with_flatten(
-                embed >> (convolution ** 4), pad=4)
+                embed
+                >> convolution ** 4, pad=4
+            )
         )
-
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
         tok2vec.embed = embed
@@ -263,34 +278,6 @@ def asarray(ops, dtype):
     def forward(X, drop=0.):
         return ops.asarray(X, dtype=dtype), None
     return layerize(forward)
-
-
-def rebatch(size, layer):
-    ops = layer.ops
-
-    def forward(X, drop=0.):
-        if X.shape[0] < size:
-            return layer.begin_update(X)
-        parts = _divide_array(X, size)
-        results, bp_results = zip(*[layer.begin_update(p, drop=drop)
-                                    for p in parts])
-        y = ops.flatten(results)
-
-        def backward(dy, sgd=None):
-            d_parts = [bp(y, sgd=sgd) for bp, y in
-                       zip(bp_results, _divide_array(dy, size))]
-            try:
-                dX = ops.flatten(d_parts)
-            except TypeError:
-                dX = None
-            except ValueError:
-                dX = None
-            return dX
-
-        return y, backward
-    model = layerize(forward)
-    model._layers.append(layer)
-    return model
 
 
 def _divide_array(X, size):

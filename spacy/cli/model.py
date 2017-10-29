@@ -1,8 +1,11 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import bz2
-import gzip
+try:
+    import bz2
+    import gzip
+except ImportError:
+    pass
 import math
 from ast import literal_eval
 from pathlib import Path
