@@ -42,6 +42,9 @@
 // $scroll-shadow-side       - side to cover shadow (left or right)
 // $scroll-shadow-background - original background color to match
 
+@function scroll-shadow-gradient($scroll-gradient-direction, $scroll-shadow-background)
+    @return linear-gradient(to #{$scroll-gradient-direction}, rgba($scroll-shadow-background, 1) 50%, rgba($scroll-shadow-background, 0) 100%)
+
 @mixin scroll-shadow-base($scroll-shadow-color, $scroll-shadow-intensity: 0.2)
     background: radial-gradient(ellipse at 0 50%, rgba($scroll-shadow-color, $scroll-shadow-intensity) 0%, rgba(0,0,0,0) 75%) 0 center, radial-gradient(ellipse at 100% 50%, rgba($scroll-shadow-color, $scroll-shadow-intensity) 0%, transparent 75%) 100% center
     background-attachment: scroll, scroll
@@ -50,15 +53,19 @@
 
 @mixin scroll-shadow-cover($scroll-shadow-side, $scroll-shadow-background)
     $scroll-gradient-direction: right !default
+    background-repeat: no-repeat
 
     @if $scroll-shadow-side == right
         $scroll-gradient-direction: left
         background-position: 100% 0
 
-    background-image: linear-gradient(to #{$scroll-gradient-direction}, rgba($scroll-shadow-background, 1) 50%, rgba($scroll-shadow-background, 0) 100%)
-    background-repeat: no-repeat
-    background-size: 20px 100%
-
+    @if $scroll-shadow-side == both
+        background-image: scroll-shadow-gradient(left, $scroll-shadow-background), scroll-shadow-gradient(right, $scroll-shadow-background)
+        background-position: 100% 0, 0 0
+        background-size: 20px 100%, 20px 100%
+    @else
+        background-image: scroll-shadow-gradient($scroll-gradient-direction, $scroll-shadow-background)
+        background-size: 20px 100%
 
 // Full vertical scroll shadows
 // adapted from: https://codepen.io/laustdeleuran/pen/DBaAu

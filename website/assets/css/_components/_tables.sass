@@ -62,9 +62,15 @@
         &:last-child
             @include scroll-shadow-cover(right, $color-back)
 
+        &:first-child:last-child
+            @include scroll-shadow-cover(both, $color-back)
+
     .c-table__row--foot .c-table__cell
         &:first-child
             @include scroll-shadow-cover(left, lighten($color-subtle-light, 2))
 
         &:last-child
             @include scroll-shadow-cover(right, lighten($color-subtle-light, 2))
+
+        &:first-child:last-child
+            @include scroll-shadow-cover(both, lighten($color-subtle-light, 2))
