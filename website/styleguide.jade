@@ -275,6 +275,19 @@ include _includes/_mixins
         nlp = spacy.load('en')
         doc = nlp(u"This is a sentence.")
 
+    +aside-code("Usage", "jade").
+        +code-new nlp.to_disk('/model')
+        +code-old nlp.save_to_directory('/model')
+
+    p
+        |  Code blocks can also be displayed with a coloured icon to visualise
+        |  correct and incorrect examples in comparison. This is useful to
+        |  show best practices or backwards incompatibilities in the API.
+
+    .o-block
+        +code-new nlp.to_disk('/model')
+        +code-old nlp.save_to_directory('/model')
+
     +h(3, "aside") Aside
 
     +aside-code("Usage", "jade").
