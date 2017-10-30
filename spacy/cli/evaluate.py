@@ -17,14 +17,14 @@ numpy.random.seed(0)
 
 
 @plac.annotations(
-    model=("Model name or path", "positional", None, str),
-    data_path=("Location of JSON-formatted evaluation data", "positional",
+    model=("model name or path", "positional", None, str),
+    data_path=("location of JSON-formatted evaluation data", "positional",
                None, str),
-    gold_preproc=("Use gold preprocessing", "flag", "G", bool),
-    gpu_id=("Use GPU", "option", "g", int),
-    displacy_path=("Directory to output rendered parses as HTML", "option",
+    gold_preproc=("use gold preprocessing", "flag", "G", bool),
+    gpu_id=("use GPU", "option", "g", int),
+    displacy_path=("directory to output rendered parses as HTML", "option",
                    "dp", str),
-    displacy_limit=("Limit of parses to render as HTML", "option", "dl", int))
+    displacy_limit=("limit of parses to render as HTML", "option", "dl", int))
 def evaluate(cmd, model, data_path, gpu_id=-1, gold_preproc=False,
              displacy_path=None, displacy_limit=25):
     """
