@@ -1,5 +1,7 @@
 //- 💫 DOCS > API > ANNOTATION > TRAINING
 
++h(3, "json-input") JSON input format for training
+
 p
     |  spaCy takes training data in JSON format. The built-in
     |  #[+api("cli#convert") #[code convert]] command helps you convert the
@@ -46,3 +48,57 @@ p
     |  Treebank:
 
 +github("spacy", "examples/training/training-data.json", false, false, "json")
+
++h(3, "vocab-jsonl") Lexical data for vocabulary
+    +tag-new(2)
+
+p
+    |  The populate a model's vocabulary, you can use the
+    |  #[+api("cli#vocab") #[code spacy vocab]] command and load in a
+    |  #[+a("https://jsonlines.readthedocs.io/en/latest/") newline-delimited JSON]
+    |  (JSONL) file containing one lexical entry per line. The first line
+    |  defines the language and vocabulary settings. All other lines are
+    |  expected to be JSON objects describing an individual lexeme. The lexical
+    |  attributes will be then set as attributes on spaCy's
+    |  #[+api("lexeme#attributes") #[code Lexeme]] object. The #[code vocab]
+    |  command outputs a ready-to-use spaCy model with a #[code Vocab]
+    |  containing the lexical data.
+
++code("First line").
+    {"lang": "en", "settings": {"oov_prob": -20.502029418945312}}
+
++code("Entry structure").
+    {
+        "orth": string,
+        "id": int,
+        "lower": string,
+        "norm": string,
+        "shape": string
+        "prefix": string,
+        "suffix": string,
+        "length": int,
+        "cluster": string,
+        "prob": float,
+        "is_alpha": bool,
+        "is_ascii": bool,
+        "is_digit": bool,
+        "is_lower": bool,
+        "is_punct": bool,
+        "is_space": bool,
+        "is_title": bool,
+        "is_upper": bool,
+        "like_url": bool,
+        "like_num": bool,
+        "like_email": bool,
+        "is_stop": bool,
+        "is_oov": bool,
+        "is_quote": bool,
+        "is_left_punct": bool,
+        "is_right_punct": bool
+    }
+
+p
+    |  Here's an example of the 500 most frequent lexemes in the English
+    |  training data:
+
++github("spacy", "examples/training/vocab-data.json", false, false, "json")

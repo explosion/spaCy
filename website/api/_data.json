@@ -220,7 +220,7 @@
             "Lemmatization": "lemmatization",
             "Dependencies": "dependency-parsing",
             "Named Entities": "named-entities",
-            "Training Data": "training"
+            "Models & Training": "training"
         }
     }
 }
