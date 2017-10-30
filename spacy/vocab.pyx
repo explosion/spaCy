@@ -27,7 +27,7 @@ cdef class Vocab:
     C-data that is shared between `Doc` objects.
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), **deprecated_kwargs):
+                 strings=tuple(), oov_prob=-20., **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -43,6 +43,7 @@ cdef class Vocab:
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer({}, {}, {})
+        self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
