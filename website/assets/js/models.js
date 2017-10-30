@@ -5,9 +5,11 @@ import { Templater, handleResponse, convertNumber } from './util.js';
 /**
  * Chart.js defaults
  */
-Chart.defaults.global.legend.position = 'bottom';
-Chart.defaults.global.defaultFontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'";
 const CHART_COLORS = { model1: '#09a3d5', model2: '#066B8C' };
+const CHART_FONTS = {
+    legend: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+    ticks: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+};
 
 /**
  * Formatters for model details.
@@ -180,6 +182,7 @@ export class ModelComparer {
         this.labels = labels;
         this.models = {};
         this.colors = CHART_COLORS;
+        this.fonts = CHART_FONTS;
         this.defaultModels = defaultModels;
         this.tpl.get('result').style.display = 'block';
         this.fetchCompat()
@@ -193,12 +196,14 @@ export class ModelComparer {
         const selectB = this.tpl.get('model2');
         selectA.addEventListener('change', this.onSelect.bind(this));
         selectB.addEventListener('change', this.onSelect.bind(this));
-        this.chart = new Chart('chart_compare_accuracy', { type: 'bar',
-            options: { responsive: true, scales: {
-                yAxes: [{ label: 'Accuracy', ticks: { min: 70 }}],
-                xAxes: [{ barPercentage: 0.75 }]
-            }}
-        });
+        this.chart = new Chart('chart_compare_accuracy', { type: 'bar', options: {
+            responsive: true,
+            legend: { position: 'bottom', labels: { fontFamily: this.fonts.legend, fontSize: 13 }},
+            scales: {
+                yAxes: [{ label: 'Accuracy', ticks: { min: 70, fontFamily: this.fonts.ticks }}],
+                xAxes: [{ barPercentage: 0.75, ticks: { fontFamily: this.fonts.ticks }}]
+            }
+        }});
         if (this.defaultModels) {
             selectA.value = this.defaultModels.model1;
             selectB.value = this.defaultModels.model2;
