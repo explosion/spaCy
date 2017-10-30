@@ -448,8 +448,8 @@ mixin grid(...style)
     width - [string] "quarter", "third", "half", "two-thirds", "three-quarters"
     see $grid in assets/css/_variables.sass
 
-mixin grid-col(width)
-    .o-grid__col(class="o-grid__col--#{width}")&attributes(attributes)
+mixin grid-col(...style)
+    .o-grid__col(class=prefixArgs(style, "o-grid__col"))&attributes(attributes)
         block
 
 
