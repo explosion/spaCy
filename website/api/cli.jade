@@ -1,4 +1,6 @@
-//- 💫 DOCS > API > TOP-LEVEL > COMMAND LINE INTERFACE
+//- 💫 DOCS > API > COMMAND LINE INTERFACE
+
+include ../_includes/_mixins
 
 p
     |  As of v1.7.0, spaCy comes with new command line helpers to download and
@@ -434,7 +436,8 @@ p
     +tag-new(2)
 
 p
-    |  Compile a vocabulary from a #[+a("#") lexicon JSONL] file and optional
+    |  Compile a vocabulary from a
+    |  #[+a("/api/annotation#vocab-jsonl") lexicon JSONL] file and optional
     |  word vectors. Will save out a valid spaCy model that you can load via
     |  #[+api("spacy#load") #[code spacy.load]] or package using the
     |  #[+api("cli#package") #[code package]] command.
@@ -459,7 +462,9 @@ p
     +row
         +cell #[code lexemes_loc]
         +cell positional
-        +cell Location of lexical data in spaCy's #[+a("#") JSONL format].
+        +cell
+            |  Location of lexical data in spaCy's
+            |  #[+a("/api/annotation#vocab-jsonl") JSONL format].
 
     +row
         +cell #[code vectors_loc]
