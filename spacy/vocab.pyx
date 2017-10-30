@@ -252,7 +252,7 @@ cdef class Vocab:
         """Reduce the current vector table to `nr_row` unique entries. Words
         mapped to the discarded vectors will be remapped to the closest vector
         among those remaining.
-        
+
         For example, suppose the original table had vectors for the words:
         ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to,
         two rows, we would discard the vectors for 'feline' and 'reclined'.
@@ -263,6 +263,15 @@ cdef class Vocab:
         The similarities are judged by cosine. The original vectors may
         be large, so the cosines are calculated in minibatches, to reduce
         memory usage.
+
+        nr_row (int): The number of rows to keep in the vector table.
+        batch_size (int): Batch of vectors for calculating the similarities.
+            Larger batch sizes might be faster, while temporarily requiring
+            more memory.
+        RETURNS (dict): A dictionary keyed by removed words mapped to
+            `(string, score)` tuples, where `string` is the entry the removed
+            word was mapped to, and `score` the similarity score between the
+            two words.
         """
         xp = get_array_module(self.vectors.data)
         # Work in batches, to avoid memory problems.
@@ -294,6 +303,7 @@ cdef class Vocab:
                 self.vectors.key2row[key] = neighbours[row-nr_row]
         # Make copy, to encourage the original table to be garbage collected.
         self.vectors.data = xp.ascontiguousarray(self.vectors.data[:nr_row])
+        # TODO: return new mapping
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary. Words can be looked

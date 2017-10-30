@@ -154,6 +154,8 @@ class Language(object):
         self._meta.setdefault('email', '')
         self._meta.setdefault('url', '')
         self._meta.setdefault('license', '')
+        self._meta['vectors'] = {'width': self.vocab.vectors_length,
+                                 'entries': len(self.vocab.vectors)}
         self._meta['pipeline'] = self.pipe_names
         return self._meta
 

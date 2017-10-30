@@ -19,7 +19,7 @@ if __name__ == '__main__':
         'convert': convert,
         'package': package,
         'model': model,
-        'model': vocab,
+        'vocab': vocab,
         'profile': profile,
         'validate': validate
     }
