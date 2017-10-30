@@ -7,7 +7,7 @@ if __name__ == '__main__':
     import plac
     import sys
     from spacy.cli import download, link, info, package, train, convert, model
-    from spacy.cli import profile, evaluate, validate
+    from spacy.cli import vocab, profile, evaluate, validate
     from spacy.util import prints
 
     commands = {
@@ -19,6 +19,7 @@ if __name__ == '__main__':
         'convert': convert,
         'package': package,
         'model': model,
+        'model': vocab,
         'profile': profile,
         'validate': validate
     }
