@@ -137,7 +137,7 @@ cdef class Vectors:
         if row >= self.keys.shape[0]:
             self.keys.resize((row*2,))
             self.data.resize((row*2, self.data.shape[1]))
-            self.keys[self.i] = key
+            self.keys[row] = key
 
         self.key2row[key] = row
         self.keys[row] = key
