@@ -3,7 +3,7 @@
 +h(2, "changelog") Changelog
     +button(gh("spacy") + "/releases", false, "secondary", "small").u-float-right.u-nowrap View releases
 
-div(data-tpl="changelog" data-tpl-key="error")
+div(data-tpl="changelog" data-tpl-key="error" style="display: none")
     +infobox
         |  Unable to load changelog from GitHub. Please see the
         |  #[+a(gh("spacy") + "/releases") releases page] instead.
