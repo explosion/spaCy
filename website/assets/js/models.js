@@ -158,3 +158,152 @@ export class ModelLoader {
     }
 }
 
+export class ModelComparer {
+    /**
+     * Compare to model meta files and render chart and comparison table.
+     * @param {string} repo - Path tp GitHub repository containing releases.
+     * @param {Object} licenses - License IDs mapped to URLs.
+     * @param {Object} benchmarkKeys - Objects of available keys by type, e.g.
+     *                                 'parser', 'ner', 'speed', mapped to labels.
+     * @param {Object} languages - Available languages, ID mapped to name.
+     * @param {Object} defaultModels - Models to compare on load, 'model1' and
+     *                                 'model2' mapped to model names.
+     */
+    constructor(repo, licenses = {}, benchmarkKeys = {}, languages = {}, labels = {}, defaultModels) {
+        this.url = `https://raw.githubusercontent.com/${repo}/master`;
+        this.repo = `https://github.com/${repo}`;
+        this.tpl = new Templater('compare');
+        this.benchKeys = benchmarkKeys;
+        this.licenses = licenses;
+        this.languages = languages;
+        this.labels = labels;
+        this.models = {};
+        this.colors = CHART_COLORS;
+        this.defaultModels = defaultModels;
+        this.fetchCompat()
+            .then(compat => this.init(compat))
+            .catch(this.showError.bind(this))
+    }
+
+    init(compat) {
+        this.compat = compat;
+        const selectA = this.tpl.get('model1');
+        const selectB = this.tpl.get('model2');
+        selectA.addEventListener('change', this.onSelect.bind(this));
+        selectB.addEventListener('change', this.onSelect.bind(this));
+        this.chart = new Chart('chart_compare_accuracy', { type: 'bar',
+            options: { responsive: true, scales: {
+                yAxes: [{ label: 'Accuracy', ticks: { min: 70 }}],
+                xAxes: [{ barPercentage: 0.75 }]
+            }}
+        });
+        if (this.defaultModels) {
+            selectA.value = this.defaultModels.model1;
+            selectB.value = this.defaultModels.model2;
+            this.getModels(this.defaultModels);
+        }
+    }
+
+    fetchCompat() {
+        return new Promise((resolve, reject) =>
+            fetch(`${this.url}/compatibility.json`)
+                .then(res => handleResponse(res))
+                .then(json => json.ok ? resolve(json.spacy) : reject()))
+    }
+
+    fetchModel(name) {
+        const version = getLatestVersion(name, this.compat);
+        const modelName = `${name}-${version}`;
+        return new Promise((resolve, reject) => {
+            // resolve immediately if model already loaded, e.g. in this.models
+            if (this.models[name]) resolve(this.models[name]);
+            else fetch(`${this.url}/meta/${modelName}.json`)
+                .then(res => handleResponse(res))
+                .then(json => json.ok ? resolve(this.saveModel(name, json)) : reject())
+        })
+    }
+
+    /**
+     * "Save" meta to this.models so it only has to be fetched from GitHub once.
+     * @param {string} name - The model name.
+     * @param {Object} data - The model meta data.
+     */
+    saveModel(name, data) {
+        this.models[name] = data;
+        return data;
+    }
+
+    showError() {
+        this.tpl.get('result').style.display = 'none';
+        this.tpl.get('error').style.display = 'block';
+    }
+
+    onSelect(ev) {
+        const modelId = ev.target.value;
+        const otherId = (ev.target.id == 'model1') ? 'model2' : 'model1';
+        const otherVal = this.tpl.get(otherId);
+        const otherModel = otherVal.options[otherVal.selectedIndex].value;
+        if (otherModel != '') this.getModels({
+            [ev.target.id]: modelId,
+            [otherId]: otherModel
+        })
+    }
+
+    getModels({ model1, model2 }) {
+        this.tpl.get('result').setAttribute('data-loading', '');
+        this.fetchModel(model1)
+            .then(data1 => this.fetchModel(model2)
+                .then(data2 => this.render({ model1: data1, model2: data2 })))
+                .catch(this.showError.bind(this))
+    }
+
+    /**
+     * Render two models, and populate the chart and table. Currently quite hacky :(
+     * @param {Object} models - The models to render.
+     * @param {Object} models.model1 - The first model (via first <select>).
+     * @param {Object} models.model2 - The second model (via second <select>).
+     */
+    render({ model1, model2 }) {
+        const accKeys = Object.assign({}, this.benchKeys.parser, this.benchKeys.ner);
+        const allKeys = [...Object.keys(model1.accuracy || []), ...Object.keys(model2.accuracy || [])];
+        const metaKeys = Object.keys(accKeys).filter(k => allKeys.includes(k));
+        const labels = metaKeys.map(key => accKeys[key]);
+        const datasets = [model1, model2]
+            .map(({ lang, name, version, accuracy = {} }, i) => ({
+                label: `${lang}_${name}-${version}`,
+                backgroundColor: this.colors[`model${i + 1}`],
+                data: metaKeys.map(key => (accuracy[key] || 0).toFixed(2))
+            }));
+        this.chart.data = { labels, datasets };
+        this.chart.update();
+        [model1, model2].forEach((model, i) => this.renderTable(metaKeys, i + 1, model));
+        this.tpl.get('result').removeAttribute('data-loading');
+    }
+
+    renderTable(metaKeys, i, { lang, name, version, size, description,
+        notes, author, url, license, sources, vectors, pipeline, accuracy = {},
+        speed = {}}) {
+        const type = name.split('_')[0];  // extract type from model name
+        const genre = name.split('_')[1];  // extract genre from model name
+        this.tpl.fill(`table-head${i}`, `${lang}_${name}`);
+        this.tpl.get(`link${i}`).setAttribute('href', `/models/${lang}#${lang}_${name}`);
+        this.tpl.fill(`download${i}`, `spacy download ${lang}_${name}\n`);
+        this.tpl.fill(`lang${i}`, this.languages[lang] || lang);
+        this.tpl.fill(`type${i}`, this.labels[type] || type);
+        this.tpl.fill(`genre${i}`, this.labels[genre] || genre);
+        this.tpl.fill(`version${i}`, formats.version(version), true);
+        this.tpl.fill(`size${i}`, size);
+        this.tpl.fill(`desc${i}`, description || 'n/a');
+        this.tpl.fill(`pipeline${i}`, formats.pipeline(pipeline), true);
+        this.tpl.fill(`vectors${i}`, formats.vectors(vectors));
+        this.tpl.fill(`sources${i}`, formats.sources(sources));
+        this.tpl.fill(`author${i}`, formats.author(author, url), true);
+        this.tpl.fill(`license${i}`, formats.license(license, this.licenses[license]), true);
+        // check if model accuracy or speed includes one of the pre-set keys
+        for (let key of [...metaKeys, ...Object.keys(this.benchKeys.speed)]) {
+            if (accuracy[key]) this.tpl.fill(`${key}${i}`, accuracy[key].toFixed(2))
+            else if (speed[key]) this.tpl.fill(`${key}${i}`, convertNumber(Math.round(speed[key])))
+            else this.tpl.fill(`${key}${i}`, 'n/a')
+        }
+    }
+}
