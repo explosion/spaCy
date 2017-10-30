@@ -2,6 +2,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from pathlib import Path
 import plac
 import json
 import spacy
