@@ -248,7 +248,7 @@ cdef class Vocab:
             width = self.vectors.data.shape[1]
         self.vectors = Vectors(self.strings, width=width)
 
-    def prune_vectors(self, nr_row, batch_size=1024):
+    def prune_vectors(self, nr_row, batch_size=8):
         """Reduce the current vector table to `nr_row` unique entries. Words
         mapped to the discarded vectors will be remapped to the closest vector
         among those remaining.
@@ -267,22 +267,31 @@ cdef class Vocab:
         xp = get_array_module(self.vectors.data)
         # Work in batches, to avoid memory problems.
         keep = self.vectors.data[:nr_row]
+        keep_keys = [key for key, row in self.vectors.key2row.items() if row < nr_row]
         toss = self.vectors.data[nr_row:]
         # Normalize the vectors, so cosine similarity is just dot product.
         # Note we can't modify the ones we're keeping in-place...
-        keep = keep / (xp.linalg.norm(keep)+1e-8)
+        keep = keep / (xp.linalg.norm(keep, axis=1, keepdims=True)+1e-8)
         keep = xp.ascontiguousarray(keep.T)
         neighbours = xp.zeros((toss.shape[0],), dtype='i')
+        scores = xp.zeros((toss.shape[0],), dtype='f')
         for i in range(0, toss.shape[0], batch_size):
             batch = toss[i : i+batch_size]
-            batch /= xp.linalg.norm(batch)+1e-8
-            neighbours[i:i+batch_size] = xp.dot(batch, keep).argmax(axis=1)
+            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)+1e-8
+            sims = xp.dot(batch, keep)
+            matches = sims.argmax(axis=1)
+            neighbours[i:i+batch_size] = matches
+            scores[i:i+batch_size] = sims.max(axis=1)
         for lex in self:
             # If we're losing the vector for this word, map it to the nearest
             # vector we're keeping.
             if lex.rank >= nr_row:
                 lex.rank = neighbours[lex.rank-nr_row]
                 self.vectors.add(lex.orth, row=lex.rank)
+        for key in self.vectors.keys:
+            row = self.vectors.key2row[key]
+            if row >= nr_row:
+                self.vectors.key2row[key] = neighbours[row-nr_row]
         # Make copy, to encourage the original table to be garbage collected.
         self.vectors.data = xp.ascontiguousarray(self.vectors.data[:nr_row])
 
