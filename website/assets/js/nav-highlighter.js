@@ -11,6 +11,8 @@ export default class NavHighlighter {
      */
     constructor(sectionAttr, navAttr, activeClass = 'is-active') {
         this.sections = [...$$(`[${navAttr}]`)];
+        // highlight first item regardless
+        if (this.sections.length) this.sections[0].classList.add(activeClass);
         this.navAttr = navAttr;
         this.sectionAttr = sectionAttr;
         this.activeClass = activeClass;

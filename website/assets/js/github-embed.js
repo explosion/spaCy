@@ -14,7 +14,6 @@ export default class GitHubEmbed {
     constructor(user, attr) {
         this.url = `https://raw.githubusercontent.com/${user}`;
         this.attr = attr;
-        this.error = `\nCan't fetch code example from GitHub :(\n\nPlease use the link below to view the example. If you've come across\na broken link, we always appreciate a pull request to the repository,\nor a report on the issue tracker. Thanks!`;
         [...$$(`[${this.attr}]`)].forEach(el => this.embed(el));
     }
 
@@ -27,10 +26,17 @@ export default class GitHubEmbed {
         el.parentElement.setAttribute('data-loading', '');
         fetch(`${this.url}/${el.getAttribute(this.attr)}`)
             .then(res => res.text().then(text => ({ text, ok: res.ok })))
-            .then(({ text, ok }) => {
-                el.textContent = ok ? text : this.error;
-                if (ok && window.Prism) Prism.highlightElement(el);
-            })
+            .then(({ text, ok }) => ok ? this.render(el, text) : false)
         el.parentElement.removeAttribute('data-loading');
+    }
+
+    /**
+     * Add text to container and apply syntax highlighting via Prism, if available.
+     * @param {node} el - The element.
+     * @param {string} text - The raw code, fetched from GitHub.
+     */
+    render(el, text) {
+        el.textContent = text;
+        if (window.Prism) Prism.highlightElement(el);
     }
 }

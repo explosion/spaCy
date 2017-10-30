@@ -100,6 +100,7 @@ export class ModelLoader {
         const modelId = `${data.lang}_${data.name}`;
         const model = `${modelId}-${data.version}`;
         const tpl = new Templater(modelId);
+        tpl.get('error').style.display = 'none';
         this.renderDetails(tpl, data)
         this.renderBenchmarks(tpl, data.accuracy, data.speed);
         this.renderCompat(tpl, modelId);
@@ -180,6 +181,7 @@ export class ModelComparer {
         this.models = {};
         this.colors = CHART_COLORS;
         this.defaultModels = defaultModels;
+        this.tpl.get('result').style.display = 'block';
         this.fetchCompat()
             .then(compat => this.init(compat))
             .catch(this.showError.bind(this))

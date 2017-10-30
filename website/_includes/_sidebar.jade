@@ -19,5 +19,5 @@ menu.c-sidebar.js-sidebar.u-text
                                     - var counter = 0
                                     for id, title in menu
                                         - counter++
-                                        li.c-sidebar__crumb__item(data-nav=id class=(counter == 1) ? "is-active" : null)
+                                        li.c-sidebar__crumb__item(data-nav=id)
                                             +a("#section-" + id)=title

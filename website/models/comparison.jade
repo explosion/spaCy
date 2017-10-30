@@ -23,17 +23,17 @@ p
                         for model in models
                             option(value=model)=model
 
-div(data-tpl=TPL data-tpl-key="error" style="display: none")
+div(data-tpl=TPL data-tpl-key="error")
     +infobox
         |  Unable to load model details and accuracy figures from GitHub to
         |  compare the models. For details of the individual models, see the
         |  overview of the
         |  #[+a(gh("spacy-models") + "/releases") latest model releases].
 
-div(data-tpl=TPL data-tpl-key="result")
+div(data-tpl=TPL data-tpl-key="result" style="display: none")
     +chart("compare_accuracy", 350)
 
-    +aside-code("Download", "text")(style="display: none")
+    +aside-code("Download", "text")
         for i in [1, 2]
             span(data-tpl=TPL data-tpl-key="download#{i}")
 

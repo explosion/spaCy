@@ -281,7 +281,12 @@ mixin github(repo, file, height, alt_file, language)
 
     figure.o-block
         pre.c-code-block.o-block-small(class="lang-#{(language || DEFAULT_SYNTAX)}" style="height: #{height}px; min-height: #{height}px")
-            code.c-code-block__content(data-gh-embed="#{repo}/#{branch}/#{file}")
+            code.c-code-block__content(data-gh-embed="#{repo}/#{branch}/#{file}").
+                Can't fetch code example from GitHub :(
+
+                Please use the link below to view the example. If you've come across
+                a broken link, we always appreciate a pull request to the repository,
+                or a report on the issue tracker. Thanks!
 
         footer.o-grid.u-text
             .o-block-small.u-flex-full.u-padding-small #[+icon("github")] #[code.u-break.u-break--all=repo + '/' + (alt_file || file)]
