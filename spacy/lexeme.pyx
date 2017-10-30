@@ -76,6 +76,8 @@ cdef class Lexeme:
         for attr, value in attrs.items():
             if attr == PROB:
                 self.c.prob = value
+            elif attr == CLUSTER:
+                self.c.cluster = int(value)
             elif isinstance(value, int) or isinstance(value, long):
                 Lexeme.set_struct_attr(self.c, attr, value)
             else:
