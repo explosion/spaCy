@@ -239,13 +239,13 @@ cdef class Vocab:
     def vectors_length(self):
         return self.vectors.data.shape[1]
 
-    def clear_vectors(self, new_dim=None):
+    def clear_vectors(self, width=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
-        if new_dim is None:
-            new_dim = self.vectors.data.shape[1]
-        self.vectors = Vectors(self.strings, width=new_dim)
+        if width is None:
+            width = self.vectors.data.shape[1]
+        self.vectors = Vectors(self.strings, width=width)
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
