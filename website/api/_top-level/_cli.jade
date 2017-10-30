@@ -453,10 +453,11 @@ p
 p
     |  Generate a #[+a("/usage/training#models-generating") model Python package]
     |  from an existing model data directory. All data files are copied over.
-    |  If the path to a meta.json is supplied, or a meta.json is found in the
-    |  input directory, this file is used. Otherwise, the data can be entered
-    |  directly from the command line. The required file templates are downloaded
-    |  from #[+src(gh("spacy-dev-resources", "templates/model")) GitHub] to make
+    |  If the path to a #[code meta.json] is supplied, or a #[code meta.json] is
+    |  found in the input directory, this file is used. Otherwise, the data can
+    |  be entered directly from the command line. The required file templates
+    |  are downloaded from
+    |  #[+src(gh("spacy-dev-resources", "templates/model")) GitHub] to make
     |  sure you're always using the latest versions. This means you need to be
     |  connected to the internet to use this command.
 
@@ -477,15 +478,16 @@ p
     +row
         +cell #[code --meta-path], #[code -m]
         +cell option
-        +cell #[+tag-new(2)] Path to meta.json file (optional).
+        +cell #[+tag-new(2)] Path to #[code meta.json] file (optional).
 
     +row
         +cell #[code --create-meta], #[code -c]
         +cell flag
         +cell
-            |  #[+tag-new(2)] Create a meta.json file on the command line, even
-            |  if one already exists in the directory.
-
+            |  #[+tag-new(2)] Create a #[code meta.json] file on the command
+            |  line, even if one already exists in the directory. If an
+            |  existing file is found, its entries will be shown as the defaults
+            |  in the command line prompt.
     +row
         +cell #[code --force], #[code -f]
         +cell flag
