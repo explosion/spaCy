@@ -18,10 +18,8 @@ from spacy.util import ensure_path
     vectors_loc=("location of vectors data, as numpy .npz (optional)",
               "positional", None, str),
     version=("Model version", "option", "V", str),
-    meta_path=("Optional path to meta.json. All relevant properties will be "
-               "overwritten.", "option", "m", Path))
-
-def make_vocab(lang, output_dir, lexemes_loc, vectors_loc=None):
+)
+def make_vocab(lang, output_dir, lexemes_loc, vectors_loc=None, version=None):
     out_dir = ensure_path(output_dir)
     jsonl_loc = ensure_path(lexemes_loc)
     nlp = spacy.blank(lang)
