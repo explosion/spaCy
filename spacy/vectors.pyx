@@ -30,7 +30,8 @@ cdef class Vectors:
     cdef readonly StringStore strings
     cdef public object key2row
     cdef public object keys
-    cdef public int i
+    cdef public int _i_key
+    cdef public int _i_vec
 
     def __init__(self, strings, width=0, data=None):
         """Create a new vector store. To keep the vector table empty, pass
@@ -53,7 +54,8 @@ cdef class Vectors:
             self.data = numpy.asarray(data, dtype='f')
         else:
             self.data = numpy.zeros((len(self.strings), width), dtype='f')
-        self.i = 0
+        self._i_key = 0
+        self._i_vec = 0
         self.key2row = {}
         self.keys = numpy.zeros((self.data.shape[0],), dtype='uint64')
         if data is not None:
@@ -105,7 +107,7 @@ cdef class Vectors:
 
         RETURNS (int): The number of vectors in the data.
         """
-        return self.i
+        return self._i_vec
 
     def __contains__(self, key):
         """Check whether a key has a vector entry in the table.
@@ -127,20 +129,20 @@ cdef class Vectors:
         """
         if isinstance(key, basestring_):
             key = self.strings.add(key)
-        if key in self.key2row and row is None:
+        if row is None and key in self.key2row:
             row = self.key2row[key]
-        elif key in self.key2row and row is not None:
-            self.key2row[key] = row
         elif row is None:
-            row = self.i
-            self.i += 1
-        if row >= self.keys.shape[0]:
-            self.keys.resize((row*2,))
+            row = self._i_vec
+            self._i_vec += 1
+        if row >= self.data.shape[0]:
             self.data.resize((row*2, self.data.shape[1]))
-            self.keys[row] = key
+        if key not in self.key2row:
+            if self._i_key >= self.keys.shape[0]:
+                self.keys.resize((self._i_key*2,))
+                self.keys[self._i_key] = key
+                self._i_key += 1
 
         self.key2row[key] = row
-        self.keys[row] = key
         if vector is not None:
             self.data[row] = vector
         return row
