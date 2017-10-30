@@ -76,6 +76,16 @@ p
         ("Google rebrands its business apps", [(0, 6, "ORG")]),
         ("look what i found on google! 😂", [(21, 27, "PRODUCT")])]
 
++infobox("Tip: Try the Prodigy annotation tool")
+    +infobox-logos(["prodigy", 100, 29, "https://prodi.gy"])
+    |  If you need to label a lot of data, check out
+    |  #[+a("https://prodi.gy", true) Prodigy], a new, active learning-powered
+    |  annotation tool we've developed. Prodigy is fast and extensible, and
+    |  comes with a modern  #[strong web application] that helps you collect
+    |  training data faster. It integrates seamlessly with spaCy, pre-selects
+    |  the #[strong most relevant examples] for annotation, and lets you
+    |  train and evaluate ready-to-use spaCy models.
+
 +h(3, "annotations") Training with annotations
 
 p
@@ -180,9 +190,10 @@ p
         +cell #[code optimizer]
         +cell Callable to update the model's weights.
 
-+infobox
-    |  For the #[strong full example and more details], see the usage guide on
-    |  #[+a("/usage/training#ner") training the named entity recognizer],
-    |  or the runnable
-    |  #[+src(gh("spaCy", "examples/training/train_ner.py")) training script]
-    |  on GitHub.
+p
+    |  Instead of writing your own training loop, you can also use the
+    |  built-in #[+api("cli#train") #[code train]] command, which expects data
+    |  in spaCy's #[+a("/api/annotation#json-input") JSON format]. On each epoch,
+    |  a model will be saved out to the directory. After training, you can
+    |  use the #[+api("cli#package") #[code package]] command to generate an
+    |  installable Python package from your model.
