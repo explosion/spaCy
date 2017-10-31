@@ -307,9 +307,18 @@ cdef class Vectors:
         path (unicode / Path): Directory path, string or Path-like object.
         RETURNS (Vectors): The modified object.
         """
-        def load_keys(path):
+        def load_key2row(path):
             if path.exists():
                 self.key2row = msgpack.load(path.open('rb'))
+            for key, row in self.key2row.items():
+                if row in self._unset:
+                    self._unset.remove(row)
+
+        def load_keys(path):
+            if path.exists():
+                keys = numpy.load(str(path))
+                for i, key in enumerate(keys):
+                    self.add(key, row=i)
 
         def load_vectors(path):
             xp = Model.ops.xp
@@ -317,7 +326,8 @@ cdef class Vectors:
                 self.data = xp.load(path)
 
         serializers = OrderedDict((
-            ('key2row', load_keys),
+            ('key2row', load_key2row),
+            ('keys', load_keys),
             ('vectors', load_vectors),
         ))
         util.from_disk(path, serializers, exclude)
