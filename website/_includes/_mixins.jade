@@ -1,17 +1,65 @@
 //- 💫 INCLUDES > MIXINS
 
 include _functions
-include _mixins-base
+
+
+//- Section
+    id - [string] anchor assigned to section (used for breadcrumb navigation)
+
+mixin section(id)
+    section.o-section(id="section-" + id data-section=id)
+        block
+
+
+//- Headlines Helper Mixin
+    level - [integer] 1, 2, 3, 4, or 5
+
+mixin headline(level)
+    if level == 1
+        h1.u-heading-1&attributes(attributes)
+            block
+
+    else if level == 2
+        h2.u-heading-2&attributes(attributes)
+            block
+
+    else if level == 3
+        h3.u-heading-3&attributes(attributes)
+            block
+
+    else if level == 4
+        h4.u-heading-4&attributes(attributes)
+            block
+
+    else if level == 5
+        h5.u-heading-5&attributes(attributes)
+            block
 
 
 //- Headlines
     level - [integer] headline level, corresponds to h1, h2, h3 etc.
     id    - [string] unique identifier, creates permalink (optional)
 
-mixin h(level, id)
-    +headline(level).u-heading&attributes(attributes)
+mixin h(level, id, source)
+    +headline(level).u-heading(id=id)&attributes(attributes)
         +permalink(id)
             block
+
+        if source
+            +button(gh("spacy", source), false, "secondary", "small").u-nowrap.u-float-right
+                span Source #[+icon("code", 14).o-icon--inline]
+
+
+//- Permalink rendering
+    id - [string] permalink ID used for link anchor
+
+mixin permalink(id)
+    if id
+        a.u-permalink(href="##{id}")
+            block
+
+    else
+        block
 
 
 //- External links
@@ -38,21 +86,37 @@ mixin src(url)
 
 
 //- API link (with added tag and automatically generated path)
-    path - [string] path to API docs page relative to /docs/api/
+    path - [string] path to API docs page relative to /api/
 
 mixin api(path)
-    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block.u-nowrap
+    - path = convertAPIPath(path)
+    +a("/api/" + path, true)(target="_self").u-no-border.u-inline-block.u-nowrap
         block
 
-        |  #[+icon("book", 18).o-icon--inline.u-color-theme]
+        |  #[+icon("book", 16).o-icon--inline.u-color-theme]
 
 
 //- Help icon with tooltip
-    tooltip - [string] Tooltip text
+    tooltip   - [string] Tooltip text
+    icon_size - [integer] Optional size of help icon in px.
 
-mixin help(tooltip)
+mixin help(tooltip, icon_size)
     span(data-tooltip=tooltip)&attributes(attributes)
-        +icon("help", 16).i-icon--inline
+        if tooltip
+            span.u-hidden(aria-role="tooltip")=tooltip
+        +icon("help_o", icon_size || 16).o-icon--inline
+
+
+//- Aside wrapper
+    label - [string] aside label
+
+mixin aside-wrapper(label)
+    aside.c-aside
+        .c-aside__content(role="complementary")&attributes(attributes)
+            if label
+                h4.u-text-label.u-text-label--dark=label
+
+            block
 
 
 //- Aside for text
@@ -68,22 +132,72 @@ mixin aside(label)
     label    - [string] aside title (optional or false for no label)
     language - [string] language for syntax highlighting (default: "python")
                supports basic relevant languages available for PrismJS
+    prompt   - [string] prompt displayed before first line, e.g. "$"
 
-mixin aside-code(label, language)
+mixin aside-code(label, language, prompt)
     +aside-wrapper(label)
-        +code(false, language).o-no-block
+        +code(false, language, prompt).o-no-block
             block
 
 
 //- Infobox
     label - [string] infobox title (optional or false for no title)
+    emoji - [string] optional emoji displayed before the title, necessary as
+            argument to be able to wrap it for spacing
 
-mixin infobox(label)
+mixin infobox(label, emoji)
     aside.o-box.o-block.u-text-small
         if label
-            h3.u-text-label.u-color-theme=label
+            h3.u-heading.u-text-label.u-color-theme
+                if emoji
+                    span.o-emoji=emoji
+                |  #{label}
 
         block
+
+
+//- Logos displayed in the top corner of some infoboxes
+    logos - [array] List of icon ID, width, height and link.
+
+mixin infobox-logos(...logos)
+    .o-box__logos.u-text-right.u-float-right
+        for logo in logos
+            if logo[3]
+                |  #[+a(logo[3]).u-inline-block.u-hide-link.u-padding-small #[+icon(logo[0], logo[1], logo[2]).u-color-dark]]
+            else
+                |  #[+icon(logo[0], logo[1], logo[2]).u-color-dark]
+
+
+//- SVG from map (uses embedded SVG sprite)
+    name   - [string] SVG symbol id
+    width  - [integer] width in px
+    height - [integer] height in px (default: same as width)
+
+mixin svg(name, width, height)
+    svg(aria-hidden="true" viewBox="0 0 #{width} #{height || width}" width=width height=(height || width))&attributes(attributes)
+        use(xlink:href="#svg_#{name}")
+
+
+//- Icon
+    name   - [string] icon name (will be used as symbol id: #svg_{name})
+    width  - [integer] icon width (default: 20)
+    height - [integer] icon height (defaults to width)
+
+mixin icon(name, width, height)
+    - var width = width || 20
+    - var height = height || width
+    +svg(name, width, height).o-icon(style="min-width: #{width}px")&attributes(attributes)
+
+
+//- Pro/Con/Neutral icon
+    icon - [string] "pro", "con" or "neutral" (default: "neutral")
+    size - [integer] icon size (optional)
+
+mixin procon(icon, label, show_label, size)
+    - var colors = { yes: "green", no: "red", neutral: "subtle" }
+    span.u-nowrap
+        +icon(icon, size || 20)(class="u-color-#{colors[icon] || 'subtle'}").o-icon--inline&attributes(attributes)
+        span.u-text-small(class=show_label ? null : "u-hidden")=(label || icon)
 
 
 //- Link button
@@ -94,7 +208,7 @@ mixin infobox(label)
                see assets/css/_components/_buttons.sass
 
 mixin button(url, trusted, ...style)
-    - external = url.includes("http")
+    - external = url && url.includes("http")
     a.c-button.u-text-label(href=url class=prefixArgs(style, "c-button") role="button" target=external ? "_blank" : null rel=external && !trusted ? "noopener nofollow" : null)&attributes(attributes)
         block
 
@@ -103,31 +217,42 @@ mixin button(url, trusted, ...style)
     label    - [string] aside title (optional or false for no label)
     language - [string] language for syntax highlighting (default: "python")
                supports basic relevant languages available for PrismJS
-    prompt    - [string] prompt or icon to display next to code block, (mostly used for old/new)
+    prompt   - [string] prompt displayed before first line, e.g. "$"
     height   - [integer] optional height to clip code block to
+    icon     - [string] icon displayed next to code block (e.g. "accept" for new code)
+    wrap     - [boolean] wrap text and disable horizontal scrolling
 
-mixin code(label, language, prompt, height)
+mixin code(label, language, prompt, height, icon, wrap)
     pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
-        - var icon = (prompt == 'accept' || prompt == 'reject')
+        - var icon = icon || (prompt == 'accept' || prompt == 'reject')
         if icon
             - var classes = {'accept': 'u-color-green', 'reject': 'u-color-red'}
             .c-code-block__icon(class=classes[icon] || null class=classes[icon] ? "c-code-block__icon--border" : null)
                 +icon(icon, 18)
 
-        code.c-code-block__content(data-prompt=icon ? null : prompt)
+        code.c-code-block__content(class=wrap ? "u-wrap" : null data-prompt=icon ? null : prompt)
             block
 
 
-//- Code blocks to display old/new versions
+//- Wrapper for code blocks to display old/new versions
 
-mixin code-old()
-    +code(false, false, "reject").o-block-small
+mixin code-wrapper()
+    span.u-inline-block.u-padding-top.u-width-full
         block
 
-mixin code-new()
-    +code(false, false, "accept").o-block-small
+//- Code blocks to display old/new versions
+    label - [string] ARIA label for block. Defaults to "correct"/"incorrect".
+
+mixin code-old(label)
+    - var label = label || 'incorrect'
+    +code(false, false, false, false, "reject").o-block-small(aria-label=label)
+        block
+
+mixin code-new(label)
+    - var label = label || 'correct'
+    +code(false, false, false, false, "accept").o-block-small(aria-label=label)
         block
 
 
@@ -138,10 +263,36 @@ mixin code-new()
 
 mixin codepen(slug, height, default_tab)
     figure.o-block(style="min-height: #{height}px")&attributes(attributes)
-        .codepen(data-height=height data-theme-id="26467" data-slug-hash=slug data-default-tab=(default_tab || "result") data-embed-version="2" data-user=SOCIAL.codepen)
+        .codepen(data-height=height data-theme-id="31335" data-slug-hash=slug data-default-tab=(default_tab || "result") data-embed-version="2" data-user=SOCIAL.codepen)
             +a("https://codepen.io/" + SOCIAL.codepen + "/" + slug) View on CodePen
 
         script(async src="https://assets.codepen.io/assets/embed/ei.js")
+
+
+//- GitHub embed
+    repo     - [string] repository owned by explosion organization
+    file     - [string] logical path to file, relative to repository root
+    alt_file - [string] alternative file path used in footer and link button
+    height   - [integer] height of code preview in px
+
+mixin github(repo, file, height, alt_file, language)
+    - var branch = ALPHA ? "develop" : "master"
+    - var height = height || 250
+
+    figure.o-block
+        pre.c-code-block.o-block-small(class="lang-#{(language || DEFAULT_SYNTAX)}" style="height: #{height}px; min-height: #{height}px")
+            code.c-code-block__content(data-gh-embed="#{repo}/#{branch}/#{file}").
+                Can't fetch code example from GitHub :(
+
+                Please use the link below to view the example. If you've come across
+                a broken link, we always appreciate a pull request to the repository,
+                or a report on the issue tracker. Thanks!
+
+        footer.o-grid.u-text
+            .o-block-small.u-flex-full.u-padding-small #[+icon("github")] #[code.u-break.u-break--all=repo + '/' + (alt_file || file)]
+            div
+                +button(gh(repo, alt_file || file), false, "primary", "small") View on GitHub
+
 
 
 //- Images / figures
@@ -168,18 +319,48 @@ mixin image-caption()
         block
 
 
-//- Label
+//- Graphic or illustration with button
+    original - [string] Path to original image
+
+mixin graphic(original)
+    +image
+        block
+        if original
+            .u-text-right
+                +button(original, false, "secondary", "small") View large graphic
+
+
+//- Chart.js
+    id - [string] chart ID, will be assigned as #chart_{id}
+
+mixin chart(id, height)
+    figure.o-block&attributes(attributes)
+        canvas(id="chart_#{id}" width="800" height=(height || "400") style="max-width: 100%")
+
+
+//- Labels
 
 mixin label()
-    .u-text-label.u-color-subtle&attributes(attributes)
+    .u-text-label.u-color-dark&attributes(attributes)
+        block
+
+
+mixin label-inline()
+    strong.u-text-label.u-color-dark&attributes(attributes)
         block
 
 
 //- Tag
+    tooltip   - [string] optional tooltip text.
+    hide_icon - [boolean] hide tooltip icon
 
-mixin tag()
-    span.u-text-tag.u-text-tag--spaced(aria-hidden="true")&attributes(attributes)
+mixin tag(tooltip, hide_icon)
+    div.u-text-tag.u-text-tag--spaced(data-tooltip=tooltip)&attributes(attributes)
         block
+        if tooltip
+            if !hide_icon
+                |  #[+icon("help", 12).o-icon--tag]
+            |  #[span.u-hidden(aria-role="tooltip")=tooltip]
 
 
 //- "Requires model" tag with tooltip and list of capabilities
@@ -188,8 +369,7 @@ mixin tag()
 mixin tag-model(...capabs)
     - var intro = "To use this functionality, spaCy needs a model to be installed"
     - var ext = capabs.length ? " that supports the following capabilities: " + capabs.join(', ') : ""
-    +tag Requires model
-    +help(intro + ext + ".").u-color-theme
+    +tag(intro + ext + ".") Needs model
 
 
 //- "New" tag to label features new in a specific version
@@ -199,8 +379,8 @@ mixin tag-model(...capabs)
 
 mixin tag-new(version)
     - var version = (typeof version == 'number') ? version.toFixed(1) : version
-    +tag(data-tooltip="This feature is new and was introduced in spaCy v#{version}.")
-        | v#{version}
+    - var tooltip = "This feature is new and was introduced in spaCy v" + version
+    +tag(tooltip, true) v#{version}
 
 
 //- List
@@ -219,15 +399,9 @@ mixin list(type, start)
 
 //- List item (only used within +list)
 
-mixin item(procon)
-    if procon
-        li&attributes(attributes)
-            +procon(procon).c-list__icon
-            block
-
-    else
-        li.c-list__item&attributes(attributes)
-            block
+mixin item()
+    li.c-list__item&attributes(attributes)
+        block
 
 
 //- Table
@@ -237,9 +411,9 @@ mixin table(head)
     table.c-table.o-block&attributes(attributes)
 
         if head
-            +row
+            +row("head")
                 each column in head
-                    th.c-table__head-cell.u-text-label=column
+                    +head-cell=column
 
         block
 
@@ -251,10 +425,11 @@ mixin row(...style)
         block
 
 
-//- Footer table row (only ued within +table)
 
-mixin footrow()
-    tr.c-table__row.c-table__row--foot&attributes(attributes)
+//- Header table cell (only used within +row)
+
+mixin head-cell()
+    th.c-table__head-cell.u-text-label&attributes(attributes)
         block
 
 
@@ -278,77 +453,64 @@ mixin grid(...style)
     width - [string] "quarter", "third", "half", "two-thirds", "three-quarters"
     see $grid in assets/css/_variables.sass
 
-mixin grid-col(width)
-    .o-grid__col(class="o-grid__col--#{width}")&attributes(attributes)
+mixin grid-col(...style)
+    .o-grid__col(class=prefixArgs(style, "o-grid__col"))&attributes(attributes)
         block
 
 
 //- Card (only used within +grid)
-    title     - [string] card title
-    details   - [object] url, image, author, description, tags etc.
-                (see /docs/usage/_data.json)
+    title  - [string] card title
+    url    - [string] link for card
+    author - [string] optional author, displayed as byline at the bottom
+    icon   - [string] optional ID of icon displayed with card
+    width  - [string] optional width of grid column, defaults to "half"
 
-mixin card(title, details)
-    +grid-col("half").o-card.u-text&attributes(attributes)
-        if details.image
-            +a(details.url).o-block-small
-                img(src=details.image alt=title width="300" role="presentation")
-
-        if title
-            +a(details.url)
-                +h(3)=title
-
-                    if details.author
-                        .u-text-small.u-color-subtle by #{details.author}
-
-        if details.description || details.tags
-            ul
-                if details.description
-                    li=details.description
-
-                if details.tags
-                    li
-                        each tag in details.tags
-                            span.u-text-tag #{tag}
-                            | &nbsp;
-
-        block
+mixin card(title, url, author, icon, width)
+    +grid-col(width || "half").o-box.o-grid.o-grid--space.u-text&attributes(attributes)
+        +a(url)
+            h4.u-heading.u-text-label
+                if icon
+                    +icon(icon, 25).u-float-right
+                if title
+                    span.u-color-dark=title
+            .o-block-small.u-text-small
+                block
+        if author
+            .u-color-subtle.u-text-tiny by #{author}
 
 
-//- Simpler card list item (only used within +list)
-    title     - [string] card title
-    details   - [object] url, image, author, description, tags etc.
-                (see /docs/usage/_data.json)
+//- Table of contents, to be used with +item mixins for links
+    col - [string] width of column (see +grid-col)
 
-mixin card-item(title, details)
-    +item&attributes(attributes)
-        +a(details.url)=title
-
-        if details.description
-            br
-            span=details.description
-
-        if details.author
-            br
-            span.u-text-small.u-color-subtle by #{details.author}
+mixin table-of-contents(col)
+    +grid-col(col || "half")
+        +infobox
+            +label.o-block-small Table of contents
+            +list("numbers").u-text-small.o-no-block
+                block
 
 
-//- Table row for models table
+//- Bibliography
+    id - [string] ID of bibliography component, for anchor links. Can be used if
+         there's more than one bibliography on one page.
 
-mixin model-row(name, lang, procon, size, license, default_model, divider)
-    - var licenses = { "CC BY-SA": "https://creativecommons.org/licenses/by-sa/3.0/", "CC BY-NC": "https://creativecommons.org/licenses/by-nc/3.0/" }
+mixin bibliography(id)
+    section(id=id || "bibliography")
+        +infobox
+            +label.o-block-small Bibliography
+            +list("numbers").u-text-small.o-no-block
+                block
 
-    +row(divider ? "divider": null)
-        +cell #[code=name]
-            if default_model
-                |  #[span.u-color-theme(title="default model") #[+icon("star", 16)]]
-        +cell=lang
-        each icon in procon
-            +cell.u-text-center #[+procon(icon ? "pro" : "con")]
-        +cell.u-text-right=size
-        +cell
-            if license in licenses
-                +a(licenses[license])=license
+
+//- Footnote
+    id      - [string / integer] ID of footnote.
+    bib_id  - [string] ID of bibliography component, defaults to "bibliography".
+    tooltip - [string] optional text displayed as tooltip
+
+mixin fn(id, bib_id, tooltip)
+    sup.u-padding-small(id="bib" + id data-tooltip=tooltip)
+        span.u-text-tag
+            +a("#" + (bib_id || "bibliography")).u-hide-link #{id}
 
 
 //- Table rows for annotation specs
@@ -385,12 +547,135 @@ mixin annotation-row(annots, style)
         block
 
 
-//- Table of contents, to be used with +item mixins for links
-    col - [string] width of column (see +grid-col)
+//- spaCy logo
 
-mixin table-of-contents(col)
-    +grid-col(col || "half")
-        +infobox
-            +label.o-block-small Table of contents
-            +list("numbers").u-text-small.o-no-block
+mixin logo()
+    +svg("spacy", 675, 215).o-logo&attributes(attributes)
+
+
+//- Gitter chat button and widget
+    button - [string] text shown on button
+    label  - [string] title of chat window (default: same as button)
+
+mixin gitter(button, label)
+    aside.js-gitter.c-chat.is-collapsed(data-title=(label || button))
+
+    button.js-gitter-button.c-chat__button.u-text-tag
+        +icon("chat", 16).o-icon--inline
+        !=button
+
+
+//- Badge
+    image - [string] path to badge image
+    url   - [string] badge link
+
+mixin badge(image, url)
+    +a(url).u-padding-small.u-hide-link&attributes(attributes)
+        img.o-badge(src=image alt=url height="20")
+
+
+//- Quickstart widget
+    quickstart.js with manual markup, inspired by PyTorch's "Getting started"
+    groups - [object] option groups, uses global variable QUICKSTART
+    headline - [string] optional text to be rendered as widget headline
+
+mixin quickstart(groups, headline, description, hide_results)
+    .c-quickstart.o-block-small#qs
+        .c-quickstart__content
+            if headline
+                +h(2)=headline
+            if description
+                p=description
+            for group in groups
+                .c-quickstart__group.u-text-small(data-qs-group=group.id)
+                    if group.title
+                        .c-quickstart__legend=group.title
+                            if group.help
+                                |  #[+help(group.help)]
+                    .c-quickstart__fields
+                        for option in group.options
+                            input.c-quickstart__input(class="c-quickstart__input--" + (group.input_style ? group.input_style : group.multiple ? "check" : "radio") type=group.multiple ? "checkbox" : "radio" name=group.id id="qs-#{option.id}" value=option.id checked=option.checked)
+                            label.c-quickstart__label.u-text-tiny(for="qs-#{option.id}")!=option.title
+                                if option.meta
+                                    |  #[span.c-quickstart__label__meta (#{option.meta})]
+                                if option.help
+                                    |  #[+help(option.help)]
+
+        if hide_results
+            block
+        else
+            pre.c-code-block
+                code.c-code-block__content.c-quickstart__code(data-qs-results="")
+                    block
+
+
+//- Quickstart code item
+    data  - [object] Rendering conditions (keyed by option group ID, value: option)
+    style - [string] modifier ID for line style
+
+mixin qs(data, style)
+    - args = {}
+    for value, setting in data
+        - args['data-qs-' + setting] = value
+    span.c-quickstart__line(class="c-quickstart__line--#{style || 'bash'}")&attributes(args)
+        block
+
+
+//- Terminal-style code window
+    label - [string] title displayed in top bar of terminal window
+
+mixin terminal(label)
+    .x-terminal
+        .x-terminal__icons: span
+        .u-padding-small.u-text-label.u-text-center=label
+
+        +code.x-terminal__code
+            block
+
+
+//- Landing
+
+mixin landing-header()
+    header.c-landing
+        .c-landing__wrapper
+            .c-landing__content
                 block
+
+mixin landing-banner(headline, label)
+    .c-landing__banner.u-padding.o-block.u-color-light
+        +grid.c-landing__banner__content.o-no-block
+            +grid-col("third")
+                h3.u-heading.u-heading-1
+                    if label
+                        div
+                            span.u-text-label.u-text-label--light=label
+                    !=headline
+
+            +grid-col("two-thirds").c-landing__banner__text
+                block
+
+
+mixin landing-logos(title, logos)
+    .o-content.u-text-center&attributes(attributes)
+        h3.u-heading.u-text-label.u-color-dark=title
+
+        each row, i in logos
+            - var is_last = i == logos.length - 1
+            +grid("center").o-inline-list.o-no-block(class=is_last ? "o-no-block" : null)
+                each details, name in row
+                    +a(details[0]).u-padding-medium
+                        +icon(name, details[1], details[2])
+
+                if is_last
+                    block
+
+
+//- Under construction (temporary)
+    Marks sections that still need to be completed for the v2.0 release.
+
+mixin under-construction()
+    +infobox("Under construction", "🚧")
+        |  This section is still being written and will be updated for the v2.0
+        |  release. Is there anything that you think should definitely mentioned or
+        |  explained here? Any examples you'd like to see? #[strong Let us know]
+        |  on the #[+a(gh("spacy") + "/issues/1105") v2.0 alpha thread] on GitHub!

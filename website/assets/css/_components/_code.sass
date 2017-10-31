@@ -4,9 +4,9 @@
 
 .c-code-block
     background: $color-front
-    color: $color-back
+    color: darken($color-back, 20)
     padding: 0.75em 0
-    border-radius: 2px
+    border-radius: $border-radius
     overflow: auto
     width: 100%
     max-width: 100%
@@ -16,6 +16,8 @@
     &.c-code-block--has-icon
         padding: 0
         display: flex
+        border-top-left-radius: 0
+        border-bottom-left-radius: 0
 
 .c-code-block__icon
     padding: 0 0 0 1rem
@@ -43,17 +45,25 @@
         opacity: 0.5
 
 
+//- Code
+
+code
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
+
+
 //- Inline code
 
+*:not(a):not(.c-code-block) > code
+    color: $color-dark
+
 *:not(.c-code-block) > code
-    font: normal 600 0.8em/#{1} $font-code
-    background: darken($color-theme-light, 5)
-    box-shadow: 1px 1px 0 rgba($color-front, 0.05)
-    text-shadow: 1px 1px 0 rgba($color-back, 0.5)
-    color: $color-front
-    padding: 0.1em 0.5em
+    font-size: 90%
+    background-color: $color-subtle-light
+    padding: 0.2rem 0.4rem
+    border-radius: 0.25rem
+    font-family: $font-code
     margin: 0
-    border-radius: 1px
     box-decoration-break: clone
     white-space: nowrap
 

@@ -4,24 +4,16 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
-import ctypes
-from libc.stdint cimport uint32_t
-from libc.string cimport memcpy
+from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from collections import OrderedDict
 from thinc.extra.search cimport Beam
-import numpy
 
 from .stateclass cimport StateClass
-from ._state cimport StateC, is_space_token
+from ._state cimport StateC
 from .nonproj import is_nonproj_tree
-from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
-from ..gold cimport GoldParse
-from ..gold cimport GoldParseC
-from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE, IS_PUNCT
-from ..lexeme cimport Lexeme
+from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
 
 
@@ -118,7 +110,7 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_start
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and st.B_(0).sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -178,7 +170,7 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return not st.B_(0).sent_start
+        return st.B_(0).sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -212,7 +204,8 @@ cdef class LeftArc:
 cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return not st.B_(0).sent_start
+        # If there's (perhaps partial) parse pre-set, don't allow cycle.
+        return st.B_(0).sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -247,6 +240,10 @@ cdef class Break:
         elif st.at_break():
             return False
         elif st.stack_depth() < 1:
+            return False
+        elif st.B_(0).l_edge < 0:
+            return False
+        elif st._sent[st.B_(0).l_edge].sent_start < 0:
             return False
         else:
             return True
@@ -311,14 +308,13 @@ cdef class ArcEager(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions',
-                    OrderedDict((
-                        (SHIFT, ['']),
-                        (REDUCE, ['']),
-                        (RIGHT, []),
-                        (LEFT, []),
-                        (BREAK, ['ROOT'])
-                    )))
+        actions = kwargs.get('actions', OrderedDict((
+            (SHIFT, ['']),
+            (REDUCE, ['']),
+            (RIGHT, []),
+            (LEFT, []),
+            (BREAK, ['ROOT']))
+        ))
         seen_actions = set()
         for label in kwargs.get('left_labels', []):
             if label.upper() != 'ROOT':
@@ -358,7 +354,8 @@ cdef class ArcEager(TransitionSystem):
             if gold.cand_to_gold[i] is None:
                 continue
             if state.safe_get(i).dep:
-                predicted.add((i, state.H(i), self.strings[state.safe_get(i).dep]))
+                predicted.add((i, state.H(i),
+                              self.strings[state.safe_get(i).dep]))
             else:
                 predicted.add((i, state.H(i), 'ROOT'))
             id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
@@ -376,7 +373,8 @@ cdef class ArcEager(TransitionSystem):
         if not self.has_gold(gold):
             return None
         for i in range(gold.length):
-            if gold.heads[i] is None or gold.labels[i] is None: # Missing values
+            # Missing values
+            if gold.heads[i] is None or gold.labels[i] is None:
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
             else:
@@ -442,14 +440,19 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int initialize_state(self, StateC* st) nogil:
         for i in range(st.length):
-            st._sent[i].l_edge = i
-            st._sent[i].r_edge = i
+            if st._sent[i].dep == 0:
+                st._sent[i].l_edge = i
+                st._sent[i].r_edge = i
+                st._sent[i].head = 0
+                st._sent[i].dep = 0
+                st._sent[i].l_kids = 0
+                st._sent[i].r_kids = 0
         st.fast_forward()
 
     cdef int finalize_state(self, StateC* st) nogil:
         cdef int i
         for i in range(st.length):
-            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+            if st._sent[i].head == 0:
                 st._sent[i].dep = self.root_label
 
     def finalize_doc(self, doc):
@@ -507,14 +510,15 @@ cdef class ArcEager(TransitionSystem):
             # Check projectivity --- leading cause
             if is_nonproj_tree(gold.heads):
                 raise ValueError(
-                    "Could not find a gold-standard action to supervise the dependency "
-                    "parser.\n"
-                    "Likely cause: the tree is non-projective (i.e. it has crossing "
-                    "arcs -- see spacy/syntax/nonproj.pyx for definitions)\n"
-                    "The ArcEager transition system only supports projective trees.\n"
-                    "To learn non-projective representations, transform the data "
-                    "before training and after parsing. Either pass make_projective=True "
-                    "to the GoldParse class, or use PseudoProjectivity.preprocess_training_data")
+                    "Could not find a gold-standard action to supervise the "
+                    "dependency parser. Likely cause: the tree is "
+                    "non-projective (i.e. it has crossing arcs -- see "
+                    "spacy/syntax/nonproj.pyx for definitions). The ArcEager "
+                    "transition system only supports projective trees. To "
+                    "learn non-projective representations, transform the data "
+                    "before training and after parsing. Either pass "
+                    "make_projective=True to the GoldParse class, or use "
+                    "spacy.syntax.nonproj.preprocess_training_data.")
             else:
                 print(gold.orig_annot)
                 print(gold.words)
@@ -522,12 +526,10 @@ cdef class ArcEager(TransitionSystem):
                 print(gold.labels)
                 print(gold.sent_starts)
                 raise ValueError(
-                    "Could not find a gold-standard action to supervise the dependency "
-                    "parser.\n"
-                    "The GoldParse was projective.\n"
-                    "The transition system has %d actions.\n"
-                    "State at failure:\n"
-                    "%s" % (self.n_moves, stcls.print_state(gold.words)))
+                    "Could not find a gold-standard action to supervise the"
+                    "dependency parser. The GoldParse was projective. The "
+                    "transition system has %d actions. State at failure: %s"
+                    % (self.n_moves, stcls.print_state(gold.words)))
         assert n_gold >= 1
 
     def get_beam_annot(self, Beam beam):
@@ -548,4 +550,3 @@ cdef class ArcEager(TransitionSystem):
                     deps[j].setdefault(dep, 0.0)
                     deps[j][dep] += prob
         return heads, deps
-

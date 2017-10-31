@@ -14,6 +14,7 @@ VENV_DIR = path.join(PWD, ENV)
 def env(lang='python2.7'):
     if path.exists(VENV_DIR):
         local('rm -rf {env}'.format(env=VENV_DIR))
+    local('pip install virtualenv')
     local('python -m virtualenv -p {lang} {env}'.format(lang=lang, env=VENV_DIR))
 
 
@@ -32,6 +33,10 @@ def make():
             local('pip install -r requirements.txt')
             local('python setup.py build_ext --inplace')
 
+def sdist():
+    with virtualenv(VENV_DIR):
+        with lcd(path.dirname(__file__)):
+            local('python setup.py sdist')
 
 def clean():
     with lcd(path.dirname(__file__)):

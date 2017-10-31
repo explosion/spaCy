@@ -14,13 +14,15 @@ class DependencyRenderer(object):
         """Initialise dependency renderer.
 
         options (dict): Visualiser-specific options (compact, word_spacing,
-                        arrow_spacing, arrow_width, arrow_stroke, distance,
-                        offset_x, color, bg, font)
+            arrow_spacing, arrow_width, arrow_stroke, distance, offset_x,
+            color, bg, font)
         """
         self.compact = options.get('compact', False)
         self.word_spacing = options.get('word_spacing', 45)
-        self.arrow_spacing = options.get('arrow_spacing', 12 if self.compact else 20)
-        self.arrow_width = options.get('arrow_width', 6 if self.compact else 10)
+        self.arrow_spacing = options.get('arrow_spacing',
+                                         12 if self.compact else 20)
+        self.arrow_width = options.get('arrow_width',
+                                       6 if self.compact else 10)
         self.arrow_stroke = options.get('arrow_stroke', 2)
         self.distance = options.get('distance', 150 if self.compact else 175)
         self.offset_x = options.get('offset_x', 50)
@@ -39,7 +41,8 @@ class DependencyRenderer(object):
         rendered = [self.render_svg(i, p['words'], p['arcs'])
                     for i, p in enumerate(parsed)]
         if page:
-            content = ''.join([TPL_FIGURE.format(content=svg) for svg in rendered])
+            content = ''.join([TPL_FIGURE.format(content=svg)
+                               for svg in rendered])
             markup = TPL_PAGE.format(content=content)
         else:
             markup = ''.join(rendered)
@@ -63,12 +66,13 @@ class DependencyRenderer(object):
         self.id = render_id
         words = [self.render_word(w['text'], w['tag'], i)
                  for i, w in enumerate(words)]
-        arcs = [self.render_arrow(a['label'], a['start'], a['end'], a['dir'], i)
+        arcs = [self.render_arrow(a['label'], a['start'],
+                                  a['end'], a['dir'], i)
                 for i, a in enumerate(arcs)]
         content = ''.join(words) + ''.join(arcs)
-        return TPL_DEP_SVG.format(id=self.id, width=self.width, height=self.height,
-                                  color=self.color, bg=self.bg, font=self.font,
-                                  content=content)
+        return TPL_DEP_SVG.format(id=self.id, width=self.width,
+                                  height=self.height, color=self.color,
+                                  bg=self.bg, font=self.font, content=content)
 
     def render_word(self, text, tag, i):
         """Render individual word.
@@ -96,7 +100,7 @@ class DependencyRenderer(object):
         x_start = self.offset_x+start*self.distance+self.arrow_spacing
         y = self.offset_y
         x_end = (self.offset_x+(end-start)*self.distance+start*self.distance
-                 -self.arrow_spacing*(self.highest_level-level)/4)
+                 - self.arrow_spacing*(self.highest_level-level)/4)
         y_curve = self.offset_y-level*self.distance/2
         if self.compact:
             y_curve = self.offset_y-level*self.distance/6
@@ -133,8 +137,10 @@ class DependencyRenderer(object):
         if direction is 'left':
             pos1, pos2, pos3 = (x, x-self.arrow_width+2, x+self.arrow_width-2)
         else:
-            pos1, pos2, pos3 = (end, end+self.arrow_width-2, end-self.arrow_width+2)
-        arrowhead = (pos1, y+2, pos2, y-self.arrow_width, pos3, y-self.arrow_width)
+            pos1, pos2, pos3 = (end, end+self.arrow_width-2,
+                                end-self.arrow_width+2)
+        arrowhead = (pos1, y+2, pos2, y-self.arrow_width, pos3,
+                     y-self.arrow_width)
         return "M{},{} L{},{} {},{}".format(*arrowhead)
 
     def get_levels(self, arcs):
@@ -159,9 +165,10 @@ class EntityRenderer(object):
         """
         colors = {'ORG': '#7aecec', 'PRODUCT': '#bfeeb7', 'GPE': '#feca74',
                   'LOC': '#ff9561', 'PERSON': '#aa9cfc', 'NORP': '#c887fb',
-                  'FACILITY': '#9cc9cc', 'EVENT': '#ffeb80', 'LANGUAGE': '#ff8197',
-                  'WORK_OF_ART': '#f0d0ff', 'DATE': '#bfe1d9', 'TIME': '#bfe1d9',
-                  'MONEY': '#e4e7d2', 'QUANTITY': '#e4e7d2', 'ORDINAL': '#e4e7d2',
+                  'FACILITY': '#9cc9cc', 'EVENT': '#ffeb80', 'LAW': '#ff8197',
+                  'LANGUAGE': '#ff8197', 'WORK_OF_ART': '#f0d0ff',
+                  'DATE': '#bfe1d9', 'TIME': '#bfe1d9', 'MONEY': '#e4e7d2',
+                  'QUANTITY': '#e4e7d2', 'ORDINAL': '#e4e7d2',
                   'CARDINAL': '#e4e7d2', 'PERCENT': '#e4e7d2'}
         colors.update(options.get('colors', {}))
         self.default_color = '#ddd'
@@ -176,9 +183,11 @@ class EntityRenderer(object):
         minify (bool): Minify HTML markup.
         RETURNS (unicode): Rendered HTML markup.
         """
-        rendered = [self.render_ents(p['text'], p['ents'], p.get('title', None)) for p in parsed]
+        rendered = [self.render_ents(p['text'], p['ents'],
+                    p.get('title', None)) for p in parsed]
         if page:
-            docs = ''.join([TPL_FIGURE.format(content=doc) for doc in rendered])
+            docs = ''.join([TPL_FIGURE.format(content=doc)
+                            for doc in rendered])
             markup = TPL_PAGE.format(content=docs)
         else:
             markup = ''.join(rendered)

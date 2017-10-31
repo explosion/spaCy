@@ -1,22 +1,18 @@
 //- 💫 CSS > COMPONENTS > NAVIGATION
 
 .c-nav
-    @include position(absolute, top, left, 0, 0)
+    @include position(fixed, top, left, 0, 0)
     @include size(100%, $nav-height)
     background: $color-back
     color: $color-theme
     align-items: center
     display: flex
     justify-content: space-between
+    flex-flow: row nowrap
     padding: 0 2rem 0 1rem
-    z-index: 20
+    z-index: 30
     width: 100%
-    border-bottom: 1px solid $color-subtle
-
-    &.c-nav--theme
-        background: $color-theme
-        color: $color-back
-        border-bottom: none
+    box-shadow: $box-shadow
 
     &.is-fixed
         animation: slideInDown 0.5s ease-in-out
@@ -28,12 +24,21 @@
     justify-content: flex-end
     flex-flow: row nowrap
     border-color: inherit
+    flex: 1
 
 .c-nav__menu__item
     display: flex
     align-items: center
     height: 100%
     text-transform: uppercase
+    font-family: $font-secondary
+    font-size: 1.6rem
+    font-weight: bold
+    color: $color-theme
 
-    &:not(:last-child)
-        margin-right: 1em
+    &:not(:first-child)
+        margin-left: 2em
+
+    &.is-active
+        color: $color-dark
+        pointer-events: none

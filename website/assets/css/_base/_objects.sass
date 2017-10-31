@@ -43,32 +43,46 @@
     position: relative
     padding: 2.5rem 0
     overflow: auto
+    background: $color-subtle-light
+
+    .o-main &
+        border-top-left-radius: $border-radius
 
 
 //- Blocks
 
+.o-section
+    width: 100%
+    max-width: 100%
+
+    &:not(:last-child)
+        margin-bottom: 7rem
+        padding-bottom: 4rem
+        border-bottom: 1px dotted $color-subtle
+
 .o-block
-    margin-bottom: 3rem
+    margin-bottom: 4rem
 
 .o-block-small
     margin-bottom: 2rem
 
-.o-no-block
+.o-no-block.o-no-block
     margin-bottom: 0
 
 .o-card
     background: $color-back
-    border-radius: 2px
-    border: 1px solid $color-subtle
-    padding: 3rem 2.5%
-
+    border-radius: $border-radius
+    box-shadow: $box-shadow
 
 //- Box
 
 .o-box
-    background: $color-theme-light
+    background: $color-subtle-light
     padding: 2rem
-    border-left: 4px solid $color-theme
+    border-radius: $border-radius
+
+.o-box__logos
+    padding-bottom: 1rem
 
 
 //- Icons
@@ -77,7 +91,20 @@
     vertical-align: middle
 
     &.o-icon--inline
-        margin: 0 0.5rem 0 0.25rem
+        margin: 0 0.5rem 0 0.1rem
+
+    &.o-icon--tag
+        vertical-align: bottom
+        height: 100%
+        position: relative
+        top: 1px
+
+.o-emoji
+    margin-right: 0.75rem
+    vertical-align: text-bottom
+
+.o-badge
+    border-radius: 1em
 
 
 //- SVG
@@ -102,3 +129,38 @@
     fill: currentColor
     vertical-align: middle
     margin: 0 0.5rem
+
+
+//- Embeds
+
+.o-chart
+    max-width: 100%
+
+.cp_embed_iframe
+    border: 1px solid $color-subtle
+    border-radius: $border-radius
+
+
+//- Form fields
+
+.o-field
+    background: $color-back
+    padding: 0 0.25em
+    border-radius: 2em
+    border: 1px solid $color-subtle
+    margin-bottom: 0.25rem
+
+.o-field__input,
+.o-field__button
+    padding: 0 0.35em
+
+.o-field__input
+    width: 100%
+
+.o-field__select
+     background: transparent
+     color: $color-dark
+     height: 1.4em
+     border: none
+     text-align-last: center
+     width: 100%

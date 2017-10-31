@@ -2,7 +2,7 @@
 # cython: profile=True
 cimport numpy as np
 import numpy
-from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
+from cpython.ref cimport PyObject, Py_XDECREF
 from thinc.extra.search cimport Beam
 from thinc.extra.search import MaxViolation
 from thinc.typedefs cimport hash_t, class_t
@@ -11,7 +11,6 @@ from thinc.extra.search cimport MaxViolation
 from .transition_system cimport TransitionSystem, Transition
 from .stateclass cimport StateClass
 from ..gold cimport GoldParse
-from ..tokens.doc cimport Doc
 
 
 # These are passed as callbacks to thinc.search.Beam
@@ -21,6 +20,7 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
     moves = <const Transition*>_moves
     dest.clone(src)
     moves[clas].do(dest.c, moves[clas].label)
+    dest.c.push_hist(clas)
 
 
 cdef int _check_final_state(void* _state, void* extra_args) except -1:
@@ -49,7 +49,7 @@ cdef class ParserBeam(object):
     cdef public object dones
 
     def __init__(self, TransitionSystem moves, states, golds,
-            int width, float density):
+                 int width, float density):
         self.moves = moves
         self.states = states
         self.golds = golds
@@ -58,7 +58,8 @@ cdef class ParserBeam(object):
         cdef StateClass state, st
         for state in states:
             beam = Beam(self.moves.n_moves, width, density)
-            beam.initialize(self.moves.init_beam_state, state.c.length, state.c._sent)
+            beam.initialize(self.moves.init_beam_state, state.c.length,
+                            state.c._sent)
             for i in range(beam.width):
                 st = <StateClass>beam.at(i)
                 st.c.offset = state.c.offset
@@ -73,7 +74,8 @@ cdef class ParserBeam(object):
 
     @property
     def is_done(self):
-        return all(b.is_done or self.dones[i] for i, b in enumerate(self.beams))
+        return all(b.is_done or self.dones[i]
+                   for i, b in enumerate(self.beams))
 
     def __getitem__(self, i):
         return self.beams[i]
@@ -125,7 +127,8 @@ cdef class ParserBeam(object):
         for i in range(beam.size):
             state = <StateClass>beam.at(i)
             if not state.c.is_final():
-                self.moves.set_costs(beam.is_valid[i], beam.costs[i], state, gold)
+                self.moves.set_costs(beam.is_valid[i], beam.costs[i],
+                                     state, gold)
                 if follow_gold:
                     for j in range(beam.nr_class):
                         if beam.costs[i][j] >= 1:
@@ -145,12 +148,15 @@ def get_token_ids(states, int n_tokens):
         c_ids += ids.shape[1]
     return ids
 
+
 nr_update = 0
+
+
 def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
-                states, tokvecs, golds,
-                state2vec, vec2scores, 
-                int width, float density,
-                sgd=None, losses=None, drop=0.):
+                states, golds,
+                state2vec, vec2scores,
+                int width, float density, int hist_feats,
+                losses=None, drop=0.):
     global nr_update
     cdef MaxViolation violn
     nr_update += 1
@@ -166,29 +172,39 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         if pbeam.is_done and gbeam.is_done:
             break
         # The beam maps let us find the right row in the flattened scores
-        # arrays for each state. States are identified by (example id, history).
-        # We keep a different beam map for each step (since we'll have a flat
-        # scores array for each step). The beam map will let us take the per-state
-        # losses, and compute the gradient for each (step, state, class).
+        # arrays for each state. States are identified by (example id,
+        # history). We keep a different beam map for each step (since we'll
+        # have a flat scores array for each step). The beam map will let us
+        # take the per-state losses, and compute the gradient for each (step,
+        # state, class).
         beam_maps.append({})
         # Gather all states from the two beams in a list. Some stats may occur
         # in both beams. To figure out which beam each state belonged to,
         # we keep two lists of indices, p_indices and g_indices
-        states, p_indices, g_indices = get_states(pbeam, gbeam, beam_maps[-1], nr_update)
+        states, p_indices, g_indices = get_states(pbeam, gbeam, beam_maps[-1],
+                                                  nr_update)
         if not states:
             break
         # Now that we have our flat list of states, feed them through the model
         token_ids = get_token_ids(states, nr_feature)
         vectors, bp_vectors = state2vec.begin_update(token_ids, drop=drop)
-        scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
+        if hist_feats:
+            hists = numpy.asarray([st.history[:hist_feats] for st in states],
+                                  dtype='i')
+            scores, bp_scores = vec2scores.begin_update((vectors, hists),
+                                                        drop=drop)
+        else:
+            scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
 
         # Store the callbacks for the backward pass
         backprops.append((token_ids, bp_vectors, bp_scores))
 
         # Unpack the flat scores into lists for the two beams. The indices arrays
         # tell us which example and state the scores-row refers to.
-        p_scores = [numpy.ascontiguousarray(scores[indices], dtype='f') for indices in p_indices]
-        g_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')  for indices in g_indices]
+        p_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')
+                    for indices in p_indices]
+        g_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')
+                    for indices in g_indices]
         # Now advance the states in the beams. The gold beam is contrained to
         # to follow only gold analyses.
         pbeam.advance(p_scores)
@@ -244,8 +260,7 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
 
 
 def get_gradient(nr_class, beam_maps, histories, losses):
-    """
-    The global model assigns a loss to each parse. The beam scores
+    """The global model assigns a loss to each parse. The beam scores
     are additive, so the same gradient is applied to each action
     in the history. This gives the gradient of a single *action*
     for a beam state -- so we have "the gradient of loss for taking
@@ -265,7 +280,8 @@ def get_gradient(nr_class, beam_maps, histories, losses):
             if loss != 0.0 and not numpy.isnan(loss):
                 nr_step = max(nr_step, len(hist))
     for i in range(nr_step):
-        grads.append(numpy.zeros((max(beam_maps[i].values())+1, nr_class), dtype='f'))
+        grads.append(numpy.zeros((max(beam_maps[i].values())+1, nr_class),
+                                 dtype='f'))
     assert len(histories) == len(losses)
     for eg_id, hists in enumerate(histories):
         for loss, hist in zip(losses[eg_id], hists):
@@ -282,5 +298,3 @@ def get_gradient(nr_class, beam_maps, histories, losses):
                 grads[j][i, clas] += loss
                 key = key + tuple([clas])
     return grads
-
-

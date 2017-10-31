@@ -9,7 +9,7 @@
 //- Table row
 
 .c-table__row
-    &:nth-child(odd)
+    &:nth-child(odd):not(.c-table__row--head)
         background: rgba($color-subtle-light, 0.35)
 
     &.c-table__row--foot
@@ -38,7 +38,6 @@
 .c-table__head-cell
     font-weight: bold
     color: $color-theme
-    background: $color-back
     padding: 1rem 0.5rem
     border-bottom: 2px solid $color-theme
 
@@ -52,6 +51,7 @@
         @include scroll-shadow-base($color-front)
         display: inline-block
         overflow-x: auto
+        overflow-y: hidden
         width: auto
         -webkit-overflow-scrolling: touch
 
@@ -63,9 +63,15 @@
         &:last-child
             @include scroll-shadow-cover(right, $color-back)
 
+        &:first-child:last-child
+            @include scroll-shadow-cover(both, $color-back)
+
     .c-table__row--foot .c-table__cell
         &:first-child
             @include scroll-shadow-cover(left, lighten($color-subtle-light, 2))
 
         &:last-child
             @include scroll-shadow-cover(right, lighten($color-subtle-light, 2))
+
+        &:first-child:last-child
+            @include scroll-shadow-cover(both, lighten($color-subtle-light, 2))

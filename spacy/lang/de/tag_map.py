@@ -62,5 +62,5 @@ TAG_MAP = {
     "VVIZU":    {POS: VERB, "VerbForm": "inf"},
     "VVPP":     {POS: VERB, "Aspect": "perf", "VerbForm": "part"},
     "XY":       {POS: X},
-    "SP":       {POS: SPACE}
+    "_SP":      {POS: SPACE}
 }

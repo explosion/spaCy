@@ -1,52 +1,48 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
-from contextlib import contextmanager
-import dill
 
-import numpy
-from thinc.neural import Model
-from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.optimizers import Adam, SGD
 import random
 import ujson
-from collections import OrderedDict
 import itertools
+import weakref
+import functools
+from collections import OrderedDict
+from contextlib import contextmanager
+from copy import copy
+from thinc.neural import Model
+from thinc.neural.optimizers import Adam
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
-from .tagger import Tagger
 from .lemmatizer import Lemmatizer
-from .syntax.parser import get_templates
-from .syntax import nonproj
-
-from .pipeline import NeuralDependencyParser, EntityRecognizer
-from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
-from .pipeline import NeuralLabeller
-from .pipeline import SimilarityHook
-from .pipeline import TextCategorizer
-from . import about
-
+from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
+from .pipeline import SimilarityHook, TextCategorizer
 from .compat import json_dumps, izip
+from .scorer import Scorer
+from ._ml import link_vectors_to_models
 from .attrs import IS_STOP
-from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
+from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
-from .lang.lex_attrs import LEX_ATTRS
+from .lang.lex_attrs import LEX_ATTRS, is_stop
 from . import util
-from .scorer import Scorer
+from . import about
 
 
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules)
+        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules,
+                          cls.lemma_lookup)
 
     @classmethod
     def create_vocab(cls, nlp=None):
         lemmatizer = cls.create_lemmatizer(nlp)
         lex_attr_getters = dict(cls.lex_attr_getters)
         # This is messy, but it's the minimal working fix to Issue #639.
-        lex_attr_getters[IS_STOP] = lambda string: string.lower() in cls.stop_words
+        lex_attr_getters[IS_STOP] = functools.partial(is_stop,
+                                                      stops=cls.stop_words)
         vocab = Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
                       lemmatizer=lemmatizer)
         for tag_str, exc in cls.morph_rules.items():
@@ -58,83 +54,31 @@ class BaseDefaults(object):
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
         token_match = cls.token_match
-        prefix_search = util.compile_prefix_regex(cls.prefixes).search \
-                        if cls.prefixes else None
-        suffix_search = util.compile_suffix_regex(cls.suffixes).search \
-                        if cls.suffixes else None
-        infix_finditer = util.compile_infix_regex(cls.infixes).finditer \
-                         if cls.infixes else None
+        prefix_search = (util.compile_prefix_regex(cls.prefixes).search
+                         if cls.prefixes else None)
+        suffix_search = (util.compile_suffix_regex(cls.suffixes).search
+                         if cls.suffixes else None)
+        infix_finditer = (util.compile_infix_regex(cls.infixes).finditer
+                          if cls.infixes else None)
         vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
         return Tokenizer(vocab, rules=rules,
-                         prefix_search=prefix_search, suffix_search=suffix_search,
-                         infix_finditer=infix_finditer, token_match=token_match)
+                         prefix_search=prefix_search,
+                         suffix_search=suffix_search,
+                         infix_finditer=infix_finditer,
+                         token_match=token_match)
 
-    @classmethod
-    def create_tagger(cls, nlp=None, **cfg):
-        if nlp is None:
-            return NeuralTagger(cls.create_vocab(nlp), **cfg)
-        else:
-            return NeuralTagger(nlp.vocab, **cfg)
-
-    @classmethod
-    def create_parser(cls, nlp=None, **cfg):
-        if nlp is None:
-            return NeuralDependencyParser(cls.create_vocab(nlp), **cfg)
-        else:
-            return NeuralDependencyParser(nlp.vocab, **cfg)
-
-    @classmethod
-    def create_entity(cls, nlp=None, **cfg):
-        if nlp is None:
-            return NeuralEntityRecognizer(cls.create_vocab(nlp), **cfg)
-        else:
-            return NeuralEntityRecognizer(nlp.vocab, **cfg)
-
-    @classmethod
-    def create_pipeline(cls, nlp=None, disable=tuple()):
-        meta = nlp.meta if nlp is not None else {}
-        # Resolve strings, like "cnn", "lstm", etc
-        pipeline = []
-        for entry in meta.get('pipeline', []):
-            if entry in disable or getattr(entry, 'name', entry) in disable:
-                continue
-            factory = cls.Defaults.factories[entry]
-            pipeline.append(factory(nlp, **meta.get(entry, {})))
-        return pipeline
-
-    factories = {
-        'make_doc': create_tokenizer,
-        'tensorizer': lambda nlp, **cfg: [TokenVectorEncoder(nlp.vocab, **cfg)],
-        'tagger': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
-        'parser': lambda nlp, **cfg: [
-            NeuralDependencyParser(nlp.vocab, **cfg),
-            nonproj.deprojectivize],
-        'ner': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
-        'similarity': lambda nlp, **cfg: [SimilarityHook(nlp.vocab, **cfg)],
-        'textcat': lambda nlp, **cfg: [TextCategorizer(nlp.vocab, **cfg)],
-        # Temporary compatibility -- delete after pivot
-        'token_vectors': lambda nlp, **cfg: [TokenVectorEncoder(nlp.vocab, **cfg)],
-        'tags': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
-        'dependencies': lambda nlp, **cfg: [
-            NeuralDependencyParser(nlp.vocab, **cfg),
-            nonproj.deprojectivize,
-        ],
-        'entities': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
-    }
-
+    pipe_names = ['tensorizer', 'tagger', 'parser', 'ner']
     token_match = TOKEN_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
     tag_map = dict(TAG_MAP)
     tokenizer_exceptions = {}
-    parser_features = get_templates('parser')
-    entity_features = get_templates('ner')
-    tagger_features = Tagger.feature_templates # TODO -- fix this
     stop_words = set()
     lemma_rules = {}
     lemma_exc = {}
     lemma_index = {}
+    lemma_lookup = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
@@ -151,8 +95,17 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
-    def __init__(self, vocab=True, make_doc=True, pipeline=None,
-                 meta={}, disable=tuple(), **kwargs):
+    factories = {
+        'tokenizer': lambda nlp: nlp.Defaults.create_tokenizer(nlp),
+        'tensorizer': lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
+        'tagger': lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        'parser': lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
+        'ner': lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
+        'similarity': lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
+        'textcat': lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg)
+    }
+
+    def __init__(self, vocab=True, make_doc=True, meta={}, **kwargs):
         """Initialise a Language object.
 
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
@@ -170,6 +123,7 @@ class Language(object):
         RETURNS (Language): The newly constructed object.
         """
         self._meta = dict(meta)
+        self._path = None
         if vocab is True:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get('vocab', {}))
@@ -178,34 +132,21 @@ class Language(object):
             factory = self.Defaults.create_tokenizer
             make_doc = factory(self, **meta.get('tokenizer', {}))
         self.tokenizer = make_doc
-        if pipeline is True:
-            self.pipeline = self.Defaults.create_pipeline(self, disable)
-        elif pipeline:
-            # Careful not to do getattr(p, 'name', None) here
-            # If we had disable=[None], we'd disable everything!
-            self.pipeline = [p for p in pipeline
-                             if p not in disable
-                             and getattr(p, 'name', p) not in disable]
-            # Resolve strings, like "cnn", "lstm", etc
-            for i, entry in enumerate(self.pipeline):
-                if entry in self.Defaults.factories:
-                    factory = self.Defaults.factories[entry]
-                    self.pipeline[i] = factory(self, **meta.get(entry, {}))
-        else:
-            self.pipeline = []
-        flat_list = []
-        for pipe in self.pipeline:
-            if isinstance(pipe, list):
-                flat_list.extend(pipe)
-            else:
-                flat_list.append(pipe)
-        self.pipeline = flat_list
+        self.pipeline = []
         self._optimizer = None
+
+    def __reduce__(self):
+        bytes_data = self.to_bytes(vocab=False)
+        return (unpickle_language, (self.vocab, self.meta, bytes_data))
+
+    @property
+    def path(self):
+        return self._path
 
     @property
     def meta(self):
         self._meta.setdefault('lang', self.vocab.lang)
-        self._meta.setdefault('name', '')
+        self._meta.setdefault('name', 'model')
         self._meta.setdefault('version', '0.0.0')
         self._meta.setdefault('spacy_version', about.__version__)
         self._meta.setdefault('description', '')
@@ -213,11 +154,9 @@ class Language(object):
         self._meta.setdefault('email', '')
         self._meta.setdefault('url', '')
         self._meta.setdefault('license', '')
-        pipeline = []
-        for component in self.pipeline:
-            if hasattr(component, 'name'):
-                pipeline.append(component.name)
-        self._meta['pipeline'] = pipeline
+        self._meta['vectors'] = {'width': self.vocab.vectors_length,
+                                 'entries': len(self.vocab.vectors)}
+        self._meta['pipeline'] = self.pipe_names
         return self._meta
 
     @meta.setter
@@ -227,34 +166,154 @@ class Language(object):
     # Conveniences to access pipeline components
     @property
     def tensorizer(self):
-        return self.get_component('tensorizer')
+        return self.get_pipe('tensorizer')
 
     @property
     def tagger(self):
-        return self.get_component('tagger')
+        return self.get_pipe('tagger')
 
     @property
     def parser(self):
-        return self.get_component('parser')
+        return self.get_pipe('parser')
 
     @property
     def entity(self):
-        return self.get_component('ner')
+        return self.get_pipe('ner')
 
     @property
     def matcher(self):
-        return self.get_component('matcher')
+        return self.get_pipe('matcher')
 
-    def get_component(self, name):
-        if self.pipeline in (True, None):
-            return None
-        for proc in self.pipeline:
-            if hasattr(proc, 'name') and proc.name.endswith(name):
-                return proc
-        return None
+    @property
+    def pipe_names(self):
+        """Get names of available pipeline components.
+
+        RETURNS (list): List of component name strings, in order.
+        """
+        return [pipe_name for pipe_name, _ in self.pipeline]
+
+    def get_pipe(self, name):
+        """Get a pipeline component for a given component name.
+
+        name (unicode): Name of pipeline component to get.
+        RETURNS (callable): The pipeline component.
+        """
+        for pipe_name, component in self.pipeline:
+            if pipe_name == name:
+                return component
+        msg = "No component '{}' found in pipeline. Available names: {}"
+        raise KeyError(msg.format(name, self.pipe_names))
+
+    def create_pipe(self, name, config=dict()):
+        """Create a pipeline component from a factory.
+
+        name (unicode): Factory name to look up in `Language.factories`.
+        config (dict): Configuration parameters to initialise component.
+        RETURNS (callable): Pipeline component.
+        """
+        if name not in self.factories:
+            raise KeyError("Can't find factory for '{}'.".format(name))
+        factory = self.factories[name]
+        return factory(self, **config)
+
+    def add_pipe(self, component, name=None, before=None, after=None,
+                 first=None, last=None):
+        """Add a component to the processing pipeline. Valid components are
+        callables that take a `Doc` object, modify it and return it. Only one
+        of before/after/first/last can be set. Default behaviour is "last".
+
+        component (callable): The pipeline component.
+        name (unicode): Name of pipeline component. Overwrites existing
+            component.name attribute if available. If no name is set and
+            the component exposes no name attribute, component.__name__ is
+            used. An error is raised if a name already exists in the pipeline.
+        before (unicode): Component name to insert component directly before.
+        after (unicode): Component name to insert component directly after.
+        first (bool): Insert component first / not first in the pipeline.
+        last (bool): Insert component last / not last in the pipeline.
+
+        EXAMPLE:
+            >>> nlp.add_pipe(component, before='ner')
+            >>> nlp.add_pipe(component, name='custom_name', last=True)
+        """
+        if name is None:
+            if hasattr(component, 'name'):
+                name = component.name
+            elif hasattr(component, '__name__'):
+                name = component.__name__
+            elif (hasattr(component, '__class__') and
+                  hasattr(component.__class__, '__name__')):
+                name = component.__class__.__name__
+            else:
+                name = repr(component)
+        if name in self.pipe_names:
+            raise ValueError("'{}' already exists in pipeline.".format(name))
+        if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
+            msg = ("Invalid constraints. You can only set one of the "
+                   "following: before, after, first, last.")
+            raise ValueError(msg)
+        pipe = (name, component)
+        if last or not any([first, before, after]):
+            self.pipeline.append(pipe)
+        elif first:
+            self.pipeline.insert(0, pipe)
+        elif before and before in self.pipe_names:
+            self.pipeline.insert(self.pipe_names.index(before), pipe)
+        elif after and after in self.pipe_names:
+            self.pipeline.insert(self.pipe_names.index(after), pipe)
+        else:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            unfound = before or after
+            raise ValueError(msg.format(unfound, self.pipe_names))
+
+    def has_pipe(self, name):
+        """Check if a component name is present in the pipeline. Equivalent to
+        `name in nlp.pipe_names`.
+
+        name (unicode): Name of the component.
+        RETURNS (bool): Whether a component of the name exists in the pipeline.
+        """
+        return name in self.pipe_names
+
+    def replace_pipe(self, name, component):
+        """Replace a component in the pipeline.
+
+        name (unicode): Name of the component to replace.
+        component (callable): Pipeline component.
+        """
+        if name not in self.pipe_names:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            raise ValueError(msg.format(name, self.pipe_names))
+        self.pipeline[self.pipe_names.index(name)] = (name, component)
+
+    def rename_pipe(self, old_name, new_name):
+        """Rename a pipeline component.
+
+        old_name (unicode): Name of the component to rename.
+        new_name (unicode): New name of the component.
+        """
+        if old_name not in self.pipe_names:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            raise ValueError(msg.format(old_name, self.pipe_names))
+        if new_name in self.pipe_names:
+            msg = "'{}' already exists in pipeline. Existing names: {}"
+            raise ValueError(msg.format(new_name, self.pipe_names))
+        i = self.pipe_names.index(old_name)
+        self.pipeline[i] = (new_name, self.pipeline[i][1])
+
+    def remove_pipe(self, name):
+        """Remove a component from the pipeline.
+
+        name (unicode): Name of the component to remove.
+        RETURNS (tuple): A `(name, component)` tuple of the removed component.
+        """
+        if name not in self.pipe_names:
+            msg = "Can't find '{}' in pipeline. Available names: {}"
+            raise ValueError(msg.format(name, self.pipe_names))
+        return self.pipeline.pop(self.pipe_names.index(name))
 
     def __call__(self, text, disable=[]):
-        """'Apply the pipeline to some text. The text can span multiple sentences,
+        """Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
@@ -268,18 +327,36 @@ class Language(object):
             ('An', 'NN')
         """
         doc = self.make_doc(text)
-        for proc in self.pipeline:
-            name = getattr(proc, 'name', None)
+        for name, proc in self.pipeline:
             if name in disable:
                 continue
             doc = proc(doc)
         return doc
 
+    def disable_pipes(self, *names):
+        """Disable one or more pipeline components. If used as a context
+        manager, the pipeline will be restored to the initial state at the end
+        of the block. Otherwise, a DisabledPipes object is returned, that has
+        a `.restore()` method you can use to undo your changes.
+
+        EXAMPLE:
+            >>> nlp.add_pipe('parser')
+            >>> nlp.add_pipe('tagger')
+            >>> with nlp.disable_pipes('parser', 'tagger'):
+            >>>     assert not nlp.has_pipe('parser')
+            >>> assert nlp.has_pipe('parser')
+            >>> disabled = nlp.disable_pipes('parser')
+            >>> assert len(disabled) == 1
+            >>> assert not nlp.has_pipe('parser')
+            >>> disabled.restore()
+            >>> assert nlp.has_pipe('parser')
+        """
+        return DisabledPipes(self, *names)
+
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None,
-            update_shared=False):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -289,46 +366,33 @@ class Language(object):
         RETURNS (dict): Results from the update.
 
         EXAMPLE:
-            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
+            >>> with nlp.begin_training(gold) as (trainer, optimizer):
             >>>    for epoch in trainer.epochs(gold):
             >>>        for docs, golds in epoch:
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
         if len(docs) != len(golds):
             raise IndexError("Update expects same number of docs and golds "
-                "Got: %d, %d" % (len(docs), len(golds)))
+                             "Got: %d, %d" % (len(docs), len(golds)))
         if len(docs) == 0:
             return
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = Adam(Model.ops, 0.001)
             sgd = self._optimizer
-        tok2vec = self.pipeline[0]
-        feats = tok2vec.doc2feats(docs)
         grads = {}
+
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
-        pipes = list(self.pipeline[1:])
+
+        pipes = list(self.pipeline)
         random.shuffle(pipes)
-        tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
-        all_d_tokvecses = [tok2vec.model.ops.allocate(tv.shape) for tv in tokvecses]
-        for proc in pipes:
+        for name, proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
-            d_tokvecses = proc.update((docs, tokvecses), golds,
-                                      drop=drop, sgd=get_grads, losses=losses)
-            if update_shared and d_tokvecses is not None:
-                for i, d_tv in enumerate(d_tokvecses):
-                    all_d_tokvecses[i] += d_tv
-        if update_shared and bp_tokvecses is not None:
-            bp_tokvecses(all_d_tokvecses, sgd=sgd)
+            proc.update(docs, golds, drop=drop, sgd=get_grads, losses=losses)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
-        # Clear the tensor variable, to free GPU memory.
-        # If we don't do this, the memory leak gets pretty
-        # bad, because we may be holding part of a batch.
-        for doc in docs:
-            doc.tensor = None
 
     def preprocess_gold(self, docs_golds):
         """Can be called before training to pre-process gold data. By default,
@@ -337,43 +401,56 @@ class Language(object):
         docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
         YIELDS (tuple): Tuples of preprocessed `Doc` and `GoldParse` objects.
         """
-        for proc in self.pipeline:
+        for name, proc in self.pipeline:
             if hasattr(proc, 'preprocess_gold'):
                 docs_golds = proc.preprocess_gold(docs_golds)
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, get_gold_tuples, **cfg):
+    def resume_training(self, **cfg):
+        if cfg.get('device', -1) >= 0:
+            device = util.use_gpu(cfg['device'])
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(
+                    self.vocab.vectors.data)
+        else:
+            device = None
+        learn_rate = util.env_opt('learn_rate', 0.001)
+        beta1 = util.env_opt('optimizer_B1', 0.9)
+        beta2 = util.env_opt('optimizer_B2', 0.999)
+        eps = util.env_opt('optimizer_eps', 1e-08)
+        L2 = util.env_opt('L2_penalty', 1e-6)
+        max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+        self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
+                               beta2=beta2, eps=eps)
+        self._optimizer.max_grad_norm = max_grad_norm
+        self._optimizer.device = device
+        return self._optimizer
+
+    def begin_training(self, get_gold_tuples=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
-        gold_tuples (iterable): Gold-standard training data.
+        get_gold_tuples (function): Function returning gold data
         **cfg: Config parameters.
-        YIELDS (tuple): A trainer and an optimizer.
-
-        EXAMPLE:
-            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
-            >>>    for epoch in trainer.epochs(gold):
-            >>>        for docs, golds in epoch:
-            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        RETURNS: An optimizer
         """
-        if self.parser:
-            self.pipeline.append(NeuralLabeller(self.vocab))
         # Populate vocab
-        for _, annots_brackets in get_gold_tuples():
-            for annots, _ in annots_brackets:
-                for word in annots[1]:
-                    _ = self.vocab[word]
+        if get_gold_tuples is not None:
+            for _, annots_brackets in get_gold_tuples():
+                for annots, _ in annots_brackets:
+                    for word in annots[1]:
+                        _ = self.vocab[word]
         contexts = []
         if cfg.get('device', -1) >= 0:
-            import cupy.cuda.device
-            device = cupy.cuda.device.Device(cfg['device'])
-            device.use()
-            Model.ops = CupyOps()
-            Model.Ops = CupyOps
+            device = util.use_gpu(cfg['device'])
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(
+                    self.vocab.vectors.data)
         else:
             device = None
-        for proc in self.pipeline:
+        link_vectors_to_models(self.vocab)
+        for name, proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
                 context = proc.begin_training(get_gold_tuples(),
                                               pipeline=self.pipeline)
@@ -385,26 +462,25 @@ class Language(object):
         L2 = util.env_opt('L2_penalty', 1e-6)
         max_grad_norm = util.env_opt('grad_norm_clip', 1.)
         self._optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
-                              beta2=beta2, eps=eps)
+                               beta2=beta2, eps=eps)
         self._optimizer.max_grad_norm = max_grad_norm
         self._optimizer.device = device
         return self._optimizer
 
-    def evaluate(self, docs_golds):
+    def evaluate(self, docs_golds, verbose=False):
         scorer = Scorer()
         docs, golds = zip(*docs_golds)
         docs = list(docs)
         golds = list(golds)
-        for pipe in self.pipeline:
+        for name, pipe in self.pipeline:
             if not hasattr(pipe, 'pipe'):
-                for doc in docs:
-                    pipe(doc)
+                docs = (pipe(doc) for doc in docs)
             else:
-                docs = list(pipe.pipe(docs))
-        assert len(docs) == len(golds)
+                docs = pipe.pipe(docs, batch_size=256)
         for doc, gold in zip(docs, golds):
-            scorer.score(doc, gold)
-            doc.tensor = None
+            if verbose:
+                print(doc)
+            scorer.score(doc, gold, verbose=verbose)
         return scorer
 
     @contextmanager
@@ -420,7 +496,7 @@ class Language(object):
             >>> with nlp.use_params(optimizer.averages):
             >>>     nlp.to_disk('/tmp/checkpoint')
         """
-        contexts = [pipe.use_params(params) for pipe
+        contexts = [pipe.use_params(params) for name, pipe
                     in self.pipeline if hasattr(pipe, 'use_params')]
         # TODO: Having trouble with contextlib
         # Workaround: these aren't actually context managers atm.
@@ -437,17 +513,17 @@ class Language(object):
                 pass
 
     def pipe(self, texts, as_tuples=False, n_threads=2, batch_size=1000,
-            disable=[]):
-        """Process texts as a stream, and yield `Doc` objects in order. Supports
-        GIL-free multi-threading.
+             disable=[]):
+        """Process texts as a stream, and yield `Doc` objects in order.
+        Supports GIL-free multi-threading.
 
         texts (iterator): A sequence of texts to process.
         as_tuples (bool):
             If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
-        n_threads (int): The number of worker threads to use. If -1, OpenMP will
-            decide how many to use at run time. Default is 2.
+        n_threads (int): The number of worker threads to use. If -1, OpenMP
+            will decide how many to use at run time. Default is 2.
         batch_size (int): The number of texts to buffer.
         disable (list): Names of the pipeline components to disable.
         YIELDS (Doc): Documents in the order of the original text.
@@ -467,24 +543,49 @@ class Language(object):
                 yield (doc, context)
             return
         docs = (self.make_doc(text) for text in texts)
-        for proc in self.pipeline:
-            name = getattr(proc, 'name', None)
+        for name, proc in self.pipeline:
             if name in disable:
                 continue
             if hasattr(proc, 'pipe'):
-                docs = proc.pipe(docs, n_threads=n_threads, batch_size=batch_size)
+                docs = proc.pipe(docs, n_threads=n_threads,
+                                 batch_size=batch_size)
             else:
                 # Apply the function, but yield the doc
                 docs = _pipe(proc, docs)
+        # Track weakrefs of "recent" documents, so that we can see when they
+        # expire from memory. When they do, we know we don't need old strings.
+        # This way, we avoid maintaining an unbounded growth in string entries
+        # in the string store.
+        recent_refs = weakref.WeakSet()
+        old_refs = weakref.WeakSet()
+        original_strings_data = self.vocab.strings.to_bytes()
+        StringStore = self.vocab.strings.__class__
+        recent_strings = StringStore().from_bytes(original_strings_data)
+        nr_seen = 0
         for doc in docs:
             yield doc
+            for word in doc:
+                recent_strings.add(word.text)
+            recent_refs.add(doc)
+            if nr_seen < 10000:
+                old_refs.add(doc)
+                nr_seen += 1
+            elif len(old_refs) == 0:
+                # All the docs in the 'old' set have expired, so the only
+                # difference between the backup strings and the current
+                # string-store should be obsolete. We therefore swap out the
+                # old strings data.
+                old_refs, recent_refs = recent_refs, old_refs
+                self.vocab.strings._reset_and_load(recent_strings)
+                recent_strings = StringStore().from_bytes(original_strings_data)
+                nr_seen = 0
 
     def to_disk(self, path, disable=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or `Path`-like objects.
+            it doesn't exist. Paths may be strings or `Path`-like objects.
         disable (list): Names of pipeline components to disable and prevent
             from being saved.
 
@@ -493,18 +594,18 @@ class Language(object):
         """
         path = util.ensure_path(path)
         serializers = OrderedDict((
-            ('vocab', lambda p: self.vocab.to_disk(p)),
             ('tokenizer', lambda p: self.tokenizer.to_disk(p, vocab=False)),
             ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
         ))
-        for proc in self.pipeline:
+        for name, proc in self.pipeline:
             if not hasattr(proc, 'name'):
                 continue
-            if proc.name in disable:
+            if name in disable:
                 continue
             if not hasattr(proc, 'to_disk'):
                 continue
-            serializers[proc.name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+            serializers[name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+        serializers['vocab'] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, {p: False for p in disable})
 
     def from_disk(self, path, disable=tuple()):
@@ -525,23 +626,22 @@ class Language(object):
         deserializers = OrderedDict((
             ('vocab', lambda p: self.vocab.from_disk(p)),
             ('tokenizer', lambda p: self.tokenizer.from_disk(p, vocab=False)),
-            ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
+            ('meta.json', lambda p: self.meta.update(ujson.load(p.open('r'))))
         ))
-        for proc in self.pipeline:
-            if not hasattr(proc, 'name'):
-                continue
-            if proc.name in disable:
+        for name, proc in self.pipeline:
+            if name in disable:
                 continue
             if not hasattr(proc, 'to_disk'):
                 continue
-            deserializers[proc.name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
+            deserializers[name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
         exclude = {p: False for p in disable}
         if not (path / 'vocab').exists():
             exclude['vocab'] = True
         util.from_disk(path, deserializers, exclude)
+        self._path = path
         return self
 
-    def to_bytes(self, disable=[]):
+    def to_bytes(self, disable=[], **exclude):
         """Serialize the current state to a binary string.
 
         disable (list): Nameds of pipeline components to disable and prevent
@@ -551,15 +651,15 @@ class Language(object):
         serializers = OrderedDict((
             ('vocab', lambda: self.vocab.to_bytes()),
             ('tokenizer', lambda: self.tokenizer.to_bytes(vocab=False)),
-            ('meta', lambda: ujson.dumps(self.meta))
+            ('meta', lambda: json_dumps(self.meta))
         ))
-        for i, proc in enumerate(self.pipeline):
-            if getattr(proc, 'name', None) in disable:
+        for i, (name, proc) in enumerate(self.pipeline):
+            if name in disable:
                 continue
             if not hasattr(proc, 'to_bytes'):
                 continue
             serializers[i] = lambda proc=proc: proc.to_bytes(vocab=False)
-        return util.to_bytes(serializers, {})
+        return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, disable=[]):
         """Load state from a binary string.
@@ -573,14 +673,57 @@ class Language(object):
             ('tokenizer', lambda b: self.tokenizer.from_bytes(b, vocab=False)),
             ('meta', lambda b: self.meta.update(ujson.loads(b)))
         ))
-        for i, proc in enumerate(self.pipeline):
-            if getattr(proc, 'name', None) in disable:
+        for i, (name, proc) in enumerate(self.pipeline):
+            if name in disable:
                 continue
             if not hasattr(proc, 'from_bytes'):
                 continue
             deserializers[i] = lambda b, proc=proc: proc.from_bytes(b, vocab=False)
         msg = util.from_bytes(bytes_data, deserializers, {})
         return self
+
+
+class DisabledPipes(list):
+    """Manager for temporary pipeline disabling."""
+    def __init__(self, nlp, *names):
+        self.nlp = nlp
+        self.names = names
+        # Important! Not deep copy -- we just want the container (but we also
+        # want to support people providing arbitrarily typed nlp.pipeline
+        # objects.)
+        self.original_pipeline = copy(nlp.pipeline)
+        list.__init__(self)
+        self.extend(nlp.remove_pipe(name) for name in names)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.restore()
+
+    def restore(self):
+        '''Restore the pipeline to its state when DisabledPipes was created.'''
+        current, self.nlp.pipeline = self.nlp.pipeline, self.original_pipeline
+        unexpected = [name for name, pipe in current
+                      if not self.nlp.has_pipe(name)]
+        if unexpected:
+            # Don't change the pipeline if we're raising an error.
+            self.nlp.pipeline = current
+            msg = (
+                "Some current components would be lost when restoring "
+                "previous pipeline state. If you added components after "
+                "calling nlp.disable_pipes(), you should remove them "
+                "explicitly with nlp.remove_pipe() before the pipeline is "
+                "restore. Names of the new components: %s"
+            )
+            raise ValueError(msg % unexpected)
+        self[:] = []
+
+
+def unpickle_language(vocab, meta, bytes_data):
+    lang = Language(vocab=vocab)
+    lang.from_bytes(bytes_data)
+    return lang
 
 
 def _pipe(func, docs):

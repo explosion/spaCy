@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 
 from ..util import make_tempdir
-from ...pipeline import NeuralDependencyParser as DependencyParser
-from ...pipeline import NeuralEntityRecognizer as EntityRecognizer
+from ...pipeline import DependencyParser
+from ...pipeline import EntityRecognizer
 
 import pytest
 

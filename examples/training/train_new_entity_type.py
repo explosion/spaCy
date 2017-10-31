@@ -21,111 +21,120 @@ After training your model, you can save it to a directory. We recommend
 wrapping models as Python packages, for ease of deployment.
 
 For more details, see the documentation:
-* Training the Named Entity Recognizer: https://spacy.io/docs/usage/train-ner
-* Saving and loading models: https://spacy.io/docs/usage/saving-loading
+* Training: https://alpha.spacy.io/usage/training
+* NER: https://alpha.spacy.io/usage/linguistic-features#named-entities
 
-Developed for: spaCy 1.7.6
-Last tested for: spaCy 1.7.6
+Developed for: spaCy 2.0.0a18
+Last updated for: spaCy 2.0.0a18
 """
 from __future__ import unicode_literals, print_function
 
+import plac
 import random
 from pathlib import Path
-import random
 
 import spacy
-from spacy.gold import GoldParse
-from spacy.tagger import Tagger
+from spacy.gold import GoldParse, minibatch
 
 
-def train_ner(nlp, train_data, output_dir):
-    # Add new words to vocab
-    for raw_text, _ in train_data:
-        doc = nlp.make_doc(raw_text)
-        for word in doc:
-            _ = nlp.vocab[word.orth]
-    random.seed(0)
-    # You may need to change the learning rate. It's generally difficult to
-    # guess what rate you should set, especially when you have limited data.
-    nlp.entity.model.learn_rate = 0.001
-    for itn in range(1000):
-        random.shuffle(train_data)
-        loss = 0.
-        for raw_text, entity_offsets in train_data:
-            gold = GoldParse(doc, entities=entity_offsets)
-            # By default, the GoldParse class assumes that the entities
-            # described by offset are complete, and all other words should
-            # have the tag 'O'. You can tell it to make no assumptions
-            # about the tag of a word by giving it the tag '-'.
-            # However, this allows a trivial solution to the current
-            # learning problem: if words are either 'any tag' or 'ANIMAL',
-            # the model can learn that all words can be tagged 'ANIMAL'.
-            #for i in range(len(gold.ner)):
-                #if not gold.ner[i].endswith('ANIMAL'):
-                #    gold.ner[i] = '-'
-            doc = nlp.make_doc(raw_text)
-            nlp.tagger(doc)
-            # As of 1.9, spaCy's parser now lets you supply a dropout probability
-            # This might help the model generalize better from only a few
-            # examples.
-            loss += nlp.entity.update(doc, gold, drop=0.9)
-        if loss == 0:
-            break
-    # This step averages the model's weights. This may or may not be good for
-    # your situation --- it's empirical.
-    nlp.end_training()
-    if output_dir:
-        if not output_dir.exists():
-            output_dir.mkdir()
-        nlp.save_to_directory(output_dir)
+# new entity label
+LABEL = 'ANIMAL'
+
+# training data
+TRAIN_DATA = [
+    ("Horses are too tall and they pretend to care about your feelings",
+     [(0, 6, 'ANIMAL')]),
+
+    ("Do they bite?", []),
+
+    ("horses are too tall and they pretend to care about your feelings",
+     [(0, 6, 'ANIMAL')]),
+
+    ("horses pretend to care about your feelings", [(0, 6, 'ANIMAL')]),
+
+    ("they pretend to care about your feelings, those horses",
+     [(48, 54, 'ANIMAL')]),
+
+    ("horses?", [(0, 6, 'ANIMAL')])
+]
 
 
-def main(model_name, output_directory=None):
-    print("Loading initial model", model_name)
-    nlp = spacy.load(model_name)
-    if output_directory is not None:
-        output_directory = Path(output_directory)
+@plac.annotations(
+    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    new_model_name=("New model name for model meta.", "option", "nm", str),
+    output_dir=("Optional output directory", "option", "o", Path),
+    n_iter=("Number of training iterations", "option", "n", int))
+def main(model=None, new_model_name='animal', output_dir=None, n_iter=50):
+    """Set up the pipeline and entity recognizer, and train the new entity."""
+    if model is not None:
+        nlp = spacy.load(model)  # load existing spaCy model
+        print("Loaded model '%s'" % model)
+    else:
+        nlp = spacy.blank('en')  # create blank Language class
+        print("Created blank 'en' model")
 
-    train_data = [
-        (
-            "Horses are too tall and they pretend to care about your feelings",
-            [(0, 6, 'ANIMAL')],
-        ),
-        (
-            "horses are too tall and they pretend to care about your feelings",
-            [(0, 6, 'ANIMAL')]
-        ),
-        (
-            "horses pretend to care about your feelings",
-            [(0, 6, 'ANIMAL')]
-        ),
-        (
-            "they pretend to care about your feelings, those horses",
-            [(48, 54, 'ANIMAL')]
-        ),
-        (
-            "horses?",
-            [(0, 6, 'ANIMAL')]
-        )
+    # Add entity recognizer to model if it's not in the pipeline
+    # nlp.create_pipe works for built-ins that are registered with spaCy
+    if 'ner' not in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
+        nlp.add_pipe(ner)
+    # otherwise, get it, so we can add labels to it
+    else:
+        ner = nlp.get_pipe('ner')
 
-    ]
-    nlp.entity.add_label('ANIMAL')
-    train_ner(nlp, train_data, output_directory)
+    ner.add_label(LABEL)   # add new entity label to entity recognizer
 
-    # Test that the entity is recognized
-    doc = nlp('Do you like horses?')
-    print("Ents in 'Do you like horses?':")
+    # get names of other pipes to disable them during training
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
+    with nlp.disable_pipes(*other_pipes):  # only train NER
+        random.seed(0)
+        optimizer = nlp.begin_training(lambda: [])
+        for itn in range(n_iter):
+            losses = {}
+            gold_parses = get_gold_parses(nlp.make_doc, TRAIN_DATA)
+            for batch in minibatch(gold_parses, size=3):
+                docs, golds = zip(*batch)
+                nlp.update(docs, golds, losses=losses, sgd=optimizer,
+                           drop=0.35)
+            print(losses)
+
+    # test the trained model
+    test_text = 'Do you like horses?'
+    doc = nlp(test_text)
+    print("Entities in '%s'" % test_text)
     for ent in doc.ents:
         print(ent.label_, ent.text)
-    if output_directory:
-        print("Loading from", output_directory)
-        nlp2 = spacy.load('en', path=output_directory)
-        nlp2.entity.add_label('ANIMAL')
-        doc2 = nlp2('Do you like horses?')
+
+    # save model to output directory
+    if output_dir is not None:
+        output_dir = Path(output_dir)
+        if not output_dir.exists():
+            output_dir.mkdir()
+        nlp.meta['name'] = new_model_name  # rename model
+        nlp.to_disk(output_dir)
+        print("Saved model to", output_dir)
+
+        # test the saved model
+        print("Loading from", output_dir)
+        nlp2 = spacy.load(output_dir)
+        doc2 = nlp2(test_text)
         for ent in doc2.ents:
             print(ent.label_, ent.text)
 
 
+def get_gold_parses(tokenizer, train_data):
+    """Shuffle and create GoldParse objects.
+
+    tokenizer (Tokenizer): Tokenizer to processs the raw text.
+    train_data (list): The training data.
+    YIELDS (tuple): (doc, gold) tuples.
+    """
+    random.shuffle(train_data)
+    for raw_text, entity_offsets in train_data:
+        doc = tokenizer(raw_text)
+        gold = GoldParse(doc, entities=entity_offsets)
+        yield doc, gold
+
+
 if __name__ == '__main__':
-    import plac
     plac.call(main)

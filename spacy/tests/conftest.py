@@ -11,8 +11,12 @@ from ..strings import StringStore
 from .. import util
 
 
+# These languages are used for generic tokenizer tests – only add a language
+# here if it's using spaCy's tokenizer (not a different library)
+# TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'id',
               'it', 'nb', 'nl', 'pl', 'pt', 'sv', 'ga', 'xx']
+
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_md'],
            'fr': ['fr_depvec_web_lg'],
@@ -42,6 +46,7 @@ def FR(request):
     #lang = util.get_lang_class(request.param)
     #return lang.Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def tokenizer():
     return util.get_lang_class('xx').Defaults.create_tokenizer()
@@ -58,8 +63,9 @@ def en_vocab():
 
 
 @pytest.fixture
-def en_parser():
-    return util.get_lang_class('en').Defaults.create_parser()
+def en_parser(en_vocab):
+    nlp = util.get_lang_class('en')(en_vocab)
+    return nlp.create_pipe('parser')
 
 
 @pytest.fixture
@@ -86,9 +92,11 @@ def hu_tokenizer():
 def fi_tokenizer():
     return util.get_lang_class('fi').Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def id_tokenizer():
     return util.get_lang_class('id').Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def sv_tokenizer():
@@ -108,9 +116,25 @@ def ga_tokenizer():
 def he_tokenizer():
     return util.get_lang_class('he').Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def nb_tokenizer():
     return util.get_lang_class('nb').Defaults.create_tokenizer()
+
+@pytest.fixture
+def da_tokenizer():
+    return util.get_lang_class('da').Defaults.create_tokenizer()
+
+@pytest.fixture
+def ja_tokenizer():
+    janome = pytest.importorskip("janome")
+    return util.get_lang_class('ja').Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def th_tokenizer():
+    pythainlp = pytest.importorskip("pythainlp")
+    return util.get_lang_class('th').Defaults.create_tokenizer()
 
 
 @pytest.fixture
@@ -126,6 +150,7 @@ def en_entityrecognizer():
 @pytest.fixture
 def text_file():
     return StringIO()
+
 
 @pytest.fixture
 def text_file_b():

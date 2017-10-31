@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ..util import make_tempdir
-from ...pipeline import NeuralTagger as Tagger
+from ...pipeline import Tagger
 
 import pytest
 
@@ -11,7 +11,7 @@ import pytest
 def taggers(en_vocab):
     tagger1 = Tagger(en_vocab)
     tagger2 = Tagger(en_vocab)
-    tagger1.model = tagger1.Model(8, 8)
+    tagger1.model = tagger1.Model(8)
     tagger2.model = tagger1.model
     return (tagger1, tagger2)
 

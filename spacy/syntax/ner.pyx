@@ -4,17 +4,12 @@ from __future__ import unicode_literals
 from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
 from collections import OrderedDict
-import numpy
-from thinc.neural.ops import NumpyOps
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
-from ..structs cimport TokenC, Entity
-from ..gold cimport GoldParseC
-from ..gold cimport GoldParse
-from ..attrs cimport ENT_TYPE, ENT_IOB
+from ..gold cimport GoldParseC, GoldParse
 
 
 cdef enum:
@@ -69,15 +64,14 @@ cdef class BiluoPushDown(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions',
-                    OrderedDict((
-                        (MISSING, ['']),
-                        (BEGIN, []),
-                        (IN, []),
-                        (LAST, []),
-                        (UNIT, []),
-                        (OUT, [''])
-                    )))
+        actions = kwargs.get('actions', OrderedDict((
+            (MISSING, ['']),
+            (BEGIN, []),
+            (IN, []),
+            (LAST, []),
+            (UNIT, []),
+            (OUT, [''])
+        )))
         seen_entities = set()
         for entity_type in kwargs.get('entity_types', []):
             if entity_type in seen_entities:
@@ -160,9 +154,8 @@ cdef class BiluoPushDown(TransitionSystem):
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
-        if name == '-' or name == None:
-            move_str = 'M'
-            label = 0
+        if name == '-' or name is None:
+            return Transition(clas=0, move=MISSING, label=0, score=0)
         elif name == '!O':
             return Transition(clas=0, move=ISNT, label=0, score=0)
         elif '-' in name:
@@ -219,6 +212,29 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             raise Exception(move)
         return t
+
+    def add_action(self, int action, label_name):
+        cdef attr_t label_id
+        if not isinstance(label_name, (int, long)):
+            label_id = self.strings.add(label_name)
+        else:
+            label_id = label_name
+        if action == OUT and label_id != 0:
+            return
+        if action == MISSING or action == ISNT:
+            return
+        # Check we're not creating a move we already have, so that this is
+        # idempotent
+        for trans in self.c[:self.n_moves]:
+            if trans.move == action and trans.label == label_id:
+                return 0
+        if self.n_moves >= self._size:
+            self._size *= 2
+            self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
+        self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
+        assert self.c[self.n_moves].label == label_id
+        self.n_moves += 1
+        return 1
 
     cdef int initialize_state(self, StateC* st) nogil:
         # This is especially necessary when we use limited training data.
@@ -306,8 +322,8 @@ cdef class In:
             return False
         elif preset_ent_iob == 3:
             return False
-        # TODO: Is this quite right?
-        # I think it's supposed to be ensuring the gazetteer matches are maintained
+        # TODO: Is this quite right? I think it's supposed to be ensuring the
+        # gazetteer matches are maintained
         elif st.B_(1).ent_iob != preset_ent_iob:
             return False
         # Don't allow entities to extend across sentence boundaries
@@ -332,10 +348,12 @@ cdef class In:
         if g_act == MISSING:
             return 0
         elif g_act == BEGIN:
-            # I, Gold B --> True (P of bad open entity sunk, R of this entity sunk)
+            # I, Gold B --> True
+            # (P of bad open entity sunk, R of this entity sunk)
             return 0
         elif g_act == IN:
-            # I, Gold I --> True (label forced by prev, if mismatch, P and R both sunk)
+            # I, Gold I --> True
+            # (label forced by prev, if mismatch, P and R both sunk)
             return 0
         elif g_act == LAST:
             # I, Gold L --> True iff this entity sunk and next tag == O
@@ -483,11 +501,3 @@ cdef class Out:
             return 1
         else:
             return 1
-
-
-class OracleError(Exception):
-    pass
-
-
-class UnknownMove(Exception):
-    pass

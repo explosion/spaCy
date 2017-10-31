@@ -8,19 +8,19 @@ from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 import regex as re
-
-from .strings cimport hash_string
-from . import util
 cimport cython
 
 from .tokens.doc cimport Doc
+from .strings cimport hash_string
+from . import util
 
 
 cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment
     boundaries.
     """
-    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, token_match=None):
+    def __init__(self, Vocab vocab, rules=None, prefix_search=None,
+                 suffix_search=None, infix_finditer=None, token_match=None):
         """Create a `Tokenizer`, to create `Doc` objects given unicode text.
 
         vocab (Vocab): A storage container for lexical types.
@@ -48,8 +48,9 @@ cdef class Tokenizer:
         self.infix_finditer = infix_finditer
         self.vocab = vocab
         self._rules = {}
-        for chunk, substrings in sorted(rules.items()):
-            self.add_special_case(chunk, substrings)
+        if rules is not None:
+            for chunk, substrings in sorted(rules.items()):
+                self.add_special_case(chunk, substrings)
 
     def __reduce__(self):
         args = (self.vocab,
@@ -61,11 +62,8 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):
+        # TODO: deprecation warning
         return Doc(self.vocab, words=strings)
-        #raise NotImplementedError(
-        #    "Method deprecated in 1.0.\n"
-        #    "Old: tokenizer.tokens_from_list(strings)\n"
-        #    "New: Doc(tokenizer.vocab, words=strings)")
 
     @cython.boundscheck(False)
     def __call__(self, unicode string):
@@ -75,13 +73,12 @@ cdef class Tokenizer:
         RETURNS (Doc): A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
-            raise ValueError(
-                "String is too long: %d characters. Max is 2**30." % len(string)
-            )
+            msg = "String is too long: %d characters. Max is 2**30."
+            raise ValueError(msg % len(string))
         cdef int length = len(string)
-        cdef Doc tokens = Doc(self.vocab)
+        cdef Doc doc = Doc(self.vocab)
         if length == 0:
-            return tokens
+            return doc
         cdef int i = 0
         cdef int start = 0
         cdef bint cache_hit
@@ -100,11 +97,11 @@ cdef class Tokenizer:
                     # we don't have to create the slice when we hit the cache.
                     span = string[start:i]
                     key = hash_string(span)
-                    cache_hit = self._try_cache(key, tokens)
+                    cache_hit = self._try_cache(key, doc)
                     if not cache_hit:
-                        self._tokenize(tokens, span, key)
+                        self._tokenize(doc, span, key)
                 if uc == ' ':
-                    tokens.c[tokens.length - 1].spacy = True
+                    doc.c[doc.length - 1].spacy = True
                     start = i + 1
                 else:
                     start = i
@@ -113,18 +110,18 @@ cdef class Tokenizer:
         if start < i:
             span = string[start:]
             key = hash_string(span)
-            cache_hit = self._try_cache(key, tokens)
+            cache_hit = self._try_cache(key, doc)
             if not cache_hit:
-                self._tokenize(tokens, span, key)
-            tokens.c[tokens.length - 1].spacy = string[-1] == ' ' and not in_ws
-        return tokens
+                self._tokenize(doc, span, key)
+            doc.c[doc.length - 1].spacy = string[-1] == ' ' and not in_ws
+        return doc
 
     def pipe(self, texts, batch_size=1000, n_threads=2):
         """Tokenize a stream of texts.
 
         texts: A sequence of unicode texts.
-        batch_size (int): The number of texts to accumulate in an internal buffer.
-        n_threads (int): The number of threads to use, if the implementation
+        batch_size (int): Number of texts to accumulate in an internal buffer.
+        n_threads (int): Number of threads to use, if the implementation
             supports multi-threading. The default tokenizer is single-threaded.
         YIELDS (Doc): A sequence of Doc objects, in order.
         """
@@ -148,14 +145,18 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
+        cdef int has_special
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
+        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes,
+                                   &has_special)
         self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
+        self._save_cached(&tokens.c[orig_size], orig_key, has_special,
+                          tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes):
+                                vector[const LexemeC*] *suffixes,
+                                int* has_special):
         cdef size_t i
         cdef unicode prefix
         cdef unicode suffix
@@ -174,6 +175,7 @@ cdef class Tokenizer:
                 if minus_pre and self._specials.get(hash_string(minus_pre)) != NULL:
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
+                    has_special[0] = 1
                     break
                 if self.token_match and self.token_match(string):
                     break
@@ -185,6 +187,7 @@ cdef class Tokenizer:
                 if minus_suf and (self._specials.get(hash_string(minus_suf)) != NULL):
                     string = minus_suf
                     suffixes.push_back(self.vocab.get(mem, suffix))
+                    has_special[0] = 1
                     break
             if pre_len and suf_len and (pre_len + suf_len) <= len(string):
                 string = string[pre_len:-suf_len]
@@ -197,6 +200,7 @@ cdef class Tokenizer:
                 string = minus_suf
                 suffixes.push_back(self.vocab.get(mem, suffix))
             if string and (self._specials.get(hash_string(string)) != NULL):
+                has_special[0] = 1
                 break
         return string
 
@@ -226,8 +230,8 @@ cdef class Tokenizer:
                 if not matches:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
                 else:
-                    # let's say we have dyn-o-mite-dave
-                    # the regex finds the start and end positions of the hyphens
+                    # let's say we have dyn-o-mite-dave - the regex finds the
+                    # start and end positions of the hyphens
                     start = 0
                     for match in matches:
                         infix_start = match.start()
@@ -248,18 +252,23 @@ cdef class Tokenizer:
 
                         start = infix_end
                     span = string[start:]
-                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
+                    if span:
+                        tokens.push_back(self.vocab.get(tokens.mem, span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             lexeme = deref(it)
             preinc(it)
             tokens.push_back(lexeme, False)
 
-    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1:
+    cdef int _save_cached(self, const TokenC* tokens, hash_t key,
+                          int has_special, int n) except -1:
         cdef int i
         for i in range(n):
             if tokens[i].lex.id == 0:
                 return 0
+        # See https://github.com/explosion/spaCy/issues/1250
+        if has_special:
+            return 0
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
         cached.is_lex = True
@@ -282,8 +291,8 @@ cdef class Tokenizer:
         return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
-        """Find the length of a prefix that should be segmented from the string,
-        or None if no prefix rules match.
+        """Find the length of a prefix that should be segmented from the
+        string, or None if no prefix rules match.
 
         string (unicode): The string to segment.
         RETURNS (int): The length of the prefix if present, otherwise `None`.
@@ -294,8 +303,8 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
-        """Find the length of a suffix that should be segmented from the string,
-        or None if no suffix rules match.
+        """Find the length of a suffix that should be segmented from the
+        string, or None if no suffix rules match.
 
         string (unicode): The string to segment.
         Returns (int): The length of the suffix if present, otherwise `None`.
@@ -315,8 +324,8 @@ cdef class Tokenizer:
 
         string (unicode): The string to specially tokenize.
         token_attrs (iterable): A sequence of dicts, where each dict describes
-            a token and its attributes. The `ORTH` fields of the attributes must
-            exactly match the string when they are concatenated.
+            a token and its attributes. The `ORTH` fields of the attributes
+            must exactly match the string when they are concatenated.
         """
         substrings = list(substrings)
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
@@ -332,7 +341,7 @@ cdef class Tokenizer:
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or `Path`-like objects.
+            it doesn't exist. Paths may be either strings or Path-like objects.
         """
         with path.open('wb') as file_:
             file_.write(self.to_bytes(**exclude))

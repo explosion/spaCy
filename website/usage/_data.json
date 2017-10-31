@@ -1,0 +1,206 @@
+{
+    "sidebar": {
+        "Get started": {
+            "Installation": "./",
+            "Models & Languages": "models",
+            "Facts & Figures": "facts-figures",
+            "spaCy 101": "spacy-101",
+            "New in v2.0": "v2"
+        },
+        "Guides": {
+            "Linguistic Features": "linguistic-features",
+            "Processing Pipelines": "processing-pipelines",
+            "Vectors & Similarity": "vectors-similarity",
+            "Text Classification": "text-classification",
+            "Deep Learning": "deep-learning",
+            "Training Models": "training",
+            "Adding Languages": "adding-languages",
+            "Visualizers": "visualizers"
+        },
+        "In-depth": {
+            "Code Examples": "examples",
+            "Resources": "resources"
+        }
+    },
+
+    "index": {
+        "title": "Install spaCy",
+        "next": "models",
+        "quickstart": true,
+        "changelog": true,
+        "menu": {
+            "Quickstart": "quickstart",
+            "Instructions": "instructions",
+            "Troubleshooting": "troubleshooting",
+            "Changelog": "changelog"
+        }
+    },
+
+    "models": {
+        "title": "Models & Languages",
+        "next": "facts-figures",
+        "quickstart": true,
+        "menu": {
+            "Quickstart": "quickstart",
+            "Available Models": "available",
+            "Installation & Usage": "install",
+            "Language Support": "languages",
+            "Production Use": "production"
+        }
+    },
+
+    "facts-figures": {
+        "title": "Facts & Figures",
+        "teaser": "The hard numbers for spaCy and how it compares to other libraries and tools.",
+        "next": "spacy-101",
+        "menu": {
+            "Feature comparison": "comparison",
+            "Benchmarks": "benchmarks",
+            "Powered by spaCy": "powered-by",
+            "Other Libraries": "other-libraries"
+        }
+    },
+
+    "spacy-101": {
+        "title": "spaCy 101: Everything you need to know",
+        "teaser": "The most important concepts, explained in simple terms.",
+        "next": "index",
+        "quickstart": true,
+        "preview": "101",
+        "menu": {
+            "Features": "features",
+            "Lightning tour": "lightning-tour",
+            "Architecture": "architecture",
+            "Community & FAQ": "community-faq"
+        }
+    },
+
+    "v2": {
+        "title": "What's New in v2.0",
+        "teaser": "New features, backwards incompatibilities and migration guide.",
+        "menu": {
+            "New features": "features",
+            "Backwards Incompatibilities": "incompat",
+            "Migrating from v1.x": "migrating",
+            "Benchmarks": "benchmarks"
+        }
+    },
+
+    "linguistic-features": {
+        "title": "Linguistic Features",
+        "teaser": "Using spaCy to extract linguistic features like part-of-speech tags, dependency labels and named entities, customising the tokenizer and working with the rule-based matcher.",
+        "next": "processing-pipelines",
+        "menu": {
+            "POS Tagging": "pos-tagging",
+            "Dependency Parse": "dependency-parse",
+            "Named Entities": "named-entities",
+            "Tokenization": "tokenization",
+            "Rule-based Matching": "rule-based-matching"
+        }
+    },
+
+    "processing-pipelines": {
+        "title": "Language Processing Pipelines",
+        "next": "vectors-similarity",
+        "menu": {
+            "How Pipelines Work": "pipelines",
+            "Custom Components": "custom-components",
+            "Developing Extensions": "extensions",
+            "Multi-Threading": "multithreading",
+            "Serialization": "serialization"
+        }
+    },
+
+    "vectors-similarity": {
+        "title": "Word Vectors and Semantic Similarity",
+        "next": "text-classification",
+        "menu": {
+            "Basics": "basics",
+            "Similarity in Context": "in-context",
+            "Custom Vectors": "custom",
+            "GPU Usage": "gpu"
+        }
+    },
+
+    "deep-learning": {
+        "title": "Deep Learning",
+        "teaser": "Using spaCy to pre-process text for deep learning, and how to plug in your own machine learning models.",
+        "next": "training",
+        "menu": {
+            "Pre-processing Text": "pre-processing",
+            "spaCy and Thinc": "thinc",
+            "TensorFlow / Keras": "tensorflow-keras",
+            "scikit-learn": "scikit-learn",
+            "PyTorch": "pytorch",
+            "DyNet": "dynet"
+        }
+    },
+
+    "text-classification": {
+        "title": "Text Classification",
+        "next": "training"
+    },
+
+    "training": {
+        "title": "Training spaCy's Statistical Models",
+        "next": "adding-languages",
+        "menu": {
+            "Basics": "basics",
+            "NER": "ner",
+            "Tagger & Parser": "tagger-parser",
+            "Similarity": "similarity",
+            "Text Classification": "textcat",
+            "Saving & Loading": "saving-loading"
+        }
+    },
+
+    "adding-languages": {
+        "title": "Adding Languages",
+        "teaser": "Adding full support for a language touches many different parts of the spaCy library. This guide explains how to fit everything together, and points you to the specific workflows for each component.",
+        "next": "training",
+        "menu": {
+            "Language data": "language-data",
+            "Testing": "testing",
+            "Training": "training"
+        }
+    },
+
+    "visualizers": {
+        "title": "Visualizers",
+        "tag_new": 2,
+        "teaser": "Visualize dependencies and entities in your browser and notebook, or export HTML.",
+        "next": "resources",
+        "menu": {
+            "Dependencies": "dep",
+            "Entities": "ent",
+            "Jupyter Notebooks": "jupyter",
+            "Rendering HTML": "html"
+        }
+    },
+
+    "resources": {
+        "title": "Resources",
+        "teaser": "Libraries, demos, books, courses and research systems featuring spaCy.",
+        "menu": {
+            "Third-party libraries": "libraries",
+            "Extensions": "extensions",
+            "Demos & Visualizations": "demos",
+            "Books & Courses": "books",
+            "Jupyter Notebooks": "notebooks",
+            "Research": "research"
+        }
+    },
+
+    "examples": {
+        "title": "Code Examples",
+        "teaser": "Full code examples you can modify and run.",
+        "next": "resources",
+        "menu": {
+            "Information Extraction": "information-extraction",
+            "Pipeline": "pipeline",
+            "Training": "training",
+            "Vectors & Similarity": "vectors",
+            "Deep Learning": "deep-learning"
+        }
+    }
+}

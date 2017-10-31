@@ -6,6 +6,7 @@ import ftfy
 import sys
 import ujson
 import itertools
+import locale
 
 from thinc.neural.util import copy_array
 
@@ -29,6 +30,10 @@ try:
 except ImportError:
     cupy = None
 
+try:
+    from thinc.neural.optimizers import Optimizer
+except ImportError:
+    from thinc.neural.optimizers import Adam as Optimizer
 
 pickle = pickle
 copy_reg = copy_reg
@@ -86,15 +91,15 @@ def symlink_to(orig, dest):
 
 
 def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
-    return ((python2 == None or python2 == is_python2) and
-            (python3 == None or python3 == is_python3) and
-            (windows == None or windows == is_windows) and
-            (linux == None or linux == is_linux) and
-            (osx == None or osx == is_osx))
+    return ((python2 is None or python2 == is_python2) and
+            (python3 is None or python3 == is_python3) and
+            (windows is None or windows == is_windows) and
+            (linux is None or linux == is_linux) and
+            (osx is None or osx == is_osx))
 
 
 def normalize_string_keys(old):
-    '''Given a dictionary, make sure keys are unicode strings, not bytes.'''
+    """Given a dictionary, make sure keys are unicode strings, not bytes."""
     new = {}
     for key, value in old.items():
         if isinstance(key, bytes_):
@@ -113,3 +118,12 @@ def import_file(name, loc):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
+
+
+def locale_escape(string, errors='replace'):
+    '''
+    Mangle non-supported characters, for savages with ascii terminals.
+    '''
+    encoding = locale.getpreferredencoding()
+    string = string.encode(encoding, errors).decode('utf8')
+    return string

@@ -1,6 +1,8 @@
-from libc.string cimport memcpy, memset
+from libc.string cimport memcpy, memset, memmove
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint32_t, uint64_t
+
+from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 
 from murmurhash.mrmr cimport hash64
 
@@ -15,6 +17,23 @@ from ..typedefs cimport attr_t
 cdef inline bint is_space_token(const TokenC* token) nogil:
     return Lexeme.c_check_flag(token.lex, IS_SPACE)
 
+cdef struct RingBufferC:
+    int[8] data
+    int i
+    int default
+
+cdef inline int ring_push(RingBufferC* ring, int value) nogil:
+    ring.data[ring.i] = value
+    ring.i += 1
+    if ring.i >= 8:
+        ring.i = 0
+
+cdef inline int ring_get(RingBufferC* ring, int i) nogil:
+    if i >= ring.i:
+        return ring.default
+    else:
+        return ring.data[ring.i-i]
+
 
 cdef cppclass StateC:
     int* _stack
@@ -23,6 +42,7 @@ cdef cppclass StateC:
     TokenC* _sent
     Entity* _ents
     TokenC _empty_token
+    RingBufferC _hist
     int length
     int offset
     int _s_i
@@ -37,6 +57,12 @@ cdef cppclass StateC:
         this.shifted = <bint*>calloc(length + (PADDING * 2), sizeof(bint))
         this._sent = <TokenC*>calloc(length + (PADDING * 2), sizeof(TokenC))
         this._ents = <Entity*>calloc(length + (PADDING * 2), sizeof(Entity))
+        if not (this._buffer and this._stack and this.shifted
+                and this._sent and this._ents):
+            with gil:
+                PyErr_SetFromErrno(MemoryError)
+                PyErr_CheckSignals()
+        memset(&this._hist, 0, sizeof(this._hist))
         this.offset = 0
         cdef int i
         for i in range(length + (PADDING * 2)):
@@ -74,6 +100,9 @@ cdef cppclass StateC:
         free(this.shifted - PADDING)
 
     void set_context_tokens(int* ids, int n) nogil:
+        if n == 2:
+            ids[0] = this.B(0)
+            ids[1] = this.S(0)
         if n == 8:
             ids[0] = this.B(0)
             ids[1] = this.B(1)
@@ -81,7 +110,7 @@ cdef cppclass StateC:
             ids[3] = this.S(1)
             ids[4] = this.H(this.S(0))
             ids[5] = this.L(this.B(0), 1)
-            ids[6] = this.L(this.S(0), 2)
+            ids[6] = this.L(this.S(0), 1)
             ids[7] = this.R(this.S(0), 1)
         elif n == 13:
             ids[0] = this.B(0)
@@ -101,9 +130,10 @@ cdef cppclass StateC:
         elif n == 6:
             if this.B(0) >= 0:
                 ids[0] = this.B(0)
+                ids[1] = this.B(0)-1
             else:
                 ids[0] = -1
-            ids[1] = this.B(0)
+                ids[1] = -1
             ids[2] = this.B(1)
             ids[3] = this.E(0)
             if ids[3] >= 1:
@@ -120,6 +150,8 @@ cdef cppclass StateC:
         for i in range(n):
             if ids[i] >= 0:
                 ids[i] += this.offset
+            else:
+                ids[i] = -1
 
     int S(int i) nogil const:
         if i >= this._s_i:
@@ -162,9 +194,9 @@ cdef cppclass StateC:
 
     int E(int i) nogil const:
         if this._e_i <= 0 or this._e_i >= this.length:
-            return 0
+            return -1
         if i < 0 or i >= this._e_i:
-            return 0
+            return -1
         return this._ents[this._e_i - (i+1)].start
 
     int L(int i, int idx) nogil const:
@@ -268,13 +300,22 @@ cdef cppclass StateC:
         sig[8] = this.B_(0)[0]
         sig[9] = this.E_(0)[0]
         sig[10] = this.E_(1)[0]
-        return hash64(sig, sizeof(sig), this._s_i)
+        return hash64(sig, sizeof(sig), this._s_i) \
+             + hash64(<void*>&this._hist, sizeof(RingBufferC), 1)
+
+    void push_hist(int act) nogil:
+        ring_push(&this._hist, act+1)
+
+    int get_hist(int i) nogil:
+        return ring_get(&this._hist, i)
 
     void push() nogil:
         if this.B(0) != -1:
             this._stack[this._s_i] = this.B(0)
         this._s_i += 1
         this._b_i += 1
+        if this.B_(0).sent_start == 1:
+            this.set_break(this.B(0))
         if this._b_i > this._break:
             this._break = -1
 
@@ -351,7 +392,7 @@ cdef cppclass StateC:
 
     void set_break(int i) nogil:
         if 0 <= i < this.length:
-            this._sent[i].sent_start = True
+            this._sent[i].sent_start = 1
             this._break = this._b_i
 
     void clone(const StateC* src) nogil:

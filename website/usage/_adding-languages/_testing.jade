@@ -1,0 +1,76 @@
+//- 💫 DOCS > USAGE > ADDING LANGUAGES > TESTING
+
+p
+    |  Before using the new language or submitting a
+    |  #[+a(gh("spaCy") + "/pulls") pull request] to spaCy, you should make sure
+    |  it works as expected. This is especially important if you've added custom
+    |  regular expressions for token matching or punctuation – you don't want to
+    |  be causing regressions.
+
++infobox("spaCy's test suite")
+    |  spaCy uses the #[+a("https://docs.pytest.org/en/latest/") pytest framework]
+    |  for testing. For more details on how the tests are structured and best
+    |  practices for writing your own tests, see our
+    |  #[+a(gh("spaCy", "spacy/tests")) tests documentation].
+
+p
+    |  The easiest way to test your new tokenizer is to run the
+    |  language-independent "tokenizer sanity" tests located in
+    |  #[+src(gh("spaCy", "spacy/tests/tokenizer")) #[code tests/tokenizer]].
+    |  This will test for basic behaviours like punctuation splitting, URL
+    |  matching and correct handling of whitespace. In the
+    |  #[+src(gh("spaCy", "spacy/tests/conftest.py")) #[code conftest.py]], add
+    |  the new language ID to the list of #[code _languages]:
+
++code.
+    _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'it', 'nb',
+                  'nl', 'pl', 'pt', 'sv', 'xx'] # new language here
+
++aside-code("Global tokenizer test example").
+    # use fixture by adding it as an argument
+    def test_with_all_languages(tokenizer):
+        # will be performed on ALL language tokenizers
+        tokens = tokenizer(u'Some text here.')
+
+p
+    |  The language will now be included in the #[code tokenizer] test fixture,
+    |  which is used by the basic tokenizer tests. If you want to add your own
+    |  tests that should be run over all languages, you can use this fixture as
+    |  an argument of your test function.
+
++h(3, "testing-custom") Writing language-specific tests
+
+p
+    |  It's recommended to always add at least some tests with examples specific
+    |  to the language. Language tests should be located in
+    |  #[+src(gh("spaCy", "spacy/tests/lang")) #[code tests/lang]] in a
+    |  directory named after the language ID. You'll also need to create a
+    |  fixture for your tokenizer in the
+    |  #[+src(gh("spaCy", "spacy/tests/conftest.py")) #[code conftest.py]].
+    |  Always use the #[+api("util#get_lang_class") #[code get_lang_class()]]
+    |  helper function within the fixture, instead of importing the class at the
+    |  top of the file. This will load the language data only when it's needed.
+    |  (Otherwise, #[em all data] would be loaded every time you run a test.)
+
++code.
+    @pytest.fixture
+    def en_tokenizer():
+        return util.get_lang_class('en').Defaults.create_tokenizer()
+
+p
+    |  When adding test cases, always
+    |  #[+a(gh("spaCy", "spacy/tests#parameters")) #[code parametrize]] them –
+    |  this will make it easier for others to add more test cases without having
+    |  to modify the test itself. You can also add parameter tuples, for example,
+    |  a test sentence and its expected length, or a list of expected tokens.
+    |  Here's an example of an English tokenizer test for combinations of
+    |  punctuation and abbreviations:
+
++code("Example test").
+    @pytest.mark.parametrize('text,length', [
+        ("The U.S. Army likes Shock and Awe.", 8),
+        ("U.N. regulations are not a part of their concern.", 10),
+        ("“Isn't it?”", 6)])
+    def test_en_tokenizer_handles_punct_abbrev(en_tokenizer, text, length):
+        tokens = en_tokenizer(text)
+        assert len(tokens) == length

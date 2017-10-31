@@ -9,7 +9,8 @@ from .util import get_doc
 
 from pathlib import Path
 import pytest
-from thinc.neural import Maxout, Softmax
+from thinc.neural._classes.maxout import Maxout
+from thinc.neural._classes.softmax import Softmax
 from thinc.api import chain
 
 

@@ -3,30 +3,34 @@ from __future__ import unicode_literals, print_function
 
 import os
 import ujson
-import pip
+import pkg_resources
 import importlib
 import regex as re
 from pathlib import Path
 import sys
 import textwrap
 import random
-import numpy
-import io
-import dill
 from collections import OrderedDict
+from thinc.neural._classes.model import Model
+import functools
+
+from .symbols import ORTH
+from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
+from .compat import import_file
 
 import msgpack
 import msgpack_numpy
 msgpack_numpy.patch()
-import ujson
-
-from .symbols import ORTH
-from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
-from .compat import copy_array, normalize_string_keys, getattr_, import_file
 
 
 LANGUAGES = {}
 _data_path = Path(__file__).parent / 'data'
+_PRINT_ENV = False
+
+
+def set_env_log(value):
+    global _PRINT_ENV
+    _PRINT_ENV = value
 
 
 def get_lang_class(lang):
@@ -36,11 +40,12 @@ def get_lang_class(lang):
     RETURNS (Language): Language class.
     """
     global LANGUAGES
-    if not lang in LANGUAGES:
+    if lang not in LANGUAGES:
         try:
             module = importlib.import_module('.lang.%s' % lang, 'spacy')
         except ImportError:
-            raise ImportError("Can't import language %s from spacy.lang." %lang)
+            msg = "Can't import language %s from spacy.lang."
+            raise ImportError(msg % lang)
         LANGUAGES[lang] = getattr(module, module.__all__[0])
     return LANGUAGES[lang]
 
@@ -98,14 +103,14 @@ def load_model(name, **overrides):
     data_path = get_data_path()
     if not data_path or not data_path.exists():
         raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
-    if isinstance(name, basestring_):
-        if name in set([d.name for d in data_path.iterdir()]): # in data dir / shortcut
+    if isinstance(name, basestring_):  # in data dir / shortcut
+        if name in set([d.name for d in data_path.iterdir()]):
             return load_model_from_link(name, **overrides)
-        if is_package(name): # installed as package
+        if is_package(name):  # installed as package
             return load_model_from_package(name, **overrides)
-        if Path(name).exists(): # path to model data directory
+        if Path(name).exists():  # path to model data directory
             return load_model_from_path(Path(name), **overrides)
-    elif hasattr(name, 'exists'): # Path or Path-like to model data
+    elif hasattr(name, 'exists'):  # Path or Path-like to model data
         return load_model_from_path(name, **overrides)
     raise IOError("Can't find model '%s'" % name)
 
@@ -118,7 +123,7 @@ def load_model_from_link(name, **overrides):
     except AttributeError:
         raise IOError(
             "Cant' load '%s'. If you're using a shortcut link, make sure it "
-            "points to a valid model package (not just a data directory)." % name)
+            "points to a valid package (not just a data directory)." % name)
     return cls.load(**overrides)
 
 
@@ -134,7 +139,18 @@ def load_model_from_path(model_path, meta=False, **overrides):
     if not meta:
         meta = get_model_meta(model_path)
     cls = get_lang_class(meta['lang'])
-    nlp = cls(pipeline=meta.get('pipeline', True), meta=meta, **overrides)
+    nlp = cls(meta=meta, **overrides)
+    pipeline = meta.get('pipeline', [])
+    disable = overrides.get('disable', [])
+    if pipeline is True:
+        pipeline = nlp.Defaults.pipe_names
+    elif pipeline in (False, None):
+        pipeline = []
+    for name in pipeline:
+        if name not in disable:
+            config = meta.get('pipeline_args', {}).get(name, {})
+            component = nlp.create_pipe(name, config=config)
+            nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path)
 
 
@@ -151,7 +167,8 @@ def load_model_from_init_py(init_file, **overrides):
     data_dir = '%s_%s-%s' % (meta['lang'], meta['name'], meta['version'])
     data_path = model_path / data_dir
     if not model_path.exists():
-        raise ValueError("Can't find model directory: %s" % path2str(data_path))
+        msg = "Can't find model directory: %s"
+        raise ValueError(msg % path2str(data_path))
     return load_model_from_path(data_path, meta, **overrides)
 
 
@@ -163,14 +180,16 @@ def get_model_meta(path):
     """
     model_path = ensure_path(path)
     if not model_path.exists():
-        raise ValueError("Can't find model directory: %s" % path2str(model_path))
+        msg = "Can't find model directory: %s"
+        raise ValueError(msg % path2str(model_path))
     meta_path = model_path / 'meta.json'
     if not meta_path.is_file():
         raise IOError("Could not read meta.json from %s" % meta_path)
     meta = read_json(meta_path)
     for setting in ['lang', 'name', 'version']:
         if setting not in meta or not meta[setting]:
-            raise ValueError("No valid '%s' setting found in model meta.json" % setting)
+            msg = "No valid '%s' setting found in model meta.json"
+            raise ValueError(msg % setting)
     return meta
 
 
@@ -180,9 +199,10 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
-    packages = pip.get_installed_distributions()
+    name = name.lower()  # compare package name against lowercase name
+    packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
-        if package.project_name.replace('-', '_') == name:
+        if package.lower().replace('-', '_') == name:
             return True
     return False
 
@@ -193,6 +213,7 @@ def get_package_path(name):
     name (unicode): Package name.
     RETURNS (Path): Path to installed package.
     """
+    name = name.lower()  # use lowercase version to be safe
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
@@ -225,7 +246,7 @@ def get_async(stream, numpy_array):
         return numpy_array
     else:
         array = cupy.ndarray(numpy_array.shape, order='C',
-                           dtype=numpy_array.dtype)
+                             dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
 
@@ -259,12 +280,6 @@ def itershuffle(iterable, bufsize=1000):
         raise StopIteration
 
 
-_PRINT_ENV = False
-def set_env_log(value):
-    global _PRINT_ENV
-    _PRINT_ENV = value
-
-
 def env_opt(name, default=None):
     if type(default) is float:
         type_convert = float
@@ -290,17 +305,20 @@ def read_regex(path):
     path = ensure_path(path)
     with path.open() as file_:
         entries = file_.read().split('\n')
-    expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
+    expression = '|'.join(['^' + re.escape(piece)
+                           for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
 def compile_prefix_regex(entries):
     if '(' in entries:
         # Handle deprecated data
-        expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
+        expression = '|'.join(['^' + re.escape(piece)
+                               for piece in entries if piece.strip()])
         return re.compile(expression)
     else:
-        expression = '|'.join(['^' + piece for piece in entries if piece.strip()])
+        expression = '|'.join(['^' + piece
+                               for piece in entries if piece.strip()])
         return re.compile(expression)
 
 
@@ -322,12 +340,16 @@ def add_lookups(default_func, *lookups):
     *lookups (dict): Lookup dictionary mapping string to attribute value.
     RETURNS (callable): Lexical attribute getter.
     """
-    def get_attr(string):
-        for lookup in lookups:
-            if string in lookup:
-                return lookup[string]
-        return default_func(string)
-    return get_attr
+    # This is implemented as functools.partial instead of a closure, to allow
+    # pickle to work.
+    return functools.partial(_get_attr_unless_lookup, default_func, lookups)
+
+
+def _get_attr_unless_lookup(default_func, lookups, string):
+    for lookup in lookups:
+        if string in lookup:
+            return lookup[string]
+    return default_func(string)
 
 
 def update_exc(base_exceptions, *addition_dicts):
@@ -340,16 +362,15 @@ def update_exc(base_exceptions, *addition_dicts):
     exc = dict(base_exceptions)
     for additions in addition_dicts:
         for orth, token_attrs in additions.items():
-            if not all(isinstance(attr[ORTH], unicode_) for attr in token_attrs):
-                msg = "Invalid value for ORTH in exception: key='%s', orths='%s'"
+            if not all(isinstance(attr[ORTH], unicode_)
+                       for attr in token_attrs):
+                msg = "Invalid ORTH value in exception: key='%s', orths='%s'"
                 raise ValueError(msg % (orth, token_attrs))
             described_orth = ''.join(attr[ORTH] for attr in token_attrs)
             if orth != described_orth:
-                raise ValueError("Invalid tokenizer exception: ORTH values "
-                                 "combined don't match original string. "
-                                 "key='%s', orths='%s'" % (orth, described_orth))
-        # overlap = set(exc.keys()).intersection(set(additions))
-        # assert not overlap, overlap
+                msg = ("Invalid tokenizer exception: ORTH values combined "
+                       "don't match original string. key='%s', orths='%s'")
+                raise ValueError(msg % (orth, described_orth))
         exc.update(additions)
     exc = expand_exc(exc, "'", "’")
     return exc
@@ -382,17 +403,15 @@ def normalize_slice(length, start, stop, step=None):
         raise ValueError("Stepped slices not supported in Span objects."
                          "Try: list(tokens)[start:stop:step] instead.")
     if start is None:
-       start = 0
+        start = 0
     elif start < 0:
-       start += length
+        start += length
     start = min(length, max(0, start))
-
     if stop is None:
-       stop = length
+        stop = length
     elif stop < 0:
-       stop += length
+        stop += length
     stop = min(length, max(start, stop))
-
     assert 0 <= start <= stop <= length
     return start, stop
 
@@ -409,7 +428,7 @@ def compounding(start, stop, compound):
       >>> assert next(sizes) == 1.5 * 1.5
     """
     def clip(value):
-        return max(value, stop) if (start>stop) else min(value, stop)
+        return max(value, stop) if (start > stop) else min(value, stop)
     curr = float(start)
     while True:
         yield clip(curr)
@@ -419,7 +438,7 @@ def compounding(start, stop, compound):
 def decaying(start, stop, decay):
     """Yield an infinite series of linearly decaying values."""
     def clip(value):
-        return max(value, stop) if (start>stop) else min(value, stop)
+        return max(value, stop) if (start > stop) else min(value, stop)
     nr_upd = 1.
     while True:
         yield clip(start * 1./(1. + decay * nr_upd))
@@ -511,17 +530,19 @@ def print_markdown(data, title=None):
 
     if isinstance(data, dict):
         data = list(data.items())
-    markdown = ["* **{}:** {}".format(l, unicode_(v)) for l, v in data if not excl_value(v)]
+    markdown = ["* **{}:** {}".format(l, unicode_(v))
+                for l, v in data if not excl_value(v)]
     if title:
         print("\n## {}".format(title))
     print('\n{}\n'.format('\n'.join(markdown)))
 
 
 def prints(*texts, **kwargs):
-    """Print formatted message (manual ANSI escape sequences to avoid dependency)
+    """Print formatted message (manual ANSI escape sequences to avoid
+    dependency)
 
     *texts (unicode): Texts to print. Each argument is rendered as paragraph.
-    **kwargs: 'title' becomes coloured headline. 'exits'=True performs sys exit.
+    **kwargs: 'title' becomes coloured headline. exits=True performs sys exit.
     """
     exits = kwargs.get('exits', None)
     title = kwargs.get('title', None)
@@ -551,9 +572,23 @@ def _wrap(text, wrap_max=80, indent=4):
 
 def minify_html(html):
     """Perform a template-specific, rudimentary HTML minification for displaCy.
-    Disclaimer: NOT a general-purpose solution, only removes indentation/newlines.
+    Disclaimer: NOT a general-purpose solution, only removes indentation and
+    newlines.
 
     html (unicode): Markup to minify.
     RETURNS (unicode): "Minified" HTML.
     """
     return html.strip().replace('    ', '').replace('\n', '')
+
+
+def use_gpu(gpu_id):
+    try:
+        import cupy.cuda.device
+    except ImportError:
+        return None
+    from thinc.neural.ops import CupyOps
+    device = cupy.cuda.device.Device(gpu_id)
+    device.use()
+    Model.ops = CupyOps()
+    Model.Ops = CupyOps
+    return device

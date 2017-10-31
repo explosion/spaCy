@@ -1,0 +1,343 @@
+//- 💫 DOCS > API > VECTORS
+
+include ../_includes/_mixins
+
+p
+    |  Vectors data is kept in the #[code Vectors.data] attribute, which should
+    |  be an instance of #[code numpy.ndarray] (for CPU vectors) or
+    |  #[code cupy.ndarray] (for GPU vectors).
+
++h(2, "init") Vectors.__init__
+    +tag method
+
+p
+    |  Create a new vector store. To keep the vector table empty, pass
+    |  #[code width=0]. You can also create the vector table and add
+    |  vectors one by one, or set the vector values directly on initialisation.
+
++aside-code("Example").
+    from spacy.vectors import Vectors
+    from spacy.strings import StringStore
+
+    empty_vectors = Vectors(StringStore())
+
+    vectors = Vectors([u'cat'], width=300)
+    vectors[u'cat'] = numpy.random.uniform(-1, 1, (300,))
+
+    vector_table = numpy.zeros((3, 300), dtype='f')
+    vectors = Vectors(StringStore(), data=vector_table)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code strings]
+        +cell #[code StringStore] or list
+        +cell
+            |  List of strings, or a #[+api("stringstore") #[code StringStore]]
+            |  that maps strings to hash values, and vice versa.
+
+    +row
+        +cell #[code width]
+        +cell int
+        +cell Number of dimensions.
+
+    +row
+        +cell #[code data]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell The vector data.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Vectors]
+        +cell The newly created object.
+
++h(2, "getitem") Vectors.__getitem__
+    +tag method
+
+p
+    |  Get a vector by key. If key is a string, it is hashed to an integer ID
+    |  using the #[code Vectors.strings] table. If the integer key is not found
+    |  in the table, a #[code KeyError] is raised.
+
++aside-code("Example").
+    vectors = Vectors(StringStore(), 300)
+    vectors.add(u'cat', numpy.random.uniform(-1, 1, (300,)))
+    cat_vector = vectors[u'cat']
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode / int
+        +cell The key to get the vector for.
+
+    +row
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell The vector for the key.
+
++h(2, "setitem") Vectors.__setitem__
+    +tag method
+
+p
+    |  Set a vector for the given key. If key is a string, it is hashed to an
+    |  integer ID using the #[code Vectors.strings] table.
+
++aside-code("Example").
+    vectors = Vectors(StringStore(), 300)
+    vectors[u'cat'] = numpy.random.uniform(-1, 1, (300,))
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode / int
+        +cell The key to set the vector for.
+
+    +row
+        +cell #[code vector]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell The vector to set.
+
++h(2, "iter") Vectors.__iter__
+    +tag method
+
+p Yield vectors from the table.
+
++aside-code("Example").
+    vector_table = numpy.zeros((3, 300), dtype='f')
+    vectors = Vectors(StringStore(), vector_table)
+    for vector in vectors:
+        print(vector)
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A vector from the table.
+
++h(2, "len") Vectors.__len__
+    +tag method
+
+p Return the number of vectors that have been assigned.
+
++aside-code("Example").
+    vector_table = numpy.zeros((3, 300), dtype='f')
+    vectors = Vectors(StringStore(), vector_table)
+    assert len(vectors) == 3
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of vectors in the data.
+
++h(2, "contains") Vectors.__contains__
+    +tag method
+
+p
+    |  Check whether a key has a vector entry in the table. If key is a string,
+    |  it is hashed to an integer ID using the #[code Vectors.strings] table.
+
++aside-code("Example").
+    vectors = Vectors(StringStore(), 300)
+    vectors.add(u'cat', numpy.random.uniform(-1, 1, (300,)))
+    assert u'cat' in vectors
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode / int
+        +cell The key to check.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the key has a vector entry.
+
++h(2, "add") Vectors.add
+    +tag method
+
+p
+    |  Add a key to the table, optionally setting a vector value as well. If
+    |  key is a string, it is hashed to an integer ID using the
+    |  #[code Vectors.strings] table.
+
++aside-code("Example").
+    vectors = Vectors(StringStore(), 300)
+    vectors.add(u'cat', numpy.random.uniform(-1, 1, (300,)))
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode / int
+        +cell The key to add.
+
+    +row
+        +cell #[code vector]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell An optional vector to add.
+
++h(2, "items") Vectors.items
+    +tag method
+
+p Iterate over #[code (string key, vector)] pairs, in order.
+
++aside-code("Example").
+    vectors = Vectors(StringStore(), 300)
+    vectors.add(u'cat', numpy.random.uniform(-1, 1, (300,)))
+    for key, vector in vectors.items():
+        print(key, vector)
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell tuple
+        +cell #[code (string key, vector)] pairs, in order.
+
++h(2, "shape") Vectors.shape
+    +tag property
+
+p
+    |  Get #[code (rows, dims)] tuples of number of rows and number of
+    |  dimensions in the vector table.
+
++aside-code("Example").
+    vectors = Vectors(StringStore(), 300)
+    vectors.add(u'cat', numpy.random.uniform(-1, 1, (300,)))
+    rows, dims = vectors.shape
+    assert rows == 1
+    assert dims == 300
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell A #[code (rows, dims)] pair.
+
++h(2, "from_glove") Vectors.from_glove
+    +tag method
+
+p
+    |  Load #[+a("https://nlp.stanford.edu/projects/glove/") GloVe] vectors from
+    |  a directory. Assumes binary format, that the vocab is in a
+    |  #[code vocab.txt], and that vectors are named
+    |  #[code vectors.{size}.[fd].bin], e.g. #[code vectors.128.f.bin] for 128d
+    |  float32 vectors, #[code vectors.300.d.bin] for 300d float64 (double)
+    |  vectors, etc. By default GloVe outputs 64-bit vectors.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode / #[code Path]
+        +cell The path to load the GloVe vectors from.
+
++h(2, "to_disk") Vectors.to_disk
+    +tag method
+
+p Save the current state to a directory.
+
++aside-code("Example").
+    vectors.to_disk('/path/to/vectors')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode / #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being saved.
+
++h(2, "from_disk") Vectors.from_disk
+    +tag method
+
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    vectors = Vectors(StringStore())
+    vectors.from_disk('/path/to/vectors')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode / #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Vectors]
+        +cell The modified #[code Vectors] object.
+
++h(2, "to_bytes") Vectors.to_bytes
+    +tag method
+
+p Serialize the current state to a binary string.
+
++aside-code("Example").
+    vectors_bytes = vectors.to_bytes()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being serialized.
+
+    +row("foot")
+        +cell returns
+        +cell bytes
+        +cell The serialized form of the #[code Vectors] object.
+
++h(2, "from_bytes") Vectors.from_bytes
+    +tag method
+
+p Load state from a binary string.
+
++aside-code("Example").
+    fron spacy.vectors import Vectors
+    vectors_bytes = vectors.to_bytes()
+    new_vectors = Vectors(StringStore())
+    new_vectors.from_bytes(vectors_bytes)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code data]
+        +cell bytes
+        +cell The data to load from.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being loaded.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Vectors]
+        +cell The #[code Vectors] object.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code data]
+        +cell #[code numpy.ndarray] / #[code cupy.ndarray]
+        +cell
+            |  Stored vectors data. #[code numpy] is used for CPU vectors,
+            |  #[code cupy] for GPU vectors.
+
+    +row
+        +cell #[code key2row]
+        +cell dict
+        +cell
+            |  Dictionary mapping word hashes to rows in the
+            |  #[code Vectors.data] table.
+
+    +row
+        +cell #[code keys]
+        +cell #[code numpy.ndarray]
+        +cell
+            |  Array keeping the keys in order, such that
+            |  #[code keys[vectors.key2row[key]] == key]

@@ -1,32 +1,25 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import bz2
-import ujson
-import re
 import numpy
+import dill
 
-from libc.string cimport memset, memcpy
-from libc.stdint cimport int32_t
-from libc.math cimport sqrt
-from cymem.cymem cimport Address
 from collections import OrderedDict
+from thinc.neural.util import get_array_module
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
 from .typedefs cimport attr_t
-from .cfile cimport CFile
 from .tokens.token cimport Token
-from .attrs cimport PROB, LANG
+from .attrs cimport PROB, LANG, ORTH, TAG
 from .structs cimport SerializedLexemeC
 
-from .compat import copy_reg, pickle, basestring_
+from .compat import copy_reg, basestring_
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
 from .vectors import Vectors
+from ._ml import link_vectors_to_models
 from . import util
-from . import attrs
-from . import symbols
 
 
 cdef class Vocab:
@@ -35,23 +28,23 @@ cdef class Vocab:
     C-data that is shared between `Doc` objects.
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-            strings=tuple(), **deprecated_kwargs):
+                 strings=tuple(), oov_prob=-20., **deprecated_kwargs):
         """Create the vocabulary.
 
-        lex_attr_getters (dict): A dictionary mapping attribute IDs to functions
-            to compute them. Defaults to `None`.
-        tag_map (dict): A dictionary mapping fine-grained tags to coarse-grained
+        lex_attr_getters (dict): A dictionary mapping attribute IDs to
+            functions to compute them. Defaults to `None`.
+        tag_map (dict): Dictionary mapping fine-grained tags to coarse-grained
             parts-of-speech, and optionally morphological attributes.
         lemmatizer (object): A lemmatizer. Defaults to `None`.
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
-        RETURNS (Vocab): The newly constructed vocab object.
+        RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer({}, {}, {})
-
+        self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
@@ -60,12 +53,9 @@ cdef class Vocab:
         if strings:
             for string in strings:
                 _ = self[string]
-        for name in tag_map.keys():
-            if name:
-                self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors(self.strings, 300)
+        self.vectors = Vectors(self.strings, width=0)
 
     property lang:
         def __get__(self):
@@ -86,19 +76,20 @@ cdef class Vocab:
 
         The flag_getter function will be called over the words currently in the
         vocab, and then applied to new words as they occur. You'll then be able
-        to access the flag value on each token, using token.check_flag(flag_id).
+        to access the flag value on each token using token.check_flag(flag_id).
         See also: `Lexeme.set_flag`, `Lexeme.check_flag`, `Token.set_flag`,
         `Token.check_flag`.
 
-        flag_getter (callable): A function `f(unicode) -> bool`, to get the flag
-            value.
+        flag_getter (callable): A function `f(unicode) -> bool`, to get the
+            flag value.
         flag_id (int): An integer between 1 and 63 (inclusive), specifying
             the bit at which the flag will be stored. If -1, the lowest
             available bit will be chosen.
         RETURNS (int): The integer ID by which the flag value can be checked.
 
         EXAMPLE:
-            >>> MY_PRODUCT = nlp.vocab.add_flag(lambda text: text in ['spaCy', 'dislaCy'])
+            >>> my_product_getter = lambda text: text in ['spaCy', 'dislaCy']
+            >>> MY_PRODUCT = nlp.vocab.add_flag(my_product_getter)
             >>> doc = nlp(u'I like spaCy')
             >>> assert doc[2].check_flag(MY_PRODUCT) == True
         """
@@ -109,9 +100,10 @@ cdef class Vocab:
                     break
             else:
                 raise ValueError(
-                    "Cannot find empty bit for new lexical flag. All bits between "
-                    "0 and 63 are occupied. You can replace one by specifying the "
-                    "flag_id explicitly, e.g. nlp.vocab.add_flag(your_func, flag_id=IS_ALPHA")
+                    "Cannot find empty bit for new lexical flag. All bits "
+                    "between 0 and 63 are occupied. You can replace one by "
+                    "specifying the flag_id explicitly, e.g. "
+                    "`nlp.vocab.add_flag(your_func, flag_id=IS_ALPHA`.")
         elif flag_id >= 64 or flag_id < 1:
             raise ValueError(
                 "Invalid value for flag_id: %d. Flag IDs must be between "
@@ -122,9 +114,9 @@ cdef class Vocab:
         return flag_id
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
-        """Get a pointer to a `LexemeC` from the lexicon, creating a new `Lexeme`
-        if necessary, using memory acquired from the given pool. If the pool
-        is the lexicon's own memory, the lexeme is saved in the lexicon.
+        """Get a pointer to a `LexemeC` from the lexicon, creating a new
+        `Lexeme` if necessary using memory acquired from the given pool. If the
+        pool is the lexicon's own memory, the lexeme is saved in the lexicon.
         """
         if string == u'':
             return &EMPTY_LEXEME
@@ -141,9 +133,9 @@ cdef class Vocab:
             return self._new_lexeme(mem, string)
 
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
-        """Get a pointer to a `LexemeC` from the lexicon, creating a new `Lexeme`
-        if necessary, using memory acquired from the given pool. If the pool
-        is the lexicon's own memory, the lexeme is saved in the lexicon.
+        """Get a pointer to a `LexemeC` from the lexicon, creating a new
+        `Lexeme` if necessary using memory acquired from the given pool. If the
+        pool is the lexicon's own memory, the lexeme is saved in the lexicon.
         """
         if orth == 0:
             return &EMPTY_LEXEME
@@ -205,8 +197,8 @@ cdef class Vocab:
         for orth, addr in self._by_orth.items():
             yield Lexeme(self, orth)
 
-    def __getitem__(self,  id_or_string):
-        """Retrieve a lexeme, given an int ID or a unicode string.  If a
+    def __getitem__(self, id_or_string):
+        """Retrieve a lexeme, given an int ID or a unicode string. If a
         previously unseen unicode string is given, a new lexeme is created and
         stored.
 
@@ -231,13 +223,14 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
-            props = intify_attrs(props, strings_map=self.strings, _do_deprecated=True)
+            props = intify_attrs(props, strings_map=self.strings,
+                                 _do_deprecated=True)
             token = &tokens[i]
             # Set the special tokens up to have arbitrary attributes
-            lex = <LexemeC*>self.get_by_orth(self.mem, props[attrs.ORTH])
+            lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
             token.lex = lex
-            if attrs.TAG in props:
-                self.morphology.assign_tag(token, props[attrs.TAG])
+            if TAG in props:
+                self.morphology.assign_tag(token, props[TAG])
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
                 Lexeme.set_struct_attr(lex, attr_id, value)
@@ -247,25 +240,79 @@ cdef class Vocab:
     def vectors_length(self):
         return self.vectors.data.shape[1]
 
-    def clear_vectors(self, new_dim=None):
+    def clear_vectors(self, width=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
-        if new_dim is None:
-            new_dim = self.vectors.data.shape[1]
-        self.vectors = Vectors(self.strings, new_dim)
+        if width is None:
+            width = self.vectors.data.shape[1]
+        self.vectors = Vectors(self.strings, width=width)
+
+    def prune_vectors(self, nr_row, batch_size=8):
+        """Reduce the current vector table to `nr_row` unique entries. Words
+        mapped to the discarded vectors will be remapped to the closest vector
+        among those remaining.
+
+        For example, suppose the original table had vectors for the words:
+        ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to,
+        two rows, we would discard the vectors for 'feline' and 'reclined'.
+        These words would then be remapped to the closest remaining vector
+        -- so "feline" would have the same vector as "cat", and "reclined"
+        would have the same vector as "sat".
+
+        The similarities are judged by cosine. The original vectors may
+        be large, so the cosines are calculated in minibatches, to reduce
+        memory usage.
+
+        nr_row (int): The number of rows to keep in the vector table.
+        batch_size (int): Batch of vectors for calculating the similarities.
+            Larger batch sizes might be faster, while temporarily requiring
+            more memory.
+        RETURNS (dict): A dictionary keyed by removed words mapped to
+            `(string, score)` tuples, where `string` is the entry the removed
+            word was mapped to, and `score` the similarity score between the
+            two words.
+        """
+        xp = get_array_module(self.vectors.data)
+        # Work in batches, to avoid memory problems.
+        keep = self.vectors.data[:nr_row]
+        keep_keys = [key for key, row in self.vectors.key2row.items() if row < nr_row]
+        toss = self.vectors.data[nr_row:]
+        # Normalize the vectors, so cosine similarity is just dot product.
+        # Note we can't modify the ones we're keeping in-place...
+        keep = keep / (xp.linalg.norm(keep, axis=1, keepdims=True)+1e-8)
+        keep = xp.ascontiguousarray(keep.T)
+        neighbours = xp.zeros((toss.shape[0],), dtype='i')
+        scores = xp.zeros((toss.shape[0],), dtype='f')
+        for i in range(0, toss.shape[0], batch_size):
+            batch = toss[i : i+batch_size]
+            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)+1e-8
+            sims = xp.dot(batch, keep)
+            matches = sims.argmax(axis=1)
+            neighbours[i:i+batch_size] = matches
+            scores[i:i+batch_size] = sims.max(axis=1)
+        for lex in self:
+            # If we're losing the vector for this word, map it to the nearest
+            # vector we're keeping.
+            if lex.rank >= nr_row:
+                lex.rank = neighbours[lex.rank-nr_row]
+                self.vectors.add(lex.orth, row=lex.rank)
+        for key in self.vectors.keys:
+            row = self.vectors.key2row[key]
+            if row >= nr_row:
+                self.vectors.key2row[key] = neighbours[row-nr_row]
+        # Make copy, to encourage the original table to be garbage collected.
+        self.vectors.data = xp.ascontiguousarray(self.vectors.data[:nr_row])
+        # TODO: return new mapping
 
     def get_vector(self, orth):
-        """Retrieve a vector for a word in the vocabulary.
+        """Retrieve a vector for a word in the vocabulary. Words can be looked
+        up by string or int ID. If no vectors data is loaded, ValueError is
+        raised.
 
-        Words can be looked up by string or int ID.
-
-        RETURNS:
-            A word vector. Size and shape determed by the
-            vocab.vectors instance. Usually, a numpy ndarray
-            of shape (300,) and dtype float32.
-
-        RAISES: If no vectors data is loaded, ValueError is raised.
+        RETURNS (numpy.ndarray): A word vector. Size
+            and shape determined by the `vocab.vectors` instance. Usually, a
+            numpy ndarray of shape (300,) and dtype float32.
         """
         if isinstance(orth, basestring_):
             orth = self.strings.add(orth)
@@ -275,21 +322,16 @@ cdef class Vocab:
             return numpy.zeros((self.vectors_length,), dtype='f')
 
     def set_vector(self, orth, vector):
-        """Set a vector for a word in the vocabulary.
-
-        Words can be referenced by string or int ID.
-
-        RETURNS:
-            None
+        """Set a vector for a word in the vocabulary. Words can be referenced
+        by string or int ID.
         """
         if not isinstance(orth, basestring_):
             orth = self.strings[orth]
         self.vectors.add(orth, vector=vector)
 
     def has_vector(self, orth):
-        """Check whether a word has a vector. Returns False if no
-        vectors have been loaded. Words can be looked up by string
-        or int ID."""
+        """Check whether a word has a vector. Returns False if no vectors have
+        been loaded. Words can be looked up by string or int ID."""
         if isinstance(orth, basestring_):
             orth = self.strings.add(orth)
         return orth in self.vectors
@@ -298,7 +340,7 @@ cdef class Vocab:
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or `Path`-like objects.
+            it doesn't exist. Paths may be either strings or Path-like objects.
         """
         path = util.ensure_path(path)
         if not path.exists():
@@ -323,6 +365,7 @@ cdef class Vocab:
             self.lexemes_from_bytes(file_.read())
         if self.vectors is not None:
             self.vectors.from_disk(path, exclude='strings.json')
+        link_vectors_to_models(self)
         return self
 
     def to_bytes(self, **exclude):
@@ -335,8 +378,8 @@ cdef class Vocab:
             if self.vectors is None:
                 return None
             else:
-                return self.vectors.to_bytes(exclude='strings.json')
- 
+                return self.vectors.to_bytes()
+
         getters = OrderedDict((
             ('strings', lambda: self.strings.to_bytes()),
             ('lexemes', lambda: self.lexemes_to_bytes()),
@@ -355,7 +398,7 @@ cdef class Vocab:
             if self.vectors is None:
                 return None
             else:
-                return self.vectors.from_bytes(b, exclude='strings')
+                return self.vectors.from_bytes(b)
         setters = OrderedDict((
             ('strings', lambda b: self.strings.from_bytes(b)),
             ('lexemes', lambda b: self.lexemes_from_bytes(b)),
@@ -397,6 +440,7 @@ cdef class Vocab:
         cdef int j = 0
         cdef SerializedLexemeC lex_data
         chunk_size = sizeof(lex_data.data)
+        cdef void* ptr
         cdef unsigned char* bytes_ptr = bytes_data
         for i in range(0, len(bytes_data), chunk_size):
             lexeme = <LexemeC*>self.mem.alloc(1, sizeof(LexemeC))
@@ -404,6 +448,9 @@ cdef class Vocab:
                 lex_data.data[j] = bytes_ptr[i+j]
             Lexeme.c_from_bytes(lexeme, lex_data)
 
+            ptr = self.strings._map.get(lexeme.orth)
+            if ptr == NULL:
+                continue
             py_str = self.strings[lexeme.orth]
             assert self.strings[py_str] == lexeme.orth, (py_str, lexeme.orth)
             key = hash_string(py_str)
@@ -417,25 +464,23 @@ def pickle_vocab(vocab):
     morph = vocab.morphology
     length = vocab.length
     data_dir = vocab.data_dir
-    lex_attr_getters = vocab.lex_attr_getters
-
+    lex_attr_getters = dill.dumps(vocab.lex_attr_getters)
     lexemes_data = vocab.lexemes_to_bytes()
-
     return (unpickle_vocab,
-        (sstore, morph, data_dir, lex_attr_getters,
-            lexemes_data, length))
+            (sstore, morph, data_dir, lex_attr_getters, lexemes_data, length))
 
 
 def unpickle_vocab(sstore, morphology, data_dir,
-        lex_attr_getters, bytes lexemes_data, int length):
+                   lex_attr_getters, bytes lexemes_data, int length):
     cdef Vocab vocab = Vocab()
     vocab.length = length
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.data_dir = data_dir
-    vocab.lex_attr_getters = lex_attr_getters
+    vocab.lex_attr_getters = dill.loads(lex_attr_getters)
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
+    link_vectors_to_models(vocab)
     return vocab
 
 
@@ -446,12 +491,10 @@ class LookupError(Exception):
     @classmethod
     def mismatched_strings(cls, id_, id_string, original_string):
         return cls(
-            "Error fetching a Lexeme from the Vocab. When looking up a string, "
-            "the lexeme returned had an orth ID that did not match the query string. "
-            "This means that the cached lexeme structs are mismatched to the "
-            "string encoding table. The mismatched:\n"
-            "Query string: {query}\n"
-            "Orth cached: {orth_str}\n"
-            "ID of orth: {orth_id}".format(
-                query=repr(original_string), orth_str=repr(id_string), orth_id=id_)
-        )
+            "Error fetching a Lexeme from the Vocab. When looking up a "
+            "string, the lexeme returned had an orth ID that did not match "
+            "the query string. This means that the cached lexeme structs are "
+            "mismatched to the string encoding table. The mismatched:\n"
+            "Query string: {}\n"
+            "Orth cached: {}\n"
+            "Orth ID: {}".format(repr(original_string), repr(id_string), id_))

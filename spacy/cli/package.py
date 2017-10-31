@@ -16,10 +16,13 @@ from .. import about
     input_dir=("directory with model data", "positional", None, str),
     output_dir=("output parent directory", "positional", None, str),
     meta_path=("path to meta.json", "option", "m", str),
-    create_meta=("create meta.json, even if one exists in directory", "flag", "c", bool),
-    force=("force overwriting of existing folder in output directory", "flag", "f", bool)
-)
-def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False, force=False):
+    create_meta=("create meta.json, even if one exists in directory – if "
+                 "existing meta is found, entries are shown as defaults in "
+                 "the command line prompt", "flag", "c", bool),
+    force=("force overwriting of existing model directory in output directory",
+           "flag", "f", bool))
+def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False,
+            force=False):
     """
     Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
@@ -39,26 +42,28 @@ def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False, force
     template_manifest = get_template('MANIFEST.in')
     template_init = get_template('xx_model_name/__init__.py')
     meta_path = meta_path or input_path / 'meta.json'
-    if not create_meta and meta_path.is_file():
-        prints(meta_path, title="Reading meta.json from file")
+    if meta_path.is_file():
         meta = util.read_json(meta_path)
-    else:
-        meta = generate_meta()
+        if not create_meta:  # only print this if user doesn't want to overwrite
+            prints(meta_path, title="Loaded meta.json from file")
+        else:
+            meta = generate_meta(input_dir, meta)
     meta = validate_meta(meta, ['lang', 'name', 'version'])
-
     model_name = meta['lang'] + '_' + meta['name']
     model_name_v = model_name + '-' + meta['version']
     main_path = output_path / model_name_v
     package_path = main_path / model_name
 
     create_dirs(package_path, force)
-    shutil.copytree(path2str(input_path), path2str(package_path / model_name_v))
+    shutil.copytree(path2str(input_path),
+                    path2str(package_path / model_name_v))
     create_file(main_path / 'meta.json', json_dumps(meta))
     create_file(main_path / 'setup.py', template_setup)
     create_file(main_path / 'MANIFEST.in', template_manifest)
     create_file(package_path / '__init__.py', template_init)
-    prints(main_path, "To build the package, run `python setup.py sdist` in this "
-           "directory.", title="Successfully created package '%s'" % model_name_v)
+    prints(main_path, "To build the package, run `python setup.py sdist` in "
+           "this directory.",
+           title="Successfully created package '%s'" % model_name_v)
 
 
 def create_dirs(package_path, force):
@@ -66,9 +71,10 @@ def create_dirs(package_path, force):
         if force:
             shutil.rmtree(path2str(package_path))
         else:
-            prints(package_path, "Please delete the directory and try again, or "
-                   "use the --force flag to overwrite existing directories.",
-                   title="Package directory already exists", exits=1)
+            prints(package_path, "Please delete the directory and try again, "
+                   "or use the --force flag to overwrite existing "
+                   "directories.", title="Package directory already exists",
+                   exits=1)
     Path.mkdir(package_path, parents=True)
 
 
@@ -77,36 +83,32 @@ def create_file(file_path, contents):
     file_path.open('w', encoding='utf-8').write(contents)
 
 
-def generate_meta():
-    settings = [('lang', 'Model language', 'en'),
-                ('name', 'Model name', 'model'),
-                ('version', 'Model version', '0.0.0'),
-                ('spacy_version', 'Required spaCy version', '>=%s,<3.0.0' % about.__version__),
-                ('description', 'Model description', False),
-                ('author', 'Author', False),
-                ('email', 'Author email', False),
-                ('url', 'Author website', False),
-                ('license', 'License', 'CC BY-NC 3.0')]
-    prints("Enter the package settings for your model.", title="Generating meta.json")
-    meta = {}
+def generate_meta(model_path, existing_meta):
+    meta = existing_meta or {}
+    settings = [('lang', 'Model language', meta.get('lang', 'en')),
+                ('name', 'Model name', meta.get('name', 'model')),
+                ('version', 'Model version', meta.get('version', '0.0.0')),
+                ('spacy_version', 'Required spaCy version',
+                 '>=%s,<3.0.0' % about.__version__),
+                ('description', 'Model description',
+                  meta.get('description', False)),
+                ('author', 'Author', meta.get('author', False)),
+                ('email', 'Author email', meta.get('email', False)),
+                ('url', 'Author website', meta.get('url', False)),
+                ('license', 'License', meta.get('license', 'CC BY-SA 3.0'))]
+    nlp = util.load_model_from_path(Path(model_path))
+    meta['pipeline'] = nlp.pipe_names
+    meta['vectors'] = {'width': nlp.vocab.vectors_length,
+                       'entries': len(nlp.vocab.vectors)}
+    prints("Enter the package settings for your model. The following "
+           "information will be read from your model data: pipeline, vectors.",
+           title="Generating meta.json")
     for setting, desc, default in settings:
         response = util.get_raw_input(desc, default)
         meta[setting] = default if response == '' and default else response
-    meta['pipeline'] = generate_pipeline()
     if about.__title__ != 'spacy':
         meta['parent_package'] = about.__title__
     return meta
-
-
-def generate_pipeline():
-    prints("If set to 'True', the default pipeline is used. If set to 'False', "
-           "the pipeline will be disabled. Components should be specified as a "
-           "comma-separated list of component names, e.g. tensorizer, tagger, "
-           "parser, ner. For more information, see the docs on processing pipelines.",
-           title="Enter your model's pipeline components")
-    pipeline = util.get_raw_input("Pipeline components", True)
-    replace = {'True': True, 'False': False}
-    return replace[pipeline] if pipeline in replace else pipeline.split(', ')
 
 
 def validate_meta(meta, keys):

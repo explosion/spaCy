@@ -55,6 +55,17 @@ def test_spans_span_sent(doc):
     assert doc[6:7].sent.root.left_edge.text == 'This'
 
 
+def test_spans_lca_matrix(en_tokenizer):
+    """Test span's lca matrix generation"""
+    tokens = en_tokenizer('the lazy dog slept')
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
+    lca = doc[:2].get_lca_matrix()
+    assert(lca[0, 0] == 0)
+    assert(lca[0, 1] == -1)
+    assert(lca[1, 0] == -1)
+    assert(lca[1, 1] == 1)
+
+
 def test_spans_default_sentiment(en_tokenizer):
     """Test span.sentiment property's default averaging behaviour"""
     text = "good stuff bad stuff"
@@ -89,7 +100,7 @@ def test_spans_are_hashable(en_tokenizer):
     assert hash(span1) != hash(span2)
     span3 = tokens[0:2]
     assert hash(span3) == hash(span1)
- 
+
 
 def test_spans_by_character(doc):
     span1 = doc[1:-2]
@@ -106,3 +117,9 @@ def test_span_to_array(doc):
     assert arr[0, 0] == span[0].orth
     assert arr[0, 1] == len(span[0])
 
+
+@pytest.mark.xfail
+def test_span_as_doc(doc):
+    span = doc[4:10]
+    span_doc = span.as_doc()
+    assert span.text == span_doc.text

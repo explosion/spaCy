@@ -1,27 +1,86 @@
 //- 💫 INCLUDES > SCRIPTS
 
-script(src="/assets/js/main.js?v#{V_JS}")
-script(src="/assets/js/prism.js")
+if quickstart
+    script(src="/assets/js/vendor/quickstart.min.js")
 
-if SECTION == "docs"
-    if quickstart
-        script(src="/assets/js/quickstart.js")
-        script var qs = new Quickstart("#qs")
-
-    script.
-        ((window.gitter = {}).chat = {}).options = {
-            useStyles: false,
-            activationElement: '.js-gitter-button',
-            targetElement: '.js-gitter',
-            room: '!{SOCIAL.gitter}'
-        };
-
-    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
+if IS_PAGE
+    script(src="/assets/js/vendor/in-view.min.js")
 
 if environment == "deploy"
-    script
+    script(async src="https://www.google-analytics.com/analytics.js")
+
+script(src="/assets/js/vendor/prism.min.js")
+
+if SECTION == "models"
+    script(src="/assets/js/vendor/chart.min.js")
+    script(src="/assets/js/models.js?v#{V_JS}" type="module")
+
+script
+    if quickstart
+        | new Quickstart("#qs");
+
+    if environment == "deploy"
         | window.ga=window.ga||function(){
         | (ga.q=ga.q||[]).push(arguments)}; ga.l=+new Date;
         | ga('create', '#{ANALYTICS}', 'auto'); ga('send', 'pageview');
 
-    script(async src="https://www.google-analytics.com/analytics.js")
+
+if IS_PAGE
+    script
+        | ((window.gitter = {}).chat = {}).options = {
+        |     useStyles: false,
+        |     activationElement: '.js-gitter-button',
+        |     targetElement: '.js-gitter',
+        |     room: '!{SOCIAL.gitter}'
+        | };
+    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
+
+
+//- JS modules – slightly hacky, but necessary to dynamically instantiate the
+    classes with data from the Harp JSON files, while still being able to
+    support older browsers that can't handle JS modules. More details:
+    https://medium.com/dev-channel/es6-modules-in-chrome-canary-m60-ba588dfb8ab7
+
+- ProgressBar = "new ProgressBar('.js-progress');"
+- Changelog = "new Changelog('" + SOCIAL.github + "', 'spacy');"
+- NavHighlighter = "new NavHighlighter('data-section', 'data-nav');"
+- GitHubEmbed = "new GitHubEmbed('" + SOCIAL.github + "', 'data-gh-embed');"
+- ModelLoader = "new ModelLoader('" + MODELS_REPO + "'," + JSON.stringify(CURRENT_MODELS) + "," + JSON.stringify(MODEL_LICENSES) + "," + JSON.stringify(MODEL_BENCHMARKS) + ");"
+- ModelComparer = "new ModelComparer('" + MODELS_REPO + "'," + JSON.stringify(MODEL_LICENSES) + "," + JSON.stringify(MODEL_BENCHMARKS) + "," + JSON.stringify(LANGUAGES) + "," + JSON.stringify(MODEL_META) + "," + JSON.stringify(default_models || false) + ");"
+
+//- Browsers with JS module support.
+    Will be ignored otherwise.
+
+script(type="module")
+    | import ProgressBar from '/assets/js/progress.js';
+    !=ProgressBar
+    if changelog
+        | import Changelog from '/assets/js/changelog.js';
+        !=Changelog
+    if IS_PAGE
+        | import NavHighlighter from '/assets/js/nav-highlighter.js';
+        !=NavHighlighter
+        | import GitHubEmbed from '/assets/js/github-embed.js';
+        !=GitHubEmbed
+    if HAS_MODELS
+        | import { ModelLoader } from '/assets/js/models.js';
+        !=ModelLoader
+    if compare_models
+        | import { ModelComparer } from '/assets/js/models.js';
+        !=ModelComparer
+
+//- Browsers with no JS module support.
+    Won't be fetched or interpreted otherwise.
+
+script(nomodule src="/assets/js/rollup.js")
+script(nomodule)
+    !=ProgressBar
+    if changelog
+        !=Changelog
+    if IS_PAGE
+        !=NavHighlighter
+        !=GitHubEmbed
+    if HAS_MODELS
+        !=ModeLoader
+    if compare_models
+        !=ModelComparer

@@ -1,108 +1,136 @@
-from __future__ import unicode_literals
+#!/usr/bin/env python
+# coding: utf8
+"""Train a multi-label convolutional neural network text classifier on the
+IMDB dataset, using the TextCategorizer component. The dataset will be loaded
+automatically via Thinc's built-in dataset loader. The model is added to
+spacy.pipeline, and predictions are available via `doc.cats`.
+
+For more details, see the documentation:
+* Training: https://alpha.spacy.io/usage/training
+* Text classification: https://alpha.spacy.io/usage/text-classification
+
+Developed for: spaCy 2.0.0a18
+Last updated for: spaCy 2.0.0a18
+"""
+from __future__ import unicode_literals, print_function
 import plac
 import random
-import tqdm
-
-from thinc.neural.optimizers import Adam
-from thinc.neural.ops import NumpyOps
+from pathlib import Path
 import thinc.extra.datasets
 
-import spacy.lang.en
+import spacy
 from spacy.gold import GoldParse, minibatch
 from spacy.util import compounding
 from spacy.pipeline import TextCategorizer
 
 
-def train_textcat(tokenizer, textcat,
-                  train_texts, train_cats, dev_texts, dev_cats,
-                  n_iter=20):
-    '''
-    Train the TextCategorizer without associated pipeline.
-    '''
-    textcat.begin_training()
-    optimizer = Adam(NumpyOps(), 0.001)
-    train_docs = [tokenizer(text) for text in train_texts]
+@plac.annotations(
+    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    output_dir=("Optional output directory", "option", "o", Path),
+    n_iter=("Number of training iterations", "option", "n", int))
+def main(model=None, output_dir=None, n_iter=20):
+    if model is not None:
+        nlp = spacy.load(model)  # load existing spaCy model
+        print("Loaded model '%s'" % model)
+    else:
+        nlp = spacy.blank('en')  # create blank Language class
+        print("Created blank 'en' model")
+
+    # add the text classifier to the pipeline if it doesn't exist
+    # nlp.create_pipe works for built-ins that are registered with spaCy
+    if 'textcat' not in nlp.pipe_names:
+        # textcat = nlp.create_pipe('textcat')
+        textcat = TextCategorizer(nlp.vocab, labels=['POSITIVE'])
+        nlp.add_pipe(textcat, last=True)
+    # otherwise, get it, so we can add labels to it
+    else:
+        textcat = nlp.get_pipe('textcat')
+
+    # add label to text classifier
+    # textcat.add_label('POSITIVE')
+
+    # load the IMBD dataset
+    print("Loading IMDB data...")
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=2000)
+    train_docs = [nlp.tokenizer(text) for text in train_texts]
     train_gold = [GoldParse(doc, cats=cats) for doc, cats in
                   zip(train_docs, train_cats)]
-    train_data = zip(train_docs, train_gold)
-    batch_sizes = compounding(4., 128., 1.001)
-    for i in range(n_iter):
-        losses = {}
-        train_data = tqdm.tqdm(train_data, leave=False) # Progress bar
-        for batch in minibatch(train_data, size=batch_sizes):
-            docs, golds = zip(*batch)
-            textcat.update((docs, None), golds, sgd=optimizer, drop=0.2,
-                losses=losses)
-        with textcat.model.use_params(optimizer.averages):
-            scores = evaluate(tokenizer, textcat, dev_texts, dev_cats)
-        yield losses['textcat'], scores
+    train_data = list(zip(train_docs, train_gold))
+
+    # get names of other pipes to disable them during training
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'textcat']
+    with nlp.disable_pipes(*other_pipes):  # only train textcat
+        optimizer = nlp.begin_training(lambda: [])
+        print("Training the model...")
+        print('{:^5}\t{:^5}\t{:^5}\t{:^5}'.format('LOSS', 'P', 'R', 'F'))
+        for i in range(n_iter):
+            losses = {}
+            # batch up the examples using spaCy's minibatch
+            batches = minibatch(train_data, size=compounding(4., 128., 1.001))
+            for batch in batches:
+                docs, golds = zip(*batch)
+                nlp.update(docs, golds, sgd=optimizer, drop=0.2, losses=losses)
+            with textcat.model.use_params(optimizer.averages):
+                # evaluate on the dev data split off in load_data()
+                scores = evaluate(nlp.tokenizer, textcat, dev_texts, dev_cats)
+            print('{0:.3f}\t{0:.3f}\t{0:.3f}\t{0:.3f}'  # print a simple table
+                  .format(losses['textcat'], scores['textcat_p'],
+                          scores['textcat_r'], scores['textcat_f']))
+
+    # test the trained model
+    test_text = "This movie sucked"
+    doc = nlp(test_text)
+    print(test_text, doc.cats)
+
+    if output_dir is not None:
+        output_dir = Path(output_dir)
+        if not output_dir.exists():
+            output_dir.mkdir()
+        nlp.to_disk(output_dir)
+        print("Saved model to", output_dir)
+
+        # test the saved model
+        print("Loading from", output_dir)
+        nlp2 = spacy.load(output_dir)
+        doc2 = nlp2(test_text)
+        print(test_text, doc2.cats)
+
+
+def load_data(limit=0, split=0.8):
+    """Load data from the IMDB dataset."""
+    # Partition off part of the train data for evaluation
+    train_data, _ = thinc.extra.datasets.imdb()
+    random.shuffle(train_data)
+    train_data = train_data[-limit:]
+    texts, labels = zip(*train_data)
+    cats = [{'POSITIVE': bool(y)} for y in labels]
+    split = int(len(train_data) * split)
+    return (texts[:split], cats[:split]), (texts[split:], cats[split:])
 
 
 def evaluate(tokenizer, textcat, texts, cats):
     docs = (tokenizer(text) for text in texts)
-    tp = 1e-8 # True positives
-    fp = 1e-8 # False positives
-    fn = 1e-8 # False negatives
-    tn = 1e-8 # True negatives
+    tp = 1e-8  # True positives
+    fp = 1e-8  # False positives
+    fn = 1e-8  # False negatives
+    tn = 1e-8  # True negatives
     for i, doc in enumerate(textcat.pipe(docs)):
         gold = cats[i]
         for label, score in doc.cats.items():
-            if score >= 0.5 and label in gold:
+            if label not in gold:
+                continue
+            if score >= 0.5 and gold[label] >= 0.5:
                 tp += 1.
-            elif score >= 0.5 and label not in gold:
+            elif score >= 0.5 and gold[label] < 0.5:
                 fp += 1.
-            elif score < 0.5 and label not in gold:
+            elif score < 0.5 and gold[label] < 0.5:
                 tn += 1
-            if score < 0.5 and label in gold:
+            elif score < 0.5 and gold[label] >= 0.5:
                 fn += 1
-    precis = tp / (tp + fp)
+    precision = tp / (tp + fp)
     recall = tp / (tp + fn)
-    fscore = 2 * (precis * recall) / (precis + recall)
-    return {'textcat_p': precis, 'textcat_r': recall, 'textcat_f': fscore}  
-
-
-def load_data():
-    # Partition off part of the train data --- avoid running experiments
-    # against test.
-    train_data, _ = thinc.extra.datasets.imdb()
-
-    random.shuffle(train_data)
-
-    texts, labels = zip(*train_data)
-    cats = [(['POSITIVE'] if y else []) for y in labels]
-
-    split = int(len(train_data) * 0.8)
-
-    train_texts = texts[:split]
-    train_cats = cats[:split]
-    dev_texts = texts[split:]
-    dev_cats = cats[split:]
-    return (train_texts, train_cats), (dev_texts, dev_cats)
-
-
-def main(model_loc=None):
-    nlp = spacy.lang.en.English()
-    tokenizer = nlp.tokenizer
-    textcat = TextCategorizer(tokenizer.vocab, labels=['POSITIVE'])
-
-    print("Load IMDB data")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data()
-
-    print("Itn.\tLoss\tP\tR\tF")
-    progress = '{i:d} {loss:.3f} {textcat_p:.3f} {textcat_r:.3f} {textcat_f:.3f}'
-
-    for i, (loss, scores) in enumerate(train_textcat(tokenizer, textcat,
-                                       train_texts, train_cats,
-                                       dev_texts, dev_cats, n_iter=20)):
-        print(progress.format(i=i, loss=loss, **scores))
-    # How to save, load and use
-    nlp.pipeline.append(textcat)
-    if model_loc is not None:
-        nlp.to_disk(model_loc)
-
-        nlp = spacy.load(model_loc)
-        doc = nlp(u'This movie sucked!')
-        print(doc.cats)
+    f_score = 2 * (precision * recall) / (precision + recall)
+    return {'textcat_p': precision, 'textcat_r': recall, 'textcat_f': f_score}
 
 
 if __name__ == '__main__':

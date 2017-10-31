@@ -1,13 +1,13 @@
 # coding: utf8
 from __future__ import print_function
 # NB! This breaks in plac on Python 2!!
-#from __future__ import unicode_literals
+# from __future__ import unicode_literals
 
 if __name__ == '__main__':
     import plac
     import sys
     from spacy.cli import download, link, info, package, train, convert, model
-    from spacy.cli import profile
+    from spacy.cli import vocab, profile, evaluate, validate
     from spacy.util import prints
 
     commands = {
@@ -15,10 +15,13 @@ if __name__ == '__main__':
         'link': link,
         'info': info,
         'train': train,
+        'evaluate': evaluate,
         'convert': convert,
         'package': package,
         'model': model,
+        'vocab': vocab,
         'profile': profile,
+        'validate': validate
     }
     if len(sys.argv) == 1:
         prints(', '.join(commands), title="Available commands", exits=1)
