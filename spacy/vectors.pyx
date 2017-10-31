@@ -27,8 +27,7 @@ cdef class Vectors:
     cdef public object data
     cdef readonly StringStore strings
     cdef public object key2row
-    cdef public object keys
-    cdef public int i
+    cdef public int _i_vec
 
     def __init__(self, strings, width=0, data=None):
         """Create a new vector store. To keep the vector table empty, pass
@@ -51,13 +50,13 @@ cdef class Vectors:
             self.data = numpy.asarray(data, dtype='f')
         else:
             self.data = numpy.zeros((len(self.strings), width), dtype='f')
-        self.i = 0
+        self._i_vec = 0
         self.key2row = {}
-        self.keys = numpy.zeros((self.data.shape[0],), dtype='uint64')
-        for i, string in enumerate(self.strings):
-            if i >= self.data.shape[0]:
-                break
-            self.add(self.strings[string], self.data[i])
+        if data is not None:
+            for i, string in enumerate(self.strings):
+                if i >= self.data.shape[0]:
+                    break
+                self.add(self.strings[string], vector=self.data[i])
 
     def __reduce__(self):
         return (Vectors, (self.strings, self.data))
@@ -122,16 +121,15 @@ cdef class Vectors:
         """
         if isinstance(key, basestring_):
             key = self.strings.add(key)
-        if key not in self.key2row:
-            i = self.i
-            if i >= self.keys.shape[0]:
-                self.keys.resize((self.keys.shape[0]*2,))
-                self.data.resize((self.data.shape[0]*2, self.data.shape[1]))
-            self.key2row[key] = self.i
-            self.keys[self.i] = key
-            self.i += 1
-        else:
-            i = self.key2row[key]
+        if row is None and key in self.key2row:
+            row = self.key2row[key]
+        elif row is None:
+            row = self._i_vec
+            self._i_vec += 1
+        if row >= self.data.shape[0]:
+            self.data.resize((row*2, self.data.shape[1]))
+
+        self.key2row[key] = row
         if vector is not None:
             self.data[i] = vector
         return i
@@ -141,9 +139,9 @@ cdef class Vectors:
 
         YIELDS (tuple): A key/vector pair.
         """
-        for i, key in enumerate(self.keys):
+        for key, row in self.key2row.items():
             string = self.strings[key]
-            yield string, self.data[i]
+            yield string, self.data[row]
 
     @property
     def shape(self):
@@ -202,7 +200,7 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr)
         serializers = OrderedDict((
             ('vectors', lambda p: save_array(self.data, p.open('wb'))),
-            ('keys', lambda p: xp.save(p.open('wb'), self.keys))
+            ('key2row', lambda p: msgpack.dump(self.key2row, p.open('wb')))
         ))
         return util.to_disk(path, serializers, exclude)
 
@@ -215,10 +213,7 @@ cdef class Vectors:
         """
         def load_keys(path):
             if path.exists():
-                self.keys = numpy.load(path2str(path))
-                for i, key in enumerate(self.keys):
-                    self.keys[i] = key
-                    self.key2row[key] = i
+                self.key2row = msgpack.load(path.open('rb'))
 
         def load_vectors(path):
             xp = Model.ops.xp
@@ -226,7 +221,7 @@ cdef class Vectors:
                 self.data = xp.load(path)
 
         serializers = OrderedDict((
-            ('keys', load_keys),
+            ('key2row', load_keys),
             ('vectors', load_vectors),
         ))
         util.from_disk(path, serializers, exclude)
@@ -244,7 +239,7 @@ cdef class Vectors:
             else:
                 return msgpack.dumps(self.data)
         serializers = OrderedDict((
-            ('keys', lambda: msgpack.dumps(self.keys)),
+            ('key2row', lambda: msgpack.dumps(self.key2row)),
             ('vectors', serialize_weights)
         ))
         return util.to_bytes(serializers, exclude)
@@ -262,14 +257,8 @@ cdef class Vectors:
             else:
                 self.data = msgpack.loads(b)
 
-        def load_keys(keys):
-            self.keys.resize((len(keys),))
-            for i, key in enumerate(keys):
-                self.keys[i] = key
-                self.key2row[key] = i
-
         deserializers = OrderedDict((
-            ('keys', lambda b: load_keys(msgpack.loads(b))),
+            ('key2row', lambda b: self.key2row.update(msgpack.loads(b))),
             ('vectors', deserialize_weights)
         ))
         util.from_bytes(data, deserializers, exclude)

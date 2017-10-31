@@ -94,6 +94,11 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     nlp.meta.update(meta)
     if vectors:
         util.load_model(vectors, vocab=nlp.vocab)
+        if vectors_limit is not None:
+            remap = nlp.vocab.prune_vectors(vectors_limit)
+            print('remap', len(remap))
+            for key, (value, sim) in remap.items():
+                print(repr(key), repr(value), sim)
     for name in pipeline:
         nlp.add_pipe(nlp.create_pipe(name), name=name)
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)

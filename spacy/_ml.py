@@ -29,6 +29,12 @@ from . import util
 VECTORS_KEY = 'spacy_pretrained_vectors'
 
 
+def cosine(vec1, vec2):
+    norm1 = (vec1**2).sum() ** 0.5
+    norm2 = (vec2**2).sum() ** 0.5
+    return vec1.dot(vec2) / (norm1 * norm2)
+
+
 @layerize
 def _flatten_add_lengths(seqs, pad=0, drop=0.):
     ops = Model.ops
@@ -198,11 +204,11 @@ class PrecomputableAffine(Model):
 def link_vectors_to_models(vocab):
     vectors = vocab.vectors
     ops = Model.ops
-    for word in vocab:
-        if word.orth in vectors.key2row:
-            word.rank = vectors.key2row[word.orth]
-        else:
-            word.rank = 0
+    #for word in vocab:
+    #    if word.orth in vectors.key2row:
+    #        word.rank = vectors.key2row[word.orth]
+    #    else:
+    #        word.rank = 0
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)

@@ -190,10 +190,11 @@ cdef class Vocab:
 
         YIELDS (Lexeme): An entry in the vocabulary.
         """
-        cdef attr_t orth
+        cdef attr_t key
         cdef size_t addr
-        for orth, addr in self._by_orth.items():
-            yield Lexeme(self, orth)
+        for key, addr in self._by_orth.items():
+            lex = Lexeme(self, key)
+            yield lex
 
     def __getitem__(self, id_or_string):
         """Retrieve a lexeme, given an int ID or a unicode string. If a
@@ -211,7 +212,7 @@ cdef class Vocab:
             >>> assert nlp.vocab[apple] == nlp.vocab[u'apple']
         """
         cdef attr_t orth
-        if type(id_or_string) == unicode:
+        if isinstance(id_or_string, unicode):
             orth = self.strings.add(id_or_string)
         else:
             orth = id_or_string
@@ -242,9 +243,69 @@ cdef class Vocab:
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
-        if new_dim is None:
-            new_dim = self.vectors.data.shape[1]
-        self.vectors = Vectors(self.strings, width=new_dim)
+        if width is None:
+            width = self.vectors.data.shape[1]
+        self.vectors = Vectors(self.strings, width=width)
+
+    def prune_vectors(self, nr_row, batch_size=8):
+        """Reduce the current vector table to `nr_row` unique entries. Words
+        mapped to the discarded vectors will be remapped to the closest vector
+        among those remaining.
+
+        For example, suppose the original table had vectors for the words:
+        ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to,
+        two rows, we would discard the vectors for 'feline' and 'reclined'.
+        These words would then be remapped to the closest remaining vector
+        -- so "feline" would have the same vector as "cat", and "reclined"
+        would have the same vector as "sat".
+
+        The similarities are judged by cosine. The original vectors may
+        be large, so the cosines are calculated in minibatches, to reduce
+        memory usage.
+
+        nr_row (int): The number of rows to keep in the vector table.
+        batch_size (int): Batch of vectors for calculating the similarities.
+            Larger batch sizes might be faster, while temporarily requiring
+            more memory.
+        RETURNS (dict): A dictionary keyed by removed words mapped to
+            `(string, score)` tuples, where `string` is the entry the removed
+            word was mapped to, and `score` the similarity score between the
+            two words.
+        """
+        xp = get_array_module(self.vectors.data)
+        # Work in batches, to avoid memory problems.
+        keep = self.vectors.data[:nr_row]
+        keep_keys = [key for key, row in self.vectors.key2row.items() if row < nr_row]
+        toss = self.vectors.data[nr_row:]
+        # Normalize the vectors, so cosine similarity is just dot product.
+        # Note we can't modify the ones we're keeping in-place...
+        keep = keep / (xp.linalg.norm(keep, axis=1, keepdims=True)+1e-8)
+        keep = xp.ascontiguousarray(keep.T)
+        neighbours = xp.zeros((toss.shape[0],), dtype='i')
+        scores = xp.zeros((toss.shape[0],), dtype='f')
+        for i in range(0, toss.shape[0]//2, batch_size):
+            batch = toss[i : i+batch_size]
+            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)+1e-8
+            sims = xp.dot(batch, keep)
+            matches = sims.argmax(axis=1)
+            neighbours[i:i+batch_size] = matches
+            scores[i:i+batch_size] = sims.max(axis=1)
+        i2k = {i: key for key, i in self.vectors.key2row.items()}
+        remap = {}
+        for lex in list(self):
+            # If we're losing the vector for this word, map it to the nearest
+            # vector we're keeping.
+            if lex.rank >= nr_row:
+                lex.rank = neighbours[lex.rank-nr_row]
+                self.vectors.add(lex.orth, row=lex.rank)
+                remap[lex.orth_] = (i2k[lex.rank], scores[lex.rank])
+        for key, row in self.vectors.key2row.items():
+            if row >= nr_row:
+                self.vectors.key2row[key] = neighbours[row-nr_row]
+        # Make copy, to encourage the original table to be garbage collected.
+        self.vectors.data = xp.ascontiguousarray(self.vectors.data[:nr_row])
+        link_vectors_to_models(self)
+        return remap
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
@@ -266,9 +327,11 @@ cdef class Vocab:
         """Set a vector for a word in the vocabulary. Words can be referenced
         by string or int ID.
         """
-        if not isinstance(orth, basestring_):
-            orth = self.strings[orth]
+        if self.vectors.data.size == 0:
+            self.clear_vectors(vector.shape[0])
+        lex = self[orth]
         self.vectors.add(orth, vector=vector)
+        lex.rank = self.vectors.key2row[lex.orth]
 
     def has_vector(self, orth):
         """Check whether a word has a vector. Returns False if no vectors have
