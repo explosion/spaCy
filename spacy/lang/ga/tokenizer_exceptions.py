@@ -1,7 +1,8 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, NORM, POS
+from ...symbols import POS, DET, ADP, CCONJ, ADV, NOUN, X, AUX
+from ...symbols import ORTH, LEMMA, NORM
 
 
 _exc = {
