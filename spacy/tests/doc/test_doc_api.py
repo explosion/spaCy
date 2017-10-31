@@ -209,7 +209,7 @@ def test_doc_api_right_edge(en_tokenizer):
 def test_doc_api_has_vector():
     vocab = Vocab()
     vocab.clear_vectors(2)
-    vocab.vectors.add('kitten', numpy.asarray([0., 2.], dtype='f'))
+    vocab.vectors.add('kitten', vector=numpy.asarray([0., 2.], dtype='f'))
     doc = Doc(vocab, words=['kitten'])
     assert doc.has_vector
 

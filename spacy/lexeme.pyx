@@ -13,6 +13,8 @@ from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_OOV
+from .attrs cimport PROB
+from .attrs import intify_attrs
 from . import about
 
 
@@ -67,6 +69,19 @@ cdef class Lexeme:
 
     def __hash__(self):
         return self.c.orth
+
+    def set_attrs(self, **attrs):
+        cdef attr_id_t attr
+        attrs = intify_attrs(attrs)
+        for attr, value in attrs.items():
+            if attr == PROB:
+                self.c.prob = value
+            elif attr == CLUSTER:
+                self.c.cluster = int(value)
+            elif isinstance(value, int) or isinstance(value, long):
+                Lexeme.set_struct_attr(self.c, attr, value)
+            else:
+                Lexeme.set_struct_attr(self.c, attr, self.vocab.strings.add(value))
 
     def set_flag(self, attr_id_t flag_id, bint value):
         """Change the value of a boolean flag.

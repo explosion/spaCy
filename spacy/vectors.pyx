@@ -21,8 +21,10 @@ cdef class Vectors:
     Vectors data is kept in the vectors.data attribute, which should be an
     instance of numpy.ndarray (for CPU vectors) or cupy.ndarray
     (for GPU vectors). `vectors.key2row` is a dictionary mapping word hashes to
-    rows in the vectors.data table. The array `vectors.keys` keeps the keys in
-    order, such that `keys[vectors.key2row[key]] == key`.
+    rows in the vectors.data table.
+    
+    Multiple keys can be mapped to the same vector, so len(keys) may be greater
+    (but not smaller) than data.shape[0].
     """
     cdef public object data
     cdef readonly StringStore strings
@@ -101,7 +103,7 @@ cdef class Vectors:
 
         RETURNS (int): The number of vectors in the data.
         """
-        return self.i
+        return self._i_vec
 
     def __contains__(self, key):
         """Check whether a key has a vector entry in the table.
@@ -113,11 +115,13 @@ cdef class Vectors:
             key = self.strings[key]
         return key in self.key2row
 
-    def add(self, key, vector=None):
-        """Add a key to the table, optionally setting a vector value as well.
+    def add(self, key, *, vector=None, row=None):
+        """Add a key to the table. Keys can be mapped to an existing vector
+        by setting `row`, or a new vector can be added.
 
         key (unicode / int): The key to add.
-        vector (numpy.ndarray): An optional vector to add.
+        vector (numpy.ndarray / None): A vector to add for the key.
+        row (int / None): The row-number of a vector to map the key to.
         """
         if isinstance(key, basestring_):
             key = self.strings.add(key)
@@ -131,8 +135,8 @@ cdef class Vectors:
 
         self.key2row[key] = row
         if vector is not None:
-            self.data[i] = vector
-        return i
+            self.data[row] = vector
+        return row
 
     def items(self):
         """Iterate over `(string key, vector)` pairs, in order.

@@ -5,6 +5,7 @@ import numpy
 import dill
 
 from collections import OrderedDict
+from thinc.neural.util import get_array_module
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
@@ -27,7 +28,7 @@ cdef class Vocab:
     C-data that is shared between `Doc` objects.
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), **deprecated_kwargs):
+                 strings=tuple(), oov_prob=-20., **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -43,6 +44,7 @@ cdef class Vocab:
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer({}, {}, {})
+        self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
@@ -239,7 +241,7 @@ cdef class Vocab:
     def vectors_length(self):
         return self.vectors.data.shape[1]
 
-    def clear_vectors(self, new_dim=None):
+    def clear_vectors(self, width=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
@@ -283,16 +285,14 @@ cdef class Vocab:
         keep = xp.ascontiguousarray(keep.T)
         neighbours = xp.zeros((toss.shape[0],), dtype='i')
         scores = xp.zeros((toss.shape[0],), dtype='f')
-        for i in range(0, toss.shape[0]//2, batch_size):
+        for i in range(0, toss.shape[0], batch_size):
             batch = toss[i : i+batch_size]
             batch /= xp.linalg.norm(batch, axis=1, keepdims=True)+1e-8
             sims = xp.dot(batch, keep)
             matches = sims.argmax(axis=1)
             neighbours[i:i+batch_size] = matches
             scores[i:i+batch_size] = sims.max(axis=1)
-        i2k = {i: key for key, i in self.vectors.key2row.items()}
-        remap = {}
-        for lex in list(self):
+        for lex in self:
             # If we're losing the vector for this word, map it to the nearest
             # vector we're keeping.
             if lex.rank >= nr_row:
