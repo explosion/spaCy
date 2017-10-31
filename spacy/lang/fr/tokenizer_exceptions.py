@@ -147,5 +147,5 @@ _regular_exp += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".f
 _regular_exp.append(URL_PATTERN)
 
 
-TOKENIZER_EXCEPTIONS = dict(_exc)
+TOKENIZER_EXCEPTIONS = _exc
 TOKEN_MATCH = re.compile('|'.join('(?:{})'.format(m) for m in _regular_exp), re.IGNORECASE).match

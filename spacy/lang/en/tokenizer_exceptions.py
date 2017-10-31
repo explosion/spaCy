@@ -456,4 +456,4 @@ for string in _exclude:
         _exc.pop(string)
 
 
-TOKENIZER_EXCEPTIONS = dict(_exc)
+TOKENIZER_EXCEPTIONS = _exc

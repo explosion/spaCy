@@ -95,5 +95,5 @@ _nums = "(({ne})|({t})|({on})|({c}))({s})?".format(
     c=CURRENCY, s=_suffixes)
 
 
-TOKENIZER_EXCEPTIONS = dict(_exc)
+TOKENIZER_EXCEPTIONS = _exc
 TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=URL_PATTERN, n=_nums)).match

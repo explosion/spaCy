@@ -2,10 +2,10 @@
 # data from Korakot Chaovavanich (https://www.facebook.com/photo.php?fbid=390564854695031&set=p.390564854695031&type=3&permPage=1&ifg=1)
 from __future__ import unicode_literals
 
-from ...symbols import *
-
+from ...symbols import POS, NOUN, PRON, ADJ, ADV, INTJ, PROPN, DET, NUM, AUX
+from ...symbols import ADP, CCONJ, PART, PUNCT, SPACE, SCONJ
 TAG_MAP = {
-    #NOUN
+    # NOUN
     "NOUN":     {POS: NOUN},
     "NCMN":     {POS: NOUN},
     "NTTL":     {POS: NOUN},
@@ -14,7 +14,7 @@ TAG_MAP = {
     "CMTR":     {POS: NOUN},
     "CFQC":     {POS: NOUN},
     "CVBL":     {POS: NOUN},
-    #PRON
+    # PRON
     "PRON":     {POS: PRON},
     "NPRP":     {POS: PRON},
     # ADJ
@@ -28,7 +28,7 @@ TAG_MAP = {
     "ADVI":     {POS: ADV},
     "ADVP":     {POS: ADV},
     "ADVS":     {POS: ADV},
-	# INT
+    # INT
     "INT":      {POS: INTJ},
     # PRON
     "PROPN":    {POS: PROPN},
@@ -50,20 +50,20 @@ TAG_MAP = {
     "NCNM":     {POS: NUM},
     "NLBL":     {POS: NUM},
     "DCNM":     {POS: NUM},
-	# AUX
+    # AUX
     "AUX":      {POS: AUX},
     "XVBM":     {POS: AUX},
     "XVAM":     {POS: AUX},
     "XVMM":     {POS: AUX},
     "XVBB":     {POS: AUX},
     "XVAE":     {POS: AUX},
-	# ADP
+    # ADP
     "ADP":      {POS: ADP},
     "RPRE":     {POS: ADP},
     # CCONJ
     "CCONJ":    {POS: CCONJ},
     "JCRG":     {POS: CCONJ},
-	# SCONJ
+    # SCONJ
     "SCONJ":    {POS: SCONJ},
     "PREL":     {POS: SCONJ},
     "JSBR":     {POS: SCONJ},

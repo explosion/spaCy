@@ -72,4 +72,4 @@ for orth in [
     _exc[orth] = [{ORTH: orth}]
 
 
-TOKENIZER_EXCEPTIONS = dict(_exc)
+TOKENIZER_EXCEPTIONS = _exc
