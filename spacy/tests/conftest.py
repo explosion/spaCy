@@ -14,9 +14,8 @@ from .. import util
 # These languages are used for generic tokenizer tests – only add a language
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
-_languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'sv', 'ga', 'xx']
-
+_languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
+              'it', 'nb', 'nl', 'pl', 'pt', 'sv', 'xx']
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_md'],
            'fr': ['fr_depvec_web_lg'],
@@ -106,6 +105,7 @@ def sv_tokenizer():
 @pytest.fixture
 def bn_tokenizer():
     return util.get_lang_class('bn').Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def ga_tokenizer():
