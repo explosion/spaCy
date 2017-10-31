@@ -147,6 +147,9 @@ cdef class Parser:
         # TODO: remove this shim when we don't have to support older data
         if 'labels' in cfg and 'actions' not in cfg:
             cfg['actions'] = cfg.pop('labels')
+        # Convert string keys to int
+        if cfg.get('actions'):
+            cfg['actions'] = {int(action_name): labels for action_name, labels in cfg['actions'].items()}
         # TODO: remove this shim when we don't have to support older data
         for action_name, labels in dict(cfg.get('actions', {})).items():
             # We need this to be sorted

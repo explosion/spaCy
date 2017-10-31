@@ -16,6 +16,10 @@ try:
 except ImportError:
     import copyreg as copy_reg
 
+try:
+    import Queue as queue
+except ImportError:
+    import queue
 
 is_python2 = six.PY2
 is_python3 = six.PY3
@@ -32,6 +36,7 @@ if is_python2:
     basestring_ = basestring
     input_ = raw_input
     json_dumps = lambda data: ujson.dumps(data, indent=2).decode('utf8')
+    intern = intern
 
 elif is_python3:
     bytes_ = bytes
@@ -39,6 +44,7 @@ elif is_python3:
     basestring_ = str
     input_ = input
     json_dumps = lambda data: ujson.dumps(data, indent=2)
+    intern = sys.intern
 
 
 def symlink_to(orig, dest):

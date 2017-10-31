@@ -7,13 +7,13 @@ from .cli.info import info
 from .glossary import explain
 from .about import __version__
 
-from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb, ja, ga
+from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb, ja, ga, th, ru
 
 
 _languages = (en.English, de.German, es.Spanish, pt.Portuguese, fr.French,
              it.Italian, hu.Hungarian, zh.Chinese, nl.Dutch, sv.Swedish,
              fi.Finnish, bn.Bengali, he.Hebrew, nb.Norwegian, ja.Japanese,
-             ga.Irish)
+             th.Thai, ru.Russian, ga.Irish)
 
 
 for _lang in _languages:

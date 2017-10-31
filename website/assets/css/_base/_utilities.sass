@@ -125,7 +125,7 @@
 .u-border-dotted
     border-top: 1px dotted $color-subtle
 
-@each $name, $color in (theme: $color-theme, subtle: $color-subtle-dark, light: $color-back, red: $color-red, green: $color-green, yellow: $color-yellow)
+@each $name, $color in (theme: $color-theme, subtle: $color-subtle-dark, light: $color-back, 'red': $color-red, 'green': $color-green, 'yellow': $color-yellow)
     .u-color-#{$name}
         color: $color
 

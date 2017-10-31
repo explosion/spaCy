@@ -1,20 +1,19 @@
-<!--- Provide a general summary of your changes in the Title -->
+<!--- Provide a general summary of your changes in the title. -->
 
 ## Description
-<!--- Use this section to describe your changes and how they're affecting the code. -->
-<!-- If your changes required testing, include information about the testing environment and the tests you ran. -->
+<!--- Use this section to describe your changes. If your changes required
+testing, include information about the testing environment and the tests you
+ran. If your test fixes a bug reported in an issue, don't forget to include the
+issue number. If your PR is still a work in progress, that's totally fine – just
+include a note to let us know. -->
 
+### Types of changes
+<!-- What type of change does your PR cover? Is it a bug fix, an enhancement
+or new feature, or a change to the documentation? -->
 
-## Types of changes
-<!--- What types of changes does your code introduce? Put an `x` in all applicable boxes.: -->
-- [ ] **Bug fix** (non-breaking change fixing an issue)
-- [ ] **New feature** (non-breaking change adding functionality to spaCy)
-- [ ] **Breaking change** (fix or feature causing change to spaCy's existing functionality)
-- [ ] **Documentation** (addition to documentation of spaCy)
-
-## Checklist:
-<!--- Go over all the following points, and put an `x` in all applicable boxes.: -->
-- [ ] My change requires a change to spaCy's documentation.
-- [ ] I have updated the documentation accordingly.
-- [ ] I have added tests to cover my changes.
-- [ ] All new and existing tests passed.
+## Checklist
+<!--- Before you submit the PR, go over this checklist and make sure you can
+tick off all the boxes. [] -> [x] -->
+- [ ] I have submitted the spaCy Contributor Agreement.
+- [ ] I ran the tests, and all new and existing tests passed.
+- [ ] My changes don't require a change to the documentation, or if they do, I've added all required details.

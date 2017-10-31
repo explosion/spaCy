@@ -101,7 +101,7 @@ Top Performance
 
 * Fastest in the world: <50ms per document.  No faster system has ever been
   announced.
-* Accuracy within 1% of the current state of the art on all tasks performed
+* Accuracy within 1% of the current state-of-the-art on all tasks performed
   (parsing, named entity recognition, part-of-speech tagging).  The only more
   accurate systems are an order of magnitude slower or more.
 
@@ -255,7 +255,7 @@ details.
     pip install -r requirements.txt
     pip install -e .
 
-Compared to regular install via pip `requirements.txt <requirements.txt>`_
+Compared to a regular install via pip, `requirements.txt <requirements.txt>`_
 additionally installs developer dependencies such as Cython.
 
 Instead of the above verbose commands, you can also use the following

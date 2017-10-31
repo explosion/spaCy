@@ -18,12 +18,12 @@ p Here's a minimal example. We first add a pattern that specifies three tokens:
 
 p
     |  Once we've added the pattern, we can use the #[code matcher] as a
-    |  callable, to receive a list of #[code (ent_id, start, end)] tuples.
+    |  callable, to receive a list of #[code (ent_id, label, start, end)] tuples.
 
 +code.
     from spacy.matcher import Matcher
     from spacy.attrs import IS_PUNCT, LOWER
-    
+
     matcher = Matcher(nlp.vocab)
     matcher.add_pattern("HelloWorld", [{LOWER: "hello"}, {IS_PUNCT: True}, {LOWER: "world"}])
 
@@ -59,6 +59,10 @@ p
 
 +h(2, "quantifiers") Using quantifiers
 
+p
+    | Token specifiers may have quantifiers attached to them, by setting the
+    |  #[code "OP"] key to one of the following values:
+
 +table([ "Name", "Description", "Example"])
     +row
         +cell #[code !]
@@ -81,9 +85,18 @@ p
         +cell optional, max one
 
 p
+    | Thus the following matcher will match "Hello, World" or "Hello world" or
+    |  "Hello - - world":
+
++code.
+    matcher = Matcher(nlp.vocab)
+    matcher.add_pattern("HelloWorld", [{LOWER: "hello"}, {IS_PUNCT: True, 'OP': '*'}, {LOWER: "world"}])
+
+p
     |  There are no nested or scoped quantifiers. You can build those
     |  behaviours with acceptors and
     |  #[+api("matcher#add_entity") #[code on_match]] callbacks.
+    |  All the operators are greedy: they will match as many tokens as possible.
 
 +h(2, "acceptor-functions") Acceptor functions
 
