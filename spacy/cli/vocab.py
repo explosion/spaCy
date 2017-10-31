@@ -22,7 +22,7 @@ from ..util import prints, ensure_path
                    "option", "V", int)
 )
 def make_vocab(cmd, lang, output_dir, lexemes_loc,
-               vectors_loc=None, prune_vectors=0):
+               vectors_loc=None, prune_vectors=-1):
     """Compile a vocabulary from a lexicon jsonl file and word vectors."""
     if not lexemes_loc.exists():
         prints(lexemes_loc, title="Can't find lexical data", exits=1)
@@ -49,7 +49,7 @@ def make_vocab(cmd, lang, output_dir, lexemes_loc,
             if word.rank:
                 nlp.vocab.vectors.add(word.orth, row=word.rank)
 
-    if prune_vectors is not None:
+    if prune_vectors >= 1:
         remap = nlp.vocab.prune_vectors(prune_vectors)
     if not output_dir.exists():
         output_dir.mkdir()
