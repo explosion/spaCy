@@ -136,13 +136,14 @@ class PrecomputableAffine(Model):
     
     def _add_padding(self, Yf):
         Yf_padded = self.ops.xp.vstack((self.pad, Yf))
-        return Yf_padded[1:]
+        return Yf_padded
 
     def _backprop_padding(self, dY, ids):
-        for i in range(ids.shape[0]):
-            for j in range(ids.shape[1]):
-                if ids[i, j] < 0:
-                    self.d_pad[0, j] += dY[i, j]
+        # (1, nF, nO, nP) += (nN, nF, nO, nP) where IDs (nN, nF) < 0
+        d_feats = dY[ids]
+        ids = ids.reshape((ids.shape[0], ids.shape[1], 1, 1))
+        d_feats *= ids < 0
+        self.d_pad += d_feats.sum(axis=0, keepdims=True)
         return dY, ids
 
     @staticmethod
@@ -157,12 +158,15 @@ class PrecomputableAffine(Model):
         '''
         if (model.W**2).sum() != 0.:
             return
-        model.ops.normal_init(model.W, model.nF * model.nI, inplace=True)
+        ops = model.ops
+        xp = ops.xp
+        ops.normal_init(model.W, model.nF * model.nI, inplace=True)
 
-        ids = numpy.zeros((5000, model.nF), dtype='i')
-        ids += numpy.asarray(numpy.random.uniform(0, 1000, ids.shape), dtype='i')
-        tokvecs = numpy.zeros((5000, model.nI), dtype='f')
-        tokvecs += numpy.random.normal(loc=0., scale=1.,
+        ids = ops.allocate((5000, model.nF), dtype='f')
+        ids += xp.random.uniform(0, 1000, ids.shape)
+        ids = ops.asarray(ids, dtype='i')
+        tokvecs = ops.allocate((5000, model.nI), dtype='f')
+        tokvecs += xp.random.normal(loc=0., scale=1.,
                     size=tokvecs.size).reshape(tokvecs.shape)
 
         def predict(ids, tokvecs):
@@ -185,10 +189,10 @@ class PrecomputableAffine(Model):
         t_i = 0
         for t_i in range(t_max):
             acts1 = predict(ids, tokvecs)
-            var = numpy.var(acts1)
-            mean = numpy.mean(acts1)
+            var = model.ops.xp.var(acts1)
+            mean = model.ops.xp.mean(acts1)
             if abs(var - 1.0) >= tol_var:
-                model.W /= numpy.sqrt(var)
+                model.W /= model.ops.xp.sqrt(var)
             elif abs(mean) >= tol_mean:
                 model.b -= mean
             else:
