@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import plac
 import numpy
 
-import from spacy.language import Language
+from spacy.language import Language
 
 
 @plac.annotations(
