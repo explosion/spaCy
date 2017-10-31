@@ -5,7 +5,7 @@ import pytest
 
 
 GA_TOKEN_EXCEPTION_TESTS = [
-    ("B'fhearr fanacht as amharc", ["B'", "fhearr", "fanacht", "as", "amharc"]),
+    ('Niall Ó Domhnaill, Rialtas na hÉireann 1977 (lch. 600).', ['Niall', 'O', 'Domhnaill', ',', 'Rialtas', 'na', 'hÉireann', '1977', '('. 'lch.', '600', ')', '.']),
     ('Daoine a bhfuil Gaeilge acu, m.sh. tusa agus mise', ['Daoine', 'a', 'bhfuil', 'Gaeilge', 'acu', ',', 'm.sh.', 'tusa', 'agus', 'mise'])
 ]
 
