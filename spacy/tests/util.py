@@ -79,9 +79,9 @@ def add_vecs_to_vocab(vocab, vectors):
     """Add list of vector tuples to given vocab. All vectors need to have the
     same length. Format: [("text", [1, 2, 3])]"""
     length = len(vectors[0][1])
-    vocab.clear_vectors(length)
+    vocab.reset_vectors(width=length)
     for word, vec in vectors:
-        vocab.set_vector(word, vec)
+        vocab.set_vector(word, vector=vec)
     return vocab
 
 

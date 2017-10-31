@@ -15,6 +15,12 @@ from .compat import basestring_, path2str
 from . import util
 
 
+def unpickle_vectors(keys_and_rows, data):
+    vectors = Vectors(data=data)
+    for key, row in keys_and_rows:
+        vectors.add(key, row=row)
+
+
 cdef class Vectors:
     """Store, save and load word vectors.
 
@@ -23,140 +29,35 @@ cdef class Vectors:
     (for GPU vectors). `vectors.key2row` is a dictionary mapping word hashes to
     rows in the vectors.data table.
     
-    Multiple keys can be mapped to the same vector, so len(keys) may be greater
-    (but not smaller) than data.shape[0].
+    Multiple keys can be mapped to the same vector, and not all of the rows in
+    the table need to be assigned --- so len(list(vectors.keys())) may be
+    greater or smaller than vectors.shape[0].
     """
     cdef public object data
-    cdef readonly StringStore strings
     cdef public object key2row
-    cdef public object keys
-    cdef public int _i_key
-    cdef public int _i_vec
+    cdef public object _unset
 
-    def __init__(self, strings, width=0, data=None):
-        """Create a new vector store. To keep the vector table empty, pass
-        `width=0`. You can also create the vector table and add vectors one by
-        one, or set the vector values directly on initialisation.
-
-        strings (StringStore or list): List of strings or StringStore that maps
-            strings to hash values, and vice versa.
-        width (int): Number of dimensions.
+    def __init__(self, *, shape=None, data=None, keys=None):
+        """Create a new vector store.
+        
+        shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray): The vector data.
         RETURNS (Vectors): The newly created object.
         """
-        if isinstance(strings, StringStore):
-            self.strings = strings
+        if data is None:
+            if shape is None:
+                shape = (0,0)
+            data = numpy.zeros(shape, dtype='f')
+        self.data = data
+        self.key2row = OrderedDict()
+        if self.data is not None:
+            self._unset = set(range(self.data.shape[0]))
         else:
-            self.strings = StringStore()
-            for string in strings:
-                self.strings.add(string)
-        if data is not None:
-            self.data = numpy.asarray(data, dtype='f')
-        else:
-            self.data = numpy.zeros((len(self.strings), width), dtype='f')
-        self._i_key = 0
-        self._i_vec = 0
-        self.key2row = {}
-        self.keys = numpy.zeros((self.data.shape[0],), dtype='uint64')
-        if data is not None:
-            for i, string in enumerate(self.strings):
-                if i >= self.data.shape[0]:
-                    break
-                self.add(self.strings[string], vector=self.data[i])
-
-    def __reduce__(self):
-        return (Vectors, (self.strings, self.data))
-
-    def __getitem__(self, key):
-        """Get a vector by key. If key is a string, it is hashed to an integer
-        ID using the vectors.strings table. If the integer key is not found in
-        the table, a KeyError is raised.
-
-        key (unicode / int): The key to get the vector for.
-        RETURNS (numpy.ndarray): The vector for the key.
-        """
-        if isinstance(key, basestring):
-            key = self.strings[key]
-        i = self.key2row[key]
-        if i is None:
-            raise KeyError(key)
-        else:
-            return self.data[i]
-
-    def __setitem__(self, key, vector):
-        """Set a vector for the given key. If key is a string, it is hashed
-        to an integer ID using the vectors.strings table.
-
-        key (unicode / int): The key to set the vector for.
-        vector (numpy.ndarray): The vector to set.
-        """
-        if isinstance(key, basestring):
-            key = self.strings.add(key)
-        i = self.key2row[key]
-        self.data[i] = vector
-
-    def __iter__(self):
-        """Yield vectors from the table.
-
-        YIELDS (numpy.ndarray): A vector.
-        """
-        yield from self.data
-
-    def __len__(self):
-        """Return the number of vectors that have been assigned.
-
-        RETURNS (int): The number of vectors in the data.
-        """
-        return self._i_vec
-
-    def __contains__(self, key):
-        """Check whether a key has a vector entry in the table.
-
-        key (unicode / int): The key to check.
-        RETURNS (bool): Whether the key has a vector entry.
-        """
-        if isinstance(key, basestring_):
-            key = self.strings[key]
-        return key in self.key2row
-
-    def add(self, key, *, vector=None, row=None):
-        """Add a key to the table. Keys can be mapped to an existing vector
-        by setting `row`, or a new vector can be added.
-
-        key (unicode / int): The key to add.
-        vector (numpy.ndarray / None): A vector to add for the key.
-        row (int / None): The row-number of a vector to map the key to.
-        """
-        if isinstance(key, basestring_):
-            key = self.strings.add(key)
-        if row is None and key in self.key2row:
-            row = self.key2row[key]
-        elif row is None:
-            row = self._i_vec
-            self._i_vec += 1
-        if row >= self.data.shape[0]:
-            self.data.resize((row*2, self.data.shape[1]))
-        if key not in self.key2row:
-            if self._i_key >= self.keys.shape[0]:
-                self.keys.resize((self._i_key*2,))
-                self.keys[self._i_key] = key
-                self._i_key += 1
-
-        self.key2row[key] = row
-        if vector is not None:
-            self.data[row] = vector
-        return row
-
-    def items(self):
-        """Iterate over `(string key, vector)` pairs, in order.
-
-        YIELDS (tuple): A key/vector pair.
-        """
-        for i, key in enumerate(self.keys):
-            string = self.strings[key]
-            row = self.key2row[key]
-            yield string, self.data[row]
-
+            self._unset = set()
+        if keys is not None:
+            for i, key in enumerate(keys):
+                self.add(key, row=i)
+    
     @property
     def shape(self):
         """Get `(rows, dims)` tuples of number of rows and number of dimensions
@@ -166,9 +67,184 @@ cdef class Vectors:
         """
         return self.data.shape
 
-    def most_similar(self, key):
-        # TODO: implement
-        raise NotImplementedError
+    @property
+    def size(self):
+        """Return rows*dims"""
+        return self.data.shape[0] * self.data.shape[1]
+
+    @property
+    def is_full(self):
+        """Returns True if no keys are available for new keys."""
+        return len(self._unset) == 0
+
+    @property
+    def n_keys(self):
+        """Returns True if no keys are available for new keys."""
+        return len(self.key2row)
+
+    def __reduce__(self):
+        keys_and_rows = self.key2row.items()
+        return (unpickle_vectors, (keys_and_rows, self.data))
+
+    def __getitem__(self, key):
+        """Get a vector by key. If the key is not found, a KeyError is raised.
+
+        key (int): The key to get the vector for.
+        RETURNS (ndarray): The vector for the key.
+        """
+        i = self.key2row[key]
+        if i is None:
+            raise KeyError(key)
+        else:
+            return self.data[i]
+
+    def __setitem__(self, key, vector):
+        """Set a vector for the given key.
+
+        key (int): The key to set the vector for.
+        vector (numpy.ndarray): The vector to set.
+        """
+        i = self.key2row[key]
+        self.data[i] = vector
+        if i in self._unset:
+            self._unset.remove(i)
+
+    def __iter__(self):
+        """Yield vectors from the table.
+
+        YIELDS (ndarray): A vector.
+        """
+        yield from self.key2row
+
+    def __len__(self):
+        """Return the number of vectors in the table.
+
+        RETURNS (int): The number of vectors in the data.
+        """
+        return self.data.shape[0]
+
+    def __contains__(self, key):
+        """Check whether a key has been mapped to a vector entry in the table.
+
+        key (int): The key to check.
+        RETURNS (bool): Whether the key has a vector entry.
+        """
+        return key in self.key2row
+
+    def resize(self, shape, inplace=False):
+        '''Resize the underlying vectors array. If inplace=True, the memory
+        is reallocated. This may cause other references to the data to become
+        invalid, so only use inplace=True if you're sure that's what you want.
+
+        If the number of vectors is reduced, keys mapped to rows that have been
+        deleted are removed. These removed items are returned as a list of
+        (key, row) tuples.
+        '''
+        if inplace:
+            self.data.resize(shape, refcheck=False)
+        else:
+            xp = get_array_module(self.data)
+            self.data = xp.resize(self.data, shape)
+        filled = {row for row in self.key2row.values()}
+        self._unset = {row for row in range(shape[0]) if row not in filled}
+        removed_items = []
+        for key, row in dict(self.key2row.items()):
+            if row >= shape[0]:
+                self.key2row.pop(key)
+                removed_items.append((key, row))
+        return removed_items
+    
+    def keys(self):
+        '''Iterate over the keys in the table.'''
+        yield from self.key2row.keys()
+    
+    def values(self):
+        '''Iterate over vectors that have been assigned to at least one key.
+
+        Note that some vectors may be unassigned, so the number of vectors
+        returned may be less than the length of the vectors table.'''
+        for row, vector in enumerate(range(self.data.shape[0])):
+            if row not in self._unset:
+                yield vector
+
+    def items(self):
+        """Iterate over `(key, vector)` pairs.
+
+        YIELDS (tuple): A key/vector pair.
+        """
+        for key, row in self.key2row.items():
+            yield key, self.data[row]
+
+    def get_keys(self, rows):
+        xp = get_array_module(self.data)
+        row2key = {row: key for key, row in self.key2row.items()}
+        keys = xp.asarray([row2key[row] for row in rows],
+                           dtype='uint64')
+        return keys
+
+    def get_rows(self, keys):
+        xp = get_array_module(self.data)
+        k2r = self.key2row
+        return xp.asarray([k2r.get(key, -1) for key in keys], dtype='i')
+
+    def add(self, key, *, vector=None, row=None):
+        """Add a key to the table. Keys can be mapped to an existing vector
+        by setting `row`, or a new vector can be added.
+
+        key (unicode / int): The key to add.
+        vector (numpy.ndarray / None): A vector to add for the key.
+        row (int / None): The row-number of a vector to map the key to.
+        """
+        if row is None and key in self.key2row:
+            row = self.key2row[key]
+        elif row is None:
+            if self.is_full:
+                raise ValueError("Cannot add new key to vectors -- full")
+            row = min(self._unset)
+
+        self.key2row[key] = row
+        if vector is not None:
+            self.data[row] = vector
+            if row in self._unset:
+                self._unset.remove(row)
+        return row
+    
+    def most_similar(self, queries, *, return_scores=False, return_rows=False,
+            batch_size=1024):
+        '''For each of the given vectors, find the single entry most similar
+        to it, by cosine.
+        
+        Queries are by vector. Results are returned as an array of keys,
+        or a tuple of (keys, scores) if return_scores=True. If `queries` is
+        large, the calculations are performed in chunks, to avoid consuming
+        too much memory. You can set the `batch_size` to control the size/space
+        trade-off during the calculations.
+        '''
+        xp = get_array_module(self.data)
+        
+        vectors = self.data / xp.linalg.norm(self.data, axis=1, keepdims=True)
+        
+        best_rows = xp.zeros((queries.shape[0],), dtype='i')
+        scores = xp.zeros((queries.shape[0],), dtype='f')
+        # Work in batches, to avoid memory problems.
+        for i in range(0, queries.shape[0], batch_size):
+            batch = queries[i : i+batch_size]
+            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)
+            # batch   e.g. (1024, 300)
+            # vectors e.g. (10000, 300)
+            # sims    e.g. (1024, 10000)
+            sims = xp.dot(batch, vectors.T)
+            best_rows[i:i+batch_size] = sims.argmax(axis=1)
+            scores[i:i+batch_size] = sims.max(axis=1)
+        keys = self.get_keys(best_rows)
+        if return_rows and return_scores:
+            return (keys, best_rows, scores)
+        elif return_rows:
+            return (keys, best_rows)
+        elif return_scores:
+            return (keys, scores)
+        else:
+            return keys
 
     def from_glove(self, path):
         """Load GloVe vectors from a directory. Assumes binary format,
@@ -178,27 +254,33 @@ cdef class Vectors:
         By default GloVe outputs 64-bit vectors.
 
         path (unicode / Path): The path to load the GloVe vectors from.
+
+        RETURNS: A StringStore object, holding the key-to-string mapping.
         """
         path = util.ensure_path(path)
+        width = None
         for name in path.iterdir():
             if name.parts[-1].startswith('vectors'):
                 _, dims, dtype, _2 = name.parts[-1].split('.')
-                self.width = int(dims)
+                width = int(dims)
                 break
         else:
             raise IOError("Expected file named e.g. vectors.128.f.bin")
         bin_loc = path / 'vectors.{dims}.{dtype}.bin'.format(dims=dims,
                                                              dtype=dtype)
+        xp = get_array_module(self.data)
+        self.data = None
         with bin_loc.open('rb') as file_:
-            self.data = numpy.fromfile(file_, dtype='float64')
-            self.data = numpy.ascontiguousarray(self.data, dtype='float32')
+            self.data = xp.fromfile(file_, dtype=dtype)
+            if dtype != 'float32':
+                self.data = xp.ascontiguousarray(self.data, dtype='float32')
         n = 0
+        strings = StringStore()
         with (path / 'vocab.txt').open('r') as file_:
-            for line in file_:
-                self.add(line.strip())
-                n += 1
-        if (self.data.size % self.width) == 0:
-            self.data
+            for i, line in enumerate(file_):
+                key = strings.add(line.strip())
+                self.add(key, row=i)
+        return strings
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
@@ -214,7 +296,7 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr)
         serializers = OrderedDict((
             ('vectors', lambda p: save_array(self.data, p.open('wb'))),
-            ('keys', lambda p: xp.save(p.open('wb'), self.keys))
+            ('key2row', lambda p: msgpack.dump(self.key2row, p.open('wb')))
         ))
         return util.to_disk(path, serializers, exclude)
 
@@ -225,12 +307,18 @@ cdef class Vectors:
         path (unicode / Path): Directory path, string or Path-like object.
         RETURNS (Vectors): The modified object.
         """
+        def load_key2row(path):
+            if path.exists():
+                self.key2row = msgpack.load(path.open('rb'))
+            for key, row in self.key2row.items():
+                if row in self._unset:
+                    self._unset.remove(row)
+
         def load_keys(path):
             if path.exists():
-                self.keys = numpy.load(path2str(path))
-                for i, key in enumerate(self.keys):
-                    self.keys[i] = key
-                    self.key2row[key] = i
+                keys = numpy.load(str(path))
+                for i, key in enumerate(keys):
+                    self.add(key, row=i)
 
         def load_vectors(path):
             xp = Model.ops.xp
@@ -238,6 +326,7 @@ cdef class Vectors:
                 self.data = xp.load(path)
 
         serializers = OrderedDict((
+            ('key2row', load_key2row),
             ('keys', load_keys),
             ('vectors', load_vectors),
         ))
@@ -256,7 +345,7 @@ cdef class Vectors:
             else:
                 return msgpack.dumps(self.data)
         serializers = OrderedDict((
-            ('keys', lambda: msgpack.dumps(self.keys)),
+            ('key2row', lambda: msgpack.dumps(self.key2row)),
             ('vectors', serialize_weights)
         ))
         return util.to_bytes(serializers, exclude)
@@ -274,14 +363,8 @@ cdef class Vectors:
             else:
                 self.data = msgpack.loads(b)
 
-        def load_keys(keys):
-            self.keys.resize((len(keys),))
-            for i, key in enumerate(keys):
-                self.keys[i] = key
-                self.key2row[key] = i
-
         deserializers = OrderedDict((
-            ('keys', lambda b: load_keys(msgpack.loads(b))),
+            ('key2row', lambda b: self.key2row.update(msgpack.loads(b))),
             ('vectors', deserialize_weights)
         ))
         util.from_bytes(data, deserializers, exclude)
