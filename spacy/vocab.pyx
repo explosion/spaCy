@@ -55,7 +55,7 @@ cdef class Vocab:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors(self.strings, width=0)
+        self.vectors = Vectors()
 
     property lang:
         def __get__(self):
@@ -241,15 +241,19 @@ cdef class Vocab:
     def vectors_length(self):
         return self.vectors.data.shape[1]
 
-    def clear_vectors(self, width=None):
+    def reset_vectors(self, *, width=None, shape=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
-        if width is None:
-            width = self.vectors.data.shape[1]
-        self.vectors = Vectors(self.strings, width=width)
+        if width is not None and shape is not None:
+            raise ValueError("Only one of width and shape can be specified")
+        elif shape is not None:
+            self.vectors = Vectors(shape=shape)
+        else:
+            width = width if width is not None else self.vectors.data.shape[1]
+            self.vectors = Vectors(shape=(self.vectors.shape[0], width))
 
-    def prune_vectors(self, nr_row, batch_size=8):
+    def prune_vectors(self, nr_row, batch_size=1024):
         """Reduce the current vector table to `nr_row` unique entries. Words
         mapped to the discarded vectors will be remapped to the closest vector
         among those remaining.
@@ -275,37 +279,29 @@ cdef class Vocab:
             two words.
         """
         xp = get_array_module(self.vectors.data)
-        # Work in batches, to avoid memory problems.
-        keep = self.vectors.data[:nr_row]
-        keep_keys = [key for key, row in self.vectors.key2row.items() if row < nr_row]
-        toss = self.vectors.data[nr_row:]
-        # Normalize the vectors, so cosine similarity is just dot product.
-        # Note we can't modify the ones we're keeping in-place...
-        keep = keep / (xp.linalg.norm(keep, axis=1, keepdims=True)+1e-12)
-        keep = xp.ascontiguousarray(keep.T)
-        neighbours = xp.zeros((toss.shape[0],), dtype='i')
-        scores = xp.zeros((toss.shape[0],), dtype='f')
-        for i in range(0, toss.shape[0], batch_size):
-            batch = toss[i : i+batch_size]
-            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)+1e-12
-            sims = xp.dot(batch, keep)
-            matches = sims.argmax(axis=1)
-            neighbours[i:i+batch_size] = matches
-            scores[i:i+batch_size] = sims.max(axis=1)
-        i2k = {i: key for key, i in self.vectors.key2row.items()}
+        # Make prob negative so it sorts by rank ascending
+        # (key2row contains the rank)
+        priority = [(-lex.prob, self.vectors.key2row[lex.orth], lex.orth)
+                    for lex in self if lex.orth in self.vectors.key2row]
+        priority.sort()
+        indices = xp.asarray([i for (prob, i, key) in priority], dtype='i')
+        keys = xp.asarray([key for (prob, i, key) in priority], dtype='uint64')
+        
+        keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
+        toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
+
+        self.vectors = Vectors(data=keep, keys=keys)
+
+        syn_keys, syn_rows, scores = self.vectors.most_similar(toss,
+                                        return_rows=True, return_scores=True)
+
         remap = {}
-        for lex in list(self):
-            # If we're losing the vector for this word, map it to the nearest
-            # vector we're keeping.
-            if lex.rank >= nr_row:
-                lex.rank = neighbours[lex.rank-nr_row]
-                self.vectors.add(lex.orth, row=lex.rank)
-                remap[lex.orth_] = (self.strings[i2k[lex.rank]], scores[lex.rank])
-        for key, row in self.vectors.key2row.items():
-            if row >= nr_row:
-                self.vectors.key2row[key] = neighbours[row-nr_row]
-        # Make copy, to encourage the original table to be garbage collected.
-        self.vectors.data = xp.ascontiguousarray(self.vectors.data[:nr_row])
+        for i, key in enumerate(keys[nr_row:]):
+            self.vectors.add(key, row=syn_rows[i])
+            word = self.strings[key]
+            synonym = self.strings[syn_keys[i]]
+            score = scores[i]
+            remap[word] = (synonym, score)
         link_vectors_to_models(self)
         return remap
 
@@ -329,11 +325,19 @@ cdef class Vocab:
         """Set a vector for a word in the vocabulary. Words can be referenced
         by string or int ID.
         """
-        if self.vectors.data.size == 0:
-            self.clear_vectors(vector.shape[0])
-        lex = self[orth]
+        if isinstance(orth, basestring_):
+            orth = self.strings.add(orth)
+        if self.vectors.is_full and orth not in self.vectors:
+            new_rows = max(100, int(self.vectors.shape[0]*1.3))
+            if self.vectors.shape[1] == 0:
+                width = vector.size
+            else:
+                width = self.vectors.shape[1]
+            self.vectors.resize((new_rows, width))
+            print(self.vectors.shape)
+            self.vectors.add(orth, vector=vector)
+        print("Adding", orth, self.vectors.is_full)
         self.vectors.add(orth, vector=vector)
-        lex.rank = self.vectors.key2row[lex.orth]
 
     def has_vector(self, orth):
         """Check whether a word has a vector. Returns False if no vectors have

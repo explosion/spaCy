@@ -72,9 +72,9 @@ def test_doc_token_api_is_properties(en_vocab):
 
 def test_doc_token_api_vectors():
     vocab = Vocab()
-    vocab.clear_vectors(2)
-    vocab.vectors.add('apples', vector=numpy.asarray([0., 2.], dtype='f'))
-    vocab.vectors.add('oranges', vector=numpy.asarray([0., 1.], dtype='f'))
+    vocab.reset_vectors(width=2)
+    vocab.set_vector('apples', vector=numpy.asarray([0., 2.], dtype='f'))
+    vocab.set_vector('oranges', vector=numpy.asarray([0., 1.], dtype='f'))
     doc = Doc(vocab, words=['apples', 'oranges', 'oov'])
     assert doc.has_vector
 
