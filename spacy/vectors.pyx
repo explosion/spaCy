@@ -28,7 +28,7 @@ cdef class Vectors:
     instance of numpy.ndarray (for CPU vectors) or cupy.ndarray
     (for GPU vectors). `vectors.key2row` is a dictionary mapping word hashes to
     rows in the vectors.data table.
-    
+
     Multiple keys can be mapped to the same vector, and not all of the rows in
     the table need to be assigned --- so len(list(vectors.keys())) may be
     greater or smaller than vectors.shape[0].
@@ -39,9 +39,10 @@ cdef class Vectors:
 
     def __init__(self, *, shape=None, data=None, keys=None):
         """Create a new vector store.
-        
+
         shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray): The vector data.
+        keys (iterable): A sequence of keys, aligned with the data.
         RETURNS (Vectors): The newly created object.
         """
         if data is None:
@@ -57,7 +58,7 @@ cdef class Vectors:
         if keys is not None:
             for i, key in enumerate(keys):
                 self.add(key, row=i)
-    
+
     @property
     def shape(self):
         """Get `(rows, dims)` tuples of number of rows and number of dimensions
@@ -102,7 +103,7 @@ cdef class Vectors:
         """Set a vector for the given key.
 
         key (int): The key to set the vector for.
-        vector (numpy.ndarray): The vector to set.
+        vector (ndarray): The vector to set.
         """
         i = self.key2row[key]
         self.data[i] = vector
@@ -110,9 +111,9 @@ cdef class Vectors:
             self._unset.remove(i)
 
     def __iter__(self):
-        """Yield vectors from the table.
+        """Iterate over the keys in the table.
 
-        YIELDS (ndarray): A vector.
+        YIELDS (int): A key in the table.
         """
         yield from self.key2row
 
@@ -132,14 +133,14 @@ cdef class Vectors:
         return key in self.key2row
 
     def resize(self, shape, inplace=False):
-        '''Resize the underlying vectors array. If inplace=True, the memory
+        """Resize the underlying vectors array. If inplace=True, the memory
         is reallocated. This may cause other references to the data to become
         invalid, so only use inplace=True if you're sure that's what you want.
 
         If the number of vectors is reduced, keys mapped to rows that have been
         deleted are removed. These removed items are returned as a list of
-        (key, row) tuples.
-        '''
+        `(key, row)` tuples.
+        """
         if inplace:
             self.data.resize(shape, refcheck=False)
         else:
@@ -153,16 +154,22 @@ cdef class Vectors:
                 self.key2row.pop(key)
                 removed_items.append((key, row))
         return removed_items
-    
+
     def keys(self):
-        '''Iterate over the keys in the table.'''
-        yield from self.key2row.keys()
-    
+        """A sequence of the keys in the table.
+
+        RETURNS (iterable): The keys.
+        """
+        return self.key2row.keys()
+
     def values(self):
-        '''Iterate over vectors that have been assigned to at least one key.
+        """Iterate over vectors that have been assigned to at least one key.
 
         Note that some vectors may be unassigned, so the number of vectors
-        returned may be less than the length of the vectors table.'''
+        returned may be less than the length of the vectors table.
+
+        YIELDS (ndarray): A vector in the table.
+        """
         for row, vector in enumerate(range(self.data.shape[0])):
             if row not in self._unset:
                 yield vector
@@ -208,12 +215,12 @@ cdef class Vectors:
             if row in self._unset:
                 self._unset.remove(row)
         return row
-    
+
     def most_similar(self, queries, *, return_scores=False, return_rows=False,
             batch_size=1024):
         '''For each of the given vectors, find the single entry most similar
         to it, by cosine.
-        
+
         Queries are by vector. Results are returned as an array of keys,
         or a tuple of (keys, scores) if return_scores=True. If `queries` is
         large, the calculations are performed in chunks, to avoid consuming
@@ -221,9 +228,9 @@ cdef class Vectors:
         trade-off during the calculations.
         '''
         xp = get_array_module(self.data)
-        
+
         vectors = self.data / xp.linalg.norm(self.data, axis=1, keepdims=True)
-        
+
         best_rows = xp.zeros((queries.shape[0],), dtype='i')
         scores = xp.zeros((queries.shape[0],), dtype='f')
         # Work in batches, to avoid memory problems.
