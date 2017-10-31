@@ -77,6 +77,11 @@ cdef class Vectors:
         """Returns True if no keys are available for new keys."""
         return len(self._unset) == 0
 
+    @property
+    def n_keys(self):
+        """Returns True if no keys are available for new keys."""
+        return len(self.key2row)
+
     def __reduce__(self):
         keys_and_rows = self.key2row.items()
         return (unpickle_vectors, (keys_and_rows, self.data))
@@ -204,7 +209,7 @@ cdef class Vectors:
                 self._unset.remove(row)
         return row
     
-    def most_similar(self, queries, *, return_scores=False, return_rows,
+    def most_similar(self, queries, *, return_scores=False, return_rows=False,
             batch_size=1024):
         '''For each of the given vectors, find the single entry most similar
         to it, by cosine.
