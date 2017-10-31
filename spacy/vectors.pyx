@@ -184,17 +184,18 @@ cdef class Vectors:
             yield key, self.data[row]
 
     def find(self, *, key=None, keys=None, row=None, rows=None):
-        '''Lookup one or more keys by row, or vice versa.
+        """Look up one or more keys by row, or vice versa.
 
         key (unicode / int): Find the row that the given key points to.
             Returns int, -1 if missing.
-        keys (sequence): Find rows that the keys point to.
+        keys (iterable): Find rows that the keys point to.
             Returns ndarray.
         row (int): Find the first key that point to the row.
             Returns int.
-        rows (sequence): Find the first keys that points to the rows.
+        rows (iterable): Find the keys that point to the rows.
             Returns ndarray.
-        '''
+        RETURNS: The requested key, keys, row or rows.
+        """
         if sum(arg is None for arg in (key, keys, row, rows)) != 3:
             raise ValueError("One (and only one) keyword arg must be set.")
         xp = get_array_module(self.data)
