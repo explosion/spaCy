@@ -334,9 +334,7 @@ cdef class Vocab:
             else:
                 width = self.vectors.shape[1]
             self.vectors.resize((new_rows, width))
-            print(self.vectors.shape)
             self.vectors.add(orth, vector=vector)
-        print("Adding", orth, self.vectors.is_full)
         self.vectors.add(orth, vector=vector)
 
     def has_vector(self, orth):
