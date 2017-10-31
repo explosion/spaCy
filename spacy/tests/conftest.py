@@ -31,7 +31,7 @@ import pytest
 
 # These languages get run through generic tokenizer tests
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
-             Swedish, Hungarian, Finnish, Bengali, Norwegian, Irish]
+             Swedish, Hungarian, Finnish, Bengali, Norwegian, Thai, Russian, Irish]
 
 
 @pytest.fixture(params=LANGUAGES)
@@ -133,6 +133,7 @@ def russian():
 @pytest.fixture
 def ga_tokenizer():
     return Irish.Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def stringstore():
