@@ -35,6 +35,6 @@ def test_vocab_prune_vectors():
 
     remap = vocab.prune_vectors(2)
     assert list(remap.keys()) == [u'kitten']
-    neighbour, similarity = remap.values()[0]
+    neighbour, similarity = list(remap.values())[0]
     assert neighbour == u'cat', remap
     assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-6)
