@@ -30,9 +30,13 @@ VECTORS_KEY = 'spacy_pretrained_vectors'
 
 
 def cosine(vec1, vec2):
-    norm1 = (vec1**2).sum() ** 0.5
-    norm2 = (vec2**2).sum() ** 0.5
-    return vec1.dot(vec2) / (norm1 * norm2)
+    xp = get_array_module(vec1)
+    norm1 = xp.linalg.norm(vec1)
+    norm2 = xp.linalg.norm(vec2)
+    if norm1 == 0. or norm2 == 0.:
+        return 0
+    else:
+        return vec1.dot(vec2) / (norm1 * norm2)
 
 
 @layerize

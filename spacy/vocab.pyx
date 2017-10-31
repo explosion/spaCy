@@ -281,24 +281,26 @@ cdef class Vocab:
         toss = self.vectors.data[nr_row:]
         # Normalize the vectors, so cosine similarity is just dot product.
         # Note we can't modify the ones we're keeping in-place...
-        keep = keep / (xp.linalg.norm(keep, axis=1, keepdims=True)+1e-8)
+        keep = keep / (xp.linalg.norm(keep, axis=1, keepdims=True)+1e-12)
         keep = xp.ascontiguousarray(keep.T)
         neighbours = xp.zeros((toss.shape[0],), dtype='i')
         scores = xp.zeros((toss.shape[0],), dtype='f')
         for i in range(0, toss.shape[0], batch_size):
             batch = toss[i : i+batch_size]
-            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)+1e-8
+            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)+1e-12
             sims = xp.dot(batch, keep)
             matches = sims.argmax(axis=1)
             neighbours[i:i+batch_size] = matches
             scores[i:i+batch_size] = sims.max(axis=1)
-        for lex in self:
+        i2k = {i: key for key, i in self.vectors.key2row.items()}
+        remap = {}
+        for lex in list(self):
             # If we're losing the vector for this word, map it to the nearest
             # vector we're keeping.
             if lex.rank >= nr_row:
                 lex.rank = neighbours[lex.rank-nr_row]
                 self.vectors.add(lex.orth, row=lex.rank)
-                remap[lex.orth_] = (i2k[lex.rank], scores[lex.rank])
+                remap[lex.orth_] = (self.strings[i2k[lex.rank]], scores[lex.rank])
         for key, row in self.vectors.key2row.items():
             if row >= nr_row:
                 self.vectors.key2row[key] = neighbours[row-nr_row]
