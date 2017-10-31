@@ -1,9 +1,10 @@
+#!/usr/bin/env python
+# coding: utf8
 """Match a large set of multi-word expressions in O(1) time.
 
 The idea is to associate each word in the vocabulary with a tag, noting whether
 they begin, end, or are inside at least one pattern. An additional tag is used
 for single-word patterns. Complete patterns are also stored in a hash set.
-
 When we process a document, we look up the words in the vocabulary, to
 associate the words with the tags.  We then search for tag-sequences that
 correspond to valid candidates. Finally, we look up the candidates in the hash

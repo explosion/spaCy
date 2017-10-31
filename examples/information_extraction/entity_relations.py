@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf8
-"""
-A simple example of extracting relations between phrases and entities using
+"""A simple example of extracting relations between phrases and entities using
 spaCy's named entity recognizer and the dependency parse. Here, we extract
 money and currency values (entities labelled as MONEY) and then check the
 dependency tree to find the noun phrase they are referring to – for example:

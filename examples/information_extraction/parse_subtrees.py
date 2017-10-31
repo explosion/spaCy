@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
-"""
-This example shows how to navigate the parse tree including subtrees attached
-to a word.
+"""This example shows how to navigate the parse tree including subtrees
+attached to a word.
 
 Based on issue #252:
 "In the documents and tutorials the main thing I haven't found is
