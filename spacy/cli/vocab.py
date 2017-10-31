@@ -7,6 +7,7 @@ import spacy
 import numpy
 from pathlib import Path
 
+from ..vectors import Vectors
 from ..util import prints, ensure_path
 
 
@@ -16,8 +17,12 @@ from ..util import prints, ensure_path
     lexemes_loc=("location of JSONL-formatted lexical data", "positional",
                  None, Path),
     vectors_loc=("optional: location of vectors data, as numpy .npz",
-                 "positional", None, str))
-def make_vocab(cmd, lang, output_dir, lexemes_loc, vectors_loc=None):
+                 "positional", None, str),
+    prune_vectors=("optional: number of vectors to prune to.",
+                   "option", "V", int)
+)
+def make_vocab(cmd, lang, output_dir, lexemes_loc,
+               vectors_loc=None, prune_vectors=0):
     """Compile a vocabulary from a lexicon jsonl file and word vectors."""
     if not lexemes_loc.exists():
         prints(lexemes_loc, title="Can't find lexical data", exits=1)
@@ -26,7 +31,6 @@ def make_vocab(cmd, lang, output_dir, lexemes_loc, vectors_loc=None):
     for word in nlp.vocab:
         word.rank = 0
     lex_added = 0
-    vec_added = 0
     with lexemes_loc.open() as file_:
         for line in file_:
             if line.strip():
@@ -39,16 +43,18 @@ def make_vocab(cmd, lang, output_dir, lexemes_loc, vectors_loc=None):
                     assert lex.rank == attrs['id']
                 lex_added += 1
     if vectors_loc is not None:
-        vector_data = numpy.load(open(vectors_loc, 'rb'))
-        nlp.vocab.clear_vectors(width=vector_data.shape[1])
+        vector_data = numpy.load(vectors_loc.open('rb'))
+        nlp.vocab.vectors = Vectors(data=vector_data)
         for word in nlp.vocab:
             if word.rank:
-                nlp.vocab.vectors.add(word.orth_, row=word.rank,
-                                      vector=vector_data[word.rank])
-                vec_added += 1
+                nlp.vocab.vectors.add(word.orth, row=word.rank)
+
+    if prune_vectors is not None:
+        remap = nlp.vocab.prune_vectors(prune_vectors)
     if not output_dir.exists():
         output_dir.mkdir()
     nlp.to_disk(output_dir)
+    vec_added = len(nlp.vocab.vectors)
     prints("{} entries, {} vectors".format(lex_added, vec_added), output_dir,
            title="Sucessfully compiled vocab and vectors, and saved model")
     return nlp
