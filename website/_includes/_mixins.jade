@@ -624,13 +624,16 @@ mixin qs(data, style)
 //- Terminal-style code window
     label - [string] title displayed in top bar of terminal window
 
-mixin terminal(label)
+mixin terminal(label, button_text, button_url)
     .x-terminal
         .x-terminal__icons: span
         .u-padding-small.u-text-label.u-text-center=label
 
         +code.x-terminal__code
             block
+
+        if button_text && button_url
+            +button(button_url, true, "primary", "small").x-terminal__button=button_text
 
 
 //- Landing
