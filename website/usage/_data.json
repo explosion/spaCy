@@ -116,7 +116,6 @@
         "next": "text-classification",
         "menu": {
             "Basics": "basics",
-            "Similarity in Context": "in-context",
             "Custom Vectors": "custom",
             "GPU Usage": "gpu"
         }
