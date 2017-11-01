@@ -842,7 +842,10 @@ cdef class Doc:
         """
         cdef unicode tag, lemma, ent_type
         if len(args) == 3:
-            # TODO: Warn deprecation
+            util.deprecated(
+                "Positional arguments to Doc.merge are deprecated. Instead, "
+                "use the keyword arguments, for example tag=, lemma= or "
+                "ent_type=.")
             tag, lemma, ent_type = args
             attributes[TAG] = tag
             attributes[LEMMA] = lemma
