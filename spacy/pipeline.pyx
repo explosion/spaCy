@@ -394,8 +394,7 @@ class Tagger(Pipe):
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
-        tag_index = {tag: i
-                     for i, tag in enumerate(self.vocab.morphology.tag_names)}
+        tag_index = {tag: i for i, tag in enumerate(self.labels)}
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
@@ -426,9 +425,12 @@ class Tagger(Pipe):
                         new_tag_map[tag] = {POS: X}
         cdef Vocab vocab = self.vocab
         if new_tag_map:
+            new_tag_map.update(orig_tag_map)
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
+        for tag in vocab.morphology.tag_names:
+            self.add_label(tag)
         if self.model is True:
             self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
