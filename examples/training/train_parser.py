@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
-"""
-Example of training spaCy dependency parser, starting off with an existing model
-or a blank model.
-
-For more details, see the documentation:
+"""Example of training spaCy dependency parser, starting off with an existing
+model or a blank model. For more details, see the documentation:
 * Training: https://alpha.spacy.io/usage/training
 * Dependency Parse: https://alpha.spacy.io/usage/linguistic-features#dependency-parse
 
@@ -67,7 +64,7 @@ def main(model=None, output_dir=None, n_iter=1000):
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'parser']
     with nlp.disable_pipes(*other_pipes):  # only train parser
-        optimizer = nlp.begin_training(lambda: [])
+        optimizer = nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}

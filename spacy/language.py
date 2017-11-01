@@ -154,6 +154,9 @@ class Language(object):
         self._meta.setdefault('email', '')
         self._meta.setdefault('url', '')
         self._meta.setdefault('license', '')
+        self._meta['vectors'] = {'width': self.vocab.vectors_length,
+                                 'vectors': len(self.vocab.vectors),
+                                 'keys': self.vocab.vectors.n_keys}
         self._meta['pipeline'] = self.pipe_names
         return self._meta
 
@@ -433,8 +436,10 @@ class Language(object):
         **cfg: Config parameters.
         RETURNS: An optimizer
         """
+        if get_gold_tuples is None:
+            get_gold_tuples = lambda: []
         # Populate vocab
-        if get_gold_tuples is not None:
+        else:
             for _, annots_brackets in get_gold_tuples():
                 for annots, _ in annots_brackets:
                     for word in annots[1]:

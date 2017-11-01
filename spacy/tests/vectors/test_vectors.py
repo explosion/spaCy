@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ...vectors import Vectors
 from ...tokenizer import Tokenizer
+from ...strings import hash_string
 from ..util import add_vecs_to_vocab, get_doc
 
 import numpy
@@ -35,20 +36,19 @@ def vocab(en_vocab, vectors):
 
 
 def test_init_vectors_with_data(strings, data):
-    v = Vectors(strings, data=data)
+    v = Vectors(data=data)
     assert v.shape == data.shape
 
-def test_init_vectors_with_width(strings):
-    v = Vectors(strings, width=3)
-    for string in strings:
-        v.add(string)
+def test_init_vectors_with_shape(strings):
+    v = Vectors(shape=(len(strings), 3))
     assert v.shape == (len(strings), 3)
 
 
 def test_get_vector(strings, data):
-    v = Vectors(strings, data=data)
-    for string in strings:
-        v.add(string)
+    v = Vectors(data=data)
+    strings = [hash_string(s) for s in strings]
+    for i, string in enumerate(strings):
+        v.add(string, row=i)
     assert list(v[strings[0]]) == list(data[0])
     assert list(v[strings[0]]) != list(data[1])
     assert list(v[strings[1]]) != list(data[0])
@@ -56,15 +56,15 @@ def test_get_vector(strings, data):
 
 def test_set_vector(strings, data):
     orig = data.copy()
-    v = Vectors(strings, data=data)
-    for string in strings:
-        v.add(string)
+    v = Vectors(data=data)
+    strings = [hash_string(s) for s in strings]
+    for i, string in enumerate(strings):
+        v.add(string, row=i)
     assert list(v[strings[0]]) == list(orig[0])
     assert list(v[strings[0]]) != list(orig[1])
     v[strings[0]] = data[1]
     assert list(v[strings[0]]) == list(orig[1])
     assert list(v[strings[0]]) != list(orig[0])
-
 
 
 @pytest.fixture()

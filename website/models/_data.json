@@ -1,7 +1,8 @@
 {
     "sidebar": {
         "Models": {
-            "Overview": "./"
+            "Overview": "./",
+            "Comparison": "comparison"
         },
 
         "Language models": {
@@ -23,6 +24,17 @@
             "Quickstart": "quickstart",
             "Installation": "install",
             "Naming Conventions": "conventions"
+        }
+    },
+
+    "comparison": {
+        "title": "Model Comparison",
+        "teaser": "Compare spaCy's statistical models and their accuracy.",
+        "tag": "experimental",
+        "compare_models": true,
+        "default_models": {
+            "model1": "en_core_web_sm",
+            "model2": "en_core_web_lg"
         }
     },
 
@@ -88,6 +100,7 @@
         "hu": "Hungarian",
         "pl": "Polish",
         "he": "Hebrew",
+        "ga": "Irish",
         "bn": "Bengali",
         "hi": "Hindi",
         "id": "Indonesian",
@@ -102,6 +115,8 @@
         "de": "Dies ist ein Satz.",
         "fr": "C'est une phrase.",
         "es": "Esto es una frase.",
+        "pt": "Esta é uma frase.",
+        "it": "Questa è una frase.",
         "xx": "This is a sentence about Facebook."
     }
 }

@@ -84,13 +84,13 @@ p
         +cell A container for accessing the annotations.
 
 +infobox("Deprecation note", "⚠️")
-    .o-block
-        |  Pipeline components to prevent from being loaded can now be added as
-        |  a list to #[code disable], instead of specifying one keyword argument
-        |  per component.
+    |  Pipeline components to prevent from being loaded can now be added as
+    |  a list to #[code disable], instead of specifying one keyword argument
+    |  per component.
 
-    +code-new doc = nlp(u"I don't want parsed", disable=['parser'])
-    +code-old doc = nlp(u"I don't want parsed", parse=False)
+    +code-wrapper
+        +code-new doc = nlp(u"I don't want parsed", disable=['parser'])
+        +code-old doc = nlp(u"I don't want parsed", parse=False)
 
 +h(2, "pipe") Language.pipe
     +tag method
@@ -533,15 +533,15 @@ p
         +cell The modified #[code Language] object.
 
 +infobox("Deprecation note", "⚠️")
-    .o-block
-        |  As of spaCy v2.0, the #[code save_to_directory] method has been
-        |  renamed to #[code to_disk], to improve consistency across classes.
-        |  Pipeline components to prevent from being loaded can now be added as
-        |  a list to #[code disable], instead of specifying one keyword argument
-        |  per component.
+    |  As of spaCy v2.0, the #[code save_to_directory] method has been
+    |  renamed to #[code to_disk], to improve consistency across classes.
+    |  Pipeline components to prevent from being loaded can now be added as
+    |  a list to #[code disable], instead of specifying one keyword argument
+    |  per component.
 
-    +code-new nlp = English().from_disk(disable=['tagger', 'ner'])
-    +code-old nlp = spacy.load('en', tagger=False, entity=False)
+    +code-wrapper
+        +code-new nlp = English().from_disk(disable=['tagger', 'ner'])
+        +code-old nlp = spacy.load('en', tagger=False, entity=False)
 
 +h(2, "to_bytes") Language.to_bytes
     +tag method
@@ -595,13 +595,13 @@ p Load state from a binary string.
         +cell The #[code Language] object.
 
 +infobox("Deprecation note", "⚠️")
-    .o-block
-        |  Pipeline components to prevent from being loaded can now be added as
-        |  a list to #[code disable], instead of specifying one keyword argument
-        |  per component.
+    |  Pipeline components to prevent from being loaded can now be added as
+    |  a list to #[code disable], instead of specifying one keyword argument
+    |  per component.
 
-    +code-new nlp = English().from_bytes(bytes, disable=['tagger', 'ner'])
-    +code-old nlp = English().from_bytes('en', tagger=False, entity=False)
+    +code-wrapper
+        +code-new nlp = English().from_bytes(bytes, disable=['tagger', 'ner'])
+        +code-old nlp = English().from_bytes('en', tagger=False, entity=False)
 
 +h(2, "attributes") Attributes
 

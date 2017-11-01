@@ -55,7 +55,7 @@ cdef class Vocab:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors(self.strings, width=0)
+        self.vectors = Vectors()
 
     property lang:
         def __get__(self):
@@ -192,10 +192,11 @@ cdef class Vocab:
 
         YIELDS (Lexeme): An entry in the vocabulary.
         """
-        cdef attr_t orth
+        cdef attr_t key
         cdef size_t addr
-        for orth, addr in self._by_orth.items():
-            yield Lexeme(self, orth)
+        for key, addr in self._by_orth.items():
+            lex = Lexeme(self, key)
+            yield lex
 
     def __getitem__(self, id_or_string):
         """Retrieve a lexeme, given an int ID or a unicode string. If a
@@ -213,7 +214,7 @@ cdef class Vocab:
             >>> assert nlp.vocab[apple] == nlp.vocab[u'apple']
         """
         cdef attr_t orth
-        if type(id_or_string) == unicode:
+        if isinstance(id_or_string, unicode):
             orth = self.strings.add(id_or_string)
         else:
             orth = id_or_string
@@ -240,19 +241,23 @@ cdef class Vocab:
     def vectors_length(self):
         return self.vectors.data.shape[1]
 
-    def clear_vectors(self, width=None):
+    def reset_vectors(self, *, width=None, shape=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
-        if width is None:
-            width = self.vectors.data.shape[1]
-        self.vectors = Vectors(self.strings, width=width)
+        if width is not None and shape is not None:
+            raise ValueError("Only one of width and shape can be specified")
+        elif shape is not None:
+            self.vectors = Vectors(shape=shape)
+        else:
+            width = width if width is not None else self.vectors.data.shape[1]
+            self.vectors = Vectors(shape=(self.vectors.shape[0], width))
 
     def prune_vectors(self, nr_row, batch_size=1024):
         """Reduce the current vector table to `nr_row` unique entries. Words
         mapped to the discarded vectors will be remapped to the closest vector
         among those remaining.
-        
+
         For example, suppose the original table had vectors for the words:
         ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to,
         two rows, we would discard the vectors for 'feline' and 'reclined'.
@@ -263,28 +268,41 @@ cdef class Vocab:
         The similarities are judged by cosine. The original vectors may
         be large, so the cosines are calculated in minibatches, to reduce
         memory usage.
+
+        nr_row (int): The number of rows to keep in the vector table.
+        batch_size (int): Batch of vectors for calculating the similarities.
+            Larger batch sizes might be faster, while temporarily requiring
+            more memory.
+        RETURNS (dict): A dictionary keyed by removed words mapped to
+            `(string, score)` tuples, where `string` is the entry the removed
+            word was mapped to, and `score` the similarity score between the
+            two words.
         """
         xp = get_array_module(self.vectors.data)
-        # Work in batches, to avoid memory problems.
-        keep = self.vectors.data[:nr_row]
-        toss = self.vectors.data[nr_row:]
-        # Normalize the vectors, so cosine similarity is just dot product.
-        # Note we can't modify the ones we're keeping in-place...
-        keep = keep / (xp.linalg.norm(keep)+1e-8)
-        keep = xp.ascontiguousarray(keep.T)
-        neighbours = xp.zeros((toss.shape[0],), dtype='i')
-        for i in range(0, toss.shape[0], batch_size):
-            batch = toss[i : i+batch_size]
-            batch /= xp.linalg.norm(batch)+1e-8
-            neighbours[i:i+batch_size] = xp.dot(batch, keep).argmax(axis=1)
-        for lex in self:
-            # If we're losing the vector for this word, map it to the nearest
-            # vector we're keeping.
-            if lex.rank >= nr_row:
-                lex.rank = neighbours[lex.rank-nr_row]
-                self.vectors.add(lex.orth, row=lex.rank)
-        # Make copy, to encourage the original table to be garbage collected.
-        self.vectors.data = xp.ascontiguousarray(self.vectors.data[:nr_row])
+        # Make prob negative so it sorts by rank ascending
+        # (key2row contains the rank)
+        priority = [(-lex.prob, self.vectors.key2row[lex.orth], lex.orth)
+                    for lex in self if lex.orth in self.vectors.key2row]
+        priority.sort()
+        indices = xp.asarray([i for (prob, i, key) in priority], dtype='i')
+        keys = xp.asarray([key for (prob, i, key) in priority], dtype='uint64')
+
+        keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
+        toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
+
+        self.vectors = Vectors(data=keep, keys=keys)
+
+        syn_keys, syn_rows, scores = self.vectors.most_similar(toss)
+
+        remap = {}
+        for i, key in enumerate(keys[nr_row:]):
+            self.vectors.add(key, row=syn_rows[i])
+            word = self.strings[key]
+            synonym = self.strings[syn_keys[i]]
+            score = scores[i]
+            remap[word] = (synonym, score)
+        link_vectors_to_models(self)
+        return remap
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
@@ -306,8 +324,16 @@ cdef class Vocab:
         """Set a vector for a word in the vocabulary. Words can be referenced
         by string or int ID.
         """
-        if not isinstance(orth, basestring_):
-            orth = self.strings[orth]
+        if isinstance(orth, basestring_):
+            orth = self.strings.add(orth)
+        if self.vectors.is_full and orth not in self.vectors:
+            new_rows = max(100, int(self.vectors.shape[0]*1.3))
+            if self.vectors.shape[1] == 0:
+                width = vector.size
+            else:
+                width = self.vectors.shape[1]
+            self.vectors.resize((new_rows, width))
+            self.vectors.add(orth, vector=vector)
         self.vectors.add(orth, vector=vector)
 
     def has_vector(self, orth):

@@ -6,6 +6,5 @@ from .profile import profile
 from .train import train
 from .evaluate import evaluate
 from .convert import convert
-from .model import model
 from .vocab import make_vocab as vocab
 from .validate import validate

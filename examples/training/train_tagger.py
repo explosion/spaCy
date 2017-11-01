@@ -3,9 +3,8 @@
 """
 A simple example for training a part-of-speech tagger with a custom tag map.
 To allow us to update the tag map with our custom one, this example starts off
-with a blank Language class and modifies its defaults.
-
-For more details, see the documentation:
+with a blank Language class and modifies its defaults. For more details, see
+the documentation:
 * Training: https://alpha.spacy.io/usage/training
 * POS Tagging: https://alpha.spacy.io/usage/linguistic-features#pos-tagging
 
@@ -62,7 +61,7 @@ def main(lang='en', output_dir=None, n_iter=25):
     tagger = nlp.create_pipe('tagger')
     nlp.add_pipe(tagger)
 
-    optimizer = nlp.begin_training(lambda: [])
+    optimizer = nlp.begin_training()
     for i in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}

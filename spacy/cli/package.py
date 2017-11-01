@@ -16,10 +16,11 @@ from .. import about
     input_dir=("directory with model data", "positional", None, str),
     output_dir=("output parent directory", "positional", None, str),
     meta_path=("path to meta.json", "option", "m", str),
-    create_meta=("create meta.json, even if one exists in directory", "flag",
-                 "c", bool),
-    force=("force overwriting of existing folder in output directory", "flag",
-           "f", bool))
+    create_meta=("create meta.json, even if one exists in directory – if "
+                 "existing meta is found, entries are shown as defaults in "
+                 "the command line prompt", "flag", "c", bool),
+    force=("force overwriting of existing model directory in output directory",
+           "flag", "f", bool))
 def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False,
             force=False):
     """
@@ -41,13 +42,13 @@ def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False,
     template_manifest = get_template('MANIFEST.in')
     template_init = get_template('xx_model_name/__init__.py')
     meta_path = meta_path or input_path / 'meta.json'
-    if not create_meta and meta_path.is_file():
-        prints(meta_path, title="Reading meta.json from file")
+    if meta_path.is_file():
         meta = util.read_json(meta_path)
-    else:
-        meta = generate_meta(input_dir)
+        if not create_meta:  # only print this if user doesn't want to overwrite
+            prints(meta_path, title="Loaded meta.json from file")
+        else:
+            meta = generate_meta(input_dir, meta)
     meta = validate_meta(meta, ['lang', 'name', 'version'])
-
     model_name = meta['lang'] + '_' + meta['name']
     model_name_v = model_name + '-' + meta['version']
     main_path = output_path / model_name_v
@@ -82,22 +83,24 @@ def create_file(file_path, contents):
     file_path.open('w', encoding='utf-8').write(contents)
 
 
-def generate_meta(model_path):
-    meta = {}
-    settings = [('lang', 'Model language', 'en'),
-                ('name', 'Model name', 'model'),
-                ('version', 'Model version', '0.0.0'),
+def generate_meta(model_path, existing_meta):
+    meta = existing_meta or {}
+    settings = [('lang', 'Model language', meta.get('lang', 'en')),
+                ('name', 'Model name', meta.get('name', 'model')),
+                ('version', 'Model version', meta.get('version', '0.0.0')),
                 ('spacy_version', 'Required spaCy version',
                  '>=%s,<3.0.0' % about.__version__),
-                ('description', 'Model description', False),
-                ('author', 'Author', False),
-                ('email', 'Author email', False),
-                ('url', 'Author website', False),
-                ('license', 'License', 'CC BY-NC 3.0')]
+                ('description', 'Model description',
+                  meta.get('description', False)),
+                ('author', 'Author', meta.get('author', False)),
+                ('email', 'Author email', meta.get('email', False)),
+                ('url', 'Author website', meta.get('url', False)),
+                ('license', 'License', meta.get('license', 'CC BY-SA 3.0'))]
     nlp = util.load_model_from_path(Path(model_path))
     meta['pipeline'] = nlp.pipe_names
     meta['vectors'] = {'width': nlp.vocab.vectors_length,
-                       'entries': len(nlp.vocab.vectors)}
+                       'vectors': len(nlp.vocab.vectors),
+                       'keys': nlp.vocab.vectors.n_keys}
     prints("Enter the package settings for your model. The following "
            "information will be read from your model data: pipeline, vectors.",
            title="Generating meta.json")

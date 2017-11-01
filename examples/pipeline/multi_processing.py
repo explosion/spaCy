@@ -1,5 +1,6 @@
-"""
-Example of multi-processing with Joblib. Here, we're exporting
+#!/usr/bin/env python
+# coding: utf8
+"""Example of multi-processing with Joblib. Here, we're exporting
 part-of-speech-tagged, true-cased, (very roughly) sentence-separated text, with
 each "sentence" on a newline, and spaces between tokens. Data is loaded from
 the IMDB movie reviews dataset and will be loaded automatically via Thinc's

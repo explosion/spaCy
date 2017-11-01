@@ -29,6 +29,16 @@ from . import util
 VECTORS_KEY = 'spacy_pretrained_vectors'
 
 
+def cosine(vec1, vec2):
+    xp = get_array_module(vec1)
+    norm1 = xp.linalg.norm(vec1)
+    norm2 = xp.linalg.norm(vec2)
+    if norm1 == 0. or norm2 == 0.:
+        return 0
+    else:
+        return vec1.dot(vec2) / (norm1 * norm2)
+
+
 @layerize
 def _flatten_add_lengths(seqs, pad=0, drop=0.):
     ops = Model.ops
@@ -428,7 +438,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
     pretrained_dims = cfg.get('pretrained_dims', 0)
     with Model.define_operators({'>>': chain, '+': add, '|': concatenate,
                                  '**': clone}):
-        if cfg.get('low_data'):
+        if cfg.get('low_data') and pretrained_dims:
             model = (
                 SpacyVectors
                 >> flatten_add_lengths

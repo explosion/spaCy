@@ -32,7 +32,6 @@ numpy.random.seed(0)
     n_sents=("number of sentences", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
     vectors=("Model to load vectors from", "option", "v"),
-    vectors_limit=("Truncate to N vectors (requires -v)", "option", None, int),
     no_tagger=("Don't train tagger", "flag", "T", bool),
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool),
@@ -41,7 +40,7 @@ numpy.random.seed(0)
     meta_path=("Optional path to meta.json. All relevant properties will be "
                "overwritten.", "option", "m", Path))
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
-          use_gpu=-1, vectors=None, vectors_limit=None, no_tagger=False,
+          use_gpu=-1, vectors=None, no_tagger=False,
           no_parser=False, no_entities=False, gold_preproc=False,
           version="0.0.0", meta_path=None):
     """
@@ -95,8 +94,6 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     nlp.meta.update(meta)
     if vectors:
         util.load_model(vectors, vocab=nlp.vocab)
-        if vectors_limit is not None:
-            nlp.vocab.prune_vectors(vectors_limit)
     for name in pipeline:
         nlp.add_pipe(nlp.create_pipe(name), name=name)
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
@@ -149,7 +146,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                 meta['speed'] = {'nwords': nwords, 'cpu': cpu_wps,
                                  'gpu': gpu_wps}
                 meta['vectors'] = {'width': nlp.vocab.vectors_length,
-                                   'entries': len(nlp.vocab.vectors)}
+                                   'vectors': len(nlp.vocab.vectors),
+                                   'keys': nlp.vocab.vectors.n_keys}
                 meta['lang'] = nlp.lang
                 meta['pipeline'] = pipeline
                 meta['spacy_version'] = '>=%s' % about.__version__

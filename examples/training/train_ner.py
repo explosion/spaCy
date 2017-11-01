@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf8
-"""
-Example of training spaCy's named entity recognizer, starting off with an
+"""Example of training spaCy's named entity recognizer, starting off with an
 existing model or a blank model.
 
 For more details, see the documentation:

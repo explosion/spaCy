@@ -1,4 +1,6 @@
-//- 💫 DOCS > API > TOP-LEVEL > COMMAND LINE INTERFACE
+//- 💫 DOCS > API > COMMAND LINE INTERFACE
+
+include ../_includes/_mixins
 
 p
     |  As of v1.7.0, spaCy comes with new command line helpers to download and
@@ -33,6 +35,13 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
+    +row("foot")
+        +cell creates
+        +cell directory, symlink
+        +cell
+            |  The installed model package in your #[code site-packages]
+            |  directory and a shortcut link as a symlink in #[code spacy/data].
 
 +aside("Downloading best practices")
     |  The #[code download] command is mostly intended as a convenient,
@@ -86,6 +95,13 @@ p
         +cell flag
         +cell Show help message and available arguments.
 
+    +row("foot")
+        +cell creates
+        +cell symlink
+        +cell
+            |  A shortcut link of the given name as a symlink in
+            |  #[code spacy/data].
+
 +h(3, "info") Info
 
 p
@@ -113,6 +129,11 @@ p
         +cell flag
         +cell Show help message and available arguments.
 
+    +row("foot")
+        +cell prints
+        +cell #[code stdout]
+        +cell Information about your spaCy installation.
+
 +h(3, "validate") Validate
     +tag-new(2)
 
@@ -128,6 +149,12 @@ p
 
 +code(false, "bash", "$").
     spacy validate
+
++table(["Argument", "Type", "Description"])
+    +row("foot")
+        +cell prints
+        +cell #[code stdout]
+        +cell Details about the compatibility of your installed models.
 
 +h(3, "convert") Convert
 
@@ -171,6 +198,11 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
+    +row("foot")
+        +cell creates
+        +cell JSON
+        +cell Data in spaCy's #[+a("/api/annotation#json-input") JSON format].
 
 p The following converters are available:
 
@@ -286,6 +318,11 @@ p
         +cell flag
         +cell Show help message and available arguments.
 
+    +row("foot")
+        +cell creates
+        +cell model, pickle
+        +cell A spaCy model on each epoch, and a final #[code .pickle] file.
+
 +h(4, "train-hyperparams") Environment variables for hyperparameters
     +tag-new(2)
 
@@ -395,6 +432,50 @@ p
         +cell Gradient L2 norm constraint.
         +cell #[code 1.0]
 
++h(3, "vocab") Vocab
+    +tag-new(2)
+
+p
+    |  Compile a vocabulary from a
+    |  #[+a("/api/annotation#vocab-jsonl") lexicon JSONL] file and optional
+    |  word vectors. Will save out a valid spaCy model that you can load via
+    |  #[+api("spacy#load") #[code spacy.load]] or package using the
+    |  #[+api("cli#package") #[code package]] command.
+
++code(false, "bash", "$").
+    spacy vocab [lang] [output_dir] [lexemes_loc] [vectors_loc]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code lang]
+        +cell positional
+        +cell
+            |  Model language
+            |  #[+a("https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes") ISO code],
+            |  e.g. #[code en].
+
+    +row
+        +cell #[code output_dir]
+        +cell positional
+        +cell Model output directory. Will be created if it doesn't exist.
+
+    +row
+        +cell #[code lexemes_loc]
+        +cell positional
+        +cell
+            |  Location of lexical data in spaCy's
+            |  #[+a("/api/annotation#vocab-jsonl") JSONL format].
+
+    +row
+        +cell #[code vectors_loc]
+        +cell positional
+        +cell Optional location of vectors data as numpy #[code .npz] file.
+
+    +row("foot")
+        +cell creates
+        +cell model
+        +cell A spaCy model containing the vocab and vectors.
+
 +h(3, "evaluate") Evaluate
     +tag-new(2)
 
@@ -447,21 +528,35 @@ p
         +cell flag
         +cell Use gold preprocessing.
 
+    +row("foot")
+        +cell prints / creates
+        +cell #[code stdout], HTML
+        +cell Training results and optional displaCy visualizations.
+
 
 +h(3, "package") Package
 
 p
     |  Generate a #[+a("/usage/training#models-generating") model Python package]
     |  from an existing model data directory. All data files are copied over.
-    |  If the path to a meta.json is supplied, or a meta.json is found in the
-    |  input directory, this file is used. Otherwise, the data can be entered
-    |  directly from the command line. The required file templates are downloaded
-    |  from #[+src(gh("spacy-dev-resources", "templates/model")) GitHub] to make
+    |  If the path to a #[code meta.json] is supplied, or a #[code meta.json] is
+    |  found in the input directory, this file is used. Otherwise, the data can
+    |  be entered directly from the command line. The required file templates
+    |  are downloaded from
+    |  #[+src(gh("spacy-dev-resources", "templates/model")) GitHub] to make
     |  sure you're always using the latest versions. This means you need to be
-    |  connected to the internet to use this command.
+    |  connected to the internet to use this command. After packaging, you
+    |  can run #[code python setup.py sdist] from the newly created directory
+    |  to turn your model into an installable archive file.
 
 +code(false, "bash", "$", false, false, true).
     spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--force]
+
++aside-code("Example", "bash").
+    spacy package /input /output
+    cd /output/en_model-0.0.0
+    python setup.py sdist
+    pip install dist/en_model-0.0.0.tar.gz
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -477,15 +572,16 @@ p
     +row
         +cell #[code --meta-path], #[code -m]
         +cell option
-        +cell #[+tag-new(2)] Path to meta.json file (optional).
+        +cell #[+tag-new(2)] Path to #[code meta.json] file (optional).
 
     +row
         +cell #[code --create-meta], #[code -c]
         +cell flag
         +cell
-            |  #[+tag-new(2)] Create a meta.json file on the command line, even
-            |  if one already exists in the directory.
-
+            |  #[+tag-new(2)] Create a #[code meta.json] file on the command
+            |  line, even if one already exists in the directory. If an
+            |  existing file is found, its entries will be shown as the defaults
+            |  in the command line prompt.
     +row
         +cell #[code --force], #[code -f]
         +cell flag
@@ -495,3 +591,8 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
+    +row("foot")
+        +cell creates
+        +cell directory
+        +cell A Python package containing the spaCy model.

@@ -79,6 +79,7 @@
         "title": "What's New in v2.0",
         "teaser": "New features, backwards incompatibilities and migration guide.",
         "menu": {
+            "Summary": "summary",
             "New features": "features",
             "Backwards Incompatibilities": "incompat",
             "Migrating from v1.x": "migrating",
@@ -116,7 +117,6 @@
         "next": "text-classification",
         "menu": {
             "Basics": "basics",
-            "Similarity in Context": "in-context",
             "Custom Vectors": "custom",
             "GPU Usage": "gpu"
         }

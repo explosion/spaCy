@@ -393,6 +393,37 @@ p A sequence of all the token's syntactic descendents.
         +cell #[code Token]
         +cell A descendant token such that #[code self.is_ancestor(descendant)].
 
++h(2, "is_sent_start") Token.is_sent_start
+    +tag property
+    +tag-new(2)
+
+p
+    |  A boolean value indicating whether the token starts a sentence.
+    |  #[code None] if unknown.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    assert doc[4].is_sent_start
+    assert not doc[5].is_sent_start
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the token starts a sentence.
+
++infobox("Deprecation note", "⚠️")
+    |  As of spaCy v2.0, the #[code Token.sent_start] property is deprecated and
+    |  has been replaced with #[code Token.is_sent_start], which returns a
+    |  boolean value instead of a misleading #[code 0] for #[code False] and
+    |  #[code 1] for #[code True]. It also now returns #[code None] if the
+    |  answer is unknown, and fixes a quirk in the old logic that would always
+    |  set the property to #[code 0] for the first word of the document.
+
+    +code-wrapper
+        +code-new assert doc[4].is_sent_start == True
+        +code-old assert doc[4].sent_start == 1
+
 +h(2, "has_vector") Token.has_vector
     +tag property
     +tag-model("vectors")

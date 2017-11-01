@@ -72,9 +72,9 @@ def test_doc_token_api_is_properties(en_vocab):
 
 def test_doc_token_api_vectors():
     vocab = Vocab()
-    vocab.clear_vectors(2)
-    vocab.vectors.add('apples', vector=numpy.asarray([0., 2.], dtype='f'))
-    vocab.vectors.add('oranges', vector=numpy.asarray([0., 1.], dtype='f'))
+    vocab.reset_vectors(width=2)
+    vocab.set_vector('apples', vector=numpy.asarray([0., 2.], dtype='f'))
+    vocab.set_vector('oranges', vector=numpy.asarray([0., 1.], dtype='f'))
     doc = Doc(vocab, words=['apples', 'oranges', 'oov'])
     assert doc.has_vector
 
@@ -155,13 +155,13 @@ def test_doc_token_api_head_setter(en_tokenizer):
     assert doc[2].left_edge.i == 0
 
 
-def test_sent_start(en_tokenizer):
+def test_is_sent_start(en_tokenizer):
     doc = en_tokenizer(u'This is a sentence. This is another.')
-    assert not doc[0].sent_start
-    assert not doc[5].sent_start
-    doc[5].sent_start = True
-    assert doc[5].sent_start
-    assert not doc[0].sent_start
+    assert doc[5].is_sent_start is None
+    doc[5].is_sent_start = True
+    assert doc[5].is_sent_start is True
+    # Backwards compatibility
+    assert doc[0].sent_start is False
     doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 

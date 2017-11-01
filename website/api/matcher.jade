@@ -203,18 +203,18 @@ p
             |  dict describes a token.
 
 +infobox("Deprecation note", "⚠️")
-    .o-block
-        |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
-        |  are deprecated and have been replaced with a simpler
-        |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
-        |  patterns and a callback for a given match ID.
+    |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
+    |  are deprecated and have been replaced with a simpler
+    |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
+    |  patterns and a callback for a given match ID.
 
-    +code-new.
-        matcher.add('GoogleNow', merge_phrases, [{ORTH: 'Google'}, {ORTH: 'Now'}])
+    +code-wrapper
+        +code-new.
+            matcher.add('GoogleNow', merge_phrases, [{ORTH: 'Google'}, {ORTH: 'Now'}])
 
-    +code-old.
-        matcher.add_entity('GoogleNow', on_match=merge_phrases)
-        matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
+        +code-old.
+            matcher.add_entity('GoogleNow', on_match=merge_phrases)
+            matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
 
 +h(2, "remove") Matcher.remove
     +tag method

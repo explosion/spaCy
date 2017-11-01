@@ -162,7 +162,7 @@ p
         +cell int
         +cell The integer ID by which the flag value can be checked.
 
-+h(2, "add_flag") Vocab.clear_vectors
++h(2, "clear_vectors") Vocab.clear_vectors
     +tag method
     +tag-new(2)
 
@@ -181,7 +181,50 @@ p
             |  Number of dimensions of the new vectors. If #[code None], size
             |  is not changed.
 
-+h(2, "add_flag") Vocab.get_vector
++h(2, "prune_vectors") Vocab.prune_vectors
+    +tag method
+    +tag-new(2)
+
+p
+    |  Reduce the current vector table to #[code nr_row] unique entries. Words
+    |  mapped to the discarded vectors will be remapped to the closest vector
+    |  among those remaining. For example, suppose the original table had
+    |  vectors for the words:
+    |  #[code.u-break ['sat', 'cat', 'feline', 'reclined']]. If we prune the
+    |  vector table to, two rows, we would discard the vectors for "feline"
+    |  and "reclined". These words would then be remapped to the closest
+    |  remaining vector – so "feline" would have the same vector as "cat",
+    |  and "reclined" would have the same vector as "sat". The similarities are
+    |  judged by cosine. The original vectors may be large, so the cosines are
+    |  calculated in minibatches, to reduce memory usage.
+
++aside-code("Example").
+    nlp.vocab.prune_vectors(10000)
+    assert len(nlp.vocab.vectors) &lt;= 1000
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code nr_row]
+        +cell int
+        +cell The number of rows to keep in the vector table.
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell
+            |  Batch of vectors for calculating the similarities. Larger batch
+            |  sizes might be faster, while temporarily requiring more memory.
+
+    +row("foot")
+        +cell returns
+        +cell dict
+        +cell
+            |  A dictionary keyed by removed words mapped to
+            |  #[code (string, score)] tuples, where #[code string] is the entry
+            |  the removed word was mapped to, and #[code score] the similarity
+            |  score between the two words.
+
++h(2, "get_vector") Vocab.get_vector
     +tag method
     +tag-new(2)
 
@@ -206,7 +249,7 @@ p
             |  A word vector. Size and shape are determined by the
             |  #[code Vocab.vectors] instance.
 
-+h(2, "add_flag") Vocab.set_vector
++h(2, "set_vector") Vocab.set_vector
     +tag method
     +tag-new(2)
 
@@ -228,7 +271,7 @@ p
         +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
         +cell The vector to set.
 
-+h(2, "add_flag") Vocab.has_vector
++h(2, "has_vector") Vocab.has_vector
     +tag method
     +tag-new(2)
 

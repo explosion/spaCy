@@ -88,80 +88,94 @@ p
         |  while others are related to more general machine learning
         |  functionality.
 
-    +aside
-        |  If one of spaCy's functionalities #[strong needs a model], it means
-        |  that you need to have one of the available
-        |  #[+a("/models") statistical models] installed. Models are used
-        |  to #[strong predict] linguistic annotations – for example, if a word
-        |  is a verb or a noun.
-
-    +table(["Name", "Description", "Needs model"])
+    +table(["Name", "Description"])
         +row
             +cell #[strong Tokenization]
             +cell Segmenting text into words, punctuations marks etc.
-            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Part-of-speech] (POS) #[strong Tagging]
             +cell Assigning word types to tokens, like verb or noun.
-            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Dependency Parsing]
             +cell
                 |  Assigning syntactic dependency labels, describing the
                 |  relations between individual tokens, like subject or object.
-            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Lemmatization]
             +cell
                 |  Assigning the base forms of words. For example, the lemma of
                 |  "was" is "be", and the lemma of "rats" is "rat".
-            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Sentence Boundary Detection] (SBD)
             +cell Finding and segmenting individual sentences.
-            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Named Entity Recongition] (NER)
             +cell
                 |  Labelling named "real-world" objects, like persons, companies
                 |  or locations.
-            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Similarity]
             +cell
                 |  Comparing words, text spans and documents and how similar
                 |  they are to each other.
-            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Text Classification]
             +cell
                 |  Assigning categories or labels to a whole document, or parts
                 |  of a document.
-            +cell #[+procon("yes", "yes", true)]
 
         +row
             +cell #[strong Rule-based Matching]
             +cell
                 |  Finding sequences of tokens based on their texts and
                 |  linguistic annotations, similar to regular expressions.
-            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Training]
             +cell Updating and improving a statistical model's predictions.
-            +cell #[+procon("no", "no", true)]
 
         +row
             +cell #[strong Serialization]
             +cell Saving objects to files or byte strings.
-            +cell #[+procon("no", "no", true)]
+
+    +h(3, "statistical-models") Statistical models
+
+    p
+        |  While some of spaCy's features work independently, others require
+        |  #[+a("/models")  statistical models] to be loaded, which enable spaCy
+        |  to #[strong predict] linguistic annotations – for example,
+        |  whether a word is a verb or a noun. spaCy currently offers statistical
+        |  models for #[strong #{MODEL_LANG_COUNT} languages], which can be
+        |  installed as individual Python modules. Models can differ in size,
+        |  speed, memory usage, accuracy and the data they include. The model
+        |  you choose always depends on your use case and the texts you're
+        |  working with. For a general-purpose use case, the small, default
+        |  models are always a good start. They typically include the following
+        |  components:
+
+    +list
+        +item
+            |  #[strong Binary weights] for the part-of-speech tagger,
+            |  dependency parser and named entity recognizer to predict those
+            |  annotations in context.
+        +item
+            |  #[strong Lexical entries] in the vocabulary, i.e. words and their
+            |  context-independent attributes like the shape or spelling.
+        +item
+            |  #[strong Word vectors], i.e. multi-dimensional meaning
+            |  representations of words that let you determine how similar they
+            |  are to each other.
+        +item
+            |  #[strong Configuration] options, like the language and
+            |  processing pipeline settings, to put spaCy in the correct state
+            |  when you load in the model.
 
     +h(2, "annotations") Linguistic annotations
 
@@ -174,8 +188,13 @@ p
         |  or the object – or whether "google" is used as a verb, or refers to
         |  the website or company in a specific context.
 
+    +aside-code("Loading models", "bash", "$").
+        spacy download en
+        &gt;&gt;&gt; import spacy
+        &gt;&gt;&gt; nlp = spacy.load('en')
+
     p
-        |  Once you've downloaded and installed a #[+a("/usage/models") model],
+        |  Once you've #[+a("/usage/models") downloaded and installed] a model,
         |  you can load it via #[+api("spacy#load") #[code spacy.load()]]. This will
         |  return a #[code Language] object contaning all components and data needed
         |  to process text. We usually call it #[code nlp]. Calling the #[code nlp]

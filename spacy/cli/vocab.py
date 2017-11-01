@@ -1,31 +1,37 @@
-'''Compile a vocabulary from a lexicon jsonl file and word vectors.'''
 # coding: utf8
 from __future__ import unicode_literals
 
-from pathlib import Path
 import plac
 import json
 import spacy
 import numpy
-from spacy.util import ensure_path
+from pathlib import Path
+
+from ..vectors import Vectors
+from ..util import prints, ensure_path
 
 
 @plac.annotations(
     lang=("model language", "positional", None, str),
-    output_dir=("output directory to store model in", "positional", None, str),
+    output_dir=("model output directory", "positional", None, Path),
     lexemes_loc=("location of JSONL-formatted lexical data", "positional",
-                None, str),
-    vectors_loc=("location of vectors data, as numpy .npz (optional)",
-              "positional", None, str),
-    version=("Model version", "option", "V", str),
+                 None, Path),
+    vectors_loc=("optional: location of vectors data, as numpy .npz",
+                 "positional", None, str),
+    prune_vectors=("optional: number of vectors to prune to.",
+                   "option", "V", int)
 )
-def make_vocab(lang, output_dir, lexemes_loc, vectors_loc=None, version=None):
-    out_dir = ensure_path(output_dir)
-    jsonl_loc = ensure_path(lexemes_loc)
+def make_vocab(cmd, lang, output_dir, lexemes_loc,
+               vectors_loc=None, prune_vectors=-1):
+    """Compile a vocabulary from a lexicon jsonl file and word vectors."""
+    if not lexemes_loc.exists():
+        prints(lexemes_loc, title="Can't find lexical data", exits=1)
+    vectors_loc = ensure_path(vectors_loc)
     nlp = spacy.blank(lang)
     for word in nlp.vocab:
         word.rank = 0
-    with jsonl_loc.open() as file_:
+    lex_added = 0
+    with lexemes_loc.open() as file_:
         for line in file_:
             if line.strip():
                 attrs = json.loads(line)
@@ -35,14 +41,20 @@ def make_vocab(lang, output_dir, lexemes_loc, vectors_loc=None, version=None):
                     lex = nlp.vocab[attrs['orth']]
                     lex.set_attrs(**attrs)
                     assert lex.rank == attrs['id']
+                lex_added += 1
     if vectors_loc is not None:
-        vector_data = numpy.load(open(vectors_loc, 'rb'))
-        nlp.vocab.clear_vectors(width=vector_data.shape[1])
-        added = 0
+        vector_data = numpy.load(vectors_loc.open('rb'))
+        nlp.vocab.vectors = Vectors(data=vector_data)
         for word in nlp.vocab:
             if word.rank:
-                nlp.vocab.vectors.add(word.orth_, row=word.rank,
-                                      vector=vector_data[word.rank])
-                added += 1
-    nlp.to_disk(out_dir)
+                nlp.vocab.vectors.add(word.orth, row=word.rank)
+
+    if prune_vectors >= 1:
+        remap = nlp.vocab.prune_vectors(prune_vectors)
+    if not output_dir.exists():
+        output_dir.mkdir()
+    nlp.to_disk(output_dir)
+    vec_added = len(nlp.vocab.vectors)
+    prints("{} entries, {} vectors".format(lex_added, vec_added), output_dir,
+           title="Sucessfully compiled vocab and vectors, and saved model")
     return nlp

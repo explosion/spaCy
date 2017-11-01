@@ -23,4 +23,4 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [dict(exc_data)]
 
 
-TOKENIZER_EXCEPTIONS = dict(_exc)
+TOKENIZER_EXCEPTIONS = _exc
