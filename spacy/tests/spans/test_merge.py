@@ -14,7 +14,7 @@ def test_spans_merge_tokens(en_tokenizer):
     assert len(doc) == 4
     assert doc[0].head.text == 'Angeles'
     assert doc[1].head.text == 'start'
-    doc.merge(0, len('Los Angeles'), 'NNP', 'Los Angeles', 'GPE')
+    doc.merge(0, len('Los Angeles'), tag='NNP', lemma='Los Angeles', ent_type='GPE')
     assert len(doc) == 3
     assert doc[0].text == 'Los Angeles'
     assert doc[0].head.text == 'start'
@@ -36,7 +36,8 @@ def test_spans_merge_heads(en_tokenizer):
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
 
     assert len(doc) == 8
-    doc.merge(doc[3].idx, doc[4].idx + len(doc[4]), doc[4].tag_, 'pilates class', 'O')
+    doc.merge(doc[3].idx, doc[4].idx + len(doc[4]), tag=doc[4].tag_,
+              lemma='pilates class', ent_type='O')
     assert len(doc) == 7
     assert doc[0].head.i == 1
     assert doc[1].head.i == 1
@@ -53,7 +54,8 @@ def test_span_np_merges(en_tokenizer):
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
 
     assert doc[4].head.i == 1
-    doc.merge(doc[2].idx, doc[4].idx + len(doc[4]), 'NP', 'tool', 'O')
+    doc.merge(doc[2].idx, doc[4].idx + len(doc[4]), tag='NP', lemma='tool',
+              ent_type='O')
     assert doc[2].head.i == 1
 
     text = "displaCy is a lightweight and modern dependency parse tree visualization tool built with CSS3 and JavaScript."
@@ -63,7 +65,7 @@ def test_span_np_merges(en_tokenizer):
 
     ents = [(e[0].idx, e[-1].idx + len(e[-1]), e.label_, e.lemma_) for e in doc.ents]
     for start, end, label, lemma in ents:
-        merged = doc.merge(start, end, label, lemma, label)
+        merged = doc.merge(start, end, tag=label, lemma=lemma, ent_type=label)
         assert merged != None, (start, end, label, lemma)
 
 
@@ -88,7 +90,7 @@ def test_spans_entity_merge(en_tokenizer):
     assert len(doc) == 17
     for ent in doc.ents:
         label, lemma, type_ = (ent.root.tag_, ent.root.lemma_, max(w.ent_type_ for w in ent))
-        ent.merge(label, lemma, type_)
+        ent.merge(label=label, lemma=lemma, ent_type=type_)
     # check looping is ok
     assert len(doc) == 15
 
@@ -105,8 +107,8 @@ def test_spans_sentence_update_after_merge(en_tokenizer):
     sent1, sent2 = list(doc.sents)
     init_len = len(sent1)
     init_len2 = len(sent2)
-    doc[0:2].merge('none', 'none', 'none')
-    doc[-2:].merge('none', 'none', 'none')
+    doc[0:2].merge(label='none', lemma='none', ent_type='none')
+    doc[-2:].merge(label='none', lemma='none', ent_type='none')
     assert len(sent1) == init_len - 1
     assert len(sent2) == init_len2 - 1
 
@@ -122,5 +124,5 @@ def test_spans_subtree_size_check(en_tokenizer):
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
     sent1 = list(doc.sents)[0]
     init_len = len(list(sent1.root.subtree))
-    doc[0:2].merge('none', 'none', 'none')
+    doc[0:2].merge(label='none', lemma='none', ent_type='none')
     assert len(list(sent1.root.subtree)) == init_len - 1

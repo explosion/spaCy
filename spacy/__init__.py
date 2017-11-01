@@ -8,8 +8,14 @@ from . import util
 
 
 def load(name, **overrides):
-    from .deprecated import resolve_load_name
-    name = resolve_load_name(name, **overrides)
+    depr_path = overrides.get('path')
+    if depr_path not in (True, False, None):
+        util.deprecated(
+            "As of spaCy v2.0, the keyword argument `path=` is deprecated. "
+            "You can now call spacy.load with the path as its first argument, "
+            "and the model's meta.json will be used to determine the language "
+            "to load. For example:\nnlp = spacy.load('{}')".format(depr_path),
+            'error')
     return util.load_model(name, **overrides)
 
 
