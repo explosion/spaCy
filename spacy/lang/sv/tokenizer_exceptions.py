@@ -68,7 +68,7 @@ for exc_data in [
     {ORTH: "Sön.", LEMMA: "Söndag"},
     {ORTH: "sthlm", LEMMA: "Stockholm"},
     {ORTH: "gbg", LEMMA: "Göteborg"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [

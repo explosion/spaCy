@@ -68,7 +68,7 @@ for exc_data in [
     {ORTH: "\\n", POS: SPACE},
     {ORTH: "\u2014", POS: PUNCT, LEMMA: "--"},
     {ORTH: "\u00a0", POS: SPACE, LEMMA: "  "}]:
-    BASE_EXCEPTIONS[exc_data[ORTH]] = [dict(exc_data)]
+    BASE_EXCEPTIONS[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [

@@ -26,7 +26,7 @@ for exc_data in [
     {ORTH: "Vd.", LEMMA: PRON_LEMMA, NORM: "usted"},
     {ORTH: "Uds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
     {ORTH: "Vds.", LEMMA: PRON_LEMMA, NORM: "ustedes"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 # Times

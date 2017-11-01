@@ -8,7 +8,6 @@ _exc = {}
 
 for exc_data in [
     {ORTH: "Kbh.", LEMMA: "København", NORM: "København"},
-
     {ORTH: "Jan.", LEMMA: "januar", NORM: "januar"},
     {ORTH: "Feb.", LEMMA: "februar", NORM: "februar"},
     {ORTH: "Mar.", LEMMA: "marts", NORM: "marts"},
@@ -21,7 +20,7 @@ for exc_data in [
     {ORTH: "Okt.", LEMMA: "oktober", NORM: "oktober"},
     {ORTH: "Nov.", LEMMA: "november", NORM: "november"},
     {ORTH: "Dec.", LEMMA: "december", NORM: "december"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 for orth in [
     "A/S", "beg.", "bl.a.", "ca.", "d.s.s.", "dvs.", "f.eks.", "fr.", "hhv.",

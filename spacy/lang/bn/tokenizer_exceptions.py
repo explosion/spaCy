@@ -20,7 +20,7 @@ for exc_data in [
     {ORTH: "সে.মি.", LEMMA: "সেন্টিমিটার"},
     {ORTH: "সে.মি", LEMMA: "সেন্টিমিটার"},
     {ORTH: "মি.লি.", LEMMA: "মিলিলিটার"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 TOKENIZER_EXCEPTIONS = _exc
