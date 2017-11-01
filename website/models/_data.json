@@ -74,6 +74,7 @@
     "MODEL_LICENSES": {
         "CC BY-SA":     "https://creativecommons.org/licenses/by-sa/3.0/",
         "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
         "CC BY-NC":     "https://creativecommons.org/licenses/by-nc/3.0/",
         "CC BY-NC 3.0": "https://creativecommons.org/licenses/by-nc/3.0/",
         "GPL":          "https://www.gnu.org/licenses/gpl.html",
