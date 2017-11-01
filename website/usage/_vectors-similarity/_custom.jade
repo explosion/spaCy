@@ -161,10 +161,16 @@ p
         +cell float64 (double)
 
 +code.
-    from spacy.vectors import Vectors
+    nlp = spacy.load('en')
+    nlp.vocab.vectors.from_glove('/path/to/vectors')
 
-    vectors = Vectors([], 128)
-    vectors.from_glove('/path/to/vectors')
+p
+    |  If your instance of #[code Language] already contains vectors, they will
+    |  be overwritten. To create your own GloVe vectors model package like
+    |  spaCy's #[+a("/models/en#en_vectors_web_lg") #[code en_vectors_web_lg]],
+    |  you can call #[+api("language#to_disk") #[code nlp.to_disk]], and then
+    |  package the model using the #[+api("cli#package") #[code package]]
+    |  command.
 
 +h(3, "custom-loading-other") Loading other vectors
     +tag-new(2)
