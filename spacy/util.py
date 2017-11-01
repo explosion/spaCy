@@ -236,8 +236,6 @@ def is_in_jupyter():
 
 
 def get_cuda_stream(require=False):
-    # TODO: Error and tell to install chainer if not found
-    # Requires GPU
     return CudaStream() if CudaStream is not None else None
 
 
