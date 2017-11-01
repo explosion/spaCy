@@ -302,10 +302,7 @@ cdef class Token:
         def __get__(self):
             if 'vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector'](self)
-            if self.has_vector:
-                return self.vocab.get_vector(self.c.lex.orth)
-            else:
-                return self.doc.tensor[self.i]
+            return self.vocab.get_vector(self.c.lex.orth)
 
     property vector_norm:
         """The L2 norm of the token's vector representation.
