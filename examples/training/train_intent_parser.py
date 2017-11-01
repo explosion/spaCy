@@ -94,7 +94,7 @@ def main(model=None, output_dir=None, n_iter=100):
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'parser']
     with nlp.disable_pipes(*other_pipes):  # only train parser
-        optimizer = nlp.begin_training(lambda: [])
+        optimizer = nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}

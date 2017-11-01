@@ -436,8 +436,10 @@ class Language(object):
         **cfg: Config parameters.
         RETURNS: An optimizer
         """
+        if get_gold_tuples is None:
+            get_gold_tuples = lambda: []
         # Populate vocab
-        if get_gold_tuples is not None:
+        else:
             for _, annots_brackets in get_gold_tuples():
                 for annots, _ in annots_brackets:
                     for word in annots[1]:

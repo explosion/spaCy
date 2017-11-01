@@ -59,7 +59,7 @@ def main(model=None, output_dir=None, n_iter=20):
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'textcat']
     with nlp.disable_pipes(*other_pipes):  # only train textcat
-        optimizer = nlp.begin_training(lambda: [])
+        optimizer = nlp.begin_training()
         print("Training the model...")
         print('{:^5}\t{:^5}\t{:^5}\t{:^5}'.format('LOSS', 'P', 'R', 'F'))
         for i in range(n_iter):
