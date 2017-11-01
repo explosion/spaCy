@@ -240,7 +240,8 @@ export class ModelComparer {
         return data;
     }
 
-    showError() {
+    showError(err) {
+        console.error(err);
         this.tpl.get('result').style.display = 'none';
         this.tpl.get('error').style.display = 'block';
     }
