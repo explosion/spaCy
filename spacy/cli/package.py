@@ -99,7 +99,8 @@ def generate_meta(model_path, existing_meta):
     nlp = util.load_model_from_path(Path(model_path))
     meta['pipeline'] = nlp.pipe_names
     meta['vectors'] = {'width': nlp.vocab.vectors_length,
-                       'entries': len(nlp.vocab.vectors)}
+                       'vectors': len(nlp.vocab.vectors),
+                       'keys': nlp.vocab.vectors.n_keys}
     prints("Enter the package settings for your model. The following "
            "information will be read from your model data: pipeline, vectors.",
            title="Generating meta.json")

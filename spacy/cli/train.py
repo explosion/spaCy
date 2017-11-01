@@ -146,7 +146,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                 meta['speed'] = {'nwords': nwords, 'cpu': cpu_wps,
                                  'gpu': gpu_wps}
                 meta['vectors'] = {'width': nlp.vocab.vectors_length,
-                                   'entries': len(nlp.vocab.vectors)}
+                                   'vectors': len(nlp.vocab.vectors),
+                                   'keys': nlp.vocab.vectors.n_keys}
                 meta['lang'] = nlp.lang
                 meta['pipeline'] = pipeline
                 meta['spacy_version'] = '>=%s' % about.__version__
