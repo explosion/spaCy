@@ -307,7 +307,6 @@ class Tensorizer(Pipe):
         return tokvecs, bp_tokvecs
 
     def get_loss(self, docs, golds, scores):
-        # TODO: implement
         raise NotImplementedError
 
     def begin_training(self, gold_tuples=tuple(), pipeline=None):
@@ -336,11 +335,7 @@ class Tagger(Pipe):
 
     @property
     def labels(self):
-        return self.cfg.setdefault('tag_names', [])
-
-    @labels.setter
-    def labels(self, value):
-        self.cfg['tag_names'] = value
+        return self.vocab.morphology.tag_names
 
     def __call__(self, doc):
         tags = self.predict([doc])
@@ -369,7 +364,6 @@ class Tagger(Pipe):
         cdef Doc doc
         cdef int idx = 0
         cdef Vocab vocab = self.vocab
-        tags = list(self.labels)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, 'get'):
@@ -377,7 +371,7 @@ class Tagger(Pipe):
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0 and doc.c[j].pos == 0:
-                    vocab.morphology.assign_tag(&doc.c[j], tags[tag_id])
+                    vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
         doc.is_tagged = True
 
@@ -425,12 +419,9 @@ class Tagger(Pipe):
                         new_tag_map[tag] = {POS: X}
         cdef Vocab vocab = self.vocab
         if new_tag_map:
-            new_tag_map.update(orig_tag_map)
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
-        for tag in vocab.morphology.tag_names:
-            self.add_label(tag)
         if self.model is True:
             self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
@@ -443,14 +434,15 @@ class Tagger(Pipe):
     def add_label(self, label):
         if label in self.labels:
             return 0
-        if self.model not in (True, False, None):
-            smaller = self.model._layers[-1]
-            larger = Softmax(len(self.labels)+1, smaller.nI)
-            copy_array(larger.W[:smaller.nO], smaller.W)
-            copy_array(larger.b[:smaller.nO], smaller.b)
-            self.model._layers[-1] = larger
-        self.labels.append(label)
-        return 1
+        raise NotImplementedError
+        #if self.model not in (True, False, None):
+        #    smaller = self.model._layers[-1]
+        #    larger = Softmax(len(self.labels)+1, smaller.nI)
+        #    copy_array(larger.W[:smaller.nO], smaller.W)
+        #    copy_array(larger.b[:smaller.nO], smaller.b)
+        #    self.model._layers[-1] = larger
+        #self.labels.append(label)
+        #return 1
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -484,12 +476,11 @@ class Tagger(Pipe):
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
-            for tag in self.vocab.morphology.tag_names:
-                self.add_label(tag)
 
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('tag_map', load_tag_map),
+            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
             ('model', lambda b: load_model(b)),
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -521,8 +512,6 @@ class Tagger(Pipe):
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
-            for tag in self.vocab.morphology.tag_names:
-                self.add_label(tag)
 
         deserialize = OrderedDict((
             ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
