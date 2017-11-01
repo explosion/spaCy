@@ -484,6 +484,8 @@ class Tagger(Pipe):
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
+            for tag in self.vocab.morphology.tag_names:
+                self.add_label(tag)
 
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
@@ -519,6 +521,8 @@ class Tagger(Pipe):
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
+            for tag in self.vocab.morphology.tag_names:
+                self.add_label(tag)
 
         deserialize = OrderedDict((
             ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
