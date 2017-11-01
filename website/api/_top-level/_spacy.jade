@@ -58,16 +58,16 @@ p
     nlp.from_disk(model_data_path)          #  load in model data
 
 +infobox("Deprecation note", "⚠️")
-    .o-block
-        |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
-        |  will also raise an error if no model could be loaded and never just
-        |  return an empty #[code Language] object. If you need a blank language,
-        |  you can use the new function #[+api("spacy#blank") #[code spacy.blank()]]
-        |  or import the class explicitly, e.g.
-        |  #[code from spacy.lang.en import English].
+    |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
+    |  will also raise an error if no model could be loaded and never just
+    |  return an empty #[code Language] object. If you need a blank language,
+    |  you can use the new function #[+api("spacy#blank") #[code spacy.blank()]]
+    |  or import the class explicitly, e.g.
+    |  #[code from spacy.lang.en import English].
 
-    +code-new nlp = spacy.load('/model')
-    +code-old nlp = spacy.load('en', path='/model')
+    +code-wrapper
+        +code-new nlp = spacy.load('/model')
+        +code-old nlp = spacy.load('en', path='/model')
 
 +h(3, "spacy.blank") spacy.blank
     +tag function
