@@ -87,7 +87,7 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=50):
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
     with nlp.disable_pipes(*other_pipes):  # only train NER
         random.seed(0)
-        optimizer = nlp.begin_training(lambda: [])
+        optimizer = nlp.begin_training()
         for itn in range(n_iter):
             losses = {}
             gold_parses = get_gold_parses(nlp.make_doc, TRAIN_DATA)
