@@ -18,7 +18,6 @@ import random
 from pathlib import Path
 
 import spacy
-from spacy.util import get_lang_class
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
 
@@ -52,13 +51,13 @@ def main(lang='en', output_dir=None, n_iter=25):
     train the tagger with a custom tag map, we're creating a new Language
     instance with a custom vocab.
     """
-    lang_cls = get_lang_class(lang)  # get Language class
-    lang_cls.Defaults.tag_map.update(TAG_MAP)  # add tag map to defaults
-    nlp = lang_cls()  # initialise Language class
-
+    nlp = spacy.blank(lang)
     # add the tagger to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
     tagger = nlp.create_pipe('tagger')
+    # Add the tags. This needs to be done before you start training.
+    for tag, values in TAG_MAP.items():
+        tagger.add_label(tag, values)
     nlp.add_pipe(tagger)
 
     optimizer = nlp.begin_training()

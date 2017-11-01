@@ -431,18 +431,31 @@ class Tagger(Pipe):
     def Model(cls, n_tags, **cfg):
         return build_tagger_model(n_tags, **cfg)
 
-    def add_label(self, label):
+    def add_label(self, label, values=None):
         if label in self.labels:
             return 0
-        raise NotImplementedError
-        #if self.model not in (True, False, None):
-        #    smaller = self.model._layers[-1]
-        #    larger = Softmax(len(self.labels)+1, smaller.nI)
-        #    copy_array(larger.W[:smaller.nO], smaller.W)
-        #    copy_array(larger.b[:smaller.nO], smaller.b)
-        #    self.model._layers[-1] = larger
-        #self.labels.append(label)
-        #return 1
+        if self.model not in (True, False, None):
+            # Here's how the model resizing will work, once the
+            # neuron-to-tag mapping is no longer controlled by
+            # the Morphology class, which sorts the tag names.
+            # The sorting makes adding labels difficult.
+            # smaller = self.model._layers[-1]
+            # larger = Softmax(len(self.labels)+1, smaller.nI)
+            # copy_array(larger.W[:smaller.nO], smaller.W)
+            # copy_array(larger.b[:smaller.nO], smaller.b)
+            # self.model._layers[-1] = larger
+            raise ValueError(
+                "Resizing pre-trained Tagger models is not "
+                "currently supported.")
+        tag_map = dict(self.vocab.morphology.tag_map)
+        if values is None:
+            values = {POS: "X"}
+        tag_map[label] = values
+        self.vocab.morphology = Morphology(
+            self.vocab.strings, tag_map=tag_map,
+            lemmatizer=self.vocab.morphology.lemmatizer,
+            exc=self.vocab.morphology.exc)
+        return 1
 
     def use_params(self, params):
         with self.model.use_params(params):
