@@ -1,6 +1,6 @@
 'use strict';
 
-import { Templater, handleResponse, convertNumber } from './util.js';
+import { Templater, handleResponse, convertNumber, abbrNumber } from './util.js';
 
 /**
  * Chart.js defaults
@@ -25,7 +25,7 @@ export const formats = {
     license: (license, url) => url ? `<a href="${url}" target="_blank">${license}</a>` : license,
     sources: sources => (sources instanceof Array) ? sources.join(', ') : sources,
     pipeline: pipes => (pipes && pipes.length) ? pipes.map(p => `<code>${p}</code>`).join(', ') : '-',
-    vectors: vec => vec ? `${convertNumber(vec.entries)} (${vec.width} dimensions)` : 'n/a',
+    vectors: vec => vec ? `${abbrNumber(vec.keys)} keys, ${abbrNumber(vec.vectors)} unique vectors (${vec.width} dimensions)` : 'n/a',
     version: version => `<code>v${version}</code>`
 };
 

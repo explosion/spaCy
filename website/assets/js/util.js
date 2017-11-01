@@ -46,11 +46,24 @@ export const handleResponse = res => {
     else return ({ ok: res.ok })
 };
 
-
 /**
  * Convert a number to a string and add thousand separator.
  * @param {number|string} num - The number to convert.
  * @param {string} separator – Thousand separator.
  */
-export const convertNumber = (num, separator = ',') =>
+export const convertNumber = (num = 0, separator = ',') =>
     num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+
+/**
+ * Abbreviate a number, e.g. 14249930 --> 14.25m.
+ * @param {number|string} num - The number to convert.
+ * @param {number} fixed - Number of decimals.
+ */
+export const abbrNumber = (num = 0, fixed = 2) => {
+    const suffixes = ['', 'k', 'm', 'b', 't'];
+    if (num === null || num === 0) return 0;
+    const b = num.toPrecision(2).split('e');
+    const k = (b.length === 1) ? 0 : Math.floor(Math.min(b[1].slice(1), 14) / 3);
+    const c = (k < 1) ? num.toFixed(fixed) : (num / Math.pow(10, k * 3)).toFixed(fixed + 1);
+    return (c < 0 ? c : Math.abs(c)) + suffixes[k];
+}
