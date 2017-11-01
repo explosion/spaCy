@@ -2,7 +2,7 @@
 
 p
     |  spaCy makes it very easy to create your own pipelines consisting of
-    |  reusable components – this includes spaCy's default tensorizer, tagger,
+    |  reusable components – this includes spaCy's default tagger,
     |  parser and entity regcognizer, but also your own custom processing
     |  functions. A pipeline component can be added to an already existing
     |  #[code nlp] object, specified when initialising a #[code Language] class,
@@ -49,9 +49,9 @@ p
     nlp = spacy.load('en')
 
 p
-    | ... the model tells spaCy to use the language #[code "en"] and the pipeline
-    |  #[code.u-break ["tensorizer", "tagger", "parser", "ner"]]. spaCy will
-    |  then initialise #[code spacy.lang.en.English], and create each pipeline
+    | ... the model tells spaCy to use the language #[code "en"] and the
+    |  pipeline #[code.u-break ["tagger", "parser", "ner"]]. spaCy will then
+    |  initialise #[code spacy.lang.en.English], and create each pipeline
     |  component and add it to the processing pipeline. It'll then load in the
     |  model's data from its data ditectory and return the modified
     |  #[code Language] class for you to use as the #[code nlp] object.
@@ -72,7 +72,7 @@ p
 
 +code("spacy.load under the hood").
     lang = 'en'
-    pipeline = ['tensorizer', 'tagger', 'parser', 'ner']
+    pipeline = ['tagger', 'parser', 'ner']
     data_path = 'path/to/en_core_web_sm/en_core_web_sm-2.0.0'
 
     cls = spacy.util.get_lang_class(lang)   # 1. get Language instance, e.g. English()
@@ -120,7 +120,7 @@ p
 
 +code.
     nlp = spacy.load('en', disable['parser', 'tagger'])
-    nlp = English().from_disk('/model', disable=['tensorizer', 'ner'])
+    nlp = English().from_disk('/model', disable=['ner'])
 
 p
     |  You can also use the #[+api("language#remove_pipe") #[code remove_pipe]]

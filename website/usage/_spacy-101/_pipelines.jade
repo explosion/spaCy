@@ -5,10 +5,9 @@ p
     |  produce a #[code Doc] object. The #[code Doc] is then processed in several
     |  different steps – this is also referred to as the
     |  #[strong processing pipeline]. The pipeline used by the
-    |  #[+a("/models") default models] consists of a
-    |  tensorizer, a tagger, a parser and an entity recognizer. Each pipeline
-    |  component returns the processed #[code Doc], which is then passed on to
-    |  the next component.
+    |  #[+a("/models") default models] consists of a tagger, a parser and an
+    |  entity recognizer. Each pipeline component returns the processed
+    |  #[code Doc], which is then passed on to the next component.
 
 +graphic("/assets/img/pipeline.svg")
     include ../../assets/img/pipeline.svg
@@ -21,42 +20,44 @@ p
 
 +table(["Name", "Component", "Creates", "Description"])
     +row
-        +cell tokenizer
+        +cell #[strong tokenizer]
         +cell #[+api("tokenizer") #[code Tokenizer]]
         +cell #[code Doc]
         +cell Segment text into tokens.
 
     +row("divider")
-        +cell tensorizer
-        +cell #[+api("tensorizer") Tensorizer]
-        +cell #[code Doc.tensor]
-        +cell Create feature representation tensor for #[code Doc].
-
-    +row
-        +cell tagger
+        +cell #[strong tagger]
         +cell #[+api("tagger") #[code Tagger]]
         +cell #[code Doc[i].tag]
         +cell Assign part-of-speech tags.
 
     +row
-        +cell parser
+        +cell #[strong parser]
         +cell #[+api("dependencyparser") #[code DependencyParser]]
         +cell
-            |  #[code Doc[i].head], #[code Doc[i].dep], #[code Doc.sents],
+            |  #[code Doc[i].head],
+            |  #[code Doc[i].dep],
+            |  #[code Doc.sents],
             |  #[code Doc.noun_chunks]
         +cell Assign dependency labels.
 
     +row
-        +cell ner
+        +cell #[strong ner]
         +cell #[+api("entityrecognizer") #[code EntityRecognizer]]
         +cell #[code Doc.ents], #[code Doc[i].ent_iob], #[code Doc[i].ent_type]
         +cell Detect and label named entities.
 
     +row
-        +cell textcat
+        +cell #[strong textcat]
         +cell #[+api("textcategorizer") #[code TextCategorizer]]
         +cell #[code Doc.cats]
         +cell Assign document labels.
+
+    +row("divider")
+        +cell #[strong &period;&period;&period;]
+        +cell #[+a("/usage/processing-pipelines#custom-components") custom components]
+        +cell #[code Doc._.xxx], #[code Token._.xxx], #[code Span._.xxx]
+        +cell Assign custom attributes, methods or properties.
 
 p
     |  The processing pipeline always #[strong depends on the statistical model]
@@ -66,17 +67,16 @@ p
     |  in its meta data, as a simple list containing the component names:
 
 +code(false, "json").
-    "pipeline": ["tensorizer", "tagger", "parser", "ner"]
+    "pipeline": ["tagger", "parser", "ner"]
 
 p
     |  Although you can mix and match pipeline components, their
     |  #[strong order and combination] is usually important. Some components may
-    |  require certain modifications on the #[code Doc] to process it. For
-    |  example, the default pipeline first applies the tensorizer, which
-    |  pre-processes the doc and encodes its internal
+    |  require certain modifications on the #[code Doc] to process it. As the
+    |  processing pipeline is applied, spaCy encodes the document's internal
     |  #[strong meaning representations] as an array of floats, also called a
     |  #[strong tensor]. This includes the tokens and their context, which is
-    |  required for the next component, the tagger, to make predictions of the
+    |  required for the first component, the tagger, to make predictions of the
     |  part-of-speech tags. Because spaCy's models are neural network models,
     |  they only "speak" tensors and expect the input #[code Doc] to have
     |  a #[code tensor].
