@@ -127,7 +127,8 @@ def test_doc_api_merge(en_tokenizer):
     # merge 'The Beach Boys'
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), 'NAMED', 'LEMMA', 'TYPE')
+    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), tag='NAMED', lemma='LEMMA',
+              ent_type='TYPE')
     assert len(doc) == 7
     assert doc[4].text == 'the beach boys'
     assert doc[4].text_with_ws == 'the beach boys '
@@ -136,7 +137,8 @@ def test_doc_api_merge(en_tokenizer):
     # merge 'all night'
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.merge(doc[7].idx, doc[8].idx + len(doc[8]), 'NAMED', 'LEMMA', 'TYPE')
+    doc.merge(doc[7].idx, doc[8].idx + len(doc[8]), tag='NAMED', lemma='LEMMA',
+              ent_type='TYPE')
     assert len(doc) == 8
     assert doc[7].text == 'all night'
     assert doc[7].text_with_ws == 'all night'
@@ -147,7 +149,8 @@ def test_doc_api_merge_children(en_tokenizer):
     text = "WKRO played songs by the beach boys all night"
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), 'NAMED', 'LEMMA', 'TYPE')
+    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), tag='NAMED', lemma='LEMMA',
+              ent_type='TYPE')
 
     for word in doc:
         if word.i < word.head.i:
@@ -159,8 +162,8 @@ def test_doc_api_merge_children(en_tokenizer):
 def test_doc_api_merge_hang(en_tokenizer):
     text = "through North and South Carolina"
     doc = en_tokenizer(text)
-    doc.merge(18, 32, '', '', 'ORG')
-    doc.merge(8, 32, '', '', 'ORG')
+    doc.merge(18, 32, tag='', lemma='', ent_type='ORG')
+    doc.merge(8, 32, tag='', lemma='', ent_type='ORG')
 
 
 def test_doc_api_sents_empty_string(en_tokenizer):
@@ -188,7 +191,8 @@ def test_doc_api_runtime_error(en_tokenizer):
         if len(np) > 1:
             nps.append((np.start_char, np.end_char, np.root.tag_, np.text, np.root.ent_type_))
     for np in nps:
-        doc.merge(*np)
+        start, end, tag, lemma, ent_type = np
+        doc.merge(start, end, tag=tag, lemma=lemma, ent_type=ent_type)
 
 
 def test_doc_api_right_edge(en_tokenizer):
