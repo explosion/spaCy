@@ -17,7 +17,6 @@
         "Pipeline": {
             "Language": "language",
             "Pipe": "pipe",
-            "Tensorizer": "tensorizer",
             "Tagger": "tagger",
             "DependencyParser": "dependencyparser",
             "EntityRecognizer": "entityrecognizer",
@@ -177,14 +176,6 @@
         "title": "Tagger",
         "teaser": "Annotate part-of-speech tags on documents.",
         "tag": "class",
-        "source": "spacy/pipeline.pyx"
-    },
-
-    "tensorizer": {
-        "title": "Tensorizer",
-        "teaser": "Add a tensor with position-sensitive meaning representations to a document.",
-        "tag": "class",
-        "tag_new": 2,
         "source": "spacy/pipeline.pyx"
     },
 

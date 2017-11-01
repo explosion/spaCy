@@ -20,9 +20,8 @@ p
     |  Aside from spaCy's built-in word vectors, which were trained on a lot of
     |  text with a wide vocabulary, the parsing, tagging and NER models also
     |  rely on vector representations of the #[strong meanings of words in context].
-    |  As the first component of the
-    |  #[+a("/usage/processing-pipelines") processing pipeline], the
-    |  tensorizer encodes a document's internal meaning representations as an
+    |  As the  #[+a("/usage/processing-pipelines") processing pipeline] is
+    |  applied spaCy encodes a document's internal meaning representations as an
     |  array of floats, also called a tensor. This allows spaCy to make a
     |  reasonable guess at a word's meaning, based on its surrounding words.
     |  Even if a word hasn't been seen before, spaCy will know #[em something]

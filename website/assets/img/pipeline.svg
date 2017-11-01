@@ -18,13 +18,13 @@
     <path fill="#f8cecc" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M176 58h103.3L296 88l-16.8 30H176l16.8-30z"/>
     <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="58" height="14" transform="translate(206.5 80.5)">tokenizer</text>
     <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M314 58h103.3L434 88l-16.8 30H314l16.8-30z"/>
-    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="62" height="14" transform="translate(342.5 80.5)">tensorizer</text>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="8" width="62" height="14" transform="translate(342.5 80.5)">tagger</text>
     <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M296.5 88.2h24.7"/>
     <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M327.2 88.2l-8 4 2-4-2-4z"/>
     <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M416 58h103.3L536 88l-16.8 30H416l16.8-30z"/>
-    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="40" height="14" transform="translate(455.5 80.5)">tagger</text>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="40" height="14" transform="translate(455.5 80.5)">parser</text>
     <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M519 58h103.3L639 88l-16.8 30H519l16.8-30z"/>
-    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="40" height="14" transform="translate(558.5 80.5)">parser</text>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="8" width="40" height="14" transform="translate(558.5 80.5)">ner</text>
     <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M622 58h103.3L742 88l-16.8 30H622l16.8-30z"/>
-    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="20" height="14" transform="translate(671.5 80.5)">ner</text>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="8" width="20" height="14" transform="translate(671.5 80.5)">...</text>
 </svg>

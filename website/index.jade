@@ -54,7 +54,7 @@ include _includes/_mixins
 .o-content
     +grid
         +grid-col("two-thirds")
-            +terminal("lightning_tour.py").
+            +terminal("lightning_tour.py", "More examples", "/usage/spacy-101#lightning-tour").
                 # Install: pip install spacy && spacy download en
                 import spacy
 
@@ -65,15 +65,17 @@ include _includes/_mixins
                 text = open('war_and_peace.txt').read()
                 doc = nlp(text)
 
-                # Hook in your own deep learning models
-                similarity_model = load_my_neural_network()
-                def install_similarity(doc):
-                    doc.user_hooks['similarity'] = similarity_model
-                nlp.pipeline.append(install_similarity)
+                # Find named entities, phrases and concepts
+                for entity in doc.ents:
+                    print(entity.text, entity.label_)
 
+                # Determine semantic similarities
                 doc1 = nlp(u'the fries were gross')
                 doc2 = nlp(u'worst fries ever')
                 doc1.similarity(doc2)
+
+                # Hook in your own deep learning models
+                nlp.add_pipe(load_my_model(), before='parser')
 
         +grid-col("third")
             +h(2) Features

@@ -67,7 +67,7 @@ class BaseDefaults(object):
                          infix_finditer=infix_finditer,
                          token_match=token_match)
 
-    pipe_names = ['tensorizer', 'tagger', 'parser', 'ner']
+    pipe_names = ['tagger', 'parser', 'ner']
     token_match = TOKEN_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)

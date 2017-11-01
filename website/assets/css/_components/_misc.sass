@@ -6,6 +6,7 @@
     padding: $border-radius
     border-radius: 1em
     width: 100%
+    position: relative
 
 .x-terminal__icons
     position: absolute
@@ -39,3 +40,13 @@
     width: 100%
     max-width: 100%
     white-space: pre-wrap
+
+
+.x-terminal__button.x-terminal__button
+    @include position(absolute, bottom, right, 2.65rem, 2.6rem)
+    background: $color-dark
+    border-color: $color-dark
+
+    &:hover
+        background: darken($color-dark, 5)
+        border-color: darken($color-dark, 5)
