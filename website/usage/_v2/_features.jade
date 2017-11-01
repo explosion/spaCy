@@ -164,14 +164,17 @@ p
     |  The improved #[code spacy.load] makes loading models easier and more
     |  transparent. You can load a model by supplying its
     |  #[+a("/usage/models#usage") shortcut link], the name of an installed
-    |  #[+a("/usage/saving-loading#generating") model package] or a path.
-    |  The #[code Language] class to initialise will be determined based on the
-    |  model's settings. For a blank language, you can import the class directly,
-    |  e.g. #[code from spacy.lang.en import English].
+    |  #[+a("/models") model package] or a path. The #[code Language] class to
+    |  initialise will be determined based on the model's settings. For a blank l
+    |  anguage, you can import the class directly, e.g.
+    |  #[code.u-break from spacy.lang.en import English] or use
+    |  #[+api("spacy#blank") #[code spacy.blank()]].
 
 +infobox
-    |  #[+label-inline API:] #[+api("spacy#load") #[code spacy.load]]
-    |  #[+label-inline Usage:] #[+a("/usage/saving-loading") Saving and loading]
+    |  #[+label-inline API:] #[+api("spacy#load") #[code spacy.load]],
+    |  #[+api("language#to_disk") #[code Language.to_disk]]
+    |  #[+label-inline Usage:] #[+a("/usage/models#usage") Models],
+    |  #[+a("/usage/training#saving-loading") Saving and loading]
 
 +h(3, "features-displacy") displaCy visualizer with Jupyter support
 
@@ -190,7 +193,7 @@ p
     |  visualizations in your notebook.
 
 +infobox
-    |  #[+label-inline API:] #[+api("displacy") #[code displacy]]
+    |  #[+label-inline API:] #[+api("top-level#displacy") #[code displacy]]
     |  #[+label-inline Usage:] #[+a("/usage/visualizers") Visualizing spaCy]
 
 +h(3, "features-language") Improved language data and lazy loading
@@ -222,7 +225,7 @@ p
 
 p
     |  Patterns can now be added to the matcher by calling
-    |  #[+api("matcher-add") #[code matcher.add()]] with a match ID, an optional
+    |  #[+api("matcher#add") #[code matcher.add()]] with a match ID, an optional
     |  callback function to be invoked on each match, and one or more patterns.
     |  This allows you to write powerful, pattern-specific logic using only one
     |  matcher. For example, you might only want to merge some entity types,
@@ -234,4 +237,5 @@ p
 +infobox
     |  #[+label-inline API:] #[+api("matcher") #[code Matcher]],
     |  #[+api("phrasematcher") #[code PhraseMatcher]]
-    |  #[+label-inline Usage:] #[+a("/usage/rule-based-matching") Rule-based matching]
+    |  #[+label-inline Usage:]
+    |  #[+a("/usage/linguistic-features#rule-based-matching") Rule-based matching]

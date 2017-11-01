@@ -64,7 +64,7 @@ p
 
 p
     |  If you've been using custom pipeline components, check out the new
-    |  guide on #[+a("/usage/language-processing-pipelines") processing pipelines].
+    |  guide on #[+a("/usage/processing-pipelines") processing pipelines].
     |  Pipeline components are now #[code (name, func)] tuples. Appending
     |  them to the pipeline still works – but the
     |  #[+api("language#add_pipe") #[code add_pipe]] method now makes this
@@ -191,7 +191,7 @@ p
     |  matcher now also supports string keys, which saves you an extra import.
     |  If you've been using #[strong acceptor functions], you'll need to move
     |  this logic into the
-    |  #[+a("/usage/rule-based-matching#on_match") #[code on_match] callbacks].
+    |  #[+a("/usage/linguistic-features#on_match") #[code on_match] callbacks].
     |  The callback function is invoked on every match and will give you access to
     |  the doc, the index of the current match and all total matches. This lets
     |  you both accept or reject the match, and define the actions to be

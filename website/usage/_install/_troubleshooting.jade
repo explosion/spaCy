@@ -33,7 +33,7 @@ p
     OSError: symbolic link privilege not held
 
 p
-    |  To create #[+a("/usage/models/#usage") shortcut links] that let you
+    |  To create #[+a("/usage/models#usage") shortcut links] that let you
     |  load models by name, spaCy creates a symbolic link in the
     |  #[code spacy/data] directory. This means your user needs permission to do
     |  this. The above error mostly occurs when doing a system-wide installation,
@@ -76,7 +76,7 @@ p
 p
     |  As of spaCy v1.7, all models can be installed as Python packages. This means
     |  that they'll become importable modules of your application. When creating
-    |  #[+a("/usage/models/#usage") shortcut links], spaCy will also try
+    |  #[+a("/usage/models#usage") shortcut links], spaCy will also try
     |  to import the model to load its meta data. If this fails, it's usually a
     |  sign that the package is not installed in the current environment.
     |  Run #[code pip list] or #[code pip freeze] to check which model packages
@@ -93,9 +93,8 @@ p
 p
     |  This error may occur when using #[code spacy.load()] to load
     |  a language model – either because you haven't set up a
-    |  #[+a("/usage/models/#usage") shortcut link] for it, or because it
-    |  doesn't actually exist. Set up a
-    |  #[+a("/usage/models/#usage") shortcut link] for the model
+    |  #[+a("/usage/models#usage") shortcut link] for it, or because it
+    |  doesn't actually exist. Set up a link for the model
     |  you want to load. This can either be an installed model package, or a
     |  local directory containing the model data. If you want to use one of the
     |  #[+a("/usage/models#languages") alpha tokenizers] for

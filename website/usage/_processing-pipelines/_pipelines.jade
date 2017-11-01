@@ -7,11 +7,11 @@ p
     |  functions. A pipeline component can be added to an already existing
     |  #[code nlp] object, specified when initialising a #[code Language] class,
     |  or defined within a
-    |  #[+a("/usage/saving-loading#models-generating") model package].
+    |  #[+a("/usage/training#saving-loading") model package].
 
 p
     |  When you load a model, spaCy first consults the model's
-    |  #[+a("/usage/saving-loading#models-generating") #[code meta.json]]. The
+    |  #[+a("/usage/training#saving-loading") #[code meta.json]]. The
     |  meta typically includes the model details, the ID of a language class,
     |  and an optional list of pipeline components. spaCy then does the
     |  following:
@@ -27,7 +27,7 @@ p
 +list("numbers")
     +item
         |  Load the #[strong language class and data] for the given ID via
-        |  #[+api("util.get_lang_class") #[code get_lang_class]] and initialise
+        |  #[+api("top-level#util.get_lang_class") #[code get_lang_class]] and initialise
         |  it. The #[code Language] class contains the shared vocabulary,
         |  tokenization rules and the language-specific annotation scheme.
     +item
