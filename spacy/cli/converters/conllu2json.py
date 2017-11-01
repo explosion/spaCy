@@ -27,8 +27,8 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
             docs.append(doc)
             sentences = []
 
+    output_filename = input_path.parts[-1].replace(".conll", ".json")
     output_filename = input_path.parts[-1].replace(".conllu", ".json")
-    output_filename = output_filename.parts[-1].replace(".conll", ".json")
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
