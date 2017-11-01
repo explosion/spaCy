@@ -330,9 +330,29 @@ cdef class Token:
             return self.c.r_kids
 
     property sent_start:
-        # TODO: fix and document
+        # TODO deprecation warning
         def __get__(self):
-            return self.c.sent_start
+            # Handle broken backwards compatibility case: doc[0].sent_start
+            # was False.
+            if self.i == 0:
+                return False
+            else:
+                return self.sent_start
+
+        def __set__(self, value):
+            self.is_sent_start = value
+
+    property is_sent_start:
+        """RETURNS (bool / None): Whether the token starts a sentence.
+            None if unknown.
+        """
+        def __get__(self):
+            if self.c.sent_start == 0:
+                return None
+            elif self.c.sent_start < 0:
+                return False
+            else:
+                return True
 
         def __set__(self, value):
             if self.doc.is_parsed:
