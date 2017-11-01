@@ -19,6 +19,7 @@ from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..compat import is_config
+from .. import util
 from .. import about
 from .underscore import Underscore
 
@@ -330,8 +331,14 @@ cdef class Token:
             return self.c.r_kids
 
     property sent_start:
-        # TODO deprecation warning
         def __get__(self):
+            util.deprecated(
+                "Token.sent_start is now deprecated. Use Token.is_sent_start "
+                "instead, which returns a boolean value or None if the answer "
+                "is unknown – instead of a misleading 0 for False and 1 for "
+                "True. It also fixes a quirk in the old logic that would "
+                "always set the property to 0 for the first word of the "
+                "document.")
             # Handle broken backwards compatibility case: doc[0].sent_start
             # was False.
             if self.i == 0:

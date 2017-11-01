@@ -108,6 +108,7 @@ export class ModelLoader {
         this.renderCompat(tpl, modelId);
         tpl.get('download').setAttribute('href', `${this.repo}/releases/tag/${model}`);
         tpl.get('table').removeAttribute('data-loading');
+        tpl.get('error').style.display = 'none';
     }
 
     renderDetails(tpl, { version, size, description, notes, author, url,
@@ -241,7 +242,7 @@ export class ModelComparer {
     }
 
     showError(err) {
-        console.error(err);
+        console.error(err || 'Error');
         this.tpl.get('result').style.display = 'none';
         this.tpl.get('error').style.display = 'block';
     }
@@ -286,6 +287,8 @@ export class ModelComparer {
         this.chart.update();
         [model1, model2].forEach((model, i) => this.renderTable(metaKeys, i + 1, model));
         this.tpl.get('result').removeAttribute('data-loading');
+        this.tpl.get('error').style.display = 'none';
+        this.tpl.get('result').style.display = 'block';
     }
 
     renderTable(metaKeys, i, { lang, name, version, size, description,

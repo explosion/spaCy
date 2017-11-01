@@ -161,7 +161,7 @@ def test_is_sent_start(en_tokenizer):
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True
     # Backwards compatibility
-    assert doc[0].sent_start is False
+    with pytest.warns(DeprecationWarning):
+        assert doc[0].sent_start is False
     doc.is_parsed = True
     assert len(list(doc.sents)) == 2
-

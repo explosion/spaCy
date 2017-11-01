@@ -62,7 +62,11 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):
-        # TODO: deprecation warning
+        util.deprecated(
+            "Tokenizer.from_from list is now deprecated. Create a new Doc "
+            "object instead and pass in the strings as the `words` keyword "
+            "argument, for example:\nfrom spacy.tokens import Doc\n"
+            "doc = Doc(nlp.vocab, words=[...])")
         return Doc(self.vocab, words=strings)
 
     @cython.boundscheck(False)

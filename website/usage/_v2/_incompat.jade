@@ -1,6 +1,14 @@
 //- 💫 DOCS > USAGE > WHAT'S NEW IN V2.0 > BACKWARDS INCOMPATIBILITIES
 
+p
+    |  The following modules, classes and methods have changed between v1.x
+    |  and v2.0.
+
 +table(["Old", "New"])
+    +row
+        +cell #[code spacy.download.en], #[code spacy.download.de]
+        +cell #[+api("cli#download") #[code cli.download]]
+
     +row
         +cell
             |  #[code spacy.en] etc.
@@ -135,6 +143,17 @@
     +row
         +cell #[code Token.is_ancestor_of]
         +cell #[+api("token#is_ancestor") #[code Token.is_ancestor]]
+
++h(3, "deprecated") Deprecated
+
+p
+    |  The following methods are deprecated. They can still be used,
+    |  but should be replaced.
+
++table(["Old", "New"])
+    +row
+        +cell #[code Tokenizer.tokens_from_list]
+        +cell #[+api("doc") #[code Doc]]
 
     +row
         +cell #[code Span.sent_start]
