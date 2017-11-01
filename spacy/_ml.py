@@ -434,7 +434,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
     pretrained_dims = cfg.get('pretrained_dims', 0)
     with Model.define_operators({'>>': chain, '+': add, '|': concatenate,
                                  '**': clone}):
-        if cfg.get('low_data'):
+        if cfg.get('low_data') and pretrained_dims:
             model = (
                 SpacyVectors
                 >> flatten_add_lengths
