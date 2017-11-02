@@ -59,11 +59,12 @@ export const convertNumber = (num = 0, separator = ',') =>
  * @param {number|string} num - The number to convert.
  * @param {number} fixed - Number of decimals.
  */
-export const abbrNumber = (num = 0, fixed = 2) => {
+export const abbrNumber = (num = 0, fixed = 1) => {
     const suffixes = ['', 'k', 'm', 'b', 't'];
     if (num === null || num === 0) return 0;
     const b = num.toPrecision(2).split('e');
     const k = (b.length === 1) ? 0 : Math.floor(Math.min(b[1].slice(1), 14) / 3);
-    const c = (k < 1) ? num.toFixed(fixed) : (num / Math.pow(10, k * 3)).toFixed(fixed + 1);
+    const n = (k < 1) ? num : num / Math.pow(10, k * 3);
+    const c = (k >= 1 && n >= 100 ) ? Math.round(n) : n.toFixed(fixed);
     return (c < 0 ? c : Math.abs(c)) + suffixes[k];
 }
