@@ -20,21 +20,33 @@ const CHART_FONTS = {
  * @property {function} vectors - Format vector data (entries and dimensions).
  * @property {function} version - Format model version number.
  */
-export const formats = {
+const formats = {
     author: (author, url) => url ? `<a href="${url}" target="_blank">${author}</a>` : author,
     license: (license, url) => url ? `<a href="${url}" target="_blank">${license}</a>` : license,
     sources: sources => (sources instanceof Array) ? sources.join(', ') : sources,
     pipeline: pipes => (pipes && pipes.length) ? pipes.map(p => `<code>${p}</code>`).join(', ') : '-',
-    vectors: vec => vec ? `${abbrNumber(vec.keys)} keys, ${abbrNumber(vec.vectors)} unique vectors (${vec.width} dimensions)` : 'n/a',
+    vectors: vec => formatVectors(vec),
     version: version => `<code>v${version}</code>`
 };
+
+/**
+ * Format word vectors data depending on contents.
+ * @property {Object} data - The vectors object from the model's meta.json.
+ */
+const formatVectors = data => {
+    if (!data) return 'n/a';
+    if (Object.values(data).every(n => n == 0)) return 'context vectors only';
+    const { keys, vectors: vecs, width } = data;
+    return `${abbrNumber(keys)} keys, ${abbrNumber(vecs)} unique vectors (${width} dimensions)`;
+}
+
 
 /**
  * Find the latest version of a model in a compatibility table.
  * @param {string} model - The model name.
  * @param {Object} compat - Compatibility table, keyed by spaCy version.
  */
-export const getLatestVersion = (model, compat = {}) => {
+const getLatestVersion = (model, compat = {}) => {
     for (let [spacy_v, models] of Object.entries(compat)) {
         if (models[model]) return models[model][0];
     }
@@ -90,7 +102,7 @@ export class ModelLoader {
         const tpl = new Templater(modelId);
         tpl.get('table').removeAttribute('data-loading');
         tpl.get('error').style.display = 'block';
-        for (let key of ['sources', 'pipeline', 'vectors', 'author', 'license']) {
+        for (let key of ['sources', 'pipeline', 'vecs', 'author', 'license']) {
             tpl.get(key).parentElement.parentElement.style.display = 'none';
         }
     }
@@ -120,8 +132,8 @@ export class ModelLoader {
         if (author) tpl.fill('author', formats.author(author, url), true);
         if (license) tpl.fill('license', formats.license(license, this.licenses[license]), true);
         if (sources) tpl.fill('sources', formats.sources(sources));
-        if (vectors) tpl.fill('vectors', formats.vectors(vectors));
-        else tpl.get('vectors').parentElement.parentElement.style.display = 'none';
+        if (vectors) tpl.fill('vecs', formats.vectors(vectors));
+        else tpl.get('vecs').parentElement.parentElement.style.display = 'none';
         if (pipeline && pipeline.length) tpl.fill('pipeline', formats.pipeline(pipeline), true);
         else tpl.get('pipeline').parentElement.parentElement.style.display = 'none';
     }
@@ -223,8 +235,9 @@ export class ModelComparer {
         const version = getLatestVersion(name, this.compat);
         const modelName = `${name}-${version}`;
         return new Promise((resolve, reject) => {
+            if (!version) reject();
             // resolve immediately if model already loaded, e.g. in this.models
-            if (this.models[name]) resolve(this.models[name]);
+            else if (this.models[name]) resolve(this.models[name]);
             else fetch(`${this.url}/meta/${modelName}.json`)
                 .then(res => handleResponse(res))
                 .then(json => json.ok ? resolve(this.saveModel(name, json)) : reject())
@@ -306,12 +319,13 @@ export class ModelComparer {
         this.tpl.fill(`size${i}`, size);
         this.tpl.fill(`desc${i}`, description || 'n/a');
         this.tpl.fill(`pipeline${i}`, formats.pipeline(pipeline), true);
-        this.tpl.fill(`vectors${i}`, formats.vectors(vectors));
+        this.tpl.fill(`vecs${i}`, formats.vectors(vectors));
         this.tpl.fill(`sources${i}`, formats.sources(sources));
         this.tpl.fill(`author${i}`, formats.author(author, url), true);
         this.tpl.fill(`license${i}`, formats.license(license, this.licenses[license]), true);
         // check if model accuracy or speed includes one of the pre-set keys
-        for (let key of [...metaKeys, ...Object.keys(this.benchKeys.speed)]) {
+        const allKeys = [].concat(...Object.entries(this.benchKeys).map(([_, v]) => Object.keys(v)));
+        for (let key of allKeys) {
             if (accuracy[key]) this.tpl.fill(`${key}${i}`, accuracy[key].toFixed(2))
             else if (speed[key]) this.tpl.fill(`${key}${i}`, convertNumber(Math.round(speed[key])))
             else this.tpl.fill(`${key}${i}`, 'n/a')

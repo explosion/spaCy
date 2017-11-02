@@ -68,6 +68,7 @@
         "gpu": "words per second on GPU",
         "pipeline": "Processing pipeline components in order",
         "sources": "Sources of training data",
+        "vecs": "Word vectors included in the model. Models that only support context vectors compute similarity via the tensors shared with the pipeline.",
         "benchmark_parser": "Parser accuracy",
         "benchmark_ner": "NER accuracy",
         "benchmark_speed": "Speed"

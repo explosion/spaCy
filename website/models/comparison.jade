@@ -53,6 +53,8 @@ div(data-tpl=TPL data-tpl-key="result" style="display: none")
 
         for label in ["Version", "Size", "Pipeline", "Vectors", "Sources", "Author", "License"]
             - var field = label.toLowerCase()
+            if field == "vectors"
+                - field = "vecs"
             +row
                 +cell.u-nowrap
                     +label=label
