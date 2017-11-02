@@ -12,6 +12,7 @@
             "Portuguese": "pt",
             "French": "fr",
             "Italian": "it",
+            "Dutch": "nl",
             "Multi-Language": "xx"
         }
     },
@@ -39,12 +40,13 @@
     },
 
     "MODELS": {
-        "en": ["en_core_web_sm", "en_core_web_lg", "en_vectors_web_lg"],
-        "de": ["de_dep_news_sm"],
-        "es": ["es_core_web_sm"],
-        "pt": [],
-        "fr": [],
-        "it": [],
+        "en": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
+        "de": ["de_core_news_sm", "de_core_news_md"],
+        "es": ["es_core_news_sm", "es_core_news_md", "es_vectors_web_lg"],
+        "pt": ["pt_core_news_sm"],
+        "fr": ["fr_core_news_sm", "fr_core_news_md", "fr_vectors_web_lg"],
+        "it": ["it_core_news_sm"],
+        "nl": ["nl_core_news_sm"],
         "xx": ["xx_ent_wiki_sm"]
     },
 
