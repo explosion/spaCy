@@ -6,6 +6,7 @@ from .. import util
 from ..displacy import parse_deps, parse_ents
 from ..tokens import Span
 from .util import get_doc
+from .._ml import PrecomputableAffine
 
 from pathlib import Path
 import pytest
@@ -59,3 +60,19 @@ def test_displacy_parse_deps(en_vocab):
     assert deps['arcs'] == [{'start': 0, 'end': 1, 'label': 'nsubj', 'dir': 'left'},
                             {'start': 2, 'end': 3, 'label': 'det', 'dir': 'left'},
                             {'start': 1, 'end': 3, 'label': 'attr', 'dir': 'right'}]
+
+
+def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
+    model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
+    assert model.W.shape == (nF, nO, nP, nI)
+    tensor = model.ops.allocate((10, nI))
+    Y, get_dX = model.begin_update(tensor)
+    assert Y.shape == (tensor.shape[0]+1, nF, nO, nP)
+    assert model.d_pad.shape == (1, nF, nO, nP)
+    dY = model.ops.allocate((15, nF, nO, nP))
+    ids = model.ops.allocate((15, nF))
+    ids[1,2] = -1
+    dY[1,2] = 1
+    assert model.d_pad[0, 2, 0, 0] == 0.
+    model._backprop_padding(dY, ids)
+    assert model.d_pad[0, 2, 0, 0] == 1.
