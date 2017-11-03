@@ -746,10 +746,9 @@ cdef class Parser:
             for j in range(doc.length):
                 doc.c[j] = state.c._sent[j]
             if tensors is not None:
-                print(doc.tensor.shape)
-
                 doc.extend_tensor(tensors[i])
             self.moves.finalize_doc(doc)
+
             for hook in self.postprocesses:
                 for doc in docs:
                     hook(doc)
