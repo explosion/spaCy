@@ -10,6 +10,7 @@ import numpy.linalg
 import struct
 import dill
 import msgpack
+from thinc.neural.util import get_array_module, copy_array
 
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
@@ -308,7 +309,7 @@ cdef class Doc:
                 return self.user_hooks['has_vector'](self)
             elif any(token.has_vector for token in self):
                 return True
-            elif self.tensor is not None:
+            elif self.tensor.size:
                 return True
             else:
                 return False
@@ -335,7 +336,7 @@ cdef class Doc:
                     vector += self.vocab.get_vector(token.lex.orth)
                 self._vector = vector / len(self)
                 return self._vector
-            elif self.tensor is not None:
+            elif self.tensor.size:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:
@@ -826,6 +827,23 @@ cdef class Doc:
         self.from_array(msg['array_head'][2:],
                         attrs[:, 2:])
         return self
+
+    def extend_tensor(self, tensor):
+        '''Concatenate a new tensor onto the doc.tensor object.
+
+        The doc.tensor attribute holds dense feature vectors
+        computed by the models in the pipeline. Let's say a
+        document with 30 words has a tensor with 128 dimensions
+        per word. doc.tensor.shape will be (30, 128). After
+        calling doc.extend_tensor with an array of hape (30, 64),
+        doc.tensor == (30, 192).
+        '''
+        xp = get_array_module(self.tensor)
+        if self.tensor.size == 0:
+            self.tensor.resize(tensor.shape)
+            copy_array(self.tensor, tensor)
+        else:
+            self.tensor = xp.hstack((self.tensor, tensor))
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Retokenize the document, such that the span at
