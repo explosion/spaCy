@@ -69,10 +69,20 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     Y, get_dX = model.begin_update(tensor)
     assert Y.shape == (tensor.shape[0]+1, nF, nO, nP)
     assert model.d_pad.shape == (1, nF, nO, nP)
-    dY = model.ops.allocate((15, nF, nO, nP))
+    dY = model.ops.allocate((15, nO, nP))
     ids = model.ops.allocate((15, nF))
     ids[1,2] = -1
-    dY[1,2] = 1
+    dY[1] = 1
     assert model.d_pad[0, 2, 0, 0] == 0.
     model._backprop_padding(dY, ids)
     assert model.d_pad[0, 2, 0, 0] == 1.
+    model.d_pad.fill(0.)
+    ids.fill(0.)
+    dY.fill(0.)
+    ids[1,2] = -1
+    ids[1,1] = -1
+    ids[1,0] = -1
+    dY[1] = 1
+    assert model.d_pad[0, 2, 0, 0] == 0.
+    model._backprop_padding(dY, ids)
+    assert model.d_pad[0, 2, 0, 0] == 3.
