@@ -22,35 +22,37 @@ def test_doc_lemmatization(EN):
                                          ("ring", ["ring"]),
                                          ("axes", ["axis", "axe", "ax"])])
 def test_en_lemmatizer_noun_lemmas(en_lemmatizer, text, lemmas):
-    assert en_lemmatizer.noun(text) == set(lemmas)
+    assert en_lemmatizer.noun(text) == lemmas
 
 
 @pytest.mark.models('en')
 @pytest.mark.parametrize('text,lemmas', [("bleed", ["bleed"]),
                                          ("feed", ["feed"]),
                                          ("need", ["need"]),
-                                         ("ring", ["ring"]),
-                                         ("axes", ["axis", "axe", "ax"])])
+                                         ("ring", ["ring"])])
 def test_en_lemmatizer_noun_lemmas(en_lemmatizer, text, lemmas):
-    assert en_lemmatizer.noun(text) == set(lemmas)
+    # Cases like this are problematic -- not clear what we should do to resolve
+    # ambiguity?
+    # ("axes", ["ax", "axes", "axis"])])
+    assert en_lemmatizer.noun(text) == lemmas
 
 
 @pytest.mark.xfail
 @pytest.mark.models('en')
 def test_en_lemmatizer_base_forms(en_lemmatizer):
-    assert en_lemmatizer.noun('dive', {'number': 'sing'}) == set(['dive'])
-    assert en_lemmatizer.noun('dive', {'number': 'plur'}) == set(['diva'])
+    assert en_lemmatizer.noun('dive', {'number': 'sing'}) == ['dive']
+    assert en_lemmatizer.noun('dive', {'number': 'plur'}) == ['diva']
 
 
 @pytest.mark.models('en')
 def test_en_lemmatizer_base_form_verb(en_lemmatizer):
-    assert en_lemmatizer.verb('saw', {'verbform': 'past'}) == set(['see'])
+    assert en_lemmatizer.verb('saw', {'verbform': 'past'}) == ['see']
 
 
 @pytest.mark.models('en')
 def test_en_lemmatizer_punct(en_lemmatizer):
-    assert en_lemmatizer.punct('“') == set(['"'])
-    assert en_lemmatizer.punct('“') == set(['"'])
+    assert en_lemmatizer.punct('“') == ['"']
+    assert en_lemmatizer.punct('“') == ['"']
 
 
 @pytest.mark.models('en')
