@@ -416,7 +416,7 @@ def build_tagger_model(nr_class, **cfg):
         )
     model.nI = None
     model.tok2vec = tok2vec
-    model.softmax
+    model.softmax = softmax
     return model
 
 
