@@ -23,4 +23,4 @@ def test_issue1488():
     nlp.tokenizer = my_tokenizer(nlp)
     doc = nlp("This is a test.")
     for token in doc:
-        print(token.text)
+        assert token.text
