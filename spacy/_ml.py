@@ -409,12 +409,14 @@ def build_tagger_model(nr_class, **cfg):
         else:
             tok2vec = Tok2Vec(token_vector_width, embed_size,
                               pretrained_dims=pretrained_dims)
+        softmax = with_flatten(Softmax(nr_class, token_vector_width))
         model = (
             tok2vec
-            >> with_flatten(Softmax(nr_class, token_vector_width))
+            >> softmax
         )
     model.nI = None
     model.tok2vec = tok2vec
+    model.softmax = softmax
     return model
 
 

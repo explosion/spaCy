@@ -391,9 +391,10 @@ class Language(object):
         for name, proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
+            grads = {}
             proc.update(docs, golds, drop=drop, sgd=get_grads, losses=losses)
-        for key, (W, dW) in grads.items():
-            sgd(W, dW, key=key)
+            for key, (W, dW) in grads.items():
+                sgd(W, dW, key=key)
 
     def preprocess_gold(self, docs_golds):
         """Can be called before training to pre-process gold data. By default,

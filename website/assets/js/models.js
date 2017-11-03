@@ -198,6 +198,7 @@ export class ModelComparer {
         this.fonts = CHART_FONTS;
         this.defaultModels = defaultModels;
         this.tpl.get('result').style.display = 'block';
+        this.tpl.get('error').style.display = 'none';
         this.fetchCompat()
             .then(compat => this.init(compat))
             .catch(this.showError.bind(this))

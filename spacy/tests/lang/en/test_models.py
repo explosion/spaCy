@@ -75,3 +75,11 @@ def test_en_models_probs(example):
     assert not prob0 == prob1
     assert not prob0 == prob2
     assert not prob1 == prob2
+
+
+@pytest.mark.models('en')
+def test_no_vectors_similarity(EN):
+    doc1 = EN(u'hallo')
+    doc2 = EN(u'hi')
+    assert doc1.similarity(doc2) > 0
+

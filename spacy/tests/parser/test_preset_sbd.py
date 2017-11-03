@@ -56,7 +56,7 @@ def test_sents_1_2(parser):
     doc[1].sent_start = True
     doc[2].sent_start = True
     doc = parser(doc)
-    assert len(list(doc.sents)) == 3
+    assert len(list(doc.sents)) >= 3
 
 
 def test_sents_1_3(parser):

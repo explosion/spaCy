@@ -283,7 +283,12 @@ cdef class Span:
         def __get__(self):
             if 'has_vector' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['has_vector'](self)
-            return any(token.has_vector for token in self)
+            elif self.vocab.vectors.data.size > 0:
+                return any(token.has_vector for token in self)
+            elif self.doc.tensor.size > 0:
+                return True
+            else:
+                return False
 
     property vector:
         """A real-valued meaning representation. Defaults to an average of the

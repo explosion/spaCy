@@ -198,11 +198,11 @@ p
     |  #[code .finditer()] methods:
 
 +code.
-    import re
+    import regex as re
     from spacy.tokenizer import Tokenizer
 
-    prefix_re = re.compile(r'''[\[\(&quot;&apos;]''')
-    suffix_re = re.compile(r'''[\]\)&quot;&apos;]''')
+    prefix_re = re.compile(r'''^[\[\(&quot;&apos;]''')
+    suffix_re = re.compile(r'''[\]\)&quot;&apos;]$''')
     infix_re = re.compile(r'''[-~]''')
     simple_url_re = re.compile(r'''^https?://''')
 
@@ -219,6 +219,17 @@ p
     |  If you need to subclass the tokenizer instead, the relevant methods to
     |  specialize are #[code find_prefix], #[code find_suffix] and
     |  #[code find_infix].
+
++infobox("Important note", "⚠️")
+    |  When customising the prefix, suffix and infix handling, remember that
+    |  you're passing in #[strong functions] for spaCy to execute, e.g.
+    |  #[code prefix_re.search] – not just the regular expressions. This means
+    |  that your functions also need to define how the rules should be applied.
+    |  For example, if you're adding your own prefix rules, you need
+    |  to make sure they're only applied to characters at the
+    |  #[strong beginning of a token], e.g. by adding #[code ^]. Similarly,
+    |  suffix rules should only be applied at the #[strong end of a token],
+    |  so your expression should end with a #[code $].
 
 +h(3, "custom-tokenizer") Hooking an arbitrary tokenizer into the pipeline
 

@@ -129,8 +129,14 @@ cdef class Morphology:
         tag (unicode): The part-of-speech tag to key the exception.
         orth (unicode): The word-form to key the exception.
         """
+        # TODO: Currently we've assumed that we know the number of tags -- 
+        # RichTagC is an array, and _cache is a PreshMapArray
+        # This is really bad: it makes the morphology typed to the tagger
+        # classes, which is all wrong.
         self.exc[(tag_str, orth_str)] = dict(attrs)
         tag = self.strings.add(tag_str)
+        if tag not in self.reverse_index:
+            return
         tag_id = self.reverse_index[tag]
         orth = self.strings[orth_str]
         cdef RichTagC rich_tag = self.rich_tags[tag_id]
