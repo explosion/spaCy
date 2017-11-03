@@ -12,6 +12,7 @@
             "Portuguese": "pt",
             "French": "fr",
             "Italian": "it",
+            "Dutch": "nl",
             "Multi-Language": "xx"
         }
     },
@@ -40,11 +41,9 @@
 
     "MODELS": {
         "en": ["en_core_web_sm", "en_core_web_lg", "en_vectors_web_lg"],
-        "de": ["de_dep_news_sm"],
-        "es": ["es_core_web_sm"],
-        "pt": [],
-        "fr": [],
-        "it": [],
+        "de": ["de_core_news_sm"],
+        "es": ["es_core_news_sm", "es_core_news_md"],
+        "it": ["it_core_news_sm"],
         "xx": ["xx_ent_wiki_sm"]
     },
 
@@ -66,6 +65,7 @@
         "gpu": "words per second on GPU",
         "pipeline": "Processing pipeline components in order",
         "sources": "Sources of training data",
+        "vecs": "Word vectors included in the model. Models that only support context vectors compute similarity via the tensors shared with the pipeline.",
         "benchmark_parser": "Parser accuracy",
         "benchmark_ner": "NER accuracy",
         "benchmark_speed": "Speed"
@@ -74,9 +74,11 @@
     "MODEL_LICENSES": {
         "CC BY-SA":     "https://creativecommons.org/licenses/by-sa/3.0/",
         "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
         "CC BY-NC":     "https://creativecommons.org/licenses/by-nc/3.0/",
         "CC BY-NC 3.0": "https://creativecommons.org/licenses/by-nc/3.0/",
-        "GPL":          "http://www.gnu.de/documents/gpl.en.html"
+        "GPL":          "https://www.gnu.org/licenses/gpl.html",
+        "LGPL":         "https://www.gnu.org/licenses/lgpl.html"
     },
 
     "MODEL_BENCHMARKS": {
@@ -99,6 +101,9 @@
         "da": "Danish",
         "hu": "Hungarian",
         "pl": "Polish",
+        "ro": "Romanian",
+        "hr": "Croatian",
+        "tr": "Turkish",
         "he": "Hebrew",
         "ga": "Irish",
         "bn": "Bengali",

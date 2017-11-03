@@ -11,7 +11,7 @@ for exc_data in [
     {ORTH: "jan.", LEMMA: "januar"},
     {ORTH: "feb.", LEMMA: "februar"},
     {ORTH: "jul.", LEMMA: "juli"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [

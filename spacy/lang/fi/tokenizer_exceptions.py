@@ -73,7 +73,7 @@ for exc_data in [
     {ORTH: "ts.", LEMMA: "toisin sanoen"},
     {ORTH: "vm.", LEMMA: "viimeksi mainittu"},
     {ORTH: "srk.", LEMMA: "seurakunta"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 TOKENIZER_EXCEPTIONS = _exc

@@ -276,7 +276,7 @@ for exc_data in [
     exc_data_apos = dict(exc_data)
     exc_data_apos[ORTH] = "'" + exc_data_apos[ORTH]
     for data in [exc_data, exc_data_apos]:
-        _exc[data[ORTH]] = [dict(data)]
+        _exc[data[ORTH]] = [data]
 
 
 # Times
@@ -440,7 +440,7 @@ for exc_data in [
     {ORTH: "Va.", LEMMA: "Virginia", NORM: "Virginia"},
     {ORTH: "Wash.", LEMMA: "Washington", NORM: "Washington"},
     {ORTH: "Wis.", LEMMA: "Wisconsin", NORM: "Wisconsin"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [

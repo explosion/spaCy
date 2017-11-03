@@ -40,6 +40,8 @@ for id in CURRENT_MODELS
 
             each label in ["Pipeline", "Vectors", "Sources", "Author", "License"]
                 - var field = label.toLowerCase()
+                if field == "vectors"
+                    - field = "vecs"
                 +row
                     +cell.u-nowrap
                         +label=label

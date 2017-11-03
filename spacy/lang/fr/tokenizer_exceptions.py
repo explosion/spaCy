@@ -54,7 +54,7 @@ for exc_data in [
     {LEMMA: "degrés", ORTH: "d°"},
     {LEMMA: "saint", ORTH: "St."},
     {LEMMA: "sainte", ORTH: "Ste."}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 for orth in FR_BASE_EXCEPTIONS + ["etc."]:

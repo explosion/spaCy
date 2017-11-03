@@ -164,7 +164,7 @@ for exc_data in [
     {ORTH: "z.b.", LEMMA: "zum Beispiel"},
     {ORTH: "zzgl.", LEMMA: "zuzüglich"},
     {ORTH: "österr.", LEMMA: "österreichisch", NORM: "österreichisch"}]:
-    _exc[exc_data[ORTH]] = [dict(exc_data)]
+    _exc[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [

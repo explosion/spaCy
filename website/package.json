@@ -9,7 +9,8 @@
     "babel-cli": "^6.14.0",
     "harp": "^0.24.0",
     "rollup": "^0.50.0",
-    "uglify-js": "^2.7.3"
+    "uglify-js": "^2.7.3",
+    "broken-link-checker": "^0.7.6"
   },
   "dependencies": {},
   "scripts": {
