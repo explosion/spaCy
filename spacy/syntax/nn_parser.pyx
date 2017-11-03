@@ -532,7 +532,9 @@ cdef class Parser:
             return None
 
         backprops = []
-        d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
+        # Add a padding vector to the d_tokvecs gradient, so that missing
+        # values don't affect the real gradient.
+        d_tokvecs = state2vec.ops.allocate((tokvecs.shape[0]+1, tokvecs.shape[1]))
         cdef float loss = 0.
         n_steps = 0
         while todo:
@@ -615,7 +617,9 @@ cdef class Parser:
                     bp_vectors))
             else:
                 backprop_lower.append((ids, d_vector, bp_vectors))
-        d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
+        # Add a padding vector to the d_tokvecs gradient, so that missing
+        # values don't affect the real gradient.
+        d_tokvecs = state2vec.ops.allocate((tokvecs.shape[0]+1, tokvecs.shape[1]))
         self._make_updates(d_tokvecs, bp_tokvecs, backprop_lower, sgd,
                            cuda_stream)
 
@@ -668,7 +672,8 @@ cdef class Parser:
                 (ids.size, d_state_features.shape[2]))
             self.model[0].ops.scatter_add(d_tokvecs, ids,
                 d_state_features)
-        bp_tokvecs(d_tokvecs, sgd=sgd)
+        # Padded -- see update()
+        bp_tokvecs(d_tokvecs[:-1], sgd=sgd)
 
     @property
     def move_names(self):
