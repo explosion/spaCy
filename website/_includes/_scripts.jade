@@ -11,7 +11,7 @@ if environment == "deploy"
 
 script(src="/assets/js/vendor/prism.min.js")
 
-if SECTION == "models"
+if compare_models
     script(src="/assets/js/vendor/chart.min.js")
 
 script
@@ -58,7 +58,7 @@ if environment == "deploy"
             !=NavHighlighter
             !=GitHubEmbed
         if HAS_MODELS
-            !=ModeLoader
+            !=ModelLoader
         if compare_models
             !=ModelComparer
 else
