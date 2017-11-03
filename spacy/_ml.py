@@ -150,7 +150,9 @@ class PrecomputableAffine(Model):
 
     def _backprop_padding(self, dY, ids):
         # (1, nF, nO, nP) += (nN, nF, nO, nP) where IDs (nN, nF) < 0
-        d_pad = dY * (ids.reshape((ids.shape[0], self.nF, 1, 1)) < 0.)
+        mask = ids < 0.
+        mask = mask.sum(axis=1)
+        d_pad = dY * mask.reshape((ids.shape[0], 1, 1))
         self.d_pad += d_pad.sum(axis=0)
         return dY, ids
 
