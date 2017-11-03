@@ -91,8 +91,8 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        scores = self.predict([doc])
-        self.set_annotations([doc], scores)
+        scores, tensors = self.predict([doc])
+        self.set_annotations([doc], scores, tensors=tensors)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
@@ -103,8 +103,8 @@ class Pipe(object):
         """
         for docs in cytoolz.partition_all(batch_size, stream):
             docs = list(docs)
-            scores = self.predict(docs)
-            self.set_annotations(docs, scores)
+            scores, tensors = self.predict(docs)
+            self.set_annotations(docs, scores, tensor=tensors)
             yield from docs
 
     def predict(self, docs):
@@ -113,7 +113,7 @@ class Pipe(object):
         """
         raise NotImplementedError
 
-    def set_annotations(self, docs, scores):
+    def set_annotations(self, docs, scores, tensors=None):
         """Modify a batch of documents, using pre-computed scores."""
         raise NotImplementedError
 
@@ -338,27 +338,27 @@ class Tagger(Pipe):
         return self.vocab.morphology.tag_names
 
     def __call__(self, doc):
-        tags = self.predict([doc])
-        self.set_annotations([doc], tags)
+        tags, tokvecs = self.predict([doc])
+        self.set_annotations([doc], tags, tensors=tokvecs)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
             docs = list(docs)
-            tag_ids = self.predict(docs)
-            self.set_annotations(docs, tag_ids)
+            tag_ids, tokvecs = self.predict(docs)
+            self.set_annotations(docs, tag_ids, tensors=tokvecs)
             yield from docs
 
     def predict(self, docs):
-        scores = self.model(docs)
-        scores = self.model.ops.flatten(scores)
+        tokvecs = self.model.tok2vec(docs)
+        scores = self.model.softmax(tokvecs)
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
         guesses = self.model.ops.unflatten(guesses, [len(d) for d in docs])
-        return guesses
+        return guesses, tokvecs
 
-    def set_annotations(self, docs, batch_tag_ids):
+    def set_annotations(self, docs, batch_tag_ids, tensors=None):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -373,6 +373,8 @@ class Tagger(Pipe):
                 if doc.c[j].tag == 0 and doc.c[j].pos == 0:
                     vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
+            if tensors is not None:
+                doc.extend_tensor(tensors[i])
         doc.is_tagged = True
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
@@ -573,7 +575,7 @@ class MultitaskObjective(Tagger):
     def labels(self, value):
         self.cfg['labels'] = value
 
-    def set_annotations(self, docs, dep_ids):
+    def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
     def begin_training(self, gold_tuples=tuple(), pipeline=None, tok2vec=None):
@@ -720,15 +722,15 @@ class TextCategorizer(Pipe):
         self.cfg['labels'] = value
 
     def __call__(self, doc):
-        scores = self.predict([doc])
-        self.set_annotations([doc], scores)
+        scores, tensors = self.predict([doc])
+        self.set_annotations([doc], scores, tensors=tensors)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
             docs = list(docs)
-            scores = self.predict(docs)
-            self.set_annotations(docs, scores)
+            scores, tensors = self.predict(docs)
+            self.set_annotations(docs, scores, tensors=tensors)
             yield from docs
 
     def predict(self, docs):
@@ -736,8 +738,10 @@ class TextCategorizer(Pipe):
         scores = self.model.ops.asarray(scores)
         return scores
 
-    def set_annotations(self, docs, scores):
+    def set_annotations(self, docs, scores, tensors=None):
         for i, doc in enumerate(docs):
+            if tensors is not None:
+                doc.extend_tensor(tensors[i])
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
