@@ -307,7 +307,7 @@ cdef class Doc:
         def __get__(self):
             if 'has_vector' in self.user_hooks:
                 return self.user_hooks['has_vector'](self)
-            elif any(token.has_vector for token in self):
+            elif self.vocab.vectors.data.size:
                 return True
             elif self.tensor.size:
                 return True
@@ -330,13 +330,13 @@ cdef class Doc:
                 self._vector = numpy.zeros((self.vocab.vectors_length,),
                                            dtype='f')
                 return self._vector
-            elif self.has_vector:
+            elif self.vocab.vectors.data.size > 0:
                 vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
                 for token in self.c[:self.length]:
                     vector += self.vocab.get_vector(token.lex.orth)
                 self._vector = vector / len(self)
                 return self._vector
-            elif self.tensor.size:
+            elif self.tensor.size > 0:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:
