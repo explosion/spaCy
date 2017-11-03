@@ -754,6 +754,14 @@ cdef class Parser:
                     hook(doc)
 
     @property
+    def tok2vec(self):
+        '''Return the embedding and convolutional layer of the model.'''
+        if self.model in (None, True, False):
+            return None
+        else:
+            return self.model[0]
+
+    @property
     def postprocesses(self):
         # Available for subclasses, e.g. to deprojectivize
         return []
