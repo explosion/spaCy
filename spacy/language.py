@@ -135,10 +135,6 @@ class Language(object):
         self.pipeline = []
         self._optimizer = None
 
-    def __reduce__(self):
-        bytes_data = self.to_bytes(vocab=False)
-        return (unpickle_language, (self.vocab, self.meta, bytes_data))
-
     @property
     def path(self):
         return self._path
@@ -722,12 +718,6 @@ class DisabledPipes(list):
             )
             raise ValueError(msg % unexpected)
         self[:] = []
-
-
-def unpickle_language(vocab, meta, bytes_data):
-    lang = Language(vocab=vocab)
-    lang.from_bytes(bytes_data)
-    return lang
 
 
 def _pipe(func, docs):
