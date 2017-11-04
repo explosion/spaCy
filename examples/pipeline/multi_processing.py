@@ -33,6 +33,7 @@ def main(output_dir, model='en_core_web_sm', n_jobs=4, batch_size=1000,
     print("Loading IMDB data...")
     data, _ = thinc.extra.datasets.imdb()
     texts, _ = zip(*data[-limit:])
+    print("Processing texts...")
     partitions = partition_all(batch_size, texts)
     items = ((i, [nlp(text) for text in texts], output_dir) for i, texts
              in enumerate(partitions))
