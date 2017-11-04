@@ -20,10 +20,10 @@ p Using pip, spaCy releases are currently only available as source packages.
 
 p
     |  When using pip it is generally recommended to install packages in a
-    |  #[code virtualenv] to avoid modifying system state:
+    |  virtual environment to avoid modifying system state:
 
 +code(false, "bash").
-    virtualenv .env
+    venv .env
     source .env/bin/activate
     pip install spacy
 
@@ -137,7 +137,7 @@ p
 +table(["Command", "Description"])
     +row
         +cell #[code fab env]
-        +cell Create #[code virtualenv] and delete previous one, if it exists.
+        +cell Create a virtual environment and delete previous one, if it exists.
 
     +row
         +cell #[code fab make]
@@ -152,7 +152,7 @@ p
         +cell Run basic tests, aborting after first failure.
 
 p
-    |  All commands assume that your #[code virtualenv] is located in a
+    |  All commands assume that your virtual environment is located in a
     |  directory #[code .env]. If you're using a different directory, you can
     |  change it via the environment variable #[code VENV_DIR], for example:
 
