@@ -34,21 +34,24 @@ def main(output_dir, model='en_core_web_sm', n_jobs=4, batch_size=1000,
     data, _ = thinc.extra.datasets.imdb()
     texts, _ = zip(*data[-limit:])
     partitions = partition_all(batch_size, texts)
-    items = ((i, [nlp(text) for text in texts], output_dir) for i, texts
-             in enumerate(partitions))
-    Parallel(n_jobs=n_jobs)(delayed(transform_texts)(*item) for item in items)
+    executor = Parallel(n_jobs=n_jobs)
+    do = delayed(transform_texts)
+    tasks = (do(nlp, i, batch, output_dir)
+             for i, batch in enumerate(partitions))
+    executor(tasks)
 
 
-def transform_texts(batch_id, docs, output_dir):
+def transform_texts(nlp, batch_id, texts, output_dir):
+    print(nlp.pipe_names)
     out_path = Path(output_dir) / ('%d.txt' % batch_id)
     if out_path.exists():  # return None in case same batch is called again
         return None
     print('Processing batch', batch_id)
     with out_path.open('w', encoding='utf8') as f:
-        for doc in docs:
+        for doc in nlp.pipe(texts):
             f.write(' '.join(represent_word(w) for w in doc if not w.is_space))
             f.write('\n')
-    print('Saved {} texts to {}.txt'.format(len(docs), batch_id))
+    print('Saved {} texts to {}.txt'.format(len(texts), batch_id))
 
 
 def represent_word(word):
