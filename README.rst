@@ -124,12 +124,12 @@ Using pip, spaCy releases are currently only available as source packages.
 
     pip install spacy
 
-When using pip it is generally recommended to install packages in a ``virtualenv``
-to avoid modifying system state:
+When using pip it is generally recommended to install packages in a virtual
+environment to avoid modifying system state:
 
 .. code:: bash
 
-    virtualenv .env
+    venv .env
     source .env/bin/activate
     pip install spacy
 
@@ -266,12 +266,12 @@ the right commands for your platform and Python version.
 
 Instead of the above verbose commands, you can also use the following
 `Fabric <http://www.fabfile.org/>`_ commands. All commands assume that your
-``virtualenv`` is located in a directory ``.env``. If you're using a different
-directory, you can change it via the environment variable ``VENV_DIR``, for
-example ``VENV_DIR=".custom-env" fab clean make``.
+virtual environment is located in a directory ``.env``. If you're using a
+different directory, you can change it via the environment variable ``VENV_DIR``,
+for example ``VENV_DIR=".custom-env" fab clean make``.
 
 ============= ===
-``fab env``   Create ``virtualenv`` and delete previous one, if it exists.
+``fab env``   Create virtual environment and delete previous one, if it exists.
 ``fab make``  Compile the source.
 ``fab clean`` Remove compiled objects, including the generated C++.
 ``fab test``  Run basic tests, aborting after first failure.
