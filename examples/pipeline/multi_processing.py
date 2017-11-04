@@ -33,6 +33,7 @@ def main(output_dir, model='en_core_web_sm', n_jobs=4, batch_size=1000,
     print("Loading IMDB data...")
     data, _ = thinc.extra.datasets.imdb()
     texts, _ = zip(*data[-limit:])
+    print("Processing texts...")
     partitions = partition_all(batch_size, texts)
     executor = Parallel(n_jobs=n_jobs)
     do = delayed(transform_texts)

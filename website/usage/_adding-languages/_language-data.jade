@@ -139,7 +139,7 @@ p
 
         # merge base exceptions and custom tokenizer exceptions
         tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
+        stop_words = STOP_WORDS
 
     # create actual Language class
     class Xxxxx(Language):
@@ -248,7 +248,7 @@ p
                 {ORTH: period, LEMMA: "p.m."}]
 
     # only declare this at the bottom
-    TOKENIZER_EXCEPTIONS = dict(_exc)
+    TOKENIZER_EXCEPTIONS = _exc
 
 +aside("Generating tokenizer exceptions")
     |  Keep in mind that generating exceptions only makes sense if there's a

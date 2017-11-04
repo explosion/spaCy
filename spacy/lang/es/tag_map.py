@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 
-
 TAG_MAP = {
     "ADJ___": {"morph": "_", "pos": "ADJ"},
     "ADJ__AdpType=Prep": {"morph": "AdpType=Prep", "pos": "ADJ"},
