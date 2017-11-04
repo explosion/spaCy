@@ -115,23 +115,23 @@ p
     |  #[a(href="#source-windows") Windows] for details.
 
 +code(false, "bash").
-    # make sure you are using recent pip/virtualenv versions
-    python -m pip install -U pip virtualenv
-    git clone #{gh("spaCy")}
-    cd spaCy
+    python -m pip install -U pip venv              # update pip & virtualenv
+    git clone #{gh("spaCy")}   # clone spaCy
+    cd spaCy                                       # navigate into directory
 
-    virtualenv .env
-    source .env/bin/activate
-    pip install -r requirements.txt
-    pip install -e .
-
-p
-    |  Compared to regular install via pip,
-    |  #[+a(gh("spaCy", "requirements.txt")) requirements.txt]
-    |  additionally installs developer dependencies such as Cython.
+    venv .env                                      # create environment in .env
+    source .env/bin/activate                       # activate virtual environment
+    export PYTHONPATH=`pwd`                        # set Python path to spaCy directory
+    pip install -r requirements.txt                # install all requirements
+    python setup.py build_ext --inplace            # compile spaCy
 
 p
-    |  Instead of the above verbose commands, you can also use the following
+    |  Compared to regular install via pip, the
+    |  #[+src(gh("spaCy", "requirements.txt")) #[code requirements.txt]]
+    |  additionally installs developer dependencies such as Cython. See the
+    |  the #[+a("#section-quickstart") quickstart widget] to get the right
+    |  commands for your platform and Python version. Instead of the above
+    |  verbose commands, you can also use the following
     |  #[+a("http://www.fabfile.org/") Fabric] commands:
 
 +table(["Command", "Description"])

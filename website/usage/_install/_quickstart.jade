@@ -21,7 +21,7 @@
     +qs({package: 'source'}) cd spaCy
     +qs({package: 'source'}) export PYTHONPATH=`pwd`
     +qs({package: 'source'}) pip install -r requirements.txt
-    +qs({package: 'source'}) pip install -e .
+    +qs({package: 'source'}) python setup.py build_ext --inplace
 
     for _, model in MODELS
         +qs({model: model}) spacy download #{model}

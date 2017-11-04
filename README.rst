@@ -247,17 +247,23 @@ details.
 .. code:: bash
 
     # make sure you are using recent pip/virtualenv versions
-    python -m pip install -U pip virtualenv
+    python -m pip install -U pip venv
     git clone https://github.com/explosion/spaCy
     cd spaCy
 
-    virtualenv .env
+    venv .env
     source .env/bin/activate
+    export PYTHONPATH=`pwd`
     pip install -r requirements.txt
-    pip install -e .
+    python setup.py build_ext --inplace
 
 Compared to regular install via pip, `requirements.txt <requirements.txt>`_
-additionally installs developer dependencies such as Cython.
+additionally installs developer dependencies such as Cython. For more details
+and instructions, see the documentation on
+`compiling spaCy from source <https://spacy.io/usage/#source>`_ and the
+`quickstart widget <https://alpha.spacy.io/usage/#section-quickstart>`_ to get
+the right commands for your platform and Python version.
+
 Instead of the above verbose commands, you can also use the following
 `Fabric <http://www.fabfile.org/>`_ commands. All commands assume that your
 ``virtualenv`` is located in a directory ``.env``. If you're using a different
