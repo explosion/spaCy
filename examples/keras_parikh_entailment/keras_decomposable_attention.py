@@ -2,10 +2,12 @@
 # Practical state-of-the-art text similarity with spaCy and Keras
 import numpy
 
-from keras.layers import InputSpec, Layer, Input, Dense, merge
+from keras.layers.merge import Add, Concatenate
+from keras.layers import InputSpec, Layer, Input, Dense
 from keras.layers import Lambda, Activation, Dropout, Embedding, TimeDistributed
 from keras.layers import Bidirectional, GRU, LSTM
 from keras.layers.noise import GaussianNoise
+from keras.layers import SpatialDropout1D
 from keras.layers.advanced_activations import ELU
 import keras.backend as K
 from keras.models import Sequential, Model, model_from_json
@@ -13,7 +15,6 @@ from keras.regularizers import l2
 from keras.optimizers import Adam
 from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import GlobalAveragePooling1D, GlobalMaxPooling1D
-from keras.layers import Merge
 
 
 def build_model(vectors, shape, settings):
@@ -79,8 +80,8 @@ class _StaticEmbedding(object):
                         input_length=max_length,
                         weights=None,
                         name='tune',
-                        trainable=True,
-                        dropout=dropout)
+                        trainable=True)
+        self.drop_ids = SpatialDropout1D(dropout)
         self.mod_ids = Lambda(lambda sent: sent % (nr_tune-1)+1,
                               output_shape=(self.max_length,))
 
@@ -88,7 +89,7 @@ class _StaticEmbedding(object):
                             Dense(
                                 nr_out,
                                 activation=None,
-                                bias=False,
+                                use_bias=False,
                                 name='project'))
 
     def __call__(self, sentence):
@@ -96,12 +97,12 @@ class _StaticEmbedding(object):
             print(shapes)
             return shapes[0]
         mod_sent = self.mod_ids(sentence)
-        tuning = self.tune(mod_sent)
+        tuning = self.drop_ids(self.tune(mod_sent))
         #tuning = merge([tuning, mod_sent],
         #    mode=lambda AB: AB[0] * (K.clip(K.cast(AB[1], 'float32'), 0, 1)),
         #    output_shape=(self.max_length, self.nr_out))
         pretrained = self.project(self.embed(sentence))
-        vectors = merge([pretrained, tuning], mode='sum')
+        vectors = Add()([pretrained, tuning])
         return vectors
 
 
@@ -109,9 +110,10 @@ class _BiRNNEncoding(object):
     def __init__(self, max_length, nr_out, dropout=0.0):
         self.model = Sequential()
         self.model.add(Bidirectional(LSTM(nr_out, return_sequences=True,
-                                         dropout_W=dropout, dropout_U=dropout),
+                                         dropout=dropout, recurrent_dropout=dropout),
                                          input_shape=(max_length, nr_out)))
-        self.model.add(TimeDistributed(Dense(nr_out, activation='relu', init='he_normal')))
+        self.model.add(TimeDistributed(Dense(nr_out, activation='relu',
+                                             kernel_initializer='he_normal')))
         self.model.add(TimeDistributed(Dropout(0.2)))
 
     def __call__(self, sentence):
@@ -125,21 +127,20 @@ class _Attention(object):
         self.model.add(Dropout(dropout, input_shape=(nr_hidden,)))
         self.model.add(
             Dense(nr_hidden, name='attend1',
-                init='he_normal', W_regularizer=l2(L2),
+                kernel_initializer='he_normal', kernel_regularizer=l2(L2),
                 input_shape=(nr_hidden,), activation='relu'))
         self.model.add(Dropout(dropout))
         self.model.add(Dense(nr_hidden, name='attend2',
-            init='he_normal', W_regularizer=l2(L2), activation='relu'))
+            kernel_initializer='he_normal', kernel_regularizer=l2(L2), activation='relu'))
         self.model = TimeDistributed(self.model)
 
     def __call__(self, sent1, sent2):
         def _outer(AB):
             att_ji = K.batch_dot(AB[1], K.permute_dimensions(AB[0], (0, 2, 1)))
             return K.permute_dimensions(att_ji,(0, 2, 1))
-        return merge(
-                [self.model(sent1), self.model(sent2)],
-                mode=_outer,
-                output_shape=(self.max_length, self.max_length))
+        return Lambda(_outer,
+                output_shape=(self.max_length, self.max_length))(
+                    [self.model(sent1), self.model(sent2)])
 
 
 class _SoftAlignment(object):
@@ -158,8 +159,9 @@ class _SoftAlignment(object):
             s = K.sum(e, axis=-1, keepdims=True)
             sm_att = e / s
             return K.batch_dot(sm_att, mat)
-        return merge([attention, sentence], mode=_normalize_attention,
-                      output_shape=(self.max_length, self.nr_hidden)) # Shape: (i, n)
+        return Lambda(_normalize_attention, 
+                      output_shape=(self.max_length, self.nr_hidden))(
+                        [attention, sentence]) # Shape: (i, n)
 
 
 class _Comparison(object):
@@ -168,19 +170,19 @@ class _Comparison(object):
         self.model = Sequential()
         self.model.add(Dropout(dropout, input_shape=(nr_hidden*2,)))
         self.model.add(Dense(nr_hidden, name='compare1',
-            init='he_normal', W_regularizer=l2(L2)))
+            kernel_initializer='he_normal', kernel_regularizer=l2(L2)))
         self.model.add(Activation('relu'))
         self.model.add(Dropout(dropout))
         self.model.add(Dense(nr_hidden, name='compare2',
-                        W_regularizer=l2(L2), init='he_normal'))
+                        kernel_regularizer=l2(L2), kernel_initializer='he_normal'))
         self.model.add(Activation('relu'))
         self.model = TimeDistributed(self.model)
 
     def __call__(self, sent, align, **kwargs):
-        result = self.model(merge([sent, align], mode='concat')) # Shape: (i, n)
-        avged = GlobalAveragePooling1D()(result, mask=self.words)
-        maxed = GlobalMaxPooling1D()(result, mask=self.words)
-        merged = merge([avged, maxed])
+        result = self.model(Concatenate()([sent, align])) # Shape: (i, n)
+        avged = GlobalAveragePooling1D()(result) # mask=self.words)
+        maxed = GlobalMaxPooling1D()(result) # mask=self.words)
+        merged = Concatenate()([avged, maxed])
         result = BatchNormalization()(merged)
         return result
 
@@ -190,17 +192,17 @@ class _Entailment(object):
         self.model = Sequential()
         self.model.add(Dropout(dropout, input_shape=(nr_hidden*2,)))
         self.model.add(Dense(nr_hidden, name='entail1',
-            init='he_normal', W_regularizer=l2(L2)))
+            kernel_initializer='he_normal', kernel_regularizer=l2(L2)))
         self.model.add(Activation('relu'))
         self.model.add(Dropout(dropout))
         self.model.add(Dense(nr_hidden, name='entail2',
-            init='he_normal', W_regularizer=l2(L2)))
+            kernel_initializer='he_normal', kernel_regularizer=l2(L2)))
         self.model.add(Activation('relu'))
         self.model.add(Dense(nr_out, name='entail_out', activation='softmax',
-                        W_regularizer=l2(L2), init='zero'))
+                        kernel_regularizer=l2(L2), kernel_initializer='zero'))
 
     def __call__(self, feats1, feats2):
-        features = merge([feats1, feats2], mode='concat')
+        features = Concatenate()([feats1, feats2])
         return self.model(features)
 
 
