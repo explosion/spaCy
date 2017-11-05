@@ -358,7 +358,7 @@ cdef class Vectors:
         def load_vectors(path):
             xp = Model.ops.xp
             if path.exists():
-                self.data = xp.load(path)
+                self.data = xp.load(str(path))
 
         serializers = OrderedDict((
             ('key2row', load_key2row),
