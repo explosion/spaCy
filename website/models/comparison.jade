@@ -30,7 +30,7 @@ div(data-tpl=TPL data-tpl-key="error")
         |  overview of the
         |  #[+a(gh("spacy-models") + "/releases") latest model releases].
 
-div(data-tpl=TPL data-tpl-key="result" style="display: none")
+div(data-tpl=TPL data-tpl-key="result" hidden="")
     +chart("compare_accuracy", 350)
 
     +aside-code("Download", "text")

@@ -50,7 +50,7 @@ for id in CURRENT_MODELS
                     +cell
                         span(data-tpl=id data-tpl-key=field) #[em n/a]
 
-            +row(data-tpl=id data-tpl-key="compat-wrapper" style="display: none")
+            +row(data-tpl=id data-tpl-key="compat-wrapper" hidden="")
                 +cell
                     +label Compat #[+help("Latest compatible model version for your spaCy installation").u-color-subtle]
                 +cell
@@ -58,15 +58,15 @@ for id in CURRENT_MODELS
                         select.o-field__select.u-text-small(data-tpl=id data-tpl-key="compat")
                     div(data-tpl=id data-tpl-key="compat-versions") &nbsp;
 
-        section(data-tpl=id data-tpl-key="benchmarks" style="display: none")
+        section(data-tpl=id data-tpl-key="benchmarks" hidden="")
             +grid.o-block-small
                 for keys, label in MODEL_BENCHMARKS
-                    .u-flex-full.u-padding-small(data-tpl=id data-tpl-key=label.toLowerCase() style="display: none")
+                    .u-flex-full.u-padding-small(data-tpl=id data-tpl-key=label.toLowerCase() hidden="")
                         +table.o-block-small
                             +row("head")
                                 +head-cell(colspan="2")=(MODEL_META["benchmark_" + label] || label)
                             for label, field in keys
-                                +row(style="display: none")
+                                +row(hidden="")
                                     +cell.u-nowrap
                                         +label=label
                                             if MODEL_META[field]
