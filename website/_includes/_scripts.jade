@@ -50,7 +50,7 @@ if IS_PAGE
 
 if environment == "deploy"
     //- DEPLOY: use compiled rollup.js and instantiate classes directly
-    script(src="/assets/js/rollup.js")
+    script(src="/assets/js/rollup.js?v#{V_JS}")
     script
         !=ProgressBar
         if changelog
