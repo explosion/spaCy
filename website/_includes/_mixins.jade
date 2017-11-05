@@ -534,14 +534,21 @@ mixin fn(id, bib_id, tooltip)
 
 mixin pos-row(tag, pos, morph, desc)
     +row
-        +cell #[code=tag]
+        +cell #[code(class=(tag.length > 10) ? "u-break u-break--all" : null)=tag]
         +cell #[code=pos]
         +cell
-            each m in morph.split(" ")
+            - var morphs = morph.includes("|") ? morph.split("|") : morph.split(" ")
+            for m in morphs
                 if m
                     |  #[code=m]
         +cell.u-text-small=desc
 
+mixin univ-pos-row(tag, desc, example)
+        +row
+            +cell #[code=tag]
+            +cell.u-text-small=desc
+            +cell.u-text-small
+                em=example
 
 mixin dep-row(label, desc)
     +row
