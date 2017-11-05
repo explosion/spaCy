@@ -543,12 +543,13 @@ mixin pos-row(tag, pos, morph, desc)
                     |  #[code=m]
         +cell.u-text-small=desc
 
-mixin univ-pos-row(tag, desc, example)
+mixin ud-row(tag, desc, example)
         +row
             +cell #[code=tag]
             +cell.u-text-small=desc
-            +cell.u-text-small
-                em=example
+            if example
+                +cell.u-text-small
+                    em=example
 
 mixin dep-row(label, desc)
     +row

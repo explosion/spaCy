@@ -5,6 +5,50 @@ p
     |  spaCy's #[+a("/models") models]. The individual labels are
     |  language-specific and depend on the training corpus.
 
++accordion("Universal Dependency Labels")
+    p
+        |  The #[+a("http://universaldependencies.org/u/dep/") Universal Dependencies scheme]
+        |  is used in all languages trained on Universal Dependency Corpora.
+
+    +table(["Dep", "Description"])
+        +ud-row("acl", "clausal modifier of noun (adjectival clause)")
+        +ud-row("advcl", "adverbial clause modifier")
+        +ud-row("advmod", "adverbial modifier")
+        +ud-row("amod", "adjectival modifier")
+        +ud-row("appos", "appositional modifier")
+        +ud-row("aux", "auxiliary")
+        +ud-row("case", "case marking")
+        +ud-row("cc", "coordinating conjunction")
+        +ud-row("ccomp", "clausal complement")
+        +ud-row("clf", "classifier")
+        +ud-row("compound", "compound")
+        +ud-row("conj", "conjunct")
+        +ud-row("cop", "copula")
+        +ud-row("csubj", "clausal subject")
+        +ud-row("dep", "unspecified dependency")
+        +ud-row("det", "determiner")
+        +ud-row("discourse", "discourse element")
+        +ud-row("dislocated", "dislocated elements")
+        +ud-row("expl", "expletive")
+        +ud-row("fixed", "fixed multiword expression")
+        +ud-row("flat", "flat multiword expression")
+        +ud-row("goeswith", "goes with")
+        +ud-row("iobj", "indirect object")
+        +ud-row("list", "list")
+        +ud-row("mark", "marker")
+        +ud-row("nmod", "nominal modifier")
+        +ud-row("nsubj", "nominal subject")
+        +ud-row("nummod", "numeric modifier")
+        +ud-row("obj", "object")
+        +ud-row("obl", "oblique nominal")
+        +ud-row("orphan", "orphan")
+        +ud-row("parataxis", "parataxis")
+        +ud-row("punct", "punctuation")
+        +ud-row("reparandum", "overridden disfluency")
+        +ud-row("root", "root")
+        +ud-row("vocative", "vocative")
+        +ud-row("xcomp", "open clausal complement")
+
 +accordion("English", "dependency-parsing-english")
     p
         |  The English dependency labels use the

@@ -6,7 +6,7 @@ p
     |  is specific to the training corpus and can be defined in the respective
     |  language data's #[+a("/usage/adding-languages#tag-map") #[code tag_map.py]].
 
-+accordion("Universal part-of-speech tags")
++accordion("Universal Part-of-speech Tags")
     p
         |  spaCy also maps all language-specific part-of-speech tags to a small,
         |  fixed set of word type tags following the
@@ -17,25 +17,25 @@ p
         |  #[+api("token#attributes") #[code Token.pos_]] attributes.
 
     +table(["POS", "Description", "Examples"])
-        +univ-pos-row("ADJ", "adjective", "big, old, green, incomprehensible, first")
-        +univ-pos-row("ADP", "adposition", "in, to, during")
-        +univ-pos-row("ADV", "adverb", "very, tomorrow, down, where, there")
-        +univ-pos-row("AUX", "auxiliary", "is, has (done), will (do), should (do)")
-        +univ-pos-row("CONJ", "conjunction", "and, or, but")
-        +univ-pos-row("CCONJ", "coordinating conjunction", "and, or, but")
-        +univ-pos-row("DET", "determiner", "a, an, the")
-        +univ-pos-row("INTJ", "interjection", "psst, ouch, bravo, hello")
-        +univ-pos-row("NOUN", "noun", "girl, cat, tree, air, beauty")
-        +univ-pos-row("NUM", "numeral", "1, 2017, one, seventy-seven, IV, MMXIV")
-        +univ-pos-row("PART", "particle", "'s, not, ")
-        +univ-pos-row("PRON", "pronoun", "I, you, he, she, myself, themselves, somebody")
-        +univ-pos-row("PROPN", "proper noun", "Mary, John, Londin, NATO, HBO")
-        +univ-pos-row("PUNCT", "punctuation", "., (, ), ?")
-        +univ-pos-row("SCONJ", "subordinating conjunction", "if, while, that")
-        +univ-pos-row("SYM", "symbol", "$, %, §, ©, +, −, ×, ÷, =, :), 😝")
-        +univ-pos-row("VERB", "verb", "run, runs, running, eat, ate, eating")
-        +univ-pos-row("X", "other", "sfpksdpsxmsa")
-        +univ-pos-row("SPACE", "space", "")
+        +ud-row("ADJ", "adjective", "big, old, green, incomprehensible, first")
+        +ud-row("ADP", "adposition", "in, to, during")
+        +ud-row("ADV", "adverb", "very, tomorrow, down, where, there")
+        +ud-row("AUX", "auxiliary", "is, has (done), will (do), should (do)")
+        +ud-row("CONJ", "conjunction", "and, or, but")
+        +ud-row("CCONJ", "coordinating conjunction", "and, or, but")
+        +ud-row("DET", "determiner", "a, an, the")
+        +ud-row("INTJ", "interjection", "psst, ouch, bravo, hello")
+        +ud-row("NOUN", "noun", "girl, cat, tree, air, beauty")
+        +ud-row("NUM", "numeral", "1, 2017, one, seventy-seven, IV, MMXIV")
+        +ud-row("PART", "particle", "'s, not, ")
+        +ud-row("PRON", "pronoun", "I, you, he, she, myself, themselves, somebody")
+        +ud-row("PROPN", "proper noun", "Mary, John, Londin, NATO, HBO")
+        +ud-row("PUNCT", "punctuation", "., (, ), ?")
+        +ud-row("SCONJ", "subordinating conjunction", "if, while, that")
+        +ud-row("SYM", "symbol", "$, %, §, ©, +, −, ×, ÷, =, :), 😝")
+        +ud-row("VERB", "verb", "run, runs, running, eat, ate, eating")
+        +ud-row("X", "other", "sfpksdpsxmsa")
+        +ud-row("SPACE", "space", "")
 
 +accordion("English", "pos-en")
     p
