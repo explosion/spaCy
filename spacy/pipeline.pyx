@@ -318,7 +318,7 @@ class Tensorizer(Pipe):
         loss, d_scores = self.get_loss(docs, golds, scores)
         d_inputs = bp_scores(d_scores, sgd=sgd)
         d_inputs = self.model.ops.xp.split(d_inputs, len(self.input_models), axis=1)
-        for d_input, bp_input in zip(d_inputs, bp_inputs): 
+        for d_input, bp_input in zip(d_inputs, bp_inputs):
             bp_input(d_input, sgd=sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.)
@@ -777,7 +777,8 @@ class TextCategorizer(Pipe):
     def predict(self, docs):
         scores = self.model(docs)
         scores = self.model.ops.asarray(scores)
-        return scores
+        tensors = [doc.tensor for doc in docs]
+        return scores, tensors
 
     def set_annotations(self, docs, scores, tensors=None):
         for i, doc in enumerate(docs):
