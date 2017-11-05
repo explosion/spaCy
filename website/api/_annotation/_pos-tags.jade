@@ -175,5 +175,5 @@ for _, lang in MODELS
         - var file_path = "lang/" + lang +  "/tag_map.py"
         +accordion(lang_name, "pos-" + lang)
             p
-                |  For more details on the #{lang_name} tag map, see
+                |  For details on the #{lang_name} tag map, see
                 |  #[+src(gh("spacy", "spacy/" + file_path)) #[code=file_path]].
