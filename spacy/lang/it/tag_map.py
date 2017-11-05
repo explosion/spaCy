@@ -316,5 +316,5 @@ TAG_MAP = {
     "V__VerbForm=Ger": {"pos": "VERB"},
     "V__VerbForm=Inf": {"pos": "VERB"},
     "X___": {"pos": "X"},
-    "_SP": {"pos": "_SP"}
+    "_SP": {"pos": "SPACE"}
 }
