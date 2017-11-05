@@ -6,7 +6,38 @@ p
     |  is specific to the training corpus and can be defined in the respective
     |  language data's #[+a("/usage/adding-languages#tag-map") #[code tag_map.py]].
 
-+accordion("English", "pos-tagging-english")
++accordion("Universal part-of-speech tags")
+    p
+        |  spaCy also maps all language-specific part-of-speech tags to a small,
+        |  fixed set of word type tags following the
+        |  #[+a("http://universaldependencies.org/u/pos/") Universal Dependencies scheme].
+        |  The universal tags don't code for any morphological features and only
+        |  cover the word type. They're available as the
+        |  #[+api("token#attributes") #[code Token.pos]] and
+        |  #[+api("token#attributes") #[code Token.pos_]] attributes.
+
+    +table(["POS", "Description", "Examples"])
+        +univ-pos-row("ADJ", "adjective", "big, old, green, incomprehensible, first")
+        +univ-pos-row("ADP", "adposition", "in, to, during")
+        +univ-pos-row("ADV", "adverb", "very, tomorrow, down, where, there")
+        +univ-pos-row("AUX", "auxiliary", "is, has (done), will (do), should (do)")
+        +univ-pos-row("CONJ", "conjunction", "and, or, but")
+        +univ-pos-row("CCONJ", "coordinating conjunction", "and, or, but")
+        +univ-pos-row("DET", "determiner", "a, an, the")
+        +univ-pos-row("INTJ", "interjection", "psst, ouch, bravo, hello")
+        +univ-pos-row("NOUN", "noun", "girl, cat, tree, air, beauty")
+        +univ-pos-row("NUM", "numeral", "1, 2017, one, seventy-seven, IV, MMXIV")
+        +univ-pos-row("PART", "particle", "'s, not, ")
+        +univ-pos-row("PRON", "pronoun", "I, you, he, she, myself, themselves, somebody")
+        +univ-pos-row("PROPN", "proper noun", "Mary, John, Londin, NATO, HBO")
+        +univ-pos-row("PUNCT", "punctuation", "., (, ), ?")
+        +univ-pos-row("SCONJ", "subordinating conjunction", "if, while, that")
+        +univ-pos-row("SYM", "symbol", "$, %, §, ©, +, −, ×, ÷, =, :), 😝")
+        +univ-pos-row("VERB", "verb", "run, runs, running, eat, ate, eating")
+        +univ-pos-row("X", "other", "sfpksdpsxmsa")
+        +univ-pos-row("SPACE", "space", "")
+
++accordion("English", "pos-en")
     p
         |  The English part-of-speech tagger uses the
         |  #[+a("https://catalog.ldc.upenn.edu/LDC2013T19") OntoNotes 5] version of
@@ -71,7 +102,7 @@ p
         +pos-row("WRB", "ADV", "PronType=int|rel", "wh-adverb")
         +pos-row("XX", "X", "", "unknown")
 
-+accordion("German", "pos-tagging-german")
++accordion("German", "pos-de")
     p
         |  The German part-of-speech tagger uses the
         |  #[+a("http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/TIGERCorpus/annotation/index.html") TIGER Treebank]
@@ -136,3 +167,13 @@ p
         +pos-row("VVPP", "VERB", "Aspect=perf VerbForm=part", "perfect participle, full")
         +pos-row("XY", "X", "", "non-word containing non-letter")
         +pos-row("SP", "SPACE", "", "space")
+
+for _, lang in MODELS
+    - var exclude = ["en", "de", "xx"]
+    if !exclude.includes(lang)
+        - var lang_name = LANGUAGES[lang]
+        - var file_path = "lang/" + lang +  "/tag_map.py"
+        +accordion(lang_name, "pos-" + lang)
+            p
+                |  For more details on the #{lang_name} tag map, see
+                |  #[+src(gh("spacy", "spacy/" + file_path)) #[code=file_path]].
