@@ -101,9 +101,9 @@ export class ModelLoader {
     showError(modelId) {
         const tpl = new Templater(modelId);
         tpl.get('table').removeAttribute('data-loading');
-        tpl.get('error').style.display = 'block';
+        tpl.get('error').hidden = false;
         for (let key of ['sources', 'pipeline', 'vecs', 'author', 'license']) {
-            tpl.get(key).parentElement.parentElement.style.display = 'none';
+            tpl.get(key).parentElement.parentElement.hidden = true;
         }
     }
 
@@ -114,13 +114,12 @@ export class ModelLoader {
         const modelId = `${data.lang}_${data.name}`;
         const model = `${modelId}-${data.version}`;
         const tpl = new Templater(modelId);
-        tpl.get('error').style.display = 'none';
         this.renderDetails(tpl, data)
         this.renderBenchmarks(tpl, data.accuracy, data.speed);
         this.renderCompat(tpl, modelId);
         tpl.get('download').setAttribute('href', `${this.repo}/releases/tag/${model}`);
         tpl.get('table').removeAttribute('data-loading');
-        tpl.get('error').style.display = 'none';
+        tpl.get('error').hidden = true;
     }
 
     renderDetails(tpl, { version, size, description, notes, author, url,
@@ -133,9 +132,9 @@ export class ModelLoader {
         if (license) tpl.fill('license', formats.license(license, this.licenses[license]), true);
         if (sources) tpl.fill('sources', formats.sources(sources));
         if (vectors) tpl.fill('vecs', formats.vectors(vectors));
-        else tpl.get('vecs').parentElement.parentElement.style.display = 'none';
+        else tpl.get('vecs').parentElement.parentElement.hidden = true;
         if (pipeline && pipeline.length) tpl.fill('pipeline', formats.pipeline(pipeline), true);
-        else tpl.get('pipeline').parentElement.parentElement.style.display = 'none';
+        else tpl.get('pipeline').parentElement.parentElement.hidden = true;
     }
 
     renderBenchmarks(tpl, accuracy = {}, speed = {}) {
@@ -143,7 +142,7 @@ export class ModelLoader {
         this.renderTable(tpl, 'parser', accuracy, val => val.toFixed(2));
         this.renderTable(tpl, 'ner', accuracy, val => val.toFixed(2));
         this.renderTable(tpl, 'speed', speed, Math.round);
-        tpl.get('benchmarks').style.display = 'block';
+        tpl.get('benchmarks').hidden = false;
     }
 
     renderTable(tpl, id, benchmarks, converter = val => val) {
@@ -151,13 +150,13 @@ export class ModelLoader {
         for (let key of Object.keys(this.benchKeys[id])) {
             if (benchmarks[key]) tpl
                 .fill(key, convertNumber(converter(benchmarks[key])))
-                .parentElement.style.display = 'table-row';
+                .parentElement.hidden = false;
         }
-        tpl.get(id).style.display = 'block';
+        tpl.get(id).hidden = false;
     }
 
     renderCompat(tpl, modelId) {
-        tpl.get('compat-wrapper').style.display = 'table-row';
+        tpl.get('compat-wrapper').hidden = false;
         const header = '<option selected disabled>spaCy version</option>';
         const options = Object.keys(this.compat)
             .map(v => `<option value="${v}">v${v}</option>`)
@@ -197,8 +196,8 @@ export class ModelComparer {
         this.colors = CHART_COLORS;
         this.fonts = CHART_FONTS;
         this.defaultModels = defaultModels;
-        this.tpl.get('result').style.display = 'block';
-        this.tpl.get('error').style.display = 'none';
+        this.tpl.get('result').hidden = false;
+        this.tpl.get('error').hidden = true;
         this.fetchCompat()
             .then(compat => this.init(compat))
             .catch(this.showError.bind(this))
@@ -257,8 +256,8 @@ export class ModelComparer {
 
     showError(err) {
         console.error(err || 'Error');
-        this.tpl.get('result').style.display = 'none';
-        this.tpl.get('error').style.display = 'block';
+        this.tpl.get('result').hidden = true;
+        this.tpl.get('error').hidden = false;
     }
 
     onSelect(ev) {
@@ -301,8 +300,8 @@ export class ModelComparer {
         this.chart.update();
         [model1, model2].forEach((model, i) => this.renderTable(metaKeys, i + 1, model));
         this.tpl.get('result').removeAttribute('data-loading');
-        this.tpl.get('error').style.display = 'none';
-        this.tpl.get('result').style.display = 'block';
+        this.tpl.get('error').hidden = true;
+        this.tpl.get('result').hidden = false;
     }
 
     renderTable(metaKeys, i, { lang, name, version, size, description,

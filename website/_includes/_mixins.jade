@@ -11,6 +11,23 @@ mixin section(id)
         block
 
 
+//- Accordion (collapsible sections)
+    title - [string] Section title.
+    id    - [string] Optional section ID for permalinks.
+    level - [integer] Headline level for section title.
+
+mixin accordion(title, id, level)
+    section.o-accordion.o-block
+        +h(level || 4).o-no-block(id=id)
+            button.o-accordion__button.o-grid.o-grid--vcenter.o-grid--space.js-accordion(aria-expanded="false")=title
+                svg.o-accordion__icon(width="20" height="20" viewBox="0 0 10 10" aria-hidden="true" focusable="false")
+                    rect.o-accordion__hide(height="8" width="2" y="1" x="4")
+                    rect(height="2" width="8" y="4" x="1")
+
+        .o-accordion__content(hidden="")
+            block
+
+
 //- Headlines Helper Mixin
     level - [integer] 1, 2, 3, 4, or 5
 
