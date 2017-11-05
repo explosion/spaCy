@@ -16,7 +16,7 @@ from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
-from .pipeline import SimilarityHook, TextCategorizer
+from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
 from .compat import json_dumps, izip
 from .scorer import Scorer
 from ._ml import link_vectors_to_models
@@ -102,7 +102,9 @@ class Language(object):
         'parser': lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         'ner': lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         'similarity': lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
-        'textcat': lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg)
+        'textcat': lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
+        'sbd': lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
+        'sentencizer': lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg)
     }
 
     def __init__(self, vocab=True, make_doc=True, meta={}, **kwargs):
