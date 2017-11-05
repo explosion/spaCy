@@ -205,10 +205,8 @@
         "title": "Annotation Specifications",
         "teaser": "Schemes used for labels, tags and training data.",
         "menu": {
-            "Tokenization": "tokenization",
-            "Sentence Boundaries": "sbd",
+            "Text Processing": "text-processing",
             "POS Tagging": "pos-tagging",
-            "Lemmatization": "lemmatization",
             "Dependencies": "dependency-parsing",
             "Named Entities": "named-entities",
             "Models & Training": "training"
