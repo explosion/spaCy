@@ -346,6 +346,28 @@ include _includes/_mixins
             |  A new annotation tool for radically efficient machine teaching,
             |  powered by active learning.
 
+    +h(3, "accordion") Accordion
+
+    +aside-code("Usage", "jade").
+        +accordion("Section 1")
+            p This text is shown on click.
+
+    p
+        |  Accordions are collapsible sections that are mostly used for lengthy
+        |  tables, like the tag and label annotation schemes for different
+        |  languages. They all need to be presented – but chances
+        |  are the user doesn't actually care about #[em all] of them,
+        |  especially not at the same time. So it's fairly reasonable to hide
+        |  them begin a click. This particular implementation was inspired by
+        |  the amazing
+        |  #[+a("https://inclusive-components.design/collapsible-sections/") Inclusive Components blog].
+
+
+    .o-block
+        for i in [1, 2, 3]
+            +accordion("Section " + i)
+                p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim ante, pretium a orci eget, varius dignissim augue. Nam eu dictum mauris, id tincidunt nisi. Integer commodo pellentesque tincidunt. Nam at turpis finibus tortor gravida sodales tincidunt sit amet est. Nullam euismod arcu in tortor auctor, sit amet dignissim justo congue. Sed varius vel dolor id dapibus. Curabitur pharetra fermentum arcu nec suscipit. Duis aliquet eros lorem, vitae interdum magna tempus quis.
+
     +h(3, "chart") Chart
 
     p
