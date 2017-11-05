@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
 from .lemmatizer import LOOKUP
+from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -18,6 +19,7 @@ class ItalianDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
     stop_words = STOP_WORDS
     lemma_lookup = LOOKUP
+    tag_map = TAG_MAP
 
 
 class Italian(Language):

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
+from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import LOOKUP
@@ -21,6 +22,7 @@ class FrenchDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'fr'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tag_map = TAG_MAP
     stop_words = STOP_WORDS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
