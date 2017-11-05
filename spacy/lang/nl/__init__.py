@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -18,6 +19,7 @@ class DutchDefaults(Language.Defaults):
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
     stop_words = STOP_WORDS
+    tag_map = TAG_MAP
 
 
 class Dutch(Language):
