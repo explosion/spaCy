@@ -415,7 +415,11 @@ class Tagger(Pipe):
                     vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
             if tensors is not None:
-                doc.extend_tensor(tensors[i])
+                if isinstance(doc.tensor, numpy.ndarray) \
+                and not isinstance(tensors[i], numpy.ndarray):
+                    doc.extend_tensor(tensors[i].get())
+                else:
+                    doc.extend_tensor(tensors[i])
         doc.is_tagged = True
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
