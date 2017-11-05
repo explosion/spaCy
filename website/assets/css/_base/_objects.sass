@@ -74,6 +74,42 @@
     border-radius: $border-radius
     box-shadow: $box-shadow
 
+
+//- Accordion
+
+.o-accordion
+    &:not(:last-child)
+        margin-bottom: 2rem
+
+.o-accordion__content
+    margin-top: 3rem
+
+.o-accordion__button
+    font: inherit
+    border-radius: $border-radius
+    width: 100%
+    padding: 1.5rem 2rem
+    background: $color-subtle-light
+
+    &[aria-expanded="true"]
+        border-bottom: 3px solid $color-subtle
+        border-bottom-left-radius: 0
+        border-bottom-right-radius: 0
+
+        .o-accordion__hide
+            display: none
+
+    &:focus:not([aria-expanded="true"])
+        background: $color-subtle
+
+.o-accordion__icon
+    @include size(2.5rem)
+    background: $color-theme
+    color: $color-back
+    border-radius: 50%
+    padding: 0.35rem
+    pointer-events: none
+
 //- Box
 
 .o-box

@@ -12,6 +12,7 @@ import ProgressBar from './progress.js';
 import NavHighlighter from './nav-highlighter.js';
 import Changelog from './changelog.js';
 import GitHubEmbed from './github-embed.js';
+import Accordion from './accordion.js';
 import { ModelLoader, ModelComparer } from './models.js';
 
 // Assign to window so they are bundled by rollup
@@ -19,5 +20,6 @@ window.ProgressBar = ProgressBar;
 window.NavHighlighter = NavHighlighter;
 window.Changelog = Changelog;
 window.GitHubEmbed = GitHubEmbed;
+window.Accordion = Accordion;
 window.ModelLoader = ModelLoader;
 window.ModelComparer = ModelComparer;

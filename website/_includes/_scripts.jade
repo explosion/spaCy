@@ -41,6 +41,7 @@ if IS_PAGE
     https://medium.com/dev-channel/es6-modules-in-chrome-canary-m60-ba588dfb8ab7
 
 - ProgressBar = "new ProgressBar('.js-progress');"
+- Accordion = "new Accordion('.js-accordion');"
 - Changelog = "new Changelog('" + SOCIAL.github + "', 'spacy');"
 - NavHighlighter = "new NavHighlighter('data-section', 'data-nav');"
 - GitHubEmbed = "new GitHubEmbed('" + SOCIAL.github + "', 'data-gh-embed');"
@@ -57,6 +58,7 @@ if environment == "deploy"
         if IS_PAGE
             !=NavHighlighter
             !=GitHubEmbed
+            !=Accordion
         if HAS_MODELS
             !=ModelLoader
         if compare_models
@@ -74,6 +76,8 @@ else
             !=NavHighlighter
             | import GitHubEmbed from '/assets/js/github-embed.js';
             !=GitHubEmbed
+            | import Accordion from '/assets/js/accordion.js';
+            !=Accordion
         if HAS_MODELS
             | import { ModelLoader } from '/assets/js/models.js';
             !=ModelLoader
