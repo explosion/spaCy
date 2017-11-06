@@ -46,6 +46,7 @@
         "pt": [],
         "fr": ["fr_core_news_sm"],
         "it": ["it_core_news_sm"],
+        "nl": ["nl_core_news_sm"],
         "xx": ["xx_ent_wiki_sm"]
     },
 
