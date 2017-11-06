@@ -10,8 +10,9 @@ p
 +h(3, "features-models") Convolutional neural network models
 
 +aside-code("Example", "bash")
-    for model in ["en", "de", "fr", "es", "pt", "it"]
-        | spacy download #{model}  # default #{LANGUAGES[model]} model!{'\n'}
+    for _, lang in MODELS
+        if lang != "xx"
+            | spacy download #{lang}  # default #{LANGUAGES[lang]} model!{'\n'}
     | spacy download xx_ent_wiki_sm  # multi-language NER
 
 p
@@ -20,14 +21,22 @@ p
     |  been designed and implemented from scratch specifically for spaCy, to
     |  give you an unmatched balance of speed, size and accuracy. The new
     |  models are #[strong 10&times; smaller], #[strong 20% more accurate],
-    |  and #[strong just as fast] as the previous generation.
-    |  #[strong GPU usage] is now supported via
-    |  #[+a("http://chainer.org") Chainer]'s CuPy module.
+    |  and #[strong even cheaper to run] than the previous generation.
+
+p
+    |  spaCy v2.0's new neural network models bring significant improvements in
+    |  accuracy, especially for English Named Entity Recognition. The new
+    |  #[+a("/models/en#en_core_web_lg") #[code en_core_web_lg]] model makes
+    |  about #[strong 25% fewer mistakes] than the corresponding v1.x model and
+    |  is within #[strong 1% of the current state-of-the-art]
+    |  (#[+a("https://arxiv.org/pdf/1702.02098.pdf") Strubell et al., 2017]).
+    |  The v2.0 models are also cheaper to run at scale, as they require
+    |  #[strong under 1 GB of memory] per process.
 
 +infobox
     |  #[+label-inline Usage:] #[+a("/models") Models directory],
     |  #[+a("/models/comparison") Models comparison],
-    |  #[+a("/usage/#gpu") Using spaCy with GPU]
+    |  #[+a("#benchmarks") Benchmarks]
 
 +h(3, "features-pipelines") Improved processing pipelines
 

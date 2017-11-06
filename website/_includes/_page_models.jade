@@ -71,7 +71,7 @@ for id in CURRENT_MODELS
                                         +label=label
                                             if MODEL_META[field]
                                                 |  #[+help(MODEL_META[field]).u-color-subtle]
-                                    +cell("right")(data-tpl=id data-tpl-key=field)
+                                    +cell("num")(data-tpl=id data-tpl-key=field)
                                         |  n/a
 
         p.u-text-small.u-color-dark(data-tpl=id data-tpl-key="notes")

@@ -20,34 +20,34 @@ p
     +row
         +cell #[+a("/models/en#en_core_web_sm") #[code en_core_web_sm]] 2.0.0a8
         each data in ["2.x", "neural"]
-            +cell("right")=data
-        +cell("right") 91.7
-        +cell("right") 85.3
-        +cell("right") 97.0
-        +cell("right") 10.1k
-        +cell("right") #[strong 35 MB]
+            +cell("num")=data
+        +cell("num") 91.7
+        +cell("num") 85.3
+        +cell("num") 97.0
+        +cell("num") 10.1k
+        +cell("num") #[strong 35MB]
 
     +row
         +cell #[+a("/models/en#en_core_web_lg") #[code en_core_web_lg]] 2.0.0a3
         each data in ["2.x", "neural"]
-            +cell("right")=data
-        +cell("right") #[strong 91.9]
-        +cell("right") #[strong 85.9]
-        +cell("right") #[strong 97.2]
-        +cell("right") 5.0k
-        +cell("right") 812 MB
+            +cell("num")=data
+        +cell("num") #[strong 91.9]
+        +cell("num") #[strong 85.9]
+        +cell("num") #[strong 97.2]
+        +cell("num") 10.0k
+        +cell("num") 812MB
 
     +row("divider")
         +cell #[code en_core_web_sm] 1.2.0
         each data in ["1.x", "linear", 86.6, 78.5, 96.6]
-            +cell("right")=data
-        +cell("right") #[strong 25.7k]
-        +cell("right") 50 MB
+            +cell("num")=data
+        +cell("num") #[strong 25.7k]
+        +cell("num") 50MB
 
     +row
         +cell #[code en_core_web_md] 1.2.1
-        each data in ["1.x", "linear", 90.6, 81.4, 96.7, "18.8k", "1 GB"]
-            +cell("right")=data
+        each data in ["1.x", "linear", 90.6, 81.4, 96.7, "18.8k", "1GB"]
+            +cell("num")=data
 
 +h(4, "benchmarks-models-spanish") Spanish
 
@@ -59,29 +59,29 @@ p
 +table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
     +row
         +cell #[+a("/models/es#es_core_news_sm") #[code es_core_news_sm]] 2.0.0a0
-        +cell("right") 2.x
-        +cell("right") neural
-        +cell("right") 89.8
-        +cell("right") 88.7
-        +cell("right") #[strong 96.9]
-        +cell("right") #[em n/a]
-        +cell("right") #[strong 35 MB]
+        +cell("num") 2.x
+        +cell("num") neural
+        +cell("num") 89.8
+        +cell("num") 88.7
+        +cell("num") #[strong 96.9]
+        +cell("num") #[em n/a]
+        +cell("num") #[strong 35MB]
 
     +row
         +cell #[+a("/models/es#es_core_news_md") #[code es_core_news_md]] 2.0.0a0
-        +cell("right") 2.x
-        +cell("right") neural
-        +cell("right") #[strong 90.2]
-        +cell("right") 89.0
-        +cell("right") 97.8
-        +cell("right") #[em n/a]
-        +cell("right") 93 MB
+        +cell("num") 2.x
+        +cell("num") neural
+        +cell("num") #[strong 90.2]
+        +cell("num") 89.0
+        +cell("num") 97.8
+        +cell("num") #[em n/a]
+        +cell("num") 93MB
 
     +row("divider")
         +cell #[code es_core_web_md] 1.1.0
         each data in ["1.x", "linear", 87.5]
-            +cell("right")=data
-        +cell("right") #[strong 94.2]
-        +cell("right") 96.7
-        +cell("right") #[em n/a]
-        +cell("right") 377 MB
+            +cell("num")=data
+        +cell("num") #[strong 94.2]
+        +cell("num") 96.7
+        +cell("num") #[em n/a]
+        +cell("num") 377MB

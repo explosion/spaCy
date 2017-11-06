@@ -11,9 +11,6 @@
     +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
     +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
 
-    +qs({config: 'gpu', os: 'mac'}) export PATH=$PATH:/usr/local/cuda-8.0/bin
-    +qs({config: 'gpu', os: 'linux'}) export PATH=$PATH:/usr/local/cuda-8.0/bin
-
     +qs({package: 'pip'}) pip install -U spacy
     +qs({package: 'conda'}) conda install -c conda-forge spacy
 

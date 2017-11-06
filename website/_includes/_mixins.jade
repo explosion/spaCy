@@ -243,13 +243,12 @@ mixin code(label, language, prompt, height, icon, wrap)
     pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
-        - var icon = icon || (prompt == 'accept' || prompt == 'reject')
         if icon
             - var classes = {'accept': 'u-color-green', 'reject': 'u-color-red'}
             .c-code-block__icon(class=classes[icon] || null class=classes[icon] ? "c-code-block__icon--border" : null)
                 +icon(icon, 18)
 
-        code.c-code-block__content(class=wrap ? "u-wrap" : null data-prompt=icon ? null : prompt)
+        code.c-code-block__content(class=wrap ? "u-wrap" : null data-prompt=prompt)
             block
 
 
@@ -262,14 +261,14 @@ mixin code-wrapper()
 //- Code blocks to display old/new versions
     label - [string] ARIA label for block. Defaults to "correct"/"incorrect".
 
-mixin code-old(label)
+mixin code-old(label, lang, prompt)
     - var label = label || 'incorrect'
-    +code(false, false, false, false, "reject").o-block-small(aria-label=label)
+    +code(false, lang, prompt, false, "reject").o-block-small(aria-label=label)
         block
 
-mixin code-new(label)
+mixin code-new(label, lang, prompt)
     - var label = label || 'correct'
-    +code(false, false, false, false, "accept").o-block-small(aria-label=label)
+    +code(false, lang, prompt, false, "accept").o-block-small(aria-label=label)
         block
 
 
@@ -452,8 +451,8 @@ mixin head-cell()
 
 //- Table cell (only used within +row in +table)
 
-mixin cell(align)
-    td.c-table__cell.u-text(class=align ? "u-text-" + align : null)&attributes(attributes)
+mixin cell(...style)
+    td.c-table__cell.u-text(class=prefixArgs(style, "c-table__cell"))&attributes(attributes)
         block
 
 

@@ -32,6 +32,15 @@
     &:not(:last-child)
         border-right: 1px solid $color-subtle
 
+    &.c-table__cell--num
+        text-align: right
+        font-feature-settings: "tnum"
+        font-variant-numeric: tabular-nums
+
+        & > strong
+            font-feature-settings: initial
+            font-variant-numeric: initial
+
 
 //- Table head cell
 

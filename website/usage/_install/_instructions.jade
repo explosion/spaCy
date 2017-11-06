@@ -79,12 +79,19 @@ p
     python -m spacy validate
 
 +h(3, "gpu") Run spaCy with GPU
+    +tag experimental
+
++infobox("Important note", "⚠️")
+    |  The instructions below refer to installation with CUDA 8.0. In order to
+    |  install with CUDA 9.0, set the environment variable #[code CUDA9=1]
+    |  before installing Thinc. You'll also need to adjust the path to the
+    |  CUDA runtime.
 
 p
     |  As of v2.0, spaCy's comes with neural network models that are implemented
     |  in our machine learning library, #[+a(gh("thinc")) Thinc]. For GPU
     |  support, we've been grateful to use the work of
-    |  #[+a("http://chainer.org") Chainer]'s CuPy module, which provides
+    |  Chainer's #[+a("https://cupy.chainer.org") CuPy] module, which provides
     |  a NumPy-compatible interface for GPU arrays.
 
 p
@@ -93,11 +100,11 @@ p
     |  CUDA. Finally, install spaCy.
 
 +code(false, "bash").
-    export CUDA_HOME=/usr/local/cuda-8.0 # Or wherever your CUDA is
+    export CUDA_HOME=/usr/local/cuda-8.0  # or wherever your CUDA is
     export PATH=$PATH:$CUDA_HOME/bin
 
     pip install spacy
-    python -c "import thinc.neural.gpu_ops" # Check the GPU ops were built
+    python -c "import thinc.neural.gpu_ops"  # check the GPU ops were built
 
 +h(3, "source") Compile from source
 
