@@ -784,7 +784,7 @@ class TextCategorizer(Pipe):
 
     @property
     def labels(self):
-        return self.cfg.setdefault('labels', ['LABEL'])
+        return self.cfg.setdefault('labels', [])
 
     @labels.setter
     def labels(self, value):
