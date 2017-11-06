@@ -9,4 +9,4 @@ import pytest
 @pytest.mark.parametrize('word,lemmas', [("chromosomes", ["chromosome"]), ("endosomes", ["endosome"]), ("colocalizes", ["colocaliz", "colocalize"])])
 def test_issue781(EN, word, lemmas):
     lemmatizer = EN.Defaults.create_lemmatizer()
-    assert lemmatizer(word, 'noun', morphology={'number': 'plur'}) == lemmas
+    assert lemmatizer(word, 'noun', morphology={'number': 'plur'}) == sorted(lemmas)
