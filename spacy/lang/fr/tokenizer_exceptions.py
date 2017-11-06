@@ -7,8 +7,7 @@ from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS
 from ..tokenizer_exceptions import URL_PATTERN
 from ..char_classes import ALPHA_LOWER
-from ...symbols import ORTH, LEMMA, TAG, NORM
-from ...deprecated import PRON_LEMMA
+from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 
 
 def upper_first_letter(text):

@@ -1,8 +1,7 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import LEMMA
-from ...deprecated import PRON_LEMMA
+from ...symbols import LEMMA, PRON_LEMMA
 
 
 # Used the table of pronouns at https://no.wiktionary.org/wiki/Tillegg:Pronomen_i_norsk

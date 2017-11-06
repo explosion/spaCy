@@ -4,7 +4,9 @@ p
     |  In this section, we provide benchmark accuracies for the pre-trained
     |  model pipelines we distribute with spaCy. Evaluations are conducted
     |  end-to-end from raw text, with no "gold standard" pre-processing, over
-    |  text from a mix of genres where possible.
+    |  text from a mix of genres where possible. For are more detailed
+    |  comparison of the available models, see the new
+    |  #[+a("/models/comparison") model comparison tool].
 
 +aside("Methodology")
     |  The evaluation was conducted on raw text with no gold standard
@@ -16,55 +18,70 @@ p
 
 +table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
     +row
-        +cell #[+a("/models/en#en_core_web_sm") #[code en_core_web_sm]] 2.0.0a5
+        +cell #[+a("/models/en#en_core_web_sm") #[code en_core_web_sm]] 2.0.0a8
         each data in ["2.x", "neural"]
-            +cell.u-text-right=data
-        +cell.u-text-right 91.4
-        +cell.u-text-right 85.5
-        +cell.u-text-right 97.0
-        +cell.u-text-right 8.2k
-        +cell.u-text-right #[strong 36 MB]
+            +cell("right")=data
+        +cell("right") 91.7
+        +cell("right") 85.3
+        +cell("right") 97.0
+        +cell("right") 10.1k
+        +cell("right") #[strong 35 MB]
 
     +row
-        +cell #[+a("/models/en#en_core_web_lg") #[code en_core_web_lg]] 2.0.0a0
+        +cell #[+a("/models/en#en_core_web_lg") #[code en_core_web_lg]] 2.0.0a3
         each data in ["2.x", "neural"]
-            +cell.u-text-right=data
-        +cell.u-text-right #[strong 91.9]
-        +cell.u-text-right #[strong 86.4]
-        +cell.u-text-right #[strong 97.2]
-        +cell.u-text-right #[em n/a]
-        +cell.u-text-right 667 MB
+            +cell("right")=data
+        +cell("right") #[strong 91.9]
+        +cell("right") #[strong 85.9]
+        +cell("right") #[strong 97.2]
+        +cell("right") 5.0k
+        +cell("right") 812 MB
 
     +row("divider")
         +cell #[code en_core_web_sm] 1.2.0
         each data in ["1.x", "linear", 86.6, 78.5, 96.6]
-            +cell.u-text-right=data
-        +cell.u-text-right #[strong 25.7k]
-        +cell.u-text-right 50 MB
+            +cell("right")=data
+        +cell("right") #[strong 25.7k]
+        +cell("right") 50 MB
 
     +row
         +cell #[code en_core_web_md] 1.2.1
         each data in ["1.x", "linear", 90.6, 81.4, 96.7, "18.8k", "1 GB"]
-            +cell.u-text-right=data
+            +cell("right")=data
 
 +h(4, "benchmarks-models-spanish") Spanish
 
++aside("Evaluation note")
+    |  The NER accuracy refers to the "silver standard" annotations in the
+    |  WikiNER corpus. Accuracy on these annotations tends to be higher than
+    |  correct human annotations.
+
 +table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
     +row
-        +cell #[+a("/models/es#es_core_web_sm") #[code es_core_web_sm]] 2.0.0a0
-        +cell.u-text-right 2.x
-        +cell.u-text-right neural
-        +cell.u-text-right #[strong 90.1]
-        +cell.u-text-right 89.0
-        +cell.u-text-right #[strong 96.7]
-        +cell.u-text-right #[em n/a]
-        +cell.u-text-right #[strong 36 MB]
+        +cell #[+a("/models/es#es_core_news_sm") #[code es_core_news_sm]] 2.0.0a0
+        +cell("right") 2.x
+        +cell("right") neural
+        +cell("right") 89.8
+        +cell("right") 88.7
+        +cell("right") #[strong 96.9]
+        +cell("right") #[em n/a]
+        +cell("right") #[strong 35 MB]
+
+    +row
+        +cell #[+a("/models/es#es_core_news_md") #[code es_core_news_md]] 2.0.0a0
+        +cell("right") 2.x
+        +cell("right") neural
+        +cell("right") #[strong 90.2]
+        +cell("right") 89.0
+        +cell("right") 97.8
+        +cell("right") #[em n/a]
+        +cell("right") 93 MB
 
     +row("divider")
         +cell #[code es_core_web_md] 1.1.0
         each data in ["1.x", "linear", 87.5]
-            +cell.u-text-right=data
-        +cell #[strong 94.2]
-        +cell #[strong 96.7]
-        +cell.u-text-right #[em n/a]
-        +cell.u-text-right 377 MB
+            +cell("right")=data
+        +cell("right") #[strong 94.2]
+        +cell("right") 96.7
+        +cell("right") #[em n/a]
+        +cell("right") 377 MB
