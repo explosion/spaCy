@@ -40,7 +40,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     # Create the PyTorch neural network model, and wrap it with Thinc. This
     # gives it the API that spaCy expects.
     pt_model = create_model()
-    textcat = thinc.extra.wrappers.PytorchWrapper(pt_model)
+    textcat = thinc.extra.wrappers.PyTorchWrapper(pt_model)
     nlp.add_pipe(textcat, last=True)
 
     # add label to text classifier
