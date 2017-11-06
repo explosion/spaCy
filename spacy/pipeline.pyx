@@ -810,8 +810,6 @@ class TextCategorizer(Pipe):
 
     def set_annotations(self, docs, scores, tensors=None):
         for i, doc in enumerate(docs):
-            if tensors is not None:
-                doc.extend_tensor(tensors[i])
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
