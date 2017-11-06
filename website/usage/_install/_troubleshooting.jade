@@ -100,7 +100,9 @@ p
     |  #[+a("/usage/models#languages") alpha tokenizers] for
     |  languages that don't yet have a statistical model, you should import its
     |  #[code Language] class instead, for example
-    |  #[code from spacy.lang.bn import Bengali].
+    |  #[code from spacy.lang.bn import Bengali]. You can also use
+    |  #[+api("top-level#spacy.blank") #[code spacy.blank]] to create a blank
+    |  instance, e.g. #[code nlp = spacy.blank('bn')].
 
 +h(3, "command-not-found") Command not found
 
@@ -115,7 +117,7 @@ p
     |  maps #[code spacy] to #[code python -m spacy]. If this is not working as
     |  expected, run the command with #[code python -m], yourself –
     |  for example #[code python -m spacy download en]. For more info on this,
-    |  see #[+api("cli#download") download].
+    |  see the #[+api("cli#download") #[code download]] command.
 
 +h(3, "module-load") 'module' object has no attribute 'load'
 
@@ -143,7 +145,7 @@ p
     |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
     |  novel symbol, #[code -PRON-], which is used as the lemma for
     |  all personal pronouns. For more info on this, see the
-    |  #[+api("annotation#lemmatization") annotation specs] on lemmatization.
+    |  #[+a("/api/annotation#lemmatization") lemmatization specs].
 
 +h(3, "catastrophic-forgetting") NER model doesn't recognise other entities anymore after training
 
