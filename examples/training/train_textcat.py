@@ -18,8 +18,7 @@ from pathlib import Path
 import thinc.extra.datasets
 
 import spacy
-from spacy.gold import minibatch
-from spacy.util import compounding
+from spacy.util import minibatch, compounding
 
 
 @plac.annotations(
