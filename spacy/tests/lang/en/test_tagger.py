@@ -11,7 +11,7 @@ import pytest
 def test_en_tagger_load_morph_exc(en_tokenizer):
     text = "I like his style."
     tags = ['PRP', 'VBP', 'PRP$', 'NN', '.']
-    morph_exc = {'VBP': {'like': {'L': 'luck'}}}
+    morph_exc = {'VBP': {'like': {'lemma': 'luck'}}}
     en_tokenizer.vocab.morphology.load_morph_exceptions(morph_exc)
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, [t.text for t in tokens], tags=tags)
