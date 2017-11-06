@@ -39,6 +39,19 @@ def cosine(vec1, vec2):
         return vec1.dot(vec2) / (norm1 * norm2)
 
 
+def create_default_optimizer(ops, **cfg):
+    learn_rate = util.env_opt('learn_rate', 0.001)
+    beta1 = util.env_opt('optimizer_B1', 0.9)
+    beta2 = util.env_opt('optimizer_B2', 0.999)
+    eps = util.env_opt('optimizer_eps', 1e-08)
+    L2 = util.env_opt('L2_penalty', 1e-6)
+    max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+    optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1,
+                     beta2=beta2, eps=eps)
+    optimizer.max_grad_norm = max_grad_norm
+    optimizer.device = device
+    return optimizer
+
 @layerize
 def _flatten_add_lengths(seqs, pad=0, drop=0.):
     ops = Model.ops
