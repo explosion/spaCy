@@ -3,9 +3,8 @@
 p
     |  Model differences are mostly statistical. In general, we do expect larger
     |  models to be "better" and more accurate overall. Ultimately, it depends on
-    |  your use case and requirements, and we recommend starting with the default
-    |  models (marked with a star below). For a more detailed overview, see the
-    |  #[+a("/models") models directory].
+    |  your use case and requirements. We recommend starting with the default
+    |  models (marked with a star below).
 
 +table(["Name", "Language", "Type"])
     for models, lang in MODELS
@@ -17,6 +16,3 @@ p
                         +icon("star", 16).o-icon--inline.u-color-theme
                 +cell #{LANGUAGES[comps.lang]}
                 +cell #{MODEL_META[comps.type]}
-
-.u-text-right
-    +button("/models", true, "primary", "small") View models directory
