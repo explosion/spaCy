@@ -60,7 +60,7 @@
         "wiki": "Wikipedia",
         "uas": "Unlabelled dependencies",
         "las": "Labelled dependencies",
-        "tags_acc": "Part-of-speech tags",
+        "tags_acc": "Part-of-speech tags (fine grained tags, Token.tag)",
         "ents_f": "Entities (F-score)",
         "ents_p": "Entities (precision)",
         "ents_r": "Entities (recall)",
@@ -69,7 +69,7 @@
         "pipeline": "Processing pipeline components in order",
         "sources": "Sources of training data",
         "vecs": "Word vectors included in the model. Models that only support context vectors compute similarity via the tensors shared with the pipeline.",
-        "benchmark_parser": "Parser accuracy",
+        "benchmark_parser": "Syntax accuracy",
         "benchmark_ner": "NER accuracy",
         "benchmark_speed": "Speed"
     },
