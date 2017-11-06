@@ -15,12 +15,12 @@ from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module, copy_array
 from thinc.neural._lsuv import svd_orthonormal
+from thinc.neural.optimizers import Adam
 
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
-from thinc.neural._lsuv import svd_orthonormal
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from . import util
@@ -49,7 +49,7 @@ def create_default_optimizer(ops, **cfg):
     optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1,
                      beta2=beta2, eps=eps)
     optimizer.max_grad_norm = max_grad_norm
-    optimizer.device = device
+    optimizer.device = ops.device
     return optimizer
 
 @layerize
