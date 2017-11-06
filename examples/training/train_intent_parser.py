@@ -64,7 +64,7 @@ TRAIN_DATA = [
     model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int))
-def main(model=None, output_dir=None, n_iter=100):
+def main(model=None, output_dir=None, n_iter=5):
     """Load the model, set up the pipeline and train the parser."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
@@ -73,20 +73,19 @@ def main(model=None, output_dir=None, n_iter=100):
         nlp = spacy.blank('en')  # create blank Language class
         print("Created blank 'en' model")
 
-    # add the parser to the pipeline if it doesn't exist
-    # nlp.create_pipe works for built-ins that are registered with spaCy
-    if 'parser' not in nlp.pipe_names:
-        parser = nlp.create_pipe('parser')
-        nlp.add_pipe(parser, first=True)
-    # otherwise, get it, so we can add labels to it
-    else:
-        parser = nlp.get_pipe('parser')
+    # We'll use the built-in dependency parser
+    # class, but we want to create a fresh instance, and give it a different
+    # name.
+    if 'parser' in nlp.pipe_names:
+        nlp.remove_pipe('parser')
+    parser = nlp.create_pipe('parser')
+    nlp.add_pipe(parser, name='intent-parser', first=True)
 
     for text, annotations in TRAIN_DATA:
         for dep in annotations.get('deps', []):
             parser.add_label(dep)
 
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'parser']
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'intent-parser']
     with nlp.disable_pipes(*other_pipes):  # only train parser
         optimizer = nlp.begin_training()
         for itn in range(n_iter):
