@@ -425,7 +425,7 @@ class Tagger(Pipe):
                     # Don't clobber preset lemmas
                     lemma = doc.c[j].lemma
                     vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
-                    if lemma != 0:
+                    if lemma != 0 and lemma != doc.c[j].lex.orth:
                         doc.c[j].lemma = lemma
                 idx += 1
             if tensors is not None:
