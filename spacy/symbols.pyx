@@ -461,7 +461,7 @@ IDS = {
     "xcomp": xcomp,
 
     "acl": acl,
-    "LAW": LAW
+    "LAW": LAW,
 }
 
 
@@ -469,6 +469,7 @@ def sort_nums(x):
     return x[1]
 
 
+PRON_LEMMA = "-PRON-"
 NAMES = [it[0] for it in sorted(IDS.items(), key=sort_nums)]
 # Unfortunate hack here, to work around problem with long cpdef enum
 # (which is generating an enormous amount of C++ in Cython 0.24+)
