@@ -4,9 +4,8 @@ p
     |  Similarity is determined by comparing #[strong word vectors] or "word
     |  embeddings", multi-dimensional meaning representations of a word. Word
     |  vectors can be generated using an algorithm like
-    |  #[+a("https://en.wikipedia.org/wiki/Word2vec") word2vec]. spaCy's medium
-    |  #[code md] and large #[code lg] #[+a("/models") models] come with
-    |  #[strong multi-dimensional vectors] that look like this:
+    |  #[+a("https://en.wikipedia.org/wiki/Word2vec") word2vec] and usually
+    |  look like this:
 
 +code("banana.vector", false, false, 250).
     array([2.02280000e-01,  -7.66180009e-02,   3.70319992e-01,
@@ -110,8 +109,21 @@ p
           -2.97650009e-01,   7.89430022e-01,   3.31680000e-01,
           -1.19659996e+00,  -4.71559986e-02,   5.31750023e-01], dtype=float32)
 
++infobox("Important note", "⚠️")
+    |  To make them compact and fast, spaCy's small #[+a("/models") models]
+    |  (all packages that end in #[code sm]) #[strong don&apos;t ship with word vectors], and
+    |  only include context-sensitive #[strong tensors]. This means you can
+    |  still use the #[code similarity()] methods to compare documents, spans
+    |  and tokens – but the result won't be as good, and individual tokens won't
+    |  have any vectors assigned. So in order to use #[em real] word vectors,
+    |  you need to download a larger model:
+
+    +code-wrapper
+        +code-new(false, "bash", "$") spacy download en_core_web_lg
+
 p
-    |  The #[code .vector] attribute will return an object's vector.
+    |  Models that come with built-in word vectors make them available as the
+    |  #[+api("token#vector") #[code Token.vector]] attribute.
     |  #[+api("doc#vector") #[code Doc.vector]] and
     |  #[+api("span#vector") #[code Span.vector]] will default to an average
     |  of their token vectors. You can also check if a token has a vector
@@ -119,6 +131,7 @@ p
     |  vectors.
 
 +code.
+    nlp = spacy.load('en_core_web_lg')
     tokens = nlp(u'dog cat banana sasquatch')
 
     for token in tokens:
@@ -143,10 +156,9 @@ p
     |  they're part of the model's vocabulary, and come with a vector. The word
     |  "sasquatch" on the other hand is a lot less common and out-of-vocabulary
     |  – so its vector representation consists of 300 dimensions of #[code 0],
-    |  which means it's practically nonexistent.
-
-p
-    |  If your application will benefit from a large vocabulary with more
-    |  vectors, you should consider using one of the
-    |  #[+a("/models") larger models] instead of the default,
-    |  smaller ones, which usually come with a clipped vocabulary.
+    |  which means it's practically nonexistent. If your application will
+    |  benefit from a #[strong large vocabulary] with more vectors, you should
+    |  consider using one of the larger models or loading in a full vector
+    |  package, for example,
+    |  #[+a("/models/en#en_vectors_web_lg") #[code en_vectors_web_lg]], which
+    |  includes over #[strong 1 million unique vectors].
