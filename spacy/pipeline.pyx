@@ -30,6 +30,7 @@ from .attrs import POS
 from .parts_of_speech import X
 from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
 from ._ml import link_vectors_to_models, zero_init, flatten
+from ._ml import create_default_optimizer
 from . import util
 
 
@@ -138,13 +139,20 @@ class Pipe(object):
         problem.
         """
         raise NotImplementedError
+    
+    def create_optimizer(self):
+        return create_default_optimizer(self.model.ops,
+                                        **self.cfg.get('optimizer', {}))
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None):
         """Initialize the pipe for training, using data exampes if available.
         If no model has been initialized yet, the model is added."""
         if self.model is True:
             self.model = self.Model(**self.cfg)
         link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
     def use_params(self, params):
         """Modify the pipe's model, to use the given parameter values."""
@@ -336,8 +344,8 @@ class Tensorizer(Pipe):
         loss = (d_scores**2).sum()
         return loss, d_scores
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None):
-        """Allocate models, pre-process training data and acquire a trainer and
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None):
+        """Allocate models, pre-process training data and acquire an
         optimizer.
 
         gold_tuples (iterable): Gold-standard training data.
@@ -349,9 +357,11 @@ class Tensorizer(Pipe):
         if self.model is True:
             self.cfg['input_size'] = 384
             self.cfg['output_size'] = 300
-            #self.cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model = self.Model(**self.cfg)
         link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
 
 class Tagger(Pipe):
@@ -457,7 +467,7 @@ class Tagger(Pipe):
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = {}
         for raw_text, annots_brackets in gold_tuples:
@@ -477,6 +487,9 @@ class Tagger(Pipe):
             self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
         link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
     @classmethod
     def Model(cls, n_tags, **cfg):
@@ -627,7 +640,8 @@ class MultitaskObjective(Tagger):
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None, tok2vec=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, tok2vec=None,
+                       sgd=None):
         gold_tuples = nonproj.preprocess_training_data(gold_tuples)
         for raw_text, annots_brackets in gold_tuples:
             for annots, brackets in annots_brackets:
@@ -643,6 +657,9 @@ class MultitaskObjective(Tagger):
                 Softmax(len(self.labels), token_vector_width)
             )
         link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
@@ -739,7 +756,7 @@ class SimilarityHook(Pipe):
     def update(self, doc1_doc2, golds, sgd=None, drop=0.):
         sims, bp_sims = self.model.begin_update(doc1_doc2, drop=drop)
 
-    def begin_training(self, _=tuple(), pipeline=None):
+    def begin_training(self, _=tuple(), pipeline=None, sgd=None):
         """Allocate model, using width from tensorizer in pipeline.
 
         gold_tuples (iterable): Gold-standard training data.
@@ -748,6 +765,9 @@ class SimilarityHook(Pipe):
         if self.model is True:
             self.model = self.Model(pipeline[0].model.nO)
             link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
 
 class TextCategorizer(Pipe):
@@ -831,7 +851,7 @@ class TextCategorizer(Pipe):
         self.labels.append(label)
         return 1
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None):
         if pipeline and getattr(pipeline[0], 'name', None) == 'tensorizer':
             token_vector_width = pipeline[0].model.nO
         else:
@@ -841,6 +861,9 @@ class TextCategorizer(Pipe):
             self.model = self.Model(len(self.labels), token_vector_width,
                                     **self.cfg)
             link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
 
 cdef class DependencyParser(Parser):
@@ -851,12 +874,12 @@ cdef class DependencyParser(Parser):
     def postprocesses(self):
         return [nonproj.deprojectivize]
 
-    def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
+    def init_multitask_objectives(self, gold_tuples, pipeline, sgd=None, **cfg):
         for target in []:
             labeller = MultitaskObjective(self.vocab, target=target)
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline,
-                                    tok2vec=tok2vec)
+                                    tok2vec=tok2vec, sgd=sgd)
             pipeline.append(labeller)
             self._multitasks.append(labeller)
 
@@ -871,7 +894,7 @@ cdef class EntityRecognizer(Parser):
 
     nr_feature = 6
 
-    def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
+    def init_multitask_objectives(self, gold_tuples, pipeline, sgd=None, **cfg):
         for target in []:
             labeller = MultitaskObjective(self.vocab, target=target)
             tok2vec = self.model[0]
