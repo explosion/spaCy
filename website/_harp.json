@@ -66,8 +66,7 @@
                 { "id": 3, "title": "3.x", "checked": true }]
             },
             { "id": "config", "title": "Configuration", "multiple": true, "options": [
-                {"id": "venv", "title": "virtualenv", "help": "Use a virtual environment and install spaCy into a user directory" },
-                {"id": "gpu", "title": "GPU", "help": "Run spaCy on GPU to make it faster. Requires an NVDIA graphics card with CUDA 2+. See section below for more info."}]
+                {"id": "venv", "title": "virtualenv", "help": "Use a virtual environment and install spaCy into a user directory" }]
             },
             { "id": "model", "title": "Models", "multiple": true }
         ],
