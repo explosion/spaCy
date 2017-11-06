@@ -1,0 +1,127 @@
+//- 💫 DOCS > USAGE > DEEP LEARNING > WRAPPING MODELS
+
+p
+    |  #[+a(gh("thinc")) Thinc] is the machine learning library powering spaCy.
+    |  It's a practical toolkit for implementing models that follow the
+    |  #[+a("https://explosion.ai/blog/deep-learning-formula-nlp", true) "Embed, encode, attend, predict"]
+    |  architecture. It's designed to be easy to install, efficient for CPU
+    |  usage and optimised for NLP and deep learning with text – in particular,
+    |  hierarchically structured input and variable-length sequences.
+
++aside("How Thinc works")
+    |  To differentiate a function efficiently, you usually need to store
+    |  intermediate results, computed during the "forward pass", to reuse them
+    |  during the backward pass. Most libraries require the data passed through
+    |  the network to accumulate these intermediate result. In
+    |  #[+a(gh("thinc")) Thinc], a model
+    |  that computes #[code y = f(x)] is required to also
+    |  return a callback that computes #[code dx = f&apos;(dy)]. Usually, the
+    |  callback is implemented as a closure, so the intermediate results can be
+    |  read from the enclosing scope.
+
+p
+    |  spaCy's built-in pipeline components can all be powered by any object
+    |  that follows Thinc's #[code Model] API. If a wrapper is not yet available
+    |  for the library you're using, you should create a
+    |  #[code thinc.neural.Model] subclass that implements a #[code begin_update]
+    |  method. You'll also want to implement #[code to_bytes], #[code from_bytes],
+    |  #[code to_disk] and #[code from_disk] methods, to save and load your
+    |  model.
+
++code("Thinc Model API").
+    class ThincModel(thinc.neural.Model):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def begin_update(self, X, drop=0.):
+            def backprop(dY, sgd=None):
+                return dX
+            return Y, backprop
+
+        def to_disk(self, path, **exclude):
+            return None
+
+        def from_disk(self, path, **exclude):
+            return self
+
+        def to_bytes(self, **exclude):
+            return bytes
+
+        def from_bytes(self, msgpacked_bytes, **exclude):
+            return self
+
+        def to_gpu(self, device_num):
+            return None
+
+        def to_cpu(self):
+            return None
+
+        def resize_output(self, new_size):
+            return None
+
+        def resize_input(self):
+            return None
+
+        @contextlib.contextmanager
+        def use_params(self, params):
+            return None
+
++table(["Method", "Description"])
+    +row
+        +cell #[code __init__]
+        +cell Initialise the model.
+
+    +row
+        +cell #[code begin_update]
+        +cell Return the output of the wrapped PyTorch model for the given input, along with a callback to handle the backward pass.
+
+    +row
+        +cell #[code to_disk]
+        +cell Save the model's weights to disk.
+
+    +row
+        +cell #[code from_disk]
+        +cell Read the model's weights from disk.
+
+    +row
+        +cell #[code to_bytes]
+        +cell Serialize the model's weights to bytes.
+
+    +row
+        +cell #[code from_bytes]
+        +cell Load the model's weights from bytes.
+
+    +row
+        +cell #[code to_gpu]
+        +cell
+            |  Ensure the model's weights are on the specified GPU device. If
+            |  already on that device, no action is taken.
+
+    +row
+        +cell #[code to_cpu]
+        +cell
+            |  Ensure the model's weights are on CPU. If already on CPU, no
+            |  action is taken.
+
+    +row
+        +cell #[code resize_output]
+        +cell
+            |  Resize the model such that the model's output vector has a new
+            |  size. If #[code new_size] is larger, weights corresponding to
+            |  the new output neurons are zero-initialized. If #[code new_size]
+            |  is smaller, neurons are dropped from the end of the vector.
+
+    +row
+        +cell #[code resize_input]
+        +cell
+            |  Resize the model such that the expects input vectors of a
+            |  different size. If #[code new_size] is larger, weights
+            |  corresponding to the new input neurons are zero-initialized. If
+            |  #[code new_size] is smaller, weights are dropped from the end of
+            |  the vector.
+
+    +row
+        +cell #[code use_params]
+        +cell
+            |  Use the given parameters, for the scope of the contextmanager.
+            |  At the end of the block, the weights are restored.

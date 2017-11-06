@@ -128,7 +128,7 @@
         "next": "training",
         "menu": {
             "Pre-processing Text": "pre-processing",
-            "spaCy and Thinc": "thinc",
+            "Wrapping Models": "wrapping",
             "TensorFlow / Keras": "tensorflow-keras",
             "scikit-learn": "scikit-learn",
             "PyTorch": "pytorch",
