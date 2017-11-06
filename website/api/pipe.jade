@@ -262,13 +262,13 @@ p
     +tag method
 
 p
-    |  Initialize the pipe for training, using data exampes if available. If no
-    |  model has been initialized yet, the model is added.
+    |  Initialise the pipe for training, using data exampes if available. If no
+    |  model has been initialised yet, the model is added.
 
 +aside-code("Example").
     #{VARNAME} = #{CLASSNAME}(nlp.vocab)
     nlp.pipeline.append(#{VARNAME})
-    #{VARNAME}.begin_training(pipeline=nlp.pipeline)
+    optimizer = #{VARNAME}.begin_training(pipeline=nlp.pipeline)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -284,6 +284,36 @@ p
         +cell
             |  Optional list of #[+api("pipe") #[code Pipe]] components that
             |  this component is part of.
+
+    +row
+        +cell #[code sgd]
+        +cell callable
+        +cell
+            |  An optional optimizer. Should take two arguments #[code weights]
+            |  and #[code gradient], and an optional ID. Will be created via
+            |  #[+api(CLASSNAME.toLowerCase() + "#create_optimizer") #[code create_optimizer]]
+            |  if not set.
+
+    +row("foot")
+        +cell returns
+        +cell callable
+        +cell An optimizer.
+
++h(2, "create_optimizer") #{CLASSNAME}.create_optimizer
+    +tag method
+
+p
+    |  Create an optmizer for the pipeline component.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    optimizer = #{VARNAME}.create_optimizer()
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell callable
+        +cell The optimizer.
 
 +h(2, "use_params") #{CLASSNAME}.use_params
     +tag method
@@ -309,15 +339,28 @@ p Modify the pipe's model, to use the given parameter values.
 
 p Add a new label to the pipe.
 
-+aside-code("Example").
-    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
-    #{VARNAME}.add_label('MY_LABEL')
+if CLASSNAME == "Tagger"
+    +aside-code("Example").
+        #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+        #{VARNAME}.add_label('MY_LABEL', {POS: 'NOUN'})
+else
+    +aside-code("Example").
+        #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+        #{VARNAME}.add_label('MY_LABEL')
 
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code label]
         +cell unicode
         +cell The label to add.
+
+    if CLASSNAME == "Tagger"
+        +row
+            +cell #[code values]
+            +cell dict
+            +cell
+                |  Optional values to map to the label, e.g. a tag map
+                |  dictionary.
 
 +h(2, "to_disk") #{CLASSNAME}.to_disk
     +tag method
