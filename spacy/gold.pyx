@@ -11,6 +11,7 @@ import itertools
 from .syntax import nonproj
 from .tokens import Doc
 from . import util
+from .util import minibatch
 
 
 def tags_to_entities(tags):
@@ -142,23 +143,6 @@ def _min_edit_path(cand_words, gold_words):
             curr_costs[j] = 0
 
     return prev_costs[n_gold], previous_row[-1]
-
-
-def minibatch(items, size=8):
-    """Iterate over batches of items. `size` may be an iterator,
-    so that batch-size can vary on each step.
-    """
-    if isinstance(size, int):
-        size_ = itertools.repeat(8)
-    else:
-        size_ = size
-    items = iter(items)
-    while True:
-        batch_size = next(size_)
-        batch = list(cytoolz.take(int(batch_size), items))
-        if len(batch) == 0:
-            break
-        yield list(batch)
 
 
 class GoldCorpus(object):
