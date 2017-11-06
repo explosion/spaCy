@@ -8,22 +8,24 @@ For more details, see the documentation:
 * NER: https://alpha.spacy.io/usage/linguistic-features#named-entities
 
 Developed for: spaCy 2.0.0a18
-Last updated for: spaCy 2.0.0a18
+Last updated for: spaCy 2.0.0a19
 """
 from __future__ import unicode_literals, print_function
 
 import plac
 import random
 from pathlib import Path
-
 import spacy
-from spacy.gold import GoldParse, biluo_tags_from_offsets
 
 
 # training data
 TRAIN_DATA = [
-    ('Who is Shaka Khan?', [(7, 17, 'PERSON')]),
-    ('I like London and Berlin.', [(7, 13, 'LOC'), (18, 24, 'LOC')])
+    ('Who is Shaka Khan?', {
+        'entities': [(7, 17, 'PERSON')]
+    }),
+    ('I like London and Berlin.', {
+        'entities': [(7, 13, 'LOC'), (18, 24, 'LOC')]
+    })
 ]
 
 
@@ -45,25 +47,28 @@ def main(model=None, output_dir=None, n_iter=100):
     if 'ner' not in nlp.pipe_names:
         ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, last=True)
+    # otherwise, get it so we can add labels
+    else:
+        ner = nlp.get_pipe('ner')
 
-    # function that allows begin_training to get the training data
-    get_data = lambda: reformat_train_data(nlp.tokenizer, TRAIN_DATA)
+    # add labels
+    for _, annotations in TRAIN_DATA:
+        for ent in annotations.get('entities'):
+            ner.add_label(ent[2])
 
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
     with nlp.disable_pipes(*other_pipes):  # only train NER
-        optimizer = nlp.begin_training(get_data)
+        optimizer = nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
-            for raw_text, entity_offsets in TRAIN_DATA:
-                doc = nlp.make_doc(raw_text)
-                gold = GoldParse(doc, entities=entity_offsets)
+            for text, annotations in TRAIN_DATA:
                 nlp.update(
-                    [doc], # Batch of Doc objects
-                    [gold], # Batch of GoldParse objects
-                    drop=0.5, # Dropout -- make it harder to memorise data
-                    sgd=optimizer, # Callable to update weights
+                    [text],  # batch of texts
+                    [annotations],  # batch of annotations
+                    drop=0.5,  # dropout - make it harder to memorise data
+                    sgd=optimizer,  # callable to update weights
                     losses=losses)
             print(losses)
 
@@ -90,25 +95,13 @@ def main(model=None, output_dir=None, n_iter=100):
             print('Tokens', [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 
 
-def reformat_train_data(tokenizer, examples):
-    """Reformat data to match JSON format.
-    https://alpha.spacy.io/api/annotation#json-input
-
-    tokenizer (Tokenizer): Tokenizer to process the raw text.
-    examples (list): The trainig data.
-    RETURNS (list): The reformatted training data."""
-    output = []
-    for i, (text, entity_offsets) in enumerate(examples):
-        doc = tokenizer(text)
-        ner_tags = biluo_tags_from_offsets(tokenizer(text), entity_offsets)
-        words = [w.text for w in doc]
-        tags = ['-'] * len(doc)
-        heads = [0] * len(doc)
-        deps = [''] * len(doc)
-        sentence = (range(len(doc)), words, tags, heads, deps, ner_tags)
-        output.append((text, [(sentence, [])]))
-    return output
-
-
 if __name__ == '__main__':
     plac.call(main)
+
+    # Expected output:
+    # Entities [('Shaka Khan', 'PERSON')]
+    # Tokens [('Who', '', 2), ('is', '', 2), ('Shaka', 'PERSON', 3),
+    # ('Khan', 'PERSON', 1), ('?', '', 2)]
+    # Entities [('London', 'LOC'), ('Berlin', 'LOC')]
+    # Tokens [('I', '', 2), ('like', '', 2), ('London', 'LOC', 3),
+    # ('and', '', 2), ('Berlin', 'LOC', 3), ('.', '', 2)]

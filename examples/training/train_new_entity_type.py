@@ -24,16 +24,14 @@ For more details, see the documentation:
 * NER: https://alpha.spacy.io/usage/linguistic-features#named-entities
 
 Developed for: spaCy 2.0.0a18
-Last updated for: spaCy 2.0.0a18
+Last updated for: spaCy 2.0.0a19
 """
 from __future__ import unicode_literals, print_function
 
 import plac
 import random
 from pathlib import Path
-
 import spacy
-from spacy.gold import GoldParse, minibatch
 
 
 # new entity label
@@ -45,20 +43,29 @@ LABEL = 'ANIMAL'
 # model might learn the new type, but "forget" what it previously knew.
 # https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting
 TRAIN_DATA = [
-    ("Horses are too tall and they pretend to care about your feelings",
-     [(0, 6, 'ANIMAL')]),
+    ("Horses are too tall and they pretend to care about your feelings", {
+        'entities': [(0, 6, 'ANIMAL')]
+    }),
 
-    ("Do they bite?", []),
+    ("Do they bite?", {
+        'entities': []
+    }),
 
-    ("horses are too tall and they pretend to care about your feelings",
-     [(0, 6, 'ANIMAL')]),
+    ("horses are too tall and they pretend to care about your feelings", {
+        'entities': [(0, 6, 'ANIMAL')]
+    }),
 
-    ("horses pretend to care about your feelings", [(0, 6, 'ANIMAL')]),
+    ("horses pretend to care about your feelings", {
+        'entities': [(0, 6, 'ANIMAL')]
+    }),
 
-    ("they pretend to care about your feelings, those horses",
-     [(48, 54, 'ANIMAL')]),
+    ("they pretend to care about your feelings, those horses", {
+        'entities': [(48, 54, 'ANIMAL')]
+    }),
 
-    ("horses?", [(0, 6, 'ANIMAL')])
+    ("horses?", {
+        'entities': [(0, 6, 'ANIMAL')]
+    })
 ]
 
 
@@ -90,15 +97,13 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=50):
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
     with nlp.disable_pipes(*other_pipes):  # only train NER
-        random.seed(0)
         optimizer = nlp.begin_training()
         for itn in range(n_iter):
+            random.shuffle(TRAIN_DATA)
             losses = {}
-            gold_parses = get_gold_parses(nlp.make_doc, TRAIN_DATA)
-            for batch in minibatch(gold_parses, size=3):
-                docs, golds = zip(*batch)
-                nlp.update(docs, golds, losses=losses, sgd=optimizer,
-                           drop=0.35)
+            for text, annotations in TRAIN_DATA:
+                nlp.update([text], [annotations], sgd=optimizer, drop=0.35,
+                           losses=losses)
             print(losses)
 
     # test the trained model
@@ -123,20 +128,6 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=50):
         doc2 = nlp2(test_text)
         for ent in doc2.ents:
             print(ent.label_, ent.text)
-
-
-def get_gold_parses(tokenizer, train_data):
-    """Shuffle and create GoldParse objects.
-
-    tokenizer (Tokenizer): Tokenizer to processs the raw text.
-    train_data (list): The training data.
-    YIELDS (tuple): (doc, gold) tuples.
-    """
-    random.shuffle(train_data)
-    for raw_text, entity_offsets in train_data:
-        doc = tokenizer(raw_text)
-        gold = GoldParse(doc, entities=entity_offsets)
-        yield doc, gold
 
 
 if __name__ == '__main__':

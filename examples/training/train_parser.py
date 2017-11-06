@@ -13,24 +13,19 @@ from __future__ import unicode_literals, print_function
 import plac
 import random
 from pathlib import Path
-
 import spacy
-from spacy.gold import GoldParse
-from spacy.tokens import Doc
 
 
 # training data
 TRAIN_DATA = [
-    (
-        ['They', 'trade',  'mortgage', '-', 'backed', 'securities', '.'],
-        [1, 1, 4, 4, 5, 1, 1],
-        ['nsubj', 'ROOT', 'compound', 'punct', 'nmod', 'dobj', 'punct']
-    ),
-    (
-        ['I', 'like', 'London', 'and', 'Berlin', '.'],
-        [1, 1, 1, 2, 2, 1],
-        ['nsubj', 'ROOT', 'dobj', 'cc', 'conj', 'punct']
-    )
+    ("They trade mortgage-backed securities.", {
+        'heads': [1, 1, 4, 4, 5, 1, 1],
+        'deps': ['nsubj', 'ROOT', 'compound', 'punct', 'nmod', 'dobj', 'punct']
+    }),
+    ("I like London and Berlin", {
+        'heads': [1, 1, 1, 2, 2, 1],
+        'deps': ['nsubj', 'ROOT', 'dobj', 'cc', 'conj', 'punct']
+    })
 ]
 
 
@@ -38,7 +33,7 @@ TRAIN_DATA = [
     model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int))
-def main(model=None, output_dir=None, n_iter=1000):
+def main(model=None, output_dir=None, n_iter=10):
     """Load the model, set up the pipeline and train the parser."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
@@ -57,8 +52,8 @@ def main(model=None, output_dir=None, n_iter=1000):
         parser = nlp.get_pipe('parser')
 
     # add labels to the parser
-    for _, _, deps in TRAIN_DATA:
-        for dep in deps:
+    for _, annotations in TRAIN_DATA:
+        for dep in annotations.get('deps', []):
             parser.add_label(dep)
 
     # get names of other pipes to disable them during training
@@ -68,10 +63,8 @@ def main(model=None, output_dir=None, n_iter=1000):
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
-            for words, heads, deps in TRAIN_DATA:
-                doc = Doc(nlp.vocab, words=words)
-                gold = GoldParse(doc, heads=heads, deps=deps)
-                nlp.update([doc], [gold], sgd=optimizer, losses=losses)
+            for text, annotations in TRAIN_DATA:
+                nlp.update([text], [annotations], sgd=optimizer, losses=losses)
             print(losses)
 
     # test the trained model

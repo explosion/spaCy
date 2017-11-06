@@ -9,17 +9,14 @@ the documentation:
 * POS Tagging: https://alpha.spacy.io/usage/linguistic-features#pos-tagging
 
 Developed for: spaCy 2.0.0a18
-Last updated for: spaCy 2.0.0a18
+Last updated for: spaCy 2.0.0a19
 """
 from __future__ import unicode_literals, print_function
 
 import plac
 import random
 from pathlib import Path
-
 import spacy
-from spacy.tokens import Doc
-from spacy.gold import GoldParse
 
 
 # You need to define a mapping from your data's part-of-speech tag names to the
@@ -29,16 +26,16 @@ from spacy.gold import GoldParse
 # You may also specify morphological features for your tags, from the universal
 # scheme.
 TAG_MAP = {
-    'N': {"pos": "NOUN"},
-    'V': {"pos": "VERB"},
-    'J': {"pos": "ADJ"}
+    'N': {'pos': 'NOUN'},
+    'V': {'pos': 'VERB'},
+    'J': {'pos': 'ADJ'}
 }
 
 # Usually you'll read this in, of course. Data formats vary.
 # Ensure your strings are unicode.
 TRAIN_DATA = [
-    (["I", "like", "green", "eggs"], ["N", "V", "J", "N"]),
-    (["Eat", "blue", "ham"], ["V", "J", "N"])
+    ("I like green eggs", {'tags': ['N', 'V', 'J', 'N']}),
+    ("Eat blue ham", {'tags': ['V', 'J', 'N']})
 ]
 
 
@@ -64,10 +61,8 @@ def main(lang='en', output_dir=None, n_iter=25):
     for i in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-        for words, tags in TRAIN_DATA:
-            doc = Doc(nlp.vocab, words=words)
-            gold = GoldParse(doc, tags=tags)
-            nlp.update([doc], [gold], sgd=optimizer, losses=losses)
+        for text, annotations in TRAIN_DATA:
+            nlp.update([text], [annotations], sgd=optimizer, losses=losses)
         print(losses)
 
     # test the trained model

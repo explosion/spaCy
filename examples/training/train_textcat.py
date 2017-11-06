@@ -9,7 +9,7 @@ see the documentation:
 * Text classification: https://alpha.spacy.io/usage/text-classification
 
 Developed for: spaCy 2.0.0a18
-Last updated for: spaCy 2.0.0a18
+Last updated for: spaCy 2.0.0a19
 """
 from __future__ import unicode_literals, print_function
 import plac
@@ -18,9 +18,8 @@ from pathlib import Path
 import thinc.extra.datasets
 
 import spacy
-from spacy.gold import GoldParse, minibatch
+from spacy.gold import minibatch
 from spacy.util import compounding
-from spacy.pipeline import TextCategorizer
 
 
 @plac.annotations(
@@ -52,10 +51,8 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     print("Loading IMDB data...")
     (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
     print("Using %d training examples" % n_texts)
-    train_docs = [nlp.tokenizer(text) for text in train_texts]
-    train_gold = [GoldParse(doc, cats=cats) for doc, cats in
-                  zip(train_docs, train_cats)]
-    train_data = list(zip(train_docs, train_gold))
+    train_data = list(zip(train_texts,
+                          [{'cats': cats} for cats in train_cats]))
 
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'textcat']
@@ -68,8 +65,9 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
             # batch up the examples using spaCy's minibatch
             batches = minibatch(train_data, size=compounding(4., 32., 1.001))
             for batch in batches:
-                docs, golds = zip(*batch)
-                nlp.update(docs, golds, sgd=optimizer, drop=0.2, losses=losses)
+                texts, annotations = zip(*batch)
+                nlp.update(texts, annotations, sgd=optimizer, drop=0.2,
+                           losses=losses)
             with textcat.model.use_params(optimizer.averages):
                 # evaluate on the dev data split off in load_data()
                 scores = evaluate(nlp.tokenizer, textcat, dev_texts, dev_cats)
