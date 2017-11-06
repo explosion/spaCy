@@ -40,12 +40,6 @@ p
 
 +list("numbers")
     +item
-        |  #[strong Reformat the training data] to match spaCy's
-        |  #[+a("/api/annotation#json-input") JSON format]. The built-in
-        |  #[+api("goldparse#biluo_tags_from_offsets") #[code biluo_tags_from_offsets]]
-        |  function can help you with this.
-
-    +item
         |  #[strong Load the model] you want to start with, or create an
         |  #[strong empty model] using
         |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
@@ -56,17 +50,13 @@ p
         |  This way, you'll only be training the entity recognizer.
 
     +item
-        |  #[strong Shuffle and loop over] the examples and create a
-        |  #[code Doc] and #[code GoldParse] object for each example.
-
-    +item
-        |  For each example, #[strong update the model]
-        |  by calling #[+api("language#update") #[code nlp.update]], which steps
+        |  #[strong Shuffle and loop over] the examples. For each example,
+        |  #[strong update the model] by calling
+        |  #[+api("language#update") #[code nlp.update]], which steps
         |  through the words of the input. At each word, it makes a
-        |  #[strong prediction]. It then consults the annotations provided on the
-        |  #[code GoldParse] instance, to see whether it was
-        |  right. If it was wrong, it adjusts its weights so that the correct
-        |  action will score higher next time.
+        |  #[strong prediction]. It then consults the annotations to see whether
+        |  it was right. If it was wrong, it adjusts its weights so that the
+        |  correct action will score higher next time.
 
     +item
         |  #[strong Save] the trained model using
@@ -90,13 +80,16 @@ p
 
 +github("spacy", "examples/training/train_new_entity_type.py", 500)
 
++aside("Important note", "⚠️")
+    |  If you're using an existing model, make sure to mix in examples of
+    |  #[strong other entity types] that spaCy correctly recognized before.
+    |  Otherwise, your model might learn the new type, but "forget" what it
+    |  previously knew. This is also referred to as the
+    |  #[+a("https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting", true) "catastrophic forgetting" problem].
+
 +h(4) Step by step guide
 
 +list("numbers")
-    +item
-        |  Create #[code Doc] and #[code GoldParse] objects for
-        |  #[strong each example in your training data].
-
     +item
         |  #[strong Load the model] you want to start with, or create an
         |  #[strong empty model] using
@@ -117,10 +110,9 @@ p
         |  #[strong Loop over] the examples and call
         |  #[+api("language#update") #[code nlp.update]], which steps through
         |  the words of the input. At each word, it makes a
-        |  #[strong prediction]. It then consults the annotations provided on the
-        |  #[code GoldParse] instance, to see whether it was right. If it was
-        |  wrong, it adjusts its weights so that the correct action will score
-        |  higher next time.
+        |  #[strong prediction]. It then consults the annotations, to see
+        |  whether it was right. If it was wrong, it adjusts its weights so that
+        |  the correct action will score higher next time.
 
     +item
         |  #[strong Save] the trained model using

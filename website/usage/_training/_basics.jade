@@ -172,15 +172,23 @@ p
 
     +row
         +cell #[code get_data]
-        +cell A function converting the training data to spaCy's JSON format.
+        +cell
+            |  An optional function converting the training data to spaCy's
+            |  JSON format.
 
     +row
         +cell #[code doc]
-        +cell #[+api("doc") #[code Doc]] objects.
+        +cell
+            |  #[+api("doc") #[code Doc]] objects. The #[code update] method
+            |  takes a sequence of them, so you can batch up your training
+            |  examples.
 
     +row
         +cell #[code gold]
-        +cell #[+api("goldparse") #[code GoldParse]] objects.
+        +cell
+            |  #[+api("goldparse") #[code GoldParse]] objects. The #[code update]
+            |  method takes a sequence of them, so you can batch up your
+            |  training examples.
 
     +row
         +cell #[code drop]
@@ -197,3 +205,49 @@ p
     |  a model will be saved out to the directory. After training, you can
     |  use the #[+api("cli#package") #[code package]] command to generate an
     |  installable Python package from your model.
+
++h(3, "training-simple-style") Simple training style
+    +tag-new(2)
+
+p
+    |  Instead of sequences of #[code Doc] and #[code GoldParse] objects,
+    |  you can also use the "simple training style" and pass
+    |  #[strong raw texts] and #[strong dictionaries of annotations]
+    |  to #[+api("language#update") #[code nlp.update]].
+    |  The dictionaries can have the keys #[code entities], #[code heads],
+    |  #[code deps], #[code tags] and #[code cats]. This is generally
+    |  recommended, as it removes one layer of abstraction, and avoids
+    |  unnecessary imports. It also makes it easier to structure and load
+    |  your training data.
+
++aside-code("Example Annotations").
+    {
+        'entities': [(0, 4, 'ORG')],
+        'heads': [1, 1, 1, 5, 5, 2, 7, 5],
+        'deps': ['nsubj', 'ROOT', 'prt', 'quantmod', 'compound', 'pobj', 'det', 'npadvmod'],
+        'tags': ['PROPN', 'VERB', 'ADP', 'SYM', 'NUM', 'NUM', 'DET', 'NOUN'],
+        'cats': {'BUSINESS': 1.0}
+    }
+
++code("Simple training loop").
+    TRAIN_DATA = [
+         ("Uber blew through $1 million a week", {'entities': [(0, 4, 'ORG')]}),
+         ("Google rebrands its business apps", {'entities': [(0, 6, "ORG")]})]
+
+    nlp = spacy.blank('en')
+    optimizer = nlp.begin_training()
+    for i in range(20):
+        random.shuffle(TRAIN_DATA)
+        for text, annotations in TRAIN_DATA:
+            nlp.update([text], [annotations], sgd=optimizer)
+    nlp.to_disk('/model')
+
+p
+    |  The above training loop leaves out a few details that can really
+    |  improve accuracy – but the principle really is #[em that] simple. Once
+    |  you've got your pipeline together and you want to tune the accuracy,
+    |  you usually want to process your training examples in batches, and
+    |  experiment with #[+api("top-level#util.minibatch") #[code minibatch]]
+    |  sizes and dropout rates, set via the #[code drop] keyword argument. See
+    |  the #[+api("language") #[code Language]] and #[+api("pipe") #[code Pipe]]
+    |  API docs for available options.

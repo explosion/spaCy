@@ -35,17 +35,18 @@ p
         |  be able to see results on each training iteration.
 
     +item
-        |  #[strong Loop over] the training examples, partition them into
-        |  batches and create #[code Doc] and #[code GoldParse] objects for each
-        |  example in the batch.
+        |  #[strong Loop over] the training examples and partition them into
+        |  batches using spaCy's
+        |  #[+api("top-level#util.minibatch") #[code minibatch]] and
+        |  #[+api("top-level#util.compounding") #[code compounding]] helpers.
 
     +item
         |  #[strong Update the model] by calling
         |  #[+api("language#update") #[code nlp.update]], which steps
         |  through the examples and makes a #[strong prediction]. It then
-        |  consults the annotations provided on the #[code GoldParse] instance,
-        |  to see whether it was right. If it was wrong, it adjusts its weights
-        |  so that the correct prediction will score higher next time.
+        |  consults the annotations to see whether it was right. If it was
+        |  wrong, it adjusts its weights so that the correct prediction will
+        |  score higher next time.
 
     +item
         |  Optionally, you can also #[strong evaluate the text classifier] on

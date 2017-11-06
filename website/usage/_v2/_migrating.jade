@@ -110,17 +110,23 @@ p
     |  spaCy when to #[em stop], you can now explicitly call
     |  #[+api("language#begin_training") #[code begin_taining]], which
     |  returns an optimizer you can pass into the
-    |  #[+api("language#update") #[code update]] function.
+    |  #[+api("language#update") #[code update]] function. While #[code update]
+    |  still accepts sequences of #[code Doc] and #[code GoldParse] objects,
+    |  you can now also pass in a list of strings and dictionaries describing
+    |  the annotations. This is the recommended usage, as it removes one layer
+    |  of abstraction from the training.
 
 +code-new.
     optimizer = nlp.begin_training()
     for itn in range(1000):
-        for doc, gold in train_data:
-            nlp.update([doc], [gold], sgd=optimizer)
+        for texts, annotations in train_data:
+            nlp.update(texts, annotations, sgd=optimizer)
     nlp.to_disk('/model')
 +code-old.
     for itn in range(1000):
-        for doc, gold in train_data:
+        for text, entities in train_data:
+            doc = Doc(text)
+            gold = GoldParse(doc, entities=entities)
             nlp.update(doc, gold)
     nlp.end_training()
     nlp.save_to_directory('/model')
