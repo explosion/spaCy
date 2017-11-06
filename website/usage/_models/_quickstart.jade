@@ -8,6 +8,7 @@
         +qs({lang: lang}, "divider")
         +qs({lang: lang, load: "module"}, "python") import #{package}
         +qs({lang: lang, load: "module"}, "python") nlp = #{package}.load()
+        +qs({lang: lang, load: "spacy"}, "python") import spacy
         +qs({lang: lang, load: "spacy"}, "python") nlp = spacy.load('#{lang}')
         +qs({lang: lang, config: "example"}, "python") doc = nlp(u"#{EXAMPLE_SENTENCES[lang]}")
 
