@@ -144,3 +144,15 @@ p
     |  novel symbol, #[code -PRON-], which is used as the lemma for
     |  all personal pronouns. For more info on this, see the
     |  #[+api("annotation#lemmatization") annotation specs] on lemmatization.
+
++h(3, "catastrophic-forgetting") NER model doesn't recognise other entities anymore after training
+
+p
+    |  If your training data only contained new entities and you didn't mix in
+    |  any examples the model previously recognised, it can cause the model to
+    |  "forget" what it had previously learned. This is also referred to as the
+    |  #[+a("https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting", true) "catastrophic forgetting problem"].
+    |  A solution is to pre-label some text, and mix it with the new text in
+    |  your updates. You can also do this by running spaCy over some text,
+    |  extracting a bunch of entities the model previously recognised correctly,
+    |  and adding them to your training examples.
