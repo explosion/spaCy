@@ -109,8 +109,7 @@ cdef class Morphology:
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
                                             self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
-        if token.lemma == 0:
-            token.lemma = analysis.lemma
+        token.lemma = analysis.lemma
         token.pos = analysis.tag.pos
         token.tag = analysis.tag.name
         token.morph = analysis.tag.morph

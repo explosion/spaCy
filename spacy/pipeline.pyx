@@ -412,7 +412,11 @@ class Tagger(Pipe):
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0 and doc.c[j].pos == 0:
+                    # Don't clobber preset lemmas
+                    lemma = doc.c[j].lemma
                     vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
+                    if lemma != 0:
+                        doc.c[j].lemma = lemma
                 idx += 1
             if tensors is not None:
                 if isinstance(doc.tensor, numpy.ndarray) \
