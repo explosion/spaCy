@@ -30,7 +30,7 @@ from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
-from .._ml import link_vectors_to_models
+from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import json_dumps, copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
@@ -272,6 +272,10 @@ cdef class Parser:
             'hist_width': hist_width
         }
         return (tok2vec, lower, upper), cfg
+
+    def create_optimizer(self):
+        return create_default_optimizer(self.model[0].ops,
+                                        **self.cfg.get('optimizer', {}))
 
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """Create a Parser.
@@ -793,7 +797,7 @@ cdef class Parser:
             copy_array(larger.b[:smaller.nO], smaller.b)
             self.model[-1]._layers[-1] = larger
 
-    def begin_training(self, gold_tuples, pipeline=None, **cfg):
+    def begin_training(self, gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
         gold_tuples = nonproj.preprocess_training_data(gold_tuples,
@@ -805,9 +809,14 @@ cdef class Parser:
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
-            self.init_multitask_objectives(gold_tuples, pipeline, **cfg)
+            if sgd is None:
+                sgd = self.create_optimizer()
+            self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
             self.cfg.update(cfg)
+        elif sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task

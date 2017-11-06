@@ -15,12 +15,12 @@ from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module, copy_array
 from thinc.neural._lsuv import svd_orthonormal
+from thinc.neural.optimizers import Adam
 
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
-from thinc.neural._lsuv import svd_orthonormal
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from . import util
@@ -38,6 +38,19 @@ def cosine(vec1, vec2):
     else:
         return vec1.dot(vec2) / (norm1 * norm2)
 
+
+def create_default_optimizer(ops, **cfg):
+    learn_rate = util.env_opt('learn_rate', 0.001)
+    beta1 = util.env_opt('optimizer_B1', 0.9)
+    beta2 = util.env_opt('optimizer_B2', 0.999)
+    eps = util.env_opt('optimizer_eps', 1e-08)
+    L2 = util.env_opt('L2_penalty', 1e-6)
+    max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+    optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1,
+                     beta2=beta2, eps=eps)
+    optimizer.max_grad_norm = max_grad_norm
+    optimizer.device = ops.device
+    return optimizer
 
 @layerize
 def _flatten_add_lengths(seqs, pad=0, drop=0.):
