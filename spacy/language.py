@@ -17,7 +17,8 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
-from .compat import json_dumps, izip
+from .compat import json_dumps, izip, basestring_
+from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP
@@ -377,8 +378,21 @@ class Language(object):
             return
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = Adam(Model.ops, 0.001)
+                self._optimizer = create_default_optimizer(Model.ops)
             sgd = self._optimizer
+
+        # Allow dict of args to GoldParse, instead of GoldParse objects.
+        gold_objs = []
+        doc_objs = []
+        for doc, gold in zip(docs, golds):
+            if isinstance(doc, basestring_):
+                doc = self.make_doc(doc)
+            if not isinstance(gold, GoldParse):
+                gold = GoldParse(doc, **gold)
+            doc_objs.append(doc)
+            gold_objs.append(gold)
+        golds = gold_objs
+        docs = doc_objs
         grads = {}
 
         def get_grads(W, dW, key=None):
