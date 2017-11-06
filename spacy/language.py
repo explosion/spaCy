@@ -19,7 +19,7 @@ from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
 from .compat import json_dumps, izip
 from .scorer import Scorer
-from ._ml import link_vectors_to_models
+from ._ml import link_vectors_to_models, create_default_optimizer
 from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
