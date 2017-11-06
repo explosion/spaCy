@@ -452,8 +452,8 @@ mixin head-cell()
 
 //- Table cell (only used within +row in +table)
 
-mixin cell(align)
-    td.c-table__cell.u-text(class=align ? "u-text-" + align : null)&attributes(attributes)
+mixin cell(...style)
+    td.c-table__cell.u-text(class=prefixArgs(style, "c-table__cell"))&attributes(attributes)
         block
 
 

@@ -50,55 +50,55 @@ p
         +cell spaCy v2.0.0
         +cell 2017
         +cell neural
-        +cell("right") 94.48
+        +cell("num") 94.48
 
     +row
         +cell spaCy v1.1.0
         +cell 2016
         +cell linear
-        +cell("right") 92.80
+        +cell("num") 92.80
 
     +row("divider")
         +cell
             +a("https://arxiv.org/pdf/1611.01734.pdf") Dozat and Manning
             +cell 2017
             +cell neural
-            +cell("right") #[strong 95.75]
+            +cell("num") #[strong 95.75]
 
     +row
         +cell
             +a("http://arxiv.org/abs/1603.06042") Andor et al.
         +cell 2016
         +cell neural
-        +cell("right") 94.44
+        +cell("num") 94.44
 
     +row
         +cell
             +a("https://github.com/tensorflow/models/tree/master/research/syntaxnet") SyntaxNet Parsey McParseface
         +cell 2016
         +cell neural
-        +cell("right") 94.15
+        +cell("num") 94.15
 
     +row
         +cell
             +a("http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/43800.pdf") Weiss et al.
         +cell 2015
         +cell neural
-        +cell("right") 93.91
+        +cell("num") 93.91
 
     +row
         +cell
             +a("http://research.google.com/pubs/archive/38148.pdf") Zhang and McDonald
         +cell 2014
         +cell linear
-        +cell("right") 93.32
+        +cell("num") 93.32
 
     +row
         +cell
             +a("http://www.cs.cmu.edu/~ark/TurboParser/") Martins et al.
         +cell 2013
         +cell linear
-        +cell("right") 93.10
+        +cell("num") 93.10
 
 +h(4, "ner-accuracy-ontonotes5") NER accuracy (OntoNotes 5, no pre-process)
 
@@ -113,35 +113,35 @@ p
         +cell spaCy #[+a("/models/en#en_core_web_lg") #[code en_core_web_lg]] v2.0.0a3
         +cell 2017
         +cell neural
-        +cell("right") 85.85
+        +cell("num") 85.85
 
     +row("divider")
         +cell
             +a("https://arxiv.org/pdf/1702.02098.pdf") Strubell et al.
         +cell 2017
         +cell neural
-        +cell("right") #[strong 86.81]
+        +cell("num") #[strong 86.81]
 
     +row
         +cell
             +a("https://www.semanticscholar.org/paper/Named-Entity-Recognition-with-Bidirectional-LSTM-C-Chiu-Nichols/10a4db59e81d26b2e0e896d3186ef81b4458b93f") Chiu and Nichols
         +cell 2016
         +cell neural
-        +cell("right") 86.19
+        +cell("num") 86.19
 
     +row
         +cell
             +a("https://www.semanticscholar.org/paper/A-Joint-Model-for-Entity-Analysis-Coreference-Typi-Durrett-Klein/28eb033eee5f51c5e5389cbb6b777779203a6778") Durrett and Klein
         +cell 2014
         +cell neural
-        +cell("right") 84.04
+        +cell("num") 84.04
 
     +row
         +cell
             +a("http://www.aclweb.org/anthology/W09-1119") Ratinov and Roth
         +cell 2009
         +cell linear
-        +cell("right") 83.45
+        +cell("num") 83.45
 
 +h(3, "spacy-models") Model comparison
 
@@ -183,24 +183,24 @@ p
     +row
         +cell #[strong spaCy]
         each data in [ "0.2ms", "1ms", "19ms"]
-            +cell("right") #[strong=data]
+            +cell("num") #[strong=data]
 
         each data in ["1x", "1x", "1x"]
-            +cell("right")=data
+            +cell("num")=data
 
     +row
         +cell CoreNLP
         each data in ["2ms", "10ms", "49ms", "10x", "10x", "2.6x"]
-            +cell("right")=data
+            +cell("num")=data
     +row
         +cell ZPar
         each data in ["1ms", "8ms", "850ms", "5x", "8x", "44.7x"]
-            +cell("right")=data
+            +cell("num")=data
     +row
         +cell NLTK
         each data in ["4ms", "443ms"]
-            +cell("right")=data
-        +cell("right") #[em n/a]
+            +cell("num")=data
+        +cell("num") #[em n/a]
         each data in ["20x", "443x"]
-            +cell("right")=data
-        +cell("right") #[em n/a]
+            +cell("num")=data
+        +cell("num") #[em n/a]
