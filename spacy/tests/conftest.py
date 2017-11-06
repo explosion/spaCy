@@ -15,6 +15,7 @@ from ..fi import Finnish
 from ..bn import Bengali
 from ..he import Hebrew
 from ..nb import Norwegian
+from ..ga import Irish
 from ..th import Thai
 from ..ru import Russian
 
@@ -30,7 +31,7 @@ import pytest
 
 # These languages get run through generic tokenizer tests
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
-             Swedish, Hungarian, Finnish, Bengali, Norwegian]
+             Swedish, Hungarian, Finnish, Bengali, Norwegian, Thai, Russian, Irish]
 
 
 @pytest.fixture(params=LANGUAGES)
@@ -127,6 +128,11 @@ def ru_tokenizer():
 def russian():
     pytest.importorskip("pymorphy2")
     return Russian()
+
+
+@pytest.fixture
+def ga_tokenizer():
+    return Irish.Defaults.create_tokenizer()
 
 
 @pytest.fixture
