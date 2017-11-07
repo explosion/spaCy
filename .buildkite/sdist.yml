@@ -1,0 +1,5 @@
+steps:
+  -
+    command: "fab env clean make test sdist"
+    label: ":dizzy: :python:"
+    artifact_paths: "dist/*.tar.gz"
