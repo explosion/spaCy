@@ -1,18 +1,24 @@
-import plac
-import collections
-import random
+"""
+This example shows how to use an LSTM sentiment classification model trained using Keras in spaCy. spaCy splits the document into sentences, and each sentence is classified using the LSTM. The scores for the sentences are then aggregated to give the document score. This kind of hierarchical model is quite difficult in "pure" Keras or Tensorflow, but it's very effective. The Keras example on this dataset performs quite poorly, because it cuts off the documents so that they're a fixed size. This hurts review accuracy a lot, because people often summarise their rating in the final sentence
 
+Prerequisites:
+spacy download en_vectors_web_lg
+pip install keras==2.0.9
+
+Compatible with: spaCy v2.0.0+
+"""
+
+import plac
+import random
 import pathlib
 import cytoolz
 import numpy
 from keras.models import Sequential, model_from_json
-from keras.layers import LSTM, Dense, Embedding, Dropout, Bidirectional
+from keras.layers import LSTM, Dense, Embedding, Bidirectional
 from keras.layers import TimeDistributed
 from keras.optimizers import Adam
-from spacy.compat import pickle
-
 import thinc.extra.datasets
-
+from spacy.compat import pickle
 import spacy
 
 
@@ -84,8 +90,8 @@ def get_features(docs, max_length):
 
 
 def train(train_texts, train_labels, dev_texts, dev_labels,
-        lstm_shape, lstm_settings, lstm_optimizer, batch_size=100, nb_epoch=5,
-        by_sentence=True):
+          lstm_shape, lstm_settings, lstm_optimizer, batch_size=100,
+          nb_epoch=5, by_sentence=True):
     print("Loading spaCy")
     nlp = spacy.load('en_vectors_web_lg')
     nlp.add_pipe(nlp.create_pipe('sentencizer'))
@@ -97,7 +103,7 @@ def train(train_texts, train_labels, dev_texts, dev_labels,
     if by_sentence:
         train_docs, train_labels = get_labelled_sentences(train_docs, train_labels)
         dev_docs, dev_labels = get_labelled_sentences(dev_docs, dev_labels)
-        
+
     train_X = get_features(train_docs, lstm_shape['max_length'])
     dev_X = get_features(dev_docs, lstm_shape['max_length'])
     model.fit(train_X, train_labels, validation_data=(dev_X, dev_labels),
@@ -138,12 +144,12 @@ def evaluate(model_dir, texts, labels, max_length=100):
         '''
         return [nlp.tagger, nlp.parser, SentimentAnalyser.load(model_dir, nlp,
                                                                max_length=max_length)]
-    
+
     nlp = spacy.load('en')
     nlp.pipeline = create_pipeline(nlp)
 
     correct = 0
-    i = 0 
+    i = 0
     for doc in nlp.pipe(texts, batch_size=1000, n_threads=4):
         correct += bool(doc.sentiment >= 0.5) == bool(labels[i])
         i += 1

@@ -30,19 +30,13 @@ p
         |  not necessary – but it doesn't hurt either, just to be safe.
 
     +item
-        |  #[strong Shuffle and loop over] the examples and create a
-        |  #[code Doc] and #[code GoldParse] object for each example. Make sure
-        |  to pass in the #[code heads] and #[code deps] when you create the
-        |  #[code GoldParse].
-
-    +item
-        |  For each example, #[strong update the model]
-        |  by calling #[+api("language#update") #[code nlp.update]], which steps
-        |  through the words of the input. At each word, it makes a
-        |  #[strong prediction]. It then consults the annotations provided on the
-        |  #[code GoldParse] instance, to see whether it was
-        |  right. If it was wrong, it adjusts its weights so that the correct
-        |  action will score higher next time.
+        |  #[strong Shuffle and loop over] the examples. For each example,
+        |  #[strong update the model] by calling
+        |  #[+api("language#update") #[code nlp.update]], which steps through
+        |  the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations  to see
+        |  whether it was right. If it was wrong, it adjusts its weights so
+        |  that the correct action will score higher next time.
 
     +item
         |  #[strong Save] the trained model using
@@ -67,26 +61,29 @@ p
 
 +list("numbers")
     +item
-        |  #[strong Create] a new #[code Language] class and before initialising
-        |  it, update the #[code tag_map] in its #[code Defaults] with your
-        |  custom tags.
+        |  #[strong Load the model] you want to start with, or create an
+        |  #[strong empty model] using
+        |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
+        |  language. If you're using a blank model, don't forget to add the
+        |  tagger to the pipeline. If you're using an existing model,
+        |  make sure to disable all other pipeline components during training
+        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
+        |  This way, you'll only be training the tagger.
 
     +item
-        |  #[strong Create a new tagger] component and add it to the pipeline.
+        |  #[strong Add the tag map] to the tagger using the
+        |  #[+api("tagger#add_label") #[code add_label]] method. The first
+        |  argument is the new tag name, the second the mapping to spaCy's
+        |  coarse-grained tags, e.g. #[code {'pos': 'NOUN'}].
 
     +item
-        |  #[strong Shuffle and loop over] the examples and create a
-        |  #[code Doc] and #[code GoldParse] object for each example. Make sure
-        |  to pass in the #[code tags] when you create the #[code GoldParse].
-
-    +item
-        |  For each example, #[strong update the model]
-        |  by calling #[+api("language#update") #[code nlp.update]], which steps
-        |  through the words of the input. At each word, it makes a
-        |  #[strong prediction]. It then consults the annotations provided on the
-        |  #[code GoldParse] instance, to see whether it was
-        |  right. If it was wrong, it adjusts its weights so that the correct
-        |  action will score higher next time.
+        |  #[strong Shuffle and loop over] the examples. For each example,
+        |  #[strong update the model] by calling
+        |  #[+api("language#update") #[code nlp.update]], which steps through
+        |  the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations to see whether
+        |  it was right. If it was wrong, it adjusts its weights so that the
+        |  correct action will score higher next time.
 
     +item
         |  #[strong Save] the trained model using
@@ -124,7 +121,7 @@ p
     |  respective action – e.g. search the database for hotels with high ratings
     |  for their wifi offerings.
 
-+aside("Tip: merge phrases and entities")
++aside("Tip: merge phrases and entities", "💡")
     |  To achieve even better accuracy, try merging multi-word tokens and
     |  entities specific to your domain into one token before parsing your text.
     |  You can do this by running the entity recognizer or
@@ -160,9 +157,10 @@ p
         |  #[strong empty model] using
         |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
         |  language. If you're using a blank model, don't forget to add the
-        |  parser to the pipeline. If you're using an existing model,
-        |  make sure to disable all other pipeline components during training
-        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
+        |  custom parser to the pipeline. If you're using an existing model,
+        |  make sure to #[strong remove the old parser] from the pipeline, and
+        |  disable all other pipeline components during training using
+        |  #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
         |  This way, you'll only be training the parser.
 
     +item
@@ -170,19 +168,13 @@ p
         |  #[+api("dependencyparser#add_label") #[code add_label]] method.
 
     +item
-        |  #[strong Shuffle and loop over] the examples and create a
-        |  #[code Doc] and #[code GoldParse] object for each example. Make sure
-        |  to pass in the #[code heads] and #[code deps] when you create the
-        |  #[code GoldParse].
-
-    +item
-        |  For each example, #[strong update the model]
-        |  by calling #[+api("language#update") #[code nlp.update]], which steps
+        |  #[strong Shuffle and loop over] the examples. For each example,
+        |  #[strong update the model] by calling
+        |  #[+api("language#update") #[code nlp.update]], which steps
         |  through the words of the input. At each word, it makes a
-        |  #[strong prediction]. It then consults the annotations provided on the
-        |  #[code GoldParse] instance, to see whether it was
-        |  right. If it was wrong, it adjusts its weights so that the correct
-        |  action will score higher next time.
+        |  #[strong prediction]. It then consults the annotations to see whether
+        |  it was right. If it was wrong, it adjusts its weights so that the
+        |  correct action will score higher next time.
 
     +item
         |  #[strong Save] the trained model using

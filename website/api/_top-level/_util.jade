@@ -320,3 +320,137 @@ p
             |  #[code title] is rendered as coloured headline. #[code exits]
             |  performs system exit after printing, using the value of the
             |  argument as the exit code, e.g. #[code exits=1].
+
+
++h(3, "util.minibatch") util.minibatch
+    +tag function
+    +tag-new(2)
+
+p
+    |  Iterate over batches of items. #[code size] may be an iterator, so that
+    |  batch-size can vary on each step.
+
++aside-code("Example").
+    batches = minibatch(train_data)
+    for batch in batches:
+        texts, annotations = zip(*batch)
+        nlp.update(texts, annotations)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code items]
+        +cell iterable
+        +cell The items to batch up.
+
+    +row
+        +cell #[code size]
+        +cell int / iterable
+        +cell
+            |  The batch size(s). Use
+            |  #[+api("top-level#util.compounding") #[code util.compounding]] or
+            |  #[+api("top-level#util.decaying") #[code util.decaying]] or
+            |  for an infinite series of compounding or decaying values.
+
+    +row("foot")
+        +cell yields
+        +cell list
+        +cell The batches.
+
++h(3, "util.compounding") util.compounding
+    +tag function
+    +tag-new(2)
+
+p
+    |  Yield an infinite series of compounding values. Each time the generator
+    |  is called, a value is produced by multiplying the previous value by the
+    |  compound rate.
+
++aside-code("Example").
+    sizes = compounding(1., 10., 1.5)
+    assert next(sizes) == 1.
+    assert next(sizes) == 1. * 1.5
+    assert next(sizes) == 1.5 * 1.5
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start]
+        +cell int / float
+        +cell The first value.
+
+    +row
+        +cell #[code stop]
+        +cell int / float
+        +cell The maximum value.
+
+    +row
+        +cell #[code compound]
+        +cell int / float
+        +cell The compounding factor.
+
+    +row("foot")
+        +cell yields
+        +cell int
+        +cell Compounding values.
+
++h(3, "util.decaying") util.decaying
+    +tag function
+    +tag-new(2)
+
+p
+    |  Yield an infinite series of linearly decaying values.
+
++aside-code("Example").
+    sizes = decaying(1., 10., 0.001)
+    assert next(sizes) == 1.
+    assert next(sizes) == 1. - 0.001
+    assert next(sizes) == 0.999 - 0.001
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start]
+        +cell int / float
+        +cell The first value.
+
+    +row
+        +cell #[code end]
+        +cell int / float
+        +cell The maximum value.
+
+    +row
+        +cell #[code decay]
+        +cell int / float
+        +cell The decaying factor.
+
+    +row("foot")
+        +cell yields
+        +cell int
+        +cell The decaying values.
+
++h(3, "util.itershuffle") util.itershuffle
+    +tag function
+    +tag-new(2)
+
+p
+    |  Shuffle an iterator. This works by holding #[code bufsize] items back and
+    |  yielding them sometime later. Obviously, this is not unbiased – but
+    |  should be good enough for batching. Larger bufsize means less bias.
+
++aside-code("Example").
+    values = range(1000)
+    shuffled = itershuffle(values)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code iterable]
+        +cell iterable
+        +cell Iterator to shuffle.
+
+    +row
+        +cell #[code buffsize]
+        +cell int
+        +cell Items to hold back.
+
+    +row("foot")
+        +cell yields
+        +cell iterable
+        +cell The shuffled iterator.

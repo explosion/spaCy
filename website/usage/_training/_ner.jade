@@ -2,12 +2,9 @@
 
 p
     |  All #[+a("/models") spaCy models] support online learning, so
-    |  you can update a pre-trained model with new examples. To update the
-    |  model, you first need to create an instance of
-    |  #[+api("goldparse") #[code GoldParse]], with the entity labels
-    |  you want to learn. You'll usually need to provide many examples to
-    |  meaningfully improve the system — a few hundred is a good start, although
-    |  more is better.
+    |  you can update a pre-trained model with new examples. You'll usually
+    |  need to provide many #[strong examples] to meaningfully improve the
+    |  system — a few hundred is a good start, although more is better.
 
 p
     |  You should avoid iterating over the same few examples multiple times, or
@@ -21,7 +18,7 @@ p
     |  the model of other examples by augmenting your annotations with sentences
     |  annotated with entities automatically recognised by the original model.
     |  Ultimately, this is an empirical process: you'll need to
-    |  #[strong experiment on your own data] to find a solution that works best
+    |  #[strong experiment on your data] to find a solution that works best
     |  for you.
 
 +h(3, "example-train-ner") Updating the Named Entity Recognizer
@@ -40,12 +37,6 @@ p
 
 +list("numbers")
     +item
-        |  #[strong Reformat the training data] to match spaCy's
-        |  #[+a("/api/annotation#json-input") JSON format]. The built-in
-        |  #[+api("goldparse#biluo_tags_from_offsets") #[code biluo_tags_from_offsets]]
-        |  function can help you with this.
-
-    +item
         |  #[strong Load the model] you want to start with, or create an
         |  #[strong empty model] using
         |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
@@ -56,17 +47,13 @@ p
         |  This way, you'll only be training the entity recognizer.
 
     +item
-        |  #[strong Shuffle and loop over] the examples and create a
-        |  #[code Doc] and #[code GoldParse] object for each example.
-
-    +item
-        |  For each example, #[strong update the model]
-        |  by calling #[+api("language#update") #[code nlp.update]], which steps
+        |  #[strong Shuffle and loop over] the examples. For each example,
+        |  #[strong update the model] by calling
+        |  #[+api("language#update") #[code nlp.update]], which steps
         |  through the words of the input. At each word, it makes a
-        |  #[strong prediction]. It then consults the annotations provided on the
-        |  #[code GoldParse] instance, to see whether it was
-        |  right. If it was wrong, it adjusts its weights so that the correct
-        |  action will score higher next time.
+        |  #[strong prediction]. It then consults the annotations to see whether
+        |  it was right. If it was wrong, it adjusts its weights so that the
+        |  correct action will score higher next time.
 
     +item
         |  #[strong Save] the trained model using
@@ -90,13 +77,16 @@ p
 
 +github("spacy", "examples/training/train_new_entity_type.py", 500)
 
++aside("Important note", "⚠️")
+    |  If you're using an existing model, make sure to mix in examples of
+    |  #[strong other entity types] that spaCy correctly recognized before.
+    |  Otherwise, your model might learn the new type, but "forget" what it
+    |  previously knew. This is also referred to as the
+    |  #[+a("https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting", true) "catastrophic forgetting" problem].
+
 +h(4) Step by step guide
 
 +list("numbers")
-    +item
-        |  Create #[code Doc] and #[code GoldParse] objects for
-        |  #[strong each example in your training data].
-
     +item
         |  #[strong Load the model] you want to start with, or create an
         |  #[strong empty model] using
@@ -117,10 +107,9 @@ p
         |  #[strong Loop over] the examples and call
         |  #[+api("language#update") #[code nlp.update]], which steps through
         |  the words of the input. At each word, it makes a
-        |  #[strong prediction]. It then consults the annotations provided on the
-        |  #[code GoldParse] instance, to see whether it was right. If it was
-        |  wrong, it adjusts its weights so that the correct action will score
-        |  higher next time.
+        |  #[strong prediction]. It then consults the annotations, to see
+        |  whether it was right. If it was wrong, it adjusts its weights so that
+        |  the correct action will score higher next time.
 
     +item
         |  #[strong Save] the trained model using

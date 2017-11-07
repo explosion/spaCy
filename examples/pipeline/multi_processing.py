@@ -6,7 +6,7 @@ each "sentence" on a newline, and spaces between tokens. Data is loaded from
 the IMDB movie reviews dataset and will be loaded automatically via Thinc's
 built-in dataset loader.
 
-Last updated for: spaCy 2.0.0a18
+Compatible with: spaCy v2.0.0+
 """
 from __future__ import print_function, unicode_literals
 from toolz import partition_all

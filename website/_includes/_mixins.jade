@@ -127,20 +127,22 @@ mixin help(tooltip, icon_size)
 //- Aside wrapper
     label - [string] aside label
 
-mixin aside-wrapper(label)
+mixin aside-wrapper(label, emoji)
     aside.c-aside
         .c-aside__content(role="complementary")&attributes(attributes)
             if label
-                h4.u-text-label.u-text-label--dark=label
-
+                h4.u-text-label.u-text-label--dark
+                    if emoji
+                        span.o-emoji=emoji
+                    |  #{label}
             block
 
 
 //- Aside for text
     label - [string] aside title (optional)
 
-mixin aside(label)
-    +aside-wrapper(label)
+mixin aside(label, emoji)
+    +aside-wrapper(label, emoji)
         .c-aside__text.u-text-small
             block
 
@@ -703,6 +705,6 @@ mixin landing-logos(title, logos)
 mixin under-construction()
     +infobox("Under construction", "🚧")
         |  This section is still being written and will be updated for the v2.0
-        |  release. Is there anything that you think should definitely mentioned or
-        |  explained here? Any examples you'd like to see? #[strong Let us know]
-        |  on the #[+a(gh("spacy") + "/issues/1105") v2.0 alpha thread] on GitHub!
+        |  release. Is there anything that you think should definitely mentioned
+        |  or explained here? Any examples you'd like to see?
+        |  #[strong Let us know] on the #[+a(gh("spacy") + "/issues") issue tracker]!

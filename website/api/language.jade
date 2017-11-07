@@ -157,12 +157,19 @@ p Update the models in the pipeline.
     +row
         +cell #[code docs]
         +cell iterable
-        +cell A batch of #[code Doc] objects.
+        +cell
+            |  A batch of #[code Doc] objects or unicode. If unicode, a
+            |  #[code Doc] object will be created from the text.
 
     +row
         +cell #[code golds]
         +cell iterable
-        +cell A batch of #[code GoldParse] objects.
+        +cell
+            |  A batch of #[code GoldParse] objects or dictionaries.
+            |  Dictionaries will be used to create
+            |  #[+api("goldparse") #[code GoldParse]] objects. For the available
+            |  keys and their usage, see
+            |  #[+api("goldparse#init") #[code GoldParse.__init__]].
 
     +row
         +cell #[code drop]

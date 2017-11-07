@@ -8,8 +8,7 @@ see the documentation:
 * Training: https://alpha.spacy.io/usage/training
 * Text classification: https://alpha.spacy.io/usage/text-classification
 
-Developed for: spaCy 2.0.0a18
-Last updated for: spaCy 2.0.0a19
+Compatible with: spaCy v2.0.0+
 """
 from __future__ import unicode_literals, print_function
 import plac
@@ -18,8 +17,7 @@ from pathlib import Path
 import thinc.extra.datasets
 
 import spacy
-from spacy.gold import minibatch
-from spacy.util import compounding
+from spacy.util import minibatch, compounding
 
 
 @plac.annotations(

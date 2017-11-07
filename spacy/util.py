@@ -392,7 +392,7 @@ def minibatch(items, size=8):
     so that batch-size can vary on each step.
     """
     if isinstance(size, int):
-        size_ = itertools.repeat(8)
+        size_ = itertools.repeat(size)
     else:
         size_ = size
     items = iter(items)
