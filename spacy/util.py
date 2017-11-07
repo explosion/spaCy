@@ -15,6 +15,7 @@ import inspect
 import warnings
 from thinc.neural._classes.model import Model
 import functools
+import cytoolz
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
