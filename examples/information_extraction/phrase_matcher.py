@@ -33,6 +33,8 @@ formatted in jsonl as a sequence of entries like this:
 {"text":"Annapolis"}
 {"text":"Appalachia"}
 {"text":"Argentina"}
+
+Compatible with: spaCy 2.0.0a17+
 """
 from __future__ import print_function, unicode_literals, division
 

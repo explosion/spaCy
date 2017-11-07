@@ -7,8 +7,7 @@ For more details, see the documentation:
 * Training: https://alpha.spacy.io/usage/training
 * NER: https://alpha.spacy.io/usage/linguistic-features#named-entities
 
-Developed for: spaCy 2.0.0a18
-Last updated for: spaCy 2.0.0a19
+Compatible with: spaCy 2.0.0a20+
 """
 from __future__ import unicode_literals, print_function
 

@@ -6,7 +6,7 @@ money and currency values (entities labelled as MONEY) and then check the
 dependency tree to find the noun phrase they are referring to – for example:
 $9.4 million --> Net income.
 
-Last updated for: spaCy 2.0.0a18
+Compatible with: spaCy 2.0.0a18+
 """
 from __future__ import unicode_literals, print_function
 

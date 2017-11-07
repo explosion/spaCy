@@ -5,8 +5,7 @@ model or a blank model. For more details, see the documentation:
 * Training: https://alpha.spacy.io/usage/training
 * Dependency Parse: https://alpha.spacy.io/usage/linguistic-features#dependency-parse
 
-Developed for: spaCy 2.0.0a18
-Last updated for: spaCy 2.0.0a18
+Compatible with: spaCy 2.0.0a20+
 """
 from __future__ import unicode_literals, print_function
 

@@ -8,8 +8,7 @@ coordinates. Can be extended with more details from the API.
 * REST Countries API: https://restcountries.eu (Mozilla Public License MPL 2.0)
 * Custom pipeline components: https://alpha.spacy.io//usage/processing-pipelines#custom-components
 
-Developed for: spaCy 2.0.0a17
-Last updated for: spaCy 2.0.0a18
+Compatible with: spaCy 2.0.0a17+
 """
 from __future__ import unicode_literals, print_function
 
