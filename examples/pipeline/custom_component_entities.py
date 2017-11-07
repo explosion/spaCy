@@ -6,7 +6,7 @@ labelled as ORG and their spans are merged into one token. Additionally,
 ._.has_tech_org and ._.is_tech_org is set on the Doc/Span and Token
 respectively.
 
-* Custom pipeline components: https://alpha.spacy.io//usage/processing-pipelines#custom-components
+* Custom pipeline components: https://spacy.io//usage/processing-pipelines#custom-components
 
 Compatible with: spaCy v2.0.0+
 """

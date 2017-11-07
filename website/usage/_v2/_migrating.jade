@@ -28,7 +28,7 @@ p
 
 +code-new.
     nlp = spacy.load('/model')
-    nlp = English().from_disk('/model/data')
+    nlp = spacy.blank('en').from_disk('/model/data')
 +code-old nlp = spacy.load('en', path='/model')
 
 p
@@ -113,8 +113,9 @@ p
     |  #[+api("language#update") #[code update]] function. While #[code update]
     |  still accepts sequences of #[code Doc] and #[code GoldParse] objects,
     |  you can now also pass in a list of strings and dictionaries describing
-    |  the annotations. This is the recommended usage, as it removes one layer
-    |  of abstraction from the training.
+    |  the annotations. We call this the #[+a("/usage/training#training-simple-style") "simple training style"].
+    |  This is also the recommended usage, as it removes one layer of
+    |  abstraction from the training.
 
 +code-new.
     optimizer = nlp.begin_training()

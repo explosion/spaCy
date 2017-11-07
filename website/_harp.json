@@ -5,7 +5,7 @@
 
         "SITENAME": "spaCy",
         "SLOGAN": "Industrial-strength Natural Language Processing in Python",
-        "SITE_URL": "https://alpha.spacy.io",
+        "SITE_URL": "https://spacy.io",
         "EMAIL": "contact@explosion.ai",
 
         "COMPANY": "Explosion AI",
@@ -82,9 +82,8 @@
             }
         ],
 
-        "ALPHA": true,
-        "V_CSS": "2.0a3",
-        "V_JS": "2.0a0",
+        "V_CSS": "2.0.0",
+        "V_JS": "2.0.0",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {

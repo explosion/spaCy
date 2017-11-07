@@ -5,7 +5,7 @@ Doc, Token or Span attributes in spaCy v2.0. Attribute methods act like
 they're "bound" to the object and are partially applied – i.e. the object
 they're called on is passed in as the first argument.
 
-* Custom pipeline components: https://alpha.spacy.io//usage/processing-pipelines#custom-components
+* Custom pipeline components: https://spacy.io//usage/processing-pipelines#custom-components
 
 Compatible with: spaCy v2.0.0+
 """

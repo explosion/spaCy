@@ -20,8 +20,8 @@ After training your model, you can save it to a directory. We recommend
 wrapping models as Python packages, for ease of deployment.
 
 For more details, see the documentation:
-* Training: https://alpha.spacy.io/usage/training
-* NER: https://alpha.spacy.io/usage/linguistic-features#named-entities
+* Training: https://spacy.io/usage/training
+* NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.0.0+
 """

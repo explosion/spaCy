@@ -14,7 +14,7 @@
   },
   "dependencies": {},
   "scripts": {
-    "check_links": "blc https://alpha.spacy.io -ro",
+    "check_links": "blc https://spacy.io -ro",
 
     "compile": "NODE_ENV=deploy harp compile",
     "rollup_js": "rollup www/assets/js/rollup.js --output.format iife --output.file www/assets/js/rollup.js",
