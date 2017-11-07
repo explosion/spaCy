@@ -10,6 +10,16 @@ main.o-main.o-main--sidebar.o-main--aside
             if tag
                 +tag=tag
 
+        +infobox("⚠️ Important note")
+            |  You are viewing the #[strong v1.x legacy documentation].
+            |  #[+a("https://spacy.io", true) Go here] for the latest
+            |  documentation of the new version. spaCy v2.0 comes with a lot
+            |  of improvements around training, serialization and processing
+            |  pipeline management, as well as new convolutional neural network
+            |  models for several languages. See
+            |  #[+a("https://spacy.io/usage/v2") this page] for more details and
+            |  a migration guide.
+
         !=yield
 
     +grid.o-content.u-text
@@ -21,7 +31,7 @@ main.o-main.o-main--sidebar.o-main--aside
                     span #[strong.u-text-label Read next:] #[+a(next).u-link=data.title]
 
         +grid-col("half").u-text-right
-            .o-inline-list
+            //-.o-inline-list
                 +button(gh("spacy", "website/" + current.path.join('/') + ".jade"), false, "secondary").u-text-tag Suggest edits #[+icon("code", 14)]
 
     +gitter("spaCy chat")

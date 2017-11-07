@@ -12,10 +12,10 @@
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
 
-        "SPACY_VERSION": "1.9",
+        "SPACY_VERSION": "2.0",
         "LATEST_NEWS": {
-            "url": "/docs/usage/models",
-            "title": "The first official Spanish model is here!"
+            "url": "https://alpha.spacy.io",
+            "title": "Try spaCy v2.0!"
         },
 
         "SOCIAL": {

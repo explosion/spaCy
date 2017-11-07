@@ -5,8 +5,7 @@ include _mixins
 nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : null)
     a(href='/') #[+logo]
 
-    if SUBSECTION != "index"
-        .u-text-label.u-padding-small.u-hidden-xs=SUBSECTION
+    .u-text-label.u-padding-small.u-hidden-xs Legacy
 
     ul.c-nav__menu
         each url, item in NAVIGATION

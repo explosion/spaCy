@@ -25,10 +25,6 @@
         ]
     },
 
-    "robots.txt": {
-        "layout": false
-    },
-
     "404": {
         "title": "404 Error",
         "landing": true
