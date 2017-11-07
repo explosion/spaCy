@@ -5,13 +5,13 @@ spaCy is a library for advanced natural language processing in Python and
 Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day one to be used in real products. spaCy currently supports
 English, German, French and Spanish, as well as tokenization for Italian,
-Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali, Hebrew,
+Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali, Hebrew, Thai,
 Chinese and Japanese. It's commercial open-source software, released under the
 MIT license.
 
-⭐️ **Test spaCy v2.0.0 alpha and the new models!** `Read the release notes. <https://github.com/explosion/spaCy/releases/tag/v2.0.0-alpha>`_
+⭐️ **Test spaCy v2.0.0 and the new models!** `Check out the new features here. <https://alpha.spacy.io/usage/v2>`_
 
-💫 **Version 1.9 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.10 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
@@ -326,6 +326,7 @@ and ``--model`` are optional and enable additional tests:
 =========== ============== ===========
 Version     Date           Description
 =========== ============== ===========
+`v1.10.0`_  ``2017-11-07`` Alpha support for Thai & Russian, plus improvements and bug fixes
 `v1.9.0`_   ``2017-07-22`` Spanish model, alpha support for Norwegian & Japanese, and bug fixes
 `v1.8.2`_   ``2017-04-26`` French model and small improvements
 `v1.8.1`_   ``2017-04-23`` Saving, loading and training bug fixes
@@ -360,6 +361,7 @@ Version     Date           Description
 `v0.93`_    ``2015-09-22`` Bug fixes to word vectors
 =========== ============== ===========
 
+.. _v1.10.0: https://github.com/explosion/spaCy/releases/tag/v1.10.0
 .. _v1.9.0: https://github.com/explosion/spaCy/releases/tag/v1.9.0
 .. _v1.8.2: https://github.com/explosion/spaCy/releases/tag/v1.8.2
 .. _v1.8.1: https://github.com/explosion/spaCy/releases/tag/v1.8.1
