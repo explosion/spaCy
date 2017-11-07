@@ -11,12 +11,9 @@
         "COMPANY": "Explosion AI",
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
+        "MODELS_REPO": "explosion/spacy-models",
 
-        "SPACY_VERSION": "1.9",
-        "LATEST_NEWS": {
-            "url": "/docs/usage/models",
-            "title": "The first official Spanish model is here!"
-        },
+        "SPACY_VERSION": "2.0",
 
         "SOCIAL": {
             "twitter": "spacy_io",
@@ -27,25 +24,23 @@
         },
 
         "NAVIGATION": {
-            "Home": "/",
-            "Usage": "/docs/usage",
-            "API": "/docs/api",
-            "Demos": "/docs/usage/showcase",
-            "Blog": "https://explosion.ai/blog"
+            "Usage": "/usage",
+            "Models": "/models",
+            "API": "/api"
         },
 
         "FOOTER": {
             "spaCy": {
-                "Usage": "/docs/usage",
-                "API Reference": "/docs/api",
-                "Tutorials": "/docs/usage/tutorials",
-                "Showcase": "/docs/usage/showcase"
+                "Usage": "/usage",
+                "Models": "/models",
+                "API Reference": "/api",
+                "Resources": "/usage/resources"
             },
             "Support": {
                 "Issue Tracker": "https://github.com/explosion/spaCy/issues",
                 "StackOverflow": "http://stackoverflow.com/questions/tagged/spacy",
-                "Reddit usergroup": "https://www.reddit.com/r/spacynlp/",
-                "Gitter chat": "https://gitter.im/explosion/spaCy"
+                "Reddit Usergroup": "https://www.reddit.com/r/spacynlp/",
+                "Gitter Chat": "https://gitter.im/explosion/spaCy"
             },
             "Connect": {
                 "Twitter": "https://twitter.com/spacy_io",
@@ -73,32 +68,28 @@
             { "id": "config", "title": "Configuration", "multiple": true, "options": [
                 {"id": "venv", "title": "virtualenv", "help": "Use a virtual environment and install spaCy into a user directory" }]
             },
-            { "id": "model", "title": "Models", "multiple": true, "options": [
-                { "id": "en", "title": "English", "meta": "50MB" },
-                { "id": "de", "title": "German", "meta": "645MB" },
-                { "id": "fr", "title": "French", "meta": "1.33GB" },
-                { "id": "es", "title": "Spanish", "meta": "377MB"}]
+            { "id": "model", "title": "Models", "multiple": true }
+        ],
+
+        "QUICKSTART_MODELS": [
+            { "id": "lang", "title": "Language"},
+            { "id": "load", "title": "Loading style", "options": [
+                { "id": "spacy", "title": "Use spacy.load()", "checked": true, "help": "Use spaCy's built-in loader to load the model by name." },
+                {  "id": "module", "title": "Import as module", "help": "Import the model explicitly as a Python module." }]
+            },
+            { "id": "config", "title": "Options", "multiple": true, "options": [
+                { "id": "example", "title": "Show usage example" }]
             }
         ],
 
-        "V_CSS": "1.8",
-        "V_JS": "1.2",
+        "V_CSS": "2.0.0",
+        "V_JS": "2.0.0",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {
             "user": "spacy.us12",
             "id": "83b0498b1e7fa3c91ce68c3f1",
             "list": "89ad33e698"
-        },
-        "BADGES": {
-            "pipy": {
-                "badge": "https://img.shields.io/pypi/v/spacy.svg?style=flat-square",
-                "link": "https://pypi.python.org/pypi/spacy"
-            },
-            "conda": {
-                "badge": "https://anaconda.org/conda-forge/spacy/badges/version.svg",
-                "link": "https://anaconda.org/conda-forge/spacy"
-            }
         }
     }
 }

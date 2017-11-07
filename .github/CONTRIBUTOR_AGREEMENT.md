@@ -87,7 +87,7 @@ U.S. Federal law. Any choice of law rules will not apply.
 7. Please place an “x” on one of the applicable statement below. Please do NOT
 mark both statements:
 
-    * [ ] I am signing on behalf of myself as an individual and no other person
+    * [x] I am signing on behalf of myself as an individual and no other person
     or entity, including my employer, has or will have rights with respect to my
     contributions.
 
@@ -96,11 +96,11 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                |
-|------------------------------- | -------------------- |
-| Name                           |                      |
-| Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
-| Website (optional)             |                      |
+| Field                          | Entry                              |
+|------------------------------- | --------------------               |
+| Name                           | Abhinav Sharma                     |
+| Company name (if applicable)   | Fourtek I.T. Solutions Pvt. Ltd.   |
+| Title or role (if applicable)  | Machine Learning Engineer          |
+| Date                           | 3 Novermber 2017                   |
+| GitHub username                | abhi18av                           |
+| Website (optional)             | https://abhi18av.github.io/        |

@@ -3,16 +3,15 @@
 //- Sidebar container
 
 .c-sidebar
-    background: $color-subtle-light
     overflow-y: auto
 
     @include breakpoint(min, md)
         @include position(fixed, top, left, 0, 0)
-        @include size($sidebar-width, 100vh)
+        @include size($sidebar-width, calc(100vh - 3px))
+        @include scroll-shadow($color-back, $color-front, $nav-height)
         flex: 0 0 $sidebar-width
-        padding: calc(#{$nav-height} + 1.5rem) 0 2rem
+        padding: calc(#{$nav-height} + 1.5rem) 0 0
         z-index: 10
-        border-right: 1px solid $color-subtle
 
     @include breakpoint(max, sm)
         flex: 100%
@@ -27,7 +26,7 @@
 
 .c-sidebar__section
     & > *
-        padding: 0 2rem
+        padding: 0 2rem 0.35rem
 
     @include breakpoint(max, sm)
         flex: 1 1 0
@@ -38,7 +37,59 @@
         &:not(:last-child)
             border-right: 1px solid $color-subtle
 
-    .is-active
+.c-sidebar__item
+    color: $color-theme
+
+    &:hover
+        color: $color-theme-dark
+
+    & > .is-active
         font-weight: bold
-        color: $color-theme
-        background: rgba($color-subtle, 0.4)
+        color: $color-dark
+        margin-top: 1rem
+
+
+//- Sidebar subsections
+
+$crumb-bullet: 14px
+$crumb-bar: 2px
+
+.c-sidebar__crumb
+    display: block
+    padding-top: 1rem
+    padding-left: 1rem
+    position: relative
+
+.c-sidebar__crumb__item
+    margin-bottom: $crumb-bullet / 2
+    position: relative
+    padding-left: 2rem
+    color: $color-theme
+    font-size: 1.2rem
+
+    &:hover
+        color: $color-theme-dark
+
+    &:after
+        @include size($crumb-bullet)
+        @include position(absolute, top, left, $crumb-bullet / 4, 0)
+        content: ""
+        border-radius: 50%
+        background: $color-theme
+        z-index: 10
+
+    &:not(:last-child):before
+        @include size($crumb-bar, 100%)
+        @include position(absolute, top, left, $crumb-bullet, ($crumb-bullet - $crumb-bar) / 2)
+        content: ""
+        background: $color-subtle
+
+    &:first-child:before
+        height: calc(100% + #{$crumb-bullet * 2})
+        top: -$crumb-bullet / 2
+
+    &.is-active
+        color: $color-dark
+
+        &:after
+            background: $color-dark

@@ -1,16 +1,13 @@
 from __future__ import unicode_literals
-from ... import load as load_spacy
-from ...attrs import LEMMA
-from ...matcher import merge_phrase
 
 import pytest
 
 
-@pytest.mark.models
-def test_issue758():
+@pytest.mark.xfail
+@pytest.mark.models('en')
+def test_issue758(EN):
     '''Test parser transition bug after label added.'''
-    nlp = load_spacy('en')
-    nlp.matcher.add('splash', 'my_entity', {},
-                    [[{LEMMA: 'splash'}, {LEMMA: 'on'}]],
-                    on_match=merge_phrase)
+    from ...matcher import merge_phrase
+    nlp = EN()
+    nlp.matcher.add('splash', merge_phrase, [[{'LEMMA': 'splash'}, {'LEMMA': 'on'}]])
     doc = nlp('splash On', parse=False)

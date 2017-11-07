@@ -1,0 +1,77 @@
+<svg class="o-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 582 365" width="572" height="355">
+    <style>
+        .svg__vocab__text { fill: #1a1e23; font: 18px Arial, sans-serif }
+        .svg__vocab__text-large { fill: #fff; font: bold 18px Arial, sans-serif; text-transform: uppercase }
+        .svg__vocab__text-box { fill: #fff; font: bold 12px Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace }
+        .svg__vocab__text-code {  fill: #1a1e23; font: bold 12px Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace }
+    </style>
+    <rect width="570" height="88" x="1" y="135" fill="#d5e8d4" stroke="#82b366" stroke-width="2" rx="13.2" ry="13.2"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M444 164h100v40H444z"/>
+    <text class="svg__vocab__text" dx="-0.5em" dy="1em" transform="translate(477.5 174.5)" width="31" height="17">31979...</text>
+    <rect width="52" height="20" x="468" y="152" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dy="0.9em" width="44" height="12" transform="translate(471.5 155.5)">Lexeme</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M76 164h100v40H76z"/>
+    <text class="svg__vocab__text" dx="-0.5em" dy="1em" width="23" height="17" transform="translate(113.5 174.5)">46904...</text>
+    <rect width="52" height="20" x="100" y="152" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dy="0.9em" width="44" height="12" transform="translate(103.5 155.5)">Lexeme</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M263 164h100v40H263z"/>
+    <text class="svg__vocab__text" dx="-0.7em" dy="1em" width="23" height="17" transform="translate(300.5 174.5)">37020...</text>
+    <rect width="52" height="20" x="287" y="152" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dy="0.9em" width="44" height="12" transform="translate(290.5 155.5)">Lexeme</text>
+    <rect width="570" height="88" x="1" y="246" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="13.2" ry="13.2"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M444 275h100v40H444z"/>
+    <text class="svg__vocab__text" dy="1em" width="55" height="17" transform="translate(465.5 285.5)">&quot;coffee&quot;</text>
+    <rect width="52" height="20" x="468" y="263" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dx="-0.5em" dy="0.9em" width="28" height="12" transform="translate(479.5 266.5)">31979…</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M76 275h100v40H76z"/>
+    <text class="svg__vocab__text" dy="1em" width="17" height="17" transform="translate(116.5 285.5)">&quot;I&quot;</text>
+    <rect width="52" height="20" x="100" y="263" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dx="-0.7em" dy="0.9em" width="22" height="12"  transform="translate(114.5 266.5)">46904…</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M263 275h100v40H263z"/>
+    <text class="svg__vocab__text" dy="1em" width="41" height="17" transform="translate(291.5 285.5)">&quot;love&quot;</text>
+    <rect width="52" height="20" x="287" y="263" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dx="-0.7em" dy="0.9em" width="22" height="12" transform="translate(301.5 266.5)">37020…</text>
+    <rect width="570" height="110" x="1" y="1" fill="#e1d5e7" stroke="#9673a6" stroke-width="2" rx="16.5" ry="16.5"/>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M263 60h-78.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M178.2 60l8-4-2 4 2 4z"/>
+    <rect fill="#E1D5E7" width="50" height="12" transform="translate(202.5 53.5)"/>
+    <text class="svg__vocab__text-code" dx="0.5em" dy="1em" width="50" height="12" transform="translate(202.5 53.5)">nsubj</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M363 60h72.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M441.8 60l-8 4 2-4-2-4z"/>
+    <rect fill="#E1D5E7" width="43" height="12" transform="translate(375.5 54.5)"/>
+    <text class="svg__vocab__text-code" dx="0.5em" dy="1em" width="43" height="12" transform="translate(375.5 54.5)">dobj</text>
+    <rect width="50" height="88" x="1" y="246" fill="#666" stroke="#666" stroke-width="2" rx="7.5" ry="7.5"/>
+    <text class="svg__vocab__text-large" dx="-0.25em" dy="1em" width="53" height="36" transform="rotate(-90 162 155)">String</text>
+    <text class="svg__vocab__text-large" dy="2em" width="53" height="36" transform="rotate(-90 162 155)">Store</text>
+    <rect width="50" height="88" x="1" y="135" fill="#82b366" stroke="#82b366" stroke-width="2" rx="7.5" ry="7.5"/>
+    <text class="svg__vocab__text-large" dx="-0.25em" dy="0.9em" width="47" height="17" transform="rotate(-90 109.5 93)">Vocab</text>
+    <rect width="50" height="110" x="1" y="1" fill="#9673a6" stroke="#9673a6" stroke-width="2" rx="7.5" ry="7.5"/>
+    <text class="svg__vocab__text-large" dx="-0.25em" dy="0.9em" width="31" height="17" transform="rotate(-90 44 27.5)">Doc</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M263 27h100v66H263z"/>
+    <text class="svg__vocab__text" dy="1em" width="31" height="33" transform="translate(296.5 42.5)">love</text>
+    <text class="svg__vocab__text-code" dy="2.8em" width="31" height="33" transform="translate(296.5 42.5)">VERB</text>
+    <rect width="50" height="20" x="288" y="16" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dy="0.9em" transform="translate(294.5 19.5)">Token</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M76 27h100v66H76z"/>
+    <text class="svg__vocab__text" dx="0.8em" dy="1em" width="29" height="33" transform="translate(110.5 42.5)">I</text>
+    <text class="svg__vocab__text-code" dy="2.8em" width="29" height="33" transform="translate(110.5 42.5)">PRON</text>
+    <rect width="50" height="20" x="105" y="17" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dy="0.9em" width="36" height="12" transform="translate(111.5 20.5)">Token</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M444 27h100v66H444z"/>
+    <text class="svg__vocab__text" dy="1em" width="45" height="33" transform="translate(470.5 42.5)">coffee</text>
+    <text class="svg__vocab__text-code" dx="0.6em" dy="2.8em" width="45" height="33" transform="translate(470.5 42.5)">NOUN</text>
+    <rect width="50" height="20" x="469" y="16" fill="#666" rx="3" ry="3"/>
+    <text class="svg__vocab__text-box" dy="0.9em" width="36" height="12" transform="translate(475.5 19.5)">Token</text>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M126 141.8v-38.6"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M126 149.8l-2.7-8h5.4zM126 95.2l2.7 8h-5.4z"/>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M126 214.2v38.6"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M126 206.2l2.7 8h-5.4zM126 260.8l-2.7-8h5.4z"/>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M313 103.2v38.6"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M313 95.2l2.7 8h-5.4zM313 149.8l-2.7-8h5.4z"/>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M313 214.2v38.6"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M313 206.2l2.7 8h-5.4zM313 260.8l-2.7-8h5.4z"/>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M494 214.2v38.6"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M494 206.2l2.7 8h-5.4zM494 260.8l-2.7-8h5.4z"/>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M494 103.2v38.6"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M494 95.2l2.7 8h-5.4zM494 149.8l-2.7-8h5.4z"/>
+</svg>

@@ -1,0 +1,31 @@
+//- 💫 DOCS > USAGE > INSTALL > CHANGELOG
+
++h(2, "changelog") Changelog
+    +button(gh("spacy") + "/releases", false, "secondary", "small").u-float-right.u-nowrap View releases
+
+div(data-tpl="changelog" data-tpl-key="error" style="display: none")
+    +infobox
+        |  Unable to load changelog from GitHub. Please see the
+        |  #[+a(gh("spacy") + "/releases") releases page] instead.
+
+section(data-tpl="changelog" data-tpl-key="table" style="display: none")
+    +table(["Date", "Version", "Title"])
+        tbody(data-tpl="changelog" data-tpl-key="releases")
+            +row(data-tpl="changelog" data-tpl-key="item")
+                +cell.u-nowrap
+                    +label(data-changelog="date")
+                +cell(data-changelog="tag")
+                +cell.u-text-small(data-changelog="title")
+
+    +h(3) Pre-releases
+
+    +aside("About pre-releases")
+        .o-block-small
+            |  Pre-releases include alpha and beta versions, as well as release
+            |  candidates. They are not intended for production use. You can
+            |  download spaCy pre-releases via the #[code spacy-nightly] package
+            |  on pip.
+        +badge("https://img.shields.io/pypi/v/spacy-nightly.svg?style=flat-square", "https://pypi.python.org/pypi/spacy-nightly")
+
+    +table(["Date", "Version", "Title"])
+        tbody(data-tpl="changelog" data-tpl-key="prereleases")

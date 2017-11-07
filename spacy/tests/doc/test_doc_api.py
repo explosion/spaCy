@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from ..util import get_doc
+from ...tokens import Doc
+from ...vocab import Vocab
 
 import pytest
 import numpy
@@ -102,7 +104,7 @@ def test_doc_api_getitem(en_tokenizer):
 def test_doc_api_serialize(en_tokenizer, text):
     tokens = en_tokenizer(text)
     new_tokens = get_doc(tokens.vocab).from_bytes(tokens.to_bytes())
-    assert tokens.string == new_tokens.string
+    assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
@@ -125,7 +127,8 @@ def test_doc_api_merge(en_tokenizer):
     # merge 'The Beach Boys'
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), 'NAMED', 'LEMMA', 'TYPE')
+    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), tag='NAMED', lemma='LEMMA',
+              ent_type='TYPE')
     assert len(doc) == 7
     assert doc[4].text == 'the beach boys'
     assert doc[4].text_with_ws == 'the beach boys '
@@ -134,7 +137,8 @@ def test_doc_api_merge(en_tokenizer):
     # merge 'all night'
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.merge(doc[7].idx, doc[8].idx + len(doc[8]), 'NAMED', 'LEMMA', 'TYPE')
+    doc.merge(doc[7].idx, doc[8].idx + len(doc[8]), tag='NAMED', lemma='LEMMA',
+              ent_type='TYPE')
     assert len(doc) == 8
     assert doc[7].text == 'all night'
     assert doc[7].text_with_ws == 'all night'
@@ -145,7 +149,8 @@ def test_doc_api_merge_children(en_tokenizer):
     text = "WKRO played songs by the beach boys all night"
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), 'NAMED', 'LEMMA', 'TYPE')
+    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), tag='NAMED', lemma='LEMMA',
+              ent_type='TYPE')
 
     for word in doc:
         if word.i < word.head.i:
@@ -157,8 +162,8 @@ def test_doc_api_merge_children(en_tokenizer):
 def test_doc_api_merge_hang(en_tokenizer):
     text = "through North and South Carolina"
     doc = en_tokenizer(text)
-    doc.merge(18, 32, '', '', 'ORG')
-    doc.merge(8, 32, '', '', 'ORG')
+    doc.merge(18, 32, tag='', lemma='', ent_type='ORG')
+    doc.merge(8, 32, tag='', lemma='', ent_type='ORG')
 
 
 def test_doc_api_sents_empty_string(en_tokenizer):
@@ -186,7 +191,8 @@ def test_doc_api_runtime_error(en_tokenizer):
         if len(np) > 1:
             nps.append((np.start_char, np.end_char, np.root.tag_, np.text, np.root.ent_type_))
     for np in nps:
-        doc.merge(*np)
+        start, end, tag, lemma, ent_type = np
+        doc.merge(start, end, tag=tag, lemma=lemma, ent_type=ent_type)
 
 
 def test_doc_api_right_edge(en_tokenizer):
@@ -204,16 +210,11 @@ def test_doc_api_right_edge(en_tokenizer):
     assert doc[6].right_edge.text == ','
 
 
-@pytest.mark.parametrize('text,vectors', [
-    ("apple orange pear", ["apple -1 -1 -1", "orange -1 -1 0", "pear -1 0 -1"])
-])
-def test_doc_api_has_vector(en_tokenizer, text_file, text, vectors):
-    text_file.write('\n'.join(vectors))
-    text_file.seek(0)
-    vector_length = en_tokenizer.vocab.load_vectors(text_file)
-    assert vector_length == 3
-
-    doc = en_tokenizer(text)
+def test_doc_api_has_vector():
+    vocab = Vocab()
+    vocab.reset_vectors(width=2)
+    vocab.set_vector('kitten', vector=numpy.asarray([0., 2.], dtype='f'))
+    doc = Doc(vocab, words=['kitten'])
     assert doc.has_vector
 
 def test_lowest_common_ancestor(en_tokenizer):

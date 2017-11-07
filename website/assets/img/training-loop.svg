@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="280" viewBox="-10 -10 622 360">
+    <style>
+        .svg__trainloop__text { fill: #1a1e23; font: 18px Arial, sans-serif }
+        .svg__trainloop__text-small { fill: #1a1e23; font: 16px Arial, sans-serif }
+    </style>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M121 264h31.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M158.8 264l-8 4 2-4-2-4z"/>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M121 229h31.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M158.8 229l-8 4 2-4-2-4z"/>
+    <rect width="120" height="71" x="1" y="211" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="10.7" ry="10.7"/>
+    <text class="svg__trainloop__text" dy="1em" transform="translate(11.5 236.5)" width="93" height="18">Training data</text>
+    <path fill="none" stroke="#d6b656" stroke-width="2" stroke-miterlimit="10" d="M221 279v22h330v-30.8"/>
+    <path fill="#d6b656" stroke="#d6b656" stroke-width="2" stroke-miterlimit="10" d="M551 264.2l4 8-4-2-4 2z"/>
+    <path fill="#fff2cc" stroke="#d6b656" stroke-width="2" d="M161 249h120v30H161z"/>
+    <text class="svg__trainloop__text-small" dy="1em" transform="translate(202.5 254.5)" width="35" height="18">label</text>
+    <path fill="none" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M281 229h36.8"/>
+    <path fill="#9673a6" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M323.8 229l-8 4 2-4-2-4z"/>
+    <path fill="#e1d5e7" stroke="#9673a6" stroke-width="2" d="M161 214h120v30H161z"/>
+    <text class="svg__trainloop__text-small" dy="1em" transform="translate(206.5 219.5)" width="27" height="18">text</text>
+    <path fill="none" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M446 229h36.8"/>
+    <path fill="#9673a6" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M488.8 229l-8 4 2-4-2-4z"/>
+    <path fill="none" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M416 194l30.6-48"/>
+    <path fill="#f33" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M449.8 141l-1 8.8-2.2-4-4.5-.3z"/>
+    <path fill="#e1d5e7" stroke="#9673a6" stroke-width="2" d="M326 194h120v69H326z"/>
+    <text class="svg__trainloop__text" dy="1em" transform="translate(371.5 218.5)" width="27" height="18">Doc</text>
+    <path fill="none" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M521 195l-35.2-49.3"/>
+    <path fill="#f33" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M482.3 140.8l8 4.2-4.5.7-2 4z"/>
+    <path fill="#fff2cc" stroke="#d6b656" stroke-width="2" d="M491 195h120v67H491z"/>
+    <text class="svg__trainloop__text" dy="1em" transform="translate(513.5 218.5)" width="73" height="18">GoldParse</text>
+    <path fill="none" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M466 59V21h-40.8"/>
+    <path fill="#f33" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M419.2 21l8-4-2 4 2 4z"/>
+    <path fill="#f99" stroke="#f33" stroke-width="2" stroke-miterlimit="10" d="M436 59h60l30 40-30 40h-60l-30-40z"/>
+    <text class="svg__trainloop__text" dy="0.85em" transform="translate(442.5 90.5)" width="45" height="16">update</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M342 1h60l30 40-30 40h-60l-30-40z"/>
+    <text class="svg__trainloop__text" dy="0.8em" transform="translate(360.5 32.5)" width="21" height="16">nlp</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M341 99h56.8"/>
+    <path fill="#82b366" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M403.8 99l-8 4 2-4-2-4z"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M251 59h60l30 40-30 40h-60l-30-40z"/>
+    <text class="svg__trainloop__text" dy="0.85em" transform="translate(245.5 90.5)" width="61" height="16">optimizer</text>
+</svg>

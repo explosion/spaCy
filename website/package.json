@@ -1,0 +1,25 @@
+{
+  "name": "spacy.io",
+  "private": true,
+  "version": "2.0.0",
+  "description": "spacy.io website",
+  "author": "Explosion AI",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "harp": "^0.24.0",
+    "rollup": "^0.50.0",
+    "uglify-js": "^2.7.3",
+    "broken-link-checker": "^0.7.6"
+  },
+  "dependencies": {},
+  "scripts": {
+    "check_links": "blc https://spacy.io -ro",
+
+    "compile": "NODE_ENV=deploy harp compile",
+    "rollup_js": "rollup www/assets/js/rollup.js --output.format iife --output.file www/assets/js/rollup.js",
+    "compile_rollup": "babel www/assets/js/rollup.js --out-file www/assets/js/rollup.js --presets=es2015",
+    "uglify": "uglifyjs www/assets/js/rollup.js --output www/assets/js/rollup.js",
+    "build": "npm run compile && echo 'Compiled website' && npm run rollup_js && echo 'Bundled rollup.js' && npm run compile_rollup && echo 'Compiled rollup.js' && npm run uglify && echo 'Uglified rollup.js'"
+  }
+}

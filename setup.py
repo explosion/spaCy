@@ -24,37 +24,31 @@ MOD_NAMES = [
     'spacy.vocab',
     'spacy.attrs',
     'spacy.morphology',
-    'spacy.tagger',
     'spacy.pipeline',
     'spacy.syntax.stateclass',
     'spacy.syntax._state',
+    'spacy.syntax._beam_utils',
     'spacy.tokenizer',
-    'spacy.syntax.parser',
-    'spacy.syntax.beam_parser',
+    'spacy.syntax.nn_parser',
     'spacy.syntax.nonproj',
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
-    'spacy.syntax._parse_features',
     'spacy.gold',
-    'spacy.orth',
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
-    'spacy.serialize.packer',
-    'spacy.serialize.huffman',
-    'spacy.serialize.bits',
-    'spacy.cfile',
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
-    'spacy.syntax.iterators']
-    # TODO: This is missing a lot of modules. Does it matter?
+    'spacy.vectors',
+]
 
 
 COMPILE_OPTIONS =  {
     'msvc': ['/Ox', '/EHsc'],
     'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
-    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
+    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function',
+               '-march=native']
 }
 
 
@@ -67,7 +61,7 @@ LINK_OPTIONS = {
 
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
-USE_OPENMP_DEFAULT = '1' if sys.platform != 'darwin' else None
+USE_OPENMP_DEFAULT = '0' if sys.platform != 'darwin' else None
 if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     if sys.platform == 'darwin':
         COMPILE_OPTIONS['other'].append('-fopenmp')
@@ -190,21 +184,23 @@ def setup_package():
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
+            scripts=['bin/spacy'],
             install_requires=[
                 'numpy>=1.7',
-                'murmurhash>=0.26,<0.27',
+                'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.5.0,<6.6.0',
+                'thinc>=6.10.0,<6.11.0',
                 'plac<1.0.0,>=0.9.6',
-                'pip>=9.0.0,<10.0.0',
                 'six',
                 'pathlib',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
                 'requests>=2.13.0,<3.0.0',
-                'regex>=2017.4.1,<2017.12.1',
-                'ftfy>=4.4.2,<5.0.0'],
+                'regex==2017.4.5',
+                'ftfy>=4.4.2,<5.0.0',
+                'msgpack-python',
+                'msgpack-numpy'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

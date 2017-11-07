@@ -6,7 +6,8 @@ from ..util import get_doc
 import pytest
 
 
-@pytest.mark.models
+@pytest.mark.skip
+@pytest.mark.models('en')
 def test_issue514(EN):
     """Test serializing after adding entity"""
     text = ["This", "is", "a", "sentence", "about", "pasta", "."]

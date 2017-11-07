@@ -1,98 +1,106 @@
+#!/usr/bin/env python
+# coding: utf8
+"""Example of training spaCy's named entity recognizer, starting off with an
+existing model or a blank model.
+
+For more details, see the documentation:
+* Training: https://spacy.io/usage/training
+* NER: https://spacy.io/usage/linguistic-features#named-entities
+
+Compatible with: spaCy v2.0.0+
+"""
 from __future__ import unicode_literals, print_function
-import json
-import pathlib
+
+import plac
 import random
-
+from pathlib import Path
 import spacy
-from spacy.pipeline import EntityRecognizer
-from spacy.gold import GoldParse
-from spacy.tagger import Tagger
-
- 
-try:
-    unicode
-except:
-    unicode = str
 
 
-def train_ner(nlp, train_data, entity_types):
-    # Add new words to vocab.
-    for raw_text, _ in train_data:
-        doc = nlp.make_doc(raw_text)
-        for word in doc:
-            _ = nlp.vocab[word.orth]
-
-    # Train NER.
-    ner = EntityRecognizer(nlp.vocab, entity_types=entity_types)
-    for itn in range(5):
-        random.shuffle(train_data)
-        for raw_text, entity_offsets in train_data:
-            doc = nlp.make_doc(raw_text)
-            gold = GoldParse(doc, entities=entity_offsets)
-            ner.update(doc, gold)
-    return ner
-
-def save_model(ner, model_dir):
-    model_dir = pathlib.Path(model_dir)
-    if not model_dir.exists():
-        model_dir.mkdir()
-    assert model_dir.is_dir()
-
-    with (model_dir / 'config.json').open('wb') as file_:
-        data = json.dumps(ner.cfg)
-        if isinstance(data, unicode):
-            data = data.encode('utf8')
-        file_.write(data)
-    ner.model.dump(str(model_dir / 'model'))
-    if not (model_dir / 'vocab').exists():
-        (model_dir / 'vocab').mkdir()
-    ner.vocab.dump(str(model_dir / 'vocab' / 'lexemes.bin'))
-    with (model_dir / 'vocab' / 'strings.json').open('w', encoding='utf8') as file_:
-        ner.vocab.strings.dump(file_)
+# training data
+TRAIN_DATA = [
+    ('Who is Shaka Khan?', {
+        'entities': [(7, 17, 'PERSON')]
+    }),
+    ('I like London and Berlin.', {
+        'entities': [(7, 13, 'LOC'), (18, 24, 'LOC')]
+    })
+]
 
 
-def main(model_dir=None):
-    nlp = spacy.load('en', parser=False, entity=False, add_vectors=False)
+@plac.annotations(
+    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    output_dir=("Optional output directory", "option", "o", Path),
+    n_iter=("Number of training iterations", "option", "n", int))
+def main(model=None, output_dir=None, n_iter=100):
+    """Load the model, set up the pipeline and train the entity recognizer."""
+    if model is not None:
+        nlp = spacy.load(model)  # load existing spaCy model
+        print("Loaded model '%s'" % model)
+    else:
+        nlp = spacy.blank('en')  # create blank Language class
+        print("Created blank 'en' model")
 
-    # v1.1.2 onwards
-    if nlp.tagger is None:
-        print('---- WARNING ----')
-        print('Data directory not found')
-        print('please run: `python -m spacy.en.download --force all` for better performance')
-        print('Using feature templates for tagging')
-        print('-----------------')
-        nlp.tagger = Tagger(nlp.vocab, features=Tagger.feature_templates)
+    # create the built-in pipeline components and add them to the pipeline
+    # nlp.create_pipe works for built-ins that are registered with spaCy
+    if 'ner' not in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
+        nlp.add_pipe(ner, last=True)
+    # otherwise, get it so we can add labels
+    else:
+        ner = nlp.get_pipe('ner')
 
-    train_data = [
-        (
-            'Who is Shaka Khan?',
-            [(len('Who is '), len('Who is Shaka Khan'), 'PERSON')]
-        ),
-        (
-            'I like London and Berlin.',
-            [(len('I like '), len('I like London'), 'LOC'),
-            (len('I like London and '), len('I like London and Berlin'), 'LOC')]
-        )
-    ]
-    ner = train_ner(nlp, train_data, ['PERSON', 'LOC'])
+    # add labels
+    for _, annotations in TRAIN_DATA:
+        for ent in annotations.get('entities'):
+            ner.add_label(ent[2])
 
-    doc = nlp.make_doc('Who is Shaka Khan?')
-    nlp.tagger(doc)
-    ner(doc)
-    for word in doc:
-        print(word.text, word.orth, word.lower, word.tag_, word.ent_type_, word.ent_iob)
+    # get names of other pipes to disable them during training
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
+    with nlp.disable_pipes(*other_pipes):  # only train NER
+        optimizer = nlp.begin_training()
+        for itn in range(n_iter):
+            random.shuffle(TRAIN_DATA)
+            losses = {}
+            for text, annotations in TRAIN_DATA:
+                nlp.update(
+                    [text],  # batch of texts
+                    [annotations],  # batch of annotations
+                    drop=0.5,  # dropout - make it harder to memorise data
+                    sgd=optimizer,  # callable to update weights
+                    losses=losses)
+            print(losses)
 
-    if model_dir is not None:
-        save_model(ner, model_dir)
+    # test the trained model
+    for text, _ in TRAIN_DATA:
+        doc = nlp(text)
+        print('Entities', [(ent.text, ent.label_) for ent in doc.ents])
+        print('Tokens', [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 
+    # save model to output directory
+    if output_dir is not None:
+        output_dir = Path(output_dir)
+        if not output_dir.exists():
+            output_dir.mkdir()
+        nlp.to_disk(output_dir)
+        print("Saved model to", output_dir)
 
-
+        # test the saved model
+        print("Loading from", output_dir)
+        nlp2 = spacy.load(output_dir)
+        for text, _ in TRAIN_DATA:
+            doc = nlp2(text)
+            print('Entities', [(ent.text, ent.label_) for ent in doc.ents])
+            print('Tokens', [(t.text, t.ent_type_, t.ent_iob) for t in doc])
 
 
 if __name__ == '__main__':
-    main('ner')
-    # Who "" 2
-    # is "" 2
-    # Shaka "" PERSON 3
-    # Khan "" PERSON 1
-    # ? "" 2
+    plac.call(main)
+
+    # Expected output:
+    # Entities [('Shaka Khan', 'PERSON')]
+    # Tokens [('Who', '', 2), ('is', '', 2), ('Shaka', 'PERSON', 3),
+    # ('Khan', 'PERSON', 1), ('?', '', 2)]
+    # Entities [('London', 'LOC'), ('Berlin', 'LOC')]
+    # Tokens [('I', '', 2), ('like', '', 2), ('London', 'LOC', 3),
+    # ('and', '', 2), ('Berlin', 'LOC', 3), ('.', '', 2)]

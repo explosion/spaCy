@@ -2,85 +2,42 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import ujson
-
+from collections import OrderedDict
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-
-from .strings cimport hash_string
+import regex as re
 cimport cython
 
-from . import util
 from .tokens.doc cimport Doc
+from .strings cimport hash_string
+from . import util
 
 
 cdef class Tokenizer:
+    """Segment text, and create Doc objects with the discovered segment
+    boundaries.
     """
-    Segment text, and create Doc objects with the discovered segment boundaries.
-    """
-    @classmethod
-    def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
-             infix_finditer=None, token_match=None):
-        """
-        Load a Tokenizer, reading unsupplied components from the path.
+    def __init__(self, Vocab vocab, rules=None, prefix_search=None,
+                 suffix_search=None, infix_finditer=None, token_match=None):
+        """Create a `Tokenizer`, to create `Doc` objects given unicode text.
 
-        Arguments:
-            path (Path):
-                The path to load from.
-            vocab (Vocab):
-                A storage container for lexical types.
-            rules (dict):
-                Exceptions and special-cases for the tokenizer.
-            token_match:
-                A boolean function matching strings that becomes tokens.
-            prefix_search:
-                Signature of re.compile(string).search
-            suffix_search:
-                Signature of re.compile(string).search
-            infix_finditer:
-                Signature of re.compile(string).finditer
-        Returns Tokenizer
-        """
-        path = util.ensure_path(path)
-        if rules is None:
-            with (path / 'tokenizer' / 'specials.json').open('r', encoding='utf8') as file_:
-                rules = ujson.load(file_)
-        if prefix_search in (None, True):
-            with (path / 'tokenizer' / 'prefix.txt').open() as file_:
-                entries = file_.read().split('\n')
-            prefix_search = util.compile_prefix_regex(entries).search
-        if suffix_search in (None, True):
-            with (path / 'tokenizer' / 'suffix.txt').open() as file_:
-                entries = file_.read().split('\n')
-            suffix_search = util.compile_suffix_regex(entries).search
-        if infix_finditer in (None, True):
-            with (path / 'tokenizer' / 'infix.txt').open() as file_:
-                entries = file_.read().split('\n')
-            infix_finditer = util.compile_infix_regex(entries).finditer
-        return cls(vocab, rules, prefix_search, suffix_search, infix_finditer, token_match)
+        vocab (Vocab): A storage container for lexical types.
+        rules (dict): Exceptions and special-cases for the tokenizer.
+        prefix_search (callable): A function matching the signature of
+            `re.compile(string).search` to match prefixes.
+        suffix_search (callable): A function matching the signature of
+            `re.compile(string).search` to match suffixes.
+        `infix_finditer` (callable): A function matching the signature of
+            `re.compile(string).finditer` to find infixes.
+        token_match (callable): A boolean function matching strings to be
+            recognised as tokens.
+        RETURNS (Tokenizer): The newly constructed object.
 
-    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, token_match=None):
-        """
-        Create a Tokenizer, to create Doc objects given unicode text.
-
-        Arguments:
-            vocab (Vocab):
-                A storage container for lexical types.
-            rules (dict):
-                Exceptions and special-cases for the tokenizer.
-            prefix_search:
-                A function matching the signature of re.compile(string).search
-                to match prefixes.
-            suffix_search:
-                A function matching the signature of re.compile(string).search
-                to match suffixes.
-            infix_finditer:
-                A function matching the signature of re.compile(string).finditer
-                to find infixes.
-            token_match:
-                A boolean function matching strings that becomes tokens.
+        EXAMPLE:
+            >>> tokenizer = Tokenizer(nlp.vocab)
+            >>> tokenizer = English().Defaults.create_tokenizer(nlp)
         """
         self.mem = Pool()
         self._cache = PreshMap()
@@ -91,44 +48,41 @@ cdef class Tokenizer:
         self.infix_finditer = infix_finditer
         self.vocab = vocab
         self._rules = {}
-        for chunk, substrings in sorted(rules.items()):
-            self.add_special_case(chunk, substrings)
+        if rules is not None:
+            for chunk, substrings in sorted(rules.items()):
+                self.add_special_case(chunk, substrings)
 
     def __reduce__(self):
         args = (self.vocab,
                 self._rules,
-                self._prefix_re,
-                self._suffix_re,
-                self._infix_re,
+                self.prefix_search,
+                self.suffix_search,
+                self.infix_finditer,
                 self.token_match)
-
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):
+        util.deprecated(
+            "Tokenizer.from_from list is now deprecated. Create a new Doc "
+            "object instead and pass in the strings as the `words` keyword "
+            "argument, for example:\nfrom spacy.tokens import Doc\n"
+            "doc = Doc(nlp.vocab, words=[...])")
         return Doc(self.vocab, words=strings)
-        #raise NotImplementedError(
-        #    "Method deprecated in 1.0.\n"
-        #    "Old: tokenizer.tokens_from_list(strings)\n"
-        #    "New: Doc(tokenizer.vocab, words=strings)")
 
     @cython.boundscheck(False)
     def __call__(self, unicode string):
-        """
-        Tokenize a string.
+        """Tokenize a string.
 
-        Arguments:
-            string (unicode): The string to tokenize.
-        Returns:
-            Doc A container for linguistic annotations.
+        string (unicode): The string to tokenize.
+        RETURNS (Doc): A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
-            raise ValueError(
-                "String is too long: %d characters. Max is 2**30." % len(string)
-            )
+            msg = "String is too long: %d characters. Max is 2**30."
+            raise ValueError(msg % len(string))
         cdef int length = len(string)
-        cdef Doc tokens = Doc(self.vocab)
+        cdef Doc doc = Doc(self.vocab)
         if length == 0:
-            return tokens
+            return doc
         cdef int i = 0
         cdef int start = 0
         cdef bint cache_hit
@@ -147,11 +101,11 @@ cdef class Tokenizer:
                     # we don't have to create the slice when we hit the cache.
                     span = string[start:i]
                     key = hash_string(span)
-                    cache_hit = self._try_cache(key, tokens)
+                    cache_hit = self._try_cache(key, doc)
                     if not cache_hit:
-                        self._tokenize(tokens, span, key)
+                        self._tokenize(doc, span, key)
                 if uc == ' ':
-                    tokens.c[tokens.length - 1].spacy = True
+                    doc.c[doc.length - 1].spacy = True
                     start = i + 1
                 else:
                     start = i
@@ -160,25 +114,20 @@ cdef class Tokenizer:
         if start < i:
             span = string[start:]
             key = hash_string(span)
-            cache_hit = self._try_cache(key, tokens)
+            cache_hit = self._try_cache(key, doc)
             if not cache_hit:
-                self._tokenize(tokens, span, key)
-            tokens.c[tokens.length - 1].spacy = string[-1] == ' ' and not in_ws
-        return tokens
+                self._tokenize(doc, span, key)
+            doc.c[doc.length - 1].spacy = string[-1] == ' ' and not in_ws
+        return doc
 
     def pipe(self, texts, batch_size=1000, n_threads=2):
-        """
-        Tokenize a stream of texts.
+        """Tokenize a stream of texts.
 
-        Arguments:
-            texts: A sequence of unicode texts.
-            batch_size (int):
-                The number of texts to accumulate in an internal buffer.
-            n_threads (int):
-                The number of threads to use, if the implementation supports
-                multi-threading. The default tokenizer is single-threaded.
-        Yields:
-            Doc A sequence of Doc objects, in order.
+        texts: A sequence of unicode texts.
+        batch_size (int): Number of texts to accumulate in an internal buffer.
+        n_threads (int): Number of threads to use, if the implementation
+            supports multi-threading. The default tokenizer is single-threaded.
+        YIELDS (Doc): A sequence of Doc objects, in order.
         """
         for text in texts:
             yield self(text)
@@ -186,13 +135,7 @@ cdef class Tokenizer:
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
-            # See 'flush_cache' below for hand-wringing about
-            # how to handle this.
-            cached = <_Cached*>self._specials.get(key)
-            if cached == NULL:
-                return False
-            else:
-                self._cache.set(key, cached)
+            return False
         cdef int i
         if cached.is_lex:
             for i in range(cached.length):
@@ -206,20 +149,18 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
+        cdef int has_special
         orig_size = tokens.length
-        special_case = <const _Cached*>self._specials.get(orig_key)
-        if special_case is not NULL:
-            for i in range(special_case.length):
-                tokens.push_back(&special_case.data.tokens[i], False)
-            self._cache.set(orig_key, <void*>special_case)
-        else: 
-            span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
-            self._attach_tokens(tokens, span, &prefixes, &suffixes)
-            self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
+        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes,
+                                   &has_special)
+        self._attach_tokens(tokens, span, &prefixes, &suffixes)
+        self._save_cached(&tokens.c[orig_size], orig_key, has_special,
+                          tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes):
+                                vector[const LexemeC*] *suffixes,
+                                int* has_special):
         cdef size_t i
         cdef unicode prefix
         cdef unicode suffix
@@ -238,6 +179,7 @@ cdef class Tokenizer:
                 if minus_pre and self._specials.get(hash_string(minus_pre)) != NULL:
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
+                    has_special[0] = 1
                     break
                 if self.token_match and self.token_match(string):
                     break
@@ -249,6 +191,7 @@ cdef class Tokenizer:
                 if minus_suf and (self._specials.get(hash_string(minus_suf)) != NULL):
                     string = minus_suf
                     suffixes.push_back(self.vocab.get(mem, suffix))
+                    has_special[0] = 1
                     break
             if pre_len and suf_len and (pre_len + suf_len) <= len(string):
                 string = string[pre_len:-suf_len]
@@ -261,6 +204,7 @@ cdef class Tokenizer:
                 string = minus_suf
                 suffixes.push_back(self.vocab.get(mem, suffix))
             if string and (self._specials.get(hash_string(string)) != NULL):
+                has_special[0] = 1
                 break
         return string
 
@@ -290,8 +234,8 @@ cdef class Tokenizer:
                 if not matches:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
                 else:
-                    # let's say we have dyn-o-mite-dave
-                    # the regex finds the start and end positions of the hyphens
+                    # let's say we have dyn-o-mite-dave - the regex finds the
+                    # start and end positions of the hyphens
                     start = 0
                     for match in matches:
                         infix_start = match.start()
@@ -320,11 +264,15 @@ cdef class Tokenizer:
             preinc(it)
             tokens.push_back(lexeme, False)
 
-    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1:
+    cdef int _save_cached(self, const TokenC* tokens, hash_t key,
+                          int has_special, int n) except -1:
         cdef int i
         for i in range(n):
             if tokens[i].lex.id == 0:
                 return 0
+        # See https://github.com/explosion/spaCy/issues/1250
+        if has_special:
+            return 0
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
         cached.is_lex = True
@@ -335,27 +283,23 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
 
     def find_infix(self, unicode string):
-        """
-        Find internal split points of the string, such as hyphens.
+        """Find internal split points of the string, such as hyphens.
 
         string (unicode): The string to segment.
-
-        Returns List[re.MatchObject]
-            A list of objects that have .start() and .end() methods, denoting the
-            placement of internal segment separators, e.g. hyphens.
+        RETURNS (list): A list of `re.MatchObject` objects that have `.start()`
+            and `.end()` methods, denoting the placement of internal segment
+            separators, e.g. hyphens.
         """
         if self.infix_finditer is None:
             return 0
         return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
-        """
-        Find the length of a prefix that should be segmented from the string,
-        or None if no prefix rules match.
+        """Find the length of a prefix that should be segmented from the
+        string, or None if no prefix rules match.
 
-        Arguments:
-            string (unicode): The string to segment.
-        Returns (int or None): The length of the prefix if present, otherwise None.
+        string (unicode): The string to segment.
+        RETURNS (int): The length of the prefix if present, otherwise `None`.
         """
         if self.prefix_search is None:
             return 0
@@ -363,13 +307,11 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
-        """
-        Find the length of a suffix that should be segmented from the string,
-        or None if no suffix rules match.
+        """Find the length of a suffix that should be segmented from the
+        string, or None if no suffix rules match.
 
-        Arguments:
-            string (unicode): The string to segment.
-        Returns (int or None): The length of the suffix if present, otherwise None.
+        string (unicode): The string to segment.
+        Returns (int): The length of the suffix if present, otherwise `None`.
         """
         if self.suffix_search is None:
             return 0
@@ -377,23 +319,17 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, special_cases):
-        """
-        Add special-case tokenization rules.
-        """
+        """Add special-case tokenization rules."""
         for chunk, substrings in sorted(special_cases.items()):
             self.add_special_case(chunk, substrings)
 
     def add_special_case(self, unicode string, substrings):
-        """
-        Add a special-case tokenization rule.
+        """Add a special-case tokenization rule.
 
-        Arguments:
-            string (unicode): The string to specially tokenize.
-            token_attrs:
-                A sequence of dicts, where each dict describes a token and its
-                attributes. The ORTH fields of the attributes must exactly match
-                the string when they are concatenated.
-        Returns None
+        string (unicode): The string to specially tokenize.
+        token_attrs (iterable): A sequence of dicts, where each dict describes
+            a token and its attributes. The `ORTH` fields of the attributes
+            must exactly match the string when they are concatenated.
         """
         substrings = list(substrings)
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
@@ -402,29 +338,72 @@ cdef class Tokenizer:
         cached.data.tokens = self.vocab.make_fused_token(substrings)
         key = hash_string(string)
         self._specials.set(key, cached)
+        self._cache.set(key, cached)
         self._rules[string] = substrings
-        # After changing the tokenization rules, the previous tokenization
-        # may be stale.
-        self.flush_cache()
 
-    def flush_cache(self):
-        '''Flush the tokenizer's cache. May not free memory immediately.
-        
-        This is called automatically after `add_special_case`, but if you
-        write to the prefix or suffix functions, you'll have to call this
-        yourself. You may also need to flush the tokenizer cache after
-        changing the lex_attr_getter functions.
-        '''
-        cdef hash_t key
-        for key in self._cache.keys():
-            special_case = self._specials.get(key)
-            # Don't free data shared with special-case rules
-            if special_case is not NULL:
-                continue
-            cached = <_Cached*>self._cache.get(key)
-            if cached is not NULL:
-                self.mem.free(cached)
-        self._cache = PreshMap(1000)
-        # We could here readd the data from specials --- but if we loop over
-        # a bunch of special-cases, we'll get a quadratic behaviour. The extra
-        # lookup isn't so bad? Tough to tell.
+    def to_disk(self, path, **exclude):
+        """Save the current state to a directory.
+
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or Path-like objects.
+        """
+        with path.open('wb') as file_:
+            file_.write(self.to_bytes(**exclude))
+
+    def from_disk(self, path, **exclude):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        RETURNS (Tokenizer): The modified `Tokenizer` object.
+        """
+        with path.open('rb') as file_:
+            bytes_data = file_.read()
+        self.from_bytes(bytes_data, **exclude)
+        return self
+
+    def to_bytes(self, **exclude):
+        """Serialize the current state to a binary string.
+
+        **exclude: Named attributes to prevent from being serialized.
+        RETURNS (bytes): The serialized form of the `Tokenizer` object.
+        """
+        serializers = OrderedDict((
+            ('vocab', lambda: self.vocab.to_bytes()),
+            ('prefix_search', lambda: self.prefix_search.__self__.pattern),
+            ('suffix_search', lambda: self.suffix_search.__self__.pattern),
+            ('infix_finditer', lambda: self.infix_finditer.__self__.pattern),
+            ('token_match', lambda: self.token_match.__self__.pattern),
+            ('exceptions', lambda: OrderedDict(sorted(self._rules.items())))
+        ))
+        return util.to_bytes(serializers, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        """Load state from a binary string.
+
+        bytes_data (bytes): The data to load from.
+        **exclude: Named attributes to prevent from being loaded.
+        RETURNS (Tokenizer): The `Tokenizer` object.
+        """
+        data = OrderedDict()
+        deserializers = OrderedDict((
+            ('vocab', lambda b: self.vocab.from_bytes(b)),
+            ('prefix_search', lambda b: data.setdefault('prefix', b)),
+            ('suffix_search', lambda b: data.setdefault('suffix_search', b)),
+            ('infix_finditer', lambda b: data.setdefault('infix_finditer', b)),
+            ('token_match', lambda b: data.setdefault('token_match', b)),
+            ('exceptions', lambda b: data.setdefault('rules', b))
+        ))
+        msg = util.from_bytes(bytes_data, deserializers, exclude)
+        if 'prefix_search' in data:
+            self.prefix_search = re.compile(data['prefix_search']).search
+        if 'suffix_search' in data:
+            self.suffix_search = re.compile(data['suffix_search']).search
+        if 'infix_finditer' in data:
+            self.infix_finditer = re.compile(data['infix_finditer']).finditer
+        if 'token_match' in data:
+            self.token_match = re.compile(data['token_match']).search
+        for string, substrings in data.get('rules', {}).items():
+            self.add_special_case(string, substrings)
+        return self
