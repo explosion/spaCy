@@ -11,8 +11,6 @@
             "Linguistic Features": "linguistic-features",
             "Processing Pipelines": "processing-pipelines",
             "Vectors & Similarity": "vectors-similarity",
-            "Text Classification": "text-classification",
-            "Deep Learning": "deep-learning",
             "Training Models": "training",
             "Adding Languages": "adding-languages",
             "Visualizers": "visualizers"
@@ -122,25 +120,6 @@
         }
     },
 
-    "deep-learning": {
-        "title": "Deep Learning",
-        "teaser": "Using spaCy to pre-process text for deep learning, and how to plug in your own machine learning models.",
-        "next": "training",
-        "menu": {
-            "Pre-processing Text": "pre-processing",
-            "spaCy and Thinc": "thinc",
-            "TensorFlow / Keras": "tensorflow-keras",
-            "scikit-learn": "scikit-learn",
-            "PyTorch": "pytorch",
-            "DyNet": "dynet"
-        }
-    },
-
-    "text-classification": {
-        "title": "Text Classification",
-        "next": "training"
-    },
-
     "training": {
         "title": "Training spaCy's Statistical Models",
         "next": "adding-languages",
@@ -181,6 +160,7 @@
     "resources": {
         "title": "Resources",
         "teaser": "Libraries, demos, books, courses and research systems featuring spaCy.",
+        "next": "examples",
         "menu": {
             "Third-party libraries": "libraries",
             "Extensions": "extensions",
