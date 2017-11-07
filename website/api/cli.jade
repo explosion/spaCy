@@ -541,13 +541,9 @@ p
     |  from an existing model data directory. All data files are copied over.
     |  If the path to a #[code meta.json] is supplied, or a #[code meta.json] is
     |  found in the input directory, this file is used. Otherwise, the data can
-    |  be entered directly from the command line. The required file templates
-    |  are downloaded from
-    |  #[+src(gh("spacy-dev-resources", "templates/model")) GitHub] to make
-    |  sure you're always using the latest versions. This means you need to be
-    |  connected to the internet to use this command. After packaging, you
-    |  can run #[code python setup.py sdist] from the newly created directory
-    |  to turn your model into an installable archive file.
+    |  be entered directly from the command line. After packaging, you can run
+    |  #[code python setup.py sdist] from the newly created directory to turn
+    |  your model into an installable archive file.
 
 +code(false, "bash", "$", false, false, true).
     spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--force]

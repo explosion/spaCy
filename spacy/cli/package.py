@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import plac
 import shutil
-import requests
 from pathlib import Path
 
 from ..compat import path2str, json_dumps
@@ -38,9 +37,6 @@ def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False,
     if meta_path and not meta_path.exists():
         prints(meta_path, title="meta.json not found", exits=1)
 
-    template_setup = get_template('setup.py')
-    template_manifest = get_template('MANIFEST.in')
-    template_init = get_template('xx_model_name/__init__.py')
     meta_path = meta_path or input_path / 'meta.json'
     if meta_path.is_file():
         meta = util.read_json(meta_path)
@@ -58,9 +54,9 @@ def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False,
     shutil.copytree(path2str(input_path),
                     path2str(package_path / model_name_v))
     create_file(main_path / 'meta.json', json_dumps(meta))
-    create_file(main_path / 'setup.py', template_setup)
-    create_file(main_path / 'MANIFEST.in', template_manifest)
-    create_file(package_path / '__init__.py', template_init)
+    create_file(main_path / 'setup.py', TEMPLATE_SETUP)
+    create_file(main_path / 'MANIFEST.in', TEMPLATE_MANIFEST)
+    create_file(package_path / '__init__.py', TEMPLATE_INIT)
     prints(main_path, "To build the package, run `python setup.py sdist` in "
            "this directory.",
            title="Successfully created package '%s'" % model_name_v)
@@ -120,9 +116,88 @@ def validate_meta(meta, keys):
     return meta
 
 
-def get_template(filepath):
-    r = requests.get(about.__model_files__ + filepath)
-    if r.status_code != 200:
-        prints("Couldn't fetch template files from GitHub.",
-               title="Server error (%d)" % r.status_code, exits=1)
-    return r.text
+TEMPLATE_SETUP = """
+#!/usr/bin/env python
+# coding: utf8
+from __future__ import unicode_literals
+
+import io
+import json
+from os import path, walk
+from shutil import copy
+from setuptools import setup
+
+
+def load_meta(fp):
+    with io.open(fp, encoding='utf8') as f:
+        return json.load(f)
+
+
+def list_files(data_dir):
+    output = []
+    for root, _, filenames in walk(data_dir):
+        for filename in filenames:
+            if not filename.startswith('.'):
+                output.append(path.join(root, filename))
+    output = [path.relpath(p, path.dirname(data_dir)) for p in output]
+    output.append('meta.json')
+    return output
+
+
+def list_requirements(meta):
+    parent_package = meta.get('parent_package', 'spacy')
+    requirements = [parent_package + meta['spacy_version']]
+    if 'setup_requires' in meta:
+        requirements += meta['setup_requires']
+    return requirements
+
+
+def setup_package():
+    root = path.abspath(path.dirname(__file__))
+    meta_path = path.join(root, 'meta.json')
+    meta = load_meta(meta_path)
+    model_name = str(meta['lang'] + '_' + meta['name'])
+    model_dir = path.join(model_name, model_name + '-' + meta['version'])
+
+    copy(meta_path, path.join(model_name))
+    copy(meta_path, model_dir)
+
+    setup(
+        name=model_name,
+        description=meta['description'],
+        author=meta['author'],
+        author_email=meta['email'],
+        url=meta['url'],
+        version=meta['version'],
+        license=meta['license'],
+        packages=[model_name],
+        package_data={model_name: list_files(model_dir)},
+        install_requires=list_requirements(meta),
+        zip_safe=False,
+    )
+
+
+if __name__ == '__main__':
+    setup_package()
+""".strip()
+
+
+TEMPLATE_MANIFEST = """
+include meta.json
+""".strip()
+
+
+TEMPLATE_INIT = """
+# coding: utf8
+from __future__ import unicode_literals
+
+from pathlib import Path
+from spacy.util import load_model_from_init_py, get_model_meta
+
+
+__version__ = get_model_meta(Path(__file__).parent)['version']
+
+
+def load(**overrides):
+    return load_model_from_init_py(__file__, **overrides)
+""".strip()
