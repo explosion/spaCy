@@ -3,7 +3,7 @@
 # spaCy examples
 
 The examples are Python scripts with well-behaved command line interfaces. For
-more detailed usage guides, see the [documentation](https://alpha.spacy.io/usage/).
+more detailed usage guides, see the [documentation](https://spacy.io/usage/).
 
 To see the available arguments, you can use the `--help` or `-h` flag:
 

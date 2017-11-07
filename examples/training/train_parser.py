@@ -2,8 +2,8 @@
 # coding: utf8
 """Example of training spaCy dependency parser, starting off with an existing
 model or a blank model. For more details, see the documentation:
-* Training: https://alpha.spacy.io/usage/training
-* Dependency Parse: https://alpha.spacy.io/usage/linguistic-features#dependency-parse
+* Training: https://spacy.io/usage/training
+* Dependency Parse: https://spacy.io/usage/linguistic-features#dependency-parse
 
 Compatible with: spaCy v2.0.0+
 """

@@ -22,7 +22,7 @@ First, [do a quick search](https://github.com/issues?q=+is%3Aissue+user%3Aexplos
 to see if the issue has already been reported. If so, it's often better to just
 leave a comment on an existing issue, rather than creating a new one. Old issues
 also often include helpful tips and solutions to common problems. You should
-also check the [troubleshooting guide](https://alpha.spacy.io/usage/#troubleshooting)
+also check the [troubleshooting guide](https://spacy.io/usage/#troubleshooting)
 to see if your problem is already listed there.
 
 If you're looking for help with your code, consider posting a question on
@@ -55,12 +55,12 @@ even format them as Markdown to copy-paste into GitHub issues:
 `python -m spacy info --markdown`.
 
 * **Checking the model compatibility:** If you're having problems with a
-[statistical model](https://alpha.spacy.io/models), it may be because to the
+[statistical model](https://spacy.io/models), it may be because to the
 model is incompatible with your spaCy installation. In spaCy v2.0+, you can check
 this on the command line by running `spacy validate`.
 
 * **Sharing a model's output, like dependencies and entities:** spaCy v2.0+
-comes with [built-in visualizers](https://alpha.spacy.io/usage/visualizers) that
+comes with [built-in visualizers](https://spacy.io/usage/visualizers) that
 you can run from within your script or a Jupyter notebook. For some issues, it's
 helpful to **include a screenshot** of the visualization. You can simply drag and
 drop the image into GitHub's editor and it will be uploaded and included.
@@ -97,7 +97,7 @@ requests:
 
 You don't have to be an NLP expert or Python pro to contribute, and we're happy
 to help you get started. If you're new to spaCy, a good place to start is the
-[spaCy 101 guide](https://alpha.spacy.io/usage/spacy-101) and the
+[spaCy 101 guide](https://spacy.io/usage/spacy-101) and the
 [`help wanted (easy)`](https://github.com/explosion/spaCy/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted+%28easy%29%22)
 label, which we use to tag bugs and feature requests that are easy and
 self-contained. If you've decided to take on one of these problems and you're
@@ -117,7 +117,7 @@ changes to spaCy's built-in methods. In contrast, a library of word
 alignment functions could easily live as a separate package that depended on
 spaCy — there's little difference between writing `import word_aligner` and
 `import spacy.word_aligner`. spaCy v2.0+ makes it easy to implement
-[custom pipeline components](https://alpha.spacy.io/usage/processing-pipelines#custom-components),
+[custom pipeline components](https://spacy.io/usage/processing-pipelines#custom-components),
 and add  your own attributes, properties and methods to the `Doc`, `Token` and
 `Span`.  If you're looking to implement a new spaCy feature, starting with a
 custom  component package is usually the best strategy. You won't have to worry
@@ -170,7 +170,7 @@ If you've made changes to `.pyx` files, you need to recompile spaCy before you
 can test your changes by re-running `python setup.py build_ext --inplace`.
 Changes to `.py` files will be effective immediately.
 
-📖 **For more details and instructions, see the documentation on [compiling spaCy from source](https://spacy.io/usage/#source) and the [quickstart widget](https://alpha.spacy.io/usage/#section-quickstart) to get the right commands for your platform and Python version.**
+📖 **For more details and instructions, see the documentation on [compiling spaCy from source](https://spacy.io/usage/#source) and the [quickstart widget](https://spacy.io/usage/#section-quickstart) to get the right commands for your platform and Python version.**
 
 
 ### Contributor agreement
@@ -409,7 +409,7 @@ So if you're looking to edit the content of the tokenization section, you can
 find it in `_spacy-101/_tokenization.jade`. To make it easy to add content
 components, we use a [collection of custom mixins](_includes/_mixins.jade),
 like `+table`, `+list` or `+code`. For an overview of the available mixins and
-components, see the [styleguide](https://alpha.spacy.io/styleguide).
+components, see the [styleguide](https://spacy.io/styleguide).
 
 📖 **For more info and troubleshooting guides, check out the [website README](website).**
 
@@ -417,7 +417,7 @@ components, see the [styleguide](https://alpha.spacy.io/styleguide).
 
 * [Guide to static websites with Harp and Jade](https://ines.io/blog/the-ultimate-guide-static-websites-harp-jade) (ines.io)
 * [Building a website with modular markup components (mixins)](https://explosion.ai/blog/modular-markup) (explosion.ai)
-* [spacy.io Styleguide](https://alpha.spacy.io/styleguide) (spacy.io)
+* [spacy.io Styleguide](https://spacy.io/styleguide) (spacy.io)
 * [Jade/Pug documentation](https://pugjs.org) (pugjs.org)
 * [Harp documentation](https://harpjs.com/) (harpjs.com)
 
@@ -432,7 +432,7 @@ and plugins in spaCy v2.0, and we can't wait to see what you build with it!
 and install as a Python package – for example via [PyPi](http://pypi.python.org).
 
 * Extensions that write to `Doc`, `Token` or `Span` attributes should be wrapped
-as [pipeline components](https://alpha.spacy.io/usage/processing-pipelines#custom-components)
+as [pipeline components](https://spacy.io/usage/processing-pipelines#custom-components)
 that users can **add to their processing pipeline** using `nlp.add_pipe()`.
 
 * When publishing your extension on GitHub, **tag it** with the topics
@@ -444,10 +444,10 @@ spaCy website. If you're sharing your project on Twitter, feel free to tag
 
 * Once your extension is published, you can open an issue on the
 [issue tracker](https://github.com/explosion/spacy/issues) to suggest it for the
-[resources directory](https://alpha.spacy.io/usage/resources#extensions) on the
+[resources directory](https://spacy.io/usage/resources#extensions) on the
 website.
 
-📖 **For more tips and best practices, see the [checklist for developing spaCy extensions](https://alpha.spacy.io/usage/processing-pipelines#extensions).**
+📖 **For more tips and best practices, see the [checklist for developing spaCy extensions](https://spacy.io/usage/processing-pipelines#extensions).**
 
 ## Code of conduct
 

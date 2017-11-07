@@ -4,13 +4,13 @@ spaCy: Industrial-strength NLP
 spaCy is a library for advanced Natural Language Processing in Python and Cython.
 It's built on the very latest research, and was designed from day one to be
 used in real products. spaCy comes with
-`pre-trained statistical models <https://alpha.spacy.io/models>`_ and word
+`pre-trained statistical models <https://spacy.io/models>`_ and word
 vectors, and currently supports tokenization for **20+ languages**. It features
 the **fastest syntactic parser** in the world, convolutional **neural network models**
 for tagging, parsing and **named entity recognition** and easy **deep learning**
 integration. It's commercial open-source software, released under the MIT license.
 
-💫 **Version 2.0 out now!** `Check out the new features here. <https://alpha.spacy.io/usage/v2>`_
+💫 **Version 2.0 out now!** `Check out the new features here. <https://spacy.io/usage/v2>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
@@ -50,13 +50,13 @@ integration. It's commercial open-source software, released under the MIT licens
 `Contribute`_        How to contribute to the spaCy project and code base.
 ===================  ===
 
-.. _spaCy 101: https://alpha.spacy.io/usage/spacy-101
-.. _New in v2.0: https://alpha.spacy.io/usage/v2#migrating
-.. _Usage Guides: https://alpha.spacy.io/usage/
-.. _API Reference: https://alpha.spacy.io/api/
-.. _Models: https://alpha.spacy.io/models
-.. _Resources: https://alpha.spacy.io/usage/resources
-.. _Changelog: https://alpha.spacy.io/usage/#changelog
+.. _spaCy 101: https://spacy.io/usage/spacy-101
+.. _New in v2.0: https://spacy.io/usage/v2#migrating
+.. _Usage Guides: https://spacy.io/usage/
+.. _API Reference: https://spacy.io/api/
+.. _Models: https://spacy.io/models
+.. _Resources: https://spacy.io/usage/resources
+.. _Changelog: https://spacy.io/usage/#changelog
 .. _Contribute: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
 💬 Where to ask questions
@@ -85,7 +85,7 @@ Features
 * **Named entity** recognition
 * Non-destructive **tokenization**
 * Support for **20+ languages**
-* Pre-trained `statistical models <https://alpha.spacy.io/models>`_ and word vectors
+* Pre-trained `statistical models <https://spacy.io/models>`_ and word vectors
 * Easy **deep learning** integration
 * Part-of-speech tagging
 * Labelled dependency parsing
@@ -98,13 +98,13 @@ Features
 * State-of-the-art speed
 * Robust, rigorously evaluated accuracy
 
-📖  **For more details, see the** `facts, figures and benchmarks <https://alpha.spacy.io/usage/facts-figures>`_.
+📖  **For more details, see the** `facts, figures and benchmarks <https://spacy.io/usage/facts-figures>`_.
 
 Install spaCy
 =============
 
 For detailed installation instructions, see
-the `documentation <https://alpha.spacy.io/usage>`_.
+the `documentation <https://spacy.io/usage>`_.
 
 ==================== ===
 **Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
@@ -166,7 +166,7 @@ inputs must match. After updating spaCy, we recommend **retraining your models**
 with the new version.
 
 📖  **For details on upgrading from spaCy 1.x to spaCy 2.x, see the**
-`migration guide <https://alpha.spacy.io/usage/v2#migrating>`_.
+`migration guide <https://spacy.io/usage/v2#migrating>`_.
 
 Download models
 ===============
@@ -181,8 +181,8 @@ or manually by pointing pip to a path or URL.
 `Models Documentation`_ Detailed usage instructions.
 ======================= ===
 
-.. _Available Models: https://alpha.spacy.io/models
-.. _Models Documentation: https://alpha.spacy.io/docs/usage/models
+.. _Available Models: https://spacy.io/models
+.. _Models Documentation: https://spacy.io/docs/usage/models
 
 .. code:: bash
 
@@ -218,7 +218,7 @@ then call its ``load()`` method:
     doc = nlp(u'This is a sentence.')
 
 📖 **For more info and examples, check out the**
-`models documentation <https://alpha.spacy.io/docs/usage/models>`_.
+`models documentation <https://spacy.io/docs/usage/models>`_.
 
 Support for older versions
 --------------------------
@@ -261,7 +261,7 @@ Compared to regular install via pip, `requirements.txt <requirements.txt>`_
 additionally installs developer dependencies such as Cython. For more details
 and instructions, see the documentation on
 `compiling spaCy from source <https://spacy.io/usage/#source>`_ and the
-`quickstart widget <https://alpha.spacy.io/usage/#section-quickstart>`_ to get
+`quickstart widget <https://spacy.io/usage/#section-quickstart>`_ to get
 the right commands for your platform and Python version.
 
 Instead of the above verbose commands, you can also use the following

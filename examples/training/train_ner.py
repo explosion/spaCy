@@ -4,8 +4,8 @@
 existing model or a blank model.
 
 For more details, see the documentation:
-* Training: https://alpha.spacy.io/usage/training
-* NER: https://alpha.spacy.io/usage/linguistic-features#named-entities
+* Training: https://spacy.io/usage/training
+* NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.0.0+
 """

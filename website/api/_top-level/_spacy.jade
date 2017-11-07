@@ -57,7 +57,7 @@ p
         nlp.add_pipe(component)             #  add component to pipeline
     nlp.from_disk(model_data_path)          #  load in model data
 
-+infobox("Deprecation note", "⚠️")
++infobox("Changed in v2.0", "⚠️")
     |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
     |  will also raise an error if no model could be loaded and never just
     |  return an empty #[code Language] object. If you need a blank language,
