@@ -1,0 +1,123 @@
+<svg class="o-svg" xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="-20 -10 550 400">
+    <style>
+        .svg__tokenization__text { fill: #1a1e23; font: 18px Arial, sans-serif }
+        .svg__tokenization__text-small { fill: #fff; font: 600 13px Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace }
+    </style>
+    <path fill="none" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M71 39v12H16v11M71 39v12h20v11"/>
+    <path fill="#f8cecc" stroke="#c00" stroke-width="2" d="M1 1h140v38.2H1z"/>
+    <text class="svg__tokenization__text" dy="1em" width="43" height="19" transform="translate(48.5 9.5)">“Let’s</text>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M175 39v23"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M150 1h50v38.2h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(164.5 9.5)" width="19" height="19">go</text>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M235 39v23"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M210 1h50v38.2h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(226.5 9.5)" width="15" height="19">to</text>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M341 39v23"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M270 1h141v38.2H270z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(320.5 9.5)" width="38" height="19">N.Y.!”</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M16 100v20"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M1 62h30v38.2H1z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(11.5 70.5)" width="7" height="19">“</text>
+    <path fill="none" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M91 100v11H66v9M91 100v11h29v9"/>
+    <path fill="#f8cecc" stroke="#c00" stroke-width="2" d="M41 62h100v38.2H41z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(72.5 70.5)" width="35" height="19">Let’s</text>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M175 100v20"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M150 62h50v38.2h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(164.5 70.5)" width="19" height="19">go</text>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M235 100v20"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M210 62h50v38.2h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(226.5 70.5)" width="15" height="19">to</text>
+    <path fill="none" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M341 100v20"/>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M270 62h141v38.2H270z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(320.5 70.5)" width="38" height="19">N.Y.!”</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M1 120h30v38H1z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(11.5 128.5)" width="7" height="19">“</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M66 158v24"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M41 120h50v38H41z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(53.5 128.5)" width="23" height="19">Let</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M175 158v24"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M150 120h50v38h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(164.5 128.5)" width="19" height="19">go</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M235 158v24"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M210 120h50v38h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(226.5 128.5)" width="15" height="19">to</text>
+    <path fill="none" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M341 158v13h-20v11M341 158v13h55v11"/>
+    <path fill="#f8cecc" stroke="#c00" stroke-width="2" d="M270 120h141v38H270z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(320.5 128.5)" width="38" height="19">N.Y.!”</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M120 158v24"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M100 120h40v38h-40z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(113.5 128.5)" width="11" height="19">’s</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M16 220v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M1 181.8h30V220H1z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(11.5 190.5)" width="7" height="19">“</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M66 220v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M41 181.8h50V220H41z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(53.5 190.5)" width="23" height="19">Let</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M175 220v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M150 181.8h50V220h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(164.5 190.5)" width="19" height="19">go</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M235 220v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M210 181.8h50V220h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(226.5 190.5)" width="15" height="19">to</text>
+    <path fill="none" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M321 220v11h-20v12M321 220v11h34v12"/>
+    <path fill="#f8cecc" stroke="#c00" stroke-width="2" d="M270 181.8h101V220H270z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(304.5 190.5)" width="30" height="19">N.Y.!</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M120 220v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M100 181.8h40V220h-40z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(113.5 190.5)" width="11" height="19">’s</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M396 220v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M381 181.8h30V220h-30z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(391.5 190.5)" width="7" height="19">”</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M16 281v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M1 242.7h30V281H1z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(11.5 251.5)" width="7" height="19">“</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M66 281v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M41 242.7h50V281H41z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(53.5 251.5)" width="23" height="19">Let</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M175 281v20-17 20"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M150 242.7h50V281h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(164.5 251.5)" width="19" height="19">go</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M235 281v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M210 242.7h50V281h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(226.5 251.5)" width="15" height="19">to</text>
+    <path fill="none" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M301 281v23"/>
+    <path fill="#f8cecc" stroke="#b85450" stroke-width="2" d="M270 242.7h61V281h-61z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(286.5 251.5)" width="26" height="19">N.Y.</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M120 281v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M100 242.7h40V281h-40z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(113.5 251.5)" width="11" height="19">’s</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M396 281v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M381 242.7h30V281h-30z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(391.5 251.5)" width="7" height="19">”</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M355 281v23"/>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M340 242.7h30V281h-30z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(351.5 251.5)" width="5" height="19">!</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M1 304h30v38H1z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(11.5 312.5)" width="7" height="19">“</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M41 304h50v38H41z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(53.5 312.5)" width="23" height="19">Let</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M150 304h50v38h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(164.5 312.5)" width="19" height="19">go</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M210 304h50v38h-50z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(226.5 312.5)" width="15" height="19">to</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M270 304h61v38h-61z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(286.5 312.5)" width="26" height="19">N.Y.</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M100 304h40v38h-40z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(113.5 312.5)" width="11" height="19">’s</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M381 304h30v38h-30z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(391.5 312.5)" width="7" height="19">”</text>
+    <path fill="#d5e8d4" stroke="#82b366" stroke-width="2" d="M340 304h30v38h-30z"/>
+    <text class="svg__tokenization__text" dy="1em" transform="translate(351.5 312.5)" width="5" height="19">!</text>
+    <rect width="104" height="19" x="437" y="72" fill="#c00" stroke="#c00" stroke-width="2" rx="2.9" ry="2.9"/>
+    <text class="svg__tokenization__text-small" dy="0.9em" transform="translate(455.5 74.5)" width="65" height="12">EXCEPTION</text>
+    <rect width="104" height="19" x="437" y="11" fill="#c00" stroke="#c00" stroke-width="2" rx="2.9" ry="2.9"/>
+    <text class="svg__tokenization__text-small" dy="0.9em" transform="translate(466.5 13.5)" width="43" height="12">PREFIX</text>
+    <rect width="104" height="19" x="437" y="130" fill="#c00" stroke="#c00" stroke-width="2" rx="2.9" ry="2.9"/>
+    <text class="svg__tokenization__text-small" dy="0.9em" transform="translate(466.5 132.5)" width="43" height="12">SUFFIX</text>
+    <rect width="104" height="19" x="437" y="191" fill="#c00" stroke="#c00" stroke-width="2" rx="2.9" ry="2.9"/>
+    <text class="svg__tokenization__text-small" dy="0.9em" transform="translate(466.5 193.5)" width="43" height="12">SUFFIX</text>
+    <rect width="104" height="19" x="437" y="252" fill="#c00" stroke="#c00" stroke-width="2" rx="2.9" ry="2.9"/>
+    <text class="svg__tokenization__text-small" dy="0.9em" transform="translate(455.5 254.5)" width="65" height="12">EXCEPTION</text>
+    <rect width="104" height="19" x="437" y="313" fill="#82b366" stroke="#82b366" stroke-width="2" rx="2.9" ry="2.9"/>
+    <text class="svg__tokenization__text-small" dy="0.9em" transform="translate(473.5 315.5)" width="29" height="12">DONE</text>
+</svg>

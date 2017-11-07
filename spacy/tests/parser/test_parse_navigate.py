@@ -57,9 +57,9 @@ def test_parser_parse_navigate_consistency(en_tokenizer, text, heads):
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
     for head in doc:
         for child in head.lefts:
-            assert child.head is head
+            assert child.head == head
         for child in head.rights:
-            assert child.head is head
+            assert child.head == head
 
 
 def test_parser_parse_navigate_child_consistency(en_tokenizer, text, heads):

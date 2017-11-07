@@ -1,0 +1,30 @@
+<svg class="o-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 923 200" width="923" height="200">
+    <style>
+        .svg__pipeline__text { fill: #1a1e23; font: 20px Arial, sans-serif }
+        .svg__pipeline__text-small { fill: #1a1e23; font: bold 18px Arial, sans-serif }
+        .svg__pipeline__text-code { fill: #1a1e23; font: 600 16px Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace }
+    </style>
+    <rect width="601" height="127" x="159" y="21" fill="none" stroke="#09a3d5" stroke-width="3" rx="19.1" stroke-dasharray="3 6" ry="19.1"/>
+    <path fill="#e1d5e7" stroke="#9673a6" stroke-width="2" d="M801 55h120v60H801z"/>
+    <text class="svg__pipeline__text" dy="0.75em" width="28" height="19" transform="translate(846.5 75.5)">Doc</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M121.2 84.7h29.4"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M156.6 84.7l-8 4 2-4-2-4z"/>
+    <path fill="#f5f5f5" stroke="#999" stroke-width="2" d="M1 55h120v60H1z"/>
+    <text class="svg__pipeline__text" dy="0.85em" width="34" height="22" transform="translate(43.5 73.5)">Text</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M760 84.7h33"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M799 84.7l-8 4 2-4-2-4z"/>
+    <rect width="75" height="39" x="422" y="1" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="5.8" ry="5.8"/>
+    <text class="svg__pipeline__text-code" dy="0.8em" dx="0.1em" width="29" height="17" transform="translate(444.5 11.5)">nlp</text>
+    <path fill="#f8cecc" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M176 58h103.3L296 88l-16.8 30H176l16.8-30z"/>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="58" height="14" transform="translate(206.5 80.5)">tokenizer</text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M314 58h103.3L434 88l-16.8 30H314l16.8-30z"/>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="8" width="62" height="14" transform="translate(342.5 80.5)">tagger</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M296.5 88.2h24.7"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M327.2 88.2l-8 4 2-4-2-4z"/>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M416 58h103.3L536 88l-16.8 30H416l16.8-30z"/>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="40" height="14" transform="translate(455.5 80.5)">parser</text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M519 58h103.3L639 88l-16.8 30H519l16.8-30z"/>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="8" width="40" height="14" transform="translate(558.5 80.5)">ner</text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M622 58h103.3L742 88l-16.8 30H622l16.8-30z"/>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="8" width="20" height="14" transform="translate(671.5 80.5)">...</text>
+</svg>

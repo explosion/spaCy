@@ -19,7 +19,6 @@ def test_pickle_string_store(stringstore, text1, text2):
     assert len(stringstore) == len(unpickled)
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize('text1,text2', [('dog', 'cat')])
 def test_pickle_vocab(text1, text2):
     vocab = Vocab(lex_attr_getters={int(NORM): lambda string: string[:-1]})

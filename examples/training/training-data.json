@@ -1,0 +1,641 @@
+[
+    {
+      "id": "wsj_0200",
+      "paragraphs": [
+        {
+          "raw": "In an Oct. 19 review of \"The Misanthrope\" at Chicago's Goodman Theatre (\"Revitalized Classics Take the Stage in Windy City,\" Leisure & Arts), the role of Celimene, played by Kim Cattrall, was mistakenly attributed to Christina Haag. Ms. Haag plays Elianti.",
+          "sentences": [
+            {
+              "tokens": [
+                {
+                  "head": 44,
+                  "dep": "prep",
+                  "tag": "IN",
+                  "orth": "In",
+                  "ner": "O",
+                  "id": 0
+                },
+                {
+                  "head": 3,
+                  "dep": "det",
+                  "tag": "DT",
+                  "orth": "an",
+                  "ner": "O",
+                  "id": 1
+                },
+                {
+                  "head": 2,
+                  "dep": "nmod",
+                  "tag": "NNP",
+                  "orth": "Oct.",
+                  "ner": "B-DATE",
+                  "id": 2
+                },
+                {
+                  "head": -1,
+                  "dep": "nummod",
+                  "tag": "CD",
+                  "orth": "19",
+                  "ner": "L-DATE",
+                  "id": 3
+                },
+                {
+                  "head": -4,
+                  "dep": "pobj",
+                  "tag": "NN",
+                  "orth": "review",
+                  "ner": "O",
+                  "id": 4
+                },
+                {
+                  "head": -1,
+                  "dep": "prep",
+                  "tag": "IN",
+                  "orth": "of",
+                  "ner": "O",
+                  "id": 5
+                },
+                {
+                  "head": 2,
+                  "dep": "punct",
+                  "tag": "``",
+                  "orth": "``",
+                  "ner": "O",
+                  "id": 6
+                },
+                {
+                  "head": 1,
+                  "dep": "det",
+                  "tag": "DT",
+                  "orth": "The",
+                  "ner": "B-WORK_OF_ART",
+                  "id": 7
+                },
+                {
+                  "head": -3,
+                  "dep": "pobj",
+                  "tag": "NN",
+                  "orth": "Misanthrope",
+                  "ner": "L-WORK_OF_ART",
+                  "id": 8
+                },
+                {
+                  "head": -1,
+                  "dep": "punct",
+                  "tag": "''",
+                  "orth": "''",
+                  "ner": "O",
+                  "id": 9
+                },
+                {
+                  "head": -2,
+                  "dep": "prep",
+                  "tag": "IN",
+                  "orth": "at",
+                  "ner": "O",
+                  "id": 10
+                },
+                {
+                  "head": 3,
+                  "dep": "poss",
+                  "tag": "NNP",
+                  "orth": "Chicago",
+                  "ner": "U-GPE",
+                  "id": 11
+                },
+                {
+                  "head": -1,
+                  "dep": "case",
+                  "tag": "POS",
+                  "orth": "'s",
+                  "ner": "O",
+                  "id": 12
+                },
+                {
+                  "head": 1,
+                  "dep": "compound",
+                  "tag": "NNP",
+                  "orth": "Goodman",
+                  "ner": "B-FAC",
+                  "id": 13
+                },
+                {
+                  "head": -4,
+                  "dep": "pobj",
+                  "tag": "NNP",
+                  "orth": "Theatre",
+                  "ner": "L-FAC",
+                  "id": 14
+                },
+                {
+                  "head": 4,
+                  "dep": "punct",
+                  "tag": "-LRB-",
+                  "orth": "(",
+                  "ner": "O",
+                  "id": 15
+                },
+                {
+                  "head": 3,
+                  "dep": "punct",
+                  "tag": "``",
+                  "orth": "``",
+                  "ner": "O",
+                  "id": 16
+                },
+                {
+                  "head": 1,
+                  "dep": "amod",
+                  "tag": "VBN",
+                  "orth": "Revitalized",
+                  "ner": "B-WORK_OF_ART",
+                  "id": 17
+                },
+                {
+                  "head": 1,
+                  "dep": "nsubj",
+                  "tag": "NNS",
+                  "orth": "Classics",
+                  "ner": "I-WORK_OF_ART",
+                  "id": 18
+                },
+                {
+                  "head": -15,
+                  "dep": "appos",
+                  "tag": "VBP",
+                  "orth": "Take",
+                  "ner": "I-WORK_OF_ART",
+                  "id": 19
+                },
+                {
+                  "head": 1,
+                  "dep": "det",
+                  "tag": "DT",
+                  "orth": "the",
+                  "ner": "I-WORK_OF_ART",
+                  "id": 20
+                },
+                {
+                  "head": -2,
+                  "dep": "dobj",
+                  "tag": "NN",
+                  "orth": "Stage",
+                  "ner": "I-WORK_OF_ART",
+                  "id": 21
+                },
+                {
+                  "head": -3,
+                  "dep": "prep",
+                  "tag": "IN",
+                  "orth": "in",
+                  "ner": "I-WORK_OF_ART",
+                  "id": 22
+                },
+                {
+                  "head": 1,
+                  "dep": "compound",
+                  "tag": "NNP",
+                  "orth": "Windy",
+                  "ner": "I-WORK_OF_ART",
+                  "id": 23
+                },
+                {
+                  "head": -2,
+                  "dep": "pobj",
+                  "tag": "NNP",
+                  "orth": "City",
+                  "ner": "L-WORK_OF_ART",
+                  "id": 24
+                },
+                {
+                  "head": -6,
+                  "dep": "punct",
+                  "tag": ",",
+                  "orth": ",",
+                  "ner": "O",
+                  "id": 25
+                },
+                {
+                  "head": -7,
+                  "dep": "punct",
+                  "tag": "''",
+                  "orth": "''",
+                  "ner": "O",
+                  "id": 26
+                },
+                {
+                  "head": -8,
+                  "dep": "npadvmod",
+                  "tag": "NN",
+                  "orth": "Leisure",
+                  "ner": "B-ORG",
+                  "id": 27
+                },
+                {
+                  "head": -1,
+                  "dep": "cc",
+                  "tag": "CC",
+                  "orth": "&",
+                  "ner": "I-ORG",
+                  "id": 28
+                },
+                {
+                  "head": -2,
+                  "dep": "conj",
+                  "tag": "NNS",
+                  "orth": "Arts",
+                  "ner": "L-ORG",
+                  "id": 29
+                },
+                {
+                  "head": -11,
+                  "dep": "punct",
+                  "tag": "-RRB-",
+                  "orth": ")",
+                  "ner": "O",
+                  "id": 30
+                },
+                {
+                  "head": 13,
+                  "dep": "punct",
+                  "tag": ",",
+                  "orth": ",",
+                  "ner": "O",
+                  "id": 31
+                },
+                {
+                  "head": 1,
+                  "dep": "det",
+                  "tag": "DT",
+                  "orth": "the",
+                  "ner": "O",
+                  "id": 32
+                },
+                {
+                  "head": 11,
+                  "dep": "nsubjpass",
+                  "tag": "NN",
+                  "orth": "role",
+                  "ner": "O",
+                  "id": 33
+                },
+                {
+                  "head": -1,
+                  "dep": "prep",
+                  "tag": "IN",
+                  "orth": "of",
+                  "ner": "O",
+                  "id": 34
+                },
+                {
+                  "head": -1,
+                  "dep": "pobj",
+                  "tag": "NNP",
+                  "orth": "Celimene",
+                  "ner": "U-PERSON",
+                  "id": 35
+                },
+                {
+                  "head": -3,
+                  "dep": "punct",
+                  "tag": ",",
+                  "orth": ",",
+                  "ner": "O",
+                  "id": 36
+                },
+                {
+                  "head": -4,
+                  "dep": "acl",
+                  "tag": "VBN",
+                  "orth": "played",
+                  "ner": "O",
+                  "id": 37
+                },
+                {
+                  "head": -1,
+                  "dep": "agent",
+                  "tag": "IN",
+                  "orth": "by",
+                  "ner": "O",
+                  "id": 38
+                },
+                {
+                  "head": 1,
+                  "dep": "compound",
+                  "tag": "NNP",
+                  "orth": "Kim",
+                  "ner": "B-PERSON",
+                  "id": 39
+                },
+                {
+                  "head": -2,
+                  "dep": "pobj",
+                  "tag": "NNP",
+                  "orth": "Cattrall",
+                  "ner": "L-PERSON",
+                  "id": 40
+                },
+                {
+                  "head": -8,
+                  "dep": "punct",
+                  "tag": ",",
+                  "orth": ",",
+                  "ner": "O",
+                  "id": 41
+                },
+                {
+                  "head": 2,
+                  "dep": "auxpass",
+                  "tag": "VBD",
+                  "orth": "was",
+                  "ner": "O",
+                  "id": 42
+                },
+                {
+                  "head": 1,
+                  "dep": "advmod",
+                  "tag": "RB",
+                  "orth": "mistakenly",
+                  "ner": "O",
+                  "id": 43
+                },
+                {
+                  "head": 0,
+                  "dep": "root",
+                  "tag": "VBN",
+                  "orth": "attributed",
+                  "ner": "O",
+                  "id": 44
+                },
+                {
+                  "head": -1,
+                  "dep": "prep",
+                  "tag": "IN",
+                  "orth": "to",
+                  "ner": "O",
+                  "id": 45
+                },
+                {
+                  "head": 1,
+                  "dep": "compound",
+                  "tag": "NNP",
+                  "orth": "Christina",
+                  "ner": "B-PERSON",
+                  "id": 46
+                },
+                {
+                  "head": -2,
+                  "dep": "pobj",
+                  "tag": "NNP",
+                  "orth": "Haag",
+                  "ner": "L-PERSON",
+                  "id": 47
+                },
+                {
+                  "head": -4,
+                  "dep": "punct",
+                  "tag": ".",
+                  "orth": ".",
+                  "ner": "O",
+                  "id": 48
+                }
+              ],
+              "brackets": [
+                {
+                  "first": 2,
+                  "last": 3,
+                  "label": "NML"
+                },
+                {
+                  "first": 1,
+                  "last": 4,
+                  "label": "NP"
+                },
+                {
+                  "first": 7,
+                  "last": 8,
+                  "label": "NP-TTL"
+                },
+                {
+                  "first": 11,
+                  "last": 12,
+                  "label": "NP"
+                },
+                {
+                  "first": 11,
+                  "last": 14,
+                  "label": "NP"
+                },
+                {
+                  "first": 10,
+                  "last": 14,
+                  "label": "PP-LOC"
+                },
+                {
+                  "first": 6,
+                  "last": 14,
+                  "label": "NP"
+                },
+                {
+                  "first": 5,
+                  "last": 14,
+                  "label": "PP"
+                },
+                {
+                  "first": 1,
+                  "last": 14,
+                  "label": "NP"
+                },
+                {
+                  "first": 17,
+                  "last": 18,
+                  "label": "NP-SBJ"
+                },
+                {
+                  "first": 20,
+                  "last": 21,
+                  "label": "NP"
+                },
+                {
+                  "first": 23,
+                  "last": 24,
+                  "label": "NP"
+                },
+                {
+                  "first": 22,
+                  "last": 24,
+                  "label": "PP-LOC"
+                },
+                {
+                  "first": 19,
+                  "last": 24,
+                  "label": "VP"
+                },
+                {
+                  "first": 17,
+                  "last": 24,
+                  "label": "S-HLN"
+                },
+                {
+                  "first": 27,
+                  "last": 29,
+                  "label": "NP-TMP"
+                },
+                {
+                  "first": 15,
+                  "last": 30,
+                  "label": "NP"
+                },
+                {
+                  "first": 1,
+                  "last": 30,
+                  "label": "NP"
+                },
+                {
+                  "first": 0,
+                  "last": 30,
+                  "label": "PP-LOC"
+                },
+                {
+                  "first": 32,
+                  "last": 33,
+                  "label": "NP"
+                },
+                {
+                  "first": 35,
+                  "last": 35,
+                  "label": "NP"
+                },
+                {
+                  "first": 34,
+                  "last": 35,
+                  "label": "PP"
+                },
+                {
+                  "first": 32,
+                  "last": 35,
+                  "label": "NP"
+                },
+                {
+                  "first": 39,
+                  "last": 40,
+                  "label": "NP-LGS"
+                },
+                {
+                  "first": 38,
+                  "last": 40,
+                  "label": "PP"
+                },
+                {
+                  "first": 37,
+                  "last": 40,
+                  "label": "VP"
+                },
+                {
+                  "first": 32,
+                  "last": 41,
+                  "label": "NP-SBJ-2"
+                },
+                {
+                  "first": 43,
+                  "last": 43,
+                  "label": "ADVP-MNR"
+                },
+                {
+                  "first": 46,
+                  "last": 47,
+                  "label": "NP"
+                },
+                {
+                  "first": 45,
+                  "last": 47,
+                  "label": "PP-CLR"
+                },
+                {
+                  "first": 44,
+                  "last": 47,
+                  "label": "VP"
+                },
+                {
+                  "first": 42,
+                  "last": 47,
+                  "label": "VP"
+                },
+                {
+                  "first": 0,
+                  "last": 48,
+                  "label": "S"
+                }
+              ]
+            },
+            {
+              "tokens": [
+                {
+                  "head": 1,
+                  "dep": "compound",
+                  "tag": "NNP",
+                  "orth": "Ms.",
+                  "ner": "O",
+                  "id": 0
+                },
+                {
+                  "head": 1,
+                  "dep": "nsubj",
+                  "tag": "NNP",
+                  "orth": "Haag",
+                  "ner": "U-PERSON",
+                  "id": 1
+                },
+                {
+                  "head": 0,
+                  "dep": "root",
+                  "tag": "VBZ",
+                  "orth": "plays",
+                  "ner": "O",
+                  "id": 2
+                },
+                {
+                  "head": -1,
+                  "dep": "dobj",
+                  "tag": "NNP",
+                  "orth": "Elianti",
+                  "ner": "U-PERSON",
+                  "id": 3
+                },
+                {
+                  "head": -2,
+                  "dep": "punct",
+                  "tag": ".",
+                  "orth": ".",
+                  "ner": "O",
+                  "id": 4
+                }
+              ],
+              "brackets": [
+                {
+                  "first": 0,
+                  "last": 1,
+                  "label": "NP-SBJ"
+                },
+                {
+                  "first": 3,
+                  "last": 3,
+                  "label": "NP"
+                },
+                {
+                  "first": 2,
+                  "last": 3,
+                  "label": "VP"
+                },
+                {
+                  "first": 0,
+                  "last": 4,
+                  "label": "S"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]

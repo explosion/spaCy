@@ -8,7 +8,7 @@ IDS = {
     "ADP": ADP,
     "ADV": ADV,
     "AUX": AUX,
-    "CONJ": CONJ, # U20
+    "CONJ": CONJ,  # U20
     "CCONJ": CCONJ,
     "DET": DET,
     "INTJ": INTJ,

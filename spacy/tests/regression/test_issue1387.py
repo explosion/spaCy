@@ -8,6 +8,7 @@ from ..util import get_doc
 
 import pytest
 
+
 def test_issue1387():
     tag_map = {'VBG': {POS: VERB, VerbForm_part: True}}
     index = {"verb": ("cope","cop")}
@@ -19,4 +20,3 @@ def test_issue1387():
     doc[0].tag_ = 'VBG'
     assert doc[0].text == "coping"
     assert doc[0].lemma_ == "cope"
-

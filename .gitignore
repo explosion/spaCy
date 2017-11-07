@@ -1,14 +1,12 @@
 # spaCy
 spacy/data/
 corpora/
-models/
+/models/
 keys/
 
 # Website
 website/www/
 website/_deploy.sh
-website/package.json
-website/announcement.jade
 website/.gitignore
 
 # Cython / C extensions
@@ -29,10 +27,8 @@ Profile.prof
 .python-version
 __pycache__/
 *.py[cod]
-.env*/
 .env/
-.env2/
-.env3/
+.env*
 .~env/
 .venv
 venv/
@@ -42,7 +38,6 @@ venv/
 
 # Distribution / packaging
 env/
-bin/
 build/
 develop-eggs/
 dist/
@@ -102,7 +97,3 @@ Desktop.ini
 
 # Other
 *.tgz
-
-
-# JetBrains PyCharm
-.idea/

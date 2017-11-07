@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.models
+@pytest.mark.xfail
+@pytest.mark.models('en')
 def test_issue693(EN):
     """Test that doc.noun_chunks parses the complete sentence."""
 

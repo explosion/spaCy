@@ -1,0 +1,74 @@
+//- 💫 DOCS > USAGE > LINGUISTIC FEATURES > PART-OF-SPEECH TAGGING
+
+include ../_spacy-101/_pos-deps
+
++h(3, "rule-based-morphology") Rule-based morphology
+
+p
+    |  Inflectional morphology is the process by which a root form of a word is
+    |  modified by adding prefixes or suffixes that specify its grammatical
+    |  function but do not changes its part-of-speech. We say that a
+    |  #[strong lemma] (root form) is #[strong inflected] (modified/combined)
+    |  with one or more #[strong morphological features] to create a surface
+    |  form. Here are some examples:
+
++table(["Context", "Surface", "Lemma", "POS", "Morphological Features"])
+    +row
+        +cell I was reading the paper
+        +cell reading
+        +cell read
+        +cell verb
+        +cell #[code VerbForm=Ger]
+
+    +row
+        +cell I don't watch the news, I read the paper.
+        +cell read
+        +cell read
+        +cell verb
+        +cell #[code VerbForm=Fin], #[code Mood=Ind], #[code Tense=Pres]
+
+    +row
+        +cell I read the paper yesterday
+        +cell read
+        +cell read
+        +cell verb
+        +cell #[code VerbForm=Fin], #[code Mood=Ind], #[code Tense=Past]
+
+p
+    |  English has a relatively simple morphological system, which spaCy
+    |  handles using rules that can be keyed by the token, the part-of-speech
+    |  tag, or the combination of the two. The system works as follows:
+
++list("numbers")
+    +item
+        |  The tokenizer consults a
+        |  #[+a("/usage/adding-languages#tokenizer-exceptions") mapping table]
+        |  #[code TOKENIZER_EXCEPTIONS], which allows sequences of characters
+        |  to be mapped to multiple tokens. Each token may be assigned a part
+        |  of speech and one or more morphological features.
+
+    +item
+        |  The part-of-speech tagger then assigns each token an
+        |  #[strong extended POS tag]. In the API, these tags are known as
+        |  #[code Token.tag]. They express the part-of-speech (e.g.
+        |  #[code VERB]) and some amount of morphological information, e.g.
+        |  that the verb is past tense.
+
+    +item
+        |  For words whose POS is not set by a prior process, a
+        |  #[+a("/usage/adding-languages#tag-map") mapping table]
+        |  #[code TAG_MAP] maps the tags to a part-of-speech and a set of
+        |  morphological features.
+
+    +item
+        |  Finally, a #[strong rule-based deterministic lemmatizer] maps the
+        |  surface form, to a lemma in light of the previously assigned
+        |  extended part-of-speech and morphological information, without
+        |  consulting the context of the token. The lemmatizer also accepts
+        |  list-based exception files, acquired from
+        |  #[+a("https://wordnet.princeton.edu/") WordNet].
+
++infobox("Part-of-speech tag scheme", "📖")
+    |  For a list of the fine-grained and coarse-grained part-of-speech tags
+    |  assigned by spaCy's models across different languages, see the
+    |  #[+a("/api/annotation#pos-tagging") POS tag scheme documentation].

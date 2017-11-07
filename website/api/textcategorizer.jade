@@ -1,0 +1,19 @@
+//- 💫 DOCS > API > TEXTCATEGORIZER
+
+include ../_includes/_mixins
+
+p
+    |  The model supports classification with multiple, non-mutually exclusive
+    |  labels. You can change the model architecture rather easily, but by
+    |  default, the #[code TextCategorizer] class uses a convolutional
+    |  neural network to assign position-sensitive vectors to each word in the
+    |  document. The #[code TextCategorizer] uses its own CNN model, to
+    |  avoid sharing weights with the other pipeline components. The document
+    |  tensor is then summarized by concatenating max and mean pooling, and a
+    |  multilayer perceptron is used to predict an output vector of length
+    |  #[code nr_class], before a logistic activation is applied elementwise.
+    |  The value of each output neuron is the probability that some class is
+    |  present.
+
+//- This class inherits from Pipe, so this page uses the template in pipe.jade.
+!=partial("pipe", { subclass: "TextCategorizer", short: "textcat", pipeline_id: "textcat" })

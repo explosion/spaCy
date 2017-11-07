@@ -30,9 +30,12 @@ cdef class Morphology:
     cdef public object n_tags
     cdef public object reverse_index
     cdef public object tag_names
+    cdef public object exc
 
     cdef RichTagC* rich_tags
     cdef PreshMapArray _cache
+
+    cdef int assign_untagged(self, TokenC* token) except -1
 
     cdef int assign_tag(self, TokenC* token, tag) except -1
 
@@ -41,7 +44,7 @@ cdef class Morphology:
     cdef int assign_feature(self, uint64_t* morph, univ_morph_t feat_id, bint value) except -1
 
 
-cpdef enum univ_morph_t:
+cdef enum univ_morph_t:
     NIL = 0
     Animacy_anim = symbols.Animacy_anim
     Animacy_inam
