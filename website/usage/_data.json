@@ -150,6 +150,7 @@
             "Tagger & Parser": "tagger-parser",
             "Similarity": "similarity",
             "Text Classification": "textcat",
+            "Tips and Advice": "tips",
             "Saving & Loading": "saving-loading"
         }
     },

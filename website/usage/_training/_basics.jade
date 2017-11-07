@@ -206,6 +206,10 @@ p
     |  use the #[+api("cli#package") #[code package]] command to generate an
     |  installable Python package from your model.
 
++code(false, "bash").
+    spacy convert /tmp/train.conllu /tmp/data
+    spacy train en /tmp/model /tmp/data/train.json -n 5
+
 +h(3, "training-simple-style") Simple training style
     +tag-new(2)
 

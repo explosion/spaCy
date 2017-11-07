@@ -2,12 +2,9 @@
 
 p
     |  All #[+a("/models") spaCy models] support online learning, so
-    |  you can update a pre-trained model with new examples. To update the
-    |  model, you first need to create an instance of
-    |  #[+api("goldparse") #[code GoldParse]], with the entity labels
-    |  you want to learn. You'll usually need to provide many examples to
-    |  meaningfully improve the system — a few hundred is a good start, although
-    |  more is better.
+    |  you can update a pre-trained model with new examples. You'll usually
+    |  need to provide many #[strong examples] to meaningfully improve the
+    |  system — a few hundred is a good start, although more is better.
 
 p
     |  You should avoid iterating over the same few examples multiple times, or
@@ -21,7 +18,7 @@ p
     |  the model of other examples by augmenting your annotations with sentences
     |  annotated with entities automatically recognised by the original model.
     |  Ultimately, this is an empirical process: you'll need to
-    |  #[strong experiment on your own data] to find a solution that works best
+    |  #[strong experiment on your data] to find a solution that works best
     |  for you.
 
 +h(3, "example-train-ner") Updating the Named Entity Recognizer

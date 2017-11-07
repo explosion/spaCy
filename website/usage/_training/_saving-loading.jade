@@ -41,7 +41,7 @@ p
         "author": "You",
         "email": "you@example.com",
         "license": "CC BY-SA 3.0",
-        "pipeline": ["token_vectors", "tagger"]
+        "pipeline": ["tagger", "parser", "ner"]
     }
 
 +code(false, "bash").
@@ -94,26 +94,13 @@ p
     |  The #[code load()] method that comes with our model package
     |  templates will take care of putting all this together and returning a
     |  #[code Language] object with the loaded pipeline and data. If your model
-    |  requires custom pipeline components, you should
-    |  #[strong ship then with your model] and register their
-    |  #[+a("/usage/processing-pipelines#creating-factory") factories]
-    |  via  #[+api("spacy#set_factory") #[code set_factory()]].
-
-+aside-code("Factory example").
-    def my_factory(vocab):
-        # load some state
-        def my_component(doc):
-            # process the doc
-            return doc
-        return my_component
-
-+code.
-    spacy.set_factory('custom_component', custom_component_factory)
-
-+infobox("Custom models with pipeline components")
-    |  For more details and an example of how to package a sentiment model
-    |  with a custom pipeline component, see the usage guide on
-    |  #[+a("/usage/processing-pipelines#example2") language processing pipelines].
+    |  requires custom #[+a("/usage/processing-pipelines") pipeline components]
+    |  or a custom language class, you can also
+    |  #[strong ship the code with your model]. For examples of this, check out
+    |  the implementations of spaCy's
+    |  #[+api("util#load_model_from_init_py") #[code load_model_from_init_py]]
+    |  and  #[+api("util#load_model_from_path") #[code load_model_from_path]]
+    |  utility functions.
 
 +h(3, "models-building") Building the model package
 
@@ -155,8 +142,7 @@ p
     |  #[+api("language#from_disk") #[code from_disk]] instead.
 
 +code.
-    from spacy.lang.en import English
-    nlp = English().from_disk('/path/to/data')
+    nlp = spacy.blank('en').from_disk('/path/to/data')
 
 +infobox("Important note: Loading data in v2.x")
     .o-block
@@ -168,7 +154,7 @@ p
         |  spaCy v2.0 solves this with a clear distinction between setting up
         |  the instance and loading the data.
 
-    +code-new nlp = English().from_disk('/path/to/data')
+    +code-new nlp = spacy.blank('en').from_disk('/path/to/data')
     +code-old nlp = spacy.load('en', path='/path/to/data')
 
 +h(3, "example-training-spacy") Example: How we're training and packaging models for spaCy
