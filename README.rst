@@ -1,20 +1,25 @@
 spaCy: Industrial-strength NLP
 ******************************
 
-spaCy is a library for advanced Natural Language Processing in Python and Cython.
-It's built on the very latest research, and was designed from day one to be
-used in real products. spaCy comes with
-`pre-trained statistical models <https://spacy.io/models>`_ and word
-vectors, and currently supports tokenization for **20+ languages**. It features
-the **fastest syntactic parser** in the world, convolutional **neural network models**
-for tagging, parsing and **named entity recognition** and easy **deep learning**
-integration. It's commercial open-source software, released under the MIT license.
+spaCy is a library for advanced natural language processing in Python and
+Cython. spaCy is built on  the very latest research, but it isn't researchware.
+It was designed from day one to be used in real products. spaCy currently supports
+English, German, French and Spanish, as well as tokenization for Italian,
+Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali, Hebrew, Thai,
+Chinese and Japanese. It's commercial open-source software, released under the
+MIT license.
 
-💫 **Version 2.0 out now!** `Check out the new features here. <https://spacy.io/usage/v2>`_
+⭐️ **Test spaCy v2.0.0 and the new models!** `Check out the new features here. <https://alpha.spacy.io/usage/v2>`_
+
+💫 **Version 1.10 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
-    :alt: Build Status
+    :alt: Travis Build Status
+
+.. image:: https://img.shields.io/appveyor/ci/explosion/spacy/master.svg?style=flat-square
+    :target: https://ci.appveyor.com/project/explosion/spacy
+    :alt: Appveyor Build Status
 
 .. image:: https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square
     :target: https://github.com/explosion/spaCy/releases
@@ -39,72 +44,69 @@ integration. It's commercial open-source software, released under the MIT licens
 📖 Documentation
 ================
 
-===================  ===
-`spaCy 101`_         New to spaCy? Here's everything you need to know!
-`Usage Guides`_      How to use spaCy and its features.
-`New in v2.0`_       New features, backwards incompatibilities and migration guide.
-`API Reference`_     The detailed reference for spaCy's API.
-`Models`_            Download statistical language models for spaCy.
-`Resources`_         Libraries, extensions, demos, books and courses.
-`Changelog`_         Changes and version history.
-`Contribute`_        How to contribute to the spaCy project and code base.
-===================  ===
+=================== ===
+`Usage Workflows`_  How to use spaCy and its features.
+`API Reference`_    The detailed reference for spaCy's API.
+`Troubleshooting`_  Common problems and solutions for beginners.
+`Tutorials`_        End-to-end examples, with code you can modify and run.
+`Showcase & Demos`_ Demos, libraries and products from the spaCy community.
+`Contribute`_       How to contribute to the spaCy project and code base.
+=================== ===
 
-.. _spaCy 101: https://spacy.io/usage/spacy-101
-.. _New in v2.0: https://spacy.io/usage/v2#migrating
-.. _Usage Guides: https://spacy.io/usage/
-.. _API Reference: https://spacy.io/api/
-.. _Models: https://spacy.io/models
-.. _Resources: https://spacy.io/usage/resources
-.. _Changelog: https://spacy.io/usage/#changelog
+.. _Usage Workflows: https://spacy.io/docs/usage/
+.. _API Reference: https://spacy.io/docs/api/
+.. _Troubleshooting: https://spacy.io/docs/usage/troubleshooting
+.. _Tutorials: https://spacy.io/docs/usage/tutorials
+.. _Showcase & Demos: https://spacy.io/docs/usage/showcase
 .. _Contribute: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
 💬 Where to ask questions
 ==========================
 
-The spaCy project is maintained by `@honnibal <https://github.com/honnibal>`_
-and `@ines <https://github.com/ines>`_. Please understand that we won't be able
-to provide individual support via email. We also believe that help is much more
-valuable if it's shared publicly, so that more people can benefit from it.
+Please understand that we won't be able to provide individual support via email. We also believe that help is much more valuable if it's shared publicly, so that more people can benefit from it.
 
 ====================== ===
-**Bug Reports**        `GitHub Issue Tracker`_
-**Usage Questions**    `StackOverflow`_, `Gitter Chat`_, `Reddit User Group`_
-**General Discussion** `Gitter Chat`_, `Reddit User Group`_
+**Bug reports**        `GitHub issue tracker`_
+**Usage questions**    `StackOverflow`_, `Gitter chat`_, `Reddit user group`_
+**General discussion** `Gitter chat`_, `Reddit user group`_
 ====================== ===
 
-.. _GitHub Issue Tracker: https://github.com/explosion/spaCy/issues
+.. _GitHub issue tracker: https://github.com/explosion/spaCy/issues
 .. _StackOverflow: http://stackoverflow.com/questions/tagged/spacy
-.. _Gitter Chat: https://gitter.im/explosion/spaCy
-.. _Reddit User Group: https://www.reddit.com/r/spacynlp
+.. _Gitter chat: https://gitter.im/explosion/spaCy
+.. _Reddit user group: https://www.reddit.com/r/spacynlp
 
 Features
 ========
 
-* **Fastest syntactic parser** in the world
-* **Named entity** recognition
 * Non-destructive **tokenization**
-* Support for **20+ languages**
-* Pre-trained `statistical models <https://spacy.io/models>`_ and word vectors
-* Easy **deep learning** integration
-* Part-of-speech tagging
-* Labelled dependency parsing
 * Syntax-driven sentence segmentation
-* Built in **visualizers** for syntax and NER
-* Convenient string-to-hash mapping
+* Pre-trained **word vectors**
+* Part-of-speech tagging
+* **Named entity** recognition
+* Labelled dependency parsing
+* Convenient string-to-int mapping
 * Export to numpy data arrays
+* GIL-free **multi-threading**
 * Efficient binary serialization
-* Easy **model packaging** and deployment
+* Easy **deep learning** integration
+* Statistical models for **English**, **German**, **French** and **Spanish**
 * State-of-the-art speed
 * Robust, rigorously evaluated accuracy
 
-📖  **For more details, see the** `facts, figures and benchmarks <https://spacy.io/usage/facts-figures>`_.
+See `facts, figures and benchmarks <https://spacy.io/docs/api/>`_.
 
-Install spaCy
-=============
+Top Performance
+---------------
 
-For detailed installation instructions, see
-the `documentation <https://spacy.io/usage>`_.
+* Fastest in the world: <50ms per document.  No faster system has ever been
+  announced.
+* Accuracy within 1% of the current state-of-the-art on all tasks performed
+  (parsing, named entity recognition, part-of-speech tagging).  The only more
+  accurate systems are an order of magnitude slower or more.
+
+Supports
+--------
 
 ==================== ===
 **Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
@@ -115,6 +117,12 @@ the `documentation <https://spacy.io/usage>`_.
 .. _pip: https://pypi.python.org/pypi/spacy
 .. _conda: https://anaconda.org/conda-forge/spacy
 
+Install spaCy
+=============
+
+Installation requires a working build environment. See notes on Ubuntu,
+macOS/OS X and Windows for details.
+
 pip
 ---
 
@@ -122,14 +130,14 @@ Using pip, spaCy releases are currently only available as source packages.
 
 .. code:: bash
 
-    pip install spacy
+    pip install -U spacy
 
-When using pip it is generally recommended to install packages in a virtual
-environment to avoid modifying system state:
+When using pip it is generally recommended to install packages in a ``virtualenv``
+to avoid modifying system state:
 
 .. code:: bash
 
-    venv .env
+    virtualenv .env
     source .env/bin/activate
     pip install spacy
 
@@ -141,47 +149,31 @@ install spaCy via ``conda-forge``:
 
 .. code:: bash
 
-    conda config --add channels conda-forge
-    conda install spacy
+    conda config --add channels conda-forge
+    conda install spacy
 
 For the feedstock including the build recipe and configuration,
 check out `this repository <https://github.com/conda-forge/spacy-feedstock>`_.
 Improvements and pull requests to the recipe and setup are always appreciated.
-
-Updating spaCy
---------------
-
-Some updates to spaCy may require downloading new statistical models. If you're
-running spaCy v2.0 or higher, you can use the ``validate`` command to check if
-your installed models are compatible and if not, print details on how to update
-them:
-
-.. code:: bash
-
-    pip install -U spacy
-    spacy validate
-
-If you've trained your own models, keep in mind that your training and runtime
-inputs must match. After updating spaCy, we recommend **retraining your models**
-with the new version.
-
-📖  **For details on upgrading from spaCy 1.x to spaCy 2.x, see the**
-`migration guide <https://spacy.io/usage/v2#migrating>`_.
 
 Download models
 ===============
 
 As of v1.7.0, models for spaCy can be installed as **Python packages**.
 This means that they're a component of your application, just like any
-other module. Models can be installed using spaCy's ``download`` command,
-or manually by pointing pip to a path or URL.
+other module. They're versioned and can be defined as a dependency in your
+``requirements.txt``. Models can be installed from a download URL or
+a local directory, manually or via pip. Their data can be located anywhere on
+your file system. To make a model available to spaCy, all you need to do is
+create a "shortcut link", an internal alias that tells spaCy where to find the
+data files for a specific model name.
 
 ======================= ===
-`Available Models`_     Detailed model descriptions, accuracy figures and benchmarks.
+`spaCy Models`_         Available models, latest releases and direct download.
 `Models Documentation`_ Detailed usage instructions.
 ======================= ===
 
-.. _Available Models: https://spacy.io/models
+.. _spaCy Models: https://github.com/explosion/spacy-models/releases/
 .. _Models Documentation: https://spacy.io/docs/usage/models
 
 .. code:: bash
@@ -190,10 +182,17 @@ or manually by pointing pip to a path or URL.
     python -m spacy download en
 
     # download best-matching version of specific model for your spaCy installation
-    python -m spacy download en_core_web_lg
+    python -m spacy download en_core_web_md
 
     # pip install .tar.gz archive from path or URL
-    pip install /Users/you/en_core_web_sm-2.0.0.tar.gz
+    pip install /Users/you/en_core_web_md-1.2.0.tar.gz
+    pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_md-1.2.0/en_core_web_md-1.2.0.tar.gz
+
+    # set up shortcut link to load installed package as "en_default"
+    python -m spacy link en_core_web_md en_default
+
+    # set up shortcut link to load local model as "my_amazing_model"
+    python -m spacy link /Users/you/data my_amazing_model
 
 Loading and using models
 ------------------------
@@ -203,28 +202,28 @@ To load a model, use ``spacy.load()`` with the model's shortcut link:
 .. code:: python
 
     import spacy
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_default')
     doc = nlp(u'This is a sentence.')
 
 If you've installed a model via pip, you can also ``import`` it directly and
-then call its ``load()`` method:
+then call its ``load()`` method with no arguments. This should also work for
+older models in previous versions of spaCy.
 
 .. code:: python
 
     import spacy
-    import en_core_web_sm
+    import en_core_web_md
 
-    nlp = en_core_web_.load()
+    nlp = en_core_web_md.load()
     doc = nlp(u'This is a sentence.')
 
-📖 **For more info and examples, check out the**
-`models documentation <https://spacy.io/docs/usage/models>`_.
+📖 **For more info and examples, check out the** `models documentation <https://spacy.io/docs/usage/models>`_.
 
 Support for older versions
 --------------------------
 
-If you're using an older version (``v1.6.0`` or below), you can still download
-and install the old models from within spaCy using ``python -m spacy.en.download all``
+If you're using an older version (v1.6.0 or below), you can still download and
+install the old models from within spaCy using ``python -m spacy.en.download all``
 or ``python -m spacy.de.download all``. The ``.tar.gz`` archives are also
 `attached to the v1.6.0 release <https://github.com/explosion/spaCy/tree/v1.6.0>`_.
 To download and install the models manually, unpack the archive, drop the
@@ -237,7 +236,7 @@ Compile from source
 The other way to install spaCy is to clone its
 `GitHub repository <https://github.com/explosion/spaCy>`_ and build it from
 source. That is the common way if you want to make changes to the code base.
-You'll need to make sure that you have a development environment consisting of a
+You'll need to make sure that you have a development enviroment consisting of a
 Python distribution including header files, a compiler,
 `pip <https://pip.pypa.io/en/latest/installing/>`__, `virtualenv <https://virtualenv.pypa.io/>`_
 and `git <https://git-scm.com>`_ installed. The compiler part is the trickiest.
@@ -247,35 +246,35 @@ details.
 .. code:: bash
 
     # make sure you are using recent pip/virtualenv versions
-    python -m pip install -U pip venv
+    python -m pip install -U pip virtualenv
     git clone https://github.com/explosion/spaCy
     cd spaCy
 
-    venv .env
+    virtualenv .env
     source .env/bin/activate
-    export PYTHONPATH=`pwd`
     pip install -r requirements.txt
-    python setup.py build_ext --inplace
+    pip install -e .
 
-Compared to regular install via pip, `requirements.txt <requirements.txt>`_
-additionally installs developer dependencies such as Cython. For more details
-and instructions, see the documentation on
-`compiling spaCy from source <https://spacy.io/usage/#source>`_ and the
-`quickstart widget <https://spacy.io/usage/#section-quickstart>`_ to get
-the right commands for your platform and Python version.
+Compared to a regular install via pip, `requirements.txt <requirements.txt>`_
+additionally installs developer dependencies such as Cython.
 
 Instead of the above verbose commands, you can also use the following
-`Fabric <http://www.fabfile.org/>`_ commands. All commands assume that your
-virtual environment is located in a directory ``.env``. If you're using a
-different directory, you can change it via the environment variable ``VENV_DIR``,
-for example ``VENV_DIR=".custom-env" fab clean make``.
+`Fabric <http://www.fabfile.org/>`_ commands:
 
 ============= ===
-``fab env``   Create virtual environment and delete previous one, if it exists.
+``fab env``   Create ``virtualenv`` and delete previous one, if it exists.
 ``fab make``  Compile the source.
 ``fab clean`` Remove compiled objects, including the generated C++.
 ``fab test``  Run basic tests, aborting after first failure.
 ============= ===
+
+All commands assume that your ``virtualenv`` is located in a directory ``.env``.
+If you're using a different directory, you can change it via the environment
+variable ``VENV_DIR``, for example:
+
+.. code:: bash
+
+    VENV_DIR=".custom-env" fab clean make
 
 Ubuntu
 ------
@@ -318,4 +317,80 @@ and ``--model`` are optional and enable additional tests:
 
     # make sure you are using recent pytest version
     python -m pip install -U pytest
-    python -m pytest <spacy-directory>
+
+    python -m pytest <spacy-directory> --vectors --models --slow
+
+🛠 Changelog
+============
+
+=========== ============== ===========
+Version     Date           Description
+=========== ============== ===========
+`v1.10.0`_  ``2017-11-07`` Alpha support for Thai & Russian, plus improvements and bug fixes
+`v1.9.0`_   ``2017-07-22`` Spanish model, alpha support for Norwegian & Japanese, and bug fixes
+`v1.8.2`_   ``2017-04-26`` French model and small improvements
+`v1.8.1`_   ``2017-04-23`` Saving, loading and training bug fixes
+`v1.8.0`_   ``2017-04-16`` Better NER training, saving and loading
+`v1.7.5`_   ``2017-04-07`` Bug fixes and new CLI commands
+`v1.7.3`_   ``2017-03-26`` Alpha support for Hebrew, new CLI commands and bug fixes
+`v1.7.2`_   ``2017-03-20`` Small fixes to beam parser and model linking
+`v1.7.1`_   ``2017-03-19`` Fix data download for system installation
+`v1.7.0`_   ``2017-03-18`` New 50 MB model, CLI, better downloads and lots of bug fixes
+`v1.6.0`_   ``2017-01-16`` Improvements to tokenizer and tests
+`v1.5.0`_   ``2016-12-27`` Alpha support for Swedish and Hungarian
+`v1.4.0`_   ``2016-12-18`` Improved language data and alpha Dutch support
+`v1.3.0`_   ``2016-12-03`` Improve API consistency
+`v1.2.0`_   ``2016-11-04`` Alpha tokenizers for Chinese, French, Spanish, Italian and Portuguese
+`v1.1.0`_   ``2016-10-23`` Bug fixes and adjustments
+`v1.0.0`_   ``2016-10-18`` Support for deep learning workflows and entity-aware rule matcher
+`v0.101.0`_ ``2016-05-10`` Fixed German model
+`v0.100.7`_ ``2016-05-05`` German support
+`v0.100.6`_ ``2016-03-08`` Add support for GloVe vectors
+`v0.100.5`_ ``2016-02-07`` Fix incorrect use of header file
+`v0.100.4`_ ``2016-02-07`` Fix OSX problem introduced in 0.100.3
+`v0.100.3`_ ``2016-02-06`` Multi-threading, faster loading and bugfixes
+`v0.100.2`_ ``2016-01-21`` Fix data version lock
+`v0.100.1`_ ``2016-01-21`` Fix install for OSX
+`v0.100`_   ``2016-01-19`` Revise setup.py, better model downloads, bug fixes
+`v0.99`_    ``2015-11-08`` Improve span merging, internal refactoring
+`v0.98`_    ``2015-11-03`` Smaller package, bug fixes
+`v0.97`_    ``2015-10-23`` Load the StringStore from a json list, instead of a text file
+`v0.96`_    ``2015-10-19`` Hotfix to .merge method
+`v0.95`_    ``2015-10-18`` Bug fixes
+`v0.94`_    ``2015-10-09`` Fix memory and parse errors
+`v0.93`_    ``2015-09-22`` Bug fixes to word vectors
+=========== ============== ===========
+
+.. _v1.10.0: https://github.com/explosion/spaCy/releases/tag/v1.10.0
+.. _v1.9.0: https://github.com/explosion/spaCy/releases/tag/v1.9.0
+.. _v1.8.2: https://github.com/explosion/spaCy/releases/tag/v1.8.2
+.. _v1.8.1: https://github.com/explosion/spaCy/releases/tag/v1.8.1
+.. _v1.8.0: https://github.com/explosion/spaCy/releases/tag/v1.8.0
+.. _v1.7.5: https://github.com/explosion/spaCy/releases/tag/v1.7.5
+.. _v1.7.3: https://github.com/explosion/spaCy/releases/tag/v1.7.3
+.. _v1.7.2: https://github.com/explosion/spaCy/releases/tag/v1.7.2
+.. _v1.7.1: https://github.com/explosion/spaCy/releases/tag/v1.7.1
+.. _v1.7.0: https://github.com/explosion/spaCy/releases/tag/v1.7.0
+.. _v1.6.0: https://github.com/explosion/spaCy/releases/tag/v1.6.0
+.. _v1.5.0: https://github.com/explosion/spaCy/releases/tag/v1.5.0
+.. _v1.4.0: https://github.com/explosion/spaCy/releases/tag/v1.4.0
+.. _v1.3.0: https://github.com/explosion/spaCy/releases/tag/v1.3.0
+.. _v1.2.0: https://github.com/explosion/spaCy/releases/tag/v1.2.0
+.. _v1.1.0: https://github.com/explosion/spaCy/releases/tag/v1.1.0
+.. _v1.0.0: https://github.com/explosion/spaCy/releases/tag/v1.0.0
+.. _v0.101.0: https://github.com/explosion/spaCy/releases/tag/0.101.0
+.. _v0.100.7: https://github.com/explosion/spaCy/releases/tag/0.100.7
+.. _v0.100.6: https://github.com/explosion/spaCy/releases/tag/0.100.6
+.. _v0.100.5: https://github.com/explosion/spaCy/releases/tag/0.100.5
+.. _v0.100.4: https://github.com/explosion/spaCy/releases/tag/0.100.4
+.. _v0.100.3: https://github.com/explosion/spaCy/releases/tag/0.100.3
+.. _v0.100.2: https://github.com/explosion/spaCy/releases/tag/0.100.2
+.. _v0.100.1: https://github.com/explosion/spaCy/releases/tag/0.100.1
+.. _v0.100: https://github.com/explosion/spaCy/releases/tag/0.100
+.. _v0.99: https://github.com/explosion/spaCy/releases/tag/0.99
+.. _v0.98: https://github.com/explosion/spaCy/releases/tag/0.98
+.. _v0.97: https://github.com/explosion/spaCy/releases/tag/0.97
+.. _v0.96: https://github.com/explosion/spaCy/releases/tag/0.96
+.. _v0.95: https://github.com/explosion/spaCy/releases/tag/0.95
+.. _v0.94: https://github.com/explosion/spaCy/releases/tag/0.94
+.. _v0.93: https://github.com/explosion/spaCy/releases/tag/0.93
