@@ -34,7 +34,7 @@ formatted in jsonl as a sequence of entries like this:
 {"text":"Appalachia"}
 {"text":"Argentina"}
 
-Compatible with: spaCy 2.0.0a17+
+Compatible with: spaCy v2.0.0+
 """
 from __future__ import print_function, unicode_literals, division
 

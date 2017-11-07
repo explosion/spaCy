@@ -8,7 +8,7 @@ the documentation:
 * Training: https://alpha.spacy.io/usage/training
 * POS Tagging: https://alpha.spacy.io/usage/linguistic-features#pos-tagging
 
-Compatible with: spaCy 2.0.0a20+
+Compatible with: spaCy v2.0.0+
 """
 from __future__ import unicode_literals, print_function
 

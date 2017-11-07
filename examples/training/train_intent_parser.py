@@ -15,7 +15,7 @@ following types of relations: ROOT, PLACE, QUALITY, ATTRIBUTE, TIME, LOCATION.
 ('hotel', 'PLACE', 'show') --> show PLACE hotel
 ('berlin', 'LOCATION', 'hotel') --> hotel with LOCATION berlin
 
-Compatible with: spaCy 2.0.0a20+
+Compatible with: spaCy v2.0.0+
 """
 from __future__ import unicode_literals, print_function
 

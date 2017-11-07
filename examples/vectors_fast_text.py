@@ -2,7 +2,7 @@
 # coding: utf8
 """Load vectors for a language trained using fastText
 https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
-Compatible with: spaCy v2.0.0a17+
+Compatible with: spaCy v2.0.0+
 """
 from __future__ import unicode_literals
 import plac

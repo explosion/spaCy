@@ -165,18 +165,15 @@ include ../_includes/_mixins
     +h(3, "keras") Text classification with Keras
 
     p
-        |  In this example, we're using spaCy to pre-process text for use with
-        |  a #[+a("https://keras.io") Keras] text classification model.
+        |  This example shows how to use a #[+a("https://keras.io") Keras]
+        |  LSTM sentiment classification model in spaCy. spaCy splits
+        |  the document into sentences, and each sentence is classified using
+        |  the LSTM. The scores for the sentences are then aggregated to give
+        |  the document score. This kind of hierarchical model is quite
+        |  difficult in "pure" Keras or Tensorflow, but it's very effective.
+        |  The Keras example on this dataset performs quite poorly, because it
+        |  cuts off the documents so that they're a fixed size. This hurts
+        |  review accuracy a lot, because people often summarise their rating
+        |  in the final sentence.
 
     +github("spacy", "examples/deep_learning_keras.py")
-
-    +h(3, "keras-parikh-entailment") A decomposable attention model for Natural Language Inference
-
-    p
-        |  This example contains an implementation of the entailment prediction
-        |  model described by #[+a("https://arxiv.org/pdf/1606.01933.pdf") Parikh et al. (2016)].
-        |  The model is notable for its competitive performance with very few
-        |  parameters, and was implemented using #[+a("https://keras.io") Keras]
-        |  and spaCy.
-
-    +github("spacy", "examples/keras_parikh_entailment/__main__.py", false, "examples/keras_parikh_entailment")
