@@ -52,6 +52,7 @@
 
     "MODEL_META": {
         "core": "Vocabulary, syntax, entities, vectors",
+        "core_sm": "Vocabulary, syntax, entities",
         "dep": "Vocabulary, syntax",
         "ent": "Named entities",
         "vectors": "Word vectors",
