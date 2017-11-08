@@ -40,7 +40,7 @@
     },
 
     "MODELS": {
-        "en": ["en_core_web_sm", "en_core_web_lg", "en_vectors_web_lg"],
+        "en": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
         "de": ["de_core_news_sm"],
         "es": ["es_core_news_sm", "es_core_news_md"],
         "pt": ["pt_core_news_sm"],
@@ -86,8 +86,7 @@
 
     "MODEL_BENCHMARKS": {
         "parser": { "uas": "UAS", "las": "LAS", "tags_acc": "POS" },
-        "ner":    { "ents_f": "NER F", "ents_p": "NER P", "ents_r": "NER R" },
-        "speed":  { "nwords": "Words", "cpu": "w/s CPU", "gpu": "w/s GPU" }
+        "ner":    { "ents_f": "NER F", "ents_p": "NER P", "ents_r": "NER R" }
     },
 
     "LANGUAGES": {
