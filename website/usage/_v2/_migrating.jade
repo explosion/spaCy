@@ -17,6 +17,25 @@ p
     |  runtime inputs must match. This means you'll have to
     |  #[strong retrain your models] with spaCy v2.0.
 
++h(3, "migrating-document-processing") Document processing
+
+p
+    |  The #[+api("language#pipe") #[code Language.pipe]] method allows spaCy
+    |  to batch documents, which brings a
+    |  #[strong significant performance advantage] in v2.0. The new neural
+    |  networks introduce some overhead per batch, so if you're processing a
+    |  number of documents in a row, you should use #[code nlp.pipe] and process
+    |  the texts as a stream.
+
++code-new docs = nlp.pipe(texts)
++code-old docs = (nlp(text) for text in texts)
+
+p
+    |  To make usage easier, there's now a boolean #[code as_tuples]
+    |  keyword argument, that lets you pass in an iterator of
+    |  #[code (text, context)] pairs, so you can get back an iterator of
+    |  #[code (doc, context)] tuples.
+
 +h(3, "migrating-saving-loading") Saving, loading and serialization
 
 p
