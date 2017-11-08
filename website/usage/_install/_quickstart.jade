@@ -3,6 +3,12 @@
 - QUICKSTART[QUICKSTART.length - 1].options = Object.keys(MODELS).map(m => ({ id: m, title: LANGUAGES[m] }))
 
 +quickstart(QUICKSTART, "Quickstart")
+    +qs({package: 'conda'}) # Important note: We're still waiting for spaCy v2.0 to go
+    +qs({package: 'conda'}) # live on conda, due to a backlog of OSX builds on Travis.
+    +qs({package: 'conda'}) # In the meantime, you can download spaCy via pip.
+    +qs({package: 'conda'}, "divider")
+    +qs({package: 'conda'}) pip install -U spacy
+
     +qs({config: 'venv', python: 2}) python -m pip install -U virtualenv
     +qs({config: 'venv', python: 3}) python -m pip install -U venv
     +qs({config: 'venv', python: 2}) virtualenv .env
@@ -12,7 +18,7 @@
     +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
 
     +qs({package: 'pip'}) pip install -U spacy
-    +qs({package: 'conda'}) conda install -c conda-forge spacy
+    //-+qs({package: 'conda'}) conda install -c conda-forge spacy
 
     +qs({package: 'source'}) git clone https://github.com/explosion/spaCy
     +qs({package: 'source'}) cd spaCy
