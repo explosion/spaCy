@@ -63,7 +63,7 @@ cdef class Tokenizer:
 
     cpdef Doc tokens_from_list(self, list strings):
         util.deprecated(
-            "Tokenizer.from_from list is now deprecated. Create a new Doc "
+            "Tokenizer.from_list is now deprecated. Create a new Doc "
             "object instead and pass in the strings as the `words` keyword "
             "argument, for example:\nfrom spacy.tokens import Doc\n"
             "doc = Doc(nlp.vocab, words=[...])")
