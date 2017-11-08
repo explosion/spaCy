@@ -48,7 +48,8 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     # load the IMBD dataset
     print("Loading IMDB data...")
     (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
-    print("Using %d training examples" % n_texts)
+    print("Using {} examples ({} training, {} evaluation)"
+          .format(n_texts, len(train_texts), len(dev_texts)))
     train_data = list(zip(train_texts,
                           [{'cats': cats} for cats in train_cats]))
 
