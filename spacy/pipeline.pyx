@@ -533,7 +533,7 @@ class Tagger(Pipe):
             serialize['model'] = self.model.to_bytes
         serialize['vocab'] = self.vocab.to_bytes
 
-        tag_map = OrderedDict(sorted(self.vocab.morphology.item()))
+        tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize['tag_map'] = lambda: msgpack.dumps(
             tag_map, use_bin_type=True, encoding='utf8')
         return util.to_bytes(serialize, exclude)
@@ -566,7 +566,7 @@ class Tagger(Pipe):
 
     def to_disk(self, path, **exclude):
         self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        tag_map = OrderedDict(sorted(self.vocab.morphology.item()))
+        tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
             ('tag_map', lambda p: p.open('wb').write(msgpack.dumps(
