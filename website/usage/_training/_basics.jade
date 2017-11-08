@@ -149,7 +149,9 @@ p
 
 +aside
     |  #[+api("language#begin_training") #[code begin_training()]]: Start the
-    |  training and return an optimizer function to update the model's weights.#[br]
+    |  training and return an optimizer function to update the model's weights.
+    |  Can take an optional function converting the training data to spaCy's
+    |  training format.#[br]
     |  #[+api("language#update") #[code update()]]: Update the model with the
     |  training example and gold data.#[br]
     |  #[+api("language#to_disk") #[code to_disk()]]: Save the updated model to
@@ -165,38 +167,38 @@ p
             nlp.update([doc], [gold], drop=0.5, sgd=optimizer)
     nlp.to_disk('/model')
 
+p
+    |  The #[+api("language#update") #[code nlp.update]] method takes the
+    |  following arguments:
+
 +table(["Name", "Description"])
     +row
-        +cell #[code train_data]
-        +cell The training data.
-
-    +row
-        +cell #[code get_data]
-        +cell
-            |  An optional function converting the training data to spaCy's
-            |  JSON format.
-
-    +row
-        +cell #[code doc]
+        +cell #[code docs]
         +cell
             |  #[+api("doc") #[code Doc]] objects. The #[code update] method
             |  takes a sequence of them, so you can batch up your training
-            |  examples.
+            |  examples. Alternatively, you can also pass in a sequence of
+            |  raw texts.
 
     +row
-        +cell #[code gold]
+        +cell #[code golds]
         +cell
             |  #[+api("goldparse") #[code GoldParse]] objects. The #[code update]
             |  method takes a sequence of them, so you can batch up your
-            |  training examples.
+            |  training examples. Alternatively, you can also pass in a
+            |  dictionary containing the annotations.
 
     +row
         +cell #[code drop]
-        +cell Dropout rate. Makes it harder for the model to just memorise the data.
+        +cell
+            |  Dropout rate. Makes it harder for the model to just memorise
+            |  the data.
 
     +row
-        +cell #[code optimizer]
-        +cell Callable to update the model's weights.
+        +cell #[code sgd]
+        +cell
+            |  An optimizer, i.e. a callable to update the model's weights. If
+            |  not set, spaCy will create a new one and save it for further use.
 
 p
     |  Instead of writing your own training loop, you can also use the
