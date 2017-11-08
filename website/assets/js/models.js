@@ -141,7 +141,6 @@ export class ModelLoader {
         if (!accuracy && !speed) return;
         this.renderTable(tpl, 'parser', accuracy, val => val.toFixed(2));
         this.renderTable(tpl, 'ner', accuracy, val => val.toFixed(2));
-        this.renderTable(tpl, 'speed', speed, Math.round);
         tpl.get('benchmarks').hidden = false;
     }
 
@@ -327,7 +326,6 @@ export class ModelComparer {
         const allKeys = [].concat(...Object.entries(this.benchKeys).map(([_, v]) => Object.keys(v)));
         for (let key of allKeys) {
             if (accuracy[key]) this.tpl.fill(`${key}${i}`, accuracy[key].toFixed(2))
-            else if (speed[key]) this.tpl.fill(`${key}${i}`, convertNumber(Math.round(speed[key])))
             else this.tpl.fill(`${key}${i}`, 'n/a')
         }
     }
