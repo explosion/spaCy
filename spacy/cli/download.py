@@ -64,6 +64,7 @@ def get_json(url, desc):
 
 def get_compatibility():
     version = about.__version__
+    version = version.rsplit('.dev', 1)[0]
     comp_table = get_json(about.__compatibility__, "compatibility table")
     comp = comp_table['spacy']
     if version not in comp:
