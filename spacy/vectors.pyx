@@ -150,7 +150,7 @@ cdef class Vectors:
         filled = {row for row in self.key2row.values()}
         self._unset = {row for row in range(shape[0]) if row not in filled}
         removed_items = []
-        for key, row in dict(self.key2row.items()):
+        for key, row in self.key2row.items():
             if row >= shape[0]:
                 self.key2row.pop(key)
                 removed_items.append((key, row))
