@@ -94,7 +94,7 @@ def _zero_init(model):
 def _preprocess_doc(docs, drop=0.):
     keys = [doc.to_array([LOWER]) for doc in docs]
     ops = Model.ops
-    lengths = ops.asarray([arr.shape[0] for arr in keys])
+    lengths = ops.asarray([arr.shape[0] for arr in keys], dtype='int32')
     keys = ops.xp.concatenate(keys)
     vals = ops.allocate(keys.shape[0]) + 1
     return (keys, vals, lengths), None
