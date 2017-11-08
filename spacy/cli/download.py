@@ -73,6 +73,7 @@ def get_compatibility():
 
 
 def get_version(model, comp):
+    model = model.rsplit('.dev', 1)[0]
     if model not in comp:
         version = about.__version__
         msg = "No compatible model found for '%s' (spaCy v%s)."
