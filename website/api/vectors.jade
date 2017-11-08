@@ -188,6 +188,38 @@ p
         +cell int
         +cell The row the vector was added to.
 
++h(2, "resize") Vectors.resize
+    +tag method
+
+p
+    |  Resize the underlying vectors array. If #[code inplace=True], the memory
+    |  is reallocated. This may cause other references to the data to become
+    |  invalid, so only use #[code inplace=True] if you're sure that's what you
+    |  want. If the number of vectors is reduced, keys mapped to rows that have
+    |  been deleted are removed. These removed items are returned as a list of
+    |  #[code (key, row)] tuples.
+
++aside-code("Example").
+    removed = nlp.vocab.vectors.resize((10000, 300))
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code shape]
+        +cell tuple
+        +cell
+            |  A #[code (rows, dims)] tuple describing the number of rows and
+            |  dimensions.
+
+    +row
+        +cell #[code inplace]
+        +cell bool
+        +cell Reallocate the memory.
+
+    +row("foot")
+        +cell returns
+        +cell list
+        +cell The removed items as a list of #[code (key, row)] tuples.
+
 +h(2, "keys") Vectors.keys
     +tag method
 

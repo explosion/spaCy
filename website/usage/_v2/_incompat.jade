@@ -10,10 +10,12 @@ p
         +cell #[+api("cli#download") #[code cli.download]]
 
     +row
-        +cell
-            |  #[code spacy.en] etc.
-        +cell
-            |  #[code spacy.lang.en] etc.
+        +cell #[code spacy.en] etc.
+        +cell #[code spacy.lang.en] etc.
+
+    +row
+        +cell #[code spacy.en.word_sets]
+        +cell #[code spacy.lang.en.stop_words]
 
     +row
         +cell #[code spacy.orth]
@@ -42,6 +44,10 @@ p
     +row
         +cell #[code Language.create_make_doc]
         +cell #[+api("language#attributes") #[code Language.tokenizer]]
+
+    +row
+        +cell #[code Vocab.resize_vectors]
+        +cell #[+api("vectors#resize") #[code Vectors.resize]]
 
     +row
         +cell
