@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | Abhinav Sharma                     |
 | Company name (if applicable)   | Fourtek I.T. Solutions Pvt. Ltd.   |
 | Title or role (if applicable)  | Machine Learning Engineer          |
-| Date                           | 3 Novermber 2017                   |
+| Date                           | 3 November 2017                   |
 | GitHub username                | abhi18av                           |
 | Website (optional)             | https://abhi18av.github.io/        |
