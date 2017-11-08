@@ -18,7 +18,7 @@ def main(vectors_loc):
     with open(vectors_loc, 'rb') as file_:
         header = file_.readline()
         nr_row, nr_dim = header.split()
-        nlp.vocab.clear_vectors(int(nr_dim))
+        nlp.vocab.reset_vectors(width=int(nr_dim))
         for line in file_:
             line = line.decode('utf8')
             pieces = line.split()

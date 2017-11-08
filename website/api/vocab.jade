@@ -162,24 +162,29 @@ p
         +cell int
         +cell The integer ID by which the flag value can be checked.
 
-+h(2, "clear_vectors") Vocab.clear_vectors
++h(2, "reset_vectors") Vocab.reset_vectors
     +tag method
     +tag-new(2)
 
 p
     |  Drop the current vector table. Because all vectors must be the same
-    |  width, you have to call this to change the size of the vectors.
+    |  width, you have to call this to change the size of the vectors. Only
+    |  one of the #[code width] and #[code shape] keyword arguments can be
+    |  specified.
 
 +aside-code("Example").
-    nlp.vocab.clear_vectors(new_dim=300)
+    nlp.vocab.reset_vectors(width=300)
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code new_dim]
+        +cell #[code width]
         +cell int
-        +cell
-            |  Number of dimensions of the new vectors. If #[code None], size
-            |  is not changed.
+        +cell The new width (keyword argument only).
+
+    +row
+        +cell #[code shape]
+        +cell int
+        +cell The new shape (keyword argument only).
 
 +h(2, "prune_vectors") Vocab.prune_vectors
     +tag method
