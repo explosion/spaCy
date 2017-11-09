@@ -16,10 +16,12 @@
   "scripts": {
     "check_links": "blc https://spacy.io -ro",
 
-    "compile": "NODE_ENV=deploy harp compile",
-    "rollup_js": "rollup www/assets/js/rollup.js --output.format iife --output.file www/assets/js/rollup.js",
-    "compile_rollup": "babel www/assets/js/rollup.js --out-file www/assets/js/rollup.js --presets=es2015",
+    "rollup": "rollup www/assets/js/rollup.js --output.format iife --output.file www/assets/js/rollup.js",
+    "babel": "babel www/assets/js/rollup.js --out-file www/assets/js/rollup.js --presets=es2015",
     "uglify": "uglifyjs www/assets/js/rollup.js --output www/assets/js/rollup.js",
-    "build": "npm run compile && echo 'Compiled website' && npm run rollup_js && echo 'Bundled rollup.js' && npm run compile_rollup && echo 'Compiled rollup.js' && npm run uglify && echo 'Uglified rollup.js'"
+
+    "compile": "NODE_ENV=deploy harp compile",
+    "bundle": "npm run rollup && npm run babel && npm run uglify",
+    "deploy": "rsync -P --compress --recursive --checksum --delete --exclude=\".*\" --exclude=\"README.html\" --exclude \"package.json\" --exclude \"www\" www/ $1"
   }
 }
