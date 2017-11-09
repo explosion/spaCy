@@ -132,7 +132,7 @@ p
                     infixes = find_infixes(substring)
                     offset = 0
                     for match in infixes:
-                        tokens.append(substring[i : match.start()])
+                        tokens.append(substring[offset : match.start()])
                         tokens.append(substring[match.start() : match.end()])
                         offset = match.end()
                     substring = substring[offset:]
@@ -140,7 +140,7 @@ p
                     tokens.append(substring)
                     substring = ''
             tokens.extend(reversed(suffixes))
-            return tokens
+        return tokens
 
 p
     |  The algorithm can be summarized as follows:
