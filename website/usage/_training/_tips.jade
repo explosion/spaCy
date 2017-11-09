@@ -5,7 +5,43 @@ p
     |  networks at the moment. The cutting-edge models take a very long time to
     |  train, so most researchers can't run enough experiments to figure out
     |  what's #[em really] going on. For what it's worth, here's a recipe seems
-    |  to work well on a lot of problems:
+    |  to work well on a lot of NLP problems:
+
++list("numbers")
+    +item
+        |  Initialise with batch size 1, and compound to a maximum determined
+        |  by your data size and problem type.
+    +item
+        |  Use Adam solver with fixed learning rate.
+
+    +item
+        |  Use averaged parameters
+
+    +item
+        |  Use L2 regularization.
+
+    +item
+        |  Clip gradients by L2 norm to 1.
+
+    +item
+        |  On small data sizes, start at a high dropout rate, with linear decay.
+
+p
+    |  This recipe has been cobbled together experimentally. Here's why the
+    |  various elements of the recipe made enough sense to try initially, and
+    |  what you might try changing, depending on your problem.
+
++h(3, "tips-batch-size") Compounding batch size
+
+p
+    |  The trick of increasing the batch size is starting to become quite
+    |  popular (see #[+a("https://arxiv.org/abs/1711.00489") Smith et al., 2017]).
+    |  Their recipe is quite different from how spaCy's models are being
+    |  trained, but there are some similarities. In training the various spaCy
+    |  models, we haven't found much advantage from decaying the learning
+    |  rate – but starting with a low batch size has definitely helped. You
+    |  should try it out on your data, and see how you go. Here's our current
+    |  strategy:
 
 +code("Batch heuristic").
     def get_batches(train_data, model_type):
@@ -26,15 +62,6 @@ p
     |  of labels in a single example. You therefore need smaller batches for
     |  them. The batch size for the text categorizer should be somewhat larger,
     |  especially if your documents are long.
-
-p
-    |  The trick of increasing the batch size is starting to become quite
-    |  popular (see #[+a("https://arxiv.org/abs/1711.00489") Smith et al., 2017]).
-    |  Their recipe is quite different from how spaCy's models are being
-    |  trained, but there are some similarities. In training the various spaCy
-    |  models, we haven't found much advantage from decaying the learning
-    |  rate – but starting with a low batch size has definitely helped. You
-    |  should try it out on your data, and see how you go.
 
 +h(3, "tips-hyperparams") Learning rate, regularization and gradient clipping
 
