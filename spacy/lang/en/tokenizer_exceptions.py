@@ -385,6 +385,8 @@ for exc_data in [
     {ORTH: "Ma'am", LEMMA: "madam", NORM: "madam"},
     {ORTH: "o'clock", LEMMA: "o'clock", NORM: "o'clock"},
     {ORTH: "O'clock", LEMMA: "o'clock", NORM: "o'clock"},
+    {ORTH: "lovin'", LEMMA: "love", NORM: "loving"},
+    {ORTH: "Lovin'", LEMMA: "love", NORM: "loving"},
 
     {ORTH: "Mt.", LEMMA: "Mount", NORM: "Mount"},
     {ORTH: "Ak.", LEMMA: "Alaska", NORM: "Alaska"},
