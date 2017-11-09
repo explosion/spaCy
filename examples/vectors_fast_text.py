@@ -8,13 +8,22 @@ from __future__ import unicode_literals
 import plac
 import numpy
 
+import spacy
 from spacy.language import Language
 
 
 @plac.annotations(
-    vectors_loc=("Path to vectors", "positional", None, str))
-def main(vectors_loc):
-    nlp = Language()  # start off with a blank Language class
+    vectors_loc=("Path to vectors", "positional", None, str),
+    lang=("Optional language ID. If not set, blank Language() will be used.",
+          "positional", None, str))
+def main(vectors_loc, lang=None):
+    if lang is None:
+        nlp = Language()
+    else:
+        # create empty language class – this is required if you're planning to
+        # save the model to disk and load it back later (models always need a
+        # "lang" setting). Use 'xx' for blank multi-language class.
+        nlp = spacy.blank(lang)
     with open(vectors_loc, 'rb') as file_:
         header = file_.readline()
         nr_row, nr_dim = header.split()
