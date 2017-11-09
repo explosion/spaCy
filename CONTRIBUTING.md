@@ -178,7 +178,7 @@ Changes to `.py` files will be effective immediately.
 If you've made a contribution to spaCy, you should fill in the
 [spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that
 your contribution can be used across the project. If you agree to be bound by
-the terms of the agreement, fill in the [template]((.github/CONTRIBUTOR_AGREEMENT.md))
+the terms of the agreement, fill in the [template](.github/CONTRIBUTOR_AGREEMENT.md)
 and include it with your pull request, or sumit it separately to
 [`.github/contributors/`](/.github/contributors). The name of the file should be
 your GitHub username, with the extension `.md`. For example, the user
