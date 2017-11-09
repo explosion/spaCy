@@ -737,6 +737,7 @@ cdef class Doc:
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         """
+        path = util.ensure_path(path)
         with path.open('wb') as file_:
             file_.write(self.to_bytes(**exclude))
 
@@ -748,6 +749,7 @@ cdef class Doc:
             strings or `Path`-like objects.
         RETURNS (Doc): The modified `Doc` object.
         """
+        path = util.ensure_path(path)
         with path.open('rb') as file_:
             bytes_data = file_.read()
         return self.from_bytes(bytes_data, **exclude)
