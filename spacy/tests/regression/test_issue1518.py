@@ -1,3 +1,6 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 from ...vectors import Vectors
 
 def test_issue1518():
