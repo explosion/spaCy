@@ -72,19 +72,18 @@ def main(model=None, output_dir=None, n_iter=5):
         nlp = spacy.blank('en')  # create blank Language class
         print("Created blank 'en' model")
 
-    # We'll use the built-in dependency parser
-    # class, but we want to create a fresh instance, and give it a different
-    # name.
+    # We'll use the built-in dependency parser class, but we want to create a
+    # fresh instance – just in case.
     if 'parser' in nlp.pipe_names:
         nlp.remove_pipe('parser')
     parser = nlp.create_pipe('parser')
-    nlp.add_pipe(parser, name='intent-parser', first=True)
+    nlp.add_pipe(parser, first=True)
 
     for text, annotations in TRAIN_DATA:
         for dep in annotations.get('deps', []):
             parser.add_label(dep)
 
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'intent-parser']
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'parser']
     with nlp.disable_pipes(*other_pipes):  # only train parser
         optimizer = nlp.begin_training()
         for itn in range(n_iter):
