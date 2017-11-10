@@ -58,8 +58,8 @@ def validate(cmd):
 
     if incompat_links:
         prints("You may also want to overwrite the incompatible links using "
-               "the `spacy link` command with `--force`, or remove them from "
-               "the data directory. Data path: {}"
+               "the `python -m spacy link` command with `--force`, or remove "
+               "them from the data directory. Data path: {}"
                .format(path2str(get_data_path())))
 
 

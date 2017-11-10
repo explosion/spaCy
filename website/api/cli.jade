@@ -18,7 +18,7 @@ p
     |  model name to be specified with its version (e.g., #[code en_core_web_sm-1.2.0]).
 
 +code(false, "bash", "$").
-    spacy download [model] [--direct]
+    python -m spacy download [model] [--direct]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -72,7 +72,7 @@ p
     |  model package.
 
 +code(false, "bash", "$").
-    spacy link [origin] [link_name] [--force]
+    python -m spacy link [origin] [link_name] [--force]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -110,8 +110,8 @@ p
     |  markup to copy-paste into #[+a(gh("spacy") + "/issues") GitHub issues].
 
 +code(false, "bash").
-    spacy info [--markdown]
-    spacy info [model] [--markdown]
+    python -m spacy info [--markdown]
+    python -m spacy info [model] [--markdown]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -148,7 +148,7 @@ p
     |  compatible version (if out of date) and the commands for updating.
 
 +code(false, "bash", "$").
-    spacy validate
+    python -m spacy validate
 
 +table(["Argument", "Type", "Description"])
     +row("foot")
@@ -165,7 +165,7 @@ p
     |  chosen based on the file extension of the input file.
 
 +code(false, "bash", "$", false, false, true).
-    spacy convert [input_file] [output_dir] [--converter] [--n-sents]
+    python -m spacy convert [input_file] [output_dir] [--converter] [--n-sents]
     [--morphology]
 
 +table(["Argument", "Type", "Description"])
@@ -234,7 +234,9 @@ p
     |  #[+api("cli#package") #[code package]] command.
 
 +code(false, "bash", "$", false, false, true).
-    spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter] [--n-sents] [--use-gpu] [--meta-path] [--vectors] [--no-tagger] [--no-parser] [--no-entities] [--gold-preproc]
+    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter]
+    [--n-sents] [--use-gpu] [--meta-path] [--vectors] [--no-tagger] [--no-parser]
+    [--no-entities] [--gold-preproc]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -443,7 +445,7 @@ p
     |  #[+api("cli#package") #[code package]] command.
 
 +code(false, "bash", "$").
-    spacy vocab [lang] [output_dir] [lexemes_loc] [vectors_loc]
+    python -m spacy vocab [lang] [output_dir] [lexemes_loc] [vectors_loc]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -488,7 +490,7 @@ p
     |  is present in the model's pipeline.
 
 +code(false, "bash", "$", false, false, true).
-    spacy evaluate [model] [data_path] [--displacy-path] [--displacy-limit] [--gpu-id] [--gold-preproc]
+    python -m spacy evaluate [model] [data_path] [--displacy-path] [--displacy-limit] [--gpu-id] [--gold-preproc]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -546,10 +548,10 @@ p
     |  your model into an installable archive file.
 
 +code(false, "bash", "$", false, false, true).
-    spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--force]
+    python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--force]
 
 +aside-code("Example", "bash").
-    spacy package /input /output
+    python -m spacy package /input /output
     cd /output/en_model-0.0.0
     python setup.py sdist
     pip install dist/en_model-0.0.0.tar.gz

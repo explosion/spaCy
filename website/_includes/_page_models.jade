@@ -14,7 +14,7 @@ for id in CURRENT_MODELS
                     .u-padding-small Latest: #[code(data-tpl=id data-tpl-key="version") n/a]
 
         +aside-code("Installation", "bash", "$").
-            spacy download #{id}
+            python -m spacy download #{id}
 
         - var comps = getModelComponents(id)
 

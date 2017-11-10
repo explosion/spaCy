@@ -159,7 +159,7 @@ them:
 .. code:: bash
 
     pip install -U spacy
-    spacy validate
+    python -m spacy validate
 
 If you've trained your own models, keep in mind that your training and runtime
 inputs must match. After updating spaCy, we recommend **retraining your models**

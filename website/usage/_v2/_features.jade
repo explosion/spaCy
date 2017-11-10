@@ -12,8 +12,8 @@ p
 +aside-code("Example", "bash")
     for _, lang in MODELS
         if lang != "xx"
-            | spacy download #{lang}  # default #{LANGUAGES[lang]} model!{'\n'}
-    | spacy download xx_ent_wiki_sm  # multi-language NER
+            | python -m spacy download #{lang}  # default #{LANGUAGES[lang]} model!{'\n'}
+    | python -m spacy download xx_ent_wiki_sm  # multi-language NER
 
 p
     |  spaCy v2.0 features new neural models for tagging,

@@ -27,4 +27,4 @@
     +qs({package: 'source'}) python setup.py build_ext --inplace
 
     for _, model in MODELS
-        +qs({model: model}) spacy download #{model}
+        +qs({model: model}) python -m spacy download #{model}

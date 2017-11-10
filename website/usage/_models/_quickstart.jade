@@ -4,7 +4,7 @@
 +quickstart(QUICKSTART_MODELS, "Quickstart", "Install a default model, get the code to load it from within spaCy and an example to test it. For more options, see the section on available models below.")
     for models, lang in MODELS
         - var package = models[0]
-        +qs({lang: lang}) spacy download #{lang}
+        +qs({lang: lang}) python -m spacy download #{lang}
         +qs({lang: lang}, "divider")
         +qs({lang: lang, load: "module"}, "python") import #{package}
         +qs({lang: lang, load: "module"}, "python") nlp = #{package}.load()

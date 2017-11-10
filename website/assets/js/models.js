@@ -310,7 +310,7 @@ export class ModelComparer {
         const genre = name.split('_')[1];  // extract genre from model name
         this.tpl.fill(`table-head${i}`, `${lang}_${name}`);
         this.tpl.get(`link${i}`).setAttribute('href', `/models/${lang}#${lang}_${name}`);
-        this.tpl.fill(`download${i}`, `spacy download ${lang}_${name}\n`);
+        this.tpl.fill(`download${i}`, `python -m spacy download ${lang}_${name}\n`);
         this.tpl.fill(`lang${i}`, this.languages[lang] || lang);
         this.tpl.fill(`type${i}`, this.labels[type] || type);
         this.tpl.fill(`genre${i}`, this.labels[genre] || genre);

@@ -44,7 +44,7 @@ p
     }
 
 +code(false, "bash").
-    spacy package /home/me/data/en_example_model /home/me/my_models
+    python -m spacy package /home/me/data/en_example_model /home/me/my_models
 
 p This command will create a model package directory that should look like this:
 
@@ -166,7 +166,7 @@ p
     |  looks like this:
 
 +code(false, "bash", "$", false, false, true).
-    spacy train {lang} {models_dir}/{name} {train_data} {dev_data} -m meta/{name}.json -V {version} -g {gpu_id} -n {n_epoch} -ns {n_sents}
+    python -m spacy train {lang} {models_dir}/{name} {train_data} {dev_data} -m meta/{name}.json -V {version} -g {gpu_id} -n {n_epoch} -ns {n_sents}
 
 +aside-code("meta.json template", "json").
     {
@@ -185,7 +185,7 @@ p In a directory #[code meta], we keep #[code meta.json] templates for the indiv
 p On each epoch, the model is saved out with a #[code meta.json] using our template and added properties, like the #[code pipeline], #[code accuracy] scores and the #[code spacy_version] used to train the model. After training completion, the best model is selected automatically and packaged using the #[+api("cli#package") #[code package]] command. Since a full meta file is already present on the trained model, no further setup is required to build a valid model package.
 
 +code(false, "bash").
-    spacy package -f {best_model} dist/
+    python -m spacy package -f {best_model} dist/
     cd dist/{model_name}
     python setup.py sdist
 

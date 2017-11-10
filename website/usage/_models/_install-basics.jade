@@ -5,16 +5,16 @@ p
     |  #[+api("cli#download") #[code download]] command. It takes care of
     |  finding the best-matching model compatible with your spaCy installation.
 
-- var models = Object.keys(MODELS).map(function(lang) { return "spacy download " + lang })
+- var models = Object.keys(MODELS).map(function(lang) { return "python -m spacy download " + lang })
 +code(false, "bash").
     # out-of-the-box: download best-matching default model
-    #{Object.keys(MODELS).map(function(l) {return "spacy download " + l}).join('\n')}
+    #{Object.keys(MODELS).map(function(l) {return "python -m spacy download " + l}).join('\n')}
 
     # download best-matching version of specific model for your spaCy installation
-    spacy download en_core_web_sm
+    python -m spacy download en_core_web_sm
 
     # download exact model version (doesn't create shortcut link)
-    spacy download en_core_web_sm-2.0.0 --direct
+    python -m spacy download en_core_web_sm-2.0.0 --direct
 
 p
     |  The download command will #[+a("/usage/models#download-pip") install the model] via
@@ -25,7 +25,7 @@ p
 
 +code(false, "bash").
     pip install spacy
-    spacy download en
+    python -m spacy download en
 
 +code.
     import spacy
