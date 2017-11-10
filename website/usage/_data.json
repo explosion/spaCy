@@ -112,7 +112,6 @@
 
     "vectors-similarity": {
         "title": "Word Vectors and Semantic Similarity",
-        "next": "text-classification",
         "menu": {
             "Basics": "basics",
             "Custom Vectors": "custom",
