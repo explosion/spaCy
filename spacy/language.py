@@ -12,7 +12,6 @@ from copy import copy
 from thinc.neural import Model
 from thinc.neural.optimizers import Adam
 
-from .strings import StringStore
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
