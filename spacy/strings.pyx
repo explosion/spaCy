@@ -251,7 +251,7 @@ cdef class StringStore:
 
     def _cleanup_stale_strings(self):
         if self.hits.size() == 0:
-            # If no any hits — just skip cleanup
+            # If we don't have any hits, just skip cleanup
             return
 
         cdef vector[hash_t] tmp
