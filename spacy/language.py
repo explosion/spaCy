@@ -560,7 +560,11 @@ class Language(object):
             elif len(old_refs) == 0:
                 self.vocab.strings._cleanup_stale_strings()
                 nr_seen = 0
-        self.vocab.strings._reset_and_load(original_strings_data)
+        # Last batch can be not garbage collected and we cannot know it — last
+        # doc still here. Not erase that strings — just extend with original
+        # content
+        for string in original_strings_data:
+            self.vocab.strings.add(string)
 
     def to_disk(self, path, disable=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
