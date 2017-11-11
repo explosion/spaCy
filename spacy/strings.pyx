@@ -4,6 +4,7 @@ from __future__ import unicode_literals, absolute_import
 
 cimport cython
 from libc.string cimport memcpy
+from libcpp.set cimport set
 from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64, hash32
 import ujson
@@ -111,6 +112,7 @@ cdef class StringStore:
             return SYMBOLS_BY_INT[string_or_id]
         else:
             key = string_or_id
+            self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
                 raise KeyError(string_or_id)
@@ -168,6 +170,7 @@ cdef class StringStore:
         if key < len(SYMBOLS_BY_INT):
             return True
         else:
+            self.hits.insert(key)
             return self._map.get(key) is not NULL
 
     def __iter__(self):
@@ -179,6 +182,7 @@ cdef class StringStore:
         cdef hash_t key
         for i in range(self.keys.size()):
             key = self.keys[i]
+            self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             yield decode_Utf8Str(utf8str)
         # TODO: Iterate OOV here?
@@ -241,8 +245,23 @@ cdef class StringStore:
         self.mem = Pool()
         self._map = PreshMap()
         self.keys.clear()
+        self.hits.clear()
         for string in strings:
             self.add(string)
+
+    def _cleanup_stale_strings(self):
+        if self.hits.size() == 0:
+            # If no any hits — just skip cleanup
+            return
+
+        cdef vector[hash_t] tmp
+        for i in range(self.keys.size()):
+            key = self.keys[i]
+            if self.hits.count(key) != 0:
+                tmp.push_back(key)
+
+        self.keys.swap(tmp)
+        self.hits.clear()
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
@@ -259,5 +278,6 @@ cdef class StringStore:
             return value
         value = _allocate(self.mem, <unsigned char*>utf8_string, length)
         self._map.set(key, value)
+        self.hits.insert(key)
         self.keys.push_back(key)
         return value
