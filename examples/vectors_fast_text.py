@@ -30,7 +30,7 @@ def main(vectors_loc, lang=None):
         nlp.vocab.reset_vectors(width=int(nr_dim))
         for line in file_:
             line = line.decode('utf8')
-            pieces = line.split()
+            pieces = line.rsplit(' ', nr_dim)
             word = pieces[0]
             vector = numpy.asarray([float(v) for v in pieces[1:]], dtype='f')
             nlp.vocab.set_vector(word, vector)  # add the vectors to the vocab

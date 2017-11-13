@@ -177,6 +177,22 @@
     border-radius: $border-radius
 
 
+//- Responsive Video embeds
+
+.o-video
+    position: relative
+    height: 0
+
+    @each $ratio1, $ratio2 in (16, 9), (4, 3)
+        &.o-video--#{$ratio1}x#{$ratio2}
+            padding-bottom: (100% * $ratio2 / $ratio1)
+
+.o-video__iframe
+    @include position(absolute, top, left, 0, 0)
+    @include size(100%)
+    border-radius: var(--border-radius)
+
+
 //- Form fields
 
 .o-field
