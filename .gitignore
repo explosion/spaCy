@@ -97,3 +97,6 @@ Desktop.ini
 
 # Other
 *.tgz
+
+# Pycharm project files
+*.idea
