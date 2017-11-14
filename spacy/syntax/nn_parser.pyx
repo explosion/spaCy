@@ -526,7 +526,7 @@ cdef class Parser:
                         for k in range(nr_class):
                             beam.scores[i][k] = c_scores[j * scores.shape[1] + k]
                         j += 1
-                beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
+                beam.advance(_transition_state, NULL, <void*>self.moves.c)
                 beam.check_done(_check_final_state, NULL)
             beams.append(beam)
         tokvecs = self.model[0].ops.unflatten(tokvecs,
@@ -998,16 +998,16 @@ def _cleanup(Beam beam):
             state = <StateC*>addr
             del state
             seen.add(addr)
+        else:
+            print(i, addr)
+            print(seen)
+            raise Exception
         addr = <size_t>beam._states[i].content
         if addr not in seen:
             state = <StateC*>addr
             del state
             seen.add(addr)
-
-
-cdef hash_t _hash_state(void* _state, void* _) except 0:
-    state = <StateC*>_state
-    if state.is_final():
-        return 1
-    else:
-        return state.hash()
+        else:
+            print(i, addr)
+            print(seen)
+            raise Exception
