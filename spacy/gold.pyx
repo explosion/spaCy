@@ -179,7 +179,7 @@ class GoldCorpus(object):
             gold_tuples = read_json_file(loc)
             for item in gold_tuples:
                 yield item
-                i += 1
+                i += len(item[1])
                 if self.limit and i >= self.limit:
                     break
 
