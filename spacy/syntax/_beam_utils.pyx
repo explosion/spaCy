@@ -9,36 +9,31 @@ from thinc.typedefs cimport hash_t, class_t
 from thinc.extra.search cimport MaxViolation
 
 from .transition_system cimport TransitionSystem, Transition
-from .stateclass cimport StateClass
 from ..gold cimport GoldParse
+from .stateclass cimport StateC, StateClass
 
 
 # These are passed as callbacks to thinc.search.Beam
 cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1:
-    dest = <StateClass>_dest
-    src = <StateClass>_src
+    dest = <StateC*>_dest
+    src = <StateC*>_src
     moves = <const Transition*>_moves
     dest.clone(src)
-    moves[clas].do(dest.c, moves[clas].label)
-    dest.c.push_hist(clas)
+    moves[clas].do(dest, moves[clas].label)
+    dest.push_hist(clas)
 
 
 cdef int _check_final_state(void* _state, void* extra_args) except -1:
-    return (<StateClass>_state).is_final()
-
-
-def _cleanup(Beam beam):
-    for i in range(beam.width):
-        Py_XDECREF(<PyObject*>beam._states[i].content)
-        Py_XDECREF(<PyObject*>beam._parents[i].content)
+    state = <StateC*>_state
+    return state.is_final()
 
 
 cdef hash_t _hash_state(void* _state, void* _) except 0:
-    state = <StateClass>_state
-    if state.c.is_final():
+    state = <StateC*>_state
+    if state.is_final():
         return 1
     else:
-        return state.c.hash()
+        return state.hash()
 
 
 cdef class ParserBeam(object):
@@ -55,14 +50,15 @@ cdef class ParserBeam(object):
         self.golds = golds
         self.beams = []
         cdef Beam beam
-        cdef StateClass state, st
+        cdef StateClass state
+        cdef StateC* st
         for state in states:
             beam = Beam(self.moves.n_moves, width, density)
             beam.initialize(self.moves.init_beam_state, state.c.length,
                             state.c._sent)
             for i in range(beam.width):
-                st = <StateClass>beam.at(i)
-                st.c.offset = state.c.offset
+                st = <StateC*>beam.at(i)
+                st.offset = state.c.offset
             self.beams.append(beam)
         self.dones = [False] * len(self.beams)
 
@@ -86,13 +82,14 @@ cdef class ParserBeam(object):
             if self.golds is not None:
                 self._set_costs(beam, self.golds[i], follow_gold=follow_gold)
             if follow_gold:
-                beam.advance(_transition_state, NULL, <void*>self.moves.c)
+                beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
             else:
                 beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
             beam.check_done(_check_final_state, NULL)
+            # This handles the non-monotonic stuff for the parser.
             if beam.is_done and self.golds is not None:
                 for j in range(beam.size):
-                    state = <StateClass>beam.at(j)
+                    state = StateClass.borrow(<StateC*>beam.at(j))
                     if state.is_final():
                         try:
                             if self.moves.is_gold_parse(state, self.golds[i]):
@@ -107,11 +104,11 @@ cdef class ParserBeam(object):
         cdef int nr_state = min(scores.shape[0], beam.size)
         cdef int nr_class = scores.shape[1]
         for i in range(nr_state):
-            state = <StateClass>beam.at(i)
+            state = <StateC*>beam.at(i)
             if not state.is_final():
                 for j in range(nr_class):
                     beam.scores[i][j] = c_scores[i * nr_class + j]
-                self.moves.set_valid(beam.is_valid[i], state.c)
+                self.moves.set_valid(beam.is_valid[i], state)
             else:
                 for j in range(beam.nr_class):
                     beam.scores[i][j] = 0
@@ -119,8 +116,8 @@ cdef class ParserBeam(object):
 
     def _set_costs(self, Beam beam, GoldParse gold, int follow_gold=False):
         for i in range(beam.size):
-            state = <StateClass>beam.at(i)
-            if not state.c.is_final():
+            state = StateClass.borrow(<StateC*>beam.at(i))
+            if not state.is_final():
                 self.moves.set_costs(beam.is_valid[i], beam.costs[i],
                                      state, gold)
                 if follow_gold:
@@ -157,7 +154,7 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
     pbeam = ParserBeam(moves, states, golds,
                        width=width, density=density)
     gbeam = ParserBeam(moves, states, golds,
-                       width=width, density=0.0)
+                       width=width, density=density)
     cdef StateClass state
     beam_maps = []
     backprops = []
@@ -231,7 +228,7 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
         p_indices.append([])
         g_indices.append([])
         for i in range(pbeam.size):
-            state = <StateClass>pbeam.at(i)
+            state = StateClass.borrow(<StateC*>pbeam.at(i))
             if not state.is_final():
                 key = tuple([eg_id] + pbeam.histories[i])
                 assert key not in seen, (key, seen)
@@ -240,7 +237,7 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
                 states.append(state)
         beam_map.update(seen)
         for i in range(gbeam.size):
-            state = <StateClass>gbeam.at(i)
+            state = StateClass.borrow(<StateC*>gbeam.at(i))
             if not state.is_final():
                 key = tuple([eg_id] + gbeam.histories[i])
                 if key in seen:

@@ -11,12 +11,14 @@ cdef class StateClass:
     def __init__(self, Doc doc=None, int offset=0):
         cdef Pool mem = Pool()
         self.mem = mem
+        self._borrowed = 0
         if doc is not None:
             self.c = new StateC(doc.c, doc.length)
             self.c.offset = offset
 
     def __dealloc__(self):
-        del self.c
+        if self._borrowed != 1:
+            del self.c
 
     @property
     def stack(self):

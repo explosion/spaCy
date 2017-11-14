@@ -224,6 +224,16 @@ cdef void cpu_regression_loss(float* d_scores,
                 d_scores[i] = diff
 
 
+def _collect_states(beams):
+    cdef StateClass state
+    cdef Beam beam
+    states = []
+    for beam in beams:
+        state = StateClass.borrow(<StateC*>beam.at(0))
+        states.append(state)
+    return states
+
+
 cdef class Parser:
     """
     Base class of the DependencyParser and EntityRecognizer.
@@ -336,7 +346,7 @@ cdef class Parser:
                                 beam_density=beam_density)
             beam = beams[0]
             output = self.moves.get_beam_annot(beam)
-            state = <StateClass>beam.at(0)
+            state = StateClass.borrow(<StateC*>beam.at(0))
             self.set_annotations([doc], [state], tensors=tokvecs)
             _cleanup(beam)
             return output
@@ -356,10 +366,10 @@ cdef class Parser:
         if beam_density is None:
             beam_density = self.cfg.get('beam_density', 0.0)
         cdef Doc doc
-        cdef Beam beam
         for batch in cytoolz.partition_all(batch_size, docs):
-            batch = list(batch)
-            by_length = sorted(list(batch), key=lambda doc: len(doc))
+            batch_in_order = list(batch)
+            by_length = sorted(batch_in_order, key=lambda doc: len(doc))
+            batch_beams = []
             for subbatch in cytoolz.partition_all(8, by_length):
                 subbatch = list(subbatch)
                 if beam_width == 1:
@@ -369,21 +379,20 @@ cdef class Parser:
                     beams, tokvecs = self.beam_parse(subbatch,
                                         beam_width=beam_width,
                                         beam_density=beam_density)
-                    parse_states = []
-                    for beam in beams:
-                        parse_states.append(<StateClass>beam.at(0))
-                self.set_annotations(subbatch, parse_states, tensors=tokvecs)
-            yield from batch
-            for beam in beams:
-                _cleanup(beam)
+                    parse_states = _collect_states(beams)
+                self.set_annotations(subbatch, parse_states, tensors=None)
+                for beam in beams:
+                    _cleanup(beam)
+            for doc in batch_in_order:
+                yield doc
 
     def parse_batch(self, docs):
         cdef:
             precompute_hiddens state2vec
-            StateClass stcls
             Pool mem
             const float* feat_weights
             StateC* st
+            StateClass stcls
             vector[StateC*] states
             int guess, nr_class, nr_feat, nr_piece, nr_dim, nr_state, nr_step
             int j
@@ -488,14 +497,14 @@ cdef class Parser:
             beam = Beam(nr_class, beam_width, min_density=beam_density)
             beam.initialize(self.moves.init_beam_state, doc.length, doc.c)
             for i in range(beam.width):
-                stcls = <StateClass>beam.at(i)
-                stcls.c.offset = offset
+                state = <StateC*>beam.at(i)
+                state.offset = offset
             offset += len(doc)
             beam.check_done(_check_final_state, NULL)
             while not beam.is_done:
                 states = []
                 for i in range(beam.size):
-                    stcls = <StateClass>beam.at(i)
+                    stcls = StateClass.borrow(<StateC*>beam.at(i))
                     # This way we avoid having to score finalized states
                     # We do have to take care to keep indexes aligned, though
                     if not stcls.is_final():
@@ -511,9 +520,9 @@ cdef class Parser:
                 j = 0
                 c_scores = <float*>scores.data
                 for i in range(beam.size):
-                    stcls = <StateClass>beam.at(i)
-                    if not stcls.is_final():
-                        self.moves.set_valid(beam.is_valid[i], stcls.c)
+                    state = <StateC*>beam.at(i)
+                    if not state.is_final():
+                        self.moves.set_valid(beam.is_valid[i], state)
                         for k in range(nr_class):
                             beam.scores[i][k] = c_scores[j * scores.shape[1] + k]
                         j += 1
@@ -965,27 +974,40 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 
 # These are passed as callbacks to thinc.search.Beam
 cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1:
-    dest = <StateClass>_dest
-    src = <StateClass>_src
+    dest = <StateC*>_dest
+    src = <StateC*>_src
     moves = <const Transition*>_moves
     dest.clone(src)
-    moves[clas].do(dest.c, moves[clas].label)
-    dest.c.push_hist(clas)
+    moves[clas].do(dest, moves[clas].label)
+    dest.push_hist(clas)
 
 
 cdef int _check_final_state(void* _state, void* extra_args) except -1:
-    return (<StateClass>_state).is_final()
+    state = <StateC*>_state
+    return state.is_final()
 
 
 def _cleanup(Beam beam):
+    cdef StateC* state
+    # Once parsing has finished, states in beam may not be unique. Is this
+    # correct?
+    seen = set()
     for i in range(beam.width):
-        Py_XDECREF(<PyObject*>beam._states[i].content)
-        Py_XDECREF(<PyObject*>beam._parents[i].content)
+        addr = <size_t>beam._parents[i].content
+        if addr not in seen:
+            state = <StateC*>addr
+            del state
+            seen.add(addr)
+        addr = <size_t>beam._states[i].content
+        if addr not in seen:
+            state = <StateC*>addr
+            del state
+            seen.add(addr)
 
 
 cdef hash_t _hash_state(void* _state, void* _) except 0:
-    state = <StateClass>_state
-    if state.c.is_final():
+    state = <StateC*>_state
+    if state.is_final():
         return 1
     else:
-        return state.c.hash()
+        return state.hash()
