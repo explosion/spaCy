@@ -249,7 +249,7 @@ cdef class StringStore:
         for string in strings:
             self.add(string)
 
-    def _cleanup_stale_strings(self):
+    def _cleanup_stale_strings(self, excepted):
         """
         RETURNS (keys, strings): Dropped strings and keys that can be dropped from other places
         """
@@ -262,11 +262,12 @@ cdef class StringStore:
         dropped_keys = []
         for i in range(self.keys.size()):
             key = self.keys[i]
-            if self.hits.count(key) != 0:
+            value = self[key]
+            if self.hits.count(key) != 0 or value in excepted:
                 tmp.push_back(key)
             else:
                 dropped_keys.append(key)
-                dropped_strings.append(self[key])
+                dropped_strings.append(value)
 
         self.keys.swap(tmp)
         strings = list(self)
