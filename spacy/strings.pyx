@@ -260,11 +260,9 @@ cdef class StringStore:
             if self.hits.count(key) != 0:
                 tmp.push_back(key)
 
+        self.keys.swap(tmp)
         strings = list(self)
         self._reset_and_load(strings)
-
-        self.keys.swap(tmp)
-        self.hits.clear()
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
