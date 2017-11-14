@@ -263,6 +263,8 @@ cdef class StringStore:
         self.keys.swap(tmp)
         strings = list(self)
         self._reset_and_load(strings)
+        # Here we have strings but hits to it should be reseted
+        self.hits.clear()
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
