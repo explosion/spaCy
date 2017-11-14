@@ -561,9 +561,9 @@ class Language(object):
                 old_refs, recent_refs = recent_refs, old_refs
                 self.vocab.strings._cleanup_stale_strings()
                 nr_seen = 0
-        # Last batch can be not garbage collected and we cannot know it — last
-        # doc still here. Not erase that strings — just extend with original
-        # content
+        # We can't know which strings from the last batch have really expired.
+        # So we don't erase the strings — we just extend with the original
+        # content.
         for string in original_strings_data:
             self.vocab.strings.add(string)
 

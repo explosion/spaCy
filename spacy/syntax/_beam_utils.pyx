@@ -66,12 +66,6 @@ cdef class ParserBeam(object):
             self.beams.append(beam)
         self.dones = [False] * len(self.beams)
 
-    def __dealloc__(self):
-        if self.beams is not None:
-            for beam in self.beams:
-                if beam is not None:
-                    _cleanup(beam)
-
     @property
     def is_done(self):
         return all(b.is_done or self.dones[i]
@@ -222,7 +216,8 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
             histories.append([])
             losses.append([])
     states_d_scores = get_gradient(moves.n_moves, beam_maps, histories, losses)
-    return states_d_scores, backprops[:len(states_d_scores)]
+    beams = list(pbeam.beams) + list(gbeam.beams)
+    return states_d_scores, backprops[:len(states_d_scores)], beams
 
 
 def get_states(pbeams, gbeams, beam_map, nr_update):

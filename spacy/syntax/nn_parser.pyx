@@ -374,6 +374,8 @@ cdef class Parser:
                         parse_states.append(<StateClass>beam.at(0))
                 self.set_annotations(subbatch, parse_states, tensors=tokvecs)
             yield from batch
+            for beam in beams:
+                _cleanup(beam)
 
     def parse_batch(self, docs):
         cdef:
@@ -609,7 +611,7 @@ cdef class Parser:
         cuda_stream = util.get_cuda_stream()
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(
             docs, cuda_stream, drop)
-        states_d_scores, backprops = _beam_utils.update_beam(
+        states_d_scores, backprops, beams = _beam_utils.update_beam(
             self.moves, self.nr_feature, 500, states, golds, state2vec,
             vec2scores, width, density, self.cfg.get('hist_size', 0),
             drop=drop, losses=losses)
@@ -634,6 +636,10 @@ cdef class Parser:
         d_tokvecs = state2vec.ops.allocate((tokvecs.shape[0]+1, tokvecs.shape[1]))
         self._make_updates(d_tokvecs, bp_tokvecs, backprop_lower, sgd,
                            cuda_stream)
+        cdef Beam beam
+        for beam in beams:
+            _cleanup(beam)
+
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long

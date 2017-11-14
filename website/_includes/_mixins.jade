@@ -312,6 +312,14 @@ mixin github(repo, file, height, alt_file, language)
                 +button(gh(repo, alt_file || file), false, "primary", "small") View on GitHub
 
 
+//- Youtube video embed
+    id    - [string] ID of YouTube video.
+    ratio - [string] Video ratio, "16x9" or "4x3".
+
+mixin youtube(id, ratio)
+    figure.o-video.o-block(class="o-video--" + (ratio || "16x9"))
+        iframe.o-video__iframe(src="https://www.youtube.com/embed/#{id}" frameborder="0" height="500" allowfullscreen)
+
 
 //- Images / figures
     url     - [string] url or path to image

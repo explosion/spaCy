@@ -88,8 +88,10 @@ requests:
 | [`models`](https://github.com/explosion/spaCy/labels/models), `language / [name]` | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
-| [`wip`](https://github.com/explosion/spaCy/labels/wip) | Work in progress, mostly used for pull requests. |
+| [`wip`](https://github.com/explosion/spaCy/labels/wip) | Work in progress, mostly used for pull requests |
+| [`v1`](https://github.com/explosion/spaCy/labels/v1) | Reports related to spaCy v1.x |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
+| [`third-party`](https://github.com/explosion/spaCy/labels/third-party) | Issues related to third-party packages and services |
 | [`meta`](https://github.com/explosion/spaCy/labels/meta) | Meta topics, e.g. repo organisation and issue management |
 | [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted), [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions |
 

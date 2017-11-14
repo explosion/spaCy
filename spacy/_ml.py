@@ -92,14 +92,29 @@ def _zero_init(model):
 
 @layerize
 def _preprocess_doc(docs, drop=0.):
-    keys = [doc.to_array([LOWER]) for doc in docs]
+    keys = [doc.to_array(LOWER) for doc in docs]
     ops = Model.ops
     # The dtype here matches what thinc is expecting -- which differs per
     # platform (by int definition). This should be fixed once the problem
     # is fixed on Thinc's side.
     lengths = ops.asarray([arr.shape[0] for arr in keys], dtype=numpy.int_)
     keys = ops.xp.concatenate(keys)
-    vals = ops.allocate(keys.shape[0]) + 1
+    vals = ops.allocate(keys.shape) + 1.
+    return (keys, vals, lengths), None
+
+@layerize
+def _preprocess_doc_bigrams(docs, drop=0.):
+    unigrams = [doc.to_array(LOWER) for doc in docs]
+    ops = Model.ops
+    bigrams = [ops.ngrams(2, doc_unis) for doc_unis in unigrams]
+    keys = [ops.xp.concatenate(feats) for feats in zip(unigrams, bigrams)]
+    keys, vals = zip(*[ops.xp.unique(k, return_counts=True) for k in keys])
+    # The dtype here matches what thinc is expecting -- which differs per
+    # platform (by int definition). This should be fixed once the problem
+    # is fixed on Thinc's side.
+    lengths = ops.asarray([arr.shape[0] for arr in keys], dtype=numpy.int_)
+    keys = ops.xp.concatenate(keys)
+    vals = ops.asarray(ops.xp.concatenate(vals), dtype='f')
     return (keys, vals, lengths), None
 
 
@@ -514,8 +529,9 @@ def build_text_classifier(nr_class, width=64, **cfg):
 
         linear_model = (
             _preprocess_doc
-            >> LinearModel(nr_class, drop_factor=0.)
+            >> LinearModel(nr_class)
         )
+        #model = linear_model >> logistic
 
         model = (
             (linear_model | cnn_model)
