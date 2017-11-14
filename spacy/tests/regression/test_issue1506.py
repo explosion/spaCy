@@ -35,6 +35,11 @@ def test_issue1506():
             del anchor
             gc.collect()
 
+        # We should run cleanup more than one time to actually cleanup data.
+        # In first run — clean up only mark strings as «not hitted».
+        if i == 20000 or i == 30000:
+            gc.collect()
+
         for t in d:
             str(t.lemma_)
 
