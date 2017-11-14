@@ -251,6 +251,7 @@ cdef class StringStore:
 
     def _cleanup_stale_strings(self, excepted):
         """
+        excepted (list): Strings that should not be removed.
         RETURNS (keys, strings): Dropped strings and keys that can be dropped from other places
         """
         if self.hits.size() == 0:
@@ -262,7 +263,9 @@ cdef class StringStore:
         dropped_keys = []
         for i in range(self.keys.size()):
             key = self.keys[i]
-            value = self[key]
+            # Here we cannot use __getitem__ because it also set hit.
+            utf8str = <Utf8Str*>self._map.get(key)
+            value = decode_Utf8Str(utf8str)
             if self.hits.count(key) != 0 or value in excepted:
                 tmp.push_back(key)
             else:

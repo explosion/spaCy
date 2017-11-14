@@ -469,7 +469,8 @@ cdef class Vocab:
         for k in keys:
             del self._by_hash[k]
 
-        self._by_orth = PreshMap()
+        if len(strings) != 0:
+            self._by_orth = PreshMap()
 
 
 def pickle_vocab(vocab):

@@ -14,6 +14,9 @@ def test_issue1506():
             yield "It's sentence produced by that bug."
 
         for _ in range(10001):
+            yield "I erase some hbdsaj lemmas."
+
+        for _ in range(10001):
             yield "I erase lemmas."
 
         for _ in range(10001):
