@@ -13,8 +13,6 @@ def test_issue1506():
         for _ in range(10001):
             yield "It's sentence produced by that bug."
 
-        yield "Oh snap."
-
         for _ in range(10001):
             yield "I erase lemmas."
 
@@ -24,23 +22,11 @@ def test_issue1506():
         for _ in range(10001):
             yield "It's sentence produced by that bug."
 
-    anchor = None
-    remember = None
     for i, d in enumerate(nlp.pipe(string_generator())):
-        if i == 9999:
-            anchor = d
-        elif 10001 == i:
-            remember = d
-        elif i == 10002:
-            del anchor
-            gc.collect()
-
         # We should run cleanup more than one time to actually cleanup data.
         # In first run — clean up only mark strings as «not hitted».
-        if i == 20000 or i == 30000:
+        if i == 10000 or i == 20000 or i == 30000:
             gc.collect()
 
         for t in d:
             str(t.lemma_)
-
-    assert remember.text == 'Oh snap.'
