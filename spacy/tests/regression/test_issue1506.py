@@ -35,4 +35,7 @@ def test_issue1506():
             del anchor
             gc.collect()
 
+        for t in d:
+            str(t.lemma_)
+
     assert remember.text == 'Oh snap.'
