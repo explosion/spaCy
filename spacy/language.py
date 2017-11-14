@@ -558,6 +558,7 @@ class Language(object):
                 old_refs.add(doc)
                 nr_seen += 1
             elif len(old_refs) == 0:
+                old_refs, recent_refs = recent_refs, old_refs
                 self.vocab.strings._cleanup_stale_strings()
                 nr_seen = 0
         # Last batch can be not garbage collected and we cannot know it — last
