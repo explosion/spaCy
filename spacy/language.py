@@ -561,7 +561,7 @@ class Language(object):
                 old_refs, recent_refs = recent_refs, old_refs
                 keys, strings = self.vocab.strings._cleanup_stale_strings(original_strings_data)
                 self.vocab._reset_cache(keys, strings)
-                self.tokenizer._reset_cache(keys)
+                self.tokenizer._reset_cache()
                 nr_seen = 0
 
     def to_disk(self, path, disable=tuple()):

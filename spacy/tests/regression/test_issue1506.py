@@ -11,19 +11,19 @@ def test_issue1506():
 
     def string_generator():
         for _ in range(10001):
-            yield "It's sentence produced by that bug."
+            yield u"It's sentence produced by that bug."
 
         for _ in range(10001):
-            yield "I erase some hbdsaj lemmas."
+            yield u"I erase some hbdsaj lemmas."
 
         for _ in range(10001):
-            yield "I erase lemmas."
+            yield u"I erase lemmas."
 
         for _ in range(10001):
-            yield "It's sentence produced by that bug."
+            yield u"It's sentence produced by that bug."
 
         for _ in range(10001):
-            yield "It's sentence produced by that bug."
+            yield u"It's sentence produced by that bug."
 
     for i, d in enumerate(nlp.pipe(string_generator())):
         # We should run cleanup more than one time to actually cleanup data.
