@@ -292,12 +292,16 @@ cdef int _get_root(int word, const GoldParseC* gold) nogil:
 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
-    cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
-    for i in range(st.c.length):
-        st.c._sent[i].l_edge = i
-        st.c._sent[i].r_edge = i
+    st = new StateC(<const TokenC*>tokens, length)
+    for i in range(st.length):
+        if st._sent[i].dep == 0:
+            st._sent[i].l_edge = i
+            st._sent[i].r_edge = i
+            st._sent[i].head = 0
+            st._sent[i].dep = 0
+            st._sent[i].l_kids = 0
+            st._sent[i].r_kids = 0
     st.fast_forward()
-    Py_INCREF(st)
     return <void*>st
 
 
@@ -533,18 +537,18 @@ cdef class ArcEager(TransitionSystem):
         assert n_gold >= 1
 
     def get_beam_annot(self, Beam beam):
-        length = (<StateClass>beam.at(0)).c.length
+        length = (<StateC*>beam.at(0)).length
         heads = [{} for _ in range(length)]
         deps = [{} for _ in range(length)]
         probs = beam.probs
         for i in range(beam.size):
-            stcls = <StateClass>beam.at(i)
-            self.finalize_state(stcls.c)
-            if stcls.is_final():
+            state = <StateC*>beam.at(i)
+            self.finalize_state(state)
+            if state.is_final():
                 prob = probs[i]
-                for j in range(stcls.c.length):
-                    head = j + stcls.c._sent[j].head
-                    dep = stcls.c._sent[j].dep
+                for j in range(state.length):
+                    head = j + state._sent[j].head
+                    dep = state._sent[j].dep
                     heads[j].setdefault(head, 0.0)
                     heads[j][head] += prob
                     deps[j].setdefault(dep, 0.0)

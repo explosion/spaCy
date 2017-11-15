@@ -1,4 +1,5 @@
 # coding: utf8
+# cython: profile=True
 from __future__ import unicode_literals
 
 import numpy
@@ -154,7 +155,10 @@ cdef class Vocab:
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         lex.orth = self.strings.add(string)
         lex.length = len(string)
-        lex.id = self.length
+        if self.vectors is not None:
+            lex.id = self.vectors.key2row.get(lex.orth, 0)
+        else:
+            lex.id = 0
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
@@ -164,9 +168,7 @@ cdef class Vocab:
                     lex.prob = value
                 elif value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
-        if is_oov:
-            lex.id = 0
-        else:
+        if not is_oov:
             key = hash_string(string)
             self._add_lex_to_vocab(key, lex)
         assert lex != NULL, string

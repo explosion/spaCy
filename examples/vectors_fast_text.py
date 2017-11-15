@@ -29,7 +29,7 @@ def main(vectors_loc, lang=None):
         nr_row, nr_dim = header.split()
         nlp.vocab.reset_vectors(width=int(nr_dim))
         for line in file_:
-            line = line.decode('utf8')
+            line = line.rstrip().decode('utf8')
             pieces = line.rsplit(' ', nr_dim)
             word = pieces[0]
             vector = numpy.asarray([float(v) for v in pieces[1:]], dtype='f')
