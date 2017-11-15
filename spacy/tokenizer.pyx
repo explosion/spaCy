@@ -133,11 +133,10 @@ cdef class Tokenizer:
         for text in texts:
             yield self(text)
 
-    def _reset_cache(self):
-        # We cannot do selective cache cleanup because cache can be different than words
-        # saved in StringStore (prefixes/suffixes/etc).
-        self._cache = PreshMap()
-        self._specials = PreshMap()
+    def _reset_cache(self, keys):
+        for k in keys:
+            del self._cache[k]
+            del self._specials[k]
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
