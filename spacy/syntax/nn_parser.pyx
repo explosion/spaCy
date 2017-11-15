@@ -303,7 +303,7 @@ cdef class Parser:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         if 'pretrained_dims' not in cfg:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        cfg.setdefault('cnn_maxout_pieces', 3)
+        cfg.setdefault('cnn_maxout_pieces', 2)
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
@@ -708,7 +708,7 @@ cdef class Parser:
                                        lower, stream, drop=0.0)
         return (tokvecs, bp_tokvecs), state2vec, upper
 
-    nr_feature = 13
+    nr_feature = 8
 
     def get_token_ids(self, states):
         cdef StateClass state
