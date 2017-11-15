@@ -11,6 +11,7 @@ import spacy
 import sys
 import tqdm
 import cytoolz
+import thinc.extra.datasets
 
 
 def read_inputs(loc):
@@ -32,14 +33,18 @@ def profile(cmd, lang, inputs=None):
     """
     Profile a spaCy pipeline, to find out which functions take the most time.
     """
+    if inputs is None:
+        imdb_train, _ = thinc.extra.datasets.imdb()
+        inputs, _ = zip(*imdb_train)
+        inputs = inputs[:2000]
     nlp = spacy.load(lang)
     texts = list(cytoolz.take(10000, inputs))
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(),
                     "Profile.prof")
     s = pstats.Stats("Profile.prof")
-    s.strip_dirs().sort_stats("time").print_stats()
+    s.strip_dirs().sort_stats("cumtime").print_stats()
 
 
 def parse_texts(nlp, texts):
-    for doc in nlp.pipe(tqdm.tqdm(texts), batch_size=128):
+    for doc in nlp.pipe(tqdm.tqdm(texts), batch_size=16):
         pass
