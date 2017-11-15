@@ -155,7 +155,10 @@ cdef class Vocab:
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         lex.orth = self.strings.add(string)
         lex.length = len(string)
-        lex.id = self.vectors.key2row.get(lex.orth, 0)
+        if self.vectors is not None:
+            lex.id = self.vectors.key2row.get(lex.orth, 0)
+        else:
+            lex.id = 0
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
