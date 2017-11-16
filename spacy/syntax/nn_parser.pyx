@@ -385,34 +385,20 @@ cdef class Parser:
                 yield doc
 
     def parse_batch(self, docs, int n_threads=2):
-        cdef:
-            precompute_hiddens state2vec
-            Pool mem
-            const float* feat_weights
-            StateC* st
-            StateClass stcls
-            vector[StateC*] states
-            int guess, nr_class, nr_feat, nr_piece, nr_dim, nr_state, nr_step
-            int j
         if isinstance(docs, Doc):
             docs = [docs]
-
         cuda_stream = util.get_cuda_stream()
+        cdef precompute_hiddens state2vec
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(
             docs, cuda_stream, 0.0)
-        nr_state = len(docs)
-        nr_class = self.moves.n_moves
-        nr_dim = tokvecs.shape[1]
-        nr_feat = self.nr_feature
-        nr_piece = state2vec.nP
-
         state_objs = self.moves.init_batch(docs)
+        cdef vector[StateC*] states
+        cdef StateClass stcls
         for stcls in state_objs:
             if not stcls.c.is_final():
                 states.push_back(stcls.c)
 
-        feat_weights = state2vec.get_feat_weights()
-        cdef int i
+        cdef const float* feat_weights = state2vec.get_feat_weights()
         cdef np.ndarray hidden_weights = numpy.ascontiguousarray(
             vec2scores._layers[-1].W.T)
         cdef np.ndarray hidden_bias = vec2scores._layers[-1].b
@@ -422,6 +408,11 @@ cdef class Parser:
         bias = <float*>state2vec.bias.data
         cdef int nr_hidden = hidden_weights.shape[0]
         cdef int nr_task = states.size()
+        cdef int nr_class = self.moves.n_moves
+        cdef int nr_dim = tokvecs.shape[1]
+        cdef int nr_feat = self.nr_feature
+        cdef int nr_piece = state2vec.nP
+        cdef int i
         with nogil:
             for i in range(nr_task):
                 self._parseC(states[i],
@@ -446,13 +437,14 @@ cdef class Parser:
                 PyErr_CheckSignals()
         cdef float feature
         cdef int i
+        cdef int nr_hidden_nr_piece = nr_hidden * nr_piece
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
             memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
             memset(scores, 0, nr_class * sizeof(float))
             sum_state_features(vectors,
                 feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
-            for i in range(nr_hidden * nr_piece):
+            for i in range(nr_hidden_nr_piece):
                 vectors[i] += bias[i]
             V = vectors
             W = hW
@@ -464,7 +456,7 @@ cdef class Parser:
                             scores[j] += feature * W[j]
                     W += nr_class
             else:
-                for i from 0 <= i < (nr_hidden * nr_piece) by nr_piece:
+                for i from 0 <= i < (nr_hidden_nr_piece) by nr_piece:
                     if nr_piece == 2:
                         feature = V[i] if V[i] >= V[i+1] else V[i+1]
                     else:
