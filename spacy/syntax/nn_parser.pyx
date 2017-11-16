@@ -365,28 +365,26 @@ cdef class Parser:
             beam_width = self.cfg.get('beam_width', 1)
         if beam_density is None:
             beam_density = self.cfg.get('beam_density', 0.0)
+        batch_size = min(batch_size, 2)
         cdef Doc doc
         for batch in cytoolz.partition_all(batch_size, docs):
-            batch_in_order = list(batch)
-            by_length = sorted(batch_in_order, key=lambda doc: len(doc))
+            batch = list(batch)
             batch_beams = []
-            for subbatch in cytoolz.partition_all(8, by_length):
-                subbatch = list(subbatch)
-                if beam_width == 1:
-                    parse_states, tokvecs = self.parse_batch(subbatch)
-                    beams = []
-                else:
-                    beams, tokvecs = self.beam_parse(subbatch,
-                                        beam_width=beam_width,
-                                        beam_density=beam_density)
-                    parse_states = _collect_states(beams)
-                self.set_annotations(subbatch, parse_states, tensors=None)
-                for beam in beams:
-                    _cleanup(beam)
-            for doc in batch_in_order:
+            if beam_width == 1:
+                parse_states, tokvecs = self.parse_batch(batch)
+                beams = []
+            else:
+                beams, tokvecs = self.beam_parse(batch,
+                                    beam_width=beam_width,
+                                    beam_density=beam_density)
+                parse_states = _collect_states(beams)
+            self.set_annotations(batch, parse_states, tensors=tokvecs)
+            for beam in beams:
+                _cleanup(beam)
+            for doc in batch:
                 yield doc
 
-    def parse_batch(self, docs):
+    def parse_batch(self, docs, int n_threads=2):
         cdef:
             precompute_hiddens state2vec
             Pool mem
@@ -447,6 +445,7 @@ cdef class Parser:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
         cdef float feature
+        cdef int i
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
             memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
@@ -457,17 +456,22 @@ cdef class Parser:
                 vectors[i] += bias[i]
             V = vectors
             W = hW
-            for i in range(nr_hidden):
-                if nr_piece == 1:
-                    feature = V[0] if V[0] >= 0. else 0.
-                elif nr_piece == 2:
-                    feature = V[0] if V[0] >= V[1] else V[1]
-                else:
-                    feature = Vec.max(V, nr_piece)
-                for j in range(nr_class):
-                    scores[j] += feature * W[j]
-                W += nr_class
-                V += nr_piece
+            if nr_piece == 1:
+                for i in range(nr_hidden):
+                    if V[i] > 0:
+                        feature = V[i]
+                        for j in range(nr_class):
+                            scores[j] += feature * W[j]
+                    W += nr_class
+            else:
+                for i from 0 <= i < (nr_hidden * nr_piece) by nr_piece:
+                    if nr_piece == 2:
+                        feature = V[i] if V[i] >= V[i+1] else V[i+1]
+                    else:
+                        feature = Vec.max(&V[i], nr_piece)
+                    for j in range(nr_class):
+                        scores[j] += feature * W[j]
+                    W += nr_class
             for i in range(nr_class):
                 scores[i] += hb[i]
             self.moves.set_valid(is_valid, state)
