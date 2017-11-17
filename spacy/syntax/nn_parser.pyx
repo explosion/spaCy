@@ -22,14 +22,15 @@ from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t, class_t, hash_t
 from thinc.extra.search cimport Beam
-from thinc.api import chain, clone
+from thinc.api import chain, clone, concatenate
 from thinc.v2v import Model, Maxout, Affine
+from thinc.i2v import HashEmbed
 from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 
-from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
+from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten, getitem
 from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import json_dumps, copy_array
 from ..tokens.doc cimport Doc
@@ -256,8 +257,8 @@ cdef class Parser:
         if hist_width != 0:
             raise ValueError("Currently history width is hard-coded to 0")
         tok2vec = Tok2Vec(token_vector_width, embed_size,
-                          pretrained_dims=cfg.get('pretrained_dims', 0))
-        tok2vec = chain(tok2vec, flatten)
+                          pretrained_dims=cfg.get('pretrained_dims', 0),
+                          flatten=True)
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
                     nP=parser_maxout_pieces)
@@ -365,7 +366,7 @@ cdef class Parser:
             beam_width = self.cfg.get('beam_width', 1)
         if beam_density is None:
             beam_density = self.cfg.get('beam_density', 0.0)
-        batch_size = min(batch_size, 2)
+        batch_size = min(batch_size, 16)
         cdef Doc doc
         for batch in cytoolz.partition_all(batch_size, docs):
             batch = list(batch)
