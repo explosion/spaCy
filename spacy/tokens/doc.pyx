@@ -543,8 +543,6 @@ cdef class Doc:
         assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
-        # Set morphological attributes, e.g. by lemma, if possible
-        self.vocab.morphology.assign_untagged(t)
         return t.idx + t.lex.length + t.spacy
 
     @cython.boundscheck(False)
