@@ -1,4 +1,6 @@
 # coding: utf-8
+# cython: profile=True
+# cython: infer_types=True
 """Implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
 for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
@@ -6,6 +8,8 @@ scheme.
 from __future__ import unicode_literals
 
 from copy import copy
+
+from ..tokens.doc cimport Doc
 
 
 DELIMITER = '||'
@@ -111,17 +115,18 @@ def projectivize(heads, labels):
     return proj_heads, deco_labels
 
 
-def deprojectivize(tokens):
+cpdef deprojectivize(Doc doc):
     # Reattach arcs with decorated labels (following HEAD scheme). For each
     # decorated arc X||Y, search top-down, left-to-right, breadth-first until
     # hitting a Y then make this the new head.
-    for token in tokens:
-        if is_decorated(token.dep_):
-            newlabel, headlabel = decompose(token.dep_)
-            newhead = _find_new_head(token, headlabel)
-            token.head = newhead
-            token.dep_ = newlabel
-    return tokens
+    for i in range(doc.length):
+        label = doc.vocab.strings[doc.c[i].dep]
+        if DELIMITER in label:
+            new_label, head_label = label.split(DELIMITER)
+            new_head = _find_new_head(doc[i], head_label)
+            doc[i].head = new_head
+            doc.c[i].dep = new_label
+    return doc
 
 
 def _decorate(heads, proj_heads, labels):
