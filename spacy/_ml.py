@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import numpy
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, SELU
 from thinc.i2v import HashEmbed, StaticVectors
-from thinc.t2t import ExtractWindow, ParametricAttention, MaxoutWindowEncoder
+from thinc.t2t import ExtractWindow, ParametricAttention
 from thinc.t2v import Pooling, sum_pool
 from thinc.misc import Residual
 from thinc.misc import LayerNorm as LN
@@ -290,9 +290,6 @@ def Tok2Vec(width, embed_size, **kwargs):
                 >> flatten
                 >> embed
                 >> convolution ** 4
-                #>> MaxoutWindowEncoder(width, 4)
-                #>> flatten
-                #>> convolution ** 4
             )
         else:
             tok2vec = (
