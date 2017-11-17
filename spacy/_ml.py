@@ -266,7 +266,7 @@ def Tok2Vec(width, embed_size, **kwargs):
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone,
                                  '+': add, '*': reapply}):
-        norm = HashEmbed(width, embed_size, column=cols.index(NORM),
+        norm = HashEmbed(width*2, embed_size, column=cols.index(NORM),
                          name='embed_norm')
         prefix = HashEmbed(32, embed_size//2, column=cols.index(PREFIX),
                            name='embed_prefix')
@@ -279,29 +279,33 @@ def Tok2Vec(width, embed_size, **kwargs):
 
             embed = uniqued(
                 (glove | norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width*2 + 32*3, pieces=2)), column=5)
+                >> LN(Maxout(width*2, width*3 + 32*3, pieces=2)), column=5)
         else:
             embed = uniqued(
                 (norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width + 32*3, pieces=2)), column=5)
+                >> LN(Maxout(width*2, width*2 + 32*3, pieces=2)), column=5)
 
         convolution = Residual(
             ExtractWindow(nW=1)
-            >> LN(Maxout(width, width*3, pieces=2))
+            >> LN(Maxout(width, width*3))
         )
         if kwargs.get('flatten'):
             tok2vec = (
                 FeatureExtracter(cols)
                 >> flatten
                 >> embed
-                >> convolution ** 4
+                >> ExtractWindow(nW=1)
+                >> LN(Maxout(width, width*6))
+                >> convolution ** 3
             )
         else:
             tok2vec = (
                 FeatureExtracter(cols)
                 >> with_flatten(
                     embed
-                    >> convolution ** 4
+                    >> ExtractWindow(nW=1)
+                    >> LN(Maxout(width, width*6))
+                    >> convolution ** 3
                 )
             )
 
