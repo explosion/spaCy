@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 import numpy
-from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
+from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu, SELU
 from thinc.i2v import HashEmbed, StaticVectors
-from thinc.t2t import ExtractWindow, ParametricAttention
+from thinc.t2t import ExtractWindow, ParametricAttention, MaxoutWindowEncoder
 from thinc.t2v import Pooling, sum_pool
 from thinc.misc import Residual
 from thinc.misc import LayerNorm as LN
@@ -144,8 +144,9 @@ class PrecomputableAffine(Model):
         self.nF = nF
 
     def begin_update(self, X, drop=0.):
-        Yf = self.ops.xp.dot(X,
-            self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
+        Yf = self.ops.gemm(X,
+            self.W.reshape((self.nF*self.nO*self.nP, self.nI)),
+            trans2=True)
         Yf = Yf.reshape((Yf.shape[0], self.nF, self.nO, self.nP))
         Yf = self._add_padding(Yf)
 
@@ -161,11 +162,11 @@ class PrecomputableAffine(Model):
             Wopfi = self.W.transpose((1, 2, 0, 3))
             Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
             Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
-            dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
+            dXf = self.ops.gemm(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
 
             # Reuse the buffer
             dWopfi = Wopfi; dWopfi.fill(0.)
-            self.ops.xp.dot(dY.T, Xf, out=dWopfi)
+            self.ops.gemm(dY, Xf, trans1=True, out=dWopfi)
             dWopfi = dWopfi.reshape((self.nO, self.nP, self.nF, self.nI))
             # (o, p, f, i) --> (f, o, p, i)
             self.d_W += dWopfi.transpose((2, 0, 1, 3))
@@ -262,35 +263,46 @@ def Tok2Vec(width, embed_size, **kwargs):
                                  '+': add, '*': reapply}):
         norm = HashEmbed(width, embed_size, column=cols.index(NORM),
                          name='embed_norm')
-        prefix = HashEmbed(width, embed_size//2, column=cols.index(PREFIX),
+        prefix = HashEmbed(32, embed_size//2, column=cols.index(PREFIX),
                            name='embed_prefix')
-        suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX),
+        suffix = HashEmbed(32, embed_size//2, column=cols.index(SUFFIX),
                            name='embed_suffix')
-        shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE),
+        shape = HashEmbed(32, embed_size//2, column=cols.index(SHAPE),
                           name='embed_shape')
         if pretrained_dims is not None and pretrained_dims >= 1:
             glove = StaticVectors(VECTORS_KEY, width, column=cols.index(ID))
 
             embed = uniqued(
                 (glove | norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width*5, pieces=3)), column=5)
+                >> LN(Maxout(width, width*2 + 32*3, pieces=2)), column=5)
         else:
             embed = uniqued(
                 (norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width*4, pieces=3)), column=5)
+                >> LN(Maxout(width, width + 32*3, pieces=2)), column=5)
 
         convolution = Residual(
             ExtractWindow(nW=1)
-            >> LN(Maxout(width, width*3, pieces=cnn_maxout_pieces))
+            >> LN(Maxout(width, width*3, pieces=2))
         )
-
-        tok2vec = (
-            FeatureExtracter(cols)
-            >> with_flatten(
-                embed
-                >> convolution ** 4, pad=4
+        if kwargs.get('flatten'):
+            tok2vec = (
+                FeatureExtracter(cols)
+                >> flatten
+                >> embed
+                >> convolution ** 4
+                #>> MaxoutWindowEncoder(width, 4)
+                #>> flatten
+                #>> convolution ** 4
             )
-        )
+        else:
+            tok2vec = (
+                FeatureExtracter(cols)
+                >> with_flatten(
+                    embed
+                    >> convolution ** 4
+                )
+            )
+
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
         tok2vec.embed = embed
