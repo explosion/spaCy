@@ -13,7 +13,7 @@ from spacy.language import Language
 
 
 @plac.annotations(
-    vectors_loc=("Path to vectors", "positional", None, str),
+    vectors_loc=("Path to .vec file", "positional", None, str),
     lang=("Optional language ID. If not set, blank Language() will be used.",
           "positional", None, str))
 def main(vectors_loc, lang=None):
