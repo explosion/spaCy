@@ -100,7 +100,10 @@ p
         |  Set a default value for an attribute, which can be overwritten
         |  manually at any time. Attribute extensions work like "normal"
         |  variables and are the quickest way to store arbitrary information
-        |  on a #[code Doc], #[code Span] or #[code Token].
+        |  on a #[code Doc], #[code Span] or #[code Token]. Attribute defaults
+        |  behaves just like argument defaults
+        |  #[+a("http://docs.python-guide.org/en/latest/writing/gotchas/#mutable-default-arguments") in Python functions],
+        |  and should not be used for mutable values like dictionaries or lists.
 
         +code-wrapper
             +code.
