@@ -36,13 +36,13 @@ def profile(cmd, lang, inputs=None):
     if inputs is None:
         imdb_train, _ = thinc.extra.datasets.imdb()
         inputs, _ = zip(*imdb_train)
-        inputs = inputs[:2000]
+        inputs = inputs[:25000]
     nlp = spacy.load(lang)
     texts = list(cytoolz.take(10000, inputs))
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(),
                     "Profile.prof")
     s = pstats.Stats("Profile.prof")
-    s.strip_dirs().sort_stats("cumtime").print_stats()
+    s.strip_dirs().sort_stats("time").print_stats()
 
 
 def parse_texts(nlp, texts):
