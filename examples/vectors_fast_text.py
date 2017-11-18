@@ -13,7 +13,7 @@ from spacy.language import Language
 
 
 @plac.annotations(
-    vectors_loc=("Path to vectors", "positional", None, str),
+    vectors_loc=("Path to .vec file", "positional", None, str),
     lang=("Optional language ID. If not set, blank Language() will be used.",
           "positional", None, str))
 def main(vectors_loc, lang=None):
@@ -29,8 +29,8 @@ def main(vectors_loc, lang=None):
         nr_row, nr_dim = header.split()
         nlp.vocab.reset_vectors(width=int(nr_dim))
         for line in file_:
-            line = line.decode('utf8')
-            pieces = line.rsplit(' ', nr_dim)
+            line = line.rstrip().decode('utf8')
+            pieces = line.rsplit(' ', int(nr_dim))
             word = pieces[0]
             vector = numpy.asarray([float(v) for v in pieces[1:]], dtype='f')
             nlp.vocab.set_vector(word, vector)  # add the vectors to the vocab

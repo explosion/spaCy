@@ -37,6 +37,24 @@ p
                     token._.set('is_fruit', True)
 
     +item
+        |  When using #[strong mutable values] like dictionaries or lists as
+        |  the #[code default] argument, keep in mind that they behave just like
+        |  mutable default arguments
+        |  #[+a("http://docs.python-guide.org/en/latest/writing/gotchas/#mutable-default-arguments") in Python functions].
+        |  This can easily cause unintended results, like the same value being
+        |  set on #[em all] objects instead of only one particular instance.
+        |  In most cases, it's better to use #[strong getters and setters], and
+        |  only set the #[code default] for boolean or string values.
+
+        +code-wrapper
+            +code-new.
+                Doc.set_extension('fruits', getter=get_fruits, setter=set_fruits)
+
+            +code-old.
+                Doc.set_extension('fruits', default={})
+                doc._.fruits['apple'] = u'🍎'  # all docs now have {'apple': u'🍎'}
+
+    +item
         |  Always add your custom attributes to the #[strong global] #[code Doc]
         |  #[code Token] or #[code Span] objects, not a particular instance of
         |  them. Add the attributes #[strong as early as possible], e.g. in

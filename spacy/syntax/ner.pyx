@@ -123,14 +123,14 @@ cdef class BiluoPushDown(TransitionSystem):
         entities = {}
         probs = beam.probs
         for i in range(beam.size):
-            stcls = <StateClass>beam.at(i)
-            if stcls.is_final():
-                self.finalize_state(stcls.c)
+            state = <StateC*>beam.at(i)
+            if state.is_final():
+                self.finalize_state(state)
                 prob = probs[i]
-                for j in range(stcls.c._e_i):
-                    start = stcls.c._ents[j].start
-                    end = stcls.c._ents[j].end
-                    label = stcls.c._ents[j].label
+                for j in range(state._e_i):
+                    start = state._ents[j].start
+                    end = state._ents[j].end
+                    label = state._ents[j].label
                     entities.setdefault((start, end, label), 0.0)
                     entities[(start, end, label)] += prob
         return entities
@@ -139,15 +139,15 @@ cdef class BiluoPushDown(TransitionSystem):
         parses = []
         probs = beam.probs
         for i in range(beam.size):
-            stcls = <StateClass>beam.at(i)
-            if stcls.is_final():
-                self.finalize_state(stcls.c)
+            state = <StateC*>beam.at(i)
+            if state.is_final():
+                self.finalize_state(state)
                 prob = probs[i]
                 parse = []
-                for j in range(stcls.c._e_i):
-                    start = stcls.c._ents[j].start
-                    end = stcls.c._ents[j].end
-                    label = stcls.c._ents[j].label
+                for j in range(state._e_i):
+                    start = state._ents[j].start
+                    end = state._ents[j].end
+                    label = state._ents[j].label
                     parse.append((start, end, self.strings[label]))
                 parses.append((prob, parse))
         return parses
