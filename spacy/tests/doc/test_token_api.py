@@ -23,7 +23,7 @@ def test_doc_token_api_strings(en_tokenizer):
     assert doc[0].text_with_ws == 'Give '
     assert doc[0].lower_ == 'give'
     assert doc[0].shape_ == 'Xxxx'
-    assert doc[0].prefix_ == 'G'
+    assert doc[0].prefix_ == 'Giv'
     assert doc[0].suffix_ == 'ive'
     assert doc[0].pos_ == 'VERB'
     assert doc[0].dep_ == 'ROOT'
