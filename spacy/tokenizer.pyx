@@ -241,11 +241,10 @@ cdef class Tokenizer:
                     for match in matches:
                         infix_start = match.start()
                         infix_end = match.end()
-                        if infix_start == start:
-                            continue
 
-                        span = string[start:infix_start]
-                        tokens.push_back(self.vocab.get(tokens.mem, span), False)
+                        if infix_start != start:
+                            span = string[start:infix_start]
+                            tokens.push_back(self.vocab.get(tokens.mem, span), False)
 
                         if infix_start != infix_end:
                             # If infix_start != infix_end, it means the infix
