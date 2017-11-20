@@ -53,9 +53,9 @@ is_osx = sys.platform == 'darwin'
 if is_python2:
     import imp
     bytes_ = str
-    unicode_ = unicode
-    basestring_ = basestring
-    input_ = raw_input
+    unicode_ = unicode  # noqa: F821
+    basestring_ = basestring  # noqa: F821
+    input_ = raw_input  # noqa: F821
     json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False).decode('utf8')
     path2str = lambda path: str(path).decode('utf8')
 
