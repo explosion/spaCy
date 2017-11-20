@@ -21,7 +21,7 @@ def test_lemmatizer_noun_verb_2(FR):
 
 @pytest.mark.models('fr')
 @pytest.mark.xfail(reason="Costaricienne TAG is PROPN instead of NOUN and spacy don't lemmatize PROPN")
-def test_lemmatizer_noun(model):
+def test_lemmatizer_noun(FR):
     tokens = FR("il y a des Costaricienne.")
     assert tokens[4].lemma_ == "Costaricain"
 
