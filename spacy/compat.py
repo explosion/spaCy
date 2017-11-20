@@ -7,8 +7,6 @@ import sys
 import ujson
 import itertools
 import locale
-from six.builtins import bytes as bytes_
-from six.builtins import str as unicode_
 from six.moves import input as input_
 
 from thinc.neural.util import copy_array
@@ -52,6 +50,9 @@ is_windows = sys.platform.startswith('win')
 is_linux = sys.platform.startswith('linux')
 is_osx = sys.platform == 'darwin'
 
+basestring_ = six.string_types
+bytes_ = six.binary_type
+unicode_ = six.text_type
 
 if is_python2:
     import imp
