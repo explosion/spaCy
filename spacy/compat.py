@@ -7,6 +7,9 @@ import sys
 import ujson
 import itertools
 import locale
+from six.builtins import bytes as bytes_
+from six.builtins import str as unicode_
+from six.moves import input as input_
 
 from thinc.neural.util import copy_array
 
@@ -52,24 +55,18 @@ is_osx = sys.platform == 'darwin'
 
 if is_python2:
     import imp
-    bytes_ = str
-    unicode_ = unicode  # noqa: F821
     basestring_ = basestring  # noqa: F821
-    input_ = raw_input  # noqa: F821
     json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False).decode('utf8')
     path2str = lambda path: str(path).decode('utf8')
 
 elif is_python3:
     import importlib.util
-    bytes_ = bytes
-    unicode_ = str
     basestring_ = str
-    input_ = input
     json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False)
     path2str = lambda path: str(path)
 
 
-def b_to_str(b_str):
+def b_to_str(b_str):  # could this be replaced by six.u()?
     if is_python2:
         return b_str
     # important: if no encoding is set, string becomes "b'...'"
