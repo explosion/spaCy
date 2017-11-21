@@ -527,7 +527,7 @@ cdef class Span:
 
         RETURNS (unicode): The span's text."""
         def __get__(self):
-            return ''.join([t.orth_ for t in self]).strip()
+            return self.text
 
     property lemma_:
         """RETURNS (unicode): The span's lemma."""
