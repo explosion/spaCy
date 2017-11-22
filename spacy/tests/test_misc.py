@@ -49,8 +49,10 @@ def test_displacy_parse_deps(en_vocab):
     words = ["This", "is", "a", "sentence"]
     heads = [1, 0, 1, -2]
     pos = ['DET', 'VERB', 'DET', 'NOUN']
+    tags = ['DT', 'VBZ', 'DT', 'NN']
     deps = ['nsubj', 'ROOT', 'det', 'attr']
-    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, deps=deps)
+    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags,
+                  deps=deps)
     deps = parse_deps(doc)
     assert isinstance(deps, dict)
     assert deps['words'] == [{'text': 'This', 'tag': 'DET'},
