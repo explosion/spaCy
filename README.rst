@@ -16,6 +16,10 @@ integration. It's commercial open-source software, released under the MIT licens
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
 
+.. image:: https://img.shields.io/appveyor/ci/explosion/spaCy/master.svg?style=flat-square
+    :target: https://ci.appveyor.com/project/explosion/spaCy
+    :alt: Appveyor Build Status
+
 .. image:: https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square
     :target: https://github.com/explosion/spaCy/releases
     :alt: Current Release Version
