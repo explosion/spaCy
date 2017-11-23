@@ -502,19 +502,19 @@ class Language(object):
                 pass
 
     def pipe(self, texts, as_tuples=False, n_threads=2, batch_size=1000,
-             disable=[]):
+             disable=[], cleanup=False):
         """Process texts as a stream, and yield `Doc` objects in order.
-        Supports GIL-free multi-threading.
 
         texts (iterator): A sequence of texts to process.
         as_tuples (bool):
             If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
-        n_threads (int): The number of worker threads to use. If -1, OpenMP
-            will decide how many to use at run time. Default is 2.
+        n_threads (int): Currently inactive.
         batch_size (int): The number of texts to buffer.
         disable (list): Names of the pipeline components to disable.
+        cleanup (bool): If True, unneeded strings are freed,
+            to control memory use. Experimental.
         YIELDS (Doc): Documents in the order of the original text.
 
         EXAMPLE:
