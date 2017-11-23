@@ -249,19 +249,36 @@ cdef class StringStore:
         for string in strings:
             self.add(string)
 
-    def _cleanup_stale_strings(self):
+    def _cleanup_stale_strings(self, excepted):
+        """
+        excepted (list): Strings that should not be removed.
+        RETURNS (keys, strings): Dropped strings and keys that can be dropped from other places
+        """
         if self.hits.size() == 0:
             # If we don't have any hits, just skip cleanup
             return
 
         cdef vector[hash_t] tmp
+        dropped_strings = []
+        dropped_keys = []
         for i in range(self.keys.size()):
             key = self.keys[i]
-            if self.hits.count(key) != 0:
+            # Here we cannot use __getitem__ because it also set hit.
+            utf8str = <Utf8Str*>self._map.get(key)
+            value = decode_Utf8Str(utf8str)
+            if self.hits.count(key) != 0 or value in excepted:
                 tmp.push_back(key)
+            else:
+                dropped_keys.append(key)
+                dropped_strings.append(value)
 
         self.keys.swap(tmp)
+        strings = list(self)
+        self._reset_and_load(strings)
+        # Here we have strings but hits to it should be reseted
         self.hits.clear()
+
+        return dropped_keys, dropped_strings
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.

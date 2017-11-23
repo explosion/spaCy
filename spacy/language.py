@@ -558,13 +558,11 @@ class Language(object):
                 old_refs.add(doc)
                 nr_seen += 1
             elif len(old_refs) == 0:
-                self.vocab.strings._cleanup_stale_strings()
+                old_refs, recent_refs = recent_refs, old_refs
+                keys, strings = self.vocab.strings._cleanup_stale_strings(original_strings_data)
+                self.vocab._reset_cache(keys, strings)
+                self.tokenizer._reset_cache(keys)
                 nr_seen = 0
-        # We can't know which strings from the last batch have really expired.
-        # So we don't erase the strings — we just extend with the original
-        # content.
-        for string in original_strings_data:
-            self.vocab.strings.add(string)
 
     def to_disk(self, path, disable=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
