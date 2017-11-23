@@ -53,11 +53,11 @@ p
     class MyComponent(object):
         name = 'print_info'
 
-        def __init__(vocab, short_limit=10):
-            self.vocab = nlp.vocab
+        def __init__(self, vocab, short_limit=10):
+            self.vocab = vocab
             self.short_limit = short_limit
 
-        def __call__(doc):
+        def __call__(self, doc):
             if len(doc) &lt; self.short_limit:
                 print("This is a pretty short document.")
             return doc
