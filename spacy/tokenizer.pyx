@@ -136,7 +136,6 @@ cdef class Tokenizer:
     def _reset_cache(self, keys):
         for k in keys:
             del self._cache[k]
-            del self._specials[k]
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
