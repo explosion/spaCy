@@ -73,7 +73,7 @@ TRAIN_DATA = [
     new_model_name=("New model name for model meta.", "option", "nm", str),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int))
-def main(model=None, new_model_name='animal', output_dir=None, n_iter=50):
+def main(model=None, new_model_name='animal', output_dir=None, n_iter=20):
     """Set up the pipeline and entity recognizer, and train the new entity."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
