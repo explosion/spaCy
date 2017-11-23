@@ -547,22 +547,27 @@ class Language(object):
         # in the string store.
         recent_refs = weakref.WeakSet()
         old_refs = weakref.WeakSet()
-        # If there is anything that we have inside — after iterations we should
-        # carefully get it back.
-        original_strings_data = list(self.vocab.strings)
+        # Keep track of the original string data, so that if we flush old strings,
+        # we can recover the original ones. However, we only want to do this if we're
+        # really adding strings, to save up-front costs.
+        original_strings_data = None
         nr_seen = 0
         for doc in docs:
             yield doc
-            recent_refs.add(doc)
-            if nr_seen < 10000:
-                old_refs.add(doc)
-                nr_seen += 1
-            elif len(old_refs) == 0:
-                old_refs, recent_refs = recent_refs, old_refs
-                keys, strings = self.vocab.strings._cleanup_stale_strings(original_strings_data)
-                self.vocab._reset_cache(keys, strings)
-                self.tokenizer._reset_cache(keys)
-                nr_seen = 0
+            if cleanup:
+                recent_refs.add(doc)
+                if nr_seen < 10000:
+                    old_refs.add(doc)
+                    nr_seen += 1
+                elif len(old_refs) == 0:
+                    old_refs, recent_refs = recent_refs, old_refs
+                    if original_strings_data is None:
+                        original_strings_data = list(self.vocab.strings)
+                    else:
+                        keys, strings = self.vocab.strings._cleanup_stale_strings(original_strings_data)
+                        self.vocab._reset_cache(keys, strings)
+                        self.tokenizer._reset_cache(keys)
+                    nr_seen = 0
 
     def to_disk(self, path, disable=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
