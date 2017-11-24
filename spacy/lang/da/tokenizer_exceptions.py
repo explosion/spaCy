@@ -11,20 +11,47 @@ from ...symbols import ORTH, LEMMA, NORM, TAG, ADP, PUNCT
 
 _exc = {}
 
+# Abbreviations for weekdays "søn." (for "søndag") as well as "Tor." and "Tors."
+# (for "torsdag") are left out because they are ambiguous. The same is the case
+# for abbreviations "jul." and "Jul." ("juli").
 for exc_data in [
-    {ORTH: "Kbh.", LEMMA: "København", NORM: "København"},
-    {ORTH: "Jan.", LEMMA: "januar", NORM: "januar"},
-    {ORTH: "Feb.", LEMMA: "februar", NORM: "februar"},
-    {ORTH: "Mar.", LEMMA: "marts", NORM: "marts"},
-    {ORTH: "Apr.", LEMMA: "april", NORM: "april"},
-    {ORTH: "Maj.", LEMMA: "maj", NORM: "maj"},
-    {ORTH: "Jun.", LEMMA: "juni", NORM: "juni"},
-    {ORTH: "Jul.", LEMMA: "juli", NORM: "juli"},
-    {ORTH: "Aug.", LEMMA: "august", NORM: "august"},
-    {ORTH: "Sep.", LEMMA: "september", NORM: "september"},
-    {ORTH: "Okt.", LEMMA: "oktober", NORM: "oktober"},
-    {ORTH: "Nov.", LEMMA: "november", NORM: "november"},
-    {ORTH: "Dec.", LEMMA: "december", NORM: "december"}]:
+        {ORTH: "Kbh.", LEMMA: "København", NORM: "København"},
+        {ORTH: "jan.", LEMMA: "januar"},
+        {ORTH: "febr.", LEMMA: "februar"},
+        {ORTH: "feb.", LEMMA: "februar"},
+        {ORTH: "mar.", LEMMA: "marts"},
+        {ORTH: "apr.", LEMMA: "april"},
+        {ORTH: "jun.", LEMMA: "juni"},
+        {ORTH: "aug.", LEMMA: "august"},
+        {ORTH: "sept.", LEMMA: "september"},
+        {ORTH: "sep.", LEMMA: "september"},
+        {ORTH: "okt.", LEMMA: "oktober"},
+        {ORTH: "nov.", LEMMA: "november"},
+        {ORTH: "dec.", LEMMA: "december"},
+        {ORTH: "man.", LEMMA: "mandag"},
+        {ORTH: "tirs.", LEMMA: "tirsdag"},
+        {ORTH: "ons.", LEMMA: "onsdag"},
+        {ORTH: "tor.", LEMMA: "torsdag"},
+        {ORTH: "tors.", LEMMA: "torsdag"},
+        {ORTH: "fre.", LEMMA: "fredag"},
+        {ORTH: "lør.", LEMMA: "lørdag"},
+        {ORTH: "Jan.", LEMMA: "januar"},
+        {ORTH: "Febr.", LEMMA: "februar"},
+        {ORTH: "Feb.", LEMMA: "februar"},
+        {ORTH: "Mar.", LEMMA: "marts"},
+        {ORTH: "Apr.", LEMMA: "april"},
+        {ORTH: "Jun.", LEMMA: "juni"},
+        {ORTH: "Aug.", LEMMA: "august"},
+        {ORTH: "Sept.", LEMMA: "september"},
+        {ORTH: "Sep.", LEMMA: "september"},
+        {ORTH: "Okt.", LEMMA: "oktober"},
+        {ORTH: "Nov.", LEMMA: "november"},
+        {ORTH: "Dec.", LEMMA: "december"},
+        {ORTH: "Man.", LEMMA: "mandag"},
+        {ORTH: "Tirs.", LEMMA: "tirsdag"},
+        {ORTH: "Ons.", LEMMA: "onsdag"},
+        {ORTH: "Fre.", LEMMA: "fredag"},
+        {ORTH: "Lør.", LEMMA: "lørdag"}]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 for orth in [
