@@ -117,6 +117,12 @@ for orth in [
         "øv.", "øvr.", "årg.", "årh.", ""]:
     _exc[orth] = [{ORTH: orth}]
 
+# Dates
+for h in range(1, 31 + 1):
+    for period in ["."]:
+        _exc["%d%s" % (h, period)] = [
+            {ORTH: "%d." % h}]
+
 _custom_base_exc = {
     "i.": [
         {ORTH: "i", LEMMA: "i", NORM: "i"},
