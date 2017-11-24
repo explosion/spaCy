@@ -1,7 +1,7 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, NORM
+from ...symbols import ORTH, LEMMA, NORM, TAG, ADP, PUNCT
 
 
 _exc = {}
@@ -27,6 +27,13 @@ for orth in [
     "if.", "iflg.", "m.a.o.", "mht.", "min.", "osv.", "pga.", "resp.", "self.",
     "t.o.m.", "vha.", ""]:
     _exc[orth] = [{ORTH: orth}]
+
+_custom_base_exc = {
+    "i.": [
+        {ORTH: "i", LEMMA: "i", NORM: "i"},
+        {ORTH: ".", TAG: PUNCT}]
+}
+_exc.update(_custom_base_exc)
 
 
 TOKENIZER_EXCEPTIONS = _exc
