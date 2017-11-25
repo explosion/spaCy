@@ -6,7 +6,7 @@ Source: https://forkortelse.dk/ and various others.
 
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, NORM, TAG, ADP, PUNCT
+from ...symbols import ORTH, LEMMA, NORM, TAG, PUNCT
 
 
 _exc = {}
