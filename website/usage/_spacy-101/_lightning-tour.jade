@@ -102,6 +102,28 @@ p
 +infobox
     |  #[+label-inline Usage:] #[+a("/usage/linguistic-features#named-entities") Named entity recognition]
 
++h(3, "lightning-tour-training") Train and update neural network models
+    +tag-model
+
++code.
+    import spacy
+    import random
+
+    nlp = spacy.load('en')
+    train_data = [("Uber blew through $1 million", {'entities': [(0, 4, 'ORG')]})]
+
+    with nlp.disable_pipes([pipe for pipe in nlp.pipe_names if pipe != 'ner']):
+        optimizer = nlp.begin_training()
+        for i in range(10):
+            random.shuffle(train_data)
+            for text, annotations in train_data:
+                nlp.update([text], [annotations] sgd=optimizer)
+    nlp.to_disk('/model')
+
++infobox
+    |  #[+label-inline API:] #[+api("language#update") #[code Language.update]]
+    |  #[+label-inline Usage:] #[+a("/usage/training") Training spaCy&apos;s statistical models]
+
 +h(3, "lightning-tour-displacy") Visualize a dependency parse and named entities in your browser
     +tag-model("dependency parse", "NER")
     +tag-new(2)
