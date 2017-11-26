@@ -123,7 +123,7 @@ p
 
 p
     |  Returns a list of unicode strings, describing the tags. Each tag string
-    |  will be of the form either #[code ""], #[code "O"] or
+    |  will be of the form of either #[code ""], #[code "O"] or
     |  #[code "{action}-{label}"], where action is one of #[code "B"],
     |  #[code "I"], #[code "L"], #[code "U"]. The string #[code &quot;-&quot;]
     |  is used where the entity offsets don't align with the tokenization in the
@@ -135,9 +135,9 @@ p
 
 +aside-code("Example").
     from spacy.gold import biluo_tags_from_offsets
-    text = 'I like London.'
-    entities = [(len('I like '), len('I like London'), 'LOC')]
-    doc = tokenizer(text)
+
+    doc = nlp('I like London.')
+    entities = [(7, 13, 'LOC')]
     tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ['O', 'O', 'U-LOC', 'O']
 
@@ -163,5 +163,3 @@ p
         +cell
             |  Unicode strings, describing the
             |  #[+a("/api/annotation#biluo") BILUO] tags.
-
-
