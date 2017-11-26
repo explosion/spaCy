@@ -144,6 +144,7 @@ def th_tokenizer():
 
 @pytest.fixture
 def ru_tokenizer():
+    pymorphy = pytest.importorskip('pymorphy2')
     return util.get_lang_class('ru').Defaults.create_tokenizer()
 
 
