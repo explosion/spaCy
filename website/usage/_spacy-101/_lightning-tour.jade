@@ -183,11 +183,11 @@ p
     from spacy.vocab import Vocab
 
     nlp = spacy.load('en')
-    moby_dick = open('moby_dick.txt', 'r').read()
-    doc = nlp(moby_dick)
-    doc.to_disk('/moby_dick.bin')
+    customer_feedback = open('customer_feedback_627.txt').read()
+    doc = nlp(customer_feedback)
+    doc.to_disk('/tmp/customer_feedback_627.bin')
 
-    new_doc = Doc(Vocab()).from_disk('/moby_dick.bin')
+    new_doc = Doc(Vocab()).from_disk('/tmp/customer_feedback_627.bin')
 
 +infobox
     |  #[+label-inline API:] #[+api("language") #[code Language]],
@@ -210,7 +210,8 @@ p
     pattern2 = [[{'ORTH': emoji, 'OP': '+'}] for emoji in ['😀', '😂', '🤣', '😍']]
     matcher.add('GoogleIO', None, pattern1) # match "Google I/O" or "Google i/o"
     matcher.add('HAPPY', set_sentiment, *pattern2) # match one or more happy emoji
-    matches = nlp(LOTS_OF TEXT)
+    text = open('customer_feedback_627.txt').read()
+    matches = nlp(text)
 
 +infobox
     |  #[+label-inline API:] #[+api("matcher") #[code Matcher]]
