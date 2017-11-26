@@ -6,9 +6,6 @@ from __future__ import unicode_literals
 
 import pytest
 
-from ....util import compile_prefix_regex
-from ....lang.punctuation import TOKENIZER_PREFIXES
-
 
 PUNCT_OPEN = ['(', '[', '{', '*']
 PUNCT_CLOSE = [')', ']', '}', '*']
@@ -97,7 +94,7 @@ def test_ru_tokenizer_splits_double_end_quote(ru_tokenizer, text):
 @pytest.mark.parametrize('punct_open,punct_close', PUNCT_PAIRED)
 @pytest.mark.parametrize('text', ["Тест"])
 def test_ru_tokenizer_splits_open_close_punct(ru_tokenizer, punct_open,
-                                           punct_close, text):
+                                              punct_close, text):
     tokens = ru_tokenizer(punct_open + text + punct_close)
     assert len(tokens) == 3
     assert tokens[0].text == punct_open
@@ -109,7 +106,7 @@ def test_ru_tokenizer_splits_open_close_punct(ru_tokenizer, punct_open,
 @pytest.mark.parametrize('punct_open2,punct_close2', [("`", "'")])
 @pytest.mark.parametrize('text', ["Тест"])
 def test_ru_tokenizer_two_diff_punct(ru_tokenizer, punct_open, punct_close,
-                                  punct_open2, punct_close2, text):
+                                     punct_open2, punct_close2, text):
     tokens = ru_tokenizer(punct_open2 + punct_open + text + punct_close + punct_close2)
     assert len(tokens) == 5
     assert tokens[0].text == punct_open2
@@ -119,7 +116,7 @@ def test_ru_tokenizer_two_diff_punct(ru_tokenizer, punct_open, punct_close,
     assert tokens[4].text == punct_close2
 
 
-@pytest.mark.parametrize('text', [("Тест.")])
+@pytest.mark.parametrize('text', ["Тест."])
 def test_ru_tokenizer_splits_trailing_dot(ru_tokenizer, text):
     tokens = ru_tokenizer(text)
     assert tokens[1].text == "."

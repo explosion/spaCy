@@ -1,6 +1,6 @@
 # coding: utf8
 from ...symbols import (
-    ADJ, DET, NOUN, NUM, PRON, PROPN, VERB
+    ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
 )
 from ...lemmatizer import Lemmatizer
 
@@ -9,19 +9,22 @@ class RussianLemmatizer(Lemmatizer):
     _morph = None
 
     def __init__(self):
-        super().__init__()
+        super(RussianLemmatizer, self).__init__()
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:
             raise ImportError(
                 'The Russian lemmatizer requires the pymorphy2 library: '
-                'try to fix it with "pip install pymorphy2"')
+                'try to fix it with "pip install pymorphy2==0.8"')
 
         if RussianLemmatizer._morph is None:
             RussianLemmatizer._morph = MorphAnalyzer()
 
     def __call__(self, string, univ_pos, morphology=None):
         univ_pos = self.normalize_univ_pos(univ_pos)
+        if univ_pos == 'PUNCT':
+            return [PUNCT_RULES.get(string, string)]
+
         if univ_pos not in ('ADJ', 'DET', 'NOUN', 'NUM', 'PRON', 'PROPN', 'VERB'):
             # Skip unchangeable pos
             return [string.lower()]
@@ -39,7 +42,7 @@ class RussianLemmatizer(Lemmatizer):
 
         if not len(filtered_analyses):
             return [string.lower()]
-        if morphology is None:
+        if morphology is None or (len(morphology) == 1 and POS in morphology):
             return list(set([analysis.normal_form for analysis in filtered_analyses]))
 
         if univ_pos in ('ADJ', 'DET', 'NOUN', 'PROPN'):
@@ -55,7 +58,8 @@ class RussianLemmatizer(Lemmatizer):
         for analysis in analyses:
             _, analysis_morph = oc2ud(str(analysis.tag))
             for feature in features_to_compare:
-                if feature in morphology and morphology[feature] != analysis_morph[feature]:
+                if (feature in morphology and feature in analysis_morph
+                        and morphology[feature] != analysis_morph[feature]):
                     break
             else:
                 filtered_analyses.append(analysis)
@@ -76,6 +80,7 @@ class RussianLemmatizer(Lemmatizer):
             NUM: 'NUM',
             PRON: 'PRON',
             PROPN: 'PROPN',
+            PUNCT: 'PUNCT',
             VERB: 'VERB'
         }
         if univ_pos in symbols_to_str:
@@ -86,7 +91,6 @@ class RussianLemmatizer(Lemmatizer):
         # TODO
         raise NotImplementedError
 
-    # ('ADJ', 'DET', 'NOUN', 'NUM', 'PRON', 'PROPN', 'VERB'):
     def det(self, string, morphology=None):
         return self(string, 'det', morphology)
 
@@ -227,6 +231,7 @@ def oc2ud(oc_tag):
     return pos, morphology
 
 
-if __name__ == '__main__':
-    l = RussianLemmatizer()
-    print(l.noun('гвоздики', {'Gender': 'Fem'}))
+PUNCT_RULES = {
+    "«": "\"",
+    "»": "\""
+}

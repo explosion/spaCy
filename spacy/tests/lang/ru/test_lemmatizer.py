@@ -10,15 +10,15 @@ def ru_lemmatizer(RU):
     return RU.Defaults.create_lemmatizer()
 
 
-# @pytest.mark.models('ru')
-# def test_doc_lemmatization(RU):
-#     doc = Doc(RU.vocab, words=['мама', 'мыла', 'раму'])
-#     doc[0].tag_ = 'NOUN__Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing'
-#     doc[1].tag_ = 'VERB__Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act'
-#     doc[2].tag_ = 'NOUN__Animacy=Anim|Case=Acc|Gender=Fem|Number=Sing'
-#
-#     lemmas = [token.lemma_ for token in doc]
-#     assert lemmas == ['мама', 'мыть', 'рама']
+@pytest.mark.models('ru')
+def test_doc_lemmatization(RU):
+    doc = Doc(RU.vocab, words=['мама', 'мыла', 'раму'])
+    doc[0].tag_ = 'NOUN__Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing'
+    doc[1].tag_ = 'VERB__Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act'
+    doc[2].tag_ = 'NOUN__Animacy=Anim|Case=Acc|Gender=Fem|Number=Sing'
+
+    lemmas = [token.lemma_ for token in doc]
+    assert lemmas == ['мама', 'мыть', 'рама']
 
 
 @pytest.mark.models('ru')
@@ -57,12 +57,12 @@ def test_ru_lemmatizer_works_with_noun_homonyms(ru_lemmatizer, text, morphology,
     assert ru_lemmatizer.noun(text, morphology) == [lemma]
 
 
-# @pytest.mark.models('ru')
-# def test_ru_lemmatizer_punct(ru_lemmatizer):
-#     assert ru_lemmatizer.punct('“') == ['"']
-#     assert ru_lemmatizer.punct('“') == ['"']
-#
-#
+@pytest.mark.models('ru')
+def test_ru_lemmatizer_punct(ru_lemmatizer):
+    assert ru_lemmatizer.punct('«') == ['"']
+    assert ru_lemmatizer.punct('»') == ['"']
+
+
 # @pytest.mark.models('ru')
 # def test_ru_lemmatizer_lemma_assignment(RU):
 #     text = "А роза упала на лапу Азора."

@@ -42,7 +42,7 @@ def FR(request):
 
 @pytest.fixture()
 def RU(request):
-    return util.get_lang_class('ru')
+    pymorphy = pytest.importorskip('pymorphy2')
 
 
 #@pytest.fixture(params=_languages)

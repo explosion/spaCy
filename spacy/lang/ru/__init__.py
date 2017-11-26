@@ -5,6 +5,7 @@ from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .norm_exceptions import NORM_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
+from .tag_map import TAG_MAP
 from .lemmatizer import RussianLemmatizer
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -22,6 +23,7 @@ class RussianDefaults(Language.Defaults):
                                          BASE_NORMS, NORM_EXCEPTIONS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
+    tag_map = TAG_MAP
 
     @classmethod
     def create_lemmatizer(cls, nlp=None):
