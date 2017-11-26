@@ -354,7 +354,8 @@ p
         # append mock entity for match in displaCy style to matched_sents
         # get the match span by ofsetting the start and end of the span with the
         # start and end of the sentence in the doc
-        match_ents = [{'start': span.start-sent.start, 'end': span.end-sent.start,
+        match_ents = [{'start': span.start_char - sent.start_char, 
+                       'end': span.end_char - sent.start_char,
                        'label': 'MATCH'}]
         matched_sents.append({'text': sent.text, 'ents': match_ents })
 
