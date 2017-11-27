@@ -147,7 +147,7 @@ class Language(object):
         self._meta.setdefault('lang', self.vocab.lang)
         self._meta.setdefault('name', 'model')
         self._meta.setdefault('version', '0.0.0')
-        self._meta.setdefault('spacy_version', about.__version__)
+        self._meta.setdefault('spacy_version', '>={}'.format(about.__version__))
         self._meta.setdefault('description', '')
         self._meta.setdefault('author', '')
         self._meta.setdefault('email', '')
