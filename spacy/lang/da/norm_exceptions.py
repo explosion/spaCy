@@ -3,6 +3,8 @@
 Special-case rules for normalizing tokens to improve the model's predictions.
 For example 'mysterium' vs 'mysterie' and similar.
 """
+from __future__ import unicode_literals
+
 
 # Sources:
 # 1: https://dsn.dk/retskrivning/om-retskrivningsordbogen/mere-om-retskrivningsordbogen-2012/endrede-stave-og-ordformer/
