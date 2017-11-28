@@ -260,7 +260,7 @@ class Language(object):
         elif before and before in self.pipe_names:
             self.pipeline.insert(self.pipe_names.index(before), pipe)
         elif after and after in self.pipe_names:
-            self.pipeline.insert(self.pipe_names.index(after), pipe)
+            self.pipeline.insert(self.pipe_names.index(after) + 1, pipe)
         else:
             msg = "Can't find '{}' in pipeline. Available names: {}"
             unfound = before or after
