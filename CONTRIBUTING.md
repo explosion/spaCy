@@ -57,7 +57,7 @@ even format them as Markdown to copy-paste into GitHub issues:
 * **Checking the model compatibility:** If you're having problems with a
 [statistical model](https://spacy.io/models), it may be because to the
 model is incompatible with your spaCy installation. In spaCy v2.0+, you can check
-this on the command line by running `spacy validate`.
+this on the command line by running `python -m spacy validate`.
 
 * **Sharing a model's output, like dependencies and entities:** spaCy v2.0+
 comes with [built-in visualizers](https://spacy.io/usage/visualizers) that
