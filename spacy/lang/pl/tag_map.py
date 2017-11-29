@@ -1,6 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
-
+from ...symbols import POS, ADJ, CCONJ, SCONJ, NUM, ADV, ADP, X, VERB, NOUN
 
 TAG_MAP = {
     "adja": {POS: ADJ},
