@@ -113,8 +113,9 @@ IDS = {
     "SPACE": SPACE,
 
     "Animacy_anim": Animacy_anim,
-    "Animacy_inam": Animacy_inam,
+    "Animacy_inam": Animacy_inan,
     "Animacy_hum": Animacy_hum, # U20
+    "Animacy_hum": Animacy_nhum,
     "Aspect_freq": Aspect_freq,
     "Aspect_imp": Aspect_imp,
     "Aspect_mod": Aspect_mod,
