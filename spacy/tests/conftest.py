@@ -15,7 +15,7 @@ from .. import util
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'sv', 'xx']
+              'it', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'xx']
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_md'],
            'fr': ['fr_core_news_sm'],
@@ -38,6 +38,11 @@ def DE(request):
 @pytest.fixture(params=_models['fr'])
 def FR(request):
     return load_test_model(request.param)
+
+
+@pytest.fixture()
+def RU(request):
+    pymorphy = pytest.importorskip('pymorphy2')
 
 
 #@pytest.fixture(params=_languages)
@@ -135,6 +140,12 @@ def ja_tokenizer():
 def th_tokenizer():
     pythainlp = pytest.importorskip("pythainlp")
     return util.get_lang_class('th').Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def ru_tokenizer():
+    pymorphy = pytest.importorskip('pymorphy2')
+    return util.get_lang_class('ru').Defaults.create_tokenizer()
 
 
 @pytest.fixture
