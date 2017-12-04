@@ -100,3 +100,10 @@ def test_disable_pipes_context(nlp, name):
     with nlp.disable_pipes(name):
         assert not nlp.has_pipe(name)
     assert nlp.has_pipe(name)
+
+
+@pytest.mark.parametrize('n_pipes', [100])
+def test_add_lots_of_pipes(nlp, n_pipes):
+    for i in range(n_pipes):
+        nlp.add_pipe(lambda doc: doc, name='pipe_%d' % i)
+    assert len(nlp.pipe_names) == n_pipes

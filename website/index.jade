@@ -60,8 +60,8 @@ include _includes/_mixins
                 # Load English tokenizer, tagger, parser, NER and word vectors
                 nlp = spacy.load('en')
 
-                # Process a document, of any size
-                text = open('war_and_peace.txt').read()
+                # Process whole documents
+                text = open('customer_feedback_627.txt').read()
                 doc = nlp(text)
 
                 # Find named entities, phrases and concepts

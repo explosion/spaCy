@@ -467,6 +467,13 @@ cdef class Vocab:
             self._by_orth.set(lexeme.orth, lexeme)
             self.length += 1
 
+    def _reset_cache(self, keys, strings):
+        for k in keys:
+            del self._by_hash[k]
+
+        if len(strings) != 0:
+            self._by_orth = PreshMap()
+
 
 def pickle_vocab(vocab):
     sstore = vocab.strings

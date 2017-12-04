@@ -82,7 +82,7 @@ p
     unicorn_text = doc.vocab.strings[unicorn_hash] # '🦄 '
 
 +infobox
-    |  #[+label-inline API:] #[+api("stringstore") #[code stringstore]]
+    |  #[+label-inline API:] #[+api("stringstore") #[code StringStore]]
     |  #[+label-inline Usage:] #[+a("/usage/spacy-101#vocab") Vocab, hashes and lexemes 101]
 
 +h(3, "lightning-tour-entities") Recognise and update named entities
@@ -101,6 +101,28 @@ p
 
 +infobox
     |  #[+label-inline Usage:] #[+a("/usage/linguistic-features#named-entities") Named entity recognition]
+
++h(3, "lightning-tour-training") Train and update neural network models
+    +tag-model
+
++code.
+    import spacy
+    import random
+
+    nlp = spacy.load('en')
+    train_data = [("Uber blew through $1 million", {'entities': [(0, 4, 'ORG')]})]
+
+    with nlp.disable_pipes([pipe for pipe in nlp.pipe_names if pipe != 'ner']):
+        optimizer = nlp.begin_training()
+        for i in range(10):
+            random.shuffle(train_data)
+            for text, annotations in train_data:
+                nlp.update([text], [annotations] sgd=optimizer)
+    nlp.to_disk('/model')
+
++infobox
+    |  #[+label-inline API:] #[+api("language#update") #[code Language.update]]
+    |  #[+label-inline Usage:] #[+a("/usage/training") Training spaCy&apos;s statistical models]
 
 +h(3, "lightning-tour-displacy") Visualize a dependency parse and named entities in your browser
     +tag-model("dependency parse", "NER")
@@ -183,11 +205,11 @@ p
     from spacy.vocab import Vocab
 
     nlp = spacy.load('en')
-    moby_dick = open('moby_dick.txt', 'r').read()
-    doc = nlp(moby_dick)
-    doc.to_disk('/moby_dick.bin')
+    customer_feedback = open('customer_feedback_627.txt').read()
+    doc = nlp(customer_feedback)
+    doc.to_disk('/tmp/customer_feedback_627.bin')
 
-    new_doc = Doc(Vocab()).from_disk('/moby_dick.bin')
+    new_doc = Doc(Vocab()).from_disk('/tmp/customer_feedback_627.bin')
 
 +infobox
     |  #[+label-inline API:] #[+api("language") #[code Language]],
@@ -210,7 +232,8 @@ p
     pattern2 = [[{'ORTH': emoji, 'OP': '+'}] for emoji in ['😀', '😂', '🤣', '😍']]
     matcher.add('GoogleIO', None, pattern1) # match "Google I/O" or "Google i/o"
     matcher.add('HAPPY', set_sentiment, *pattern2) # match one or more happy emoji
-    matches = nlp(LOTS_OF TEXT)
+    text = open('customer_feedback_627.txt').read()
+    matches = nlp(text)
 
 +infobox
     |  #[+label-inline API:] #[+api("matcher") #[code Matcher]]
