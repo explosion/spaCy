@@ -477,26 +477,27 @@ cdef class Vocab:
 
 def pickle_vocab(vocab):
     sstore = vocab.strings
+    vectors = vocab.vectors
     morph = vocab.morphology
     length = vocab.length
     data_dir = vocab.data_dir
     lex_attr_getters = dill.dumps(vocab.lex_attr_getters)
     lexemes_data = vocab.lexemes_to_bytes()
     return (unpickle_vocab,
-            (sstore, morph, data_dir, lex_attr_getters, lexemes_data, length))
+            (sstore, vectors, morph, data_dir, lex_attr_getters, lexemes_data, length))
 
 
-def unpickle_vocab(sstore, morphology, data_dir,
+def unpickle_vocab(sstore, vectors, morphology, data_dir,
                    lex_attr_getters, bytes lexemes_data, int length):
     cdef Vocab vocab = Vocab()
     vocab.length = length
+    vocab.vectors = vectors
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = dill.loads(lex_attr_getters)
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
-    link_vectors_to_models(vocab)
     return vocab
 
 
