@@ -85,7 +85,7 @@ cdef class Vectors:
         return len(self.key2row)
 
     def __reduce__(self):
-        keys_and_rows = self.key2row.items()
+        keys_and_rows = tuple(self.key2row.items())
         return (unpickle_vectors, (keys_and_rows, self.data))
 
     def __getitem__(self, key):
