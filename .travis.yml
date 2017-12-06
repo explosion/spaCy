@@ -13,7 +13,7 @@ os:
   - linux
 
 env:
-  #- VIA=compile LC_ALL=en_US.ascii 
+  - VIA=compile 
   - VIA=flake8
   #- VIA=pypi_nightly
 
