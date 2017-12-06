@@ -21,6 +21,13 @@ p
     |  #[strong experiment on your data] to find a solution that works best
     |  for you.
 
++aside("Tip: Converting entity annotations", "💡")
+    |  You can train the entity recognizer with entity offsets or
+    |  annotations in the #[+a("/api/annotation#biluo") BILUO scheme]. The
+    |  #[code spacy.gold] module also exposes
+    |  #[+a("/api/goldparse#util") two helper functions] to convert offsets to
+    |  BILUO tags, and BILUO tags to entity offsets.
+
 +h(3, "example-train-ner") Updating the Named Entity Recognizer
 
 p
