@@ -188,7 +188,10 @@ p
     pasta = doc[6]
     hippo = doc[8]
     assert apple.similarity(banana) > pasta.similarity(hippo)
-    assert apple.has_vector, banana.has_vector, pasta.has_vector, hippo.has_vector
+    assert apple.has_vector
+    assert banana.has_vector
+    assert pasta.has_vector
+    assert hippo.has_vector
 
 p
     |  For the best results, you should run this example using the
