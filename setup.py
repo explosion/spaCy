@@ -200,7 +200,7 @@ def setup_package():
                 'regex==2017.4.5',
                 'ftfy>=4.4.2,<5.0.0',
                 'msgpack-python',
-                'msgpack-numpy'],
+                'msgpack-numpy==0.4.1'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
