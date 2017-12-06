@@ -22,7 +22,7 @@ class DanishDefaults(Language.Defaults):
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
                                          BASE_NORMS, NORM_EXCEPTIONS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    # morph_rules = MORPH_RULES
+    morph_rules = MORPH_RULES
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
 
