@@ -3,18 +3,15 @@ from __future__ import unicode_literals
 
 import plac
 import math
-
 from tqdm import tqdm
-
-import spacy
 import numpy
 from ast import literal_eval
 from pathlib import Path
 from preshed.counter import PreshCounter
 
-from spacy.compat import fix_text
-from spacy.vectors import Vectors
-from spacy.util import prints, ensure_path
+from ...compat import fix_text
+from ...vectors import Vectors
+from ...util import prints, ensure_path, get_lang_class
 
 
 @plac.annotations(
@@ -29,7 +26,7 @@ from spacy.util import prints, ensure_path
     prune_vectors=("optional: number of vectors to prune to",
                    "option", "V", int)
 )
-def main(lang, output_dir, freqs_loc, clusters_loc=None, vectors_loc=None, prune_vectors=-1):
+def init_model(lang, output_dir, freqs_loc, clusters_loc=None, vectors_loc=None, prune_vectors=-1):
     if not freqs_loc.exists():
         prints(freqs_loc, title="Can't find words frequencies file", exits=1)
     clusters_loc = ensure_path(clusters_loc)
@@ -48,8 +45,9 @@ def main(lang, output_dir, freqs_loc, clusters_loc=None, vectors_loc=None, prune
 
 
 def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, prune_vectors):
-    prints("Creating model...")
-    nlp = spacy.blank(lang)
+    print("Creating model...")
+    lang_class = get_lang_class(lang)
+    nlp = lang_class()
     for lexeme in nlp.vocab:
         lexeme.rank = 0
 
@@ -80,7 +78,7 @@ def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, pru
 
 
 def read_vectors(vectors_loc):
-    prints("Reading vectors...")
+    print("Reading vectors...")
     with vectors_loc.open() as f:
         shape = tuple(int(size) for size in f.readline().split())
         vectors_data = numpy.zeros(shape=shape, dtype='f')
@@ -94,7 +92,7 @@ def read_vectors(vectors_loc):
 
 
 def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
-    prints("Counting frequencies...")
+    print("Counting frequencies...")
     counts = PreshCounter()
     total = 0
     with freqs_loc.open() as f:
@@ -120,7 +118,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
 
 
 def read_clusters(clusters_loc):
-    prints("Reading clusters...")
+    print("Reading clusters...")
     clusters = {}
     with clusters_loc.open() as f:
         for line in tqdm(f):
@@ -144,7 +142,3 @@ def read_clusters(clusters_loc):
         if word.upper() not in clusters:
             clusters[word.upper()] = cluster
     return clusters
-
-
-if __name__ == '__main__':
-    plac.call(main)
