@@ -19,6 +19,7 @@ def unpickle_vectors(keys_and_rows, data):
     vectors = Vectors(data=data)
     for key, row in keys_and_rows:
         vectors.add(key, row=row)
+    return vectors
 
 
 cdef class Vectors:
