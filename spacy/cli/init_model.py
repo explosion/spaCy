@@ -27,6 +27,10 @@ from ..util import prints, ensure_path, get_lang_class
                    "option", "V", int)
 )
 def init_model(lang, output_dir, freqs_loc, clusters_loc=None, vectors_loc=None, prune_vectors=-1):
+    """
+    Create a new model from raw data, like word frequencies, Brown clusters
+    and word vectors.
+    """
     if not freqs_loc.exists():
         prints(freqs_loc, title="Can't find words frequencies file", exits=1)
     clusters_loc = ensure_path(clusters_loc)
