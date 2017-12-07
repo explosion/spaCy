@@ -478,6 +478,66 @@ p
         +cell model
         +cell A spaCy model containing the vocab and vectors.
 
++h(3, "init-model") Init Model
+    +tag-new(2)
+
+p
+    |  Create a new model directory from raw data, like word frequencies, Brown
+    |  clusters and word vectors. This command is similar to the
+    |  #[code spacy model] command in v1.x.
+
++code(false, "bash", "$", false, false, true).
+    python -m spacy init-model [lang] [output_dir] [freqs_loc] [--clusters-loc] [--vectors-loc] [--prune-vectors]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code lang]
+        +cell positional
+        +cell
+            |  Model language
+            |  #[+a("https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes") ISO code],
+            |  e.g. #[code en].
+
+    +row
+        +cell #[code output_dir]
+        +cell positional
+        +cell Model output directory. Will be created if it doesn't exist.
+
+    +row
+        +cell #[code freqs_loc]
+        +cell positional
+        +cell
+            |  Location of word frequencies file. Should be a tab-separated
+            |  file with three columns: frequency, document frequency and
+            |  frequency count.
+
+    +row
+        +cell #[code --clusters-loc], #[code -c]
+        +cell option
+        +cell
+            |  Optional location of clusters file. Should be a tab-separated
+            |  file with three columns: cluster, word and frequency.
+
+    +row
+        +cell #[code --vectors-loc], #[code -v]
+        +cell option
+        +cell
+            |  Optional location of vectors file. Should be a tab-separated
+            |  file where the first column contains the word and the remaining
+            |  columns the values.
+
+    +row
+        +cell #[code --prune-vectors], #[code -V]
+        +cell flag
+        +cell
+            |  Number of vectors to prune the vocabulary to. Defaults to
+            |  #[code -1] for no pruning.
+
+    +row("foot")
+        +cell creates
+        +cell model
+        +cell A spaCy model containing the vocab and vectors.
+
 +h(3, "evaluate") Evaluate
     +tag-new(2)
 
