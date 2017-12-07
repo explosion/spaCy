@@ -264,7 +264,7 @@ p
     def dependency_labels_to_root(token):
         """Walk up the syntactic tree, collecting the arc labels."""
         dep_labels = []
-        while token.head is not token:
+        while token.head != token:
             dep_labels.append(token.dep)
             token = token.head
         return dep_labels
