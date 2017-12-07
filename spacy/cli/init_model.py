@@ -9,20 +9,20 @@ from ast import literal_eval
 from pathlib import Path
 from preshed.counter import PreshCounter
 
-from ...compat import fix_text
-from ...vectors import Vectors
-from ...util import prints, ensure_path, get_lang_class
+from ..compat import fix_text
+from ..vectors import Vectors
+from ..util import prints, ensure_path, get_lang_class
 
 
 @plac.annotations(
     lang=("model language", "positional", None, str),
     output_dir=("model output directory", "positional", None, Path),
     freqs_loc=("location of words frequencies file", "positional",
-               None, Path),
+               "f", Path),
     clusters_loc=("optional: location of brown clusters data",
-                  "option", None, str),
+                  "option", "c", str),
     vectors_loc=("optional: location of vectors file in GenSim text format",
-                 "option", None, str),
+                 "option", "v", str),
     prune_vectors=("optional: number of vectors to prune to",
                    "option", "V", int)
 )
