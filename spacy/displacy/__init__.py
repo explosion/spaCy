@@ -97,7 +97,10 @@ def parse_deps(orig_doc, options={}):
                           word.lemma_, word.ent_type_))
         for span_props in spans:
             doc.merge(*span_props)
-    words = [{'text': w.text, 'tag': w.pos_} for w in doc]
+    if options.get('fine_grained'):
+        words = [{'text': w.text, 'tag': w.tag_} for w in doc]
+    else:
+        words = [{'text': w.text, 'tag': w.pos_} for w in doc]
     arcs = []
     for word in doc:
         if word.i < word.head.i:
