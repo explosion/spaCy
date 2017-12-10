@@ -165,12 +165,9 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                            gpu_wps=gpu_wps)
     finally:
         print("Saving model...")
-        try:
-            with (output_path / 'model-final.pickle').open('wb') as file_:
-                with nlp.use_params(optimizer.averages):
-                    dill.dump(nlp, file_, -1)
-        except:
-            print("Error saving model")
+        with (output_path / 'model-final.pickle').open('wb') as file_:
+            with nlp.use_params(optimizer.averages):
+                dill.dump(nlp, file_, -1)
 
 
 def _render_parses(i, to_render):
