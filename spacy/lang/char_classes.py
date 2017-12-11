@@ -15,9 +15,11 @@ _hebrew = r'[\p{L}&&\p{Hebrew}]'
 _latin_lower = r'[\p{Ll}&&\p{Latin}]'
 _latin_upper = r'[\p{Lu}&&\p{Latin}]'
 _latin = r'[[\p{Ll}||\p{Lu}]&&\p{Latin}]'
+_russian_lower = r'[ёа-я]'
+_russian_upper = r'[ЁА-Я]'
 
-_upper = [_latin_upper]
-_lower = [_latin_lower]
+_upper = [_latin_upper, _russian_upper]
+_lower = [_latin_lower, _russian_lower]
 _uncased = [_bengali, _hebrew]
 
 ALPHA = merge_char_classes(_upper + _lower + _uncased)
@@ -27,8 +29,9 @@ ALPHA_UPPER = merge_char_classes(_upper + _uncased)
 
 _units = ('km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm nm yd in ft '
           'kg g mg µg t lb oz m/s km/h kmh mph hPa Pa mbar mb MB kb KB gb GB tb '
-          'TB T G M K %')
-_currency = r'\$ £ € ¥ ฿ US\$ C\$ A\$'
+          'TB T G M K % км км² км³ м м² м³ дм дм² дм³ см см² см³ мм мм² мм³ нм '
+          'кг г мг м/с км/ч кПа Па мбар Кб КБ кб Мб МБ мб Гб ГБ гб Тб ТБ тб')
+_currency = r'\$ £ € ¥ ฿ US\$ C\$ A\$ ₽'
 
 # These expressions contain various unicode variations, including characters
 # used in Chinese (see #1333, #1340, #1351) – unless there are cross-language

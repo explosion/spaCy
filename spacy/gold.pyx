@@ -541,5 +541,24 @@ def biluo_tags_from_offsets(doc, entities, missing='O'):
     return biluo
 
 
+def offsets_from_biluo_tags(doc, tags):
+    """Encode per-token tags following the BILUO scheme into entity offsets.
+
+    doc (Doc): The document that the BILUO tags refer to.
+    entities (iterable): A sequence of BILUO tags with each tag describing one
+        token. Each tags string will be of the form of either "", "O" or
+        "{action}-{label}", where action is one of "B", "I", "L", "U".
+    RETURNS (list): A sequence of `(start, end, label)` triples. `start` and
+        `end` will be character-offset integers denoting the slice into the
+        original string.
+    """
+    token_offsets = tags_to_entities(tags)
+    offsets = []
+    for label, start_idx, end_idx in token_offsets:
+        span = doc[start_idx : end_idx + 1]
+        offsets.append((span.start_char, span.end_char, label))
+    return offsets
+
+
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'

@@ -1,4 +1,6 @@
+# coding: utf8
 from __future__ import unicode_literals
+
 import json
 import random
 import contextlib
@@ -6,7 +8,7 @@ import shutil
 import pytest
 import tempfile
 from pathlib import Path
-
+from thinc.neural.optimizers import Adam
 
 from ...gold import GoldParse
 from ...pipeline import EntityRecognizer

@@ -257,7 +257,11 @@ cdef class Token:
             inflectional suffixes.
         """
         def __get__(self):
-            return self.c.lemma
+            if self.c.lemma == 0:
+                lemma = self.vocab.morphology.lemmatizer.lookup(self.orth_)
+                return lemma
+            else:
+                return self.c.lemma
 
         def __set__(self, attr_t lemma):
             self.c.lemma = lemma
@@ -724,7 +728,10 @@ cdef class Token:
             with no inflectional suffixes.
         """
         def __get__(self):
-            return self.vocab.strings[self.c.lemma]
+            if self.c.lemma == 0:
+                return self.vocab.morphology.lemmatizer.lookup(self.orth_)
+            else:
+                return self.vocab.strings[self.c.lemma]
 
         def __set__(self, unicode lemma_):
             self.c.lemma = self.vocab.strings.add(lemma_)

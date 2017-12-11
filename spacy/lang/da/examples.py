@@ -11,7 +11,7 @@ Example sentences to test spaCy and its language models.
 
 
 sentences = [
-    "Apple overvejer at købe et britisk statup for 1 milliard dollar",
+    "Apple overvejer at købe et britisk startup for 1 milliard dollar",
     "Selvkørende biler flytter forsikringsansvaret over på producenterne",
     "San Francisco overvejer at forbyde leverandørrobotter på fortov",
     "London er en stor by i Storbritannien"

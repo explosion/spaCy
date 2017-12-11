@@ -44,7 +44,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     # add label to text classifier
     textcat.add_label('POSITIVE')
 
-    # load the IMBD dataset
+    # load the IMDB dataset
     print("Loading IMDB data...")
     (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
     print("Using {} examples ({} training, {} evaluation)"
