@@ -36,7 +36,8 @@ def main(model='en_core_web_sm'):
 
 def extract_currency_relations(doc):
     # merge entities and noun chunks into one token
-    for span in [*list(doc.ents), *list(doc.noun_chunks)]:
+    spans = list(doc.ents) + list(doc.noun_chunks)
+    for span in spans:
         span.merge()
 
     relations = []

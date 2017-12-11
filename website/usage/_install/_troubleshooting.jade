@@ -55,6 +55,24 @@ p
     |  the latest version of pip. To see which version you have installed,
     |  run #[code pip --version].
 
++h(3, "unknown-locale") Unknown locale: UTF-8
+
++code(false, "text").
+    ValueError: unknown locale: UTF-8
+
+p
+    |  This error can sometimes occur on OSX and is likely related to a
+    |  still unresolved #[+a("https://bugs.python.org/issue18378") Python bug].
+    |  However, it's easy to fix: just add the following to your
+    |  #[code ~&sol;.bash_profile] or #[code ~&sol;.zshrc] and then run
+    |  #[code source ~&sol;.bash_profile] or #[code source ~&sol;.zshrc].
+    |  Make sure to add #[strong both lines] for #[code LC_ALL] and
+    |  #[code LANG].
+
++code(false, "bash").
+    export LC_ALL=en_US.UTF-8
+    export LANG=en_US.UTF-8
+
 +h(3, "import-error") Import error
 
 +code(false, "text").

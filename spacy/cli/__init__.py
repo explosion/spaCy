@@ -7,4 +7,5 @@ from .train import train
 from .evaluate import evaluate
 from .convert import convert
 from .vocab import make_vocab as vocab
+from .init_model import init_model
 from .validate import validate

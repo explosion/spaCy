@@ -133,6 +133,10 @@ cdef class Tokenizer:
         for text in texts:
             yield self(text)
 
+    def _reset_cache(self, keys):
+        for k in keys:
+            del self._cache[k]
+
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
@@ -238,14 +242,17 @@ cdef class Tokenizer:
                     # let's say we have dyn-o-mite-dave - the regex finds the
                     # start and end positions of the hyphens
                     start = 0
+                    start_before_infixes = start
                     for match in matches:
                         infix_start = match.start()
                         infix_end = match.end()
-                        if infix_start == start:
+
+                        if infix_start == start_before_infixes:
                             continue
 
-                        span = string[start:infix_start]
-                        tokens.push_back(self.vocab.get(tokens.mem, span), False)
+                        if infix_start != start:
+                            span = string[start:infix_start]
+                            tokens.push_back(self.vocab.get(tokens.mem, span), False)
 
                         if infix_start != infix_end:
                             # If infix_start != infix_end, it means the infix

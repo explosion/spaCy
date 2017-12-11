@@ -8,15 +8,17 @@ from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 class Lemmatizer(object):
     @classmethod
     def load(cls, path, index=None, exc=None, rules=None, lookup=None):
-        return cls(index or {}, exc or {}, rules or {}, lookup or {})
+        return cls(index, exc, rules, lookup)
 
     def __init__(self, index=None, exceptions=None, rules=None, lookup=None):
-        self.index = index if index is not None else {}
-        self.exc = exceptions if exceptions is not None else {}
-        self.rules = rules if rules is not None else {}
+        self.index = index
+        self.exc = exceptions
+        self.rules = rules
         self.lookup_table = lookup if lookup is not None else {}
 
     def __call__(self, string, univ_pos, morphology=None):
+        if not self.rules:
+            return [self.lookup_table.get(string, string)]
         if univ_pos in (NOUN, 'NOUN', 'noun'):
             univ_pos = 'noun'
         elif univ_pos in (VERB, 'VERB', 'verb'):

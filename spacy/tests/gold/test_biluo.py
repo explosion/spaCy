@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...gold import biluo_tags_from_offsets
+from ...gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from ...tokens.doc import Doc
 
 import pytest
@@ -41,3 +41,14 @@ def test_gold_biluo_misalign(en_vocab):
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), 'LOC')]
     tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ['O', 'O', 'O', '-', '-', '-']
+
+
+def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
+    text = "I flew to Silicon Valley via London."
+    biluo_tags = ['O', 'O', 'O', 'B-LOC', 'L-LOC', 'O', 'U-GPE', 'O']
+    offsets = [(10, 24, 'LOC'), (29, 35, 'GPE')]
+    doc = en_tokenizer(text)
+    biluo_tags_converted = biluo_tags_from_offsets(doc, offsets)
+    assert biluo_tags_converted == biluo_tags
+    offsets_converted = offsets_from_biluo_tags(doc, biluo_tags)
+    assert offsets_converted == offsets

@@ -147,7 +147,7 @@ class Language(object):
         self._meta.setdefault('lang', self.vocab.lang)
         self._meta.setdefault('name', 'model')
         self._meta.setdefault('version', '0.0.0')
-        self._meta.setdefault('spacy_version', about.__version__)
+        self._meta.setdefault('spacy_version', '>={}'.format(about.__version__))
         self._meta.setdefault('description', '')
         self._meta.setdefault('author', '')
         self._meta.setdefault('email', '')
@@ -260,7 +260,7 @@ class Language(object):
         elif before and before in self.pipe_names:
             self.pipeline.insert(self.pipe_names.index(before), pipe)
         elif after and after in self.pipe_names:
-            self.pipeline.insert(self.pipe_names.index(after), pipe)
+            self.pipeline.insert(self.pipe_names.index(after) + 1, pipe)
         else:
             msg = "Can't find '{}' in pipeline. Available names: {}"
             unfound = before or after
@@ -502,19 +502,19 @@ class Language(object):
                 pass
 
     def pipe(self, texts, as_tuples=False, n_threads=2, batch_size=1000,
-             disable=[]):
+             disable=[], cleanup=False):
         """Process texts as a stream, and yield `Doc` objects in order.
-        Supports GIL-free multi-threading.
 
         texts (iterator): A sequence of texts to process.
         as_tuples (bool):
             If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
-        n_threads (int): The number of worker threads to use. If -1, OpenMP
-            will decide how many to use at run time. Default is 2.
+        n_threads (int): Currently inactive.
         batch_size (int): The number of texts to buffer.
         disable (list): Names of the pipeline components to disable.
+        cleanup (bool): If True, unneeded strings are freed,
+            to control memory use. Experimental.
         YIELDS (Doc): Documents in the order of the original text.
 
         EXAMPLE:
@@ -547,24 +547,27 @@ class Language(object):
         # in the string store.
         recent_refs = weakref.WeakSet()
         old_refs = weakref.WeakSet()
-        # If there is anything that we have inside — after iterations we should
-        # carefully get it back.
-        original_strings_data = list(self.vocab.strings)
+        # Keep track of the original string data, so that if we flush old strings,
+        # we can recover the original ones. However, we only want to do this if we're
+        # really adding strings, to save up-front costs.
+        original_strings_data = None
         nr_seen = 0
         for doc in docs:
             yield doc
-            recent_refs.add(doc)
-            if nr_seen < 10000:
-                old_refs.add(doc)
-                nr_seen += 1
-            elif len(old_refs) == 0:
-                self.vocab.strings._cleanup_stale_strings()
-                nr_seen = 0
-        # We can't know which strings from the last batch have really expired.
-        # So we don't erase the strings — we just extend with the original
-        # content.
-        for string in original_strings_data:
-            self.vocab.strings.add(string)
+            if cleanup:
+                recent_refs.add(doc)
+                if nr_seen < 10000:
+                    old_refs.add(doc)
+                    nr_seen += 1
+                elif len(old_refs) == 0:
+                    old_refs, recent_refs = recent_refs, old_refs
+                    if original_strings_data is None:
+                        original_strings_data = list(self.vocab.strings)
+                    else:
+                        keys, strings = self.vocab.strings._cleanup_stale_strings(original_strings_data)
+                        self.vocab._reset_cache(keys, strings)
+                        self.tokenizer._reset_cache(keys)
+                    nr_seen = 0
 
     def to_disk(self, path, disable=tuple()):
         """Save the current state to a directory.  If a model is loaded, this

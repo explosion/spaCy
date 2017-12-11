@@ -3,7 +3,6 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from pathlib import Path
-import dill
 import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
@@ -165,12 +164,9 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                            gpu_wps=gpu_wps)
     finally:
         print("Saving model...")
-        try:
-            with (output_path / 'model-final.pickle').open('wb') as file_:
-                with nlp.use_params(optimizer.averages):
-                    dill.dump(nlp, file_, -1)
-        except:
-            print("Error saving model")
+        with nlp.use_params(optimizer.averages):
+            final_model_path = output_path / 'model-final'
+            nlp.to_disk(final_model_path)
 
 
 def _render_parses(i, to_render):
