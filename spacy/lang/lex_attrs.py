@@ -74,6 +74,8 @@ def like_email(text):
 
 
 def like_url(text):
+    if '@' in text:  # prevent matches on e-mail addresses
+        return False
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
     if text.startswith('http://') or text.startswith('https://'):
