@@ -4,7 +4,7 @@ p
     |  There are lots of conflicting "recipes" for training deep neural
     |  networks at the moment. The cutting-edge models take a very long time to
     |  train, so most researchers can't run enough experiments to figure out
-    |  what's #[em really] going on. For what it's worth, here's a recipe seems
+    |  what's #[em really] going on. For what it's worth, here's a recipe that seems
     |  to work well on a lot of NLP problems:
 
 +list("numbers")
@@ -113,7 +113,7 @@ p
 +h(3, "tips-param-avg") Parameter averaging
 
 p
-    |  The last part of our optimisation recipe is #[strong parameter averaging],
+    |  The last part of our optimization recipe is #[strong parameter averaging],
     |  an old trick introduced by
     |  #[+a("https://cseweb.ucsd.edu/~yfreund/papers/LargeMarginsUsingPerceptron.pdf") Freund and Schapire (1999)],
     |  popularised in the NLP community by
@@ -126,7 +126,7 @@ p
 
 p
     |  The trick is to store the moving average of the weights during training.
-    |  We don't optimise this average – we just track it. Then  when we want to
+    |  We don't optimize this average – we just track it. Then  when we want to
     |  actually use the model, we use the averages, not the most recent value.
     |  In spaCy (and #[+a(gh("thinc")) Thinc]) this is done by using a
     |  context manager, #[+api("language#use_params") #[code use_params]], to
