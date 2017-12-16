@@ -8,43 +8,44 @@ include _includes/_mixins
 
 doctype html
 html(lang="en")
-    title
-        if SECTION == "api" || SECTION == "usage" || SECTION == "models"
-            - var title_section = (SECTION == "api") ? "API" : SECTION.charAt(0).toUpperCase() + SECTION.slice(1)
-            | #{title} | #{SITENAME} #{title_section} Documentation
+    head
+        title
+            if SECTION == "api" || SECTION == "usage" || SECTION == "models"
+                - var title_section = (SECTION == "api") ? "API" : SECTION.charAt(0).toUpperCase() + SECTION.slice(1)
+                | #{title} | #{SITENAME} #{title_section} Documentation
 
-        else if SECTION != "index"
-            | #{title} | #{SITENAME}
+            else if SECTION != "index"
+                | #{title} | #{SITENAME}
+
+            else
+                | #{SITENAME} - #{SLOGAN}
+
+        meta(charset="utf-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        meta(name="referrer" content="always")
+        meta(name="description" content=description)
+
+        meta(property="og:type" content="website")
+        meta(property="og:site_name" content=sitename)
+        meta(property="og:url" content="#{SITE_URL}/#{current.path.join('/')}")
+        meta(property="og:title" content=social_title)
+        meta(property="og:description" content=description)
+        meta(property="og:image" content=social_img)
+
+        meta(name="twitter:card" content="summary_large_image")
+        meta(name="twitter:site" content="@" + SOCIAL.twitter)
+        meta(name="twitter:title" content=social_title)
+        meta(name="twitter:description" content=description)
+        meta(name="twitter:image" content=social_img)
+
+        link(rel="shortcut icon" href="/assets/img/favicon.ico")
+        link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
+
+        if SECTION == "api"
+            link(href="/assets/css/style_green.css?v#{V_CSS}" rel="stylesheet")
 
         else
-            | #{SITENAME} - #{SLOGAN}
-
-    meta(charset="utf-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    meta(name="referrer" content="always")
-    meta(name="description" content=description)
-
-    meta(property="og:type" content="website")
-    meta(property="og:site_name" content=sitename)
-    meta(property="og:url" content="#{SITE_URL}/#{current.path.join('/')}")
-    meta(property="og:title" content=social_title)
-    meta(property="og:description" content=description)
-    meta(property="og:image" content=social_img)
-
-    meta(name="twitter:card" content="summary_large_image")
-    meta(name="twitter:site" content="@" + SOCIAL.twitter)
-    meta(name="twitter:title" content=social_title)
-    meta(name="twitter:description" content=description)
-    meta(name="twitter:image" content=social_img)
-
-    link(rel="shortcut icon" href="/assets/img/favicon.ico")
-    link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
-
-    if SECTION == "api"
-        link(href="/assets/css/style_green.css?v#{V_CSS}" rel="stylesheet")
-
-    else
-        link(href="/assets/css/style.css?v#{V_CSS}" rel="stylesheet")
+            link(href="/assets/css/style.css?v#{V_CSS}" rel="stylesheet")
 
     body
         include _includes/_svg
