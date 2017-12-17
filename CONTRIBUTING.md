@@ -88,6 +88,7 @@ requests:
 | [`models`](https://github.com/explosion/spaCy/labels/models), `language / [name]` | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
+| [`compat`](https://github.com/explosion/spaCy/labels/compat) | Cross-platform and cross-Python compatibility issues |
 | [`wip`](https://github.com/explosion/spaCy/labels/wip) | Work in progress, mostly used for pull requests |
 | [`v1`](https://github.com/explosion/spaCy/labels/v1) | Reports related to spaCy v1.x |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
