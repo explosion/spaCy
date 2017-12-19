@@ -87,7 +87,7 @@ for orth in [
         "lic.", "lign.", "lin.", "ling.merc.", "litt.", "Ll.", "loc.cit.",
         "lok.", "lrs.", "ltr.", "m/s", "M/S", "m.a.o.", "m.fl.", "m.m.", "m.v.",
         "m.v.h.", "Mag.", "maks.", "md.", "mdr.", "mdtl.", "mezz.", "mfl.",
-        "m.h.p.", "m.h.t", "mht.", "mik.", "min.", "mio.", "modt.", "Mr.",
+        "m.h.p.", "m.h.t", "m.h.t.", "mht.", "mik.", "min.", "mio.", "modt.", "Mr.",
         "mrk.", "mul.", "mv.", "n.br.", "n.f.", "nat.", "nb.", "Ndr.",
         "nedenst.", "nl.", "nr.", "Nr.", "nto.", "nuv.", "o/m", "o.a.", "o.fl.",
         "o.h.", "o.l.", "o.lign.", "o.m.a.", "o.s.fr.", "obl.", "obs.",
