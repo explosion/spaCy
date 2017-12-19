@@ -143,10 +143,10 @@ p
 
 +code.
     doc = nlp(u'Credit and mortgage account holders must submit their requests')
-    root = [token for token in doc if token.head is token][0]
+    root = [token for token in doc if token.head == token][0]
     subject = list(root.lefts)[0]
     for descendant in subject.subtree:
-        assert subject.is_ancestor(descendant)
+        assert subject is descendant or subject.is_ancestor(descendant)
         print(descendant.text, descendant.dep_, descendant.n_lefts, descendant.n_rights,
               [ancestor.text for ancestor in descendant.ancestors])
 
