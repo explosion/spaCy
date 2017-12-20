@@ -148,14 +148,9 @@ for h in range(1, 31 + 1):
         _exc["%d%s" % (h, period)] = [{ORTH: "%d." % h}]
 
 _custom_base_exc = {
-    "i.": [{
-        ORTH: "i",
-        LEMMA: "i",
-        NORM: "i"
-    }, {
-        ORTH: ".",
-        TAG: PUNCT
-    }]
+    "i.": [
+        {ORTH: "i", LEMMA: "i", NORM: "i"},
+        {ORTH: ".", TAG: PUNCT}]
 }
 _exc.update(_custom_base_exc)
 
