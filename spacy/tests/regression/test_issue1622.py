@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import json
 from tempfile import NamedTemporaryFile
+import pytest
 
 from ...cli.train import train
 
