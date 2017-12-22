@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 from ...cli.train import train
 
 
+@pytest.mark.xfail
 def test_cli_trained_model_can_be_saved(tmpdir):
     cmd = None
     lang = 'nl'
