@@ -21,7 +21,7 @@ TRAIN_DATA = [
         'heads': [1, 1, 4, 4, 5, 1, 1],
         'deps': ['nsubj', 'ROOT', 'compound', 'punct', 'nmod', 'dobj', 'punct']
     }),
-    ("I like London and Berlin", {
+    ("I like London and Berlin.", {
         'heads': [1, 1, 1, 2, 2, 1],
         'deps': ['nsubj', 'ROOT', 'dobj', 'cc', 'conj', 'punct']
     })

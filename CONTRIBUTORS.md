@@ -12,6 +12,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Ben Eyal, [@beneyal](https://github.com/beneyal)
 * Bhargav Srinivasa, [@bhargavvader](https://github.com/bhargavvader)
 * Bruno P. Kinoshita, [@kinow](https://github.com/kinow)
+* Canbey Bilgili, [@cbilgili](https://github.com/cbilgili)
 * Chris DuBois, [@chrisdubois](https://github.com/chrisdubois)
 * Christoph Schwienheer, [@chssch](https://github.com/chssch)
 * Dafne van Kuppevelt, [@dafnevk](https://github.com/dafnevk)

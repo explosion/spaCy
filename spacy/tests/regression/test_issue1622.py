@@ -2,10 +2,12 @@
 from __future__ import unicode_literals
 import json
 from tempfile import NamedTemporaryFile
+import pytest
 
 from ...cli.train import train
 
 
+@pytest.mark.xfail
 def test_cli_trained_model_can_be_saved(tmpdir):
     cmd = None
     lang = 'nl'
