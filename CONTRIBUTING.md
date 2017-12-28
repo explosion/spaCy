@@ -43,7 +43,7 @@ opening an issue to report the bug, simply refer to your pull request in the
 issue body. A few more tips:
 
 * **Describing your issue:** Try to provide as many details as possible. What
-exactly goes wrong? *How* is is failing? Is there an error?
+exactly goes wrong? *How* is it failing? Is there an error?
 "XY doesn't work" usually isn't that helpful for tracking down problems. Always
 remember to include the code you ran and if possible, extract only the relevant
 parts and don't just dump your entire script. This will make it easier for us to
@@ -88,6 +88,7 @@ requests:
 | [`models`](https://github.com/explosion/spaCy/labels/models), `language / [name]` | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
+| [`compat`](https://github.com/explosion/spaCy/labels/compat) | Cross-platform and cross-Python compatibility issues |
 | [`wip`](https://github.com/explosion/spaCy/labels/wip) | Work in progress, mostly used for pull requests |
 | [`v1`](https://github.com/explosion/spaCy/labels/v1) | Reports related to spaCy v1.x |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
