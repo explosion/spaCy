@@ -125,6 +125,11 @@ def he_tokenizer():
 
 
 @pytest.fixture
+def hi_tokenizer():
+    return util.get_lang_class('hi').Defaults.create_tokenizer()
+
+
+@pytest.fixture
 def nb_tokenizer():
     return util.get_lang_class('nb').Defaults.create_tokenizer()
 
