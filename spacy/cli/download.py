@@ -51,6 +51,7 @@ def download(cmd, model, direct=False):
                     "nlp = spacy.load('%s')" % model_name,
                     title="Download successful but linking failed")
 
+
 def get_json(url, desc):
     r = requests.get(url)
     if r.status_code != 200:
