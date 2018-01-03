@@ -401,11 +401,11 @@ p
 +aside-code("Example").
     from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
     from spacy.tokens import Doc
-    doc = nlp(text)
+    doc = nlp("Hello world!")
     np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
-    doc2 = Doc(doc.vocab)
+    doc2 = Doc(doc.vocab, words=[t.text for t in doc])
     doc2.from_array([LOWER, POS, ENT_TYPE, IS_ALPHA], np_array)
-    assert doc.text == doc2.text
+    assert doc[0].pos_ == doc2[0].pos_
 
 +table(["Name", "Type", "Description"])
     +row
