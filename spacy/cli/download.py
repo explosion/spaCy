@@ -49,8 +49,7 @@ def download(cmd, model, direct=False):
                     "you don't have admin permissions?), but you can still "
                     "load the model via its full package name:",
                     "nlp = spacy.load('%s')" % model_name,
-                    title="Download successful")
-
+                    title="Download successful but linking failed")
 
 def get_json(url, desc):
     r = requests.get(url)
