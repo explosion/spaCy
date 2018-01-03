@@ -99,5 +99,5 @@ you how run-time usage will eventually look.
 ## Getting updates
 
 We should have the blog post explaining the model ready before the end of the week. To get
-notified when it's published, you can either the follow me on [Twitter](https://twitter.com/honnibal),
+notified when it's published, you can either follow me on [Twitter](https://twitter.com/honnibal)
 or subscribe to our [mailing list](http://eepurl.com/ckUpQ5).
