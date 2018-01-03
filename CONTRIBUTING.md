@@ -150,7 +150,7 @@ recipes, that does provide some argument for bringing it "in house".
 
 ### Getting started
 
-To make changes to spaCy's code base, you need to clone the GitHub repository
+To make changes to spaCy's code base, you need to fork then clone the GitHub repository
 and build spaCy from source. You'll need to make sure that you have a
 development environment consisting of a Python distribution including header
 files, a compiler, [pip](https://pip.pypa.io/en/latest/installing/),
