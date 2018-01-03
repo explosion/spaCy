@@ -13,7 +13,7 @@ from .. import util
 @plac.annotations(
     model=("optional: shortcut link of model", "positional", None, str),
     markdown=("generate Markdown for GitHub issues", "flag", "md", str))
-def info(cmd, model=None, markdown=False):
+def info(_cmd, model=None, markdown=False):
     """Print info about spaCy installation. If a model shortcut link is
     speficied as an argument, print model information. Flag --markdown
     prints details in Markdown for easy copy-pasting to GitHub issues.

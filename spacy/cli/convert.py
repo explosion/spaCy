@@ -24,7 +24,7 @@ CONVERTERS = {
     n_sents=("Number of sentences per doc", "option", "n", int),
     converter=("Name of converter (auto, iob, conllu or ner)", "option", "c", str),
     morphology=("Enable appending morphology to tags", "flag", "m", bool))
-def convert(cmd, input_file, output_dir, n_sents=1, morphology=False,
+def convert(_cmd, input_file, output_dir, n_sents=1, morphology=False,
             converter='auto'):
     """
     Convert files into JSON format for use with train command and other
