@@ -34,11 +34,18 @@ def link(cmd, origin, link_name, force=False, model_path=None):
                "located here:", path2str(spacy_loc), exits=1,
                title="Can't find the spaCy data path to create model symlink")
     link_path = util.get_data_path() / link_name
-    if link_path.exists() and not force:
+    if link_path.is_symlink() and not force:
         prints("To overwrite an existing link, use the --force flag.",
                title="Link %s already exists" % link_name, exits=1)
-    elif link_path.exists():
+    elif link_path.is_symlink():  # does a symlink exist?
+        # NB: It's important to check for is_symlink here and not for exists,
+        # because invalid/outdated symlinks would return False otherwise.
         link_path.unlink()
+    elif link_path.exists(): # does it exist otherwise?
+        # NB: Check this last because valid symlinks also "exist".
+        prints("This can happen if your data directory contains a directory "
+               "or file of the same name.", link_path,
+               title="Can't overwrite symlink %s" % link_name, exits=1)
     try:
         symlink_to(link_path, model_path)
     except:
