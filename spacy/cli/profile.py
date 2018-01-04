@@ -29,7 +29,7 @@ def read_inputs(loc):
 @plac.annotations(
     lang=("model/language", "positional", None, str),
     inputs=("Location of input file", "positional", None, read_inputs))
-def profile(_cmd, lang, inputs=None):
+def profile(lang, inputs=None):
     """
     Profile a spaCy pipeline, to find out which functions take the most time.
     """

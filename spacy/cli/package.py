@@ -20,7 +20,7 @@ from .. import about
                  "the command line prompt", "flag", "c", bool),
     force=("force overwriting of existing model directory in output directory",
            "flag", "f", bool))
-def package(_cmd, input_dir, output_dir, meta_path=None, create_meta=False,
+def package(input_dir, output_dir, meta_path=None, create_meta=False,
             force=False):
     """
     Generate Python package for model data, including meta and required
