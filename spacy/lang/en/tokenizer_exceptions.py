@@ -213,7 +213,8 @@ for verb_data in [
     {ORTH: "could", NORM: "could", TAG: "MD"},
     {ORTH: "might", NORM: "might", TAG: "MD"},
     {ORTH: "must", NORM: "must", TAG: "MD"},
-    {ORTH: "should", NORM: "should", TAG: "MD"}]:
+    {ORTH: "should", NORM: "should", TAG: "MD"},
+    {ORTH: "would", NORM: "would", TAG: "MD"}]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
     for data in [verb_data, verb_data_tc]:
