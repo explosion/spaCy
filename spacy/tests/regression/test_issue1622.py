@@ -9,7 +9,6 @@ from ...cli.train import train
 
 @pytest.mark.xfail
 def test_cli_trained_model_can_be_saved(tmpdir):
-    cmd = None
     lang = 'nl'
     output_dir = str(tmpdir)
     train_file = NamedTemporaryFile('wb', dir=output_dir, delete=False)
