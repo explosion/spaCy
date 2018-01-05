@@ -86,6 +86,6 @@ def test_cli_trained_model_can_be_saved(tmpdir):
 
     # spacy train -n 1 -g -1 nl output_nl training_corpus.json training \
     # corpus.json
-    train(cmd, lang, output_dir, train_data, dev_data, n_iter=1)
+    train(lang, output_dir, train_data, dev_data, n_iter=1)
 
     assert True
