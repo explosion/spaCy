@@ -32,6 +32,8 @@ def like_num(text):
             return True
     if text.lower() in _num_words:
         return True
+    if text.lower() in _ordinal_words:
+        return True
     return False
 
 
