@@ -10,7 +10,7 @@ from ..util import prints, get_data_path, read_json
 from .. import about
 
 
-def validate(_cmd):
+def validate():
     """Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """

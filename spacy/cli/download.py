@@ -16,7 +16,7 @@ from .. import about
     model=("model to download, shortcut or name)", "positional", None, str),
     direct=("force direct download. Needs model name with version and won't "
             "perform compatibility check", "flag", "d", bool))
-def download(_cmd, model, direct=False):
+def download(model, direct=False):
     """
     Download compatible model from default download path using pip. Model
     can be shortcut, model name or, if --direct flag is set, full model name
@@ -38,8 +38,7 @@ def download(_cmd, model, direct=False):
                 # package, which fails if model was just installed via
                 # subprocess
                 package_path = get_package_path(model_name)
-                link(None, model_name, model, force=True,
-                     model_path=package_path)
+                link(model_name, model, force=True, model_path=package_path)
             except:
                 # Dirty, but since spacy.download and the auto-linking is
                 # mostly a convenience wrapper, it's best to show a success
