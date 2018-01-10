@@ -21,8 +21,7 @@ from ..util import prints, ensure_path
     prune_vectors=("optional: number of vectors to prune to.",
                    "option", "V", int)
 )
-def make_vocab(cmd, lang, output_dir, lexemes_loc,
-               vectors_loc=None, prune_vectors=-1):
+def make_vocab(lang, output_dir, lexemes_loc, vectors_loc=None, prune_vectors=-1):
     """Compile a vocabulary from a lexicon jsonl file and word vectors."""
     if not lexemes_loc.exists():
         prints(lexemes_loc, title="Can't find lexical data", exits=1)

@@ -13,7 +13,7 @@ from .. import util
     origin=("package name or local path to model", "positional", None, str),
     link_name=("name of shortuct link to create", "positional", None, str),
     force=("force overwriting of existing link", "flag", "f", bool))
-def link(cmd, origin, link_name, force=False, model_path=None):
+def link(origin, link_name, force=False, model_path=None):
     """
     Create a symlink for models within the spacy/data directory. Accepts
     either the name of a pip package, or the local path to the model data

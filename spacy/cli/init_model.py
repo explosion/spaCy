@@ -25,7 +25,7 @@ from ..util import prints, ensure_path, get_lang_class
     prune_vectors=("optional: number of vectors to prune to",
                    "option", "V", int)
 )
-def init_model(_cmd, lang, output_dir, freqs_loc, clusters_loc=None, vectors_loc=None, prune_vectors=-1):
+def init_model(lang, output_dir, freqs_loc, clusters_loc=None, vectors_loc=None, prune_vectors=-1):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
