@@ -122,7 +122,6 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
             else:
                 pattern[i].attrs[j].value = value
                 pattern[i].attrs[j].is_regex = False
-                memset(&(pattern[i].attrs[j].regex), 0, sizeof(regex_t))
     i = len(token_specs)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
