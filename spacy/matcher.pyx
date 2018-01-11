@@ -63,6 +63,7 @@ cdef extern from "regex.h" nogil:
     int regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
     void regfree(regex_t* preg)
 
+
 cpdef enum quantifier_t:
     _META
     ONE
@@ -150,10 +151,8 @@ cdef int get_action(const TokenPatternC* pattern, const TokenC* token, char* tok
     cdef attr_t token_attr_value
     for attr in pattern.attrs[:pattern.nr_attr]:
         token_attr_value = get_token_attr(token, attr.attr)
-        if token_attr_value != attr.value:
+        if token_attr_value != attr.value and (attr.is_regex == False or _regex_match(token_string, &(attr.regex)) == 0):
             if pattern.quantifier == ONE:
-                if attr.is_regex and _regex_match(token_string, &(attr.regex)):
-                    return ACCEPT
                 return REJECT
             elif pattern.quantifier == ZERO:
                 return ACCEPT if lookahead.nr_attr == 0 else ADVANCE
@@ -373,7 +372,8 @@ cdef class Matcher:
             # Go over the open matches, extending or finalizing if able.
             # Otherwise, we over-write them (q doesn't advance)
             for state in partials:
-                token_string = self.vocab.strings[token.lex.orth].encode('utf-8')
+                token_string = self.vocab.strings[token.lex.orth]
+                token_string = token_string.encode('utf-8')
                 action = get_action(state.second, token, token_string)
                 if action == PANIC:
                     raise Exception("Error selecting action in matcher")
@@ -406,7 +406,8 @@ cdef class Matcher:
             partials.resize(q)
             # Check whether we open any new patterns on this token
             for pattern in self.patterns:
-                token_string = self.vocab.strings[token.lex.orth].encode('utf-8')
+                token_string = self.vocab.strings[token.lex.orth]
+                token_string = token_string.encode('utf-8')
                 action = get_action(pattern, token, token_string)
                 if action == PANIC:
                     raise Exception("Error selecting action in matcher")

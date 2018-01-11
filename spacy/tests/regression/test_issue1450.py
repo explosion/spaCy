@@ -4,6 +4,7 @@ import pytest
 from ...matcher import Matcher
 from ...tokens import Doc
 from ...vocab import Vocab
+from ..util import get_doc
 
 
 @pytest.mark.parametrize(
@@ -17,9 +18,9 @@ from ...vocab import Vocab
         ('a b b', 0, 2),
     ]
 )
-def test_issue1450_matcher_end_zero_plus(string, start, end):
+def test_issue1450_matcher_end_zero_plus(en_vocab, string, start, end):
     '''Test matcher works when patterns end with * operator.
-    
+
     Original example (rewritten to avoid model usage)
 
     nlp = spacy.load('en_core_web_sm')
@@ -39,8 +40,12 @@ def test_issue1450_matcher_end_zero_plus(string, start, end):
     assert len(matches) == 1
     assert matches[0][1] == 4
     assert matches[0][2] == 5
+
+    ---------------------------
+    Changed the
     '''
-    matcher = Matcher(Vocab())
+    words = string.split()
+    matcher = Matcher(en_vocab)
     matcher.add(
         "TSTEND",
         None,
@@ -49,10 +54,10 @@ def test_issue1450_matcher_end_zero_plus(string, start, end):
             {'ORTH': "b", 'OP': "*"}
         ]
     )
-    doc = Doc(Vocab(), words=string.split())
+    doc = get_doc(en_vocab, words)
     matches = matcher(doc)
     if start is None or end is None:
         assert matches == []
-    
+
     assert matches[0][1] == start
     assert matches[0][2] == end
