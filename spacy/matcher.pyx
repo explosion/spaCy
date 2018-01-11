@@ -119,7 +119,6 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
                 py_bytes = value.encode('utf-8')
                 regcomp(&(pattern[i].attrs[j].regex), py_bytes, REG_EXTENDED)
                 pattern[i].attrs[j].is_regex = True
-                pattern[i].attrs[j].value = -10
             else:
                 pattern[i].attrs[j].value = value
                 pattern[i].attrs[j].is_regex = False
@@ -151,7 +150,8 @@ cdef int get_action(const TokenPatternC* pattern, const TokenC* token, char* tok
     cdef attr_t token_attr_value
     for attr in pattern.attrs[:pattern.nr_attr]:
         token_attr_value = get_token_attr(token, attr.attr)
-        if token_attr_value != attr.value and (attr.is_regex == False or _regex_match(token_string, &(attr.regex)) == 0):
+        if (attr.is_regex == True and _regex_match(token_string, &(attr.regex)) == 0) or \
+            (attr.is_regex == False and token_attr_value != attr.value):
             if pattern.quantifier == ONE:
                 return REJECT
             elif pattern.quantifier == ZERO:
