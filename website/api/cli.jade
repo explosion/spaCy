@@ -17,6 +17,17 @@ p
     |  Direct downloads don't perform any compatibility checks and require the
     |  model name to be specified with its version (e.g., #[code en_core_web_sm-1.2.0]).
 
++aside("Downloading best practices")
+    |  The #[code download] command is mostly intended as a convenient,
+    |  interactive wrapper – it performs compatibility checks and prints
+    |  detailed messages in case things go wrong. It's #[strong not recommended]
+    |  to use this command as part of an automated process. If you know which
+    |  model your project needs, you should consider a
+    |  #[+a("/usage/models#download-pip") direct download via pip], or
+    |  uploading the model to a local PyPi installation and fetching it straight
+    |  from there. This will also allow you to add it as a versioned package
+    |  dependency to your project.
+
 +code(false, "bash", "$").
     python -m spacy download [model] [--direct]
 
@@ -42,17 +53,6 @@ p
         +cell
             |  The installed model package in your #[code site-packages]
             |  directory and a shortcut link as a symlink in #[code spacy/data].
-
-+aside("Downloading best practices")
-    |  The #[code download] command is mostly intended as a convenient,
-    |  interactive wrapper – it performs compatibility checks and prints
-    |  detailed messages in case things go wrong. It's #[strong not recommended]
-    |  to use this command as part of an automated process. If you know which
-    |  model your project needs, you should consider a
-    |  #[+a("/usage/models#download-pip") direct download via pip], or
-    |  uploading the model to a local PyPi installation and fetching it straight
-    |  from there. This will also allow you to add it as a versioned package
-    |  dependency to your project.
 
 +h(3, "link") Link
 
@@ -144,8 +144,14 @@ p
     |  #[code pip install -U spacy] to ensure that all installed models are
     |  can be used with the new version. The command is also useful to detect
     |  out-of-sync model links resulting from links created in different virtual
-    |  environments. Prints a list of models, the installed versions, the latest
-    |  compatible version (if out of date) and the commands for updating.
+    |  environments. It will a list of models, the installed versions, the
+    |  latest compatible version (if out of date) and the commands for updating.
+
++aside("Automated validation")
+    |  You can also use the #[code validate] command as part of your build
+    |  process or test suite, to ensure all models are up to date before
+    |  proceeding. If incompatible models or shortcut links are found, it will
+    |  return #[code 1].
 
 +code(false, "bash", "$").
     python -m spacy validate
