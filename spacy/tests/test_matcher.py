@@ -258,3 +258,25 @@ def test_matcher_end_zero_plus(matcher):
     assert len(matcher(nlp(u'a b c'))) == 1
     assert len(matcher(nlp(u'a b b c'))) == 1
     assert len(matcher(nlp(u'a b b'))) == 1
+
+
+@pytest.mark.parametrize('sentence, n_matches', [
+    (u'I am writing a cheeky test', 1),
+    (u'But it has failed in the past', 0),
+    (u'I\'m going to improve them though', 1),
+    (u'It had to be improved', 0)
+])
+def test_matcher_regex(matcher, sentence, n_matches):
+    '''Test matcher works with the REGEX attribute'''
+    matcher = Matcher(matcher.vocab)
+    matcher.add(
+        'VBG_TAG',
+        None,
+        [
+            {'REGEX': r'^[a-z]+ing$'}
+        ]
+    )
+    nlp = lambda sent: Doc(matcher.vocab, words=sent.split())
+    for m in matcher(nlp(sentence)):
+        print(m)
+    assert len(matcher(nlp(sentence))) == n_matches
