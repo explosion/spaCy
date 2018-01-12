@@ -40,9 +40,6 @@ def test_issue1450_matcher_end_zero_plus(en_vocab, string, start, end):
     assert len(matches) == 1
     assert matches[0][1] == 4
     assert matches[0][2] == 5
-
-    ---------------------------
-    Changed the
     '''
     words = string.split()
     matcher = Matcher(en_vocab)
