@@ -266,27 +266,7 @@ def test_matcher_end_zero_plus(matcher, sentence, n_matches):
 
 
 @pytest.mark.parametrize('sentence, n_matches', [
-    (u'I am writing a cheeky test', 1),
-    (u'But it has failed in the past', 0),
-    (u'I\'m going to improve them though', 1),
-    (u'It had to be improved', 0)
-])
-def test_matcher_regex(matcher, sentence, n_matches):
-    '''Test matcher works with the REGEX attribute'''
-    matcher = Matcher(matcher.vocab)
-    matcher.add(
-        'VBG_TAG',
-        None,
-        [
-            {'REGEX': r'^[a-z]+ing$'}
-        ]
-    )
-    words = sentence.split()
-    doc = get_doc(matcher.vocab, words)
-    assert len(matcher(doc)) == n_matches
-
-
-@pytest.mark.parametrize('sentence, n_matches', [
+    (u'a ababc x', 1),
     (u'a ab a', 1),
     (u'a aab a a ab c z', 2),
     (u'a aaaac a aab a a ab a', 2),
@@ -299,6 +279,11 @@ def test_matcher_regex_with_operators(matcher, sentence, n_matches):
     matcher.add(
         'VBG_TAG',
         None,
+        [
+            {'ORTH': 'a'},
+            {'REGEX': r'^[abc]+$'},
+            {'ORTH': 'x'},
+        ],
         [
             {'ORTH': 'a'},
             {'REGEX': r'^[a-z]+b$', 'OP': '+'},
