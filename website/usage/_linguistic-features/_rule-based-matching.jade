@@ -148,7 +148,7 @@ p
         +cell Negate the pattern, by requiring it to match exactly 0 times.
 
     +row
-        +cell #[code *]
+        +cell #[code ?]
         +cell Make the pattern optional, by allowing it to match 0 or 1 times.
 
     +row
@@ -156,8 +156,8 @@ p
         +cell Require the pattern to match 1 or more times.
 
     +row
-        +cell #[code ?]
-        +cell Allow the pattern to zero or more times.
+        +cell #[code *]
+        +cell Allow the pattern to match zero or more times.
 
 p
     |  The #[code +] and #[code *] operators are usually interpretted
@@ -354,7 +354,7 @@ p
         # append mock entity for match in displaCy style to matched_sents
         # get the match span by ofsetting the start and end of the span with the
         # start and end of the sentence in the doc
-        match_ents = [{'start': span.start_char - sent.start_char, 
+        match_ents = [{'start': span.start_char - sent.start_char,
                        'end': span.end_char - sent.start_char,
                        'label': 'MATCH'}]
         matched_sents.append({'text': sent.text, 'ents': match_ents })
