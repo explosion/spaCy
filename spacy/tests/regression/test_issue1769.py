@@ -5,9 +5,9 @@ from ...lang.da.lex_attrs import like_num as da_like_num
 from ...lang.en.lex_attrs import like_num as en_like_num
 from ...lang.fr.lex_attrs import like_num as fr_like_num
 from ...lang.id.lex_attrs import like_num as id_like_num
-# from ...lang.nl.lex_attrs import like_num as nl_like_num
-# from ...lang.pt.lex_attrs import like_num as pt_like_num
-# from ...lang.ru.lex_attrs import like_num as ru_like_num
+from ...lang.nl.lex_attrs import like_num as nl_like_num
+from ...lang.pt.lex_attrs import like_num as pt_like_num
+from ...lang.ru.lex_attrs import like_num as ru_like_num
 
 import pytest
 
@@ -16,26 +16,22 @@ import pytest
 def words():
     return {
         "da": {
-            "num_words": ('elleve', 'ELLEVE'),
-            "ord_words": ('første', 'FØRSTE')
+            "num_words": ('elleve', 'ELLEVE')
         },
         "en": {
             "num_words": ('eleven', 'ELEVEN')
         },
         "fr": {
-            "num_words": ('onze', 'ONZE'),
-            "ord_words": ('onzième', 'ONZIÈME')
+            "num_words": ('onze', 'ONZE')
         },
         "id": {
             "num_words": ('sebelas', 'SEBELAS')
         },
         "nl": {
-            "num_words": ('elf', 'ELF'),
-            "ord_words": ('elfde', 'ELFDE')
+            "num_words": ('elf', 'ELF')
         },
         "pt": {
-            "num_words": ('onze', 'ONZE'),
-            "ord_words": ('quadragésimo', 'QUADRAGÉSIMO')
+            "num_words": ('onze', 'ONZE')
         },
         "ru": {
             "num_words": ('одиннадцать', 'ОДИННАДЦАТЬ')
@@ -54,7 +50,6 @@ def like_num(words, fn):
 
 def test_da_lex_attrs(words):
     assert like_num(words["da"]["num_words"], da_like_num) == True
-    assert like_num(words["da"]["ord_words"], da_like_num) == True
 
 
 def test_en_lex_attrs(words):
@@ -63,22 +58,19 @@ def test_en_lex_attrs(words):
 
 def test_fr_lex_attrs(words):
     assert like_num(words["fr"]["num_words"], fr_like_num) == True
-    assert like_num(words["fr"]["ord_words"], fr_like_num) == True
 
 
 def test_id_lex_attrs(words):
     assert like_num(words["id"]["num_words"], id_like_num) == True
 
 
-# def test_nl_lex_attrs(words):
-#     assert like_num(words["nl"]["num_words"], nl_like_num) == True
-#     assert like_num(words["nl"]["ord_words"], nl_like_num) == True
-#
-#
-# def test_pt_lex_attrs(words):
-#     assert like_num(words["pt"]["num_words"], pt_like_num) == True
-#     assert like_num(words["pt"]["ord_words"], pt_like_num) == True
-#
-#
-# def test_ru_lex_attrs(words):
-#     assert like_num(words["ru"]["num_words"], ru_like_num) == True
+def test_nl_lex_attrs(words):
+    assert like_num(words["nl"]["num_words"], nl_like_num) == True
+
+
+def test_pt_lex_attrs(words):
+    assert like_num(words["pt"]["num_words"], pt_like_num) == True
+
+
+def test_ru_lex_attrs(words):
+    assert like_num(words["ru"]["num_words"], ru_like_num) == True
