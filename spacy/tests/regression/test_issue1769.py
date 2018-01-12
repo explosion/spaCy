@@ -12,65 +12,36 @@ from ...lang.ru.lex_attrs import like_num as ru_like_num
 import pytest
 
 
-@pytest.fixture
-def words():
-    return {
-        "da": {
-            "num_words": ('elleve', 'ELLEVE')
-        },
-        "en": {
-            "num_words": ('eleven', 'ELEVEN')
-        },
-        "fr": {
-            "num_words": ('onze', 'ONZE')
-        },
-        "id": {
-            "num_words": ('sebelas', 'SEBELAS')
-        },
-        "nl": {
-            "num_words": ('elf', 'ELF')
-        },
-        "pt": {
-            "num_words": ('onze', 'ONZE')
-        },
-        "ru": {
-            "num_words": ('одиннадцать', 'ОДИННАДЦАТЬ')
-        }
-    }
+@pytest.mark.parametrize('word', ['elleve', 'første'])
+def test_da_lex_attrs(word):
+    assert da_like_num(word) == da_like_num(word.upper())
 
 
-def like_num(words, fn):
-    ok = True
-    for word in words:
-        if fn(word) is not True:
-            ok = False
-            break
-    return ok
+@pytest.mark.parametrize('word', ['eleven'])
+def test_en_lex_attrs(word):
+    assert en_like_num(word) == en_like_num(word.upper())
 
 
-def test_da_lex_attrs(words):
-    assert like_num(words["da"]["num_words"], da_like_num) == True
+@pytest.mark.parametrize('word', ['onze', 'onzième'])
+def test_fr_lex_attrs(word):
+    assert fr_like_num(word) == fr_like_num(word.upper())
 
 
-def test_en_lex_attrs(words):
-    assert like_num(words["en"]["num_words"], en_like_num) == True
+@pytest.mark.parametrize('word', ['sebelas'])
+def test_id_lex_attrs(word):
+    assert id_like_num(word) == id_like_num(word.upper())
 
 
-def test_fr_lex_attrs(words):
-    assert like_num(words["fr"]["num_words"], fr_like_num) == True
+@pytest.mark.parametrize('word', ['elf', 'elfde'])
+def test_nl_lex_attrs(word):
+    assert nl_like_num(word) == nl_like_num(word.upper())
 
 
-def test_id_lex_attrs(words):
-    assert like_num(words["id"]["num_words"], id_like_num) == True
+@pytest.mark.parametrize('word', ['onze', 'quadragésimo'])
+def test_pt_lex_attrs(word):
+    assert pt_like_num(word) == pt_like_num(word.upper())
 
 
-def test_nl_lex_attrs(words):
-    assert like_num(words["nl"]["num_words"], nl_like_num) == True
-
-
-def test_pt_lex_attrs(words):
-    assert like_num(words["pt"]["num_words"], pt_like_num) == True
-
-
-def test_ru_lex_attrs(words):
-    assert like_num(words["ru"]["num_words"], ru_like_num) == True
+@pytest.mark.parametrize('word', ['одиннадцать'])
+def test_ru_lex_attrs(word):
+    assert ru_like_num(word) == ru_like_num(word.upper())
