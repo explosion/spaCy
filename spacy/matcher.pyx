@@ -61,7 +61,6 @@ cdef extern from "regex.h" nogil:
     int REG_EXTENDED
     int regcomp(regex_t* preg, const char* regex, int cflags)
     int regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
-    void regfree(regex_t* preg)
 
 
 cpdef enum quantifier_t:
@@ -108,7 +107,6 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
                                  object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
     cdef int i
-    cdef char * fancy_c_string
     for i, (quantifier, spec) in enumerate(token_specs):
         pattern[i].quantifier = quantifier
         pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
