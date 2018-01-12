@@ -4,12 +4,15 @@
 from __future__ import unicode_literals
 
 import ujson
+import re
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
 from libcpp.pair cimport pair
 from murmurhash.mrmr cimport hash64
 from libc.stdint cimport int32_t
+from libcpp cimport bool as cbool
+from libc.string cimport memset, strcpy, strlen
 
 from .typedefs cimport attr_t
 from .typedefs cimport hash_t
@@ -46,6 +49,18 @@ from .attrs import FLAG38 as L7_ENT
 from .attrs import FLAG37 as L8_ENT
 from .attrs import FLAG36 as L9_ENT
 from .attrs import FLAG35 as L10_ENT
+from .attrs import REGEX
+
+
+cdef extern from "regex.h" nogil:
+    ctypedef struct regmatch_t:
+       int rm_so
+       int rm_eo
+    ctypedef struct regex_t:
+       pass
+    int REG_EXTENDED
+    int regcomp(regex_t* preg, const char* regex, int cflags)
+    int regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
 
 
 cpdef enum quantifier_t:
@@ -74,6 +89,8 @@ cdef enum action_t:
 cdef struct AttrValueC:
     attr_id_t attr
     attr_t value
+    regex_t regex
+    cbool is_regex
 
 
 cdef struct TokenPatternC:
@@ -96,7 +113,13 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
         pattern[i].nr_attr = len(spec)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
-            pattern[i].attrs[j].value = value
+            if attr == REGEX:
+                py_bytes = value.encode('utf-8')
+                regcomp(&(pattern[i].attrs[j].regex), py_bytes, REG_EXTENDED)
+                pattern[i].attrs[j].is_regex = True
+            else:
+                pattern[i].attrs[j].value = value
+                pattern[i].attrs[j].is_regex = False
     i = len(token_specs)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
@@ -104,6 +127,12 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
     pattern[i].nr_attr = 0
     return pattern
 
+cdef int _regex_match(char *token_string, regex_t *regex) nogil:
+    cdef int token_string_len = strlen(token_string)
+    cdef regmatch_t regmatch_obj[1]
+
+    nomatch = regexec(regex, token_string, 1, regmatch_obj, 0)
+    return 0 if nomatch else 1
 
 cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
     while pattern.nr_attr != 0:
@@ -112,11 +141,14 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
     assert id_attr.attr == ID
     return id_attr.value
 
-
-cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
+cdef int get_action(const TokenPatternC* pattern, const TokenC* token, char* token_string) nogil:
     lookahead = &pattern[1]
+    cdef attr_t token_attr
+    cdef attr_t token_attr_value
     for attr in pattern.attrs[:pattern.nr_attr]:
-        if get_token_attr(token, attr.attr) != attr.value:
+        token_attr_value = get_token_attr(token, attr.attr)
+        if (attr.is_regex == True and _regex_match(token_string, &(attr.regex)) == 0) or \
+            (attr.is_regex == False and token_attr_value != attr.value):
             if pattern.quantifier == ONE:
                 return REJECT
             elif pattern.quantifier == ZERO:
@@ -134,7 +166,7 @@ cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
     elif pattern.quantifier == ZERO_PLUS:
         # This is a bandaid over the 'shadowing' problem described here:
         # https://github.com/explosion/spaCy/issues/864
-        next_action = get_action(lookahead, token)
+        next_action = get_action(lookahead, token, token_string)
         if next_action is REJECT:
             return REPEAT
         else:
@@ -165,7 +197,7 @@ def _convert_strings(token_specs, string_store):
                     raise KeyError(msg % (value, ', '.join(operators.keys())))
             if isinstance(attr, basestring):
                 attr = IDS.get(attr.upper())
-            if isinstance(value, basestring):
+            if isinstance(value, basestring) and attr != REGEX:
                 value = string_store.add(value)
             if isinstance(value, bool):
                 value = int(value)
@@ -337,12 +369,14 @@ cdef class Matcher:
             # Go over the open matches, extending or finalizing if able.
             # Otherwise, we over-write them (q doesn't advance)
             for state in partials:
-                action = get_action(state.second, token)
+                token_string = self.vocab.strings[token.lex.orth]
+                token_string = token_string.encode('utf-8')
+                action = get_action(state.second, token, token_string)
                 if action == PANIC:
                     raise Exception("Error selecting action in matcher")
                 while action == ADVANCE_ZERO:
                     state.second += 1
-                    action = get_action(state.second, token)
+                    action = get_action(state.second, token, token_string)
                 if action == PANIC:
                     raise Exception("Error selecting action in matcher")
 
@@ -369,12 +403,14 @@ cdef class Matcher:
             partials.resize(q)
             # Check whether we open any new patterns on this token
             for pattern in self.patterns:
-                action = get_action(pattern, token)
+                token_string = self.vocab.strings[token.lex.orth]
+                token_string = token_string.encode('utf-8')
+                action = get_action(pattern, token, token_string)
                 if action == PANIC:
                     raise Exception("Error selecting action in matcher")
                 while action == ADVANCE_ZERO:
                     pattern += 1
-                    action = get_action(pattern, token)
+                    action = get_action(pattern, token, token_string)
                 if action == REPEAT:
                     state.first = token_i
                     state.second = pattern

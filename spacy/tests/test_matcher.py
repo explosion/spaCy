@@ -239,7 +239,17 @@ def test_operator_combos(matcher):
             assert not matches, (string, pattern_str)
 
 
-def test_matcher_end_zero_plus(matcher):
+@pytest.mark.parametrize(
+    'sentence, n_matches', [
+        (u'a', 1),
+        (u'a b', 1),
+        (u'a c', 1),
+        (u'a b c', 1),
+        (u'a b b c', 1),
+        (u'a b b', 1)
+    ]
+)
+def test_matcher_end_zero_plus(matcher, sentence, n_matches):
     '''Test matcher works when patterns end with * operator. (issue 1450)'''
     matcher = Matcher(matcher.vocab)
     matcher.add(
@@ -250,11 +260,44 @@ def test_matcher_end_zero_plus(matcher):
             {'ORTH': "b", 'OP': "*"}
         ]
     )
-    nlp = lambda string: Doc(matcher.vocab, words=string.split())
-    assert len(matcher(nlp(u'a'))) == 1
-    assert len(matcher(nlp(u'a b'))) == 1
-    assert len(matcher(nlp(u'a b'))) == 1
-    assert len(matcher(nlp(u'a c'))) == 1
-    assert len(matcher(nlp(u'a b c'))) == 1
-    assert len(matcher(nlp(u'a b b c'))) == 1
-    assert len(matcher(nlp(u'a b b'))) == 1
+    words = sentence.split()
+    doc = get_doc(matcher.vocab, words)
+    assert len(matcher(doc)) == 1
+
+
+@pytest.mark.parametrize('sentence, n_matches', [
+    (u'a ababc x', 1),
+    (u'a ab a', 1),
+    (u'a aab a a ab c z', 2),
+    (u'a aaaac a aab a a ab a', 2),
+    (u'a ab c f fb b f b', 2),
+    (u'a z', 1)
+])
+def test_matcher_regex_with_operators(matcher, sentence, n_matches):
+    '''Test matcher works with the REGEX attribute and operators'''
+    matcher = Matcher(matcher.vocab)
+    matcher.add(
+        'VBG_TAG',
+        None,
+        [
+            {'ORTH': 'a'},
+            {'REGEX': r'^[abc]+$'},
+            {'ORTH': 'x'},
+        ],
+        [
+            {'ORTH': 'a'},
+            {'REGEX': r'^[a-z]+b$', 'OP': '+'},
+            {'ORTH': 'a'},
+        ],
+        [
+            {'ORTH': 'f'},
+            {'REGEX': r'^[a-z]+b$', 'OP': '*'},
+            {'ORTH': 'b'},
+        ],
+        [
+            {'ORTH': u'z', 'OP': '+'}
+        ]
+    )
+    words = sentence.split()
+    doc = get_doc(matcher.vocab, words)
+    assert len(matcher(doc)) == n_matches
