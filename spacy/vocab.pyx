@@ -335,6 +335,7 @@ cdef class Vocab:
             else:
                 width = self.vectors.shape[1]
             self.vectors.resize((new_rows, width))
+            lex = self[orth] # Adds worse to vocab
             self.vectors.add(orth, vector=vector)
         self.vectors.add(orth, vector=vector)
 
