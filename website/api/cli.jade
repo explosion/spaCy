@@ -341,8 +341,12 @@ p
     |  for your custom #[code train] command while still being able to easily
     |  tweak the hyperparameters. For example:
 
-+code(false, "bash").
-    parser_hidden_depth=2 parser_maxout_pieces=1 train-parser
++code(false, "bash", "$").
+    parser_hidden_depth=2 parser_maxout_pieces=1 spacy train [...]
+
++code("Usage with alias", "bash", "$").
+    alias train-parser="spacy train en /output /data /train /dev -n 1000"
+    parser_maxout_pieces=1 train-parser
 
 +table(["Name", "Description", "Default"])
     +row
