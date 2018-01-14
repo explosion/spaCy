@@ -354,7 +354,7 @@ cdef class Token:
             if self.i == 0:
                 return False
             else:
-                return self.sent_start
+                return self.c.sent_start
 
         def __set__(self, value):
             self.is_sent_start = value
