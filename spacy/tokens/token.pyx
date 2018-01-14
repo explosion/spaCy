@@ -341,19 +341,20 @@ cdef class Token:
 
     property sent_start:
         def __get__(self):
-            util.deprecated(
-                "Token.sent_start is now deprecated. Use Token.is_sent_start "
-                "instead, which returns a boolean value or None if the answer "
-                "is unknown – instead of a misleading 0 for False and 1 for "
-                "True. It also fixes a quirk in the old logic that would "
-                "always set the property to 0 for the first word of the "
-                "document.")
+            # Raising a deprecation warning causes errors for autocomplete
+            #util.deprecated(
+            #    "Token.sent_start is now deprecated. Use Token.is_sent_start "
+            #    "instead, which returns a boolean value or None if the answer "
+            #    "is unknown – instead of a misleading 0 for False and 1 for "
+            #    "True. It also fixes a quirk in the old logic that would "
+            #    "always set the property to 0 for the first word of the "
+            #    "document.")
             # Handle broken backwards compatibility case: doc[0].sent_start
             # was False.
             if self.i == 0:
                 return False
             else:
-                return self.sent_start
+                return self.c.sent_start
 
         def __set__(self, value):
             self.is_sent_start = value

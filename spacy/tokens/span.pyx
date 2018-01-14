@@ -261,6 +261,11 @@ cdef class Span:
             self.start = start
             self.end = end + 1
 
+    property vocab:
+        """RETURNS (Vocab): The Span's Doc's vocab."""
+        def __get__(self):
+            return self.doc.vocab
+
     property sent:
         """RETURNS (Span): The sentence span that the span is a part of."""
         def __get__(self):
