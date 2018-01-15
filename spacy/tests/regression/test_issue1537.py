@@ -1,4 +1,5 @@
 '''Test Span.as_doc() doesn't segfault'''
+from __future__ import unicode_literals
 from ...tokens import Doc 
 from ...vocab import Vocab
 from ... import load as load_spacy
