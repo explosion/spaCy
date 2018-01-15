@@ -64,6 +64,11 @@ cdef class Span:
         self._vector_norm = vector_norm
 
     def __richcmp__(self, Span other, int op):
+        if other is None:
+            if op == 0 or op == 1 or op == 2:
+                return False
+            else:
+                return True
         # Eq
         if op == 0:
             return self.start_char < other.start_char
