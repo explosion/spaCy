@@ -14,6 +14,7 @@ extern "C" CONFUSE_EMACS
        everything when you're typing */
 #endif
 
+#include <Python.h>
 #include "ndarraytypes.h"
 
 /* Includes the "function" C-API -- these are all stored in a
@@ -26,7 +27,7 @@ extern "C" CONFUSE_EMACS
 #include "__multiarray_api.h"
 
 
-/* C-API that requries previous API to be defined */
+/* C-API that requires previous API to be defined */
 
 #define PyArray_DescrCheck(op) (((PyObject*)(op))->ob_type==&PyArrayDescr_Type)
 
@@ -50,24 +51,32 @@ extern "C" CONFUSE_EMACS
 
 #define PyArray_CheckScalar(m) (PyArray_IsScalar(m, Generic) ||               \
                                 PyArray_IsZeroDim(m))
-
+#if PY_MAJOR_VERSION >= 3
+#define PyArray_IsPythonNumber(obj)                                           \
+        (PyFloat_Check(obj) || PyComplex_Check(obj) ||                        \
+         PyLong_Check(obj) || PyBool_Check(obj))
+#define PyArray_IsIntegerScalar(obj) (PyLong_Check(obj)                       \
+              || PyArray_IsScalar((obj), Integer))
+#define PyArray_IsPythonScalar(obj)                                           \
+        (PyArray_IsPythonNumber(obj) || PyBytes_Check(obj) ||                 \
+         PyUnicode_Check(obj))
+#else
 #define PyArray_IsPythonNumber(obj)                                           \
         (PyInt_Check(obj) || PyFloat_Check(obj) || PyComplex_Check(obj) ||    \
          PyLong_Check(obj) || PyBool_Check(obj))
-
+#define PyArray_IsIntegerScalar(obj) (PyInt_Check(obj)                        \
+              || PyLong_Check(obj)                                            \
+              || PyArray_IsScalar((obj), Integer))
 #define PyArray_IsPythonScalar(obj)                                           \
         (PyArray_IsPythonNumber(obj) || PyString_Check(obj) ||                \
          PyUnicode_Check(obj))
+#endif
 
 #define PyArray_IsAnyScalar(obj)                                              \
         (PyArray_IsScalar(obj, Generic) || PyArray_IsPythonScalar(obj))
 
 #define PyArray_CheckAnyScalar(obj) (PyArray_IsPythonScalar(obj) ||           \
                                      PyArray_CheckScalar(obj))
-
-#define PyArray_IsIntegerScalar(obj) (PyInt_Check(obj)                        \
-              || PyLong_Check(obj)                                            \
-              || PyArray_IsScalar((obj), Integer))
 
 
 #define PyArray_GETCONTIGUOUS(m) (PyArray_ISCONTIGUOUS(m) ?                   \
@@ -87,7 +96,7 @@ extern "C" CONFUSE_EMACS
                                                       NULL)
 
 #define PyArray_FROM_OT(m,type) PyArray_FromAny(m,                            \
-                                PyArray_DescrFromType(type), 0, 0, 0, NULL);
+                                PyArray_DescrFromType(type), 0, 0, 0, NULL)
 
 #define PyArray_FROM_OTF(m, type, flags) \
         PyArray_FromAny(m, PyArray_DescrFromType(type), 0, 0, \
@@ -107,9 +116,10 @@ extern "C" CONFUSE_EMACS
 
 #define PyArray_FILLWBYTE(obj, val) memset(PyArray_DATA(obj), val, \
                                            PyArray_NBYTES(obj))
-
+#ifndef PYPY_VERSION
 #define PyArray_REFCOUNT(obj) (((PyObject *)(obj))->ob_refcnt)
 #define NPY_REFCOUNT PyArray_REFCOUNT
+#endif
 #define NPY_MAX_ELSIZE (2 * NPY_SIZEOF_LONGDOUBLE)
 
 #define PyArray_ContiguousFromAny(op, type, min_depth, max_depth) \
@@ -161,15 +171,16 @@ extern "C" CONFUSE_EMACS
                                             (l)*PyArray_STRIDES(obj)[3]))
 
 static NPY_INLINE void
-PyArray_XDECREF_ERR(PyArrayObject *arr)
+PyArray_DiscardWritebackIfCopy(PyArrayObject *arr)
 {
     if (arr != NULL) {
-        if (PyArray_FLAGS(arr) & NPY_ARRAY_UPDATEIFCOPY) {
+        if ((PyArray_FLAGS(arr) & NPY_ARRAY_WRITEBACKIFCOPY) ||
+            (PyArray_FLAGS(arr) & NPY_ARRAY_UPDATEIFCOPY)) {
             PyArrayObject *base = (PyArrayObject *)PyArray_BASE(arr);
             PyArray_ENABLEFLAGS(base, NPY_ARRAY_WRITEABLE);
+            PyArray_CLEARFLAGS(arr, NPY_ARRAY_WRITEBACKIFCOPY);
             PyArray_CLEARFLAGS(arr, NPY_ARRAY_UPDATEIFCOPY);
         }
-        Py_DECREF(arr);
     }
 }
 
@@ -225,14 +236,20 @@ PyArray_XDECREF_ERR(PyArrayObject *arr)
                                    (PyTuple_GET_ITEM((value), 2) == (key)))
 
 
-/* Define python version independent deprecation macro */
-
-#if PY_VERSION_HEX >= 0x02050000
 #define DEPRECATE(msg) PyErr_WarnEx(PyExc_DeprecationWarning,msg,1)
 #define DEPRECATE_FUTUREWARNING(msg) PyErr_WarnEx(PyExc_FutureWarning,msg,1)
-#else
-#define DEPRECATE(msg) PyErr_Warn(PyExc_DeprecationWarning,msg)
-#define DEPRECATE_FUTUREWARNING(msg) PyErr_Warn(PyExc_FutureWarning,msg)
+
+#if !defined(NPY_NO_DEPRECATED_API) || \
+    (NPY_NO_DEPRECATED_API < NPY_1_14_API_VERSION)
+static NPY_INLINE void
+PyArray_XDECREF_ERR(PyArrayObject *arr)
+{
+    /* 2017-Nov-10 1.14 */
+    DEPRECATE("PyArray_XDECREF_ERR is deprecated, call "
+        "PyArray_DiscardWritebackIfCopy then Py_XDECREF instead");
+    PyArray_DiscardWritebackIfCopy(arr);
+    Py_XDECREF(arr);
+}
 #endif
 
 

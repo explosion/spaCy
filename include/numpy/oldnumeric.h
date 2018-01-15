@@ -1,8 +1,10 @@
 #include "arrayobject.h"
 
+#ifndef PYPY_VERSION
 #ifndef REFCOUNT
 #  define REFCOUNT NPY_REFCOUNT
 #  define MAX_ELSIZE 16
+#endif
 #endif
 
 #define PyArray_UNSIGNED_TYPES

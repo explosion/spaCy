@@ -37,6 +37,7 @@ int npy_half_signbit(npy_half h);
 npy_half npy_half_copysign(npy_half x, npy_half y);
 npy_half npy_half_spacing(npy_half h);
 npy_half npy_half_nextafter(npy_half x, npy_half y);
+npy_half npy_half_divmod(npy_half x, npy_half y, npy_half *modulus);
 
 /*
  * Half-precision constants
