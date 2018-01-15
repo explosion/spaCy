@@ -13,6 +13,6 @@ def test_issue1757():
     assert not span < None
     assert not span == None
     assert span >= None
-    lex = vocab['a']
+    lex = doc.vocab['a']
     assert not lex == None
     assert not lex < None
