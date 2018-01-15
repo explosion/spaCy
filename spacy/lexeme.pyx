@@ -40,6 +40,11 @@ cdef class Lexeme:
         assert self.c.orth == orth
 
     def __richcmp__(self, other, int op):
+        if other is None:
+            if op == 0 or op == 1 or op == 2:
+                return False
+            else:
+                return True
         if isinstance(other, Lexeme):
             a = self.orth
             b = other.orth
