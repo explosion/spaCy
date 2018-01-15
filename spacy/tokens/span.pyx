@@ -184,6 +184,15 @@ cdef class Span:
         """
         if 'similarity' in self.doc.user_span_hooks:
             self.doc.user_span_hooks['similarity'](self, other)
+        if len(self) == 1 and hasattr(other, 'orth'):
+            if self[0].orth == other.orth:
+                return 1.0
+        elif hasattr(other, '__len__') and len(self) == len(other):
+            for i in range(len(self)):
+                if self[i].orth != getattr(other[i], 'orth', None):
+                    break
+            else:
+                return 1.0
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
