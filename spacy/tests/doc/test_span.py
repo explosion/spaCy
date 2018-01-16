@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from ..util import get_doc
 from ...attrs import ORTH, LENGTH
+from ...tokens import Doc
+from ...vocab import Vocab
 
 import pytest
 
@@ -64,6 +66,15 @@ def test_spans_lca_matrix(en_tokenizer):
     assert(lca[0, 1] == -1)
     assert(lca[1, 0] == -1)
     assert(lca[1, 1] == 1)
+
+
+def test_span_similarity_match():
+    doc = Doc(Vocab(), words=['a', 'b', 'a', 'b'])
+    span1 = doc[:2]
+    span2 = doc[2:]
+    assert span1.similarity(span2) == 1.0
+    assert span1.similarity(doc) == 0.0
+    assert span1[:1].similarity(doc.vocab['a']) == 1.0
 
 
 def test_spans_default_sentiment(en_tokenizer):

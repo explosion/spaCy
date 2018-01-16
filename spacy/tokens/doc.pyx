@@ -295,6 +295,17 @@ cdef class Doc:
         """
         if 'similarity' in self.user_hooks:
             return self.user_hooks['similarity'](self, other)
+        if isinstance(other, (Lexeme, Token)) and self.length == 1:
+            if self.c[0].lex.orth == other.orth:
+                return 1.0
+        elif isinstance(other, (Span, Doc)):
+            if len(self) == len(other):
+                for i in range(self.length):
+                    if self[i].orth != other[i].orth:
+                        break
+                else:
+                    return 1.0
+ 
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)

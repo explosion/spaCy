@@ -149,6 +149,12 @@ cdef class Token:
         """
         if 'similarity' in self.doc.user_token_hooks:
             return self.doc.user_token_hooks['similarity'](self)
+        if hasattr(other, '__len__') and len(other) == 1:
+            if self.c.lex.orth == getattr(other[0], 'orth', None):
+                return 1.0
+        elif hasattr(other, 'orth'):
+            if self.c.lex.orth == other.orth:
+                return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return (numpy.dot(self.vector, other.vector) /
