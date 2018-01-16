@@ -27,7 +27,7 @@ def like_num(text):
         num, denom = text.split('/')
         if num.isdigit() and denom.isdigit():
             return True
-    if text in _num_words:
+    if text.lower() in _num_words:
         return True
     if text.count('-') == 1:
         _, num = text.split('-')

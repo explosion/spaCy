@@ -295,6 +295,17 @@ cdef class Doc:
         """
         if 'similarity' in self.user_hooks:
             return self.user_hooks['similarity'](self, other)
+        if isinstance(other, (Lexeme, Token)) and self.length == 1:
+            if self.c[0].lex.orth == other.orth:
+                return 1.0
+        elif isinstance(other, (Span, Doc)):
+            if len(self) == len(other):
+                for i in range(self.length):
+                    if self[i].orth != other[i].orth:
+                        break
+                else:
+                    return 1.0
+ 
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -508,13 +519,18 @@ cdef class Doc:
                 yield from self.user_hooks['sents'](self)
                 return
 
-            if not self.is_parsed:
-                raise ValueError(
-                    "Sentence boundary detection requires the dependency "
-                    "parse, which requires a statistical model to be "
-                    "installed and loaded. For more info, see the "
-                    "documentation: \n%s\n" % about.__docs_models__)
             cdef int i
+            if not self.is_parsed:
+                for i in range(1, self.length):
+                    if self.c[i].sent_start != 0:
+                        break
+                else:
+                    raise ValueError(
+                        "Sentence boundaries unset. You can add the 'sentencizer' "
+                        "component to the pipeline with: "
+                        "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
+                        "Alternatively, add the dependency parser, or set "
+                        "sentence boundaries by setting doc[i].sent_start")
             start = 0
             for i in range(1, self.length):
                 if self.c[i].sent_start == 1:

@@ -148,7 +148,7 @@ p
         +cell Negate the pattern, by requiring it to match exactly 0 times.
 
     +row
-        +cell #[code *]
+        +cell #[code ?]
         +cell Make the pattern optional, by allowing it to match 0 or 1 times.
 
     +row
@@ -156,8 +156,8 @@ p
         +cell Require the pattern to match 1 or more times.
 
     +row
-        +cell #[code ?]
-        +cell Allow the pattern to zero or more times.
+        +cell #[code *]
+        +cell Allow the pattern to match zero or more times.
 
 p
     |  The #[code +] and #[code *] operators are usually interpretted
@@ -305,6 +305,54 @@ p
             |  A list of #[code (match_id, start, end)] tuples, describing the
             |  matches. A match tuple describes a span #[code doc[start:end]].
 
++h(3, "regex") Using regular expressions
+
+p
+    |  In some cases, only matching tokens and token attributes isn't enough –
+    |  for example, you might want to match different spellings of a word,
+    |  without having to add a new pattern for each spelling. A simple solution
+    |  is to match a regular expression on the #[code Doc]'s #[code text] and
+    |  use the #[+api("doc#char_span") #[code Doc.char_span]] method to
+    |  create a #[code Span] from the character indices of the match:
+
++code.
+    import spacy
+    import re
+
+    nlp = spacy.load('en')
+    doc = nlp(u'The spelling is "definitely", not "definately" or "deffinitely".')
+
+    DEFINITELY_PATTERN = re.compile(r'deff?in[ia]tely')
+
+    for match in re.finditer(DEFINITELY_PATTERN, doc.text):
+        start, end = match.span()         # get matched indices
+        span = doc.char_span(start, end)  # create Span from indices
+
+p
+    |  You can also use the regular expression with spaCy's #[code Matcher] by
+    |  converting it to a token flag. To ensure efficiency, the
+    |  #[code Matcher] can only access the C-level data. This means that it can
+    |  either use built-in token attributes or #[strong binary flags].
+    |  #[+api("vocab#add_flag") #[code Vocab.add_flag]] returns a flag ID which
+    |  you can use as a key of a token match pattern. Tokens that match the
+    |  regular expression will return #[code True] for the #[code IS_DEFINITELY]
+    |  flag.
+
++code.
+    IS_DEFINITELY = nlp.vocab.add_flag(re.compile(r'deff?in[ia]tely').match)
+
+    matcher = Matcher(nlp.vocab)
+    matcher.add('DEFINITELY', None, [{IS_DEFINITELY: True}])
+
+p
+    |  Providing the regular expressions as binary flags also lets you use them
+    |  in combination with other token patterns – for example, to match the
+    |  word "definitely" in various spellings, followed by a case-insensitive
+    |  "not" and and adjective:
+
++code.
+    [{IS_DEFINITELY: True}, {'LOWER': 'not'}, {'POS': 'ADJ'}]
+
 +h(3, "example1") Example: Using linguistic annotations
 
 p
@@ -354,7 +402,7 @@ p
         # append mock entity for match in displaCy style to matched_sents
         # get the match span by ofsetting the start and end of the span with the
         # start and end of the sentence in the doc
-        match_ents = [{'start': span.start_char - sent.start_char, 
+        match_ents = [{'start': span.start_char - sent.start_char,
                        'end': span.end_char - sent.start_char,
                        'label': 'MATCH'}]
         matched_sents.append({'text': sent.text, 'ents': match_ents })

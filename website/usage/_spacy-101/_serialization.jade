@@ -48,9 +48,9 @@ p
     |  those IDs back to strings.
 
 +code.
-    moby_dick = open('moby_dick.txt', 'r') # open a large document
-    doc = nlp(moby_dick) # process it
-    doc.to_disk('/moby_dick.bin') # save the processed Doc
+    text = open('customer_feedback_627.txt', 'r').read() # open a document
+    doc = nlp(text) # process it
+    doc.to_disk('/customer_feedback_627.bin') # save the processed Doc
 
 p
     |  If you need it again later, you can load it back into an empty #[code Doc]
@@ -61,4 +61,4 @@ p
     from spacy.tokens import Doc # to create empty Doc
     from spacy.vocab import Vocab # to create empty Vocab
 
-    doc = Doc(Vocab()).from_disk('/moby_dick.bin') # load processed Doc
+    doc = Doc(Vocab()).from_disk('/customer_feedback_627.bin') # load processed Doc

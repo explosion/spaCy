@@ -78,10 +78,15 @@ cdef class Token:
 
     def __richcmp__(self, Token other, int op):
         # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
+        if other is None:
+            if op in (0, 1, 2):
+                return False
+            else:
+                return True
         cdef Doc my_doc = self.doc
         cdef Doc other_doc = other.doc
         my = self.idx
-        their = other.idx if other is not None else None
+        their = other.idx
         if op == 0:
             return my < their
         elif op == 2:
@@ -144,6 +149,12 @@ cdef class Token:
         """
         if 'similarity' in self.doc.user_token_hooks:
             return self.doc.user_token_hooks['similarity'](self)
+        if hasattr(other, '__len__') and len(other) == 1:
+            if self.c.lex.orth == getattr(other[0], 'orth', None):
+                return 1.0
+        elif hasattr(other, 'orth'):
+            if self.c.lex.orth == other.orth:
+                return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return (numpy.dot(self.vector, other.vector) /
@@ -341,19 +352,20 @@ cdef class Token:
 
     property sent_start:
         def __get__(self):
-            util.deprecated(
-                "Token.sent_start is now deprecated. Use Token.is_sent_start "
-                "instead, which returns a boolean value or None if the answer "
-                "is unknown – instead of a misleading 0 for False and 1 for "
-                "True. It also fixes a quirk in the old logic that would "
-                "always set the property to 0 for the first word of the "
-                "document.")
+            # Raising a deprecation warning causes errors for autocomplete
+            #util.deprecated(
+            #    "Token.sent_start is now deprecated. Use Token.is_sent_start "
+            #    "instead, which returns a boolean value or None if the answer "
+            #    "is unknown – instead of a misleading 0 for False and 1 for "
+            #    "True. It also fixes a quirk in the old logic that would "
+            #    "always set the property to 0 for the first word of the "
+            #    "document.")
             # Handle broken backwards compatibility case: doc[0].sent_start
             # was False.
             if self.i == 0:
                 return False
             else:
-                return self.sent_start
+                return self.c.sent_start
 
         def __set__(self, value):
             self.is_sent_start = value

@@ -11,5 +11,6 @@ form.o-grid#mc-embedded-subscribe-form(action="//#{MAILCHIMP.user}.list-manage.c
         input(type="text" name="b_#{MAILCHIMP.id}_#{MAILCHIMP.list}" tabindex="-1" value="")
 
     .o-grid-col.o-grid.o-grid--nowrap.o-field.u-padding-small
-        input#mce-EMAIL.o-field__input.u-text(type="email" name="EMAIL" placeholder="Your email" aria-label="Your email")
+        div
+            input#mce-EMAIL.o-field__input.u-text(type="email" name="EMAIL" placeholder="Your email" aria-label="Your email")
         button#mc-embedded-subscribe.o-field__button.u-text-label.u-color-theme.u-nowrap(type="submit" name="subscribe") Sign up
