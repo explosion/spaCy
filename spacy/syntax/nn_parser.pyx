@@ -269,10 +269,6 @@ cdef class Parser:
                 zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
             )
 
-        # TODO: This is an unfortunate hack atm!
-        # Used to set input dimensions in network.
-        if not cfg.get('from_disk', False):
-            lower.begin_training(lower.ops.allocate((500, token_vector_width)))
         cfg = {
             'nr_class': nr_class,
             'hidden_depth': depth,
@@ -836,6 +832,8 @@ cdef class Parser:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
+            self.model[1].begin_training(
+                    self.model[1].ops.allocate((5, cfg['token_vector_width'])))
             self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
             self.cfg.update(cfg)
