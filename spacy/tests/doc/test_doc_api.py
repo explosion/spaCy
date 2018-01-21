@@ -217,6 +217,16 @@ def test_doc_api_has_vector():
     doc = Doc(vocab, words=['kitten'])
     assert doc.has_vector
 
+
+def test_doc_api_similarity_match():
+    doc = Doc(Vocab(), words=['a'])
+    assert doc.similarity(doc[0]) == 1.0
+    assert doc.similarity(doc.vocab['a']) == 1.0
+    doc2 = Doc(doc.vocab, words=['a', 'b', 'c'])
+    assert doc.similarity(doc2[:1]) == 1.0
+    assert doc.similarity(doc2) == 0.0
+
+
 def test_lowest_common_ancestor(en_tokenizer):
     tokens = en_tokenizer('the lazy dog slept')
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
@@ -224,6 +234,7 @@ def test_lowest_common_ancestor(en_tokenizer):
     assert(lca[1, 1] == 1)
     assert(lca[0, 1] == 2)
     assert(lca[1, 2] == 2)
+
 
 def test_parse_tree(en_tokenizer):
     """Tests doc.print_tree() method."""
