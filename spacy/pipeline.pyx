@@ -881,15 +881,17 @@ cdef class DependencyParser(Parser):
     @property
     def postprocesses(self):
         return [nonproj.deprojectivize]
+    
+    def add_multitask_objective(self, target):
+        labeller = MultitaskObjective(self.vocab, target=target)
+        self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, gold_tuples, pipeline, sgd=None, **cfg):
-        for target in []:
-            labeller = MultitaskObjective(self.vocab, target=target)
+        for labeller in self._multitasks:
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec, sgd=sgd)
-            pipeline.append(labeller)
-            self._multitasks.append(labeller)
+            pipeline.append((labeller.name, labeller))
 
     def __reduce__(self):
         return (DependencyParser, (self.vocab, self.moves, self.model),
@@ -901,15 +903,17 @@ cdef class EntityRecognizer(Parser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
+    
+    def add_multitask_objective(self, target):
+        labeller = MultitaskObjective(self.vocab, target=target)
+        self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, gold_tuples, pipeline, sgd=None, **cfg):
-        for target in []:
-            labeller = MultitaskObjective(self.vocab, target=target)
+        for labeller in self._multitasks:
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec)
-            pipeline.append(labeller)
-            self._multitasks.append(labeller)
+            pipeline.append((labeller.name, labeller))
 
     def __reduce__(self):
         return (EntityRecognizer, (self.vocab, self.moves, self.model),
