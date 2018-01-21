@@ -887,7 +887,7 @@ cdef class Parser:
             path = util.ensure_path(path)
             if self.model is True:
                 self.cfg['pretrained_dims'] = self.vocab.vectors_length
-                self.model, cfg = self.Model(from_disk=True, **self.cfg)
+                self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
             with (path / 'tok2vec_model').open('rb') as file_:
