@@ -8,12 +8,14 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
 from libcpp.pair cimport pair
-from libcpp.unordered_map cimport unordered_map as umap
 from cython.operator cimport dereference as deref
 from murmurhash.mrmr cimport hash64
 from libc.stdint cimport int32_t
 
-from libc.stdio cimport printf
+try:
+    from libcpp.unordered_map cimport unordered_map as umap
+except:
+    from libcpp.map cimport map as umap
 
 from .typedefs cimport attr_t
 from .typedefs cimport hash_t
