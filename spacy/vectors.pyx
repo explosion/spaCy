@@ -310,6 +310,8 @@ cdef class Vectors:
             self.data = xp.fromfile(file_, dtype=dtype)
             if dtype != 'float32':
                 self.data = xp.ascontiguousarray(self.data, dtype='float32')
+        if self.data.ndim == 1:
+            self.data = self.data.reshape((self.data.size//width, width))
         n = 0
         strings = StringStore()
         with (path / 'vocab.txt').open('r') as file_:
