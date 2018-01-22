@@ -1,5 +1,6 @@
 '''Test sentence boundaries are deserialized correctly,
 even for non-projective sentences.'''
+from __future__ import unicode_literals
 
 import pytest
 import numpy
