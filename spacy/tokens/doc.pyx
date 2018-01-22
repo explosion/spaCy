@@ -1035,18 +1035,19 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         child = &tokens[i]
         head = &tokens[i + child.head]
         if child < head:
-            if child.l_edge < head.l_edge:
-                head.l_edge = child.l_edge
             head.l_kids += 1
+        if child.l_edge < head.l_edge:
+            head.l_edge = child.l_edge
 
     # Set right edges --- same as above, but iterate in reverse
     for i in range(length-1, -1, -1):
         child = &tokens[i]
         head = &tokens[i + child.head]
         if child > head:
-            if child.r_edge > head.r_edge:
-                head.r_edge = child.r_edge
             head.r_kids += 1
+        if child.r_edge > head.r_edge:
+            head.r_edge = child.r_edge
+
 
     # Set sentence starts
     for i in range(length):
