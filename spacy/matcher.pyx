@@ -361,7 +361,8 @@ cdef class Matcher:
                 if action == PANIC:
                     raise Exception("Error selecting action in matcher")
                 
-
+                # ADVANCE_PLUS acts like REPEAT, but also pushes a partial that
+                # acts like and ADVANCE_ZERO
                 if action == ADVANCE_PLUS:
                     state.second += 1
                     partials.push_back(state)
@@ -372,10 +373,13 @@ cdef class Matcher:
                 if action == ADVANCE:
                     state.second += 1
 
+                # Check for partial matches that are at the same spec in the same pattern
+                # Keep the longer of the matches
+                # This ensures that there are never more then 2 partials for every spec
+                # in a pattern (one of which gets pruned in this step)
+
                 overlap=False
                 for i in range(q):
-                    if ent_id != get_pattern_key(partials[i].second):
-                        continue
                     if state.second == partials[i].second and state.first < partials[i].first:
                         partials[i] = state
                         j = i
@@ -385,25 +389,11 @@ cdef class Matcher:
                     continue
                 overlap=False
                 for i in range(q):
-                    if ent_id != get_pattern_key(partials[i].second):
-                        continue
                     if state.second == partials[i].second:
                         overlap = True
                         break
                 if overlap:
                     continue
-
-                # overlap=False
-                # for i in range(q):
-                #     if state.second == partials[i].second:
-                #         if state.first < partials[i].first:
-                #             partials[i] = state
-                #             j = i-1
-                #         else:
-                #             overlap=True
-                #         break
-                # if overlap:
-                #     continue
 
     
                 if action == REPEAT:
@@ -425,10 +415,9 @@ cdef class Matcher:
                     # ent_id = state.second[1].attrs[0].value
                     # ent_id = get_pattern_key(state.second)
                     label = state.second[1].attrs[1].value
-                    # matches.append((ent_id, start, end))
                     # Check that this match doesn't overlap with an earlier match.
                     # Only overwrite an earlier match if it is a substring of this
-                    # match.
+                    # match (i.e. it starts after this match starts).
 
                     if ent_id not in matches_dict:
                         matches_dict[ent_id] = (start,end,len(matches))
@@ -454,23 +443,8 @@ cdef class Matcher:
                 action = get_action(pattern, token)
                 if action == PANIC:
                     raise Exception("Error selecting action in matcher")
-                # while acton == ADVANCE_ZERO:
-                #     pattern += 1
-                #     action = get_action(pattern,token)
-                # if action == PANIC:
-                #     raise Exception("Error selecting action in matcher")
                 while action in (ADVANCE_PLUS,ADVANCE_ZERO):
                     if action == ADVANCE_PLUS:
-                        # j=0
-                        # overlap = False
-                        # for j in range(q):
-                        #     if pattern == partials[j].second:
-                        #         overlap = True
-                        #         break
-                        # if overlap:
-                        #     pattern += 1
-                        #     action = get_action(pattern, token)
-                        #     continue
                         state.first = token_i
                         state.second = pattern
                         partials.push_back(state)
@@ -483,8 +457,6 @@ cdef class Matcher:
                 j=0
                 overlap = False
                 for j in range(q):
-                    if ent_id == get_pattern_key(partials[j].second):
-                        continue
                     if pattern == partials[j].second:
                         overlap = True
                         break
@@ -508,7 +480,6 @@ cdef class Matcher:
                     start = token_i
                     end = token_i+1 if action == ACCEPT else token_i
                     ent_id = pattern[1].attrs[0].value
-                    # ent_id = get_pattern_key(state.second)
                     label = pattern[1].attrs[1].value
                     if ent_id not in matches_dict:
                         matches_dict[ent_id] = (start,end,len(matches))
@@ -531,9 +502,7 @@ cdef class Matcher:
                     start = state.first
                     end = len(doc)
                     ent_id = state.second.attrs[0].value
-                    # ent_id = get_pattern_key(state.second)
                     label = state.second.attrs[1].value
-                    # matches.append((ent_id, start, end))
                     if ent_id not in matches_dict:
                         matches_dict[ent_id] = (start,end,len(matches))
                         matches.append((ent_id,start,end))
