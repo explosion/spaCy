@@ -1,3 +1,5 @@
+'''Test that models with no pretrained vectors can be deserialized correctly
+after vectors are added.'''
 from __future__ import unicode_literals
 import numpy
 from ...pipeline import Tagger
