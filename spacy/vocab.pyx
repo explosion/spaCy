@@ -179,14 +179,20 @@ cdef class Vocab:
         self._by_orth.set(lex.orth, <void*>lex)
         self.length += 1
 
-    def __contains__(self, unicode string):
-        """Check whether the string has an entry in the vocabulary.
+    def __contains__(self, key):
+        """Check whether the string or int key has an entry in the vocabulary.
 
         string (unicode): The ID string.
         RETURNS (bool) Whether the string has an entry in the vocabulary.
         """
-        key = hash_string(string)
-        lex = self._by_hash.get(key)
+        cdef hash_t int_key
+        if isinstance(key, bytes):
+            int_key = hash_string(key.decode('utf8'))
+        elif isinstance(key, unicode):
+            int_key = hash_string(key)
+        else:
+            int_key = key
+        lex = self._by_hash.get(int_key)
         return lex is not NULL
 
     def __iter__(self):
