@@ -174,7 +174,7 @@ class Pipe(object):
         """Load the pipe from a bytestring."""
         def load_model(b):
             if self.model is True:
-                self.cfg['pretrained_dims'] = self.vocab.vectors_length
+                self.cfg.setdefault('pretrained_dims', self.vocab.vectors_length)
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(b)
 
@@ -199,7 +199,7 @@ class Pipe(object):
         """Load the pipe from disk."""
         def load_model(p):
             if self.model is True:
-                self.cfg['pretrained_dims'] = self.vocab.vectors_length
+                self.cfg.setdefault('pretrained_dims', self.vocab.vectors_length)
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
