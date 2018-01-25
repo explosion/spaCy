@@ -1,6 +1,9 @@
 # coding: utf8
-"""Based on Garman tag map, converted using
-https://pdfs.semanticscholar.org/87b9/24e2134f6782acc59ab567f6bf87cb5e5d9f.pdf"""
+"""Based on unique combinations form this dataset:
+
+https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal
+
+Models can be trained using this. dataset as well."""
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, ADJ, CONJ, CCONJ, SCONJ, SYM, NUM, DET, ADV, ADP, X, VERB
