@@ -12,7 +12,7 @@ from ...util import update_exc, add_lookups
 
 class PersianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'fa'  # ISO code
+    lex_attr_getters[LANG] = lambda text: 'fa'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
     stop_words = STOP_WORDS
