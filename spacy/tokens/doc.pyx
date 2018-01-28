@@ -701,9 +701,12 @@ cdef class Doc:
                 for i in range(length):
                     if array[i, col] != 0:
                         self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
-        set_children_from_heads(self.c, self.length)
+        # set flags
         self.is_parsed = bool(HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(TAG in attrs or POS in attrs)
+        # if document is parsed, set children
+        if self.is_parsed:
+            set_children_from_heads(self.c, self.length)
         return self
 
     def get_lca_matrix(self):
@@ -779,7 +782,16 @@ cdef class Doc:
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
         """
-        array_head = [LENGTH, SPACY, TAG, LEMMA, HEAD, DEP, ENT_IOB, ENT_TYPE]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+
+        if self.is_tagged:
+            array_head.append(TAG)
+        # if doc parsed add head and dep attribute
+        if self.is_parsed:
+            array_head.extend([HEAD, DEP])
+        # otherwise add sent_start
+        else:
+            array_head.append(SENT_START)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
