@@ -41,7 +41,7 @@ def download(model, direct=False):
             # package, which fails if model was just installed via
             # subprocess
             package_path = get_package_path(model_name)
-            link(None, model_name, model, force=True,
+            link(model_name, model, force=True,
                     model_path=package_path)
         except:
             # Dirty, but since spacy.download and the auto-linking is
