@@ -239,7 +239,7 @@ class Language(object):
         if not hasattr(component, '__call__'):
             msg = ("Not a valid pipeline component. Expected callable, but "
                    "got {}. ".format(repr(component)))
-            if component in self.factories:
+            if isinstance(component, basestring_) and component in self.factories:
                 msg += ("If you meant to add a built-in component, use "
                         "create_pipe: nlp.add_pipe(nlp.create_pipe('{}'))"
                         .format(component))
