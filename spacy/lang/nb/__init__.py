@@ -13,6 +13,12 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
+# Borrowing french syntax parser because both languages use
+# universal dependencies for tagging/parsing.
+# Read here for more:
+# https://github.com/explosion/spaCy/pull/1882#issuecomment-361409573
+from ..fr.syntax_iterators import SYNTAX_ITERATORS
+
 
 class NorwegianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
@@ -22,6 +28,7 @@ class NorwegianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     lemma_lookup = LOOKUP
+    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Norwegian(Language):
