@@ -20,13 +20,16 @@ def validate():
         prints("Couldn't fetch compatibility table.",
                title="Server error (%d)" % r.status_code, exits=1)
     compat = r.json()['spacy']
+    current_compat = compat.get(about.__version__)
+    if not current_compat:
+        prints(about.__compatibility__, exits=1,
+               title="Can't find spaCy v{} in compatibility table"
+               .format(about.__version__))
     all_models = set()
     for spacy_v, models in dict(compat).items():
         all_models.update(models.keys())
         for model, model_vs in models.items():
             compat[spacy_v][model] = [reformat_version(v) for v in model_vs]
-
-    current_compat = compat[about.__version__]
     model_links = get_model_links(current_compat)
     model_pkgs = get_model_pkgs(current_compat, all_models)
     incompat_links = {l for l, d in model_links.items() if not d['compat']}
