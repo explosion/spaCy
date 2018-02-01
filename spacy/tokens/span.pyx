@@ -64,6 +64,11 @@ cdef class Span:
         self._vector_norm = vector_norm
 
     def __richcmp__(self, Span other, int op):
+        if other is None:
+            if op == 0 or op == 1 or op == 2:
+                return False
+            else:
+                return True
         # Eq
         if op == 0:
             return self.start_char < other.start_char
@@ -179,6 +184,15 @@ cdef class Span:
         """
         if 'similarity' in self.doc.user_span_hooks:
             self.doc.user_span_hooks['similarity'](self, other)
+        if len(self) == 1 and hasattr(other, 'orth'):
+            if self[0].orth == other.orth:
+                return 1.0
+        elif hasattr(other, '__len__') and len(self) == len(other):
+            for i in range(len(self)):
+                if self[i].orth != getattr(other[i], 'orth', None):
+                    break
+            else:
+                return 1.0
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -260,6 +274,11 @@ cdef class Span:
 
             self.start = start
             self.end = end + 1
+
+    property vocab:
+        """RETURNS (Vocab): The Span's Doc's vocab."""
+        def __get__(self):
+            return self.doc.vocab
 
     property sent:
         """RETURNS (Span): The sentence span that the span is a part of."""

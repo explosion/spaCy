@@ -174,7 +174,7 @@ class Pipe(object):
         """Load the pipe from a bytestring."""
         def load_model(b):
             if self.model is True:
-                self.cfg['pretrained_dims'] = self.vocab.vectors_length
+                self.cfg.setdefault('pretrained_dims', self.vocab.vectors_length)
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(b)
 
@@ -199,7 +199,7 @@ class Pipe(object):
         """Load the pipe from disk."""
         def load_model(p):
             if self.model is True:
-                self.cfg['pretrained_dims'] = self.vocab.vectors_length
+                self.cfg.setdefault('pretrained_dims', self.vocab.vectors_length)
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
@@ -532,7 +532,7 @@ class Tagger(Pipe):
         else:
             serialize['model'] = self.model.to_bytes
         serialize['vocab'] = self.vocab.to_bytes
-
+        serialize['cfg'] = lambda: ujson.dumps(self.cfg)
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize['tag_map'] = lambda: msgpack.dumps(
             tag_map, use_bin_type=True, encoding='utf8')
@@ -565,7 +565,7 @@ class Tagger(Pipe):
         return self
 
     def to_disk(self, path, **exclude):
-        self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
+        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
@@ -652,10 +652,7 @@ class MultitaskObjective(Tagger):
                         self.labels[label] = len(self.labels)
         if self.model is True:
             token_vector_width = util.env_opt('token_vector_width')
-            self.model = chain(
-                tok2vec,
-                Softmax(len(self.labels), token_vector_width)
-            )
+            self.model = self.Model(len(self.labels), tok2vec=tok2vec)
         link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -663,7 +660,20 @@ class MultitaskObjective(Tagger):
 
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
-        return build_tagger_model(n_tags, tok2vec=tok2vec, **cfg)
+        token_vector_width = util.env_opt('token_vector_width', 128)
+        softmax = Softmax(n_tags, token_vector_width)
+        model = chain(
+            tok2vec,
+            softmax
+        )
+        model.tok2vec = tok2vec
+        model.softmax = softmax
+        return model
+
+    def predict(self, docs):
+        tokvecs = self.model.tok2vec(docs)
+        scores = self.model.softmax(tokvecs)
+        return tokvecs, scores
 
     def get_loss(self, docs, golds, scores):
         cdef int idx = 0
@@ -871,15 +881,17 @@ cdef class DependencyParser(Parser):
     @property
     def postprocesses(self):
         return [nonproj.deprojectivize]
+    
+    def add_multitask_objective(self, target):
+        labeller = MultitaskObjective(self.vocab, target=target)
+        self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, gold_tuples, pipeline, sgd=None, **cfg):
-        for target in []:
-            labeller = MultitaskObjective(self.vocab, target=target)
+        for labeller in self._multitasks:
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec, sgd=sgd)
-            pipeline.append(labeller)
-            self._multitasks.append(labeller)
+            pipeline.append((labeller.name, labeller))
 
     def __reduce__(self):
         return (DependencyParser, (self.vocab, self.moves, self.model),
@@ -891,15 +903,17 @@ cdef class EntityRecognizer(Parser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
+    
+    def add_multitask_objective(self, target):
+        labeller = MultitaskObjective(self.vocab, target=target)
+        self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, gold_tuples, pipeline, sgd=None, **cfg):
-        for target in []:
-            labeller = MultitaskObjective(self.vocab, target=target)
+        for labeller in self._multitasks:
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec)
-            pipeline.append(labeller)
-            self._multitasks.append(labeller)
+            pipeline.append((labeller.name, labeller))
 
     def __reduce__(self):
         return (EntityRecognizer, (self.vocab, self.moves, self.model),

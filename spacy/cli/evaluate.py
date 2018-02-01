@@ -25,8 +25,8 @@ numpy.random.seed(0)
     displacy_path=("directory to output rendered parses as HTML", "option",
                    "dp", str),
     displacy_limit=("limit of parses to render as HTML", "option", "dl", int))
-def evaluate(cmd, model, data_path, gpu_id=-1, gold_preproc=False,
-             displacy_path=None, displacy_limit=25):
+def evaluate(model, data_path, gpu_id=-1, gold_preproc=False, displacy_path=None,
+             displacy_limit=25):
     """
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.

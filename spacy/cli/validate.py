@@ -4,13 +4,14 @@ from __future__ import unicode_literals, print_function
 import requests
 import pkg_resources
 from pathlib import Path
+import sys
 
 from ..compat import path2str, locale_escape
 from ..util import prints, get_data_path, read_json
 from .. import about
 
 
-def validate(cmd):
+def validate():
     """Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """
@@ -19,13 +20,16 @@ def validate(cmd):
         prints("Couldn't fetch compatibility table.",
                title="Server error (%d)" % r.status_code, exits=1)
     compat = r.json()['spacy']
+    current_compat = compat.get(about.__version__)
+    if not current_compat:
+        prints(about.__compatibility__, exits=1,
+               title="Can't find spaCy v{} in compatibility table"
+               .format(about.__version__))
     all_models = set()
     for spacy_v, models in dict(compat).items():
         all_models.update(models.keys())
         for model, model_vs in models.items():
             compat[spacy_v][model] = [reformat_version(v) for v in model_vs]
-
-    current_compat = compat[about.__version__]
     model_links = get_model_links(current_compat)
     model_pkgs = get_model_pkgs(current_compat, all_models)
     incompat_links = {l for l, d in model_links.items() if not d['compat']}
@@ -61,6 +65,9 @@ def validate(cmd):
                "the `python -m spacy link` command with `--force`, or remove "
                "them from the data directory. Data path: {}"
                .format(path2str(get_data_path())))
+
+    if incompat_models or incompat_links:
+        sys.exit(1)
 
 
 def get_model_links(compat):

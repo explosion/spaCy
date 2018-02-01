@@ -38,7 +38,7 @@ numpy.random.seed(0)
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json. All relevant properties will be "
                "overwritten.", "option", "m", Path))
-def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
+def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
           use_gpu=-1, vectors=None, no_tagger=False,
           no_parser=False, no_entities=False, gold_preproc=False,
           version="0.0.0", meta_path=None):

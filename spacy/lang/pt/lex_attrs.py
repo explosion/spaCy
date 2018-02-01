@@ -11,13 +11,13 @@ _num_words = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete',
               'oitenta', 'noventa', 'cem', 'mil', 'milhão', 'bilião', 'trilião',
               'quadrilião']
 
-_ord_words = ['primeiro', 'segundo', 'terceiro', 'quarto', 'quinto', 'sexto',
-              'sétimo', 'oitavo', 'nono', 'décimo', 'vigésimo', 'trigésimo',
-              'quadragésimo', 'quinquagésimo', 'sexagésimo', 'septuagésimo',
-              'octogésimo', 'nonagésimo', 'centésimo', 'ducentésimo',
-              'trecentésimo', 'quadringentésimo', 'quingentésimo', 'sexcentésimo',
-              'septingentésimo', 'octingentésimo', 'nongentésimo', 'milésimo',
-              'milionésimo', 'bilionésimo']
+_ordinal_words = ['primeiro', 'segundo', 'terceiro', 'quarto', 'quinto', 'sexto',
+                  'sétimo', 'oitavo', 'nono', 'décimo', 'vigésimo', 'trigésimo',
+                  'quadragésimo', 'quinquagésimo', 'sexagésimo', 'septuagésimo',
+                  'octogésimo', 'nonagésimo', 'centésimo', 'ducentésimo',
+                  'trecentésimo', 'quadringentésimo', 'quingentésimo', 'sexcentésimo',
+                  'septingentésimo', 'octingentésimo', 'nongentésimo', 'milésimo',
+                  'milionésimo', 'bilionésimo']
 
 
 def like_num(text):
@@ -28,7 +28,9 @@ def like_num(text):
         num, denom = text.split('/')
         if num.isdigit() and denom.isdigit():
             return True
-    if text in _num_words:
+    if text.lower() in _num_words:
+        return True
+    if text.lower() in _ordinal_words:
         return True
     return False
 

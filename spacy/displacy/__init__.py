@@ -95,8 +95,8 @@ def parse_deps(orig_doc, options={}):
             span = doc[start:end]
             spans.append((span.start_char, span.end_char, word.tag_,
                           word.lemma_, word.ent_type_))
-        for span_props in spans:
-            doc.merge(*span_props)
+        for start, end, tag, lemma, ent_type in spans:
+            doc.merge(start, end, tag=tag, lemma=lemma, ent_type=ent_type)
     if options.get('fine_grained'):
         words = [{'text': w.text, 'tag': w.tag_} for w in doc]
     else:

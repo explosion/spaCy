@@ -40,6 +40,11 @@ cdef class Lexeme:
         assert self.c.orth == orth
 
     def __richcmp__(self, other, int op):
+        if other is None:
+            if op == 0 or op == 1 or op == 2:
+                return False
+            else:
+                return True
         if isinstance(other, Lexeme):
             a = self.orth
             b = other.orth
@@ -107,6 +112,14 @@ cdef class Lexeme:
             `Span`, `Token` and `Lexeme` objects.
         RETURNS (float): A scalar similarity score. Higher is more similar.
         """
+        # Return 1.0 similarity for matches
+        if hasattr(other, 'orth'):
+            if self.c.orth == other.orth:
+                return 1.0
+        elif hasattr(other, '__len__') and len(other) == 1 \
+        and hasattr(other[0], 'orth'):
+            if self.c.orth == other[0].orth:
+                return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return (numpy.dot(self.vector, other.vector) /

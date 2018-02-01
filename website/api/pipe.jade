@@ -49,6 +49,7 @@ p Create a new pipeline instance.
 +aside-code("Example").
     from spacy.pipeline import #{CLASSNAME}
     #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    #{VARNAME}.from_disk('/path/to/model')
 
 +table(["Name", "Type", "Description"])
     +row
