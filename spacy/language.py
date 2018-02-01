@@ -236,6 +236,14 @@ class Language(object):
             >>> nlp.add_pipe(component, before='ner')
             >>> nlp.add_pipe(component, name='custom_name', last=True)
         """
+        if not hasattr(component, '__call__'):
+            msg = ("Not a valid pipeline component. Expected callable, but "
+                   "got {}. ".format(repr(component)))
+            if isinstance(component, basestring_) and component in self.factories:
+                msg += ("If you meant to add a built-in component, use "
+                        "create_pipe: nlp.add_pipe(nlp.create_pipe('{}'))"
+                        .format(component))
+            raise ValueError(msg)
         if name is None:
             if hasattr(component, 'name'):
                 name = component.name
