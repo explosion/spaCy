@@ -12,7 +12,7 @@ import numpy
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_OOV
+from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_CURRENCY, IS_OOV
 from .attrs cimport PROB
 from .attrs import intify_attrs
 from . import about
@@ -473,6 +473,14 @@ cdef class Lexeme:
 
         def __set__(self, bint x):
             Lexeme.c_set_flag(self.c, IS_RIGHT_PUNCT, x)
+
+    property is_currency:
+        """RETURNS (bool): Whether the lexeme is a currency symbol, e.g. $, €."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c, IS_CURRENCY)
+
+        def __set__(self, bint x):
+            Lexeme.c_set_flag(self.c, IS_CURRENCY, x)
 
     property like_url:
         """RETURNS (bool): Whether the lexeme resembles a URL."""
