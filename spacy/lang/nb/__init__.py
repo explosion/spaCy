@@ -17,7 +17,7 @@ from ...util import update_exc, add_lookups
 # universal dependencies for tagging/parsing.
 # Read here for more:
 # https://github.com/explosion/spaCy/pull/1882#issuecomment-361409573
-from ..fr.syntax_iterators import SYNTAX_ITERATORS
+from .syntax_iterators import SYNTAX_ITERATORS
 
 
 class NorwegianDefaults(Language.Defaults):
