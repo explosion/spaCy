@@ -461,7 +461,8 @@ class Language(object):
             if hasattr(proc, 'begin_training'):
                 proc.begin_training(get_gold_tuples(),
                                     pipeline=self.pipeline,
-                                    sgd=self._optimizer)
+                                    sgd=self._optimizer,
+                                    **cfg)
         return self._optimizer
 
     def evaluate(self, docs_golds, verbose=False):
