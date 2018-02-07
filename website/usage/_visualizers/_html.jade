@@ -74,7 +74,8 @@ p
     |  #[+a("https://github.com/tensorflow/models/tree/master/research/syntaxnet") SyntaxNet].
     |  Simply convert the dependency parse or recognised entities to displaCy's
     |  format and set #[code manual=True] on either #[code render()] or
-    |  #[code serve()].
+    |  #[code serve()]. When setting #[code ents] manually, make sure to supply
+    |  them in the right order, i.e. starting with the lowest start position.
 
 +aside-code("Example").
     ex = [{'text': 'But Google is starting from behind.',
