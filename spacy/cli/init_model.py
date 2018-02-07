@@ -36,7 +36,7 @@ def init_model(lang, output_dir, freqs_loc, clusters_loc=None, vectors_loc=None,
     vectors_loc = ensure_path(vectors_loc)
 
     probs, oov_prob = read_freqs(freqs_loc)
-    vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else None, None
+    vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     clusters = read_clusters(clusters_loc) if clusters_loc else {}
 
     nlp = create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, prune_vectors)
@@ -69,7 +69,7 @@ def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, pru
         lex_added += 1
     nlp.vocab.cfg.update({'oov_prob': oov_prob})
 
-    if vectors_data:
+    if len(vectors_data):
         nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if prune_vectors >= 1:
         nlp.vocab.prune_vectors(prune_vectors)
