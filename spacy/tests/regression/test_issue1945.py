@@ -1,17 +1,19 @@
-'''Test regression in PhraseMatcher introduced in v2.0.6.'''
+'''Test regression in Matcher introduced in v2.0.6.'''
 from __future__ import unicode_literals
 import pytest
 
-from ...lang.en import English
-from ...matcher import PhraseMatcher
+from ...vocab import Vocab
+from ...tokens import Doc
+from ...matcher import Matcher
 
 @pytest.mark.xfail
 def test_issue1945():
-    text = "deep machine learning"
-    mw_list = ["machine learning", "deep blue", "planing machine"]
-
-    nlp = English()
-    matcher = PhraseMatcher(nlp.vocab)
-    matcher.add("MWE", None, *[nlp.tokenizer(item) for item in mw_list])
-
-    assert len(matcher(nlp(text))) == 1
+    text = "a a a"
+    matcher = Matcher(Vocab())
+    matcher.add('MWE', None, [{'orth': 'a'}, {'orth': 'a'}])
+    doc = Doc(matcher.vocab, words=['a', 'a', 'a'])
+    matches = matcher(doc)
+    # We should see two overlapping matches here
+    assert len(matches) == 2
+    assert matches[0][1:] == (0, 2)
+    assert matches[1][1:] == (1, 3)
