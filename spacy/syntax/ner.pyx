@@ -281,7 +281,7 @@ cdef class Begin:
         elif preset_ent_iob == 3 and st.B_(1).ent_iob != 1:
             return False
         # Don't allow entities to extend across sentence boundaries
-        elif st.B_(1).sent_start:
+        elif st.B_(1).sent_start == 1:
             return False
         else:
             return label != 0 and not st.entity_is_open()
@@ -327,7 +327,7 @@ cdef class In:
         elif st.B_(1).ent_iob != preset_ent_iob:
             return False
         # Don't allow entities to extend across sentence boundaries
-        elif st.B_(1).sent_start:
+        elif st.B_(1).sent_start == 1:
             return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
