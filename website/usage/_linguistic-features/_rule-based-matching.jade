@@ -88,8 +88,8 @@ p
         +cell The exact verbatim text of a token.
 
     +row
-        +cell.u-nowrap #[code LOWER], #[code UPPER]
-        +cell The lowercase, uppercase form of the token text.
+        +cell.u-nowrap #[code LOWER]
+        +cell The lowercase form of the token text.
 
     +row
         +cell.u-nowrap #[code IS_ALPHA], #[code IS_ASCII], #[code IS_DIGIT]
@@ -222,8 +222,8 @@ p
         doc.ents += ((EVENT, start, end),)
 
     matcher.add('GoogleIO', add_event_ent,
-                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}],
-                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}, {'IS_DIGIT': True}])
+                [{'ORTH': 'Google'}, {'ORTH': 'I'}, {'ORTH': '/'}, {'ORTH': 'O'}],
+                [{'ORTH': 'Google'}, {'ORTH': 'I'}, {'ORTH': '/'}, {'ORTH': 'O'}, {'IS_DIGIT': True}])
 
 p
     |  In addition to mentions of "Google I/O", your data also contains some

@@ -231,7 +231,7 @@ p
     def set_sentiment(matcher, doc, i, matches):
         doc.sentiment += 0.1
 
-    pattern1 = [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}]
+    pattern1 = [{'ORTH': 'Google'}, {'ORTH': 'I'}, {'ORTH': '/'}, {'ORTH': 'O'}]
     pattern2 = [[{'ORTH': emoji, 'OP': '+'}] for emoji in ['😀', '😂', '🤣', '😍']]
     matcher.add('GoogleIO', None, pattern1) # match "Google I/O" or "Google i/o"
     matcher.add('HAPPY', set_sentiment, *pattern2) # match one or more happy emoji
