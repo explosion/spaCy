@@ -32,7 +32,7 @@ p
     |  string to get its hash, or a hash to get its string:
 
 +code.
-    doc = nlp(u'I like coffee')
+    doc = nlp(u'I love coffee')
     assert doc.vocab.strings[u'coffee'] == 3197928453018144401
     assert doc.vocab.strings[3197928453018144401] == u'coffee'
 
@@ -70,7 +70,7 @@ p
     - var style = [0, 1, 1, 0, 0, 1, 1]
     +annotation-row(["I", "4690420944186131903", "X", "I", "I", true, false], style)
     +annotation-row(["love", "3702023516439754181", "xxxx", "l", "ove", true, false], style)
-    +annotation-row(["coffee", "3197928453018144401", "xxxx", "c", "ffe", true, false], style)
+    +annotation-row(["coffee", "3197928453018144401", "xxxx", "c", "fee", true, false], style)
 
 p
     |  The mapping of words to hashes doesn't depend on any state. To make sure
