@@ -89,7 +89,7 @@ p Match a stream of documents, yielding them in turn.
 +aside-code("Example").
     from spacy.matcher import Matcher
     matcher = Matcher(nlp.vocab)
-    for doc in matcher.pipe(texts, batch_size=50, n_threads=4):
+    for doc in matcher.pipe(docs, batch_size=50, n_threads=4):
         pass
 
 +table(["Name", "Type", "Description"])
