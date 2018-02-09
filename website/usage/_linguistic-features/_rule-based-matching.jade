@@ -339,7 +339,8 @@ p
     |  flag.
 
 +code.
-    IS_DEFINITELY = nlp.vocab.add_flag(re.compile(r'deff?in[ia]tely').match)
+    definitely_flag = lambda text: bool(re.compile(r'deff?in[ia]tely').match(text))
+    IS_DEFINITELY = nlp.vocab.add_flag(definitely_flag)
 
     matcher = Matcher(nlp.vocab)
     matcher.add('DEFINITELY', None, [{IS_DEFINITELY: True}])
