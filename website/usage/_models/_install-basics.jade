@@ -31,3 +31,13 @@ p
     import spacy
     nlp = spacy.load('en')
     doc = nlp(u'This is a sentence.')
+
++infobox("Important note", "⚠️")
+    |  To allow loading models via convenient shortcuts like #[code 'en'], spaCy
+    |  will create a symlink within the #[code spacy/data] directory. This means
+    |  that your user needs the #[strong required permissions].
+    |  If you've installed spaCy to a system directory and don't have admin
+    |  privileges, the model linking may fail. The easiest solution
+    |  is to re-run the command as admin, or use a #[code virtualenv]. For more
+    |  info on this, see the
+    |  #[+a("/usage/#symlink-privilege") troubleshooting guide].
