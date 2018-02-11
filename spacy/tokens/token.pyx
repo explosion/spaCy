@@ -15,7 +15,7 @@ from ..lexeme cimport Lexeme
 from .. import parts_of_speech
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL
+from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..compat import is_config
@@ -854,6 +854,11 @@ cdef class Token:
         """RETURNS (bool): Whether the token is a left punctuation mark."""
         def __get__(self):
             return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
+
+    property is_currency:
+        """RETURNS (bool): Whether the token is a currency symbol."""
+        def __get__(self):
+            return Lexeme.c_check_flag(self.c.lex, IS_CURRENCY)
 
     property like_url:
         """RETURNS (bool): Whether the token resembles a URL."""
