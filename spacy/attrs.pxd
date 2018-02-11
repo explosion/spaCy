@@ -20,8 +20,7 @@ cdef enum attr_id_t:
     IS_RIGHT_PUNCT
     IS_CURRENCY
 
-    FLAG18 = 18
-    FLAG19
+    FLAG19 = 19
     FLAG20
     FLAG21
     FLAG22
