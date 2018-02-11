@@ -17,6 +17,7 @@ cdef enum symbol_t:
     IS_QUOTE
     IS_LEFT_PUNCT
     IS_RIGHT_PUNCT
+    IS_CURRENCY
 
     FLAG18 = 18
     FLAG19
