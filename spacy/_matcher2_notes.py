@@ -37,10 +37,11 @@ def transition(state, token, matches, nexts):
         start = token.i
     if is_match:
         matches.append((pattern, start, token.i+1))
-    if keep_state:
-        nexts.append((pattern, i, start))
     if advance_state:
         nexts.append((pattern, i+1, start))
+    if keep_state:
+        # TODO: This needs to be zero-width :(.
+        nexts.append((pattern, i, start))
     return (matches, nexts)
 
 
@@ -92,7 +93,7 @@ def get_action(state, token):
         elif is_match:
             return '011'
         else:
-            return '010'
+            return '001'
     else:
         print(operator, is_match, is_final)
         raise ValueError
@@ -245,7 +246,7 @@ def test_find_matches_greedy():
     assert matches == [(patterns[0], 0, 1), (patterns[0], 0, 2), (patterns[0], 1, 2)]
 
 def test_find_matches_non_greedy():
-    patterns = [[{'spec': 'a', 'op': '0+'}, {'spec': 'b'}]]
+    patterns = [[{'spec': 'a', 'op': '0+'}, {'spec': 'b', "op": "1"}]]
     doc = Doc(Vocab(), words=['b'])
     matches = find_matches(patterns, doc)
     assert matches == [(patterns[0], 0, 1)]
