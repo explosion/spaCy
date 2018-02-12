@@ -68,13 +68,11 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
         cache = PreshMap()
         nexts.clear()
         for j in range(curr_states.size()):
-            action = get_action(curr_states[j], &doc.c[i], extra_attrs[i], cache)
             transition(matches, nexts,
-                action, curr_states[j], i)
+                curr_states[j], i, doc, extra_attrs, cache)
         for j in range(init_states.size()):
-            action = get_action(init_states[j], &doc.c[i], extra_attrs[i], cache)
             transition(matches, nexts,
-                action, init_states[j], i)
+                init_states[j], i, doc, extra_attrs, cache)
         nexts, curr_states = curr_states, nexts
     # Filter out matches that have a longer equivalent.
     longest_matches = {}
@@ -89,19 +87,26 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
 
 
 cdef void transition(vector[MatchC]& matches, vector[PatternStateC]& nexts,
-        ActionC action, PatternStateC state, int token) except *:
+        PatternStateC state, int token,
+        Doc doc, const attr_t* const* extra_attrs, PreshMap cache) except *:
+    action = get_action(state, &doc.c[token], extra_attrs[token], cache)
     if state.start == -1:
         state.start = token
     if action.is_match:
         ent_id = state.state[1].attrs.value
         matches.push_back(
             MatchC(pattern_id=ent_id, start=state.start, end=token+1))
-    if action.keep_state:
-        nexts.push_back(PatternStateC(start=state.start, state=state.state,
-            last_action=action))
     if action.advance_state:
         nexts.push_back(PatternStateC(start=state.start,
             state=state.state+1, last_action=action))
+    cdef PatternStateC next_state
+    if action.keep_state and token < doc.length:
+        # Keeping the state needs to not consume a token, so we call transition
+        # with the next state
+        next_state = PatternStateC(start=state.start, state=state.state+1,
+                                   last_action=action)
+        transition(matches, nexts, next_state, token, doc, extra_attrs, cache)
+
 
 
 cdef ActionC get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs,
