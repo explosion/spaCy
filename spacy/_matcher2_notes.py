@@ -49,54 +49,53 @@ def get_action(state, token):
     '''We need to consider:
 
     a) Does the token match the specification? [Yes, No]
-    b) What's the quantifier? [1, 1+, 0+]
+    b) What's the quantifier? [1, 0+, ?]
     c) Is this the last specification? [final, non-final]
 
-    We therefore have 12 cases to consider. For each case, we need to know
-    whether to emit a match, whether to keep the current state in the partials,
-    and whether to add an advanced state to the partials.
+    We can transition in the following ways:
 
-    We therefore have eight possible results for these three booleans, which
-    we'll code as 000, 001 etc.
+    a) Do we emit a match?
+    b) Do we add a state with (next state, next token)?
+    c) Do we add a state with (next state, same token)?
+    d) Do we add a state with (same state, next token)?
+
+    We'll code the actions as boolean strings, so 0000 means no to all 4,
+    1000 means match but no states added, etc.
     
-    - No match:
-      000
-    - Match, final:
-        1: 100
-        1+: 110
-    - Match, non-final:
-        1: 001
-        1+: 011
+    1:
+      Yes, final:
+        1000
+      Yes, non-final:
+        0100
+      No, final:
+        0000
+      No, non-final
+        0000
+    0+:
+      Yes, final:
+        1001
+      Yes, non-final:
+        0111
+      No, final:
+        1000 (note: Don't include last token!)
+      No, non-final:
+        0010
+    ?:
+      Yes, final:
+        1000
+      Yes, non-final:
+        0100
+      No, final:
+        1000 (note: Don't include last token!)
+      No, non-final:
+        0010
 
     Problem: If a quantifier is matching, we're adding a lot of open partials
     '''
     is_match = get_is_match(state, token)
     operator = get_operator(state, token)
     is_final = get_is_final(state, token)
-    if operator == '1':
-        if not is_match:
-            return '000'
-        elif is_final:
-            return '100'
-        else:
-            return '001'
-    elif operator == '1+':
-        if not is_match:
-            return '000'
-        if is_final:
-            return '110'
-        else:
-            return '011'
-    elif operator == '0+':
-        if is_final:
-            return '100'
-        elif is_match:
-            return '011'
-        else:
-            return '001'
-    else:
-        print(operator, is_match, is_final)
-        raise ValueError
+    raise NotImplementedError
 
 
 def get_is_match(state, token):
