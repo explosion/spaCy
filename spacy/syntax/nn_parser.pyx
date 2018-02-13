@@ -887,7 +887,7 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, strings=False),
-            'cfg': lambda p: self.cfg.update(ujson.load(p.open())),
+            'cfg': lambda p: self.cfg.update(util.read_json(p)),
             'model': lambda p: None
         }
         util.from_disk(path, deserializers, exclude)
