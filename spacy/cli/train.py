@@ -6,8 +6,6 @@ from pathlib import Path
 import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
-import random
-import numpy.random
 
 from ..gold import GoldCorpus, minibatch
 from ..util import prints
@@ -15,9 +13,6 @@ from .. import util
 from .. import about
 from .. import displacy
 from ..compat import json_dumps
-
-random.seed(0)
-numpy.random.seed(0)
 
 
 @plac.annotations(
@@ -45,6 +40,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     """
     Train a model. Expects data in spaCy's JSON format.
     """
+    util.fix_random_seed()
     util.set_env_log(True)
     n_sents = n_sents or None
     output_path = util.ensure_path(output_dir)

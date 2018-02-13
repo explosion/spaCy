@@ -3,17 +3,11 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from timeit import default_timer as timer
-import random
-import numpy.random
 
 from ..gold import GoldCorpus
 from ..util import prints
 from .. import util
 from .. import displacy
-
-
-random.seed(0)
-numpy.random.seed(0)
 
 
 @plac.annotations(
@@ -31,6 +25,8 @@ def evaluate(model, data_path, gpu_id=-1, gold_preproc=False, displacy_path=None
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.
     """
+
+    util.fix_random_seed()
     if gpu_id >= 0:
         util.use_gpu(gpu_id)
     util.set_env_log(False)
