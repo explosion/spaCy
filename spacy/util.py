@@ -17,7 +17,7 @@ from thinc.neural._classes.model import Model
 import functools
 import cytoolz
 import itertools
-import numpy as np
+import numpy.random
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
@@ -627,5 +627,5 @@ def use_gpu(gpu_id):
 
 
 def fix_random_seed(seed=0):
-    random.seed(0)
-    np.random.seed(0)
+    random.seed(seed)
+    numpy.random.seed(seed)
