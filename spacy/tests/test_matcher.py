@@ -1,7 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..matcher import Matcher, PhraseMatcher
+from ..matcher2 import Matcher
+from ..matcher2 import PhraseMatcher
 from .util import get_doc
 from ..tokens import Doc
 
@@ -186,6 +187,7 @@ def test_matcher_match_zero_plus(matcher):
     pattern = [{'ORTH': '"'},
                {'OP': '*', 'IS_PUNCT': False},
                {'ORTH': '"'}]
+    matcher = Matcher(matcher.vocab)
     matcher.add('Quote', None, pattern)
     doc = get_doc(matcher.vocab, words)
     assert len(matcher(doc)) == 1
