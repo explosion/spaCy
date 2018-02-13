@@ -203,16 +203,16 @@ cdef ActionC get_action(PatternStateC state, const TokenC* token, const attr_t* 
 
     Problem: If a quantifier is matching, we're adding a lot of open partials
     '''
-    cached_match = <uint64_t>cache.get(state.pattern.key)
+    #cached_match = <uint64_t>cache.get(state.pattern.key)
     cdef char is_match
-    if cached_match == 0:
-        is_match = get_is_match(state, token, extra_attrs)
-        cached_match = is_match + 1
-        cache.set(state.pattern.key, <void*>cached_match)
-    elif cached_match == 1:
-        is_match = 0
-    else:
-        is_match = 1
+    #if cached_match == 0:
+    is_match = get_is_match(state, token, extra_attrs)
+    # cached_match = is_match + 1
+    # cache.set(state.pattern.key, <void*>cached_match)
+    #elif cached_match == 1:
+    #    is_match = 0
+    #else:
+    #    is_match = 1
     quantifier = get_quantifier(state)
     is_final = get_is_final(state)
     if quantifier == ZERO:
