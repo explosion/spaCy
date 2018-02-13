@@ -82,7 +82,6 @@ cdef struct MatchC:
 
 
 cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
-    print("N patterns: ", n)
     cdef vector[PatternStateC] init_states
     cdef ActionC null_action = ActionC(-1, -1, -1, -1)
     for i in range(n):
