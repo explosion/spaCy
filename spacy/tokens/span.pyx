@@ -285,16 +285,33 @@ cdef class Span:
         def __get__(self):
             if 'sent' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['sent'](self)
-            # This should raise if we're not parsed.
+            # This should raise if we're not parsed
+            # or doesen't have any sbd component :)
             self.doc.sents
+            # if doc is parsed we can use the deps to find the sentence
+            # otherwise we use the `sent_start` token attribute
             cdef int n = 0
-            root = &self.doc.c[self.start]
-            while root.head != 0:
-                root += root.head
-                n += 1
-                if n >= self.doc.length:
-                    raise RuntimeError
-            return self.doc[root.l_edge:root.r_edge + 1]
+            if self.doc.is_parsed:
+                root = &self.doc.c[self.start]
+                while root.head != 0:
+                    root += root.head
+                    n += 1
+                    if n >= self.doc.length:
+                        raise RuntimeError
+                return self.doc[root.l_edge:root.r_edge + 1]
+            else:
+                # find start of the sentence
+                start = self.start
+                while not self.doc.c[start].sent_start and start > 0:
+                    start += -1
+                # find end of the sentence
+                end = self.end
+                while not self.doc.c[end].sent_start:
+                    end += 1
+                    if n >= self.doc.length:
+                        break
+                #
+                return self.doc[start:end]
 
     property has_vector:
         """RETURNS (bool): Whether a word vector is associated with the object.
