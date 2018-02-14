@@ -175,7 +175,7 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) 
                 state.pattern += 1
 
 
-cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) except *:
+cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) nogil:
     '''We need to consider:
 
     a) Does the token match the specification? [Yes, No]
