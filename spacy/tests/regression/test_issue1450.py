@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import pytest
 
-from ...matcher import Matcher
+from ...matcher2 import Matcher
 from ...tokens import Doc
 from ...vocab import Vocab
 

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import copy
 
 from ... vocab import Vocab
-from ... matcher import Matcher
+from ... matcher2 import Matcher
 from ... tokens import Doc
 
 
