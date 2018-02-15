@@ -1,30 +1,18 @@
-# cython: profile=True
 # cython: infer_types=True
-# coding: utf8
-from __future__ import unicode_literals
-
-import ujson
-from cymem.cymem cimport Pool
-from preshed.maps cimport PreshMap
+# cython: profile=True
 from libcpp.vector cimport vector
-from libcpp.pair cimport pair
-from cython.operator cimport dereference as deref
+from libc.stdint cimport int32_t, uint64_t, uint16_t
+from preshed.maps cimport PreshMap
+from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
-from libc.stdint cimport int32_t
-
-# try:
-#     from libcpp.unordered_map cimport unordered_map as umap
-# except:
-#     from libcpp.map cimport map as umap
-
-from .typedefs cimport attr_t
-from .typedefs cimport hash_t
+from .typedefs cimport attr_t, hash_t
 from .structs cimport TokenC
-from .tokens.doc cimport Doc, get_token_attr
+from .lexeme cimport attr_id_t
 from .vocab cimport Vocab
-
+from .tokens.doc cimport Doc
+from .tokens.doc cimport get_token_attr
+from .attrs cimport ID, attr_id_t, NULL_ATTR
 from .attrs import IDS
-from .attrs cimport attr_id_t, ID, NULL_ATTR
 from .attrs import FLAG61 as U_ENT
 from .attrs import FLAG60 as B2_ENT
 from .attrs import FLAG59 as B3_ENT
@@ -54,29 +42,23 @@ from .attrs import FLAG36 as L9_ENT
 from .attrs import FLAG35 as L10_ENT
 
 
-cpdef enum quantifier_t:
-    _META
-    ONE
+cdef enum action_t:
+    REJECT = 0000
+    MATCH = 1000
+    ADVANCE = 0100
+    RETRY = 0010
+    RETRY_EXTEND = 0011
+    MATCH_EXTEND = 1001
+    MATCH_REJECT = 2000
+
+
+cdef enum quantifier_t:
     ZERO
     ZERO_ONE
     ZERO_PLUS
+    ONE
+    ONE_PLUS
 
-
-cdef enum action_t:
-    REJECT
-    ADVANCE
-    REPEAT
-    ACCEPT
-    ADVANCE_ZERO
-    ADVANCE_PLUS
-    ACCEPT_PREV
-    PANIC
-
-
-# Each token pattern consists of a quantifier and 0+ (attr, value) pairs.
-# A state is an (int, pattern pointer) pair, where the int is the start
-# position, and the pattern pointer shows where we're up to
-# in the pattern.
 
 cdef struct AttrValueC:
     attr_id_t attr
@@ -87,28 +69,231 @@ cdef struct TokenPatternC:
     AttrValueC* attrs
     int32_t nr_attr
     quantifier_t quantifier
+    hash_t key
 
 
-ctypedef TokenPatternC* TokenPatternC_ptr
-# ctypedef pair[int, TokenPatternC_ptr] StateC
+cdef struct ActionC:
+    char emit_match
+    char next_state_next_token
+    char next_state_same_token
+    char same_state_next_token
 
-# Match Dictionary entry type
-cdef struct MatchEntryC:
+
+cdef struct PatternStateC:
+    TokenPatternC* pattern
     int32_t start
-    int32_t end
-    int32_t offset
+    int32_t length
 
-# A state instance represents the information that defines a 
-# partial match
-# start: the index of the first token in the partial match
-# pattern: a pointer to the current token pattern in the full
-#       pattern
-# last_match: The entry of the last span matched by the
-#       same pattern
-cdef struct StateC:
+
+cdef struct MatchC:
+    attr_t pattern_id
     int32_t start
-    TokenPatternC_ptr pattern
-    MatchEntryC* last_match
+    int32_t length
+
+
+cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
+    cdef vector[PatternStateC] states
+    cdef vector[MatchC] matches
+    cdef PatternStateC state
+    cdef Pool mem = Pool()
+    # TODO: Prefill this with the extra attribute values.
+    extra_attrs = <attr_t**>mem.alloc(len(doc), sizeof(attr_t*))
+    # Main loop
+    cdef int i, j
+    for i in range(doc.length):
+        for j in range(n):
+            states.push_back(PatternStateC(patterns[j], i, 0))
+        transition_states(states, matches, &doc.c[i], extra_attrs[i])
+    # Handle matches that end in 0-width patterns
+    finish_states(matches, states)
+    return [(matches[i].pattern_id, matches[i].start, matches[i].start+matches[i].length)
+            for i in range(matches.size())]
+
+
+
+cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
+        const TokenC* token, const attr_t* extra_attrs) except *:
+    cdef int q = 0
+    cdef vector[PatternStateC] new_states
+    for i in range(states.size()):
+        action = get_action(states[i], token, extra_attrs)
+        if action == REJECT:
+            continue
+        state = states[i]
+        states[q] = state
+        while action in (RETRY, RETRY_EXTEND):
+            if action == RETRY_EXTEND:
+                new_states.push_back(
+                    PatternStateC(pattern=state.pattern, start=state.start,
+                                  length=state.length+1))
+            states[q].pattern += 1
+            action = get_action(states[q], token, extra_attrs)
+        if action == REJECT:
+            pass
+        elif action == ADVANCE:
+            states[q].pattern += 1
+            states[q].length += 1
+            q += 1
+        else:
+            ent_id = state.pattern[1].attrs.value
+            if action == MATCH:
+                matches.push_back(
+                    MatchC(pattern_id=ent_id, start=state.start,
+                            length=state.length+1))
+            elif action == MATCH_REJECT:
+                matches.push_back(
+                    MatchC(pattern_id=ent_id, start=state.start,
+                            length=state.length))
+            elif action == MATCH_EXTEND:
+                matches.push_back(
+                    MatchC(pattern_id=ent_id, start=state.start,
+                           length=state.length))
+                states[q].length += 1
+                q += 1
+    states.resize(q)
+    for i in range(new_states.size()):
+        states.push_back(new_states[i])
+
+
+cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) except *:
+    '''Handle states that end in zero-width patterns.'''
+    cdef PatternStateC state
+    for i in range(states.size()):
+        state = states[i]
+        while get_quantifier(state) in (ZERO_PLUS, ZERO_ONE):
+            is_final = get_is_final(state)
+            if is_final:
+                ent_id = state.pattern[1].attrs.value
+                matches.push_back(
+                    MatchC(pattern_id=ent_id, start=state.start, length=state.length))
+                break
+            else:
+                state.pattern += 1
+
+
+cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) nogil:
+    '''We need to consider:
+
+    a) Does the token match the specification? [Yes, No]
+    b) What's the quantifier? [1, 0+, ?]
+    c) Is this the last specification? [final, non-final]
+
+    We can transition in the following ways:
+
+    a) Do we emit a match?
+    b) Do we add a state with (next state, next token)?
+    c) Do we add a state with (next state, same token)?
+    d) Do we add a state with (same state, next token)?
+
+    We'll code the actions as boolean strings, so 0000 means no to all 4,
+    1000 means match but no states added, etc.
+    
+    1:
+      Yes, final:
+        1000
+      Yes, non-final:
+        0100
+      No, final:
+        0000
+      No, non-final
+        0000
+    0+:
+      Yes, final:
+        1001
+      Yes, non-final:
+        0011
+      No, final:
+        1000 (note: Don't include last token!)
+      No, non-final:
+        0010
+    ?:
+      Yes, final:
+        1000
+      Yes, non-final:
+        0100
+      No, final:
+        1000 (note: Don't include last token!)
+      No, non-final:
+        0010
+
+    Possible combinations:  1000, 0100, 0000, 1001, 0011, 0010, 
+    
+    We'll name the bits "match", "advance", "retry", "extend"
+    REJECT = 0000
+    MATCH = 1000
+    ADVANCE = 0100
+    RETRY = 0010
+    MATCH_EXTEND = 1001
+    RETRY_EXTEND = 0011
+    MATCH_REJECT = 2000 # Match, but don't include last token
+
+    Problem: If a quantifier is matching, we're adding a lot of open partials
+    '''
+    cdef char is_match
+    is_match = get_is_match(state, token, extra_attrs)
+    quantifier = get_quantifier(state)
+    is_final = get_is_final(state)
+    if quantifier == ZERO:
+        is_match = not is_match
+        quantifier = ONE
+    if quantifier == ONE:
+      if is_match and is_final:
+          # Yes, final: 1000
+          return MATCH
+      elif is_match and not is_final:
+          # Yes, non-final: 0100
+          return ADVANCE
+      elif not is_match and is_final:
+          # No, final: 0000
+          return REJECT
+      else:
+          return REJECT
+    elif quantifier == ZERO_PLUS:
+      if is_match and is_final:
+          # Yes, final: 1001
+          return MATCH_EXTEND
+      elif is_match and not is_final:
+          # Yes, non-final: 0011
+          return RETRY_EXTEND
+      elif not is_match and is_final:
+          # No, final 2000 (note: Don't include last token!)
+          return MATCH_REJECT
+      else:
+          # No, non-final 0010
+          return RETRY
+    elif quantifier == ZERO_ONE:
+      if is_match and is_final:
+          # Yes, final: 1000
+          return MATCH
+      elif is_match and not is_final:
+          # Yes, non-final: 0100
+          return ADVANCE
+      elif not is_match and is_final:
+          # No, final 2000 (note: Don't include last token!)
+          return MATCH_REJECT
+      else:
+          # No, non-final 0010
+          return RETRY
+
+
+cdef char get_is_match(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) nogil:
+    spec = state.pattern
+    for attr in spec.attrs[:spec.nr_attr]:
+        if get_token_attr(token, attr.attr) != attr.value:
+            return 0
+    else:
+        return 1
+
+
+cdef char get_is_final(PatternStateC state) nogil:
+    if state.pattern[1].attrs[0].attr == ID and state.pattern[1].nr_attr == 0:
+        return 1
+    else:
+        return 0
+
+
+cdef char get_quantifier(PatternStateC state) nogil:
+    return state.pattern.quantifier
 
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
@@ -122,6 +307,7 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
+        pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
@@ -130,51 +316,16 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
     return pattern
 
 
-cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
+cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
     while pattern.nr_attr != 0:
         pattern += 1
     id_attr = pattern[0].attrs[0]
-    assert id_attr.attr == ID
     return id_attr.value
-
-
-cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
-    lookahead = &pattern[1]
-    for attr in pattern.attrs[:pattern.nr_attr]:
-        if get_token_attr(token, attr.attr) != attr.value:
-            if pattern.quantifier == ONE:
-                return REJECT
-            elif pattern.quantifier == ZERO:
-                return ACCEPT if lookahead.nr_attr == 0 else ADVANCE
-            elif pattern.quantifier in (ZERO_ONE, ZERO_PLUS):
-                return ACCEPT_PREV if lookahead.nr_attr == 0 else ADVANCE_ZERO
-            else:
-                return PANIC
-    if pattern.quantifier == ZERO:
-        return REJECT
-    elif lookahead.nr_attr == 0:
-        if pattern.quantifier == ZERO_PLUS:
-            return REPEAT
-        else:
-            return ACCEPT
-    elif pattern.quantifier in (ONE, ZERO_ONE):
-        return ADVANCE
-    elif pattern.quantifier == ZERO_PLUS:
-        # This is a bandaid over the 'shadowing' problem described here:
-        # https://github.com/explosion/spaCy/issues/864
-        next_action = get_action(lookahead, token)
-        if next_action is REJECT:
-            return REPEAT
-        else:
-            return ADVANCE_PLUS
-    else:
-        return PANIC
-
 
 def _convert_strings(token_specs, string_store):
     # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
-    operators = {'!': (ZERO,), '*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
-                 '?': (ZERO_ONE,), '1': (ONE,)}
+    operators = {'*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
+                 '?': (ZERO_ONE,), '1': (ONE,), '!': (ZERO,)}
     tokens = []
     op = ONE
     for spec in token_specs:
@@ -202,21 +353,6 @@ def _convert_strings(token_specs, string_store):
         for op in ops:
             tokens.append((op, token))
     return tokens
-
-
-def merge_phrase(matcher, doc, i, matches):
-    """Callback to merge a phrase on match."""
-    ent_id, label, start, end = matches[i]
-    span = doc[start:end]
-    span.merge(ent_type=label, ent_id=ent_id)
-
-
-def unpickle_matcher(vocab, patterns, callbacks):
-    matcher = Matcher(vocab)
-    for key, specs in patterns.items():
-        callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
-    return matcher
 
 
 cdef class Matcher:
@@ -339,7 +475,7 @@ cdef class Matcher:
         if key not in self._patterns:
             return default
         return (self._callbacks[key], self._patterns[key])
-
+    
     def pipe(self, docs, batch_size=1000, n_threads=2):
         """Match a stream of documents, yielding them in turn.
 
@@ -361,231 +497,9 @@ cdef class Matcher:
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
-        cdef vector[StateC] partials
-        cdef int n_partials = 0
-        cdef int q = 0
-        cdef int i, token_i
-        cdef const TokenC* token
-        cdef StateC state
-        cdef int j = 0
-        cdef int k
-        cdef bint overlap = False
-        cdef MatchEntryC* state_match 
-        cdef MatchEntryC* last_matches = <MatchEntryC*>self.mem.alloc(self.patterns.size(),sizeof(MatchEntryC))
-
-        for i in range(self.patterns.size()):
-            last_matches[i].start = 0
-            last_matches[i].end = 0
-            last_matches[i].offset = 0
-
-        matches = []
-        for token_i in range(doc.length):
-            token = &doc.c[token_i]
-            q = 0
-            # Go over the open matches, extending or finalizing if able.
-            # Otherwise, we over-write them (q doesn't advance)
-            #for state in partials:
-            j=0
-            while j < n_partials:
-                state = partials[j]
-                action = get_action(state.pattern, token)
-                j += 1
-                # Skip patterns that would overlap with an existing match
-                # Patterns overlap an existing match if they point to the
-                # same final state and start between the start and end
-                # of said match.
-                # Different patterns with the same label are allowed to 
-                # overlap.
-                state_match = state.last_match
-                if (state.start > state_match.start 
-                    and state.start < state_match.end):
-                    continue
-                if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
-                while action == ADVANCE_ZERO:
-                    state.pattern += 1
-                    action = get_action(state.pattern, token)
-                if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
-                
-                # ADVANCE_PLUS acts like REPEAT, but also pushes a partial that
-                # acts like and ADVANCE_ZERO
-                if action == ADVANCE_PLUS:
-                    state.pattern += 1
-                    partials.push_back(state)
-                    n_partials += 1
-                    state.pattern -= 1
-                    action = REPEAT
-
-                if action == ADVANCE:
-                    state.pattern += 1
-
-                # Check for partial matches that are at the same spec in the same pattern
-                # Keep the longer of the matches
-                # This ensures that there are never more then 2 partials for every spec
-                # in a pattern (one of which gets pruned in this step)
-
-                overlap=False
-                for i in range(q):
-                    if state.pattern == partials[i].pattern and state.start < partials[i].start:
-                        partials[i] = state
-                        j = i
-                        overlap = True
-                        break
-                if overlap:
-                    continue
-                overlap=False
-                for i in range(q):
-                    if state.pattern == partials[i].pattern:
-                        overlap = True
-                        break
-                if overlap:
-                    continue
-
-    
-                if action == REPEAT:
-                    # Leave the state in the queue, and advance to next slot
-                    # (i.e. we don't overwrite -- we want to greedily match
-                    # more pattern.
-                    partials[q] = state
-                    q += 1
-                elif action == REJECT:
-                    pass
-                elif action == ADVANCE:
-                    partials[q] = state
-                    q += 1
-                elif action in (ACCEPT, ACCEPT_PREV):
-                    # TODO: What to do about patterns starting with ZERO? Need
-                    # to adjust the start position.
-                    start = state.start
-                    end = token_i+1 if action == ACCEPT else token_i
-                    ent_id = state.pattern[1].attrs[0].value
-                    label = state.pattern[1].attrs[1].value
-                    # Check that this match doesn't overlap with an earlier match.
-                    # Only overwrite an earlier match if it is a substring of this
-                    # match (i.e. it starts after this match starts).
-                    state_match = state.last_match
-
-                    if start >= state_match.end:
-                        state_match.start = start
-                        state_match.end = end
-                        state_match.offset = len(matches)
-                        matches.append((ent_id,start,end))
-                    elif start <= state_match.start and end >= state_match.end:
-                        if len(matches) == 0:
-                            assert state_match.offset==0
-                            state_match.offset = 0
-                            matches.append((ent_id,start,end))
-                        else:
-                            i = state_match.offset
-                            matches[i] = (ent_id,start,end)
-                        state_match.start = start
-                        state_match.end = end
-                    else:
-                        pass
-
-            partials.resize(q)
-            n_partials = q
-            # Check whether we open any new patterns on this token
-            i=0
-            for pattern in self.patterns:
-                # Skip patterns that would overlap with an existing match
-                # state_match = pattern.last_match
-                state_match = &last_matches[i]
-                i+=1
-                if (token_i > state_match.start 
-                    and token_i < state_match.end):
-                    continue
-                action = get_action(pattern, token)
-                if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
-                while action in (ADVANCE_PLUS,ADVANCE_ZERO):
-                    if action == ADVANCE_PLUS:
-                        state.start = token_i
-                        state.pattern = pattern
-                        state.last_match = state_match
-                        partials.push_back(state)
-                        n_partials += 1
-                    pattern += 1
-                    action = get_action(pattern, token)
-
-                if action == ADVANCE:
-                    pattern += 1
-                j=0
-                overlap = False
-                for j in range(q):
-                    if pattern == partials[j].pattern:
-                        overlap = True
-                        break
-                if overlap:
-                    continue
-
-
-                if action == REPEAT:
-                    state.start = token_i
-                    state.pattern = pattern
-                    state.last_match = state_match
-                    partials.push_back(state)
-                    n_partials += 1
-                elif action == ADVANCE:
-                    # TODO: What to do about patterns starting with ZERO? Need
-                    # to adjust the start position.
-                    state.start = token_i
-                    state.pattern = pattern
-                    state.last_match = state_match
-                    partials.push_back(state)
-                    n_partials += 1
-                elif action in (ACCEPT, ACCEPT_PREV):
-                    start = token_i
-                    end = token_i+1 if action == ACCEPT else token_i
-                    ent_id = pattern[1].attrs[0].value
-
-                    label = pattern[1].attrs[1].value
-                    if start >= state_match.end:
-                        state_match.start = start
-                        state_match.end = end
-                        state_match.offset = len(matches)
-                        matches.append((ent_id,start,end))
-                    if start <= state_match.start and end >= state_match.end:
-                        if len(matches) == 0:
-                            state_match.offset = 0
-                            matches.append((ent_id,start,end))
-                        else:
-                            j = state_match.offset
-                            matches[j] = (ent_id,start,end)
-                        state_match.start = start
-                        state_match.end = end
-                    else:
-                        pass
-
-        # Look for open patterns that are actually satisfied
-        for state in partials:
-            while state.pattern.quantifier in (ZERO, ZERO_ONE, ZERO_PLUS):
-                state.pattern += 1
-                if state.pattern.nr_attr == 0:
-                    start = state.start
-                    end = len(doc)
-                    ent_id = state.pattern.attrs[0].value
-                    label = state.pattern.attrs[1].value
-                    state_match = state.last_match
-                    if start >= state_match.end:
-                        state_match.start = start
-                        state_match.end = end
-                        state_match.offset = len(matches)
-                        matches.append((ent_id,start,end))
-                    if start <= state_match.start and end >= state_match.end:
-                        j = state_match.offset
-                        if len(matches) == 0:
-                            state_match.offset = 0
-                            matches.append((ent_id,start,end))
-                        else:
-                            matches[j] = (ent_id,start,end)
-                        state_match.start = start
-                        state_match.end = end
-                    else:
-                        pass
-        for i, (ent_id, start, end) in enumerate(matches):
-            on_match = self._callbacks.get(ent_id)
+        matches = find_matches(&self.patterns[0], self.patterns.size(), doc)
+        for i, (key, start, end) in enumerate(matches):
+            on_match = self._callbacks.get(key, None)
             if on_match is not None:
                 on_match(self, doc, i, matches)
         return matches
@@ -595,6 +509,26 @@ cdef class Matcher:
             return self.vocab.strings.add(key)
         else:
             return key
+
+
+def unpickle_matcher(vocab, patterns, callbacks):
+    matcher = Matcher(vocab)
+    for key, specs in patterns.items():
+        callback = callbacks.get(key, None)
+        matcher.add(key, callback, *specs)
+    return matcher
+
+
+def _get_longest_matches(matches):
+    '''Filter out matches that have a longer equivalent.'''
+    longest_matches = {}
+    for pattern_id, start, end in matches:
+        key = (pattern_id, start)
+        length = end-start
+        if key not in longest_matches or length > longest_matches[key]:
+            longest_matches[key] = length
+    return [(pattern_id, start, start+length)
+              for (pattern_id, start), length in longest_matches.items()]
 
 
 def get_bilou(length):
