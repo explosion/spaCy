@@ -291,6 +291,7 @@ cdef class Span:
             # if doc is parsed we can use the deps to find the sentence
             # otherwise we use the `sent_start` token attribute
             cdef int n = 0
+            cdef int i
             if self.doc.is_parsed:
                 root = &self.doc.c[self.start]
                 while root.head != 0:
@@ -300,18 +301,29 @@ cdef class Span:
                         raise RuntimeError
                 return self.doc[root.l_edge:root.r_edge + 1]
             else:
+                # Check if the document has sentence boundaries,
+                # i.e at least one tok has the sent_start == 1
+                for i in range(self.doc.length):
+                    if self.doc.c[i].sent_start == 1:
+                        break
+                else:
+                    raise ValueError(
+                        "Access to sentence requires either the dependency parse "
+                        "or sentence boundaries to be set by setting " +
+                        "doc[i].is_sent_start = True")
                 # find start of the sentence
                 start = self.start
-                while not self.doc.c[start].sent_start and start > 0:
+                while self.doc.c[start].sent_start != 1 and start > 0:
                     start += -1
                 # find end of the sentence
                 end = self.end
-                while not self.doc.c[end].sent_start:
+                while self.doc.c[end].sent_start != 1:
                     end += 1
                     if n >= self.doc.length:
                         break
                 #
                 return self.doc[start:end]
+
 
     property has_vector:
         """RETURNS (bool): Whether a word vector is associated with the object.
