@@ -347,7 +347,8 @@ cdef class Vectors:
         """
         def load_key2row(path):
             if path.exists():
-                self.key2row = msgpack.load(path.open('rb'))
+                with path.open('rb') as file_:
+                    self.key2row = msgpack.load(file_)
             for key, row in self.key2row.items():
                 if row in self._unset:
                     self._unset.remove(row)
