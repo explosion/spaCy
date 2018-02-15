@@ -92,6 +92,10 @@ p
         +cell The lowercase form of the token text.
 
     +row
+        +cell #[code LENGTH]
+        +cell The length of the token text.
+
+    +row
         +cell.u-nowrap #[code IS_ALPHA], #[code IS_ASCII], #[code IS_DIGIT]
         +cell
             |  Token text consists of alphanumeric characters, ASCII characters,
@@ -116,6 +120,10 @@ p
         +cell
             |  The token's simple and extended part-of-speech tag, dependency
             |  label, lemma, shape.
+
+    +row
+        +cell.u-nowrap #[code ENT_TYPE]
+        +cell The token's entity label.
 
 +h(4, "adding-patterns-wildcard") Using wildcard token patterns
     +tag-new(2)
@@ -335,7 +343,8 @@ p
     |  flag.
 
 +code.
-    IS_DEFINITELY = nlp.vocab.add_flag(re.compile(r'deff?in[ia]tely').match)
+    definitely_flag = lambda text: bool(re.compile(r'deff?in[ia]tely').match(text))
+    IS_DEFINITELY = nlp.vocab.add_flag(definitely_flag)
 
     matcher = Matcher(nlp.vocab)
     matcher.add('DEFINITELY', None, [{IS_DEFINITELY: True}])

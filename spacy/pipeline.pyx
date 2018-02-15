@@ -215,7 +215,8 @@ class Pipe(object):
 
 def _load_cfg(path):
     if path.exists():
-        return ujson.load(path.open())
+        with path.open() as file_:
+            return ujson.load(file_)
     else:
         return {}
 
@@ -583,7 +584,8 @@ class Tagger(Pipe):
         def load_model(p):
             if self.model is True:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
-            self.model.from_bytes(p.open('rb').read())
+            with p.open('rb') as file_:
+                self.model.from_bytes(file_.read())
 
         def load_tag_map(p):
             with p.open('rb') as file_:

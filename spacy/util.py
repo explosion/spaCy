@@ -17,6 +17,7 @@ from thinc.neural._classes.model import Model
 import functools
 import cytoolz
 import itertools
+import numpy.random
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
@@ -623,3 +624,8 @@ def use_gpu(gpu_id):
     Model.ops = CupyOps()
     Model.Ops = CupyOps
     return device
+
+
+def fix_random_seed(seed=0):
+    random.seed(seed)
+    numpy.random.seed(seed)
