@@ -835,7 +835,8 @@ cdef class Parser:
                 sgd = self.create_optimizer()
             self.model[1].begin_training(
                     self.model[1].ops.allocate((5, cfg['token_vector_width'])))
-            self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
+            if pipeline is not None:
+                self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
         else:
             if sgd is None:
