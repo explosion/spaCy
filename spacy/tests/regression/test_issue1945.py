@@ -4,9 +4,8 @@ import pytest
 
 from ...vocab import Vocab
 from ...tokens import Doc
-from ...matcher2 import Matcher
+from ...matcher import Matcher
 
-#@pytest.mark.xfail
 def test_issue1945():
     text = "a a a"
     matcher = Matcher(Vocab())

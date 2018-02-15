@@ -1,8 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..matcher2 import Matcher
-from ..matcher2 import PhraseMatcher
+from ..matcher import Matcher, PhraseMatcher
 from .util import get_doc
 from ..tokens import Doc
 
@@ -254,9 +253,8 @@ def test_matcher_end_zero_plus(matcher):
     )
     nlp = lambda string: Doc(matcher.vocab, words=string.split())
     assert len(matcher(nlp(u'a'))) == 1
-    assert len(matcher(nlp(u'a b'))) == 1
-    assert len(matcher(nlp(u'a b'))) == 1
+    assert len(matcher(nlp(u'a b'))) == 2
     assert len(matcher(nlp(u'a c'))) == 1
-    assert len(matcher(nlp(u'a b c'))) == 1
-    assert len(matcher(nlp(u'a b b c'))) == 1
-    assert len(matcher(nlp(u'a b b'))) == 1
+    assert len(matcher(nlp(u'a b c'))) == 2
+    assert len(matcher(nlp(u'a b b c'))) == 3
+    assert len(matcher(nlp(u'a b b'))) == 3

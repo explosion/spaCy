@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import pytest
 
-from ...matcher2 import Matcher
+from ...matcher import Matcher
 from ...tokens import Doc
 from ...vocab import Vocab
 
@@ -54,5 +54,5 @@ def test_issue1450_matcher_end_zero_plus(string, start, end):
     if start is None or end is None:
         assert matches == []
     
-    assert matches[0][1] == start
-    assert matches[0][2] == end
+    assert matches[-1][1] == start
+    assert matches[-1][2] == end

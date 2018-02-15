@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import re
 
-from ...matcher2 import Matcher
+from ...matcher import Matcher
 
 import pytest
 

@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import pytest
 
-from ...matcher2 import Matcher
+from ...matcher import Matcher
 from ...vocab import Vocab
 from ...attrs import LOWER
 from ...tokens import Doc
