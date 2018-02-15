@@ -2,16 +2,14 @@
 from __future__ import unicode_literals
 import pytest
 
-from ..util import load_test_model
-
 
 @pytest.mark.models('en')
-def test_issue1959():
+def test_issue1959(EN):
     texts = ['Apple is looking at buying U.K. startup for $1 billion.']
-    nlp = load_test_model('en_core_web_sm')
-    nlp.add_pipe(clean_component, name='cleaner', after='ner')
-    doc = nlp(texts[0])
-    doc_pipe = [doc_pipe for doc_pipe in nlp.pipe(texts)]
+    # nlp = load_test_model('en_core_web_sm')
+    EN.add_pipe(clean_component, name='cleaner', after='ner')
+    doc = EN(texts[0])
+    doc_pipe = [doc_pipe for doc_pipe in EN.pipe(texts)]
     assert doc == doc_pipe[0]
 
 
