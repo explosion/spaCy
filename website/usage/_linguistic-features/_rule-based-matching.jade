@@ -54,10 +54,21 @@ p
 
 p
     |  The matcher returns a list of #[code (match_id, start, end)] tuples – in
-    |  this case, #[code [('HelloWorld', 0, 2)]], which maps to the span
-    |  #[code doc[0:2]] of our original document. Optionally, we could also
-    |  choose to add more than one pattern, for example to also match sequences
-    |  without punctuation between "hello" and "world":
+    |  this case, #[code [('15578876784678163569', 0, 2)]], which maps to the
+    |  span #[code doc[0:2]] of our original document. The #[code match_id]
+    |  is the #[+a("/usage/spacy-101#vocab") hash value] of the string ID
+    |  "HelloWorld". To get the string value, you can look up the ID
+    |  in the #[+api("stringstore") #[code StringStore]].
+
++code.
+    for match_id, start, end in matches:
+        string_id = nlp.vocab.strings[match_id]  # 'HelloWorld'
+        span = doc[start:end]                    # the matched span
+
+p
+    |  Optionally, we could also choose to add more than one pattern, for
+    |  example to also match sequences without punctuation between "hello" and
+    |  "world":
 
 +code.
     matcher.add('HelloWorld', None,
