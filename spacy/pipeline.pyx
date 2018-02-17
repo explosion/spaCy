@@ -892,12 +892,10 @@ cdef class DependencyParser(Parser):
         self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, gold_tuples, pipeline, sgd=None, **cfg):
-        self.add_multitask_objective('tag')
         for labeller in self._multitasks:
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec, sgd=sgd)
-            pipeline.append((labeller.name, labeller))
 
     def __reduce__(self):
         return (DependencyParser, (self.vocab, self.moves, self.model),
@@ -919,7 +917,6 @@ cdef class EntityRecognizer(Parser):
             tok2vec = self.model[0]
             labeller.begin_training(gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec)
-            pipeline.append((labeller.name, labeller))
 
     def __reduce__(self):
         return (EntityRecognizer, (self.vocab, self.moves, self.model),

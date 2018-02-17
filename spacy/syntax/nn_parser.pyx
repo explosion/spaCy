@@ -605,6 +605,8 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             bp_tokvecs, backprops, sgd, cuda_stream)
+        for multitask in self._multitasks:
+            multitask.update(docs, golds, drop=drop, sgd=sgd)
 
     def update_beam(self, docs, golds, width=None, density=None,
             drop=0., sgd=None, losses=None):
