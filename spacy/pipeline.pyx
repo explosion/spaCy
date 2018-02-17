@@ -681,13 +681,19 @@ class MultitaskObjective(Tagger):
         return tokvecs, scores
 
     def get_loss(self, docs, golds, scores):
+        assert len(docs) == len(golds)
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
-        for gold in golds:
-            for i in range(len(gold.labels)):
-                label = self.make_label(i, gold.words, gold.tags, gold.heads,
-                                        gold.labels, gold.ents)
+        for i, gold in enumerate(golds):
+            for j in range(len(docs[i])):
+                # Handes alignment for tokenization differences
+                gold_idx = gold.cand_to_gold[j]
+                if gold_idx is None:
+                    idx += 1
+                    continue
+                label = self.make_label(gold_idx, gold.words, gold.tags,
+                                        gold.heads, gold.labels, gold.ents)
                 if label is None or label not in self.labels:
                     correct[idx] = guesses[idx]
                 else:
