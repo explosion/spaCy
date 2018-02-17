@@ -720,5 +720,5 @@ class DisabledPipes(list):
 
 def _pipe(func, docs):
     for doc in docs:
-        func(doc)
+        doc = func(doc)
         yield doc
