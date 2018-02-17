@@ -835,7 +835,8 @@ cdef class Parser:
                 sgd = self.create_optimizer()
             self.model[1].begin_training(
                     self.model[1].ops.allocate((5, cfg['token_vector_width'])))
-            self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
+            if pipeline is not None:
+                self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
         else:
             if sgd is None:
@@ -887,7 +888,7 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, strings=False),
-            'cfg': lambda p: self.cfg.update(ujson.load(p.open())),
+            'cfg': lambda p: self.cfg.update(util.read_json(p)),
             'model': lambda p: None
         }
         util.from_disk(path, deserializers, exclude)

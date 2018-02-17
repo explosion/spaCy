@@ -624,7 +624,7 @@ class Language(object):
         deserializers = OrderedDict((
             ('vocab', lambda p: self.vocab.from_disk(p)),
             ('tokenizer', lambda p: self.tokenizer.from_disk(p, vocab=False)),
-            ('meta.json', lambda p: self.meta.update(ujson.load(p.open('r'))))
+            ('meta.json', lambda p: self.meta.update(util.read_json(p)))
         ))
         for name, proc in self.pipeline:
             if name in disable:
@@ -720,5 +720,5 @@ class DisabledPipes(list):
 
 def _pipe(func, docs):
     for doc in docs:
-        func(doc)
+        doc = func(doc)
         yield doc
