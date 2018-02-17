@@ -87,4 +87,4 @@ cdef enum attr_id_t:
     SPACY
     PROB
 
-    LANG = 999
+    LANG

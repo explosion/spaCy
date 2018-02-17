@@ -457,4 +457,4 @@ cdef enum symbol_t:
 
     acl
     LAW
-    LANG = 999
+    LANG
