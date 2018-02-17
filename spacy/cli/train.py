@@ -7,6 +7,7 @@ import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 
+from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus, minibatch
 from ..util import prints
 from .. import util
@@ -90,6 +91,15 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     nlp.meta.update(meta)
     if vectors:
         util.load_model(vectors, vocab=nlp.vocab)
+        for lex in nlp.vocab:
+            values = {}
+            for attr, func in nlp.vocab.lex_attr_getters.items():
+                # These attrs are expected to be set by data. Others should
+                # be set by calling the language functions.
+                if attr not in (CLUSTER, PROB, IS_OOV, LANG):
+                    values[lex.vocab.strings[attr]] = func(lex.orth_)
+            lex.set_attrs(**values)
+            lex.is_oov = False
     for name in pipeline:
         nlp.add_pipe(nlp.create_pipe(name), name=name)
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
