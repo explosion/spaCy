@@ -85,6 +85,7 @@ cdef enum symbol_t:
     SENT_START
     SPACY
     PROB
+    LANG
 
     ADJ
     ADP
@@ -394,6 +395,7 @@ cdef enum symbol_t:
     EVENT
     WORK_OF_ART
     LANGUAGE
+    LAW
 
     DATE
     TIME
@@ -452,10 +454,9 @@ cdef enum symbol_t:
     prt
     punct
     quantmod
+    relcl
     rcmod
     root
     xcomp
 
     acl
-    LAW
-    LANG
