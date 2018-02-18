@@ -6,7 +6,6 @@ preshed>=1.0.0,<2.0.0
 thinc>=6.10.1,<6.11.0
 murmurhash>=0.28,<0.29
 plac<1.0.0,>=0.9.6
-six
 ujson>=1.35
 dill>=0.2,<0.3
 requests>=2.13.0,<3.0.0
@@ -16,4 +15,3 @@ pytest>=3.0.6,<4.0.0
 mock>=2.0.0,<3.0.0
 msgpack-python==0.5.4
 msgpack-numpy==0.4.1
-html5lib==1.0b8

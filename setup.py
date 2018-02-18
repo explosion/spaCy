@@ -191,8 +191,6 @@ def setup_package():
                 'preshed>=1.0.0,<2.0.0',
                 'thinc>=6.10.1,<6.11.0',
                 'plac<1.0.0,>=0.9.6',
-                'six',
-                'html5lib==1.0b8',
                 'pathlib',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
