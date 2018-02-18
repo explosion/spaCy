@@ -90,6 +90,7 @@ IDS = {
     "SENT_START": SENT_START,
     "SPACY": SPACY,
     "PROB": PROB,
+    "LANG": LANG,
 
     "ADJ": ADJ,
     "ADP": ADP,

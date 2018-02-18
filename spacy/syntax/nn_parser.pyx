@@ -542,6 +542,7 @@ cdef class Parser:
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
+        assert len(docs) == len(golds)
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
             return self.update_beam(docs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
@@ -551,6 +552,8 @@ cdef class Parser:
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
+        for multitask in self._multitasks:
+            multitask.update(docs, golds, drop=drop, sgd=sgd)
         cuda_stream = util.get_cuda_stream()
         states, golds, max_steps = self._init_gold_batch(docs, golds)
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
@@ -605,7 +608,7 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             bp_tokvecs, backprops, sgd, cuda_stream)
-
+    
     def update_beam(self, docs, golds, width=None, density=None,
             drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):

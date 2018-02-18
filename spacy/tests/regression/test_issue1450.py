@@ -13,8 +13,8 @@ from ...vocab import Vocab
         ('a b', 0, 2),
         ('a c', 0, 1),
         ('a b c', 0, 2),
-        ('a b b c', 0, 3),
-        ('a b b', 0, 3),
+        ('a b b c', 0, 2),
+        ('a b b', 0, 2),
     ]
 )
 def test_issue1450_matcher_end_zero_plus(string, start, end):

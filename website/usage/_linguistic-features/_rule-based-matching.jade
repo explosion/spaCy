@@ -179,8 +179,12 @@ p
         +cell Allow the pattern to match zero or more times.
 
 p
-    |  The #[code +] and #[code *] operators are usually interpretted
-    |  "greedily", i.e. longer matches are returned where possible.
+    |  In versions before v2.1.0, the semantics of the #[code +] and #[code *] operators
+    |  behave inconsistently. They were usually interpretted
+    |  "greedily", i.e. longer matches are returned where possible. However, if
+    |  you specify two #[code +] and #[code *] patterns in a row and their
+    |  matches overlap, the first operator will behave non-greedily. This quirk
+    |  in the semantics is corrected in spaCy v2.1.0.
 
 +h(3, "adding-phrase-patterns") Adding phrase patterns
 
