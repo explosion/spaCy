@@ -108,8 +108,9 @@ cdef enum symbol_t:
     SPACE
 
     Animacy_anim
-    Animacy_inam
+    Animacy_inan
     Animacy_hum # U20
+    Animacy_nhum
     Aspect_freq
     Aspect_imp
     Aspect_mod
