@@ -111,6 +111,23 @@ p Match a stream of documents, yielding them in turn.
             |  parallel, if the #[code Matcher] implementation supports
             |  multi-threading.
 
+    +row
+        +cell #[code return_matches]
+        +cell bool
+        +cell
+            |  Yield the match lists along with the docs, making results
+            |  #[code (doc, matches)] tuples.
+
+    +row
+        +cell #[code as_tuples]
+        +cell bool
+        +cell
+            |  Interpret the input stream as #[code (doc, context)] tuples, and
+            |  yield #[code (result, context)] tuples out. If both
+            |  #[code return_matches] and #[code as_tuples] are #[code True],
+            |  the output will be a sequence of
+            |  #[code ((doc, matches), context)] tuples.
+
     +row("foot")
         +cell yields
         +cell #[code Doc]
