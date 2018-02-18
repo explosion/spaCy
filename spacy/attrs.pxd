@@ -86,5 +86,6 @@ cdef enum attr_id_t:
     SENT_START
     SPACY
     PROB
+    REGEX
 
     LANG
