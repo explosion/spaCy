@@ -637,18 +637,36 @@ cdef class PhraseMatcher:
                 on_match(self, doc, i, matches)
         return matches
 
-    def pipe(self, stream, batch_size=1000, n_threads=2):
+    def pipe(self, stream, batch_size=1000, n_threads=2, return_matches=False,
+             as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
         batch_size (int): Number of documents to accumulate into a working set.
         n_threads (int): The number of threads with which to work on the buffer
             in parallel, if the implementation supports multi-threading.
+        return_matches (bool): Yield the match lists along with the docs, making
+            results (doc, matches) tuples.
+        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
+            and yield (result, context) tuples out.
+            If both return_matches and as_tuples are True, the output will
+            be a sequence of ((doc, matches), context) tuples.
         YIELDS (Doc): Documents, in order.
         """
-        for doc in stream:
-            self(doc)
-            yield doc
+        if as_tuples:
+            for doc, context in stream:
+                matches = self(doc)
+                if return_matches:
+                    yield ((doc, matches), context)
+                else:
+                    yield (doc, context)
+        else:
+            for doc in stream:
+                matches = self(doc)
+                if return_matches:
+                    yield (doc, matches) 
+                else:
+                    yield doc
 
     def accept_match(self, Doc doc, int start, int end):
         cdef int i, j

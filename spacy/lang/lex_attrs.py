@@ -144,7 +144,7 @@ def is_lower(string): return string.islower()
 def is_space(string): return string.isspace()
 def is_title(string): return string.istitle()
 def is_upper(string): return string.isupper()
-def is_stop(string, stops=set()): return string in stops
+def is_stop(string, stops=set()): return string.lower() in stops
 def is_oov(string): return True
 def get_prob(string): return -20.
 
