@@ -84,24 +84,42 @@ i.e. D[i,j+1] + 1
 '''
 import numpy
 cimport numpy as np
+from .compat import unicode_
+from murmurhash.mrmr cimport hash32
 
 
-def align(bytes S, bytes T):
+def align(S, T):
     cdef int m = len(S)
     cdef int n = len(T)
     cdef np.ndarray matrix = numpy.zeros((m+1, n+1), dtype='int32')
     cdef np.ndarray i2j = numpy.zeros((m,), dtype='i')
     cdef np.ndarray j2i = numpy.zeros((n,), dtype='i')
 
+    cdef np.ndarray S_arr = _convert_sequence(S)
+    cdef np.ndarray T_arr = _convert_sequence(T)
+
     fill_matrix(<int*>matrix.data,
-        S, m, T, n)
+        <const int*>S_arr.data, m, <const int*>T_arr.data, n)
     fill_i2j(i2j, matrix)
     fill_j2i(j2i, matrix)
     return matrix[-1,-1], i2j, j2i, matrix
 
+def _convert_sequence(seq):
+    if isinstance(seq, numpy.ndarray):
+        return numpy.ascontiguousarray(seq, dtype='i')
+    cdef np.ndarray output = numpy.zeros((len(seq),), dtype='i')
+    cdef bytes item_bytes
+    for i, item in enumerate(seq):
+        if isinstance(item, unicode):
+            item_bytes = item.encode('utf8')
+        else:
+            item_bytes = item
+        output[i] = hash32(<void*><char*>item_bytes, len(item_bytes), 0)
+    return output
+
 
 cdef void fill_matrix(int* D, 
-        const char* S, int m, const char* T, int n) nogil:
+        const int* S, int m, const int* T, int n) nogil:
     m1 = m+1
     n1 = n+1
     for i in range(m1*n1):
