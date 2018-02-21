@@ -21,7 +21,7 @@ class SpanishDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
-    sytax_iterators = SYNTAX_ITERATORS
+    syntax_iterators = SYNTAX_ITERATORS
     lemma_lookup = LOOKUP
 
 
