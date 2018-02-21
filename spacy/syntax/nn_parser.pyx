@@ -791,6 +791,11 @@ cdef class Parser:
                     hook(doc)
 
     @property
+    def labels(self):
+        class_names = [self.moves.get_class_name(i) for i in range(self.moves.n_moves)]
+        return class_names
+
+    @property
     def tok2vec(self):
         '''Return the embedding and convolutional layer of the model.'''
         if self.model in (None, True, False):
