@@ -16,7 +16,7 @@ def noun_chunks(obj):
     token = doc[0]
     while token and token.i < len(doc):
         if token.pos in [PROPN, NOUN, PRON]:
-            left, right = noun_bounds(token, np_left_deps, np_right_deps, stop_deps)
+            left, right = noun_bounds(doc, token, np_left_deps, np_right_deps, stop_deps)
             yield left.i, right.i+1, np_label
             token = right
         token = next_token(token)
@@ -33,7 +33,7 @@ def next_token(token):
         return None
 
 
-def noun_bounds(root, np_left_deps, np_right_deps, stop_deps):
+def noun_bounds(doc, root, np_left_deps, np_right_deps, stop_deps):
     left_bound = root
     for token in reversed(list(root.lefts)):
         if token.dep in np_left_deps:
@@ -41,7 +41,7 @@ def noun_bounds(root, np_left_deps, np_right_deps, stop_deps):
     right_bound = root
     for token in root.rights:
         if (token.dep in np_right_deps):
-            left, right = noun_bounds(token, np_left_deps, np_right_deps, stop_deps)
+            left, right = noun_bounds(doc, token, np_left_deps, np_right_deps, stop_deps)
             if list(filter(lambda t: is_verb_token(t) or t.dep in stop_deps,
                            doc[left_bound.i: right.i])):
                 break
