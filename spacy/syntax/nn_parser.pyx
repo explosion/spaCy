@@ -659,7 +659,7 @@ cdef class Parser:
             _cleanup(beam)
 
 
-    def _init_gold_batch(self, whole_docs, whole_golds):
+    def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=2000):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
         where N is the shortest doc. We'll make two states, one representing
@@ -668,7 +668,7 @@ cdef class Parser:
             StateClass state
             Transition action
         whole_states = self.moves.init_batch(whole_docs)
-        max_length = max(5, min(50, min([len(doc) for doc in whole_docs])))
+        max_length = max(min_length, min(max_length, min([len(doc) for doc in whole_docs])))
         max_moves = 0
         states = []
         golds = []
@@ -830,7 +830,7 @@ cdef class Parser:
         if 'model' in cfg:
             self.model = cfg['model']
         gold_tuples = nonproj.preprocess_training_data(gold_tuples,
-                                                       label_freq_cutoff=100)
+                                                       label_freq_cutoff=30)
         actions = self.moves.get_actions(gold_parses=gold_tuples)
         for action, labels in actions.items():
             for label in labels:
