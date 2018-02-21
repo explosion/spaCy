@@ -527,7 +527,12 @@ cdef class ArcEager(TransitionSystem):
                 is_valid[i] = False
                 costs[i] = 9000
         if n_gold < 1:
-            # Check projectivity --- leading cause
+            # Check label set --- leading cause
+            label_set = set([self.strings[self.c[i].label] for i in range(self.n_moves)])
+            for label_str in gold.labels:
+                if label_str is not None and label_str not in label_set:
+                    raise ValueError("Cannot get gold parser action: unknown label: %s" % label_str)
+            # Check projectivity --- other leading cause
             if is_nonproj_tree(gold.heads):
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the "
