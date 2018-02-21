@@ -95,8 +95,8 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
             prepro_sents.append(
                 ((ids, words, tags, proj_heads, deco_labels, iob), ctnts))
         preprocessed.append((raw_text, prepro_sents))
-    #if label_freq_cutoff > 0:
-    #    return _filter_labels(preprocessed, label_freq_cutoff, freqs)
+    if label_freq_cutoff > 0:
+        return _filter_labels(preprocessed, label_freq_cutoff, freqs)
     return preprocessed
 
 
