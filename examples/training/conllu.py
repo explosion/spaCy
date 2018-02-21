@@ -153,7 +153,7 @@ def parse_dev_data(nlp, text_loc, conllu_loc):
     return docs, scorer
 
 
-def print_progress(itn, losses, scores):
+def print_progress(itn, losses, scorer):
     scores = {}
     for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc',
                 'ents_p', 'ents_r', 'ents_f', 'cpu_wps', 'gpu_wps']:
@@ -228,7 +228,7 @@ def main(spacy_model, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev
         
         with nlp.use_params(optimizer.averages):
             dev_docs, scorer = parse_dev_data(nlp, text_dev_loc, conllu_dev_loc)
-            print_progress(i, losses, scorer.scores)
+            print_progress(i, losses, scorer)
             with open(output_loc, 'w') as file_:
                 print_conllu(dev_docs, file_)
 
