@@ -208,6 +208,13 @@ def main(spacy_model, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev
             if tag is not None:
                 nlp.tagger.add_label(tag)
     optimizer = nlp.begin_training(lambda: golds_to_gold_tuples(docs, golds))
+    # Replace labels that didn't make the frequency cutoff
+    actions = set(nlp.parser.labels)
+    label_set = set([act.split('-')[1] for act in actions if '-' in act])
+    for gold in golds:
+        for i, label in enumerate(gold.labels):
+            if label is not None and label not in label_set:
+                gold.labels[i] = label.split('||')[0]
     n_train_words = sum(len(doc) for doc in docs)
     print(n_train_words)
     print("Begin training")
