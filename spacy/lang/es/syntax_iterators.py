@@ -6,6 +6,8 @@ from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 
 def noun_chunks(obj):
     doc = obj.doc
+    if not len(doc):
+        return
     np_label = doc.vocab.strings.add('NP')
     left_labels = ['det', 'fixed', 'neg'] #['nunmod', 'det', 'appos', 'fixed']
     right_labels = ['flat', 'fixed', 'compound', 'neg']
