@@ -186,6 +186,7 @@ def test_matcher_match_zero_plus(matcher):
     pattern = [{'ORTH': '"'},
                {'OP': '*', 'IS_PUNCT': False},
                {'ORTH': '"'}]
+    matcher = Matcher(matcher.vocab)
     matcher.add('Quote', None, pattern)
     doc = get_doc(matcher.vocab, words)
     assert len(matcher(doc)) == 1
@@ -252,9 +253,8 @@ def test_matcher_end_zero_plus(matcher):
     )
     nlp = lambda string: Doc(matcher.vocab, words=string.split())
     assert len(matcher(nlp(u'a'))) == 1
-    assert len(matcher(nlp(u'a b'))) == 1
-    assert len(matcher(nlp(u'a b'))) == 1
+    assert len(matcher(nlp(u'a b'))) == 2
     assert len(matcher(nlp(u'a c'))) == 1
-    assert len(matcher(nlp(u'a b c'))) == 1
-    assert len(matcher(nlp(u'a b b c'))) == 1
-    assert len(matcher(nlp(u'a b b'))) == 1
+    assert len(matcher(nlp(u'a b c'))) == 2
+    assert len(matcher(nlp(u'a b b c'))) == 3
+    assert len(matcher(nlp(u'a b b'))) == 3
