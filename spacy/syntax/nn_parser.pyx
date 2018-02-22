@@ -22,14 +22,15 @@ from libc.stdlib cimport calloc, free
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t, class_t, hash_t
 from thinc.extra.search cimport Beam
-from thinc.api import chain, clone
+from thinc.api import chain, clone, concatenate
 from thinc.v2v import Model, Maxout, Affine
+from thinc.i2v import HashEmbed
 from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 
-from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
+from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten, getitem
 from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import json_dumps, copy_array
 from ..tokens.doc cimport Doc
@@ -256,8 +257,8 @@ cdef class Parser:
         if hist_width != 0:
             raise ValueError("Currently history width is hard-coded to 0")
         tok2vec = Tok2Vec(token_vector_width, embed_size,
-                          pretrained_dims=cfg.get('pretrained_dims', 0))
-        tok2vec = chain(tok2vec, flatten)
+                          pretrained_dims=cfg.get('pretrained_dims', 0),
+                          flatten=True)
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
                     nP=parser_maxout_pieces)
@@ -310,7 +311,7 @@ cdef class Parser:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         if 'pretrained_dims' not in cfg:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        cfg.setdefault('cnn_maxout_pieces', 3)
+        cfg.setdefault('cnn_maxout_pieces', 2)
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
@@ -362,56 +363,40 @@ cdef class Parser:
             beam_width = self.cfg.get('beam_width', 1)
         if beam_density is None:
             beam_density = self.cfg.get('beam_density', 0.0)
+        batch_size = min(batch_size, 16)
         cdef Doc doc
         for batch in cytoolz.partition_all(batch_size, docs):
-            batch_in_order = list(batch)
-            by_length = sorted(batch_in_order, key=lambda doc: len(doc))
+            batch = list(batch)
             batch_beams = []
-            for subbatch in cytoolz.partition_all(8, by_length):
-                subbatch = list(subbatch)
-                if beam_width == 1:
-                    parse_states, tokvecs = self.parse_batch(subbatch)
-                    beams = []
-                else:
-                    beams, tokvecs = self.beam_parse(subbatch,
-                                        beam_width=beam_width,
-                                        beam_density=beam_density)
-                    parse_states = _collect_states(beams)
-                self.set_annotations(subbatch, parse_states, tensors=None)
-                for beam in beams:
-                    _cleanup(beam)
-            for doc in batch_in_order:
+            if beam_width == 1:
+                parse_states, tokvecs = self.parse_batch(batch)
+                beams = []
+            else:
+                beams, tokvecs = self.beam_parse(batch,
+                                    beam_width=beam_width,
+                                    beam_density=beam_density)
+                parse_states = _collect_states(beams)
+            self.set_annotations(batch, parse_states, tensors=tokvecs)
+            for beam in beams:
+                _cleanup(beam)
+            for doc in batch:
                 yield doc
 
-    def parse_batch(self, docs):
-        cdef:
-            precompute_hiddens state2vec
-            Pool mem
-            const float* feat_weights
-            StateC* st
-            StateClass stcls
-            vector[StateC*] states
-            int guess, nr_class, nr_feat, nr_piece, nr_dim, nr_state, nr_step
-            int j
+    def parse_batch(self, docs, int n_threads=2):
         if isinstance(docs, Doc):
             docs = [docs]
-
         cuda_stream = util.get_cuda_stream()
+        cdef precompute_hiddens state2vec
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(
             docs, cuda_stream, 0.0)
-        nr_state = len(docs)
-        nr_class = self.moves.n_moves
-        nr_dim = tokvecs.shape[1]
-        nr_feat = self.nr_feature
-        nr_piece = state2vec.nP
-
         state_objs = self.moves.init_batch(docs)
+        cdef vector[StateC*] states
+        cdef StateClass stcls
         for stcls in state_objs:
             if not stcls.c.is_final():
                 states.push_back(stcls.c)
 
-        feat_weights = state2vec.get_feat_weights()
-        cdef int i
+        cdef const float* feat_weights = state2vec.get_feat_weights()
         cdef np.ndarray hidden_weights = numpy.ascontiguousarray(
             vec2scores._layers[-1].W.T)
         cdef np.ndarray hidden_bias = vec2scores._layers[-1].b
@@ -421,6 +406,11 @@ cdef class Parser:
         bias = <float*>state2vec.bias.data
         cdef int nr_hidden = hidden_weights.shape[0]
         cdef int nr_task = states.size()
+        cdef int nr_class = self.moves.n_moves
+        cdef int nr_dim = tokvecs.shape[1]
+        cdef int nr_feat = self.nr_feature
+        cdef int nr_piece = state2vec.nP
+        cdef int i
         with nogil:
             for i in range(nr_task):
                 self._parseC(states[i],
@@ -444,27 +434,34 @@ cdef class Parser:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
         cdef float feature
+        cdef int i
+        cdef int nr_hidden_nr_piece = nr_hidden * nr_piece
         while not state.is_final():
             state.set_context_tokens(token_ids, nr_feat)
             memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
             memset(scores, 0, nr_class * sizeof(float))
             sum_state_features(vectors,
                 feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
-            for i in range(nr_hidden * nr_piece):
+            for i in range(nr_hidden_nr_piece):
                 vectors[i] += bias[i]
             V = vectors
             W = hW
-            for i in range(nr_hidden):
-                if nr_piece == 1:
-                    feature = V[0] if V[0] >= 0. else 0.
-                elif nr_piece == 2:
-                    feature = V[0] if V[0] >= V[1] else V[1]
-                else:
-                    feature = Vec.max(V, nr_piece)
-                for j in range(nr_class):
-                    scores[j] += feature * W[j]
-                W += nr_class
-                V += nr_piece
+            if nr_piece == 1:
+                for i in range(nr_hidden):
+                    if V[i] > 0:
+                        feature = V[i]
+                        for j in range(nr_class):
+                            scores[j] += feature * W[j]
+                    W += nr_class
+            else:
+                for i from 0 <= i < (nr_hidden_nr_piece) by nr_piece:
+                    if nr_piece == 2:
+                        feature = V[i] if V[i] >= V[i+1] else V[i+1]
+                    else:
+                        feature = Vec.max(&V[i], nr_piece)
+                    for j in range(nr_class):
+                        scores[j] += feature * W[j]
+                    W += nr_class
             for i in range(nr_class):
                 scores[i] += hb[i]
             self.moves.set_valid(is_valid, state)
@@ -726,7 +723,7 @@ cdef class Parser:
                                        lower, stream, drop=0.0)
         return (tokvecs, bp_tokvecs), state2vec, upper
 
-    nr_feature = 13
+    nr_feature = 8
 
     def get_token_ids(self, states):
         cdef StateClass state

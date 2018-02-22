@@ -135,7 +135,7 @@ def word_shape(text):
     return ''.join(shape)
 
 def lower(string): return string.lower()
-def prefix(string): return string[0]
+def prefix(string): return string[:3]
 def suffix(string): return string[-3:]
 def cluster(string): return 0
 def is_alpha(string): return string.isalpha()
