@@ -83,6 +83,7 @@ i.e. D[i,j+1] + 1
 
 '''
 from __future__ import unicode_literals
+from libc.stdint cimport uint32_t
 import numpy
 cimport numpy as np
 from .compat import unicode_
@@ -107,8 +108,8 @@ def align(S, T):
 
 def _convert_sequence(seq):
     if isinstance(seq, numpy.ndarray):
-        return numpy.ascontiguousarray(seq, dtype='i')
-    cdef np.ndarray output = numpy.zeros((len(seq),), dtype='i')
+        return numpy.ascontiguousarray(seq, dtype='uint32_t')
+    cdef np.ndarray output = numpy.zeros((len(seq),), dtype='uint32_t')
     cdef bytes item_bytes
     for i, item in enumerate(seq):
         if isinstance(item, unicode):
