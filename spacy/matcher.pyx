@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # cython: infer_types=True
 # cython: profile=True
 from libcpp.vector cimport vector
