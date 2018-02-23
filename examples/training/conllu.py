@@ -14,7 +14,13 @@ from spacy.syntax.nonproj import projectivize
 from collections import Counter
 from timeit import default_timer as timer
 
+import random
+import numpy.random
+
 from spacy._align import align
+
+random.seed(0)
+numpy.random.seed(0)
 
 def prevent_bad_sentences(doc):
     '''This is an example pipeline component for fixing sentence segmentation
@@ -41,10 +47,7 @@ def load_model(lang):
     be marked as incorrect.
     '''
     English = spacy.util.get_lang_class(lang)
-    English.Defaults.infixes += ('(?<=[^-\d])[+\-\*^](?=[^-\d])',)
-    English.Defaults.infixes += ('(?<=[^-])[+\-\*^](?=[^-\d])',)
-    English.Defaults.infixes += ('(?<=[^-\d])[+\-\*^](?=[^-])',)
-    English.Defaults.token_match = re.compile(r'=+').match
+    English.Defaults.token_match = re.compile(r'=+|!+|\?+|\*+|_+').match
     nlp = English()
     nlp.tokenizer.add_special_case('***', [{'ORTH': '***'}])
     nlp.tokenizer.add_special_case("):", [{'ORTH': ")"}, {"ORTH": ":"}])
@@ -246,13 +249,19 @@ def print_conllu(docs, file_):
 def main(spacy_model, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev_loc,
          output_loc):
     nlp = load_model(spacy_model)
+    vec_nlp = spacy.util.load_model('spacy/data/en_core_web_lg/en_core_web_lg-2.0.0')
+    nlp.vocab.vectors = vec_nlp.vocab.vectors
+    for lex in vec_nlp.vocab:
+        _ = nlp.vocab[lex.orth_]
     with open(conllu_train_loc) as conllu_file:
         with open(text_train_loc) as text_file:
             docs, golds = read_data(nlp, conllu_file, text_file,
-                                    oracle_segments=True, raw_text=True,
+                                    oracle_segments=False, raw_text=True,
                                     limit=None)
     print("Create parser")
     nlp.add_pipe(nlp.create_pipe('parser'))
+    nlp.parser.add_multitask_objective('tag')
+    nlp.parser.add_multitask_objective('sent_start')
     nlp.add_pipe(nlp.create_pipe('tagger'))
     for gold in golds:
         for tag in gold.tags:
@@ -271,7 +280,7 @@ def main(spacy_model, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev
     print("Begin training")
     # Batch size starts at 1 and grows, so that we make updates quickly
     # at the beginning of training.
-    batch_sizes = spacy.util.compounding(spacy.util.env_opt('batch_from', 8),
+    batch_sizes = spacy.util.compounding(spacy.util.env_opt('batch_from', 1),
                                    spacy.util.env_opt('batch_to', 8),
                                    spacy.util.env_opt('batch_compound', 1.001))
     for i in range(30):
