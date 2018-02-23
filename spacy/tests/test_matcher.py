@@ -3,12 +3,17 @@ from __future__ import unicode_literals
 
 from ..matcher import Matcher, PhraseMatcher
 from .util import get_doc
+from ..util import get_lang_class
 from ..tokens import Doc
 
 import pytest
 
+@pytest.fixture(scope="session")
+def en_vocab():
+    return get_lang_class('en').Defaults.create_vocab()
 
-@pytest.fixture
+
+@pytest.fixture(scope="session")
 def matcher(en_vocab):
     rules = {
         'JS':        [[{'ORTH': 'JavaScript'}]],
@@ -76,7 +81,15 @@ def test_matcher_no_match(matcher):
     assert matcher(doc) == []
 
 
-def test_matcher_compile(matcher):
+def test_matcher_compile(en_vocab):
+    rules = {
+        'JS':        [[{'ORTH': 'JavaScript'}]],
+        'GoogleNow': [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]],
+        'Java':      [[{'LOWER': 'java'}]]
+    }
+    matcher = Matcher(en_vocab)
+    for key, patterns in rules.items():
+        matcher.add(key, None, *patterns)
     assert len(matcher) == 3
 
 
