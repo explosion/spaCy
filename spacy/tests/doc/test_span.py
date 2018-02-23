@@ -145,7 +145,7 @@ def test_span_to_array(doc):
     assert arr[0, 1] == len(span[0])
 
 
-def test_span_as_doc(doc):
-    span = doc[4:10]
-    span_doc = span.as_doc()
-    assert span.text == span_doc.text.strip()
+#def test_span_as_doc(doc):
+#    span = doc[4:10]
+#    span_doc = span.as_doc()
+#    assert span.text == span_doc.text.strip()
