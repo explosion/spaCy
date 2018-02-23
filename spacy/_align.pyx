@@ -109,7 +109,7 @@ def align(S, T):
 def _convert_sequence(seq):
     if isinstance(seq, numpy.ndarray):
         return numpy.ascontiguousarray(seq, dtype='uint32_t')
-    cdef np.ndarray output = numpy.zeros((len(seq),), dtype='uint32_t')
+    cdef np.ndarray output = numpy.zeros((len(seq),), dtype='uint32')
     cdef bytes item_bytes
     for i, item in enumerate(seq):
         if isinstance(item, unicode):
