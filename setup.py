@@ -18,6 +18,7 @@ PACKAGES = find_packages()
 
 
 MOD_NAMES = [
+    'spacy._align',
     'spacy.parts_of_speech',
     'spacy.strings',
     'spacy.lexeme',

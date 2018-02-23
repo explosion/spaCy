@@ -555,7 +555,10 @@ cdef class Parser:
         for multitask in self._multitasks:
             multitask.update(docs, golds, drop=drop, sgd=sgd)
         cuda_stream = util.get_cuda_stream()
-        states, golds, max_steps = self._init_gold_batch(docs, golds)
+        # Chop sequences into lengths of this many transitions, to make the
+        # batch uniform length.
+        cut_gold = numpy.random.choice(range(20, 100))
+        states, golds, max_steps = self._init_gold_batch(docs, golds, max_length=cut_gold)
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
                                                                             drop)
         todo = [(s, g) for (s, g) in zip(states, golds)
@@ -659,7 +662,7 @@ cdef class Parser:
             _cleanup(beam)
 
 
-    def _init_gold_batch(self, whole_docs, whole_golds):
+    def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
         where N is the shortest doc. We'll make two states, one representing
@@ -668,7 +671,7 @@ cdef class Parser:
             StateClass state
             Transition action
         whole_states = self.moves.init_batch(whole_docs)
-        max_length = max(5, min(50, min([len(doc) for doc in whole_docs])))
+        max_length = max(min_length, min(max_length, min([len(doc) for doc in whole_docs])))
         max_moves = 0
         states = []
         golds = []
@@ -791,6 +794,11 @@ cdef class Parser:
                     hook(doc)
 
     @property
+    def labels(self):
+        class_names = [self.moves.get_class_name(i) for i in range(self.moves.n_moves)]
+        return class_names
+
+    @property
     def tok2vec(self):
         '''Return the embedding and convolutional layer of the model.'''
         if self.model in (None, True, False):
@@ -825,7 +833,7 @@ cdef class Parser:
         if 'model' in cfg:
             self.model = cfg['model']
         gold_tuples = nonproj.preprocess_training_data(gold_tuples,
-                                                       label_freq_cutoff=100)
+                                                       label_freq_cutoff=30)
         actions = self.moves.get_actions(gold_parses=gold_tuples)
         for action, labels in actions.items():
             for label in labels:

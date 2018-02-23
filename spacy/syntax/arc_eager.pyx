@@ -110,7 +110,8 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and st.B_(0).sent_start != 1
+        sent_start = st._sent[st.B_(0).l_edge].sent_start
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -170,7 +171,8 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.B_(0).sent_start != 1
+        sent_start = st._sent[st.B_(0).l_edge].sent_start
+        return sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -205,7 +207,8 @@ cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         # If there's (perhaps partial) parse pre-set, don't allow cycle.
-        return st.B_(0).sent_start != 1 and st.H(st.S(0)) != st.B(0)
+        sent_start = st._sent[st.B_(0).l_edge].sent_start
+        return sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -527,7 +530,12 @@ cdef class ArcEager(TransitionSystem):
                 is_valid[i] = False
                 costs[i] = 9000
         if n_gold < 1:
-            # Check projectivity --- leading cause
+            # Check label set --- leading cause
+            label_set = set([self.strings[self.c[i].label] for i in range(self.n_moves)])
+            for label_str in gold.labels:
+                if label_str is not None and label_str not in label_set:
+                    raise ValueError("Cannot get gold parser action: unknown label: %s" % label_str)
+            # Check projectivity --- other leading cause
             if is_nonproj_tree(gold.heads):
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the "
