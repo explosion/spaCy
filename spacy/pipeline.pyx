@@ -690,11 +690,7 @@ class MultitaskObjective(Tagger):
         for i, gold in enumerate(golds):
             for j in range(len(docs[i])):
                 # Handes alignment for tokenization differences
-                gold_idx = gold.cand_to_gold[j]
-                if gold_idx is None:
-                    idx += 1
-                    continue
-                label = self.make_label(gold_idx, gold.words, gold.tags,
+                label = self.make_label(j, gold.words, gold.tags,
                                         gold.heads, gold.labels, gold.ents)
                 if label is None or label not in self.labels:
                     correct[idx] = guesses[idx]
@@ -749,6 +745,8 @@ class MultitaskObjective(Tagger):
         of gold data. You can pass cache=False if you know the cache will
         do the wrong thing.
         '''
+        assert len(words) == len(heads)
+        assert target < len(words), (target, len(words))
         if cache:
             if id(heads) in _cache:
                 return _cache[id(heads)][target]
@@ -781,8 +779,6 @@ class MultitaskObjective(Tagger):
                 sent_tags[span[0]] = 'B-SENT'
                 sent_tags[span[-1]] = 'L-SENT'
         return sent_tags[target]
-
-
 
 
 class SimilarityHook(Pipe):
