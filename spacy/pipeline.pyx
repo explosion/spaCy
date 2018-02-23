@@ -761,20 +761,19 @@ class MultitaskObjective(Tagger):
             sent_tags = ['I-SENT'] * len(words)
 
         def _find_root(child):
-            while heads[child] != child:
-                if heads[child] is None:
-                    if child == 0:
-                        return child
-                    else:
-                        child -= 1
-                else:
-                    child = heads[child]
+            seen = set([child])
+            while child is not None and heads[child] != child:
+                seen.add(child)
+                child = heads[child]
             return child
 
         sentences = {}
         for i in range(len(words)):
             root = _find_root(i)
-            sentences.setdefault(root, []).append(i)
+            if root is None:
+                sent_tags[i] = None
+            else:
+                sentences.setdefault(root, []).append(i)
         for root, span in sorted(sentences.items()):
             if len(span) == 1:
                 sent_tags[span[0]] = 'U-SENT'
