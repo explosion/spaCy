@@ -82,6 +82,7 @@ i.e. D[i,j+1] + 1
     g 4 0 0 0 0
 
 '''
+from __future__ import unicode_literals
 import numpy
 cimport numpy as np
 from .compat import unicode_
