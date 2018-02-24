@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import pytest
-from .._align import align
+from .._align import align, multi_align
 
 
 @pytest.mark.parametrize('string1,string2,cost', [
@@ -47,10 +47,20 @@ def test_align_strings():
     assert list(j2i) == [-1, 2, -1, -1]
 
 def test_align_many_to_one():
-    words1 = ['hello', 'this', 'is', 'test!']
-    words2 = ['hellothis', 'is', 'test', '!']
-    cost, i2j, j2i, matrix = align(words1, words2, many_to_one=True)
-    assert list(i2j) == [0, 0, 1, -1]
-    assert list(j2i) == [-1, 2, -1, -1]
+    words1 = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    words2 = ['ab', 'bc', 'e', 'fg', 'h']
+    cost, i2j, j2i, matrix = align(words1, words2)
+    assert list(i2j) == [-1, -1, -1, -1, 2, -1, -1, 4]
+    lengths1 = [len(w) for w in words1]
+    lengths2 = [len(w) for w in words2]
+    i2j_multi, j2i_multi = multi_align(i2j, j2i, lengths1, lengths2)
+    assert i2j_multi[0] == 0
+    assert i2j_multi[1] == 0
+    assert i2j_multi[2] == 1
+    assert i2j_multi[3] == 1
+    assert i2j_multi[3] == 1
+    assert i2j_multi[5] == 3
+    assert i2j_multi[6] == 3
 
-
+    assert j2i_multi[0] == 1
+    assert j2i_multi[1] == 3
