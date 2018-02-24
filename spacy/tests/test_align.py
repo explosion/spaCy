@@ -43,5 +43,14 @@ def test_align_strings():
     words2 = ['hellothis', 'is', 'test', '!']
     cost, i2j, j2i, matrix = align(words1, words2)
     assert cost == 4
-    assert list(i2j) == [0, -1, 1, 2]
-    assert list(j2i) == [0, 2, 3, -1]
+    assert list(i2j) == [-1, -1, 1, -1]
+    assert list(j2i) == [-1, 2, -1, -1]
+
+def test_align_many_to_one():
+    words1 = ['hello', 'this', 'is', 'test!']
+    words2 = ['hellothis', 'is', 'test', '!']
+    cost, i2j, j2i, matrix = align(words1, words2, many_to_one=True)
+    assert list(i2j) == [0, 0, 1, -1]
+    assert list(j2i) == [-1, 2, -1, -1]
+
+

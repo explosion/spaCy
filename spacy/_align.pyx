@@ -90,7 +90,7 @@ from .compat import unicode_
 from murmurhash.mrmr cimport hash32
 
 
-def align(S, T):
+def align(S, T, many_to_one=False, one_to_many=False):
     cdef int m = len(S)
     cdef int n = len(T)
     cdef np.ndarray matrix = numpy.zeros((m+1, n+1), dtype='int32')
@@ -104,7 +104,72 @@ def align(S, T):
         <const int*>S_arr.data, m, <const int*>T_arr.data, n)
     fill_i2j(i2j, matrix)
     fill_j2i(j2i, matrix)
+    for i in range(i2j.shape[0]):
+        if i2j[i] >= 0 and len(S[i]) != len(T[i2j[i]]):
+            i2j[i] = -1
+    for j in range(j2i.shape[0]):
+        if j2i[j] >= 0 and len(T[j]) != len(S[j2i[j]]):
+            j2i[j] = -1
+
+    if many_to_one or one_to_many:
+        i2j_multi, j2i_multi = multi_align(i2j, j2i,
+                                [len(s) for s in S], [len(t) for t in T])
+        if many_to_one:
+            for i, j in i2j_multi.items():
+                i2j[i] = j
+        if one_to_many:
+            for j, i in j2i_multi.items():
+                j2i[j] = i
     return matrix[-1,-1], i2j, j2i, matrix
+
+
+def multi_align(np.ndarray i2j, np.ndarray j2i, i_lengths, j_lengths):
+    '''Let's say we had:
+
+    Guess: [aa bb cc dd]
+    Truth: [aa bbcc dd]
+    i2j: [0, None, -2, 2]
+    j2i: [0, -2, 3]
+
+    We want:
+
+    i2j_multi: {1: 1, 2: 1}
+    j2i_multi: {}
+    '''
+    i_starts = numpy.cumsum([0] + i_lengths[:-1])
+    j_starts = numpy.cumsum([0] + j_lengths[:-1])
+    i2j_miss = _get_regions(i2j, i_starts)
+    j2i_miss = _get_regions(j2i, j_starts)
+
+    i2j_multi = _get_mapping(i2j_miss, j2i_miss, i_lengths, j_lengths)
+    j2i_multi = _get_mapping(j2i_miss, i2j_miss, j_lengths, i_lengths)
+    return i2j_multi, j2i_multi
+
+
+def _get_regions(alignment, starts):
+    regions = {}
+    start = None
+    for i in range(len(alignment)):
+        if alignment[i] < 0:
+            if start is None:
+                start = starts[i]
+                regions.setdefault(start, [])
+            regions[start].append(i)
+        else:
+            start = None
+    return regions
+
+
+def _get_mapping(miss1, miss2, lengths1, lengths2):
+    output = {}
+    for start, region1 in miss1.items():
+        region2 = miss2.get(start, [])
+        if len(region2) == 1:
+            if sum(lengths1[i] for i in region1):
+                for i in region1:
+                    output[i] = region2[0]
+    return output
+
 
 def _convert_sequence(seq):
     if isinstance(seq, numpy.ndarray):
