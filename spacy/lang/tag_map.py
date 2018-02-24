@@ -24,5 +24,5 @@ TAG_MAP = {
     "ADJ":      {POS: ADJ},
     "VERB":     {POS: VERB},
     "PART":     {POS: PART},
-    "SP":     	{POS: SPACE}
+    "_SP":     	{POS: SPACE}
 }
