@@ -110,16 +110,6 @@ def align(S, T, many_to_one=False, one_to_many=False):
     for j in range(j2i.shape[0]):
         if j2i[j] >= 0 and len(T[j]) != len(S[j2i[j]]):
             j2i[j] = -1
-
-    if many_to_one or one_to_many:
-        i2j_multi, j2i_multi = multi_align(i2j, j2i,
-                                [len(s) for s in S], [len(t) for t in T])
-        if many_to_one:
-            for i, j in i2j_multi.items():
-                i2j[i] = j
-        if one_to_many:
-            for j, i in j2i_multi.items():
-                j2i[j] = i
     return matrix[-1,-1], i2j, j2i, matrix
 
 

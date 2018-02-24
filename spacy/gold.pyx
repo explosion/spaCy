@@ -67,9 +67,19 @@ def align(cand_words, gold_words):
     gold_words = [punct_re.sub('', w).lower() for w in gold_words]
     if cand_words == gold_words:
         alignment = numpy.arange(len(cand_words))
-        return 0, alignment, alignment
+        return 0, alignment, alignment, {}, {}
     cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
-    return cost, i2j, j2i
+    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
+                                [len(w) for w in gold_words])
+    for i, j in list(i2j_multi.items()):
+        if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
+            i2j[i] = j
+            i2j_multi.pop(i)
+    for j, i in list(j2i_multi.items()):
+        if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
+            j2i[j] = i
+            j2i_multi.pop(j)
+    return cost, i2j, j2i, i2j_multi, j2i_multi
 
 
 class GoldCorpus(object):
@@ -361,9 +371,17 @@ cdef class GoldParse:
         self.labels = [None] * len(doc)
         self.ner = [None] * len(doc)
 
-        cost, i2j, j2i = align([t.orth_ for t in doc], words)
-        self.cand_to_gold = [(j if j != -1 else None) for j in i2j]
-        self.gold_to_cand = [(i if i != -1 else None) for i in j2i]
+        # Do many-to-one alignment for misaligned tokens.
+        # If we over-segment, we'll have one gold word that covers a sequence
+        # of predicted words
+        # If we under-segment, we'll have one predicted word that covers a
+        # sequence of gold words.
+        # If we "mis-segment", we'll have a sequence of predicted words covering
+        # a sequence of gold words. That's many-to-many -- we don't do that.
+        cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
+
+        self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
+        self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
 
         annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
         self.orig_annot = list(zip(*annot_tuples))
@@ -376,7 +394,17 @@ cdef class GoldParse:
                 self.labels[i] = None
                 self.ner[i] = 'O'
             if gold_i is None:
-                pass
+                if i in i2j_multi:
+                    self.words[i] = words[i2j_multi[i]]
+                    self.tags[i] = tags[i2j_multi[i]]
+                    # Set next word in multi-token span as head, until last
+                    if i2j_multi[i] == i2j_multi.get(i+1):
+                        self.heads[i] = i+1
+                        self.labels[i] = 'subtok'
+                    else:
+                        self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
+                        self.labels[i] = deps[i2j_multi[i]]
+                    # TODO: Set NER!
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
