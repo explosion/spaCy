@@ -63,8 +63,6 @@ def merge_sents(sents):
 
 punct_re = re.compile(r'\W')
 def align(cand_words, gold_words):
-    cand_words = [punct_re.sub('', w).lower() for w in cand_words]
-    gold_words = [punct_re.sub('', w).lower() for w in gold_words]
     if cand_words == gold_words:
         alignment = numpy.arange(len(cand_words))
         return 0, alignment, alignment, {}, {}
@@ -389,7 +387,7 @@ cdef class GoldParse:
         for i, gold_i in enumerate(self.cand_to_gold):
             if doc[i].text.isspace():
                 self.words[i] = doc[i].text
-                self.tags[i] = 'SP'
+                self.tags[i] = '_SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
