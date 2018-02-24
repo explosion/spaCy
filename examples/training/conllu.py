@@ -13,6 +13,7 @@ from spacy.gold import GoldParse, minibatch
 from spacy.syntax.nonproj import projectivize
 from collections import Counter
 from timeit import default_timer as timer
+from spacy.matcher import Matcher
 
 import random
 import numpy.random
@@ -22,42 +23,6 @@ from spacy._align import align
 random.seed(0)
 numpy.random.seed(0)
 
-def prevent_bad_sentences(doc):
-    '''This is an example pipeline component for fixing sentence segmentation
-    mistakes. The component sets is_sent_start to False, which means the
-    parser will be prevented from making a sentence boundary there. The
-    rules here aren't necessarily a good idea.'''
-    for token in doc[1:]:
-        if token.nbor(-1).text == ',':
-            token.is_sent_start = False
-        elif not token.nbor(-1).whitespace_:
-            token.is_sent_start = False
-        elif not token.nbor(-1).is_punct:
-            token.is_sent_start = False
-        elif token.nbor(-1).is_left_punct:
-            token.is_sent_start = False
-    return doc
-
-
-def load_model(lang):
-    '''This shows how to adjust the tokenization rules, to special-case
-    for ways the CoNLLU tokenization differs. We need to get the tokenizer
-    accuracy high on the various treebanks in order to do well. If we don't
-    align on a content word, all dependencies to and from that word will
-    be marked as incorrect.
-    '''
-    English = spacy.util.get_lang_class(lang)
-    English.Defaults.token_match = re.compile(r'=+|!+|\?+|\*+|_+').match
-    nlp = English()
-    nlp.tokenizer.add_special_case('***', [{'ORTH': '***'}])
-    nlp.tokenizer.add_special_case("):", [{'ORTH': ")"}, {"ORTH": ":"}])
-    nlp.tokenizer.add_special_case("and/or", [{'ORTH': "and"}, {"ORTH": "/"}, {"ORTH": "or"}])
-    nlp.tokenizer.add_special_case("non-Microsoft", [{'ORTH': "non-Microsoft"}])
-    nlp.tokenizer.add_special_case("mis-matches", [{'ORTH': "mis-matches"}])
-    nlp.tokenizer.add_special_case("X.", [{'ORTH': "X"}, {"ORTH": "."}])
-    nlp.tokenizer.add_special_case("b/c", [{'ORTH': "b/c"}])
-    return nlp
-    
 
 def get_token_acc(docs, golds):
     '''Quick function to evaluate tokenization accuracy.'''
@@ -229,8 +194,16 @@ def print_progress(itn, losses, scorer):
     ))
     print(tpl.format(itn, **scores))
 
+
 def print_conllu(docs, file_):
+    merger = Matcher(docs[0].vocab)
+    merger.add('SUBTOK', None, [{'DEP': 'subtok', 'op': '+'}])
     for i, doc in enumerate(docs):
+        matches = merger(doc)
+        spans = [(doc[start].idx, doc[end+1].idx+len(doc[end+1]))
+                 for (_, start, end) in matches if end < (len(doc)-1)]
+        for start_char, end_char in spans:
+            doc.merge(start_char, end_char)
         file_.write("# newdoc id = {i}\n".format(i=i))
         for j, sent in enumerate(doc.sents):
             file_.write("# sent_id = {i}.{j}\n".format(i=i, j=j))
@@ -246,13 +219,15 @@ def print_conllu(docs, file_):
             file_.write('\n')
 
 
-def main(spacy_model, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev_loc,
+def main(lang, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev_loc,
          output_loc):
-    nlp = load_model(spacy_model)
-    vec_nlp = spacy.util.load_model('spacy/data/en_core_web_lg/en_core_web_lg-2.0.0')
-    nlp.vocab.vectors = vec_nlp.vocab.vectors
-    for lex in vec_nlp.vocab:
-        _ = nlp.vocab[lex.orth_]
+    nlp = spacy.blank(lang)
+    if lang == 'en':
+        vec_nlp = spacy.util.load_model('spacy/data/en_core_web_lg/en_core_web_lg-2.0.0')
+        nlp.vocab.vectors = vec_nlp.vocab.vectors
+        for lex in vec_nlp.vocab:
+            _ = nlp.vocab[lex.orth_]
+        vec_nlp = None
     with open(conllu_train_loc) as conllu_file:
         with open(text_train_loc) as text_file:
             docs, golds = read_data(nlp, conllu_file, text_file,
@@ -262,6 +237,7 @@ def main(spacy_model, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev
     nlp.add_pipe(nlp.create_pipe('parser'))
     nlp.parser.add_multitask_objective('tag')
     nlp.parser.add_multitask_objective('sent_start')
+    nlp.parser.moves.add_action(2, 'subtok')
     nlp.add_pipe(nlp.create_pipe('tagger'))
     for gold in golds:
         for tag in gold.tags:
@@ -281,7 +257,7 @@ def main(spacy_model, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev
     # Batch size starts at 1 and grows, so that we make updates quickly
     # at the beginning of training.
     batch_sizes = spacy.util.compounding(spacy.util.env_opt('batch_from', 1),
-                                   spacy.util.env_opt('batch_to', 8),
+                                   spacy.util.env_opt('batch_to', 2),
                                    spacy.util.env_opt('batch_compound', 1.001))
     for i in range(30):
         docs = refresh_docs(docs)
