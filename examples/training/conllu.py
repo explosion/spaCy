@@ -286,8 +286,7 @@ def main(lang, conllu_train_loc, text_train_loc, conllu_dev_loc, text_dev_loc,
         
         with nlp.use_params(optimizer.averages):
             dev_docs, scorer = parse_dev_data(nlp, text_dev_loc, conllu_dev_loc,
-                                              oracle_segments=False, joint_sbd=True,
-                                              limit=5)
+                                              oracle_segments=False, joint_sbd=True)
             print_progress(i, losses, scorer)
             with open(output_loc, 'w') as file_:
                 print_conllu(dev_docs, file_)
