@@ -1,6 +1,6 @@
-from __future__ import unicode_literals
 # cython: infer_types=True
 # cython: profile=True
+from __future__ import unicode_literals
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, uint64_t, uint16_t
 from preshed.maps cimport PreshMap
