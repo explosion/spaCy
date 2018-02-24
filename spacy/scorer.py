@@ -100,8 +100,7 @@ class Scorer(object):
                 continue
             gold_i = gold.cand_to_gold[token.i]
             if gold_i is None:
-                if token.dep_.lower() not in punct_labels:
-                    self.tokens.fp += 1
+                self.tokens.fp += 1
             else:
                 self.tokens.tp += 1
                 cand_tags.add((gold_i, token.tag_))
