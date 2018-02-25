@@ -26,6 +26,10 @@ import cytoolz
 
 import conll17_ud_eval
 
+import spacy.lang.zh
+
+spacy.lang.zh.Chinese.Defaults.use_jieba = False
+
 random.seed(0)
 numpy.random.seed(0)
 
