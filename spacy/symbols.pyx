@@ -389,6 +389,9 @@ IDS = {
     "VerbType_cop": VerbType_cop, # U,
     "VerbType_mod": VerbType_mod, # U,
     "VerbType_light": VerbType_light, # U,
+    
+    "Fused_begin": Fused_begin,
+    "Fused_inside": Fused_inside,
 
     "PERSON": PERSON,
     "NORP": NORP,

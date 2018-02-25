@@ -10,6 +10,7 @@ cimport numpy as np
 np.import_array()
 import numpy
 
+from ..morphology cimport univ_morph_t
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from .. import parts_of_speech
@@ -127,6 +128,15 @@ cdef class Token:
             True
         """
         return Lexeme.c_check_flag(self.c.lex, flag_id)
+
+    def set_morph(self, univ_morph_t feature, bint value):
+        '''Set a morphological feature'''
+        self.vocab.morphology.set_feature(&self.c.morph, feature, value)
+
+    def check_morph(self, univ_morph_t feature):
+        '''Check whether the token has the given morphological feature.'''
+        features = self.vocab.morphology.get_features(self.c.morph)
+        return feature in features
 
     def nbor(self, int i=1):
         """Get a neighboring token.

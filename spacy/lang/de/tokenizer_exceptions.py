@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
+from ...morphology import Fused_begin, Fused_inside
 
 
 _exc = {
@@ -47,7 +48,11 @@ _exc = {
 
     "über'm": [
         {ORTH: "über", LEMMA: "über"},
-        {ORTH: "'m", LEMMA: "der", NORM: "dem"}]
+        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
+    "zum": [
+        {ORTH: "zu", LEMMA: "zu", "morphology": [Fused_begin]},
+        {ORTH: "m", LEMMA: "der", "morphology": [Fused_inside]}
+    ]
 }
 
 

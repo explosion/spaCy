@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import pytest
+from ....morphology import Fused_begin, Fused_inside
 
 
 def test_tokenizer_handles_long_text(de_tokenizer):
@@ -22,8 +23,14 @@ Umfang kläglich dünnen Beine flimmerten ihm hilflos vor den Augen.
 »Was ist mit mir geschehen?«, dachte er."""
 
     tokens = de_tokenizer(text)
-    assert len(tokens) == 109
+    assert len(tokens) == 110
 
+
+def test_fused(de_tokenizer):
+    doc = de_tokenizer('zum')
+    assert len(doc) == 2
+    assert doc[0].check_morph(Fused_begin)
+    assert doc[1].check_morph(Fused_inside)
 
 @pytest.mark.parametrize('text', [
     "Donaudampfschifffahrtsgesellschaftskapitänsanwärterposten",

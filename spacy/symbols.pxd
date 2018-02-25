@@ -384,6 +384,9 @@ cdef enum symbol_t:
     VerbType_cop # U
     VerbType_mod # U
     VerbType_light # U
+    
+    Fused_begin
+    Fused_inside
 
     PERSON
     NORP

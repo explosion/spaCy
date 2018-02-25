@@ -31,6 +31,7 @@ cdef class Morphology:
     cdef public object reverse_index
     cdef public object tag_names
     cdef public object exc
+    cdef public object _morph2features
 
     cdef RichTagC* rich_tags
     cdef PreshMapArray _cache
@@ -42,6 +43,8 @@ cdef class Morphology:
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
 
     cdef int assign_feature(self, uint64_t* morph, univ_morph_t feat_id, bint value) except -1
+    
+    cdef int set_feature(self, uint64_t* morph, univ_morph_t feat_id, bint value) except -1
 
 
 cdef enum univ_morph_t:
@@ -297,5 +300,8 @@ cdef enum univ_morph_t:
     VerbType_cop # U
     VerbType_mod # U
     VerbType_light # U
+
+    Fused_begin
+    Fused_inside
 
 

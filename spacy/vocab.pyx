@@ -232,14 +232,17 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
+            features = props.get('morphology', frozenset())
             props = intify_attrs(props, strings_map=self.strings,
-                                 _do_deprecated=True)
+                                 _do_deprecated=False)
             token = &tokens[i]
             # Set the special tokens up to have arbitrary attributes
             lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
             token.lex = lex
             if TAG in props:
                 self.morphology.assign_tag(token, props[TAG])
+            for feature in features:
+                self.morphology.set_feature(&token.morph, feature, True)
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
                 Lexeme.set_struct_attr(lex, attr_id, value)
