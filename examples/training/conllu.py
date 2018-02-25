@@ -377,8 +377,7 @@ def main(ud_dir, corpus, config, parses='/tmp/dev.conllu'):
                         drop=config.dropout, losses=losses)
         
         with nlp.use_params(optimizer.averages):
-            dev_docs, scorer = parse_dev_data(nlp, paths.dev.text, paths.dev.conllu,
-                                              **attr.asdict(config))
+            dev_docs, scorer = parse_dev_data(nlp, paths.dev.text, paths.dev.conllu)
             print_progress(i, losses, scorer)
             with open(output_loc, 'w') as file_:
                 print_conllu(dev_docs, file_)
