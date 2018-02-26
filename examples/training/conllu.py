@@ -250,7 +250,7 @@ def get_token_conllu(token, i):
         n = 1
         while token.nbor(n)._.inside_fused:
             n += 1
-        id_ = '%d-%d' % (k, k+n)
+        id_ = '%d-%d' % (i, i+n)
         lines = [id_, token.text, '_', '_', '_', '_', '_', '_', '_', '_']
     else:
         lines = []
