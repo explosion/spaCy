@@ -9,6 +9,14 @@ p Collection for training annotations.
 
 p Create a #[code GoldParse].
 
++aside-code("Example").
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+from spacy.gold import GoldParse
+vocab = Vocab(tag_map={'N': {'pos': 'NOUN'}, 'V': {'pos': 'VERB'}})
+doc = Doc(vocab, words=['I', 'like', 'stuff'])
+gold = GoldParse(doc, tags=['N', 'V', 'N'])
+
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code doc]
