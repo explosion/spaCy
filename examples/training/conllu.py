@@ -29,6 +29,7 @@ import conll17_ud_eval
 import spacy.lang.zh
 
 spacy.lang.zh.Chinese.Defaults.use_jieba = False
+spacy.lang.ja.Chinese.Defaults.use_janome = False
 
 random.seed(0)
 numpy.random.seed(0)
