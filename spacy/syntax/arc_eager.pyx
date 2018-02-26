@@ -110,8 +110,7 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and sent_start != 1
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and st.B_(0).sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -171,8 +170,7 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return sent_start != 1
+        return st.B_(0).sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -207,8 +205,7 @@ cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         # If there's (perhaps partial) parse pre-set, don't allow cycle.
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return sent_start != 1 and st.H(st.S(0)) != st.B(0)
+        return st.B_(0).sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
