@@ -107,6 +107,7 @@ cdef class Morphology:
         # justification is that this is where the specific word and the tag
         # interact. Still, we should have a better way to enforce this rule, or
         # figure out why the statistical model fails. Related to Issue #220
+        previous_features = self.get_features(token.morph)
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
             tag_id = self.reverse_index[self.strings.add('_SP')]
         rich_tag = self.rich_tags[tag_id]
@@ -122,6 +123,8 @@ cdef class Morphology:
         token.pos = analysis.tag.pos
         token.tag = analysis.tag.name
         token.morph = analysis.tag.morph
+        for feature in previous_features:
+            self.set_feature(&token.morph, feature, True)
 
     cdef int assign_feature(self, uint64_t* morph, univ_morph_t flag_id, bint value) except -1:
         # Deprecated
@@ -146,7 +149,10 @@ cdef class Morphology:
             self._morph2features[morph[0]] = new_features
 
     def get_features(self, uint64_t morph):
-        return self._morph2features.get(morph, frozenset())
+        if morph in self._morph2features:
+            return self._morph2features[morph]
+        else:
+            return frozenset()
 
     def add_special_case(self, unicode tag_str, unicode orth_str, attrs,
                          force=False):

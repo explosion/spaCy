@@ -484,9 +484,11 @@ class Tagger(Pipe):
                         new_tag_map[tag] = {POS: X}
         cdef Vocab vocab = self.vocab
         if new_tag_map:
+            morph_feats = self.vocab.morphology._morph2features
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
+            vocab.morphology._morph2features = morph_feats
         if self.model is True:
             self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
@@ -519,10 +521,12 @@ class Tagger(Pipe):
         if values is None:
             values = {POS: "X"}
         tag_map[label] = values
+        morph_feats = Morphology._morph2features
         self.vocab.morphology = Morphology(
             self.vocab.strings, tag_map=tag_map,
             lemmatizer=self.vocab.morphology.lemmatizer,
             exc=self.vocab.morphology.exc)
+        self.vocab.morphology._morph2features = morph_feats
         return 1
 
     def use_params(self, params):
@@ -554,10 +558,12 @@ class Tagger(Pipe):
 
         def load_tag_map(b):
             tag_map = msgpack.loads(b, encoding='utf8')
+            morph_feats = self.vocab.morphology._morph2features
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
+            self.vocab.morphology._morph2features = morph_feats
 
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
@@ -590,10 +596,12 @@ class Tagger(Pipe):
         def load_tag_map(p):
             with p.open('rb') as file_:
                 tag_map = msgpack.loads(file_.read(), encoding='utf8')
+            morph_feats = self.vocab.morphology._morph2features
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
+            self.vocab.morphology._morph2features = morph_feats
 
         deserialize = OrderedDict((
             ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
