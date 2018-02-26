@@ -319,7 +319,7 @@ cdef class ArcEager(TransitionSystem):
             (SHIFT, ['']),
             (REDUCE, ['']),
             (RIGHT, []),
-            (LEFT, []),
+            (LEFT, ['subtok']),
             (BREAK, ['ROOT']))
         ))
         seen_actions = set()
