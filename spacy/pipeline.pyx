@@ -521,7 +521,7 @@ class Tagger(Pipe):
         if values is None:
             values = {POS: "X"}
         tag_map[label] = values
-        morph_feats = Morphology._morph2features
+        morph_feats = self.vocab.morphology._morph2features
         self.vocab.morphology = Morphology(
             self.vocab.strings, tag_map=tag_map,
             lemmatizer=self.vocab.morphology.lemmatizer,
