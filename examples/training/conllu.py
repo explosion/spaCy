@@ -249,6 +249,9 @@ def _get_token_conllu(token, k, sent_len):
             fields[1] = token.norm_[0].upper() + token.norm_[1:]
         else:
             fields[1] = token.norm_
+    elif token.check_morph(Fused_inside):
+        fields[1] = token.norm_
+
     lines.append('\t'.join(fields))
     return '\n'.join(lines)
 
