@@ -49,10 +49,6 @@ _exc = {
     "über'm": [
         {ORTH: "über", LEMMA: "über"},
         {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
-    "zum": [
-        {ORTH: "zu", LEMMA: "zu", "morphology": [Fused_begin]},
-        {ORTH: "m", LEMMA: "der", "morphology": [Fused_inside]}
-    ]
 }
 
 
