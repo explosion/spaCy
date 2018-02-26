@@ -191,9 +191,12 @@ def _filter_labels(gold_tuples, cutoff, freqs):
     for raw_text, sents in gold_tuples:
         filtered_sents = []
         for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            filtered_labels = [decompose(label)[0]
-                               if freqs.get(label, cutoff) < cutoff
-                               else label for label in labels]
+            filtered_labels = []
+            for label in labels:
+                if is_decorated(label) and freqs.get(label, 0) < cutoff:
+                    filtered_labels.append(decompose(label)[0])
+                else:
+                    filtered_labels.append(label)
             filtered_sents.append(
                 ((ids, words, tags, heads, filtered_labels, iob), ctnts))
         filtered.append((raw_text, filtered_sents))
