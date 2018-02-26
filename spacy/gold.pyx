@@ -133,10 +133,10 @@ class GoldCorpus(object):
     def train_docs(self, nlp, gold_preproc=False,
                    projectivize=False, max_length=None,
                    noise_level=0.0):
-        train_tuples = self.train_tuples
+        train_tuples = list(self.train_tuples)
         if projectivize:
             train_tuples = nonproj.preprocess_training_data(
-                self.train_tuples, label_freq_cutoff=100)
+                self.train_tuples, label_freq_cutoff=30)
         random.shuffle(train_tuples)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
