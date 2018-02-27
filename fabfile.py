@@ -35,7 +35,7 @@ def virtualenv(name, create=False, python='/usr/bin/python3.6'):
 
 
 def env(lang='python2.7'):
-    if path.exists(VENV_DIR):
+    if VENV_DIR.exists():
         local('rm -rf {env}'.format(env=VENV_DIR))
     local('pip install virtualenv')
     local('python -m virtualenv -p {lang} {env}'.format(lang=lang, env=VENV_DIR))
