@@ -1,0 +1,11 @@
+steps:
+  -
+    command: "fab env clean make test wheel"
+    label: ":dizzy: :python:"
+    artifact_paths: "dist/*.whl"
+  - wait
+  - trigger: "spacy-train-from-wheel"
+    label: ":dizzy: :train:"
+    build:
+      env:
+        SPACY_VERSION: "{$SPACY_VERSION}"
