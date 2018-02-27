@@ -77,5 +77,4 @@ def clean():
 def test():
     with lcd(path.dirname(__file__)):
         with virtualenv(VENV_DIR) as venv_local:
-            local('pip install pytest')
-            local('py.test -x spacy/tests')
+            venv_local('py.test -x spacy/tests')
