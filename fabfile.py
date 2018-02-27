@@ -5,6 +5,7 @@ import contextlib
 from pathlib import Path
 from fabric.api import local, lcd, env, settings, prefix
 from os import path, environ
+import shutil
 
 
 PWD = path.dirname(__file__)
