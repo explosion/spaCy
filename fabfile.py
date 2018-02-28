@@ -14,15 +14,14 @@ VENV_DIR = Path(PWD) / ENV
 
 
 @contextlib.contextmanager
-def virtualenv(name, create=False, python='/usr/bin/python3.6', capture=False):
+def virtualenv(name, create=False, python='/usr/bin/python3.6'):
     python = Path(python).resolve()
     env_path = VENV_DIR
     if create:
         if env_path.exists():
             shutil.rmtree(str(env_path))
-        local('{python} -m venv {env_path}'.format(python=python, env_path=VENV_DIR),
-              capture=capture)
-    def wrapped_local(cmd, env_vars=[]):
+        local('{python} -m venv {env_path}'.format(python=python, env_path=VENV_DIR))
+    def wrapped_local(cmd, env_vars=[], capture=False):
         env_py = env_path / 'bin' / 'python'
         env_vars = ' '.join(env_vars)
         if cmd.split()[0] == 'python':
