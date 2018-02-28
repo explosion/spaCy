@@ -37,15 +37,15 @@ def virtualenv(name, create=False, python='/usr/bin/python3.6'):
 def env(lang='python3.6'):
     if VENV_DIR.exists():
         local('rm -rf {env}'.format(env=VENV_DIR))
-    local('{lang} -m pip install virtualenv'.format(lang=lang))
+    local('{lang} -m pip install virtualenv --no-cache-dir'.format(lang=lang))
     if lang.startswith('python3'):
         local('{lang} -m venv {env}'.format(lang=lang, env=VENV_DIR))
     else:
-        local('{lang} -m virtualenv {env}'.format(lang=lang, env=VENV_DIR))
+        local('{lang} -m virtualenv {env} --no-cache-dir'.format(lang=lang, env=VENV_DIR))
     with virtualenv(VENV_DIR) as venv_local:
-        venv_local('python --version')
-        venv_local('pip install --upgrade setuptools')
-        venv_local('pip install pytest')
+        print(venv_local('python --version', capture=True))
+        venv_local('pip install --upgrade setuptools --no-cache-dir')
+        venv_local('pip install pytest --no-cache-dir')
 
 
 def install():
