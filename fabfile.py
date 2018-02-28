@@ -52,34 +52,32 @@ def install():
 
 
 def make():
-    with lcd(path.dirname(__file__)):
-        with virtualenv(VENV_DIR) as venv_local:
-            venv_local('pip install wheel')
+    with virtualenv(VENV_DIR) as venv_local:
+        with lcd(path.dirname(__file__)):
             venv_local('pip install cython')
-            venv_local('pip install murmurhash')
             venv_local('pip install -r requirements.txt')
-            venv_local('python setup.py build_ext --inplace')
+            venv_local('PYTHONPATH=`pwd`  python setup.py build_ext --inplace')
 
 def sdist():
-    with lcd(path.dirname(__file__)):
-        with virtualenv(VENV_DIR) as venv_local:
+    with virtualenv(VENV_DIR) as venv_local:
+        with lcd(path.dirname(__file__)):
             local('python setup.py sdist')
 
 def wheel():
-    with lcd(path.dirname(__file__)):
-        with virtualenv(VENV_DIR) as venv_local:
+    with virtualenv(VENV_DIR) as venv_local:
+        with lcd(path.dirname(__file__)):
             venv_local('pip install wheel')
             venv_local('python setup.py bdist_wheel')
 
 
 def clean():
-    with virtualenv(VENV_DIR) as venv_local:
-        with lcd(path.dirname(__file__)):
+    with lcd(path.dirname(__file__)):
+        with virtualenv(VENV_DIR) as venv_local:
             local('python setup.py clean --all')
 
 
 def test():
-    with lcd(path.dirname(__file__)):
-        with virtualenv(VENV_DIR) as venv_local:
+    with virtualenv(VENV_DIR) as venv_local:
+        with lcd(path.dirname(__file__)):
             venv_local('pip install pytest')
             venv_local('pytest -x spacy/tests')
