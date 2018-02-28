@@ -56,7 +56,7 @@ def make():
         with lcd(path.dirname(__file__)):
             venv_local('pip install cython')
             venv_local('pip install -r requirements.txt')
-            venv_local('PYTHONPATH=`pwd`  python setup.py build_ext --inplace')
+            venv_local('python setup.py build_ext --inplace', env_vars=['PYTHONPATH=`pwd`'])
 
 def sdist():
     with virtualenv(VENV_DIR) as venv_local:
