@@ -46,6 +46,7 @@ def env(lang='python3.6'):
         print(venv_local('python --version', capture=True))
         venv_local('pip install --upgrade setuptools --no-cache-dir')
         venv_local('pip install pytest --no-cache-dir')
+        venv_local('pip install wheel')
 
 
 def install():
@@ -73,7 +74,7 @@ def wheel():
 def clean():
     with lcd(path.dirname(__file__)):
         with virtualenv(VENV_DIR) as venv_local:
-            local('python setup.py clean --all')
+            venv_local('python setup.py clean --all')
 
 
 def test():
