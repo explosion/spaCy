@@ -54,9 +54,9 @@ def install():
 def make():
     with lcd(path.dirname(__file__)):
         with virtualenv(VENV_DIR) as venv_local:
+            venv_local('pip install wheel')
             venv_local('pip install cython')
             venv_local('pip install murmurhash')
-            venv_local('pip install wheel')
             venv_local('pip install -r requirements.txt')
             venv_local('python setup.py build_ext --inplace')
 
