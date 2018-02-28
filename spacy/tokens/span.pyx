@@ -294,6 +294,7 @@ cdef class Span:
             cdef int i
             if self.doc.is_parsed:
                 root = &self.doc.c[self.start]
+                n = 0
                 while root.head != 0:
                     root += root.head
                     n += 1
@@ -307,8 +308,10 @@ cdef class Span:
                     start += -1
                 # find end of the sentence
                 end = self.end
-                while self.doc.c[end].sent_start != 1:
+                n = 0
+                while end < self.doc.length and self.doc.c[end].sent_start != 1:
                     end += 1
+                    n += 1
                     if n >= self.doc.length:
                         break
                 #
