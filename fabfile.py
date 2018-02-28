@@ -34,11 +34,14 @@ def virtualenv(name, create=False, python='/usr/bin/python3.6'):
     yield wrapped_local
 
 
-def env(lang='python2.7'):
+def env(lang='python3.6'):
     if VENV_DIR.exists():
         local('rm -rf {env}'.format(env=VENV_DIR))
-    local('pip install virtualenv')
-    local('python -m virtualenv -p {lang} {env}'.format(lang=lang, env=VENV_DIR))
+    local('{lang} -m pip install virtualenv'.format(lang=lang))
+    if lang.startswith('python3'):
+        local('{lang} -m venv {env}'.format(lang=lang, env=VENV_DIR))
+    else:
+        local('{lang} -m virtualenv {env}'.format(lang=lang, env=VENV_DIR))
 
 
 def install():
