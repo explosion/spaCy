@@ -42,19 +42,20 @@ def env(lang='python3.6'):
         local('{lang} -m venv {env}'.format(lang=lang, env=VENV_DIR))
     else:
         local('{lang} -m virtualenv {env}'.format(lang=lang, env=VENV_DIR))
+    with virtualenv(VENV_DIR) as venv_local:
+        venv_local('python --version')
+        venv_local('pip install --upgrade setuptools')
+        venv_local('pip install pytest')
 
 
 def install():
     with virtualenv(VENV_DIR) as venv_local:
-        venv_local('pip install --upgrade setuptools')
         venv_local('pip install dist/*.tar.gz')
-        venv_local('pip install pytest')
 
 
 def make():
     with virtualenv(VENV_DIR) as venv_local:
         with lcd(path.dirname(__file__)):
-            venv_local('pip install cython')
             venv_local('pip install -r requirements.txt')
             venv_local('python setup.py build_ext --inplace', env_vars=['PYTHONPATH=`pwd`'])
 
@@ -66,7 +67,6 @@ def sdist():
 def wheel():
     with virtualenv(VENV_DIR) as venv_local:
         with lcd(path.dirname(__file__)):
-            venv_local('pip install wheel')
             venv_local('python setup.py bdist_wheel')
 
 
@@ -79,5 +79,4 @@ def clean():
 def test():
     with virtualenv(VENV_DIR) as venv_local:
         with lcd(path.dirname(__file__)):
-            venv_local('pip install pytest')
             venv_local('pytest -x spacy/tests')
