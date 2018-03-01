@@ -81,3 +81,8 @@ def test():
     with virtualenv(VENV_DIR) as venv_local:
         with lcd(path.dirname(__file__)):
             venv_local('pytest -x spacy/tests')
+
+def train():
+    args = environ.get('SPACY_TRAIN_ARGS', '')
+    with virtualenv(VENV_DIR) as venv_local:
+        venv_local('spacy train {args}'.format(args=args))
