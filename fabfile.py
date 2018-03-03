@@ -22,37 +22,41 @@ def virtualenv(name, create=False, python='/usr/bin/python3.6'):
             shutil.rmtree(str(env_path))
         local('{python} -m venv {env_path}'.format(python=python, env_path=VENV_DIR))
     def wrapped_local(cmd, env_vars=[], capture=False, direct=False):
-        env_py = env_path / 'bin' / 'python'
-        env_vars = ' '.join(env_vars)
-        if cmd.split()[0] == 'python':
-            cmd = cmd.replace('python', str(env_py))
-            return local(env_vars + ' ' + cmd, capture=capture)
-        elif direct:
-            cmd, args = cmd.split(' ', 1)
-            env_cmd = str(env_py).replace('python', cmd)
-            return local('{env_vars} {env_cmd} {args}'.format(
-                         env_cmd=env_cmd, args=args, env_vars=env_vars),
-                         capture=capture)
-        else:
-            return local('{env_vars} {env_py} -m {cmd}'.format(
-                      env_py=env_py, cmd=cmd, env_vars=env_vars),
-                    capture=capture)
+        return local('source {}/bin/activate && {}'.format(env_path, cmd),
+                     shell='/bin/bash', capture=False)
+        #env_vars = ' '.join(env_vars)
+        #if cmd.split()[0] == 'python':
+        #    cmd = cmd.replace('python', str(env_py))
+        #    return local(env_vars + ' ' + cmd, capture=capture)
+        #elif direct:
+        #    cmd, args = cmd.split(' ', 1)
+        #    env_cmd = str(env_py).replace('python', cmd)
+        #    return local('{env_vars} {env_cmd} {args}'.format(
+        #                 env_cmd=env_cmd, args=args, env_vars=env_vars),
+        #                 capture=capture)
+        #else:
+        #    return local('{env_vars} {env_py} -m {cmd}'.format(
+        #              env_py=env_py, cmd=cmd, env_vars=env_vars),
+        #            capture=capture)
     yield wrapped_local
 
 
 def env(lang='python3.6'):
     if VENV_DIR.exists():
         local('rm -rf {env}'.format(env=VENV_DIR))
-    local('{lang} -m pip install virtualenv --no-cache-dir'.format(lang=lang))
     if lang.startswith('python3'):
         local('{lang} -m venv {env}'.format(lang=lang, env=VENV_DIR))
     else:
+        local('{lang} -m pip install virtualenv --no-cache-dir'.format(lang=lang))
         local('{lang} -m virtualenv {env} --no-cache-dir'.format(lang=lang, env=VENV_DIR))
     with virtualenv(VENV_DIR) as venv_local:
         print(venv_local('python --version', capture=True))
         venv_local('pip install --upgrade setuptools --no-cache-dir')
         venv_local('pip install pytest --no-cache-dir')
-        venv_local('pip install wheel')
+        venv_local('pip install wheel --no-cache-dir')
+        venv_local('pip install -r requirements.txt --no-cache-dir')
+        venv_local('pip install pex --no-cache-dir')
+
 
 
 def install():
@@ -61,11 +65,9 @@ def install():
 
 
 def make():
-    with virtualenv(VENV_DIR) as venv_local:
-        with lcd(path.dirname(__file__)):
-            venv_local('pip install -r requirements.txt')
-            venv_local('pip install pex')
-            venv_local('python setup.py build_ext --inplace', env_vars=['PYTHONPATH=`pwd`'])
+    with lcd(path.dirname(__file__)):
+        local('export PYTHONPATH=`pwd` && source .env/bin/activate && python setup.py build_ext --inplace',
+            shell='/bin/bash')
 
 def sdist():
     with virtualenv(VENV_DIR) as venv_local:
@@ -80,7 +82,9 @@ def wheel():
 def pex():
     with virtualenv(VENV_DIR) as venv_local:
         with lcd(path.dirname(__file__)):
-            venv_local('pex . -e spacy -o dist/spacy', direct=True)
+            sha = local('git rev-parse --short HEAD', capture=True)
+            venv_local('pex dist/*.whl -e spacy -o dist/spacy-%s.pex' % sha,
+                direct=True)
 
 
 def clean():
