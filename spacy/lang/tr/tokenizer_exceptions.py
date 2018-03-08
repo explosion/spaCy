@@ -78,6 +78,7 @@ for exc_data in [
     {ORTH: "sn.", NORM: "saniye"},
     {ORTH: "Sok.", NORM: "Sokak"},
     {ORTH: "Şb.", NORM: "Şube"},
+    {ORTH: "Şti.", NORM: "Şirketi"},
     {ORTH: "T.C.", NORM: "Türkiye Cumhuriyeti"},
     {ORTH: "tel.", NORM: "telefon"},
     {ORTH: "telg.", NORM: "telgraf"},
