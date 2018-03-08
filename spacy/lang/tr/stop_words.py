@@ -317,12 +317,8 @@ olduklarını
 oldukça
 olduğu
 olduğunu
-olmadı
-olmadığı
 olmak
 olması
-olmayan
-olmaz
 olsa
 olsun
 olup
