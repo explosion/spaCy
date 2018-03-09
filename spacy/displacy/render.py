@@ -67,7 +67,8 @@ class DependencyRenderer(object):
         words = [self.render_word(w['text'], w['tag'], i)
                  for i, w in enumerate(words)]
         arcs = [self.render_arrow(a['label'], a['start'],
-                                  a['end'], a['dir'], i)
+                                  a['end'], a['dir'], i,
+                                  a.get('color', 'currentColor'))
                 for i, a in enumerate(arcs)]
         content = ''.join(words) + ''.join(arcs)
         return TPL_DEP_SVG.format(id=self.id, width=self.width,
@@ -86,7 +87,7 @@ class DependencyRenderer(object):
         x = self.offset_x+i*self.distance
         return TPL_DEP_WORDS.format(text=text, tag=tag, x=x, y=y)
 
-    def render_arrow(self, label, start, end, direction, i):
+    def render_arrow(self, label, start, end, direction, i, color='currentColor'):
         """Render indivicual arrow.
 
         label (unicode): Dependency label.

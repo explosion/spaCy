@@ -20,11 +20,11 @@ TPL_DEP_WORDS = """
 
 TPL_DEP_ARCS = """
 <g class="displacy-arrow">
-    <path class="displacy-arc" id="arrow-{id}-{i}" stroke-width="{stroke}px" d="{arc}" fill="none" stroke="currentColor"/>
+    <path class="displacy-arc" id="arrow-{id}-{i}" stroke-width="{stroke}px" d="{arc}" fill="none" stroke="{color}"/>
     <text dy="1.25em" style="font-size: 0.8em; letter-spacing: 1px">
-        <textPath xlink:href="#arrow-{id}-{i}" class="displacy-label" startOffset="50%" fill="currentColor" text-anchor="middle">{label}</textPath>
+        <textPath xlink:href="#arrow-{id}-{i}" class="displacy-label" startOffset="50%" fill="{color}" text-anchor="middle">{label}</textPath>
     </text>
-    <path class="displacy-arrowhead" d="{head}" fill="currentColor"/>
+    <path class="displacy-arrowhead" d="{head}" fill="{color}"/>
 </g>
 """
 
