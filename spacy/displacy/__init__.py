@@ -30,6 +30,12 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
         raise ValueError("Unknown style: %s" % style)
     if isinstance(docs, Doc) or isinstance(docs, dict):
         docs = [docs]
+    if style == 'dep' and any(not doc.is_parsed or not doc.is_tagged
+                              for doc in docs):
+        print("Warning: One or more documents you're trying to visualize "
+              "don't seem to be tagged and/or parsed. Make sure the nlp "
+              "object you're using has a model with a tagger and dependency "
+              "parser loaded.")
     renderer, converter = factories[style]
     renderer = renderer(options=options)
     parsed = [converter(doc, options) for doc in docs] if not manual else docs
