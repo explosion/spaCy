@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 import plac
 import tqdm
-import attr
 from pathlib import Path
 import re
 import sys
@@ -308,15 +307,11 @@ def initialize_pipeline(nlp, docs, golds, config):
 # Command line helpers #
 ########################
 
-@attr.s
 class Config(object):
-    vectors = attr.ib(default=None)
-    max_doc_length = attr.ib(default=10)
-    multitask_tag = attr.ib(default=True)
-    multitask_sent = attr.ib(default=True)
-    nr_epoch = attr.ib(default=30)
-    batch_size = attr.ib(default=1000)
-    dropout = attr.ib(default=0.2)
+    def __init__(self, vectors=None, max_doc_length=10, multitask_tag=True,
+            multitask_sent=True, nr_epoch=30, batch_size=1000, dropout=0.2):
+        for key, value in locals():
+            setattr(self, key, value)
 
     @classmethod
     def load(cls, loc):
