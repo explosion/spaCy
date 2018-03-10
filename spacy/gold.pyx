@@ -13,7 +13,7 @@ from . import _align
 from .syntax import nonproj
 from .tokens import Doc
 from . import util
-from .util import minibatch
+from .util import minibatch, itershuffle
 
 
 def tags_to_entities(tags):
@@ -133,15 +133,14 @@ class GoldCorpus(object):
     def train_docs(self, nlp, gold_preproc=False,
                    projectivize=False, max_length=None,
                    noise_level=0.0):
-        train_tuples = list(self.train_tuples)
         if projectivize:
             train_tuples = nonproj.preprocess_training_data(
                 self.train_tuples, label_freq_cutoff=30)
-        random.shuffle(train_tuples)
+        random.shuffle(self.train_locs)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
                                         noise_level=noise_level)
-        yield from gold_docs
+        yield from itershuffle(gold_docs, bufsize=100)
 
     def dev_docs(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc)
