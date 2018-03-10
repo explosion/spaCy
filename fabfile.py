@@ -75,6 +75,8 @@ def pex():
 
 def clean():
     with lcd(path.dirname(__file__)):
+        local('rm -f dist/*.whl')
+        local('rm -f dist/*.pex')
         with virtualenv(VENV_DIR) as venv_local:
             venv_local('python setup.py clean --all')
 
