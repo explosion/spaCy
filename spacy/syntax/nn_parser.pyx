@@ -525,7 +525,7 @@ cdef class Parser:
             if n_states == 0:
                 break
             vectors, _ = state2vec.begin_update(token_ids[:n_states], drop)
-            scores, _ = vec2scores(vectors, drop)
+            scores, _ = vec2scores.begin_update(vectors, drop=drop)
             c_scores = <float*>scores.data
             for beam in todo:
                 for i in range(beam.size):
