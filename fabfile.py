@@ -24,20 +24,6 @@ def virtualenv(name, create=False, python='/usr/bin/python3.6'):
     def wrapped_local(cmd, env_vars=[], capture=False, direct=False):
         return local('source {}/bin/activate && {}'.format(env_path, cmd),
                      shell='/bin/bash', capture=False)
-        #env_vars = ' '.join(env_vars)
-        #if cmd.split()[0] == 'python':
-        #    cmd = cmd.replace('python', str(env_py))
-        #    return local(env_vars + ' ' + cmd, capture=capture)
-        #elif direct:
-        #    cmd, args = cmd.split(' ', 1)
-        #    env_cmd = str(env_py).replace('python', cmd)
-        #    return local('{env_vars} {env_cmd} {args}'.format(
-        #                 env_cmd=env_cmd, args=args, env_vars=env_vars),
-        #                 capture=capture)
-        #else:
-        #    return local('{env_vars} {env_py} -m {cmd}'.format(
-        #              env_py=env_py, cmd=cmd, env_vars=env_vars),
-        #            capture=capture)
     yield wrapped_local
 
 
