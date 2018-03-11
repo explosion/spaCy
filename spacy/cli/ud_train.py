@@ -310,7 +310,7 @@ def initialize_pipeline(nlp, docs, golds, config):
 class Config(object):
     def __init__(self, vectors=None, max_doc_length=10, multitask_tag=True,
             multitask_sent=True, nr_epoch=30, batch_size=1000, dropout=0.2):
-        for key, value in locals():
+        for key, value in locals().items():
             setattr(self, key, value)
 
     @classmethod
@@ -352,10 +352,11 @@ class TreebankPaths(object):
     corpus=("UD corpus to train and evaluate on, e.g. en, es_ancora, etc",
             "positional", None, str),
     parses_dir=("Directory to write the development parses", "positional", None, Path),
-    config=("Path to json formatted config file", "positional", None, Config.load),
+    config=("Path to json formatted config file", "positional"),
     limit=("Size limit", "option", "n", int)
 )
 def main(ud_dir, parses_dir, config, corpus, limit=0):
+    config = Config.load(config)
     paths = TreebankPaths(ud_dir, corpus)
     if not (parses_dir / corpus).exists():
         (parses_dir / corpus).mkdir()
