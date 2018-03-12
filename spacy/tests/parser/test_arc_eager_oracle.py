@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ...vocab import Vocab
 from ...pipeline import DependencyParser
 from ...tokens import Doc
