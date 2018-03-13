@@ -161,7 +161,7 @@ class PrecomputableAffine(Model):
             Wopfi = self.W.transpose((1, 2, 0, 3))
             Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
             Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
-            dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
+            dXf = self.ops.gemm(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
 
             # Reuse the buffer
             dWopfi = Wopfi; dWopfi.fill(0.)
