@@ -139,7 +139,7 @@ class Pipe(object):
         problem.
         """
         raise NotImplementedError
-    
+
     def create_optimizer(self):
         return create_default_optimizer(self.model.ops,
                                         **self.cfg.get('optimizer', {}))
@@ -935,7 +935,7 @@ cdef class DependencyParser(Parser):
     @property
     def postprocesses(self):
         return [nonproj.deprojectivize]
-    
+
     def add_multitask_objective(self, target):
         labeller = MultitaskObjective(self.vocab, target=target)
         self._multitasks.append(labeller)
@@ -956,7 +956,7 @@ cdef class EntityRecognizer(Parser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
-    
+
     def add_multitask_objective(self, target):
         labeller = MultitaskObjective(self.vocab, target=target)
         self._multitasks.append(labeller)
