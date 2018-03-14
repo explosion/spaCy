@@ -1310,7 +1310,6 @@ LOOKUP = {
     "alphabets": "alphabet",
     "alphas": "alpha",
     "alpines": "alpine",
-    "also": "also",
     "also-rans": "also-ran",
     "altars": "altar",
     "alterations": "alteration",
