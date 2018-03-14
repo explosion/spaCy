@@ -76,13 +76,15 @@
     },
 
     "MODEL_LICENSES": {
-        "CC BY-SA":     "https://creativecommons.org/licenses/by-sa/3.0/",
-        "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "CC BY-NC":     "https://creativecommons.org/licenses/by-nc/3.0/",
-        "CC BY-NC 3.0": "https://creativecommons.org/licenses/by-nc/3.0/",
-        "GPL":          "https://www.gnu.org/licenses/gpl.html",
-        "LGPL":         "https://www.gnu.org/licenses/lgpl.html"
+        "CC BY 4.0":       "https://creativecommons.org/licenses/by/4.0/",
+        "CC BY-SA":        "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA 3.0":    "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA 4.0":    "https://creativecommons.org/licenses/by-sa/4.0/",
+        "CC BY-NC":        "https://creativecommons.org/licenses/by-nc/3.0/",
+        "CC BY-NC 3.0":    "https://creativecommons.org/licenses/by-nc/3.0/",
+        "CC-BY-NC-SA 3.0": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+        "GPL":             "https://www.gnu.org/licenses/gpl.html",
+        "LGPL":            "https://www.gnu.org/licenses/lgpl.html"
     },
 
     "MODEL_BENCHMARKS": {

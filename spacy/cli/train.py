@@ -116,10 +116,9 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
 
     print("Itn.\tP.Loss\tN.Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
-        train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
-                                       gold_preproc=gold_preproc, max_length=0)
-        train_docs = list(train_docs)
         for i in range(n_iter):
+            train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
+                                           gold_preproc=gold_preproc, max_length=0)
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
                 for batch in minibatch(train_docs, size=batch_sizes):

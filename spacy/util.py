@@ -451,7 +451,7 @@ def itershuffle(iterable, bufsize=1000):
     try:
         while True:
             for i in range(random.randint(1, bufsize-len(buf))):
-                buf.append(iterable.next())
+                buf.append(next(iterable))
             random.shuffle(buf)
             for i in range(random.randint(1, bufsize)):
                 if buf:

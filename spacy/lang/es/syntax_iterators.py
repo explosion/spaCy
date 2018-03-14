@@ -6,17 +6,19 @@ from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 
 def noun_chunks(obj):
     doc = obj.doc
-    np_label = doc.vocab.strings['NP']
+    if not len(doc):
+        return
+    np_label = doc.vocab.strings.add('NP')
     left_labels = ['det', 'fixed', 'neg'] #['nunmod', 'det', 'appos', 'fixed']
     right_labels = ['flat', 'fixed', 'compound', 'neg']
     stop_labels = ['punct']
-    np_left_deps = [doc.vocab.strings[label] for label in left_labels]
-    np_right_deps = [doc.vocab.strings[label] for label in right_labels]
-    stop_deps = [doc.vocab.strings[label] for label in stop_labels]
+    np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]
+    np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
+    stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
     token = doc[0]
     while token and token.i < len(doc):
         if token.pos in [PROPN, NOUN, PRON]:
-            left, right = noun_bounds(token)
+            left, right = noun_bounds(doc, token, np_left_deps, np_right_deps, stop_deps)
             yield left.i, right.i+1, np_label
             token = right
         token = next_token(token)
@@ -33,7 +35,7 @@ def next_token(token):
         return None
 
 
-def noun_bounds(root):
+def noun_bounds(doc, root, np_left_deps, np_right_deps, stop_deps):
     left_bound = root
     for token in reversed(list(root.lefts)):
         if token.dep in np_left_deps:
@@ -41,7 +43,7 @@ def noun_bounds(root):
     right_bound = root
     for token in root.rights:
         if (token.dep in np_right_deps):
-            left, right = noun_bounds(token)
+            left, right = noun_bounds(doc, token, np_left_deps, np_right_deps, stop_deps)
             if list(filter(lambda t: is_verb_token(t) or t.dep in stop_deps,
                            doc[left_bound.i: right.i])):
                 break

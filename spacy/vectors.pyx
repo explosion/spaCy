@@ -15,11 +15,8 @@ from .compat import basestring_, path2str
 from . import util
 
 
-def unpickle_vectors(keys_and_rows, data):
-    vectors = Vectors(data=data)
-    for key, row in keys_and_rows:
-        vectors.add(key, row=row)
-    return vectors
+def unpickle_vectors(bytes_data):
+    return Vectors().from_bytes(bytes_data)
 
 
 cdef class Vectors:
@@ -86,8 +83,7 @@ cdef class Vectors:
         return len(self.key2row)
 
     def __reduce__(self):
-        keys_and_rows = tuple(self.key2row.items())
-        return (unpickle_vectors, (keys_and_rows, self.data))
+        return (unpickle_vectors, (self.to_bytes(),))
 
     def __getitem__(self, key):
         """Get a vector by key. If the key is not found, a KeyError is raised.
