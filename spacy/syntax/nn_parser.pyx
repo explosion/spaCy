@@ -28,7 +28,7 @@ from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 
-from thinc.openblas cimport simple_gemm, simple_axpy
+from thinc.linalg cimport MatVec, VecVec
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
@@ -172,9 +172,8 @@ cdef void sum_state_features(float* output,
             else:
                 idx = token_ids[f] * F * O + f*O
                 feature = &cached[idx]
-            simple_axpy(output, O, feature, 1.)
-            #for i in range(O):
-            #    output[i] += feature[i]
+            VecVec.add_i(output,
+                feature, 1., O)
         output += O
         token_ids += F
 
@@ -267,7 +266,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(LayerNorm(Maxout(hidden_width, hidden_width)), depth-1),
+                clone(Maxout(hidden_width, hidden_width), depth-1),
                 zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
             )
 
@@ -456,19 +455,20 @@ cdef class Parser:
                 memset(unmaxed, 0, nr_hidden * nr_piece * sizeof(float))
                 sum_state_features(unmaxed,
                     feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
-                simple_axpy(unmaxed, nr_hidden*nr_piece, bias, 1.0)
+                VecVec.add_i(unmaxed,
+                    bias, 1., nr_hidden*nr_piece)
                 state_vector = &vectors[i*nr_hidden]
                 for j in range(nr_hidden):
                     index = j * nr_piece
                     which = Vec.arg_max(&unmaxed[index], nr_piece)
                     state_vector[j] = unmaxed[index + which]
             # Compute hidden-to-output
-            simple_gemm(scores, nr_todo, nr_class,
-                vectors, nr_todo, nr_hidden,
-                hW, nr_hidden, nr_class, 0, 0)
+            MatVec.batch_dot(scores,
+                hW, vectors, nr_class, nr_hidden, nr_todo)
             # Add bias
             for i in range(nr_todo):
-                simple_axpy(&scores[i*nr_class], nr_class, hb, 1.0)
+                VecVec.add_i(&scores[i*nr_class],
+                    hb, 1., nr_class)
             # Validate actions, argmax, take action.
             for i in range(nr_todo):
                 state = states[i]
