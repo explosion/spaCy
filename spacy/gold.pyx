@@ -8,6 +8,10 @@ import random
 import cytoolz
 import itertools
 import numpy
+import tempfile
+import shutil
+from pathlib import Path
+import msgpack
 
 from . import _align 
 from .syntax import nonproj
@@ -85,40 +89,83 @@ def align(cand_words, gold_words):
 class GoldCorpus(object):
     """An annotated corpus, using the JSON file format. Manages
     annotations for tagging, dependency parsing and NER."""
-    def __init__(self, train_path, dev_path, gold_preproc=True, limit=None):
+    def __init__(self, train, dev, gold_preproc=True, limit=None):
         """Create a GoldCorpus.
 
         train_path (unicode or Path): File or directory of training data.
         dev_path (unicode or Path): File or directory of development data.
         RETURNS (GoldCorpus): The newly created object.
         """
-        self.train_path = util.ensure_path(train_path)
-        self.dev_path = util.ensure_path(dev_path)
         self.limit = limit
-        self.train_locs = self.walk_corpus(self.train_path)
-        self.dev_locs = self.walk_corpus(self.dev_path)
+        if isinstance(train, str) or isinstance(train, Path):
+            train = self.read_tuples(self.walk_corpus(train))
+            dev = self.read_tuples(self.walk_corpus(dev))
 
-    @property
-    def train_tuples(self):
+        # Write temp directory with one doc per file, so we can shuffle
+        # and stream
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.write_msgpack(self.tmp_dir / 'train', train)
+        self.write_msgpack(self.tmp_dir / 'dev', dev)
+
+    def __del__(self):
+        shutil.rmtree(self.tmp_dir)
+
+    @staticmethod
+    def write_msgpack(directory, doc_tuples):
+        if not directory.exists():
+            directory.mkdir()
+        for i, doc_tuple in enumerate(doc_tuples):
+            with open(directory / '{}.msg'.format(i), 'wb') as file_:
+                msgpack.dump(doc_tuple, file_)
+
+    @staticmethod
+    def walk_corpus(path):
+        path = util.ensure_path(path)
+        if not path.is_dir():
+            return [path]
+        paths = [path]
+        locs = []
+        seen = set()
+        for path in paths:
+            if str(path) in seen:
+                continue
+            seen.add(str(path))
+            if path.parts[-1].startswith('.'):
+                continue
+            elif path.is_dir():
+                paths.extend(path.iterdir())
+            elif path.parts[-1].endswith('.json'):
+                locs.append(path)
+        return locs
+
+    @staticmethod
+    def read_tuples(locs, limit=0):
         i = 0
-        for loc in self.train_locs:
-            gold_tuples = read_json_file(loc)
+        for loc in locs:
+            loc = util.ensure_path(loc)
+            if loc.parts[-1].endswith('json'):
+                gold_tuples = read_json_file(loc)
+            elif loc.parts[-1].endswith('msg'):
+                with loc.open('rb') as file_:
+                    gold_tuples = [msgpack.load(file_)]
+            else:
+                msg = "Cannot read from file: %s. Supported formats: .json, .msg"
+                raise ValueError(msg % loc)
             for item in gold_tuples:
                 yield item
                 i += len(item[1])
-                if self.limit and i >= self.limit:
+                if limit and i >= limit:
                     break
 
     @property
     def dev_tuples(self):
-        i = 0
-        for loc in self.dev_locs:
-            gold_tuples = read_json_file(loc)
-            for item in gold_tuples:
-                yield item
-                i += len(item[1])
-                if self.limit and i >= self.limit:
-                    break
+        locs = (self.tmp_dir / 'dev').iterdir()
+        yield from self.read_tuples(locs, limit=self.limit)
+   
+    @property
+    def train_tuples(self):
+        locs = (self.tmp_dir / 'train').iterdir()
+        yield from self.read_tuples(locs, limit=self.limit)
 
     def count_train(self):
         n = 0
@@ -130,17 +177,15 @@ class GoldCorpus(object):
             i += len(paragraph_tuples)
         return n
 
-    def train_docs(self, nlp, gold_preproc=False,
-                   projectivize=False, max_length=None,
-                   noise_level=0.0):
-        if projectivize:
-            train_tuples = nonproj.preprocess_training_data(
-                self.train_tuples, label_freq_cutoff=30)
-        random.shuffle(self.train_locs)
+    def train_docs(self, nlp, gold_preproc=False, max_length=None,
+                    noise_level=0.0):
+        locs = list((self.tmp_dir / 'train').iterdir())
+        random.shuffle(locs)
+        train_tuples = self.read_tuples(locs, limit=self.limit)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
                                         noise_level=noise_level)
-        yield from itershuffle(gold_docs, bufsize=100)
+        yield from gold_docs
 
     def dev_docs(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc)
@@ -182,25 +227,6 @@ class GoldCorpus(object):
             return [GoldParse.from_annot_tuples(doc, sent_tuples)
                     for doc, (sent_tuples, brackets)
                     in zip(docs, paragraph_tuples)]
-
-    @staticmethod
-    def walk_corpus(path):
-        if not path.is_dir():
-            return [path]
-        paths = [path]
-        locs = []
-        seen = set()
-        for path in paths:
-            if str(path) in seen:
-                continue
-            seen.add(str(path))
-            if path.parts[-1].startswith('.'):
-                continue
-            elif path.is_dir():
-                paths.extend(path.iterdir())
-            elif path.parts[-1].endswith('.json'):
-                locs.append(path)
-        return locs
 
 
 def add_noise(orig, noise_level):

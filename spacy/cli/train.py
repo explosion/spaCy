@@ -85,9 +85,6 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                                    util.env_opt('batch_to', 16),
                                    util.env_opt('batch_compound', 1.001))
     max_doc_len = util.env_opt('max_doc_len', 5000)
-    corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
-    n_train_words = corpus.count_train()
-
     lang_class = util.get_lang_class(lang)
     nlp = lang_class()
     meta['pipeline'] = pipeline
@@ -111,13 +108,15 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     if entity_multitasks:
         for objective in entity_multitasks.split(','):
             nlp.entity.add_multitask_objective(objective)
+    corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
+    n_train_words = corpus.count_train()
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
 
     print("Itn.\tP.Loss\tN.Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
         for i in range(n_iter):
-            train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
+            train_docs = corpus.train_docs(nlp, noise_level=0.0,
                                            gold_preproc=gold_preproc, max_length=0)
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
