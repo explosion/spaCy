@@ -466,7 +466,7 @@ cdef class Parser:
             # TODO: These methods in Thinc are confusing at the moment, and
             # quite backwards. But this currently does what we need.
             MatVec.batch_T_dot(scores,
-                hW, vectors, nr_class, nr_hidden, nr_todo)
+                hW, vectors, nr_hidden, nr_class, nr_todo)
             # Add bias
             for i in range(nr_todo):
                 VecVec.add_i(&scores[i*nr_class],
