@@ -6,12 +6,12 @@ from __future__ import unicode_literals
 
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict, Counter
 from thinc.extra.search cimport Beam
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .nonproj import is_nonproj_tree
+from .nonproj import projectivize, is_nonproj_tree
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
@@ -315,39 +315,31 @@ cdef class ArcEager(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions', OrderedDict((
-            (SHIFT, ['']),
-            (REDUCE, ['']),
-            (RIGHT, []),
-            (LEFT, ['subtok']),
-            (BREAK, ['ROOT']))
-        ))
-        seen_actions = set()
+        actions = defaultdict(lambda: Counter())
+        actions[SHIFT][''] = 1
+        actions[REDUCE][''] = 1
+        actions[BREAK]['ROOT'] = 1
+        actions[RIGHT]['subtok'] = 1
+        actions[LEFT]['subtok'] = 1
         for label in kwargs.get('left_labels', []):
-            if label.upper() != 'ROOT':
-                if (LEFT, label) not in seen_actions:
-                    actions[LEFT].append(label)
-                    seen_actions.add((LEFT, label))
+            actions[LEFT][label] = 1
+            actions[SHIFT][label] = 1
         for label in kwargs.get('right_labels', []):
-            if label.upper() != 'ROOT':
-                if (RIGHT, label) not in seen_actions:
-                    actions[RIGHT].append(label)
-                    seen_actions.add((RIGHT, label))
-
+            actions[RIGHT][label] = 1
+            actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
                 for child, head, label in zip(ids, heads, labels):
-                    if label.upper() == 'ROOT':
+                    if label.upper() == 'ROOT' :
                         label = 'ROOT'
-                    if label != 'ROOT':
-                        if head < child:
-                            if (RIGHT, label) not in seen_actions:
-                                actions[RIGHT].append(label)
-                                seen_actions.add((RIGHT, label))
-                        elif head > child:
-                            if (LEFT, label) not in seen_actions:
-                                actions[LEFT].append(label)
-                                seen_actions.add((LEFT, label))
+                    if head == child:
+                        actions[BREAK][label] += 1
+                    elif head < child:
+                        actions[RIGHT][label] += 1
+                        actions[REDUCE][''] += 1
+                    elif head > child:
+                        actions[LEFT][label] += 1
+                        actions[SHIFT][''] += 1
         return actions
 
     property action_types:
@@ -379,18 +371,18 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
-        for i in range(gold.length):
+        heads, deps = projectivize(gold.heads, gold.labels)
+        for i, (head, dep) in enumerate(zip(heads, deps)):
             # Missing values
-            if gold.heads[i] is None or gold.labels[i] is None:
+            if head is None or dep is None:
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
             else:
-                label = gold.labels[i]
                 gold.c.has_dep[i] = True
-                if label.upper() == 'ROOT':
-                    label = 'ROOT'
-                gold.c.heads[i] = gold.heads[i]
-                gold.c.labels[i] = self.strings.add(label)
+                if dep.upper() == 'ROOT':
+                    dep = 'ROOT'
+                gold.c.heads[i] = head
+                gold.c.labels[i] = self.strings.add(dep)
         return gold
 
     def get_beam_parses(self, Beam beam):

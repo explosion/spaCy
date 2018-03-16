@@ -314,9 +314,12 @@ cdef class Parser:
         cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
         if 'actions' in self.cfg:
-            for action, labels in self.cfg.get('actions', {}).items():
-                for label in labels:
-                    self.moves.add_action(action, label)
+            for action, label_freqs in self.cfg.get('actions', {}).items():
+                sorted_labels = [(f, L) for L, f in label_freqs.items()]
+                sorted_labels.sort()
+                sorted_labels.reverse()
+                for freq, label in sorted_labels:
+                    self.moves.add_action(int(action), label, freq=freq)
         self.model = model
         self._multitasks = []
 
@@ -829,11 +832,8 @@ cdef class Parser:
     def add_label(self, label):
         resized = False
         for action in self.moves.action_types:
-            added = self.moves.add_action(action, label)
+            added = self.moves.add_action(action, label, freq=None)
             if added:
-                # Important that the labels be stored as a list! We need the
-                # order, or the model goes out of synch
-                self.cfg.setdefault('extra_labels', []).append(label)
                 resized = True
         if self.model not in (True, False, None) and resized:
             # Weights are stored in (nr_out, nr_in) format, so we're basically
@@ -847,12 +847,10 @@ cdef class Parser:
     def begin_training(self, gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        gold_tuples = nonproj.preprocess_training_data(gold_tuples,
-                                                       label_freq_cutoff=30)
         actions = self.moves.get_actions(gold_parses=gold_tuples)
         for action, labels in actions.items():
-            for label in labels:
-                self.moves.add_action(action, label)
+            for label, freq in sorted(labels.items(), key=lambda item: item[1]):
+                self.moves.add_action(action, label, freq=freq)
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length

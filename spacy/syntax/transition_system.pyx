@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 import ujson
 
 from ..structs cimport TokenC
@@ -36,21 +36,22 @@ cdef class TransitionSystem:
 
         self.c = <Transition*>self.mem.alloc(self._size, sizeof(Transition))
 
-        for action, label_strs in labels_by_action.items():
-            for label_str in label_strs:
-                self.add_action(int(action), label_str)
+        self.labels = {}
+        for action, label_freqs in sorted(labels_by_action.items()):
+            # Make sure we take a copy here, and that we get a Counter
+            self.labels[action] = Counter(label_freqs.items())
+            # Have to be careful here: Sorting must be stable, or our model
+            # won't be read back in correctly. 
+            sorted_labels = [(f, L) for L, f in label_freqs.items()]
+            sorted_labels.sort()
+            sorted_labels.reverse()
+            for freq, label_str in sorted_labels:
+                self.add_action(int(action), label_str, freq=freq)
         self.root_label = self.strings.add('ROOT')
         self.init_beam_state = _init_state
 
     def __reduce__(self):
-        labels_by_action = OrderedDict()
-        cdef Transition t
-        for trans in self.c[:self.n_moves]:
-            label_str = self.strings[trans.label]
-            labels_by_action.setdefault(trans.move, []).append(label_str)
-        return (self.__class__,
-                (self.strings, labels_by_action),
-                None, None)
+        return (self.__class__, (self.strings, self.labels), None, None)
 
     def init_batch(self, docs):
         cdef StateClass state
@@ -146,7 +147,7 @@ cdef class TransitionSystem:
         act = self.c[clas]
         return self.move_name(act.move, act.label)
 
-    def add_action(self, int action, label_name):
+    def add_action(self, int action, label_name, freq=None):
         cdef attr_t label_id
         if not isinstance(label_name, int) and \
            not isinstance(label_name, long):
@@ -164,6 +165,14 @@ cdef class TransitionSystem:
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
         assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
+        if self.labels.get(action, []):
+            new_freq = min(self.labels[action].values())
+        else:
+            self.labels[action] = Counter()
+            new_freq = -1
+        if new_freq > 0:
+            new_freq = 0
+        self.labels[action][label_name] = new_freq-1
         return 1
 
     def to_disk(self, path, **exclude):
@@ -171,12 +180,14 @@ cdef class TransitionSystem:
             file_.write(self.to_bytes(**exclude))
 
     def from_disk(self, path, **exclude):
+        # TODO: Change this to use frequencies, store as strings (not hash)
         with path.open('rb') as file_:
             byte_data = file_.read()
         self.from_bytes(byte_data, **exclude)
         return self
 
     def to_bytes(self, **exclude):
+        # TODO: Change this to use frequencies, store as strings (not hash)
         transitions = []
         for trans in self.c[:self.n_moves]:
             transitions.append({
@@ -192,6 +203,7 @@ cdef class TransitionSystem:
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
+        # TODO: Change this to use frequencies, store as strings (not hash)
         transitions = []
         deserializers = {
             'transitions': lambda b: transitions.extend(ujson.loads(b)),

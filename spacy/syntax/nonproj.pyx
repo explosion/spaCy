@@ -74,7 +74,21 @@ def decompose(label):
 
 
 def is_decorated(label):
-    return label.find(DELIMITER) != -1
+    return DELIMITER in label
+
+def count_decorated_labels(gold_tuples):
+    freqs = {}
+    for raw_text, sents in gold_tuples:
+        for (ids, words, tags, heads, labels, iob), ctnts in sents:
+            proj_heads, deco_labels = projectivize(heads, labels)
+            # set the label to ROOT for each root dependent
+            deco_labels = ['ROOT' if head == i else deco_labels[i]
+                           for i, head in enumerate(proj_heads)]
+            # count label frequencies
+            for label in deco_labels:
+                if is_decorated(label):
+                    freqs[label] = freqs.get(label, 0) + 1
+    return freqs
 
 
 def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
