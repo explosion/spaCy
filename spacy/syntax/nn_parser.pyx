@@ -302,7 +302,8 @@ cdef class Parser:
         """
         self.vocab = vocab
         if moves is True:
-            self.moves = self.TransitionSystem(self.vocab.strings, {})
+            self.moves = self.TransitionSystem(self.vocab.strings,
+                                               self.cfg.get('actions', {}))
         else:
             self.moves = moves
         if 'beam_width' not in cfg:
