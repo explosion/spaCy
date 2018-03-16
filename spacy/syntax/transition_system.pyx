@@ -180,36 +180,32 @@ cdef class TransitionSystem:
             file_.write(self.to_bytes(**exclude))
 
     def from_disk(self, path, **exclude):
-        # TODO: Change this to use frequencies, store as strings (not hash)
         with path.open('rb') as file_:
             byte_data = file_.read()
         self.from_bytes(byte_data, **exclude)
         return self
 
     def to_bytes(self, **exclude):
-        # TODO: Change this to use frequencies, store as strings (not hash)
         transitions = []
-        for trans in self.c[:self.n_moves]:
-            transitions.append({
-                'clas': trans.clas,
-                'move': trans.move,
-                'label': self.strings[trans.label],
-                'name': self.move_name(trans.move, trans.label)
-            })
         serializers = {
-            'transitions': lambda: json_dumps(transitions),
+            'moves': lambda: json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes()
         }
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
-        # TODO: Change this to use frequencies, store as strings (not hash)
-        transitions = []
+        labels = {}
         deserializers = {
-            'transitions': lambda b: transitions.extend(ujson.loads(b)),
+            'moves': lambda b: labels.update(ujson.loads(b)),
             'strings': lambda b: self.strings.from_bytes(b)
         }
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for trans in transitions:
-            self.add_action(trans['move'], trans['label'])
+        for action, label_freqs in sorted(labels.items()):
+            # Have to be careful here: Sorting must be stable, or our model
+            # won't be read back in correctly. 
+            sorted_labels = [(f, L) for L, f in label_freqs.items()]
+            sorted_labels.sort()
+            sorted_labels.reverse()
+            for freq, label in sorted_labels:
+                self.add_action(int(action), label, freq=freq)
         return self

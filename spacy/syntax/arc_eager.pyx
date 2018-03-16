@@ -329,6 +329,7 @@ cdef class ArcEager(TransitionSystem):
             actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
+                heads, labels = projectivize(heads, labels)
                 for child, head, label in zip(ids, heads, labels):
                     if label.upper() == 'ROOT' :
                         label = 'ROOT'
@@ -371,6 +372,7 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
+        heads = [head+i for i, head in enumerate(gold.heads)]
         heads, deps = projectivize(gold.heads, gold.labels)
         for i, (head, dep) in enumerate(zip(heads, deps)):
             # Missing values
@@ -383,6 +385,8 @@ cdef class ArcEager(TransitionSystem):
                     dep = 'ROOT'
                 gold.c.heads[i] = head
                 gold.c.labels[i] = self.strings.add(dep)
+        gold.heads = heads
+        gold.labels = deps
         return gold
 
     def get_beam_parses(self, Beam beam):
