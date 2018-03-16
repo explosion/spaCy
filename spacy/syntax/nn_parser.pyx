@@ -1,7 +1,6 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-# cython: profile=True
 # coding: utf-8
 from __future__ import unicode_literals, print_function
 
@@ -28,6 +27,8 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
+
+from thinc.linalg cimport MatVec, VecVec
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
@@ -171,8 +172,8 @@ cdef void sum_state_features(float* output,
             else:
                 idx = token_ids[f] * F * O + f*O
                 feature = &cached[idx]
-            for i in range(O):
-                output[i] += feature[i]
+            VecVec.add_i(output,
+                feature, 1., O)
         output += O
         token_ids += F
 
@@ -265,7 +266,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(LayerNorm(Maxout(hidden_width, hidden_width)), depth-1),
+                clone(Maxout(hidden_width, hidden_width), depth-1),
                 zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
             )
 
@@ -422,59 +423,70 @@ cdef class Parser:
         cdef int nr_hidden = hidden_weights.shape[0]
         cdef int nr_task = states.size()
         with nogil:
-            for i in range(nr_task):
-                self._parseC(states[i],
-                    feat_weights, bias, hW, hb,
-                    nr_class, nr_hidden, nr_feat, nr_piece)
+            self._parseC(&states[0], nr_task, feat_weights, bias, hW, hb,
+                nr_class, nr_hidden, nr_feat, nr_piece)
         PyErr_CheckSignals()
         tokvecs = self.model[0].ops.unflatten(tokvecs,
                                     [len(doc) for doc in docs])
         return state_objs, tokvecs
 
-    cdef void _parseC(self, StateC* state, 
+    cdef void _parseC(self, StateC** states, int nr_task, 
             const float* feat_weights, const float* bias,
             const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
         token_ids = <int*>calloc(nr_feat, sizeof(int))
         is_valid = <int*>calloc(nr_class, sizeof(int))
-        vectors = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
-        scores = <float*>calloc(nr_class, sizeof(float))
+        vectors = <float*>calloc(nr_hidden * nr_task, sizeof(float))
+        unmaxed = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
+        scores = <float*>calloc(nr_class*nr_task, sizeof(float))
         if not (token_ids and is_valid and vectors and scores):
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
-        cdef float feature
-        while not state.is_final():
-            state.set_context_tokens(token_ids, nr_feat)
-            memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
-            memset(scores, 0, nr_class * sizeof(float))
-            sum_state_features(vectors,
-                feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
-            for i in range(nr_hidden * nr_piece):
-                vectors[i] += bias[i]
-            V = vectors
-            W = hW
-            for i in range(nr_hidden):
-                if nr_piece == 1:
-                    feature = V[0] if V[0] >= 0. else 0.
-                elif nr_piece == 2:
-                    feature = V[0] if V[0] >= V[1] else V[1]
-                else:
-                    feature = Vec.max(V, nr_piece)
-                for j in range(nr_class):
-                    scores[j] += feature * W[j]
-                W += nr_class
-                V += nr_piece
-            for i in range(nr_class):
-                scores[i] += hb[i]
-            self.moves.set_valid(is_valid, state)
-            guess = arg_max_if_valid(scores, is_valid, nr_class)
-            action = self.moves.c[guess]
-            action.do(state, action.label)
-            state.push_hist(guess)
+        cdef int nr_todo = nr_task
+        cdef int i, j
+        cdef vector[StateC*] unfinished
+        while nr_todo >= 1:
+            memset(vectors, 0, nr_todo * nr_hidden * sizeof(float))
+            memset(scores, 0, nr_todo * nr_class * sizeof(float))
+            for i in range(nr_todo):
+                state = states[i]
+                state.set_context_tokens(token_ids, nr_feat)
+                memset(unmaxed, 0, nr_hidden * nr_piece * sizeof(float))
+                sum_state_features(unmaxed,
+                    feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
+                VecVec.add_i(unmaxed,
+                    bias, 1., nr_hidden*nr_piece)
+                state_vector = &vectors[i*nr_hidden]
+                for j in range(nr_hidden):
+                    index = j * nr_piece
+                    which = Vec.arg_max(&unmaxed[index], nr_piece)
+                    state_vector[j] = unmaxed[index + which]
+            # Compute hidden-to-output
+            MatVec.batch_dot(scores,
+                hW, vectors, nr_class, nr_hidden, nr_todo)
+            # Add bias
+            for i in range(nr_todo):
+                VecVec.add_i(&scores[i*nr_class],
+                    hb, 1., nr_class)
+            # Validate actions, argmax, take action.
+            for i in range(nr_todo):
+                state = states[i]
+                self.moves.set_valid(is_valid, state)
+                guess = arg_max_if_valid(&scores[i*nr_class], is_valid, nr_class)
+                action = self.moves.c[guess]
+                action.do(state, action.label)
+                state.push_hist(guess)
+                if not state.is_final():
+                    unfinished.push_back(state)
+            for i in range(unfinished.size()):
+                states[i] = unfinished[i]
+            nr_todo = unfinished.size()
+            unfinished.clear()
         free(token_ids)
         free(is_valid)
         free(vectors)
+        free(unmaxed)
         free(scores)
 
     def beam_parse(self, docs, int beam_width=3, float beam_density=0.001,

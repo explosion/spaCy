@@ -144,8 +144,8 @@ class PrecomputableAffine(Model):
         self.nF = nF
 
     def begin_update(self, X, drop=0.):
-        Yf = self.ops.xp.dot(X,
-            self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
+        Yf = self.ops.gemm(X,
+            self.W.reshape((self.nF*self.nO*self.nP, self.nI)), trans2=True)
         Yf = Yf.reshape((Yf.shape[0], self.nF, self.nO, self.nP))
         Yf = self._add_padding(Yf)
 
@@ -161,11 +161,11 @@ class PrecomputableAffine(Model):
             Wopfi = self.W.transpose((1, 2, 0, 3))
             Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
             Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
-            dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
+            dXf = self.ops.gemm(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
 
             # Reuse the buffer
             dWopfi = Wopfi; dWopfi.fill(0.)
-            self.ops.xp.dot(dY.T, Xf, out=dWopfi)
+            self.ops.gemm(dY, Xf, out=dWopfi, trans1=True)
             dWopfi = dWopfi.reshape((self.nO, self.nP, self.nF, self.nI))
             # (o, p, f, i) --> (f, o, p, i)
             self.d_W += dWopfi.transpose((2, 0, 1, 3))
