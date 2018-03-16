@@ -463,7 +463,9 @@ cdef class Parser:
                     which = Vec.arg_max(&unmaxed[index], nr_piece)
                     state_vector[j] = unmaxed[index + which]
             # Compute hidden-to-output
-            MatVec.batch_dot(scores,
+            # TODO: These methods in Thinc are confusing at the moment, and
+            # quite backwards. But this currently does what we need.
+            MatVec.batch_T_dot(scores,
                 hW, vectors, nr_class, nr_hidden, nr_todo)
             # Add bias
             for i in range(nr_todo):
