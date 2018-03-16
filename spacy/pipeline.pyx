@@ -69,6 +69,34 @@ class SentenceSegmenter(object):
             yield doc[start:len(doc)]
 
 
+def merge_noun_chunks(doc):
+    """Merge noun chunks into a single token.
+
+    doc (Doc): The Doc object.
+    RETURNS (Doc): The Doc object with merged noun chunks.
+    """
+    if not doc.is_parsed:
+        return
+    spans = [(np.start_char, np.end_char, np.root.tag, np.root.dep)
+             for np in doc.noun_chunks]
+    for start, end, tag, dep in spans:
+        doc.merge(start, end, tag=tag, dep=dep)
+    return doc
+
+
+def merge_entities(doc):
+    """Merge entities into a single token.
+
+    doc (Doc): The Doc object.
+    RETURNS (Doc): The Doc object with merged noun entities.
+    """
+    spans = [(e.start_char, e.end_char, e.root.tag, e.root.dep, e.label)
+             for e in doc.ents]
+    for start, end, tag, dep, ent_type in spans:
+        doc.merge(start, end, tag=tag, dep=dep, ent_type=ent_type)
+    return doc
+
+
 class Pipe(object):
     """This class is not instantiated directly. Components inherit from it, and
     it defines the interface that components should follow to function as
@@ -139,7 +167,7 @@ class Pipe(object):
         problem.
         """
         raise NotImplementedError
-    
+
     def create_optimizer(self):
         return create_default_optimizer(self.model.ops,
                                         **self.cfg.get('optimizer', {}))
@@ -935,7 +963,7 @@ cdef class DependencyParser(Parser):
     @property
     def postprocesses(self):
         return [nonproj.deprojectivize]
-    
+
     def add_multitask_objective(self, target):
         labeller = MultitaskObjective(self.vocab, target=target)
         self._multitasks.append(labeller)
@@ -956,7 +984,7 @@ cdef class EntityRecognizer(Parser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
-    
+
     def add_multitask_objective(self, target):
         labeller = MultitaskObjective(self.vocab, target=target)
         self._multitasks.append(labeller)
