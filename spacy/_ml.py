@@ -64,23 +64,6 @@ def _flatten_add_lengths(seqs, pad=0, drop=0.):
     return (X, lengths), finish_update
 
 
-@layerize
-def _logistic(X, drop=0.):
-    xp = get_array_module(X)
-    if not isinstance(X, xp.ndarray):
-        X = xp.asarray(X)
-    # Clip to range (-10, 10)
-    X = xp.minimum(X, 10., X)
-    X = xp.maximum(X, -10., X)
-    Y = 1. / (1. + xp.exp(-X))
-
-    def logistic_bwd(dY, sgd=None):
-        dX = dY * (Y * (1-Y))
-        return dX
-
-    return Y, logistic_bwd
-
-
 def _zero_init(model):
     def _zero_init_impl(self, X, y):
         self.W.fill(0)
@@ -531,8 +514,6 @@ def build_text_classifier(nr_class, width=64, **cfg):
             _preprocess_doc
             >> LinearModel(nr_class)
         )
-        #model = linear_model >> logistic
-
         model = (
             (linear_model | cnn_model)
             >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))
