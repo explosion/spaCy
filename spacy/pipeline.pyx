@@ -933,6 +933,15 @@ class TextCategorizer(Pipe):
         if label in self.labels:
             return 0
         if self.model not in (None, True, False):
+            # This functionality was available previously, but was broken.
+            # The problem is that we resize the last layer, but the last layer
+            # is actually just an ensemble. We're not resizing the child layers
+            # -- a huge problem.
+            raise ValueError(
+                "Cannot currently add labels to pre-trained text classifier. "
+                "Add labels before training begins. This functionality was "
+                "available in previous versions, but had significant bugs that "
+                "let to poor performance")
             smaller = self.model._layers[-1]
             larger = Affine(len(self.labels)+1, smaller.nI)
             copy_array(larger.W[:smaller.nO], smaller.W)
