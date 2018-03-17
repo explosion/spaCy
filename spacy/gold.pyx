@@ -186,7 +186,8 @@ class GoldCorpus(object):
         train_tuples = self.read_tuples(locs, limit=self.limit)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
-                                        noise_level=noise_level)
+                                        noise_level=noise_level,
+                                        make_projective=True)
         yield from gold_docs
 
     def dev_docs(self, nlp, gold_preproc=False):
@@ -195,7 +196,7 @@ class GoldCorpus(object):
 
     @classmethod
     def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
-                       noise_level=0.0):
+                       noise_level=0.0, make_projective=False):
         for raw_text, paragraph_tuples in tuples:
             if gold_preproc:
                 raw_text = None
@@ -203,7 +204,7 @@ class GoldCorpus(object):
                 paragraph_tuples = merge_sents(paragraph_tuples)
             docs = cls._make_docs(nlp, raw_text, paragraph_tuples,
                                   gold_preproc, noise_level=noise_level)
-            golds = cls._make_golds(docs, paragraph_tuples)
+            golds = cls._make_golds(docs, paragraph_tuples, make_projective)
             for doc, gold in zip(docs, golds):
                 if (not max_length) or len(doc) < max_length:
                     yield doc, gold
@@ -220,13 +221,15 @@ class GoldCorpus(object):
                     for (sent_tuples, brackets) in paragraph_tuples]
 
     @classmethod
-    def _make_golds(cls, docs, paragraph_tuples):
+    def _make_golds(cls, docs, paragraph_tuples, make_projective):
         assert len(docs) == len(paragraph_tuples)
         if len(docs) == 1:
             return [GoldParse.from_annot_tuples(docs[0],
-                                                paragraph_tuples[0][0])]
+                                                paragraph_tuples[0][0],
+                                                make_projective=make_projective)]
         else:
-            return [GoldParse.from_annot_tuples(doc, sent_tuples)
+            return [GoldParse.from_annot_tuples(doc, sent_tuples,
+                                                make_projective=make_projective)
                     for doc, (sent_tuples, brackets)
                     in zip(docs, paragraph_tuples)]
 
@@ -430,6 +433,10 @@ cdef class GoldParse:
         self.labels = [None] * len(doc)
         self.ner = [None] * len(doc)
 
+        # This needs to be done before we align the words
+        if make_projective and heads is not None and deps is not None:
+            heads, deps = nonproj.projectivize(heads, deps)
+
         # Do many-to-one alignment for misaligned tokens.
         # If we over-segment, we'll have one gold word that covers a sequence
         # of predicted words
@@ -477,10 +484,6 @@ cdef class GoldParse:
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
             raise Exception("Cycle found: %s" % cycle)
-
-        if make_projective:
-            proj_heads, _ = nonproj.projectivize(self.heads, self.labels)
-            self.heads = proj_heads
 
     def __len__(self):
         """Get the number of gold-standard tokens.

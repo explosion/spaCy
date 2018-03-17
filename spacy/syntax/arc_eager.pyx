@@ -11,7 +11,7 @@ from thinc.extra.search cimport Beam
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .nonproj import projectivize, is_nonproj_tree
+from .nonproj import is_nonproj_tree, projectivize
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
@@ -372,10 +372,7 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
-        heads = [(head+i) if head is not None else head
-                 for i, head in enumerate(gold.heads)]
-        heads, deps = projectivize(gold.heads, gold.labels)
-        for i, (head, dep) in enumerate(zip(heads, deps)):
+        for i, (head, dep) in enumerate(zip(gold.heads, gold.deps)):
             # Missing values
             if head is None or dep is None:
                 gold.c.heads[i] = i
@@ -386,8 +383,6 @@ cdef class ArcEager(TransitionSystem):
                     dep = 'ROOT'
                 gold.c.heads[i] = head
                 gold.c.labels[i] = self.strings.add(dep)
-        gold.heads = heads
-        gold.labels = deps
         return gold
 
     def get_beam_parses(self, Beam beam):
