@@ -1,3 +1,4 @@
+from __unicode_literals
 import random
 
 from ..pipeline import TextCategorizer
