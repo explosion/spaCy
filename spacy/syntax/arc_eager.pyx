@@ -318,9 +318,9 @@ cdef class ArcEager(TransitionSystem):
         actions = defaultdict(lambda: Counter())
         actions[SHIFT][''] = 1
         actions[REDUCE][''] = 1
-        actions[BREAK]['ROOT'] = 1
-        actions[RIGHT]['subtok'] = 1
-        actions[LEFT]['subtok'] = 1
+        actions[BREAK]['ROOT'] = -1
+        actions[RIGHT]['subtok'] = -1
+        actions[LEFT]['subtok'] = -1
         for label in kwargs.get('left_labels', []):
             actions[LEFT][label] = 1
             actions[SHIFT][label] = 1
@@ -378,6 +378,19 @@ cdef class ArcEager(TransitionSystem):
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
             else:
+                if head > i:
+                    action = LEFT
+                elif head < i:
+                    action = RIGHT
+                else:
+                    action = BREAK
+                if dep not in self.labels[action]:
+                    if '||' in dep:
+                        dep = dep.split('||')[0]
+                    else:
+                        gold.c.heads[i] = i
+                        gold.c.has_dep[i] = False
+                        continue
                 gold.c.has_dep[i] = True
                 if dep.upper() == 'ROOT':
                     dep = 'ROOT'

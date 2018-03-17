@@ -314,13 +314,6 @@ cdef class Parser:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
         cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
-        if 'actions' in self.cfg:
-            for action, label_freqs in self.cfg.get('actions', {}).items():
-                sorted_labels = [(f, L) for L, f in label_freqs.items()]
-                sorted_labels.sort()
-                sorted_labels.reverse()
-                for freq, label in sorted_labels:
-                    self.moves.add_action(int(action), label, freq=freq)
         self.model = model
         self._multitasks = []
 
@@ -833,7 +826,7 @@ cdef class Parser:
     def add_label(self, label):
         resized = False
         for action in self.moves.action_types:
-            added = self.moves.add_action(action, label, freq=None)
+            added = self.moves.add_action(action, label)
             if added:
                 resized = True
         if self.model not in (True, False, None) and resized:
@@ -849,9 +842,8 @@ cdef class Parser:
         if 'model' in cfg:
             self.model = cfg['model']
         actions = self.moves.get_actions(gold_parses=gold_tuples)
-        for action, labels in actions.items():
-            for label, freq in sorted(labels.items(), key=lambda item: item[1]):
-                self.moves.add_action(action, label, freq=freq)
+        cfg.setdefault('min_action_freq', 30)
+        self.moves.initialize_actions(actions, min_freq=cfg['min_action_freq'])
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length
@@ -859,7 +851,7 @@ cdef class Parser:
             if sgd is None:
                 sgd = self.create_optimizer()
             self.model[1].begin_training(
-                    self.model[1].ops.allocate((5, cfg['token_vector_width'])))
+                self.model[1].ops.allocate((5, cfg['token_vector_width'])))
             if pipeline is not None:
                 self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)

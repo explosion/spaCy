@@ -28,7 +28,7 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
 
 
 cdef class TransitionSystem:
-    def __init__(self, StringStore string_table, labels_by_action):
+    def __init__(self, StringStore string_table, labels_by_action=None):
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
@@ -37,16 +37,8 @@ cdef class TransitionSystem:
         self.c = <Transition*>self.mem.alloc(self._size, sizeof(Transition))
 
         self.labels = {}
-        for action, label_freqs in sorted(labels_by_action.items()):
-            # Make sure we take a copy here, and that we get a Counter
-            self.labels[action] = Counter(label_freqs.items())
-            # Have to be careful here: Sorting must be stable, or our model
-            # won't be read back in correctly. 
-            sorted_labels = [(f, L) for L, f in label_freqs.items()]
-            sorted_labels.sort()
-            sorted_labels.reverse()
-            for freq, label_str in sorted_labels:
-                self.add_action(int(action), label_str, freq=freq)
+        if labels_by_action:
+            self.initialize_actions(labels_by_action)
         self.root_label = self.strings.add('ROOT')
         self.init_beam_state = _init_state
 
@@ -147,7 +139,22 @@ cdef class TransitionSystem:
         act = self.c[clas]
         return self.move_name(act.move, act.label)
 
-    def add_action(self, int action, label_name, freq=None):
+    def initialize_actions(self, labels_by_action, min_freq=None):
+        self.labels = {}
+        self.n_moves = 0
+        for action, label_freqs in sorted(labels_by_action.items()):
+            # Make sure we take a copy here, and that we get a Counter
+            self.labels[action] = Counter()
+            # Have to be careful here: Sorting must be stable, or our model
+            # won't be read back in correctly. 
+            sorted_labels = [(f, L) for L, f in label_freqs.items()]
+            sorted_labels.sort()
+            sorted_labels.reverse()
+            for freq, label_str in sorted_labels:
+                self.add_action(int(action), label_str)
+                self.labels[action][label_str] = freq 
+
+    def add_action(self, int action, label_name):
         cdef attr_t label_id
         if not isinstance(label_name, int) and \
            not isinstance(label_name, long):
@@ -200,12 +207,5 @@ cdef class TransitionSystem:
             'strings': lambda b: self.strings.from_bytes(b)
         }
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        for action, label_freqs in sorted(labels.items()):
-            # Have to be careful here: Sorting must be stable, or our model
-            # won't be read back in correctly. 
-            sorted_labels = [(f, L) for L, f in label_freqs.items()]
-            sorted_labels.sort()
-            sorted_labels.reverse()
-            for freq, label in sorted_labels:
-                self.add_action(int(action), label, freq=freq)
+        self.initialize_actions(labels)
         return self
