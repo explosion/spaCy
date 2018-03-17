@@ -259,6 +259,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for filename in loc.iterdir():
             yield from read_json_file(loc / filename, limit=limit)
     else:
+        print(loc)
         with loc.open('r', encoding='utf8') as file_:
             docs = ujson.load(file_)
         if limit is not None:
