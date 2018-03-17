@@ -51,8 +51,6 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     train_path = util.ensure_path(train_data)
     dev_path = util.ensure_path(dev_data)
     meta_path = util.ensure_path(meta_path)
-    if not output_path.exists():
-        output_path.mkdir()
     if not train_path.exists():
         prints(train_path, title="Training data not found", exits=1)
     if dev_path and not dev_path.exists():
@@ -65,6 +63,12 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                title="Not a valid meta.json format", exits=1)
     meta.setdefault('lang', lang)
     meta.setdefault('name', 'unnamed')
+    
+    if not output_path.exists():
+        output_path.mkdir()
+
+    corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
+    n_train_words = corpus.count_train()
 
     pipeline = ['tagger', 'parser', 'ner']
     if no_tagger and 'tagger' in pipeline:
@@ -108,8 +112,6 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     if entity_multitasks:
         for objective in entity_multitasks.split(','):
             nlp.entity.add_multitask_objective(objective)
-    corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
-    n_train_words = corpus.count_train()
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
 
