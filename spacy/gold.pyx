@@ -171,7 +171,7 @@ class GoldCorpus(object):
         n = 0
         i = 0
         for raw_text, paragraph_tuples in self.train_tuples:
-            n += sum([len(s[0][1]) for s in paragraph_tuples])
+            n += sum(len(s[0][1]) for s in paragraph_tuples)
             if self.limit and i >= self.limit:
                 break
             i += len(paragraph_tuples)
