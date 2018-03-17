@@ -194,6 +194,7 @@ def setup_package():
                 'plac<1.0.0,>=0.9.6',
                 'pathlib',
                 'ujson>=1.35',
+                'python-rapidjson',
                 'dill>=0.2,<0.3',
                 'requests>=2.13.0,<3.0.0',
                 'regex==2017.4.5',

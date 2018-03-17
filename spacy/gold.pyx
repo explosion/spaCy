@@ -3,7 +3,6 @@
 from __future__ import unicode_literals, print_function
 
 import re
-import ujson
 import random
 import cytoolz
 import itertools
@@ -12,6 +11,8 @@ import tempfile
 import shutil
 from pathlib import Path
 import msgpack
+
+import rapidjson as json
 
 from . import _align 
 from .syntax import nonproj
@@ -261,7 +262,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
     else:
         print(loc)
         with loc.open('r', encoding='utf8') as file_:
-            docs = ujson.load(file_)
+            docs = json.load(file_)
         if limit is not None:
             docs = docs[:limit]
         for doc in docs:
