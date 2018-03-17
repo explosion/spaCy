@@ -1,4 +1,4 @@
-from __unicode_literals
+from __future__ import unicode_literals
 import random
 
 from ..pipeline import TextCategorizer
