@@ -372,7 +372,7 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
-        for i, (head, dep) in enumerate(zip(gold.heads, gold.deps)):
+        for i, (head, dep) in enumerate(zip(gold.heads, gold.labels)):
             # Missing values
             if head is None or dep is None:
                 gold.c.heads[i] = i
