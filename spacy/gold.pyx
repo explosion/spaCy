@@ -12,7 +12,7 @@ import shutil
 from pathlib import Path
 import msgpack
 
-import rapidjson as json
+import ujson
 
 from . import _align 
 from .syntax import nonproj
@@ -20,6 +20,7 @@ from .tokens import Doc
 from . import util
 from .util import minibatch, itershuffle
 
+from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
 def tags_to_entities(tags):
     entities = []
@@ -261,11 +262,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
             yield from read_json_file(loc / filename, limit=limit)
     else:
         print(loc)
-        with loc.open('r', encoding='utf8') as file_:
-            docs = json.load(file_)
-        if limit is not None:
-            docs = docs[:limit]
-        for doc in docs:
+        for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
             paragraphs = []
@@ -293,6 +290,41 @@ def read_json_file(loc, docs_filter=None, limit=None):
                         sent.get('brackets', [])])
                 if sents:
                     yield [paragraph.get('raw', None), sents]
+
+
+def _json_iterate(loc):
+    # We should've made these files jsonl...But since we didn't, parse out
+    # the docs one-by-one to reduce memory usage.
+    # It's okay to read in the whole file -- just don't parse it into JSON.
+    cdef bytes py_raw
+    loc = util.ensure_path(loc)
+    with loc.open('rb') as file_:
+        py_raw = file_.read()
+    raw = <char*>py_raw
+    cdef int square_depth = 0
+    cdef int curly_depth = 0
+    cdef int start = -1
+    cdef char c
+    cdef char open_square = ord('[')
+    cdef char close_square = ord(']')
+    cdef char open_curly = ord('{')
+    cdef char close_curly = ord('}')
+    for i in range(len(py_raw)):
+        c = raw[i]
+        if c == open_square:
+            square_depth += 1
+        elif c == close_square:
+            square_depth -= 1
+        elif c == open_curly:
+            if square_depth == 1 and curly_depth == 0:
+                start = i
+            curly_depth += 1
+        elif c == close_curly:
+            curly_depth -= 1
+            if square_depth == 1 and curly_depth == 0:
+                py_str = py_raw[start : i+1].decode('utf8')
+                yield ujson.loads(py_str)
+                start = -1
 
 
 def iob_to_biluo(tags):
