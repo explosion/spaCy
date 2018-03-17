@@ -13,7 +13,7 @@ import spacy
 import spacy.util
 from ..tokens import Token, Doc
 from ..gold import GoldParse
-from ..util import compounding
+from ..util import compounding, minibatch_by_words
 from ..syntax.nonproj import projectivize
 from ..matcher import Matcher
 from collections import defaultdict, Counter
@@ -36,30 +36,6 @@ lang.ja.Japanese.Defaults.use_janome = False
 
 random.seed(0)
 numpy.random.seed(0)
-
-def minibatch_by_words(items, size):
-    random.shuffle(items)
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
-    items = iter(items)
-    while True:
-        batch_size = next(size_)
-        batch = []
-        while batch_size >= 0:
-            try:
-                doc, gold = next(items)
-            except StopIteration:
-                if batch:
-                    yield batch
-                return
-            batch_size -= len(doc)
-            batch.append((doc, gold))
-        if batch:
-            yield batch
-        else:
-            break
 
 ################
 # Data reading #
@@ -372,7 +348,9 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
     batch_sizes = compounding(config.batch_size //10, config.batch_size, 1.001)
     for i in range(config.nr_epoch):
         docs = [nlp.make_doc(doc.text) for doc in docs]
-        batches = minibatch_by_words(list(zip(docs, golds)), size=batch_sizes)
+        Xs = list(zip(docs, golds))
+        random.shuffle(Xs)
+        batches = minibatch_by_words(Xs, size=batch_sizes)
         losses = {}
         n_train_words = sum(len(doc) for doc in docs)
         with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
