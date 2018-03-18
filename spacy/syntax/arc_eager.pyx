@@ -349,6 +349,9 @@ cdef class ArcEager(TransitionSystem):
         actions[BREAK].setdefault('ROOT', 0)
         actions[RIGHT].setdefault('subtok', 0)
         actions[LEFT].setdefault('subtok', 0)
+        # Used for backoff
+        actions[RIGHT].setdefault('dep', 0)
+        actions[LEFT].setdefault('dep', 0)
         return actions
 
     property action_types:
@@ -395,6 +398,12 @@ cdef class ArcEager(TransitionSystem):
                 if dep not in self.labels[action]:
                     if action == BREAK:
                         dep = 'ROOT'
+                    elif nonproj.is_decorated(dep):
+                        backoff = nonproj.decompose(dep)[0]
+                        if backoff in self.labels[action]:
+                            dep = backoff
+                        else:
+                            dep = 'dep'
                     else:
                         dep = 'dep'
                 gold.c.has_dep[i] = True
