@@ -9,7 +9,7 @@ from timeit import default_timer as timer
 
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
-from ..util import prints, minibatch_by_words
+from ..util import prints, minibatch, minibatch_by_words
 from .. import util
 from .. import about
 from .. import displacy
@@ -86,10 +86,9 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
                                   util.env_opt('dropout_to', 0.2),
                                   util.env_opt('dropout_decay', 0.0))
-    batch_sizes = util.compounding(util.env_opt('batch_from', 100),
-                                   util.env_opt('batch_to', 3000),
-                                   util.env_opt('batch_compound', 1.01))
-    max_doc_len = util.env_opt('max_doc_len', 5000)
+    batch_sizes = util.compounding(util.env_opt('batch_from', 1000),
+                                   util.env_opt('batch_to', 1000),
+                                   util.env_opt('batch_compound', 1.001))
     lang_class = util.get_lang_class(lang)
     nlp = lang_class()
     meta['pipeline'] = pipeline
@@ -107,6 +106,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
             lex.is_oov = False
     for name in pipeline:
         nlp.add_pipe(nlp.create_pipe(name), name=name)
+    nlp.add_pipe(nlp.create_pipe('merge_subtokens'))
     if parser_multitasks:
         for objective in parser_multitasks.split(','):
             nlp.parser.add_multitask_objective(objective)
@@ -124,7 +124,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
-                for batch in minibatch(train_docs, size=batch_sizes):
+                for batch in minibatch_by_words(train_docs, size=batch_sizes):
                     if not batch:
                         continue
                     docs, golds = zip(*batch)
