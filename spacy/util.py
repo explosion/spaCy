@@ -457,8 +457,6 @@ def minibatch_by_words(items, size, count_words=len):
             batch.append((doc, gold))
         if batch:
             yield batch
-        else:
-            break
 
 
 def itershuffle(iterable, bufsize=1000):
