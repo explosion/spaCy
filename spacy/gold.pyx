@@ -470,7 +470,7 @@ cdef class GoldParse:
                     is_last = i2j_multi[i] != i2j_multi.get(i+1)
                     is_first = i2j_multi[i] != i2j_multi.get(i-1)
                     # Set next word in multi-token span as head, until last
-                    if is_last:
+                    if not is_last:
                         self.heads[i] = i+1
                         self.labels[i] = 'subtok'
                     else:
