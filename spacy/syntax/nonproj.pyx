@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from copy import copy
 
-from ..tokens.doc cimport Doc
+from ..tokens.doc cimport Doc, set_children_from_heads
 
 
 DELIMITER = '||'
@@ -138,8 +138,9 @@ cpdef deprojectivize(Doc doc):
         if DELIMITER in label:
             new_label, head_label = label.split(DELIMITER)
             new_head = _find_new_head(doc[i], head_label)
-            doc[i].head = new_head
+            doc.c[i].head = new_head.i - i
             doc.c[i].dep = doc.vocab.strings.add(new_label)
+    set_children_from_heads(doc.c, doc.length)
     return doc
 
 
