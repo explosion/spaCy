@@ -467,14 +467,39 @@ cdef class GoldParse:
                 if i in i2j_multi:
                     self.words[i] = words[i2j_multi[i]]
                     self.tags[i] = tags[i2j_multi[i]]
+                    is_last = i2j_multi[i] != i2j_multi.get(i+1)
+                    is_first = i2j_multi[i] != i2j_multi.get(i-1)
                     # Set next word in multi-token span as head, until last
-                    if i2j_multi[i] == i2j_multi.get(i+1):
+                    if is_last:
                         self.heads[i] = i+1
                         self.labels[i] = 'subtok'
                     else:
                         self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
                         self.labels[i] = deps[i2j_multi[i]]
-                    # TODO: Set NER!
+                    # Now set NER...This is annoying because if we've split
+                    # got an entity word split into two, we need to adjust the
+                    # BILOU tags. We can't have BB or LL etc.
+                    # Case 1: O -- easy.
+                    ner_tag = entities[i2j_multi[i]]
+                    if ner_tag == 'O':
+                        self.ner[i] = 'O'
+                    # Case 2: U. This has to become a B I* L sequence.
+                    elif ner_tag.startswith('U-'):
+                        if is_first:
+                            self.ner[i] = ner_tag.replace('U-', 'B-', 1)
+                        elif is_last:
+                            self.ner[i] = ner_tag.replace('U-', 'L-', 1)
+                        else:
+                            self.ner[i] = ner_tag.replace('U-', 'I-', 1)
+                    # Case 3: L. If not last, change to I.
+                    elif ner_tag.startswith('L-'):
+                        if is_last:
+                            self.ner[i] = ner_tag
+                        else:
+                            self.ner[i] = ner_tag.replace('L-', 'I-', 1)
+                    # Case 4: I. Stays correct
+                    elif ner_tag.startswith('I-'):
+                        self.ner[i] = ner_tag
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
