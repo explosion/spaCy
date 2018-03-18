@@ -310,14 +310,29 @@ def _json_iterate(loc):
     raw = <char*>py_raw
     cdef int square_depth = 0
     cdef int curly_depth = 0
+    cdef int inside_string = 0
+    cdef int escape = 0
     cdef int start = -1
     cdef char c
+    cdef char quote = ord('"')
+    cdef char backslash = ord('\\')
     cdef char open_square = ord('[')
     cdef char close_square = ord(']')
     cdef char open_curly = ord('{')
     cdef char close_curly = ord('}')
     for i in range(len(py_raw)):
         c = raw[i]
+        if c == backslash:
+            escape = True
+            continue
+        if escape:
+            escape = False
+            continue
+        if c == quote:
+            inside_string = not inside_string
+            continue
+        if inside_string:
+            continue
         if c == open_square:
             square_depth += 1
         elif c == close_square:
