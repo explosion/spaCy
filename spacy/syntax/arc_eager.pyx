@@ -349,9 +349,6 @@ cdef class ArcEager(TransitionSystem):
         actions[BREAK].setdefault('ROOT', 0)
         actions[RIGHT].setdefault('subtok', 0)
         actions[LEFT].setdefault('subtok', 0)
-
-        print("Got actions")
-        print(json.dumps(actions, indent=2))
         return actions
 
     property action_types:
@@ -396,9 +393,10 @@ cdef class ArcEager(TransitionSystem):
                 else:
                     action = BREAK
                 if dep not in self.labels[action]:
-                    gold.c.heads[i] = i
-                    gold.c.has_dep[i] = False
-                    continue
+                    if action == BREAK:
+                        dep = 'ROOT'
+                    else:
+                        dep = 'dep'
                 gold.c.has_dep[i] = True
                 if dep.upper() == 'ROOT':
                     dep = 'ROOT'
