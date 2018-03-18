@@ -143,6 +143,7 @@ cdef class TransitionSystem:
         self.labels = {}
         self.n_moves = 0
         for action, label_freqs in sorted(labels_by_action.items()):
+            action = int(action)
             # Make sure we take a copy here, and that we get a Counter
             self.labels[action] = Counter()
             # Have to be careful here: Sorting must be stable, or our model
