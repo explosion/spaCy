@@ -121,17 +121,18 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
         for i in range(n_iter):
             train_docs = corpus.train_docs(nlp, noise_level=0.0,
                                            gold_preproc=gold_preproc, max_length=0)
+            words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
-                for batch in minibatch_by_words(train_docs, size=batch_sizes):
-                    batch = [(d, g) for (d, g) in batch if len(d) < max_doc_len]
+                for batch in minibatch(train_docs, size=batch_sizes):
                     if not batch:
                         continue
                     docs, golds = zip(*batch)
                     nlp.update(docs, golds, sgd=optimizer,
                                drop=next(dropout_rates), losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
-
+                    words_seen += sum(len(doc) for doc in docs)
+                print(words_seen)
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / ('model%d' % i)
