@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ..cli.download import download, get_compatibility, get_version, check_error_depr
+from ..cli.link import is_package
 
 import pytest
 
@@ -24,3 +25,9 @@ def test_cli_download_get_matching_version_fails(model):
 def test_cli_download_no_model_depr_error(model):
     with pytest.raises(SystemExit):
         check_error_depr(model)
+
+
+@pytest.mark.parametrize('package', ['numpy'])
+def test_cli_link_is_package(package):
+    """Test that an installed package via pip is recognised by link.is_package."""
+    assert is_package(package)
