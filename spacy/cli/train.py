@@ -86,9 +86,9 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
                                   util.env_opt('dropout_to', 0.2),
                                   util.env_opt('dropout_decay', 0.0))
-    batch_sizes = util.compounding(util.env_opt('batch_from', 1000),
-                                   util.env_opt('batch_to', 7000),
-                                   util.env_opt('batch_compound', 1.001))
+    batch_sizes = util.compounding(util.env_opt('batch_from', 100),
+                                   util.env_opt('batch_to', 3000),
+                                   util.env_opt('batch_compound', 1.01))
     max_doc_len = util.env_opt('max_doc_len', 5000)
     lang_class = util.get_lang_class(lang)
     nlp = lang_class()
