@@ -264,19 +264,11 @@ def initialize_pipeline(nlp, docs, golds, config):
         nlp.parser.add_multitask_objective('tag')
     if config.multitask_sent:
         nlp.parser.add_multitask_objective('sent_start')
-    nlp.parser.moves.add_action(2, 'subtok')
     nlp.add_pipe(nlp.create_pipe('tagger'))
     for gold in golds:
         for tag in gold.tags:
             if tag is not None:
                 nlp.tagger.add_label(tag)
-    # Replace labels that didn't make the frequency cutoff
-    actions = set(nlp.parser.labels)
-    label_set = set([act.split('-')[1] for act in actions if '-' in act])
-    for gold in golds:
-        for i, label in enumerate(gold.labels):
-            if label is not None and label not in label_set:
-                gold.labels[i] = label.split('||')[0]
     return nlp.begin_training(lambda: golds_to_gold_tuples(docs, golds))
 
 
