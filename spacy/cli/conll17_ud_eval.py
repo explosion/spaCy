@@ -168,7 +168,8 @@ def load_conllu(file):
                 if word.parent is None:
                     head = int(word.columns[HEAD])
                     if head > len(ud.words) - sentence_start:
-                        raise UDError("HEAD '{}' points outside of the sentence".format(word.columns[HEAD]))
+                        raise UDError("Line {}: HEAD '{}' points outside of the sentence".format(
+                            linenum, word.columns[HEAD]))
                     if head:
                         parent = ud.words[sentence_start + head - 1]
                         word.parent = "remapping"
