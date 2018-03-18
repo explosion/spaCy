@@ -19,6 +19,7 @@ from .syntax import nonproj
 from .tokens import Doc
 from . import util
 from .util import minibatch, itershuffle
+from .compat import json_dumps
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
@@ -91,7 +92,7 @@ def align(cand_words, gold_words):
 class GoldCorpus(object):
     """An annotated corpus, using the JSON file format. Manages
     annotations for tagging, dependency parsing and NER."""
-    def __init__(self, train, dev, gold_preproc=True, limit=None):
+    def __init__(self, train, dev, gold_preproc=False, limit=None):
         """Create a GoldCorpus.
 
         train_path (unicode or Path): File or directory of training data.
@@ -119,8 +120,8 @@ class GoldCorpus(object):
             directory.mkdir()
         for i, doc_tuple in enumerate(doc_tuples):
             with open(directory / '{}.msg'.format(i), 'wb') as file_:
-                msgpack.dump(doc_tuple, file_, use_bin_type=True, encoding='utf8')
-
+                msgpack.dump([doc_tuple], file_, use_bin_type=True, encoding='utf8')
+    
     @staticmethod
     def walk_corpus(path):
         path = util.ensure_path(path)
@@ -150,7 +151,7 @@ class GoldCorpus(object):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith('msg'):
                 with loc.open('rb') as file_:
-                    gold_tuples = [msgpack.load(file_, encoding='utf8')]
+                    gold_tuples = msgpack.load(file_, encoding='utf8')
             else:
                 msg = "Cannot read from file: %s. Supported formats: .json, .msg"
                 raise ValueError(msg % loc)
@@ -193,7 +194,8 @@ class GoldCorpus(object):
         yield from gold_docs
 
     def dev_docs(self, nlp, gold_preproc=False):
-        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc)
+        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples,
+                                        gold_preproc=gold_preproc)
         yield from gold_docs
 
     @classmethod
