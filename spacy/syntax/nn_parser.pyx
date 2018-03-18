@@ -302,8 +302,7 @@ cdef class Parser:
         """
         self.vocab = vocab
         if moves is True:
-            self.moves = self.TransitionSystem(self.vocab.strings,
-                                               cfg.get('actions', {}))
+            self.moves = self.TransitionSystem(self.vocab.strings)
         else:
             self.moves = moves
         if 'beam_width' not in cfg:
@@ -312,7 +311,6 @@ cdef class Parser:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         if 'pretrained_dims' not in cfg:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
         self.model = model
         self._multitasks = []
@@ -673,7 +671,6 @@ cdef class Parser:
         for beam in beams:
             _cleanup(beam)
 
-
     def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
@@ -841,9 +838,10 @@ cdef class Parser:
     def begin_training(self, gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        actions = self.moves.get_actions(gold_parses=gold_tuples)
         cfg.setdefault('min_action_freq', 30)
-        self.moves.initialize_actions(actions, min_freq=cfg['min_action_freq'])
+        actions = self.moves.get_actions(gold_parses=gold_tuples,
+                                         min_freq=cfg.get('min_action_freq', 30))
+        self.moves.initialize_actions(actions)
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length

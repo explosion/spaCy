@@ -8,10 +8,11 @@ from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from collections import OrderedDict, defaultdict, Counter
 from thinc.extra.search cimport Beam
+import json
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .nonproj import is_nonproj_tree, projectivize
+from . import nonproj
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
@@ -315,12 +316,10 @@ cdef class ArcEager(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
+        min_freq = kwargs.get('min_freq', None)
         actions = defaultdict(lambda: Counter())
         actions[SHIFT][''] = 1
         actions[REDUCE][''] = 1
-        actions[BREAK]['ROOT'] = -1
-        actions[RIGHT]['subtok'] = -1
-        actions[LEFT]['subtok'] = -1
         for label in kwargs.get('left_labels', []):
             actions[LEFT][label] = 1
             actions[SHIFT][label] = 1
@@ -329,7 +328,7 @@ cdef class ArcEager(TransitionSystem):
             actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
-                heads, labels = projectivize(heads, labels)
+                heads, labels = nonproj.projectivize(heads, labels)
                 for child, head, label in zip(ids, heads, labels):
                     if label.upper() == 'ROOT' :
                         label = 'ROOT'
@@ -341,6 +340,18 @@ cdef class ArcEager(TransitionSystem):
                     elif head > child:
                         actions[LEFT][label] += 1
                         actions[SHIFT][''] += 1
+        if min_freq is not None:
+            for action, label_freqs in actions.items():
+                for label, freq in list(label_freqs.items()):
+                    if freq < min_freq:
+                        label_freqs.pop(label)
+        # Ensure these actions are present
+        actions[BREAK].setdefault('ROOT', 0)
+        actions[RIGHT].setdefault('subtok', 0)
+        actions[LEFT].setdefault('subtok', 0)
+
+        print("Got actions")
+        print(json.dumps(actions, indent=2))
         return actions
 
     property action_types:
@@ -385,12 +396,9 @@ cdef class ArcEager(TransitionSystem):
                 else:
                     action = BREAK
                 if dep not in self.labels[action]:
-                    if '||' in dep:
-                        dep = dep.split('||')[0]
-                    else:
-                        gold.c.heads[i] = i
-                        gold.c.has_dep[i] = False
-                        continue
+                    gold.c.heads[i] = i
+                    gold.c.has_dep[i] = False
+                    continue
                 gold.c.has_dep[i] = True
                 if dep.upper() == 'ROOT':
                     dep = 'ROOT'
@@ -541,7 +549,7 @@ cdef class ArcEager(TransitionSystem):
                 if label_str is not None and label_str not in label_set:
                     raise ValueError("Cannot get gold parser action: unknown label: %s" % label_str)
             # Check projectivity --- other leading cause
-            if is_nonproj_tree(gold.heads):
+            if nonproj.is_nonproj_tree(gold.heads):
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the "
                     "dependency parser. Likely cause: the tree is "

@@ -28,7 +28,7 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
 
 
 cdef class TransitionSystem:
-    def __init__(self, StringStore string_table, labels_by_action=None):
+    def __init__(self, StringStore string_table, labels_by_action=None, min_freq=None):
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
@@ -38,7 +38,7 @@ cdef class TransitionSystem:
 
         self.labels = {}
         if labels_by_action:
-            self.initialize_actions(labels_by_action)
+            self.initialize_actions(labels_by_action, min_freq=min_freq)
         self.root_label = self.strings.add('ROOT')
         self.init_beam_state = _init_state
 
