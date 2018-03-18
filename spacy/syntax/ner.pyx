@@ -64,15 +64,14 @@ cdef class BiluoPushDown(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
-        # TODO: Change this to map to frequencies.
-        actions = OrderedDict((
-            (MISSING, Counter()),
-            (BEGIN, Counter()),
-            (IN, Counter()),
-            (LAST, Counter()),
-            (UNIT, Counter()),
-            (OUT, Counter())
-        ))
+        actions = {
+            MISSING: Counter(),
+            BEGIN: Counter(),
+            IN: Counter(),
+            LAST: Counter(),
+            UNIT: Counter(),
+            OUT: Counter()
+        }
         actions[OUT][''] = 1
         for entity_type in kwargs.get('entity_types', []):
             for action in (BEGIN, IN, LAST, UNIT):
@@ -230,13 +229,12 @@ cdef class BiluoPushDown(TransitionSystem):
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
         assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
-        if freq is None:
-            if self.labels.get(action, []):
-                freq = min(0, min(self.labels[action].values()))
-                self.labels[action][label_name] = freq-1
-            else:
-                self.labels[action] = Counter()
-                self.labels[action][label_name] = -1
+        if self.labels.get(action, []):
+            freq = min(0, min(self.labels[action].values()))
+            self.labels[action][label_name] = freq-1
+        else:
+            self.labels[action] = Counter()
+            self.labels[action][label_name] = -1
         return 1
 
     cdef int initialize_state(self, StateC* st) nogil:
