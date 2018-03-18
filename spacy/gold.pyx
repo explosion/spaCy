@@ -106,6 +106,7 @@ class GoldCorpus(object):
         # Write temp directory with one doc per file, so we can shuffle
         # and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
+        print("Writing data to", self.tmp_dir)
         self.write_msgpack(self.tmp_dir / 'train', train)
         self.write_msgpack(self.tmp_dir / 'dev', dev)
 
@@ -118,7 +119,7 @@ class GoldCorpus(object):
             directory.mkdir()
         for i, doc_tuple in enumerate(doc_tuples):
             with open(directory / '{}.msg'.format(i), 'wb') as file_:
-                msgpack.dump(doc_tuple, file_)
+                msgpack.dump(doc_tuple, file_, use_bin_type=True, encoding='utf8')
 
     @staticmethod
     def walk_corpus(path):
@@ -149,7 +150,7 @@ class GoldCorpus(object):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith('msg'):
                 with loc.open('rb') as file_:
-                    gold_tuples = [msgpack.load(file_)]
+                    gold_tuples = [msgpack.load(file_, encoding='utf8')]
             else:
                 msg = "Cannot read from file: %s. Supported formats: .json, .msg"
                 raise ValueError(msg % loc)
@@ -173,7 +174,8 @@ class GoldCorpus(object):
         n = 0
         i = 0
         for raw_text, paragraph_tuples in self.train_tuples:
-            n += sum(len(s[0][1]) for s in paragraph_tuples)
+            for sent_tuples, brackets in paragraph_tuples:
+                n += len(sent_tuples[1])
             if self.limit and i >= self.limit:
                 break
             i += len(paragraph_tuples)
