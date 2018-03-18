@@ -132,7 +132,6 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                                drop=next(dropout_rates), losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
-                print(words_seen)
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / ('model%d' % i)
