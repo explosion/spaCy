@@ -16,6 +16,7 @@ from ..gold import GoldParse
 from ..util import compounding, minibatch_by_words
 from ..syntax.nonproj import projectivize
 from ..matcher import Matcher
+from .. import displacy
 from collections import defaultdict, Counter
 from timeit import default_timer as timer
 
@@ -175,7 +176,7 @@ def evaluate(nlp, text_loc, gold_loc, sys_loc, limit=None):
         with sys_loc.open('r', encoding='utf8') as sys_file:
             sys_ud = conll17_ud_eval.load_conllu(sys_file)
         scores = conll17_ud_eval.evaluate(gold_ud, sys_ud)
-    return scores
+    return docs, scores
 
 
 def write_conllu(docs, file_):
@@ -354,8 +355,16 @@ def main(ud_dir, parses_dir, config, corpus, limit=0):
         
         out_path = parses_dir / corpus / 'epoch-{i}.conllu'.format(i=i)
         with nlp.use_params(optimizer.averages):
-            scores = evaluate(nlp, paths.dev.text, paths.dev.conllu, out_path)
+            parsed_docs, scores = evaluate(nlp, paths.dev.text, paths.dev.conllu, out_path)
             print_progress(i, losses, scores)
+            _render_parses(i, parsed_docs[:50]) 
+
+
+def _render_parses(i, to_render):
+    to_render[0].user_data['title'] = "Batch %d" % i
+    with Path('/tmp/parses.html').open('w') as file_:
+        html = displacy.render(to_render[:5], style='dep', page=True)
+        file_.write(html)
 
 
 if __name__ == '__main__':
