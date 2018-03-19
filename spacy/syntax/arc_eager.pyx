@@ -6,16 +6,19 @@ from __future__ import unicode_literals
 
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict, Counter
 from thinc.extra.search cimport Beam
+import json
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .nonproj import is_nonproj_tree
+from . import nonproj
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
 
+# Calculate cost as gold/not gold. We don't use scalar value anyway.
+cdef int BINARY_COSTS = 1
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = True
@@ -54,6 +57,8 @@ cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) no
             cost += 1
         if gold.heads[S_i] == target and (NON_MONOTONIC or not stcls.has_head(S_i)):
             cost += 1
+        if BINARY_COSTS and cost >= 1:
+            return cost
     cost += Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0
     return cost
 
@@ -67,6 +72,8 @@ cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nog
         cost += gold.heads[target] == B_i
         if gold.heads[B_i] == B_i or gold.heads[B_i] < target:
             break
+        if BINARY_COSTS and cost >= 1:
+            return cost
     if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
         cost += 1
     return cost
@@ -315,39 +322,42 @@ cdef class ArcEager(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions', OrderedDict((
-            (SHIFT, ['']),
-            (REDUCE, ['']),
-            (RIGHT, []),
-            (LEFT, ['subtok']),
-            (BREAK, ['ROOT']))
-        ))
-        seen_actions = set()
+        min_freq = kwargs.get('min_freq', None)
+        actions = defaultdict(lambda: Counter())
+        actions[SHIFT][''] = 1
+        actions[REDUCE][''] = 1
         for label in kwargs.get('left_labels', []):
-            if label.upper() != 'ROOT':
-                if (LEFT, label) not in seen_actions:
-                    actions[LEFT].append(label)
-                    seen_actions.add((LEFT, label))
+            actions[LEFT][label] = 1
+            actions[SHIFT][label] = 1
         for label in kwargs.get('right_labels', []):
-            if label.upper() != 'ROOT':
-                if (RIGHT, label) not in seen_actions:
-                    actions[RIGHT].append(label)
-                    seen_actions.add((RIGHT, label))
-
+            actions[RIGHT][label] = 1
+            actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
+                heads, labels = nonproj.projectivize(heads, labels)
                 for child, head, label in zip(ids, heads, labels):
-                    if label.upper() == 'ROOT':
+                    if label.upper() == 'ROOT' :
                         label = 'ROOT'
-                    if label != 'ROOT':
-                        if head < child:
-                            if (RIGHT, label) not in seen_actions:
-                                actions[RIGHT].append(label)
-                                seen_actions.add((RIGHT, label))
-                        elif head > child:
-                            if (LEFT, label) not in seen_actions:
-                                actions[LEFT].append(label)
-                                seen_actions.add((LEFT, label))
+                    if head == child:
+                        actions[BREAK][label] += 1
+                    elif head < child:
+                        actions[RIGHT][label] += 1
+                        actions[REDUCE][''] += 1
+                    elif head > child:
+                        actions[LEFT][label] += 1
+                        actions[SHIFT][''] += 1
+        if min_freq is not None:
+            for action, label_freqs in actions.items():
+                for label, freq in list(label_freqs.items()):
+                    if freq < min_freq:
+                        label_freqs.pop(label)
+        # Ensure these actions are present
+        actions[BREAK].setdefault('ROOT', 0)
+        actions[RIGHT].setdefault('subtok', 0)
+        actions[LEFT].setdefault('subtok', 0)
+        # Used for backoff
+        actions[RIGHT].setdefault('dep', 0)
+        actions[LEFT].setdefault('dep', 0)
         return actions
 
     property action_types:
@@ -379,18 +389,34 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
-        for i in range(gold.length):
+        for i, (head, dep) in enumerate(zip(gold.heads, gold.labels)):
             # Missing values
-            if gold.heads[i] is None or gold.labels[i] is None:
+            if head is None or dep is None:
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
             else:
-                label = gold.labels[i]
+                if head > i:
+                    action = LEFT
+                elif head < i:
+                    action = RIGHT
+                else:
+                    action = BREAK
+                if dep not in self.labels[action]:
+                    if action == BREAK:
+                        dep = 'ROOT'
+                    elif nonproj.is_decorated(dep):
+                        backoff = nonproj.decompose(dep)[0]
+                        if backoff in self.labels[action]:
+                            dep = backoff
+                        else:
+                            dep = 'dep'
+                    else:
+                        dep = 'dep'
                 gold.c.has_dep[i] = True
-                if label.upper() == 'ROOT':
-                    label = 'ROOT'
-                gold.c.heads[i] = gold.heads[i]
-                gold.c.labels[i] = self.strings.add(label)
+                if dep.upper() == 'ROOT':
+                    dep = 'ROOT'
+                gold.c.heads[i] = head
+                gold.c.labels[i] = self.strings.add(dep)
         return gold
 
     def get_beam_parses(self, Beam beam):
@@ -536,7 +562,7 @@ cdef class ArcEager(TransitionSystem):
                 if label_str is not None and label_str not in label_set:
                     raise ValueError("Cannot get gold parser action: unknown label: %s" % label_str)
             # Check projectivity --- other leading cause
-            if is_nonproj_tree(gold.heads):
+            if nonproj.is_nonproj_tree(gold.heads):
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the "
                     "dependency parser. Likely cause: the tree is "

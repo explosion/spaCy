@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -64,21 +64,18 @@ cdef class BiluoPushDown(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions', OrderedDict((
-            (MISSING, ['']),
-            (BEGIN, []),
-            (IN, []),
-            (LAST, []),
-            (UNIT, []),
-            (OUT, [''])
-        )))
-        seen_entities = set()
+        actions = {
+            MISSING: Counter(),
+            BEGIN: Counter(),
+            IN: Counter(),
+            LAST: Counter(),
+            UNIT: Counter(),
+            OUT: Counter()
+        }
+        actions[OUT][''] = 1
         for entity_type in kwargs.get('entity_types', []):
-            if entity_type in seen_entities:
-                continue
-            seen_entities.add(entity_type)
             for action in (BEGIN, IN, LAST, UNIT):
-                actions[action].append(entity_type)
+                actions[action][entity_type] = 1
         moves = ('M', 'B', 'I', 'L', 'U')
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, biluo), _ in sents:
@@ -87,10 +84,8 @@ cdef class BiluoPushDown(TransitionSystem):
                         if ner_tag.count('-') != 1:
                             raise ValueError(ner_tag)
                         _, label = ner_tag.split('-')
-                        if label not in seen_entities:
-                            seen_entities.add(label)
-                            for move_str in ('B', 'I', 'L', 'U'):
-                                actions[moves.index(move_str)].append(label)
+                        for action in (BEGIN, IN, LAST, UNIT):
+                            actions[action][label] += 1
         return actions
 
     property action_types:
@@ -213,7 +208,7 @@ cdef class BiluoPushDown(TransitionSystem):
             raise Exception(move)
         return t
 
-    def add_action(self, int action, label_name):
+    def add_action(self, int action, label_name, freq=None):
         cdef attr_t label_id
         if not isinstance(label_name, (int, long)):
             label_id = self.strings.add(label_name)
@@ -234,6 +229,12 @@ cdef class BiluoPushDown(TransitionSystem):
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
         assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
+        if self.labels.get(action, []):
+            freq = min(0, min(self.labels[action].values()))
+            self.labels[action][label_name] = freq-1
+        else:
+            self.labels[action] = Counter()
+            self.labels[action][label_name] = -1
         return 1
 
     cdef int initialize_state(self, StateC* st) nogil:

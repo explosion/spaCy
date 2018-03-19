@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import division, print_function, unicode_literals
 
-from .gold import tags_to_entities
+from .gold import tags_to_entities, GoldParse
 
 
 class PRFScore(object):
@@ -84,6 +84,8 @@ class Scorer(object):
         }
 
     def score(self, tokens, gold, verbose=False, punct_labels=('p', 'punct')):
+        if len(tokens) != len(gold):
+            gold = GoldParse.from_annot_tuples(tokens, zip(*gold.orig_annot))
         assert len(tokens) == len(gold)
         gold_deps = set()
         gold_tags = set()
