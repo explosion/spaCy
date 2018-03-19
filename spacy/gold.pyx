@@ -107,7 +107,6 @@ class GoldCorpus(object):
         # Write temp directory with one doc per file, so we can shuffle
         # and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
-        print("Writing data to", self.tmp_dir)
         self.write_msgpack(self.tmp_dir / 'train', train)
         self.write_msgpack(self.tmp_dir / 'dev', dev)
 
@@ -268,7 +267,6 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for filename in loc.iterdir():
             yield from read_json_file(loc / filename, limit=limit)
     else:
-        print(loc)
         for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
