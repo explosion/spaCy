@@ -82,7 +82,7 @@ class JapaneseTokenizer(object):
         doc = Doc(self.vocab, words=words, spaces=[False]*len(words))
         for token, dtoken in zip(doc, dtokens):
             token._.mecab_tag = dtoken.pos
-
+            token.tag_ = resolve_pos(dtoken)
         return doc
 
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
@@ -112,5 +112,8 @@ class Japanese(Language):
     lang = 'ja'
     Defaults = JapaneseDefaults
     Tokenizer = JapaneseTokenizer
+
+    def make_doc(self, text):
+        return self.tokenizer(text)
 
 __all__ = ['Japanese']
