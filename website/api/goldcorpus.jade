@@ -14,9 +14,22 @@ p Create a #[code GoldCorpus].
     +row
         +cell #[code train]
         +cell unicode or #[code Path] or iterable
-        +cell Training data, as a path (file or directory) or iterable. If an iterable, each item should be a #[code (text, paragraphs)] tuple, where each paragraph is a tuple #[code (sentences, brackets)], and each sentence is a tuple #[code (ids, words, tags, heads, ner)]. See the implementation of #[code spacy.gold.read_json_file] for further details.
+        +cell
+            |  Training data, as a path (file or directory) or iterable. If an
+            |  iterable, each item should be a #[code (text, paragraphs)]
+            |  tuple, where each paragraph is a tuple
+            |  #[code.u-break (sentences, brackets)],and each sentence is a
+            |  tuple #[code.u-break (ids, words, tags, heads, ner)]. See the
+            |  implementation of
+            |  #[+src(gh("spacy", "spacy/gold.pyx")) #[code gold.read_json_file]]
+            |  for further details.
 
     +row
         +cell #[code dev]
         +cell unicode or #[code Path] or iterable
         +cell Development data, as a path (file or directory) or iterable.
+
+    +row("foot")
+        +cell returns
+        +cell #[code GoldCorpus]
+        +cell The newly constructed object.
