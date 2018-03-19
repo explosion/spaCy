@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import random
 
 from ..pipeline import TextCategorizer
@@ -33,7 +34,6 @@ def test_textcat_learns_multilabel():
             truth = {letter: w2==letter for letter in letters}
             model(doc)
             for cat, score in doc.cats.items():
-                print(doc, cat, score)
                 if not truth[cat]:
                     assert score < 0.5
                 else:
