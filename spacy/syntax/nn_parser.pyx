@@ -27,8 +27,8 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
+from thinc cimport openblas
 
-from thinc.linalg cimport MatVec, VecVec
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
@@ -458,10 +458,8 @@ cdef class Parser:
                     which = Vec.arg_max(&unmaxed[index], nr_piece)
                     state_vector[j] = unmaxed[index + which]
             # Compute hidden-to-output
-            # TODO: These methods in Thinc are confusing at the moment, and
-            # quite backwards. But this currently does what we need.
-            MatVec.batch_T_dot(scores,
-                hW, vectors, nr_hidden, nr_class, nr_todo)
+            openblas.simple_gemm(scores, nr_todo, nr_class,
+                vectors, nr_todo, nr_hidden, hW, nr_hidden, nr_class, 0, 0)
             # Add bias
             for i in range(nr_todo):
                 VecVec.add_i(&scores[i*nr_class],
