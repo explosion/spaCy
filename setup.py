@@ -190,7 +190,7 @@ def setup_package():
                 'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.11.1.dev3,<6.12.0',
+                'thinc>=6.11.1.dev7,<6.12.0',
                 'plac<1.0.0,>=0.9.6',
                 'pathlib',
                 'ujson>=1.35',
@@ -200,6 +200,7 @@ def setup_package():
                 'ftfy>=4.4.2,<5.0.0',
                 'msgpack-python==0.5.4',
                 'msgpack-numpy==0.4.1'],
+            setup_requires=['wheel'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

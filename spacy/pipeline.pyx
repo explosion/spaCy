@@ -25,6 +25,7 @@ from .morphology cimport Morphology
 from .vocab cimport Vocab
 from .syntax import nonproj
 from .compat import json_dumps
+from .matcher import Matcher
 
 from .attrs import POS
 from .parts_of_speech import X
@@ -96,6 +97,17 @@ def merge_entities(doc):
         doc.merge(start, end, tag=tag, dep=dep, ent_type=ent_type)
     return doc
 
+
+def merge_subtokens(doc, label='subtok'):
+    merger = Matcher(doc.vocab)
+    merger.add('SUBTOK', None, [{'DEP': label, 'op': '+'}])
+    matches = merger(doc)
+    spans = [doc[start:end+1] for _, start, end in matches]
+    offsets = [(span.start_char, span.end_char) for span in spans]
+    for start_char, end_char in offsets:
+        doc.merge(start_char, end_char)
+    return doc
+ 
 
 class Pipe(object):
     """This class is not instantiated directly. Components inherit from it, and

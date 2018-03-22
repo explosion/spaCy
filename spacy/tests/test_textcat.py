@@ -1,4 +1,6 @@
+from __future__ import unicode_literals
 import random
+import numpy.random
 
 from ..pipeline import TextCategorizer
 from ..lang.en import English
@@ -8,6 +10,8 @@ from ..gold import GoldParse
 
 
 def test_textcat_learns_multilabel():
+    random.seed(0)
+    numpy.random.seed(0)
     docs = []
     nlp = English()
     vocab = nlp.vocab
@@ -21,7 +25,7 @@ def test_textcat_learns_multilabel():
     for letter in letters:
         model.add_label(letter)
     optimizer = model.begin_training()
-    for i in range(20):
+    for i in range(30):
         losses = {}
         Ys = [GoldParse(doc, cats=cats) for doc, cats in docs]
         Xs = [doc for doc, cats in docs]
@@ -33,7 +37,6 @@ def test_textcat_learns_multilabel():
             truth = {letter: w2==letter for letter in letters}
             model(doc)
             for cat, score in doc.cats.items():
-                print(doc, cat, score)
                 if not truth[cat]:
                     assert score < 0.5
                 else:

@@ -302,7 +302,7 @@ cdef class Parser:
         """
         self.vocab = vocab
         if moves is True:
-            self.moves = self.TransitionSystem(self.vocab.strings, {})
+            self.moves = self.TransitionSystem(self.vocab.strings)
         else:
             self.moves = moves
         if 'beam_width' not in cfg:
@@ -311,12 +311,7 @@ cdef class Parser:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         if 'pretrained_dims' not in cfg:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
-        if 'actions' in self.cfg:
-            for action, labels in self.cfg.get('actions', {}).items():
-                for label in labels:
-                    self.moves.add_action(action, label)
         self.model = model
         self._multitasks = []
 
@@ -676,7 +671,6 @@ cdef class Parser:
         for beam in beams:
             _cleanup(beam)
 
-
     def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
@@ -831,9 +825,6 @@ cdef class Parser:
         for action in self.moves.action_types:
             added = self.moves.add_action(action, label)
             if added:
-                # Important that the labels be stored as a list! We need the
-                # order, or the model goes out of synch
-                self.cfg.setdefault('extra_labels', []).append(label)
                 resized = True
         if self.model not in (True, False, None) and resized:
             # Weights are stored in (nr_out, nr_in) format, so we're basically
@@ -847,12 +838,10 @@ cdef class Parser:
     def begin_training(self, gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        gold_tuples = nonproj.preprocess_training_data(gold_tuples,
-                                                       label_freq_cutoff=30)
-        actions = self.moves.get_actions(gold_parses=gold_tuples)
-        for action, labels in actions.items():
-            for label in labels:
-                self.moves.add_action(action, label)
+        cfg.setdefault('min_action_freq', 30)
+        actions = self.moves.get_actions(gold_parses=gold_tuples,
+                                         min_freq=cfg.get('min_action_freq', 30))
+        self.moves.initialize_actions(actions)
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length
@@ -860,7 +849,7 @@ cdef class Parser:
             if sgd is None:
                 sgd = self.create_optimizer()
             self.model[1].begin_training(
-                    self.model[1].ops.allocate((5, cfg['token_vector_width'])))
+                self.model[1].ops.allocate((5, cfg['token_vector_width'])))
             if pipeline is not None:
                 self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
