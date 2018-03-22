@@ -12,12 +12,12 @@ _prefixes = (['§', '%', '=', r'\+'] + LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES 
 
 _suffixes = (LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS +
              ["'s", "'S", "’s", "’S"] +
-             [r'(?<=[0-9])\+',
-              r'(?<=°[FfCcKk])\.',
-              r'(?<=[0-9])(?:{})'.format(CURRENCY),
-              r'(?<=[0-9])(?:{})'.format(UNITS),
-              r'(?<=[0-9{}{}(?:{})])\.'.format(ALPHA_LOWER, r'%²\-\)\]\+', QUOTES),
-              r'(?<=[{a}][{a}])\.'.format(a=ALPHA_UPPER)])
+             [r'(?:[0-9])(\+)',
+              r'(?:°[FfCcKk])(\.)',
+              r'(?:[0-9])({})'.format(CURRENCY),
+              r'(?:[0-9])({})'.format(UNITS),
+              r'(?:[0-9{}{}(?:{})])(\.)'.format(ALPHA_LOWER, r'%²\-\)\]\+', QUOTES),
+              r'(?:[{a}][{a}])(\.)'.format(a=ALPHA_UPPER)])
 
 
 _infixes = (LIST_ELLIPSES + LIST_ICONS +
