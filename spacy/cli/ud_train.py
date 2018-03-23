@@ -32,11 +32,6 @@ from .. import lang
 from ..lang import zh
 from ..lang import ja
 
-lang.zh.Chinese.Defaults.use_jieba = False
-lang.ja.Japanese.Defaults.use_janome = False
-
-random.seed(0)
-numpy.random.seed(0)
 
 ################
 # Data reading #
@@ -326,6 +321,12 @@ class TreebankPaths(object):
     limit=("Size limit", "option", "n", int)
 )
 def main(ud_dir, parses_dir, config, corpus, limit=0):
+    lang.zh.Chinese.Defaults.use_jieba = False
+    lang.ja.Japanese.Defaults.use_janome = False
+
+    random.seed(0)
+    numpy.random.seed(0)
+
     config = Config.load(config)
     paths = TreebankPaths(ud_dir, corpus)
     if not (parses_dir / corpus).exists():
