@@ -256,7 +256,7 @@ def load_nlp(corpus, config):
     lang = corpus.split('_')[0]
     nlp = spacy.blank(lang)
     if config.vectors:
-        nlp.vocab.from_disk(config.vectors / 'vocab')
+        nlp.vocab.from_disk(Path(config.vectors) / 'vocab')
     return nlp
 
 def initialize_pipeline(nlp, docs, golds, config):
