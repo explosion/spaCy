@@ -106,7 +106,7 @@ def lemmatize(string, index, exceptions, rules):
                 else:
                     oov_forms.append(form)
     if not forms:
-        forms.extend(oov_forms)
-    if not forms:
         forms.append(orig)
+    if not forms:
+        forms.extend(oov_forms)
     return list(set(forms))
