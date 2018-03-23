@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import pip
+import pkg_resources
 from pathlib import Path
 import importlib
 from ..compat import unicode_, symlink_to
@@ -69,10 +69,14 @@ def get_meta(package_path, package):
     meta = util.parse_package_meta(package_path, package)
     return meta
 
-
-def is_package(origin):
-    packages = pip.get_installed_distributions()
+def is_package(name):
+    """Check if string maps to a package installed via pip.
+    name (unicode): Name of package.
+    RETURNS (bool): True if installed package, False if not.
+    """
+    name = name.lower()  # compare package name against lowercase name
+    packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
-        if package.project_name.replace('-', '_') == origin:
+        if package.lower().replace('-', '_') == name:
             return True
     return False
