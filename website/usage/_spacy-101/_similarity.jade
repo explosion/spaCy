@@ -37,7 +37,7 @@ p
             +cell.u-text-label.u-color-theme=label
             for cell in cells
                 +cell.u-text-center
-                    - var result = cell > 0.5 ? ["yes", "similar"] : cell != 1 ? ["no", "dissimilar"] : ["neutral", "identical"]
+                    - var result = cell < 0.5 ? ["no", "dissimilar"] : cell != 1 ? ["yes", "similar"] : ["neutral", "identical"]
                     |  #[code=cell.toFixed(2)] #[+procon(...result)]
 
 p
