@@ -460,10 +460,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
-                # At this point we don't know whether the NER has run over the
-                # Doc. If the ent_iob is missing, leave it missing.
-                if self.c[i].ent_iob != 0:
-                    self.c[i].ent_iob = 2  # Means O. Non-O are set from ents.
+                self.c[i].ent_iob = 2  # Means O. Non-O are set from ents.
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
@@ -978,6 +975,8 @@ cdef class Doc:
                 self.c[i].head = start
             elif head_idx >= end:
                 self.c[i].head -= offset
+        token.ent_iob = span[0].ent_iob
+        token.ent_type = span[0].ent_type
         # Now compress the token array
         for i in range(end, self.length):
             self.c[i - offset] = self.c[i]
@@ -988,6 +987,7 @@ cdef class Doc:
         for i in range(self.length):
             # ...And, set heads back to a relative position
             self.c[i].head -= i
+        # TODO: Fix entity IOB
         # Set the left/right children, left/right edges
         set_children_from_heads(self.c, self.length)
         # Clear the cached Python objects
