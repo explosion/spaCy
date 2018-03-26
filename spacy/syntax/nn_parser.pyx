@@ -248,8 +248,8 @@ cdef class Parser:
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
                                            cfg.get('token_vector_width', 128))
-        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 200))
-        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 7000))
+        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 128))
+        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 5000))
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size != 0:
