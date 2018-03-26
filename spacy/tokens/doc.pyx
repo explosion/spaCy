@@ -949,6 +949,13 @@ cdef class Doc:
                 self.vocab.morphology.assign_tag(token, attr_value)
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
+        # Make sure ent_iob remains consistent
+        if self.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
+            if token.ent_type == self.c[end].ent_type:
+                token.ent_iob = 3
+            else:
+                # If they're not the same entity type, let them be two entities
+                self.c[end].ent_iob = 3
         # Begin by setting all the head indices to absolute token positions
         # This is easier to work with for now than the offsets
         # Before thinking of something simpler, beware the case where a
