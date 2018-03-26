@@ -421,7 +421,12 @@ cdef class Doc:
             for i in range(self.length):
                 token = &self.c[i]
                 if token.ent_iob == 1:
-                    assert start != -1
+                    if start == -1:
+                        seq = ['%s|%s' % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        raise ValueError(
+                            "token.ent_iob values make invalid sequence: "
+                            "I without B\n"
+                            "{seq}".format(seq=' '.join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
                         output.append(Span(self, start, i, label=label))
