@@ -955,6 +955,13 @@ cdef class Doc:
                 self.vocab.morphology.assign_tag(token, attr_value)
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
+        # Make sure ent_iob remains consistent
+        if self.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
+            if token.ent_type == self.c[end].ent_type:
+                token.ent_iob = 3
+            else:
+                # If they're not the same entity type, let them be two entities
+                self.c[end].ent_iob = 3
         # Begin by setting all the head indices to absolute token positions
         # This is easier to work with for now than the offsets
         # Before thinking of something simpler, beware the case where a
@@ -980,8 +987,6 @@ cdef class Doc:
                 self.c[i].head = start
             elif head_idx >= end:
                 self.c[i].head -= offset
-        token.ent_iob = span[0].ent_iob
-        token.ent_type = span[0].ent_type
         # Now compress the token array
         for i in range(end, self.length):
             self.c[i - offset] = self.c[i]
@@ -992,7 +997,6 @@ cdef class Doc:
         for i in range(self.length):
             # ...And, set heads back to a relative position
             self.c[i].head -= i
-        # TODO: Fix entity IOB
         # Set the left/right children, left/right edges
         set_children_from_heads(self.c, self.length)
         # Clear the cached Python objects
