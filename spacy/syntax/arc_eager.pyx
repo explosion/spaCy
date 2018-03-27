@@ -122,6 +122,8 @@ cdef class Shift:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
+        if label != 0:
+            st.split(st.B(1), label)
         st.push()
         st.fast_forward()
 
@@ -135,7 +137,10 @@ cdef class Shift:
 
     @staticmethod
     cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
-        return 0
+        if gold.fused_tokens[s.B(1)] == label:
+            return 0
+        else:
+            return 1
 
 
 cdef class Reduce:
