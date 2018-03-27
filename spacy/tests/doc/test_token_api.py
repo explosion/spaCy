@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ...attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
+from ...symbols import NOUN, VERB
 from ..util import get_doc
 from ...vocab import Vocab
 from ...tokens import Doc
@@ -162,3 +163,10 @@ def test_is_sent_start(en_tokenizer):
     assert doc[5].is_sent_start is True
     doc.is_parsed = True
     assert len(list(doc.sents)) == 2
+
+def test_set_pos():
+    doc = Doc(Vocab(), words=['hello', 'world'])
+    doc[0].pos_ = 'NOUN'
+    assert doc[0].pos_ == 'NOUN'
+    doc[1].pos = VERB
+    assert doc[1].pos_ == 'VERB'
