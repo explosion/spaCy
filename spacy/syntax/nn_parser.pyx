@@ -833,11 +833,11 @@ cdef class Parser:
             copy_array(larger.b[:smaller.nO], smaller.b)
             self.model[-1]._layers[-1] = larger
 
-    def begin_training(self, gold_tuples, pipeline=None, sgd=None, **cfg):
+    def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
         cfg.setdefault('min_action_freq', 30)
-        actions = self.moves.get_actions(gold_parses=gold_tuples,
+        actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
                                          min_freq=cfg.get('min_action_freq', 30))
         self.moves.initialize_actions(actions)
         cfg.setdefault('token_vector_width', 128)
@@ -849,7 +849,7 @@ cdef class Parser:
             self.model[1].begin_training(
                 self.model[1].ops.allocate((5, cfg['token_vector_width'])))
             if pipeline is not None:
-                self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
+                self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
         else:
             if sgd is None:
@@ -863,7 +863,7 @@ cdef class Parser:
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
     
-    def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
+    def init_multitask_objectives(self, get_gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
 

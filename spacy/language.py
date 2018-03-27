@@ -463,7 +463,7 @@ class Language(object):
         self._optimizer = sgd
         for name, proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
-                proc.begin_training(get_gold_tuples(),
+                proc.begin_training(get_gold_tuples,
                                     pipeline=self.pipeline,
                                     sgd=self._optimizer,
                                     **cfg)
