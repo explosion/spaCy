@@ -34,11 +34,11 @@ cdef class Token:
 
     @classmethod
     def get_extension(cls, name):
-        return Underscore.span_extensions.get(name)
+        return Underscore.token_extensions.get(name)
 
     @classmethod
     def has_extension(cls, name):
-        return name in Underscore.span_extensions
+        return name in Underscore.token_extensions
 
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
         """Construct a `Token` object.

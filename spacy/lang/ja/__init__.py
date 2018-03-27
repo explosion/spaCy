@@ -35,32 +35,14 @@ class JapaneseTokenizer(object):
     def from_disk(self, path, **exclude):
         return self
 
-class JapaneseCharacterSegmenter(object):
-    def __init__(self, vocab):
-        self.vocab = vocab
-
-    def __call__(self, text):
-        words = []
-        spaces = []
-        doc = self.tokenizer(text)
-        for token in self.tokenizer(text):
-            words.extend(list(token.text))
-            spaces.extend([False]*len(token.text))
-            spaces[-1] = bool(token.whitespace_)
-        return Doc(self.vocab, words=words, spaces=spaces)
-
 
 class JapaneseDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: 'ja'
-    use_janome = True
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
-        if cls.use_janome:
-            return JapaneseTokenizer(cls, nlp)
-        else:
-            return JapaneseCharacterSegmenter(cls, nlp.vocab)
+        return JapaneseTokenizer(cls, nlp)
 
 
 class Japanese(Language):

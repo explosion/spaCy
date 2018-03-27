@@ -47,9 +47,7 @@ cdef class Morphology:
 cdef enum univ_morph_t:
     NIL = 0
     Animacy_anim = symbols.Animacy_anim
-    Animacy_inan
-    Animacy_hum
-    Animacy_nhum
+    Animacy_inam
     Aspect_freq
     Aspect_imp
     Aspect_mod

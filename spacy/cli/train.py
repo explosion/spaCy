@@ -8,8 +8,8 @@ from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
-from ..gold import GoldCorpus
-from ..util import prints, minibatch, minibatch_by_words
+from ..gold import GoldCorpus, minibatch
+from ..util import prints
 from .. import util
 from .. import about
 from .. import displacy
@@ -51,6 +51,8 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     train_path = util.ensure_path(train_data)
     dev_path = util.ensure_path(dev_data)
     meta_path = util.ensure_path(meta_path)
+    if not output_path.exists():
+        output_path.mkdir()
     if not train_path.exists():
         prints(train_path, title="Training data not found", exits=1)
     if dev_path and not dev_path.exists():
@@ -63,14 +65,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                title="Not a valid meta.json format", exits=1)
     meta.setdefault('lang', lang)
     meta.setdefault('name', 'unnamed')
-    
-    if not output_path.exists():
-        output_path.mkdir()
 
-    print("Counting training words (limit=%s" % n_sents)
-    corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
-    n_train_words = corpus.count_train()
-    print(n_train_words)
     pipeline = ['tagger', 'parser', 'ner']
     if no_tagger and 'tagger' in pipeline:
         pipeline.remove('tagger')
@@ -86,9 +81,13 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
                                   util.env_opt('dropout_to', 0.2),
                                   util.env_opt('dropout_decay', 0.0))
-    batch_sizes = util.compounding(util.env_opt('batch_from', 1000),
-                                   util.env_opt('batch_to', 1000),
+    batch_sizes = util.compounding(util.env_opt('batch_from', 1),
+                                   util.env_opt('batch_to', 16),
                                    util.env_opt('batch_compound', 1.001))
+    max_doc_len = util.env_opt('max_doc_len', 5000)
+    corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
+    n_train_words = corpus.count_train()
+
     lang_class = util.get_lang_class(lang)
     nlp = lang_class()
     meta['pipeline'] = pipeline
@@ -106,7 +105,6 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
             lex.is_oov = False
     for name in pipeline:
         nlp.add_pipe(nlp.create_pipe(name), name=name)
-    nlp.add_pipe(nlp.create_pipe('merge_subtokens'))
     if parser_multitasks:
         for objective in parser_multitasks.split(','):
             nlp.parser.add_multitask_objective(objective)
@@ -118,20 +116,21 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
 
     print("Itn.\tP.Loss\tN.Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
+        train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
+                                       gold_preproc=gold_preproc, max_length=0)
+        train_docs = list(train_docs)
         for i in range(n_iter):
-            train_docs = corpus.train_docs(nlp, noise_level=0.0,
-                                           gold_preproc=gold_preproc, max_length=0)
-            words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
-                for batch in minibatch_by_words(train_docs, size=batch_sizes):
+                for batch in minibatch(train_docs, size=batch_sizes):
+                    batch = [(d, g) for (d, g) in batch if len(d) < max_doc_len]
                     if not batch:
                         continue
                     docs, golds = zip(*batch)
                     nlp.update(docs, golds, sgd=optimizer,
                                drop=next(dropout_rates), losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
-                    words_seen += sum(len(doc) for doc in docs)
+
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / ('model%d' % i)

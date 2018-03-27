@@ -1,19 +1,24 @@
-# cython: infer_types=True
 # cython: profile=True
+# cython: infer_types=True
+# coding: utf8
 from __future__ import unicode_literals
-from libcpp.vector cimport vector
-from libc.stdint cimport int32_t, uint64_t, uint16_t
-from preshed.maps cimport PreshMap
+
+import ujson
 from cymem.cymem cimport Pool
+from preshed.maps cimport PreshMap
+from libcpp.vector cimport vector
+from libcpp.pair cimport pair
 from murmurhash.mrmr cimport hash64
-from .typedefs cimport attr_t, hash_t
+from libc.stdint cimport int32_t
+
+from .typedefs cimport attr_t
+from .typedefs cimport hash_t
 from .structs cimport TokenC
-from .lexeme cimport attr_id_t
+from .tokens.doc cimport Doc, get_token_attr
 from .vocab cimport Vocab
-from .tokens.doc cimport Doc
-from .tokens.doc cimport get_token_attr
-from .attrs cimport ID, attr_id_t, NULL_ATTR
+
 from .attrs import IDS
+from .attrs cimport attr_id_t, ID, NULL_ATTR
 from .attrs import FLAG61 as U_ENT
 from .attrs import FLAG60 as B2_ENT
 from .attrs import FLAG59 as B3_ENT
@@ -43,23 +48,28 @@ from .attrs import FLAG36 as L9_ENT
 from .attrs import FLAG35 as L10_ENT
 
 
-cdef enum action_t:
-    REJECT = 0000
-    MATCH = 1000
-    ADVANCE = 0100
-    RETRY = 0010
-    RETRY_EXTEND = 0011
-    MATCH_EXTEND = 1001
-    MATCH_REJECT = 2000
-
-
-cdef enum quantifier_t:
+cpdef enum quantifier_t:
+    _META
+    ONE
     ZERO
     ZERO_ONE
     ZERO_PLUS
-    ONE
-    ONE_PLUS
 
+
+cdef enum action_t:
+    REJECT
+    ADVANCE
+    REPEAT
+    ACCEPT
+    ADVANCE_ZERO
+    ACCEPT_PREV
+    PANIC
+
+# A "match expression" conists of one or more token patterns
+# Each token pattern consists of a quantifier and 0+ (attr, value) pairs.
+# A state is an (int, pattern pointer) pair, where the int is the start
+# position, and the pattern pointer shows where we're up to
+# in the pattern.
 
 cdef struct AttrValueC:
     attr_id_t attr
@@ -70,231 +80,10 @@ cdef struct TokenPatternC:
     AttrValueC* attrs
     int32_t nr_attr
     quantifier_t quantifier
-    hash_t key
 
 
-cdef struct ActionC:
-    char emit_match
-    char next_state_next_token
-    char next_state_same_token
-    char same_state_next_token
-
-
-cdef struct PatternStateC:
-    TokenPatternC* pattern
-    int32_t start
-    int32_t length
-
-
-cdef struct MatchC:
-    attr_t pattern_id
-    int32_t start
-    int32_t length
-
-
-cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
-    cdef vector[PatternStateC] states
-    cdef vector[MatchC] matches
-    cdef PatternStateC state
-    cdef Pool mem = Pool()
-    # TODO: Prefill this with the extra attribute values.
-    extra_attrs = <attr_t**>mem.alloc(len(doc), sizeof(attr_t*))
-    # Main loop
-    cdef int i, j
-    for i in range(doc.length):
-        for j in range(n):
-            states.push_back(PatternStateC(patterns[j], i, 0))
-        transition_states(states, matches, &doc.c[i], extra_attrs[i])
-    # Handle matches that end in 0-width patterns
-    finish_states(matches, states)
-    return [(matches[i].pattern_id, matches[i].start, matches[i].start+matches[i].length)
-            for i in range(matches.size())]
-
-
-
-cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
-        const TokenC* token, const attr_t* extra_attrs) except *:
-    cdef int q = 0
-    cdef vector[PatternStateC] new_states
-    for i in range(states.size()):
-        action = get_action(states[i], token, extra_attrs)
-        if action == REJECT:
-            continue
-        state = states[i]
-        states[q] = state
-        while action in (RETRY, RETRY_EXTEND):
-            if action == RETRY_EXTEND:
-                new_states.push_back(
-                    PatternStateC(pattern=state.pattern, start=state.start,
-                                  length=state.length+1))
-            states[q].pattern += 1
-            action = get_action(states[q], token, extra_attrs)
-        if action == REJECT:
-            pass
-        elif action == ADVANCE:
-            states[q].pattern += 1
-            states[q].length += 1
-            q += 1
-        else:
-            ent_id = state.pattern[1].attrs.value
-            if action == MATCH:
-                matches.push_back(
-                    MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length+1))
-            elif action == MATCH_REJECT:
-                matches.push_back(
-                    MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length))
-            elif action == MATCH_EXTEND:
-                matches.push_back(
-                    MatchC(pattern_id=ent_id, start=state.start,
-                           length=state.length))
-                states[q].length += 1
-                q += 1
-    states.resize(q)
-    for i in range(new_states.size()):
-        states.push_back(new_states[i])
-
-
-cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) except *:
-    '''Handle states that end in zero-width patterns.'''
-    cdef PatternStateC state
-    for i in range(states.size()):
-        state = states[i]
-        while get_quantifier(state) in (ZERO_PLUS, ZERO_ONE):
-            is_final = get_is_final(state)
-            if is_final:
-                ent_id = state.pattern[1].attrs.value
-                matches.push_back(
-                    MatchC(pattern_id=ent_id, start=state.start, length=state.length))
-                break
-            else:
-                state.pattern += 1
-
-
-cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) nogil:
-    '''We need to consider:
-
-    a) Does the token match the specification? [Yes, No]
-    b) What's the quantifier? [1, 0+, ?]
-    c) Is this the last specification? [final, non-final]
-
-    We can transition in the following ways:
-
-    a) Do we emit a match?
-    b) Do we add a state with (next state, next token)?
-    c) Do we add a state with (next state, same token)?
-    d) Do we add a state with (same state, next token)?
-
-    We'll code the actions as boolean strings, so 0000 means no to all 4,
-    1000 means match but no states added, etc.
-    
-    1:
-      Yes, final:
-        1000
-      Yes, non-final:
-        0100
-      No, final:
-        0000
-      No, non-final
-        0000
-    0+:
-      Yes, final:
-        1001
-      Yes, non-final:
-        0011
-      No, final:
-        1000 (note: Don't include last token!)
-      No, non-final:
-        0010
-    ?:
-      Yes, final:
-        1000
-      Yes, non-final:
-        0100
-      No, final:
-        1000 (note: Don't include last token!)
-      No, non-final:
-        0010
-
-    Possible combinations:  1000, 0100, 0000, 1001, 0011, 0010, 
-    
-    We'll name the bits "match", "advance", "retry", "extend"
-    REJECT = 0000
-    MATCH = 1000
-    ADVANCE = 0100
-    RETRY = 0010
-    MATCH_EXTEND = 1001
-    RETRY_EXTEND = 0011
-    MATCH_REJECT = 2000 # Match, but don't include last token
-
-    Problem: If a quantifier is matching, we're adding a lot of open partials
-    '''
-    cdef char is_match
-    is_match = get_is_match(state, token, extra_attrs)
-    quantifier = get_quantifier(state)
-    is_final = get_is_final(state)
-    if quantifier == ZERO:
-        is_match = not is_match
-        quantifier = ONE
-    if quantifier == ONE:
-      if is_match and is_final:
-          # Yes, final: 1000
-          return MATCH
-      elif is_match and not is_final:
-          # Yes, non-final: 0100
-          return ADVANCE
-      elif not is_match and is_final:
-          # No, final: 0000
-          return REJECT
-      else:
-          return REJECT
-    elif quantifier == ZERO_PLUS:
-      if is_match and is_final:
-          # Yes, final: 1001
-          return MATCH_EXTEND
-      elif is_match and not is_final:
-          # Yes, non-final: 0011
-          return RETRY_EXTEND
-      elif not is_match and is_final:
-          # No, final 2000 (note: Don't include last token!)
-          return MATCH_REJECT
-      else:
-          # No, non-final 0010
-          return RETRY
-    elif quantifier == ZERO_ONE:
-      if is_match and is_final:
-          # Yes, final: 1000
-          return MATCH
-      elif is_match and not is_final:
-          # Yes, non-final: 0100
-          return ADVANCE
-      elif not is_match and is_final:
-          # No, final 2000 (note: Don't include last token!)
-          return MATCH_REJECT
-      else:
-          # No, non-final 0010
-          return RETRY
-
-
-cdef char get_is_match(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) nogil:
-    spec = state.pattern
-    for attr in spec.attrs[:spec.nr_attr]:
-        if get_token_attr(token, attr.attr) != attr.value:
-            return 0
-    else:
-        return 1
-
-
-cdef char get_is_final(PatternStateC state) nogil:
-    if state.pattern[1].attrs[0].attr == ID and state.pattern[1].nr_attr == 0:
-        return 1
-    else:
-        return 0
-
-
-cdef char get_quantifier(PatternStateC state) nogil:
-    return state.pattern.quantifier
+ctypedef TokenPatternC* TokenPatternC_ptr
+ctypedef pair[int, TokenPatternC_ptr] StateC
 
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
@@ -308,7 +97,6 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
-        pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
@@ -317,16 +105,48 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
     return pattern
 
 
-cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
+cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
     while pattern.nr_attr != 0:
         pattern += 1
     id_attr = pattern[0].attrs[0]
+    assert id_attr.attr == ID
     return id_attr.value
+
+
+cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
+    lookahead = &pattern[1]
+    for attr in pattern.attrs[:pattern.nr_attr]:
+        if get_token_attr(token, attr.attr) != attr.value:
+            if pattern.quantifier == ONE:
+                return REJECT
+            elif pattern.quantifier == ZERO:
+                return ACCEPT if lookahead.nr_attr == 0 else ADVANCE
+            elif pattern.quantifier in (ZERO_ONE, ZERO_PLUS):
+                return ACCEPT_PREV if lookahead.nr_attr == 0 else ADVANCE_ZERO
+            else:
+                return PANIC
+    if pattern.quantifier == ZERO:
+        return REJECT
+    elif lookahead.nr_attr == 0:
+        return ACCEPT
+    elif pattern.quantifier in (ONE, ZERO_ONE):
+        return ADVANCE
+    elif pattern.quantifier == ZERO_PLUS:
+        # This is a bandaid over the 'shadowing' problem described here:
+        # https://github.com/explosion/spaCy/issues/864
+        next_action = get_action(lookahead, token)
+        if next_action is REJECT:
+            return REPEAT
+        else:
+            return ADVANCE_ZERO
+    else:
+        return PANIC
+
 
 def _convert_strings(token_specs, string_store):
     # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
-    operators = {'*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
-                 '?': (ZERO_ONE,), '1': (ONE,), '!': (ZERO,)}
+    operators = {'!': (ZERO,), '*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
+                 '?': (ZERO_ONE,), '1': (ONE,)}
     tokens = []
     op = ONE
     for spec in token_specs:
@@ -354,6 +174,21 @@ def _convert_strings(token_specs, string_store):
         for op in ops:
             tokens.append((op, token))
     return tokens
+
+
+def merge_phrase(matcher, doc, i, matches):
+    """Callback to merge a phrase on match."""
+    ent_id, label, start, end = matches[i]
+    span = doc[start:end]
+    span.merge(ent_type=label, ent_id=ent_id)
+
+
+def unpickle_matcher(vocab, patterns, callbacks):
+    matcher = Matcher(vocab)
+    for key, specs in patterns.items():
+        callback = callbacks.get(key, None)
+        matcher.add(key, callback, *specs)
+    return matcher
 
 
 cdef class Matcher:
@@ -476,7 +311,7 @@ cdef class Matcher:
         if key not in self._patterns:
             return default
         return (self._callbacks[key], self._patterns[key])
-    
+
     def pipe(self, docs, batch_size=1000, n_threads=2):
         """Match a stream of documents, yielding them in turn.
 
@@ -498,9 +333,85 @@ cdef class Matcher:
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
-        matches = find_matches(&self.patterns[0], self.patterns.size(), doc)
-        for i, (key, start, end) in enumerate(matches):
-            on_match = self._callbacks.get(key, None)
+        cdef vector[StateC] partials
+        cdef int n_partials = 0
+        cdef int q = 0
+        cdef int i, token_i
+        cdef const TokenC* token
+        cdef StateC state
+        matches = []
+        for token_i in range(doc.length):
+            token = &doc.c[token_i]
+            q = 0
+            # Go over the open matches, extending or finalizing if able.
+            # Otherwise, we over-write them (q doesn't advance)
+            for state in partials:
+                action = get_action(state.second, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
+                while action == ADVANCE_ZERO:
+                    state.second += 1
+                    action = get_action(state.second, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
+
+                if action == REPEAT:
+                    # Leave the state in the queue, and advance to next slot
+                    # (i.e. we don't overwrite -- we want to greedily match
+                    # more pattern.
+                    q += 1
+                elif action == REJECT:
+                    pass
+                elif action == ADVANCE:
+                    partials[q] = state
+                    partials[q].second += 1
+                    q += 1
+                elif action in (ACCEPT, ACCEPT_PREV):
+                    # TODO: What to do about patterns starting with ZERO? Need
+                    # to adjust the start position.
+                    start = state.first
+                    end = token_i+1 if action == ACCEPT else token_i
+                    ent_id = state.second[1].attrs[0].value
+                    label = state.second[1].attrs[1].value
+                    matches.append((ent_id, start, end))
+
+            partials.resize(q)
+            # Check whether we open any new patterns on this token
+            for pattern in self.patterns:
+                action = get_action(pattern, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
+                while action == ADVANCE_ZERO:
+                    pattern += 1
+                    action = get_action(pattern, token)
+                if action == REPEAT:
+                    state.first = token_i
+                    state.second = pattern
+                    partials.push_back(state)
+                elif action == ADVANCE:
+                    # TODO: What to do about patterns starting with ZERO? Need
+                    # to adjust the start position.
+                    state.first = token_i
+                    state.second = pattern + 1
+                    partials.push_back(state)
+                elif action in (ACCEPT, ACCEPT_PREV):
+                    start = token_i
+                    end = token_i+1 if action == ACCEPT else token_i
+                    ent_id = pattern[1].attrs[0].value
+                    label = pattern[1].attrs[1].value
+                    matches.append((ent_id, start, end))
+        # Look for open patterns that are actually satisfied
+        for state in partials:
+            while state.second.quantifier in (ZERO, ZERO_ONE, ZERO_PLUS):
+                state.second += 1
+                if state.second.nr_attr == 0:
+                    start = state.first
+                    end = len(doc)
+                    ent_id = state.second.attrs[0].value
+                    label = state.second.attrs[0].value
+                    matches.append((ent_id, start, end))
+        for i, (ent_id, start, end) in enumerate(matches):
+            on_match = self._callbacks.get(ent_id)
             if on_match is not None:
                 on_match(self, doc, i, matches)
         return matches
@@ -512,37 +423,31 @@ cdef class Matcher:
             return key
 
 
-def unpickle_matcher(vocab, patterns, callbacks):
-    matcher = Matcher(vocab)
-    for key, specs in patterns.items():
-        callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
-    return matcher
-
-
-def _get_longest_matches(matches):
-    '''Filter out matches that have a longer equivalent.'''
-    longest_matches = {}
-    for pattern_id, start, end in matches:
-        key = (pattern_id, start)
-        length = end-start
-        if key not in longest_matches or length > longest_matches[key]:
-            longest_matches[key] = length
-    return [(pattern_id, start, start+length)
-              for (pattern_id, start), length in longest_matches.items()]
-
-
 def get_bilou(length):
-    if length == 0:
-        raise ValueError("Length must be >= 1")
-    elif length == 1:
+    if length == 1:
         return [U_ENT]
     elif length == 2:
         return [B2_ENT, L2_ENT]
     elif length == 3:
         return [B3_ENT, I3_ENT, L3_ENT]
+    elif length == 4:
+        return [B4_ENT, I4_ENT, I4_ENT, L4_ENT]
+    elif length == 5:
+        return [B5_ENT, I5_ENT, I5_ENT, I5_ENT, L5_ENT]
+    elif length == 6:
+        return [B6_ENT, I6_ENT, I6_ENT, I6_ENT, I6_ENT, L6_ENT]
+    elif length == 7:
+        return [B7_ENT, I7_ENT, I7_ENT, I7_ENT, I7_ENT, I7_ENT, L7_ENT]
+    elif length == 8:
+        return [B8_ENT, I8_ENT, I8_ENT, I8_ENT, I8_ENT, I8_ENT, I8_ENT, L8_ENT]
+    elif length == 9:
+        return [B9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT, I9_ENT,
+                L9_ENT]
+    elif length == 10:
+        return [B10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT,
+                I10_ENT, I10_ENT, L10_ENT]
     else:
-        return [B4_ENT, I4_ENT] + [I4_ENT] * (length-3) + [L4_ENT]
+        raise ValueError("Max length currently 10 for phrase matching")
 
 
 cdef class PhraseMatcher:
@@ -551,21 +456,21 @@ cdef class PhraseMatcher:
     cdef Matcher matcher
     cdef PreshMap phrase_ids
     cdef int max_length
+    cdef attr_t* _phrase_key
     cdef public object _callbacks
     cdef public object _patterns
 
     def __init__(self, Vocab vocab, max_length=10):
         self.mem = Pool()
+        self._phrase_key = <attr_t*>self.mem.alloc(max_length, sizeof(attr_t))
         self.max_length = max_length
         self.vocab = vocab
         self.matcher = Matcher(self.vocab)
         self.phrase_ids = PreshMap()
-        abstract_patterns = [
-            [{U_ENT: True}],
-            [{B2_ENT: True}, {L2_ENT: True}],
-            [{B3_ENT: True}, {I3_ENT: True}, {L3_ENT: True}],
-            [{B4_ENT: True}, {I4_ENT: True}, {I4_ENT: True, "OP": "+"}, {L4_ENT: True}],
-        ]
+        abstract_patterns = []
+        for length in range(1, max_length):
+            abstract_patterns.append([{tag: True}
+                                      for tag in get_bilou(length)])
         self.matcher.add('Candidate', None, *abstract_patterns)
         self._callbacks = {}
 
@@ -599,24 +504,29 @@ cdef class PhraseMatcher:
         *docs (Doc): `Doc` objects representing match patterns.
         """
         cdef Doc doc
+        for doc in docs:
+            if len(doc) >= self.max_length:
+                msg = (
+                    "Pattern length (%d) >= phrase_matcher.max_length (%d). "
+                    "Length can be set on initialization, up to 10."
+                )
+                raise ValueError(msg % (len(doc), self.max_length))
         cdef hash_t ent_id = self.matcher._normalize_key(key)
         self._callbacks[ent_id] = on_match
         cdef int length
         cdef int i
         cdef hash_t phrase_hash
-        cdef Pool mem = Pool()
         for doc in docs:
             length = doc.length
-            if length == 0:
-                continue
             tags = get_bilou(length)
-            phrase_key = <attr_t*>mem.alloc(length, sizeof(attr_t))
+            for i in range(self.max_length):
+                self._phrase_key[i] = 0
             for i, tag in enumerate(tags):
                 lexeme = self.vocab[doc.c[i].lex.orth]
                 lexeme.set_flag(tag, True)
-                phrase_key[i] = lexeme.orth
-            phrase_hash = hash64(phrase_key,
-                                 length * sizeof(attr_t), 0)
+                self._phrase_key[i] = lexeme.orth
+            phrase_hash = hash64(self._phrase_key,
+                                 self.max_length * sizeof(attr_t), 0)
             self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
@@ -638,45 +548,28 @@ cdef class PhraseMatcher:
                 on_match(self, doc, i, matches)
         return matches
 
-    def pipe(self, stream, batch_size=1000, n_threads=2, return_matches=False,
-             as_tuples=False):
+    def pipe(self, stream, batch_size=1000, n_threads=2):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
         batch_size (int): Number of documents to accumulate into a working set.
         n_threads (int): The number of threads with which to work on the buffer
             in parallel, if the implementation supports multi-threading.
-        return_matches (bool): Yield the match lists along with the docs, making
-            results (doc, matches) tuples.
-        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
-            and yield (result, context) tuples out.
-            If both return_matches and as_tuples are True, the output will
-            be a sequence of ((doc, matches), context) tuples.
         YIELDS (Doc): Documents, in order.
         """
-        if as_tuples:
-            for doc, context in stream:
-                matches = self(doc)
-                if return_matches:
-                    yield ((doc, matches), context)
-                else:
-                    yield (doc, context)
-        else:
-            for doc in stream:
-                matches = self(doc)
-                if return_matches:
-                    yield (doc, matches) 
-                else:
-                    yield doc
+        for doc in stream:
+            self(doc)
+            yield doc
 
     def accept_match(self, Doc doc, int start, int end):
+        assert (end - start) < self.max_length
         cdef int i, j
-        cdef Pool mem = Pool()
-        phrase_key = <attr_t*>mem.alloc(end-start, sizeof(attr_t))
+        for i in range(self.max_length):
+            self._phrase_key[i] = 0
         for i, j in enumerate(range(start, end)):
-            phrase_key[i] = doc.c[j].lex.orth
-        cdef hash_t key = hash64(phrase_key,
-                                 (end-start) * sizeof(attr_t), 0)
+            self._phrase_key[i] = doc.c[j].lex.orth
+        cdef hash_t key = hash64(self._phrase_key,
+                                 self.max_length * sizeof(attr_t), 0)
         ent_id = <hash_t>self.phrase_ids.get(key)
         if ent_id == 0:
             return None

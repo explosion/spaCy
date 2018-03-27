@@ -184,9 +184,7 @@ cdef class Morphology:
 
 IDS = {
     "Animacy_anim": Animacy_anim,
-    "Animacy_inan": Animacy_inan,
-    "Animacy_hum": Animacy_hum, # U20
-    "Animacy_nhum": Animacy_nhum,
+    "Animacy_inam": Animacy_inam,
     "Aspect_freq": Aspect_freq,
     "Aspect_imp": Aspect_imp,
     "Aspect_mod": Aspect_mod,

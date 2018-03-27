@@ -18,7 +18,6 @@ PACKAGES = find_packages()
 
 
 MOD_NAMES = [
-    'spacy._align',
     'spacy.parts_of_speech',
     'spacy.strings',
     'spacy.lexeme',
@@ -192,6 +191,8 @@ def setup_package():
                 'preshed>=1.0.0,<2.0.0',
                 'thinc>=6.11.1.dev10,<6.12.0',
                 'plac<1.0.0,>=0.9.6',
+                'six',
+                'html5lib==1.0b8',
                 'pathlib',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
@@ -200,7 +201,6 @@ def setup_package():
                 'ftfy>=4.4.2,<5.0.0',
                 'msgpack-python==0.5.4',
                 'msgpack-numpy==0.4.1'],
-            setup_requires=['wheel'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
