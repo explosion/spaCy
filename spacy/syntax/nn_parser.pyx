@@ -837,6 +837,9 @@ cdef class Parser:
     def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
+        if not hasattr(get_gold_tuples, '__call__'):
+            gold_tuples = get_gold_tuples
+            get_gold_tuples = lambda: gold_tuples
         cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
                                          min_freq=cfg.get('min_action_freq', 30))
