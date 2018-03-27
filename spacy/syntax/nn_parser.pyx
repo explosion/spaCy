@@ -164,16 +164,17 @@ cdef void sum_state_features(float* output,
     cdef const float* feature
     padding = cached
     cached += F * O
+    cdef int id_stride = F*O
+    cdef float one = 1.
     for b in range(B):
         for f in range(F):
             if token_ids[f] < 0:
                 feature = &padding[f*O]
             else:
-                idx = token_ids[f] * F * O + f*O
+                idx = token_ids[f] * id_stride + f*O
                 feature = &cached[idx]
-            for i in range(O):
-                output[i] += feature[i]
-        output += O
+            openblas.simple_axpy(&output[b*O], O,
+                feature, one)
         token_ids += F
 
 
@@ -726,7 +727,7 @@ cdef class Parser:
                                        lower, stream, drop=0.0)
         return (tokvecs, bp_tokvecs), state2vec, upper
 
-    nr_feature = 13
+    nr_feature = 8
 
     def get_token_ids(self, states):
         cdef StateClass state
@@ -821,15 +822,13 @@ cdef class Parser:
             copy_array(larger.b[:smaller.nO], smaller.b)
             self.model[-1]._layers[-1] = larger
 
-    def begin_training(self, gold_tuples, pipeline=None, sgd=None, **cfg):
+    def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        gold_tuples = nonproj.preprocess_training_data(gold_tuples,
-                                                       label_freq_cutoff=100)
-        actions = self.moves.get_actions(gold_parses=gold_tuples)
-        for action, labels in actions.items():
-            for label in labels:
-                self.moves.add_action(action, label)
+        cfg.setdefault('min_action_freq', 30)
+        actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
+                                         min_freq=cfg.get('min_action_freq', 30))
+        self.moves.initialize_actions(actions)
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
             cfg['pretrained_dims'] = self.vocab.vectors_length
@@ -837,9 +836,9 @@ cdef class Parser:
             if sgd is None:
                 sgd = self.create_optimizer()
             self.model[1].begin_training(
-                    self.model[1].ops.allocate((5, cfg['token_vector_width'])))
+                self.model[1].ops.allocate((5, cfg['token_vector_width'])))
             if pipeline is not None:
-                self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
+                self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
         else:
             if sgd is None:
@@ -853,7 +852,7 @@ cdef class Parser:
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
     
-    def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
+    def init_multitask_objectives(self, get_gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
 
