@@ -14,7 +14,6 @@ from collections import OrderedDict
 import inspect
 import warnings
 from thinc.neural._classes.model import Model
-from thinc.neural.ops import NumpyOps
 import functools
 import cytoolz
 import itertools
@@ -242,12 +241,7 @@ def is_in_jupyter():
 
 
 def get_cuda_stream(require=False):
-    if CudaStream is None:
-        return None
-    elif isinstance(Model.ops, NumpyOps):
-        return None
-    else:
-        return CudaStream()
+    return CudaStream() if CudaStream is not None else None
 
 
 def get_async(stream, numpy_array):
