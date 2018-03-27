@@ -557,7 +557,8 @@ cdef class Doc:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
         t.l_edge = self.length
         t.r_edge = self.length
-        assert t.lex.orth != 0
+        if t.lex.orth == 0:
+            raise ValueError("Invalid token: empty string ('')")
         t.spacy = has_space
         self.length += 1
         return t.idx + t.lex.length + t.spacy
