@@ -558,7 +558,8 @@ cdef class Doc:
         t.l_edge = self.length
         t.r_edge = self.length
         if t.lex.orth == 0:
-            raise ValueError("Invalid token: empty string ('')")
+            raise ValueError("Invalid token: empty string ('') at position {}"
+                             .format(self.length))
         t.spacy = has_space
         self.length += 1
         return t.idx + t.lex.length + t.spacy
