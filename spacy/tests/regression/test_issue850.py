@@ -22,10 +22,9 @@ def test_basic_case():
     assert end == 4
 
 
-@pytest.mark.xfail
 def test_issue850():
-    """The problem here is that the variable-length pattern matches the
-    succeeding token. We then don't handle the ambiguity correctly."""
+    """The variable-length pattern matches the
+    succeeding token. Check we handle the ambiguity correctly."""
     matcher = Matcher(Vocab(
                 lex_attr_getters={LOWER: lambda string: string.lower()}))
     IS_ANY_TOKEN = matcher.vocab.add_flag(lambda x: True)

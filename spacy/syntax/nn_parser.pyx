@@ -1,7 +1,6 @@
 # cython: infer_types=True
 # cython: cdivision=True
 # cython: boundscheck=False
-# cython: profile=True
 # coding: utf-8
 from __future__ import unicode_literals, print_function
 
@@ -28,6 +27,8 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
+from thinc cimport openblas
+
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
@@ -266,7 +267,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(LayerNorm(Maxout(hidden_width, hidden_width)), depth-1),
+                clone(Maxout(hidden_width, hidden_width), depth-1),
                 zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
             )
 
@@ -302,7 +303,7 @@ cdef class Parser:
         """
         self.vocab = vocab
         if moves is True:
-            self.moves = self.TransitionSystem(self.vocab.strings, {})
+            self.moves = self.TransitionSystem(self.vocab.strings)
         else:
             self.moves = moves
         if 'beam_width' not in cfg:
@@ -311,12 +312,7 @@ cdef class Parser:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         if 'pretrained_dims' not in cfg:
             cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
-        cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
-        if 'actions' in self.cfg:
-            for action, labels in self.cfg.get('actions', {}).items():
-                for label in labels:
-                    self.moves.add_action(action, label)
         self.model = model
         self._multitasks = []
 
@@ -423,69 +419,81 @@ cdef class Parser:
         cdef int nr_hidden = hidden_weights.shape[0]
         cdef int nr_task = states.size()
         with nogil:
-            for i in range(nr_task):
-                self._parseC(states[i],
-                    feat_weights, bias, hW, hb,
-                    nr_class, nr_hidden, nr_feat, nr_piece)
+            self._parseC(&states[0], nr_task, feat_weights, bias, hW, hb,
+                nr_class, nr_hidden, nr_feat, nr_piece)
         PyErr_CheckSignals()
         tokvecs = self.model[0].ops.unflatten(tokvecs,
                                     [len(doc) for doc in docs])
         return state_objs, tokvecs
 
-    cdef void _parseC(self, StateC* state, 
+    cdef void _parseC(self, StateC** states, int nr_task, 
             const float* feat_weights, const float* bias,
             const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
         token_ids = <int*>calloc(nr_feat, sizeof(int))
         is_valid = <int*>calloc(nr_class, sizeof(int))
-        vectors = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
-        scores = <float*>calloc(nr_class, sizeof(float))
+        vectors = <float*>calloc(nr_hidden * nr_task, sizeof(float))
+        unmaxed = <float*>calloc(nr_hidden * nr_piece, sizeof(float))
+        scores = <float*>calloc(nr_class*nr_task, sizeof(float))
         if not (token_ids and is_valid and vectors and scores):
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
-        cdef float feature
-        while not state.is_final():
-            state.set_context_tokens(token_ids, nr_feat)
-            memset(vectors, 0, nr_hidden * nr_piece * sizeof(float))
-            memset(scores, 0, nr_class * sizeof(float))
-            sum_state_features(vectors,
-                feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
-            for i in range(nr_hidden * nr_piece):
-                vectors[i] += bias[i]
-            V = vectors
-            W = hW
-            for i in range(nr_hidden):
-                if nr_piece == 1:
-                    feature = V[0] if V[0] >= 0. else 0.
-                elif nr_piece == 2:
-                    feature = V[0] if V[0] >= V[1] else V[1]
-                else:
-                    feature = Vec.max(V, nr_piece)
-                for j in range(nr_class):
-                    scores[j] += feature * W[j]
-                W += nr_class
-                V += nr_piece
-            for i in range(nr_class):
-                scores[i] += hb[i]
-            self.moves.set_valid(is_valid, state)
-            guess = arg_max_if_valid(scores, is_valid, nr_class)
-            action = self.moves.c[guess]
-            action.do(state, action.label)
-            state.push_hist(guess)
+        cdef int nr_todo = nr_task
+        cdef int i, j
+        cdef vector[StateC*] unfinished
+        while nr_todo >= 1:
+            memset(vectors, 0, nr_todo * nr_hidden * sizeof(float))
+            memset(scores, 0, nr_todo * nr_class * sizeof(float))
+            for i in range(nr_todo):
+                state = states[i]
+                state.set_context_tokens(token_ids, nr_feat)
+                memset(unmaxed, 0, nr_hidden * nr_piece * sizeof(float))
+                sum_state_features(unmaxed,
+                    feat_weights, token_ids, 1, nr_feat, nr_hidden * nr_piece)
+                VecVec.add_i(unmaxed,
+                    bias, 1., nr_hidden*nr_piece)
+                state_vector = &vectors[i*nr_hidden]
+                for j in range(nr_hidden):
+                    index = j * nr_piece
+                    which = Vec.arg_max(&unmaxed[index], nr_piece)
+                    state_vector[j] = unmaxed[index + which]
+            # Compute hidden-to-output
+            openblas.simple_gemm(scores, nr_todo, nr_class,
+                vectors, nr_todo, nr_hidden, hW, nr_hidden, nr_class, 0, 0)
+            # Add bias
+            for i in range(nr_todo):
+                VecVec.add_i(&scores[i*nr_class],
+                    hb, 1., nr_class)
+            # Validate actions, argmax, take action.
+            for i in range(nr_todo):
+                state = states[i]
+                self.moves.set_valid(is_valid, state)
+                guess = arg_max_if_valid(&scores[i*nr_class], is_valid, nr_class)
+                action = self.moves.c[guess]
+                action.do(state, action.label)
+                state.push_hist(guess)
+                if not state.is_final():
+                    unfinished.push_back(state)
+            for i in range(unfinished.size()):
+                states[i] = unfinished[i]
+            nr_todo = unfinished.size()
+            unfinished.clear()
         free(token_ids)
         free(is_valid)
         free(vectors)
+        free(unmaxed)
         free(scores)
 
-    def beam_parse(self, docs, int beam_width=3, float beam_density=0.001):
+    def beam_parse(self, docs, int beam_width=3, float beam_density=0.001,
+            float drop=0.):
         cdef Beam beam
         cdef np.ndarray scores
         cdef Doc doc
         cdef int nr_class = self.moves.n_moves
         cuda_stream = util.get_cuda_stream()
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(
-            docs, cuda_stream, 0.0)
+            docs, cuda_stream, drop)
         cdef int offset = 0
         cdef int j = 0
         cdef int k
@@ -524,8 +532,8 @@ cdef class Parser:
                         n_states += 1
             if n_states == 0:
                 break
-            vectors = state2vec(token_ids[:n_states])
-            scores = vec2scores(vectors)
+            vectors, _ = state2vec.begin_update(token_ids[:n_states], drop)
+            scores, _ = vec2scores.begin_update(vectors, drop=drop)
             c_scores = <float*>scores.data
             for beam in todo:
                 for i in range(beam.size):
@@ -556,7 +564,10 @@ cdef class Parser:
         for multitask in self._multitasks:
             multitask.update(docs, golds, drop=drop, sgd=sgd)
         cuda_stream = util.get_cuda_stream()
-        states, golds, max_steps = self._init_gold_batch(docs, golds)
+        # Chop sequences into lengths of this many transitions, to make the
+        # batch uniform length.
+        cut_gold = numpy.random.choice(range(20, 100))
+        states, golds, max_steps = self._init_gold_batch(docs, golds, max_length=cut_gold)
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
                                                                             drop)
         todo = [(s, g) for (s, g) in zip(states, golds)
@@ -659,8 +670,7 @@ cdef class Parser:
         for beam in beams:
             _cleanup(beam)
 
-
-    def _init_gold_batch(self, whole_docs, whole_golds):
+    def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
         where N is the shortest doc. We'll make two states, one representing
@@ -669,7 +679,7 @@ cdef class Parser:
             StateClass state
             Transition action
         whole_states = self.moves.init_batch(whole_docs)
-        max_length = max(5, min(50, min([len(doc) for doc in whole_docs])))
+        max_length = max(min_length, min(max_length, min([len(doc) for doc in whole_docs])))
         max_moves = 0
         states = []
         golds = []
@@ -792,6 +802,11 @@ cdef class Parser:
                     hook(doc)
 
     @property
+    def labels(self):
+        class_names = [self.moves.get_class_name(i) for i in range(self.moves.n_moves)]
+        return class_names
+
+    @property
     def tok2vec(self):
         '''Return the embedding and convolutional layer of the model.'''
         if self.model in (None, True, False):
@@ -809,9 +824,6 @@ cdef class Parser:
         for action in self.moves.action_types:
             added = self.moves.add_action(action, label)
             if added:
-                # Important that the labels be stored as a list! We need the
-                # order, or the model goes out of synch
-                self.cfg.setdefault('extra_labels', []).append(label)
                 resized = True
         if self.model not in (True, False, None) and resized:
             # Weights are stored in (nr_out, nr_in) format, so we're basically

@@ -108,7 +108,7 @@ cdef cppclass StateC:
             ids[1] = this.B(1)
             ids[2] = this.S(0)
             ids[3] = this.S(1)
-            ids[4] = this.H(this.S(0))
+            ids[4] = this.S(2)
             ids[5] = this.L(this.B(0), 1)
             ids[6] = this.L(this.S(0), 1)
             ids[7] = this.R(this.S(0), 1)

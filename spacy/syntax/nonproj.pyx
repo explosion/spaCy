@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from copy import copy
 
-from ..tokens.doc cimport Doc
+from ..tokens.doc cimport Doc, set_children_from_heads
 
 
 DELIMITER = '||'
@@ -74,7 +74,21 @@ def decompose(label):
 
 
 def is_decorated(label):
-    return label.find(DELIMITER) != -1
+    return DELIMITER in label
+
+def count_decorated_labels(gold_tuples):
+    freqs = {}
+    for raw_text, sents in gold_tuples:
+        for (ids, words, tags, heads, labels, iob), ctnts in sents:
+            proj_heads, deco_labels = projectivize(heads, labels)
+            # set the label to ROOT for each root dependent
+            deco_labels = ['ROOT' if head == i else deco_labels[i]
+                           for i, head in enumerate(proj_heads)]
+            # count label frequencies
+            for label in deco_labels:
+                if is_decorated(label):
+                    freqs[label] = freqs.get(label, 0) + 1
+    return freqs
 
 
 def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
@@ -124,8 +138,9 @@ cpdef deprojectivize(Doc doc):
         if DELIMITER in label:
             new_label, head_label = label.split(DELIMITER)
             new_head = _find_new_head(doc[i], head_label)
-            doc[i].head = new_head
+            doc.c[i].head = new_head.i - i
             doc.c[i].dep = doc.vocab.strings.add(new_label)
+    set_children_from_heads(doc.c, doc.length)
     return doc
 
 
@@ -191,9 +206,12 @@ def _filter_labels(gold_tuples, cutoff, freqs):
     for raw_text, sents in gold_tuples:
         filtered_sents = []
         for (ids, words, tags, heads, labels, iob), ctnts in sents:
-            filtered_labels = [decompose(label)[0]
-                               if freqs.get(label, cutoff) < cutoff
-                               else label for label in labels]
+            filtered_labels = []
+            for label in labels:
+                if is_decorated(label) and freqs.get(label, 0) < cutoff:
+                    filtered_labels.append(decompose(label)[0])
+                else:
+                    filtered_labels.append(label)
             filtered_sents.append(
                 ((ids, words, tags, heads, filtered_labels, iob), ctnts))
         filtered.append((raw_text, filtered_sents))

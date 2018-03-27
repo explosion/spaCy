@@ -3,16 +3,25 @@
 from __future__ import unicode_literals, print_function
 
 import re
-import ujson
 import random
 import cytoolz
 import itertools
+import numpy
+import tempfile
+import shutil
+from pathlib import Path
+import msgpack
 
+import ujson
+
+from . import _align 
 from .syntax import nonproj
 from .tokens import Doc
 from . import util
-from .util import minibatch
+from .util import minibatch, itershuffle
+from .compat import json_dumps
 
+from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
 def tags_to_entities(tags):
     entities = []
@@ -59,196 +68,62 @@ def merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-def align(cand_words, gold_words):
-    cost, edit_path = _min_edit_path(cand_words, gold_words)
-    alignment = []
-    i_of_gold = 0
-    for move in edit_path:
-        if move == 'M':
-            alignment.append(i_of_gold)
-            i_of_gold += 1
-        elif move == 'S':
-            alignment.append(None)
-            i_of_gold += 1
-        elif move == 'D':
-            alignment.append(None)
-        elif move == 'I':
-            i_of_gold += 1
-        else:
-            raise Exception(move)
-    return alignment
-
-
 punct_re = re.compile(r'\W')
-
-
-def _min_edit_path(cand_words, gold_words):
-    cdef:
-        Pool mem
-        int i, j, n_cand, n_gold
-        int* curr_costs
-        int* prev_costs
-
-    # TODO: Fix this --- just do it properly, make the full edit matrix and
-    # then walk back over it...
-    # Preprocess inputs
-    cand_words = [punct_re.sub('', w).lower() for w in cand_words]
-    gold_words = [punct_re.sub('', w).lower() for w in gold_words]
-
+def align(cand_words, gold_words):
     if cand_words == gold_words:
-        return 0, ''.join(['M' for _ in gold_words])
-    mem = Pool()
-    n_cand = len(cand_words)
-    n_gold = len(gold_words)
-    # Levenshtein distance, except we need the history, and we may want
-    # different costs. Mark operations with a string, and score the history
-    # using _edit_cost.
-    previous_row = []
-    prev_costs = <int*>mem.alloc(n_gold + 1, sizeof(int))
-    curr_costs = <int*>mem.alloc(n_gold + 1, sizeof(int))
-    for i in range(n_gold + 1):
-        cell = ''
-        for j in range(i):
-            cell += 'I'
-        previous_row.append('I' * i)
-        prev_costs[i] = i
-    for i, cand in enumerate(cand_words):
-        current_row = ['D' * (i + 1)]
-        curr_costs[0] = i+1
-        for j, gold in enumerate(gold_words):
-            if gold.lower() == cand.lower():
-                s_cost = prev_costs[j]
-                i_cost = curr_costs[j] + 1
-                d_cost = prev_costs[j + 1] + 1
-            else:
-                s_cost = prev_costs[j] + 1
-                i_cost = curr_costs[j] + 1
-                d_cost = prev_costs[j + 1] + (1 if cand else 0)
-
-            if s_cost <= i_cost and s_cost <= d_cost:
-                best_cost = s_cost
-                best_hist = previous_row[j] + ('M' if gold == cand else 'S')
-            elif i_cost <= s_cost and i_cost <= d_cost:
-                best_cost = i_cost
-                best_hist = current_row[j] + 'I'
-            else:
-                best_cost = d_cost
-                best_hist = previous_row[j + 1] + 'D'
-
-            current_row.append(best_hist)
-            curr_costs[j+1] = best_cost
-        previous_row = current_row
-        for j in range(len(gold_words) + 1):
-            prev_costs[j] = curr_costs[j]
-            curr_costs[j] = 0
-
-    return prev_costs[n_gold], previous_row[-1]
+        alignment = numpy.arange(len(cand_words))
+        return 0, alignment, alignment, {}, {}
+    cand_words = [w.replace(' ', '') for w in cand_words]
+    gold_words = [w.replace(' ', '') for w in gold_words]
+    cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
+    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
+                                [len(w) for w in gold_words])
+    for i, j in list(i2j_multi.items()):
+        if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
+            i2j[i] = j
+            i2j_multi.pop(i)
+    for j, i in list(j2i_multi.items()):
+        if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
+            j2i[j] = i
+            j2i_multi.pop(j)
+    return cost, i2j, j2i, i2j_multi, j2i_multi
 
 
 class GoldCorpus(object):
     """An annotated corpus, using the JSON file format. Manages
     annotations for tagging, dependency parsing and NER."""
-    def __init__(self, train_path, dev_path, gold_preproc=True, limit=None):
+    def __init__(self, train, dev, gold_preproc=False, limit=None):
         """Create a GoldCorpus.
 
         train_path (unicode or Path): File or directory of training data.
         dev_path (unicode or Path): File or directory of development data.
         RETURNS (GoldCorpus): The newly created object.
         """
-        self.train_path = util.ensure_path(train_path)
-        self.dev_path = util.ensure_path(dev_path)
         self.limit = limit
-        self.train_locs = self.walk_corpus(self.train_path)
-        self.dev_locs = self.walk_corpus(self.dev_path)
+        if isinstance(train, str) or isinstance(train, Path):
+            train = self.read_tuples(self.walk_corpus(train))
+            dev = self.read_tuples(self.walk_corpus(dev))
 
-    @property
-    def train_tuples(self):
-        i = 0
-        for loc in self.train_locs:
-            gold_tuples = read_json_file(loc)
-            for item in gold_tuples:
-                yield item
-                i += len(item[1])
-                if self.limit and i >= self.limit:
-                    break
+        # Write temp directory with one doc per file, so we can shuffle
+        # and stream
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.write_msgpack(self.tmp_dir / 'train', train)
+        self.write_msgpack(self.tmp_dir / 'dev', dev)
 
-    @property
-    def dev_tuples(self):
-        i = 0
-        for loc in self.dev_locs:
-            gold_tuples = read_json_file(loc)
-            for item in gold_tuples:
-                yield item
-                i += len(item[1])
-                if self.limit and i >= self.limit:
-                    break
-
-    def count_train(self):
-        n = 0
-        i = 0
-        for raw_text, paragraph_tuples in self.train_tuples:
-            n += sum([len(s[0][1]) for s in paragraph_tuples])
-            if self.limit and i >= self.limit:
-                break
-            i += len(paragraph_tuples)
-        return n
-
-    def train_docs(self, nlp, gold_preproc=False,
-                   projectivize=False, max_length=None,
-                   noise_level=0.0):
-        train_tuples = self.train_tuples
-        if projectivize:
-            train_tuples = nonproj.preprocess_training_data(
-                self.train_tuples, label_freq_cutoff=100)
-        random.shuffle(train_tuples)
-        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
-                                        max_length=max_length,
-                                        noise_level=noise_level)
-        yield from gold_docs
-
-    def dev_docs(self, nlp, gold_preproc=False):
-        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc)
-        yield from gold_docs
-
-    @classmethod
-    def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
-                       noise_level=0.0):
-        for raw_text, paragraph_tuples in tuples:
-            if gold_preproc:
-                raw_text = None
-            else:
-                paragraph_tuples = merge_sents(paragraph_tuples)
-            docs = cls._make_docs(nlp, raw_text, paragraph_tuples,
-                                  gold_preproc, noise_level=noise_level)
-            golds = cls._make_golds(docs, paragraph_tuples)
-            for doc, gold in zip(docs, golds):
-                if (not max_length) or len(doc) < max_length:
-                    yield doc, gold
-
-    @classmethod
-    def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc,
-                   noise_level=0.0):
-        if raw_text is not None:
-            raw_text = add_noise(raw_text, noise_level)
-            return [nlp.make_doc(raw_text)]
-        else:
-            return [Doc(nlp.vocab,
-                        words=add_noise(sent_tuples[1], noise_level))
-                    for (sent_tuples, brackets) in paragraph_tuples]
-
-    @classmethod
-    def _make_golds(cls, docs, paragraph_tuples):
-        assert len(docs) == len(paragraph_tuples)
-        if len(docs) == 1:
-            return [GoldParse.from_annot_tuples(docs[0],
-                                                paragraph_tuples[0][0])]
-        else:
-            return [GoldParse.from_annot_tuples(doc, sent_tuples)
-                    for doc, (sent_tuples, brackets)
-                    in zip(docs, paragraph_tuples)]
+    def __del__(self):
+        shutil.rmtree(self.tmp_dir)
 
     @staticmethod
+    def write_msgpack(directory, doc_tuples):
+        if not directory.exists():
+            directory.mkdir()
+        for i, doc_tuple in enumerate(doc_tuples):
+            with open(directory / '{}.msg'.format(i), 'wb') as file_:
+                msgpack.dump([doc_tuple], file_, use_bin_type=True, encoding='utf8')
+    
+    @staticmethod
     def walk_corpus(path):
+        path = util.ensure_path(path)
         if not path.is_dir():
             return [path]
         paths = [path]
@@ -265,6 +140,101 @@ class GoldCorpus(object):
             elif path.parts[-1].endswith('.json'):
                 locs.append(path)
         return locs
+
+    @staticmethod
+    def read_tuples(locs, limit=0):
+        i = 0
+        for loc in locs:
+            loc = util.ensure_path(loc)
+            if loc.parts[-1].endswith('json'):
+                gold_tuples = read_json_file(loc)
+            elif loc.parts[-1].endswith('msg'):
+                with loc.open('rb') as file_:
+                    gold_tuples = msgpack.load(file_, encoding='utf8')
+            else:
+                msg = "Cannot read from file: %s. Supported formats: .json, .msg"
+                raise ValueError(msg % loc)
+            for item in gold_tuples:
+                yield item
+                i += len(item[1])
+                if limit and i >= limit:
+                    break
+
+    @property
+    def dev_tuples(self):
+        locs = (self.tmp_dir / 'dev').iterdir()
+        yield from self.read_tuples(locs, limit=self.limit)
+   
+    @property
+    def train_tuples(self):
+        locs = (self.tmp_dir / 'train').iterdir()
+        yield from self.read_tuples(locs, limit=self.limit)
+
+    def count_train(self):
+        n = 0
+        i = 0
+        for raw_text, paragraph_tuples in self.train_tuples:
+            for sent_tuples, brackets in paragraph_tuples:
+                n += len(sent_tuples[1])
+            if self.limit and i >= self.limit:
+                break
+            i += len(paragraph_tuples)
+        return n
+
+    def train_docs(self, nlp, gold_preproc=False, max_length=None,
+                    noise_level=0.0):
+        locs = list((self.tmp_dir / 'train').iterdir())
+        random.shuffle(locs)
+        train_tuples = self.read_tuples(locs, limit=self.limit)
+        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
+                                        max_length=max_length,
+                                        noise_level=noise_level,
+                                        make_projective=True)
+        yield from gold_docs
+
+    def dev_docs(self, nlp, gold_preproc=False):
+        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples,
+                                        gold_preproc=gold_preproc)
+        yield from gold_docs
+
+    @classmethod
+    def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
+                       noise_level=0.0, make_projective=False):
+        for raw_text, paragraph_tuples in tuples:
+            if gold_preproc:
+                raw_text = None
+            else:
+                paragraph_tuples = merge_sents(paragraph_tuples)
+            docs = cls._make_docs(nlp, raw_text, paragraph_tuples,
+                                  gold_preproc, noise_level=noise_level)
+            golds = cls._make_golds(docs, paragraph_tuples, make_projective)
+            for doc, gold in zip(docs, golds):
+                if (not max_length) or len(doc) < max_length:
+                    yield doc, gold
+
+    @classmethod
+    def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc,
+                   noise_level=0.0):
+        if raw_text is not None:
+            raw_text = add_noise(raw_text, noise_level)
+            return [nlp.make_doc(raw_text)]
+        else:
+            return [Doc(nlp.vocab,
+                        words=add_noise(sent_tuples[1], noise_level))
+                    for (sent_tuples, brackets) in paragraph_tuples]
+
+    @classmethod
+    def _make_golds(cls, docs, paragraph_tuples, make_projective):
+        assert len(docs) == len(paragraph_tuples)
+        if len(docs) == 1:
+            return [GoldParse.from_annot_tuples(docs[0],
+                                                paragraph_tuples[0][0],
+                                                make_projective=make_projective)]
+        else:
+            return [GoldParse.from_annot_tuples(doc, sent_tuples,
+                                                make_projective=make_projective)
+                    for doc, (sent_tuples, brackets)
+                    in zip(docs, paragraph_tuples)]
 
 
 def add_noise(orig, noise_level):
@@ -297,11 +267,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for filename in loc.iterdir():
             yield from read_json_file(loc / filename, limit=limit)
     else:
-        with loc.open('r', encoding='utf8') as file_:
-            docs = ujson.load(file_)
-        if limit is not None:
-            docs = docs[:limit]
-        for doc in docs:
+        for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
             paragraphs = []
@@ -329,6 +295,56 @@ def read_json_file(loc, docs_filter=None, limit=None):
                         sent.get('brackets', [])])
                 if sents:
                     yield [paragraph.get('raw', None), sents]
+
+
+def _json_iterate(loc):
+    # We should've made these files jsonl...But since we didn't, parse out
+    # the docs one-by-one to reduce memory usage.
+    # It's okay to read in the whole file -- just don't parse it into JSON.
+    cdef bytes py_raw
+    loc = util.ensure_path(loc)
+    with loc.open('rb') as file_:
+        py_raw = file_.read()
+    raw = <char*>py_raw
+    cdef int square_depth = 0
+    cdef int curly_depth = 0
+    cdef int inside_string = 0
+    cdef int escape = 0
+    cdef int start = -1
+    cdef char c
+    cdef char quote = ord('"')
+    cdef char backslash = ord('\\')
+    cdef char open_square = ord('[')
+    cdef char close_square = ord(']')
+    cdef char open_curly = ord('{')
+    cdef char close_curly = ord('}')
+    for i in range(len(py_raw)):
+        c = raw[i]
+        if c == backslash:
+            escape = True
+            continue
+        if escape:
+            escape = False
+            continue
+        if c == quote:
+            inside_string = not inside_string
+            continue
+        if inside_string:
+            continue
+        if c == open_square:
+            square_depth += 1
+        elif c == close_square:
+            square_depth -= 1
+        elif c == open_curly:
+            if square_depth == 1 and curly_depth == 0:
+                start = i
+            curly_depth += 1
+        elif c == close_curly:
+            curly_depth -= 1
+            if square_depth == 1 and curly_depth == 0:
+                py_str = py_raw[start : i+1].decode('utf8')
+                yield ujson.loads(py_str)
+                start = -1
 
 
 def iob_to_biluo(tags):
@@ -434,8 +450,21 @@ cdef class GoldParse:
         self.labels = [None] * len(doc)
         self.ner = [None] * len(doc)
 
-        self.cand_to_gold = align([t.orth_ for t in doc], words)
-        self.gold_to_cand = align(words, [t.orth_ for t in doc])
+        # This needs to be done before we align the words
+        if make_projective and heads is not None and deps is not None:
+            heads, deps = nonproj.projectivize(heads, deps)
+
+        # Do many-to-one alignment for misaligned tokens.
+        # If we over-segment, we'll have one gold word that covers a sequence
+        # of predicted words
+        # If we under-segment, we'll have one predicted word that covers a
+        # sequence of gold words.
+        # If we "mis-segment", we'll have a sequence of predicted words covering
+        # a sequence of gold words. That's many-to-many -- we don't do that.
+        cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
+
+        self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
+        self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
 
         annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
         self.orig_annot = list(zip(*annot_tuples))
@@ -443,12 +472,47 @@ cdef class GoldParse:
         for i, gold_i in enumerate(self.cand_to_gold):
             if doc[i].text.isspace():
                 self.words[i] = doc[i].text
-                self.tags[i] = 'SP'
+                self.tags[i] = '_SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
             if gold_i is None:
-                pass
+                if i in i2j_multi:
+                    self.words[i] = words[i2j_multi[i]]
+                    self.tags[i] = tags[i2j_multi[i]]
+                    is_last = i2j_multi[i] != i2j_multi.get(i+1)
+                    is_first = i2j_multi[i] != i2j_multi.get(i-1)
+                    # Set next word in multi-token span as head, until last
+                    if not is_last:
+                        self.heads[i] = i+1
+                        self.labels[i] = 'subtok'
+                    else:
+                        self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
+                        self.labels[i] = deps[i2j_multi[i]]
+                    # Now set NER...This is annoying because if we've split
+                    # got an entity word split into two, we need to adjust the
+                    # BILOU tags. We can't have BB or LL etc.
+                    # Case 1: O -- easy.
+                    ner_tag = entities[i2j_multi[i]]
+                    if ner_tag == 'O':
+                        self.ner[i] = 'O'
+                    # Case 2: U. This has to become a B I* L sequence.
+                    elif ner_tag.startswith('U-'):
+                        if is_first:
+                            self.ner[i] = ner_tag.replace('U-', 'B-', 1)
+                        elif is_last:
+                            self.ner[i] = ner_tag.replace('U-', 'L-', 1)
+                        else:
+                            self.ner[i] = ner_tag.replace('U-', 'I-', 1)
+                    # Case 3: L. If not last, change to I.
+                    elif ner_tag.startswith('L-'):
+                        if is_last:
+                            self.ner[i] = ner_tag
+                        else:
+                            self.ner[i] = ner_tag.replace('L-', 'I-', 1)
+                    # Case 4: I. Stays correct
+                    elif ner_tag.startswith('I-'):
+                        self.ner[i] = ner_tag
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
@@ -462,10 +526,6 @@ cdef class GoldParse:
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
             raise Exception("Cycle found: %s" % cycle)
-
-        if make_projective:
-            proj_heads, _ = nonproj.projectivize(self.heads, self.labels)
-            self.heads = proj_heads
 
     def __len__(self):
         """Get the number of gold-standard tokens.

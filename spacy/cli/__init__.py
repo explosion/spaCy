@@ -9,3 +9,5 @@ from .convert import convert
 from .vocab import make_vocab as vocab
 from .init_model import init_model
 from .validate import validate
+from .ud_train import main as ud_train
+from .conll17_ud_eval import main as ud_evaluate

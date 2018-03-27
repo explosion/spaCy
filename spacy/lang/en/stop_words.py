@@ -39,7 +39,7 @@ made make many may me meanwhile might mine more moreover most mostly move much
 must my myself
 
 name namely neither never nevertheless next nine no nobody none noone nor not
-nothing now nowhere
+nothing now nowhere n't
 
 of off often on once one only onto or other others otherwise our ours ourselves
 out over own
@@ -66,4 +66,6 @@ whereafter whereas whereby wherein whereupon wherever whether which while
 whither who whoever whole whom whose why will with within without would
 
 yet you your yours yourself yourselves
+
+'d 'll 'm 're 's 've
 """.split())

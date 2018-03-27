@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import six
 import ftfy
 import sys
 import ujson
@@ -47,9 +46,10 @@ is_windows = sys.platform.startswith('win')
 is_linux = sys.platform.startswith('linux')
 is_osx = sys.platform == 'darwin'
 
-is_python2 = six.PY2
-is_python3 = six.PY3
-is_python_pre_3_5 = is_python2 or (is_python3 and sys.version_info[1]<5)
+# See: https://github.com/benjaminp/six/blob/master/six.py
+is_python2 = sys.version_info[0] == 2
+is_python3 = sys.version_info[0] == 3
+is_python_pre_3_5 = is_python2 or (is_python3 and sys.version_info[1] < 5)
 
 if is_python2:
     bytes_ = str
