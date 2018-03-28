@@ -2,13 +2,14 @@
 from __future__ import unicode_literals
 
 import plac
-import requests
 import os
 import subprocess
 import sys
+import ujson
 
 from .link import link
 from ..util import prints, get_package_path
+from ..compat import url_open, url_error
 from .. import about
 
 
@@ -56,13 +57,14 @@ def download(model, direct=False):
 
 
 def get_json(url, desc):
-    r = requests.get(url)
-    if r.status_code != 200:
+    try:
+        r = url_open(url)
+    except url_error as e:
         msg = ("Couldn't fetch %s. Please find a model for your spaCy "
                "installation (v%s), and download it manually.")
         prints(msg % (desc, about.__version__), about.__docs_models__,
-               title="Server error (%d)" % r.status_code, exits=1)
-    return r.json()
+               title="Server error (%d: %s)" % (e.code, e.reason), exits=1)
+    return ujson.load(r)
 
 
 def get_compatibility():
