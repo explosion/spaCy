@@ -8,7 +8,9 @@ cimport numpy as np
 import cytoolz
 from collections import OrderedDict
 import ujson
-import msgpack
+
+from .util import msgpack
+from .util import msgpack_numpy
 
 from thinc.api import chain
 from thinc.v2v import Affine, SELU, Softmax

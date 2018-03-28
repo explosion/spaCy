@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 import numpy
 from collections import OrderedDict
-import msgpack
-import msgpack_numpy
-msgpack_numpy.patch()
+
+from .util import msgpack
+from .util import msgpack_numpy
+
 cimport numpy as np
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
