@@ -625,7 +625,6 @@ cdef class Parser:
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         lengths = [len(d) for d in docs]
-        assert min(lengths) >= 1
         states = self.moves.init_batch(docs)
         for gold in golds:
             self.moves.preprocess_gold(gold)

@@ -340,7 +340,6 @@ def get_col(idx):
         raise IndexError(Errors.E066.format(value=idx))
 
     def forward(X, drop=0.):
-        assert idx >= 0, idx
         if isinstance(X, numpy.ndarray):
             ops = NumpyOps()
         else:
@@ -348,7 +347,6 @@ def get_col(idx):
         output = ops.xp.ascontiguousarray(X[:, idx], dtype=X.dtype)
 
         def backward(y, sgd=None):
-            assert idx >= 0, idx
             dX = ops.allocate(X.shape)
             dX[:, idx] += y
             return dX

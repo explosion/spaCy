@@ -375,7 +375,6 @@ def normalize_slice(length, start, stop, step=None):
     elif stop < 0:
         stop += length
     stop = min(length, max(start, stop))
-    assert 0 <= start <= stop <= length
     return start, stop
 
 

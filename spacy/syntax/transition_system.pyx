@@ -150,7 +150,6 @@ cdef class TransitionSystem:
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
-        assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
         return 1
 

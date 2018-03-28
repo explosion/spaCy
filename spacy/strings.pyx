@@ -60,7 +60,6 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
         string.p = <unsigned char*>mem.alloc(length + 1, sizeof(unsigned char))
         string.p[0] = length
         memcpy(&string.p[1], chars, length)
-        assert string.s[0] >= sizeof(string.s) or string.s[0] == 0, string.s[0]
         return string
     else:
         i = 0
@@ -70,7 +69,6 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
             string.p[i] = 255
         string.p[n_length_bytes-1] = length % 255
         memcpy(&string.p[n_length_bytes], chars, length)
-        assert string.s[0] >= sizeof(string.s) or string.s[0] == 0, string.s[0]
         return string
 
 
