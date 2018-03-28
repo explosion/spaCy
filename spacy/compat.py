@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import ftfy
 import sys
 import ujson
 import itertools
@@ -38,7 +37,6 @@ pickle = pickle
 copy_reg = copy_reg
 CudaStream = CudaStream
 cupy = cupy
-fix_text = ftfy.fix_text
 copy_array = copy_array
 izip = getattr(itertools, 'izip', zip)
 
