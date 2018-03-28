@@ -34,7 +34,7 @@ except ImportError:
     from thinc.neural.optimizers import Adam as Optimizer
 
 try:
-    import urllib
+    import urllib.request
 except ImportError:
     import urllib2 as urllib
 
@@ -48,7 +48,6 @@ copy_reg = copy_reg
 CudaStream = CudaStream
 cupy = cupy
 copy_array = copy_array
-urllib = urllib
 izip = getattr(itertools, 'izip', zip)
 
 is_windows = sys.platform.startswith('win')
@@ -83,7 +82,7 @@ def url_read(url):
     file_ = url_open(url)
     code = file_.getcode()
     if code != 200:
-        raise HTTPError(url, code, "Cannot GET url", [], file_)  
+        raise HTTPError(url, code, "Cannot GET url", [], file_)
     data = file_.read()
     return data
 
