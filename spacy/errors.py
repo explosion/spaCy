@@ -312,7 +312,7 @@ SPACY_WARNING_FILTER = os.environ.get('SPACY_WARNING_FILTER', 'always')
 SPACY_WARNING_TYPES = _get_warn_types(os.environ.get('SPACY_WARNING_TYPES'))
 
 
-def user_warning(message_code):
+def user_warning(message):
     _warn(message, 'user')
 
 
