@@ -15,6 +15,11 @@ from ..compat import fix_text
 from ..vectors import Vectors
 from ..util import prints, ensure_path, get_lang_class
 
+try:
+    import ftfy
+except ImportError:
+    ftfy = None
+
 
 @plac.annotations(
     lang=("model language", "positional", None, str),
@@ -140,11 +145,14 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
 def read_clusters(clusters_loc):
     print("Reading clusters...")
     clusters = {}
+    if ftfy is None:
+        print("Warning: No text fixing. Run pip install ftfy if necessary")
     with clusters_loc.open() as f:
         for line in tqdm(f):
             try:
                 cluster, word, freq = line.split()
-                word = fix_text(word)
+                if ftfy is not None:
+                    word = fix_text(word)
             except ValueError:
                 continue
             # If the clusterer has only seen the word a few times, its
