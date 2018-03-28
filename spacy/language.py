@@ -133,6 +133,8 @@ class Language(object):
         if vocab is True:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get('vocab', {}))
+            if vocab.vectors.name is None:
+                vocab.vectors.name = meta.get('vectors', {}).get('name')
         self.vocab = vocab
         if make_doc is True:
             factory = self.Defaults.create_tokenizer
@@ -158,7 +160,8 @@ class Language(object):
         self._meta.setdefault('license', '')
         self._meta['vectors'] = {'width': self.vocab.vectors_length,
                                  'vectors': len(self.vocab.vectors),
-                                 'keys': self.vocab.vectors.n_keys}
+                                 'keys': self.vocab.vectors.n_keys,
+                                 'name': self.vocab.vectors.name}
         self._meta['pipeline'] = self.pipe_names
         return self._meta
 
@@ -457,6 +460,8 @@ class Language(object):
         else:
             device = None
         link_vectors_to_models(self.vocab)
+        if self.vocab.vectors.data.shape[1]:
+            cfg['pretrained_vectors'] = self.vocab.vectors.name
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
@@ -629,6 +634,7 @@ class Language(object):
             ('tokenizer', lambda p: self.tokenizer.from_disk(p, vocab=False)),
             ('meta.json', lambda p: self.meta.update(util.read_json(p)))
         ))
+        _fix_pretrained_vectors_name(self)
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -674,6 +680,7 @@ class Language(object):
             ('tokenizer', lambda b: self.tokenizer.from_bytes(b, vocab=False)),
             ('meta', lambda b: self.meta.update(ujson.loads(b)))
         ))
+        _fix_pretrained_vectors_name(self)
         for i, (name, proc) in enumerate(self.pipeline):
             if name in disable:
                 continue
@@ -682,6 +689,25 @@ class Language(object):
             deserializers[i] = lambda b, proc=proc: proc.from_bytes(b, vocab=False)
         msg = util.from_bytes(bytes_data, deserializers, {})
         return self
+
+def _fix_pretrained_vectors_name(nlp):
+    # TODO: Replace this once we handle vectors consistently as static
+    # data
+    if 'vectors' in nlp.meta and nlp.meta['vectors'].get('name'):
+        nlp.vocab.vectors.name = nlp.meta['vectors']['name']
+    elif not nlp.vocab.vectors.size:
+        nlp.vocab.vectors.name = None
+    elif 'name' in nlp.meta and 'lang' in nlp.meta:
+        vectors_name = '%s_%s.vectors' % (nlp.meta['lang'], nlp.meta['name'])
+        nlp.vocab.vectors.name = vectors_name
+    else:
+        raise ValueError("Unnamed vectors")
+    for name, proc in nlp.pipeline:
+        if not hasattr(proc, 'cfg'):
+            continue
+        if proc.cfg.get('pretrained_dims'):
+            assert nlp.vocab.vectors.name
+            proc.cfg['pretrained_vectors'] = nlp.vocab.vectors.name
 
 
 class DisabledPipes(list):

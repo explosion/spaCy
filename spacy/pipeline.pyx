@@ -202,8 +202,10 @@ class Pipe(object):
     def from_bytes(self, bytes_data, **exclude):
         """Load the pipe from a bytestring."""
         def load_model(b):
+            # TODO: Remove this once we don't have to handle previous models
+            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name 
             if self.model is True:
-                self.cfg.setdefault('pretrained_dims', self.vocab.vectors_length)
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(b)
 
@@ -227,8 +229,10 @@ class Pipe(object):
     def from_disk(self, path, **exclude):
         """Load the pipe from disk."""
         def load_model(p):
+            # TODO: Remove this once we don't have to handle previous models
+            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name 
             if self.model is True:
-                self.cfg.setdefault('pretrained_dims', self.vocab.vectors_length)
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
@@ -286,7 +290,6 @@ class Tensorizer(Pipe):
         self.model = model
         self.input_models = []
         self.cfg = dict(cfg)
-        self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
         self.cfg.setdefault('cnn_maxout_pieces', 3)
 
     def __call__(self, doc):
@@ -403,8 +406,6 @@ class Tagger(Pipe):
         self.model = model
         self.cfg = OrderedDict(sorted(cfg.items()))
         self.cfg.setdefault('cnn_maxout_pieces', 2)
-        self.cfg.setdefault('pretrained_dims',
-                            self.vocab.vectors.data.shape[1])
 
     @property
     def labels(self):
@@ -515,8 +516,8 @@ class Tagger(Pipe):
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
+        self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
         if self.model is True:
-            self.cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -525,6 +526,13 @@ class Tagger(Pipe):
 
     @classmethod
     def Model(cls, n_tags, **cfg):
+        if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
+            raise ValueError(
+                "Bad configuration of Tagger --- this is probably a bug "
+                "within spaCy. We changed the name of an internal attribute "
+                "for loading pre-trained vectors, and the class has been "
+                "passed the old name (pretrained_dims) but not the new name "
+                "(pretrained_vectors)")
         return build_tagger_model(n_tags, **cfg)
 
     def add_label(self, label, values=None):
@@ -572,6 +580,10 @@ class Tagger(Pipe):
 
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
+            # TODO: Remove this once we don't have to handle previous models
+            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name 
+ 
             if self.model is True:
                 token_vector_width = util.env_opt(
                     'token_vector_width',
@@ -597,7 +609,6 @@ class Tagger(Pipe):
         return self
 
     def to_disk(self, path, **exclude):
-        self.cfg.setdefault('pretrained_dims', self.vocab.vectors.data.shape[1])
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
@@ -610,6 +621,9 @@ class Tagger(Pipe):
 
     def from_disk(self, path, **exclude):
         def load_model(p):
+            # TODO: Remove this once we don't have to handle previous models
+            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             with p.open('rb') as file_:
@@ -659,8 +673,6 @@ class MultitaskObjective(Tagger):
                              "one of: dep, tag, ent, dep_tag_offset, ent_tag.")
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
-        self.cfg.setdefault('pretrained_dims',
-                            self.vocab.vectors.data.shape[1])
 
     @property
     def labels(self):
@@ -898,13 +910,15 @@ class TextCategorizer(Pipe):
         self.labels.append(label)
         return 1
 
-    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None):
+    def begin_training(self, gold_tuples=tuple(), pipeline=None, sgd=None,
+                       **kwargs):
         if pipeline and getattr(pipeline[0], 'name', None) == 'tensorizer':
             token_vector_width = pipeline[0].model.nO
         else:
             token_vector_width = 64
+
         if self.model is True:
-            self.cfg['pretrained_dims'] = self.vocab.vectors_length
+            self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
             self.model = self.Model(len(self.labels), token_vector_width,
                                     **self.cfg)
             link_vectors_to_models(self.vocab)

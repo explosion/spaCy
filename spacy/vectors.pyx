@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import functools
 import numpy
 from collections import OrderedDict
 import msgpack
@@ -19,6 +20,20 @@ def unpickle_vectors(bytes_data):
     return Vectors().from_bytes(bytes_data)
 
 
+class GlobalRegistry(object):
+    '''Global store of vectors, to avoid repeatedly loading the data.'''
+    data = {}
+
+    @classmethod
+    def register(cls, name, data):
+        cls.data[name] = data
+        return functools.partial(cls.get, name)
+
+    @classmethod
+    def get(cls, name):
+        return cls.data[name]
+
+
 cdef class Vectors:
     """Store, save and load word vectors.
 
@@ -31,18 +46,21 @@ cdef class Vectors:
     the table need to be assigned --- so len(list(vectors.keys())) may be
     greater or smaller than vectors.shape[0].
     """
+    cdef public object name
     cdef public object data
     cdef public object key2row
     cdef public object _unset
 
-    def __init__(self, *, shape=None, data=None, keys=None):
+    def __init__(self, *, shape=None, data=None, keys=None, name=None):
         """Create a new vector store.
 
         shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
+        name (string): A name to identify the vectors table.
         RETURNS (Vectors): The newly created object.
         """
+        self.name = name
         if data is None:
             if shape is None:
                 shape = (0,0)
