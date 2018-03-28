@@ -896,7 +896,6 @@ cdef class Parser:
             # TODO: Remove this once we don't have to handle previous models
             if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
-            print("Create parser model", self.cfg)
             path = util.ensure_path(path)
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
@@ -944,7 +943,6 @@ cdef class Parser:
             # TODO: Remove this once we don't have to handle previous models
             if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
-            print("Create parser model", self.cfg)
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
             else:
