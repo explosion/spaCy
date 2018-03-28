@@ -23,9 +23,10 @@ from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
 from .compat import import_file
 
-import msgpack
-import msgpack_numpy
-msgpack_numpy.patch()
+# Import these directly from Thinc, so that we're sure we always have the
+# same version.
+from thinc.neural._classes.model import msgpack
+from thinc.neural._classes.model import msgpack_numpy
 
 
 LANGUAGES = {}
