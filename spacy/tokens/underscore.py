@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import functools
 
+from ..errors import Errors
+
 
 class Underscore(object):
     doc_extensions = {}
@@ -23,7 +25,7 @@ class Underscore(object):
 
     def __getattr__(self, name):
         if name not in self._extensions:
-            raise AttributeError(name)
+            raise AttributeError(Errors.E046.format(name=name))
         default, method, getter, setter = self._extensions[name]
         if getter is not None:
             return getter(self._obj)
@@ -34,7 +36,7 @@ class Underscore(object):
 
     def __setattr__(self, name, value):
         if name not in self._extensions:
-            raise AttributeError(name)
+            raise AttributeError(Errors.E047.format(name=name))
         default, method, getter, setter = self._extensions[name]
         if setter is not None:
             return setter(self._obj, value)

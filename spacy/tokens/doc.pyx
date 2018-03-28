@@ -31,7 +31,6 @@ from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
-from .. import about
 from ..errors import Errors, Warnings, deprecation_warning
 from .. import util
 from .underscore import Underscore
@@ -41,9 +40,9 @@ DEF PADDING = 5
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
-        raise IndexError
+        raise IndexError(Errors.E026.format(i=i, length=length))
     if (i - padding) >= length:
-        raise IndexError
+        raise IndexError(Errors.E026.format(i=i, length=length))
 
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
@@ -98,7 +97,8 @@ cdef class Doc:
     def set_extension(cls, name, default=None, method=None,
                       getter=None, setter=None):
         nr_defined = sum(t is not None for t in (default, getter, setter, method))
-        assert nr_defined == 1
+        if nr_defined != 1:
+            raise ValueError(Errors.E083.format(n_args=nr_defined))
         Underscore.doc_extensions[name] = (default, method, getter, setter)
 
     @classmethod
@@ -155,11 +155,7 @@ cdef class Doc:
             if spaces is None:
                 spaces = [True] * len(words)
             elif len(spaces) != len(words):
-                raise ValueError(
-                    "Arguments 'words' and 'spaces' should be sequences of "
-                    "the same length, or 'spaces' should be left default at "
-                    "None. spaces should be a sequence of booleans, with True "
-                    "meaning that the word owns a ' ' character following it.")
+                raise ValueError(Errors.E027)
             orths_and_spaces = zip(words, spaces)
         if orths_and_spaces is not None:
             for orth_space in orths_and_spaces:
@@ -167,10 +163,7 @@ cdef class Doc:
                     orth = orth_space
                     has_space = True
                 elif isinstance(orth_space, bytes):
-                    raise ValueError(
-                        "orths_and_spaces expects either List(unicode) or "
-                        "List((unicode, bool)). "
-                        "Got bytes instance: %s" % (str(orth_space)))
+                    raise ValueError(Errors.E028.format(value=orth_space))
                 else:
                     orth, has_space = orth_space
                 # Note that we pass self.mem here --- we have ownership, if LexemeC
@@ -488,11 +481,7 @@ cdef class Doc:
         """
         def __get__(self):
             if not self.is_parsed:
-                raise ValueError(
-                    "noun_chunks requires the dependency parse, which "
-                    "requires a statistical model to be installed and loaded. "
-                    "For more info, see the "
-                    "documentation: \n%s\n" % about.__docs_models__)
+                raise ValueError(Errors.E029)
             # Accumulate the result before beginning to iterate over it. This
             # prevents the tokenisation from being changed out from under us
             # during the iteration. The tricky thing here is that Span accepts
@@ -526,12 +515,7 @@ cdef class Doc:
                     if self.c[i].sent_start != 0:
                         break
                 else:
-                    raise ValueError(
-                        "Sentence boundaries unset. You can add the 'sentencizer' "
-                        "component to the pipeline with: "
-                        "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
-                        "Alternatively, add the dependency parser, or set "
-                        "sentence boundaries by setting doc[i].sent_start")
+                    raise ValueError(Errors.E030)
             start = 0
             for i in range(1, self.length):
                 if self.c[i].sent_start == 1:
@@ -559,8 +543,7 @@ cdef class Doc:
         t.l_edge = self.length
         t.r_edge = self.length
         if t.lex.orth == 0:
-            raise ValueError("Invalid token: empty string ('') at position {}"
-                             .format(self.length))
+            raise ValueError(Errors.E031.format(i=self.length))
         t.spacy = has_space
         self.length += 1
         return t.idx + t.lex.length + t.spacy
@@ -676,13 +659,7 @@ cdef class Doc:
 
     def from_array(self, attrs, array):
         if SENT_START in attrs and HEAD in attrs:
-            raise ValueError(
-                "Conflicting attributes specified in doc.from_array(): "
-                "(HEAD, SENT_START)\n"
-                "The HEAD attribute currently sets sentence boundaries "
-                "implicitly, based on the tree structure. This means the HEAD "
-                "attribute would potentially override the sentence boundaries "
-                "set by SENT_START.")
+            raise ValueError(Errors.E032)
         cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
@@ -820,7 +797,7 @@ cdef class Doc:
         RETURNS (Doc): Itself.
         """
         if self.length != 0:
-            raise ValueError("Cannot load into non-empty Doc")
+            raise ValueError(Errors.E033.format(length=self.length))
         deserializers = {
             'text': lambda b: None,
             'array_head': lambda b: None,
@@ -910,13 +887,9 @@ cdef class Doc:
             if 'ent_type' in attributes:
                 attributes[ENT_TYPE] = attributes['ent_type']
         elif args:
-            raise ValueError(
-                "Doc.merge received %d non-keyword arguments. Expected either "
-                "3 arguments (deprecated), or 0 (use keyword arguments). "
-                "Arguments supplied:\n%s\n"
-                "Keyword arguments: %s\n" % (len(args), repr(args),
-                                             repr(attributes)))
-
+            raise ValueError(Errors.E034.format(n_args=len(args),
+                                                args=repr(args),
+                                                kwargs=repr(attributes)))
         # More deprecated attribute handling =/
         if 'label' in attributes:
             attributes['ent_type'] = attributes.pop('label')

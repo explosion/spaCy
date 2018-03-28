@@ -20,6 +20,7 @@ import numpy.random
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
 from .compat import import_file
+from .errors import Errors
 
 import msgpack
 import msgpack_numpy
@@ -47,8 +48,7 @@ def get_lang_class(lang):
         try:
             module = importlib.import_module('.lang.%s' % lang, 'spacy')
         except ImportError:
-            msg = "Can't import language %s from spacy.lang."
-            raise ImportError(msg % lang)
+            raise ImportError(Errors.E048.format(lang=lang))
         LANGUAGES[lang] = getattr(module, module.__all__[0])
     return LANGUAGES[lang]
 
@@ -105,7 +105,7 @@ def load_model(name, **overrides):
     """
     data_path = get_data_path()
     if not data_path or not data_path.exists():
-        raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
+        raise IOError(Errors.E049.format(path=path2str(data_path)))
     if isinstance(name, basestring_):  # in data dir / shortcut
         if name in set([d.name for d in data_path.iterdir()]):
             return load_model_from_link(name, **overrides)
@@ -115,7 +115,7 @@ def load_model(name, **overrides):
             return load_model_from_path(Path(name), **overrides)
     elif hasattr(name, 'exists'):  # Path or Path-like to model data
         return load_model_from_path(name, **overrides)
-    raise IOError("Can't find model '%s'" % name)
+    raise IOError(Errors.E050.format(name=name))
 
 
 def load_model_from_link(name, **overrides):
@@ -124,9 +124,7 @@ def load_model_from_link(name, **overrides):
     try:
         cls = import_file(name, path)
     except AttributeError:
-        raise IOError(
-            "Cant' load '%s'. If you're using a shortcut link, make sure it "
-            "points to a valid package (not just a data directory)." % name)
+        raise IOError(Errors.E051.format(name=name))
     return cls.load(**overrides)
 
 
@@ -170,8 +168,7 @@ def load_model_from_init_py(init_file, **overrides):
     data_dir = '%s_%s-%s' % (meta['lang'], meta['name'], meta['version'])
     data_path = model_path / data_dir
     if not model_path.exists():
-        msg = "Can't find model directory: %s"
-        raise ValueError(msg % path2str(data_path))
+        raise IOError(Errors.E052.format(path=path2str(data_path)))
     return load_model_from_path(data_path, meta, **overrides)
 
 
@@ -183,16 +180,14 @@ def get_model_meta(path):
     """
     model_path = ensure_path(path)
     if not model_path.exists():
-        msg = "Can't find model directory: %s"
-        raise ValueError(msg % path2str(model_path))
+        raise IOError(Errors.E052.format(path=path2str(model_path)))
     meta_path = model_path / 'meta.json'
     if not meta_path.is_file():
-        raise IOError("Could not read meta.json from %s" % meta_path)
+        raise IOError(Errors.E053.format(path=meta_path))
     meta = read_json(meta_path)
     for setting in ['lang', 'name', 'version']:
         if setting not in meta or not meta[setting]:
-            msg = "No valid '%s' setting found in model meta.json"
-            raise ValueError(msg % setting)
+            raise ValueError(Errors.E054.format(setting=setting))
     return meta
 
 
@@ -336,13 +331,10 @@ def update_exc(base_exceptions, *addition_dicts):
         for orth, token_attrs in additions.items():
             if not all(isinstance(attr[ORTH], unicode_)
                        for attr in token_attrs):
-                msg = "Invalid ORTH value in exception: key='%s', orths='%s'"
-                raise ValueError(msg % (orth, token_attrs))
+                raise ValueError(Errors.E055.format(key=orth, orths=token_attrs))
             described_orth = ''.join(attr[ORTH] for attr in token_attrs)
             if orth != described_orth:
-                msg = ("Invalid tokenizer exception: ORTH values combined "
-                       "don't match original string. key='%s', orths='%s'")
-                raise ValueError(msg % (orth, described_orth))
+                raise ValueError(Errors.E056.format(key=orth, orths=described_orth))
         exc.update(additions)
     exc = expand_exc(exc, "'", "’")
     return exc
@@ -372,8 +364,7 @@ def expand_exc(excs, search, replace):
 
 def normalize_slice(length, start, stop, step=None):
     if not (step is None or step == 1):
-        raise ValueError("Stepped slices not supported in Span objects."
-                         "Try: list(tokens)[start:stop:step] instead.")
+        raise ValueError(Errors.E057)
     if start is None:
         start = 0
     elif start < 0:

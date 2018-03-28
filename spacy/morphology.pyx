@@ -9,6 +9,7 @@ from .attrs import LEMMA, intify_attrs
 from .parts_of_speech cimport SPACE
 from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
+from .errors import Errors
 
 
 def _normalize_props(props):
@@ -93,7 +94,7 @@ cdef class Morphology:
 
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1:
         if tag_id > self.n_tags:
-            raise ValueError("Unknown tag ID: %s" % tag_id)
+            raise ValueError(Errors.E014.format(tag=tag_id))
         # TODO: It's pretty arbitrary to put this logic here. I guess the
         # justification is that this is where the specific word and the tag
         # interact. Still, we should have a better way to enforce this rule, or
@@ -147,9 +148,7 @@ cdef class Morphology:
         elif force:
             memset(cached, 0, sizeof(cached[0]))
         else:
-            raise ValueError(
-                "Conflicting morphology exception for (%s, %s). Use "
-                "force=True to overwrite." % (tag_str, orth_str))
+            raise ValueError(Errors.E015.format(tag=tag_str, orth=orth_str))
 
         cached.tag = rich_tag
         # TODO: Refactor this to take arbitrary attributes.

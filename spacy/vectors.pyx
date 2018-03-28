@@ -12,6 +12,7 @@ from thinc.neural._classes.model import Model
 
 from .strings cimport StringStore, hash_string
 from .compat import basestring_, path2str
+from .errors import Errors
 from . import util
 
 
@@ -93,7 +94,7 @@ cdef class Vectors:
         """
         i = self.key2row[key]
         if i is None:
-            raise KeyError(key)
+            raise KeyError(Errors.E058.format(key=key))
         else:
             return self.data[i]
 
@@ -194,7 +195,8 @@ cdef class Vectors:
         RETURNS: The requested key, keys, row or rows.
         """
         if sum(arg is None for arg in (key, keys, row, rows)) != 3:
-            raise ValueError("One (and only one) keyword arg must be set.")
+            bad_kwargs = {'key': key, 'keys': keys, 'row': row, 'rows': rows}
+            raise ValueError(Errors.E059.format(kwargs=bad_kwargs))
         xp = get_array_module(self.data)
         if key is not None:
             if isinstance(key, basestring_):
@@ -233,9 +235,9 @@ cdef class Vectors:
             row = self.key2row[key]
         elif row is None:
             if self.is_full:
-                raise ValueError("Cannot add new key to vectors -- full")
+                raise ValueError(Errors.E060.format(rows=self.data.shape[0],
+                                                    cols=self.data.shape[1]))
             row = min(self._unset)
-
         self.key2row[key] = row
         if vector is not None:
             self.data[row] = vector
@@ -297,7 +299,7 @@ cdef class Vectors:
                 width = int(dims)
                 break
         else:
-            raise IOError("Expected file named e.g. vectors.128.f.bin")
+            raise IOError(Errors.E061.format(filename=path))
         bin_loc = path / 'vectors.{dims}.{dtype}.bin'.format(dims=dims,
                                                              dtype=dtype)
         xp = get_array_module(self.data)

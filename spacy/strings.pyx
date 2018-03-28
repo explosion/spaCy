@@ -13,6 +13,7 @@ from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
 from .typedefs cimport hash_t
 from .compat import json_dumps
+from .errors import Errors
 from . import util
 
 
@@ -115,7 +116,7 @@ cdef class StringStore:
             self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
-                raise KeyError(string_or_id)
+                raise KeyError(Errors.E018.format(hash_value=string_or_id))
             else:
                 return decode_Utf8Str(utf8str)
 
@@ -136,8 +137,7 @@ cdef class StringStore:
             key = hash_utf8(string, len(string))
             self._intern_utf8(string, len(string))
         else:
-            raise TypeError(
-                "Can only add unicode or bytes. Got type: %s" % type(string))
+            raise TypeError(Errors.E017.format(value_type=type(string)))
         return key
 
     def __len__(self):

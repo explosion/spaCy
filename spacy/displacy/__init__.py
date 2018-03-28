@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc
 from ..compat import b_to_str
+from ..errors import Errors
 from ..util import prints, is_in_jupyter
 
 
@@ -27,7 +28,7 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
     factories = {'dep': (DependencyRenderer, parse_deps),
                  'ent': (EntityRenderer, parse_ents)}
     if style not in factories:
-        raise ValueError("Unknown style: %s" % style)
+        raise ValueError(Errors.E087.format(style=style))
     if isinstance(docs, Doc) or isinstance(docs, dict):
         docs = [docs]
     renderer, converter = factories[style]

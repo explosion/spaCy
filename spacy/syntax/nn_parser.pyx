@@ -34,6 +34,7 @@ from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import json_dumps, copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
+from ..errors import Errors, TempErrors
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -242,7 +243,7 @@ cdef class Parser:
     def Model(cls, nr_class, **cfg):
         depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
         if depth != 1:
-            raise ValueError("Currently parser depth is hard-coded to 1.")
+            raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
@@ -252,9 +253,9 @@ cdef class Parser:
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size != 0:
-            raise ValueError("Currently history size is hard-coded to 0")
+            raise ValueError(TempErrors.T005.format(value=hist_size))
         if hist_width != 0:
-            raise ValueError("Currently history width is hard-coded to 0")
+            raise ValueError(TempErrors.T006.format(value=hist_width))
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_dims=cfg.get('pretrained_dims', 0))
         tok2vec = chain(tok2vec, flatten)
@@ -542,7 +543,9 @@ cdef class Parser:
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
-        assert len(docs) == len(golds)
+        if len(docs) != len(golds):
+            raise ValueError(Errors.E077.format(value='update', n_docs=len(docs),
+                                                n_golds=len(golds)))
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
             return self.update_beam(docs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
@@ -1019,15 +1022,11 @@ def _cleanup(Beam beam):
             del state
             seen.add(addr)
         else:
-            print(i, addr)
-            print(seen)
-            raise Exception
+            raise ValueError(Errors.E023.format(addr=addr, i=i))
         addr = <size_t>beam._states[i].content
         if addr not in seen:
             state = <StateC*>addr
             del state
             seen.add(addr)
         else:
-            print(i, addr)
-            print(seen)
-            raise Exception
+            raise ValueError(Errors.E023.format(addr=addr, i=i))

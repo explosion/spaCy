@@ -15,6 +15,7 @@ from .nonproj import is_nonproj_tree
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
+from ..errors import Errors
 
 
 DEF NON_MONOTONIC = True
@@ -455,7 +456,7 @@ cdef class ArcEager(TransitionSystem):
             t.do = Break.transition
             t.get_cost = Break.cost
         else:
-            raise Exception(move)
+            raise ValueError(Errors.E019.format(action=move, src='arc_eager'))
         return t
 
     cdef int initialize_state(self, StateC* st) nogil:
@@ -529,28 +530,11 @@ cdef class ArcEager(TransitionSystem):
         if n_gold < 1:
             # Check projectivity --- leading cause
             if is_nonproj_tree(gold.heads):
-                raise ValueError(
-                    "Could not find a gold-standard action to supervise the "
-                    "dependency parser. Likely cause: the tree is "
-                    "non-projective (i.e. it has crossing arcs -- see "
-                    "spacy/syntax/nonproj.pyx for definitions). The ArcEager "
-                    "transition system only supports projective trees. To "
-                    "learn non-projective representations, transform the data "
-                    "before training and after parsing. Either pass "
-                    "make_projective=True to the GoldParse class, or use "
-                    "spacy.syntax.nonproj.preprocess_training_data.")
+                raise ValueError(Errors.E020)
             else:
-                print(gold.orig_annot)
-                print(gold.words)
-                print(gold.heads)
-                print(gold.labels)
-                print(gold.sent_starts)
-                raise ValueError(
-                    "Could not find a gold-standard action to supervise the"
-                    "dependency parser. The GoldParse was projective. The "
-                    "transition system has %d actions. State at failure: %s"
-                    % (self.n_moves, stcls.print_state(gold.words)))
-        assert n_gold >= 1
+                failure_state = stcls.print_state(gold.words)
+                raise ValueError(Errors.E021.format(n_actions=self.n_moves,
+                                                    state=failure_state))
 
     def get_beam_annot(self, Beam beam):
         length = (<StateC*>beam.at(0)).length

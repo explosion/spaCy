@@ -75,8 +75,7 @@ cdef class Tokenizer:
         RETURNS (Doc): A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
-            msg = "String is too long: %d characters. Max is 2**30."
-            raise ValueError(msg % len(string))
+            raise ValueError(Errors.E025.format(length=len(string)))
         cdef int length = len(string)
         cdef Doc doc = Doc(self.vocab)
         if length == 0:

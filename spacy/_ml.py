@@ -23,6 +23,7 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
+from .errors import Errors
 from . import util
 
 
@@ -335,7 +336,8 @@ def _divide_array(X, size):
 
 
 def get_col(idx):
-    assert idx >= 0, idx
+    if idx < 0:
+        raise IndexError(Errors.E066.format(value=idx))
 
     def forward(X, drop=0.):
         assert idx >= 0, idx
