@@ -533,7 +533,6 @@ class Tagger(Pipe):
                 "for loading pre-trained vectors, and the class has been "
                 "passed the old name (pretrained_dims) but not the new name "
                 "(pretrained_vectors)")
-        print(cfg)
         return build_tagger_model(n_tags, **cfg)
 
     def add_label(self, label, values=None):
