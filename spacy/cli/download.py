@@ -9,7 +9,7 @@ import ujson
 
 from .link import link
 from ..util import prints, get_package_path
-from ..compat import url_open, url_error
+from ..compat import url_read, HTTPError
 from .. import about
 
 
@@ -58,13 +58,13 @@ def download(model, direct=False):
 
 def get_json(url, desc):
     try:
-        r = url_open(url)
-    except url_error as e:
+        data = url_read(url)
+    except HTTPError as e:
         msg = ("Couldn't fetch %s. Please find a model for your spaCy "
                "installation (v%s), and download it manually.")
         prints(msg % (desc, about.__version__), about.__docs_models__,
                title="Server error (%d: %s)" % (e.code, e.reason), exits=1)
-    return ujson.load(r)
+    return ujson.loads(data)
 
 
 def get_compatibility():
