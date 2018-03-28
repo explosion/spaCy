@@ -421,7 +421,12 @@ cdef class Doc:
             for i in range(self.length):
                 token = &self.c[i]
                 if token.ent_iob == 1:
-                    assert start != -1
+                    if start == -1:
+                        seq = ['%s|%s' % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        raise ValueError(
+                            "token.ent_iob values make invalid sequence: "
+                            "I without B\n"
+                            "{seq}".format(seq=' '.join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
                         output.append(Span(self, start, i, label=label))
@@ -446,10 +451,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
-                # At this point we don't know whether the NER has run over the
-                # Doc. If the ent_iob is missing, leave it missing.
-                if self.c[i].ent_iob != 0:
-                    self.c[i].ent_iob = 2  # Means O. Non-O are set from ents.
+                self.c[i].ent_iob = 0  # Means missing.
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
@@ -947,6 +949,13 @@ cdef class Doc:
                 self.vocab.morphology.assign_tag(token, attr_value)
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
+        # Make sure ent_iob remains consistent
+        if self.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
+            if token.ent_type == self.c[end].ent_type:
+                token.ent_iob = 3
+            else:
+                # If they're not the same entity type, let them be two entities
+                self.c[end].ent_iob = 3
         # Begin by setting all the head indices to absolute token positions
         # This is easier to work with for now than the offsets
         # Before thinking of something simpler, beware the case where a
