@@ -12,6 +12,7 @@ import tarfile
 import gzip
 
 from ..vectors import Vectors
+from ..errors import user_warning
 from ..util import prints, ensure_path, get_lang_class
 
 try:
@@ -145,7 +146,9 @@ def read_clusters(clusters_loc):
     print("Reading clusters...")
     clusters = {}
     if ftfy is None:
-        print("Warning: No text fixing. Run pip install ftfy if necessary")
+        user_warning(
+            "Warning: No text fixing. Run 'pip install ftfy' to enable fixing "
+            "using ftfy.fix_text if necessary.")
     with clusters_loc.open() as f:
         for line in tqdm(f):
             try:

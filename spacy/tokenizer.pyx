@@ -13,6 +13,7 @@ cimport cython
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
+from .errors import Errors, Warnings, deprecation_warning
 from . import util
 
 
@@ -63,11 +64,7 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):
-        util.deprecated(
-            "Tokenizer.from_list is now deprecated. Create a new Doc "
-            "object instead and pass in the strings as the `words` keyword "
-            "argument, for example:\nfrom spacy.tokens import Doc\n"
-            "doc = Doc(nlp.vocab, words=[...])")
+        deprecation_warning(Warnings.W002)
         return Doc(self.vocab, words=strings)
 
     @cython.boundscheck(False)

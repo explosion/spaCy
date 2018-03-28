@@ -32,6 +32,7 @@ from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
 from .. import about
+from ..errors import Errors, Warnings, deprecation_warning
 from .. import util
 from .underscore import Underscore
 
@@ -895,10 +896,7 @@ cdef class Doc:
         """
         cdef unicode tag, lemma, ent_type
         if len(args) == 3:
-            util.deprecated(
-                "Positional arguments to Doc.merge are deprecated. Instead, "
-                "use the keyword arguments, for example tag=, lemma= or "
-                "ent_type=.")
+            deprecation_warning(Warnings.W003)
             tag, lemma, ent_type = args
             attributes[TAG] = tag
             attributes[LEMMA] = lemma

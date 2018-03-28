@@ -11,8 +11,6 @@ import sys
 import textwrap
 import random
 from collections import OrderedDict
-import inspect
-import warnings
 from thinc.neural._classes.model import Model
 import functools
 import cytoolz
@@ -521,18 +519,6 @@ def from_disk(path, readers, exclude):
         if key not in exclude:
             reader(path / key)
     return path
-
-
-def deprecated(message, filter='always'):
-    """Show a deprecation warning.
-
-    message (unicode): The message to display.
-    filter (unicode): Filter value.
-    """
-    stack = inspect.stack()[-1]
-    with warnings.catch_warnings():
-        warnings.simplefilter(filter, DeprecationWarning)
-        warnings.warn_explicit(message, DeprecationWarning, stack[1], stack[2])
 
 
 def print_table(data, title=None):
