@@ -175,7 +175,7 @@ class PrecomputableAffine(Model):
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return dXf.reshape((dXf.shape[0], self.nF, self.nI))
         return Yf, backward
-    
+
     def _add_padding(self, Yf):
         Yf_padded = self.ops.xp.vstack((self.pad, Yf))
         return Yf_padded

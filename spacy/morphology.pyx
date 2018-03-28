@@ -130,7 +130,7 @@ cdef class Morphology:
         tag (unicode): The part-of-speech tag to key the exception.
         orth (unicode): The word-form to key the exception.
         """
-        # TODO: Currently we've assumed that we know the number of tags -- 
+        # TODO: Currently we've assumed that we know the number of tags --
         # RichTagC is an array, and _cache is a PreshMapArray
         # This is really bad: it makes the morphology typed to the tagger
         # classes, which is all wrong.

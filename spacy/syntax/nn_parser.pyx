@@ -432,7 +432,7 @@ cdef class Parser:
                                     [len(doc) for doc in docs])
         return state_objs, tokvecs
 
-    cdef void _parseC(self, StateC* state, 
+    cdef void _parseC(self, StateC* state,
             const float* feat_weights, const float* bias,
             const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
@@ -611,7 +611,7 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             bp_tokvecs, backprops, sgd, cuda_stream)
-    
+
     def update_beam(self, docs, golds, width=None, density=None,
             drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
@@ -854,7 +854,7 @@ cdef class Parser:
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
-    
+
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
