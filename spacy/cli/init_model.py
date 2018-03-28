@@ -11,7 +11,6 @@ from preshed.counter import PreshCounter
 import tarfile
 import gzip
 
-from ..compat import fix_text
 from ..vectors import Vectors
 from ..util import prints, ensure_path, get_lang_class
 
@@ -152,7 +151,7 @@ def read_clusters(clusters_loc):
             try:
                 cluster, word, freq = line.split()
                 if ftfy is not None:
-                    word = fix_text(word)
+                    word = ftfy.fix_text(word)
             except ValueError:
                 continue
             # If the clusterer has only seen the word a few times, its
