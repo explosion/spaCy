@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc
 from ..compat import b_to_str
-from ..errors import Errors
+from ..errors import Errors, Messages
 from ..util import prints, is_in_jupyter
 
 
@@ -58,12 +58,12 @@ def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
     render(docs, style=style, page=page, minify=minify, options=options,
            manual=manual)
     httpd = simple_server.make_server('0.0.0.0', port, app)
-    prints("Using the '%s' visualizer" % style,
-           title="Serving on port %d..." % port)
+    prints(Messages.M056.format(style=style),
+           title=Messages.M054.format(port=port))
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        prints("Shutting down server on port %d." % port)
+        prints(Messages.M055.format(port=port))
     finally:
         httpd.server_close()
 

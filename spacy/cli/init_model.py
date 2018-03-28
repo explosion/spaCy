@@ -12,7 +12,7 @@ import tarfile
 import gzip
 
 from ..vectors import Vectors
-from ..errors import user_warning
+from ..errors import Messages, Warnings, user_warning
 from ..util import prints, ensure_path, get_lang_class
 
 try:
@@ -38,16 +38,13 @@ def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None, vectors_loc=
     and word vectors.
     """
     if freqs_loc is not None and not freqs_loc.exists():
-        prints(freqs_loc, title="Can't find words frequencies file", exits=1)
+        prints(freqs_loc, title=Messages.M037, exits=1)
     clusters_loc = ensure_path(clusters_loc)
     vectors_loc = ensure_path(vectors_loc)
-
     probs, oov_prob = read_freqs(freqs_loc) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     clusters = read_clusters(clusters_loc) if clusters_loc else {}
-
     nlp = create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, prune_vectors)
-
     if not output_dir.exists():
         output_dir.mkdir()
     nlp.to_disk(output_dir)
@@ -70,7 +67,6 @@ def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, pru
     nlp = lang_class()
     for lexeme in nlp.vocab:
         lexeme.rank = 0
-
     lex_added = 0
     for i, (word, prob) in enumerate(tqdm(sorted(probs.items(), key=lambda item: item[1], reverse=True))):
         lexeme = nlp.vocab[word]
@@ -90,15 +86,13 @@ def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, pru
             lexeme = nlp.vocab[word]
             lexeme.is_oov = False
             lex_added += 1
-
     if len(vectors_data):
         nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if prune_vectors >= 1:
         nlp.vocab.prune_vectors(prune_vectors)
     vec_added = len(nlp.vocab.vectors)
-
-    prints("{} entries, {} vectors".format(lex_added, vec_added),
-           title="Sucessfully compiled vocab")
+    prints(Messages.M039.format(entries=lex_added, vectors=vec_added),
+           title=Messages.M038)
     return nlp
 
 
@@ -146,9 +140,7 @@ def read_clusters(clusters_loc):
     print("Reading clusters...")
     clusters = {}
     if ftfy is None:
-        user_warning(
-            "Warning: No text fixing. Run 'pip install ftfy' to enable fixing "
-            "using ftfy.fix_text if necessary.")
+        user_warning(Warnings.W004)
     with clusters_loc.open() as f:
         for line in tqdm(f):
             try:
