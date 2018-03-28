@@ -194,7 +194,6 @@ def setup_package():
                 'pathlib',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
-                'requests>=2.13.0,<3.0.0',
                 'regex==2017.4.5',
                 'msgpack-python==0.5.4',
                 'msgpack-numpy==0.4.1'],
