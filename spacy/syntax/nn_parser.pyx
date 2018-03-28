@@ -255,8 +255,9 @@ cdef class Parser:
             raise ValueError("Currently history size is hard-coded to 0")
         if hist_width != 0:
             raise ValueError("Currently history width is hard-coded to 0")
+        pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
-                          pretrained_vectors=cfg.get('pretrained_vectors', None))
+                          pretrained_vectors=pretrained_vectors)
         tok2vec = chain(tok2vec, flatten)
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
@@ -275,6 +276,7 @@ cdef class Parser:
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
+            'pretrained_vectors': pretrained_vectors,
             'hist_size': hist_size,
             'hist_width': hist_width
         }
