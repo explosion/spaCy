@@ -695,6 +695,8 @@ def _fix_pretrained_vectors_name(nlp):
     # data
     if 'vectors' in nlp.meta and nlp.meta['vectors'].get('name'):
         nlp.vocab.vectors.name = nlp.meta['vectors']['name']
+    elif not nlp.vocab.vectors.size:
+        nlp.vocab.vectors.name = None
     elif 'name' in nlp.meta and 'lang' in nlp.meta:
         vectors_name = '%s_%s.vectors' % (nlp.meta['lang'], nlp.meta['name'])
         nlp.vocab.vectors.name = vectors_name
@@ -706,7 +708,6 @@ def _fix_pretrained_vectors_name(nlp):
         if proc.cfg.get('pretrained_dims'):
             assert nlp.vocab.vectors.name
             proc.cfg['pretrained_vectors'] = nlp.vocab.vectors.name
-        print(proc.cfg)
 
 
 class DisabledPipes(list):
