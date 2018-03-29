@@ -29,6 +29,15 @@ class Warnings(object):
             "the keyword arguments, for example tag=, lemma= or ent_type=.")
     W004 = ("No text fixing enabled. Run `pip install ftfy` to enable fixing "
             "using ftfy.fix_text if necessary.")
+    W005 = ("Doc object not parsed. This means displaCy won't be able to "
+            "generate a dependency visualization for it. Make sure the Doc "
+            "was processed with a model that supports dependency parsing, and "
+            "not just a language class like `English()`. For more info, see "
+            "the docs:\nhttps://spacy.io/usage/models")
+    W006 = ("No entities to visualize found in Doc object. If this is "
+            "surprising to you, make sure the Doc was processed using a model "
+            "that supports named entity recognition, and check the `doc.ents` "
+            "property manually if necessary.")
 
 
 @add_codes

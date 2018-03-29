@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc
 from ..compat import b_to_str
-from ..errors import Errors
+from ..errors import Errors, Warnings, user_warning
 from ..util import prints, is_in_jupyter
 
 
@@ -84,6 +84,8 @@ def parse_deps(orig_doc, options={}):
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
     doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
+    if not doc.is_parsed:
+        user_warning(Warnings.W005)
     if options.get('collapse_punct', True):
         spans = []
         for word in doc[:-1]:
@@ -121,6 +123,8 @@ def parse_ents(doc, options={}):
     """
     ents = [{'start': ent.start_char, 'end': ent.end_char, 'label': ent.label_}
             for ent in doc.ents]
+    if not ents:
+        user_warning(Warnings.W006)
     title = (doc.user_data.get('title', None)
              if hasattr(doc, 'user_data') else None)
     return {'text': doc.text, 'ents': ents, 'title': title}
