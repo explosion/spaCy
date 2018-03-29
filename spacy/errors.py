@@ -36,7 +36,7 @@ class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}'.")
     E003 = ("Not a valid pipeline component. Expected callable, but "
-            "got {component}. ")
+            "got {component} (name: '{name}').")
     E004 = ("If you meant to add a built-in component, use create_pipe: "
             "nlp.add_pipe(nlp.create_pipe('{component}'))")
     E005 = ("'{name}' already exists in pipeline.")

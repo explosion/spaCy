@@ -240,7 +240,7 @@ class Language(object):
             >>> nlp.add_pipe(component, name='custom_name', last=True)
         """
         if not hasattr(component, '__call__'):
-            msg = Errors.E003.format(component=repr(component))
+            msg = Errors.E003.format(component=repr(component), name=name)
             if isinstance(component, basestring_) and component in self.factories:
                 msg += Errors.E004.format(component=component)
             raise ValueError(msg)
@@ -331,6 +331,8 @@ class Language(object):
         for name, proc in self.pipeline:
             if name in disable:
                 continue
+            if not hasattr(proc, '__call__'):
+                raise ValueError(Errors.E003.format(component=type(proc), name=name))
             doc = proc(doc)
         return doc
 
