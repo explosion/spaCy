@@ -5,8 +5,8 @@ import plac
 import shutil
 from pathlib import Path
 
+from ._messages import Messages
 from ..compat import path2str, json_dumps
-from ..errors import Messages
 from ..util import prints
 from .. import util
 from .. import about

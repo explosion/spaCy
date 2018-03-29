@@ -5,7 +5,7 @@ import plac
 from pathlib import Path
 
 from .converters import conllu2json, iob2json, conll_ner2json
-from ..errors import Messages
+from ._messages import Messages
 from ..util import prints
 
 # Converters are matched by file extension. To add a converter, add a new

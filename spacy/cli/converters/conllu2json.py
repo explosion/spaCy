@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from .._messages import Messages
 from ...compat import json_dumps, path2str
-from ...errors import Messages
 from ...util import prints
 
 

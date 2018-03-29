@@ -7,9 +7,9 @@ import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 
+from ._messages import Messages
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus, minibatch
-from ..errors import Messages
 from ..util import prints
 from .. import util
 from .. import about

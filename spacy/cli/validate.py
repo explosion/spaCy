@@ -6,8 +6,8 @@ from pathlib import Path
 import sys
 import ujson
 
+from ._messages import Messages
 from ..compat import path2str, locale_escape, url_read, HTTPError
-from ..errors import Messages
 from ..util import prints, get_data_path, read_json
 from .. import about
 

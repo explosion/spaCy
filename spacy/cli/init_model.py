@@ -11,8 +11,9 @@ from preshed.counter import PreshCounter
 import tarfile
 import gzip
 
+from ._messages import Messages
 from ..vectors import Vectors
-from ..errors import Messages, Warnings, user_warning
+from ..errors import Warnings, user_warning
 from ..util import prints, ensure_path, get_lang_class
 
 try:

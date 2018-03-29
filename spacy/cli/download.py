@@ -8,9 +8,9 @@ import sys
 import ujson
 
 from .link import link
+from ._messages import Messages
 from ..util import prints, get_package_path
 from ..compat import url_read, HTTPError
-from ..errors import Messages
 from .. import about
 
 

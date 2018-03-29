@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 import plac
 from pathlib import Path
 
+from ._messages import Messages
 from ..compat import symlink_to, path2str
-from ..errors import Messages
 from ..util import prints
 from .. import util
 

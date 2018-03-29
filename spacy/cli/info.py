@@ -5,8 +5,8 @@ import plac
 import platform
 from pathlib import Path
 
+from ._messages import Messages
 from ..compat import path2str
-from ..errors import Messages
 from .. import util
 from .. import about
 

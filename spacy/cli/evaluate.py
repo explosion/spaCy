@@ -4,9 +4,9 @@ from __future__ import unicode_literals, division, print_function
 import plac
 from timeit import default_timer as timer
 
+from ._messages import Messages
 from ..gold import GoldCorpus
 from ..util import prints
-from ..errors import Messages
 from .. import util
 from .. import displacy
 
