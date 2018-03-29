@@ -341,16 +341,8 @@ class Language(object):
             ('An', 'NN')
         """
         if len(text) >= self.max_length:
-            msg = (
-                "Text of length {length} exceeds maximum of {max_length}. "
-                "The v2 parser and NER models require roughly 1GB of temporary "
-                "memory per 100,000 characters in the input. This means long "
-                "texts may cause memory allocation errors. If you're not using "
-                "the parser or NER, it's probably safe to increase the "
-                "nlp.max_length limit. The limit is in number of characters, "
-                "so you can check whether your inputs are too long by checking "
-                "len(text)".)
-            raise ValueError(msg.format(length=len(text), max_length=self.max_length))
+            raise ValueError(Errors.E088.format(length=len(text),
+                                                max_length=self.max_length))
         doc = self.make_doc(text)
         for name, proc in self.pipeline:
             if name in disable:
