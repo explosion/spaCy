@@ -359,7 +359,7 @@ class Language(object):
                 "the parser or NER, it's probably safe to increase the "
                 "nlp.max_length limit. The limit is in number of characters, "
                 "so you can check whether your inputs are too long by checking "
-                "len(text)".)
+                "len(text).")
             raise ValueError(msg.format(length=len(text), max_length=self.max_length))
         doc = self.make_doc(text)
         for name, proc in self.pipeline:
