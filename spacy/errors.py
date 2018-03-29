@@ -34,7 +34,12 @@ class Warnings(object):
 @add_codes
 class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
-    E002 = ("Can't find factory for '{name}'.")
+    E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
+            "calls nlp.create_pipe with a component name that's not built in "
+            "- for example, when constructing the pipeline from a model's "
+            "meta.json. If you're using a custom component, you can write to "
+            "Language.factories['{name}'] or remove it from the model meta "
+            "and add it via nlp.add_pipe instead.")
     E003 = ("Not a valid pipeline component. Expected callable, but "
             "got {component} (name: '{name}').")
     E004 = ("If you meant to add a built-in component, use create_pipe: "
