@@ -43,11 +43,11 @@ def link(origin, link_name, force=False, model_path=None):
         # NB: Check this last because valid symlinks also "exist".
         prints(Messages.M015, link_path,
                title=Messages.M014.format(name=link_name), exits=1)
-    msg = "%s --> %s" % (path2str(model_path), path2str(link_path)))
+    msg = "%s --> %s" % (path2str(model_path), path2str(link_path))
     try:
         symlink_to(link_path, model_path)
     except:
         # This is quite dirty, but just making sure other errors are caught.
-        prints(Messages.M017, msg, title=Messages.M016.format(name=link_name)
+        prints(Messages.M017, msg, title=Messages.M016.format(name=link_name))
         raise
     prints(msg, Messages.M019.format(name=link_name), title=Messages.M018)
