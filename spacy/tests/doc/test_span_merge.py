@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from ..util import get_doc
+from ...vocab import Vocab
+from ...tokens import Doc
 
 import pytest
 
@@ -93,6 +95,21 @@ def test_spans_entity_merge(en_tokenizer):
         ent.merge(label=label, lemma=lemma, ent_type=type_)
     # check looping is ok
     assert len(doc) == 15
+
+
+def test_spans_entity_merge_iob():
+    # Test entity IOB stays consistent after merging
+    words = ["a", "b", "c", "d", "e"]
+    doc = Doc(Vocab(), words=words)
+    doc.ents = [(doc.vocab.strings.add('ent-abc'), 0, 3),
+                (doc.vocab.strings.add('ent-d'), 3, 4)]
+    assert doc[0].ent_iob_ == "B"
+    assert doc[1].ent_iob_ == "I"
+    assert doc[2].ent_iob_ == "I"
+    assert doc[3].ent_iob_ == "B"
+    doc[0:1].merge()
+    assert doc[0].ent_iob_ == "B"
+    assert doc[1].ent_iob_ == "I"
 
 
 def test_spans_sentence_update_after_merge(en_tokenizer):
