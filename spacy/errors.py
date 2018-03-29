@@ -44,24 +44,24 @@ class Warnings(object):
 class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
-            "calls nlp.create_pipe with a component name that's not built in "
-            "- for example, when constructing the pipeline from a model's "
+            "calls `nlp.create_pipe` with a component name that's not built "
+            "in - for example, when constructing the pipeline from a model's "
             "meta.json. If you're using a custom component, you can write to "
-            "Language.factories['{name}'] or remove it from the model meta "
-            "and add it via nlp.add_pipe instead.")
+            "`Language.factories['{name}']` or remove it from the model meta "
+            "and add it via `nlp.add_pipe` instead.")
     E003 = ("Not a valid pipeline component. Expected callable, but "
             "got {component} (name: '{name}').")
-    E004 = ("If you meant to add a built-in component, use create_pipe: "
-            "nlp.add_pipe(nlp.create_pipe('{component}'))")
+    E004 = ("If you meant to add a built-in component, use `create_pipe`: "
+            "`nlp.add_pipe(nlp.create_pipe('{component}'))`")
     E005 = ("'{name}' already exists in pipeline.")
     E006 = ("Invalid constraints. You can only set one of the following: "
             "before, after, first, last.")
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")
     E008 = ("Some current components would be lost when restoring previous "
             "pipeline state. If you added components after calling "
-            "nlp.disable_pipes(), you should remove them explicitly with "
-            "nlp.remove_pipe() before the pipeline is restored. Names of the "
-            "new components: {names}")
+            "`nlp.disable_pipes()`, you should remove them explicitly with "
+            "`nlp.remove_pipe()` before the pipeline is restored. Names of "
+            "the new components: {names}")
     E009 = ("The `update` method expects same number of docs and golds, but "
             "got: {n_docs} docs, {n_golds} golds.")
     E010 = ("Word vectors set to length 0. This may be because you don't have "
