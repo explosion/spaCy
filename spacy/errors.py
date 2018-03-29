@@ -6,6 +6,16 @@ import warnings
 import inspect
 
 
+def add_codes(err_cls):
+    """Add error codes to string messages via class attribute names."""
+    class ErrorsWithCodes(object):
+        def __getattribute__(self, code):
+            msg = getattr(err_cls, code)
+            return '[{code}] {msg}'.format(code=code, msg=msg)
+    return ErrorsWithCodes()
+
+
+@add_codes
 class Warnings(object):
     W001 = ("As of spaCy v2.0, the keyword argument `path=` is deprecated. "
             "You can now call spacy.load with the path as its first argument, "
@@ -21,6 +31,7 @@ class Warnings(object):
             "using ftfy.fix_text if necessary.")
 
 
+@add_codes
 class Errors(object):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}'.")
@@ -201,6 +212,7 @@ class Errors(object):
     E087 = ("Unknown displaCy style: {style}.")
 
 
+@add_codes
 class TempErrors(object):
     T001 = ("Max length currently 10 for phrase matching")
     T002 = ("Pattern length ({doc_len}) >= phrase_matcher.max_length "
