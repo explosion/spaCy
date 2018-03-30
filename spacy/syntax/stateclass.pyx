@@ -20,9 +20,40 @@ cdef class StateClass:
         if self._borrowed != 1:
             del self.c
 
+    def __len__(self):
+        return self.c.length
+
+    def get_B(self, int i):
+        return self.c.B(i)
+    
+    def get_S(self, int i):
+        return self.c.S(i)
+
+    def push_stack(self, fast_forward=True):
+        self.c.push()
+        if fast_forward:
+            self.c.fast_forward()
+
+    def pop_stack(self, fast_forward=True):
+        self.c.pop()
+        if fast_forward:
+            self.c.fast_forward()
+
+    def split_token(self, int i, int n, fast_forward=True):
+        self.c.split(i, n)
+        if fast_forward:
+            self.c.fast_forward()
+
+    def get_doc(self, vocab):
+        cdef Doc doc = Doc(vocab)
+        doc.vocab = vocab
+        doc.c = self.c._sent
+        doc.length = self.c.length
+        return doc
+
     @property
     def stack(self):
-        return {self.S(i) for i in range(self.c._s_i)}
+        return [self.S(i) for i in range(self.c._s_i)]
 
     @property
     def queue(self):
