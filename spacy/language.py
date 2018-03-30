@@ -111,7 +111,7 @@ class Language(object):
         'merge_entities': lambda nlp, **cfg: merge_entities
     }
 
-    def __init__(self, vocab=True, make_doc=True, meta={}, **kwargs):
+    def __init__(self, vocab=True, make_doc=True, max_length=10**6, meta={}, **kwargs):
         """Initialise a Language object.
 
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
@@ -126,6 +126,15 @@ class Language(object):
             string occurs in both, the component is not loaded.
         meta (dict): Custom meta data for the Language class. Is written to by
             models to add model meta data.
+        max_length (int) :
+            Maximum number of characters in a single text. The current v2 models
+            may run out memory on extremely long texts, due to large internal
+            allocations. You should segment these texts into meaningful units,
+            e.g. paragraphs, subsections etc, before passing them to spaCy.
+            Default maximum length is 1,000,000 characters (1mb). As a rule of
+            thumb, if all pipeline components are enabled, spaCy's default
+            models currently requires roughly 1GB of temporary memory per
+            100,000 characters in one text.
         RETURNS (Language): The newly constructed object.
         """
         self._meta = dict(meta)
@@ -133,12 +142,15 @@ class Language(object):
         if vocab is True:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get('vocab', {}))
+            if vocab.vectors.name is None:
+                vocab.vectors.name = meta.get('vectors', {}).get('name')
         self.vocab = vocab
         if make_doc is True:
             factory = self.Defaults.create_tokenizer
             make_doc = factory(self, **meta.get('tokenizer', {}))
         self.tokenizer = make_doc
         self.pipeline = []
+        self.max_length = max_length
         self._optimizer = None
 
     @property
@@ -158,7 +170,8 @@ class Language(object):
         self._meta.setdefault('license', '')
         self._meta['vectors'] = {'width': self.vocab.vectors_length,
                                  'vectors': len(self.vocab.vectors),
-                                 'keys': self.vocab.vectors.n_keys}
+                                 'keys': self.vocab.vectors.n_keys,
+                                 'name': self.vocab.vectors.name}
         self._meta['pipeline'] = self.pipe_names
         return self._meta
 
@@ -337,6 +350,17 @@ class Language(object):
             >>> tokens[0].text, tokens[0].head.tag_
             ('An', 'NN')
         """
+        if len(text) >= self.max_length:
+            msg = (
+                "Text of length {length} exceeds maximum of {max_length}. "
+                "The v2 parser and NER models require roughly 1GB of temporary "
+                "memory per 100,000 characters in the input. This means long "
+                "texts may cause memory allocation errors. If you're not using "
+                "the parser or NER, it's probably safe to increase the "
+                "nlp.max_length limit. The limit is in number of characters, "
+                "so you can check whether your inputs are too long by checking "
+                "len(text).")
+            raise ValueError(msg.format(length=len(text), max_length=self.max_length))
         doc = self.make_doc(text)
         for name, proc in self.pipeline:
             if name in disable:
@@ -457,6 +481,8 @@ class Language(object):
         else:
             device = None
         link_vectors_to_models(self.vocab)
+        if self.vocab.vectors.data.shape[1]:
+            cfg['pretrained_vectors'] = self.vocab.vectors.name
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
@@ -629,6 +655,7 @@ class Language(object):
             ('tokenizer', lambda p: self.tokenizer.from_disk(p, vocab=False)),
             ('meta.json', lambda p: self.meta.update(util.read_json(p)))
         ))
+        _fix_pretrained_vectors_name(self)
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -674,6 +701,7 @@ class Language(object):
             ('tokenizer', lambda b: self.tokenizer.from_bytes(b, vocab=False)),
             ('meta', lambda b: self.meta.update(ujson.loads(b)))
         ))
+        _fix_pretrained_vectors_name(self)
         for i, (name, proc) in enumerate(self.pipeline):
             if name in disable:
                 continue
@@ -682,6 +710,25 @@ class Language(object):
             deserializers[i] = lambda b, proc=proc: proc.from_bytes(b, vocab=False)
         msg = util.from_bytes(bytes_data, deserializers, {})
         return self
+
+def _fix_pretrained_vectors_name(nlp):
+    # TODO: Replace this once we handle vectors consistently as static
+    # data
+    if 'vectors' in nlp.meta and nlp.meta['vectors'].get('name'):
+        nlp.vocab.vectors.name = nlp.meta['vectors']['name']
+    elif not nlp.vocab.vectors.size:
+        nlp.vocab.vectors.name = None
+    elif 'name' in nlp.meta and 'lang' in nlp.meta:
+        vectors_name = '%s_%s.vectors' % (nlp.meta['lang'], nlp.meta['name'])
+        nlp.vocab.vectors.name = vectors_name
+    else:
+        raise ValueError("Unnamed vectors")
+    for name, proc in nlp.pipeline:
+        if not hasattr(proc, 'cfg'):
+            continue
+        if proc.cfg.get('pretrained_dims'):
+            assert nlp.vocab.vectors.name
+            proc.cfg['pretrained_vectors'] = nlp.vocab.vectors.name
 
 
 class DisabledPipes(list):

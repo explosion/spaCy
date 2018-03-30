@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import six
-import ftfy
 import sys
 import ujson
 import itertools
@@ -35,11 +33,20 @@ try:
 except ImportError:
     from thinc.neural.optimizers import Adam as Optimizer
 
+try:
+    import urllib.request
+except ImportError:
+    import urllib2 as urllib
+
+try:
+    from urllib.error import HTTPError
+except ImportError:
+    from urllib2 import HTTPError
+
 pickle = pickle
 copy_reg = copy_reg
 CudaStream = CudaStream
 cupy = cupy
-fix_text = ftfy.fix_text
 copy_array = copy_array
 izip = getattr(itertools, 'izip', zip)
 
@@ -47,9 +54,10 @@ is_windows = sys.platform.startswith('win')
 is_linux = sys.platform.startswith('linux')
 is_osx = sys.platform == 'darwin'
 
-is_python2 = six.PY2
-is_python3 = six.PY3
-is_python_pre_3_5 = is_python2 or (is_python3 and sys.version_info[1]<5)
+# See: https://github.com/benjaminp/six/blob/master/six.py
+is_python2 = sys.version_info[0] == 2
+is_python3 = sys.version_info[0] == 3
+is_python_pre_3_5 = is_python2 or (is_python3 and sys.version_info[1] < 5)
 
 if is_python2:
     bytes_ = str
@@ -58,6 +66,7 @@ if is_python2:
     input_ = raw_input  # noqa: F821
     json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False).decode('utf8')
     path2str = lambda path: str(path).decode('utf8')
+    url_open = urllib.urlopen
 
 elif is_python3:
     bytes_ = bytes
@@ -66,6 +75,16 @@ elif is_python3:
     input_ = input
     json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False)
     path2str = lambda path: str(path)
+    url_open = urllib.request.urlopen
+
+
+def url_read(url):
+    file_ = url_open(url)
+    code = file_.getcode()
+    if code != 200:
+        raise HTTPError(url, code, "Cannot GET url", [], file_)
+    data = file_.read()
+    return data
 
 
 def b_to_str(b_str):

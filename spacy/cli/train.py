@@ -93,6 +93,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     meta['pipeline'] = pipeline
     nlp.meta.update(meta)
     if vectors:
+        print("Load vectors model", vectors)
         util.load_model(vectors, vocab=nlp.vocab)
         for lex in nlp.vocab:
             values = {}

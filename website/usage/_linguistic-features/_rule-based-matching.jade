@@ -513,21 +513,21 @@ p
     from spacy.lang.en import English
     from spacy.matcher import Matcher
 
-    nlp = English() # we only want the tokenizer, so no need to load a model
+    nlp = English()  # we only want the tokenizer, so no need to load a model
     matcher = Matcher(nlp.vocab)
 
-    pos_emoji = [u'😀', u'😃', u'😂', u'🤣', u'😊', u'😍'] # positive emoji
-    neg_emoji = [u'😞', u'😠', u'😩', u'😢', u'😭', u'😒'] # negative emoji
+    pos_emoji = [u'😀', u'😃', u'😂', u'🤣', u'😊', u'😍']  # positive emoji
+    neg_emoji = [u'😞', u'😠', u'😩', u'😢', u'😭', u'😒']  # negative emoji
 
     # add patterns to match one or more emoji tokens
     pos_patterns = [[{'ORTH': emoji}] for emoji in pos_emoji]
     neg_patterns = [[{'ORTH': emoji}] for emoji in neg_emoji]
 
-    matcher.add('HAPPY', label_sentiment, *pos_patterns) # add positive pattern
-    matcher.add('SAD', label_sentiment, *neg_patterns) # add negative pattern
+    matcher.add('HAPPY', label_sentiment, *pos_patterns)  # add positive pattern
+    matcher.add('SAD', label_sentiment, *neg_patterns)  # add negative pattern
 
     # add pattern to merge valid hashtag, i.e. '#' plus any ASCII token
-    matcher.add('HASHTAG', merge_hashtag, [{'ORTH': '#'}, {'IS_ASCII': True}])
+    matcher.add('HASHTAG', None, [{'ORTH': '#'}, {'IS_ASCII': True}])
 
 p
     |  Because the #[code on_match] callback receives the ID of each match, you
@@ -541,38 +541,47 @@ p
     |  #[+a("https://github.com/bcongdon/python-emojipedia") Emojipedia],
     |  we can also retrieve a short description for each emoji – for example,
     |  #[span.o-icon.o-icon--inline 😍]'s official title is "Smiling Face With
-    |  Heart-Eyes". Assigning it to the merged token's norm will make it
-    |  available as #[code token.norm_].
+    |  Heart-Eyes". Assigning it to a
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attribute]
+    |  on the emoji span will make it available as #[code span._.emoji_desc].
 
 +code.
-    from emojipedia import Emojipedia # installation: pip install emojipedia
+    from emojipedia import Emojipedia  # installation: pip install emojipedia
+    from spacy.tokens import Span  # get the global Span object
+
+    Span.set_extension('emoji_desc', default=None)  # register the custom attribute
 
     def label_sentiment(matcher, doc, i, matches):
         match_id, start, end = matches[i]
-        if doc.vocab.strings[match_id] == 'HAPPY': # don't forget to get string!
-            doc.sentiment += 0.1 # add 0.1 for positive sentiment
+        if doc.vocab.strings[match_id] == 'HAPPY':  # don't forget to get string!
+            doc.sentiment += 0.1  # add 0.1 for positive sentiment
         elif doc.vocab.strings[match_id] == 'SAD':
-            doc.sentiment -= 0.1 # subtract 0.1 for negative sentiment
+            doc.sentiment -= 0.1  # subtract 0.1 for negative sentiment
         span = doc[start : end]
         emoji = Emojipedia.search(span[0].text) # get data for emoji
-        span.merge(norm=emoji.title) # merge span and set NORM to emoji title
+        span._.emoji_desc = emoji.title  # assign emoji description
 
 p
     |  To label the hashtags, we first need to add a new custom flag.
     |  #[code IS_HASHTAG] will be the flag's ID, which you can use to assign it
     |  to the hashtag's span, and check its value via a token's
     |  #[+api("token#check_flag") #[code check_flag()]] method. On each
-    |  match, we merge the hashtag and assign the flag.
+    |  match, we merge the hashtag and assign the flag. Alternatively, we
+    |  could also use a
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attribute],
+    |  e.g. #[code token._.is_hashtag].
 
 +code.
     # Add a new custom flag to the vocab, which is always False by default
     IS_HASHTAG = nlp.vocab.add_flag(lambda text: False)
 
-    def merge_hashtag(matcher, doc, i, matches):
-        match_id, start, end = matches[i]
-        span = doc[start : end]
-        span.merge() # merge hashtag
-        span.set_flag(IS_HASHTAG, True) # set IS_HASHTAG to True
+    matches = matcher(doc)
+    spans = []
+    for match_id, start, end in matches:
+        spans.append(doc[start : end])
+    for span in spans:
+        span.merge()  # merge hashtag
+        span.set_flag(IS_HASHTAG, True)  # set IS_HASHTAG to True
 
 p
     |  To process a stream of social media posts, we can use

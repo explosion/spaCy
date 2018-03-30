@@ -255,8 +255,9 @@ cdef class Parser:
             raise ValueError("Currently history size is hard-coded to 0")
         if hist_width != 0:
             raise ValueError("Currently history width is hard-coded to 0")
+        pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
-                          pretrained_dims=cfg.get('pretrained_dims', 0))
+                          pretrained_vectors=pretrained_vectors)
         tok2vec = chain(tok2vec, flatten)
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
@@ -275,6 +276,7 @@ cdef class Parser:
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
+            'pretrained_vectors': pretrained_vectors,
             'hist_size': hist_size,
             'hist_width': hist_width
         }
@@ -294,9 +296,9 @@ cdef class Parser:
             unless True (default), in which case a new instance is created with
             `Parser.Moves()`.
         model (object): Defines how the parse-state is created, updated and
-            evaluated. The value is set to the .model attribute unless True
-            (default), in which case a new instance is created with
-            `Parser.Model()`.
+            evaluated. The value is set to the .model attribute. If set to True
+            (default), a new instance will be created with `Parser.Model()`
+            in parser.begin_training(), parser.from_disk() or parser.from_bytes().
         **cfg: Arbitrary configuration parameters. Set to the `.cfg` attribute
         """
         self.vocab = vocab
@@ -308,8 +310,6 @@ cdef class Parser:
             cfg['beam_width'] = util.env_opt('beam_width', 1)
         if 'beam_density' not in cfg:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
-        if 'pretrained_dims' not in cfg:
-            cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
         cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
         if 'actions' in self.cfg:
@@ -832,7 +832,6 @@ cdef class Parser:
                 self.moves.add_action(action, label)
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
-            cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
@@ -896,9 +895,11 @@ cdef class Parser:
         }
         util.from_disk(path, deserializers, exclude)
         if 'model' not in exclude:
+            # TODO: Remove this once we don't have to handle previous models
+            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             path = util.ensure_path(path)
             if self.model is True:
-                self.cfg.setdefault('pretrained_dims', self.vocab.vectors_length)
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
@@ -941,12 +942,13 @@ cdef class Parser:
         ))
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
+            # TODO: Remove this once we don't have to handle previous models
+            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
-                cfg['pretrained_dims'] = self.vocab.vectors_length
             else:
                 cfg = {}
-            cfg['pretrained_dims'] = self.vocab.vectors_length
             if 'tok2vec_model' in msg:
                 self.model[0].from_bytes(msg['tok2vec_model'])
             if 'lower_model' in msg:

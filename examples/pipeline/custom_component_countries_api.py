@@ -9,6 +9,7 @@ coordinates. Can be extended with more details from the API.
 * Custom pipeline components: https://spacy.io//usage/processing-pipelines#custom-components
 
 Compatible with: spaCy v2.0.0+
+Prerequisites: pip install requests
 """
 from __future__ import unicode_literals, print_function
 

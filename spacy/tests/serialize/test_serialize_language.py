@@ -17,6 +17,7 @@ def meta_data():
         'email': 'email-in-fixture',
         'url': 'url-in-fixture',
         'license': 'license-in-fixture',
+        'vectors': {'width': 0, 'vectors': 0, 'keys': 0, 'name': None}
     }
 
 

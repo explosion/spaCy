@@ -84,9 +84,7 @@ cdef class BiluoPushDown(TransitionSystem):
             for (ids, words, tags, heads, labels, biluo), _ in sents:
                 for i, ner_tag in enumerate(biluo):
                     if ner_tag != 'O' and ner_tag != '-':
-                        if ner_tag.count('-') != 1:
-                            raise ValueError(ner_tag)
-                        _, label = ner_tag.split('-')
+                        _, label = ner_tag.split('-', 1)
                         if label not in seen_entities:
                             seen_entities.add(label)
                             for move_str in ('B', 'I', 'L', 'U'):
