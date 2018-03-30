@@ -1,5 +1,5 @@
 from libc.string cimport memcpy, memset, memmove
-from libc.stdlib cimport malloc, calloc, free
+from libc.stdlib cimport malloc, calloc, free, realloc
 from libc.stdint cimport uint32_t, uint64_t
 
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
@@ -13,6 +13,7 @@ from ..symbols cimport punct
 from ..attrs cimport IS_SPACE
 from ..typedefs cimport attr_t
 
+cdef void _split(StateC* this, int i, int n) nogil
 
 cdef inline bint is_space_token(const TokenC* token) nogil:
     return Lexeme.c_check_flag(token.lex, IS_SPACE)
@@ -326,13 +327,30 @@ cdef cppclass StateC:
         # Before: [0, 1, 2, 3, 4, 5,   6,   7,   8, 9, 10]
         # After:  [0, 1, 2, 3, 4, 5.0, 5.1, 5.2, 6, 7, 8, 9, 10]
         # Sentence grows to length 12.
-        this.length += n
-        this._sent -= PADDING
-        this._sent = <TokenC*>realloc(this.length + (PADDING * 2), sizeof(TokenC))
-        this._sent += PADDING
         # Words 6-10 move to positions 8-12
-        memmove(&this._sent[i+1], &this._sent[i+1+n], (this.length-i)+PADDING*sizeof(TokenC))
         # Words 0-5 stay where they are.
+        cdef int PADDING = 5
+        cdef int j
+        # Unwind the padding, so we can work with the original pointer.
+        this._sent -= PADDING
+        this._sent = <TokenC*>realloc(this._sent,
+                        ((this.length+n+1) + (PADDING * 2)) * sizeof(TokenC))
+        for j in range(this.length+PADDING*2, this.length+n+1+PADDING*2):
+            this._sent[j] = this._empty_token
+        # Put the start padding back in
+        this._sent += PADDING
+        # In our example, we want to move words 6-10 to 8-12. So we must move
+        # a block of 4 words.
+        cdef int n_moved = this.length - (i+1) 
+        cdef int move_from = i+1
+        cdef int move_to = i+n+1
+        memmove(&this._sent[move_to], &this._sent[move_from],
+                n_moved*sizeof(TokenC))
+        # Now copy the token that has been split into its neighbours.
+        for j in range(i+1, i+n+1):
+            this._sent[j] = this._sent[i]
+        # Finally, adjust length.
+        this.length += n
 
     void pop() nogil:
         if this._s_i >= 1:
