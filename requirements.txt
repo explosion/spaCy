@@ -17,3 +17,4 @@ mock>=2.0.0,<3.0.0
 msgpack-python==0.5.4
 msgpack-numpy==0.4.1
 html5lib==1.0b8
+bintrees==2.0.7
