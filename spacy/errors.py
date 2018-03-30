@@ -53,7 +53,8 @@ class Errors(object):
             "got {component} (name: '{name}').")
     E004 = ("If you meant to add a built-in component, use `create_pipe`: "
             "`nlp.add_pipe(nlp.create_pipe('{component}'))`")
-    E005 = ("'{name}' already exists in pipeline.")
+    E005 = ("Pipeline component '{name}' returned None. If you're using a "
+            "custom component, maybe you forgot to return the processed Doc?")
     E006 = ("Invalid constraints. You can only set one of the following: "
             "before, after, first, last.")
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")

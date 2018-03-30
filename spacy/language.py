@@ -268,7 +268,7 @@ class Language(object):
             else:
                 name = repr(component)
         if name in self.pipe_names:
-            raise ValueError(Errors.E005.format(name=name))
+            raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
         if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
             raise ValueError(Errors.E006)
         pipe = (name, component)
@@ -350,6 +350,8 @@ class Language(object):
             if not hasattr(proc, '__call__'):
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
             doc = proc(doc)
+            if doc is None:
+                raise ValueError(Errors.E005.format(name=name))
         return doc
 
     def disable_pipes(self, *names):
