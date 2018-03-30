@@ -4,6 +4,10 @@ from __future__ import unicode_literals
 import functools
 import numpy
 from collections import OrderedDict
+from bintrees import RBTree
+import msgpack
+import msgpack_numpy
+msgpack_numpy.patch()
 
 from .util import msgpack
 from .util import msgpack_numpy
@@ -50,7 +54,7 @@ cdef class Vectors:
     cdef public object name
     cdef public object data
     cdef public object key2row
-    cdef public object _unset
+    cdef public object _unset_rbtree
 
     def __init__(self, *, shape=None, data=None, keys=None, name=None):
         """Create a new vector store.
@@ -69,9 +73,9 @@ cdef class Vectors:
         self.data = data
         self.key2row = OrderedDict()
         if self.data is not None:
-            self._unset = set(range(self.data.shape[0]))
+            self._unset_rbtree = RBTree(dict((key,1) for key in range(self.data.shape[0])))
         else:
-            self._unset = set()
+            self._unset_rbtree = RBTree()
         if keys is not None:
             for i, key in enumerate(keys):
                 self.add(key, row=i)
@@ -93,7 +97,7 @@ cdef class Vectors:
     @property
     def is_full(self):
         """RETURNS (bool): `True` if no slots are available for new keys."""
-        return len(self._unset) == 0
+        return self._unset_rbtree.count == 0
 
     @property
     def n_keys(self):
@@ -124,8 +128,8 @@ cdef class Vectors:
         """
         i = self.key2row[key]
         self.data[i] = vector
-        if i in self._unset:
-            self._unset.remove(i)
+        if self._unset_rbtree.get(i):
+            self._unset_rbtree.remove(i)
 
     def __iter__(self):
         """Iterate over the keys in the table.
@@ -164,7 +168,7 @@ cdef class Vectors:
             xp = get_array_module(self.data)
             self.data = xp.resize(self.data, shape)
         filled = {row for row in self.key2row.values()}
-        self._unset = {row for row in range(shape[0]) if row not in filled}
+        self._unset_rbtree = RBTree(dict((row,1) for row in range(shape[0]) if row not in filled))
         removed_items = []
         for key, row in list(self.key2row.items()):
             if row >= shape[0]:
@@ -188,7 +192,7 @@ cdef class Vectors:
         YIELDS (ndarray): A vector in the table.
         """
         for row, vector in enumerate(range(self.data.shape[0])):
-            if row not in self._unset:
+            if not self._unset_rbtree.get(row):
                 yield vector
 
     def items(self):
@@ -253,13 +257,13 @@ cdef class Vectors:
         elif row is None:
             if self.is_full:
                 raise ValueError("Cannot add new key to vectors -- full")
-            row = min(self._unset)
+            row = self._unset_rbtree.min_key()
 
         self.key2row[key] = row
         if vector is not None:
             self.data[row] = vector
-            if row in self._unset:
-                self._unset.remove(row)
+            if self._unset_rbtree.get(row):
+                self._unset_rbtree.remove(row)
         return row
 
     def most_similar(self, queries, *, batch_size=1024):
@@ -365,8 +369,8 @@ cdef class Vectors:
                 with path.open('rb') as file_:
                     self.key2row = msgpack.load(file_)
             for key, row in self.key2row.items():
-                if row in self._unset:
-                    self._unset.remove(row)
+                if self._unset_rbtree.get(row):
+                    self._unset_rbtree.remove(row)
 
         def load_keys(path):
             if path.exists():
