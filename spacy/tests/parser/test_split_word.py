@@ -32,37 +32,12 @@ def test_pop():
     assert state.get_S(0) == 0
 
 
-def toy_split():
-    def _realloc(data, new_size):
-        additions = new_size - len(data)
-        return data + ['']*additions
-    length = 10
-    sent = list(range(length))
-    sent = [None]*pad + sent + [None]*pad # pad
-    ptr = pad
-    i = 5
-    n = 2
-
-    ptr -= pad
-    i += pad
-    sent = _realloc(sent, length+n+(pad*2))
-    n_moved = (length + (pad*2)) - i+1
-
-
-
 def test_split():
     '''state.split_token should take the ith word of the buffer, and split it
     into n+1 pieces. n is 0-indexed, i.e. split(i, 0) is a noop, and split(i, 1)
     creates 1 new token.'''
     doc = get_doc('abcd')
-    state = StateClass(doc)
-    assert len(state) == len(doc)
-    state.split_token(1, 2)
-    assert len(state) == len(doc)+2
-    stdoc = state.get_doc(doc.vocab)
-    assert stdoc[0].text == 'a'
-    assert stdoc[1].text == 'b'
-    assert stdoc[2].text == 'b'
-    assert stdoc[3].text == 'b'
-    assert stdoc[4].text == 'c'
-    assert stdoc[5].text == 'd'
+    state = StateClass(doc, max_split=3)
+    assert state.queue == [0, 1, 2, 3]
+    state.split_token(1, 2, fast_forward=False)
+    assert state.queue == [0, 1, 1*4+1, 2*4+1, 2, 3]

@@ -10,6 +10,7 @@ from ..vocab cimport EMPTY_LEXEME
 from ._state cimport StateC
 
 
+@cython.final
 cdef class StateClass:
     cdef Pool mem
     cdef StateC* c
@@ -105,7 +106,7 @@ cdef class StateClass:
         return self.c.stack_depth()
 
     cdef inline int buffer_length(self) nogil:
-        return self.c.buffer_length()
+        return self.c.buffer_length
 
     cdef inline void push(self) nogil:
         self.c.push()

@@ -8,13 +8,14 @@ from ..tokens.doc cimport Doc
 
 
 cdef class StateClass:
-    def __init__(self, Doc doc=None, int offset=0):
+    def __init__(self, Doc doc=None, int offset=0, int max_split=0):
         cdef Pool mem = Pool()
         self.mem = mem
         self._borrowed = 0
         if doc is not None:
             self.c = new StateC(doc.c, doc.length)
             self.c.offset = offset
+            self.c.max_split = max_split
 
     def __dealloc__(self):
         if self._borrowed != 1:
@@ -39,6 +40,14 @@ cdef class StateClass:
         if fast_forward:
             self.c.fast_forward()
 
+    def unshift(self, fast_forward=True):
+        self.c.unshift()
+        if fast_forward:
+            self.c.fast_forward()
+
+    def set_break(self, int i):
+        self.c.set_break(i)
+
     def split_token(self, int i, int n, fast_forward=True):
         self.c.split(i, n)
         if fast_forward:
@@ -57,7 +66,7 @@ cdef class StateClass:
 
     @property
     def queue(self):
-        return {self.B(i) for i in range(self.c.buffer_length())}
+        return [self.B(i) for i in range(self.c.buffer_length)]
 
     @property
     def token_vector_lenth(self):

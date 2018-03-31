@@ -66,7 +66,7 @@ cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) no
 cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
     cdef weight_t cost = 0
     cdef int i, B_i
-    for i in range(stcls.buffer_length()):
+    for i in range(stcls.c.buffer_length):
         B_i = stcls.B(i)
         cost += gold.heads[B_i] == target
         cost += gold.heads[target] == B_i
@@ -118,7 +118,7 @@ cdef class Shift:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and sent_start != 1
+        return st.buffer_length >= 2 and not st.shifted[st.B(0)] and sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -137,10 +137,11 @@ cdef class Shift:
 
     @staticmethod
     cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
-        if gold.fused_tokens[s.B(1)] == label:
-            return 0
-        else:
-            return 1
+        return 0
+        #if gold.fused_tokens[s.B(1)] == label:
+        #    return 0
+        #else:
+        #    return 1
 
 
 cdef class Reduce:
@@ -265,7 +266,7 @@ cdef class Break:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.set_break(st.B_(0).l_edge)
+        st.set_break(0)
         st.fast_forward()
 
     @staticmethod
@@ -278,7 +279,7 @@ cdef class Break:
         cdef int i, j, S_i, B_i
         for i in range(s.stack_depth()):
             S_i = s.S(i)
-            for j in range(s.buffer_length()):
+            for j in range(s.c.buffer_length):
                 B_i = s.B(j)
                 cost += gold.heads[S_i] == B_i
                 cost += gold.heads[B_i] == S_i
