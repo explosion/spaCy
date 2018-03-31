@@ -52,7 +52,7 @@ cdef class Vectors:
     cdef public object name
     cdef public object data
     cdef public object key2row
-    cdef cppset[int] _unset
+    cdef public cppset[int] _unset
 
     def __init__(self, *, shape=None, data=None, keys=None, name=None):
         """Create a new vector store.
