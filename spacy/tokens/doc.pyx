@@ -34,6 +34,7 @@ from ..compat import is_config, copy_reg, pickle, basestring_
 from .. import about
 from .. import util
 from .underscore import Underscore
+from ._retokenize import Retokenizer
 
 DEF PADDING = 5
 
@@ -888,6 +889,18 @@ cdef class Doc:
         else:
             self.tensor = xp.hstack((self.tensor, tensor))
 
+    def retokenize(self):
+        '''Context manager to handle retokenization of the Doc. 
+        Modifications to the Doc's tokenization are stored, and then
+        made all at once when the context manager exits. This is
+        much more efficient, and less error-prone.
+
+        All views of the Doc (Span and Token) created before the
+        retokenization are invalidated, although they may accidentally
+        continue to work.
+        '''
+        return Retokenizer(self)
+
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Retokenize the document, such that the span at
         `doc.text[start_idx : end_idx]` is merged into a single token. If
@@ -941,66 +954,8 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = self[start:end]
-        # Get LexemeC for newly merged token
-        new_orth = ''.join([t.text_with_ws for t in span])
-        if span[-1].whitespace_:
-            new_orth = new_orth[:-len(span[-1].whitespace_)]
-        cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
-        # House the new merged token where it starts
-        cdef TokenC* token = &self.c[start]
-        token.spacy = self.c[end-1].spacy
-        for attr_name, attr_value in attributes.items():
-            if attr_name == TAG:
-                self.vocab.morphology.assign_tag(token, attr_value)
-            else:
-                Token.set_struct_attr(token, attr_name, attr_value)
-        # Make sure ent_iob remains consistent
-        if self.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
-            if token.ent_type == self.c[end].ent_type:
-                token.ent_iob = 3
-            else:
-                # If they're not the same entity type, let them be two entities
-                self.c[end].ent_iob = 3
-        # Begin by setting all the head indices to absolute token positions
-        # This is easier to work with for now than the offsets
-        # Before thinking of something simpler, beware the case where a
-        # dependency bridges over the entity. Here the alignment of the
-        # tokens changes.
-        span_root = span.root.i
-        token.dep = span.root.dep
-        # We update token.lex after keeping span root and dep, since
-        # setting token.lex will change span.start and span.end properties
-        # as it modifies the character offsets in the doc
-        token.lex = lex
-        for i in range(self.length):
-            self.c[i].head += i
-        # Set the head of the merged token, and its dep relation, from the Span
-        token.head = self.c[span_root].head
-        # Adjust deps before shrinking tokens
-        # Tokens which point into the merged token should now point to it
-        # Subtract the offset from all tokens which point to >= end
-        offset = (end - start) - 1
-        for i in range(self.length):
-            head_idx = self.c[i].head
-            if start <= head_idx < end:
-                self.c[i].head = start
-            elif head_idx >= end:
-                self.c[i].head -= offset
-        # Now compress the token array
-        for i in range(end, self.length):
-            self.c[i - offset] = self.c[i]
-        for i in range(self.length - offset, self.length):
-            memset(&self.c[i], 0, sizeof(TokenC))
-            self.c[i].lex = &EMPTY_LEXEME
-        self.length -= offset
-        for i in range(self.length):
-            # ...And, set heads back to a relative position
-            self.c[i].head -= i
-        # Set the left/right children, left/right edges
-        set_children_from_heads(self.c, self.length)
-        # Clear the cached Python objects
-        # Return the merged Python object
+        with self.retokenize() as retokenizer:
+            retokenizer.merge(self[start:end], attrs=attributes)
         return self[start]
 
     def print_tree(self, light=False, flat=False):
