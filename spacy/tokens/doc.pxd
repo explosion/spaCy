@@ -28,6 +28,8 @@ cdef int token_by_start(const TokenC* tokens, int length, int start_char) except
 cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 
 
+cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+
 cdef class Doc:
     cdef readonly Pool mem
     cdef readonly Vocab vocab
