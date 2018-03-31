@@ -11,6 +11,7 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
+from ..typedefs cimport attr_t
 from ..attrs cimport *
 
 
@@ -47,6 +48,21 @@ cdef class Retokenizer:
             _merge(self.doc, start, end+1, attrs)
         for start_char, orths, attrs in self.splits:
             raise NotImplementedError
+
+
+def _fix_parse_tree(Doc doc, parse_tree):
+    # Currently unused -- placeholder
+    cdef attr_t label
+    cdef int token_idx, head_idx, child, head
+    for token_idx, (head_idx, label) in parse_tree.items():
+        child = token_by_start(doc.c, doc.length, token_idx)
+        head = token_by_start(doc.c, doc.length, head_idx)
+        if head != -1 and child != -1:
+            doc.c[child].head = head-child
+            doc.c[child].dep = label
+        else:
+            raise NotImplementedError
+    set_children_from_heads(doc.c, doc.length)
 
 
 def _merge(Doc doc, int start, int end, attributes):
@@ -126,4 +142,27 @@ def _merge(Doc doc, int start, int end, attributes):
     # Return the merged Python object
     return doc[start]
 
-
+#        cdef int PADDING = 5
+#        cdef int j
+#        # Unwind the padding, so we can work with the original pointer.
+#        this._sent -= PADDING
+#        this._sent = <TokenC*>realloc(this._sent,
+#                        ((this.length+n+1) + (PADDING * 2)) * sizeof(TokenC))
+#        for j in range(this.length+PADDING*2, this.length+n+1+PADDING*2):
+#            this._sent[j] = this._empty_token
+#        # Put the start padding back in
+#        this._sent += PADDING
+#        # In our example, we want to move words 6-10 to 8-12. So we must move
+#        # a block of 4 words.
+#        cdef int n_moved = this.length - (i+1) 
+#        cdef int move_from = i+1
+#        cdef int move_to = i+n+1
+#        memmove(&this._sent[move_to], &this._sent[move_from],
+#                n_moved*sizeof(TokenC))
+#        # Now copy the token that has been split into its neighbours.
+#        for j in range(i+1, i+n+1):
+#            this._sent[j] = this._sent[i]
+#        # Finally, adjust length.
+#        this.length += n
+#
+#
