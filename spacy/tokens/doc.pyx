@@ -34,6 +34,7 @@ from ..compat import is_config, copy_reg, pickle, basestring_
 from .. import about
 from .. import util
 from .underscore import Underscore
+from ._retokenize import Retokenizer
 
 DEF PADDING = 5
 
@@ -186,6 +187,20 @@ cdef class Doc:
     def _(self):
         return Underscore(Underscore.doc_extensions, self)
 
+    @property
+    def is_sentenced(self):
+        # Check if the document has sentence boundaries,
+        # i.e at least one tok has the sent_start in (-1, 1)
+        if 'sents' in self.user_hooks:
+            return True
+        if self.is_parsed:
+            return True
+        for i in range(self.length):
+            if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
+                return True
+        else:
+            return False
+
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
 
@@ -305,7 +320,7 @@ cdef class Doc:
                         break
                 else:
                     return 1.0
-
+ 
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -517,29 +532,23 @@ cdef class Doc:
             >>> assert [s.root.text for s in doc.sents] == ["is", "'s"]
         """
         def __get__(self):
+            if not self.is_sentenced:
+                raise ValueError(
+                    "Sentence boundaries unset. You can add the 'sentencizer' "
+                    "component to the pipeline with: "
+                    "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
+                    "Alternatively, add the dependency parser, or set "
+                    "sentence boundaries by setting doc[i].sent_start")
             if 'sents' in self.user_hooks:
                 yield from self.user_hooks['sents'](self)
-                return
-
-            cdef int i
-            if not self.is_parsed:
+            else:
+                start = 0
                 for i in range(1, self.length):
-                    if self.c[i].sent_start != 0:
-                        break
-                else:
-                    raise ValueError(
-                        "Sentence boundaries unset. You can add the 'sentencizer' "
-                        "component to the pipeline with: "
-                        "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
-                        "Alternatively, add the dependency parser, or set "
-                        "sentence boundaries by setting doc[i].sent_start")
-            start = 0
-            for i in range(1, self.length):
-                if self.c[i].sent_start == 1:
-                    yield Span(self, start, i)
-                    start = i
-            if start != self.length:
-                yield Span(self, start, self.length)
+                    if self.c[i].sent_start == 1:
+                        yield Span(self, start, i)
+                        start = i
+                if start != self.length:
+                    yield Span(self, start, self.length)
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
         if self.length == 0:
@@ -559,9 +568,7 @@ cdef class Doc:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
         t.l_edge = self.length
         t.r_edge = self.length
-        if t.lex.orth == 0:
-            raise ValueError("Invalid token: empty string ('') at position {}"
-                             .format(self.length))
+        assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
         return t.idx + t.lex.length + t.spacy
@@ -882,6 +889,18 @@ cdef class Doc:
         else:
             self.tensor = xp.hstack((self.tensor, tensor))
 
+    def retokenize(self):
+        '''Context manager to handle retokenization of the Doc. 
+        Modifications to the Doc's tokenization are stored, and then
+        made all at once when the context manager exits. This is
+        much more efficient, and less error-prone.
+
+        All views of the Doc (Span and Token) created before the
+        retokenization are invalidated, although they may accidentally
+        continue to work.
+        '''
+        return Retokenizer(self)
+
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Retokenize the document, such that the span at
         `doc.text[start_idx : end_idx]` is merged into a single token. If
@@ -935,66 +954,8 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = self[start:end]
-        # Get LexemeC for newly merged token
-        new_orth = ''.join([t.text_with_ws for t in span])
-        if span[-1].whitespace_:
-            new_orth = new_orth[:-len(span[-1].whitespace_)]
-        cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
-        # House the new merged token where it starts
-        cdef TokenC* token = &self.c[start]
-        token.spacy = self.c[end-1].spacy
-        for attr_name, attr_value in attributes.items():
-            if attr_name == TAG:
-                self.vocab.morphology.assign_tag(token, attr_value)
-            else:
-                Token.set_struct_attr(token, attr_name, attr_value)
-        # Make sure ent_iob remains consistent
-        if self.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
-            if token.ent_type == self.c[end].ent_type:
-                token.ent_iob = 3
-            else:
-                # If they're not the same entity type, let them be two entities
-                self.c[end].ent_iob = 3
-        # Begin by setting all the head indices to absolute token positions
-        # This is easier to work with for now than the offsets
-        # Before thinking of something simpler, beware the case where a
-        # dependency bridges over the entity. Here the alignment of the
-        # tokens changes.
-        span_root = span.root.i
-        token.dep = span.root.dep
-        # We update token.lex after keeping span root and dep, since
-        # setting token.lex will change span.start and span.end properties
-        # as it modifies the character offsets in the doc
-        token.lex = lex
-        for i in range(self.length):
-            self.c[i].head += i
-        # Set the head of the merged token, and its dep relation, from the Span
-        token.head = self.c[span_root].head
-        # Adjust deps before shrinking tokens
-        # Tokens which point into the merged token should now point to it
-        # Subtract the offset from all tokens which point to >= end
-        offset = (end - start) - 1
-        for i in range(self.length):
-            head_idx = self.c[i].head
-            if start <= head_idx < end:
-                self.c[i].head = start
-            elif head_idx >= end:
-                self.c[i].head -= offset
-        # Now compress the token array
-        for i in range(end, self.length):
-            self.c[i - offset] = self.c[i]
-        for i in range(self.length - offset, self.length):
-            memset(&self.c[i], 0, sizeof(TokenC))
-            self.c[i].lex = &EMPTY_LEXEME
-        self.length -= offset
-        for i in range(self.length):
-            # ...And, set heads back to a relative position
-            self.c[i].head -= i
-        # Set the left/right children, left/right edges
-        set_children_from_heads(self.c, self.length)
-        # Clear the cached Python objects
-        # Return the merged Python object
+        with self.retokenize() as retokenizer:
+            retokenizer.merge(self[start:end], attrs=attributes)
         return self[start]
 
     def print_tree(self, light=False, flat=False):
