@@ -843,6 +843,8 @@ cdef class Parser:
         cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
                                          min_freq=cfg.get('min_action_freq', 30))
+        for action, freqs in self.moves.labels.items():
+            actions.setdefault(action, {}).update(freqs)
         self.moves.initialize_actions(actions)
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
