@@ -552,7 +552,7 @@ cdef class Parser:
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
         assert len(docs) == len(golds)
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
+        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.5:
             return self.update_beam(docs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
                     drop=drop, sgd=sgd, losses=losses)
