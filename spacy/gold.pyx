@@ -442,6 +442,7 @@ cdef class GoldParse:
         self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.sent_start = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
+        self.c.fused = <int*>self.mem.alloc(len(doc), sizeof(int))
 
         self.cats = {} if cats is None else dict(cats)
         self.words = [None] * len(doc)

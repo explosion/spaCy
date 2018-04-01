@@ -12,7 +12,7 @@ cdef struct GoldParseC:
     int* sent_start
     attr_t* labels
     int** brackets
-    int* fused_tokens
+    int* fused
     Transition* ner
 
 
