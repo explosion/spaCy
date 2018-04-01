@@ -147,7 +147,7 @@ def test_non_monotonic_sequence_four_words(arc_eager, vocab):
     assert c1['R-right'] != 0.0
     c2 = cost_history.pop(0)
     assert c2['R-right'] != 0.0
-    assert c2['B-ROOT'] == 9000.0
+    assert c2['B-ROOT'] == 0.0
     assert c2['D'] == 0.0
     c3 = cost_history.pop(0)
     assert c3['L-left'] == -1.0
@@ -169,7 +169,7 @@ def test_oracle_at_sentence_break(arc_eager, vocab):
     c2 = cost_history.pop(0)
     c3 = cost_history.pop(0)
     assert c2['D'] == 0.0
-    assert c2['B-ROOT'] == 9000.0
+    assert c2['B-ROOT'] == 0.0
     assert c3['B-ROOT'] == 0.0
     assert c3['D'] == 9000.0
 
