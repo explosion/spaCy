@@ -64,3 +64,16 @@ def test_align_many_to_one():
 
     assert j2i_multi[0] == 1
     assert j2i_multi[1] == 3
+
+def test_align_one_to_many():
+    words1 = ['a', 'bc', 'd']
+    words2 = ['a', 'b', 'c', 'd']
+    cost, i2j, j2i, matrix = align(words1, words2)
+    assert list(i2j) == [0, -1, 3]
+    lengths1 = [len(w) for w in words1]
+    lengths2 = [len(w) for w in words2]
+    multi_j2i, multi_i2j = multi_align(j2i, i2j, lengths2, lengths1)
+    unsegmented = {}
+    for j, i in multi_j2i.items():
+        unsegmented.setdefault(i, []).append(j)
+    assert unsegmented[1] == [1, 2]
