@@ -189,7 +189,9 @@ cdef cppclass StateC:
             return False
         elif this._sent[this.B_(0).l_edge].sent_start < 0:
             return False
-        elif this.stack_depth() < 1: # ?? I guess stops first action break?
+        # We only want to break when the 'root' word is on the stack, so that
+        # we can add the label.
+        elif this.stack_depth() != 1: 
             return False
         elif this.at_break():
             return False
