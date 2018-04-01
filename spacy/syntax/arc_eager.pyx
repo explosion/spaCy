@@ -474,16 +474,21 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
-        for i, (head, dep) in enumerate(zip(gold.heads, gold.labels)):
+        for i, (head_group, dep_group) in enumerate(zip(gold.heads, gold.labels)):
             # Missing values
-            if head is None or dep is None:
+            if head_group is None or dep_group is None:
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
-            elif isinstance(head, list):
-                # TODO: This is where the fused token stuff will happen
-                gold.c.heads[i] = i
-                gold.c.has_dep[i] = False
-            else:
+                continue
+            if not isinstance(head_group, list):
+                # Map the simple format into the elaborate one we need for
+                # the fused tokens.
+                head_group = [(head_group, 0)]
+                dep_group = [dep_group]
+            for head_addr, dep in zip(head_group, dep_group):
+                if not isinstance(head_addr, tuple):
+                    head_addr = (head_addr, 0)
+                head, subtoken = head_addr
                 if head > i:
                     action = LEFT
                 elif head < i:
