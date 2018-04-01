@@ -22,6 +22,7 @@ cdef int BINARY_COSTS = 1
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = True
+DEF USE_SPLIT = False
 
 cdef weight_t MIN_SCORE = -90000
 
