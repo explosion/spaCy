@@ -131,7 +131,7 @@ def test_oracle_four_words(arc_eager, vocab):
         assert state_costs[actions[i]] == 0.0, actions[i]
         for other_action, cost in state_costs.items():
             if other_action != actions[i]:
-                assert cost >= 1
+                assert cost >= 1, (i, other_action, actions[i])
 
 def test_non_monotonic_sequence_four_words(arc_eager, vocab):
     words = ['a', 'b', 'c', 'd']
@@ -147,24 +147,31 @@ def test_non_monotonic_sequence_four_words(arc_eager, vocab):
     assert c1['R-right'] != 0.0
     c2 = cost_history.pop(0)
     assert c2['R-right'] != 0.0
-    assert c2['B-ROOT'] == 0.0
+    assert c2['B-ROOT'] == 9000.0
     assert c2['D'] == 0.0
     c3 = cost_history.pop(0)
     assert c3['L-left'] == -1.0
+    c4 = cost_history.pop(0)
+    assert c4['D'] == 0.0
+    c5 = cost_history.pop(0)
+    assert c5['B-ROOT'] == 0.0
  
 
-def test_reduce_is_gold_at_break(arc_eager, vocab):
+def test_oracle_at_sentence_break(arc_eager, vocab):
     words = ['a', 'b', 'c', 'd']
     heads = [1, 1, 3, 3]
     deps = ['left', 'B-ROOT', 'left', 'B-ROOT']
-    actions = ['S', 'R-right', 'B-ROOT', 'D', 'S', 'L-left', 'S']
+    actions = ['S', 'R-right', 'D', 'B-ROOT', 'S']
     state, cost_history = get_sequence_costs(arc_eager, words, heads, deps, actions)
-    assert state.is_final(), state.print_state(words)
+    assert not state.is_final(), state.print_state(words)
     c0 = cost_history.pop(0)
     c1 = cost_history.pop(0)
     c2 = cost_history.pop(0)
     c3 = cost_history.pop(0)
-    assert c3['D'] == 0.0
+    assert c2['D'] == 0.0
+    assert c2['B-ROOT'] == 9000.0
+    assert c3['B-ROOT'] == 0.0
+    assert c3['D'] == 9000.0
 
 annot_tuples = [
     (0, 'When', 'WRB', 11, 'advmod', 'O'),
