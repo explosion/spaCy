@@ -72,7 +72,7 @@ punct_re = re.compile(r'\W')
 def align(cand_words, gold_words):
     if cand_words == gold_words:
         alignment = numpy.arange(len(cand_words))
-        return 0, alignment, alignment, {}, {}
+        return 0, alignment, alignment, {}, {}, []
     cand_words = [w.replace(' ', '') for w in cand_words]
     gold_words = [w.replace(' ', '') for w in gold_words]
     cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
@@ -86,7 +86,12 @@ def align(cand_words, gold_words):
         if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
             j2i[j] = i
             j2i_multi.pop(j)
-    return cost, i2j, j2i, i2j_multi, j2i_multi
+    reverse_j2i, reverse_i2j = _align.multi_align(j2i, i2j, [len(w) for w in gold_words],
+                                [len(w) for w in cand_words])
+    undersegmented = {}
+    for j, i in reverse_j2i.items():
+        undersegmented.setdefault(i, []).append(j)
+    return cost, i2j, j2i, i2j_multi, j2i_multi, undersegmented
 
 
 class GoldCorpus(object):
@@ -380,6 +385,47 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
+def _flatten_fused_heads(heads):
+    '''Let's say we have a heads array with fused tokens. We might have
+    something like:
+    
+    [[(0, 1), 1], 1]
+
+    This indicates that token 0 aligns to two gold tokens. The head of the
+    first subtoken is the second subtoken. The head of the second subtoken
+    is the second token.
+
+    So we expand to a tree:
+
+    [1, 2, 2]
+
+    This is helpful for preventing other functions from knowing our weird
+    format.
+    '''
+    # Get an alignment -- normalize to the more complicated format; so
+    # if we have an int i, treat it as [(i, 0)]
+    j = 0
+    alignment = {(None, 0): None}
+    for i, tokens in enumerate(heads):
+        if not isinstance(tokens, list):
+            alignment[(i, 0)] = j
+            j += 1
+        else:
+            for sub_i in range(len(tokens)):
+                alignment[(i, sub_i)] = j
+                j += 1
+    # Apply the alignment to get the new values
+    new = []
+    for head_vals in heads:
+        if not isinstance(head_vals, list):
+            head_vals = [(head_vals, 0)]
+        for head_val in head_vals:
+            if not isinstance(head_val, tuple):
+                head_val = (head_val, 0)
+            new.append(alignment[head_val])
+    return new
+
+
 cdef class GoldParse:
     """Collection for training annotations."""
     @classmethod
@@ -418,15 +464,15 @@ cdef class GoldParse:
         if words is None:
             words = [token.text for token in doc]
         if tags is None:
-            tags = [None for _ in doc]
+            tags = [None for _ in words]
         if heads is None:
-            heads = [None for token in doc]
+            heads = [None for token in words]
         if deps is None:
-            deps = [None for _ in doc]
+            deps = [None for _ in words]
         if entities is None:
-            entities = [None for _ in doc]
+            entities = [None for _ in words]
         elif len(entities) == 0:
-            entities = ['O' for _ in doc]
+            entities = ['O' for _ in words]
         elif not isinstance(entities[0], basestring):
             # Assume we have entities specified by character offset.
             entities = biluo_tags_from_offsets(doc, entities)
@@ -462,7 +508,7 @@ cdef class GoldParse:
         # sequence of gold words.
         # If we "mis-segment", we'll have a sequence of predicted words covering
         # a sequence of gold words. That's many-to-many -- we don't do that.
-        cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
+        cost, i2j, j2i, i2j_multi, j2i_multi, undersegmented = align([t.orth_ for t in doc], words)
 
         self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
         self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
@@ -478,7 +524,18 @@ cdef class GoldParse:
                 self.labels[i] = None
                 self.ner[i] = 'O'
             if gold_i is None:
-                if i in i2j_multi:
+                if i in undersegmented:
+                    self.words[i] = [words[j] for j in undersegmented[i]]
+                    self.tags[i] = [tags[j] for j in undersegmented[i]]
+                    self.labels[i] = [deps[j] for j in undersegmented[i]]
+                    self.ner[i] = [entities[j] for j in undersegmented[i]]
+                    self.heads[i] = []
+                    for h in [heads[j] for j in undersegmented[i]]:
+                        if heads[h] is None:
+                            self.heads[i].append(None)
+                        else:
+                            self.heads[i].append(self.gold_to_cand[heads[h]])
+                elif i in i2j_multi:
                     self.words[i] = words[i2j_multi[i]]
                     self.tags[i] = tags[i2j_multi[i]]
                     is_last = i2j_multi[i] != i2j_multi.get(i+1)
@@ -495,25 +552,26 @@ cdef class GoldParse:
                     # BILOU tags. We can't have BB or LL etc.
                     # Case 1: O -- easy.
                     ner_tag = entities[i2j_multi[i]]
-                    if ner_tag == 'O':
-                        self.ner[i] = 'O'
-                    # Case 2: U. This has to become a B I* L sequence.
-                    elif ner_tag.startswith('U-'):
-                        if is_first:
-                            self.ner[i] = ner_tag.replace('U-', 'B-', 1)
-                        elif is_last:
-                            self.ner[i] = ner_tag.replace('U-', 'L-', 1)
-                        else:
-                            self.ner[i] = ner_tag.replace('U-', 'I-', 1)
-                    # Case 3: L. If not last, change to I.
-                    elif ner_tag.startswith('L-'):
-                        if is_last:
+                    if ner_tag is not None:
+                        if ner_tag == 'O':
+                            self.ner[i] = 'O'
+                        # Case 2: U. This has to become a B I* L sequence.
+                        elif ner_tag.startswith('U-'):
+                            if is_first:
+                                self.ner[i] = ner_tag.replace('U-', 'B-', 1)
+                            elif is_last:
+                                self.ner[i] = ner_tag.replace('U-', 'L-', 1)
+                            else:
+                                self.ner[i] = ner_tag.replace('U-', 'I-', 1)
+                        # Case 3: L. If not last, change to I.
+                        elif ner_tag.startswith('L-'):
+                            if is_last:
+                                self.ner[i] = ner_tag
+                            else:
+                                self.ner[i] = ner_tag.replace('L-', 'I-', 1)
+                        # Case 4: I. Stays correct
+                        elif ner_tag.startswith('I-'):
                             self.ner[i] = ner_tag
-                        else:
-                            self.ner[i] = ner_tag.replace('L-', 'I-', 1)
-                    # Case 4: I. Stays correct
-                    elif ner_tag.startswith('I-'):
-                        self.ner[i] = ner_tag
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
@@ -523,8 +581,7 @@ cdef class GoldParse:
                     self.heads[i] = self.gold_to_cand[heads[gold_i]]
                 self.labels[i] = deps[gold_i]
                 self.ner[i] = entities[gold_i]
-
-        cycle = nonproj.contains_cycle(self.heads)
+        cycle = nonproj.contains_cycle(_flatten_fused_heads(self.heads))
         if cycle is not None:
             raise Exception("Cycle found: %s" % cycle)
 
