@@ -157,6 +157,45 @@ cdef cppclass StateC:
             else:
                 ids[i] = -1
 
+    int can_push() nogil const:
+        if this.buffer_length == 0:
+            return 0
+        else:
+            return 1
+
+    int can_pop() nogil const:
+        if this.stack_depth() < 1:
+            return 0
+        else:
+            return 1
+
+    int can_arc() nogil const:
+        if this.at_break():
+            return 0
+        elif this.stack_depth() < 1:
+            return 0
+        elif this.buffer_length == 0:
+            return 0
+        else:
+            return 1
+
+    int can_break() nogil const:
+        if this.buffer_length == 0:
+            return False
+        elif this.B_(0).l_edge < 0:
+            return False
+        elif this._sent[this.B_(0).l_edge].sent_start < 0:
+            return False
+        elif this.stack_depth() < 1: # ?? I guess stops first action break?
+            return False
+        elif this.at_break():
+            return False
+        else:
+            return True
+    
+    int can_split() nogil const:
+        return 0
+
     int S(int i) nogil const:
         if i >= this._s_i:
             return -1
@@ -265,7 +304,7 @@ cdef cppclass StateC:
         return this._n_until_break == 0
 
     bint is_final() nogil const:
-        return this.stack_depth() <= 0 and this.buffer_length == 0
+        return this.stack_depth() <= 1 and this.buffer_length == 0
 
     bint has_head(int i) nogil const:
         return this.safe_get(i).head != 0
@@ -286,6 +325,12 @@ cdef cppclass StateC:
 
     int stack_depth() nogil const:
         return this._s_i
+
+    int segment_length() nogil const:
+        if this._n_until_break != -1:
+            return this._n_until_break
+        else:
+            return this.buffer_length
 
     uint64_t hash() nogil const:
         cdef TokenC[11] sig
@@ -460,69 +505,3 @@ cdef cppclass StateC:
         this._n_until_break = src._n_until_break
         this.offset = src.offset
         this._empty_token = src._empty_token
-
-    void fast_forward() nogil:
-        # space token attachement policy:
-        # - attach space tokens always to the last preceding real token
-        # - except if it's the beginning of a sentence, then attach to the first following
-        # - boundary case: a document containing multiple space tokens but nothing else,
-        #   then make the last space token the head of all others
-
-        while is_space_token(this.B_(0)) \
-        or this.eol() \
-        or this.stack_depth() == 0:
-            if this.eol():
-                # remove the last sentence's root from the stack
-                if this.stack_depth() == 1:
-                    this.pop()
-                # parser got stuck: reduce stack or unshift
-                elif this.stack_depth() > 1:
-                    if this.has_head(this.S(0)):
-                        this.pop()
-                    else:
-                        this.unshift()
-                # stack is empty but there is another sentence on the buffer
-                elif this.buffer_length != 0:
-                    this.push()
-                else: # stack empty and nothing else coming
-                    break
-
-            elif is_space_token(this.B_(0)):
-                # the normal case: we're somewhere inside a sentence
-                if this.stack_depth() > 0:
-                    # assert not is_space_token(this.S_(0))
-                    # attach all coming space tokens to their last preceding
-                    # real token (which should be on the top of the stack)
-                    while is_space_token(this.B_(0)):
-                        this.add_arc(this.S(0),this.B(0),0)
-                        this.push()
-                        this.pop()
-                # the rare case: we're at the beginning of a document:
-                # space tokens are attached to the first real token on the buffer
-                elif this.stack_depth() == 0:
-                    # store all space tokens on the stack until a real token shows up
-                    # or the last token on the buffer is reached
-                    while is_space_token(this.B_(0)) and this.buffer_length > 1:
-                        this.push()
-                    # empty the stack by attaching all space tokens to the
-                    # first token on the buffer
-                    # boundary case: if all tokens are space tokens, the last one
-                    # becomes the head of all others
-                    while this.stack_depth() > 0:
-                        this.add_arc(this.B(0),this.S(0),0)
-                        this.pop()
-                    # move the first token onto the stack
-                    this.push()
-
-            elif this.stack_depth() == 0:
-                # for one token sentences (?)
-                if this.buffer_length == 1:
-                    this.push()
-                    this.pop()
-                # with an empty stack and a non-empty buffer
-                # only shift is valid anyway
-                elif this.buffer_length != 0:
-                    this.push()
-
-            else: # can this even happen?
-                break

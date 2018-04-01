@@ -17,7 +17,10 @@ def vocab():
 
 @pytest.fixture
 def moves(vocab):
-    aeager = ArcEager(vocab.strings, {})
+    aeager = ArcEager(vocab.strings)
+    aeager.add_action(0, '')
+    aeager.add_action(1, '')
+    aeager.add_action(4, 'ROOT')
     aeager.add_action(2, 'nsubj')
     aeager.add_action(3, 'dobj')
     aeager.add_action(2, 'aux')

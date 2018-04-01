@@ -137,6 +137,3 @@ cdef class StateClass:
 
     cdef inline void clone(self, StateClass src) nogil:
         self.c.clone(src.c)
-
-    cdef inline void fast_forward(self) nogil:
-        self.c.fast_forward()

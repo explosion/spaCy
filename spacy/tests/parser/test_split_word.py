@@ -39,5 +39,5 @@ def test_split():
     doc = get_doc('abcd')
     state = StateClass(doc, max_split=3)
     assert state.queue == [0, 1, 2, 3]
-    state.split_token(1, 2, fast_forward=False)
+    state.split_token(1, 2)
     assert state.queue == [0, 1, 1*4+1, 2*4+1, 2, 3]

@@ -41,7 +41,6 @@ def test_init_parser(parser):
     pass
 
 # TODO: This is flakey, because it depends on what the parser first learns.
-@pytest.mark.xfail
 def test_add_label(parser):
     doc = Doc(parser.vocab, words=['a', 'b', 'c', 'd'])
     doc = parser(doc)

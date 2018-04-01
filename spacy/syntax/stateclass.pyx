@@ -30,28 +30,32 @@ cdef class StateClass:
     def get_S(self, int i):
         return self.c.S(i)
 
-    def push_stack(self, fast_forward=True):
+    def can_push(self):
+        return self.c.can_push()
+
+    def can_pop(self):
+        return self.c.can_pop()
+
+    def can_break(self):
+        return self.c.can_break()
+
+    def can_arc(self):
+        return self.c.can_arc()
+
+    def push_stack(self):
         self.c.push()
-        if fast_forward:
-            self.c.fast_forward()
 
-    def pop_stack(self, fast_forward=True):
+    def pop_stack(self):
         self.c.pop()
-        if fast_forward:
-            self.c.fast_forward()
 
-    def unshift(self, fast_forward=True):
+    def unshift(self):
         self.c.unshift()
-        if fast_forward:
-            self.c.fast_forward()
 
     def set_break(self, int i):
         self.c.set_break(i)
 
-    def split_token(self, int i, int n, fast_forward=True):
+    def split_token(self, int i, int n):
         self.c.split(i, n)
-        if fast_forward:
-            self.c.fast_forward()
 
     def get_doc(self, vocab):
         cdef Doc doc = Doc(vocab)

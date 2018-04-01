@@ -66,7 +66,7 @@ cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) no
 cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
     cdef weight_t cost = 0
     cdef int i, B_i
-    for i in range(stcls.c.buffer_length):
+    for i in range(stcls.c.segment_length()):
         B_i = stcls.B(i)
         cost += gold.heads[B_i] == target
         cost += gold.heads[target] == B_i
@@ -74,8 +74,8 @@ cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nog
             break
         if BINARY_COSTS and cost >= 1:
             return cost
-    if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
-        cost += 1
+    #if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
+    #    cost += 1
     return cost
 
 
@@ -117,15 +117,23 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return st.buffer_length >= 2 and not st.shifted[st.B(0)] and sent_start != 1
+        if not st.can_push():
+            return False
+        elif st.stack_depth() == 0: # If the stack is empty, we must push
+            return True
+        elif st.shifted[st.B(0)]:
+            return False
+        elif st.at_break():
+            return False
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        if label != 0:
-            st.split(st.B(1), label)
+        #if label != 0:
+        #    st.split(st.B(1), label)
+        st.shifted[st.B(0)] = 1
         st.push()
-        st.fast_forward()
 
     @staticmethod
     cdef weight_t cost(StateClass st, const GoldParseC* gold, attr_t label) nogil:
@@ -138,7 +146,7 @@ cdef class Shift:
     @staticmethod
     cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return 0
-        #if gold.fused_tokens[s.B(1)] == label:
+        #if gold.fused_tokens[s.B(1)] == label: TODO
         #    return 0
         #else:
         #    return 1
@@ -147,15 +155,21 @@ cdef class Shift:
 cdef class Reduce:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.stack_depth() >= 2
+        if st.stack_depth() >= 2:
+            return True
+        elif st.at_break() and st.stack_depth() == 1:
+            return True
+        else:
+            return False
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         if st.has_head(st.S(0)):
             st.pop()
+        elif st.stack_depth() == 1 and st.at_break():
+            st.pop()
         else:
             st.unshift()
-        st.fast_forward()
 
     @staticmethod
     cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
@@ -165,15 +179,15 @@ cdef class Reduce:
     cdef inline weight_t move_cost(StateClass st, const GoldParseC* gold) nogil:
         cost = pop_cost(st, gold, st.S(0))
         if not st.has_head(st.S(0)):
-            # Decrement cost for the arcs e save
+            # Decrement cost for the arcs we save
             for i in range(1, st.stack_depth()):
                 S_i = st.S(i)
                 if gold.heads[st.S(0)] == S_i:
                     cost -= 1
                 if gold.heads[S_i] == st.S(0):
                     cost -= 1
-            if Break.is_valid(st.c, 0) and Break.move_cost(st, gold) == 0:
-                cost -= 1
+            #if Break.is_valid(st.c, 0) and Break.move_cost(st, gold) == 0:
+            #    cost -= 1
         return cost
 
     @staticmethod
@@ -184,18 +198,18 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return sent_start != 1
+        return st.can_arc()
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.add_arc(st.B(0), st.S(0), label)
         st.pop()
-        st.fast_forward()
 
     @staticmethod
     cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
-        return LeftArc.move_cost(s, gold) + LeftArc.label_cost(s, gold, label)
+        cdef weight_t move_cost = LeftArc.move_cost(s, gold)
+        cdef weight_t label_cost = LeftArc.label_cost(s, gold, label)
+        return move_cost + label_cost
 
     @staticmethod
     cdef inline weight_t move_cost(StateClass s, const GoldParseC* gold) nogil:
@@ -220,14 +234,17 @@ cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         # If there's (perhaps partial) parse pre-set, don't allow cycle.
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return sent_start != 1 and st.H(st.S(0)) != st.B(0)
+        if not st.can_arc():
+            return 0
+        elif st.H(st.S(0)) == st.B(0):
+            return 0
+        else:
+            return 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.add_arc(st.S(0), st.B(0), label)
         st.push()
-        st.fast_forward()
 
     @staticmethod
     cdef inline weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
@@ -253,21 +270,13 @@ cdef class Break:
         cdef int i
         if not USE_BREAK:
             return False
-        elif st.at_break():
-            return False
-        elif st.stack_depth() < 1:
-            return False
-        elif st.B_(0).l_edge < 0:
-            return False
-        elif st._sent[st.B_(0).l_edge].sent_start < 0:
-            return False
         else:
-            return True
+            return st.can_break()
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.set_break(0)
-        st.fast_forward()
+        st.pop()
 
     @staticmethod
     cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
@@ -317,7 +326,6 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
             st._sent[i].dep = 0
             st._sent[i].l_kids = 0
             st._sent[i].r_kids = 0
-    st.fast_forward()
     return <void*>st
 
 
@@ -520,7 +528,6 @@ cdef class ArcEager(TransitionSystem):
                 st._sent[i].dep = 0
                 st._sent[i].l_kids = 0
                 st._sent[i].r_kids = 0
-        st.fast_forward()
 
     cdef int finalize_state(self, StateC* st) nogil:
         cdef int i
