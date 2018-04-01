@@ -586,9 +586,9 @@ cdef class GoldParse:
             raise Exception("Cycle found: %s" % cycle)
 
     def __len__(self):
-        """Get the number of gold-standard tokens.
+        """Get the number of predicted tokens the annotations have been aligned to.
 
-        RETURNS (int): The number of gold-standard tokens.
+        RETURNS (int): The number of tokens.
         """
         return self.length
 
