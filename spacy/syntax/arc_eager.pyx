@@ -26,8 +26,12 @@ DEF USE_SPLIT = False
 
 cdef weight_t MIN_SCORE = -90000
 
-# Break transition from here
+# Break transition inspired by this paper:
 # http://www.aclweb.org/anthology/P13-1074
+# However, there's a significant difference in the constraints.
+# The most relevant factor is whether we predict Break early, or late:
+# do we wait until the root is on the stack, or do we predict when the last
+# word of the previous sentence is on the stack?
 cdef enum:
     SHIFT
     REDUCE
