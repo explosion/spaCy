@@ -38,6 +38,7 @@ cdef inline int ring_get(RingBufferC* ring, int i) nogil:
 cdef cppclass StateC:
     int* _stack
     int* _buffer
+    int* was_split
     bint* shifted
     TokenC* _sent
     Entity* _ents
@@ -56,6 +57,7 @@ cdef cppclass StateC:
         cdef int PADDING = 5
         this._buffer = <int*>calloc(length + (PADDING * 2), sizeof(int))
         this._stack = <int*>calloc(length + (PADDING * 2), sizeof(int))
+        this.was_split = <int*>calloc(length + (PADDING * 2), sizeof(int))
         this.shifted = <bint*>calloc(length + (PADDING * 2), sizeof(bint))
         this._sent = <TokenC*>calloc(length + (PADDING * 2), sizeof(TokenC))
         this._ents = <Entity*>calloc(length + (PADDING * 2), sizeof(Entity))
@@ -102,6 +104,7 @@ cdef cppclass StateC:
         free(this._buffer - PADDING)
         free(this._stack - PADDING)
         free(this.shifted - PADDING)
+        free(this.was_split)
 
     void set_context_tokens(int* ids, int n) nogil:
         if n == 2:
