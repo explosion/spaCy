@@ -479,6 +479,10 @@ cdef class ArcEager(TransitionSystem):
             if head is None or dep is None:
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
+            elif isinstance(head, list):
+                # TODO: This is where the fused token stuff will happen
+                gold.c.heads[i] = i
+                gold.c.has_dep[i] = False
             else:
                 if head > i:
                     action = LEFT

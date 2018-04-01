@@ -111,7 +111,10 @@ cdef class BiluoPushDown(TransitionSystem):
         if not self.has_gold(gold):
             return None
         for i in range(gold.length):
-            gold.c.ner[i] = self.lookup_transition(gold.ner[i])
+            if isinstance(gold.ner[i], list):
+                gold.c.ner[i] = self.lookup_transition(None)
+            else:
+                gold.c.ner[i] = self.lookup_transition(gold.ner[i])
         return gold
 
     def get_beam_annot(self, Beam beam):

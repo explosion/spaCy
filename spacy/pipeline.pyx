@@ -500,6 +500,8 @@ class Tagger(Pipe):
             for tag in gold.tags:
                 if tag is None:
                     correct[idx] = guesses[idx]
+                elif isinstance(tag, list): # Leave these latent for now.
+                    correct[idx] = guesses[idx]
                 else:
                     correct[idx] = tag_index[tag]
                 idx += 1
