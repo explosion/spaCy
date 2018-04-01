@@ -475,11 +475,11 @@ cdef class ArcEager(TransitionSystem):
         if not self.has_gold(gold):
             return None
         for i, (head_group, dep_group) in enumerate(zip(gold.heads, gold.labels)):
+            if not USE_SPLIT:
+                if isinstance(head_group, list):
+                    head_group = [(None, 0)]
+                    dep_group = [None]
             # Missing values
-            if head_group is None or dep_group is None:
-                gold.c.heads[i] = i
-                gold.c.has_dep[i] = False
-                continue
             if not isinstance(head_group, list):
                 # Map the simple format into the elaborate one we need for
                 # the fused tokens.
@@ -489,6 +489,10 @@ cdef class ArcEager(TransitionSystem):
                 if not isinstance(head_addr, tuple):
                     head_addr = (head_addr, 0)
                 head, subtoken = head_addr
+                if head is None or dep is None:
+                    gold.c.heads[i] = i
+                    gold.c.has_dep[i] = False
+                    continue
                 if head > i:
                     action = LEFT
                 elif head < i:
@@ -665,6 +669,8 @@ cdef class ArcEager(TransitionSystem):
             # Check label set --- leading cause
             label_set = set([self.strings[self.c[i].label] for i in range(self.n_moves)])
             for label_str in gold.labels:
+                if isinstance(label_str, list):
+                    continue
                 if label_str is not None and label_str not in label_set:
                     raise ValueError("Cannot get gold parser action: unknown label: %s" % label_str)
             # Check projectivity --- other leading cause
