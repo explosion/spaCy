@@ -124,8 +124,11 @@ class Alignment(object):
 
     def index_to_yours(self, index):
         '''Translate an index that points into their tokens to point into yours'''
-        alignment = self._t2y[index]
-        return alignment
+        if index is None:
+            return None
+        else:
+            alignment = self._t2y[index]
+            return alignment
         #if isinstance(alignment, int):
         #    return alignment
         #elif len(alignment) == 1 and isinstance(alignment, int):
@@ -170,8 +173,7 @@ class Alignment(object):
         [(0, 0), (0, 1), [1, 2]]
         '''
         if cand_words == gold_words:
-            alignment = numpy.arange(len(cand_words))
-            return 0, alignment, alignment, {}, {}, []
+            return 0, list(range(len(cand_words))), list(range(len(cand_words)))
         cand_words = [w.replace(' ', '') for w in cand_words]
         gold_words = [w.replace(' ', '') for w in gold_words]
         cost, i2j, j2i, matrix = levenshtein_align(cand_words, gold_words)
@@ -217,8 +219,9 @@ class Alignment(object):
         for head_vals in heads:
             if isinstance(head_vals, int):
                 head_vals = [(head_vals, 0)]
-            elif isinstance(head_vals, tuple):
-                head_vals = [None]
+            elif head_vals is None or isinstance(head_vals, tuple):
+                new.append(None)
+                continue
             for head_val in head_vals:
                 if not isinstance(head_val, tuple):
                     head_val = (head_val, 0)
