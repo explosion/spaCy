@@ -109,7 +109,9 @@ class Alignment(object):
         '''
         output = []
         for i, alignment in enumerate(self._y2t):
-            if isinstance(alignment, int):
+            if alignment is None:
+                output.append(None)
+            elif isinstance(alignment, int):
                 output.append(items[alignment])
             elif isinstance(alignment, tuple):
                 output.append((items[alignment[0]], alignment[1]))

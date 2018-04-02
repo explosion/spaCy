@@ -443,19 +443,45 @@ cdef class GoldParse:
         # sequence of gold words.
         # If we "mis-segment", we'll have a sequence of predicted words covering
         # a sequence of gold words. That's many-to-many -- we don't do that.
-        self._alignment = Alignment([t.orth_ for t in doc], words)
+        if words is not None:
+            self._alignment = Alignment([t.text for t in doc], words)
+        else:
+            self._alignment = Alignment([t.text for t in doc], [t.text for t in doc])
 
         annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
         self.orig_annot = list(zip(*annot_tuples))
 
-        self.words = self._alignment.to_yours(words)
-        self.tags = self._alignment.to_yours(tags)
-        self.labels = self._alignment.to_yours(deps)
-        self.tags = self._alignment.to_yours(tags)
-        self.ner = self._alignment.to_yours(entities)
-
-        aligned_heads = [self._alignment.index_to_yours(h) for h in heads]
-        self.heads = self._alignment.to_yours(aligned_heads)
+        if words is not None:
+            self.words = self._alignment.to_yours(words)
+        if tags is not None:
+            self.tags = self._alignment.to_yours(tags)
+        if deps is not None:
+            self.labels = self._alignment.to_yours(deps)
+        if tags is not None:
+            self.tags = self._alignment.to_yours(tags)
+        if entities is not None:
+            self.ner = self._alignment.to_yours(entities)
+        if heads is not None:
+            for gold_i, gold_head in enumerate(heads):
+                if gold_head is None:
+                    continue
+                cand_i = self._alignment._t2y[gold_i]
+                cand_head = self._alignment._t2y[gold_head]
+                if cand_i is None or cand_head is None:
+                    continue
+                elif isinstance(cand_i, int):
+                    self.heads[cand_i] = cand_head
+                elif isinstance(cand_i, list):
+                    for sub_i in cand_i[:-1]:
+                        self.heads[sub_i] = sub_i+1
+                    self.heads[cand_i[-1]] = cand_head
+                elif isinstance(cand_i, tuple):
+                    cand_i, sub_i = cand_i
+                    if not isinstance(self.heads[cand_i], list):
+                        self.heads[cand_i] = []
+                    while len(self.heads[cand_i]) <= sub_i:
+                        self.heads[cand_i].append(None)
+                    self.heads[cand_i][sub_i] = cand_head
 
         for i in range(len(doc)):
             # Fix spaces
@@ -472,13 +498,18 @@ cdef class GoldParse:
                 or not isinstance(self.labels[i+1], tuple) \
                 or self.labels[i][1] < sub_i:
                     self.labels[i] = self.labels[i][0]
-                    self.heads[i] = self.heads[i][0]
                 else:
                     self.labels[i] = 'subtok'
                     self.heads[i] = i+1
 
         cycle = nonproj.contains_cycle(self._alignment.flatten(self.heads))
         if cycle is not None:
+            print(repr(doc.text))
+            print([t.text for t in doc])
+            print(words)
+            print(self.labels)
+            print(list(enumerate(self.heads)))
+            print(heads)
             raise Exception("Cycle found: %s" % cycle)
 
     def __len__(self):
