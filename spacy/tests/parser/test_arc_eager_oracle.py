@@ -173,6 +173,21 @@ def test_oracle_at_sentence_break(arc_eager, vocab):
     assert c3['B-ROOT'] == 0.0
     assert c3['D'] == 9000.0
 
+
+def test_split_oracle(arc_eager, vocab):
+    gold_words = ['a', 'b', 'c']
+    doc = Doc(vocab, words=['ab', 'c'])
+    heads = [2, 2, 2]
+    deps = ['dep', 'dep', 'ROOT']
+    actions = ['P-1', 'S', 'L-dep', 'S', 'B-ROOT']
+    gold = GoldParse(doc, words=gold_words, heads=heads, deps=deps)
+    assert gold.heads == [[1, 1], 1]
+    assert gold.labels == [['dep', 'dep'], 'ROOT']
+    state = StateClass(doc)
+    M = arc_eager
+    M.preprocess_gold(gold)
+ 
+
 annot_tuples = [
     (0, 'When', 'WRB', 11, 'advmod', 'O'),
     (1, 'Walter', 'NNP', 2, 'compound', 'B-PERSON'),
