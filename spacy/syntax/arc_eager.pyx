@@ -508,14 +508,14 @@ cdef class ArcEager(TransitionSystem):
                     gold.c.labels[index] = 0
                     gold.c.has_dep[index] = False
         for child_i, (head_group, dep_group) in enumerate(zip(gold.heads, gold.labels)):
-            if not USE_SPLIT and isinstance(head_group, list):
+            if not USE_SPLIT and (isinstance(head_group, list) or isinstance(head_group, tuple)):
                 # Set as missing values if we don't handle token splitting
                 head_group = [(None, 0)]
                 dep_group = [None]
             if not isinstance(head_group, list):
                 # Map the simple format into the elaborate one we need for
                 # the fused tokens.
-                head_group = [(head_group, 0)]
+                head_group = [head_group]
                 dep_group = [dep_group]
             for child_j, (head_addr, dep) in enumerate(zip(head_group, dep_group)):
                 if not isinstance(head_addr, tuple):
