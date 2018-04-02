@@ -503,6 +503,8 @@ class Tagger(Pipe):
                 elif isinstance(tag, list): # Leave these latent for now.
                     correct[idx] = guesses[idx]
                 else:
+                    if isinstance(tag, tuple):
+                        tag = tag[0]
                     correct[idx] = tag_index[tag]
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
