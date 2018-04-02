@@ -32,6 +32,7 @@ cdef class GoldParse:
     cdef public list ents
     cdef public dict brackets
     cdef public object cats
+    cdef public object _alignment
 
     cdef readonly list cand_to_gold
     cdef readonly list gold_to_cand

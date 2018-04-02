@@ -465,6 +465,17 @@ cdef class GoldParse:
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
+            elif isinstance(self.labels[i], tuple):
+                sub_i = self.labels[i][1]
+                # If we're at the end of the subtoken, use the head and label
+                if (i+1) == len(self.labels) \
+                or not isinstance(self.labels[i+1], tuple) \
+                or self.labels[i][1] < sub_i:
+                    self.labels[i] = self.labels[i][0]
+                    self.heads[i] = self.heads[i][0]
+                else:
+                    self.labels[i] = 'subtok'
+                    self.heads[i] = i+1
 
         cycle = nonproj.contains_cycle(self._alignment.flatten(self.heads))
         if cycle is not None:

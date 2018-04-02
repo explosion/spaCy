@@ -108,25 +108,37 @@ class Alignment(object):
         many remaining subtokens align to the same value.
         '''
         output = []
-        for i, alignment in enumerate(self._t2y):
-            if len(alignment) == 1 and alignment[0][1] == 0:
-                output.append(items[alignment[0][0]])
+        for i, alignment in enumerate(self._y2t):
+            if isinstance(alignment, int):
+                output.append(items[alignment])
+            elif isinstance(alignment, tuple):
+                output.append((items[alignment[0]], alignment[1]))
             else:
                 output.append([])
-                for j1, j2 in alignment:
-                    output[-1].append((items[j1], j2))
+                for entry in alignment:
+                    if isinstance(entry, int):
+                        output[-1].append(items[entry])
+                    else:
+                        output[-1].append((items[entry[0]], entry[1]))
         return output
 
     def index_to_yours(self, index):
         '''Translate an index that points into their tokens to point into yours'''
         alignment = self._t2y[index]
-        if len(alignment) == 1 and alignment[0][2] == 0:
-            return alignment[0][0]
-        else:
-            output = []
-            for i1, i2, n_to_go in alignment:
-                output.append((i1, i2, n_to_go))
-            return output
+        return alignment
+        #if isinstance(alignment, int):
+        #    return alignment
+        #elif len(alignment) == 1 and isinstance(alignment, int):
+        #    return alignment[0]
+        #elif len(alignment) == 1:
+        #    return alignment[0][0]
+        #if len(alignment) == 1 and alignment[0][2] == 0:
+        #    return alignment[0][0]
+        #else:
+        #    output = []
+        #    for i1, i2, n_to_go in alignment:
+        #        output.append((i1, i2, n_to_go))
+        #    return output
     
     def to_theirs(self, items):
         raise NotImplementedError
@@ -203,8 +215,10 @@ class Alignment(object):
         # Apply the alignment to get the new values
         new = []
         for head_vals in heads:
-            if not isinstance(head_vals, list):
+            if isinstance(head_vals, int):
                 head_vals = [(head_vals, 0)]
+            elif isinstance(head_vals, tuple):
+                head_vals = [None]
             for head_val in head_vals:
                 if not isinstance(head_val, tuple):
                     head_val = (head_val, 0)
@@ -269,15 +283,15 @@ def _convert_multi_align(one2one, many2one, one2many, one2part):
     seen_j = Counter()
     for i, j in enumerate(one2one):
         if j != -1:
-            output.append(j)
+            output.append(int(j))
         elif i in many2one:
             j = many2one[i]
-            output.append((j, seen_j[j]))
+            output.append((int(j), seen_j[j]))
             seen_j[j] += 1
         elif i in one2many:
             output.append([])
             for j in one2many[i]:
-                output[-1].append(j)
+                output[-1].append(int(j))
         elif i in one2part:
             output.append(one2part[i])
         else:
