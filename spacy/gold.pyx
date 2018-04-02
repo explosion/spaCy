@@ -451,37 +451,35 @@ cdef class GoldParse:
         annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
         self.orig_annot = list(zip(*annot_tuples))
 
-        if words is not None:
-            self.words = self._alignment.to_yours(words)
-        if tags is not None:
-            self.tags = self._alignment.to_yours(tags)
-        if deps is not None:
-            self.labels = self._alignment.to_yours(deps)
-        if tags is not None:
-            self.tags = self._alignment.to_yours(tags)
-        if entities is not None:
-            self.ner = self._alignment.to_yours(entities)
-        if heads is not None:
-            for gold_i, gold_head in enumerate(heads):
-                if gold_head is None:
-                    continue
-                cand_i = self._alignment._t2y[gold_i]
-                cand_head = self._alignment._t2y[gold_head]
-                if cand_i is None or cand_head is None:
-                    continue
-                elif isinstance(cand_i, int):
-                    self.heads[cand_i] = cand_head
-                elif isinstance(cand_i, list):
-                    for sub_i in cand_i[:-1]:
-                        self.heads[sub_i] = sub_i+1
+        self.words = self._alignment.to_yours(words)
+        self.tags = self._alignment.to_yours(tags)
+        self.labels = self._alignment.to_yours(deps)
+        self.tags = self._alignment.to_yours(tags)
+        self.ner = self._alignment.to_yours(entities)
+        for gold_i, gold_head in enumerate(heads):
+            if gold_head is None:
+                continue
+            cand_i = self._alignment._t2y[gold_i]
+            cand_head = self._alignment._t2y[gold_head]
+            if cand_i is None or cand_head is None:
+                continue
+            elif isinstance(cand_i, int):
+                self.heads[cand_i] = cand_head
+            elif isinstance(cand_i, list):
+                for sub_i in cand_i[:-1]:
+                    self.heads[sub_i] = sub_i+1
+                if isinstance(cand_head, list):
+                    self.heads[cand_i[-1]] = cand_head[-1]
+                else:
                     self.heads[cand_i[-1]] = cand_head
-                elif isinstance(cand_i, tuple):
-                    cand_i, sub_i = cand_i
-                    if not isinstance(self.heads[cand_i], list):
-                        self.heads[cand_i] = []
-                    while len(self.heads[cand_i]) <= sub_i:
-                        self.heads[cand_i].append(None)
-                    self.heads[cand_i][sub_i] = cand_head
+            elif isinstance(cand_i, tuple) and isinstance(cand_head, int):
+                # We only handle one-to-many or many-to-one, not many-to-many
+                cand_i, sub_i = cand_i
+                if not isinstance(self.heads[cand_i], list):
+                    self.heads[cand_i] = []
+                while len(self.heads[cand_i]) <= sub_i:
+                    self.heads[cand_i].append(None)
+                self.heads[cand_i][sub_i] = cand_head
 
         for i in range(len(doc)):
             # Fix spaces
@@ -500,7 +498,7 @@ cdef class GoldParse:
                     self.labels[i] = self.labels[i][0]
                 else:
                     self.labels[i] = 'subtok'
-                    self.heads[i] = i+1
+                    #self.heads[i] = i+1
 
         cycle = nonproj.contains_cycle(self._alignment.flatten(self.heads))
         if cycle is not None:
