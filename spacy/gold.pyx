@@ -11,10 +11,11 @@ import tempfile
 import shutil
 from pathlib import Path
 import msgpack
+from collections import Counter
 
 import ujson
 
-from . import _align 
+from ._align import Alignment
 from .syntax import nonproj
 from .tokens import Doc
 from . import util
@@ -22,6 +23,7 @@ from .util import minibatch, itershuffle
 from .compat import json_dumps
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
+
 
 def tags_to_entities(tags):
     entities = []
@@ -66,32 +68,6 @@ def merge_sents(sents):
                           for b in brackets)
         i += len(ids)
     return [(m_deps, m_brackets)]
-
-
-punct_re = re.compile(r'\W')
-def align(cand_words, gold_words):
-    if cand_words == gold_words:
-        alignment = numpy.arange(len(cand_words))
-        return 0, alignment, alignment, {}, {}, []
-    cand_words = [w.replace(' ', '') for w in cand_words]
-    gold_words = [w.replace(' ', '') for w in gold_words]
-    cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
-                                [len(w) for w in gold_words])
-    for i, j in list(i2j_multi.items()):
-        if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
-            i2j[i] = j
-            i2j_multi.pop(i)
-    for j, i in list(j2i_multi.items()):
-        if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
-            j2i[j] = i
-            j2i_multi.pop(j)
-    reverse_j2i, reverse_i2j = _align.multi_align(j2i, i2j, [len(w) for w in gold_words],
-                                [len(w) for w in cand_words])
-    undersegmented = {}
-    for j, i in reverse_j2i.items():
-        undersegmented.setdefault(i, []).append(j)
-    return cost, i2j, j2i, i2j_multi, j2i_multi, undersegmented
 
 
 class GoldCorpus(object):
@@ -385,47 +361,6 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
-def _flatten_fused_heads(heads):
-    '''Let's say we have a heads array with fused tokens. We might have
-    something like:
-    
-    [[(0, 1), 1], 1]
-
-    This indicates that token 0 aligns to two gold tokens. The head of the
-    first subtoken is the second subtoken. The head of the second subtoken
-    is the second token.
-
-    So we expand to a tree:
-
-    [1, 2, 2]
-
-    This is helpful for preventing other functions from knowing our weird
-    format.
-    '''
-    # Get an alignment -- normalize to the more complicated format; so
-    # if we have an int i, treat it as [(i, 0)]
-    j = 0
-    alignment = {(None, 0): None}
-    for i, tokens in enumerate(heads):
-        if not isinstance(tokens, list):
-            alignment[(i, 0)] = j
-            j += 1
-        else:
-            for sub_i in range(len(tokens)):
-                alignment[(i, sub_i)] = j
-                j += 1
-    # Apply the alignment to get the new values
-    new = []
-    for head_vals in heads:
-        if not isinstance(head_vals, list):
-            head_vals = [(head_vals, 0)]
-        for head_val in head_vals:
-            if not isinstance(head_val, tuple):
-                head_val = (head_val, 0)
-            new.append(alignment[head_val])
-    return new
-
-
 cdef class GoldParse:
     """Collection for training annotations."""
     @classmethod
@@ -508,80 +443,30 @@ cdef class GoldParse:
         # sequence of gold words.
         # If we "mis-segment", we'll have a sequence of predicted words covering
         # a sequence of gold words. That's many-to-many -- we don't do that.
-        cost, i2j, j2i, i2j_multi, j2i_multi, undersegmented = align([t.orth_ for t in doc], words)
-
-        self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
-        self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
+        self._alignment = Alignment([t.orth_ for t in doc], words)
 
         annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
         self.orig_annot = list(zip(*annot_tuples))
 
-        for i, gold_i in enumerate(self.cand_to_gold):
+        self.words = self._alignment.to_yours(words)
+        self.tags = self._alignment.to_yours(tags)
+        self.labels = self._alignment.to_yours(deps)
+        self.tags = self._alignment.to_yours(tags)
+        self.ner = self._alignment.to_yours(entities)
+
+        aligned_heads = [self._alignment.index_to_yours(h) for h in heads]
+        self.heads = self._alignment.to_yours(aligned_heads)
+
+        for i in range(len(doc)):
+            # Fix spaces
             if doc[i].text.isspace():
                 self.words[i] = doc[i].text
                 self.tags[i] = '_SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
-            if gold_i is None:
-                if i in undersegmented:
-                    self.words[i] = [words[j] for j in undersegmented[i]]
-                    self.tags[i] = [tags[j] for j in undersegmented[i]]
-                    self.labels[i] = [deps[j] for j in undersegmented[i]]
-                    self.ner[i] = [entities[j] for j in undersegmented[i]]
-                    self.heads[i] = []
-                    for h in [heads[j] for j in undersegmented[i]]:
-                        if heads[h] is None:
-                            self.heads[i].append(None)
-                        else:
-                            self.heads[i].append(self.gold_to_cand[heads[h]])
-                elif i in i2j_multi:
-                    self.words[i] = words[i2j_multi[i]]
-                    self.tags[i] = tags[i2j_multi[i]]
-                    is_last = i2j_multi[i] != i2j_multi.get(i+1)
-                    is_first = i2j_multi[i] != i2j_multi.get(i-1)
-                    # Set next word in multi-token span as head, until last
-                    if not is_last:
-                        self.heads[i] = i+1
-                        self.labels[i] = 'subtok'
-                    else:
-                        self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
-                        self.labels[i] = deps[i2j_multi[i]]
-                    # Now set NER...This is annoying because if we've split
-                    # got an entity word split into two, we need to adjust the
-                    # BILOU tags. We can't have BB or LL etc.
-                    # Case 1: O -- easy.
-                    ner_tag = entities[i2j_multi[i]]
-                    if ner_tag is not None:
-                        if ner_tag == 'O':
-                            self.ner[i] = 'O'
-                        # Case 2: U. This has to become a B I* L sequence.
-                        elif ner_tag.startswith('U-'):
-                            if is_first:
-                                self.ner[i] = ner_tag.replace('U-', 'B-', 1)
-                            elif is_last:
-                                self.ner[i] = ner_tag.replace('U-', 'L-', 1)
-                            else:
-                                self.ner[i] = ner_tag.replace('U-', 'I-', 1)
-                        # Case 3: L. If not last, change to I.
-                        elif ner_tag.startswith('L-'):
-                            if is_last:
-                                self.ner[i] = ner_tag
-                            else:
-                                self.ner[i] = ner_tag.replace('L-', 'I-', 1)
-                        # Case 4: I. Stays correct
-                        elif ner_tag.startswith('I-'):
-                            self.ner[i] = ner_tag
-            else:
-                self.words[i] = words[gold_i]
-                self.tags[i] = tags[gold_i]
-                if heads[gold_i] is None:
-                    self.heads[i] = None
-                else:
-                    self.heads[i] = self.gold_to_cand[heads[gold_i]]
-                self.labels[i] = deps[gold_i]
-                self.ner[i] = entities[gold_i]
-        cycle = nonproj.contains_cycle(_flatten_fused_heads(self.heads))
+
+        cycle = nonproj.contains_cycle(self._alignment.flatten(self.heads))
         if cycle is not None:
             raise Exception("Cycle found: %s" % cycle)
 
@@ -690,3 +575,4 @@ def offsets_from_biluo_tags(doc, tags):
 
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'
+
