@@ -65,6 +65,10 @@ cdef class StateClass:
         return doc
 
     @property
+    def buffer_length(self):
+        return self.c.buffer_length
+
+    @property
     def stack(self):
         return [self.S(i) for i in range(self.c._s_i)]
 

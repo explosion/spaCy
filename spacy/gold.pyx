@@ -517,6 +517,10 @@ cdef class GoldParse:
         """
         return self.length
 
+    @property
+    def fused(self):
+        return [self.c.fused[i] for i in range(self.length)]
+
     def resize_arrays(self, int new_size):
         # These are filled by the tagger/parser/entity recogniser
         self.c.tags = <int*>self.mem.realloc(self.c.tags, new_size * sizeof(int))
