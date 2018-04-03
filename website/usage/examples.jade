@@ -161,6 +161,19 @@ include ../_includes/_mixins
 
     +github("spacy", "examples/vectors_fast_text.py")
 
+    +h(3, "tensorboard") Visualizing spaCy vectors in TensorBoard
+
+    p
+        |  These two scripts let you load any spaCy model containing word vectors
+        |  into #[+a("https://projector.tensorflow.org/") TensorBoard] to create
+        |  an #[+a("https://www.tensorflow.org/versions/r1.1/get_started/embedding_viz") embedding visualization].
+        |  The first example uses TensorBoard, the second example TensorBoard's
+        |  standalone embedding projector.
+
+    +github("spacy", "examples/vectors_tensorboard.py")
+
+    +github("spacy", "examples/vectors_tensorboard_standalone.py")
+
 +section("deep-learning")
     +h(3, "keras") Text classification with Keras
 
