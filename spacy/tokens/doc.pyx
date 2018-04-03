@@ -314,7 +314,7 @@ cdef class Doc:
                         break
                 else:
                     return 1.0
- 
+
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -870,7 +870,7 @@ cdef class Doc:
             self.tensor = xp.hstack((self.tensor, tensor))
 
     def retokenize(self):
-        '''Context manager to handle retokenization of the Doc. 
+        '''Context manager to handle retokenization of the Doc.
         Modifications to the Doc's tokenization are stored, and then
         made all at once when the context manager exits. This is
         much more efficient, and less error-prone.
