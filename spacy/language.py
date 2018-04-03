@@ -707,7 +707,7 @@ def _fix_pretrained_vectors_name(nlp):
         vectors_name = '%s_%s.vectors' % (nlp.meta['lang'], nlp.meta['name'])
         nlp.vocab.vectors.name = vectors_name
     else:
-        raise ValueError("Unnamed vectors")
+        raise ValueError(Errors.E092)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, 'cfg'):
             continue

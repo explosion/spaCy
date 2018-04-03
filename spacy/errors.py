@@ -239,6 +239,11 @@ class Errors(object):
             "existing extension, set `force=True` on `{obj}.set_extension`.")
     E091 = ("Invalid extension attribute {name}: expected callable or None, "
             "but got: {value}")
+    E092 = ("Could not find or assign name for word vectors. Ususally, the "
+            "name is read from the model's meta.json in vector.name. "
+            "Alternatively, it is built from the 'lang' and 'name' keys in "
+            "the meta.json. Vector names are required to avoid issue #1660.")
+    E093 = ("token.ent_iob values make invalid sequence: I without B\n{seq}")
 
 
 @add_codes
@@ -252,6 +257,10 @@ class TempErrors(object):
     T006 = ("Currently history width is hard-coded to 0. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
+    T008 = ("Bad configuration of Tagger. This is probably a bug within "
+            "spaCy. We changed the name of an internal attribute for loading "
+            "pre-trained vectors, and the class has been passed the old name "
+            "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 
 class ModelsWarning(UserWarning):

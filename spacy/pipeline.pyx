@@ -207,7 +207,7 @@ class Pipe(object):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
             if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors.name 
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(b)
@@ -234,7 +234,7 @@ class Pipe(object):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
             if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors.name 
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(p.open('rb').read())
@@ -531,12 +531,7 @@ class Tagger(Pipe):
     @classmethod
     def Model(cls, n_tags, **cfg):
         if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
-            raise ValueError(
-                "Bad configuration of Tagger --- this is probably a bug "
-                "within spaCy. We changed the name of an internal attribute "
-                "for loading pre-trained vectors, and the class has been "
-                "passed the old name (pretrained_dims) but not the new name "
-                "(pretrained_vectors)")
+            raise ValueError(TempErrors.T008)
         return build_tagger_model(n_tags, **cfg)
 
     def add_label(self, label, values=None):
@@ -584,8 +579,8 @@ class Tagger(Pipe):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
             if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors.name 
- 
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
+
             if self.model is True:
                 token_vector_width = util.env_opt(
                     'token_vector_width',
