@@ -37,6 +37,7 @@ MOD_NAMES = [
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
+    'spacy.tokens._retokenize',
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
