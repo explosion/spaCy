@@ -472,7 +472,7 @@ cdef class GoldParse:
                     self.heads[cand_i[-1]] = cand_head[-1]
                 else:
                     self.heads[cand_i[-1]] = cand_head
-            elif isinstance(cand_i, tuple) and isinstance(cand_head, int):
+            elif isinstance(cand_i, tuple) and not isinstance(cand_head, list): 
                 # We only handle one-to-many or many-to-one, not many-to-many
                 cand_i, sub_i = cand_i
                 if not isinstance(self.heads[cand_i], list):
