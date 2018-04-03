@@ -696,6 +696,7 @@ class Language(object):
         msg = util.from_bytes(bytes_data, deserializers, {})
         return self
 
+
 def _fix_pretrained_vectors_name(nlp):
     # TODO: Replace this once we handle vectors consistently as static
     # data
@@ -708,7 +709,8 @@ def _fix_pretrained_vectors_name(nlp):
         nlp.vocab.vectors.name = vectors_name
     else:
         raise ValueError(Errors.E092)
-    link_vectors_to_models(nlp.vocab)
+    if nlp.vocab.vectors.size != 0:
+        link_vectors_to_models(nlp.vocab)
     for name, proc in nlp.pipeline:
         if not hasattr(proc, 'cfg'):
             continue
