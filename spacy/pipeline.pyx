@@ -33,6 +33,7 @@ from .parts_of_speech import X
 from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
+from .errors import Errors, TempErrors
 from . import util
 
 
@@ -169,7 +170,7 @@ class Pipe(object):
         problem.
         """
         raise NotImplementedError
-    
+
     def create_optimizer(self):
         return create_default_optimizer(self.model.ops,
                                         **self.cfg.get('optimizer', {}))
@@ -336,7 +337,8 @@ class Tensorizer(Pipe):
         tensors (object): Vector representation for each token in the docs.
         """
         for doc, tensor in zip(docs, tensors):
-            assert tensor.shape[0] == len(doc)
+            if tensor.shape[0] != len(doc):
+                raise ValueError(Errors.E076.format(rows=tensor.shape[0], words=len(doc)))
             doc.tensor = tensor
 
     def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
@@ -550,9 +552,7 @@ class Tagger(Pipe):
             # copy_array(larger.W[:smaller.nO], smaller.W)
             # copy_array(larger.b[:smaller.nO], smaller.b)
             # self.model._layers[-1] = larger
-            raise ValueError(
-                "Resizing pre-trained Tagger models is not "
-                "currently supported.")
+            raise ValueError(TempErrors.T003)
         tag_map = dict(self.vocab.morphology.tag_map)
         if values is None:
             values = {POS: "X"}
@@ -671,8 +671,7 @@ class MultitaskObjective(Tagger):
         elif hasattr(target, '__call__'):
             self.make_label = target
         else:
-            raise ValueError("MultitaskObjective target should be function or "
-                             "one of: dep, tag, ent, dep_tag_offset, ent_tag.")
+            raise ValueError(Errors.E016)
         self.cfg = dict(cfg)
         self.cfg.setdefault('cnn_maxout_pieces', 2)
 
@@ -723,7 +722,9 @@ class MultitaskObjective(Tagger):
         return tokvecs, scores
 
     def get_loss(self, docs, golds, scores):
-        assert len(docs) == len(golds)
+        if len(docs) != len(golds):
+            raise ValueError(Errors.E077.format(value='loss', n_docs=len(docs),
+                                                n_golds=len(golds)))
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
@@ -936,7 +937,7 @@ cdef class DependencyParser(Parser):
     @property
     def postprocesses(self):
         return [nonproj.deprojectivize]
-    
+
     def add_multitask_objective(self, target):
         labeller = MultitaskObjective(self.vocab, target=target)
         self._multitasks.append(labeller)
@@ -957,7 +958,7 @@ cdef class EntityRecognizer(Parser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
-    
+
     def add_multitask_objective(self, target):
         labeller = MultitaskObjective(self.vocab, target=target)
         self._multitasks.append(labeller)

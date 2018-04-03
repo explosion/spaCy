@@ -23,6 +23,7 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
+from .errors import Errors
 from . import util
 
 
@@ -174,7 +175,7 @@ class PrecomputableAffine(Model):
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return dXf.reshape((dXf.shape[0], self.nF, self.nI))
         return Yf, backward
-    
+
     def _add_padding(self, Yf):
         Yf_padded = self.ops.xp.vstack((self.pad, Yf))
         return Yf_padded
@@ -340,10 +341,10 @@ def _divide_array(X, size):
 
 
 def get_col(idx):
-    assert idx >= 0, idx
+    if idx < 0:
+        raise IndexError(Errors.E066.format(value=idx))
 
     def forward(X, drop=0.):
-        assert idx >= 0, idx
         if isinstance(X, numpy.ndarray):
             ops = NumpyOps()
         else:
@@ -351,7 +352,6 @@ def get_col(idx):
         output = ops.xp.ascontiguousarray(X[:, idx], dtype=X.dtype)
 
         def backward(y, sgd=None):
-            assert idx >= 0, idx
             dX = ops.allocate(X.shape)
             dX[:, idx] += y
             return dX

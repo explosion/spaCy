@@ -5,6 +5,7 @@ import plac
 import shutil
 from pathlib import Path
 
+from ._messages import Messages
 from ..compat import path2str, json_dumps
 from ..util import prints
 from .. import util
@@ -31,17 +32,17 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False,
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
     if not input_path or not input_path.exists():
-        prints(input_path, title="Model directory not found", exits=1)
+        prints(input_path, title=Messages.M008, exits=1)
     if not output_path or not output_path.exists():
-        prints(output_path, title="Output directory not found", exits=1)
+        prints(output_path, title=Messages.M040, exits=1)
     if meta_path and not meta_path.exists():
-        prints(meta_path, title="meta.json not found", exits=1)
+        prints(meta_path, title=Messages.M020, exits=1)
 
     meta_path = meta_path or input_path / 'meta.json'
     if meta_path.is_file():
         meta = util.read_json(meta_path)
         if not create_meta:  # only print this if user doesn't want to overwrite
-            prints(meta_path, title="Loaded meta.json from file")
+            prints(meta_path, title=Messages.M041)
         else:
             meta = generate_meta(input_dir, meta)
     meta = validate_meta(meta, ['lang', 'name', 'version'])
@@ -57,9 +58,8 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False,
     create_file(main_path / 'setup.py', TEMPLATE_SETUP)
     create_file(main_path / 'MANIFEST.in', TEMPLATE_MANIFEST)
     create_file(package_path / '__init__.py', TEMPLATE_INIT)
-    prints(main_path, "To build the package, run `python setup.py sdist` in "
-           "this directory.",
-           title="Successfully created package '%s'" % model_name_v)
+    prints(main_path, Messages.M043,
+           title=Messages.M042.format(name=model_name_v))
 
 
 def create_dirs(package_path, force):
@@ -67,10 +67,7 @@ def create_dirs(package_path, force):
         if force:
             shutil.rmtree(path2str(package_path))
         else:
-            prints(package_path, "Please delete the directory and try again, "
-                   "or use the --force flag to overwrite existing "
-                   "directories.", title="Package directory already exists",
-                   exits=1)
+            prints(package_path, Messages.M045, title=Messages.M044, exits=1)
     Path.mkdir(package_path, parents=True)
 
 
@@ -97,9 +94,7 @@ def generate_meta(model_path, existing_meta):
     meta['vectors'] = {'width': nlp.vocab.vectors_length,
                        'vectors': len(nlp.vocab.vectors),
                        'keys': nlp.vocab.vectors.n_keys}
-    prints("Enter the package settings for your model. The following "
-           "information will be read from your model data: pipeline, vectors.",
-           title="Generating meta.json")
+    prints(Messages.M047, title=Messages.Mo46)
     for setting, desc, default in settings:
         response = util.get_raw_input(desc, default)
         meta[setting] = default if response == '' and default else response
@@ -111,8 +106,7 @@ def generate_meta(model_path, existing_meta):
 def validate_meta(meta, keys):
     for key in keys:
         if key not in meta or meta[key] == '':
-            prints("This setting is required to build your package.",
-                   title='No "%s" setting found in meta.json' % key, exits=1)
+            prints(Messages.M049, title=Messages.M048.format(key=key), exits=1)
     return meta
 
 

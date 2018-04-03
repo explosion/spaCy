@@ -10,6 +10,7 @@ from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
 from ..gold cimport GoldParseC, GoldParse
+from ..errors import Errors
 
 
 cdef enum:
@@ -173,7 +174,7 @@ cdef class BiluoPushDown(TransitionSystem):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
         else:
-            raise KeyError(name)
+            raise KeyError(Errors.E022.format(name=name))
 
     cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -208,7 +209,7 @@ cdef class BiluoPushDown(TransitionSystem):
             t.do = Out.transition
             t.get_cost = Out.cost
         else:
-            raise Exception(move)
+            raise ValueError(Errors.E019.format(action=move, src='ner'))
         return t
 
     def add_action(self, int action, label_name):
@@ -230,7 +231,6 @@ cdef class BiluoPushDown(TransitionSystem):
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
-        assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
         return 1
 

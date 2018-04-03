@@ -28,6 +28,7 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS, is_stop
+from .errors import Errors
 from . import util
 from . import about
 
@@ -217,8 +218,7 @@ class Language(object):
         for pipe_name, component in self.pipeline:
             if pipe_name == name:
                 return component
-        msg = "No component '{}' found in pipeline. Available names: {}"
-        raise KeyError(msg.format(name, self.pipe_names))
+        raise KeyError(Errors.E001.format(name=name, opts=self.pipe_names))
 
     def create_pipe(self, name, config=dict()):
         """Create a pipeline component from a factory.
@@ -228,7 +228,7 @@ class Language(object):
         RETURNS (callable): Pipeline component.
         """
         if name not in self.factories:
-            raise KeyError("Can't find factory for '{}'.".format(name))
+            raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
         return factory(self, **config)
 
@@ -253,12 +253,9 @@ class Language(object):
             >>> nlp.add_pipe(component, name='custom_name', last=True)
         """
         if not hasattr(component, '__call__'):
-            msg = ("Not a valid pipeline component. Expected callable, but "
-                   "got {}. ".format(repr(component)))
+            msg = Errors.E003.format(component=repr(component), name=name)
             if isinstance(component, basestring_) and component in self.factories:
-                msg += ("If you meant to add a built-in component, use "
-                        "create_pipe: nlp.add_pipe(nlp.create_pipe('{}'))"
-                        .format(component))
+                msg += Errors.E004.format(component=component)
             raise ValueError(msg)
         if name is None:
             if hasattr(component, 'name'):
@@ -271,11 +268,9 @@ class Language(object):
             else:
                 name = repr(component)
         if name in self.pipe_names:
-            raise ValueError("'{}' already exists in pipeline.".format(name))
+            raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
         if sum([bool(before), bool(after), bool(first), bool(last)]) >= 2:
-            msg = ("Invalid constraints. You can only set one of the "
-                   "following: before, after, first, last.")
-            raise ValueError(msg)
+            raise ValueError(Errors.E006)
         pipe = (name, component)
         if last or not any([first, before, after]):
             self.pipeline.append(pipe)
@@ -286,9 +281,8 @@ class Language(object):
         elif after and after in self.pipe_names:
             self.pipeline.insert(self.pipe_names.index(after) + 1, pipe)
         else:
-            msg = "Can't find '{}' in pipeline. Available names: {}"
-            unfound = before or after
-            raise ValueError(msg.format(unfound, self.pipe_names))
+            raise ValueError(Errors.E001.format(name=before or after,
+                                                opts=self.pipe_names))
 
     def has_pipe(self, name):
         """Check if a component name is present in the pipeline. Equivalent to
@@ -306,8 +300,7 @@ class Language(object):
         component (callable): Pipeline component.
         """
         if name not in self.pipe_names:
-            msg = "Can't find '{}' in pipeline. Available names: {}"
-            raise ValueError(msg.format(name, self.pipe_names))
+            raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         self.pipeline[self.pipe_names.index(name)] = (name, component)
 
     def rename_pipe(self, old_name, new_name):
@@ -317,11 +310,9 @@ class Language(object):
         new_name (unicode): New name of the component.
         """
         if old_name not in self.pipe_names:
-            msg = "Can't find '{}' in pipeline. Available names: {}"
-            raise ValueError(msg.format(old_name, self.pipe_names))
+            raise ValueError(Errors.E001.format(name=old_name, opts=self.pipe_names))
         if new_name in self.pipe_names:
-            msg = "'{}' already exists in pipeline. Existing names: {}"
-            raise ValueError(msg.format(new_name, self.pipe_names))
+            raise ValueError(Errors.E007.format(name=new_name, opts=self.pipe_names))
         i = self.pipe_names.index(old_name)
         self.pipeline[i] = (new_name, self.pipeline[i][1])
 
@@ -332,8 +323,7 @@ class Language(object):
         RETURNS (tuple): A `(name, component)` tuple of the removed component.
         """
         if name not in self.pipe_names:
-            msg = "Can't find '{}' in pipeline. Available names: {}"
-            raise ValueError(msg.format(name, self.pipe_names))
+            raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         return self.pipeline.pop(self.pipe_names.index(name))
 
     def __call__(self, text, disable=[]):
@@ -351,21 +341,17 @@ class Language(object):
             ('An', 'NN')
         """
         if len(text) >= self.max_length:
-            msg = (
-                "Text of length {length} exceeds maximum of {max_length}. "
-                "The v2 parser and NER models require roughly 1GB of temporary "
-                "memory per 100,000 characters in the input. This means long "
-                "texts may cause memory allocation errors. If you're not using "
-                "the parser or NER, it's probably safe to increase the "
-                "nlp.max_length limit. The limit is in number of characters, "
-                "so you can check whether your inputs are too long by checking "
-                "len(text).")
-            raise ValueError(msg.format(length=len(text), max_length=self.max_length))
+            raise ValueError(Errors.E088.format(length=len(text),
+                                                max_length=self.max_length))
         doc = self.make_doc(text)
         for name, proc in self.pipeline:
             if name in disable:
                 continue
+            if not hasattr(proc, '__call__'):
+                raise ValueError(Errors.E003.format(component=type(proc), name=name))
             doc = proc(doc)
+            if doc is None:
+                raise ValueError(Errors.E005.format(name=name))
         return doc
 
     def disable_pipes(self, *names):
@@ -407,8 +393,7 @@ class Language(object):
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
         if len(docs) != len(golds):
-            raise IndexError("Update expects same number of docs and golds "
-                             "Got: %d, %d" % (len(docs), len(golds)))
+            raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
         if len(docs) == 0:
             return
         if sgd is None:
@@ -757,14 +742,7 @@ class DisabledPipes(list):
         if unexpected:
             # Don't change the pipeline if we're raising an error.
             self.nlp.pipeline = current
-            msg = (
-                "Some current components would be lost when restoring "
-                "previous pipeline state. If you added components after "
-                "calling nlp.disable_pipes(), you should remove them "
-                "explicitly with nlp.remove_pipe() before the pipeline is "
-                "restore. Names of the new components: %s"
-            )
-            raise ValueError(msg % unexpected)
+            raise ValueError(Errors.E008.format(names=unexpected))
         self[:] = []
 
 

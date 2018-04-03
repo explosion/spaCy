@@ -34,6 +34,7 @@ from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import json_dumps, copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
+from ..errors import Errors, TempErrors
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -242,7 +243,7 @@ cdef class Parser:
     def Model(cls, nr_class, **cfg):
         depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
         if depth != 1:
-            raise ValueError("Currently parser depth is hard-coded to 1.")
+            raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
@@ -252,9 +253,9 @@ cdef class Parser:
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size != 0:
-            raise ValueError("Currently history size is hard-coded to 0")
+            raise ValueError(TempErrors.T005.format(value=hist_size))
         if hist_width != 0:
-            raise ValueError("Currently history width is hard-coded to 0")
+            raise ValueError(TempErrors.T006.format(value=hist_width))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           pretrained_vectors=pretrained_vectors)
@@ -431,7 +432,7 @@ cdef class Parser:
                                     [len(doc) for doc in docs])
         return state_objs, tokvecs
 
-    cdef void _parseC(self, StateC* state, 
+    cdef void _parseC(self, StateC* state,
             const float* feat_weights, const float* bias,
             const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
@@ -542,7 +543,9 @@ cdef class Parser:
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
-        assert len(docs) == len(golds)
+        if len(docs) != len(golds):
+            raise ValueError(Errors.E077.format(value='update', n_docs=len(docs),
+                                                n_golds=len(golds)))
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
             return self.update_beam(docs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
@@ -608,7 +611,7 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             bp_tokvecs, backprops, sgd, cuda_stream)
-    
+
     def update_beam(self, docs, golds, width=None, density=None,
             drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
@@ -622,7 +625,6 @@ cdef class Parser:
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         lengths = [len(d) for d in docs]
-        assert min(lengths) >= 1
         states = self.moves.init_batch(docs)
         for gold in golds:
             self.moves.preprocess_gold(gold)
@@ -851,7 +853,7 @@ cdef class Parser:
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
-    
+
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
@@ -1021,15 +1023,11 @@ def _cleanup(Beam beam):
             del state
             seen.add(addr)
         else:
-            print(i, addr)
-            print(seen)
-            raise Exception
+            raise ValueError(Errors.E023.format(addr=addr, i=i))
         addr = <size_t>beam._states[i].content
         if addr not in seen:
             state = <StateC*>addr
             del state
             seen.add(addr)
         else:
-            print(i, addr)
-            print(seen)
-            raise Exception
+            raise ValueError(Errors.E023.format(addr=addr, i=i))

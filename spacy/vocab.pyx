@@ -16,6 +16,7 @@ from .attrs cimport PROB, LANG, ORTH, TAG
 from .structs cimport SerializedLexemeC
 
 from .compat import copy_reg, basestring_
+from .errors import Errors
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
 from .vectors import Vectors
@@ -100,15 +101,9 @@ cdef class Vocab:
                     flag_id = bit
                     break
             else:
-                raise ValueError(
-                    "Cannot find empty bit for new lexical flag. All bits "
-                    "between 0 and 63 are occupied. You can replace one by "
-                    "specifying the flag_id explicitly, e.g. "
-                    "`nlp.vocab.add_flag(your_func, flag_id=IS_ALPHA`.")
+                raise ValueError(Errors.E062)
         elif flag_id >= 64 or flag_id < 1:
-            raise ValueError(
-                "Invalid value for flag_id: %d. Flag IDs must be between "
-                "1 and 63 (inclusive)" % flag_id)
+            raise ValueError(Errors.E063.format(value=flag_id))
         for lex in self:
             lex.set_flag(flag_id, flag_getter(lex.orth_))
         self.lex_attr_getters[flag_id] = flag_getter
@@ -127,8 +122,9 @@ cdef class Vocab:
         cdef size_t addr
         if lex != NULL:
             if lex.orth != self.strings[string]:
-                raise LookupError.mismatched_strings(
-                    lex.orth, self.strings[string], string)
+                raise KeyError(Errors.E064.format(string=lex.orth,
+                                                  orth=self.strings[string],
+                                                  orth_id=string))
             return lex
         else:
             return self._new_lexeme(mem, string)
@@ -171,7 +167,8 @@ cdef class Vocab:
         if not is_oov:
             key = hash_string(string)
             self._add_lex_to_vocab(key, lex)
-        assert lex != NULL, string
+        if lex == NULL:
+            raise ValueError(Errors.E085.format(string=string))
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
@@ -254,7 +251,7 @@ cdef class Vocab:
         width, you have to call this to change the size of the vectors.
         """
         if width is not None and shape is not None:
-            raise ValueError("Only one of width and shape can be specified")
+            raise ValueError(Errors.E065.format(width=width, shape=shape))
         elif shape is not None:
             self.vectors = Vectors(shape=shape)
         else:
@@ -471,7 +468,10 @@ cdef class Vocab:
             if ptr == NULL:
                 continue
             py_str = self.strings[lexeme.orth]
-            assert self.strings[py_str] == lexeme.orth, (py_str, lexeme.orth)
+            if self.strings[py_str] != lexeme.orth:
+                raise ValueError(Errors.E086.format(string=py_str,
+                                                    orth_id=lexeme.orth,
+                                                    hash_id=self.strings[py_str]))
             key = hash_string(py_str)
             self._by_hash.set(key, lexeme)
             self._by_orth.set(lexeme.orth, lexeme)
@@ -512,16 +512,3 @@ def unpickle_vocab(sstore, vectors, morphology, data_dir,
 
 
 copy_reg.pickle(Vocab, pickle_vocab, unpickle_vocab)
-
-
-class LookupError(Exception):
-    @classmethod
-    def mismatched_strings(cls, id_, id_string, original_string):
-        return cls(
-            "Error fetching a Lexeme from the Vocab. When looking up a "
-            "string, the lexeme returned had an orth ID that did not match "
-            "the query string. This means that the cached lexeme structs are "
-            "mismatched to the string encoding table. The mismatched:\n"
-            "Query string: {}\n"
-            "Orth cached: {}\n"
-            "Orth ID: {}".format(repr(original_string), repr(id_string), id_))
