@@ -77,9 +77,10 @@ def test_underscore_raises_for_dup(obj):
     {'default': None, 'method': lambda: None},
     {'getter': True}])
 def test_underscore_raises_for_invalid(invalid_kwargs):
+    invalid_kwargs['force'] = True
     doc = Doc(Vocab(), words=['hello', 'world'])
     with pytest.raises(ValueError):
-        doc.set_extension('test', **invalid_kwargs, force=True)
+        doc.set_extension('test', **invalid_kwargs)
 
 
 @pytest.mark.parametrize('valid_kwargs', [
@@ -89,5 +90,6 @@ def test_underscore_raises_for_invalid(invalid_kwargs):
     {'default': None},
     {'method': lambda: None}])
 def test_underscore_accepts_valid(valid_kwargs):
+    valid_kwargs['force'] = True
     doc = Doc(Vocab(), words=['hello', 'world'])
-    doc.set_extension('test', **valid_kwargs, force=True)
+    doc.set_extension('test', **valid_kwargs)
