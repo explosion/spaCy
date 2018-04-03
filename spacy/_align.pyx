@@ -227,7 +227,12 @@ class Alignment(object):
             for head_val in head_vals:
                 if not isinstance(head_val, tuple):
                     head_val = (head_val, 0)
-                new.append(alignment[head_val])
+                elif head_val not in alignment:
+                    head_val = (head_val[0], 0)
+                try:
+                    new.append(alignment[head_val])
+                except:
+                    raise
         return new
 
 
