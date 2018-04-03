@@ -1,0 +1,6 @@
+@ARTICLE{spacy2,
+   AUTHOR  = {Honnibal, Matthew AND Montani, Ines},
+   TITLE   = {spaCy 2: Natural language understanding with Bloom embeddings, convolutional neural networks and incremental parsing},
+   YEAR    = {2017},
+   JOURNAL = {To appear}
+}
