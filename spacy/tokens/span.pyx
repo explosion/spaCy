@@ -17,15 +17,16 @@ from ..attrs cimport IS_PUNCT, IS_SPACE
 from ..lexeme cimport Lexeme
 from ..compat import is_config
 from ..errors import Errors, TempErrors
-from .underscore import Underscore
+from .underscore import Underscore, get_ext_args
 
 
 cdef class Span:
     """A slice from a Doc object."""
     @classmethod
-    def set_extension(cls, name, default=None, method=None,
-                      getter=None, setter=None):
-        Underscore.span_extensions[name] = (default, method, getter, setter)
+    def set_extension(cls, name, **kwargs):
+        if cls.has_extension(name) and not kwargs.get('force', False):
+            raise ValueError(Errors.E090.format(name=name, obj='Span'))
+        Underscore.span_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):

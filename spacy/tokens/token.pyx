@@ -21,16 +21,17 @@ from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..compat import is_config
 from ..errors import Errors
 from .. import util
-from .underscore import Underscore
+from .underscore import Underscore, get_ext_args
 
 
 cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace,
     etc."""
     @classmethod
-    def set_extension(cls, name, default=None, method=None,
-                      getter=None, setter=None):
-        Underscore.token_extensions[name] = (default, method, getter, setter)
+    def set_extension(cls, name, **kwargs):
+        if cls.has_extension(name) and not kwargs.get('force', False):
+            raise ValueError(Errors.E090.format(name=name, obj='Token'))
+        Underscore.token_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):

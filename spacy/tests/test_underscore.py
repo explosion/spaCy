@@ -1,4 +1,11 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
+import pytest
 from mock import Mock
+
+from ..vocab import Vocab
+from ..tokens.doc import Doc
 from ..tokens.underscore import Underscore
 
 
@@ -51,3 +58,36 @@ def test_token_underscore_method():
                                             None, None)
     token._ = Underscore(Underscore.token_extensions, token, start=token.idx)
     assert token._.hello() == 'cheese'
+
+
+@pytest.mark.parametrize('obj', [
+    Doc(Vocab(), words=['hello', 'world']),
+    Doc(Vocab(), words=['hello', 'world'])[1],
+    Doc(Vocab(), words=['hello', 'world'])[0:2]])
+def test_underscore_raises_for_dup(obj):
+    obj.set_extension('test', default=None)
+    with pytest.raises(ValueError):
+        obj.set_extension('test', default=None)
+
+
+@pytest.mark.parametrize('invalid_kwargs', [
+    {'getter': None, 'setter': lambda: None},
+    {'default': None, 'method': lambda: None, 'getter': lambda: None},
+    {'setter': lambda: None},
+    {'default': None, 'method': lambda: None},
+    {'getter': True}])
+def test_underscore_raises_for_invalid(invalid_kwargs):
+    doc = Doc(Vocab(), words=['hello', 'world'])
+    with pytest.raises(ValueError):
+        doc.set_extension('test', **invalid_kwargs, force=True)
+
+
+@pytest.mark.parametrize('valid_kwargs', [
+    {'getter': lambda: None},
+    {'getter': lambda: None, 'setter': lambda: None},
+    {'default': 'hello'},
+    {'default': None},
+    {'method': lambda: None}])
+def test_underscore_accepts_valid(valid_kwargs):
+    doc = Doc(Vocab(), words=['hello', 'world'])
+    doc.set_extension('test', **valid_kwargs, force=True)

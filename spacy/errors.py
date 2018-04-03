@@ -218,8 +218,8 @@ class Errors(object):
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
-    E083 = ("Error setting extension: only one of default, getter, setter and "
-            "method is allowed. {n_args} keyword arguments were specified.")
+    E083 = ("Error setting extension: only one of `default`, `method`, or "
+            "`getter` (plus optional `setter`) is allowed. Got: {nr_defined}")
     E084 = ("Error assigning label ID {label} to span: not in StringStore.")
     E085 = ("Can't create lexeme for string '{string}'.")
     E086 = ("Error deserializing lexeme '{string}': orth ID {orth_id} does "
@@ -233,6 +233,12 @@ class Errors(object):
             "`nlp.max_length` limit. The limit is in number of characters, so "
             "you can check whether your inputs are too long by checking "
             "`len(text)`.")
+    E089 = ("Extensions can't have a setter argument without a getter "
+            "argument. Check the keyword arguments on `set_extension`.")
+    E090 = ("Extension '{name}' already exists on {obj}. To overwrite the "
+            "existing extension, set `force=True` on `{obj}.set_extension`.")
+    E091 = ("Invalid extension attribute {name}: expected callable or None, "
+            "but got: {value}")
 
 
 @add_codes

@@ -33,7 +33,7 @@ from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import Errors, Warnings, deprecation_warning
 from .. import util
-from .underscore import Underscore
+from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 
 DEF PADDING = 5
@@ -95,12 +95,10 @@ cdef class Doc:
                       spaces=[True, False, False])
     """
     @classmethod
-    def set_extension(cls, name, default=None, method=None,
-                      getter=None, setter=None):
-        nr_defined = sum(t is not None for t in (default, getter, setter, method))
-        if nr_defined != 1:
-            raise ValueError(Errors.E083.format(n_args=nr_defined))
-        Underscore.doc_extensions[name] = (default, method, getter, setter)
+    def set_extension(cls, name, **kwargs):
+        if cls.has_extension(name) and not kwargs.get('force', False):
+            raise ValueError(Errors.E090.format(name=name, obj='Doc'))
+        Underscore.doc_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):
