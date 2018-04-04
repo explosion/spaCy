@@ -12,6 +12,7 @@ from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..typedefs cimport attr_t
 from ..compat import json_dumps
+from ..errors import Errors
 from .. import util
 
 
@@ -80,10 +81,7 @@ cdef class TransitionSystem:
                     action.do(state.c, action.label)
                     break
             else:
-                print(gold.words)
-                print(gold.ner)
-                print(history)
-                raise ValueError("Could not find gold move")
+                raise ValueError(Errors.E024)
         return history
 
     cdef int initialize_state(self, StateC* state) nogil:
@@ -130,17 +128,7 @@ cdef class TransitionSystem:
             else:
                 costs[i] = 9000
         if n_gold <= 0:
-            print(gold.words)
-            print(gold.ner)
-            print([gold.c.ner[i].clas for i in range(gold.length)])
-            print([gold.c.ner[i].move for i in range(gold.length)])
-            print([gold.c.ner[i].label for i in range(gold.length)])
-            print("Self labels",
-                  [self.c[i].label for i in range(self.n_moves)])
-            raise ValueError(
-                "Could not find a gold-standard action to supervise "
-                "the entity recognizer. The transition system has "
-                "%d actions." % (self.n_moves))
+            raise ValueError(Errors.E024)
 
     def get_class_name(self, int clas):
         act = self.c[clas]
@@ -162,7 +150,6 @@ cdef class TransitionSystem:
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
-        assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
         return 1
 

@@ -11,6 +11,9 @@ nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : null)
                 +a(url)(tabindex=is_active ? "-1" : null)=item
 
         li.c-nav__menu__item.u-hidden-xs
+            +a("https://survey.spacy.io", true) User Survey 2018
+
+        li.c-nav__menu__item.u-hidden-xs
             +a(gh("spaCy"))(aria-label="GitHub") #[+icon("github", 20)]
 
     progress.c-progress.js-progress(value="0" max="1")

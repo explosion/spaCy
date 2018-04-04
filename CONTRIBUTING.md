@@ -73,28 +73,8 @@ so it only becomes visible on click, making the issue easier to read and follow.
 ### Issue labels
 
 To distinguish issues that are opened by us, the maintainers, we usually add a
-💫 to the title. We also use the following system to tag our issues and pull
-requests:
-
-| Issue label | Description |
-| --- | --- |
-| [`bug`](https://github.com/explosion/spaCy/labels/bug) | Bugs and behaviour differing from documentation |
-| [`enhancement`](https://github.com/explosion/spaCy/labels/enhancement) | Feature requests and improvements |
-| [`install`](https://github.com/explosion/spaCy/labels/install) | Installation problems |
-| [`performance`](https://github.com/explosion/spaCy/labels/performance) | Accuracy, speed and memory use problems |
-| [`tests`](https://github.com/explosion/spaCy/labels/tests) | Missing or incorrect [tests](spacy/tests) |
-| [`docs`](https://github.com/explosion/spaCy/labels/docs), [`examples`](https://github.com/explosion/spaCy/labels/examples) | Issues related to the [documentation](https://spacy.io/docs) and [examples](spacy/examples) |
-| [`training`](https://github.com/explosion/spaCy/labels/training) | Issues related to training and updating models |
-| [`models`](https://github.com/explosion/spaCy/labels/models), `language / [name]` | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
-| [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
-| [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
-| [`compat`](https://github.com/explosion/spaCy/labels/compat) | Cross-platform and cross-Python compatibility issues |
-| [`wip`](https://github.com/explosion/spaCy/labels/wip) | Work in progress, mostly used for pull requests |
-| [`v1`](https://github.com/explosion/spaCy/labels/v1) | Reports related to spaCy v1.x |
-| [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
-| [`third-party`](https://github.com/explosion/spaCy/labels/third-party) | Issues related to third-party packages and services |
-| [`meta`](https://github.com/explosion/spaCy/labels/meta) | Meta topics, e.g. repo organisation and issue management |
-| [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted), [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions |
+💫 to the title. [See this page](https://github.com/explosion/spaCy/labels) 
+for an overview of the system we use to tag our issues and pull requests.
 
 ## Contributing to the code base
 

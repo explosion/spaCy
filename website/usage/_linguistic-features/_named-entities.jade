@@ -80,7 +80,7 @@ p
     doc.ents = [netflix_ent]
 
     ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
-    assert ents = [(u'Netflix', 0, 7, u'ORG')]
+    assert ents == [(u'Netflix', 0, 7, u'ORG')]
 
 p
     |  Keep in mind that you need to create a #[code Span] with the start and

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc
 from ..compat import b_to_str
+from ..errors import Errors, Warnings, user_warning
 from ..util import prints, is_in_jupyter
 
 
@@ -27,7 +28,7 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
     factories = {'dep': (DependencyRenderer, parse_deps),
                  'ent': (EntityRenderer, parse_ents)}
     if style not in factories:
-        raise ValueError("Unknown style: %s" % style)
+        raise ValueError(Errors.E087.format(style=style))
     if isinstance(docs, Doc) or isinstance(docs, dict):
         docs = [docs]
     renderer, converter = factories[style]
@@ -57,12 +58,12 @@ def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
     render(docs, style=style, page=page, minify=minify, options=options,
            manual=manual)
     httpd = simple_server.make_server('0.0.0.0', port, app)
-    prints("Using the '%s' visualizer" % style,
-           title="Serving on port %d..." % port)
+    prints("Using the '{}' visualizer".format(style),
+           title="Serving on port {}...".format(port))
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        prints("Shutting down server on port %d." % port)
+        prints("Shutting down server on port {}.".format(port))
     finally:
         httpd.server_close()
 
@@ -83,6 +84,8 @@ def parse_deps(orig_doc, options={}):
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
     doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
+    if not doc.is_parsed:
+        user_warning(Warnings.W005)
     if options.get('collapse_punct', True):
         spans = []
         for word in doc[:-1]:
@@ -120,6 +123,8 @@ def parse_ents(doc, options={}):
     """
     ents = [{'start': ent.start_char, 'end': ent.end_char, 'label': ent.label_}
             for ent in doc.ents]
+    if not ents:
+        user_warning(Warnings.W006)
     title = (doc.user_data.get('title', None)
              if hasattr(doc, 'user_data') else None)
     return {'text': doc.text, 'ents': ents, 'title': title}

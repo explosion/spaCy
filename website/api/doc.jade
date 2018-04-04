@@ -245,7 +245,9 @@ p Check whether an extension has been registered on the #[code Doc] class.
     +tag method
     +tag-new(2)
 
-p Create a #[code Span] object from the slice #[code doc.text[start : end]].
+p
+    |  Create a #[code Span] object from the slice #[code doc.text[start : end]].
+    |  Returns #[code None] if the character indices don't map to a valid span.
 
 +aside-code("Example").
     doc = nlp(u'I like New York')
@@ -276,7 +278,7 @@ p Create a #[code Span] object from the slice #[code doc.text[start : end]].
     +row("foot")
         +cell returns
         +cell #[code Span]
-        +cell The newly constructed object.
+        +cell The newly constructed object or #[code None].
 
 +h(2, "similarity") Doc.similarity
     +tag method
@@ -672,7 +674,7 @@ p
     |  token vectors.
 
 +aside-code("Example").
-    apples = nlp(u'I like apples')
+    doc = nlp(u'I like apples')
     assert doc.vector.dtype == 'float32'
     assert doc.vector.shape == (300,)
 

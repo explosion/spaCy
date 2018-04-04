@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 from ....parts_of_speech import SPACE
+from ....compat import unicode_
 from ...util import get_doc
 
-import six
 import pytest
 
 
@@ -24,8 +24,8 @@ def test_tag_names(EN):
     text = "I ate pizzas with anchovies."
     doc = EN(text, disable=['parser'])
     assert type(doc[2].pos) == int
-    assert isinstance(doc[2].pos_, six.text_type)
-    assert isinstance(doc[2].dep_, six.text_type)
+    assert isinstance(doc[2].pos_, unicode_)
+    assert isinstance(doc[2].dep_, unicode_)
     assert doc[2].tag_ == u'NNS'
 
 
