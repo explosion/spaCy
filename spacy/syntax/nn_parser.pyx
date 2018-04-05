@@ -546,7 +546,10 @@ cdef class Parser:
         if len(docs) != len(golds):
             raise ValueError(Errors.E077.format(value='update', n_docs=len(docs),
                                                 n_golds=len(golds)))
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
+        # The probability we use beam update, instead of falling back to
+        # a greedy update
+        beam_update_prob = 1-self.cfg.get('beam_update_prob', 0.5)
+        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= beam_update_prob:
             return self.update_beam(docs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
                     drop=drop, sgd=sgd, losses=losses)
