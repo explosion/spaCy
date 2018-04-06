@@ -308,18 +308,20 @@ VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 Run tests
 =========
 
-spaCy comes with an `extensive test suite <spacy/tests>`_. First, find out where
-spaCy is installed:
+spaCy comes with an `extensive test suite <spacy/tests>`_.  In order to run the
+tests, you'll usually want to clone the repository and build spaCy from source.
+This will also install the required development dependencies and test utilities
+defined in the ``requirements.txt``.
+
+Alternatively, you can find out where spaCy is installed and run ``pytest`` on
+that directory. Don't forget to also install the test utilities via spaCy's
+``requirements.txt``:
 
 .. code:: bash
 
     python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
-
-Then run ``pytest`` on that directory. The flags ``--vectors``, ``--slow``
-and ``--model`` are optional and enable additional tests:
-
-.. code:: bash
-
-    # make sure you are using recent pytest version
-    python -m pip install -U pytest
+    pip install -r path/to/requirements.txt
     python -m pytest <spacy-directory>
+
+See `the documentation <https://spacy.io/usage/#tests>`_ for more details and
+examples.
