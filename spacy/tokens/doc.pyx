@@ -500,8 +500,9 @@ cdef class Doc:
             # its tokenisation changing, so it's okay once we have the Span
             # objects. See Issue #375.
             spans = []
-            for start, end, label in self.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+            if self.noun_chunks_iterator is not None:
+                for start, end, label in self.noun_chunks_iterator(self):
+                    spans.append(Span(self, start, end, label=label))
             for span in spans:
                 yield span
 
