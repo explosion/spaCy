@@ -180,6 +180,8 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        if label == SUBTOK_LABEL and st.S(0).i != (st.B(0).i-1):
+            return 0
         sent_start = st._sent[st.B_(0).l_edge].sent_start
         return sent_start != 1
 
@@ -216,6 +218,8 @@ cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         # If there's (perhaps partial) parse pre-set, don't allow cycle.
+        if label == SUBTOK_LABEL and st.S(0).i != (st.B(0).i-1):
+            return 0
         sent_start = st._sent[st.B_(0).l_edge].sent_start
         return sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
