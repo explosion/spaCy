@@ -24,7 +24,7 @@ aci-acinya
 aco-acoan
 ad-blocker
 ad-interim
-ada-ada saja
+ada-ada
 ada-adanya
 ada-adanyakah
 adang-adang
@@ -1278,6 +1278,7 @@ dulang-dulang
 duri-duri
 duta-duta
 dwi-kewarganegaraan
+e-KTP
 ecek-ecek
 eco-friendly
 eco-park
