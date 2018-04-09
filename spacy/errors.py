@@ -38,6 +38,7 @@ class Warnings(object):
             "surprising to you, make sure the Doc was processed using a model "
             "that supports named entity recognition, and check the `doc.ents` "
             "property manually if necessary.")
+    W008 = ("Evaluating {obj}.similarity based on empty vectors.")
 
 
 @add_codes

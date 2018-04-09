@@ -16,7 +16,7 @@ from ..util import normalize_slice
 from ..attrs cimport IS_PUNCT, IS_SPACE
 from ..lexeme cimport Lexeme
 from ..compat import is_config
-from ..errors import Errors, TempErrors
+from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
 from .underscore import Underscore, get_ext_args
 
 
@@ -195,6 +195,7 @@ cdef class Span:
             else:
                 return 1.0
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
+            user_warning(Warnings.W008.format(obj='Span'))
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 

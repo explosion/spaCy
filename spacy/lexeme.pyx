@@ -15,7 +15,7 @@ from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_CURRENCY, IS_OOV
 from .attrs cimport PROB
 from .attrs import intify_attrs
-from .errors import Errors
+from .errors import Errors, Warnings, user_warning
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
@@ -122,6 +122,7 @@ cdef class Lexeme:
             if self.c.orth == other[0].orth:
                 return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
+            user_warning(Warnings.W008.format(obj='Lexeme'))
             return 0.0
         return (numpy.dot(self.vector, other.vector) /
                 (self.vector_norm * other.vector_norm))

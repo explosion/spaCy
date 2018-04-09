@@ -31,7 +31,8 @@ from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
-from ..errors import Errors, Warnings, deprecation_warning
+from ..errors import deprecation_warning, models_warning, user_warning
+from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
@@ -314,6 +315,7 @@ cdef class Doc:
                     return 1.0
 
         if self.vector_norm == 0 or other.vector_norm == 0:
+            user_warning(Warnings.W008.format(obj='Doc'))
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
