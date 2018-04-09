@@ -155,6 +155,8 @@ cdef class Token:
         elif hasattr(other, 'orth'):
             if self.c.lex.orth == other.orth:
                 return 1.0
+        if self.vocab.vectors.n_keys == 0:
+            models_warning(Warnings.W007.format(obj='Token'))
         if self.vector_norm == 0 or other.vector_norm == 0:
             user_warning(Warnings.W008.format(obj='Token'))
             return 0.0

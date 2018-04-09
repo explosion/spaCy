@@ -313,7 +313,8 @@ cdef class Doc:
                         break
                 else:
                     return 1.0
-
+        if self.vocab.vectors.n_keys == 0:
+            models_warning(Warnings.W007.format(obj='Doc'))
         if self.vector_norm == 0 or other.vector_norm == 0:
             user_warning(Warnings.W008.format(obj='Doc'))
             return 0.0

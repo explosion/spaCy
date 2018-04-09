@@ -194,6 +194,8 @@ cdef class Span:
                     break
             else:
                 return 1.0
+        if self.vocab.vectors.n_keys == 0:
+            models_warning(Warnings.W007.format(obj='Span'))
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             user_warning(Warnings.W008.format(obj='Span'))
             return 0.0
