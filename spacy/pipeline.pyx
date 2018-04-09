@@ -79,7 +79,7 @@ def merge_noun_chunks(doc):
     RETURNS (Doc): The Doc object with merged noun chunks.
     """
     if not doc.is_parsed:
-        return
+        return doc
     spans = [(np.start_char, np.end_char, np.root.tag, np.root.dep)
              for np in doc.noun_chunks]
     for start, end, tag, dep in spans:
