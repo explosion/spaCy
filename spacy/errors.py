@@ -244,6 +244,7 @@ class Errors(object):
             "Alternatively, it is built from the 'lang' and 'name' keys in "
             "the meta.json. Vector names are required to avoid issue #1660.")
     E093 = ("token.ent_iob values make invalid sequence: I without B\n{seq}")
+    E094 = ("Error reading line {line_num} in vectors file {loc}.")
 
 
 @add_codes

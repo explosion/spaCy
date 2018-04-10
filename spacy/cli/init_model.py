@@ -14,7 +14,7 @@ import zipfile
 
 from ._messages import Messages
 from ..vectors import Vectors
-from ..errors import Warnings, user_warning
+from ..errors import Errors, Warnings, user_warning
 from ..util import prints, ensure_path, get_lang_class
 
 try:
@@ -114,8 +114,7 @@ def read_vectors(vectors_loc):
         pieces = line.rsplit(' ', vectors_data.shape[1]+1)
         word = pieces.pop(0)
         if len(pieces) != vectors_data.shape[1]:
-            print(word, repr(line))
-            raise ValueError("Bad line in file")
+            raise ValueError(Errors.E094.format(line_num=i, loc=vectors_loc)
         vectors_data[i] = numpy.asarray(pieces, dtype='f')
         vectors_keys.append(word)
     return vectors_data, vectors_keys
