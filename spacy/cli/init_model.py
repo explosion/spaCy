@@ -29,12 +29,14 @@ except ImportError:
     freqs_loc=("location of words frequencies file", "positional", None, Path),
     clusters_loc=("optional: location of brown clusters data",
                   "option", "c", str),
-    vectors_loc=("optional: location of vectors file in GenSim text format",
-                 "option", "v", str),
+    vectors_loc=("optional: location of vectors file in Word2Vec format "
+                 "(either as .txt or zipped as .zip or .tar.gz)", "option",
+                 "v", str),
     prune_vectors=("optional: number of vectors to prune to",
                    "option", "V", int)
 )
-def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None, vectors_loc=None, prune_vectors=-1):
+def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None,
+               vectors_loc=None, prune_vectors=-1):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
