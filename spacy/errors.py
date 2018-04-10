@@ -299,7 +299,7 @@ def _get_warn_excl(arg):
 
 SPACY_WARNING_FILTER = os.environ.get('SPACY_WARNING_FILTER', 'always')
 SPACY_WARNING_TYPES = _get_warn_types(os.environ.get('SPACY_WARNING_TYPES'))
-SPACY_WARNING_EXCLUDE = _get_warn_excl(os.environ.get('SPACY_WARNING_EXCLUDE'))
+SPACY_WARNING_IGNORE = _get_warn_excl(os.environ.get('SPACY_WARNING_IGNORE'))
 
 
 def user_warning(message):
@@ -320,7 +320,7 @@ def _warn(message, warn_type='user'):
     category (Warning): The Warning to show.
     """
     w_id = message.split('[', 1)[1].split(']', 1)[0]  # get ID from string
-    if warn_type in SPACY_WARNING_TYPES and w_id not in SPACY_WARNING_EXCLUDE:
+    if warn_type in SPACY_WARNING_TYPES and w_id not in SPACY_WARNING_IGNORE:
         category = WARNINGS[warn_type]
         stack = inspect.stack()[-1]
         with warnings.catch_warnings():
