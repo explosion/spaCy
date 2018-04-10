@@ -114,7 +114,7 @@ def read_vectors(vectors_loc):
         pieces = line.rsplit(' ', vectors_data.shape[1]+1)
         word = pieces.pop(0)
         if len(pieces) != vectors_data.shape[1]:
-            raise ValueError(Errors.E094.format(line_num=i, loc=vectors_loc)
+            raise ValueError(Errors.E094.format(line_num=i, loc=vectors_loc))
         vectors_data[i] = numpy.asarray(pieces, dtype='f')
         vectors_keys.append(word)
     return vectors_data, vectors_keys
