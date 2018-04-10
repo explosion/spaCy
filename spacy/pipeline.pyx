@@ -470,7 +470,7 @@ class Tagger(Pipe):
                     doc.extend_tensor(tensors[i].get())
                 else:
                     doc.extend_tensor(tensors[i])
-        doc.is_tagged = True
+            doc.is_tagged = True
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
