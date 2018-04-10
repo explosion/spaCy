@@ -12,11 +12,11 @@ integration. It's commercial open-source software, released under the MIT licens
 
 💫 **Version 2.0 out now!** `Check out the new features here. <https://spacy.io/usage/v2>`_
 
-.. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
+.. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
 
-.. image:: https://img.shields.io/appveyor/ci/explosion/spaCy/master.svg?style=flat-square
+.. image:: https://img.shields.io/appveyor/ci/explosion/spaCy/master.svg?style=flat-square&logo=appveyor
     :target: https://ci.appveyor.com/project/explosion/spaCy
     :alt: Appveyor Build Status
 
@@ -28,11 +28,11 @@ integration. It's commercial open-source software, released under the MIT licens
     :target: https://pypi.python.org/pypi/spacy
     :alt: pypi Version
 
-.. image:: https://anaconda.org/conda-forge/spacy/badges/version.svg
+.. image:: https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square
     :target: https://anaconda.org/conda-forge/spacy
     :alt: conda Version
 
-.. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg?style=flat-square
+.. image:: https://img.shields.io/badge/chat-join%20%E2%86%92-09a3d5.svg?style=flat-square&logo=gitter-white
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
 
