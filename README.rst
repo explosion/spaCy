@@ -199,6 +199,11 @@ or manually by pointing pip to a path or URL.
     # pip install .tar.gz archive from path or URL
     pip install /Users/you/en_core_web_sm-2.0.0.tar.gz
 
+If you have SSL certification problems, SSL customization options are described in the help:
+
+    # help for the download command
+    python -m spacy download --help
+
 Loading and using models
 ------------------------
 
