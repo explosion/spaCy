@@ -17,19 +17,39 @@ from .. import about
 @plac.annotations(
     model=("model to download, shortcut or name)", "positional", None, str),
     direct=("force direct download. Needs model name with version and won't "
-            "perform compatibility check", "flag", "d", bool))
-def download(model, direct=False):
+            "perform compatibility check", "flag", "d", bool),
+    unsecure=("unsecure mode - disables the verification of certificates", 
+        "flag", "u", bool),
+    caFile=("specify a certificate authority file to use for certificates "
+        "validation. Ignored if --unsecure is used", "option", "c"))
+def download(model, direct=False, unsecure=False, caFile=None):
     """
     Download compatible model from default download path using pip. Model
     can be shortcut, model name or, if --direct flag is set, full model name
     with version.
+    The --unsecure optional flag can be used to disable ssl verification
+    The --caFile option can be used to provide a local CA file
+    used for certificate verification.
     """
+
+    # sslVerify is the argument handled to the 'verify' parameter
+    # of requests package. It must be either None, a boolean, 
+    # or a String containing the path to CA file
+    sslVerify = None
+    if unsecure:
+        caFile    = None
+        sslVerify = False
+    else:
+        if caFile != None:
+            sslVerify = caFile
+
+    # Download the model
     if direct:
         dl = download_model('{m}/{m}.tar.gz'.format(m=model))
     else:
-        shortcuts = get_json(about.__shortcuts__, "available shortcuts")
+        shortcuts = get_json(about.__shortcuts__, "available shortcuts", sslVerify)
         model_name = shortcuts.get(model, model)
-        compatibility = get_compatibility()
+        compatibility = get_compatibility(sslVerify)
         version = get_version(model_name, compatibility)
         dl = download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name,
                                                             v=version))
@@ -50,19 +70,19 @@ def download(model, direct=False):
             prints(Messages.M001.format(name=model_name), title=Messages.M002)
 
 
-def get_json(url, desc):
+def get_json(url, desc, sslVerify):
     try:
-        data = url_read(url)
+        data = url_read(url, verify=sslVerify)
     except HTTPError as e:
         prints(Messages.M004.format(desc, about.__version__),
                title=Messages.M003.format(e.code, e.reason), exits=1)
     return ujson.loads(data)
 
 
-def get_compatibility():
+def get_compatibility(sslVerify):
     version = about.__version__
     version = version.rsplit('.dev', 1)[0]
-    comp_table = get_json(about.__compatibility__, "compatibility table")
+    comp_table = get_json(about.__compatibility__, "compatibility table", sslVerify)
     comp = comp_table['spacy']
     if version not in comp:
         prints(Messages.M006.format(version=version), title=Messages.M005,
