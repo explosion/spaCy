@@ -71,3 +71,10 @@ cdef struct TokenC:
     int ent_iob
     attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     hash_t ent_id
+
+cdef inline int get_left_edge(const TokenC* head) nogil:
+    return head.l_edge
+
+cdef inline int get_right_edge(const TokenC* head) nogil:
+    return head.r_edge
+
