@@ -108,6 +108,18 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
+    new_tokens = get_doc(tokens.vocab).from_bytes(
+        tokens.to_bytes(tensor=False), tensor=False)
+    assert tokens.text == new_tokens.text
+    assert [t.text for t in tokens] == [t.text for t in new_tokens]
+    assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+
+    new_tokens = get_doc(tokens.vocab).from_bytes(
+        tokens.to_bytes(sentiment=False), sentiment=False)
+    assert tokens.text == new_tokens.text
+    assert [t.text for t in tokens] == [t.text for t in new_tokens]
+    assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+
 
 def test_doc_api_set_ents(en_tokenizer):
     text = "I use goggle chrone to surf the web"
