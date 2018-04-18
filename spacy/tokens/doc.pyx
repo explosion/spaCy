@@ -855,7 +855,7 @@ cdef class Doc:
         computed by the models in the pipeline. Let's say a
         document with 30 words has a tensor with 128 dimensions
         per word. doc.tensor.shape will be (30, 128). After
-        calling doc.extend_tensor with an array of hape (30, 64),
+        calling doc.extend_tensor with an array of shape (30, 64),
         doc.tensor == (30, 192).
         '''
         xp = get_array_module(self.tensor)
