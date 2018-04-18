@@ -96,13 +96,13 @@ p
     assert doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
 
     empty_doc = Doc(Vocab()) # new Doc with empty Vocab
-    # doc.vocab.strings[3197928453018144401] will raise an error :(
+    # empty_doc.vocab.strings[3197928453018144401] will raise an error :(
 
     empty_doc.vocab.strings.add(u'coffee') # add "coffee" and generate hash
-    assert doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
+    assert empty_doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
 
     new_doc = Doc(doc.vocab) # create new doc with first doc's vocab
-    assert doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
+    assert new_doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
 
 p
     |  If the vocabulary doesn't contain a string for #[code 3197928453018144401],
