@@ -162,7 +162,7 @@ If you've made a contribution to spaCy, you should fill in the
 [spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that
 your contribution can be used across the project. If you agree to be bound by
 the terms of the agreement, fill in the [template](.github/CONTRIBUTOR_AGREEMENT.md)
-and include it with your pull request, or sumit it separately to
+and include it with your pull request, or submit it separately to
 [`.github/contributors/`](/.github/contributors). The name of the file should be
 your GitHub username, with the extension `.md`. For example, the user
 example_user would create the file `.github/contributors/example_user.md`.
@@ -200,7 +200,7 @@ All Python code must be written in an **intersection of Python 2 and Python 3**.
 This is easy in Cython, but somewhat ugly in Python. Logic that deals with
 Python or platform compatibility should only live in
 [`spacy.compat`](spacy/compat.py). To distinguish them from the builtin
-functions, replacement functions are suffixed with an undersocre, for example
+functions, replacement functions are suffixed with an underscore, for example
 `unicode_`. If you need to access the user's version or platform information,
 for example to show more specific error messages, you can use the `is_config()`
 helper function.
