@@ -23,6 +23,18 @@ def vectors():
         ('juice', [5, 5, 10]),
         ('pie', [7, 6.3, 8.9])]
 
+@pytest.fixture
+def ngrams_vectors():
+    return [
+        ("apple", [1, 2, 3]),
+        ("app", [-0.1, -0.2, -0.3]),
+        ('ppl', [-0.2, -0.3, -0.4]),
+        ('pl', [0.7, 0.8, 0.9])
+    ]
+@pytest.fixture()
+def ngrams_vocab(en_vocab, ngrams_vectors):
+    add_vecs_to_vocab(en_vocab, ngrams_vectors)
+    return en_vocab
 
 @pytest.fixture
 def data():
@@ -104,6 +116,18 @@ def test_vectors_token_vector(tokenizer_v, vectors, text):
     assert vectors[0] == (doc[0].text, list(doc[0].vector))
     assert vectors[1] == (doc[2].text, list(doc[2].vector))
 
+
+@pytest.mark.parametrize('text', ["apple"])
+def test_vectors__ngrams_word(ngrams_vocab, text):
+    assert list(ngrams_vocab.get_vector(text)) == list(ngrams_vectors()[0][1])
+
+@pytest.mark.parametrize('text', ["applpie"])
+def test_vectors__ngrams_subword(ngrams_vocab, text):
+    truth = list(ngrams_vocab.get_vector(text,1,6))
+    test = list([(ngrams_vectors()[1][1][i] + ngrams_vectors()[2][1][i] + ngrams_vectors()[3][1][i])/3 for i in range(len(ngrams_vectors()[1][1]))])
+    eps = [abs(truth[i] - test[i]) for i in range(len(truth))]
+    for i in eps:
+        assert i<1e-6
 
 @pytest.mark.parametrize('text', ["apple", "orange"])
 def test_vectors_lexeme_vector(vocab, text):
