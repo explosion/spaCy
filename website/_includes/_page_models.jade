@@ -75,3 +75,16 @@ for id in CURRENT_MODELS
                                         |  n/a
 
         p.u-text-small.u-color-dark(data-tpl=id data-tpl-key="notes")
+
+        if comps.size == "sm" && EXAMPLE_SENT_LANGS.includes(comps.lang)
+            section
+                +code-exec("Test the model live").
+                    import spacy
+                    from spacy.lang.#{comps.lang}.examples import sentences
+
+                    nlp = spacy.load('#{id}')
+                    doc = nlp(sentences[0])
+                    print(doc.text)
+                    for token in doc:
+                        print(token.text, token.pos_, token.dep_)
+
