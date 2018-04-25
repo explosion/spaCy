@@ -34,6 +34,10 @@ script
 if IS_PAGE
     script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
 
+if IS_PAGE || SECTION == "index"
+    script(type="text/x-thebe-config") { bootstrap: true, binderOptions: { repo: "#{KERNEL_BINDER}"}, kernelOptions: { name: "#{KERNEL_PYTHON}" }}
+    //- Custom build of: https://github.com/minrk/thebelab
+    script(src="/assets/js/vendor/thebelab.custom.min.js")
 
 //- JS modules – slightly hacky, but necessary to dynamically instantiate the
     classes with data from the Harp JSON files, while still being able to
