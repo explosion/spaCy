@@ -39,11 +39,11 @@ p
     |  callback function to invoke on a successful match. For now, we set it
     |  to #[code None].
 
-+code.
++code-exec.
     import spacy
     from spacy.matcher import Matcher
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     matcher = Matcher(nlp.vocab)
     # add match ID "HelloWorld" with no callback and one pattern
     pattern = [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}]
@@ -51,6 +51,10 @@ p
 
     doc = nlp(u'Hello, world! Hello world!')
     matches = matcher(doc)
+    for match_id, start, end in matches:
+        string_id = nlp.vocab.strings[match_id]  # get string representation
+        span = doc[start:end]  # the matched span
+        print(match_id, string_id, start, end, span.text)
 
 p
     |  The matcher returns a list of #[code (match_id, start, end)] tuples – in
@@ -195,11 +199,11 @@ p
     |  much more efficient overall. The #[code Doc] patterns can contain single
     |  or multiple tokens.
 
-+code.
++code-exec.
     import spacy
     from spacy.matcher import PhraseMatcher
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     matcher = PhraseMatcher(nlp.vocab)
     terminology_list = ['Barack Obama', 'Angela Merkel', 'Washington, D.C.']
     patterns = [nlp(text) for text in terminology_list]
@@ -208,6 +212,9 @@ p
     doc = nlp(u"German Chancellor Angela Merkel and US President Barack Obama "
               u"converse in the Oval Office inside the White House in Washington, D.C.")
     matches = matcher(doc)
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        print(span.text)
 
 p
     |  Since spaCy is used for processing both the patterns and the text to be
@@ -228,11 +235,11 @@ p
     |  "Google I/O 2017". If your pattern matches, spaCy should execute your
     |  custom callback function #[code add_event_ent].
 
-+code.
++code-exec.
     import spacy
     from spacy.matcher import Matcher
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     matcher = Matcher(nlp.vocab)
 
     # Get the ID of the 'EVENT' entity type. This is required to set an entity.
@@ -242,11 +249,16 @@ p
         # Get the current match and create tuple of entity label, start and end.
         # Append entity to the doc's entity. (Don't overwrite doc.ents!)
         match_id, start, end = matches[i]
-        doc.ents += ((EVENT, start, end),)
+        entity = (EVENT, start, end)
+        doc.ents += (entity,)
+        print(doc[start:end].text, entity)
 
     matcher.add('GoogleIO', add_event_ent,
                 [{'ORTH': 'Google'}, {'ORTH': 'I'}, {'ORTH': '/'}, {'ORTH': 'O'}],
                 [{'ORTH': 'Google'}, {'ORTH': 'I'}, {'ORTH': '/'}, {'ORTH': 'O'}, {'IS_DIGIT': True}])
+
+    doc = nlp(u"This is a text about Google I/O 2015.")
+    matches = matcher(doc)
 
 p
     |  In addition to mentions of "Google I/O", your data also contains some
@@ -256,20 +268,32 @@ p
     |  can easily ignore them later. So you add a second pattern and pass in a
     |  function #[code merge_and_flag]:
 
-+code.
-    # Add a new custom flag to the vocab, which is always False by default.
-    # BAD_HTML_FLAG will be the flag ID, which we can use to set it to True on the span.
-    BAD_HTML_FLAG = nlp.vocab.add_flag(lambda text: False)
++code-exec.
+    import spacy
+    from spacy.matcher import Matcher
+    from spacy.tokens import Token
+
+    nlp = spacy.load('en_core_web_sm')
+    matcher = Matcher(nlp.vocab)
+    # register a new token extension to flag bad HTML
+    Token.set_extension('bad_html', default=False, force=True)
 
     def merge_and_flag(matcher, doc, i, matches):
         match_id, start, end = matches[i]
         span = doc[start : end]
         span.merge(is_stop=True) # merge (and mark it as a stop word, just in case)
-        span.set_flag(BAD_HTML_FLAG, True) # set BAD_HTML_FLAG
+        for token in span:
+            token._.bad_html = True  # mark token as bad HTML
+        print(span.text)
 
     matcher.add('BAD_HTML', merge_and_flag,
                 [{'ORTH': '&lt;'}, {'LOWER': 'br'}, {'ORTH': '&gt;'}],
                 [{'ORTH': '&lt;'}, {'LOWER': 'br/'}, {'ORTH': '&gt;'}])
+
+    doc = nlp(u"Hello&lt;br&gt;world!")
+    matches = matcher(doc)
+    for token in doc:
+        print(token.text, token._.bad_html)
 
 +aside("Tip: Visualizing matches")
     |  When working with entities, you can use #[+api("top-level#displacy") displaCy]
@@ -334,11 +358,11 @@ p
     |  use the #[+api("doc#char_span") #[code Doc.char_span]] method to
     |  create a #[code Span] from the character indices of the match:
 
-+code.
++code-exec.
     import spacy
     import re
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(u'The spelling is "definitely", not "definately" or "deffinitely".')
 
     DEFINITELY_PATTERN = re.compile(r'deff?in[ia]tely')
@@ -346,6 +370,7 @@ p
     for match in re.finditer(DEFINITELY_PATTERN, doc.text):
         start, end = match.span()         # get matched indices
         span = doc.char_span(start, end)  # create Span from indices
+        print(span.text)
 
 p
     |  You can also use the regular expression with spaCy's #[code Matcher] by
@@ -357,12 +382,23 @@ p
     |  regular expression will return #[code True] for the #[code IS_DEFINITELY]
     |  flag.
 
-+code.
++code-exec.
+    import spacy
+    from spacy.matcher import Matcher
+    import re
+
+    nlp = spacy.load('en_core_web_sm')
     definitely_flag = lambda text: bool(re.compile(r'deff?in[ia]tely').match(text))
     IS_DEFINITELY = nlp.vocab.add_flag(definitely_flag)
 
     matcher = Matcher(nlp.vocab)
     matcher.add('DEFINITELY', None, [{IS_DEFINITELY: True}])
+
+    doc = nlp(u'The spelling is "definitely", not "definately" or "deffinitely".')
+    matches = matcher(doc)
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        print(span.text)
 
 p
     |  Providing the regular expressions as binary flags also lets you use them
@@ -407,18 +443,19 @@ p
     |  #[+a("/usage/visualizers#manual-usage") "manual" mode] lets you
     |  pass in a list of dictionaries containing the text and entities to render.
 
-+code.
++code-exec.
+    import spacy
     from spacy import displacy
     from spacy.matcher import Matcher
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     matcher = Matcher(nlp.vocab)
     matched_sents = [] # collect data of matched sentences to be visualized
 
     def collect_sents(matcher, doc, i, matches):
         match_id, start, end = matches[i]
-        span = doc[start : end] # matched span
-        sent = span.sent # sentence containing matched span
+        span = doc[start : end]  # matched span
+        sent = span.sent  # sentence containing matched span
         # append mock entity for match in displaCy style to matched_sents
         # get the match span by ofsetting the start and end of the span with the
         # start and end of the sentence in the doc
@@ -429,12 +466,15 @@ p
 
     pattern = [{'LOWER': 'facebook'}, {'LEMMA': 'be'}, {'POS': 'ADV', 'OP': '*'},
                {'POS': 'ADJ'}]
-    matcher.add('FacebookIs', collect_sents, pattern) # add pattern
-    matches = matcher(nlp(LOTS_OF_TEXT)) # match on your text
+    matcher.add('FacebookIs', collect_sents, pattern)  # add pattern
+    doc = nlp(u"I'd say that Facebook is evil. – Facebook is pretty cool, right?")
+    matches = matcher(doc)
 
     # serve visualization of sentences containing match with displaCy
     # set manual=True to make displaCy render straight from a dictionary
-    displacy.serve(matched_sents, style='ent', manual=True)
+    # (if you're not running the code within a Jupyer environment, you can
+    # remove jupyter=True and use displacy.serve instead)
+    displacy.render(matched_sents, style='ent', manual=True, jupyter=True)
 
 +h(3, "example2") Example: Phone numbers
 
@@ -474,6 +514,23 @@ p
     |  extend, and doesn't require any training data – only a set of
     |  test cases.
 
++code-exec.
+    import spacy
+    from spacy.matcher import Matcher
+
+    nlp = spacy.load('en_core_web_sm')
+    matcher = Matcher(nlp.vocab)
+    pattern = [{'ORTH': '('}, {'SHAPE': 'ddd'}, {'ORTH': ')'}, {'SHAPE': 'ddd'},
+               {'ORTH': '-', 'OP': '?'}, {'SHAPE': 'ddd'}]
+    matcher.add('PHONE_NUMBER', None, pattern)
+
+    doc = nlp(u"Call me at (123) 456 789 or (123) 456 789!")
+    print([t.text for t in doc])
+    matches = matcher(doc)
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        print(span.text)
+
 +h(3, "example3") Example: Hashtags and emoji on social media
 
 p
@@ -509,7 +566,7 @@ p
     |  Valid hashtags usually consist of a #[code #], plus a sequence of
     |  ASCII characters with no whitespace, making them easy to match as well.
 
-+code.
++code-exec.
     from spacy.lang.en import English
     from spacy.matcher import Matcher
 
@@ -523,11 +580,26 @@ p
     pos_patterns = [[{'ORTH': emoji}] for emoji in pos_emoji]
     neg_patterns = [[{'ORTH': emoji}] for emoji in neg_emoji]
 
+    # function to label the sentiment
+    def label_sentiment(matcher, doc, i, matches):
+        match_id, start, end = matches[i]
+        if doc.vocab.strings[match_id] == 'HAPPY':  # don't forget to get string!
+            doc.sentiment += 0.1  # add 0.1 for positive sentiment
+        elif doc.vocab.strings[match_id] == 'SAD':
+            doc.sentiment -= 0.1  # subtract 0.1 for negative sentiment
+
     matcher.add('HAPPY', label_sentiment, *pos_patterns)  # add positive pattern
     matcher.add('SAD', label_sentiment, *neg_patterns)  # add negative pattern
 
-    # add pattern to merge valid hashtag, i.e. '#' plus any ASCII token
+    # add pattern for valid hashtag, i.e. '#' plus any ASCII token
     matcher.add('HASHTAG', None, [{'ORTH': '#'}, {'IS_ASCII': True}])
+
+    doc = nlp(u"Hello world 😀 #MondayMotivation")
+    matches = matcher(doc)
+    for match_id, start, end in matches:
+        string_id = doc.vocab.strings[match_id]  # look up string ID
+        span = doc[start:end]
+        print(string_id, span.text)
 
 p
     |  Because the #[code on_match] callback receives the ID of each match, you
@@ -562,26 +634,37 @@ p
         span._.emoji_desc = emoji.title  # assign emoji description
 
 p
-    |  To label the hashtags, we first need to add a new custom flag.
-    |  #[code IS_HASHTAG] will be the flag's ID, which you can use to assign it
-    |  to the hashtag's span, and check its value via a token's
-    |  #[+api("token#check_flag") #[code check_flag()]] method. On each
-    |  match, we merge the hashtag and assign the flag. Alternatively, we
-    |  could also use a
-    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attribute],
-    |  e.g. #[code token._.is_hashtag].
+    |  To label the hashtags, we can use a
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attribute]
+    |  set on the respective token:
 
-+code.
-    # Add a new custom flag to the vocab, which is always False by default
-    IS_HASHTAG = nlp.vocab.add_flag(lambda text: False)
++code-exec.
+    import spacy
+    from spacy.matcher import Matcher
+    from spacy.tokens import Token
 
+    nlp = spacy.load('en_core_web_sm')
+    matcher = Matcher(nlp.vocab)
+
+    # add pattern for valid hashtag, i.e. '#' plus any ASCII token
+    matcher.add('HASHTAG', None, [{'ORTH': '#'}, {'IS_ASCII': True}])
+
+    # register token extension
+    Token.set_extension('is_hashtag', default=False, force=True)
+
+    doc = nlp(u"Hello world 😀 #MondayMotivation")
     matches = matcher(doc)
-    spans = []
+    hashtags = []
     for match_id, start, end in matches:
-        spans.append(doc[start : end])
-    for span in spans:
-        span.merge()  # merge hashtag
-        span.set_flag(IS_HASHTAG, True)  # set IS_HASHTAG to True
+        if doc.vocab.strings[match_id] == 'HASHTAG':
+            hashtags.append(doc[start:end])
+    for span in hashtags:
+        span.merge()
+        for token in span:
+            token._.is_hashtag = True
+
+    for token in doc:
+        print(token.text, token._.is_hashtag)
 
 p
     |  To process a stream of social media posts, we can use

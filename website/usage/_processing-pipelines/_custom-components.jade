@@ -31,14 +31,16 @@ p
     |  #[strong custom name]. If no name is set and no #[code name] attribute
     |  is present on your component, the function name is used.
 
-+code("Adding pipeline components").
++code-exec.
+    import spacy
+
     def my_component(doc):
         print("After tokenization, this doc has %s tokens." % len(doc))
         if len(doc) &lt; 10:
             print("This is a pretty short document.")
         return doc
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     nlp.add_pipe(my_component, name='print_info', first=True)
     print(nlp.pipe_names) # ['print_info', 'tagger', 'parser', 'ner']
     doc = nlp(u"This is a sentence.")
@@ -49,7 +51,9 @@ p
     |  This is useful for #[strong stateful components], especially ones which
     |  #[strong depend on shared data].
 
-+code.
++code-exec.
+    import spacy
+
     class MyComponent(object):
         name = 'print_info'
 
@@ -62,8 +66,10 @@ p
                 print("This is a pretty short document.")
             return doc
 
-    my_component = MyComponent(nlp.vocab, short_limit=25)
+    nlp = spacy.load('en_core_web_sm')
+    my_component = MyComponent(nlp.vocab, short_limit=5)
     nlp.add_pipe(my_component, first=True)
+    doc = nlp(u"This is a sentence.")
 
 +h(3, "custom-components-attributes")
     |  Extension attributes on #[code Doc], #[code Span] and #[code Token]
@@ -210,7 +216,9 @@ p
     |  #[strong before] the dependency parsing – this way, the parser can also
     |  take advantage of the sentence boundaries.
 
-+code.
++code-exec.
+    import spacy
+
     def sbd_component(doc):
         for i, token in enumerate(doc[:-2]):
             # define sentence start if period + titlecase token
@@ -218,8 +226,11 @@ p
                 doc[i+1].sent_start = True
         return doc
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     nlp.add_pipe(sbd_component, before='parser')  # insert before the parser
+    doc = nlp(u"This is a sentence. This is another sentence.")
+    for sent in doc.sents:
+        print(sent.text)
 
 +h(4, "component-example2")
     |  Example: Pipeline component for entity matching and tagging with

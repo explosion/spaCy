@@ -7,16 +7,18 @@ p
 +h(3, "lightning-tour-models") Install models and process text
 
 +code(false, "bash").
-    python -m spacy download en
-    python -m spacy download de
+    python -m spacy download en_core_web_sm
+    python -m spacy download de_core_news_sm
 
-+code.
++code-exec.
     import spacy
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(u'Hello, world. Here are two sentences.')
+    print([t.text for t in doc])
 
-    nlp_de = spacy.load('de')
+    nlp_de = spacy.load('de_core_news_sm')
     doc_de = nlp_de(u'Ich bin ein Berliner.')
+    print([t.text for t in doc_de])
 
 +infobox
     |  #[+label-inline API:] #[+api("spacy#load") #[code spacy.load()]]
@@ -26,19 +28,23 @@ p
 +h(3, "lightning-tour-tokens-sentences") Get tokens, noun chunks & sentences
     +tag-model("dependency parse")
 
-+code.
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(u"Peach emoji is where it has always been. Peach is the superior "
               u"emoji. It's outranking eggplant 🍑 ")
+    print(doc[0].text)          # Peach
+    print(doc[1].text)          # emoji
+    print(doc[-1].text)         # 🍑
+    print(doc[17:19].text)      # outranking eggplant
 
-    assert doc[0].text == u'Peach'
-    assert doc[1].text == u'emoji'
-    assert doc[-1].text == u'🍑'
-    assert doc[17:19].text == u'outranking eggplant'
-    assert list(doc.noun_chunks)[0].text == u'Peach emoji'
+    noun_chunks = list(doc.noun_chunks)
+    print(noun_chunks[0].text)  # Peach emoji
 
     sentences = list(doc.sents)
     assert len(sentences) == 3
-    assert sentences[1].text == u'Peach is the superior emoji.'
+    print(sentences[1].text)    # 'Peach is the superior emoji.'
 
 +infobox
     |  #[+label-inline API:] #[+api("doc") #[code Doc]], #[+api("token") #[code Token]]
@@ -47,19 +53,22 @@ p
 +h(3, "lightning-tour-pos-tags") Get part-of-speech tags and flags
     +tag-model("tagger")
 
-+code.
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
     apple = doc[0]
-    assert [apple.pos_, apple.pos] == [u'PROPN', 17049293600679659579]
-    assert [apple.tag_, apple.tag] == [u'NNP', 15794550382381185553]
-    assert [apple.shape_, apple.shape] == [u'Xxxxx', 16072095006890171862]
-    assert apple.is_alpha == True
-    assert apple.is_punct == False
+    print('Fine-grained POS tag', apple.pos_, apple.pos)
+    print('Coarse-grained POS tag', apple.tag_, apple.tag)
+    print('Word shape', apple.shape_, apple.shape)
+    print('Alphanumeric characters?', apple.is_alpha)
+    print('Punctuation mark?', apple.is_punct)
 
     billion = doc[10]
-    assert billion.is_digit == False
-    assert billion.like_num == True
-    assert billion.like_email == False
+    print('Digit?', billion.is_digit)
+    print('Like a number?', billion.like_num)
+    print('Like an email address?', billion.like_email)
 
 +infobox
     |  #[+label-inline API:] #[+api("token") #[code Token]]
@@ -67,19 +76,25 @@ p
 
 +h(3, "lightning-tour-hashes") Use hash values for any string
 
-+code.
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(u'I love coffee')
-    coffee_hash = nlp.vocab.strings[u'coffee'] # 3197928453018144401
-    coffee_text = nlp.vocab.strings[coffee_hash] # 'coffee'
 
-    assert doc[2].orth == coffee_hash == 3197928453018144401
-    assert doc[2].text == coffee_text == u'coffee'
+    coffee_hash = nlp.vocab.strings[u'coffee']  # 3197928453018144401
+    coffee_text = nlp.vocab.strings[coffee_hash]  # 'coffee'
+    print(coffee_hash, coffee_text)
+    print(doc[2].orth, coffee_hash)  # 3197928453018144401
+    print(doc[2].text, coffee_text)  # 'coffee'
 
-    beer_hash = doc.vocab.strings.add(u'beer') # 3073001599257881079
-    beer_text = doc.vocab.strings[beer_hash] # 'beer'
+    beer_hash = doc.vocab.strings.add(u'beer')  # 3073001599257881079
+    beer_text = doc.vocab.strings[beer_hash]  # 'beer'
+    print(beer_hash, beer_text)
 
-    unicorn_hash = doc.vocab.strings.add(u'🦄 ') # 18234233413267120783
-    unicorn_text = doc.vocab.strings[unicorn_hash] # '🦄 '
+    unicorn_hash = doc.vocab.strings.add(u'🦄 ')  # 18234233413267120783
+    unicorn_text = doc.vocab.strings[unicorn_hash]  # '🦄 '
+    print(unicorn_hash, unicorn_text)
 
 +infobox
     |  #[+label-inline API:] #[+api("stringstore") #[code StringStore]]
@@ -88,16 +103,19 @@ p
 +h(3, "lightning-tour-entities") Recognise and update named entities
     +tag-model("NER")
 
-+code.
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(u'San Francisco considers banning sidewalk delivery robots')
-    ents = [(ent.text, ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
-    assert ents == [(u'San Francisco', 0, 13, u'GPE')]
+    for ent in doc.ents:
+        print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
     from spacy.tokens import Span
-    doc = nlp(u'Netflix is hiring a new VP of global policy')
+    doc = nlp(u'FB is hiring a new VP of global policy')
     doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings[u'ORG'])]
-    ents = [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
-    assert ents == [(0, 7, u'ORG')]
+    for ent in doc.ents:
+        print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
 +infobox
     |  #[+label-inline Usage:] #[+a("/usage/linguistic-features#named-entities") Named entity recognition]
@@ -260,14 +278,19 @@ p
 +h(3, "lightning-tour-dependencies") Get syntactic dependencies
     +tag-model("dependency parse")
 
-+code.
-    def dependency_labels_to_root(token):
-        """Walk up the syntactic tree, collecting the arc labels."""
-        dep_labels = []
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"When Sebastian Thrun started working on self-driving cars at Google "
+              u"in 2007, few people outside of the company took him seriously.")
+
+    dep_labels = []
+    for token in doc:
         while token.head != token:
-            dep_labels.append(token.dep)
+            dep_labels.append(token.dep_)
             token = token.head
-        return dep_labels
+    print(dep_labels)
 
 +infobox
     |  #[+label-inline API:] #[+api("token") #[code Token]]
