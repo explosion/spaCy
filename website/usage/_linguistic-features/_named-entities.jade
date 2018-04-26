@@ -77,16 +77,17 @@ p
     from spacy.tokens import Span
 
     nlp = spacy.load('en_core_web_sm')
-    doc = nlp(u'FB is hiring a new VP of global policy')
-    print([e.text for e in doc.ents])
+    doc = nlp(u"FB is hiring a new Vice President of global policy")
+    ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+    print('Before', ents)
     # the model didn't recognise "FB" as an entity :(
 
     ORG = doc.vocab.strings[u'ORG']  # get hash value of entity label
     fb_ent = Span(doc, 0, 1, label=ORG) # create a Span for the new entity
-    doc.ents = [fb_ent]
+    doc.ents = list(doc.ents) + [fb_ent]
 
     ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
-    print(ents)
+    print('After', ents)
     # [(u'FB', 0, 2, 'ORG')] 🎉
 
 p
