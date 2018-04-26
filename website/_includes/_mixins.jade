@@ -7,7 +7,7 @@ include _functions
     id - [string] anchor assigned to section (used for breadcrumb navigation)
 
 mixin section(id)
-    section.o-section(id="section-" + id data-section=id)
+    section.o-section(id=id ? "section-" + id : null data-section=id)&attributes(attributes)
         block
 
 
@@ -165,7 +165,7 @@ mixin aside-code(label, language, prompt)
             argument to be able to wrap it for spacing
 
 mixin infobox(label, emoji)
-    aside.o-box.o-block.u-text-small
+    aside.o-box.o-block.u-text-small&attributes(attributes)
         if label
             h3.u-heading.u-text-label.u-color-theme
                 if emoji
