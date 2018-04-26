@@ -1,8 +1,7 @@
 {
     "sidebar": {
         "Models": {
-            "Overview": "./",
-            "Comparison": "comparison"
+            "Overview": "./"
         },
 
         "Language models": {
