@@ -256,11 +256,11 @@ mixin code(label, language, prompt, height, icon, wrap)
 
 //- Executable code
 
-mixin code-exec(label)
+mixin code-exec(label, large)
     - label = (label || "Editable code example") + " (experimental)"
-    +terminal-wrapper(label, true)
+    +terminal-wrapper(label, !large)
         figure.thebelab-wrapper
-            span.thebelab-wrapper__text.u-text-tiny Python 3 &middot; powered by Binder
+            span.thebelab-wrapper__text.u-text-tiny v#{BINDER_VERSION} &middot; Python 3 &middot; via #[+a("https://mybinder.org/").u-hide-link Binder]
             +code(data-executable="true")&attributes(attributes)
                 block
 
@@ -671,11 +671,8 @@ mixin qs(data, style)
 mixin terminal-wrapper(label, small)
     .x-terminal(class=small ? "x-terminal--small" : null)
         .x-terminal__icons(class=small ? "x-terminal__icons--small" : null): span
-        if small
-            .u-padding-small.u-text-tiny.u-text-center
-                strong=label
-        else
-            .u-padding-small.u-text-label.u-text-center=label
+        .u-padding-small.u-text-center(class=small ? "u-text-tiny" : "u-text")
+            strong=label
         block
 
 mixin terminal(label, button_text, button_url, exec)

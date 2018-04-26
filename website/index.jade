@@ -53,8 +53,10 @@ include _includes/_mixins
 .o-content
     +grid
         +grid-col("two-thirds")
-            +terminal("Edit the code below to try spaCy", false, false, true).
-                # Install: pip install spacy && python -m spacy download en_core_web_sm
+            +code-exec("Edit the code & try spaCy", true).
+                # pip install spacy
+                # python -m spacy download en_core_web_sm
+
                 import spacy
 
                 # Load English tokenizer, tagger, parser, NER and word vectors
