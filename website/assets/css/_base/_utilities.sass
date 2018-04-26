@@ -245,8 +245,9 @@
 
 //- Hidden elements
 
-.u-hidden
-    display: none
+.u-hidden,
+[v-cloak]
+    display: none !important
 
 @each $breakpoint in (xs, sm, md)
     .u-hidden-#{$breakpoint}.u-hidden-#{$breakpoint}
