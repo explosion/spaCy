@@ -25,7 +25,6 @@
         "title": "Install spaCy",
         "next": "models",
         "quickstart": true,
-        "changelog": true,
         "menu": {
             "Quickstart": "quickstart",
             "Instructions": "instructions",
