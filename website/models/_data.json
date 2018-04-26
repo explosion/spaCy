@@ -71,7 +71,8 @@
         "vecs": "Word vectors included in the model. Models that only support context vectors compute similarity via the tensors shared with the pipeline.",
         "benchmark_parser": "Syntax accuracy",
         "benchmark_ner": "NER accuracy",
-        "benchmark_speed": "Speed"
+        "benchmark_speed": "Speed",
+        "compat": "Latest compatible model version for your spaCy installation"
     },
 
     "MODEL_LICENSES": {
