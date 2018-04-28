@@ -117,7 +117,7 @@ p
         for i in range(10):
             random.shuffle(train_data)
             for text, annotations in train_data:
-                nlp.update([text], [annotations] sgd=optimizer)
+                nlp.update([text], [annotations], sgd=optimizer)
     nlp.to_disk('/model')
 
 +infobox
