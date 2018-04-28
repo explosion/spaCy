@@ -108,6 +108,12 @@ cdef class Doc:
     def has_extension(cls, name):
         return name in Underscore.doc_extensions
 
+    @classmethod
+    def remove_extension(cls, name):
+        if not cls.has_extension(name):
+            raise ValueError(Errors.E046.format(name=name))
+        return Underscore.doc_extensions.pop(name)
+
     def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
                  orths_and_spaces=None):
         """Create a Doc object.

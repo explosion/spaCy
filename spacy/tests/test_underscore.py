@@ -61,6 +61,15 @@ def test_token_underscore_method():
 
 
 @pytest.mark.parametrize('obj', [Doc, Span, Token])
+def test_doc_underscore_remove_extension(obj):
+    ext_name = 'to_be_removed'
+    obj.set_extension(ext_name, default=False)
+    assert obj.has_extension(ext_name)
+    obj.remove_extension(ext_name)
+    assert not obj.has_extension(ext_name)
+
+
+@pytest.mark.parametrize('obj', [Doc, Span, Token])
 def test_underscore_raises_for_dup(obj):
     obj.set_extension('test', default=None)
     with pytest.raises(ValueError):
