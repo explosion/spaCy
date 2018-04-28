@@ -143,7 +143,7 @@ mixin aside-wrapper(label, emoji)
 
 mixin aside(label, emoji)
     +aside-wrapper(label, emoji)
-        .c-aside__text.u-text-small
+        .c-aside__text.u-text-small&attributes(attributes)
             block
 
 
@@ -154,7 +154,7 @@ mixin aside(label, emoji)
     prompt   - [string] prompt displayed before first line, e.g. "$"
 
 mixin aside-code(label, language, prompt)
-    +aside-wrapper(label)
+    +aside-wrapper(label)&attributes(attributes)
         +code(false, language, prompt).o-no-block
             block
 
