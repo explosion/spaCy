@@ -60,9 +60,12 @@
         padding-bottom: 4rem
         border-bottom: 1px dotted $color-subtle
 
-    &.o-section--small:not(:last-child)
-        margin-bottom: 3.5rem
-        padding-bottom: 2rem
+    &.o-section--small
+        overflow: auto
+
+        &:not(:last-child)
+            margin-bottom: 3.5rem
+            padding-bottom: 2rem
 
 .o-block
     margin-bottom: 4rem

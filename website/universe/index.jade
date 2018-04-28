@@ -49,8 +49,9 @@ section(data-vue="universe")
                             install.packages("{{ selected.cran }}")
 
                     +section.o-section--small
+                        img.o-block-small.u-padding-medium.u-float-right(v-if="selected.cover" v-bind:src="selected.cover" v-bind:alt="selected.title" width="250" style="max-width: 50%")
+
                         .x-markdown.o-block(v-if="selected.description")
-                            img.u-padding-medium.u-float-right(v-if="selected.cover" v-bind:src="selected.cover" v-bind:alt="selected.title" width="250")
                             vue-markdown(v-bind:source="selected.description")
 
                         .o-block(v-if="selected.code_example")
