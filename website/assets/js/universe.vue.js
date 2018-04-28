@@ -26,7 +26,6 @@ export default function(selector, dataPath) {
             fetch(dataPath)
                 .then(res => res.json())
                 .then(({ resources, projectCats, educationCats }) => {
-                    console.log(resources.map(r => r.category).filter(c => !c))
                     this.allResources = resources || [];
                     this.filteredResources = resources || [];
                     this.projectCats = projectCats || {};

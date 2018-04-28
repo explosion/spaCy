@@ -1,8 +1,9 @@
 //- 💫 INCLUDES > SCRIPTS
 
-script(type="text/x-thebe-config")
-    | { bootstrap: true, binderOptions: { repo: "#{KERNEL_BINDER}"},
-    |  kernelOptions: { name: "#{KERNEL_PYTHON}" }}
+if IS_PAGE || SECTION == "index"
+    script(type="text/x-thebe-config")
+        | { bootstrap: true, binderOptions: { repo: "#{KERNEL_BINDER}"},
+        |  kernelOptions: { name: "#{KERNEL_PYTHON}" }}
 
 - scripts = ["vendor/prism.min", "vendor/vue.min"]
 - if (SECTION == "universe") scripts.push("vendor/vue-markdown.min")

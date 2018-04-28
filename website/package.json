@@ -22,6 +22,6 @@
 
     "compile": "NODE_ENV=deploy harp compile",
     "bundle": "npm run rollup && npm run babel && npm run uglify",
-    "deploy": "rsync -P --compress --recursive --checksum --delete --exclude=\".*\" --exclude=\"README.html\" --exclude \"package.json\" --exclude \"www\" www/ $1"
+    "deploy": "rsync -P --compress --recursive --checksum --delete --exclude=\".*\" --exclude\"*.vue.js\" --exclude=\"README.html\" --exclude \"package.json\" --exclude \"www\" www/ $1"
   }
 }
