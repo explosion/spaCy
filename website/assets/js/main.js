@@ -22,6 +22,18 @@ import initModels from './models.vue.js';
 }
 
 /**
+ * Initialise Universe
+ */
+import initUniverse from './universe.vue.js';
+
+{
+    const selector = '[data-vue="universe"]';
+    if (window.Vue && document.querySelector(selector)) {
+        initUniverse(selector, '/universe/universe.json');
+    }
+}
+
+/**
  * Initialise Quickstart
  */
 if (document.querySelector('#qs') && window.Quickstart) {

@@ -29,7 +29,8 @@
         "NAVIGATION": {
             "Usage": "/usage",
             "Models": "/models",
-            "API": "/api"
+            "API": "/api",
+            "Universe": "/universe"
         },
 
         "FOOTER": {
@@ -37,7 +38,7 @@
                 "Usage": "/usage",
                 "Models": "/models",
                 "API Reference": "/api",
-                "Resources": "/usage/resources"
+                "Universe": "/universe"
             },
             "Support": {
                 "Issue Tracker": "https://github.com/explosion/spaCy/issues",

@@ -43,7 +43,8 @@ html(lang="en")
 
         if SECTION == "api"
             link(href="/assets/css/style_green.css?v#{V_CSS}" rel="stylesheet")
-
+        else if SECTION == "universe"
+            link(href="/assets/css/style_purple.css?v#{V_CSS}" rel="stylesheet")
         else
             link(href="/assets/css/style.css?v#{V_CSS}" rel="stylesheet")
 
@@ -53,6 +54,9 @@ html(lang="en")
 
         if !landing
             include _includes/_page-docs
+
+        else if SECTION == "universe"
+            !=yield
 
         else
             main!=yield
