@@ -256,3 +256,11 @@
     .u-hidden-#{$breakpoint}.u-hidden-#{$breakpoint}
         @include breakpoint(max, $breakpoint)
             display: none
+
+//- Transitions
+
+.u-fade-enter-active
+    transition: opacity 0.5s
+
+.u-fade-enter
+    opacity: 0
