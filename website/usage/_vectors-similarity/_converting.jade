@@ -1,0 +1,24 @@
+//- 💫 DOCS > USAGE > VECTORS & SIMILARITY > CONVERTING
+
++h(3, "converting") Converting word vectors for use in spaCy
+
+p
+    |  Custom word vectors can be trained using a number of open-source libraries,
+    |  such as Gensim, Fast Text, or Tomas Mikolov's original word2vec implementation.
+    |  Most word vector libraries output an easy-to-read text-based format, where
+    |  each line consists of the word followed by its vector. For everyday use,
+    |  we want to convert the vectors model into a binary format that loads faster
+    |  and takes up less space on disk. The easiest way to do this is the
+    |  `spacy init-model` command-line utility:
+
++code.
+    wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
+    spacy init-model /tmp/la_vectors_wiki_lg -v cc.la.300.vec.gz
+
+p
+    |  This will output a spaCy model directory in the directory /tmp/la_vectors_wiki_lg,
+    |  You can then pass the path to this directory to `spacy.load()`.
+    |  The model directory will have a vocab/ directory with the strings, lexical entries
+    |  and word vectors from the input vectors model. The `spacy init-model` command
+    |  supports a number of archive formats for the word vectors: the vectors can be
+    |  in plain text (.txt), Zip file, (.zip), or tarred and zipped (.tgz).
