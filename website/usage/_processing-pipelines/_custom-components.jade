@@ -49,32 +49,82 @@ p
     |  Of course, you can also wrap your component as a class to allow
     |  initialising it with custom settings and hold state within the component.
     |  This is useful for #[strong stateful components], especially ones which
-    |  #[strong depend on shared data].
+    |  #[strong depend on shared data]. In the following example, the custom
+    |  component #[code EntityMatcher] can be initialised with #[code nlp] object,
+    |  a terminology list and an entity label. Using the
+    |  #[+api("phrasematcher") #[code PhraseMatcher]], it then matches the terms
+    |  in the #[code Doc] and adds them to the existing entities.
+
++aside("Rule-based entities vs. model", "💡")
+    |  For complex tasks, it's usually better to train a statistical entity
+    |  recognition model. However, statistical models require training data, so
+    |  for many situations, rule-based approaches are more practical. This is
+    |  especially true at the start of a project: you can use a rule-based
+    |  approach as part of a data collection process, to help you "bootstrap" a
+    |  statistical model.
 
 +code-exec.
     import spacy
+    from spacy.matcher import PhraseMatcher
+    from spacy.tokens import Span
 
-    class MyComponent(object):
-        name = 'print_info'
+    class EntityMatcher(object):
+        name = 'entity_matcher'
 
-        def __init__(self, vocab, short_limit=10):
-            self.vocab = vocab
-            self.short_limit = short_limit
+        def __init__(self, nlp, terms, label):
+            patterns = [nlp(text) for text in terms]
+            self.matcher = PhraseMatcher(nlp.vocab)
+            self.matcher.add(label, None, *patterns)
 
         def __call__(self, doc):
-            if len(doc) &lt; self.short_limit:
-                print("This is a pretty short document.")
+            matches = self.matcher(doc)
+            for match_id, start, end in matches:
+                span = Span(doc, start, end, label=match_id)
+                doc.ents = list(doc.ents) + [span]
             return doc
 
     nlp = spacy.load('en_core_web_sm')
-    my_component = MyComponent(nlp.vocab, short_limit=5)
-    nlp.add_pipe(my_component, first=True)
-    doc = nlp(u"This is a sentence.")
+    terms = (u'cat', u'dog', u'tree kangaroo', u'giant sea spider')
+    entity_matcher = EntityMatcher(nlp, terms, 'ANIMAL')
 
+    nlp.add_pipe(entity_matcher, after='ner')
+    print(nlp.pipe_names)  # the components in the pipeline
 
+    doc = nlp(u"This is a text about Barack Obama and a tree kangaroo")
+    print([(ent.text, ent.label_) for ent in doc.ents])
 
-
++h(3, "custom-components-factories") Adding factories
 
 p
+    |  When spaCy loads a model via its #[code meta.json], it will iterate over
+    |  the #[code "pipeline"] setting, look up every component name in the
+    |  internal factories and call
+    |  #[+api("language#create_pipe") #[code nlp.create_pipe]] to initialise the
+    |  individual components, like the tagger, parser or entity recogniser. If
+    |  your model uses custom components, this won't work – so you'll have to
+    |  tell spaCy #[strong where to find your component]. You can do this by
+    |  writing to the #[code Language.factories]:
+
++code.
+    from spacy.language import Language
+    Language.factories['entity_matcher'] = lambda nlp, **cfg: EntityMatcher(nlp, **cfg)
 
 p
+    |  You can also ship the above code and your custom component in your
+    |  packaged model's #[code __init__.py], so it's executed when you load your
+    |  model. The #[code **cfg] config parameters are passed all the way down
+    |  from #[+api("spacy#load") #[code spacy.load]], so you can load the model
+    |  and its components with custom settings:
+
++code.
+    nlp = spacy.load('your_custom_model', terms=(u'tree kangaroo'), label='ANIMAL')
+
++infobox("Important note", "⚠️")
+    |  When you load a model via its shortcut or package name, like
+    |  #[code en_core_web_sm], spaCy will import the package and then call its
+    |  #[code load()] method. This means that custom code in the model's
+    |  #[code __init__.py] will be executed, too. This is #[strong not the case]
+    |  if you're loading a model from a path containing the model data. Here,
+    |  spaCy will only read in the #[code meta.json]. If you want to use custom
+    |  factories with a model loaded from a path, you need to add them to
+    |  #[code Language.factories] #[em before] you load the model.
