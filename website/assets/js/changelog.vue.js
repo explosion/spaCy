@@ -1,3 +1,8 @@
+/**
+ * Initialise changelog table for releases and prereleases
+ * @param {string} selector - The element selector to initialise the app.
+ * @param {string} repo - Repository to load from, in the format user/repo.
+ */
 export default function(selector, repo) {
     new Vue({
         el: selector,
@@ -14,8 +19,7 @@ export default function(selector, repo) {
                 .catch(err => { this.error = true });
         },
         updated() {
-            // make sure scroll positions for progress bar etc. are recalculated
-            window.dispatchEvent(new Event('resize'));
+            window.dispatchEvent(new Event('resize'));  // scroll position for progress
         },
         methods: {
             $_update(json) {
