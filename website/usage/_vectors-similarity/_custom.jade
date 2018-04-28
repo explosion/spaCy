@@ -210,18 +210,6 @@ p
     |  package the model using the #[+api("cli#package") #[code package]]
     |  command.
 
-+h(3, "custom-loading-other") Loading other vectors
-    +tag-new(2)
-
-p
-    |  You can also choose to load in vectors from other sources, like the
-    |  #[+a("https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md") fastText vectors]
-    |  for 294 languages, trained on Wikipedia. After reading in the file,
-    |  the vectors are added to the #[code Vocab] using the
-    |  #[+api("vocab#set_vector") #[code set_vector]] method.
-
-+github("spacy", "examples/vectors_fast_text.py")
-
 +h(3, "custom-similarity") Using custom similarity methods
 
 p
