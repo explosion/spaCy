@@ -10,7 +10,8 @@ export default function(selector, dataPath) {
             educationCats: {},
             filterVals: ['category'],
             activeMenu: 'all',
-            selected: null
+            selected: null,
+            loading: false
         },
         computed: {
             resources() {
@@ -22,6 +23,7 @@ export default function(selector, dataPath) {
         },
 
         beforeMount() {
+            this.loading = true;
             window.addEventListener('popstate', this.$_init);
             fetch(dataPath)
                 .then(res => res.json())
@@ -31,6 +33,7 @@ export default function(selector, dataPath) {
                     this.projectCats = projectCats || {};
                     this.educationCats = educationCats || {};
                     this.$_init();
+                    this.loading = false;
                 });
         },
         updated() {

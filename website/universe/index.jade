@@ -113,7 +113,7 @@ section(data-vue="universe")
                             |  #[+src(gh("spacy", "website/universe/universe.json")) #[code universe.json]]
                             |  for the full data.
 
-                        +grid()(v-cloak="")
+                        +grid()(v-cloak="" v-bind:data-loading="loading")
                             +grid-col().u-text(v-for="resource in resources" v-bind:key="resource.id" v-bind:class="{'o-box': !resource.cover, 'o-grid__col--third': resource.cover, 'o-grid__col--half': !resource.cover}" v-if="(activeMenu && activeMenu != 'all') || resource.type != 'education'")
                                 a.u-hand(v-on:click="viewResource(resource.id)")
                                     img(v-bind:src="resource.cover" v-bind:alt="resource.title" v-if="resource.cover")
