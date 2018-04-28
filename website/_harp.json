@@ -1,7 +1,7 @@
 {
     "globals": {
         "title": "spaCy",
-        "description": "spaCy is a free open-source library featuring state-of-the-art speed and accuracy and a powerful Python API.",
+        "description": "spaCy is a free open-source library for Natural Language Processing in Python. It features NER, POS tagging, dependency parsing, word vectors and more.",
 
         "SITENAME": "spaCy",
         "SLOGAN": "Industrial-strength Natural Language Processing in Python",
