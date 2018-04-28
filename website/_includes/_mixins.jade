@@ -242,8 +242,9 @@ mixin button(url, trusted, ...style)
     wrap     - [boolean] wrap text and disable horizontal scrolling
 
 mixin code(label, language, prompt, height, icon, wrap)
-    - var lang = language || DEFAULT_SYNTAX
-    pre.c-code-block.o-block(data-language=lang class="lang-#{lang}" class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
+    - var lang = (language != "none") ? (language || DEFAULT_SYNTAX) : null
+    - var lang_class = (language != "none") ? "lang-" + (language || DEFAULT_SYNTAX) : null
+    pre.c-code-block.o-block(data-language=lang class=lang_class class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
         if icon
