@@ -91,6 +91,7 @@ if (window.thebelab) {
 
 /**
  * Reading indicator as progress bar
+ * @param {string} selector - Selector of <progress> element.
  */
 class ProgressBar {
     constructor(selector) {

@@ -26,19 +26,19 @@ section(data-vue="universe")
         article.o-content
             transition-group(name="u-fade")
                 section(v-if="selected" key="selected" v-cloak="")
-                    +h(1)
+                    +h(1).u-heading--title
                         .u-float-right.o-thumb(v-if="selected.thumb")
                             img(v-bind:src="selected.thumb" width="100" role="presentation")
 
                         |  {{ selected.title || selected.id }}
 
-                        .u-heading__teaser.u-text-small.u-color-dark.o-block(v-if="selected.slogan") {{ selected.slogan }}
+                        .u-heading__teaser.u-text-small.u-color-dark.o-block-small(v-if="selected.slogan") {{ selected.slogan }}
 
-                    p(v-if="selected.github")
-                        a.u-hide-link(v-bind:href="`https://github.com/${selected.github}`")
-                            |  #[img.o-badge(v-bind:src="`https://img.shields.io/github/release/${selected.github}/all.svg?style=flat-square`")]
-                            |  #[img.o-badge(v-bind:src="`https://img.shields.io/github/license/${selected.github}.svg?style=flat-square`")]
-                            |  #[img(v-bind:src="`https://img.shields.io/github/stars/${selected.github}.svg?style=social&label=Stars`")]
+                        p(v-if="selected.github")
+                            a.u-hide-link(v-bind:href="`https://github.com/${selected.github}`")
+                                |  #[img.o-badge(v-bind:src="`https://img.shields.io/github/release/${selected.github}/all.svg?style=flat-square`")]
+                                |  #[img.o-badge(v-bind:src="`https://img.shields.io/github/license/${selected.github}.svg?style=flat-square`")]
+                                |  #[img(v-bind:src="`https://img.shields.io/github/stars/${selected.github}.svg?style=social&label=Stars`")]
 
                     div(v-if="selected.pip")
                         +aside-code("Installation", "bash", "$").
@@ -49,8 +49,9 @@ section(data-vue="universe")
                             install.packages("{{ selected.cran }}")
 
                     +section.o-section--small
+                        img.o-block-small.u-padding-medium.u-float-right(v-if="selected.cover" v-bind:src="selected.cover" v-bind:alt="selected.title" width="250" style="max-width: 50%")
+
                         .x-markdown.o-block(v-if="selected.description")
-                            img.u-padding-medium.u-float-right(v-if="selected.cover" v-bind:src="selected.cover" v-bind:alt="selected.title" width="250")
                             vue-markdown(v-bind:source="selected.description")
 
                         .o-block(v-if="selected.code_example")

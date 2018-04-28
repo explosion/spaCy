@@ -1,3 +1,7 @@
+/**
+ * Initialise model overviews
+ * @param {string} repo - Repository to load from, in the format user/repo.
+ */
 export default function(repo) {
     const LICENSES = {
         'CC BY 4.0':       'https://creativecommons.org/licenses/by/4.0/',
@@ -70,8 +74,7 @@ export default function(repo) {
                     }
                 },
                 updated() {
-                    // make sure scroll positions for progress bar etc. are recalculated
-                    window.dispatchEvent(new Event('resize'));
+                    window.dispatchEvent(new Event('resize'));  // scroll position for progress
                 },
                 methods: {
                     $_updateData(data) {
@@ -115,6 +118,11 @@ export default function(repo) {
                         return `${nKeys} keys, ${nVectors} unique vectors (${width} dimensions)`;
                     },
 
+                    /**
+                     * Abbreviate a number, e.g. 14249930 --> 14.25m.
+                     * @param {number|string} num - The number to convert.
+                     * @param {number} fixed - Number of decimals.
+                     */
                     $_abbrNum: function(num = 0, fixed = 1) {
                         const suffixes = ['', 'k', 'm', 'b', 't'];
                         if (num === null || num === 0) return 0;
