@@ -134,28 +134,22 @@ p
     import spacy
 
     nlp = spacy.load('en_core_web_md')
-    tokens = nlp(u'dog cat banana sasquatch')
+    tokens = nlp(u'dog cat banana afskfsd')
 
     for token in tokens:
-        print(token.text, token.has_vector, token.vector_norm)
+        print(token.text, token.has_vector, token.vector_norm, token.is_oov)
 
 +aside
     |  #[strong Text]: The original token text.#[br]
     |  #[strong has vector]: Does the token have a vector representation?#[br]
     |  #[strong Vector norm]: The L2 norm of the token's vector (the square root
     |  of the sum of the values squared)#[br]
-
-+table(["Text", "Has vector", "Vector norm"])
-    - var style = [0, 1, 1]
-    +annotation-row(["dog", true, 7.033672992262838], style)
-    +annotation-row(["cat", true, 6.68081871208896], style)
-    +annotation-row(["banana", true, 6.700014292148571], style)
-    +annotation-row(["sasquatch", false, 0], style)
+    |  #[strong OOV]: Out-of-vocabulary
 
 p
     |  The words "dog", "cat" and "banana" are all pretty common in English, so
     |  they're part of the model's vocabulary, and come with a vector. The word
-    |  "sasquatch" on the other hand is a lot less common and out-of-vocabulary
+    |  "afskfsd" on the other hand is a lot less common and out-of-vocabulary
     |  – so its vector representation consists of 300 dimensions of #[code 0],
     |  which means it's practically nonexistent. If your application will
     |  benefit from a #[strong large vocabulary] with more vectors, you should
