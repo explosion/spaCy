@@ -13,7 +13,7 @@ if IS_PAGE || SECTION == "index"
 
 for script in scripts
     script(src="/assets/js/" + script + ".js")
-script(src="/assets/js/main.js" type=(environment == "deploy") ? null : "module")
+script(src="/assets/js/main.js?v#{V_JS}" type=(environment == "deploy") ? null : "module")
 
 if environment == "deploy"
     script(src="https://www.google-analytics.com/analytics.js", async)
