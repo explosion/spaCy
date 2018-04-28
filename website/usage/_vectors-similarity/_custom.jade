@@ -136,6 +136,19 @@ p
     |  to the vector of "coast", which is deemed about 73% similar. "Leaving"
     |  was remapped to the vector of "leaving", which is identical.
 
+p
+    |  If you're using the #[+api("cli#init-model") #[code init-model]] command,
+    |  you can set the #[code --prune-vectors] option to easily reduce the size
+    |  of the vectors as you add them to a spaCy model:
+
++code(false, "bash", "$").
+    python -m spacy init-model /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
+
+p
+    |  This will create a spaCy model with vectors for the first 10,000 words in
+    |  the vectors model. All other words in the vectors model are mapped to the
+    |  closest vector among those retained.
+
 +h(3, "custom-vectors-add") Adding vectors
     +tag-new(2)
 

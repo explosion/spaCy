@@ -199,21 +199,25 @@ p
 +h(3, "lightning-tour-word-vectors") Get word vectors and similarity
     +tag-model("word vectors")
 
-+code.
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_md')
     doc = nlp(u"Apple and banana are similar. Pasta and hippo aren't.")
+
     apple = doc[0]
     banana = doc[2]
     pasta = doc[6]
     hippo = doc[8]
-    assert apple.similarity(banana) > pasta.similarity(hippo)
-    assert apple.has_vector
-    assert banana.has_vector
-    assert pasta.has_vector
-    assert hippo.has_vector
+
+    print('apple <-> banana', apple.similarity(banana))
+    print('pasta <-> hippo', pasta.similarity(hippo))
+    print(apple.has_vector, banana.has_vector, pasta.has_vector, hippo.has_vector)
 
 p
     |  For the best results, you should run this example using the
-    |  #[+a("/models/en#en_vectors_web_lg") #[code en_vectors_web_lg]] model.
+    |  #[+a("/models/en#en_vectors_web_lg") #[code en_vectors_web_lg]] model
+    |  (currently not available in the live demo).
 
 +infobox
     |  #[+label-inline Usage:] #[+a("/usage/vectors-similarity") Word vectors and similarity]
@@ -239,11 +243,11 @@ p
 
 +h(3, "lightning-tour-rule-matcher") Match text with token rules
 
-+code.
++code-exec.
     import spacy
     from spacy.matcher import Matcher
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     matcher = Matcher(nlp.vocab)
 
     def set_sentiment(matcher, doc, i, matches):
@@ -253,8 +257,15 @@ p
     pattern2 = [[{'ORTH': emoji, 'OP': '+'}] for emoji in ['😀', '😂', '🤣', '😍']]
     matcher.add('GoogleIO', None, pattern1) # match "Google I/O" or "Google i/o"
     matcher.add('HAPPY', set_sentiment, *pattern2) # match one or more happy emoji
-    text = open('customer_feedback_627.txt').read()
-    matches = nlp(text)
+
+    doc = nlp(u"A text about Google I/O 😀😀")
+    matches = matcher(doc)
+
+    for match_id, start, end in matches:
+       string_id = nlp.vocab.strings[match_id]
+       span = doc[start:end]
+       print(string_id, span.text)
+    print('Sentiment', doc.sentiment)
 
 +infobox
     |  #[+label-inline API:] #[+api("matcher") #[code Matcher]]
@@ -298,25 +309,38 @@ p
 
 +h(3, "lightning-tour-numpy-arrays") Export to numpy arrays
 
-+code.
-    from spacy.attrs import ORTH, LIKE_URL, IS_OOV
++code-exec.
+    import spacy
+    from spacy.attrs import ORTH, LIKE_URL
 
-    attr_ids = [ORTH, LIKE_URL, IS_OOV]
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"Check out https://spacy.io")
+    for token in doc:
+        print(token.text, token.orth, token.like_url)
+
+    attr_ids = [ORTH, LIKE_URL]
     doc_array = doc.to_array(attr_ids)
-    assert doc_array.shape == (len(doc), len(attr_ids))
+    print(doc_array.shape)
+    print(len(doc), len(attr_ids))
+
     assert doc[0].orth == doc_array[0, 0]
     assert doc[1].orth == doc_array[1, 0]
     assert doc[0].like_url == doc_array[0, 1]
+
     assert list(doc_array[:, 1]) == [t.like_url for t in doc]
+    print(list(doc_array[:, 1]))
 
 +h(3, "lightning-tour-inline") Calculate inline markup on original string
 
-+code.
-    def put_spans_around_tokens(doc, get_classes):
-        """Given some function to compute class names, put each token in a
++code-exec.
+    import spacy
+
+    def put_spans_around_tokens(doc):
+        """Here, we're building a custom "syntax highlighter" for
+        part-of-speech tags and dependencies. We put each token in a
         span element, with the appropriate classes computed. All whitespace is
-        preserved, outside of the spans. (Of course, HTML won't display more than
-        one whitespace character it – but the point is, no information is lost
+        preserved, outside of the spans. (Of course, HTML will only display
+        multiple whitespace if enabled – but the point is, no information is lost
         and you can calculate what you need, e.g. &lt;br /&gt;, &lt;p&gt; etc.)
         """
         output = []
@@ -325,9 +349,14 @@ p
             if token.is_space:
                 output.append(token.text)
             else:
-                classes = ' '.join(get_classes(token))
+                classes = 'pos-{} dep-{}'.format(token.pos_, token.dep_)
                 output.append(html.format(classes=classes, word=token.text, space=token.whitespace_))
         string = ''.join(output)
         string = string.replace('\n', '')
         string = string.replace('\t', '    ')
-        return string
+        return '&lt;pre&gt;{}&lt;/pre&gt;.format(string)
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"This is a test.\n\nHello   world.")
+    html = put_spans_around_tokens(doc)
+    print(html)
