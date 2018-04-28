@@ -42,6 +42,13 @@
 -       return `${SITENAME} · ${SLOGAN}`;
 -   }
 
+//- Get social image based on section and settings
+
+-   function getPageImage() {
+-       var img = (SECTION == 'api') ? 'api' : 'default';
+-       return `${SITE_URL}/assets/img/social/preview_${preview || img}.jpg`;
+-   }
+
 //- Add prefixes to items of an array (for modifier CSS classes)
     array   - [array] list of class names or options, e.g. ["foot"]
     prefix  - [string] prefix to add to each class, e.g. "c-table__row"

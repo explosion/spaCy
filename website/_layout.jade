@@ -6,7 +6,7 @@ include _includes/_mixins
 
 - PAGE_URL = getPageUrl()
 - PAGE_TITLE = getPageTitle()
-- SOCIAL_IMG = SITE_URL + "/assets/img/social/preview_" + (preview || "default") + ".jpg"
+- PAGE_IMAGE = getPageImage()
 
 doctype html
 html(lang="en")
@@ -22,13 +22,13 @@ html(lang="en")
         meta(property="og:url" content=PAGE_URL)
         meta(property="og:title" content=PAGE_TITLE)
         meta(property="og:description" content=description)
-        meta(property="og:image" content=SOCIAL_IMG)
+        meta(property="og:image" content=PAGE_IMAGE)
 
         meta(name="twitter:card" content="summary_large_image")
         meta(name="twitter:site" content="@" + SOCIAL.twitter)
         meta(name="twitter:title" content=PAGE_TITLE)
         meta(name="twitter:description" content=description)
-        meta(name="twitter:image" content=SOCIAL_IMG)
+        meta(name="twitter:image" content=PAGE_IMAGE)
 
         link(rel="shortcut icon" href="/assets/img/favicon.ico")
         link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
