@@ -10,6 +10,7 @@ from collections import OrderedDict, defaultdict, Counter
 from thinc.extra.search cimport Beam
 import json
 
+from .nonproj import is_nonproj_tree
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from . import nonproj
