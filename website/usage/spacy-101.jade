@@ -189,9 +189,9 @@ p
         |  the website or company in a specific context.
 
     +aside-code("Loading models", "bash", "$").
-        python -m spacy download en
+        python -m spacy download en_core_web_sm
         &gt;&gt;&gt; import spacy
-        &gt;&gt;&gt; nlp = spacy.load('en')
+        &gt;&gt;&gt; nlp = spacy.load('en_core_web_sm')
 
     p
         |  Once you've #[+a("/usage/models") downloaded and installed] a model,
@@ -200,11 +200,13 @@ p
         |  to process text. We usually call it #[code nlp]. Calling the #[code nlp]
         |  object on a string of text will return a processed #[code Doc]:
 
-    +code.
+    +code-exec.
         import spacy
 
-        nlp = spacy.load('en')
+        nlp = spacy.load('en_core_web_sm')
         doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
+        for token in doc:
+            print(token.text, token.pos_, token.dep_)
 
     p
         |  Even though a #[code Doc] is processed – e.g. split into individual words

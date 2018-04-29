@@ -2,6 +2,27 @@
 
 include ../_spacy-101/_training
 
++h(3, "spacy-train-cli") Training via the command-line interface
+
+p
+    |  For most purposes, the best way to train spaCy is via the command-line
+    |  interface. The #[+api("cli#train") #[code spacy train]] command takes
+    |  care of many details for you, including making sure that the data is
+    |  minibatched and shuffled correctly, progress is printed, and models are
+    |  saved after each epoch. You can prepare your data for use in
+    |  #[+api("cli#train") #[code spacy train]] using the
+    |  #[+api("cli#convert") #[code spacy convert]] command, which accepts many
+    |  common NLP data formats, including #[code .iob] for named entities, and
+    |  the CoNLL format for dependencies:
+
++code("Example", "bash").
+    git clone https://github.com/UniversalDependencies/UD_Spanish-AnCora
+    mkdir ancora-json
+    python -m spacy convert UD_Spanish-AnCora/es_ancora-ud-train.json ancora-json
+    python -m spacy convert UD_Spanish-AnCora/es_ancora-ud-dev.json ancora-json
+    mkdir models
+    python -m spacy train es models ancora-json/es_ancora-ud-train.json ancora-json/es_ancora-ud-dev.json
+
 +h(3, "training-data") How do I get training data?
 
 p
