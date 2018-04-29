@@ -16,16 +16,17 @@ from ..util import normalize_slice
 from ..attrs cimport IS_PUNCT, IS_SPACE
 from ..lexeme cimport Lexeme
 from ..compat import is_config
-from .. import about
-from .underscore import Underscore
+from ..errors import Errors, TempErrors
+from .underscore import Underscore, get_ext_args
 
 
 cdef class Span:
     """A slice from a Doc object."""
     @classmethod
-    def set_extension(cls, name, default=None, method=None,
-                      getter=None, setter=None):
-        Underscore.span_extensions[name] = (default, method, getter, setter)
+    def set_extension(cls, name, **kwargs):
+        if cls.has_extension(name) and not kwargs.get('force', False):
+            raise ValueError(Errors.E090.format(name=name, obj='Span'))
+        Underscore.span_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):
@@ -34,6 +35,12 @@ cdef class Span:
     @classmethod
     def has_extension(cls, name):
         return name in Underscore.span_extensions
+
+    @classmethod
+    def remove_extension(cls, name):
+        if not cls.has_extension(name):
+            raise ValueError(Errors.E046.format(name=name))
+        return Underscore.span_extensions.pop(name)
 
     def __cinit__(self, Doc doc, int start, int end, attr_t label=0,
                   vector=None, vector_norm=None):
@@ -48,8 +55,7 @@ cdef class Span:
         RETURNS (Span): The newly constructed object.
         """
         if not (0 <= start <= end <= len(doc)):
-            raise IndexError
-
+            raise IndexError(Errors.E035.format(start=start, end=end, length=len(doc)))
         self.doc = doc
         self.start = start
         self.start_char = self.doc[start].idx if start < self.doc.length else 0
@@ -58,7 +64,8 @@ cdef class Span:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
             self.end_char = 0
-        assert label in doc.vocab.strings, label
+        if label not in doc.vocab.strings:
+            raise ValueError(Errors.E084.format(label=label))
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
@@ -267,11 +274,10 @@ cdef class Span:
         or (self.doc.c[self.end-1].idx + self.doc.c[self.end-1].lex.length) != self.end_char:
             start = token_by_start(self.doc.c, self.doc.length, self.start_char)
             if self.start == -1:
-                raise IndexError("Error calculating span: Can't find start")
+                raise IndexError(Errors.E036.format(start=self.start_char))
             end = token_by_end(self.doc.c, self.doc.length, self.end_char)
             if end == -1:
-                raise IndexError("Error calculating span: Can't find end")
-
+                raise IndexError(Errors.E037.format(end=self.end_char))
             self.start = start
             self.end = end + 1
 
@@ -294,12 +300,11 @@ cdef class Span:
             cdef int i
             if self.doc.is_parsed:
                 root = &self.doc.c[self.start]
-                n = 0
                 while root.head != 0:
                     root += root.head
                     n += 1
                     if n >= self.doc.length:
-                        raise RuntimeError
+                        raise RuntimeError(Errors.E038)
                 return self.doc[root.l_edge:root.r_edge + 1]
             elif self.doc.is_sentenced:
                 # find start of the sentence
@@ -314,13 +319,7 @@ cdef class Span:
                     n += 1
                     if n >= self.doc.length:
                         break
-                #
                 return self.doc[start:end]
-            else:
-                raise ValueError(
-                    "Access to sentence requires either the dependency parse "
-                    "or sentence boundaries to be set by setting " +
-                    "doc[i].is_sent_start = True")
 
     property has_vector:
         """RETURNS (bool): Whether a word vector is associated with the object.
@@ -402,11 +401,7 @@ cdef class Span:
         """
         def __get__(self):
             if not self.doc.is_parsed:
-                raise ValueError(
-                    "noun_chunks requires the dependency parse, which "
-                    "requires a statistical model to be installed and loaded. "
-                    "For more info, see the "
-                    "documentation: \n%s\n" % about.__docs_models__)
+                raise ValueError(Errors.E029)
             # Accumulate the result before beginning to iterate over it. This
             # prevents the tokenisation from being changed out from under us
             # during the iteration. The tricky thing here is that Span accepts
@@ -552,9 +547,7 @@ cdef class Span:
             return self.root.ent_id
 
         def __set__(self, hash_t key):
-            raise NotImplementedError(
-                "Can't yet set ent_id from Span. Vote for this feature on "
-                "the issue tracker: http://github.com/explosion/spaCy/issues")
+            raise NotImplementedError(TempErrors.T007.format(attr='ent_id'))
 
     property ent_id_:
         """RETURNS (unicode): The (string) entity ID."""
@@ -562,9 +555,7 @@ cdef class Span:
             return self.root.ent_id_
 
         def __set__(self, hash_t key):
-            raise NotImplementedError(
-                "Can't yet set ent_id_ from Span. Vote for this feature on the "
-                "issue tracker: http://github.com/explosion/spaCy/issues")
+            raise NotImplementedError(TempErrors.T007.format(attr='ent_id_'))
 
     property orth_:
         """Verbatim text content (identical to Span.text). Exists mostly for
@@ -612,9 +603,5 @@ cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
         token += token.head
         n += 1
         if n >= sent_length:
-            raise RuntimeError(
-                "Array bounds exceeded while searching for root word. This "
-                "likely means the parse tree is in an invalid state. Please "
-                "report this issue here: "
-                "http://github.com/explosion/spaCy/issues")
+            raise RuntimeError(Errors.E039)
     return n

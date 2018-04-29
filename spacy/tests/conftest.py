@@ -19,7 +19,9 @@ _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_md'],
            'fr': ['fr_core_news_sm'],
-           'xx': ['xx_ent_web_md']}
+           'xx': ['xx_ent_web_md'],
+           'en_core_web_md': ['en_core_web_md'],
+           'es_core_news_md': ['es_core_news_md']}
 
 
 # only used for tests that require loading the models
@@ -183,6 +185,9 @@ def pytest_addoption(parser):
 
     for lang in _languages + ['all']:
         parser.addoption("--%s" % lang, action="store_true", help="Use %s models" % lang)
+    for model in _models:
+        if model not in _languages:
+            parser.addoption("--%s" % model, action="store_true", help="Use %s model" % model)
 
 
 def pytest_runtest_setup(item):

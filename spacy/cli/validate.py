@@ -1,12 +1,13 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
-import requests
 import pkg_resources
 from pathlib import Path
 import sys
+import ujson
 
-from ..compat import path2str, locale_escape
+from ._messages import Messages
+from ..compat import path2str, locale_escape, url_read, HTTPError
 from ..util import prints, get_data_path, read_json
 from .. import about
 
@@ -15,16 +16,16 @@ def validate():
     """Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """
-    r = requests.get(about.__compatibility__)
-    if r.status_code != 200:
-        prints("Couldn't fetch compatibility table.",
-               title="Server error (%d)" % r.status_code, exits=1)
-    compat = r.json()['spacy']
+    try:
+        data = url_read(about.__compatibility__)
+    except HTTPError as e:
+        title = Messages.M003.format(code=e.code, desc=e.reason)
+        prints(Messages.M021, title=title, exits=1)
+    compat = ujson.loads(data)['spacy']
     current_compat = compat.get(about.__version__)
     if not current_compat:
         prints(about.__compatibility__, exits=1,
-               title="Can't find spaCy v{} in compatibility table"
-               .format(about.__version__))
+               title=Messages.M022.format(version=about.__version__))
     all_models = set()
     for spacy_v, models in dict(compat).items():
         all_models.update(models.keys())
@@ -41,7 +42,7 @@ def validate():
     update_models = [m for m in incompat_models if m in current_compat]
 
     prints(path2str(Path(__file__).parent.parent),
-           title="Installed models (spaCy v{})".format(about.__version__))
+           title=Messages.M023.format(version=about.__version__))
     if model_links or model_pkgs:
         print(get_row('TYPE', 'NAME', 'MODEL', 'VERSION', ''))
         for name, data in model_pkgs.items():
@@ -49,23 +50,16 @@ def validate():
         for name, data in model_links.items():
             print(get_model_row(current_compat, name, data, 'link'))
     else:
-        prints("No models found in your current environment.", exits=0)
-
+        prints(Messages.M024, exits=0)
     if update_models:
         cmd = '    python -m spacy download {}'
-        print("\n    Use the following commands to update the model packages:")
+        print("\n    " + Messages.M025)
         print('\n'.join([cmd.format(pkg) for pkg in update_models]))
-
     if na_models:
-        prints("The following models are not available for spaCy v{}: {}"
-               .format(about.__version__, ', '.join(na_models)))
-
+        prints(Messages.M025.format(version=about.__version__,
+                                    models=', '.join(na_models)))
     if incompat_links:
-        prints("You may also want to overwrite the incompatible links using "
-               "the `python -m spacy link` command with `--force`, or remove "
-               "them from the data directory. Data path: {}"
-               .format(path2str(get_data_path())))
-
+        prints(Messages.M027.format(path=path2str(get_data_path())))
     if incompat_models or incompat_links:
         sys.exit(1)
 

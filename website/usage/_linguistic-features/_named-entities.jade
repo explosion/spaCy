@@ -36,18 +36,21 @@ p
     |  #[code O] – Token is outside an entity.#[br]
     |  #[code B] – Token is the beginning of an entity.#[br]
 
-+code("Example").
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(u'San Francisco considers banning sidewalk delivery robots')
 
     # document level
     ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
-    assert ents == [(u'San Francisco', 0, 13, u'GPE')]
+    print(ents)
 
     # token level
     ent_san = [doc[0].text, doc[0].ent_iob_, doc[0].ent_type_]
     ent_francisco = [doc[1].text, doc[1].ent_iob_, doc[1].ent_type_]
-    assert ent_san == [u'San', u'B', u'GPE']
-    assert ent_francisco == [u'Francisco', u'I', u'GPE']
+    print(ent_san)  # [u'San', u'B', u'GPE']
+    print(ent_francisco)  # [u'Francisco', u'I', u'GPE']
 
 +table(["Text", "ent_iob", "ent_iob_", "ent_type_", "Description"])
     - var style = [0, 1, 1, 1, 0]
@@ -69,25 +72,30 @@ p
     |  to assign to the #[+api("doc#ents") #[code doc.ents]] attribute
     |  and create the new entity as a #[+api("span") #[code Span]].
 
-+code("Example").
++code-exec.
+    import spacy
     from spacy.tokens import Span
 
-    doc = nlp(u'Netflix is hiring a new VP of global policy')
-    # the model didn't recognise any entities :(
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"FB is hiring a new Vice President of global policy")
+    ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+    print('Before', ents)
+    # the model didn't recognise "FB" as an entity :(
 
-    ORG = doc.vocab.strings[u'ORG'] # get hash value of entity label
-    netflix_ent = Span(doc, 0, 1, label=ORG) # create a Span for the new entity
-    doc.ents = [netflix_ent]
+    ORG = doc.vocab.strings[u'ORG']  # get hash value of entity label
+    fb_ent = Span(doc, 0, 1, label=ORG) # create a Span for the new entity
+    doc.ents = list(doc.ents) + [fb_ent]
 
     ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
-    assert ents == [(u'Netflix', 0, 7, u'ORG')]
+    print('After', ents)
+    # [(u'FB', 0, 2, 'ORG')] 🎉
 
 p
     |  Keep in mind that you need to create a #[code Span] with the start and
     |  end index of the #[strong token], not the start and end index of the
-    |  entity in the document. In this case, "Netflix" is token #[code (0, 1)] –
+    |  entity in the document. In this case, "FB" is token #[code (0, 1)] –
     |  but at the document level, the entity will have the start and end
-    |  indices #[code (0, 7)].
+    |  indices #[code (0, 2)].
 
 +h(4, "setting-from-array") Setting entity annotations from array
 
@@ -97,19 +105,21 @@ p
     |  you should include both the #[code ENT_TYPE] and the #[code ENT_IOB]
     |  attributes in the array you're importing from.
 
-+code.
++code-exec.
     import numpy
+    import spacy
     from spacy.attrs import ENT_IOB, ENT_TYPE
 
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp.make_doc(u'London is a big city in the United Kingdom.')
-    assert list(doc.ents) == []
+    print('Before', list(doc.ents))  # []
 
     header = [ENT_IOB, ENT_TYPE]
     attr_array = numpy.zeros((len(doc), len(header)))
-    attr_array[0, 0] = 2 # B
+    attr_array[0, 0] = 3  # B
     attr_array[0, 1] = doc.vocab.strings[u'GPE']
     doc.from_array(header, attr_array)
-    assert list(doc.ents)[0].text == u'London'
+    print('After', list(doc.ents))  # [London]
 
 +h(4, "setting-cython") Setting entity annotations in Cython
 

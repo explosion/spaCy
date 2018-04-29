@@ -36,6 +36,44 @@ p
     |  vector table produces rapidly diminishing returns in coverage over these
     |  rare terms.
 
++h(3, "converting") Converting word vectors for use in spaCy
+    +tag-new("2.0.10")
+
+p
+    |  Custom word vectors can be trained using a number of open-source libraries,
+    |  such as #[+a("https://radimrehurek.com/gensim") Gensim],
+    |  #[+a("https://fasttext.cc") Fast Text], or Tomas Mikolov's original
+    |  #[+a("https://code.google.com/archive/p/word2vec/") word2vec implementation].
+    |  Most word vector libraries output an easy-to-read text-based format, where
+    |  each line consists of the word followed by its vector. For everyday use,
+    |  we want to convert the vectors model into a binary format that loads faster
+    |  and takes up less space on disk. The easiest way to do this is the
+    |  #[+api("cli#init-model") #[code init-model]] command-line utility:
+
++code(false, "bash").
+    wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
+    python -m spacy init-model /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.vec.gz
+
+p
+    |  This will output a spaCy model in the directory
+    |  #[code /tmp/la_vectors_wiki_lg], giving you access to some nice Latin
+    |  vectors 😉 You can then pass the directory path to
+    |  #[+api("spacy#load") #[code spacy.load()]].
+
++code.
+    nlp_latin = spacy.load('/tmp/la_vectors_wiki_lg')
+    doc1 = nlp(u"Caecilius est in horto")
+    doc2 = nlp(u"servus est in atrio")
+    doc1.similarity(doc2)
+
+p
+    |  The model directory will have a #[code /vocab] directory with the strings,
+    |  lexical entries and word vectors from the input vectors model. The
+    |  #[+api("cli#init-model") #[code init-model]] command supports a number of
+    |  archive formats for the word vectors: the vectors can be in plain text
+    |  (#[code .txt]), zipped (#[code .zip]), or tarred and zipped
+    |  (#[code .tgz]).
+
 +h(3, "custom-vectors-coverage") Optimising vector coverage
     +tag-new(2)
 
@@ -97,6 +135,19 @@ p
     |  In the example above, the vector for "Shore" was removed and remapped
     |  to the vector of "coast", which is deemed about 73% similar. "Leaving"
     |  was remapped to the vector of "leaving", which is identical.
+
+p
+    |  If you're using the #[+api("cli#init-model") #[code init-model]] command,
+    |  you can set the #[code --prune-vectors] option to easily reduce the size
+    |  of the vectors as you add them to a spaCy model:
+
++code(false, "bash", "$").
+    python -m spacy init-model /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
+
+p
+    |  This will create a spaCy model with vectors for the first 10,000 words in
+    |  the vectors model. All other words in the vectors model are mapped to the
+    |  closest vector among those retained.
 
 +h(3, "custom-vectors-add") Adding vectors
     +tag-new(2)
@@ -171,18 +222,6 @@ p
     |  you can call #[+api("language#to_disk") #[code nlp.to_disk]], and then
     |  package the model using the #[+api("cli#package") #[code package]]
     |  command.
-
-+h(3, "custom-loading-other") Loading other vectors
-    +tag-new(2)
-
-p
-    |  You can also choose to load in vectors from other sources, like the
-    |  #[+a("https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md") fastText vectors]
-    |  for 294 languages, trained on Wikipedia. After reading in the file,
-    |  the vectors are added to the #[code Vocab] using the
-    |  #[+api("vocab#set_vector") #[code set_vector]] method.
-
-+github("spacy", "examples/vectors_fast_text.py")
 
 +h(3, "custom-similarity") Using custom similarity methods
 

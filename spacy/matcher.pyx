@@ -13,6 +13,8 @@ from .vocab cimport Vocab
 from .tokens.doc cimport Doc
 from .tokens.doc cimport get_token_attr
 from .attrs cimport ID, attr_id_t, NULL_ATTR
+from .errors import Errors, TempErrors
+
 from .attrs import IDS
 from .attrs import FLAG61 as U_ENT
 from .attrs import FLAG60 as B2_ENT
@@ -321,6 +323,8 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
     while pattern.nr_attr != 0:
         pattern += 1
     id_attr = pattern[0].attrs[0]
+    if id_attr.attr != ID:
+        raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
     return id_attr.value
 
 def _convert_strings(token_specs, string_store):
@@ -341,8 +345,8 @@ def _convert_strings(token_specs, string_store):
                 if value in operators:
                     ops = operators[value]
                 else:
-                    msg = "Unknown operator '%s'. Options: %s"
-                    raise KeyError(msg % (value, ', '.join(operators.keys())))
+                    keys = ', '.join(operators.keys())
+                    raise KeyError(Errors.E011.format(op=value, opts=keys))
             if isinstance(attr, basestring):
                 attr = IDS.get(attr.upper())
             if isinstance(value, basestring):
@@ -429,9 +433,7 @@ cdef class Matcher:
         """
         for pattern in patterns:
             if len(pattern) == 0:
-                msg = ("Cannot add pattern for zero tokens to matcher.\n"
-                       "key: {key}\n")
-                raise ValueError(msg.format(key=key))
+                raise ValueError(Errors.E012.format(key=key))
         key = self._normalize_key(key)
         for pattern in patterns:
             specs = _convert_strings(pattern, self.vocab.strings)

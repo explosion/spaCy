@@ -19,18 +19,19 @@ from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..compat import is_config
+from ..errors import Errors
 from .. import util
-from .. import about
-from .underscore import Underscore
+from .underscore import Underscore, get_ext_args
 
 
 cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace,
     etc."""
     @classmethod
-    def set_extension(cls, name, default=None, method=None,
-                      getter=None, setter=None):
-        Underscore.token_extensions[name] = (default, method, getter, setter)
+    def set_extension(cls, name, **kwargs):
+        if cls.has_extension(name) and not kwargs.get('force', False):
+            raise ValueError(Errors.E090.format(name=name, obj='Token'))
+        Underscore.token_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):
@@ -39,6 +40,12 @@ cdef class Token:
     @classmethod
     def has_extension(cls, name):
         return name in Underscore.span_extensions
+
+    @classmethod
+    def remove_extension(cls, name):
+        if not cls.has_extension(name):
+            raise ValueError(Errors.E046.format(name=name))
+        return Underscore.token_extensions.pop(name)
 
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
         """Construct a `Token` object.
@@ -106,7 +113,7 @@ cdef class Token:
         elif op == 5:
             return my >= their
         else:
-            raise ValueError(op)
+            raise ValueError(Errors.E041.format(op=op))
 
     @property
     def _(self):
@@ -135,8 +142,7 @@ cdef class Token:
         RETURNS (Token): The token at position `self.doc[self.i+i]`.
         """
         if self.i+i < 0 or (self.i+i >= len(self.doc)):
-            msg = "Error accessing doc[%d].nbor(%d), for doc of length %d"
-            raise IndexError(msg % (self.i, i, len(self.doc)))
+            raise IndexError(Errors.E042.format(i=self.i, j=i, length=len(self.doc)))
         return self.doc[self.i+i]
 
     def similarity(self, other):
@@ -354,14 +360,7 @@ cdef class Token:
 
     property sent_start:
         def __get__(self):
-            # Raising a deprecation warning causes errors for autocomplete
-            #util.deprecated(
-            #    "Token.sent_start is now deprecated. Use Token.is_sent_start "
-            #    "instead, which returns a boolean value or None if the answer "
-            #    "is unknown – instead of a misleading 0 for False and 1 for "
-            #    "True. It also fixes a quirk in the old logic that would "
-            #    "always set the property to 0 for the first word of the "
-            #    "document.")
+            # Raising a deprecation warning here causes errors for autocomplete
             # Handle broken backwards compatibility case: doc[0].sent_start
             # was False.
             if self.i == 0:
@@ -386,9 +385,7 @@ cdef class Token:
 
         def __set__(self, value):
             if self.doc.is_parsed:
-                raise ValueError(
-                    "Refusing to write to token.sent_start if its document "
-                    "is parsed, because this may cause inconsistent state.")
+                raise ValueError(Errors.E043)
             if value is None:
                 self.c.sent_start = 0
             elif value is True:
@@ -396,8 +393,7 @@ cdef class Token:
             elif value is False:
                 self.c.sent_start = -1
             else:
-                raise ValueError("Invalid value for token.sent_start. Must be "
-                                 "one of: None, True, False")
+                raise ValueError(Errors.E044.format(value=value))
 
     property lefts:
         """The leftward immediate children of the word, in the syntactic
@@ -415,8 +411,7 @@ cdef class Token:
                 nr_iter += 1
                 # This is ugly, but it's a way to guard out infinite loops
                 if nr_iter >= 10000000:
-                    raise RuntimeError("Possibly infinite loop encountered "
-                                       "while looking for token.lefts")
+                    raise RuntimeError(Errors.E045.format(attr='token.lefts'))
 
     property rights:
         """The rightward immediate children of the word, in the syntactic
@@ -434,8 +429,7 @@ cdef class Token:
                 ptr -= 1
                 nr_iter += 1
                 if nr_iter >= 10000000:
-                    raise RuntimeError("Possibly infinite loop encountered "
-                                       "while looking for token.rights")
+                    raise RuntimeError(Errors.E045.format(attr='token.rights'))
             tokens.reverse()
             for t in tokens:
                 yield t

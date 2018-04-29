@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf8
-"""Train a multi-label convolutional neural network text classifier on the
+"""Train a convolutional neural network text classifier on the
 IMDB dataset, using the TextCategorizer component. The dataset will be loaded
 automatically via Thinc's built-in dataset loader. The model is added to
 spacy.pipeline, and predictions are available via `doc.cats`. For more details,

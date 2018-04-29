@@ -10,8 +10,8 @@ from ..gold import GoldParse
 
 
 def test_textcat_learns_multilabel():
-    random.seed(0)
-    numpy.random.seed(0)
+    random.seed(1)
+    numpy.random.seed(1)
     docs = []
     nlp = English()
     vocab = nlp.vocab

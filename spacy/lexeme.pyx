@@ -15,7 +15,7 @@ from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_CURRENCY, IS_OOV
 from .attrs cimport PROB
 from .attrs import intify_attrs
-from . import about
+from .errors import Errors
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
@@ -37,7 +37,8 @@ cdef class Lexeme:
         self.vocab = vocab
         self.orth = orth
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
-        assert self.c.orth == orth
+        if self.c.orth != orth:
+            raise ValueError(Errors.E071.format(orth=orth, vocab_orth=self.c.orth))
 
     def __richcmp__(self, other, int op):
         if other is None:
@@ -129,20 +130,25 @@ cdef class Lexeme:
         lex_data = Lexeme.c_to_bytes(self.c)
         start = <const char*>&self.c.flags
         end = <const char*>&self.c.sentiment + sizeof(self.c.sentiment)
-        assert (end-start) == sizeof(lex_data.data), (end-start, sizeof(lex_data.data))
+        if (end-start) != sizeof(lex_data.data):
+            raise ValueError(Errors.E072.format(length=end-start,
+                                                bad_length=sizeof(lex_data.data)))
         byte_string = b'\0' * sizeof(lex_data.data)
         byte_chars = <char*>byte_string
         for i in range(sizeof(lex_data.data)):
             byte_chars[i] = lex_data.data[i]
-        assert len(byte_string) == sizeof(lex_data.data), (len(byte_string),
-                sizeof(lex_data.data))
+        if len(byte_string) != sizeof(lex_data.data):
+            raise ValueError(Errors.E072.format(length=len(byte_string),
+                                                bad_length=sizeof(lex_data.data)))
         return byte_string
 
     def from_bytes(self, bytes byte_string):
         # This method doesn't really have a use-case --- wrote it for testing.
         # Possibly delete? It puts the Lexeme out of synch with the vocab.
         cdef SerializedLexemeC lex_data
-        assert len(byte_string) == sizeof(lex_data.data)
+        if len(byte_string) != sizeof(lex_data.data):
+            raise ValueError(Errors.E072.format(length=len(byte_string),
+                                                bad_length=sizeof(lex_data.data)))
         for i in range(len(byte_string)):
             lex_data.data[i] = byte_string[i]
         Lexeme.c_from_bytes(self.c, lex_data)
@@ -169,16 +175,13 @@ cdef class Lexeme:
         def __get__(self):
             cdef int length = self.vocab.vectors_length
             if length == 0:
-                raise ValueError(
-                    "Word vectors set to length 0. This may be because you "
-                    "don't have a model installed or loaded, or because your "
-                    "model doesn't include word vectors. For more info, see "
-                    "the documentation: \n%s\n" % about.__docs_models__
-                )
+                raise ValueError(Errors.E010)
             return self.vocab.get_vector(self.c.orth)
 
         def __set__(self, vector):
-            assert len(vector) == self.vocab.vectors_length
+            if len(vector) != self.vocab.vectors_length:
+                raise ValueError(Errors.E073.format(new_length=len(vector),
+                                                    length=self.vocab.vectors_length))
             self.vocab.set_vector(self.c.orth, vector)
 
     property rank:

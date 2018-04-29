@@ -7,6 +7,7 @@ import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 
+from ._messages import Messages
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
 from ..util import prints, minibatch, minibatch_by_words
@@ -52,15 +53,15 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     dev_path = util.ensure_path(dev_data)
     meta_path = util.ensure_path(meta_path)
     if not train_path.exists():
-        prints(train_path, title="Training data not found", exits=1)
+        prints(train_path, title=Messages.M050, exits=1)
     if dev_path and not dev_path.exists():
-        prints(dev_path, title="Development data not found", exits=1)
+        prints(dev_path, title=Messages.M051, exits=1)
     if meta_path is not None and not meta_path.exists():
-        prints(meta_path, title="meta.json not found", exits=1)
+        prints(meta_path, title=Messages.M020, exits=1)
     meta = util.read_json(meta_path) if meta_path else {}
     if not isinstance(meta, dict):
-        prints("Expected dict but got: {}".format(type(meta)),
-               title="Not a valid meta.json format", exits=1)
+        prints(Messages.M053.format(meta_type=type(meta)),
+               title=Messages.M052, exits=1)
     meta.setdefault('lang', lang)
     meta.setdefault('name', 'unnamed')
     
@@ -94,6 +95,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     meta['pipeline'] = pipeline
     nlp.meta.update(meta)
     if vectors:
+        print("Load vectors model", vectors)
         util.load_model(vectors, vocab=nlp.vocab)
         for lex in nlp.vocab:
             values = {}

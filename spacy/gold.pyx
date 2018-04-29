@@ -17,6 +17,7 @@ import ujson
 from . import _align 
 from .syntax import nonproj
 from .tokens import Doc
+from .errors import Errors
 from . import util
 from .util import minibatch, itershuffle
 from .compat import json_dumps
@@ -37,7 +38,8 @@ def tags_to_entities(tags):
         elif tag == '-':
             continue
         elif tag.startswith('I'):
-            assert start is not None, tags[:i]
+            if start is None:
+                raise ValueError(Errors.E067.format(tags=tags[:i]))
             continue
         if tag.startswith('U'):
             entities.append((tag[2:], i, i))
@@ -47,7 +49,7 @@ def tags_to_entities(tags):
             entities.append((tag[2:], start, i))
             start = None
         else:
-            raise Exception(tag)
+            raise ValueError(Errors.E068.format(tag=tag))
     return entities
 
 
@@ -225,7 +227,9 @@ class GoldCorpus(object):
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples, make_projective):
-        assert len(docs) == len(paragraph_tuples)
+        if len(docs) != len(paragraph_tuples):
+            raise ValueError(Errors.E070.format(n_docs=len(docs),
+                                                n_annots=len(paragraph_tuples)))
         if len(docs) == 1:
             return [GoldParse.from_annot_tuples(docs[0],
                                                 paragraph_tuples[0][0],
@@ -525,7 +529,7 @@ cdef class GoldParse:
 
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
-            raise Exception("Cycle found: %s" % cycle)
+            raise ValueError(Errors.E069.format(cycle=cycle))
 
     def __len__(self):
         """Get the number of gold-standard tokens.

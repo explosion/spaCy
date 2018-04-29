@@ -1,7 +1,7 @@
 {
     "globals": {
         "title": "spaCy",
-        "description": "spaCy is a free open-source library featuring state-of-the-art speed and accuracy and a powerful Python API.",
+        "description": "spaCy is a free open-source library for Natural Language Processing in Python. It features NER, POS tagging, dependency parsing, word vectors and more.",
 
         "SITENAME": "spaCy",
         "SLOGAN": "Industrial-strength Natural Language Processing in Python",
@@ -10,10 +10,13 @@
 
         "COMPANY": "Explosion AI",
         "COMPANY_URL": "https://explosion.ai",
-        "DEMOS_URL": "https://demos.explosion.ai",
+        "DEMOS_URL": "https://explosion.ai/demos",
         "MODELS_REPO": "explosion/spacy-models",
+        "KERNEL_BINDER": "ines/spacy-binder",
+        "KERNEL_PYTHON": "python3",
 
         "SPACY_VERSION": "2.0",
+        "BINDER_VERSION": "2.0.11",
 
         "SOCIAL": {
             "twitter": "spacy_io",
@@ -26,7 +29,8 @@
         "NAVIGATION": {
             "Usage": "/usage",
             "Models": "/models",
-            "API": "/api"
+            "API": "/api",
+            "Universe": "/universe"
         },
 
         "FOOTER": {
@@ -34,7 +38,7 @@
                 "Usage": "/usage",
                 "Models": "/models",
                 "API Reference": "/api",
-                "Resources": "/usage/resources"
+                "Universe": "/universe"
             },
             "Support": {
                 "Issue Tracker": "https://github.com/explosion/spaCy/issues",
@@ -82,8 +86,8 @@
             }
         ],
 
-        "V_CSS": "2.0.1",
-        "V_JS": "2.0.1",
+        "V_CSS": "2.1.2",
+        "V_JS": "2.1.0",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {
