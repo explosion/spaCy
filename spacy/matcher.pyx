@@ -324,7 +324,8 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
         pattern += 1
     id_attr = pattern[0].attrs[0]
     if id_attr.attr != ID:
-        raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
+        with gil:
+            raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
     return id_attr.value
 
 def _convert_strings(token_specs, string_store):
