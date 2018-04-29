@@ -888,8 +888,8 @@ class TextCategorizer(Pipe):
     name = 'textcat'
 
     @classmethod
-    def Model(cls, **cfg):
-        return build_text_classifier(**cfg)
+    def Model(cls, nr_class, **cfg):
+        return build_text_classifier(nr_class, **cfg)
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
@@ -981,8 +981,7 @@ class TextCategorizer(Pipe):
 
         if self.model is True:
             self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
-            self.model = self.Model(len(self.labels), token_vector_width,
-                                    **self.cfg)
+            self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
