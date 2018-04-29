@@ -10,6 +10,10 @@ If you have a project that you want the spaCy community to make use of, you can
 suggest it by submitting a pull request to this repository. The Universe
 database is open-source and collected in a simple JSON file.
 
+Looking for inspiration for your own spaCy plugin or extension? Check out the
+[`project idea`](https://github.com/explosion/spaCy/labels/project%20idea) label
+on the issue tracker.
+
 ## Checklist
 
 ### Projects
