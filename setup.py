@@ -195,7 +195,7 @@ def setup_package():
                 'plac<1.0.0,>=0.9.6',
                 'pathlib',
                 'ujson>=1.35',
-                'dill>=0.2,<0.3',
+                'dill>=0.2,<0.3'],
             setup_requires=['wheel'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
