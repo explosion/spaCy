@@ -338,7 +338,7 @@ def main(ud_dir, parses_dir, config, corpus, limit=0, use_gpu=-1):
 
     optimizer = initialize_pipeline(nlp, docs, golds, config, use_gpu)
 
-    batch_sizes = compounding(config.batch_size, config.batch_size, 1.001)
+    batch_sizes = compounding(config.batch_size//10, config.batch_size, 1.001)
     for i in range(config.nr_epoch):
         docs = [nlp.make_doc(doc.text) for doc in docs]
         Xs = list(zip(docs, golds))
