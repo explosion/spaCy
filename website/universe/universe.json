@@ -834,10 +834,10 @@
             "github": "5hirish/adam_qas",
             "pip": "qas",
             "code_example": [
-                "$ git clone https://github.com/5hirish/adam_qas.git",
-                "$ cd adam_qas",
-                "$ pip install -r requirements.txt",
-                "$ python -m qas.adam 'When was linux kernel version 4.0 released ?'"
+                "git clone https://github.com/5hirish/adam_qas.git",
+                "cd adam_qas",
+                "pip install -r requirements.txt",
+                "python -m qas.adam 'When was linux kernel version 4.0 released ?'"
             ],
             "code_language": "bash",
             "thumb": "https://shirishkadam.files.wordpress.com/2018/04/mini_alleviate.png",
