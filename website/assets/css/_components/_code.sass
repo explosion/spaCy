@@ -3,7 +3,7 @@
 //- Code block
 
 .c-code-block,
-.thebelab-cell
+.juniper-cell
     background: $color-front
     color: darken($color-back, 20)
     padding: 0.75em 0
@@ -32,7 +32,7 @@
 //- Code block content
 
 .c-code-block__content,
-.thebelab-input,
+.juniper-input,
 .jp-OutputArea
     display: block
     font: normal normal 1.1rem/#{1.9} $font-code
@@ -45,13 +45,21 @@
     vertical-align: middle
     opacity: 0.5
 
-//- Thebelab
+//- Juniper
 
 [data-executable]
     margin-bottom: 0
 
-.thebelab-input.thebelab-input
-    padding: 3em 2em 1em
+.juniper-cell
+    border: 0
+
+.juniper-input
+    padding: 0
+
+.juniper-output
+    color: inherit
+    background: inherit
+    padding: 0
 
 .jp-OutputArea
     &:not(:empty)
@@ -75,13 +83,14 @@
     font-family: inherit
     font-weight: bold
 
-.thebelab-run-button
+.juniper-button
     @extend .u-text-label, .u-text-label--dark
+    position: static
 
-.thebelab-wrapper
+.juniper-wrapper
     position: relative
 
-.thebelab-wrapper__text
+.juniper-wrapper__text
     @include position(absolute, top, right, 1.25rem, 1.25rem)
     color: $color-subtle-dark
     z-index: 10

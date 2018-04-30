@@ -260,8 +260,8 @@ mixin code(label, language, prompt, height, icon, wrap)
 mixin code-exec(label, large)
     - label = (label || "Editable code example") + " (experimental)"
     +terminal-wrapper(label, !large)
-        figure.thebelab-wrapper
-            span.thebelab-wrapper__text.u-text-tiny v#{BINDER_VERSION} &middot; Python 3 &middot; via #[+a("https://mybinder.org/").u-hide-link Binder]
+        figure.juniper-wrapper
+            span.juniper-wrapper__text.u-text-tiny v#{BINDER_VERSION} &middot; Python 3 &middot; via #[+a("https://mybinder.org/").u-hide-link Binder]
             +code(data-executable="true")&attributes(attributes)
                 block
 
