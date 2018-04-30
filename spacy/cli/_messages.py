@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+
 class Messages(object):
     M001 = ("Download successful but linking failed")
     M002 = ("Creating a shortcut link for 'en' didn't work (maybe you "
@@ -64,7 +65,7 @@ class Messages(object):
             "flag to overwrite existing directories.")
     M046 = ("Generating meta.json")
     M047 = ("Enter the package settings for your model. The following "
-           "information will be read from your model data: pipeline, vectors.")
+            "information will be read from your model data: pipeline, vectors.")
     M048 = ("No '{key}' setting found in meta.json")
     M049 = ("This setting is required to build your package.")
     M050 = ("Training data not found")

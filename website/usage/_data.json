@@ -16,8 +16,7 @@
             "Visualizers": "visualizers"
         },
         "In-depth": {
-            "Code Examples": "examples",
-            "Resources": "resources"
+            "Code Examples": "examples"
         }
     },
 
@@ -25,7 +24,6 @@
         "title": "Install spaCy",
         "next": "models",
         "quickstart": true,
-        "changelog": true,
         "menu": {
             "Quickstart": "quickstart",
             "Instructions": "instructions",
@@ -104,7 +102,7 @@
         "menu": {
             "How Pipelines Work": "pipelines",
             "Custom Components": "custom-components",
-            "Developing Extensions": "extensions",
+            "Extension Attributes": "custom-components-extensions",
             "Multi-Threading": "multithreading",
             "Serialization": "serialization"
         }
@@ -147,7 +145,6 @@
         "title": "Visualizers",
         "tag_new": 2,
         "teaser": "Visualize dependencies and entities in your browser and notebook, or export HTML.",
-        "next": "resources",
         "menu": {
             "Dependencies": "dep",
             "Entities": "ent",
@@ -156,25 +153,9 @@
         }
     },
 
-    "resources": {
-        "title": "Resources",
-        "teaser": "Libraries, demos, books, courses and research systems featuring spaCy.",
-        "next": "examples",
-        "menu": {
-            "Third-party libraries": "libraries",
-            "Extensions": "extensions",
-            "Demos & Visualizations": "demos",
-            "Books & Courses": "books",
-            "Jupyter Notebooks": "notebooks",
-            "Videos": "videos",
-            "Research": "research"
-        }
-    },
-
     "examples": {
         "title": "Code Examples",
         "teaser": "Full code examples you can modify and run.",
-        "next": "resources",
         "menu": {
             "Information Extraction": "information-extraction",
             "Pipeline": "pipeline",

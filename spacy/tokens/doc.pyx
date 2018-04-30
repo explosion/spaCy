@@ -108,6 +108,12 @@ cdef class Doc:
     def has_extension(cls, name):
         return name in Underscore.doc_extensions
 
+    @classmethod
+    def remove_extension(cls, name):
+        if not cls.has_extension(name):
+            raise ValueError(Errors.E046.format(name=name))
+        return Underscore.doc_extensions.pop(name)
+
     def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
                  orths_and_spaces=None):
         """Create a Doc object.
@@ -500,8 +506,9 @@ cdef class Doc:
             # its tokenisation changing, so it's okay once we have the Span
             # objects. See Issue #375.
             spans = []
-            for start, end, label in self.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+            if self.noun_chunks_iterator is not None:
+                for start, end, label in self.noun_chunks_iterator(self):
+                    spans.append(Span(self, start, end, label=label))
             for span in spans:
                 yield span
 
@@ -854,7 +861,7 @@ cdef class Doc:
         computed by the models in the pipeline. Let's say a
         document with 30 words has a tensor with 128 dimensions
         per word. doc.tensor.shape will be (30, 128). After
-        calling doc.extend_tensor with an array of hape (30, 64),
+        calling doc.extend_tensor with an array of shape (30, 64),
         doc.tensor == (30, 192).
         '''
         xp = get_array_module(self.tensor)

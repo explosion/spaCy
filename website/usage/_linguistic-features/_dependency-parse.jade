@@ -18,9 +18,11 @@ p
     |  tech fund". To get the noun chunks in a document, simply iterate over
     |  #[+api("doc#noun_chunks") #[code Doc.noun_chunks]].
 
-+code("Example").
-    nlp = spacy.load('en')
-    doc = nlp(u'Autonomous cars shift insurance liability toward manufacturers')
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
     for chunk in doc.noun_chunks:
         print(chunk.text, chunk.root.text, chunk.root.dep_,
               chunk.root.head.text)
@@ -48,8 +50,11 @@ p
     |  attributes, the value of #[code .dep] is a hash value. You can get
     |  the string value with #[code .dep_].
 
-+code("Example").
-    doc = nlp(u'Autonomous cars shift insurance liability toward manufacturers')
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
     for token in doc:
         print(token.text, token.dep_, token.head.text, token.head.pos_,
               [child for child in token.children])
@@ -79,14 +84,19 @@ p
     |  the tree by iterating over the words in the sentence. This is usually
     |  the best way to match an arc of interest — from below:
 
-+code.
++code-exec.
+    import spacy
     from spacy.symbols import nsubj, VERB
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
 
     # Finding a verb with a subject from below — good
     verbs = set()
     for possible_subject in doc:
         if possible_subject.dep == nsubj and possible_subject.head.pos == VERB:
             verbs.add(possible_subject.head)
+    print(verbs)
 
 p
     |  If you try to match from above, you'll have to iterate twice: once for
@@ -119,12 +129,23 @@ p
     |  #[+api("token#n_lefts") #[code Token.n_lefts]], that give the number of
     |  left and right children.
 
-+code.
-    doc = nlp(u'bright red apples on the tree')
-    assert [token.text for token in doc[2].lefts]) == [u'bright', u'red']
-    assert [token.text for token in doc[2].rights]) == ['on']
-    assert doc[2].n_lefts == 2
-    assert doc[2].n_rights == 1
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"bright red apples on the tree")
+    print([token.text for token in doc[2].lefts])  # ['bright', 'red']
+    print([token.text for token in doc[2].rights])  # ['on']
+    print(doc[2].n_lefts)  # 2
+    print(doc[2].n_rights)  # 1
+
++code-exec.
+    import spacy
+
+    nlp = spacy.load('de_core_news_sm')
+    doc = nlp(u"schöne rote Äpfel auf dem Baum")
+    print([token.text for token in doc[2].lefts])  # ['schöne', 'rote']
+    print([token.text for token in doc[2].rights])  # ['auf']
 
 p
     |  You can get a whole phrase by its syntactic head using the
@@ -141,13 +162,18 @@ p
     |  to be contiguous. This is not true for the German model, which has many
     |  #[+a(COMPANY_URL + "/blog/german-model#word-order", true) non-projective dependencies].
 
-+code.
-    doc = nlp(u'Credit and mortgage account holders must submit their requests')
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"Credit and mortgage account holders must submit their requests")
+
     root = [token for token in doc if token.head == token][0]
     subject = list(root.lefts)[0]
     for descendant in subject.subtree:
         assert subject is descendant or subject.is_ancestor(descendant)
-        print(descendant.text, descendant.dep_, descendant.n_lefts, descendant.n_rights,
+        print(descendant.text, descendant.dep_, descendant.n_lefts,
+              descendant.n_rights,
               [ancestor.text for ancestor in descendant.ancestors])
 
 +table(["Text", "Dep", "n_lefts", "n_rights", "ancestors"])
@@ -166,8 +192,11 @@ p
     |  #[strong within] the subtree — so if you use it as the end-point of a
     |  range, don't forget to #[code +1]!
 
-+code.
-    doc = nlp(u'Credit and mortgage account holders must submit their requests')
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"Credit and mortgage account holders must submit their requests")
     span = doc[doc[4].left_edge.i : doc[4].right_edge.i+1]
     span.merge()
     for token in doc:
@@ -199,11 +228,13 @@ p
     |  hook into some type of syntactic construction, just plug the sentence into
     |  the visualizer and see how spaCy annotates it.
 
-+code.
++code-exec.
+    import spacy
     from spacy import displacy
 
-    doc = nlp(u'Autonomous cars shift insurance liability toward manufacturers')
-    displacy.serve(doc, style='dep')
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"Autonomous cars shift insurance liability toward manufacturers")
+    displacy.render(doc, style='dep', jupyter=True)
 
 +infobox
     |  For more details and examples, see the

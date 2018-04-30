@@ -5,7 +5,7 @@ import pytest
 from mock import Mock
 
 from ..vocab import Vocab
-from ..tokens.doc import Doc
+from ..tokens import Doc, Span, Token
 from ..tokens.underscore import Underscore
 
 
@@ -60,10 +60,16 @@ def test_token_underscore_method():
     assert token._.hello() == 'cheese'
 
 
-@pytest.mark.parametrize('obj', [
-    Doc(Vocab(), words=['hello', 'world']),
-    Doc(Vocab(), words=['hello', 'world'])[1],
-    Doc(Vocab(), words=['hello', 'world'])[0:2]])
+@pytest.mark.parametrize('obj', [Doc, Span, Token])
+def test_doc_underscore_remove_extension(obj):
+    ext_name = 'to_be_removed'
+    obj.set_extension(ext_name, default=False)
+    assert obj.has_extension(ext_name)
+    obj.remove_extension(ext_name)
+    assert not obj.has_extension(ext_name)
+
+
+@pytest.mark.parametrize('obj', [Doc, Span, Token])
 def test_underscore_raises_for_dup(obj):
     obj.set_extension('test', default=None)
     with pytest.raises(ValueError):
@@ -78,9 +84,8 @@ def test_underscore_raises_for_dup(obj):
     {'getter': True}])
 def test_underscore_raises_for_invalid(invalid_kwargs):
     invalid_kwargs['force'] = True
-    doc = Doc(Vocab(), words=['hello', 'world'])
     with pytest.raises(ValueError):
-        doc.set_extension('test', **invalid_kwargs)
+        Doc.set_extension('test', **invalid_kwargs)
 
 
 @pytest.mark.parametrize('valid_kwargs', [
@@ -91,5 +96,4 @@ def test_underscore_raises_for_invalid(invalid_kwargs):
     {'method': lambda: None}])
 def test_underscore_accepts_valid(valid_kwargs):
     valid_kwargs['force'] = True
-    doc = Doc(Vocab(), words=['hello', 'world'])
-    doc.set_extension('test', **valid_kwargs)
+    Doc.set_extension('test', **valid_kwargs)

@@ -368,29 +368,6 @@ include _includes/_mixins
             +accordion("Section " + i)
                 p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim ante, pretium a orci eget, varius dignissim augue. Nam eu dictum mauris, id tincidunt nisi. Integer commodo pellentesque tincidunt. Nam at turpis finibus tortor gravida sodales tincidunt sit amet est. Nullam euismod arcu in tortor auctor, sit amet dignissim justo congue. Sed varius vel dolor id dapibus. Curabitur pharetra fermentum arcu nec suscipit. Duis aliquet eros lorem, vitae interdum magna tempus quis.
 
-    +h(3, "chart") Chart
-
-    p
-        |  Charts are powered by #[+a("http://www.chartjs.org") chart.js] and
-        |  implemented via a mixin that creates the #[code canvas] element and
-        |  assigns the chart ID. The chart data itself is supplied in JavaScript.
-        |  Charts are mostly used to visualise and compare model accuracy scores
-        |  and speed benchmarks.
-
-    +aside-code("Usage", "jade").
-        +chart("accuracy")
-        script(src="/assets/js/chart.min.js")
-        script new Chart('chart_accuracy', { datasets: [] })
-
-    +chart("accuracy", 400)
-    +chart("speed", 300)
-
-    script(src="/assets/js/vendor/chart.min.js")
-    script.
-        Chart.defaults.global.defaultFontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'";
-        new Chart('chart_accuracy', { type: 'bar', options: { legend: { position: 'bottom'}, responsive: true, scales: { yAxes: [{ label: 'Accuracy', ticks: { suggestedMin: 70 } }], xAxes: [{ barPercentage: 0.75 }]}}, data: { labels: ['UAS', 'LAS', 'POS', 'NER F', 'NER P', 'NER R'], datasets: [{ label: 'en_core_web_sm', data: [91.65, 89.77, 97.05, 84.80, 84.53, 85.06], backgroundColor: '#09a3d5' }, { label: 'en_core_web_lg', data: [91.49, 89.66, 97.23, 86.46, 86.78, 86.15], backgroundColor: '#066B8C'}]}});
-        new Chart('chart_speed', { type: 'horizontalBar', options: { legend: { position: 'bottom'}, responsive: true, scales: { xAxes: [{ label: 'Speed', ticks: { suggestedMin: 0 }}], yAxes: [{ barPercentage: 0.75 }]}}, data: { labels: ['w/s CPU', 'w/s GPU'], datasets: [{ label: 'en_core_web_sm', data: [9575, 25531], backgroundColor: '#09a3d5'}, { label: 'en_core_web_lg', data: [8421, 22092], backgroundColor: '#066B8C'}]}});
-
 +section("embeds")
     +h(2, "embeds") Embeds
 
@@ -560,15 +537,15 @@ include _includes/_mixins
         |  the sub-navigation in the sidebar and maps titles to section IDs.
 
     +code(false, "json").
-        "resources": {
-            "title": "Resources",
-            "teaser": "Libraries, demos, books, courses and research systems featuring spaCy.",
+        "v2": {
+            "title": "What's New in v2.0",
+            "teaser": "New features, backwards incompatibilities and migration guide.",
             "menu": {
-                "Third-party libraries": "libraries",
-                "Demos & Visualizations": "demos",
-                "Books & Courses": "books",
-                "Jupyter Notebooks": "notebooks",
-                "Research": "research"
+                "Summary": "summary",
+                "New features": "features",
+                "Backwards Incompatibilities": "incompat",
+                "Migrating from v1.x": "migrating",
+                "Benchmarks": "benchmarks"
             }
         }
 

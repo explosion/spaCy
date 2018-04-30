@@ -86,6 +86,10 @@ def parse_deps(orig_doc, options={}):
     doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
     if not doc.is_parsed:
         user_warning(Warnings.W005)
+    if options.get('collapse_phrases', False):
+        for np in list(doc.noun_chunks):
+            np.merge(tag=np.root.tag_, lemma=np.root.lemma_,
+                    ent_type=np.root.ent_type_)
     if options.get('collapse_punct', True):
         spans = []
         for word in doc[:-1]:

@@ -10,10 +10,11 @@ from pathlib import Path
 from preshed.counter import PreshCounter
 import tarfile
 import gzip
+import zipfile
 
 from ._messages import Messages
 from ..vectors import Vectors
-from ..errors import Warnings, user_warning
+from ..errors import Errors, Warnings, user_warning
 from ..util import prints, ensure_path, get_lang_class
 
 try:
@@ -28,12 +29,14 @@ except ImportError:
     freqs_loc=("location of words frequencies file", "positional", None, Path),
     clusters_loc=("optional: location of brown clusters data",
                   "option", "c", str),
-    vectors_loc=("optional: location of vectors file in GenSim text format",
-                 "option", "v", str),
+    vectors_loc=("optional: location of vectors file in Word2Vec format "
+                 "(either as .txt or zipped as .zip or .tar.gz)", "option",
+                 "v", str),
     prune_vectors=("optional: number of vectors to prune to",
                    "option", "V", int)
 )
-def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None, vectors_loc=None, prune_vectors=-1):
+def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None,
+               vectors_loc=None, prune_vectors=-1):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
@@ -54,13 +57,18 @@ def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None, vectors_loc=
 def open_file(loc):
     '''Handle .gz, .tar.gz or unzipped files'''
     loc = ensure_path(loc)
+    print("Open loc")
     if tarfile.is_tarfile(str(loc)):
         return tarfile.open(str(loc), 'r:gz')
     elif loc.parts[-1].endswith('gz'):
         return (line.decode('utf8') for line in gzip.open(str(loc), 'r'))
+    elif loc.parts[-1].endswith('zip'):
+        zip_file = zipfile.ZipFile(str(loc))
+        names = zip_file.namelist()
+        file_ = zip_file.open(names[0])
+        return (line.decode('utf8') for line in file_)
     else:
         return loc.open('r', encoding='utf8')
-
 
 def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, prune_vectors):
     print("Creating model...")
@@ -104,8 +112,11 @@ def read_vectors(vectors_loc):
     vectors_data = numpy.zeros(shape=shape, dtype='f')
     vectors_keys = []
     for i, line in enumerate(tqdm(f)):
-        pieces = line.split()
+        line = line.rstrip()
+        pieces = line.rsplit(' ', vectors_data.shape[1]+1)
         word = pieces.pop(0)
+        if len(pieces) != vectors_data.shape[1]:
+            raise ValueError(Errors.E094.format(line_num=i, loc=vectors_loc))
         vectors_data[i] = numpy.asarray(pieces, dtype='f')
         vectors_keys.append(word)
     return vectors_data, vectors_keys

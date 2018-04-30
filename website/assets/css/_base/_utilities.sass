@@ -103,6 +103,9 @@
     &:hover
         color: $color-theme-dark
 
+.u-hand
+    cursor: pointer
+
 .u-hide-link.u-hide-link
     border: none
     color: inherit
@@ -224,6 +227,7 @@
     $spinner-size: 75px
     $spinner-bar: 8px
 
+    min-height: $spinner-size * 2
     position: relative
 
     & > *
@@ -245,10 +249,19 @@
 
 //- Hidden elements
 
-.u-hidden
-    display: none
+.u-hidden,
+[v-cloak]
+    display: none !important
 
 @each $breakpoint in (xs, sm, md)
     .u-hidden-#{$breakpoint}.u-hidden-#{$breakpoint}
         @include breakpoint(max, $breakpoint)
             display: none
+
+//- Transitions
+
+.u-fade-enter-active
+    transition: opacity 0.5s
+
+.u-fade-enter
+    opacity: 0
