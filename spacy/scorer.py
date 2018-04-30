@@ -86,7 +86,7 @@ class Scorer(object):
 
     def score(self, tokens, gold, verbose=False, punct_labels=('p', 'punct')):
         if len(tokens) != len(gold):
-            raise ValueError(Errors.E078.format(words_doc=len(tokens), words_gold=len(gold)))
+            gold = GoldParse.from_annot_tuples(tokens, zip(*gold.orig_annot))
         gold_deps = set()
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[-1]
