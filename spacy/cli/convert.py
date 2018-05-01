@@ -5,6 +5,7 @@ import plac
 from pathlib import Path
 
 from .converters import conllu2json, iob2json, conll_ner2json
+from ._messages import Messages
 from ..util import prints
 
 # Converters are matched by file extension. To add a converter, add a new
@@ -32,14 +33,14 @@ def convert(input_file, output_dir, n_sents=1, morphology=False, converter='auto
     input_path = Path(input_file)
     output_path = Path(output_dir)
     if not input_path.exists():
-        prints(input_path, title="Input file not found", exits=1)
+        prints(input_path, title=Messages.M028, exits=1)
     if not output_path.exists():
-        prints(output_path, title="Output directory not found", exits=1)
+        prints(output_path, title=Messages.M029, exits=1)
     if converter == 'auto':
         converter = input_path.suffix[1:]
     if converter not in CONVERTERS:
-            prints("Can't find converter for %s" % converter,
-                title="Unknown format", exits=1)
+            prints(Messages.M031.format(converter=converter),
+                   title=Messages.M030, exits=1)
     func = CONVERTERS[converter]
     func(input_path, output_path,
          n_sents=n_sents, use_morphology=morphology)

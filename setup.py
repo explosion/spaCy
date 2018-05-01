@@ -18,7 +18,6 @@ PACKAGES = find_packages()
 
 
 MOD_NAMES = [
-    'spacy._align',
     'spacy.parts_of_speech',
     'spacy.strings',
     'spacy.lexeme',
@@ -38,6 +37,7 @@ MOD_NAMES = [
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
+    'spacy.tokens._retokenize',
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
@@ -195,11 +195,7 @@ def setup_package():
                 'pathlib',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
-                'requests>=2.13.0,<3.0.0',
-                'regex==2017.4.5',
-                'ftfy>=4.4.2,<5.0.0',
-                'msgpack-python==0.5.4',
-                'msgpack-numpy==0.4.1'],
+                'regex==2017.4.5'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

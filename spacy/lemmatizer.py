@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .symbols import POS, NOUN, VERB, ADJ, PUNCT, PROPN
+from .symbols import POS, NOUN, VERB, ADJ, PUNCT
 from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
@@ -27,13 +27,11 @@ class Lemmatizer(object):
             univ_pos = 'adj'
         elif univ_pos in (PUNCT, 'PUNCT', 'punct'):
             univ_pos = 'punct'
-        elif univ_pos in (PROPN, 'PROPN'):
-            return [string]
         else:
-            return [string.lower()]
+            return list(set([string.lower()]))
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
-            return [string.lower()]
+            return list(set([string.lower()]))
         lemmas = lemmatize(string, self.index.get(univ_pos, {}),
                            self.exc.get(univ_pos, {}),
                            self.rules.get(univ_pos, []))
@@ -90,7 +88,6 @@ class Lemmatizer(object):
 
 
 def lemmatize(string, index, exceptions, rules):
-    orig = string
     string = string.lower()
     forms = []
     forms.extend(exceptions.get(string, []))
@@ -108,5 +105,5 @@ def lemmatize(string, index, exceptions, rules):
     if not forms:
         forms.extend(oov_forms)
     if not forms:
-        forms.append(orig)
+        forms.append(string)
     return list(set(forms))

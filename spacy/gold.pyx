@@ -7,11 +7,10 @@ import ujson
 import random
 import cytoolz
 import itertools
-import numpy
 
-from . import _align 
 from .syntax import nonproj
 from .tokens import Doc
+from .errors import Errors
 from . import util
 from .util import minibatch
 
@@ -30,7 +29,8 @@ def tags_to_entities(tags):
         elif tag == '-':
             continue
         elif tag.startswith('I'):
-            assert start is not None, tags[:i]
+            if start is None:
+                raise ValueError(Errors.E067.format(tags=tags[:i]))
             continue
         if tag.startswith('U'):
             entities.append((tag[2:], i, i))
@@ -40,7 +40,7 @@ def tags_to_entities(tags):
             entities.append((tag[2:], start, i))
             start = None
         else:
-            raise Exception(tag)
+            raise ValueError(Errors.E068.format(tag=tag))
     return entities
 
 
@@ -61,25 +61,90 @@ def merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-punct_re = re.compile(r'\W')
 def align(cand_words, gold_words):
+    cost, edit_path = _min_edit_path(cand_words, gold_words)
+    alignment = []
+    i_of_gold = 0
+    for move in edit_path:
+        if move == 'M':
+            alignment.append(i_of_gold)
+            i_of_gold += 1
+        elif move == 'S':
+            alignment.append(None)
+            i_of_gold += 1
+        elif move == 'D':
+            alignment.append(None)
+        elif move == 'I':
+            i_of_gold += 1
+        else:
+            raise Exception(move)
+    return alignment
+
+
+punct_re = re.compile(r'\W')
+
+
+def _min_edit_path(cand_words, gold_words):
+    cdef:
+        Pool mem
+        int i, j, n_cand, n_gold
+        int* curr_costs
+        int* prev_costs
+
+    # TODO: Fix this --- just do it properly, make the full edit matrix and
+    # then walk back over it...
+    # Preprocess inputs
+    cand_words = [punct_re.sub('', w).lower() for w in cand_words]
+    gold_words = [punct_re.sub('', w).lower() for w in gold_words]
+
     if cand_words == gold_words:
-        alignment = numpy.arange(len(cand_words))
-        return 0, alignment, alignment, {}, {}
-    cand_words = [w.replace(' ', '') for w in cand_words]
-    gold_words = [w.replace(' ', '') for w in gold_words]
-    cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
-                                [len(w) for w in gold_words])
-    for i, j in list(i2j_multi.items()):
-        if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
-            i2j[i] = j
-            i2j_multi.pop(i)
-    for j, i in list(j2i_multi.items()):
-        if j2i_multi.get(j+1) != i and j2i_multi.get(j-1) != i:
-            j2i[j] = i
-            j2i_multi.pop(j)
-    return cost, i2j, j2i, i2j_multi, j2i_multi
+        return 0, ''.join(['M' for _ in gold_words])
+    mem = Pool()
+    n_cand = len(cand_words)
+    n_gold = len(gold_words)
+    # Levenshtein distance, except we need the history, and we may want
+    # different costs. Mark operations with a string, and score the history
+    # using _edit_cost.
+    previous_row = []
+    prev_costs = <int*>mem.alloc(n_gold + 1, sizeof(int))
+    curr_costs = <int*>mem.alloc(n_gold + 1, sizeof(int))
+    for i in range(n_gold + 1):
+        cell = ''
+        for j in range(i):
+            cell += 'I'
+        previous_row.append('I' * i)
+        prev_costs[i] = i
+    for i, cand in enumerate(cand_words):
+        current_row = ['D' * (i + 1)]
+        curr_costs[0] = i+1
+        for j, gold in enumerate(gold_words):
+            if gold.lower() == cand.lower():
+                s_cost = prev_costs[j]
+                i_cost = curr_costs[j] + 1
+                d_cost = prev_costs[j + 1] + 1
+            else:
+                s_cost = prev_costs[j] + 1
+                i_cost = curr_costs[j] + 1
+                d_cost = prev_costs[j + 1] + (1 if cand else 0)
+
+            if s_cost <= i_cost and s_cost <= d_cost:
+                best_cost = s_cost
+                best_hist = previous_row[j] + ('M' if gold == cand else 'S')
+            elif i_cost <= s_cost and i_cost <= d_cost:
+                best_cost = i_cost
+                best_hist = current_row[j] + 'I'
+            else:
+                best_cost = d_cost
+                best_hist = previous_row[j + 1] + 'D'
+
+            current_row.append(best_hist)
+            curr_costs[j+1] = best_cost
+        previous_row = current_row
+        for j in range(len(gold_words) + 1):
+            prev_costs[j] = curr_costs[j]
+            curr_costs[j] = 0
+
+    return prev_costs[n_gold], previous_row[-1]
 
 
 class GoldCorpus(object):
@@ -133,10 +198,10 @@ class GoldCorpus(object):
     def train_docs(self, nlp, gold_preproc=False,
                    projectivize=False, max_length=None,
                    noise_level=0.0):
-        train_tuples = list(self.train_tuples)
+        train_tuples = self.train_tuples
         if projectivize:
             train_tuples = nonproj.preprocess_training_data(
-                self.train_tuples, label_freq_cutoff=30)
+                self.train_tuples, label_freq_cutoff=100)
         random.shuffle(train_tuples)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
@@ -175,7 +240,9 @@ class GoldCorpus(object):
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples):
-        assert len(docs) == len(paragraph_tuples)
+        if len(docs) != len(paragraph_tuples):
+            raise ValueError(Errors.E070.format(n_docs=len(docs),
+                                                n_annots=len(paragraph_tuples)))
         if len(docs) == 1:
             return [GoldParse.from_annot_tuples(docs[0],
                                                 paragraph_tuples[0][0])]
@@ -371,17 +438,8 @@ cdef class GoldParse:
         self.labels = [None] * len(doc)
         self.ner = [None] * len(doc)
 
-        # Do many-to-one alignment for misaligned tokens.
-        # If we over-segment, we'll have one gold word that covers a sequence
-        # of predicted words
-        # If we under-segment, we'll have one predicted word that covers a
-        # sequence of gold words.
-        # If we "mis-segment", we'll have a sequence of predicted words covering
-        # a sequence of gold words. That's many-to-many -- we don't do that.
-        cost, i2j, j2i, i2j_multi, j2i_multi = align([t.orth_ for t in doc], words)
-
-        self.cand_to_gold = [(j if j >= 0 else None) for j in i2j]
-        self.gold_to_cand = [(i if i >= 0 else None) for i in j2i]
+        self.cand_to_gold = align([t.orth_ for t in doc], words)
+        self.gold_to_cand = align(words, [t.orth_ for t in doc])
 
         annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
         self.orig_annot = list(zip(*annot_tuples))
@@ -389,22 +447,12 @@ cdef class GoldParse:
         for i, gold_i in enumerate(self.cand_to_gold):
             if doc[i].text.isspace():
                 self.words[i] = doc[i].text
-                self.tags[i] = '_SP'
+                self.tags[i] = 'SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
             if gold_i is None:
-                if i in i2j_multi:
-                    self.words[i] = words[i2j_multi[i]]
-                    self.tags[i] = tags[i2j_multi[i]]
-                    # Set next word in multi-token span as head, until last
-                    if i2j_multi[i] == i2j_multi.get(i+1):
-                        self.heads[i] = i+1
-                        self.labels[i] = 'subtok'
-                    else:
-                        self.heads[i] = self.gold_to_cand[heads[i2j_multi[i]]]
-                        self.labels[i] = deps[i2j_multi[i]]
-                    # TODO: Set NER!
+                pass
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
@@ -417,7 +465,7 @@ cdef class GoldParse:
 
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
-            raise Exception("Cycle found: %s" % cycle)
+            raise ValueError(Errors.E069.format(cycle=cycle))
 
         if make_projective:
             proj_heads, _ = nonproj.projectivize(self.heads, self.labels)

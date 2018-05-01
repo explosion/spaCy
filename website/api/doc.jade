@@ -674,7 +674,7 @@ p
     |  token vectors.
 
 +aside-code("Example").
-    apples = nlp(u'I like apples')
+    doc = nlp(u'I like apples')
     assert doc.vector.dtype == 'float32'
     assert doc.vector.shape == (300,)
 

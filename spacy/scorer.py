@@ -2,6 +2,7 @@
 from __future__ import division, print_function, unicode_literals
 
 from .gold import tags_to_entities
+from .errors import Errors
 
 
 class PRFScore(object):
@@ -84,7 +85,8 @@ class Scorer(object):
         }
 
     def score(self, tokens, gold, verbose=False, punct_labels=('p', 'punct')):
-        assert len(tokens) == len(gold)
+        if len(tokens) != len(gold):
+            raise ValueError(Errors.E078.format(words_doc=len(tokens), words_gold=len(gold)))
         gold_deps = set()
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[-1]
@@ -100,7 +102,8 @@ class Scorer(object):
                 continue
             gold_i = gold.cand_to_gold[token.i]
             if gold_i is None:
-                self.tokens.fp += 1
+                if token.dep_.lower() not in punct_labels:
+                    self.tokens.fp += 1
             else:
                 self.tokens.tp += 1
                 cand_tags.add((gold_i, token.tag_))

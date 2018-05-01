@@ -10,6 +10,7 @@ from thinc.extra.search cimport MaxViolation
 
 from .transition_system cimport TransitionSystem, Transition
 from ..gold cimport GoldParse
+from ..errors import Errors
 from .stateclass cimport StateC, StateClass
 
 
@@ -220,7 +221,8 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
     p_indices = []
     g_indices = []
     cdef Beam pbeam, gbeam
-    assert len(pbeams) == len(gbeams)
+    if len(pbeams) != len(gbeams):
+        raise ValueError(Errors.E079.format(pbeams=len(pbeams), gbeams=len(gbeams)))
     for eg_id, (pbeam, gbeam) in enumerate(zip(pbeams, gbeams)):
         p_indices.append([])
         g_indices.append([])
@@ -228,7 +230,8 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
             state = StateClass.borrow(<StateC*>pbeam.at(i))
             if not state.is_final():
                 key = tuple([eg_id] + pbeam.histories[i])
-                assert key not in seen, (key, seen)
+                if key in seen:
+                    raise ValueError(Errors.E080.format(key=key))
                 seen[key] = len(states)
                 p_indices[-1].append(len(states))
                 states.append(state)
@@ -271,7 +274,8 @@ def get_gradient(nr_class, beam_maps, histories, losses):
     for i in range(nr_step):
         grads.append(numpy.zeros((max(beam_maps[i].values())+1, nr_class),
                                  dtype='f'))
-    assert len(histories) == len(losses)
+    if len(histories) != len(losses):
+        raise ValueError(Errors.E081.format(n_hist=len(histories), losses=len(losses)))
     for eg_id, hists in enumerate(histories):
         for loss, hist in zip(losses[eg_id], hists):
             if loss == 0.0 or numpy.isnan(loss):

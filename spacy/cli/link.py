@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import plac
 from pathlib import Path
 
+from ._messages import Messages
 from ..compat import symlink_to, path2str
 from ..util import prints
 from .. import util
@@ -24,40 +25,29 @@ def link(origin, link_name, force=False, model_path=None):
     else:
         model_path = Path(origin) if model_path is None else Path(model_path)
     if not model_path.exists():
-        prints("The data should be located in %s" % path2str(model_path),
-               title="Can't locate model data", exits=1)
+        prints(Messages.M009.format(path=path2str(model_path)),
+               title=Messages.M008, exits=1)
     data_path = util.get_data_path()
     if not data_path or not data_path.exists():
         spacy_loc = Path(__file__).parent.parent
-        prints("Make sure a directory `/data` exists within your spaCy "
-               "installation and try again. The data directory should be "
-               "located here:", path2str(spacy_loc), exits=1,
-               title="Can't find the spaCy data path to create model symlink")
+        prints(Messages.M011, spacy_loc, title=Messages.M010, exits=1)
     link_path = util.get_data_path() / link_name
     if link_path.is_symlink() and not force:
-        prints("To overwrite an existing link, use the --force flag.",
-               title="Link %s already exists" % link_name, exits=1)
+        prints(Messages.M013, title=Messages.M012.format(name=link_name),
+               exits=1)
     elif link_path.is_symlink():  # does a symlink exist?
         # NB: It's important to check for is_symlink here and not for exists,
         # because invalid/outdated symlinks would return False otherwise.
         link_path.unlink()
     elif link_path.exists(): # does it exist otherwise?
         # NB: Check this last because valid symlinks also "exist".
-        prints("This can happen if your data directory contains a directory "
-               "or file of the same name.", link_path,
-               title="Can't overwrite symlink %s" % link_name, exits=1)
+        prints(Messages.M015, link_path,
+               title=Messages.M014.format(name=link_name), exits=1)
+    msg = "%s --> %s" % (path2str(model_path), path2str(link_path))
     try:
         symlink_to(link_path, model_path)
     except:
         # This is quite dirty, but just making sure other errors are caught.
-        prints("Creating a symlink in spacy/data failed. Make sure you have "
-               "the required permissions and try re-running the command as "
-               "admin, or use a virtualenv. You can still import the model as "
-               "a module and call its load() method, or create the symlink "
-               "manually.",
-               "%s --> %s" % (path2str(model_path), path2str(link_path)),
-               title="Error: Couldn't link model to '%s'" % link_name)
+        prints(Messages.M017, msg, title=Messages.M016.format(name=link_name))
         raise
-    prints("%s --> %s" % (path2str(model_path), path2str(link_path)),
-           "You can now load the model via spacy.load('%s')" % link_name,
-           title="Linking successful")
+    prints(msg, Messages.M019.format(name=link_name), title=Messages.M018)
