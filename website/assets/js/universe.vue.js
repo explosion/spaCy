@@ -116,7 +116,8 @@ export default function(selector, dataPath) {
             $_updateUrl(params) {
                 const loc = Object.keys(params)
                     .map(param => `${param}=${encodeURIComponent(params[param])}`);
-                const url = loc.length ? '?' + loc.join('&') : window.location.origin + window.location.pathname;
+                const url = loc.length ? '?' + loc.join('&')
+                    : window.location.origin + window.location.pathname;
                 window.history.pushState(params, null, url);
             }
         }
