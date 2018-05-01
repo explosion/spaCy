@@ -6,6 +6,7 @@ from pathlib import Path
 from fabric.api import local, lcd, env, settings, prefix
 from os import path, environ
 import shutil
+import sys
 
 
 PWD = path.dirname(__file__)
@@ -90,3 +91,31 @@ def train():
     args = environ.get('SPACY_TRAIN_ARGS', '')
     with virtualenv(VENV_DIR) as venv_local:
         venv_local('spacy train {args}'.format(args=args))
+
+
+def conll17(treebank_dir, experiment_dir, vectors_dir, config, corpus=''):
+    is_not_clean = local('git status --porcelain', capture=True)
+    if is_not_clean:
+        print("Repository is not clean")
+        print(is_not_clean)
+        sys.exit(1)
+    git_sha = local('git rev-parse --short HEAD', capture=True)
+    config_checksum = local('sha256sum {config}'.format(config=config), capture=True)
+    experiment_dir = Path(experiment_dir) / '{}--{}'.format(config_checksum[:6], git_sha)
+    if not experiment_dir.exists():
+        experiment_dir.mkdir()
+    test_data_dir = Path(treebank_dir) / 'ud-test-v2.0-conll2017'
+    assert test_data_dir.exists()
+    assert test_data_dir.is_dir()
+    if corpus:
+        corpora = [corpus]
+    else:
+        corpora = ['UD_English', 'UD_Chinese', 'UD_Japanese', 'UD_Vietnamese']
+
+    local('cp {config} {experiment_dir}/config.json'.format(config=config, experiment_dir=experiment_dir))
+    with virtualenv(VENV_DIR) as venv_local:
+        for corpus in corpora:
+            venv_local('spacy ud-train {treebank_dir} {vectors_dir} {experiment_dir} {config} {corpus}'.format(
+                treebank_dir=treebank_dir, experiment_dir=experiment_dir, config=config, corpus=corpus))
+            venv_local('spacy ud-run-test {test_data_dir} {experiment_dir} {corpus}'.format(
+                test_data_dir=test_data_dir, experiment_dir=experiment_dir, config=config, corpus=corpus))
