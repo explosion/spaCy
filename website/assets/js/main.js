@@ -36,21 +36,19 @@ import initUniverse from './universe.vue.js';
 /**
  * Initialise Quickstart
  */
-if (document.querySelector('#qs') && window.Quickstart) {
-    new Quickstart('#qs');
+{
+    if (document.querySelector('#qs') && window.Quickstart) {
+        new Quickstart('#qs');
+    }
 }
 
 /**
- * Thebelabs
+ * Initialise Juniper
  */
-if (window.thebelab) {
-    window.thebelab.on('status', (ev, data) => {
-        if (data.status == 'failed') {
-            const msg = "Failed to connect to kernel :( This can happen if too many users are active at the same time. Please reload the page and try again!";
-            const wrapper = `<span style="white-space: pre-wrap">${msg}</span>`;
-            document.querySelector('.jp-OutputArea-output pre').innerHTML = wrapper;
-        }
-    });
+{
+    if (window.Juniper) {
+        new Juniper({ repo: 'ines/spacy-binder' });
+    }
 }
 
 /**

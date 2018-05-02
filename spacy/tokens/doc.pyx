@@ -835,8 +835,11 @@ cdef class Doc:
 
         cdef attr_t[:, :] attrs
         cdef int i, start, end, has_space
-        self.sentiment = msg['sentiment']
-        self.tensor = msg['tensor']
+
+        if 'sentiment' not in exclude and 'sentiment' in msg:
+            self.sentiment = msg['sentiment']
+        if 'tensor' not in exclude and 'tensor' in msg:
+            self.tensor = msg['tensor']
 
         start = 0
         cdef const LexemeC* lex

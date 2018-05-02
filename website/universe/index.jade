@@ -56,7 +56,7 @@ section(data-vue="universe")
 
                         .o-block(v-if="selected.code_example")
                             +code("Example", "none")(v-bind:class="`lang-${selected.code_language||'#{DEFAULT_SYNTAX}'}`")
-                                |  {{ selected.code_example.join('\n') }}
+                                | {{ selected.code_example.join('\n') }}
 
                         figure.o-block.u-text(v-if="selected.image")
                             img(v-bind:src="selected.image" width="800" v-bind:alt="selected.slogan || selected.title || selected.id")

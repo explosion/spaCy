@@ -276,7 +276,7 @@ p
     nlp = spacy.load('en_core_web_sm')
     matcher = Matcher(nlp.vocab)
     # register a new token extension to flag bad HTML
-    Token.set_extension('bad_html', default=False, force=True)
+    Token.set_extension('bad_html', default=False)
 
     def merge_and_flag(matcher, doc, i, matches):
         match_id, start, end = matches[i]
@@ -650,7 +650,7 @@ p
     matcher.add('HASHTAG', None, [{'ORTH': '#'}, {'IS_ASCII': True}])
 
     # register token extension
-    Token.set_extension('is_hashtag', default=False, force=True)
+    Token.set_extension('is_hashtag', default=False)
 
     doc = nlp(u"Hello world 😀 #MondayMotivation")
     matches = matcher(doc)
