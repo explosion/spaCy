@@ -602,7 +602,6 @@ cdef class Parser:
                 scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
 
             d_scores = self.get_batch_loss(states, golds, scores)
-            d_scores /= len(docs)
             d_vector = bp_scores(d_scores, sgd=sgd)
             if drop != 0:
                 d_vector *= mask
@@ -654,7 +653,6 @@ cdef class Parser:
         backprop_lower = []
         cdef float batch_size = len(docs)
         for i, d_scores in enumerate(states_d_scores):
-            d_scores /= batch_size
             if losses is not None:
                 losses[self.name] += (d_scores**2).sum()
             ids, bp_vectors, bp_scores = backprops[i]

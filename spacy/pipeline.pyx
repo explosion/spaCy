@@ -389,7 +389,7 @@ class Tensorizer(Pipe):
             vectors = self.model.ops.xp.vstack([w.vector for w in doc])
             target.append(vectors)
         target = self.model.ops.xp.vstack(target)
-        d_scores = (prediction - target) / prediction.shape[0]
+        d_scores = (prediction - target) 
         loss = (d_scores**2).sum()
         return loss, d_scores
 
@@ -510,7 +510,6 @@ class Tagger(Pipe):
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
-        d_scores /= d_scores.shape[0]
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
@@ -749,7 +748,6 @@ class MultitaskObjective(Tagger):
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
-        d_scores /= d_scores.shape[0]
         loss = (d_scores**2).sum()
         return float(loss), d_scores
 
