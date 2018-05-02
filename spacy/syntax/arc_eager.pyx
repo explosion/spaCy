@@ -20,6 +20,7 @@ from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
 from ..errors import Errors
+from ..tokens.doc cimport Doc, set_children_from_heads
 
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1
@@ -530,8 +531,9 @@ cdef class ArcEager(TransitionSystem):
             if st._sent[i].head == 0:
                 st._sent[i].dep = self.root_label
 
-    def finalize_doc(self, doc):
+    def finalize_doc(self, Doc doc):
         doc.is_parsed = True
+        set_children_from_heads(doc.c, doc.length)
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
