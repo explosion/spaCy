@@ -1,6 +1,14 @@
 //- 💫 DOCS > API > ARCHITECTURE > NN MODEL ARCHITECTURE
 
 p
+    |  spaCy's statistical models have been custom-designed to give a
+    |  high-performance mix of speed and accuracy. The current architecture
+    |  hasn't been published yet, but in the meantime we prepared a video that
+    |  explains how the models work, with particular focus on NER.
+
++youtube("sqDHBH9IjRU")
+
+p
     |  The parsing model is a blend of recent results. The two recent
     |  inspirations have been the work of Eli Klipperwasser and Yoav Goldberg at
     |  Bar Ilan#[+fn(1)], and the SyntaxNet team from Google. The foundation of
@@ -44,7 +52,7 @@ p
         +cell First two words of the buffer.
 
     +row
-        +cell.u-nowrap
+        +cell
             |  #[code S0L1], #[code S1L1], #[code S2L1], #[code B0L1],
             |  #[code B1L1]#[br]
             |  #[code S0L2], #[code S1L2], #[code S2L2], #[code B0L2],
@@ -54,7 +62,7 @@ p
             |  #[code S2], #[code B0] and #[code B1].
 
     +row
-        +cell.u-nowrap
+        +cell
             |  #[code S0R1], #[code S1R1], #[code S2R1], #[code B0R1],
             |  #[code B1R1]#[br]
             |  #[code S0R2], #[code S1R2], #[code S2R2], #[code B0R2],

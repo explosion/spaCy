@@ -1,22 +1,41 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import functools
 import numpy
 from collections import OrderedDict
-import msgpack
-import msgpack_numpy
-msgpack_numpy.patch()
+
+from .util import msgpack
+from .util import msgpack_numpy
+
 cimport numpy as np
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
 
 from .strings cimport StringStore, hash_string
 from .compat import basestring_, path2str
+from .errors import Errors
 from . import util
 
+from cython.operator cimport dereference as deref
+from libcpp.set cimport set as cppset
 
 def unpickle_vectors(bytes_data):
     return Vectors().from_bytes(bytes_data)
+
+
+class GlobalRegistry(object):
+    '''Global store of vectors, to avoid repeatedly loading the data.'''
+    data = {}
+
+    @classmethod
+    def register(cls, name, data):
+        cls.data[name] = data
+        return functools.partial(cls.get, name)
+
+    @classmethod
+    def get(cls, name):
+        return cls.data[name]
 
 
 cdef class Vectors:
@@ -31,18 +50,21 @@ cdef class Vectors:
     the table need to be assigned --- so len(list(vectors.keys())) may be
     greater or smaller than vectors.shape[0].
     """
+    cdef public object name
     cdef public object data
     cdef public object key2row
-    cdef public object _unset
+    cdef cppset[int] _unset
 
-    def __init__(self, *, shape=None, data=None, keys=None):
+    def __init__(self, *, shape=None, data=None, keys=None, name=None):
         """Create a new vector store.
 
         shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
+        name (string): A name to identify the vectors table.
         RETURNS (Vectors): The newly created object.
         """
+        self.name = name
         if data is None:
             if shape is None:
                 shape = (0,0)
@@ -50,9 +72,9 @@ cdef class Vectors:
         self.data = data
         self.key2row = OrderedDict()
         if self.data is not None:
-            self._unset = set(range(self.data.shape[0]))
+            self._unset = cppset[int]({i for i in range(self.data.shape[0])})
         else:
-            self._unset = set()
+            self._unset = cppset[int]()
         if keys is not None:
             for i, key in enumerate(keys):
                 self.add(key, row=i)
@@ -74,7 +96,7 @@ cdef class Vectors:
     @property
     def is_full(self):
         """RETURNS (bool): `True` if no slots are available for new keys."""
-        return len(self._unset) == 0
+        return self._unset.size() == 0
 
     @property
     def n_keys(self):
@@ -93,7 +115,7 @@ cdef class Vectors:
         """
         i = self.key2row[key]
         if i is None:
-            raise KeyError(key)
+            raise KeyError(Errors.E058.format(key=key))
         else:
             return self.data[i]
 
@@ -105,8 +127,8 @@ cdef class Vectors:
         """
         i = self.key2row[key]
         self.data[i] = vector
-        if i in self._unset:
-            self._unset.remove(i)
+        if self._unset.count(i):
+            self._unset.erase(self._unset.find(i))
 
     def __iter__(self):
         """Iterate over the keys in the table.
@@ -145,7 +167,7 @@ cdef class Vectors:
             xp = get_array_module(self.data)
             self.data = xp.resize(self.data, shape)
         filled = {row for row in self.key2row.values()}
-        self._unset = {row for row in range(shape[0]) if row not in filled}
+        self._unset = cppset[int]({row for row in range(shape[0]) if row not in filled})
         removed_items = []
         for key, row in list(self.key2row.items()):
             if row >= shape[0]:
@@ -169,7 +191,7 @@ cdef class Vectors:
         YIELDS (ndarray): A vector in the table.
         """
         for row, vector in enumerate(range(self.data.shape[0])):
-            if row not in self._unset:
+            if not self._unset.count(row):
                 yield vector
 
     def items(self):
@@ -194,7 +216,8 @@ cdef class Vectors:
         RETURNS: The requested key, keys, row or rows.
         """
         if sum(arg is None for arg in (key, keys, row, rows)) != 3:
-            raise ValueError("One (and only one) keyword arg must be set.")
+            bad_kwargs = {'key': key, 'keys': keys, 'row': row, 'rows': rows}
+            raise ValueError(Errors.E059.format(kwargs=bad_kwargs))
         xp = get_array_module(self.data)
         if key is not None:
             if isinstance(key, basestring_):
@@ -233,14 +256,14 @@ cdef class Vectors:
             row = self.key2row[key]
         elif row is None:
             if self.is_full:
-                raise ValueError("Cannot add new key to vectors -- full")
-            row = min(self._unset)
-
+                raise ValueError(Errors.E060.format(rows=self.data.shape[0],
+                                                    cols=self.data.shape[1]))
+            row = deref(self._unset.begin())
         self.key2row[key] = row
         if vector is not None:
             self.data[row] = vector
-            if row in self._unset:
-                self._unset.remove(row)
+            if self._unset.count(row):
+                self._unset.erase(self._unset.find(row))
         return row
 
     def most_similar(self, queries, *, batch_size=1024):
@@ -297,7 +320,7 @@ cdef class Vectors:
                 width = int(dims)
                 break
         else:
-            raise IOError("Expected file named e.g. vectors.128.f.bin")
+            raise IOError(Errors.E061.format(filename=path))
         bin_loc = path / 'vectors.{dims}.{dtype}.bin'.format(dims=dims,
                                                              dtype=dtype)
         xp = get_array_module(self.data)
@@ -346,8 +369,8 @@ cdef class Vectors:
                 with path.open('rb') as file_:
                     self.key2row = msgpack.load(file_)
             for key, row in self.key2row.items():
-                if row in self._unset:
-                    self._unset.remove(row)
+                if self._unset.count(row):
+                    self._unset.erase(self._unset.find(row))
 
         def load_keys(path):
             if path.exists():

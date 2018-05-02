@@ -15,12 +15,39 @@
 - MODEL_META = public.models._data.MODEL_META
 - MODEL_LICENSES = public.models._data.MODEL_LICENSES
 - MODEL_BENCHMARKS = public.models._data.MODEL_BENCHMARKS
+- EXAMPLE_SENT_LANGS = public.models._data.EXAMPLE_SENT_LANGS
 - EXAMPLE_SENTENCES = public.models._data.EXAMPLE_SENTENCES
 
 - IS_PAGE = (SECTION != "index") && !landing
 - IS_MODELS = (SECTION == "models" && LANGUAGES[current.source])
 - HAS_MODELS = IS_MODELS && CURRENT_MODELS.length
 
+//- Get page URL
+
+-    function getPageUrl() {
+-       var path = current.path;
+-       if(path[path.length - 1] == 'index') path = path.slice(0, path.length - 1);
+-       return `${SITE_URL}/${path.join('/')}`;
+-   }
+
+//- Get pretty page title depending on section
+
+-   function getPageTitle() {
+-       var sections = ['api', 'usage', 'models'];
+-       if (sections.includes(SECTION)) {
+-           var titleSection = (SECTION == "api") ? 'API' : SECTION.charAt(0).toUpperCase() + SECTION.slice(1);
+-           return `${title} · ${SITENAME} ${titleSection} Documentation`;
+-       }
+-       else if (SECTION != 'index') return `${title} · ${SITENAME}`;
+-       return `${SITENAME} · ${SLOGAN}`;
+-   }
+
+//- Get social image based on section and settings
+
+-   function getPageImage() {
+-       var img = (SECTION == 'api') ? 'api' : 'default';
+-       return `${SITE_URL}/assets/img/social/preview_${preview || img}.jpg`;
+-   }
 
 //- Add prefixes to items of an array (for modifier CSS classes)
     array   - [array] list of class names or options, e.g. ["foot"]

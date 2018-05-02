@@ -10,20 +10,24 @@ from collections import OrderedDict, defaultdict, Counter
 from thinc.extra.search cimport Beam
 import json
 
+from .nonproj import is_nonproj_tree
+from ..typedefs cimport hash_t, attr_t
+from ..strings cimport hash_string
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from . import nonproj
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
+from ..errors import Errors
 
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1
+cdef weight_t MIN_SCORE = -90000
+cdef attr_t SUBTOK_LABEL = hash_string('subtok')
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = True
-
-cdef weight_t MIN_SCORE = -90000
 
 # Break transition from here
 # http://www.aclweb.org/anthology/P13-1074
@@ -178,6 +182,8 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        if label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
+            return 0
         sent_start = st._sent[st.B_(0).l_edge].sent_start
         return sent_start != 1
 
@@ -214,6 +220,8 @@ cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         # If there's (perhaps partial) parse pre-set, don't allow cycle.
+        if label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
+            return 0
         sent_start = st._sent[st.B_(0).l_edge].sent_start
         return sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
@@ -364,6 +372,18 @@ cdef class ArcEager(TransitionSystem):
         def __get__(self):
             return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
 
+    def get_cost(self, StateClass state, GoldParse gold, action):
+        cdef Transition t = self.lookup_transition(action)
+        if not t.is_valid(state.c, t.label):
+            return 9000
+        else:
+            return t.get_cost(state, &gold.c, t.label)
+
+    def transition(self, StateClass state, action):
+        cdef Transition t = self.lookup_transition(action)
+        t.do(state.c, t.label)
+        return state
+ 
     def is_gold_parse(self, StateClass state, GoldParse gold):
         predicted = set()
         truth = set()
@@ -435,7 +455,10 @@ cdef class ArcEager(TransitionSystem):
                 parses.append((prob, parse))
         return parses
 
-    cdef Transition lookup_transition(self, object name) except *:
+    cdef Transition lookup_transition(self, object name_or_id) except *:
+        if isinstance(name_or_id, int):
+            return self.c[name_or_id]
+        name = name_or_id
         if '-' in name:
             move_str, label_str = name.split('-', 1)
             label = self.strings[label_str]
@@ -454,6 +477,9 @@ cdef class ArcEager(TransitionSystem):
             return MOVE_NAMES[move] + '-' + label_str
         else:
             return MOVE_NAMES[move]
+
+    def class_name(self, int i):
+        return self.move_name(self.c[i].move, self.c[i].label)
 
     cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -484,7 +510,7 @@ cdef class ArcEager(TransitionSystem):
             t.do = Break.transition
             t.get_cost = Break.cost
         else:
-            raise Exception(move)
+            raise ValueError(Errors.E019.format(action=move, src='arc_eager'))
         return t
 
     cdef int initialize_state(self, StateC* st) nogil:
@@ -516,7 +542,10 @@ cdef class ArcEager(TransitionSystem):
         is_valid[BREAK] = Break.is_valid(st, 0)
         cdef int i
         for i in range(self.n_moves):
-            output[i] = is_valid[self.c[i].move]
+            if self.c[i].label == SUBTOK_LABEL:
+                output[i] = self.c[i].is_valid(st, self.c[i].label)
+            else:
+                output[i] = is_valid[self.c[i].move]
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        StateClass stcls, GoldParse gold) except -1:
@@ -556,35 +585,13 @@ cdef class ArcEager(TransitionSystem):
                 is_valid[i] = False
                 costs[i] = 9000
         if n_gold < 1:
-            # Check label set --- leading cause
-            label_set = set([self.strings[self.c[i].label] for i in range(self.n_moves)])
-            for label_str in gold.labels:
-                if label_str is not None and label_str not in label_set:
-                    raise ValueError("Cannot get gold parser action: unknown label: %s" % label_str)
-            # Check projectivity --- other leading cause
-            if nonproj.is_nonproj_tree(gold.heads):
-                raise ValueError(
-                    "Could not find a gold-standard action to supervise the "
-                    "dependency parser. Likely cause: the tree is "
-                    "non-projective (i.e. it has crossing arcs -- see "
-                    "spacy/syntax/nonproj.pyx for definitions). The ArcEager "
-                    "transition system only supports projective trees. To "
-                    "learn non-projective representations, transform the data "
-                    "before training and after parsing. Either pass "
-                    "make_projective=True to the GoldParse class, or use "
-                    "spacy.syntax.nonproj.preprocess_training_data.")
+            # Check projectivity --- leading cause
+            if is_nonproj_tree(gold.heads):
+                raise ValueError(Errors.E020)
             else:
-                print(gold.orig_annot)
-                print(gold.words)
-                print(gold.heads)
-                print(gold.labels)
-                print(gold.sent_starts)
-                raise ValueError(
-                    "Could not find a gold-standard action to supervise the"
-                    "dependency parser. The GoldParse was projective. The "
-                    "transition system has %d actions. State at failure: %s"
-                    % (self.n_moves, stcls.print_state(gold.words)))
-        assert n_gold >= 1
+                failure_state = stcls.print_state(gold.words)
+                raise ValueError(Errors.E021.format(n_actions=self.n_moves,
+                                                    state=failure_state))
 
     def get_beam_annot(self, Beam beam):
         length = (<StateC*>beam.at(0)).length

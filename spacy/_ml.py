@@ -23,6 +23,7 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
+from .errors import Errors
 from . import util
 
 
@@ -42,8 +43,8 @@ def cosine(vec1, vec2):
 def create_default_optimizer(ops, **cfg):
     learn_rate = util.env_opt('learn_rate', 0.001)
     beta1 = util.env_opt('optimizer_B1', 0.9)
-    beta2 = util.env_opt('optimizer_B2', 0.999)
-    eps = util.env_opt('optimizer_eps', 1e-08)
+    beta2 = util.env_opt('optimizer_B2', 0.9)
+    eps = util.env_opt('optimizer_eps', 1e-12)
     L2 = util.env_opt('L2_penalty', 1e-6)
     max_grad_norm = util.env_opt('grad_norm_clip', 1.)
     optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1,
@@ -157,7 +158,7 @@ class PrecomputableAffine(Model):
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return dXf.reshape((dXf.shape[0], self.nF, self.nI))
         return Yf, backward
-    
+
     def _add_padding(self, Yf):
         Yf_padded = self.ops.xp.vstack((self.pad, Yf))
         return Yf_padded
@@ -194,14 +195,15 @@ class PrecomputableAffine(Model):
                     size=tokvecs.size).reshape(tokvecs.shape)
 
         def predict(ids, tokvecs):
-            # nS ids. nW tokvecs
-            hiddens = model(tokvecs) # (nW, f, o, p)
+            # nS ids. nW tokvecs. Exclude the padding array.
+            hiddens = model(tokvecs[:-1]) # (nW, f, o, p)
+            vectors = model.ops.allocate((ids.shape[0], model.nO * model.nP), dtype='f')
             # need nS vectors
-            vectors = model.ops.allocate((ids.shape[0], model.nO, model.nP))
-            for i, feats in enumerate(ids):
-                for j, id_ in enumerate(feats):
-                    vectors[i] += hiddens[id_, j]
+            hiddens = hiddens.reshape((hiddens.shape[0] * model.nF, model.nO * model.nP))
+            model.ops.scatter_add(vectors, ids.flatten(), hiddens)
+            vectors = vectors.reshape((vectors.shape[0], model.nO, model.nP))
             vectors += model.b
+            vectors = model.ops.asarray(vectors)
             if model.nP >= 2:
                 return model.ops.maxout(vectors)[0]
             else:
@@ -225,6 +227,11 @@ class PrecomputableAffine(Model):
 
 def link_vectors_to_models(vocab):
     vectors = vocab.vectors
+    if vectors.name is None:
+        vectors.name = VECTORS_KEY
+        print(
+            "Warning: Unnamed vectors -- this won't allow multiple vectors "
+            "models to be loaded. (Shape: (%d, %d))" % vectors.data.shape)
     ops = Model.ops
     for word in vocab:
         if word.orth in vectors.key2row:
@@ -234,11 +241,11 @@ def link_vectors_to_models(vocab):
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
-    thinc.extra.load_nlp.VECTORS[(ops.device, VECTORS_KEY)] = data
+    thinc.extra.load_nlp.VECTORS[(ops.device, vectors.name)] = data
 
 
 def Tok2Vec(width, embed_size, **kwargs):
-    pretrained_dims = kwargs.get('pretrained_dims', 0)
+    pretrained_vectors = kwargs.get('pretrained_vectors', None)
     cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 2)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone,
@@ -251,16 +258,16 @@ def Tok2Vec(width, embed_size, **kwargs):
                            name='embed_suffix')
         shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE),
                           name='embed_shape')
-        if pretrained_dims is not None and pretrained_dims >= 1:
-            glove = StaticVectors(VECTORS_KEY, width, column=cols.index(ID))
+        if pretrained_vectors is not None:
+            glove = StaticVectors(pretrained_vectors, width, column=cols.index(ID))
 
             embed = uniqued(
                 (glove | norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width*5, pieces=3)), column=5)
+                >> LN(Maxout(width, width*5, pieces=3)), column=cols.index(ORTH))
         else:
             embed = uniqued(
                 (norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width*4, pieces=3)), column=5)
+                >> LN(Maxout(width, width*4, pieces=3)), column=cols.index(ORTH))
 
         convolution = Residual(
             ExtractWindow(nW=1)
@@ -318,10 +325,10 @@ def _divide_array(X, size):
 
 
 def get_col(idx):
-    assert idx >= 0, idx
+    if idx < 0:
+        raise IndexError(Errors.E066.format(value=idx))
 
     def forward(X, drop=0.):
-        assert idx >= 0, idx
         if isinstance(X, numpy.ndarray):
             ops = NumpyOps()
         else:
@@ -329,7 +336,6 @@ def get_col(idx):
         output = ops.xp.ascontiguousarray(X[:, idx], dtype=X.dtype)
 
         def backward(y, sgd=None):
-            assert idx >= 0, idx
             dX = ops.allocate(X.shape)
             dX[:, idx] += y
             return dX
@@ -416,13 +422,13 @@ def build_tagger_model(nr_class, **cfg):
         token_vector_width = cfg['token_vector_width']
     else:
         token_vector_width = util.env_opt('token_vector_width', 128)
-    pretrained_dims = cfg.get('pretrained_dims', 0)
+    pretrained_vectors = cfg.get('pretrained_vectors')
     with Model.define_operators({'>>': chain, '+': add}):
         if 'tok2vec' in cfg:
             tok2vec = cfg['tok2vec']
         else:
             tok2vec = Tok2Vec(token_vector_width, embed_size,
-                              pretrained_dims=pretrained_dims)
+                              pretrained_vectors=pretrained_vectors)
         softmax = with_flatten(Softmax(nr_class, token_vector_width))
         model = (
             tok2vec

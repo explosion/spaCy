@@ -1,9 +1,74 @@
 from __future__ import unicode_literals
+import pytest
+
 from ...vocab import Vocab
 from ...pipeline import DependencyParser
 from ...tokens import Doc
 from ...gold import GoldParse
 from ...syntax.nonproj import projectivize
+from ...syntax.stateclass import StateClass
+from ...syntax.arc_eager import ArcEager
+
+
+def get_sequence_costs(M, words, heads, deps, transitions):
+    doc = Doc(Vocab(), words=words)
+    gold = GoldParse(doc, heads=heads, deps=deps)
+    state = StateClass(doc)
+    M.preprocess_gold(gold)
+    cost_history = []
+    for gold_action in transitions:
+        state_costs = {}
+        for i in range(M.n_moves):
+            name = M.class_name(i)
+            state_costs[name] = M.get_cost(state, gold, i)
+        M.transition(state, gold_action)
+        cost_history.append(state_costs)
+    return state, cost_history
+
+
+@pytest.fixture
+def vocab():
+    return Vocab()
+
+@pytest.fixture
+def arc_eager(vocab):
+    moves = ArcEager(vocab.strings, ArcEager.get_actions())
+    moves.add_action(2, 'left')
+    moves.add_action(3, 'right')
+    return moves
+
+@pytest.fixture
+def words():
+    return ['a', 'b']
+
+@pytest.fixture
+def doc(words, vocab):
+    if vocab is None:
+        vocab = Vocab()
+    return Doc(vocab, words=list(words))
+
+@pytest.fixture
+def gold(doc, words):
+    if len(words) == 2:
+        return GoldParse(doc, words=['a', 'b'], heads=[0, 0], deps=['ROOT', 'right'])
+    else:
+        raise NotImplementedError
+
+@pytest.mark.xfail
+def test_oracle_four_words(arc_eager, vocab):
+    words = ['a', 'b', 'c', 'd']
+    heads = [1, 1, 3, 3]
+    deps = ['left', 'ROOT', 'left', 'ROOT']
+    actions = ['L-left', 'B-ROOT', 'L-left']
+    state, cost_history = get_sequence_costs(arc_eager, words, heads, deps, actions)
+    assert state.is_final()
+    for i, state_costs in enumerate(cost_history):
+        # Check gold moves is 0 cost
+        assert state_costs[actions[i]] == 0.0, actions[i]
+        for other_action, cost in state_costs.items():
+            if other_action != actions[i]:
+                assert cost >= 1
+
 
 annot_tuples = [
     (0, 'When', 'WRB', 11, 'advmod', 'O'),

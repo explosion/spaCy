@@ -12,11 +12,11 @@ integration. It's commercial open-source software, released under the MIT licens
 
 💫 **Version 2.0 out now!** `Check out the new features here. <https://spacy.io/usage/v2>`_
 
-.. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
+.. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
 
-.. image:: https://img.shields.io/appveyor/ci/explosion/spaCy/master.svg?style=flat-square
+.. image:: https://img.shields.io/appveyor/ci/explosion/spaCy/master.svg?style=flat-square&logo=appveyor
     :target: https://ci.appveyor.com/project/explosion/spaCy
     :alt: Appveyor Build Status
 
@@ -28,11 +28,11 @@ integration. It's commercial open-source software, released under the MIT licens
     :target: https://pypi.python.org/pypi/spacy
     :alt: pypi Version
 
-.. image:: https://anaconda.org/conda-forge/spacy/badges/version.svg
+.. image:: https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square
     :target: https://anaconda.org/conda-forge/spacy
     :alt: conda Version
 
-.. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg?style=flat-square
+.. image:: https://img.shields.io/badge/chat-join%20%E2%86%92-09a3d5.svg?style=flat-square&logo=gitter-white
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
 
@@ -49,7 +49,7 @@ integration. It's commercial open-source software, released under the MIT licens
 `New in v2.0`_       New features, backwards incompatibilities and migration guide.
 `API Reference`_     The detailed reference for spaCy's API.
 `Models`_            Download statistical language models for spaCy.
-`Resources`_         Libraries, extensions, demos, books and courses.
+`Universe`_          Libraries, extensions, demos, books and courses.
 `Changelog`_         Changes and version history.
 `Contribute`_        How to contribute to the spaCy project and code base.
 ===================  ===
@@ -59,7 +59,7 @@ integration. It's commercial open-source software, released under the MIT licens
 .. _Usage Guides: https://spacy.io/usage/
 .. _API Reference: https://spacy.io/api/
 .. _Models: https://spacy.io/models
-.. _Resources: https://spacy.io/usage/resources
+.. _Universe: https://spacy.io/universe
 .. _Changelog: https://spacy.io/usage/#changelog
 .. _Contribute: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
@@ -308,18 +308,20 @@ VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 Run tests
 =========
 
-spaCy comes with an `extensive test suite <spacy/tests>`_. First, find out where
-spaCy is installed:
+spaCy comes with an `extensive test suite <spacy/tests>`_.  In order to run the
+tests, you'll usually want to clone the repository and build spaCy from source.
+This will also install the required development dependencies and test utilities
+defined in the ``requirements.txt``.
+
+Alternatively, you can find out where spaCy is installed and run ``pytest`` on
+that directory. Don't forget to also install the test utilities via spaCy's
+``requirements.txt``:
 
 .. code:: bash
 
     python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
-
-Then run ``pytest`` on that directory. The flags ``--vectors``, ``--slow``
-and ``--model`` are optional and enable additional tests:
-
-.. code:: bash
-
-    # make sure you are using recent pytest version
-    python -m pip install -U pytest
+    pip install -r path/to/requirements.txt
     python -m pytest <spacy-directory>
+
+See `the documentation <https://spacy.io/usage/#tests>`_ for more details and
+examples.

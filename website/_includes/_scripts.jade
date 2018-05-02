@@ -1,86 +1,33 @@
 //- 💫 INCLUDES > SCRIPTS
 
-if quickstart
-    script(src="/assets/js/vendor/quickstart.min.js")
+if IS_PAGE || SECTION == "index"
+    script(type="text/x-thebe-config")
+        | { bootstrap: true, binderOptions: { repo: "#{KERNEL_BINDER}"},
+        |  kernelOptions: { name: "#{KERNEL_PYTHON}" }}
 
-if IS_PAGE
-    script(src="/assets/js/vendor/in-view.min.js")
+- scripts = ["vendor/prism.min", "vendor/vue.min"]
+- if (SECTION == "universe") scripts.push("vendor/vue-markdown.min")
+- if (quickstart) scripts.push("vendor/quickstart.min")
+- if (IS_PAGE) scripts.push("vendor/in-view.min")
+- if (IS_PAGE || SECTION == "index") scripts.push("vendor/thebelab.custom.min")
+
+for script in scripts
+    script(src="/assets/js/" + script + ".js")
+script(src="/assets/js/main.js?v#{V_JS}" type=(environment == "deploy") ? null : "module")
 
 if environment == "deploy"
-    script(async src="https://www.google-analytics.com/analytics.js")
-
-script(src="/assets/js/vendor/prism.min.js")
-
-if compare_models
-    script(src="/assets/js/vendor/chart.min.js")
-
-script
-    if quickstart
-        | new Quickstart("#qs");
-
-    if environment == "deploy"
+    script(src="https://www.google-analytics.com/analytics.js", async)
+    script
         | window.ga=window.ga||function(){
         | (ga.q=ga.q||[]).push(arguments)}; ga.l=+new Date;
         | ga('create', '#{ANALYTICS}', 'auto'); ga('send', 'pageview');
 
-    if IS_PAGE
+if IS_PAGE
+    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
+    script
         | ((window.gitter = {}).chat = {}).options = {
         |     useStyles: false,
         |     activationElement: '.js-gitter-button',
         |     targetElement: '.js-gitter',
         |     room: '!{SOCIAL.gitter}'
         | };
-
-if IS_PAGE
-    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
-
-
-//- JS modules – slightly hacky, but necessary to dynamically instantiate the
-    classes with data from the Harp JSON files, while still being able to
-    support older browsers that can't handle JS modules. More details:
-    https://medium.com/dev-channel/es6-modules-in-chrome-canary-m60-ba588dfb8ab7
-
-- ProgressBar = "new ProgressBar('.js-progress');"
-- Accordion = "new Accordion('.js-accordion');"
-- Changelog = "new Changelog('" + SOCIAL.github + "', 'spacy');"
-- NavHighlighter = "new NavHighlighter('data-section', 'data-nav');"
-- GitHubEmbed = "new GitHubEmbed('" + SOCIAL.github + "', 'data-gh-embed');"
-- ModelLoader = "new ModelLoader('" + MODELS_REPO + "'," + JSON.stringify(CURRENT_MODELS) + "," + JSON.stringify(MODEL_LICENSES) + "," + JSON.stringify(MODEL_BENCHMARKS) + ");"
-- ModelComparer = "new ModelComparer('" + MODELS_REPO + "'," + JSON.stringify(MODEL_LICENSES) + "," + JSON.stringify(MODEL_BENCHMARKS) + "," + JSON.stringify(LANGUAGES) + "," + JSON.stringify(MODEL_META) + "," + JSON.stringify(default_models || false) + ");"
-
-if environment == "deploy"
-    //- DEPLOY: use compiled rollup.js and instantiate classes directly
-    script(src="/assets/js/rollup.js?v#{V_JS}")
-    script
-        !=ProgressBar
-        if changelog
-            !=Changelog
-        if IS_PAGE
-            !=NavHighlighter
-            !=GitHubEmbed
-            !=Accordion
-        if HAS_MODELS
-            !=ModelLoader
-        if compare_models
-            !=ModelComparer
-else
-    //- DEVELOPMENT: Use ES6 modules
-    script(type="module")
-        | import ProgressBar from '/assets/js/progress.js';
-        !=ProgressBar
-        if changelog
-            | import Changelog from '/assets/js/changelog.js';
-            !=Changelog
-        if IS_PAGE
-            | import NavHighlighter from '/assets/js/nav-highlighter.js';
-            !=NavHighlighter
-            | import GitHubEmbed from '/assets/js/github-embed.js';
-            !=GitHubEmbed
-            | import Accordion from '/assets/js/accordion.js';
-            !=Accordion
-        if HAS_MODELS
-            | import { ModelLoader } from '/assets/js/models.js';
-            !=ModelLoader
-        if compare_models
-            | import { ModelComparer } from '/assets/js/models.js';
-            !=ModelComparer

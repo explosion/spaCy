@@ -10,6 +10,7 @@ from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
 from ..gold cimport GoldParseC, GoldParse
+from ..errors import Errors
 
 
 cdef enum:
@@ -81,9 +82,7 @@ cdef class BiluoPushDown(TransitionSystem):
             for (ids, words, tags, heads, labels, biluo), _ in sents:
                 for i, ner_tag in enumerate(biluo):
                     if ner_tag != 'O' and ner_tag != '-':
-                        if ner_tag.count('-') != 1:
-                            raise ValueError(ner_tag)
-                        _, label = ner_tag.split('-')
+                        _, label = ner_tag.split('-', 1)
                         for action in (BEGIN, IN, LAST, UNIT):
                             actions[action][label] += 1
         return actions
@@ -170,7 +169,7 @@ cdef class BiluoPushDown(TransitionSystem):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
         else:
-            raise KeyError(name)
+            raise KeyError(Errors.E022.format(name=name))
 
     cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -205,7 +204,7 @@ cdef class BiluoPushDown(TransitionSystem):
             t.do = Out.transition
             t.get_cost = Out.cost
         else:
-            raise Exception(move)
+            raise ValueError(Errors.E019.format(action=move, src='ner'))
         return t
 
     def add_action(self, int action, label_name, freq=None):
@@ -227,7 +226,6 @@ cdef class BiluoPushDown(TransitionSystem):
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
-        assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
         if self.labels.get(action, []):
             freq = min(0, min(self.labels[action].values()))

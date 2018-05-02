@@ -60,6 +60,13 @@
         padding-bottom: 4rem
         border-bottom: 1px dotted $color-subtle
 
+    &.o-section--small
+        overflow: auto
+
+        &:not(:last-child)
+            margin-bottom: 3.5rem
+            padding-bottom: 2rem
+
 .o-block
     margin-bottom: 4rem
 
@@ -141,6 +148,14 @@
 
 .o-badge
     border-radius: 1em
+
+.o-thumb
+    @include size(100px)
+    overflow: hidden
+    border-radius: 50%
+
+    &.o-thumb--small
+        @include size(35px)
 
 
 //- SVG

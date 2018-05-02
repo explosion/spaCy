@@ -52,20 +52,23 @@ p
     |  Here's how to add a special case rule to an existing
     |  #[+api("tokenizer") #[code Tokenizer]] instance:
 
-+code.
++code-exec.
     import spacy
     from spacy.symbols import ORTH, LEMMA, POS, TAG
 
-    nlp = spacy.load('en')
-    doc = nlp(u'gimme that') # phrase to tokenize
-    assert [w.text for w in doc] == [u'gimme', u'that'] # current tokenization
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u'gimme that')  # phrase to tokenize
+    print([w.text for w in doc])  # ['gimme', 'that']
 
     # add special case rule
     special_case = [{ORTH: u'gim', LEMMA: u'give', POS: u'VERB'}, {ORTH: u'me'}]
     nlp.tokenizer.add_special_case(u'gimme', special_case)
-    assert [w.text for w in nlp(u'gimme that')] == [u'gim', u'me', u'that']
+
+    # check new tokenization
+    print([w.text for w in nlp(u'gimme that')])  # ['gim', 'me', 'that']
+
     # Pronoun lemma is returned as -PRON-!
-    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'-PRON-', u'that']
+    print([w.lemma_ for w in nlp(u'gimme that')])  # ['give', '-PRON-', 'that']
 
 p
     |  For details on spaCy's custom pronoun lemma #[code -PRON-],
@@ -197,8 +200,9 @@ p
     |  expression object, and pass its #[code .search()] and
     |  #[code .finditer()] methods:
 
-+code.
-    import regex as re
++code-exec.
+    import re
+    import spacy
     from spacy.tokenizer import Tokenizer
 
     prefix_re = re.compile(r'''^[\[\(&quot;&apos;]''')
@@ -212,8 +216,10 @@ p
                                     infix_finditer=infix_re.finditer,
                                     token_match=simple_url_re.match)
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     nlp.tokenizer = custom_tokenizer(nlp)
+    doc = nlp(u"hello-world.")
+    print([t.text for t in doc])
 
 p
     |  If you need to subclass the tokenizer instead, the relevant methods to
@@ -287,7 +293,8 @@ p
     |  vocabulary object. Let's say we have the following class as
     |  our tokenizer:
 
-+code.
++code-exec.
+    import spacy
     from spacy.tokens import Doc
 
     class WhitespaceTokenizer(object):
@@ -300,16 +307,17 @@ p
             spaces = [True] * len(words)
             return Doc(self.vocab, words=words, spaces=spaces)
 
+    nlp = spacy.load('en_core_web_sm')
+    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
+    doc = nlp(u"What's happened to me? he thought. It wasn't a dream.")
+    print([t.text for t in doc])
+
 p
     |  As you can see, we need a #[code Vocab] instance to construct this — but
     |  we won't have it until we get back the loaded #[code nlp] object. The
     |  simplest solution is to build the tokenizer in two steps. This also means
     |  that you can reuse the "tokenizer factory" and initialise it with
     |  different instances of #[code Vocab].
-
-+code.
-    nlp = spacy.load('en')
-    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
 +h(3, "own-annotations") Bringing your own annotations
 
@@ -322,8 +330,15 @@ p
     |  specify a list of boolean values, indicating whether each word has a
     |  subsequent space.
 
-+code.
-    doc = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'], spaces=[False, True, False, False])
++code-exec.
+    import spacy
+    from spacy.tokens import Doc
+    from spacy.lang.en import English
+
+    nlp = English()
+    doc = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'],
+              spaces=[False, True, False, False])
+    print([(t.text, t.text_with_ws, t.whitespace_) for t in doc])
 
 p
     |  If provided, the spaces list must be the same length as the words list.
@@ -332,11 +347,18 @@ p
     |  attributes. If you don't provide a #[code spaces] sequence, spaCy will
     |  assume that all words are whitespace delimited.
 
-+code.
-    good_spaces = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'], spaces=[False, True, False, False])
++code-exec.
+    import spacy
+    from spacy.tokens import Doc
+    from spacy.lang.en import English
+
+    nlp = English()
     bad_spaces = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'])
-    assert bad_spaces.text == u'Hello , world !'
-    assert good_spaces.text == u'Hello, world!'
+    good_spaces = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'],
+                      spaces=[False, True, False, False])
+
+    print(bad_spaces.text)   # 'Hello , world !'
+    print(good_spaces.text)  # 'Hello, world!'
 
 p
     |  Once you have a #[+api("doc") #[code Doc]] object, you can write to its

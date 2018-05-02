@@ -7,7 +7,7 @@ include _functions
     id - [string] anchor assigned to section (used for breadcrumb navigation)
 
 mixin section(id)
-    section.o-section(id="section-" + id data-section=id)
+    section.o-section(id=id ? "section-" + id : null data-section=id)&attributes(attributes)
         block
 
 
@@ -143,7 +143,7 @@ mixin aside-wrapper(label, emoji)
 
 mixin aside(label, emoji)
     +aside-wrapper(label, emoji)
-        .c-aside__text.u-text-small
+        .c-aside__text.u-text-small&attributes(attributes)
             block
 
 
@@ -154,7 +154,7 @@ mixin aside(label, emoji)
     prompt   - [string] prompt displayed before first line, e.g. "$"
 
 mixin aside-code(label, language, prompt)
-    +aside-wrapper(label)
+    +aside-wrapper(label)&attributes(attributes)
         +code(false, language, prompt).o-no-block
             block
 
@@ -165,7 +165,7 @@ mixin aside-code(label, language, prompt)
             argument to be able to wrap it for spacing
 
 mixin infobox(label, emoji)
-    aside.o-box.o-block.u-text-small
+    aside.o-box.o-block.u-text-small&attributes(attributes)
         if label
             h3.u-heading.u-text-label.u-color-theme
                 if emoji
@@ -242,7 +242,9 @@ mixin button(url, trusted, ...style)
     wrap     - [boolean] wrap text and disable horizontal scrolling
 
 mixin code(label, language, prompt, height, icon, wrap)
-    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
+    - var lang = (language != "none") ? (language || DEFAULT_SYNTAX) : null
+    - var lang_class = (language != "none") ? "lang-" + (language || DEFAULT_SYNTAX) : null
+    pre.c-code-block.o-block(data-language=lang class=lang_class class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
         if icon
@@ -253,6 +255,15 @@ mixin code(label, language, prompt, height, icon, wrap)
         code.c-code-block__content(class=wrap ? "u-wrap" : null data-prompt=prompt)
             block
 
+//- Executable code
+
+mixin code-exec(label, large)
+    - label = (label || "Editable code example") + " (experimental)"
+    +terminal-wrapper(label, !large)
+        figure.thebelab-wrapper
+            span.thebelab-wrapper__text.u-text-tiny v#{BINDER_VERSION} &middot; Python 3 &middot; via #[+a("https://mybinder.org/").u-hide-link Binder]
+            +code(data-executable="true")&attributes(attributes)
+                block
 
 //- Wrapper for code blocks to display old/new versions
 
@@ -658,12 +669,16 @@ mixin qs(data, style)
 //- Terminal-style code window
     label - [string] title displayed in top bar of terminal window
 
-mixin terminal(label, button_text, button_url)
-    .x-terminal
-        .x-terminal__icons: span
-        .u-padding-small.u-text-label.u-text-center=label
+mixin terminal-wrapper(label, small)
+    .x-terminal(class=small ? "x-terminal--small" : null)
+        .x-terminal__icons(class=small ? "x-terminal__icons--small" : null): span
+        .u-padding-small.u-text-center(class=small ? "u-text-tiny" : "u-text")
+            strong=label
+        block
 
-        +code.x-terminal__code
+mixin terminal(label, button_text, button_url, exec)
+    +terminal-wrapper(label)
+        +code.x-terminal__code(data-executable=exec ? "" : null)
             block
 
         if button_text && button_url
