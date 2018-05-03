@@ -447,7 +447,7 @@ cdef class GoldParse:
         for i, gold_i in enumerate(self.cand_to_gold):
             if doc[i].text.isspace():
                 self.words[i] = doc[i].text
-                self.tags[i] = 'SP'
+                self.tags[i] = '_SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
