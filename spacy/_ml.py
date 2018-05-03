@@ -195,14 +195,15 @@ class PrecomputableAffine(Model):
                     size=tokvecs.size).reshape(tokvecs.shape)
 
         def predict(ids, tokvecs):
-            # nS ids. nW tokvecs
-            hiddens = model(tokvecs) # (nW, f, o, p)
+            # nS ids. nW tokvecs. Exclude the padding array.
+            hiddens = model(tokvecs[:-1]) # (nW, f, o, p)
+            vectors = model.ops.allocate((ids.shape[0], model.nO * model.nP), dtype='f')
             # need nS vectors
-            vectors = model.ops.allocate((ids.shape[0], model.nO, model.nP))
-            for i, feats in enumerate(ids):
-                for j, id_ in enumerate(feats):
-                    vectors[i] += hiddens[id_, j]
+            hiddens = hiddens.reshape((hiddens.shape[0] * model.nF, model.nO * model.nP))
+            model.ops.scatter_add(vectors, ids.flatten(), hiddens)
+            vectors = vectors.reshape((vectors.shape[0], model.nO, model.nP))
             vectors += model.b
+            vectors = model.ops.asarray(vectors)
             if model.nP >= 2:
                 return model.ops.maxout(vectors)[0]
             else:
