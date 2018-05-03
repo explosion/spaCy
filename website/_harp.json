@@ -12,8 +12,6 @@
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://explosion.ai/demos",
         "MODELS_REPO": "explosion/spacy-models",
-        "KERNEL_BINDER": "ines/spacy-binder",
-        "KERNEL_PYTHON": "python3",
 
         "SPACY_VERSION": "2.0",
         "BINDER_VERSION": "2.0.11",
@@ -87,7 +85,7 @@
         ],
 
         "V_CSS": "2.1.3",
-        "V_JS": "2.1.1",
+        "V_JS": "2.1.2",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {
