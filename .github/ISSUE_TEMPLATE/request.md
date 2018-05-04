@@ -1,5 +1,5 @@
 ---
-name: "\U0001F381 Feature request"
+name: "\U0001F381 Feature Request"
 about: Do you have an idea for an improvement, a new feature or a plugin?
 
 ---
