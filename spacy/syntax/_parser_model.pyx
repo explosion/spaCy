@@ -100,14 +100,14 @@ cdef void predict_states(ActivationsC* A, StateC** states,
     memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
     memset(A.hiddens, 0, n.states * n.hiddens * sizeof(float))
     for i in range(n.states):
-        state = states[i]
-        state.set_context_tokens(A.token_ids, n.feats)
-        sum_state_features(A.unmaxed,
-            W.feat_weights, A.token_ids, 1, n.feats, n.hiddens * n.pieces)
-        VecVec.add_i(A.unmaxed,
+        states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
+    sum_state_features(A.unmaxed,
+        W.feat_weights, A.token_ids, n.states, n.feats, n.hiddens * n.pieces)
+    for i in range(n.states):
+        VecVec.add_i(&A.unmaxed[i*n.hiddens*n.pieces],
             W.feat_bias, 1., n.hiddens * n.pieces)
         for j in range(n.hiddens):
-            index = j * n.pieces
+            index = i * n.hiddens * n.pieces + j * n.pieces
             which = Vec.arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     memset(A.scores, 0, n.states * n.classes * sizeof(float))
