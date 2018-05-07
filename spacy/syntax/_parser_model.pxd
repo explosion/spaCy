@@ -15,11 +15,11 @@ cdef struct SizesC:
 
 
 cdef struct WeightsC:
-    float* feat_weights
-    float* feat_bias
-    float* hidden_bias
-    float* hidden_weights
-    float* vectors
+    const float* feat_weights
+    const float* feat_bias
+    const float* hidden_bias
+    const float* hidden_weights
+    const float* vectors
 
 
 cdef struct ActivationsC:
@@ -33,7 +33,9 @@ cdef struct ActivationsC:
     int _max_size
 
 
-cdef WeightsC get_c_weights(model)
+cdef WeightsC get_c_weights(model) except *
+
+cdef SizesC get_c_sizes(model, int batch_size) except *
 
 cdef void resize_activations(ActivationsC* A, SizesC n) nogil
 

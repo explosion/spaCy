@@ -31,7 +31,7 @@ from thinc cimport openblas
 
 from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ._parser_model cimport get_c_weights
+from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
@@ -43,7 +43,7 @@ from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
-from . import _beam_utils, nonproj
+from . import nonproj
 
 
 cdef class Parser:
@@ -182,8 +182,9 @@ cdef class Parser:
             beam_width = self.cfg.get('beam_width', 1)
         if beam_density is None:
             beam_density = self.cfg.get('beam_density', 0.0)
-        states, tokvecs = self.predict([doc])
-        self.set_annotations([doc], states, tensors=tokvecs)
+        states = self.predict([doc])
+        #beam_width=beam_width, beam_density=beam_density)
+        self.set_annotations([doc], states, tensors=None)
         return doc
 
     def pipe(self, docs, int batch_size=256, int n_threads=2,
@@ -217,13 +218,14 @@ cdef class Parser:
         if isinstance(docs, Doc):
             docs = [docs]
 
-        cdef SizesC sizes
         cdef vector[StateC*] states
         cdef StateClass state
         state_objs = self.moves.init_batch(docs)
         for state in state_objs:
             states.push_back(state.c)
-        cdef WeightsC weights = get_c_weights(self.model)
+        model = self.model(docs)
+        cdef WeightsC weights = get_c_weights(model)
+        cdef SizesC sizes = get_c_sizes(self.model, len(state_objs))
         with nogil:
             self._parseC(&states[0],
                 weights, sizes)
@@ -234,6 +236,7 @@ cdef class Parser:
         cdef int i, j
         cdef vector[StateC*] unfinished
         cdef ActivationsC activations
+        memset(&activations, 0, sizeof(activations))
         while sizes.states >= 1:
             predict_states(&activations,
                 states, &weights, sizes)
@@ -248,7 +251,7 @@ cdef class Parser:
             sizes.states = unfinished.size()
             unfinished.clear()
      
-    def set_annotations(self, docs, states):
+    def set_annotations(self, docs, states, tensors=None):
         cdef StateClass state
         cdef Doc doc
         for i, (state, doc) in enumerate(zip(states, docs)):

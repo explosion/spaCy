@@ -37,29 +37,56 @@ from ..errors import Errors, TempErrors
 from .. import util
 from .stateclass cimport StateClass
 from .transition_system cimport Transition
-from . import _beam_utils, nonproj
+from . import nonproj
 
 
-cdef WeightsC get_c_weights(model):
+cdef WeightsC get_c_weights(model) except *:
     cdef WeightsC output
+    cdef precompute_hiddens state2vec = model.state2vec
+    output.feat_weights = state2vec.get_feat_weights()
+    output.feat_bias = <const float*>state2vec.bias.data
+    cdef np.ndarray vec2scores_W = model.vec2scores.W
+    cdef np.ndarray vec2scores_b = model.vec2scores.b
+    output.hidden_weights = <const float*>vec2scores_W.data
+    output.hidden_bias = <const float*>vec2scores_b.data
+    cdef np.ndarray tokvecs = model.tokvecs
+    output.vectors = <float*>tokvecs.data
     return output
 
+
+cdef SizesC get_c_sizes(model, int batch_size) except *:
+    cdef SizesC output
+    output.states = batch_size
+    output.classes = model.nO
+    output.hiddens = model.nH
+    output.pieces = model.nP
+    output.feats = model.nF
+    output.embed_width = model.nI
+    return output
+
+
 cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
-    if n.states < A._max_size:
+    if n.states <= A._max_size:
         A._curr_size = n.states
         return
     if A._max_size == 0:
         A.token_ids = <int*>calloc(n.states * n.feats, sizeof(A.token_ids[0]))
         A.vectors = <float*>calloc(n.states * n.hiddens, sizeof(A.hiddens[0]))
         A.scores = <float*>calloc(n.states * n.classes, sizeof(A.scores[0]))
-        A.unmaxed = <float*>calloc(n.states * n.hiddens, sizeof(A.unmaxed[0]))
+        A.unmaxed = <float*>calloc(n.states * n.hiddens * n.feats, sizeof(A.unmaxed[0]))
         A.is_valid = <int*>calloc(n.states * n.classes, sizeof(A.is_valid[0]))
+        A._max_size = n.states
     else:
-        A.token_ids = <int*>realloc(A.token_ids, n.states * n.feats * sizeof(A.token_ids[0]))
-        A.vectors = <float*>realloc(A.token_ids, n.states * n.embed_width * sizeof(A.vectors[0]))
-        A.scores = <float*>realloc(A.scores,     n.states * n.classes * sizeof(A.scores[0]))
-        A.unmaxed = <float*>realloc(A.unmaxed,   n.states * n.hiddens * sizeof(A.unmaxed[0]))
-        A.is_valid = <int*>realloc(A.is_valid,   n.states * n.classes * sizeof(A.is_valid[0]))
+        A.token_ids = <int*>realloc(A.token_ids,
+            n.states * n.feats * sizeof(A.token_ids[0]))
+        A.vectors = <float*>realloc(A.vectors,
+            n.states * n.embed_width * sizeof(A.vectors[0]))
+        A.scores = <float*>realloc(A.scores,
+            n.states * n.classes * sizeof(A.scores[0]))
+        A.unmaxed = <float*>realloc(A.unmaxed,
+            n.states * n.hiddens * n.feats * sizeof(A.unmaxed[0]))
+        A.is_valid = <int*>realloc(A.is_valid,
+            n.states * n.classes * sizeof(A.is_valid[0]))
         A._max_size = n.states
     A._curr_size = n.states
 
@@ -165,8 +192,28 @@ class ParserModel(Model):
         Model.__init__(self)
         self._layers = [tok2vec, lower_model, upper_model]
 
+    @property
+    def nO(self):
+        return self._layers[-1].nO
+    
+    @property
+    def nI(self):
+        return self._layers[1].nI
+
+    @property
+    def nH(self):
+        return self._layers[1].nO
+    
+    @property
+    def nF(self):
+        return self._layers[1].nF
+
+    @property
+    def nP(self):
+        return self._layers[1].nP
+
     def begin_update(self, docs, drop=0.):
-        step_model = ParserStepModel(docs, self.layers, drop=drop)
+        step_model = ParserStepModel(docs, self._layers, drop=drop)
         def finish_parser_update(golds, sgd=None):
             step_model.make_updates(sgd)
             return None
@@ -202,7 +249,7 @@ class ParserStepModel(Model):
 
         def backprop_parser_step(d_scores, sgd=None):
             d_vector = bp_dropout(get_d_vector(d_scores, sgd=sgd))
-            if isinstance(self.model[0].ops, CupyOps) \
+            if isinstance(self.ops, CupyOps) \
             and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
                 # Move token_ids and d_vector to GPU, asynchronously
                 self.backprops.append((
@@ -217,7 +264,7 @@ class ParserStepModel(Model):
 
     def get_token_ids(self, states):
         cdef StateClass state
-        cdef int n_tokens = self.nr_feature
+        cdef int n_tokens = self.state2vec.nF
         cdef np.ndarray ids = numpy.zeros((len(states), n_tokens),
                                           dtype='i', order='C')
         c_ids = <int*>ids.data
@@ -263,7 +310,7 @@ cdef class precompute_hiddens:
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
     """
-    cdef int nF, nO, nP
+    cdef readonly int nF, nO, nP
     cdef bint _is_synchronized
     cdef public object ops
     cdef np.ndarray _features
