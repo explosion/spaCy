@@ -545,9 +545,20 @@ cdef class GoldParse:
         """
         return not nonproj.is_nonproj_tree(self.heads)
 
-    @property
-    def sent_starts(self):
-        return [self.c.sent_start[i] for i in range(self.length)]
+    property sent_starts:
+        def __get__(self):
+            return [self.c.sent_start[i] for i in range(self.length)]
+
+        def __set__(self, sent_starts):
+            for gold_i, is_sent_start in enumerate(sent_starts):
+                i = self.gold_to_cand[gold_i]
+                if i is not None:
+                    if is_sent_start in (1, True):
+                        self.c.sent_start[i] = 1
+                    elif is_sent_start in (-1, False):
+                        self.c.sent_start[i] = -1
+                    else:
+                        self.c.sent_start[i] = 0
 
 
 def biluo_tags_from_offsets(doc, entities, missing='O'):
