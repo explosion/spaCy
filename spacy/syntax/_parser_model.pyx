@@ -37,6 +37,7 @@ from ..errors import Errors, TempErrors
 from .. import util
 from .stateclass cimport StateClass
 from .transition_system cimport Transition
+from . import _beam_utils
 from . import nonproj
 
 
@@ -196,26 +197,6 @@ class ParserModel(Model):
         Model.__init__(self)
         self._layers = [tok2vec, lower_model, upper_model]
 
-    @property
-    def nO(self):
-        return self._layers[-1].nO
-    
-    @property
-    def nI(self):
-        return self._layers[1].nI
-
-    @property
-    def nH(self):
-        return self._layers[1].nO
-    
-    @property
-    def nF(self):
-        return self._layers[1].nF
-
-    @property
-    def nP(self):
-        return self._layers[1].nP
-
     def begin_update(self, docs, drop=0.):
         step_model = ParserStepModel(docs, self._layers, drop=drop)
         def finish_parser_update(golds, sgd=None):
@@ -223,6 +204,15 @@ class ParserModel(Model):
             return None
         return step_model, finish_parser_update
 
+    def resize_output(self, new_output):
+        # Weights are stored in (nr_out, nr_in) format, so we're basically
+        # just adding rows here.
+        smaller = self._layers[-1]._layers[-1]
+        larger = Affine(self.moves.n_moves, smaller.nI)
+        copy_array(larger.W[:smaller.nO], smaller.W)
+        copy_array(larger.b[:smaller.nO], smaller.b)
+        self._layers[-1]._layers[-1] = larger
+   
     @property
     def tok2vec(self):
         return self._layers[0]
@@ -274,15 +264,15 @@ class ParserStepModel(Model):
             return None
         return scores, backprop_parser_step
 
-    def get_token_ids(self, states):
-        cdef StateClass state
-        cdef int n_tokens = self.state2vec.nF
-        cdef np.ndarray ids = numpy.zeros((len(states), n_tokens),
+    def get_token_ids(self, batch):
+        states = _beam_utils.collect_states(batch)
+        cdef np.ndarray ids = numpy.zeros((len(states), self.state2vec.nF),
                                           dtype='i', order='C')
         c_ids = <int*>ids.data
-        for i, state in enumerate(states):
-            if not state.is_final():
-                state.c.set_context_tokens(c_ids, n_tokens)
+        cdef StateClass state
+        for state in states:
+            if not state.c.is_final():
+                state.c.set_context_tokens(c_ids, ids.shape[1])
             c_ids += ids.shape[1]
         return ids
 
