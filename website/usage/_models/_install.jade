@@ -19,15 +19,15 @@ include _install-basics
 +h(3, "download-pip") Installation via pip
 
 p
-    | To download a model directly using #[+a("https://pypi.python.org/pypi/pip") pip],
-    |  simply point #[code pip install] to the URL or local path of the archive
+    |  To download a model directly using #[+a("https://pypi.python.org/pypi/pip") pip],
+    |  point #[code pip install] to the URL or local path of the archive
     |  file. To find the direct link to a model, head over to the
     |  #[+a(gh("spacy-models") + "/releases") model releases], right click on the archive
     |  link and copy it to your clipboard.
 
 +code(false, "bash").
     # with external URL
-    pip install #{gh("spacy-models")}/releases/download/en_core_web_md-1.2.0/en_core_web_md-1.2.0.tar.gz
+    pip install #{gh("spacy-models")}/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz
 
     # with local file
     pip install /Users/you/en_core_web_md-1.2.0.tar.gz
@@ -69,7 +69,7 @@ p
 
 p
     |  You can place the #[strong model package directory] anywhere on your
-    |  local file system. To use it with spaCy, simply assign it a name by
+    |  local file system. To use it with spaCy, assign it a name by
     |  creating a #[+a("#usage") shortcut link] for the data directory.
 
 +h(3, "usage") Using models with spaCy
