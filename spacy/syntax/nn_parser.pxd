@@ -6,6 +6,7 @@ from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc
 from ..structs cimport TokenC
 from ._state cimport StateC
+from ._parser_model cimport WeightsC, ActivationsC, SizesC
 
 
 cdef class Parser:
@@ -14,8 +15,10 @@ cdef class Parser:
     cdef readonly TransitionSystem moves
     cdef readonly object cfg
     cdef public object _multitasks
-
-    cdef void _parseC(self, StateC** states, int nr_task, 
-            const float* feat_weights, const float* bias,
-            const float* hW, const float* hb,
-            int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil
+    
+    cdef void _parseC(self, StateC** states,
+            WeightsC weights, SizesC sizes) nogil
+ 
+    cdef void c_transition_batch(self, StateC** states, const float* scores,
+            int nr_class, int batch_size) nogil
+ 
