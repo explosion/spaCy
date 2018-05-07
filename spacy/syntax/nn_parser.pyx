@@ -218,9 +218,10 @@ cdef class Parser:
         if beam_width == 1:
             batch = self.moves.init_batch(docs)
             weights = get_c_weights(model)
-            sizes = get_c_sizes(model, states.size())
             for state in batch:
-                states.push_back(state.c)
+                if not state.is_final():
+                    states.push_back(state.c)
+            sizes = get_c_sizes(model, states.size())
             with nogil:
                 self._parseC(&states[0],
                     weights, sizes)
