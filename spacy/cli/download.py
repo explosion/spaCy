@@ -18,38 +18,38 @@ from .. import about
     model=("model to download, shortcut or name)", "positional", None, str),
     direct=("force direct download. Needs model name with version and won't "
             "perform compatibility check", "flag", "d", bool),
-    unsecure=("unsecure mode - disables the verification of certificates", 
-        "flag", "u", bool),
-    caFile=("specify a certificate authority file to use for certificates "
-        "validation. Ignored if --unsecure is used", "option", "c"))
-def download(model, direct=False, unsecure=False, caFile=None):
+    insecure=("insecure mode - disables the verification of certificates",
+              "flag", "i", bool),
+    ca_file=("specify a certificate authority file to use for certificates "
+             "validation. Ignored if --insecure is used", "option", "c"))
+def download(model, direct=False, insecure=False, ca_file=None):
     """
     Download compatible model from default download path using pip. Model
     can be shortcut, model name or, if --direct flag is set, full model name
     with version.
-    The --unsecure optional flag can be used to disable ssl verification
-    The --caFile option can be used to provide a local CA file
+    The --insecure optional flag can be used to disable ssl verification
+    The --ca-file option can be used to provide a local CA file
     used for certificate verification.
     """
 
-    # sslVerify is the argument handled to the 'verify' parameter
-    # of requests package. It must be either None, a boolean, 
-    # or a String containing the path to CA file
-    sslVerify = None
-    if unsecure:
-        caFile    = None
-        sslVerify = False
+    # ssl_verify is the argument handled to the 'verify' parameter
+    # of requests package. It must be either None, a boolean,
+    # or a string containing the path to CA file
+    ssl_verify = None
+    if insecure:
+        ca_file = None
+        ssl_verify = False
     else:
-        if caFile != None:
-            sslVerify = caFile
+        if ca_file is not None:
+            ssl_verify = ca_file
 
     # Download the model
     if direct:
         dl = download_model('{m}/{m}.tar.gz'.format(m=model))
     else:
-        shortcuts = get_json(about.__shortcuts__, "available shortcuts", sslVerify)
+        shortcuts = get_json(about.__shortcuts__, "available shortcuts", ssl_verify)
         model_name = shortcuts.get(model, model)
-        compatibility = get_compatibility(sslVerify)
+        compatibility = get_compatibility(ssl_verify)
         version = get_version(model_name, compatibility)
         dl = download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name,
                                                             v=version))
@@ -61,8 +61,7 @@ def download(model, direct=False, unsecure=False, caFile=None):
             # package, which fails if model was just installed via
             # subprocess
             package_path = get_package_path(model_name)
-            link(model_name, model, force=True,
-                    model_path=package_path)
+            link(model_name, model, force=True, model_path=package_path)
         except:
             # Dirty, but since spacy.download and the auto-linking is
             # mostly a convenience wrapper, it's best to show a success
@@ -70,19 +69,19 @@ def download(model, direct=False, unsecure=False, caFile=None):
             prints(Messages.M001.format(name=model_name), title=Messages.M002)
 
 
-def get_json(url, desc, sslVerify):
+def get_json(url, desc, ssl_verify):
     try:
-        data = url_read(url, verify=sslVerify)
+        data = url_read(url, verify=ssl_verify)
     except HTTPError as e:
         prints(Messages.M004.format(desc, about.__version__),
                title=Messages.M003.format(e.code, e.reason), exits=1)
     return ujson.loads(data)
 
 
-def get_compatibility(sslVerify):
+def get_compatibility(ssl_verify):
     version = about.__version__
     version = version.rsplit('.dev', 1)[0]
-    comp_table = get_json(about.__compatibility__, "compatibility table", sslVerify)
+    comp_table = get_json(about.__compatibility__, "compatibility table", ssl_verify)
     comp = comp_table['spacy']
     if version not in comp:
         prints(Messages.M006.format(version=version), title=Messages.M005,
