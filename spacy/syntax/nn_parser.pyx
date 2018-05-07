@@ -183,7 +183,6 @@ cdef class Parser:
         if beam_density is None:
             beam_density = self.cfg.get('beam_density', 0.0)
         states = self.predict([doc])
-        #beam_width=beam_width, beam_density=beam_density)
         self.set_annotations([doc], states, tensors=None)
         return doc
 
@@ -214,7 +213,7 @@ cdef class Parser:
             for doc in batch_in_order:
                 yield doc
 
-    def predict(self, docs):
+    def predict(self, docs, beam_width=1, beam_density=0.):
         if isinstance(docs, Doc):
             docs = [docs]
 
@@ -223,9 +222,10 @@ cdef class Parser:
         state_objs = self.moves.init_batch(docs)
         for state in state_objs:
             states.push_back(state.c)
+        # Prepare the stepwise model, and get the callback for finishing the batch
         model = self.model(docs)
-        cdef WeightsC weights = get_c_weights(model)
-        cdef SizesC sizes = get_c_sizes(self.model, len(state_objs))
+        weights = get_c_weights(model)
+        sizes = get_c_sizes(model, states.size())
         with nogil:
             self._parseC(&states[0],
                 weights, sizes)
@@ -305,7 +305,7 @@ cdef class Parser:
             states, golds = zip(*states_golds)
             scores, backprop = model.begin_update(states, drop=drop)
             d_scores = self.get_batch_loss(states, golds, scores, losses)
-            backprop(d_scores)
+            backprop(d_scores, sgd=sgd)
             # Follow the predicted action
             self.transition_batch(states, scores)
             states_golds = [eg for eg in states_golds if not eg[0].is_final()]
@@ -369,7 +369,7 @@ cdef class Parser:
             c_d_scores += d_scores.shape[1]
         if losses is not None:
             losses.setdefault(self.name, 0.)
-            losses[self.name] += d_scores.sum()
+            losses[self.name] += (d_scores**2).sum()
         return d_scores
      
     def create_optimizer(self):

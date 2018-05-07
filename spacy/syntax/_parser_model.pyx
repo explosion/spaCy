@@ -57,11 +57,11 @@ cdef WeightsC get_c_weights(model) except *:
 cdef SizesC get_c_sizes(model, int batch_size) except *:
     cdef SizesC output
     output.states = batch_size
-    output.classes = model.nO
-    output.hiddens = model.nH
-    output.pieces = model.nP
-    output.feats = model.nF
-    output.embed_width = model.nI
+    output.classes = model.vec2scores.nO
+    output.hiddens = model.state2vec.nO
+    output.pieces = model.state2vec.nP
+    output.feats = model.state2vec.nF
+    output.embed_width = model.tokvecs.shape[1]
     return output
 
 
@@ -71,9 +71,10 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
         return
     if A._max_size == 0:
         A.token_ids = <int*>calloc(n.states * n.feats, sizeof(A.token_ids[0]))
-        A.vectors = <float*>calloc(n.states * n.hiddens, sizeof(A.hiddens[0]))
+        A.vectors = <float*>calloc(n.states * n.embed_width, sizeof(A.vectors[0]))
         A.scores = <float*>calloc(n.states * n.classes, sizeof(A.scores[0]))
-        A.unmaxed = <float*>calloc(n.states * n.hiddens * n.feats, sizeof(A.unmaxed[0]))
+        A.unmaxed = <float*>calloc(n.states * n.hiddens * n.pieces, sizeof(A.unmaxed[0]))
+        A.hiddens = <float*>calloc(n.states * n.hiddens, sizeof(A.hiddens[0]))
         A.is_valid = <int*>calloc(n.states * n.classes, sizeof(A.is_valid[0]))
         A._max_size = n.states
     else:
@@ -84,7 +85,9 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
         A.scores = <float*>realloc(A.scores,
             n.states * n.classes * sizeof(A.scores[0]))
         A.unmaxed = <float*>realloc(A.unmaxed,
-            n.states * n.hiddens * n.feats * sizeof(A.unmaxed[0]))
+            n.states * n.hiddens * n.pieces * sizeof(A.unmaxed[0]))
+        A.hiddens = <float*>realloc(A.hiddens,
+            n.states * n.hiddens * sizeof(A.hiddens[0]))
         A.is_valid = <int*>realloc(A.is_valid,
             n.states * n.classes * sizeof(A.is_valid[0]))
         A._max_size = n.states
@@ -94,27 +97,28 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
 cdef void predict_states(ActivationsC* A, StateC** states,
         const WeightsC* W, SizesC n) nogil:
     resize_activations(A, n)
+    memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
+    memset(A.hiddens, 0, n.states * n.hiddens * sizeof(float))
     for i in range(n.states):
         state = states[i]
         state.set_context_tokens(A.token_ids, n.feats)
-        memset(A.unmaxed, 0, n.hiddens * n.pieces * sizeof(float))
         sum_state_features(A.unmaxed,
             W.feat_weights, A.token_ids, 1, n.feats, n.hiddens * n.pieces)
         VecVec.add_i(A.unmaxed,
             W.feat_bias, 1., n.hiddens * n.pieces)
-        state_vector = &A.vectors[i*n.hiddens]
         for j in range(n.hiddens):
             index = j * n.pieces
             which = Vec.arg_max(&A.unmaxed[index], n.pieces)
-            state_vector[j] = A.unmaxed[index + which]
-        # Compute hidden-to-output
-        openblas.simple_gemm(A.scores, n.states, n.classes,
-            A.vectors, n.states, n.hiddens,
-            W.hidden_weights, n.hiddens, n.classes, 0, 0)
-        # Add bias
-        for i in range(n.states):
-            VecVec.add_i(&A.scores[i*n.classes],
-                W.hidden_bias, 1., n.classes)
+            A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
+    memset(A.scores, 0, n.states * n.classes * sizeof(float))
+    # Compute hidden-to-output
+    openblas.simple_gemm(A.scores, n.states, n.classes,
+        A.hiddens, n.states, n.hiddens,
+        W.hidden_weights, n.classes, n.hiddens, 0, 1)
+    # Add bias
+    for i in range(n.states):
+        VecVec.add_i(&A.scores[i*n.classes],
+            W.hidden_bias, 1., n.classes)
 
             
 cdef void sum_state_features(float* output,
@@ -241,14 +245,22 @@ class ParserStepModel(Model):
         self.cuda_stream = util.get_cuda_stream()
         self.backprops = []
 
+    @property
+    def nO(self):
+        return self.state2vec.nO
+
     def begin_update(self, states, drop=0.):
         token_ids = self.get_token_ids(states)
         vector, get_d_tokvecs = self.state2vec.begin_update(token_ids, drop=0.0)
-        vector, bp_dropout = self.ops.dropout(vector, drop)
+        mask = self.ops.get_dropout_mask(vector.shape, drop)
+        if mask is not None:
+            vector *= mask
         scores, get_d_vector = self.vec2scores.begin_update(vector, drop=drop)
 
         def backprop_parser_step(d_scores, sgd=None):
-            d_vector = bp_dropout(get_d_vector(d_scores, sgd=sgd))
+            d_vector = get_d_vector(d_scores, sgd=sgd)
+            if mask is not None:
+                d_vector *= mask
             if isinstance(self.ops, CupyOps) \
             and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
                 # Move token_ids and d_vector to GPU, asynchronously
