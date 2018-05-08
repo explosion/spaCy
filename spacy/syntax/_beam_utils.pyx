@@ -106,8 +106,6 @@ cdef class ParserBeam(object):
                         try:
                             if self.moves.is_gold_parse(state, self.golds[i]):
                                 beam._states[j].loss = 0.0
-                            elif beam._states[j].loss == 0.0:
-                                beam._states[j].loss = 1.0
                         except NotImplementedError:
                             break
 
