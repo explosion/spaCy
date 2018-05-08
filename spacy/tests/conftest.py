@@ -10,12 +10,11 @@ from ..tokens import Doc
 from ..strings import StringStore
 from .. import util
 
-
 # These languages are used for generic tokenizer tests – only add a language
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'tr', 'xx']
+              'it', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'tr', 'ar', 'xx']
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_md'],
            'fr': ['fr_core_news_sm'],
@@ -48,10 +47,10 @@ def RU(request):
     return util.get_lang_class('ru')()
 
 
-#@pytest.fixture(params=_languages)
-#def tokenizer(request):
-    #lang = util.get_lang_class(request.param)
-    #return lang.Defaults.create_tokenizer()
+# @pytest.fixture(params=_languages)
+# def tokenizer(request):
+# lang = util.get_lang_class(request.param)
+# return lang.Defaults.create_tokenizer()
 
 
 @pytest.fixture
@@ -129,19 +128,23 @@ def he_tokenizer():
 def nb_tokenizer():
     return util.get_lang_class('nb').Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def da_tokenizer():
     return util.get_lang_class('da').Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def ja_tokenizer():
     janome = pytest.importorskip("MeCab")
     return util.get_lang_class('ja').Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def th_tokenizer():
     pythainlp = pytest.importorskip("pythainlp")
     return util.get_lang_class('th').Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def tr_tokenizer():
@@ -155,13 +158,18 @@ def ru_tokenizer():
 
 
 @pytest.fixture
+def ar_tokenizer():
+    return util.get_lang_class('ar').Defaults.create_tokenizer()
+
+
+@pytest.fixture
 def stringstore():
     return StringStore()
 
 
 @pytest.fixture
 def en_entityrecognizer():
-     return util.get_lang_class('en').Defaults.create_entity()
+    return util.get_lang_class('en').Defaults.create_entity()
 
 
 @pytest.fixture
@@ -176,11 +184,11 @@ def text_file_b():
 
 def pytest_addoption(parser):
     parser.addoption("--models", action="store_true",
-        help="include tests that require full models")
+                     help="include tests that require full models")
     parser.addoption("--vectors", action="store_true",
-        help="include word vectors tests")
+                     help="include word vectors tests")
     parser.addoption("--slow", action="store_true",
-        help="include slow tests")
+                     help="include slow tests")
 
     for lang in _languages + ['all']:
         parser.addoption("--%s" % lang, action="store_true", help="Use %s models" % lang)
