@@ -16,7 +16,7 @@ from ..gold import GoldParse
 from ..util import compounding, minibatch_by_words
 from ..syntax.nonproj import projectivize
 from ..matcher import Matcher
-from ..morphology import Fused_begin, Fused_inside
+#from ..morphology import Fused_begin, Fused_inside
 from .. import displacy
 from collections import defaultdict, Counter
 from timeit import default_timer as timer
