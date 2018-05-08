@@ -394,7 +394,7 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None,
                  heads=None, deps=None, entities=None, make_projective=False,
-                 cats=None):
+                 cats=None, **_):
         """Create a GoldParse.
 
         doc (Doc): The document the annotations refer to.
