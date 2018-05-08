@@ -6,10 +6,10 @@ from ...attrs import LIKE_NUM
 
 _num_words = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete',
               'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'catorze',
-              'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove', 'vinte',
+              'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove', 'vinte',
               'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta',
-              'oitenta', 'noventa', 'cem', 'mil', 'milhão', 'bilião', 'trilião',
-              'quadrilião']
+              'oitenta', 'noventa', 'cem', 'mil', 'milhão', 'bilhão', 'trilhão',
+              'quatrilhão']
 
 _ordinal_words = ['primeiro', 'segundo', 'terceiro', 'quarto', 'quinto', 'sexto',
                   'sétimo', 'oitavo', 'nono', 'décimo', 'vigésimo', 'trigésimo',
