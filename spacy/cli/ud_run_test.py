@@ -20,6 +20,8 @@ from ..matcher import Matcher
 from .. import displacy
 from collections import defaultdict, Counter
 from timeit import default_timer as timer
+Fused_begin = None
+Fused_inside = None
 
 import itertools
 import random
