@@ -59,7 +59,7 @@ cdef class ParserBeam(object):
     cdef public object dones
 
     def __init__(self, TransitionSystem moves, states, golds,
-                 int width, float density):
+                 int width, float density=0.):
         self.moves = moves
         self.states = states
         self.golds = golds
@@ -133,8 +133,12 @@ cdef class ParserBeam(object):
                 self.moves.set_costs(beam.is_valid[i], beam.costs[i],
                                      state, gold)
                 if follow_gold:
+                    min_cost = 0
                     for j in range(beam.nr_class):
-                        if beam.costs[i][j] >= 1:
+                        if beam.costs[i][j] < min_cost:
+                            min_cost = beam.costs[i][j]
+                    for j in range(beam.nr_class):
+                        if beam.costs[i][j] > min_cost:
                             beam.is_valid[i][j] = 0
 
 

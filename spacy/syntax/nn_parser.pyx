@@ -208,31 +208,62 @@ cdef class Parser:
             for doc in batch_in_order:
                 yield doc
 
-    def predict(self, docs, beam_width=1):
+    def predict(self, docs, beam_width=1, drop=0.):
         if isinstance(docs, Doc):
             docs = [docs]
+        if beam_width < 2:
+            return self.greedy_parse(docs, drop=drop)
+        else:
+            return self.beam_parse(docs, beam_width=beam_width, drop=drop)
 
+    def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
         model = self.model(docs)
-        if beam_width == 1:
-            batch = self.moves.init_batch(docs)
-            weights = get_c_weights(model)
-            for state in batch:
-                if not state.is_final():
-                    states.push_back(state.c)
-            sizes = get_c_sizes(model, states.size())
-            with nogil:
-                self._parseC(&states[0],
-                    weights, sizes)
-        else:
-            batch = self.moves.init_beams(docs, beam_width)
-            unfinished = list(batch)
-            while unfinished:
-                scores = model.predict(unfinished)
-                unfinished = self.transition_beams(batch, scores)
+        batch = self.moves.init_batch(docs)
+        weights = get_c_weights(model)
+        for state in batch:
+            if not state.is_final():
+                states.push_back(state.c)
+        sizes = get_c_sizes(model, states.size())
+        with nogil:
+            self._parseC(&states[0],
+                weights, sizes)
         return batch
     
+    def beam_parse(self, docs, int beam_width=3, float drop=0.):
+        cdef Beam beam
+        cdef Doc doc
+        cdef np.ndarray token_ids
+        model = self.model(docs)
+        beams = self.moves.init_beams(docs, beam_width)
+        token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
+                                 dtype='i', order='C')
+        cdef int* c_ids
+        cdef int nr_feature = self.nr_feature
+        cdef int n_states
+        model = self.model(docs)
+        todo = [beam for beam in beams if not beam.is_done]
+        while todo:
+            token_ids.fill(-1)
+            c_ids = <int*>token_ids.data
+            n_states = 0
+            for beam in todo:
+                for i in range(beam.size):
+                    state = <StateC*>beam.at(i)
+                    # This way we avoid having to score finalized states
+                    # We do have to take care to keep indexes aligned, though
+                    if not state.is_final():
+                        state.set_context_tokens(c_ids, nr_feature)
+                        c_ids += nr_feature
+                        n_states += 1
+            if n_states == 0:
+                break
+            vectors = model.state2vec(token_ids[:n_states])
+            scores = model.vec2scores(vectors)
+            todo = self.transition_beams(todo, scores)
+        return beams
+ 
     cdef void _parseC(self, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
@@ -325,7 +356,7 @@ cdef class Parser:
         beam_update_prob = 1-self.cfg.get('beam_update_prob', 0.5)
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= beam_update_prob:
             return self.update_beam(docs, golds,
-                    self.cfg['beam_width'], self.cfg['beam_density'],
+                    self.cfg['beam_width'],
                     drop=drop, sgd=sgd, losses=losses)
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
@@ -352,12 +383,11 @@ cdef class Parser:
 
     def update_beam(self, docs, golds, width, drop=0., sgd=None, losses=None):
         lengths = [len(d) for d in docs]
-        states = self.moves.init_batch(docs)
-        for gold in golds:
-            self.moves.preprocess_gold(gold)
+        cut_gold = numpy.random.choice(range(20, 100))
+        states, golds, max_steps = self._init_gold_batch(docs, golds, max_length=cut_gold)
         model, finish_update = self.model.begin_update(docs, drop=drop)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
-            self.moves, self.nr_feature, 500, states, golds, model.state2vec,
+            self.moves, self.nr_feature, max_steps, states, golds, model.state2vec,
             model.vec2scores, width, drop=drop, losses=losses)
         for i, d_scores in enumerate(states_d_scores):
             ids, bp_vectors, bp_scores = backprops[i]

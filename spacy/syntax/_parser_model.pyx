@@ -266,13 +266,14 @@ class ParserStepModel(Model):
 
     def get_token_ids(self, batch):
         states = _beam_utils.collect_states(batch)
+        cdef StateClass state
+        states = [state for state in states if not state.is_final()]
         cdef np.ndarray ids = numpy.zeros((len(states), self.state2vec.nF),
                                           dtype='i', order='C')
+        ids.fill(-1)
         c_ids = <int*>ids.data
-        cdef StateClass state
         for state in states:
-            if not state.c.is_final():
-                state.c.set_context_tokens(c_ids, ids.shape[1])
+            state.c.set_context_tokens(c_ids, ids.shape[1])
             c_ids += ids.shape[1]
         return ids
 
