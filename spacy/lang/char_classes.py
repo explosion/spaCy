@@ -3,12 +3,10 @@ from __future__ import unicode_literals
 
 import regex as re
 
-
 re.DEFAULT_VERSION = re.VERSION1
 merge_char_classes = lambda classes: '[{}]'.format('||'.join(classes))
 split_chars = lambda char: list(char.strip().split(' '))
 merge_chars = lambda char: char.strip().replace(' ', '|')
-
 
 _bengali = r'[\p{L}&&\p{Bengali}]'
 _hebrew = r'[\p{L}&&\p{Hebrew}]'
@@ -27,11 +25,11 @@ ALPHA = merge_char_classes(_upper + _lower + _uncased)
 ALPHA_LOWER = merge_char_classes(_lower + _uncased)
 ALPHA_UPPER = merge_char_classes(_upper + _uncased)
 
-
 _units = ('km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm nm yd in ft '
           'kg g mg µg t lb oz m/s km/h kmh mph hPa Pa mbar mb MB kb KB gb GB tb '
           'TB T G M K % км км² км³ м м² м³ дм дм² дм³ см см² см³ мм мм² мм³ нм '
-          'кг г мг м/с км/ч кПа Па мбар Кб КБ кб Мб МБ мб Гб ГБ гб Тб ТБ тб')
+          'кг г мг м/с км/ч кПа Па мбар Кб КБ кб Мб МБ мб Гб ГБ гб Тб ТБ тб'
+          'كم كم² كم³ م م² م³ سم سم² سم³ مم مم² مم³ كم غرام جرام جم كغ ملغ كوب اكواب')
 _currency = r'\$ £ € ¥ ฿ US\$ C\$ A\$ ₽ ﷼'
 
 # These expressions contain various unicode variations, including characters
@@ -44,7 +42,6 @@ _hyphens = '- – — -- --- —— ~'
 # Various symbols like dingbats, but also emoji
 # Details: https://www.compart.com/en/unicode/category/So
 _other_symbols = r'[\p{So}]'
-
 
 UNITS = merge_chars(_units)
 CURRENCY = merge_chars(_currency)
