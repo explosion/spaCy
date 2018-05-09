@@ -6,9 +6,9 @@ from ...attrs import LIKE_NUM
 
 _num_words = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete',
               'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'catorze',
-              'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove', 'vinte',
+              'quinze', 'dezesseis', 'dezasseis', 'dezessete', 'dezassete', 'dezoito', 'dezenove', 'dezanove', 'vinte',
               'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta',
-              'oitenta', 'noventa', 'cem', 'mil', 'milhão', 'bilhão', 'trilhão',
+              'oitenta', 'noventa', 'cem', 'mil', 'milhão', 'bilhão', 'bilião', 'trilhão', 'trilião',
               'quatrilhão']
 
 _ordinal_words = ['primeiro', 'segundo', 'terceiro', 'quarto', 'quinto', 'sexto',
