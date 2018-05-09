@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | Lucas Riêra Abbade |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           | 05/08/2018 |
+| Date                           | 2018-05-08 |
 | GitHub username                | LRAbbade |
 | Website (optional)             |                      |
