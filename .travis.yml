@@ -22,6 +22,7 @@ install:
   - pip install flake8
 
 script:
+  - "cat /proc/cpuinfo | grep flags | head -n 1"
   - "pip install pytest pytest-timeout"
   - if [[ "${VIA}" == "compile" ]]; then python -m pytest --tb=native spacy; fi
   - if [[ "${VIA}" == "flake8" ]]; then flake8 . --count --exclude=spacy/compat.py,spacy/lang --select=E901,E999,F821,F822,F823 --show-source --statistics; fi  
