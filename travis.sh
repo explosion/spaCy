@@ -16,9 +16,7 @@ fi
 
 
 if [ "${VIA}" == "compile" ]; then
-  ls /usr/lib
-  ls /usr/lib/local
-  THINC_BLAS=/usr/lib/libblas.so pip install -r requirements.txt
+  pip install -r requirements.txt
   python setup.py build_ext --inplace
   pip install -e .
 fi
