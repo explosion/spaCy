@@ -182,7 +182,9 @@ cdef class Parser:
         """
         if beam_width is None:
             beam_width = self.cfg.get('beam_width', 1)
-        states = self.predict([doc], beam_width=beam_width)
+        beam_density = self.cfg.get('beam_density', 0.)
+        states = self.predict([doc], beam_width=beam_width,
+                              beam_density=beam_density)
         self.set_annotations([doc], states, tensors=None)
         return doc
 
@@ -197,24 +199,27 @@ cdef class Parser:
         """
         if beam_width is None:
             beam_width = self.cfg.get('beam_width', 1)
+        beam_density = self.cfg.get('beam_density', 0.)
         cdef Doc doc
         for batch in cytoolz.partition_all(batch_size, docs):
             batch_in_order = list(batch)
             by_length = sorted(batch_in_order, key=lambda doc: len(doc))
             for subbatch in cytoolz.partition_all(8, by_length):
                 subbatch = list(subbatch)
-                parse_states = self.predict(subbatch, beam_width=beam_width)
+                parse_states = self.predict(subbatch, beam_width=beam_width,
+                                            beam_density=beam_density)
                 self.set_annotations(subbatch, parse_states, tensors=None)
             for doc in batch_in_order:
                 yield doc
 
-    def predict(self, docs, beam_width=1, drop=0.):
+    def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
         if isinstance(docs, Doc):
             docs = [docs]
         if beam_width < 2:
             return self.greedy_parse(docs, drop=drop)
         else:
-            return self.beam_parse(docs, beam_width=beam_width, drop=drop)
+            return self.beam_parse(docs, beam_width=beam_width,
+                                   beam_density=beam_density, drop=drop)
 
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
@@ -231,12 +236,12 @@ cdef class Parser:
                 weights, sizes)
         return batch
     
-    def beam_parse(self, docs, int beam_width, float drop=0.):
+    def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
         cdef np.ndarray token_ids
         model = self.model(docs)
-        beams = self.moves.init_beams(docs, beam_width)
+        beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
@@ -358,9 +363,9 @@ cdef class Parser:
         # a greedy update
         beam_update_prob = self.cfg.get('beam_update_prob', 1.0)
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(docs, golds,
-                    self.cfg['beam_width'],
-                    drop=drop, sgd=sgd, losses=losses)
+            return self.update_beam(docs, golds, self.cfg.get('beam_width', 1),
+                    drop=drop, sgd=sgd, losses=losses,
+                    beam_density=self.cfg.get('beam_density', 0.0))
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
         cut_gold = numpy.random.choice(range(20, 100))
@@ -384,7 +389,8 @@ cdef class Parser:
         finish_update(golds, sgd=sgd)
         return losses
 
-    def update_beam(self, docs, golds, width, drop=0., sgd=None, losses=None):
+    def update_beam(self, docs, golds, width, drop=0., sgd=None, losses=None,
+                    beam_density=0.0):
         lengths = [len(d) for d in docs]
         states = self.moves.init_batch(docs)
         for gold in golds:
@@ -392,7 +398,8 @@ cdef class Parser:
         model, finish_update = self.model.begin_update(docs, drop=drop)
         states_d_scores, backprops, beams = _beam_utils.update_beam(
             self.moves, self.nr_feature, 10000, states, golds, model.state2vec,
-            model.vec2scores, width, drop=drop, losses=losses)
+            model.vec2scores, width, drop=drop, losses=losses,
+            beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
             losses[self.name] += (d_scores**2).sum()
             ids, bp_vectors, bp_scores = backprops[i]

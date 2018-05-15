@@ -68,7 +68,7 @@ cdef class ParserBeam(object):
         cdef StateClass state
         cdef StateC* st
         for state in states:
-            beam = Beam(self.moves.n_moves, width, density)
+            beam = Beam(self.moves.n_moves, width, min_density=density)
             beam.initialize(self.moves.init_beam_state, state.c.length,
                             state.c._sent)
             for i in range(beam.width):
@@ -161,12 +161,12 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
                 states, golds,
                 state2vec, vec2scores,
                 int width, losses=None, drop=0.,
-                early_update=True):
+                early_update=True, beam_density=0.0):
     global nr_update
     cdef MaxViolation violn
     nr_update += 1
-    pbeam = ParserBeam(moves, states, golds, width=width)
-    gbeam = ParserBeam(moves, states, golds, width=width)
+    pbeam = ParserBeam(moves, states, golds, width=width, density=beam_density)
+    gbeam = ParserBeam(moves, states, golds, width=width, density=beam_density)
     cdef StateClass state
     beam_maps = []
     backprops = []
