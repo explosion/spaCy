@@ -34,60 +34,60 @@ def test_util_get_package_path(package):
     assert isinstance(path, Path)
 
 
-#@pytest.mark.xfail
-#def test_displacy_parse_ents(en_vocab):
-#    """Test that named entities on a Doc are converted into displaCy's format."""
-#    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
-#    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings[u'ORG'])]
-#    ents = parse_ents(doc)
-#    assert isinstance(ents, dict)
-#    assert ents['text'] == 'But Google is starting from behind '
-#    assert ents['ents'] == [{'start': 4, 'end': 10, 'label': 'ORG'}]
-#
-#
-#@pytest.mark.xfail
-#def test_displacy_parse_deps(en_vocab):
-#    """Test that deps and tags on a Doc are converted into displaCy's format."""
-#    words = ["This", "is", "a", "sentence"]
-#    heads = [1, 0, 1, -2]
-#    pos = ['DET', 'VERB', 'DET', 'NOUN']
-#    tags = ['DT', 'VBZ', 'DT', 'NN']
-#    deps = ['nsubj', 'ROOT', 'det', 'attr']
-#    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags,
-#                  deps=deps)
-#    deps = parse_deps(doc)
-#    assert isinstance(deps, dict)
-#    assert deps['words'] == [{'text': 'This', 'tag': 'DET'},
-#                            {'text': 'is', 'tag': 'VERB'},
-#                            {'text': 'a', 'tag': 'DET'},
-#                            {'text': 'sentence', 'tag': 'NOUN'}]
-#    assert deps['arcs'] == [{'start': 0, 'end': 1, 'label': 'nsubj', 'dir': 'left'},
-#                            {'start': 2, 'end': 3, 'label': 'det', 'dir': 'left'},
-#                            {'start': 1, 'end': 3, 'label': 'attr', 'dir': 'right'}]
-#
-#
-#@pytest.mark.xfail
-#def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
-#    model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
-#    assert model.W.shape == (nF, nO, nP, nI)
-#    tensor = model.ops.allocate((10, nI))
-#    Y, get_dX = model.begin_update(tensor)
-#    assert Y.shape == (tensor.shape[0]+1, nF, nO, nP)
-#    assert model.d_pad.shape == (1, nF, nO, nP)
-#    dY = model.ops.allocate((15, nO, nP))
-#    ids = model.ops.allocate((15, nF))
-#    ids[1,2] = -1
-#    dY[1] = 1
-#    assert model.d_pad[0, 2, 0, 0] == 0.
-#    model._backprop_padding(dY, ids)
-#    assert model.d_pad[0, 2, 0, 0] == 1.
-#    model.d_pad.fill(0.)
-#    ids.fill(0.)
-#    dY.fill(0.)
-#    ids[1,2] = -1
-#    ids[1,1] = -1
-#    ids[1,0] = -1
-#    dY[1] = 1
-#    assert model.d_pad[0, 2, 0, 0] == 0.
-#    model._backprop_padding(dY, ids)
-#    assert model.d_pad[0, 2, 0, 0] == 3.
+@pytest.mark.xfail
+def test_displacy_parse_ents(en_vocab):
+    """Test that named entities on a Doc are converted into displaCy's format."""
+    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
+    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings[u'ORG'])]
+    ents = parse_ents(doc)
+    assert isinstance(ents, dict)
+    assert ents['text'] == 'But Google is starting from behind '
+    assert ents['ents'] == [{'start': 4, 'end': 10, 'label': 'ORG'}]
+
+
+@pytest.mark.xfail
+def test_displacy_parse_deps(en_vocab):
+    """Test that deps and tags on a Doc are converted into displaCy's format."""
+    words = ["This", "is", "a", "sentence"]
+    heads = [1, 0, 1, -2]
+    pos = ['DET', 'VERB', 'DET', 'NOUN']
+    tags = ['DT', 'VBZ', 'DT', 'NN']
+    deps = ['nsubj', 'ROOT', 'det', 'attr']
+    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags,
+                  deps=deps)
+    deps = parse_deps(doc)
+    assert isinstance(deps, dict)
+    assert deps['words'] == [{'text': 'This', 'tag': 'DET'},
+                            {'text': 'is', 'tag': 'VERB'},
+                            {'text': 'a', 'tag': 'DET'},
+                            {'text': 'sentence', 'tag': 'NOUN'}]
+    assert deps['arcs'] == [{'start': 0, 'end': 1, 'label': 'nsubj', 'dir': 'left'},
+                            {'start': 2, 'end': 3, 'label': 'det', 'dir': 'left'},
+                            {'start': 1, 'end': 3, 'label': 'attr', 'dir': 'right'}]
+
+
+@pytest.mark.xfail
+def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
+    model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
+    assert model.W.shape == (nF, nO, nP, nI)
+    tensor = model.ops.allocate((10, nI))
+    Y, get_dX = model.begin_update(tensor)
+    assert Y.shape == (tensor.shape[0]+1, nF, nO, nP)
+    assert model.d_pad.shape == (1, nF, nO, nP)
+    dY = model.ops.allocate((15, nO, nP))
+    ids = model.ops.allocate((15, nF))
+    ids[1,2] = -1
+    dY[1] = 1
+    assert model.d_pad[0, 2, 0, 0] == 0.
+    model._backprop_padding(dY, ids)
+    assert model.d_pad[0, 2, 0, 0] == 1.
+    model.d_pad.fill(0.)
+    ids.fill(0.)
+    dY.fill(0.)
+    ids[1,2] = -1
+    ids[1,1] = -1
+    ids[1,0] = -1
+    dY[1] = 1
+    assert model.d_pad[0, 2, 0, 0] == 0.
+    model._backprop_padding(dY, ids)
+    assert model.d_pad[0, 2, 0, 0] == 3.
