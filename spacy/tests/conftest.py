@@ -15,7 +15,8 @@ from .. import util
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'tr', 'xx']
+              'it', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'tr', 'ar', 'xx']
+
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_md'],
            'fr': ['fr_core_news_sm'],
@@ -50,8 +51,8 @@ def RU(request):
 
 #@pytest.fixture(params=_languages)
 #def tokenizer(request):
-    #lang = util.get_lang_class(request.param)
-    #return lang.Defaults.create_tokenizer()
+#lang = util.get_lang_class(request.param)
+#return lang.Defaults.create_tokenizer()
 
 
 @pytest.fixture
@@ -101,6 +102,11 @@ def fi_tokenizer():
 
 
 @pytest.fixture
+def ro_tokenizer():
+    return util.get_lang_class('ro').Defaults.create_tokenizer()
+
+
+@pytest.fixture
 def id_tokenizer():
     return util.get_lang_class('id').Defaults.create_tokenizer()
 
@@ -135,9 +141,8 @@ def da_tokenizer():
 
 @pytest.fixture
 def ja_tokenizer():
-    janome = pytest.importorskip("janome")
+    janome = pytest.importorskip("MeCab")
     return util.get_lang_class('ja').Defaults.create_tokenizer()
-
 
 @pytest.fixture
 def th_tokenizer():
@@ -148,6 +153,9 @@ def th_tokenizer():
 def tr_tokenizer():
     return util.get_lang_class('tr').Defaults.create_tokenizer()
 
+@pytest.fixture
+def ar_tokenizer():
+    return util.get_lang_class('ar').Defaults.create_tokenizer()
 
 @pytest.fixture
 def ru_tokenizer():
@@ -162,7 +170,7 @@ def stringstore():
 
 @pytest.fixture
 def en_entityrecognizer():
-     return util.get_lang_class('en').Defaults.create_entity()
+    return util.get_lang_class('en').Defaults.create_entity()
 
 
 @pytest.fixture
@@ -177,11 +185,11 @@ def text_file_b():
 
 def pytest_addoption(parser):
     parser.addoption("--models", action="store_true",
-        help="include tests that require full models")
+                     help="include tests that require full models")
     parser.addoption("--vectors", action="store_true",
-        help="include word vectors tests")
+                     help="include word vectors tests")
     parser.addoption("--slow", action="store_true",
-        help="include slow tests")
+                     help="include slow tests")
 
     for lang in _languages + ['all']:
         parser.addoption("--%s" % lang, action="store_true", help="Use %s models" % lang)

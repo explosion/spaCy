@@ -68,9 +68,9 @@ class RESTCountriesComponent(object):
         # the matches, so we're only setting a default value, not a getter.
         # If no default value is set, it defaults to None.
         Token.set_extension('is_country', default=False)
-        Token.set_extension('country_capital')
-        Token.set_extension('country_latlng')
-        Token.set_extension('country_flag')
+        Token.set_extension('country_capital', default=False)
+        Token.set_extension('country_latlng', default=False)
+        Token.set_extension('country_flag', default=False)
 
         # Register attributes on Doc and Span via a getter that checks if one of
         # the contained tokens is set to is_country == True.
