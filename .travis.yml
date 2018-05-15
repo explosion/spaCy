@@ -1,6 +1,6 @@
 language: python
 
-sudo: true
+sudo: false
 dist: trusty
 group: edge
 
