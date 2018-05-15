@@ -92,6 +92,7 @@
             "Dependency Parse": "dependency-parse",
             "Named Entities": "named-entities",
             "Tokenization": "tokenization",
+            "Sentence Segmentation": "sbd",
             "Rule-based Matching": "rule-based-matching"
         }
     },

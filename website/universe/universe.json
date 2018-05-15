@@ -446,6 +446,29 @@
             "category": ["visualizers"]
         },
         {
+            "id": "scattertext",
+            "slogan": "Beautiful visualizations of how language differs among document types",
+            "description": "A tool for finding distinguishing terms in small-to-medium-sized corpora, and presenting them in a sexy, interactive scatter plot with non-overlapping term labels. Exploratory data analysis just got more fun.",
+            "github": "JasonKessler/scattertext",
+            "image": "https://jasonkessler.github.io/2012conventions0.0.2.2.png",
+            "code_example": [
+                "import spacy",
+                "import scattertext as st",
+                "",
+                "nlp = spacy.load('en')",
+                "corpus = st.CorpusFromPandas(convention_df,",
+                "                             category_col='party',",
+                "                             text_col='text',",
+                "                             nlp=nlp).build()"
+            ],
+            "author": "Jason Kessler",
+            "author_links": {
+                "github": "JasonKessler",
+                "twitter": "jasonkessler"
+            },
+            "category": ["visualizers"]
+        },
+        {
             "id": "rasa",
             "title": "Rasa NLU",
             "slogan": "Turn natural language into structured data",

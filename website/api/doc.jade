@@ -149,7 +149,7 @@ p
 
 +aside-code("Example").
     from spacy.tokens import Doc
-    city_getter = lambda doc: doc.text in ('New York', 'Paris', 'Berlin')
+    city_getter = lambda doc: any(city in doc.text for city in ('New York', 'Paris', 'Berlin'))
     Doc.set_extension('has_city', getter=city_getter)
     doc = nlp(u'I like New York')
     assert doc._.has_city
