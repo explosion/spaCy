@@ -531,7 +531,7 @@ cdef class Parser:
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
-            with (path / 'tok2vec_model').open('rb') as file_:
+            with (path / 'model').open('rb') as file_:
                 bytes_data = file_.read()
             self.model.from_bytes(bytes_data)
             self.cfg.update(cfg)
