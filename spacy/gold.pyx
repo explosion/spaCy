@@ -160,7 +160,7 @@ class GoldCorpus(object):
                 yield item
                 i += len(item[1])
                 if limit and i >= limit:
-                    break
+                    return
 
     @property
     def dev_tuples(self):
@@ -178,9 +178,9 @@ class GoldCorpus(object):
         for raw_text, paragraph_tuples in self.train_tuples:
             for sent_tuples, brackets in paragraph_tuples:
                 n += len(sent_tuples[1])
-            if self.limit and i >= self.limit:
-                break
-            i += len(paragraph_tuples)
+                if self.limit and i >= self.limit:
+                    break
+                i += 1
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
