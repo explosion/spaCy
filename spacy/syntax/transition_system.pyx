@@ -5,9 +5,12 @@ from __future__ import unicode_literals
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
+from thinc.extra.search cimport Beam
 from collections import OrderedDict, Counter
 import ujson
 
+from . cimport _beam_utils
+from ..tokens.doc cimport Doc
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..typedefs cimport attr_t
@@ -56,6 +59,21 @@ cdef class TransitionSystem:
             states.append(state)
             offset += len(doc)
         return states
+
+    def init_beams(self, docs, beam_width, beam_density=0.):
+        cdef Doc doc
+        beams = []
+        cdef int offset = 0
+        for doc in docs:
+            beam = Beam(self.n_moves, beam_width, min_density=beam_density)
+            beam.initialize(self.init_beam_state, doc.length, doc.c)
+            for i in range(beam.width):
+                state = <StateC*>beam.at(i)
+                state.offset = offset
+            offset += len(doc)
+            beam.check_done(_beam_utils.check_final_state, NULL)
+            beams.append(beam)
+        return beams
 
     def get_oracle_sequence(self, doc, GoldParse gold):
         cdef Pool mem = Pool()
