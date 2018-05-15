@@ -85,6 +85,8 @@ cdef class Parser:
         }
         return ParserModel(tok2vec, lower, upper), cfg
 
+    name = 'base_parser'
+
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """Create a Parser.
 
