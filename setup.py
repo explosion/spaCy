@@ -196,6 +196,7 @@ def setup_package():
                 'plac<1.0.0,>=0.9.6',
                 'pathlib',
                 'ujson>=1.35',
+                'regex==2017.4.5',
                 'dill>=0.2,<0.3'],
             setup_requires=['wheel'],
             classifiers=[
