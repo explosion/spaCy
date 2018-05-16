@@ -16,10 +16,12 @@ from ..gold import GoldParse
 from ..util import compounding, minibatch_by_words
 from ..syntax.nonproj import projectivize
 from ..matcher import Matcher
-from ..morphology import Fused_begin, Fused_inside
+#from ..morphology import Fused_begin, Fused_inside
 from .. import displacy
 from collections import defaultdict, Counter
 from timeit import default_timer as timer
+Fused_begin = None
+Fused_inside = None
 
 import itertools
 import random
@@ -254,12 +256,6 @@ def get_token_split_end(token):
     return token.nbor(i-1)
  
 
-Token.set_extension('split_start', getter=get_token_split_start)
-Token.set_extension('split_end', getter=get_token_split_end)
-Token.set_extension('begins_fused', default=False)
-Token.set_extension('inside_fused', default=False)
-
-
 ##################
 # Initialization #
 ##################
@@ -280,6 +276,10 @@ def initialize_pipeline(nlp, docs, golds, config, device):
     corpus=("UD corpus to evaluate, e.g. UD_English, UD_Spanish, etc", "positional", None, str),
 )
 def main(test_data_dir, experiment_dir, corpus):
+    Token.set_extension('split_start', getter=get_token_split_start)
+    Token.set_extension('split_end', getter=get_token_split_end)
+    Token.set_extension('begins_fused', default=False)
+    Token.set_extension('inside_fused', default=False)
     lang.zh.Chinese.Defaults.use_jieba = False
     lang.ja.Japanese.Defaults.use_janome = False
     lang.ru.Russian.Defaults.use_pymorphy2 = False
