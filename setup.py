@@ -199,6 +199,12 @@ def setup_package():
                 'regex==2017.4.5',
                 'dill>=0.2,<0.3'],
             setup_requires=['wheel'],
+            extras_require={
+                'cuda': ['cupy>=4.0'],
+                'cuda80': ['cupy-cuda80>=4.0'],
+                'cuda90': ['cupy-cuda90>=4.0'],
+                'cuda91': ['cupy-cuda91>=4.0'],
+            },
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
