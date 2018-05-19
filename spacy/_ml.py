@@ -43,8 +43,8 @@ def cosine(vec1, vec2):
 def create_default_optimizer(ops, **cfg):
     learn_rate = util.env_opt('learn_rate', 0.001)
     beta1 = util.env_opt('optimizer_B1', 0.9)
-    beta2 = util.env_opt('optimizer_B2', 0.999)
-    eps = util.env_opt('optimizer_eps', 1e-08)
+    beta2 = util.env_opt('optimizer_B2', 0.9)
+    eps = util.env_opt('optimizer_eps', 1e-12)
     L2 = util.env_opt('L2_penalty', 1e-6)
     max_grad_norm = util.env_opt('grad_norm_clip', 1.)
     optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1,
@@ -63,23 +63,6 @@ def _flatten_add_lengths(seqs, pad=0, drop=0.):
 
     X = ops.flatten(seqs, pad=pad)
     return (X, lengths), finish_update
-
-
-@layerize
-def _logistic(X, drop=0.):
-    xp = get_array_module(X)
-    if not isinstance(X, xp.ndarray):
-        X = xp.asarray(X)
-    # Clip to range (-10, 10)
-    X = xp.minimum(X, 10., X)
-    X = xp.maximum(X, -10., X)
-    Y = 1. / (1. + xp.exp(-X))
-
-    def logistic_bwd(dY, sgd=None):
-        dX = dY * (Y * (1-Y))
-        return dX
-
-    return Y, logistic_bwd
 
 
 def _zero_init(model):
@@ -145,8 +128,8 @@ class PrecomputableAffine(Model):
         self.nF = nF
 
     def begin_update(self, X, drop=0.):
-        Yf = self.ops.xp.dot(X,
-            self.W.reshape((self.nF*self.nO*self.nP, self.nI)).T)
+        Yf = self.ops.gemm(X,
+            self.W.reshape((self.nF*self.nO*self.nP, self.nI)), trans2=True)
         Yf = Yf.reshape((Yf.shape[0], self.nF, self.nO, self.nP))
         Yf = self._add_padding(Yf)
 
@@ -162,11 +145,11 @@ class PrecomputableAffine(Model):
             Wopfi = self.W.transpose((1, 2, 0, 3))
             Wopfi = self.ops.xp.ascontiguousarray(Wopfi)
             Wopfi = Wopfi.reshape((self.nO*self.nP, self.nF * self.nI))
-            dXf = self.ops.dot(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
+            dXf = self.ops.gemm(dY.reshape((dY.shape[0], self.nO*self.nP)), Wopfi)
 
             # Reuse the buffer
             dWopfi = Wopfi; dWopfi.fill(0.)
-            self.ops.xp.dot(dY.T, Xf, out=dWopfi)
+            self.ops.gemm(dY, Xf, out=dWopfi, trans1=True)
             dWopfi = dWopfi.reshape((self.nO, self.nP, self.nF, self.nI))
             # (o, p, f, i) --> (f, o, p, i)
             self.d_W += dWopfi.transpose((2, 0, 1, 3))
@@ -212,14 +195,15 @@ class PrecomputableAffine(Model):
                     size=tokvecs.size).reshape(tokvecs.shape)
 
         def predict(ids, tokvecs):
-            # nS ids. nW tokvecs
-            hiddens = model(tokvecs) # (nW, f, o, p)
+            # nS ids. nW tokvecs. Exclude the padding array.
+            hiddens = model(tokvecs[:-1]) # (nW, f, o, p)
+            vectors = model.ops.allocate((ids.shape[0], model.nO * model.nP), dtype='f')
             # need nS vectors
-            vectors = model.ops.allocate((ids.shape[0], model.nO, model.nP))
-            for i, feats in enumerate(ids):
-                for j, id_ in enumerate(feats):
-                    vectors[i] += hiddens[id_, j]
+            hiddens = hiddens.reshape((hiddens.shape[0] * model.nF, model.nO * model.nP))
+            model.ops.scatter_add(vectors, ids.flatten(), hiddens)
+            vectors = vectors.reshape((vectors.shape[0], model.nO, model.nP))
             vectors += model.b
+            vectors = model.ops.asarray(vectors)
             if model.nP >= 2:
                 return model.ops.maxout(vectors)[0]
             else:
@@ -472,6 +456,7 @@ def SpacyVectors(docs, drop=0.):
 
 
 def build_text_classifier(nr_class, width=64, **cfg):
+    depth = cfg.get('depth', 2)
     nr_vector = cfg.get('nr_vector', 5000)
     pretrained_dims = cfg.get('pretrained_dims', 0)
     with Model.define_operators({'>>': chain, '+': add, '|': concatenate,
@@ -523,7 +508,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
                 LN(Maxout(width, vectors_width))
                 >> Residual(
                     (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
-                ) ** 2, pad=2
+                ) ** depth, pad=depth
             )
             >> flatten_add_lengths
             >> ParametricAttention(width)
@@ -536,8 +521,6 @@ def build_text_classifier(nr_class, width=64, **cfg):
             _preprocess_doc
             >> LinearModel(nr_class)
         )
-        #model = linear_model >> logistic
-
         model = (
             (linear_model | cnn_model)
             >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))

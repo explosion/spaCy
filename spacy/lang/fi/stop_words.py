@@ -79,7 +79,7 @@ pienestä pieni pienin poikki puolesta puolestaan päälle
 
 runsaasti
 
-saakka sama samaa samaan samalla saman samat samoin sata sataa satojen se
+saakka sama samaa samaan samalla saman samat samoin satojen se
 seitsemän sekä sen seuraavat siellä sieltä siihen siinä siis siitä sijaan siksi
 sille silloin sillä silti siltä sinne sinua sinulla sinulle sinulta sinun
 sinussa sinusta sinut sinuun sinä sisäkkäin sisällä siten sitten sitä ssa sta
@@ -89,7 +89,7 @@ taa taas taemmas tahansa tai takaa takaisin takana takia tallä tapauksessa
 tarpeeksi tavalla tavoitteena te teidän teidät teihin teille teillä teiltä
 teissä teistä teitä tietysti todella toinen toisaalla toisaalle toisaalta
 toiseen toiseksi toisella toiselle toiselta toisemme toisen toisensa toisessa
-toisesta toista toistaiseksi toki tosin tuhannen tuhat tule tulee tulemme tulen
+toisesta toista toistaiseksi toki tosin tule tulee tulemme tulen
 tulet tulette tulevat tulimme tulin tulisi tulisimme tulisin tulisit tulisitte
 tulisivat tulit tulitte tulivat tulla tulleet tullut tuntuu tuo tuohon tuoksi
 tuolla tuolle tuolloin tuolta tuon tuona tuonne tuossa tuosta tuota tuskin tykö

@@ -34,6 +34,7 @@ def test_util_get_package_path(package):
     assert isinstance(path, Path)
 
 
+@pytest.mark.xfail
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
     doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
@@ -44,6 +45,7 @@ def test_displacy_parse_ents(en_vocab):
     assert ents['ents'] == [{'start': 4, 'end': 10, 'label': 'ORG'}]
 
 
+@pytest.mark.xfail
 def test_displacy_parse_deps(en_vocab):
     """Test that deps and tags on a Doc are converted into displaCy's format."""
     words = ["This", "is", "a", "sentence"]
@@ -64,6 +66,7 @@ def test_displacy_parse_deps(en_vocab):
                             {'start': 1, 'end': 3, 'label': 'attr', 'dir': 'right'}]
 
 
+@pytest.mark.xfail
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
     assert model.W.shape == (nF, nO, nP, nI)

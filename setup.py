@@ -18,6 +18,7 @@ PACKAGES = find_packages()
 
 
 MOD_NAMES = [
+    'spacy._align',
     'spacy.parts_of_speech',
     'spacy.strings',
     'spacy.lexeme',
@@ -27,9 +28,10 @@ MOD_NAMES = [
     'spacy.pipeline',
     'spacy.syntax.stateclass',
     'spacy.syntax._state',
-    'spacy.syntax._beam_utils',
     'spacy.tokenizer',
     'spacy.syntax.nn_parser',
+    'spacy.syntax._parser_model',
+    'spacy.syntax._beam_utils',
     'spacy.syntax.nonproj',
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
@@ -190,12 +192,19 @@ def setup_package():
                 'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.10.1,<6.11.0',
+                'thinc>=6.11.1.dev17,<6.12.0',
                 'plac<1.0.0,>=0.9.6',
                 'pathlib',
                 'ujson>=1.35',
-                'dill>=0.2,<0.3',
-                'regex==2017.4.5'],
+                'regex==2017.4.5',
+                'dill>=0.2,<0.3'],
+            setup_requires=['wheel'],
+            extras_require={
+                'cuda': ['cupy>=4.0'],
+                'cuda80': ['cupy-cuda80>=4.0'],
+                'cuda90': ['cupy-cuda90>=4.0'],
+                'cuda91': ['cupy-cuda91>=4.0'],
+            },
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

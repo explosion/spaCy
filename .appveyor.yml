@@ -5,7 +5,7 @@ environment:
     # For Python versions available on Appveyor, see
     # http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python27-x64"
     #- PYTHON: "C:\\Python34"
     #- PYTHON: "C:\\Python35"
     #- PYTHON: "C:\\Python27-x64"
@@ -32,7 +32,7 @@ test_script:
   # Note that you must use the environment variable %PYTHON% to refer to
   # the interpreter you're using - Appveyor does not do anything special
   # to put the Python version you want to use on PATH.
-  - "%PYTHON%\\python.exe -m pytest spacy/"
+  - "%PYTHON%\\python.exe -m pytest spacy/ --no-print-logs"
 
 after_test:
   # This step builds your wheels.

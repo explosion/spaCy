@@ -17,7 +17,7 @@ from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
-from .pipeline import merge_noun_chunks, merge_entities
+from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .compat import json_dumps, izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
@@ -109,7 +109,8 @@ class Language(object):
         'sbd': lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
         'sentencizer': lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
         'merge_noun_chunks': lambda nlp, **cfg: merge_noun_chunks,
-        'merge_entities': lambda nlp, **cfg: merge_entities
+        'merge_entities': lambda nlp, **cfg: merge_entities,
+        'merge_subtokens': lambda nlp, **cfg: merge_subtokens,
     }
 
     def __init__(self, vocab=True, make_doc=True, max_length=10**6, meta={}, **kwargs):
@@ -473,7 +474,7 @@ class Language(object):
         self._optimizer = sgd
         for name, proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
-                proc.begin_training(get_gold_tuples(),
+                proc.begin_training(get_gold_tuples,
                                     pipeline=self.pipeline,
                                     sgd=self._optimizer,
                                     **cfg)

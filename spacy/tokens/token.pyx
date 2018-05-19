@@ -287,6 +287,8 @@ cdef class Token:
         """RETURNS (uint64): ID of coarse-grained part-of-speech tag."""
         def __get__(self):
             return self.c.pos
+        def __set__(self, pos):
+            self.c.pos = pos
 
     property tag:
         """RETURNS (uint64): ID of fine-grained part-of-speech tag."""
@@ -746,6 +748,8 @@ cdef class Token:
         """RETURNS (unicode): Coarse-grained part-of-speech tag."""
         def __get__(self):
             return parts_of_speech.NAMES[self.c.pos]
+        def __set__(self, pos_name):
+            self.c.pos = parts_of_speech.IDS[pos_name]
 
     property tag_:
         """RETURNS (unicode): Fine-grained part-of-speech tag."""

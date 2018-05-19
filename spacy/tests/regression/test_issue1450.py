@@ -13,8 +13,8 @@ from ...vocab import Vocab
         ('a b', 0, 2),
         ('a c', 0, 1),
         ('a b c', 0, 2),
-        ('a b b c', 0, 2),
-        ('a b b', 0, 2),
+        ('a b b c', 0, 3),
+        ('a b b', 0, 3),
     ]
 )
 def test_issue1450_matcher_end_zero_plus(string, start, end):
@@ -54,5 +54,6 @@ def test_issue1450_matcher_end_zero_plus(string, start, end):
     if start is None or end is None:
         assert matches == []
     
-    assert matches[0][1] == start
-    assert matches[0][2] == end
+    print(matches)
+    assert matches[-1][1] == start
+    assert matches[-1][2] == end
