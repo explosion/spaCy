@@ -118,9 +118,13 @@ def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
 
 def normalize_string_keys(old):
     """Given a dictionary, make sure keys are unicode strings, not bytes."""
-    return {key.decode('utf8') if isinstance(key, bytes_) else key: value
-            for key, value in old.items()}
-
+    new = {}
+    for key, value in old.items():
+        if isinstance(key, bytes_):
+            new[key.decode('utf8')] = value
+        else:
+            new[key] = value
+    return new
 
 def import_file(name, loc):
     loc = str(loc)
