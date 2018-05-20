@@ -606,3 +606,18 @@ def use_gpu(gpu_id):
 def fix_random_seed(seed=0):
     random.seed(seed)
     numpy.random.seed(seed)
+
+
+class SimpleFrozenDict(dict):
+    """Simplified implementation of a frozen dict, mainly used as default
+    function or method argument (for arguments that should default to empty
+    dictionary). Will raise an error if user or spaCy attempts to add to dict.
+    """
+    def __setitem__(self, key, value):
+        raise NotImplementedError(Errors.E095)
+
+    def pop(self, key, default=None):
+        raise NotImplementedError(Errors.E095)
+
+    def update(self, other):
+        raise NotImplementedError(Errors.E095)
