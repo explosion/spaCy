@@ -245,6 +245,8 @@ class Errors(object):
             "the meta.json. Vector names are required to avoid issue #1660.")
     E093 = ("token.ent_iob values make invalid sequence: I without B\n{seq}")
     E094 = ("Error reading line {line_num} in vectors file {loc}.")
+    E095 = ("Can't write to frozen dictionary. This is likely an internal "
+            "error. Are you writing to a default function argument?")
 
 
 @add_codes

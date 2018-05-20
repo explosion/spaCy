@@ -19,12 +19,10 @@ cdef struct WeightsC:
     const float* feat_bias
     const float* hidden_bias
     const float* hidden_weights
-    const float* vectors
 
 
 cdef struct ActivationsC:
     int* token_ids
-    float* vectors
     float* unmaxed
     float* scores
     float* hiddens

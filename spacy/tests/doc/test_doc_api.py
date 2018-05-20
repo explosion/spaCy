@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from ..util import get_doc
 from ...tokens import Doc
 from ...vocab import Vocab
+from ...attrs import LEMMA
 
 import pytest
 import numpy
@@ -176,6 +177,26 @@ def test_doc_api_merge_hang(en_tokenizer):
     doc = en_tokenizer(text)
     doc.merge(18, 32, tag='', lemma='', ent_type='ORG')
     doc.merge(8, 32, tag='', lemma='', ent_type='ORG')
+
+
+def test_doc_api_retokenizer(en_tokenizer):
+    doc = en_tokenizer("WKRO played songs by the beach boys all night")
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7])
+    assert len(doc) == 7
+    assert doc[4].text == 'the beach boys'
+
+
+def test_doc_api_retokenizer_attrs(en_tokenizer):
+    doc = en_tokenizer("WKRO played songs by the beach boys all night")
+    # test both string and integer attributes and values
+    attrs = {LEMMA: 'boys', 'ENT_TYPE': doc.vocab.strings['ORG']}
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7], attrs=attrs)
+    assert len(doc) == 7
+    assert doc[4].text == 'the beach boys'
+    assert doc[4].lemma_ == 'boys'
+    assert doc[4].ent_type_ == 'ORG'
 
 
 def test_doc_api_sents_empty_string(en_tokenizer):
