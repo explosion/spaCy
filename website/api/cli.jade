@@ -15,7 +15,8 @@ p
     |  package and automatically creates a
     |  #[+a("/usage/models#usage") shortcut link] to load the model by name.
     |  Direct downloads don't perform any compatibility checks and require the
-    |  model name to be specified with its version (e.g., #[code en_core_web_sm-1.2.0]).
+    |  model name to be specified with its version (e.g.
+    |  #[code en_core_web_sm-2.0.0]).
 
 +aside("Downloading best practices")
     |  The #[code download] command is mostly intended as a convenient,
@@ -35,12 +36,22 @@ p
     +row
         +cell #[code model]
         +cell positional
-        +cell Model name or shortcut (#[code en], #[code de], #[code vectors]).
+        +cell
+            |  Model name or shortcut (#[code en], #[code de],
+            |  #[code en_core_web_sm]).
 
     +row
         +cell #[code --direct], #[code -d]
         +cell flag
         +cell Force direct download of exact model version.
+
+    +row
+        +cell other
+        +cell -
+        +cell
+            |  Additional installation options to be passed to
+            |  #[code pip install] when installing the model package. For
+            |  example, #[code --user] to install to the user home directory.
 
     +row
         +cell #[code --help], #[code -h]
