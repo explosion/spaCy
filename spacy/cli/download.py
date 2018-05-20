@@ -24,14 +24,14 @@ def download(model, direct=False):
     with version.
     """
     if direct:
-        dl = download_model('{m}/{m}.tar.gz'.format(m=model))
+        dl = download_model('{m}/{m}.tar.gz#egg={m}'.format(m=model))
     else:
         shortcuts = get_json(about.__shortcuts__, "available shortcuts")
         model_name = shortcuts.get(model, model)
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        dl = download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name,
-                                                            v=version))
+        dl = download_model('{m}-{v}/{m}-{v}.tar.gz#egg={m}=={v}'
+                            .format(m=model_name, v=version))
         if dl != 0:  # if download subprocess doesn't return 0, exit
             sys.exit(dl)
         try:
