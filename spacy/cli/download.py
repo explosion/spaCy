@@ -17,23 +17,26 @@ from .. import about
     model=("model to download, shortcut or name)", "positional", None, str),
     direct=("force direct download. Needs model name with version and won't "
             "perform compatibility check", "flag", "d", bool),
+    deps=("also check and install or update dependencies of model packages",
+          "flag", "dp", bool),
     pip_args=("additional arguments to be passed to `pip install` when "
               "installing the model"))
-def download(model, direct=False, *pip_args):
+def download(model, direct=False, deps=False, *pip_args):
     """
     Download compatible model from default download path using pip. Model
     can be shortcut, model name or, if --direct flag is set, full model name
     with version.
     """
     if direct:
-        dl = download_model('{m}/{m}.tar.gz#egg={m}'.format(m=model), pip_args)
+        dl = download_model('{m}/{m}.tar.gz#egg={m}'.format(m=model), deps,
+                            pip_args)
     else:
         shortcuts = get_json(about.__shortcuts__, "available shortcuts")
         model_name = shortcuts.get(model, model)
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
         dl = download_model('{m}-{v}/{m}-{v}.tar.gz#egg={m}=={v}'
-                            .format(m=model_name, v=version), pip_args)
+                            .format(m=model_name, v=version), deps, pip_args)
         if dl != 0:  # if download subprocess doesn't return 0, exit
             sys.exit(dl)
         try:
@@ -77,9 +80,11 @@ def get_version(model, comp):
     return comp[model][0]
 
 
-def download_model(filename, user_pip_args=None):
+def download_model(filename, deps=False, user_pip_args=None):
     download_url = about.__download_url__ + '/' + filename
-    pip_args = ['--no-cache-dir', '--no-deps']
+    pip_args = ['--no-cache-dir']
+    if not deps:
+        pip_args.append('--no-deps')
     if user_pip_args:
         pip_args.extend(user_pip_args)
     cmd = [sys.executable, '-m', 'pip', 'install'] + pip_args + [download_url]
