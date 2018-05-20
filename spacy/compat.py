@@ -126,6 +126,7 @@ def normalize_string_keys(old):
             new[key] = value
     return new
 
+
 def import_file(name, loc):
     loc = str(loc)
     if is_python_pre_3_5:
