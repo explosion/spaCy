@@ -88,9 +88,10 @@ def test_span_similarity_match():
     doc = Doc(Vocab(), words=['a', 'b', 'a', 'b'])
     span1 = doc[:2]
     span2 = doc[2:]
-    assert span1.similarity(span2) == 1.0
-    assert span1.similarity(doc) == 0.0
-    assert span1[:1].similarity(doc.vocab['a']) == 1.0
+    with pytest.warns(None):
+        assert span1.similarity(span2) == 1.0
+        assert span1.similarity(doc) == 0.0
+        assert span1[:1].similarity(doc.vocab['a']) == 1.0
 
 
 def test_spans_default_sentiment(en_tokenizer):

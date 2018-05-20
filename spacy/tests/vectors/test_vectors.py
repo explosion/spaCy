@@ -206,15 +206,17 @@ def test_vectors_lexeme_doc_similarity(vocab, text):
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_span_span_similarity(vocab, text):
     doc = get_doc(vocab, text)
-    assert doc[0:2].similarity(doc[1:3]) == doc[1:3].similarity(doc[0:2])
-    assert -1. < doc[0:2].similarity(doc[1:3]) < 1.0
+    with pytest.warns(None):
+        assert doc[0:2].similarity(doc[1:3]) == doc[1:3].similarity(doc[0:2])
+        assert -1. < doc[0:2].similarity(doc[1:3]) < 1.0
 
 
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_span_doc_similarity(vocab, text):
     doc = get_doc(vocab, text)
-    assert doc[0:2].similarity(doc) == doc.similarity(doc[0:2])
-    assert -1. < doc[0:2].similarity(doc) < 1.0
+    with pytest.warns(None):
+        assert doc[0:2].similarity(doc) == doc.similarity(doc[0:2])
+        assert -1. < doc[0:2].similarity(doc) < 1.0
 
 
 @pytest.mark.parametrize('text1,text2', [

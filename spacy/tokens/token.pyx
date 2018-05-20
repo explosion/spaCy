@@ -19,7 +19,7 @@ from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..compat import is_config
-from ..errors import Errors
+from ..errors import Errors, Warnings, user_warning, models_warning
 from .. import util
 from .underscore import Underscore, get_ext_args
 
@@ -161,7 +161,10 @@ cdef class Token:
         elif hasattr(other, 'orth'):
             if self.c.lex.orth == other.orth:
                 return 1.0
+        if self.vocab.vectors.n_keys == 0:
+            models_warning(Warnings.W007.format(obj='Token'))
         if self.vector_norm == 0 or other.vector_norm == 0:
+            user_warning(Warnings.W008.format(obj='Token'))
             return 0.0
         return (numpy.dot(self.vector, other.vector) /
                 (self.vector_norm * other.vector_norm))
