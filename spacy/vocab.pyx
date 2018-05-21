@@ -309,7 +309,7 @@ cdef class Vocab:
         link_vectors_to_models(self)
         return remap
 
-    def get_vector(self, orth):
+    def get_vector(self, orth, minn=None, maxn=None):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
@@ -320,10 +320,42 @@ cdef class Vocab:
         """
         if isinstance(orth, basestring_):
             orth = self.strings.add(orth)
+        word = self[orth].orth_
         if orth in self.vectors.key2row:
             return self.vectors[orth]
-        else:
-            return numpy.zeros((self.vectors_length,), dtype='f')
+
+        # Assign default ngram limits to minn and maxn which is the length of the word.
+        if minn is None:
+            minn = len(word)
+        if maxn is None:
+            maxn = len(word)
+        vectors = numpy.zeros((self.vectors_length,), dtype='f')
+
+        # Fasttext's ngram computation taken from https://github.com/facebookresearch/fastText
+        ngrams_size = 0;
+        for i in range(len(word)):
+            ngram = ""
+            if (word[i] and 0xC0) == 0x80:
+                continue
+            n = 1
+            j = i
+            while (j < len(word) and n <= maxn):
+                if n > maxn:
+                    break
+                ngram += word[j]
+                j = j + 1
+                while (j < len(word) and (word[j] and 0xC0) == 0x80):
+                    ngram += word[j]
+                    j = j + 1
+                if (n >= minn and not (n == 1 and (i == 0 or j == len(word)))):
+                    if self.strings[ngram] in self.vectors.key2row:
+                        vectors = numpy.add(self.vectors[self.strings[ngram]],vectors)
+                        ngrams_size += 1
+                n = n + 1
+        if ngrams_size > 0:
+            vectors = vectors * (1.0/ngrams_size)
+
+        return vectors
 
     def set_vector(self, orth, vector):
         """Set a vector for a word in the vocabulary. Words can be referenced

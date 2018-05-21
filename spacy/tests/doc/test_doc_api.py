@@ -253,11 +253,13 @@ def test_doc_api_has_vector():
 
 def test_doc_api_similarity_match():
     doc = Doc(Vocab(), words=['a'])
-    assert doc.similarity(doc[0]) == 1.0
-    assert doc.similarity(doc.vocab['a']) == 1.0
+    with pytest.warns(None):
+        assert doc.similarity(doc[0]) == 1.0
+        assert doc.similarity(doc.vocab['a']) == 1.0
     doc2 = Doc(doc.vocab, words=['a', 'b', 'c'])
-    assert doc.similarity(doc2[:1]) == 1.0
-    assert doc.similarity(doc2) == 0.0
+    with pytest.warns(None):
+        assert doc.similarity(doc2[:1]) == 1.0
+        assert doc.similarity(doc2) == 0.0
 
 
 def test_lowest_common_ancestor(en_tokenizer):
