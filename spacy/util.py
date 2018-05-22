@@ -220,6 +220,19 @@ def get_package_path(name):
     return Path(pkg.__file__).parent
 
 
+def get_entry_points(key):
+    """Get registered entry points from other packages for a given key, e.g.
+    'spacy_factories' and return them as a dictionary, keyed by name.
+
+    key (unicode): Entry point name.
+    RETURNS (dict): Entry points, keyed by name.
+    """
+    result = {}
+    for entry_point in pkg_resources.iter_entry_points(key):
+        result[entry_point.name] = entry_point.load()
+    return result
+
+
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
