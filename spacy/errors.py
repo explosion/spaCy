@@ -46,6 +46,8 @@ class Warnings(object):
             "use context-sensitive tensors. You can always add your own word "
             "vectors, or use one of the larger models instead if available.")
     W008 = ("Evaluating {obj}.similarity based on empty vectors.")
+    W009 = ("Custom factory '{name}' provided by entry points of another "
+            "package overwrites built-in factory.")
 
 
 @add_codes
