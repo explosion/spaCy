@@ -5,7 +5,7 @@ import regex as re
 
 from ._tokenizer_exceptions_list import ID_BASE_EXCEPTIONS
 from ..tokenizer_exceptions import URL_PATTERN
-from ...symbols import ORTH
+from ...symbols import ORTH, LEMMA, NORM
 
 
 _exc = {}
