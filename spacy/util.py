@@ -589,6 +589,18 @@ def minify_html(html):
     """
     return html.strip().replace('    ', '').replace('\n', '')
 
+def escape_html(text):
+    """
+    Replace <, >, &, " with their html representation.
+    :param text: original text
+    :return: equivalent text to be safely used within html
+    """
+    text = text.replace('&', '&amp;')
+    text = text.replace('<', '&lt;')
+    text = text.replace('>', '&gt;')
+    text = text.replace('"', '&quot;')
+
+    return text
 
 def use_gpu(gpu_id):
     try:
