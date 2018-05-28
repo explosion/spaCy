@@ -632,6 +632,20 @@ def minify_html(html):
     return html.strip().replace('    ', '').replace('\n', '')
 
 
+def escape_html(text):
+    """Replace <, >, &, " with their HTML encoded representation. Intended to
+    prevent HTML errors in rendered displaCy markup.
+
+    text (unicode): The original text.
+    RETURNS (unicode): Equivalent text to be safely used within HTML.
+    """
+    text = text.replace('&', '&amp;')
+    text = text.replace('<', '&lt;')
+    text = text.replace('>', '&gt;')
+    text = text.replace('"', '&quot;')
+    return text
+
+
 def use_gpu(gpu_id):
     try:
         import cupy.cuda.device

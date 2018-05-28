@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS
 from .templates import TPL_ENT, TPL_ENTS, TPL_FIGURE, TPL_TITLE, TPL_PAGE
-from ..util import minify_html
+from ..util import minify_html, escape_html
 
 
 class DependencyRenderer(object):
@@ -84,7 +84,9 @@ class DependencyRenderer(object):
         """
         y = self.offset_y+self.word_spacing
         x = self.offset_x+i*self.distance
-        return TPL_DEP_WORDS.format(text=text, tag=tag, x=x, y=y)
+        html_text = escape_html(text)
+        return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
+
 
     def render_arrow(self, label, start, end, direction, i):
         """Render indivicual arrow.
