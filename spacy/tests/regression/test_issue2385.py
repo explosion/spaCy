@@ -7,11 +7,17 @@ from ...gold import iob_to_biluo
 @pytest.mark.xfail
 @pytest.mark.parametrize('tags', [('B-ORG', 'L-ORG'),
                                   ('B-PERSON', 'I-PERSON', 'L-PERSON'),
-                                  ('B-BRAWLER', 'I-BRAWLER', 'L-BRAWLER'),
                                   ('U-BRAWLER', 'U-BRAWLER')])
 def test_issue2385_biluo(tags):
     """already biluo format"""
     assert iob_to_biluo(tags) == list(tags)
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize('tags', [('B-BRAWLER', 'I-BRAWLER', 'I-BRAWLER')])
+def test_issue2385_iob_bcharacter(tags):
+    """fix bug in labels with a 'b' character"""
+    assert iob_to_biluo(tags) == ['B-BRAWLER', 'I-BRAWLER', 'L-BRAWLER']
 
 
 @pytest.mark.xfail
