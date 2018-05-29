@@ -353,12 +353,14 @@ def _consume_os(tags):
 def _consume_ent(tags):
     if not tags:
         return []
-    target = tags.pop(0).replace('B', 'I')
+    tag = tags.pop(0)
+    target_in = 'I' + tag[1:]
+    target_last = 'L' + tag[1:]
     length = 1
-    while tags and tags[0] == target:
+    while tags and tags[0] in {target_in, target_last}:
         length += 1
         tags.pop(0)
-    label = target[2:]
+    label = tag[2:]
     if length == 1:
         return ['U-' + label]
     else:
