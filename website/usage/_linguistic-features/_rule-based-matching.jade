@@ -349,9 +349,10 @@ p
             for match_id, start, end in matches:
                 spans.append(doc[start:end])
             for span in spans:
-                span.merge(is_stop=True) # merge (and mark it as a stop word)
+                span.merge()   # merge
                 for token in span:
                     token._.bad_html = True  # mark token as bad HTML
+                    doc.vocab[token.text].is_stop = True  # mark lexeme as stop word
             return doc
 
     nlp = spacy.load('en_core_web_sm')
