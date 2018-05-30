@@ -884,6 +884,7 @@
             "code_example": [
                 "import spacy",
                 "from benepar.spacy_plugin import BeneparComponent",
+                "",
                 "nlp = spacy.load('en')",
                 "nlp.add_pipe(BeneparComponent('benepar_en'))",
                 "doc = nlp(u'The time for action is now. It's never too late to do something.')",
