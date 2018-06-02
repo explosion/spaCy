@@ -872,8 +872,37 @@
             },
             "category": ["standalone"],
             "tags": [ "question-answering", "elasticsearch"]
+        },
+        {
+            "id": "self-attentive-parser",
+            "title": "Berkeley Neural Parser",
+            "slogan": "Constituency Parsing with a Self-Attentive Encoder (ACL 2018)",
+            "description": "A Python implementation of the parsers described in *\"Constituency Parsing with a Self-Attentive Encoder\"* from ACL 2018.",
+            "url": "https://arxiv.org/abs/1805.01052",
+            "github": "nikitakit/self-attentive-parser",
+            "pip": "benepar",
+            "code_example": [
+                "import spacy",
+                "from benepar.spacy_plugin import BeneparComponent",
+                "",
+                "nlp = spacy.load('en')",
+                "nlp.add_pipe(BeneparComponent('benepar_en'))",
+                "doc = nlp(u'The time for action is now. It's never too late to do something.')",
+                "sent = list(doc.sents)[0]",
+                "print(sent._.parse_string)",
+                "# (S (NP (NP (DT The) (NN time)) (PP (IN for) (NP (NN action)))) (VP (VBZ is) (ADVP (RB now))) (. .))",
+                "print(sent._.labels)",
+                "# ('S',)",
+                "print(list(sent._.children)[0])",
+                "# The time for action"
+            ],
+            "author": "Nikita Kitaev",
+            "author_links": {
+                "github": "nikitakit",
+                "website": " http://kitaev.io"
+            },
+            "category": ["research", "pipeline"]
         }
-
     ],
     "projectCats": {
         "pipeline": {

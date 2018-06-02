@@ -1,14 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-_exc = {
-    "Rp": "$",
-    "IDR": "$",
-    "RMB": "$",
-    "USD": "$",
-    "AUD": "$",
-    "GBP": "$",
-}
+_exc = {}
 
 NORM_EXCEPTIONS = {}
 

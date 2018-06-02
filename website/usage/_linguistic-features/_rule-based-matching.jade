@@ -184,7 +184,7 @@ p
 
 p
     |  In versions before v2.1.0, the semantics of the #[code +] and #[code *] operators
-    |  behave inconsistently. They were usually interpretted
+    |  behave inconsistently. They were usually interpreted
     |  "greedily", i.e. longer matches are returned where possible. However, if
     |  you specify two #[code +] and #[code *] patterns in a row and their
     |  matches overlap, the first operator will behave non-greedily. This quirk
@@ -260,41 +260,6 @@ p
     doc = nlp(u"This is a text about Google I/O 2015.")
     matches = matcher(doc)
 
-p
-    |  In addition to mentions of "Google I/O", your data also contains some
-    |  annoying pre-processing artefacts, like leftover HTML line breaks
-    |  (e.g. #[code &lt;br&gt;] or #[code &lt;BR/&gt;]). While you're at it,
-    |  you want to merge those into one token and flag them, to make sure you
-    |  can easily ignore them later. So you add a second pattern and pass in a
-    |  function #[code merge_and_flag]:
-
-+code-exec.
-    import spacy
-    from spacy.matcher import Matcher
-    from spacy.tokens import Token
-
-    nlp = spacy.load('en_core_web_sm')
-    matcher = Matcher(nlp.vocab)
-    # register a new token extension to flag bad HTML
-    Token.set_extension('bad_html', default=False)
-
-    def merge_and_flag(matcher, doc, i, matches):
-        match_id, start, end = matches[i]
-        span = doc[start : end]
-        span.merge(is_stop=True) # merge (and mark it as a stop word, just in case)
-        for token in span:
-            token._.bad_html = True  # mark token as bad HTML
-        print(span.text)
-
-    matcher.add('BAD_HTML', merge_and_flag,
-                [{'ORTH': '&lt;'}, {'LOWER': 'br'}, {'ORTH': '&gt;'}],
-                [{'ORTH': '&lt;'}, {'LOWER': 'br/'}, {'ORTH': '&gt;'}])
-
-    doc = nlp(u"Hello&lt;br&gt;world!")
-    matches = matcher(doc)
-    for token in doc:
-        print(token.text, token._.bad_html)
-
 +aside("Tip: Visualizing matches")
     |  When working with entities, you can use #[+api("top-level#displacy") displaCy]
     |  to quickly generate a NER visualization from your updated #[code Doc],
@@ -315,7 +280,7 @@ p
     |  that was matched, and invoke it.
 
 +code.
-    doc = nlp(LOTS_OF_TEXT)
+    doc = nlp(YOUR_TEXT_HERE)
     matcher(doc)
 
 p
@@ -347,6 +312,70 @@ p
         +cell
             |  A list of #[code (match_id, start, end)] tuples, describing the
             |  matches. A match tuple describes a span #[code doc[start:end]].
+
++h(3, "matcher-pipeline") Using custom pipeline components
+
+p
+    |  Let's say your data also contains some annoying pre-processing artefacts,
+    |  like leftover HTML line breaks (e.g. #[code &lt;br&gt;] or
+    |  #[code &lt;BR/&gt;]). To make your text easier to analyse, you want to
+    |  merge those into one token and flag them, to make sure you
+    |  can ignore them later. Ideally, this should all be done automatically
+    |  as you process the text. You can achieve this by adding a
+    |  #[+a("/usage/processing-pipelines#custom-components") custom pipeline component]
+    |  that's called on each #[code Doc] object, merges the leftover HTML spans
+    |  and sets an attribute #[code bad_html] on the token.
+
++code-exec.
+    import spacy
+    from spacy.matcher import Matcher
+    from spacy.tokens import Token
+
+    # we're using a class because the component needs to be initialised with
+    # the shared vocab via the nlp object
+    class BadHTMLMerger(object):
+        def __init__(self, nlp):
+            # register a new token extension to flag bad HTML
+            Token.set_extension('bad_html', default=False)
+            self.matcher = Matcher(nlp.vocab)
+            self.matcher.add('BAD_HTML', None,
+                [{'ORTH': '&lt;'}, {'LOWER': 'br'}, {'ORTH': '&gt;'}],
+                [{'ORTH': '&lt;'}, {'LOWER': 'br/'}, {'ORTH': '&gt;'}])
+
+        def __call__(self, doc):
+            # this method is invoked when the component is called on a Doc
+            matches = self.matcher(doc)
+            spans = []  # collect the matched spans here
+            for match_id, start, end in matches:
+                spans.append(doc[start:end])
+            for span in spans:
+                span.merge()   # merge
+                for token in span:
+                    token._.bad_html = True  # mark token as bad HTML
+                    doc.vocab[token.text].is_stop = True  # mark lexeme as stop word
+            return doc
+
+    nlp = spacy.load('en_core_web_sm')
+    html_merger = BadHTMLMerger(nlp)
+    nlp.add_pipe(html_merger, last=True)  # add component to the pipeline
+    doc = nlp(u"Hello&lt;br&gt;world! &lt;br/&gt; This is a test.")
+    for token in doc:
+        print(token.text, token._.bad_html)
+
+p
+    |  Instead of hard-coding the patterns into the component, you could also
+    |  make it take a path to a JSON file containing the patterns. This lets
+    |  you reuse the component with different patterns, depending on your
+    |  application:
+
++code.
+    html_merger = BadHTMLMerger(nlp, path='/path/to/patterns.json')
+
++infobox
+    |  For more details and examples of how to
+    |  #[strong create custom pipeline components] and
+    |  #[strong extension attributes], see the
+    |  #[+a("/usage/processing-pipelines") usage guide].
 
 +h(3, "regex") Using regular expressions
 

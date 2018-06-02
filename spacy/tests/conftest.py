@@ -15,12 +15,12 @@ from .. import util
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'ru', 'sv', 'tr', 'ar', 'xx']
+              'it', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'ar', 'xx']
 
 _models = {'en': ['en_core_web_sm'],
-           'de': ['de_core_news_md'],
+           'de': ['de_core_news_sm'],
            'fr': ['fr_core_news_sm'],
-           'xx': ['xx_ent_web_md'],
+           'xx': ['xx_ent_web_sm'],
            'en_core_web_md': ['en_core_web_md'],
            'es_core_news_md': ['es_core_news_md']}
 
