@@ -5,45 +5,73 @@ from __future__ import unicode_literals
 # Stop words
 
 STOP_WORDS = set("""
-ačiū ana antai apie ar arba argi aš aure
+a abi abidvi abiejose abiejų abiejuose abiem abipus abu abudu aha ai aj ana anaiptol 
+anaisiais anąja anąją anajai anajam anajame anąjį anapus anas anąsias anasis ane anei 
+aniedvi anieji aniesiems anoji anojo anojoje anokia anoks anosiomis anosioms anosios 
+anosiose anot ant antai anųjų anuodu anuoju anuosiuose anuosius apie aplink ar arba 
+argi arti aš aukščiau
 
-be bemaž bene bent beveik bei bet būtent buvo būtų bus būti
+be bei beje bemaž bene bent bet betgi beveik 
 
-čia
+dar dargi daugmaž deja dėka dėl dėlei dėlto 
 
-dar destis dėl dabar daug daugiau dėlto
+ech ei ej et 
 
-gal gi gali galbūt
+gal galbūt galgi gan gana gi greta
 
-ir itin idant iki iš
+į idant iki įkypai ir irgi iš išilgai įstrižai išvis it itin
 
-į
+ja ją jaisiais jąja jąją jajai jajam jąsias jei jeigu ji jį jiedu jiedvi jieji jiesiems 
+jinai jis jisai jo jog joji jojo jojoje jokia joks josiomis josioms josios josiose judu 
+judvi jųjų juk jumis jums jumyse juo juodu juosiuose juosius jus jūs jūsiškė jūsiškis 
+jūsų
 
-jau juk juo jei jeigu jog jūs jis jūsų jie jų
+kad kada kadangi kai kaip kaipgi kas katra katras katriedvi katruodu kažin kažkas 
+kažkatra kažkatras kažkokia kažkoks kažkuri kažkuris kiaurai kiek kiekvienas kieno kita 
+kitas kitokia kitoks kodėl kokia koks kol kolei kone kuomet kur kurgi kuri kuriedvi 
+kuris kuriuodu
 
-kad kažin ko kone kuo kuotik kuone kada kadangi kai kaip kol kurie kas ką kur kuris kiek
+lai lig ligi link lyg
 
-lyg ligi labai
+man manaisiais manąja manąją manajai manajam manajame manąjį manas manasai manąsias 
+manasis mane manęs manieji maniesiems manim manimi maniškė maniškis mano manoji manojo 
+manojoje manosiomis manosioms manosios manosiose manųjų manuoju manuosiuose manuosius 
+manyje mat maždaug mažne mes mudu mudvi mumis mums mumyse mus mūsiškė mūsiškis mūsų na
 
-mes mūsų manau mano man
+nagi ne nė nebe nebent negi negu nei nejau nejaugi nekaip nelyginant nes net netgi 
+netoli neva nors nuo
 
-ne nebe nebent negi nei nejau nejaugi nelyginant net nors nė negu nes nėra nuo norėčiau
+o ogi oho oi oj 
 
-o
+pačiais pačiam pačiame pačiu pačių pačiuose pačius paeiliui pagal pakeliui pala 
+palaipsniui palei pas pasak paskos paskui paskum pat pati patį patiems paties pats 
+patys per pernelyg pirm pirma pirmiau po prie prieš priešais pro pusiau
 
-pat per po prieš pagal
+rasi rodos 
 
-su savo
+šalia sau savaisiais savąja savąją savajai savajam savajame savąjį savas savasai 
+savąsias savasis save savęs savieji saviesiems savimi saviškė saviškis savo savoji 
+savojo savojoje savosiomis savosioms savosios savosiose savųjų savuoju savuosiuose 
+savuosius savyje še ši šį šiaisiais šiąja šiąją šiajai šiajam šiajame šiapus šiąsias 
+šiedvi šieji šiesiems šįjį šioji šiojo šiojoje šiokia šioks šiosiomis šiosioms šiosios 
+šiosiose šis šisai šit šita šitas šitiedvi šitokia šitoks šituodu šiųjų šiuodu šiuoju 
+šiuosiuose šiuosius skersai skradžiai stačiai štai su sulig
 
-še šit šitai štai
+ta tačiau tad tai taigi taip taipogi taisiais tąja tąją tajai tajam tajame tąjį tamsta 
+tarp tarsi tartum tarytum tas tasai tąsias tau tavaisiais tavąja tavąją tavajai 
+tavajam tavajame tavąjį tavas tavasai tavąsias tavasis tave tavęs tavieji taviesiems 
+tavimi taviškė taviškis tavo tavoji tavojo tavojoje tavosiomis tavosioms tavosios 
+tavosiose tavųjų tavuoju tavuosiuose tavuosius tavyje te tegu tegul tiedvi tieji ties 
+tiesiems tiesiog tik tikriausiai tiktai to toji tojoje tokia toks tol tolei toliau 
+tosiomis tosioms tosios tosiose tu tųjų tūlas tuodu tuoju tuosiuose tuosius turbūt
 
-taigi taip tarsi tartum tarytum te tegu tegul tik tik tik tiktai tai tačiau tiek todėl 
-to turi tikrai tą tam tikrųjų tas tada
+už užtat užvis
 
-užtai
+va vai vau vėl vėlgi viduj vidury vien vienas vienokia vienoks vietoj virš viršuj 
+viršum vis visa visas visgi visokia visoks vos
 
-va veik vien vis vos vėl visi
+ypač
 
-ypač yra
+žemiau
 
 """.split())

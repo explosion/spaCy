@@ -35,7 +35,7 @@ from ...util import update_exc
 
 class LithuanianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'en' # ISO code
+    lex_attr_getters[LANG] = lambda text: 'lt' # ISO code
     # add more norm exception dictionaries here
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
 
