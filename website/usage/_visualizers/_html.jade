@@ -72,10 +72,11 @@ p
     |  you want to visualize output from other libraries, like
     |  #[+a("http://www.nltk.org") NLTK] or
     |  #[+a("https://github.com/tensorflow/models/tree/master/research/syntaxnet") SyntaxNet].
-    |  Simply convert the dependency parse or recognised entities to displaCy's
-    |  format and set #[code manual=True] on either #[code render()] or
-    |  #[code serve()]. When setting #[code ents] manually, make sure to supply
-    |  them in the right order, i.e. starting with the lowest start position.
+    |  If you set #[code manual=True] on either #[code render()] or
+    |  #[code serve()], you can pass in data in displaCy's format (instead of
+    |  #[code Doc] objects). When setting #[code ents] manually, make sure to
+    |  supply them in the right order, i.e. starting with the lowest start
+    |  position.
 
 +aside-code("Example").
     ex = [{'text': 'But Google is starting from behind.',
@@ -109,7 +110,7 @@ p
     |  If you want to use the visualizers as part of a web application, for
     |  example to create something like our
     |  #[+a(DEMOS_URL + "/displacy") online demo], it's not recommended to
-    |  simply wrap and serve the displaCy renderer. Instead, you should only
+    |  only wrap and serve the displaCy renderer. Instead, you should only
     |  rely on the server to perform spaCy's processing capabilities, and use
     |  #[+a(gh("displacy")) displaCy.js] to render the JSON-formatted output.
 

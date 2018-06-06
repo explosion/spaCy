@@ -1,17 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .errors import Errors, Warnings, deprecation_warning
-
-try:
-    # check if spaCy has compiled correctly (if it hasn't this will raise)
-    import spacy.symbols
-except ModuleNotFoundError:
-    raise ImportError(Errors.E094)
-
 from .cli.info import info as cli_info
 from .glossary import explain
 from .about import __version__
+from .errors import Warnings, deprecation_warning
 from . import util
 
 

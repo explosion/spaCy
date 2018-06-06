@@ -244,10 +244,9 @@ class Errors(object):
             "Alternatively, it is built from the 'lang' and 'name' keys in "
             "the meta.json. Vector names are required to avoid issue #1660.")
     E093 = ("token.ent_iob values make invalid sequence: I without B\n{seq}")
-    E094 = ("Can't import from compiled modules. This usually indicates that "
-            "spaCy hasn't compiled correcty. If you're on Windows, make sure "
-            "you have a compiler, i.e. the Visual C++ Build Tools installed. "
-            "See the installation docs for more info: https://spacy.io/usage/")
+    E094 = ("Error reading line {line_num} in vectors file {loc}.")
+    E095 = ("Can't write to frozen dictionary. This is likely an internal "
+            "error. Are you writing to a default function argument?")
 
 
 @add_codes

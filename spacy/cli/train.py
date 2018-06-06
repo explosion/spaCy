@@ -116,7 +116,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
 
-    print("Itn.\tP.Loss\tN.Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
+    print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
     try:
         train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
                                        gold_preproc=gold_preproc, max_length=0)
@@ -207,17 +207,17 @@ def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores.update(dev_scores)
     scores['cpu_wps'] = cpu_wps
     scores['gpu_wps'] = gpu_wps or 0.0
-    tpl = '\t'.join((
-        '{:d}',
-        '{dep_loss:.3f}',
-        '{ner_loss:.3f}',
-        '{uas:.3f}',
-        '{ents_p:.3f}',
-        '{ents_r:.3f}',
-        '{ents_f:.3f}',
-        '{tags_acc:.3f}',
-        '{token_acc:.3f}',
-        '{cpu_wps:.1f}',
+    tpl = ''.join((
+        '{:<6d}',
+        '{dep_loss:<10.3f}',
+        '{ner_loss:<10.3f}',
+        '{uas:<8.3f}',
+        '{ents_p:<8.3f}',
+        '{ents_r:<8.3f}',
+        '{ents_f:<8.3f}',
+        '{tags_acc:<8.3f}',
+        '{token_acc:<9.3f}',
+        '{cpu_wps:<9.1f}',
         '{gpu_wps:.1f}',
     ))
     print(tpl.format(itn, **scores))

@@ -590,6 +590,20 @@ def minify_html(html):
     return html.strip().replace('    ', '').replace('\n', '')
 
 
+def escape_html(text):
+    """Replace <, >, &, " with their HTML encoded representation. Intended to
+    prevent HTML errors in rendered displaCy markup.
+
+    text (unicode): The original text.
+    RETURNS (unicode): Equivalent text to be safely used within HTML.
+    """
+    text = text.replace('&', '&amp;')
+    text = text.replace('<', '&lt;')
+    text = text.replace('>', '&gt;')
+    text = text.replace('"', '&quot;')
+    return text
+
+
 def use_gpu(gpu_id):
     try:
         import cupy.cuda.device
@@ -606,3 +620,18 @@ def use_gpu(gpu_id):
 def fix_random_seed(seed=0):
     random.seed(seed)
     numpy.random.seed(seed)
+
+
+class SimpleFrozenDict(dict):
+    """Simplified implementation of a frozen dict, mainly used as default
+    function or method argument (for arguments that should default to empty
+    dictionary). Will raise an error if user or spaCy attempts to add to dict.
+    """
+    def __setitem__(self, key, value):
+        raise NotImplementedError(Errors.E095)
+
+    def pop(self, key, default=None):
+        raise NotImplementedError(Errors.E095)
+
+    def update(self, other):
+        raise NotImplementedError(Errors.E095)

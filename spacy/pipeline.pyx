@@ -79,7 +79,7 @@ def merge_noun_chunks(doc):
     RETURNS (Doc): The Doc object with merged noun chunks.
     """
     if not doc.is_parsed:
-        return
+        return doc
     spans = [(np.start_char, np.end_char, np.root.tag, np.root.dep)
              for np in doc.noun_chunks]
     for start, end, tag, dep in spans:
@@ -206,7 +206,7 @@ class Pipe(object):
         """Load the pipe from a bytestring."""
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
-            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
@@ -233,7 +233,7 @@ class Pipe(object):
         """Load the pipe from disk."""
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
-            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
@@ -470,7 +470,7 @@ class Tagger(Pipe):
                     doc.extend_tensor(tensors[i].get())
                 else:
                     doc.extend_tensor(tensors[i])
-        doc.is_tagged = True
+            doc.is_tagged = True
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
@@ -578,7 +578,7 @@ class Tagger(Pipe):
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
-            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
 
             if self.model is True:
@@ -619,7 +619,7 @@ class Tagger(Pipe):
     def from_disk(self, path, **exclude):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
-            if 'pretrained_dims' in self.cfg and 'pretrained_vectors' not in self.cfg:
+            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)

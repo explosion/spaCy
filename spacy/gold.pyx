@@ -353,12 +353,14 @@ def _consume_os(tags):
 def _consume_ent(tags):
     if not tags:
         return []
-    target = tags.pop(0).replace('B', 'I')
+    tag = tags.pop(0)
+    target_in = 'I' + tag[1:]
+    target_last = 'L' + tag[1:]
     length = 1
-    while tags and tags[0] == target:
+    while tags and tags[0] in {target_in, target_last}:
         length += 1
         tags.pop(0)
-    label = target[2:]
+    label = tag[2:]
     if length == 1:
         return ['U-' + label]
     else:
@@ -447,7 +449,7 @@ cdef class GoldParse:
         for i, gold_i in enumerate(self.cand_to_gold):
             if doc[i].text.isspace():
                 self.words[i] = doc[i].text
-                self.tags[i] = 'SP'
+                self.tags[i] = '_SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'

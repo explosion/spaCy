@@ -94,7 +94,7 @@ def generate_meta(model_path, existing_meta):
     meta['vectors'] = {'width': nlp.vocab.vectors_length,
                        'vectors': len(nlp.vocab.vectors),
                        'keys': nlp.vocab.vectors.n_keys}
-    prints(Messages.M047, title=Messages.Mo46)
+    prints(Messages.M047, title=Messages.M046)
     for setting, desc, default in settings:
         response = util.get_raw_input(desc, default)
         meta[setting] = default if response == '' and default else response

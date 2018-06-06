@@ -130,9 +130,11 @@ p
     |  assigned, and get the L2 norm, which can be used to normalise
     |  vectors.
 
-+code.
-    nlp = spacy.load('en_core_web_lg')
-    tokens = nlp(u'dog cat banana sasquatch')
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_md')
+    tokens = nlp(u'dog cat banana afskfsd')
 
     for token in tokens:
         print(token.text, token.has_vector, token.vector_norm, token.is_oov)
@@ -142,19 +144,12 @@ p
     |  #[strong has vector]: Does the token have a vector representation?#[br]
     |  #[strong Vector norm]: The L2 norm of the token's vector (the square root
     |  of the sum of the values squared)#[br]
-    |  #[strong is OOV]: Is the word out-of-vocabulary?
-
-+table(["Text", "Has vector", "Vector norm", "OOV"])
-    - var style = [0, 1, 1, 1]
-    +annotation-row(["dog", true, 7.033672992262838, false], style)
-    +annotation-row(["cat", true, 6.68081871208896, false], style)
-    +annotation-row(["banana", true, 6.700014292148571, false], style)
-    +annotation-row(["sasquatch", false, 0, true], style)
+    |  #[strong OOV]: Out-of-vocabulary
 
 p
     |  The words "dog", "cat" and "banana" are all pretty common in English, so
     |  they're part of the model's vocabulary, and come with a vector. The word
-    |  "sasquatch" on the other hand is a lot less common and out-of-vocabulary
+    |  "afskfsd" on the other hand is a lot less common and out-of-vocabulary
     |  – so its vector representation consists of 300 dimensions of #[code 0],
     |  which means it's practically nonexistent. If your application will
     |  benefit from a #[strong large vocabulary] with more vectors, you should

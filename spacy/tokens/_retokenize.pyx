@@ -11,11 +11,13 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport *
+from ..attrs cimport TAG
+from ..attrs import intify_attrs
+from ..util import SimpleFrozenDict
 
 
 cdef class Retokenizer:
-    '''Helper class for doc.retokenize() context manager.'''
+    """Helper class for doc.retokenize() context manager."""
     cdef Doc doc
     cdef list merges
     cdef list splits
@@ -24,14 +26,18 @@ cdef class Retokenizer:
         self.merges = []
         self.splits = []
 
-    def merge(self, Span span, attrs=None):
-        '''Mark a span for merging. The attrs will be applied to the resulting
-        token.'''
+    def merge(self, Span span, attrs=SimpleFrozenDict()):
+        """Mark a span for merging. The attrs will be applied to the resulting
+        token.
+        """
+        attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         self.merges.append((span.start_char, span.end_char, attrs))
 
-    def split(self, Token token, orths, attrs=None):
-        '''Mark a Token for splitting, into the specified orths. The attrs
-        will be applied to each subtoken.'''
+    def split(self, Token token, orths, attrs=SimpleFrozenDict()):
+        """Mark a Token for splitting, into the specified orths. The attrs
+        will be applied to each subtoken.
+        """
+        attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         self.splits.append((token.start_char, orths, attrs))
 
     def __enter__(self):
@@ -125,5 +131,3 @@ def _merge(Doc doc, int start, int end, attributes):
     # Clear the cached Python objects
     # Return the merged Python object
     return doc[start]
-
-
