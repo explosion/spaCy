@@ -2,476 +2,162 @@
 # THIS IS ENGLISH AS OF YET
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
+from ...symbols import ORTH, LEMMA, POS, ADV, ADJ, NOUN, ADP, VERB, TAG, NORM, PRON_LEMMA
 
 
 _exc = {}
-_exclude = ["Ill", "ill", "Its", "its", "Hell", "hell", "Shell", "shell",
-               "Shed", "shed", "were", "Were", "Well", "well", "Whore", "whore"]
-
-
-# Pronouns
-
-for pron in ["i"]:
-    for orth in [pron, pron.title()]:
-        _exc[orth + "'m"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'m", LEMMA: "be", NORM: "am", TAG: "VBP", "tenspect": 1, "number": 1}]
-
-        _exc[orth + "m"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "m", LEMMA: "be", TAG: "VBP", "tenspect": 1, "number": 1 }]
-
-        _exc[orth + "'ma"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'m", LEMMA: "be", NORM: "am"},
-            {ORTH: "a", LEMMA: "going to", NORM: "gonna"}]
-
-        _exc[orth + "ma"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "m", LEMMA: "be", NORM: "am"},
-            {ORTH: "a", LEMMA: "going to", NORM: "gonna"}]
-
-
-for pron in ["i", "you", "he", "she", "it", "we", "they"]:
-    for orth in [pron, pron.title()]:
-        _exc[orth + "'ll"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"}]
-
-        _exc[orth + "ll"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"}]
-
-        _exc[orth + "'ll've"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "llve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "'d"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'d", LEMMA: "would", NORM: "would", TAG: "MD"}]
-
-        _exc[orth + "d"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "d", LEMMA: "would", NORM: "would", TAG: "MD"}]
-
-        _exc[orth + "'d've"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "dve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-
-for pron in ["i", "you", "we", "they"]:
-    for orth in [pron, pron.title()]:
-        _exc[orth + "'ve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "ve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-
-for pron in ["you", "we", "they"]:
-    for orth in [pron, pron.title()]:
-        _exc[orth + "'re"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'re", LEMMA: "be", NORM: "are"}]
-
-        _exc[orth + "re"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "re", LEMMA: "be", NORM: "are", TAG: "VBZ"}]
-
-
-for pron in ["he", "she", "it"]:
-    for orth in [pron, pron.title()]:
-        _exc[orth + "'s"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'s", NORM: "'s"}]
-
-        _exc[orth + "s"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "s"}]
-
-
-# W-words, relative pronouns, prepositions etc.
-
-for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
-    for orth in [word, word.title()]:
-        _exc[orth + "'s"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'s", NORM: "'s"}]
-
-        _exc[orth + "s"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "s"}]
-
-        _exc[orth + "'ll"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"}]
-
-        _exc[orth + "ll"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"}]
-
-        _exc[orth + "'ll've"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "llve"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "'re"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'re", LEMMA: "be", NORM: "are"}]
-
-        _exc[orth + "re"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "re", LEMMA: "be", NORM: "are"}]
-
-        _exc[orth + "'ve"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'ve", LEMMA: "have", TAG: "VB"}]
-
-        _exc[orth + "ve"] = [
-            {ORTH: orth, LEMMA: word},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "'d"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'d", NORM: "'d"}]
-
-        _exc[orth + "d"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "d"}]
-
-        _exc[orth + "'d've"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[orth + "dve"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-
-# Verbs
-
-for verb_data in [
-    {ORTH: "ca", LEMMA: "can", NORM: "can", TAG: "MD"},
-    {ORTH: "could", NORM: "could", TAG: "MD"},
-    {ORTH: "do", LEMMA: "do", NORM: "do"},
-    {ORTH: "does", LEMMA: "do", NORM: "does"},
-    {ORTH: "did", LEMMA: "do", NORM: "do", TAG: "VBD"},
-    {ORTH: "had", LEMMA: "have", NORM: "have", TAG: "VBD"},
-    {ORTH: "may", NORM: "may", TAG: "MD"},
-    {ORTH: "might", NORM: "might", TAG: "MD"},
-    {ORTH: "must", NORM: "must", TAG: "MD"},
-    {ORTH: "need", NORM: "need"},
-    {ORTH: "ought", NORM: "ought", TAG: "MD"},
-    {ORTH: "sha", LEMMA: "shall", NORM: "shall", TAG: "MD"},
-    {ORTH: "should", NORM: "should", TAG: "MD"},
-    {ORTH: "wo", LEMMA: "will", NORM: "will", TAG: "MD"},
-    {ORTH: "would", NORM: "would", TAG: "MD"}]:
-    verb_data_tc = dict(verb_data)
-    verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
-    for data in [verb_data, verb_data_tc]:
-        _exc[data[ORTH] + "n't"] = [
-            dict(data),
-            {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"}]
-
-        _exc[data[ORTH] + "nt"] = [
-            dict(data),
-            {ORTH: "nt", LEMMA: "not", NORM: "not", TAG: "RB"}]
-
-        _exc[data[ORTH] + "n't've"] = [
-            dict(data),
-            {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-        _exc[data[ORTH] + "ntve"] = [
-            dict(data),
-            {ORTH: "nt", LEMMA: "not", NORM: "not", TAG: "RB"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}]
-
-
-for verb_data in [
-    {ORTH: "could", NORM: "could", TAG: "MD"},
-    {ORTH: "might", NORM: "might", TAG: "MD"},
-    {ORTH: "must", NORM: "must", TAG: "MD"},
-    {ORTH: "should", NORM: "should", TAG: "MD"},
-    {ORTH: "would", NORM: "would", TAG: "MD"}]:
-    verb_data_tc = dict(verb_data)
-    verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
-    for data in [verb_data, verb_data_tc]:
-        _exc[data[ORTH] + "'ve"] = [
-            dict(data),
-            {ORTH: "'ve", LEMMA: "have", TAG: "VB"}]
-
-        _exc[data[ORTH] + "ve"] = [
-            dict(data),
-            {ORTH: "ve", LEMMA: "have", TAG: "VB"}]
-
-
-for verb_data in [
-    {ORTH: "ai", LEMMA: "be", TAG: "VBP", "number": 2},
-    {ORTH: "are", LEMMA: "be", NORM: "are", TAG: "VBP", "number": 2},
-    {ORTH: "is", LEMMA: "be", NORM: "is", TAG: "VBZ"},
-    {ORTH: "was", LEMMA: "be", NORM: "was"},
-    {ORTH: "were", LEMMA: "be", NORM: "were"},
-    {ORTH: "have", NORM: "have"},
-    {ORTH: "has", LEMMA: "have", NORM: "has"},
-    {ORTH: "dare", NORM: "dare"}]:
-    verb_data_tc = dict(verb_data)
-    verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
-    for data in [verb_data, verb_data_tc]:
-        _exc[data[ORTH] + "n't"] = [
-            dict(data),
-            {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"}]
-
-        _exc[data[ORTH] + "nt"] = [
-            dict(data),
-            {ORTH: "nt", LEMMA: "not", NORM: "not", TAG: "RB"}]
-
-
-# Other contractions with trailing apostrophe
-
-for exc_data in [
-    {ORTH: "doin", LEMMA: "do", NORM: "doing"},
-    {ORTH: "goin", LEMMA: "go", NORM: "going"},
-    {ORTH: "nothin", LEMMA: "nothing", NORM: "nothing"},
-    {ORTH: "nuthin", LEMMA: "nothing", NORM: "nothing"},
-    {ORTH: "ol", LEMMA: "old", NORM: "old"},
-    {ORTH: "somethin", LEMMA: "something", NORM: "something"}]:
-    exc_data_tc = dict(exc_data)
-    exc_data_tc[ORTH] = exc_data_tc[ORTH].title()
-    for data in [exc_data, exc_data_tc]:
-        data_apos = dict(data)
-        data_apos[ORTH] = data_apos[ORTH] + "'"
-        _exc[data[ORTH]] = [dict(data)]
-        _exc[data_apos[ORTH]] = [dict(data_apos)]
-
-
-# Other contractions with leading apostrophe
-
-for exc_data in [
-    {ORTH: "cause", LEMMA: "because", NORM: "because"},
-    {ORTH: "em", LEMMA: PRON_LEMMA, NORM: "them"},
-    {ORTH: "ll", LEMMA: "will", NORM: "will"},
-    {ORTH: "nuff", LEMMA: "enough", NORM: "enough"}]:
-    exc_data_apos = dict(exc_data)
-    exc_data_apos[ORTH] = "'" + exc_data_apos[ORTH]
-    for data in [exc_data, exc_data_apos]:
-        _exc[data[ORTH]] = [data]
-
-
-# Times
-
-for h in range(1, 12 + 1):
-    for period in ["a.m.", "am"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "a.m.", NORM: "a.m."}]
-    for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "p.m.", NORM: "p.m."}]
-
-
-# Rest
-
-_other_exc = {
-    "y'all": [
-        {ORTH: "y'", LEMMA: PRON_LEMMA, NORM: "you"},
-        {ORTH: "all"}],
-
-    "yall": [
-        {ORTH: "y", LEMMA: PRON_LEMMA, NORM: "you"},
-        {ORTH: "all"}],
-
-    "how'd'y": [
-        {ORTH: "how", LEMMA: "how"},
-        {ORTH: "'d", LEMMA: "do"},
-        {ORTH: "'y", LEMMA: PRON_LEMMA, NORM: "you"}],
-
-    "How'd'y": [
-        {ORTH: "How", LEMMA: "how", NORM: "how"},
-        {ORTH: "'d", LEMMA: "do"},
-        {ORTH: "'y", LEMMA: PRON_LEMMA, NORM: "you"}],
-
-    "not've": [
-        {ORTH: "not", LEMMA: "not", TAG: "RB"},
-        {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}],
-
-    "notve": [
-        {ORTH: "not", LEMMA: "not", TAG: "RB"},
-        {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}],
-
-    "Not've": [
-        {ORTH: "Not", LEMMA: "not", NORM: "not", TAG: "RB"},
-        {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"}],
-
-    "Notve": [
-        {ORTH: "Not", LEMMA: "not", NORM: "not", TAG: "RB"},
-        {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"}],
-
-    "cannot": [
-        {ORTH: "can", LEMMA: "can", TAG: "MD"},
-        {ORTH: "not", LEMMA: "not", TAG: "RB"}],
-
-    "Cannot": [
-        {ORTH: "Can", LEMMA: "can", NORM: "can", TAG: "MD"},
-        {ORTH: "not", LEMMA: "not", TAG: "RB"}],
-
-    "gonna": [
-        {ORTH: "gon", LEMMA: "go", NORM: "going"},
-        {ORTH: "na", LEMMA: "to", NORM: "to"}],
-
-    "Gonna": [
-        {ORTH: "Gon", LEMMA: "go", NORM: "going"},
-        {ORTH: "na", LEMMA: "to", NORM: "to"}],
-
-    "gotta": [
-        {ORTH: "got"},
-        {ORTH: "ta", LEMMA: "to", NORM: "to"}],
-
-    "Gotta": [
-        {ORTH: "Got", NORM: "got"},
-        {ORTH: "ta", LEMMA: "to", NORM: "to"}],
-
-    "let's": [
-        {ORTH: "let"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"}],
-
-    "Let's": [
-        {ORTH: "Let", LEMMA: "let", NORM: "let"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"}]
-}
-
-_exc.update(_other_exc)
 
 
 for exc_data in [
-    {ORTH: "'S", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "'s", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "\u2018S", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "\u2018s", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "and/or", LEMMA: "and/or", NORM: "and/or", TAG: "CC"},
-    {ORTH: "w/o", LEMMA: "without", NORM: "without"},
-    {ORTH: "'re", LEMMA: "be", NORM: "are"},
-    {ORTH: "'Cause", LEMMA: "because", NORM: "because"},
-    {ORTH: "'cause", LEMMA: "because", NORM: "because"},
-    {ORTH: "'cos", LEMMA: "because", NORM: "because"},
-    {ORTH: "'Cos", LEMMA: "because", NORM: "because"},
-    {ORTH: "'coz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'Coz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'cuz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'Cuz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'bout", LEMMA: "about", NORM: "about"},
-    {ORTH: "ma'am", LEMMA: "madam", NORM: "madam"},
-    {ORTH: "Ma'am", LEMMA: "madam", NORM: "madam"},
-    {ORTH: "o'clock", LEMMA: "o'clock", NORM: "o'clock"},
-    {ORTH: "O'clock", LEMMA: "o'clock", NORM: "o'clock"},
-    {ORTH: "lovin'", LEMMA: "love", NORM: "loving"},
-    {ORTH: "Lovin'", LEMMA: "love", NORM: "loving"},
-    {ORTH: "lovin", LEMMA: "love", NORM: "loving"},
-    {ORTH: "Lovin", LEMMA: "love", NORM: "loving"},
-    {ORTH: "havin'", LEMMA: "have", NORM: "having"},
-    {ORTH: "Havin'", LEMMA: "have", NORM: "having"},
-    {ORTH: "havin", LEMMA: "have", NORM: "having"},
-    {ORTH: "Havin", LEMMA: "have", NORM: "having"},
-    {ORTH: "doin'", LEMMA: "do", NORM: "doing"},
-    {ORTH: "Doin'", LEMMA: "do", NORM: "doing"},
-    {ORTH: "doin", LEMMA: "do", NORM: "doing"},
-    {ORTH: "Doin", LEMMA: "do", NORM: "doing"},
-    {ORTH: "goin'", LEMMA: "go", NORM: "going"},
-    {ORTH: "Goin'", LEMMA: "go", NORM: "going"},
-    {ORTH: "goin", LEMMA: "go", NORM: "going"},
-    {ORTH: "Goin", LEMMA: "go", NORM: "going"},
-
-
-    {ORTH: "Mt.", LEMMA: "Mount", NORM: "Mount"},
-    {ORTH: "Ak.", LEMMA: "Alaska", NORM: "Alaska"},
-    {ORTH: "Ala.", LEMMA: "Alabama", NORM: "Alabama"},
-    {ORTH: "Apr.", LEMMA: "April", NORM: "April"},
-    {ORTH: "Ariz.", LEMMA: "Arizona", NORM: "Arizona"},
-    {ORTH: "Ark.", LEMMA: "Arkansas", NORM: "Arkansas"},
-    {ORTH: "Aug.", LEMMA: "August", NORM: "August"},
-    {ORTH: "Calif.", LEMMA: "California", NORM: "California"},
-    {ORTH: "Colo.", LEMMA: "Colorado", NORM: "Colorado"},
-    {ORTH: "Conn.", LEMMA: "Connecticut", NORM: "Connecticut"},
-    {ORTH: "Dec.", LEMMA: "December", NORM: "December"},
-    {ORTH: "Del.", LEMMA: "Delaware", NORM: "Delaware"},
-    {ORTH: "Feb.", LEMMA: "February", NORM: "February"},
-    {ORTH: "Fla.", LEMMA: "Florida", NORM: "Florida"},
-    {ORTH: "Ga.", LEMMA: "Georgia", NORM: "Georgia"},
-    {ORTH: "Ia.", LEMMA: "Iowa", NORM: "Iowa"},
-    {ORTH: "Id.", LEMMA: "Idaho", NORM: "Idaho"},
-    {ORTH: "Ill.", LEMMA: "Illinois", NORM: "Illinois"},
-    {ORTH: "Ind.", LEMMA: "Indiana", NORM: "Indiana"},
-    {ORTH: "Jan.", LEMMA: "January", NORM: "January"},
-    {ORTH: "Jul.", LEMMA: "July", NORM: "July"},
-    {ORTH: "Jun.", LEMMA: "June", NORM: "June"},
-    {ORTH: "Kan.", LEMMA: "Kansas", NORM: "Kansas"},
-    {ORTH: "Kans.", LEMMA: "Kansas", NORM: "Kansas"},
-    {ORTH: "Ky.", LEMMA: "Kentucky", NORM: "Kentucky"},
-    {ORTH: "La.", LEMMA: "Louisiana", NORM: "Louisiana"},
-    {ORTH: "Mar.", LEMMA: "March", NORM: "March"},
-    {ORTH: "Mass.", LEMMA: "Massachusetts", NORM: "Massachusetts"},
-    {ORTH: "May.", LEMMA: "May", NORM: "May"},
-    {ORTH: "Mich.", LEMMA: "Michigan", NORM: "Michigan"},
-    {ORTH: "Minn.", LEMMA: "Minnesota", NORM: "Minnesota"},
-    {ORTH: "Miss.", LEMMA: "Mississippi", NORM: "Mississippi"},
-    {ORTH: "N.C.", LEMMA: "North Carolina", NORM: "North Carolina"},
-    {ORTH: "N.D.", LEMMA: "North Dakota", NORM: "North Dakota"},
-    {ORTH: "N.H.", LEMMA: "New Hampshire", NORM: "New Hampshire"},
-    {ORTH: "N.J.", LEMMA: "New Jersey", NORM: "New Jersey"},
-    {ORTH: "N.M.", LEMMA: "New Mexico", NORM: "New Mexico"},
-    {ORTH: "N.Y.", LEMMA: "New York", NORM: "New York"},
-    {ORTH: "Neb.", LEMMA: "Nebraska", NORM: "Nebraska"},
-    {ORTH: "Nebr.", LEMMA: "Nebraska", NORM: "Nebraska"},
-    {ORTH: "Nev.", LEMMA: "Nevada", NORM: "Nevada"},
-    {ORTH: "Nov.", LEMMA: "November", NORM: "November"},
-    {ORTH: "Oct.", LEMMA: "October", NORM: "October"},
-    {ORTH: "Okla.", LEMMA: "Oklahoma", NORM: "Oklahoma"},
-    {ORTH: "Ore.", LEMMA: "Oregon", NORM: "Oregon"},
-    {ORTH: "Pa.", LEMMA: "Pennsylvania", NORM: "Pennsylvania"},
-    {ORTH: "S.C.", LEMMA: "South Carolina", NORM: "South Carolina"},
-    {ORTH: "Sep.", LEMMA: "September", NORM: "September"},
-    {ORTH: "Sept.", LEMMA: "September", NORM: "September"},
-    {ORTH: "Tenn.", LEMMA: "Tennessee", NORM: "Tennessee"},
-    {ORTH: "Va.", LEMMA: "Virginia", NORM: "Virginia"},
-    {ORTH: "Wash.", LEMMA: "Washington", NORM: "Washington"},
-    {ORTH: "Wis.", LEMMA: "Wisconsin", NORM: "Wisconsin"}]:
+    {ORTH: "a.", LEMMA: "aikštė", POS: NOUN},
+    {ORTH: "a. k.", LEMMA: "asmens kodas", POS: NOUN},
+    {ORTH: "asm. k.", LEMMA: "asmens kodas", POS: NOUN},
+    {ORTH: "asm. kodas.", LEMMA: "asmens kodas", POS: NOUN},
+    {ORTH: "AK", LEMMA: "asmens kodas", POS: NOUN},
+    {ORTH: "a. s.", LEMMA: "atsiskaitomoji sąskaita", POS: NOUN},
+    {ORTH: "atsisk. sąsk.", LEMMA: "atsiskaitomoji sąskaita", POS: NOUN},
+    {ORTH: "atsisk. sąskaita", LEMMA: "atsiskaitomoji sąskaita", POS: NOUN},
+    {ORTH: "adv.", LEMMA: "advokatas", POS: NOUN},
+    {ORTH: "akad.", LEMMA: "akademikas", POS: NOUN},
+    {ORTH: "akt.", LEMMA: "aktorius", POS: NOUN},
+    {ORTH: "al.", LEMMA: "alėja", POS: NOUN},
+    {ORTH: "apyg.", LEMMA: "apygarda", POS: NOUN},
+    {ORTH: "aps.", LEMMA: "apskritis", POS: NOUN},
+    {ORTH: "apskr.", LEMMA: "apskritis", POS: NOUN},
+    {ORTH: "asist.", LEMMA: "asistentas", POS: NOUN},
+    {ORTH: "asmv.", LEMMA: "asmenvardis", POS: NOUN},
+    {ORTH: "aut.", LEMMA: "autorius", POS: NOUN},
+    {ORTH: "avd.", LEMMA: "asmenvardis", POS: NOUN},
+    {ORTH: "biol.", LEMMA: "biologija", POS: NOUN},
+    {ORTH: "b. k.", LEMMA: "banko kodas", POS: NOUN},
+    {ORTH: "bkl.", LEMMA: "bakalauras", POS: NOUN},
+    {ORTH: "bot.", LEMMA: "botanika", POS: NOUN},
+    {ORTH: "bt.", LEMMA: "butas", POS: NOUN},
+    {ORTH: "buv.", LEMMA: "buvęs", POS: ADJ},
+    {ORTH: "chem.", LEMMA: "chemija", POS: NOUN},
+    {ORTH: "d.", LEMMA: "duktė", POS: NOUN},
+    {ORTH: "dail.", LEMMA: "dailininkas", POS: NOUN},
+    {ORTH: "dek.", LEMMA: "dekanas", POS: NOUN},
+    {ORTH: "dėst.", LEMMA: "dėstytojas", POS: NOUN},
+    {ORTH: "dir.", LEMMA: "direktorius", POS: NOUN},
+    {ORTH: "dirig.", LEMMA: "dirigentas", POS: NOUN},
+    {ORTH: "doc.", LEMMA: "docentas", POS: NOUN},
+    {ORTH: "dr.", LEMMA: "daktaras", POS: NOUN},
+    {ORTH: "drp.", LEMMA: "durpynas", POS: NOUN},
+    {ORTH: "dš.", LEMMA: "dešinysis", POS: ADJ},
+    {ORTH: "e. b.", LEMMA: "elektroninis bankas", POS: NOUN},
+    {ORTH: "e. bankas", LEMMA: "elektroninis bankas", POS: NOUN},
+    {ORTH: "e. p.", LEMMA: "elektroninis paštas", POS: NOUN},
+    {ORTH: "e. parašas", LEMMA: "elektroninis parašas", POS: NOUN},
+    {ORTH: "e. paštas", LEMMA: "elektroninis paštas", POS: NOUN},
+    {ORTH: "e. v.", LEMMA: "elektroninė valdžia", POS: NOUN},
+    {ORTH: "e. valdžia", LEMMA: "elektroninė valdžia", POS: NOUN},
+    {ORTH: "el. bankas", LEMMA: "elektroninis bankas", POS: NOUN},
+    {ORTH: "el. p.", LEMMA: "elektroninis paštas", POS: NOUN},
+    {ORTH: "el. parašas", LEMMA: "elektroninis parašas", POS: NOUN},
+    {ORTH: "el. paštas", LEMMA: "elektroninis paštas", POS: NOUN},
+    {ORTH: "el. valdžia", LEMMA: "elektroninė valdžia", POS: NOUN},
+    {ORTH: "egz.", LEMMA: "egzempliorius", POS: NOUN},
+    {ORTH: "eil.", LEMMA: "eilutė", POS: NOUN},
+    {ORTH: "ekon.", LEMMA: "ekonomika", POS: NOUN},
+    {ORTH: "ež.", LEMMA: "ežeras", POS: NOUN},
+    {ORTH: "fak.", LEMMA: "fakultetas", POS: NOUN},
+    {ORTH: "faks.", LEMMA: "faksas", POS: NOUN},
+    {ORTH: "filol.", LEMMA: "filologija", POS: NOUN},
+    {ORTH: "filos.", LEMMA: "filosofija", POS: NOUN},
+    {ORTH: "gen.", LEMMA: "generolas", POS: NOUN},
+    {ORTH: "geol.", LEMMA: "geologija", POS: NOUN},
+    {ORTH: "gim.", LEMMA: "gimęs", POS: ADJ},
+    {ORTH: "gyd.", LEMMA: "gydytojas", POS: NOUN},
+    {ORTH: "gv.", LEMMA: "gyvenvietė", POS: NOUN},
+    {ORTH: "įl.", LEMMA: "įlanka", POS: NOUN},
+    {ORTH: "insp.", LEMMA: "inspektorius", POS: NOUN},
+    {ORTH: "inž.", LEMMA: "inžinierius", POS: NOUN},
+    {ORTH: "istor.", LEMMA: "istorija", POS: ADV},
+    {ORTH: "k.", LEMMA: "kaimas", POS: NOUN},
+    {ORTH: "kand.", LEMMA: "kandidatas", POS: NOUN},
+    {ORTH: "kat.", LEMMA: "katedra", POS: NOUN},
+    {ORTH: "kyš.", LEMMA: "kyšulys", POS: NOUN},
+    {ORTH: "kl.", LEMMA: "klasė", POS: NOUN},
+    {ORTH: "kln.", LEMMA: "kalnas", POS: NOUN},
+    {ORTH: "kn.", LEMMA: "knyga", POS: NOUN},
+    {ORTH: "koresp.", LEMMA: "korespondentas", POS: NOUN},
+    {ORTH: "kpt.", LEMMA: "kapitonas", POS: NOUN},
+    {ORTH: "kr.", LEMMA: "kairysis", POS: NOUN},
+    {ORTH: "kun.", LEMMA: "kunigas", POS: NOUN},
+    {ORTH: "ltn.", LEMMA: "leitenantas", POS: NOUN},
+    {ORTH: "m.", LEMMA: "metai", POS: NOUN},
+    {ORTH: "m. m.", LEMMA: "metai", POS: NOUN},
+    {ORTH: "mst.", LEMMA: "miestas", POS: NOUN},
+    {ORTH: "m. e..", LEMMA: "mūsų eros", POS: NOUN},
+    {ORTH: "mat.", LEMMA: "matematika", POS: NOUN},
+    {ORTH: "med.", LEMMA: "medicina", POS: NOUN},
+    {ORTH: "mgr.", LEMMA: "magistras", POS: NOUN},
+    {ORTH: "mgnt.", LEMMA: "magistrantas", POS: NOUN},
+    {ORTH: "mjr.", LEMMA: "majoras", POS: NOUN},
+    {ORTH: "mln.", LEMMA: "milijonas", POS: NOUN},
+    {ORTH: "mlrd.", LEMMA: "milijardas", POS: NOUN},
+    {ORTH: "mok.", LEMMA: "mokinys", POS: NOUN},
+    {ORTH: "mokyt.", LEMMA: "mokytojas", POS: NOUN},
+    {ORTH: "moksl.", LEMMA: "mokslinis", POS: NOUN},
+    {ORTH: "mot.", LEMMA: "moteris", POS: NOUN},
+    {ORTH: "mstl.", LEMMA: "miestelis", POS: NOUN},
+    {ORTH: "nr.", LEMMA: "numeris", POS: NOUN},
+    {ORTH: "p. d.", LEMMA: "pašto dėžutė", POS: NOUN},
+    {ORTH: "p. m. e.", LEMMA: "prieš mūsų erą", POS: ADP},
+    {ORTH: "pav.", LEMMA: "paveikslas", POS: NOUN},
+    {ORTH: "pavad.", LEMMA: "pavaduotojas", POS: NOUN},
+    {ORTH: "pirm.", LEMMA: "pirmininkas", POS: NOUN},
+    {ORTH: "plk.", LEMMA: "pulkininkas", POS: NOUN},
+    {ORTH: "pr. Kr.", LEMMA: "prieš Kristų", POS: NOUN},
+    {ORTH: "prof.", LEMMA: "profesorius", POS: NOUN},
+    {ORTH: "r.", LEMMA: "rajonas", POS: NOUN},
+    {ORTH: "prot.", LEMMA: "protokolas", POS: NOUN},
+    {ORTH: "pss.", LEMMA: "pusiasalis", POS: NOUN},
+    {ORTH: "pšt.", LEMMA: "paštas", POS: NOUN},
+    {ORTH: "red.", LEMMA: "redaktorius", POS: NOUN},
+    {ORTH: "s.", LEMMA: "sąskaita", POS: NOUN},
+    {ORTH: "sąs.", LEMMA: "sąsiuvinis", POS: NOUN},
+    {ORTH: "saviv.", LEMMA: "savivaldybė", POS: NOUN},
+    {ORTH: "sav.", LEMMA: "savivaldybė", POS: NOUN},
+    {ORTH: "sekr.", LEMMA: "sekretorius", POS: NOUN},
+    {ORTH: "sen.", LEMMA: "seniūnija", POS: NOUN},
+    {ORTH: "sk.", LEMMA: "skaityk", POS: VERB},
+    {ORTH: "skyr.", LEMMA: "skyrius", POS: NOUN},
+    {ORTH: "sp.", LEMMA: "spauda", POS: NOUN},
+    {ORTH: "spec.", LEMMA: "specialistas", POS: NOUN},
+    {ORTH: "str.", LEMMA: "straipsnis", POS: NOUN},
+    {ORTH: "stud.", LEMMA: "studentas", POS: NOUN},
+    {ORTH: "š. m.", LEMMA: "šių metų", POS: NOUN},
+    {ORTH: "šnek.", LEMMA: "šnekamosios kalbos", POS: NOUN},
+    {ORTH: "t.", LEMMA: "tomas", POS: NOUN},
+    {ORTH: "techn.", LEMMA: "technika", POS: NOUN},
+    {ORTH: "tel.", LEMMA: "telefonas", POS: NOUN},
+    {ORTH: "teol.", LEMMA: "teologija", POS: NOUN},
+    {ORTH: "tir.", LEMMA: "tiražas", POS: NOUN},
+    {ORTH: "tūkst.", LEMMA: "tūkstantis", POS: NOUN},
+    {ORTH: "up.", LEMMA: "upė", POS: NOUN},
+    {ORTH: "upl.", LEMMA: "upelis", POS: NOUN},
+    {ORTH: "ved.", LEMMA: "vedėjas", POS: NOUN},
+    {ORTH: "vet.", LEMMA: "veterinarija", POS: NOUN},
+    {ORTH: "virš.", LEMMA: "viršininkas", POS: NOUN},
+    {ORTH: "vyr.", LEMMA: "vyriausiasis", POS: ADJ},
+    {ORTH: "vyresn.", LEMMA: "vyresnysis", POS: ADJ},
+    {ORTH: "vs.", LEMMA: "viensėdis", POS: NOUN},
+    {ORTH: "zool.", LEMMA: "zoologija", POS: NOUN},
+    {ORTH: "žml.", LEMMA: "žemėlapis", POS: NOUN},
+    {ORTH: "žr.", LEMMA: "žiūrėk", POS: VERB},
+    {ORTH: "ž. ū.", LEMMA: "žemės ūkis", POS: NOUN},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [
-    "'d", "a.m.", "Adm.", "Bros.", "co.", "Co.", "Corp.", "D.C.", "Dr.", "e.g.",
-    "E.g.", "E.G.", "Gen.", "Gov.", "i.e.", "I.e.", "I.E.", "Inc.", "Jr.",
-    "Ltd.", "Md.", "Messrs.", "Mo.", "Mont.", "Mr.", "Mrs.", "Ms.", "p.m.",
-    "Ph.D.", "Rep.", "Rev.", "Sen.", "St.", "vs."]:
+    "aklg.", "atsak.", "etc.", "g.", "G.", "gerb.", "Įn", "ir pan.", "ir t. t.", "J. E.", "J. Em.",
+    "K.", "k. a.", "kt.", "l. e. p.", "N.", "nkt.", "ntk.", "p.", "pl.", "plg.", "pr.", "pvz.",
+    "rš.", "skg.", "skv.", "sr.", "st.", "t. y.", "t. p.", "V.", "vad.", "vlsč.", "Vt.", "vtv.",
+    "vv."]:
     _exc[orth] = [{ORTH: orth}]
-
-
-for string in _exclude:
-    if string in _exc:
-        _exc.pop(string)
 
 
 TOKENIZER_EXCEPTIONS = _exc
