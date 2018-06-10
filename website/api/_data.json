@@ -41,8 +41,7 @@
         "next": "annotation",
         "menu": {
             "Basics": "basics",
-            "Neural Network Model": "nn-model",
-            "Cython Conventions": "cython"
+            "Neural Network Model": "nn-model"
         }
     },
 
