@@ -231,3 +231,19 @@
      border: none
      text-align-last: center
      width: 100%
+
+//- Abbreviations
+
+.o-abbr
+    +breakpoint(min, md)
+        cursor: help
+        border-bottom: 2px dotted $color-theme
+        padding-bottom: 3px
+
+    +breakpoint(max, sm)
+        &[data-tooltip]:before
+            content: none
+
+        &:after
+            content: " (" attr(aria-label) ")"
+            color: $color-subtle-dark
