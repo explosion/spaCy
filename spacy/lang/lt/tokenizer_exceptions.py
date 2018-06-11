@@ -1,5 +1,4 @@
 # coding: utf8
-# THIS IS ENGLISH AS OF YET
 from __future__ import unicode_literals
 
 from ...symbols import ORTH, LEMMA, POS, ADV, ADJ, NOUN, ADP, VERB, TAG, NORM, PRON_LEMMA

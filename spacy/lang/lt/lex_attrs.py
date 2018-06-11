@@ -4,11 +4,11 @@ from __future__ import unicode_literals
 from ...attrs import LIKE_NUM
 
 
-_num_words = ['nulis', 'vienas', 'du', 'trys', 'keturi', 'penki', 'šeši', 'septyni',
-              'aštuoni', 'devyni', 'dešimt', 'vienuolika', 'dvylika', 'trylika', 'keturiolika',
-              'penkiolika', 'šešiolika', 'septyniolika', 'aštuoniolika', 'devyniolika', '',
-              'trisdešimt', 'keturiasdešimt', 'penkiasdešimt', 'šešiasdešimt', 'septyniasdešimt', 'aštuoniasdešimt', 'devyniasdešimt',
-              'šimtas', 'tūkstantis', 'milijonas', 'milijardas', 'trilijonas', 'kvadrilijonas']
+_num_words = ['nulis', 'vienas', 'pirmas', 'du', 'antras', 'trys', 'trečias', 'keturi', 'ketvirtas', 'penki', 'šeši',
+              'septyni', 'aštuoni', 'devyni', 'dešimt', 'vienuolika', 'dvylika', 'trylika', 'keturiolika',
+              'penkiolika', 'šešiolika', 'septyniolika', 'aštuoniolika', 'devyniolika', 'dvidešimt',
+              'trisdešimt', 'keturiasdešimt', 'penkiasdešimt', 'šešiasdešimt', 'septyniasdešimt', 'aštuoniasdešimt',
+              'devyniasdešimt', 'šimtas', 'tūkstantis', 'milijonas', 'milijardas', 'trilijonas', 'kvadrilijonas']
 
 
 def like_num(text):
