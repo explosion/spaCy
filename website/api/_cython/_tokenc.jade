@@ -84,7 +84,9 @@ p
         +cell
             |  Ternary value indicating whether the token is the first word of
             |  a sentence. #[code 0] indicates a missing value, #[code -1]
-            |  indicates #[code False] and #[code 1] indicates #[code True].
+            |  indicates #[code False] and #[code 1] indicates #[code True]. The default value, 0,
+            |  is interpretted as no sentence break. Sentence boundary detectors will usually
+            |  set 0 for all tokens except tokens that follow a sentence boundary.
 
     +row
         +cell #[code ent_iob]
