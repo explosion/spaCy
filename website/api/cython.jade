@@ -2,12 +2,67 @@
 
 include ../_includes/_mixins
 
-+section
-    p
++section("overview")
+    +aside("What's Cython?")
         |  #[+a("http://cython.org/") Cython] is a language for writing
         |  C extensions for Python. Most Python code is also valid Cython, but
         |  you can add type declarations to get efficient memory-managed code
         |  just like C or C++.
+
+    p
+        |  This section documents spaCy's C-level data structures and
+        |  interfaces, intended for use from Cython. Some of the attributes are
+        |  primarily for internal use, and all C-level functions and methods are
+        |  designed for speed over safety – if you make a mistake and access an
+        |  array out-of-bounds, the program may crash abruptly.
+
+    p
+        |  With Cython there are four ways of declaring complex data types.
+        |  Unfortunately we use all four in different places, as they all have
+        |  different utility:
+
+    +table(["Declaration", "Description", "Example"])
+        +row
+            +cell #[code class]
+            +cell A normal Python class.
+            +cell #[+api("language") #[code Language]]
+
+        +row
+            +cell #[code cdef class]
+            +cell
+                |  A Python extension type. Differs from a normal Python class
+                |  in that its attributes can be defined on the underlying
+                |  struct. Can have C-level objects as attributes (notably
+                |  structs and pointers), and can have methods which have
+                |  C-level objects as arguments or return types.
+            +cell #[+api("cython-classes#lexeme") #[code Lexeme]]
+
+        +row
+            +cell #[code cdef struct]
+            +cell
+                |  A struct is just a collection of variables, sort of like a
+                |  named tuple, except the memory is contiguous. Structs can't
+                |  have methods, only attributes.
+            +cell #[+api("cython-structs#lexemec") #[code LexemeC]]
+
+        +row
+            +cell #[code cdef cppclass]
+            +cell
+                |  A C++ class. Like a struct, this can be allocated on the
+                |  stack, but can have methods, a constructor and a destructor.
+                |  Differs from `cdef class` in that it can be created and
+                |  destroyed without acquiring the Python global interpreter
+                |  lock. This style is the most obscure.
+            +cell #[+src(gh("spacy", "spacy/syntax/_state.pxd")) #[code StateC]]
+
+    p
+        |  The most important classes in spaCy are defined as #[code cdef class]
+        |  objects. The underlying data for these objects is usually gathered
+        |  into a struct, which is usually named #[code c]. For instance, the
+        |  #[+api("cython-classses#lexeme") #[code Lexeme]] class holds a
+        |  #[+api("cython-structs#lexemec") #[code LexemeC]] struct, at
+        |  #[code Lexeme.c]. This lets you shed the Python container, and pass
+        |  a pointer to the underlying data into C-level functions.
 
 +section("conventions")
     +h(2, "conventions") Conventions
