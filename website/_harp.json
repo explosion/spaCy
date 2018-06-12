@@ -84,8 +84,8 @@
             }
         ],
 
-        "V_CSS": "2.2.0",
-        "V_JS": "2.2.0",
+        "V_CSS": "2.2.1",
+        "V_JS": "2.2.1",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {

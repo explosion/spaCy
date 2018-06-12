@@ -61,10 +61,10 @@ import initUniverse from './universe.vue.js';
     const sidebarAttr = 'data-sidebar-active';
     const sections = [...document.querySelectorAll(`[${navAttr}]`)];
     const currentItem = document.querySelector(`[${sidebarAttr}]`);
-    if (currentItem && Element.prototype.scrollIntoView) {
-        currentItem.scrollIntoView();
-    }
     if (window.inView) {
+        if (currentItem && Element.prototype.scrollIntoView && !inView.is(currentItem)) {
+            currentItem.scrollIntoView();
+        }
         if (sections.length) {  // highlight first item regardless
             sections[0].classList.add(activeClass);
         }
@@ -74,7 +74,7 @@ import initUniverse from './universe.vue.js';
             if (el) {
                 sections.forEach(el => el.classList.remove(activeClass));
                 el.classList.add(activeClass);
-                if (Element.prototype.scrollIntoView) {
+                if (Element.prototype.scrollIntoView && !inView.is(el)) {
                     el.scrollIntoView();
                 }
             }
