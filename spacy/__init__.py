@@ -21,4 +21,4 @@ def blank(name, **kwargs):
 
 
 def info(model=None, markdown=False, silent=False):
-    return cli_info(model, markdown)
+    return cli_info(model, markdown, silent)
