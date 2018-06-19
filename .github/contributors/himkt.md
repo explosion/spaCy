@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | himkt                   |
 | Company name (if applicable)   | University of Tsukuba   |
 | Title or role (if applicable)  |                         |
-| Date                           | 2018-06-08              |
+| Date                           | 2018-06-07              |
 | GitHub username                | himkt                   |
 | Website (optional)             | https://himkt.github.io |
