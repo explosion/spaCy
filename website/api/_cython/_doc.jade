@@ -1,0 +1,71 @@
+//- 💫 DOCS > API > CYTHON > CLASSES > DOC
+
+p
+    |  The #[code Doc] object holds an array of
+    |  #[+api("cython-structs#tokenc") #[code TokenC]] structs.
+
++infobox
+    |  This section documents the extra C-level attributes and methods that
+    |  can't be accessed from Python. For the Python documentation, see
+    |  #[+api("doc") #[code Doc]].
+
++h(3, "doc_attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code mem]
+        +cell #[code cymem.Pool]
+        +cell
+            |  A memory pool. Allocated memory will be freed once the
+            |  #[code Doc] object is garbage collected.
+
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A reference to the shared #[code Vocab] object.
+
+    +row
+        +cell #[code c]
+        +cell #[code TokenC*]
+        +cell
+            |  A pointer to a #[+api("cython-structs#tokenc") #[code TokenC]]
+            |  struct.
+
+    +row
+        +cell #[code length]
+        +cell #[code int]
+        +cell The number of tokens in the document.
+
+    +row
+        +cell #[code max_length]
+        +cell #[code int]
+        +cell The underlying size of the #[code Doc.c] array.
+
++h(3, "doc_push_back") Doc.push_back
+    +tag method
+
+p
+    |  Append a token to the #[code Doc]. The token can be provided as a
+    |  #[+api("cython-structs#lexemec") #[code LexemeC]] or
+    |  #[+api("cython-structs#tokenc") #[code TokenC]] pointer, using Cython's
+    |  #[+a("http://cython.readthedocs.io/en/latest/src/userguide/fusedtypes.html") fused types].
+
++aside-code("Example").
+    from spacy.tokens cimport Doc
+    from spacy.vocab cimport Vocab
+
+    doc = Doc(Vocab())
+    lexeme = doc.vocab.get(u'hello')
+    doc.push_back(lexeme, True)
+    assert doc.text == u'hello '
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lex_or_tok]
+        +cell #[code LexemeOrToken]
+        +cell The word to append to the #[code Doc].
+
+    +row
+        +cell #[code has_space]
+        +cell #[code bint]
+        +cell Whether the word has trailing whitespace.

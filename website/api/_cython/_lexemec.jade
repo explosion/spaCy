@@ -1,0 +1,200 @@
+//- 💫 DOCS > API > CYTHON > STRUCTS > LEXEMEC
+
+p
+    |  Struct holding information about a lexical type. #[code LexemeC]
+    |  structs are usually owned by the #[code Vocab], and accessed through a
+    |  read-only pointer on the #[code TokenC] struct.
+
++aside-code("Example").
+    lex = doc.c[3].lex
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code flags]
+        +cell #[+abbr("uint64_t") #[code flags_t]]
+        +cell Bit-field for binary lexical flag values.
+
+    +row
+        +cell #[code id]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell
+            |  Usually used to map lexemes to rows in a matrix, e.g. for word
+            |  vectors. Does not need to be unique, so currently misnamed.
+
+    +row
+        +cell #[code length]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Number of unicode characters in the lexeme.
+
+    +row
+        +cell #[code orth]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell ID of the verbatim text content.
+
+    +row
+        +cell #[code lower]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell ID of the lowercase form of the lexeme.
+
+    +row
+        +cell #[code norm]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell ID of the lexeme's norm, i.e. a normalised form of the text.
+
+    +row
+        +cell #[code shape]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Transform of the lexeme's string, to show orthographic features.
+
+    +row
+        +cell #[code prefix]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell
+            |  Length-N substring from the start of the lexeme. Defaults to
+            |  #[code N=1].
+
+    +row
+        +cell #[code suffix]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell
+            |  Length-N substring from the end of the lexeme. Defaults to
+            |  #[code N=3].
+
+    +row
+        +cell #[code cluster]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Brown cluster ID.
+
+    +row
+        +cell #[code prob]
+        +cell #[code float]
+        +cell Smoothed log probability estimate of the lexeme's type.
+
+    +row
+        +cell #[code sentiment]
+        +cell #[code float]
+        +cell A scalar value indicating positivity or negativity.
+
++h(3, "lexeme_get_struct_attr", "spacy/lexeme.pxd") Lexeme.get_struct_attr
+    +tag staticmethod
+    +tag nogil
+
+p Get the value of an attribute from the #[code LexemeC] struct by attribute ID.
+
++aside-code("Example").
+    from spacy.attrs cimport IS_ALPHA
+    from spacy.lexeme cimport Lexeme
+
+    lexeme = doc.c[3].lex
+    is_alpha = Lexeme.get_struct_attr(lexeme, IS_ALPHA)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lex]
+        +cell #[code const LexemeC*]
+        +cell A pointer to a #[code LexemeC] struct.
+
+    +row
+        +cell #[code feat_name]
+        +cell #[code attr_id_t]
+        +cell
+            |  The ID of the attribute to look up. The attributes are
+            |  enumerated in #[code spacy.typedefs].
+
+    +row("foot")
+        +cell returns
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell The value of the attribute.
+
++h(3, "lexeme_set_struct_attr", "spacy/lexeme.pxd") Lexeme.set_struct_attr
+    +tag staticmethod
+    +tag nogil
+
+p Set the value of an attribute of the #[code LexemeC] struct by attribute ID.
+
++aside-code("Example").
+    from spacy.attrs cimport NORM
+    from spacy.lexeme cimport Lexeme
+
+    lexeme = doc.c[3].lex
+    Lexeme.set_struct_attr(lexeme, NORM, lexeme.lower)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lex]
+        +cell #[code const LexemeC*]
+        +cell A pointer to a #[code LexemeC] struct.
+
+    +row
+        +cell #[code feat_name]
+        +cell #[code attr_id_t]
+        +cell
+            |  The ID of the attribute to look up. The attributes are
+            |  enumerated in #[code spacy.typedefs].
+
+    +row
+        +cell #[code value]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell The value to set.
+
++h(3, "lexeme_c_check_flag", "spacy/lexeme.pxd") Lexeme.c_check_flag
+    +tag staticmethod
+    +tag nogil
+
+p Check the value of a binary flag attribute.
+
++aside-code("Example").
+    from spacy.attrs cimport IS_STOP
+    from spacy.lexeme cimport Lexeme
+
+    lexeme = doc.c[3].lex
+    is_stop = Lexeme.c_check_flag(lexeme, IS_STOP)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lexeme]
+        +cell #[code const LexemeC*]
+        +cell A pointer to a #[code LexemeC] struct.
+
+    +row
+        +cell #[code flag_id]
+        +cell #[code attr_id_t]
+        +cell
+            |  The ID of the flag to look up. The flag IDs are enumerated in
+            |  #[code spacy.typedefs].
+
+    +row("foot")
+        +cell returns
+        +cell #[code bint]
+        +cell The boolean value of the flag.
+
++h(3, "lexeme_c_set_flag", "spacy/lexeme.pxd") Lexeme.c_set_flag
+    +tag staticmethod
+    +tag nogil
+
+p Set the value of a binary flag attribute.
+
++aside-code("Example").
+    from spacy.attrs cimport IS_STOP
+    from spacy.lexeme cimport Lexeme
+
+    lexeme = doc.c[3].lex
+    Lexeme.c_set_flag(lexeme, IS_STOP, 0)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lexeme]
+        +cell #[code const LexemeC*]
+        +cell A pointer to a #[code LexemeC] struct.
+
+    +row
+        +cell #[code flag_id]
+        +cell #[code attr_id_t]
+        +cell
+            |  The ID of the flag to look up. The flag IDs are enumerated in
+            |  #[code spacy.typedefs].
+
+    +row
+        +cell #[code value]
+        +cell #[code bint]
+        +cell The value to set.
