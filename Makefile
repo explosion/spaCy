@@ -13,3 +13,10 @@ dist/spacy.pex :
 	pex dist/*.whl -e spacy -o dist/spacy-$(sha).pex
 	cp dist/spacy-$(sha).pex dist/spacy.pex
 	chmod a+rx dist/spacy.pex
+
+.PHONY : clean
+
+clean : setup.py
+	source env3.6/bin/activate
+	rm -rf dist/*
+	python setup.py clean --all
