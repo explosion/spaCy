@@ -874,6 +874,43 @@
             "tags": [ "question-answering", "elasticsearch"]
         },
         {
+            "id": "epitator",
+            "title": "EpiTator",
+            "thumb": "http://apps.eha.io/images/eha-logo.jpg",
+            "slogan": "Extracts case counts, resolved location/species/disease names, date ranges and more",
+            "description": "EcoHealth Alliance uses EpiTator to catalog the what, where and when of infectious disease case counts reported in online news. Each of these aspects is extracted using independent annotators than can be applied to other domains. EpiTator organizes annotations by creating \"AnnoTiers\" for each type. AnnoTiers have methods for manipulating, combining and searching annotations. For instance, the `with_following_spans_from()` method can be used to create a new tier that combines a tier of one type (such as numbers), with another (say, kitchenware). The resulting tier will contain all the phrases in the document that match that pattern, like \"5 plates\" or \"2 cups.\"\n\nAnother commonly used method is `group_spans_by_containing_span()` which can be used to do things like find all the spaCy tokens in all the GeoNames a document mentions. spaCy tokens, named entities, sentences and noun chunks are exposed through the spaCy annotator which will create a AnnoTier for each. These are basis of many of the other annotators. EpiTator also includes an annotator for extracting tables embedded in free text articles. Another neat feature is that the lexicons used for entity resolution are all stored in an embedded sqlite database so there is no need to run any external services in order to use EpiTator.",
+            "url": "https://github.com/ecohealthalliance/EpiTator",
+            "github": "ecohealthalliance/EpiTator",
+            "pip": "EpiTator",
+            "code_example": [
+                "from epitator.annotator import AnnoDoc",
+                "from epitator.geoname_annotator import GeonameAnnotator",
+                "",
+                "doc = AnnoDoc('Where is Chiang Mai?')",
+                "geoname_annotier = doc.require_tiers('geonames', via=GeonameAnnotator)",
+                "geoname = geoname_annotier.spans[0].metadata['geoname']",
+                "geoname['name']",
+                "# = 'Chiang Mai'",
+                "geoname['geonameid']",
+                "# = '1153671'",
+                "geoname['latitude']",
+                "# = 18.79038",
+                "geoname['longitude']",
+                "# = 98.98468",
+                "",
+                "from epitator.spacy_annotator import SpacyAnnotator",
+                "spacy_token_tier = doc.require_tiers('spacy.tokens', via=SpacyAnnotator)",
+                "list(geoname_annotier.group_spans_by_containing_span(spacy_token_tier))",
+                "# = [(AnnoSpan(9-19, Chiang Mai), [AnnoSpan(9-15, Chiang), AnnoSpan(16-19, Mai)])]"
+            ],
+            "author": "EcoHealth Alliance",
+            "author_links": {
+                "github": "ecohealthalliance",
+                "website": " https://ecohealthalliance.org/"
+            },
+            "category": ["research", "standalone"]
+        },
+        {
             "id": "self-attentive-parser",
             "title": "Berkeley Neural Parser",
             "slogan": "Constituency Parsing with a Self-Attentive Encoder (ACL 2018)",

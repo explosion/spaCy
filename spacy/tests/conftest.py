@@ -141,7 +141,7 @@ def da_tokenizer():
 
 @pytest.fixture
 def ja_tokenizer():
-    janome = pytest.importorskip("MeCab")
+    mecab = pytest.importorskip("MeCab")
     return util.get_lang_class('ja').Defaults.create_tokenizer()
 
 @pytest.fixture
