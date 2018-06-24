@@ -190,7 +190,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
             components.append('parser')
         if not no_tagger:
             components.append('tagger')
-        if not no_entity:
+        if not no_entities:
             components.append('ner')
         _collate_best_model(meta, output_path, components)
 
