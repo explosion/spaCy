@@ -187,14 +187,15 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / 'model-final'
             nlp.to_disk(final_model_path)
-        components = []
-        if not no_parser:
-            components.append('parser')
-        if not no_tagger:
-            components.append('tagger')
-        if not no_entities:
-            components.append('ner')
-        _collate_best_model(meta, output_path, components)
+    components = []
+    if not no_parser:
+        components.append('parser')
+    if not no_tagger:
+        components.append('tagger')
+    if not no_entities:
+        components.append('ner')
+    _collate_best_model(meta, output_path, components)
+
 
 def _collate_best_model(meta, output_path, components):
     bests = {}
