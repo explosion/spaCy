@@ -7,6 +7,7 @@ import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import json
+import shutil
 
 from ._messages import Messages
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
