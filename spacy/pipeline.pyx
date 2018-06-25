@@ -501,7 +501,7 @@ class Tagger(Pipe):
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
-        known_labels = numpy.ones((scores.shape[0],), dtype='f')
+        known_labels = numpy.ones((scores.shape[0], 1), dtype='f')
         for gold in golds:
             for tag in gold.tags:
                 if tag is None:
