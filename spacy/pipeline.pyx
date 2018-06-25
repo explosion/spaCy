@@ -501,6 +501,7 @@ class Tagger(Pipe):
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
+        known_labels = numpy.ones((scores.shape[0],), dtype='f')
         for gold in golds:
             for tag in gold.tags:
                 if tag is None:
@@ -508,10 +509,12 @@ class Tagger(Pipe):
                 elif tag in tag_index:
                     correct[idx] = tag_index[tag]
                 else:
-                    correct[idx] = len(tag_index)+1
+                    correct[idx] = 0
+                    known_labels[idx] = 0.
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores *= known_labels
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
