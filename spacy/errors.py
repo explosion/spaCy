@@ -257,6 +257,8 @@ class Errors(object):
     E094 = ("Error reading line {line_num} in vectors file {loc}.")
     E095 = ("Can't write to frozen dictionary. This is likely an internal "
             "error. Are you writing to a default function argument?")
+    E096 = ("Invalid pattern: expected token pattern (list of dicts) or "
+            "phrase pattern (string) but got:\n{pattern}")
 
 
 @add_codes
