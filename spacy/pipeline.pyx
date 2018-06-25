@@ -505,8 +505,10 @@ class Tagger(Pipe):
             for tag in gold.tags:
                 if tag is None:
                     correct[idx] = guesses[idx]
-                else:
+                elif tag in tag_index:
                     correct[idx] = tag_index[tag]
+                else:
+                    correct[idx] = len(tag_index)+1
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
