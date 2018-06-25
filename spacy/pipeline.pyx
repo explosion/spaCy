@@ -113,7 +113,7 @@ def merge_subtokens(doc, label='subtok'):
     for start_char, end_char in offsets:
         doc.merge(start_char, end_char)
     return doc
- 
+
 
 class EntityRuler(object):
     name = 'entity_ruler'
@@ -550,7 +550,7 @@ class Tensorizer(Pipe):
             vectors = self.model.ops.xp.vstack([w.vector for w in doc])
             target.append(vectors)
         target = self.model.ops.xp.vstack(target)
-        d_scores = (prediction - target) 
+        d_scores = (prediction - target)
         loss = (d_scores**2).sum()
         return loss, d_scores
 
