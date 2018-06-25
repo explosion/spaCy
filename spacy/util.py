@@ -507,6 +507,20 @@ def read_json(location):
         return ujson.load(f)
 
 
+def read_jsonl(file_path):
+    """Read a .jsonl file and yield its contents line by line.
+
+    file_path (unicode / Path): The file path.
+    YIELDS: The loaded JSON contents of each line.
+    """
+    with Path(file_path).open('r', encoding='utf8') as f:
+        for line in f:
+            try:  # hack to handle broken jsonl
+                yield ujson.loads(line.strip())
+            except ValueError:
+                continue
+
+
 def get_raw_input(description, default=False):
     """Get user input from the command line via raw_input / input.
 
