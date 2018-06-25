@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from .render import DependencyRenderer, EntityRenderer
-from ..tokens import Doc
+from ..tokens import Doc, Span
 from ..compat import b_to_str
 from ..util import prints, is_in_jupyter
 
@@ -28,8 +28,14 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
                  'ent': (EntityRenderer, parse_ents)}
     if style not in factories:
         raise ValueError("Unknown style: %s" % style)
-    if isinstance(docs, Doc) or isinstance(docs, dict):
+    if isinstance(docs, (Doc, dict)):
         docs = [docs]
+    elif isinstance(docs, Span):
+        docs = [docs.as_doc()]
+    else:
+        # TODO: proper error
+        raise ValueError("Need object of type Span, Doc or dict")
+
     renderer, converter = factories[style]
     renderer = renderer(options=options)
     parsed = [converter(doc, options) for doc in docs] if not manual else docs
