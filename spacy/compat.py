@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import six
-import ftfy
 import sys
 import ujson
 import itertools
@@ -39,19 +37,19 @@ pickle = pickle
 copy_reg = copy_reg
 CudaStream = CudaStream
 cupy = cupy
-fix_text = ftfy.fix_text
 copy_array = copy_array
 izip = getattr(itertools, 'izip', zip)
 
-is_python2 = six.PY2
-is_python3 = six.PY3
 is_windows = sys.platform.startswith('win')
 is_linux = sys.platform.startswith('linux')
 is_osx = sys.platform == 'darwin'
 
+# See: https://github.com/benjaminp/six/blob/master/six.py
+is_python2 = sys.version_info[0] == 2
+is_python3 = sys.version_info[0] == 3
+is_python_pre_3_5 = is_python2 or (is_python3 and sys.version_info[1] < 5)
 
 if is_python2:
-    import imp
     bytes_ = str
     unicode_ = unicode  # noqa: F821
     basestring_ = basestring  # noqa: F821
@@ -60,7 +58,6 @@ if is_python2:
     path2str = lambda path: str(path).decode('utf8')
 
 elif is_python3:
-    import importlib.util
     bytes_ = bytes
     unicode_ = str
     basestring_ = str
@@ -91,11 +88,11 @@ def symlink_to(orig, dest):
 
 
 def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
-    return ((python2 is None or python2 == is_python2) and
-            (python3 is None or python3 == is_python3) and
-            (windows is None or windows == is_windows) and
-            (linux is None or linux == is_linux) and
-            (osx is None or osx == is_osx))
+    return (python2 in (None, is_python2) and
+            python3 in (None, is_python3) and
+            windows in (None, is_windows) and
+            linux in (None, is_linux) and
+            osx in (None, is_osx))
 
 
 def normalize_string_keys(old):
@@ -111,9 +108,11 @@ def normalize_string_keys(old):
 
 def import_file(name, loc):
     loc = str(loc)
-    if is_python2:
+    if is_python_pre_3_5:
+        import imp
         return imp.load_source(name, loc)
     else:
+        import importlib.util
         spec = importlib.util.spec_from_file_location(name, str(loc))
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)

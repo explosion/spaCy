@@ -185,7 +185,7 @@ p
 
 p
     |  Install a version of the
-    |  #[+a("http://landinghub.visualstudio.com/visual-cpp-build-tools") Visual C++ Bulild Tools] or
+    |  #[+a("http://landinghub.visualstudio.com/visual-cpp-build-tools") Visual C++ Build Tools] or
     |  #[+a("https://www.visualstudio.com/vs/visual-studio-express/") Visual Studio Express]
     |  that matches the version that was used to compile your Python
     |  interpreter. For official distributions these are:
@@ -238,7 +238,7 @@ p
     python -m pytest &lt;spacy-directory&gt; --models --en   # basic and English model tests
 
 +infobox("Note on model tests", "⚠️")
-    |  The test suite specifies a #[+a(gh("spacy", "tests/conftest.py")) list of models]
+    |  The test suite specifies a #[+a(gh("spacy", "spacy/tests/conftest.py")) list of models]
     |  to run the tests on. If a model is not installed, the tests will be
     |  skipped. If all models are installed, the respective tests will run once
     |  for each model. The easiest way to find out which models and model

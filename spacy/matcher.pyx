@@ -16,6 +16,7 @@ from .typedefs cimport hash_t
 from .structs cimport TokenC
 from .tokens.doc cimport Doc, get_token_attr
 from .vocab cimport Vocab
+from .errors import Errors, TempErrors
 
 from .attrs import IDS
 from .attrs cimport attr_id_t, ID, NULL_ATTR
@@ -109,7 +110,8 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
     while pattern.nr_attr != 0:
         pattern += 1
     id_attr = pattern[0].attrs[0]
-    assert id_attr.attr == ID
+    if id_attr.attr != ID:
+        raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
     return id_attr.value
 
 
@@ -161,8 +163,8 @@ def _convert_strings(token_specs, string_store):
                 if value in operators:
                     ops = operators[value]
                 else:
-                    msg = "Unknown operator '%s'. Options: %s"
-                    raise KeyError(msg % (value, ', '.join(operators.keys())))
+                    keys = ', '.join(operators.keys())
+                    raise KeyError(Errors.E011.format(op=value, opts=keys))
             if isinstance(attr, basestring):
                 attr = IDS.get(attr.upper())
             if isinstance(value, basestring):
@@ -181,6 +183,14 @@ def merge_phrase(matcher, doc, i, matches):
     ent_id, label, start, end = matches[i]
     span = doc[start:end]
     span.merge(ent_type=label, ent_id=ent_id)
+
+
+def unpickle_matcher(vocab, patterns, callbacks):
+    matcher = Matcher(vocab)
+    for key, specs in patterns.items():
+        callback = callbacks.get(key, None)
+        matcher.add(key, callback, *specs)
+    return matcher
 
 
 cdef class Matcher:
@@ -206,7 +216,8 @@ cdef class Matcher:
         self.mem = Pool()
 
     def __reduce__(self):
-        return (self.__class__, (self.vocab, self._patterns), None, None)
+        data = (self.vocab, self._patterns, self._callbacks)
+        return (unpickle_matcher, data, None, None)
 
     def __len__(self):
         """Get the number of rules added to the matcher. Note that this only
@@ -255,16 +266,14 @@ cdef class Matcher:
         """
         for pattern in patterns:
             if len(pattern) == 0:
-                msg = ("Cannot add pattern for zero tokens to matcher.\n"
-                       "key: {key}\n")
-                raise ValueError(msg.format(key=key))
+                raise ValueError(Errors.E012.format(key=key))
         key = self._normalize_key(key)
-        self._patterns.setdefault(key, [])
-        self._callbacks[key] = on_match
         for pattern in patterns:
             specs = _convert_strings(pattern, self.vocab.strings)
             self.patterns.push_back(init_pattern(self.mem, key, specs))
-            self._patterns[key].append(specs)
+        self._patterns.setdefault(key, [])
+        self._callbacks[key] = on_match
+        self._patterns[key].extend(patterns)
 
     def remove(self, key):
         """Remove a rule from the matcher. A KeyError is raised if the key does
@@ -339,13 +348,12 @@ cdef class Matcher:
             for state in partials:
                 action = get_action(state.second, token)
                 if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
+                    raise ValueError(Errors.E013)
                 while action == ADVANCE_ZERO:
                     state.second += 1
                     action = get_action(state.second, token)
                 if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
-
+                    raise ValueError(Errors.E013)
                 if action == REPEAT:
                     # Leave the state in the queue, and advance to next slot
                     # (i.e. we don't overwrite -- we want to greedily match
@@ -371,7 +379,7 @@ cdef class Matcher:
             for pattern in self.patterns:
                 action = get_action(pattern, token)
                 if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
+                    raise ValueError(Errors.E013)
                 while action == ADVANCE_ZERO:
                     pattern += 1
                     action = get_action(pattern, token)
@@ -438,7 +446,7 @@ def get_bilou(length):
         return [B10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT,
                 I10_ENT, I10_ENT, L10_ENT]
     else:
-        raise ValueError("Max length currently 10 for phrase matching")
+        raise ValueError(TempErrors.T001)
 
 
 cdef class PhraseMatcher:
@@ -497,11 +505,8 @@ cdef class PhraseMatcher:
         cdef Doc doc
         for doc in docs:
             if len(doc) >= self.max_length:
-                msg = (
-                    "Pattern length (%d) >= phrase_matcher.max_length (%d). "
-                    "Length can be set on initialization, up to 10."
-                )
-                raise ValueError(msg % (len(doc), self.max_length))
+                raise ValueError(TempErrors.T002.format(doc_len=len(doc),
+                                                        max_len=self.max_length))
         cdef hash_t ent_id = self.matcher._normalize_key(key)
         self._callbacks[ent_id] = on_match
         cdef int length
@@ -553,7 +558,9 @@ cdef class PhraseMatcher:
             yield doc
 
     def accept_match(self, Doc doc, int start, int end):
-        assert (end - start) < self.max_length
+        if (end - start) >= self.max_length:
+            raise ValueError(Errors.E075.format(length=end - start,
+                                                max_len=self.max_length))
         cdef int i, j
         for i in range(self.max_length):
             self._phrase_key[i] = 0

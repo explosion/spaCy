@@ -3,17 +3,12 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from timeit import default_timer as timer
-import random
-import numpy.random
 
+from ._messages import Messages
 from ..gold import GoldCorpus
 from ..util import prints
 from .. import util
 from .. import displacy
-
-
-random.seed(0)
-numpy.random.seed(0)
 
 
 @plac.annotations(
@@ -31,16 +26,17 @@ def evaluate(model, data_path, gpu_id=-1, gold_preproc=False, displacy_path=None
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.
     """
+
+    util.fix_random_seed()
     if gpu_id >= 0:
         util.use_gpu(gpu_id)
     util.set_env_log(False)
     data_path = util.ensure_path(data_path)
     displacy_path = util.ensure_path(displacy_path)
     if not data_path.exists():
-        prints(data_path, title="Evaluation data not found", exits=1)
+        prints(data_path, title=Messages.M034, exits=1)
     if displacy_path and not displacy_path.exists():
-        prints(displacy_path, title="Visualization output directory not found",
-               exits=1)
+        prints(displacy_path, title=Messages.M035, exits=1)
     corpus = GoldCorpus(data_path, data_path)
     nlp = util.load_model(model)
     dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
@@ -56,8 +52,7 @@ def evaluate(model, data_path, gpu_id=-1, gold_preproc=False, displacy_path=None
         render_ents = 'ner' in nlp.meta.get('pipeline', [])
         render_parses(docs, displacy_path, model_name=model,
                       limit=displacy_limit, deps=render_deps, ents=render_ents)
-        msg = "Generated %s parses as HTML" % displacy_limit
-        prints(displacy_path, title=msg)
+        prints(displacy_path, title=Messages.M036.format(n=displacy_limit))
 
 
 def render_parses(docs, output_path, model_name='', limit=250, deps=True,

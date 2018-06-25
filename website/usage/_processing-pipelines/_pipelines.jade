@@ -40,7 +40,7 @@ p
     +item
         |  Make the #[strong model data] available to the #[code Language] class
         |  by calling #[+api("language#from_disk") #[code from_disk]] with the
-        |  path to the model data ditectory.
+        |  path to the model data directory.
 
 p
     |  So when you call this...
@@ -53,7 +53,7 @@ p
     |  pipeline #[code.u-break ["tagger", "parser", "ner"]]. spaCy will then
     |  initialise #[code spacy.lang.en.English], and create each pipeline
     |  component and add it to the processing pipeline. It'll then load in the
-    |  model's data from its data ditectory and return the modified
+    |  model's data from its data directory and return the modified
     |  #[code Language] class for you to use as the #[code nlp] object.
 
 p
