@@ -96,7 +96,7 @@ def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, pru
                 lexeme = nlp.vocab[word]
                 lexeme.is_oov = False
                 lex_added += 1
-    if len(vectors_data):
+    if vectors_data:
         nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if prune_vectors >= 1:
         nlp.vocab.prune_vectors(prune_vectors)
