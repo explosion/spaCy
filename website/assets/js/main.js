@@ -47,7 +47,10 @@ import initUniverse from './universe.vue.js';
  */
 {
     if (window.Juniper) {
-        new Juniper({ repo: 'ines/spacy-io-binder' });
+        new Juniper({
+            repo: 'ines/spacy-io-binder',
+            storageExpire: 60
+        });
     }
 }
 
