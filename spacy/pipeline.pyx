@@ -269,7 +269,7 @@ class EntityRuler(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix('.jsonl')
-        data = [json_dumps(line) for line in self.patterns]
+        data = [json_dumps(line, indent=0) for line in self.patterns]
         path.open('w').write('\n'.join(data))
 
 
