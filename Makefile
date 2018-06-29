@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 sha = $(shell "git" "rev-parse" "--short" "HEAD")
 
-dist/spacy.pex : 
+dist/spacy.pex : spacy/*.pyx spacy/*.pxd spacy/*/*.pyx spacy/*/*.pxd
 	python3.6 -m venv env3.6
 	source env3.6/bin/activate
 	env3.6/bin/pip install wheel
