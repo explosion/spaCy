@@ -482,7 +482,7 @@ class Tagger(Pipe):
                     if lemma != 0 and lemma != doc.c[j].lex.orth:
                         doc.c[j].lemma = lemma
                 idx += 1
-            if tensors is not None:
+            if tensors is not None and len(tensors):
                 if isinstance(doc.tensor, numpy.ndarray) \
                 and not isinstance(tensors[i], numpy.ndarray):
                     doc.extend_tensor(tensors[i].get())
