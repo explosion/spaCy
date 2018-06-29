@@ -90,12 +90,13 @@ def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, pru
             lexeme.cluster = 0
         lex_added += 1
     nlp.vocab.cfg.update({'oov_prob': oov_prob})
-    for word in vector_keys:
-        if word not in nlp.vocab:
-            lexeme = nlp.vocab[word]
-            lexeme.is_oov = False
-            lex_added += 1
-    if len(vectors_data):
+    if vector_keys is not None:
+        for word in vector_keys:
+            if word not in nlp.vocab:
+                lexeme = nlp.vocab[word]
+                lexeme.is_oov = False
+                lex_added += 1
+    if vectors_data:
         nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if prune_vectors >= 1:
         nlp.vocab.prune_vectors(prune_vectors)

@@ -7,6 +7,7 @@ import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import json
+import shutil
 
 from ._messages import Messages
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
@@ -186,14 +187,15 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / 'model-final'
             nlp.to_disk(final_model_path)
-        components = []
-        if not no_parser:
-            components.append('parser')
-        if not no_tagger:
-            components.append('tagger')
-        if not no_entities:
-            components.append('ner')
-        _collate_best_model(meta, output_path, components)
+    components = []
+    if not no_parser:
+        components.append('parser')
+    if not no_tagger:
+        components.append('tagger')
+    if not no_entities:
+        components.append('ner')
+    _collate_best_model(meta, output_path, components)
+
 
 def _collate_best_model(meta, output_path, components):
     bests = {}
@@ -202,8 +204,8 @@ def _collate_best_model(meta, output_path, components):
     best_dest = output_path / 'model-best'
     shutil.copytree(output_path / 'model-final', best_dest)
     for component, best_component_src in bests.items():
-        shutil.rmtree(best_dir / component)
-        shutil.copytree(best_component_src, best_dest / component)
+        shutil.rmtree(best_dest / component)
+        shutil.copytree(best_component_src / component, best_dest / component)
         with (best_component_src / 'accuracy.json').open() as file_:
             accs = json.load(file_)
         for metric in _get_metrics(component):
