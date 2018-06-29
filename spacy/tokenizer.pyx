@@ -378,7 +378,8 @@ cdef class Tokenizer:
             ('prefix_search', lambda: self.prefix_search.__self__.pattern),
             ('suffix_search', lambda: self.suffix_search.__self__.pattern),
             ('infix_finditer', lambda: self.infix_finditer.__self__.pattern),
-            ('token_match', lambda: self.token_match.__self__.pattern),
+            ('token_match', lambda:
+                self.token_match.__self__.pattern if self.token_match else None),
             ('exceptions', lambda: OrderedDict(sorted(self._rules.items())))
         ))
         return util.to_bytes(serializers, exclude)
@@ -406,7 +407,7 @@ cdef class Tokenizer:
             self.suffix_search = re.compile(data['suffix_search']).search
         if 'infix_finditer' in data:
             self.infix_finditer = re.compile(data['infix_finditer']).finditer
-        if 'token_match' in data:
+        if data.get('token_match'):
             self.token_match = re.compile(data['token_match']).search
         for string, substrings in data.get('rules', {}).items():
             self.add_special_case(string, substrings)
