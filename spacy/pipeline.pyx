@@ -449,7 +449,8 @@ class Tagger(Pipe):
     def predict(self, docs):
         if not any(len(doc) for doc in docs):
             # Handle case where there are no tokens in any docs.
-            return [self.model.ops.allocate((0, self.model.nO)) for doc in docs]
+            n_labels = len(self.labels)
+            return [self.model.ops.allocate((0, n_labels)) for doc in docs]
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
         guesses = []
