@@ -393,7 +393,7 @@ cdef class Tokenizer:
         data = OrderedDict()
         deserializers = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
-            ('prefix_search', lambda b: data.setdefault('prefix', b)),
+            ('prefix_search', lambda b: data.setdefault('prefix_search', b)),
             ('suffix_search', lambda b: data.setdefault('suffix_search', b)),
             ('infix_finditer', lambda b: data.setdefault('infix_finditer', b)),
             ('token_match', lambda b: data.setdefault('token_match', b)),
