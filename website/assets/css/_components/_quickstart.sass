@@ -1,13 +1,16 @@
 //- 💫 CSS > COMPONENTS > QUICKSTART
 
 .c-quickstart
-    border: 1px solid $color-subtle
-    border-radius: 2px
+    border-radius: $border-radius
     display: none
     background: $color-subtle-light
 
     &:not([style]) + .c-quickstart__info
         display: none
+
+    .c-code-block
+        border-top-left-radius: 0
+        border-top-right-radius: 0
 
 .c-quickstart__content
     padding: 2rem 3rem
@@ -49,7 +52,7 @@
         vertical-align: middle
         margin-right: 1rem
         cursor: pointer
-        border-radius: 50%
+        border-radius: 2px
 
     .c-quickstart__input--check:checked + &:before
         background: $color-theme url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+)
@@ -72,7 +75,6 @@
     flex: 100%
 
 .c-quickstart__legend
-    color: $color-subtle-dark
     margin-right: 2rem
     padding-top: 0.75rem
     flex: 1 1 35%
@@ -84,7 +86,15 @@
     &:before
         color: $color-theme
         margin-right: 1em
+
+    &.c-quickstart__line--bash:before
         content: "$"
 
+    &.c-quickstart__line--python:before
+        content: ">>>"
+
+    &.c-quickstart__line--divider
+        padding: 1.5rem 0
+
 .c-quickstart__code
-    font-size: 1.6rem
+    font-size: 1.4rem

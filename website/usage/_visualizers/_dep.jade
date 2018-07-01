@@ -1,0 +1,62 @@
+//- 💫 DOCS > USAGE > VISUALIZERS > DEPENDENCIES
+
+p
+    |  The dependency visualizer, #[code dep], shows part-of-speech tags
+    |  and syntactic dependencies.
+
++code("Dependency example").
+    import spacy
+    from spacy import displacy
+
+    nlp = spacy.load('en')
+    doc = nlp(u'This is a sentence.')
+    displacy.serve(doc, style='dep')
+
++codepen("f0e85b64d469d6617251d8241716d55f", 370)
+
+p
+    |  The argument #[code options] lets you specify a dictionary of settings
+    |  to customise the layout, for example:
+
++aside("Important note")
+    |  There's currently a known issue with the #[code compact] mode for
+    |  sentences with short arrows and long dependency labels, that causes labels
+    |  longer than the arrow to wrap. So if you come across this problem,
+    |  especially when using custom labels, you'll have to increase the
+    |  #[code distance] setting in the #[code options] to allow longer arcs.
+
++table(["Name", "Type", "Description", "Default"])
+    +row
+        +cell #[code compact]
+        +cell bool
+        +cell "Compact mode" with square arrows that takes up less space.
+        +cell #[code False]
+
+    +row
+        +cell #[code color]
+        +cell unicode
+        +cell Text color (HEX, RGB or color names).
+        +cell #[code '#000000']
+
+    +row
+        +cell #[code bg]
+        +cell unicode
+        +cell Background color (HEX, RGB or color names).
+        +cell #[code '#ffffff']
+
+    +row
+        +cell #[code font]
+        +cell unicode
+        +cell Font name or font family for all text.
+        +cell #[code 'Arial']
+
+p
+    |  For a list of all available options, see the
+    |  #[+api("top-level#displacy_options") #[code displacy] API documentation].
+
++aside-code("Options example").
+    options = {'compact': True, 'bg': '&#35;09a3d5',
+               'color': 'white', 'font': 'Source Sans Pro'}
+    displacy.serve(doc, style='dep', options=options)
+
++codepen("39c02c893a84794353de77a605d817fd", 360)

@@ -1,0 +1,27 @@
+{
+  "name": "spacy.io",
+  "private": true,
+  "version": "2.0.0",
+  "description": "spacy.io website",
+  "author": "Explosion AI",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "harp": "^0.24.0",
+    "rollup": "^0.50.0",
+    "uglify-js": "^2.7.3",
+    "broken-link-checker": "^0.7.6"
+  },
+  "dependencies": {},
+  "scripts": {
+    "check_links": "blc https://spacy.io -ro",
+
+    "rollup": "rollup www/assets/js/main.js --output.format iife --output.file www/assets/js/main.js",
+    "babel": "babel www/assets/js/main.js --out-file www/assets/js/main.js --presets=es2015",
+    "uglify": "uglifyjs www/assets/js/main.js --output www/assets/js/main.js",
+
+    "compile": "NODE_ENV=deploy harp compile",
+    "bundle": "npm run rollup && npm run babel && npm run uglify",
+    "deploy": "rsync -P --compress --recursive --checksum --delete --exclude=\".*\" --exclude=\"*.vue.js\" --exclude=\"README.html\" --exclude \"package.json\" --exclude \"www\" www/ $1"
+  }
+}

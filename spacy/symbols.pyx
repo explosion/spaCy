@@ -1,5 +1,7 @@
 # coding: utf8
+#cython: optimize.unpack_method_calls=False
 from __future__ import unicode_literals
+
 
 IDS = {
     "": NIL,
@@ -16,11 +18,12 @@ IDS = {
     "LIKE_EMAIL": LIKE_EMAIL,
     "IS_STOP": IS_STOP,
     "IS_OOV": IS_OOV,
-    "FLAG14": FLAG14,
-    "FLAG15": FLAG15,
-    "FLAG16": FLAG16,
-    "FLAG17": FLAG17,
-    "FLAG18": FLAG18,
+    "IS_BRACKET": IS_BRACKET,
+    "IS_QUOTE": IS_QUOTE,
+    "IS_LEFT_PUNCT": IS_LEFT_PUNCT,
+    "IS_RIGHT_PUNCT": IS_RIGHT_PUNCT,
+    "IS_CURRENCY": IS_CURRENCY,
+
     "FLAG19": FLAG19,
     "FLAG20": FLAG20,
     "FLAG21": FLAG21,
@@ -84,8 +87,10 @@ IDS = {
     "ENT_IOB": ENT_IOB,
     "ENT_TYPE": ENT_TYPE,
     "HEAD": HEAD,
+    "SENT_START": SENT_START,
     "SPACY": SPACY,
     "PROB": PROB,
+    "LANG": LANG,
 
     "ADJ": ADJ,
     "ADP": ADP,
@@ -160,7 +165,7 @@ IDS = {
     "Degree_sup": Degree_sup,
     "Degree_abs": Degree_abs,
     "Degree_com": Degree_com,
-    "Degree_dim ": Degree_dim, # du
+    "Degree_dim": Degree_dim, # du
     "Degree_equ": Degree_equ, # U20
     "Evident_nfh": Evident_nfh, # U20
     "Gender_com": Gender_com,
@@ -186,8 +191,8 @@ IDS = {
     "Number_none": Number_none,
     "Number_plur": Number_plur,
     "Number_sing": Number_sing,
-    "Number_ptan ": Number_ptan, # bg
-    "Number_count ": Number_count, # bg, U20
+    "Number_ptan": Number_ptan, # bg
+    "Number_count": Number_count, # bg, U20
     "Number_tri": Number_tri, # U20
     "NumType_card": NumType_card,
     "NumType_dist": NumType_dist,
@@ -232,22 +237,22 @@ IDS = {
     "VerbForm_sup": VerbForm_sup,
     "VerbForm_trans": VerbForm_trans,
     "VerbForm_conv": VerbForm_conv, # U20
-    "VerbForm_gdv ": VerbForm_gdv, # la,
+    "VerbForm_gdv": VerbForm_gdv, # la,
     "VerbForm_vnoun": VerbForm_vnoun, # U20
     "Voice_act": Voice_act,
     "Voice_cau": Voice_cau,
     "Voice_pass": Voice_pass,
-    "Voice_mid ": Voice_mid, # gkc, U20
-    "Voice_int ": Voice_int, # hb,
+    "Voice_mid": Voice_mid, # gkc, U20
+    "Voice_int": Voice_int, # hb,
     "Voice_antip": Voice_antip, # U20
     "Voice_dir": Voice_dir, # U20
     "Voice_inv": Voice_inv, # U20
-    "Abbr_yes ": Abbr_yes, # cz, fi, sl, U,
-    "AdpType_prep ": AdpType_prep, # cz, U,
-    "AdpType_post ": AdpType_post, # U,
-    "AdpType_voc ": AdpType_voc, # cz,
-    "AdpType_comprep ": AdpType_comprep, # cz,
-    "AdpType_circ ": AdpType_circ, # U,
+    "Abbr_yes": Abbr_yes, # cz, fi, sl, U,
+    "AdpType_prep": AdpType_prep, # cz, U,
+    "AdpType_post": AdpType_post, # U,
+    "AdpType_voc": AdpType_voc, # cz,
+    "AdpType_comprep": AdpType_comprep, # cz,
+    "AdpType_circ": AdpType_circ, # U,
     "AdvType_man": AdvType_man,
     "AdvType_loc": AdvType_loc,
     "AdvType_tim": AdvType_tim,
@@ -257,56 +262,56 @@ IDS = {
     "AdvType_sta": AdvType_sta,
     "AdvType_ex": AdvType_ex,
     "AdvType_adadj": AdvType_adadj,
-    "ConjType_oper ": ConjType_oper, # cz, U,
-    "ConjType_comp ": ConjType_comp, # cz, U,
-    "Connegative_yes ": Connegative_yes, # fi,
-    "Derivation_minen ": Derivation_minen, # fi,
-    "Derivation_sti ": Derivation_sti, # fi,
-    "Derivation_inen ": Derivation_inen, # fi,
-    "Derivation_lainen ": Derivation_lainen, # fi,
-    "Derivation_ja ": Derivation_ja, # fi,
-    "Derivation_ton ": Derivation_ton, # fi,
-    "Derivation_vs ": Derivation_vs, # fi,
-    "Derivation_ttain ": Derivation_ttain, # fi,
-    "Derivation_ttaa ": Derivation_ttaa, # fi,
-    "Echo_rdp ": Echo_rdp, # U,
-    "Echo_ech ": Echo_ech, # U,
-    "Foreign_foreign ": Foreign_foreign, # cz, fi, U,
-    "Foreign_fscript ": Foreign_fscript, # cz, fi, U,
-    "Foreign_tscript ": Foreign_tscript, # cz, U,
-    "Foreign_yes ": Foreign_yes, # sl,
-    "Gender_dat_masc ": Gender_dat_masc, # bq, U,
-    "Gender_dat_fem ": Gender_dat_fem, # bq, U,
-    "Gender_erg_masc ": Gender_erg_masc, # bq,
-    "Gender_erg_fem ": Gender_erg_fem, # bq,
-    "Gender_psor_masc ": Gender_psor_masc, # cz, sl, U,
-    "Gender_psor_fem ": Gender_psor_fem, # cz, sl, U,
-    "Gender_psor_neut ": Gender_psor_neut, # sl,
-    "Hyph_yes ": Hyph_yes, # cz, U,
-    "InfForm_one ": InfForm_one, # fi,
-    "InfForm_two ": InfForm_two, # fi,
-    "InfForm_three ": InfForm_three, # fi,
-    "NameType_geo ": NameType_geo, # U, cz,
-    "NameType_prs ": NameType_prs, # U, cz,
-    "NameType_giv ": NameType_giv, # U, cz,
-    "NameType_sur ": NameType_sur, # U, cz,
-    "NameType_nat ": NameType_nat, # U, cz,
-    "NameType_com ": NameType_com, # U, cz,
-    "NameType_pro ": NameType_pro, # U, cz,
-    "NameType_oth ": NameType_oth, # U, cz,
-    "NounType_com ": NounType_com, # U,
-    "NounType_prop ": NounType_prop, # U,
-    "NounType_class ": NounType_class, # U,
-    "Number_abs_sing ": Number_abs_sing, # bq, U,
-    "Number_abs_plur ": Number_abs_plur, # bq, U,
-    "Number_dat_sing ": Number_dat_sing, # bq, U,
-    "Number_dat_plur ": Number_dat_plur, # bq, U,
-    "Number_erg_sing ": Number_erg_sing, # bq, U,
-    "Number_erg_plur ": Number_erg_plur, # bq, U,
-    "Number_psee_sing ": Number_psee_sing, # U,
-    "Number_psee_plur ": Number_psee_plur, # U,
-    "Number_psor_sing ": Number_psor_sing, # cz, fi, sl, U,
-    "Number_psor_plur ": Number_psor_plur, # cz, fi, sl, U,
+    "ConjType_oper": ConjType_oper, # cz, U,
+    "ConjType_comp": ConjType_comp, # cz, U,
+    "Connegative_yes": Connegative_yes, # fi,
+    "Derivation_minen": Derivation_minen, # fi,
+    "Derivation_sti": Derivation_sti, # fi,
+    "Derivation_inen": Derivation_inen, # fi,
+    "Derivation_lainen": Derivation_lainen, # fi,
+    "Derivation_ja": Derivation_ja, # fi,
+    "Derivation_ton": Derivation_ton, # fi,
+    "Derivation_vs": Derivation_vs, # fi,
+    "Derivation_ttain": Derivation_ttain, # fi,
+    "Derivation_ttaa": Derivation_ttaa, # fi,
+    "Echo_rdp": Echo_rdp, # U,
+    "Echo_ech": Echo_ech, # U,
+    "Foreign_foreign": Foreign_foreign, # cz, fi, U,
+    "Foreign_fscript": Foreign_fscript, # cz, fi, U,
+    "Foreign_tscript": Foreign_tscript, # cz, U,
+    "Foreign_yes": Foreign_yes, # sl,
+    "Gender_dat_masc": Gender_dat_masc, # bq, U,
+    "Gender_dat_fem": Gender_dat_fem, # bq, U,
+    "Gender_erg_masc": Gender_erg_masc, # bq,
+    "Gender_erg_fem": Gender_erg_fem, # bq,
+    "Gender_psor_masc": Gender_psor_masc, # cz, sl, U,
+    "Gender_psor_fem": Gender_psor_fem, # cz, sl, U,
+    "Gender_psor_neut": Gender_psor_neut, # sl,
+    "Hyph_yes": Hyph_yes, # cz, U,
+    "InfForm_one": InfForm_one, # fi,
+    "InfForm_two": InfForm_two, # fi,
+    "InfForm_three": InfForm_three, # fi,
+    "NameType_geo": NameType_geo, # U, cz,
+    "NameType_prs": NameType_prs, # U, cz,
+    "NameType_giv": NameType_giv, # U, cz,
+    "NameType_sur": NameType_sur, # U, cz,
+    "NameType_nat": NameType_nat, # U, cz,
+    "NameType_com": NameType_com, # U, cz,
+    "NameType_pro": NameType_pro, # U, cz,
+    "NameType_oth": NameType_oth, # U, cz,
+    "NounType_com": NounType_com, # U,
+    "NounType_prop": NounType_prop, # U,
+    "NounType_class": NounType_class, # U,
+    "Number_abs_sing": Number_abs_sing, # bq, U,
+    "Number_abs_plur": Number_abs_plur, # bq, U,
+    "Number_dat_sing": Number_dat_sing, # bq, U,
+    "Number_dat_plur": Number_dat_plur, # bq, U,
+    "Number_erg_sing": Number_erg_sing, # bq, U,
+    "Number_erg_plur": Number_erg_plur, # bq, U,
+    "Number_psee_sing": Number_psee_sing, # U,
+    "Number_psee_plur": Number_psee_plur, # U,
+    "Number_psor_sing": Number_psor_sing, # cz, fi, sl, U,
+    "Number_psor_plur": Number_psor_plur, # cz, fi, sl, U,
     "Number_pauc": Number_pauc, # U20
     "Number_grpa": Number_grpa, # U20
     "Number_grpl": Number_grpl, # U20
@@ -351,7 +356,7 @@ IDS = {
     "Polite_infm": Polite_infm, # U20
     "Polite_form": Polite_form, # U20
     "Polite_form_elev": Polite_form_elev, # U20
-    "Polite_form_humb ": Polite_form_humb, # U20
+    "Polite_form_humb": Polite_form_humb, # U20
     "Prefix_yes": Prefix_yes, # U,
     "PrepCase_npr": PrepCase_npr, # cz,
     "PrepCase_pre": PrepCase_pre, # U,
@@ -454,7 +459,20 @@ IDS = {
     "quantmod": quantmod,
     "rcmod": rcmod,
     "root": root,
-    "xcomp": xcomp
+    "xcomp": xcomp,
+
+    "acl": acl,
+    "LAW": LAW,
 }
 
-NAMES = [it[0] for it in sorted(IDS.items(), key=lambda it: it[1])]
+
+def sort_nums(x):
+    return x[1]
+
+
+PRON_LEMMA = "-PRON-"
+NAMES = [it[0] for it in sorted(IDS.items(), key=sort_nums)]
+# Unfortunate hack here, to work around problem with long cpdef enum
+# (which is generating an enormous amount of C++ in Cython 0.24+)
+# We keep the enum cdef, and just make sure the names are available to Python
+locals().update(IDS)

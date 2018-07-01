@@ -27,8 +27,6 @@ The docs can always use another example or more detail, and they should always b
 
 While all page content lives in the `.jade` files, article meta (page titles, sidebars etc.) is stored as JSON. Each folder contains a `_data.json` with all required meta for its files.
 
-For simplicity, all sites linked in the [tutorials](https://spacy.io/docs/usage/tutorials) and [showcase](https://spacy.io/docs/usage/showcase) are also stored as JSON. So in order to edit those pages, there's no need to dig into the Jade files – simply edit the [`_data.json`](docs/usage/_data.json).
-
 ### Markup language and conventions
 
 Jade/Pug is a whitespace-sensitive markup language that compiles to HTML. Indentation is used to nest elements, and for template logic, like `if`/`else` or `for`, mainly used to iterate over objects and arrays in the meta data. It also allows inline JavaScript expressions.

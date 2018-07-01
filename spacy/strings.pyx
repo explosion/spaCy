@@ -4,14 +4,17 @@ from __future__ import unicode_literals, absolute_import
 
 cimport cython
 from libc.string cimport memcpy
-from libc.stdint cimport uint64_t, uint32_t
-from murmurhash.mrmr cimport hash64, hash32
-from preshed.maps cimport map_iter, key_t
-
-from .typedefs cimport hash_t
+from libcpp.set cimport set
 from libc.stdint cimport uint32_t
-
+from murmurhash.mrmr cimport hash64, hash32
 import ujson
+
+from .symbols import IDS as SYMBOLS_BY_STR
+from .symbols import NAMES as SYMBOLS_BY_INT
+from .typedefs cimport hash_t
+from .compat import json_dumps
+from .errors import Errors
+from . import util
 
 
 cpdef hash_t hash_string(unicode string) except 0:
@@ -27,7 +30,7 @@ cdef uint32_t hash32_utf8(char* utf8_string, int length) nogil:
     return hash32(utf8_string, length, 1)
 
 
-cdef unicode _decode(const Utf8Str* string):
+cdef unicode decode_Utf8Str(const Utf8Str* string):
     cdef int i, length
     if string.s[0] < sizeof(string.s) and string.s[0] != 0:
         return string.s[1:string.s[0]+1].decode('utf8')
@@ -44,10 +47,10 @@ cdef unicode _decode(const Utf8Str* string):
         return string.p[i:length + i].decode('utf8')
 
 
-cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, uint32_t length) except *:
+cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) except *:
     cdef int n_length_bytes
     cdef int i
-    cdef Utf8Str string
+    cdef Utf8Str* string = <Utf8Str*>mem.alloc(1, sizeof(Utf8Str))
     cdef uint32_t ulength = length
     if length < sizeof(string.s):
         string.s[0] = <unsigned char>length
@@ -57,7 +60,6 @@ cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, uint32_t length) ex
         string.p = <unsigned char*>mem.alloc(length + 1, sizeof(unsigned char))
         string.p[0] = length
         memcpy(&string.p[1], chars, length)
-        assert string.s[0] >= sizeof(string.s) or string.s[0] == 0, string.s[0]
         return string
     else:
         i = 0
@@ -67,140 +69,214 @@ cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, uint32_t length) ex
             string.p[i] = 255
         string.p[n_length_bytes-1] = length % 255
         memcpy(&string.p[n_length_bytes], chars, length)
-        assert string.s[0] >= sizeof(string.s) or string.s[0] == 0, string.s[0]
         return string
 
 
 cdef class StringStore:
-    """
-    Map strings to and from integer IDs.
-    """
+    """Look up strings by 64-bit hashes."""
     def __init__(self, strings=None, freeze=False):
-        """
-        Create the StringStore.
+        """Create the StringStore.
 
-        Arguments:
-            strings: A sequence of unicode strings to add to the store.
+        strings (iterable): A sequence of unicode strings to add to the store.
+        RETURNS (StringStore): The newly constructed object.
         """
         self.mem = Pool()
         self._map = PreshMap()
-        self._oov = PreshMap()
-        self._resize_at = 10000
-        self.c = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
-        self.size = 1
-        self.is_frozen = freeze
         if strings is not None:
             for string in strings:
-                _ = self[string]
-
-    property size:
-        def __get__(self):
-            return self.size -1
-
-    def __reduce__(self):
-        # TODO: OOV words, for the is_frozen stuff?
-        if self.is_frozen:
-            raise NotImplementedError(
-                "Currently missing support for pickling StringStore when "
-                "is_frozen=True")
-        return (StringStore, (list(self),))
-
-    def __len__(self):
-        """
-        The number of strings in the store.
-
-        Returns:
-            int The number of strings in the store.
-        """
-        return self.size-1
+                self.add(string)
 
     def __getitem__(self, object string_or_id):
-        """
-        Retrieve a string from a given integer ID, or vice versa.
+        """Retrieve a string from a given hash, or vice versa.
 
-        Arguments:
-            string_or_id (bytes or unicode or int):
-                The value to encode.
-        Returns:
-            unicode or int: The value to retrieved.
+        string_or_id (bytes, unicode or uint64): The value to encode.
+        Returns (unicode or uint64): The value to be retrieved.
         """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
         elif string_or_id == 0:
             return u''
+        elif string_or_id in SYMBOLS_BY_STR:
+            return SYMBOLS_BY_STR[string_or_id]
 
-        cdef bytes byte_string
-        cdef const Utf8Str* utf8str
-        cdef uint64_t int_id
-        cdef uint32_t oov_id
-        if isinstance(string_or_id, (int, long)):
-            int_id = string_or_id
-            oov_id = string_or_id
-            if int_id < <uint64_t>self.size:
-                return _decode(&self.c[int_id])
-            else:
-                utf8str = <Utf8Str*>self._oov.get(oov_id)
-                if utf8str is not NULL:
-                    return _decode(utf8str)
-                else:
-                    raise IndexError(string_or_id)
+        cdef hash_t key
+
+        if isinstance(string_or_id, unicode):
+            key = hash_string(string_or_id)
+            return key
+        elif isinstance(string_or_id, bytes):
+            key = hash_utf8(string_or_id, len(string_or_id))
+            return key
+        elif string_or_id < len(SYMBOLS_BY_INT):
+            return SYMBOLS_BY_INT[string_or_id]
         else:
-            if isinstance(string_or_id, bytes):
-                byte_string = <bytes>string_or_id
-            elif isinstance(string_or_id, unicode):
-                byte_string = (<unicode>string_or_id).encode('utf8')
-            else:
-                raise TypeError(type(string_or_id))
-            utf8str = self._intern_utf8(byte_string, len(byte_string))
+            key = string_or_id
+            self.hits.insert(key)
+            utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
-                # TODO: We need to use 32 bit here, for compatibility with the
-                # vocabulary values. This makes birthday paradox probabilities
-                # pretty bad.
-                # We could also get unlucky here, and hash into a value that
-                # collides with the 'real' strings.
-                return hash32_utf8(byte_string, len(byte_string))
+                raise KeyError(Errors.E018.format(hash_value=string_or_id))
             else:
-                return utf8str - self.c
+                return decode_Utf8Str(utf8str)
 
-    def __contains__(self, unicode string not None):
-        """
-        Check whether a string is in the store.
+    def add(self, string):
+        """Add a string to the StringStore.
 
-        Arguments:
-            string (unicode): The string to check.
-        Returns bool:
-            Whether the store contains the string.
+        string (unicode): The string to add.
+        RETURNS (uint64): The string's hash value.
         """
-        if len(string) == 0:
+        if isinstance(string, unicode):
+            if string in SYMBOLS_BY_STR:
+                return SYMBOLS_BY_STR[string]
+            key = hash_string(string)
+            self.intern_unicode(string)
+        elif isinstance(string, bytes):
+            if string in SYMBOLS_BY_STR:
+                return SYMBOLS_BY_STR[string]
+            key = hash_utf8(string, len(string))
+            self._intern_utf8(string, len(string))
+        else:
+            raise TypeError(Errors.E017.format(value_type=type(string)))
+        return key
+
+    def __len__(self):
+        """The number of strings in the store.
+
+        RETURNS (int): The number of strings in the store.
+        """
+        return self.keys.size()
+
+    def __contains__(self, string not None):
+        """Check whether a string is in the store.
+
+        string (unicode): The string to check.
+        RETURNS (bool): Whether the store contains the string.
+        """
+        cdef hash_t key
+        if isinstance(string, int) or isinstance(string, long):
+            if string == 0:
+                return True
+            key = string
+        elif len(string) == 0:
             return True
-        cdef hash_t key = hash_string(string)
-        return self._map.get(key) is not NULL
+        elif string in SYMBOLS_BY_STR:
+            return True
+        elif isinstance(string, unicode):
+            key = hash_string(string)
+        else:
+            string = string.encode('utf8')
+            key = hash_utf8(string, len(string))
+        if key < len(SYMBOLS_BY_INT):
+            return True
+        else:
+            self.hits.insert(key)
+            return self._map.get(key) is not NULL
 
     def __iter__(self):
-        """
-        Iterate over the strings in the store, in order.
+        """Iterate over the strings in the store, in order.
 
-        Yields: unicode A string in the store.
+        YIELDS (unicode): A string in the store.
         """
         cdef int i
-        for i in range(self.size):
-            yield _decode(&self.c[i]) if i > 0 else u''
+        cdef hash_t key
+        for i in range(self.keys.size()):
+            key = self.keys[i]
+            self.hits.insert(key)
+            utf8str = <Utf8Str*>self._map.get(key)
+            yield decode_Utf8Str(utf8str)
         # TODO: Iterate OOV here?
 
     def __reduce__(self):
-        strings = [""]
-        for i in range(1, self.size):
-            string = &self.c[i]
-            py_string = _decode(string)
-            strings.append(py_string)
+        strings = list(self)
         return (StringStore, (strings,), None, None, None)
 
-    def set_frozen(self, bint is_frozen):
-        # TODO
-        self.is_frozen = is_frozen
+    def to_disk(self, path):
+        """Save the current state to a directory.
 
-    def flush_oov(self):
-        self._oov = PreshMap()
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or Path-like objects.
+        """
+        path = util.ensure_path(path)
+        strings = list(self)
+        with path.open('w') as file_:
+            file_.write(json_dumps(strings))
+
+    def from_disk(self, path):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        RETURNS (StringStore): The modified `StringStore` object.
+        """
+        path = util.ensure_path(path)
+        with path.open('r') as file_:
+            strings = ujson.load(file_)
+        prev = list(self)
+        self._reset_and_load(strings)
+        for word in prev:
+            self.add(word)
+        return self
+
+    def to_bytes(self, **exclude):
+        """Serialize the current state to a binary string.
+
+        **exclude: Named attributes to prevent from being serialized.
+        RETURNS (bytes): The serialized form of the `StringStore` object.
+        """
+        return json_dumps(list(self))
+
+    def from_bytes(self, bytes_data, **exclude):
+        """Load state from a binary string.
+
+        bytes_data (bytes): The data to load from.
+        **exclude: Named attributes to prevent from being loaded.
+        RETURNS (StringStore): The `StringStore` object.
+        """
+        strings = ujson.loads(bytes_data)
+        prev = list(self)
+        self._reset_and_load(strings)
+        for word in prev:
+            self.add(word)
+        return self
+
+    def _reset_and_load(self, strings):
+        self.mem = Pool()
+        self._map = PreshMap()
+        self.keys.clear()
+        self.hits.clear()
+        for string in strings:
+            self.add(string)
+
+    def _cleanup_stale_strings(self, excepted):
+        """
+        excepted (list): Strings that should not be removed.
+        RETURNS (keys, strings): Dropped strings and keys that can be dropped from other places
+        """
+        if self.hits.size() == 0:
+            # If we don't have any hits, just skip cleanup
+            return
+
+        cdef vector[hash_t] tmp
+        dropped_strings = []
+        dropped_keys = []
+        for i in range(self.keys.size()):
+            key = self.keys[i]
+            # Here we cannot use __getitem__ because it also set hit.
+            utf8str = <Utf8Str*>self._map.get(key)
+            value = decode_Utf8Str(utf8str)
+            if self.hits.count(key) != 0 or value in excepted:
+                tmp.push_back(key)
+            else:
+                dropped_keys.append(key)
+                dropped_strings.append(value)
+
+        self.keys.swap(tmp)
+        strings = list(self)
+        self._reset_and_load(strings)
+        # Here we have strings but hits to it should be reseted
+        self.hits.clear()
+
+        return dropped_keys, dropped_strings
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
@@ -215,81 +291,8 @@ cdef class StringStore:
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
-        value = <Utf8Str*>self._oov.get(key)
-        if value is not NULL:
-            return value
-        if self.is_frozen:
-            # OOV store uses 32 bit hashes. Pretty ugly :(
-            key32 = hash32_utf8(utf8_string, length)
-            # Important: Make the OOV store own the memory. That way it's trivial
-            # to flush them all.
-            value = <Utf8Str*>self._oov.mem.alloc(1, sizeof(Utf8Str))
-            value[0] = _allocate(self._oov.mem, <unsigned char*>utf8_string, length)
-            self._oov.set(key32, value)
-            return NULL
-
-        if self.size == self._resize_at:
-            self._realloc()
-        self.c[self.size] = _allocate(self.mem, <unsigned char*>utf8_string, length)
-        self._map.set(key, <void*>&self.c[self.size])
-        self.size += 1
-        return &self.c[self.size-1]
-
-    def dump(self, file_):
-        """
-        Save the strings to a JSON file.
-
-        Arguments:
-            file_ (buffer): The file to save the strings.
-        Returns:
-            None
-        """
-        string_data = ujson.dumps(list(self))
-        if not isinstance(string_data, unicode):
-            string_data = string_data.decode('utf8')
-        # TODO: OOV?
-        file_.write(string_data)
-
-    def load(self, file_):
-        """
-        Load the strings from a JSON file.
-
-        Arguments:
-            file_ (buffer): The file from which to load the strings.
-        Returns:
-            None
-        """
-        strings = ujson.load(file_)
-        if strings == ['']:
-            return None
-        cdef unicode string
-        for string in strings:
-            # explicit None/len check instead of simple truth testing
-            # (bug in Cython <= 0.23.4)
-            if string is not None and len(string):
-                self.intern_unicode(string)
-
-    def _realloc(self):
-        # We want to map straight to pointers, but they'll be invalidated if
-        # we resize our array. So, first we remap to indices, then we resize,
-        # then we can acquire the new pointers.
-        cdef Pool tmp_mem = Pool()
-        keys = <key_t*>tmp_mem.alloc(self.size, sizeof(key_t))
-        cdef key_t key
-        cdef void* value
-        cdef const Utf8Str ptr
-        cdef int i = 0
-        cdef size_t offset
-        while map_iter(self._map.c_map, &i, &key, &value):
-            # Find array index with pointer arithmetic
-            offset = ((<Utf8Str*>value) - self.c)
-            keys[offset] = key
-
-        self._resize_at *= 2
-        cdef size_t new_size = self._resize_at * sizeof(Utf8Str)
-        self.c = <Utf8Str*>self.mem.realloc(self.c, new_size)
-
-        self._map = PreshMap(self.size)
-        for i in range(self.size):
-            if keys[i]:
-                self._map.set(keys[i], &self.c[i])
+        value = _allocate(self.mem, <unsigned char*>utf8_string, length)
+        self._map.set(key, value)
+        self.hits.insert(key)
+        self.keys.push_back(key)
+        return value

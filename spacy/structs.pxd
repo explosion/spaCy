@@ -5,8 +5,6 @@ from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:
-    float* vector
-
     flags_t flags
 
     attr_t lang
@@ -25,14 +23,31 @@ cdef struct LexemeC:
 
     float prob
     float sentiment
-    float l2_norm
+
+
+cdef struct SerializedLexemeC:
+    unsigned char[8 + 8*10 + 4 + 4] data
+    #    sizeof(flags_t)  # flags
+    #    + sizeof(attr_t) # lang
+    #    + sizeof(attr_t) # id
+    #    + sizeof(attr_t) # length
+    #    + sizeof(attr_t) # orth
+    #    + sizeof(attr_t) # lower
+    #    + sizeof(attr_t) # norm
+    #    + sizeof(attr_t) # shape
+    #    + sizeof(attr_t) # prefix
+    #    + sizeof(attr_t) # suffix
+    #    + sizeof(attr_t) # cluster
+    #    + sizeof(float)  # prob
+    #    + sizeof(float)  # cluster
+    #    + sizeof(float) # l2_norm
 
 
 cdef struct Entity:
     hash_t id
     int start
     int end
-    int label
+    attr_t label
 
 
 cdef struct TokenC:
@@ -40,19 +55,19 @@ cdef struct TokenC:
     uint64_t morph
     univ_pos_t pos
     bint spacy
-    int tag
+    attr_t tag
     int idx
-    int lemma
-    int sense
+    attr_t lemma
+    attr_t sense
     int head
-    int dep
-    bint sent_start
+    attr_t dep
 
     uint32_t l_kids
     uint32_t r_kids
     uint32_t l_edge
     uint32_t r_edge
 
+    int sent_start
     int ent_iob
-    int ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
+    attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     hash_t ent_id

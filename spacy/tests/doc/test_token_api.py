@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from ...attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
 from ..util import get_doc
+from ...vocab import Vocab
+from ...tokens import Doc
 
 import pytest
 import numpy
@@ -68,25 +70,21 @@ def test_doc_token_api_is_properties(en_vocab):
     assert doc[5].like_email
 
 
-@pytest.mark.parametrize('text,vectors', [
-    ("apples oranges ldskbjls", ["apples -1 -1 -1", "oranges -1 -1 0"])
-])
-def test_doc_token_api_vectors(en_tokenizer, text_file, text, vectors):
-    text_file.write('\n'.join(vectors))
-    text_file.seek(0)
-    vector_length = en_tokenizer.vocab.load_vectors(text_file)
-    assert vector_length == 3
+def test_doc_token_api_vectors():
+    vocab = Vocab()
+    vocab.reset_vectors(width=2)
+    vocab.set_vector('apples', vector=numpy.asarray([0., 2.], dtype='f'))
+    vocab.set_vector('oranges', vector=numpy.asarray([0., 1.], dtype='f'))
+    doc = Doc(vocab, words=['apples', 'oranges', 'oov'])
+    assert doc.has_vector
 
-    tokens = en_tokenizer(text)
-    assert tokens[0].has_vector
-    assert tokens[1].has_vector
-    assert not tokens[2].has_vector
-    assert tokens[0].similarity(tokens[1]) > tokens[0].similarity(tokens[2])
-    assert tokens[0].similarity(tokens[1]) == tokens[1].similarity(tokens[0])
-    assert sum(tokens[0].vector) != sum(tokens[1].vector)
-    assert numpy.isclose(
-        tokens[0].vector_norm,
-        numpy.sqrt(numpy.dot(tokens[0].vector, tokens[0].vector)))
+    assert doc[0].has_vector
+    assert doc[1].has_vector
+    assert not doc[2].has_vector
+    apples_norm = (0*0 + 2*2) ** 0.5
+    oranges_norm = (0*0 + 1*1) ** 0.5
+    cosine = ((0*0) + (2*1)) / (apples_norm * oranges_norm)
+    assert doc[0].similarity(doc[1]) == cosine
 
 
 def test_doc_token_api_ancestors(en_tokenizer):
@@ -99,8 +97,8 @@ def test_doc_token_api_ancestors(en_tokenizer):
     assert [t.text for t in doc[1].ancestors] == ["saw"]
     assert [t.text for t in doc[2].ancestors] == []
 
-    assert doc[2].is_ancestor_of(doc[7])
-    assert not doc[6].is_ancestor_of(doc[2])
+    assert doc[2].is_ancestor(doc[7])
+    assert not doc[6].is_ancestor(doc[2])
 
 
 def test_doc_token_api_head_setter(en_tokenizer):
@@ -155,3 +153,12 @@ def test_doc_token_api_head_setter(en_tokenizer):
     assert doc[3].left_edge.i == 0
     assert doc[4].left_edge.i == 0
     assert doc[2].left_edge.i == 0
+
+
+def test_is_sent_start(en_tokenizer):
+    doc = en_tokenizer(u'This is a sentence. This is another.')
+    assert doc[5].is_sent_start is None
+    doc[5].is_sent_start = True
+    assert doc[5].is_sent_start is True
+    doc.is_parsed = True
+    assert len(list(doc.sents)) == 2

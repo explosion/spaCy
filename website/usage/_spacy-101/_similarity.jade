@@ -1,0 +1,51 @@
+//- 💫 DOCS > USAGE > SPACY 101 > SIMILARITY
+
+p
+    |  spaCy is able to compare two objects, and make a prediction of
+    |  #[strong how similar they are]. Predicting similarity is useful for
+    |  building recommendation systems or flagging duplicates. For example, you
+    |  can suggest a user content that's similar to what they're currently
+    |  looking at, or label a support ticket as a duplicate if it's very
+    |  similar to an already existing one.
+
+p
+    |  Each #[code Doc], #[code Span] and #[code Token] comes with a
+    |  #[+api("token#similarity") #[code .similarity()]] method that lets you
+    |  compare it with another object, and determine the similarity. Of course
+    |  similarity is always subjective – whether "dog" and "cat" are similar
+    |  really depends on how you're looking at it. spaCy's similarity model
+    |  usually assumes a pretty general-purpose definition of similarity.
+
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_md')  # make sure to use larger model!
+    tokens = nlp(u'dog cat banana')
+
+    for token1 in tokens:
+        for token2 in tokens:
+            print(token1.text, token2.text, token1.similarity(token2))
+
++aside
+    |  #[strong #[+procon("neutral", "identical", false, 16)] similarity:] identical#[br]
+    |  #[strong #[+procon("yes", "similar", false, 16)] similarity:] similar (higher is more similar) #[br]
+    |  #[strong #[+procon("no", "dissimilar", false, 16)] similarity:] dissimilar (lower is less similar)
+
++table
+    +row("head")
+        for column in ["", "dog", "cat", "banana"]
+            +head-cell.u-text-center=column
+    each cells, label in {"dog": [1, 0.8, 0.24], "cat": [0.8, 1, 0.28], "banana": [0.24, 0.28, 1]}
+        +row
+            +cell.u-text-label.u-color-theme=label
+            for cell in cells
+                +cell.u-text-center
+                    - var result = cell < 0.5 ? ["no", "dissimilar"] : cell != 1 ? ["yes", "similar"] : ["neutral", "identical"]
+                    |  #[code=cell.toFixed(2)] #[+procon(...result)]
+
+p
+    |  In this case, the model's predictions are pretty on point. A dog is very
+    |  similar to a cat, whereas a banana is not very similar to either of them.
+    |  Identical tokens are obviously 100% similar to each other (just not always
+    |  exactly #[code 1.0], because of vector math and floating point
+    |  imprecisions).

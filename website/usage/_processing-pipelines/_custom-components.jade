@@ -1,0 +1,130 @@
+//- 💫 DOCS > USAGE > PROCESSING PIPELINES > CUSTOM COMPONENTS
+
+p
+    |  A component receives a #[code Doc] object and can modify it – for example,
+    |  by using the current weights to make a prediction and set some annotation
+    |  on the document. By adding a component to the pipeline, you'll get access
+    |  to the #[code Doc] at any point #[strong during processing] – instead of
+    |  only being able to modify it afterwards.
+
++aside-code("Example").
+    def my_component(doc):
+        # do something to the doc here
+        return doc
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The #[code Doc] object processed by the previous component.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell The #[code Doc] object processed by this pipeline component.
+
+p
+    |  Custom components can be added to the pipeline using the
+    |  #[+api("language#add_pipe") #[code add_pipe]] method. Optionally, you
+    |  can either specify a component to add it #[strong before or after], tell
+    |  spaCy to add it #[strong first or last] in the pipeline, or define a
+    |  #[strong custom name]. If no name is set and no #[code name] attribute
+    |  is present on your component, the function name is used.
+
++code-exec.
+    import spacy
+
+    def my_component(doc):
+        print("After tokenization, this doc has %s tokens." % len(doc))
+        if len(doc) &lt; 10:
+            print("This is a pretty short document.")
+        return doc
+
+    nlp = spacy.load('en_core_web_sm')
+    nlp.add_pipe(my_component, name='print_info', first=True)
+    print(nlp.pipe_names) # ['print_info', 'tagger', 'parser', 'ner']
+    doc = nlp(u"This is a sentence.")
+
+p
+    |  Of course, you can also wrap your component as a class to allow
+    |  initialising it with custom settings and hold state within the component.
+    |  This is useful for #[strong stateful components], especially ones which
+    |  #[strong depend on shared data]. In the following example, the custom
+    |  component #[code EntityMatcher] can be initialised with #[code nlp] object,
+    |  a terminology list and an entity label. Using the
+    |  #[+api("phrasematcher") #[code PhraseMatcher]], it then matches the terms
+    |  in the #[code Doc] and adds them to the existing entities.
+
++aside("Rule-based entities vs. model", "💡")
+    |  For complex tasks, it's usually better to train a statistical entity
+    |  recognition model. However, statistical models require training data, so
+    |  for many situations, rule-based approaches are more practical. This is
+    |  especially true at the start of a project: you can use a rule-based
+    |  approach as part of a data collection process, to help you "bootstrap" a
+    |  statistical model.
+
++code-exec.
+    import spacy
+    from spacy.matcher import PhraseMatcher
+    from spacy.tokens import Span
+
+    class EntityMatcher(object):
+        name = 'entity_matcher'
+
+        def __init__(self, nlp, terms, label):
+            patterns = [nlp(text) for text in terms]
+            self.matcher = PhraseMatcher(nlp.vocab)
+            self.matcher.add(label, None, *patterns)
+
+        def __call__(self, doc):
+            matches = self.matcher(doc)
+            for match_id, start, end in matches:
+                span = Span(doc, start, end, label=match_id)
+                doc.ents = list(doc.ents) + [span]
+            return doc
+
+    nlp = spacy.load('en_core_web_sm')
+    terms = (u'cat', u'dog', u'tree kangaroo', u'giant sea spider')
+    entity_matcher = EntityMatcher(nlp, terms, 'ANIMAL')
+
+    nlp.add_pipe(entity_matcher, after='ner')
+    print(nlp.pipe_names)  # the components in the pipeline
+
+    doc = nlp(u"This is a text about Barack Obama and a tree kangaroo")
+    print([(ent.text, ent.label_) for ent in doc.ents])
+
++h(3, "custom-components-factories") Adding factories
+
+p
+    |  When spaCy loads a model via its #[code meta.json], it will iterate over
+    |  the #[code "pipeline"] setting, look up every component name in the
+    |  internal factories and call
+    |  #[+api("language#create_pipe") #[code nlp.create_pipe]] to initialise the
+    |  individual components, like the tagger, parser or entity recogniser. If
+    |  your model uses custom components, this won't work – so you'll have to
+    |  tell spaCy #[strong where to find your component]. You can do this by
+    |  writing to the #[code Language.factories]:
+
++code.
+    from spacy.language import Language
+    Language.factories['entity_matcher'] = lambda nlp, **cfg: EntityMatcher(nlp, **cfg)
+
+p
+    |  You can also ship the above code and your custom component in your
+    |  packaged model's #[code __init__.py], so it's executed when you load your
+    |  model. The #[code **cfg] config parameters are passed all the way down
+    |  from #[+api("spacy#load") #[code spacy.load]], so you can load the model
+    |  and its components with custom settings:
+
++code.
+    nlp = spacy.load('your_custom_model', terms=(u'tree kangaroo'), label='ANIMAL')
+
++infobox("Important note", "⚠️")
+    |  When you load a model via its shortcut or package name, like
+    |  #[code en_core_web_sm], spaCy will import the package and then call its
+    |  #[code load()] method. This means that custom code in the model's
+    |  #[code __init__.py] will be executed, too. This is #[strong not the case]
+    |  if you're loading a model from a path containing the model data. Here,
+    |  spaCy will only read in the #[code meta.json]. If you want to use custom
+    |  factories with a model loaded from a path, you need to add them to
+    |  #[code Language.factories] #[em before] you load the model.

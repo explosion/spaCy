@@ -1,0 +1,33 @@
+//- 💫 DOCS > USAGE > TRAINING
+
+include ../_includes/_mixins
+
+p
+    |  This guide describes how to train new statistical models for spaCy's
+    |  part-of-speech tagger, named entity recognizer and dependency parser.
+    |  Once the model is trained, you can then
+    |  #[+a("/usage/models#saving-loading") save and load] it.
+
++section("basics")
+    +h(2, "basics") Training basics
+    include _training/_basics
+
++section("ner")
+    +h(2, "ner") Training the named entity recognizer
+    include _training/_ner
+
++section("tagger-parser")
+    +h(2, "tagger-parser") Training the tagger and parser
+    include _training/_tagger-parser
+
++section("textcat")
+    +h(2, "textcat") Training a text classification model
+    include _training/_textcat
+
++section("tips")
+    +h(2, "tips") Optimization tips and advice
+    include _training/_tips
+
++section("saving-loading")
+    +h(2, "saving-loading") Saving and loading models
+    include _training/_saving-loading

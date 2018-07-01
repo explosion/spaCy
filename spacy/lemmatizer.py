@@ -7,26 +7,31 @@ from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 class Lemmatizer(object):
     @classmethod
-    def load(cls, path, index=None, exc=None, rules=None):
-        return cls(index or {}, exc or {}, rules or {})
+    def load(cls, path, index=None, exc=None, rules=None, lookup=None):
+        return cls(index, exc, rules, lookup)
 
-    def __init__(self, index, exceptions, rules):
+    def __init__(self, index=None, exceptions=None, rules=None, lookup=None):
         self.index = index
         self.exc = exceptions
         self.rules = rules
+        self.lookup_table = lookup if lookup is not None else {}
 
     def __call__(self, string, univ_pos, morphology=None):
-        if univ_pos == NOUN:
+        if not self.rules:
+            return [self.lookup_table.get(string, string)]
+        if univ_pos in (NOUN, 'NOUN', 'noun'):
             univ_pos = 'noun'
-        elif univ_pos == VERB:
+        elif univ_pos in (VERB, 'VERB', 'verb'):
             univ_pos = 'verb'
-        elif univ_pos == ADJ:
+        elif univ_pos in (ADJ, 'ADJ', 'adj'):
             univ_pos = 'adj'
-        elif univ_pos == PUNCT:
+        elif univ_pos in (PUNCT, 'PUNCT', 'punct'):
             univ_pos = 'punct'
+        else:
+            return list(set([string.lower()]))
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
-            return set([string.lower()])
+            return list(set([string.lower()]))
         lemmas = lemmatize(string, self.index.get(univ_pos, {}),
                            self.exc.get(univ_pos, {}),
                            self.rules.get(univ_pos, []))
@@ -38,11 +43,18 @@ class Lemmatizer(object):
         avoid lemmatization entirely.
         """
         morphology = {} if morphology is None else morphology
-        others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
-        true_morph_key = morphology.get('morph', 0)
+        others = [key for key in morphology
+                  if key not in (POS, 'Number', 'POS', 'VerbForm', 'Tense')]
         if univ_pos == 'noun' and morphology.get('Number') == 'sing':
             return True
         elif univ_pos == 'verb' and morphology.get('VerbForm') == 'inf':
+            return True
+        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
+        # morphology
+        elif univ_pos == 'verb' and (morphology.get('VerbForm') == 'fin' and
+                                     morphology.get('Tense') == 'pres' and
+                                     morphology.get('Number') is None and
+                                     not others):
             return True
         elif univ_pos == 'adj' and morphology.get('Degree') == 'pos':
             return True
@@ -69,26 +81,29 @@ class Lemmatizer(object):
     def punct(self, string, morphology=None):
         return self(string, 'punct', morphology)
 
+    def lookup(self, string):
+        if string in self.lookup_table:
+            return self.lookup_table[string]
+        return string
+
 
 def lemmatize(string, index, exceptions, rules):
     string = string.lower()
     forms = []
-    # TODO: Is this correct? See discussion in Issue #435.
-    #if string in index:
-    #    forms.append(string)
     forms.extend(exceptions.get(string, []))
     oov_forms = []
-    for old, new in rules:
-        if string.endswith(old):
-            form = string[:len(string) - len(old)] + new
-            if not form:
-                pass
-            elif form in index or not form.isalpha():
-                forms.append(form)
-            else:
-                oov_forms.append(form)
+    if not forms:
+        for old, new in rules:
+            if string.endswith(old):
+                form = string[:len(string) - len(old)] + new
+                if not form:
+                    pass
+                elif form in index or not form.isalpha():
+                    forms.append(form)
+                else:
+                    oov_forms.append(form)
     if not forms:
         forms.extend(oov_forms)
     if not forms:
         forms.append(string)
-    return set(forms)
+    return list(set(forms))

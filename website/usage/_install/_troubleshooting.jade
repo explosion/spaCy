@@ -1,0 +1,179 @@
+//- 💫 DOCS > USAGE > INSTALL > TROUBLESHOOTING
+
+p
+    |  This section collects some of the most common errors you may come
+    |  across when installing, loading and using spaCy, as well as their solutions.
+
++aside("Help us improve this guide")
+    |  Did you come across a problem like the ones listed here and want to
+    |  share the solution? You can find the "Suggest edits" button at the
+    |  bottom of this page that points you to the source. We always
+    |  appreciate #[+a(gh("spaCy") + "/pulls") pull requests]!
+
++h(3, "compatible-model") No compatible model found
+
++code(false, "text").
+    No compatible model found for [lang] (spaCy v#{SPACY_VERSION}).
+
+p
+    |  This usually means that the model you're trying to download does not
+    |  exist, or isn't available for your version of spaCy. Check the
+    |  #[+a(gh("spacy-models", "compatibility.json")) compatibility table]
+    |  to see which models are available for your spaCy version. If you're using
+    |  an old version, consider upgrading to the latest release. Note that while
+    |  spaCy supports tokenization for
+    |  #[+a("/usage/models#languages") a variety of languages],
+    |  not all of them come with statistical models. To only use the tokenizer,
+    |  import the language's #[code Language] class instead, for example
+    |  #[code from spacy.fr import French].
+
++h(3, "symlink-privilege") Symbolic link privilege not held
+
++code(false, "text").
+    OSError: symbolic link privilege not held
+
+p
+    |  To create #[+a("/usage/models#usage") shortcut links] that let you
+    |  load models by name, spaCy creates a symbolic link in the
+    |  #[code spacy/data] directory. This means your user needs permission to do
+    |  this. The above error mostly occurs when doing a system-wide installation,
+    |  which will create the symlinks in a system directory. Run the
+    |  #[code download] or #[code link] command as administrator (on Windows,
+    |  you can either right-click on your terminal or shell ans select "Run as
+    |  Administrator"), or use a #[code virtualenv] to install spaCy in a user
+    |  directory, instead of doing a system-wide installation.
+
++h(3, "no-cache-dir") No such option: --no-cache-dir
+
++code(false, "text").
+    no such option: --no-cache-dir
+
+p
+    |  The #[code download] command uses pip to install the models and sets the
+    |  #[code --no-cache-dir] flag to prevent it from requiring too much memory.
+    |  #[+a("https://pip.pypa.io/en/stable/reference/pip_install/#caching") This setting]
+    |  requires pip v6.0 or newer. Run #[code pip install -U pip] to upgrade to
+    |  the latest version of pip. To see which version you have installed,
+    |  run #[code pip --version].
+
++h(3, "unknown-locale") Unknown locale: UTF-8
+
++code(false, "text").
+    ValueError: unknown locale: UTF-8
+
+p
+    |  This error can sometimes occur on OSX and is likely related to a
+    |  still unresolved #[+a("https://bugs.python.org/issue18378") Python bug].
+    |  However, it's easy to fix: just add the following to your
+    |  #[code ~&sol;.bash_profile] or #[code ~&sol;.zshrc] and then run
+    |  #[code source ~&sol;.bash_profile] or #[code source ~&sol;.zshrc].
+    |  Make sure to add #[strong both lines] for #[code LC_ALL] and
+    |  #[code LANG].
+
++code(false, "bash").
+    export LC_ALL=en_US.UTF-8
+    export LANG=en_US.UTF-8
+
++h(3, "import-error") Import error
+
++code(false, "text").
+    Import Error: No module named spacy
+
+p
+    |  This error means that the spaCy module can't be located on your system, or in
+    |  your environment. Make sure you have spaCy installed. If you're using a
+    |  #[code virtualenv], make sure it's activated and check that spaCy is
+    |  installed in that environment – otherwise, you're trying to load a system
+    |  installation. You can also run #[code which python] to find out where
+    |  your Python executable is located.
+
++h(3, "import-error-models") Import error: models
+
++code(false, "text").
+    ImportError: No module named 'en_core_web_sm'
+
+p
+    |  As of spaCy v1.7, all models can be installed as Python packages. This means
+    |  that they'll become importable modules of your application. When creating
+    |  #[+a("/usage/models#usage") shortcut links], spaCy will also try
+    |  to import the model to load its meta data. If this fails, it's usually a
+    |  sign that the package is not installed in the current environment.
+    |  Run #[code pip list] or #[code pip freeze] to check which model packages
+    |  you have installed, and install the
+    |  #[+a("/models") correct models] if necessary. If you're
+    |  importing a model manually at the top of a file, make sure to use the name
+    |  of the package, not the shortcut link you've created.
+
++h(3, "vocab-strings") File not found: vocab/strings.json
+
++code(false, "text").
+    FileNotFoundError: No such file or directory: [...]/vocab/strings.json
+
+p
+    |  This error may occur when using #[code spacy.load()] to load
+    |  a language model – either because you haven't set up a
+    |  #[+a("/usage/models#usage") shortcut link] for it, or because it
+    |  doesn't actually exist. Set up a link for the model
+    |  you want to load. This can either be an installed model package, or a
+    |  local directory containing the model data. If you want to use one of the
+    |  #[+a("/usage/models#languages") alpha tokenizers] for
+    |  languages that don't yet have a statistical model, you should import its
+    |  #[code Language] class instead, for example
+    |  #[code from spacy.lang.bn import Bengali]. You can also use
+    |  #[+api("top-level#spacy.blank") #[code spacy.blank]] to create a blank
+    |  instance, e.g. #[code nlp = spacy.blank('bn')].
+
++h(3, "command-not-found") Command not found
+
++code(false, "text").
+    command not found: spacy
+
+p
+    |  This error may occur when running the #[code spacy] command from the
+    |  command line. spaCy does not currently add an entry to our #[code PATH]
+    |  environment variable, as this can lead to unexpected results, especially
+    |  when using #[code virtualenv]. Instead, spaCy adds an auto-alias that
+    |  maps #[code spacy] to #[code python -m spacy]. If this is not working as
+    |  expected, run the command with #[code python -m], yourself –
+    |  for example #[code python -m spacy download en]. For more info on this,
+    |  see the #[+api("cli#download") #[code download]] command.
+
++h(3, "module-load") 'module' object has no attribute 'load'
+
++code(false, "text").
+    AttributeError: 'module' object has no attribute 'load'
+
+p
+    |  While this could technically have many causes, including spaCy being
+    |  broken, the most likely one is that your script's file or directory name
+    |  is "shadowing" the module – e.g. your file is called #[code spacy.py],
+    |  or a directory you're importing from is called #[code spacy]. So, when
+    |  using spaCy, never call anything else #[code spacy].
+
++h(3, "pron-lemma") Pronoun lemma is returned as #[code -PRON-]
+
++code.
+    doc = nlp(u'They are')
+    print(doc[0].lemma_)
+    # -PRON-
+
+p
+    |  This is in fact expected behaviour and not a bug.
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code -PRON-], which is used as the lemma for
+    |  all personal pronouns. For more info on this, see the
+    |  #[+a("/api/annotation#lemmatization") lemmatization specs].
+
++h(3, "catastrophic-forgetting") NER model doesn't recognise other entities anymore after training
+
+p
+    |  If your training data only contained new entities and you didn't mix in
+    |  any examples the model previously recognised, it can cause the model to
+    |  "forget" what it had previously learned. This is also referred to as the
+    |  #[+a("https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting", true) "catastrophic forgetting problem"].
+    |  A solution is to pre-label some text, and mix it with the new text in
+    |  your updates. You can also do this by running spaCy over some text,
+    |  extracting a bunch of entities the model previously recognised correctly,
+    |  and adding them to your training examples.

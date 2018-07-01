@@ -1,23 +1,24 @@
 # coding: utf-8
+# cython: infer_types=True
 from __future__ import unicode_literals
 
-from libc.string cimport memcpy, memset
-from libc.stdint cimport uint32_t
+import numpy
 
-from ..vocab cimport EMPTY_LEXEME
-from ..structs cimport Entity
-from ..lexeme cimport Lexeme
-from ..symbols cimport punct
-from ..attrs cimport IS_SPACE
+from ..tokens.doc cimport Doc
 
 
 cdef class StateClass:
-    def __init__(self, int length):
+    def __init__(self, Doc doc=None, int offset=0):
         cdef Pool mem = Pool()
         self.mem = mem
+        self._borrowed = 0
+        if doc is not None:
+            self.c = new StateC(doc.c, doc.length)
+            self.c.offset = offset
 
     def __dealloc__(self):
-        del self.c
+        if self._borrowed != 1:
+            del self.c
 
     @property
     def stack(self):
@@ -26,6 +27,25 @@ cdef class StateClass:
     @property
     def queue(self):
         return {self.B(i) for i in range(self.c.buffer_length())}
+
+    @property
+    def token_vector_lenth(self):
+        return self.doc.tensor.shape[1]
+
+    @property
+    def history(self):
+        hist = numpy.ndarray((8,), dtype='i')
+        for i in range(8):
+            hist[i] = self.c.get_hist(i+1)
+        return hist
+
+    def is_final(self):
+        return self.c.is_final()
+
+    def copy(self):
+        cdef StateClass new_state = StateClass.init(self.c._sent, self.c.length)
+        new_state.c.clone(self.c)
+        return new_state
 
     def print_state(self, words):
         words = list(words) + ['_']

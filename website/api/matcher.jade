@@ -1,0 +1,281 @@
+//- 💫 DOCS > API > MATCHER
+
+include ../_includes/_mixins
+
++infobox("Changed in v2.0", "⚠️")
+    |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
+    |  are deprecated and have been replaced with a simpler
+    |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
+    |  patterns and a callback for a given match ID. #[code Matcher.get_entity]
+    |  is now called #[+api("matcher#get") #[code matcher.get]].
+    |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
+    |  and #[code Matcher.has_entity] (now redundant) have been removed. The
+    |  concept of "acceptor functions" has also been retired – this logic can
+    |  now be handled in the callback functions.
+
++h(2, "init") Matcher.__init__
+    +tag method
+
+p Create the rule-based #[code Matcher].
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+
+    patterns = {'HelloWorld': [{'LOWER': 'hello'}, {'LOWER': 'world'}]}
+    matcher = Matcher(nlp.vocab)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell
+            |  The vocabulary object, which must be shared with the documents
+            |  the matcher will operate on.
+
+    +row
+        +cell #[code patterns]
+        +cell dict
+        +cell Patterns to add to the matcher, keyed by ID.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Matcher]
+        +cell The newly constructed object.
+
++h(2, "call") Matcher.__call__
+    +tag method
+
+p Find all token sequences matching the supplied patterns on the #[code Doc].
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+
+    matcher = Matcher(nlp.vocab)
+    pattern = [{'LOWER': "hello"}, {'LOWER': "world"}]
+    matcher.add("HelloWorld", None, pattern)
+    doc = nlp(u'hello world!')
+    matches = matcher(doc)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The document to match over.
+
+    +row("foot")
+        +cell returns
+        +cell list
+        +cell
+            |  A list of #[code (match_id, start, end)] tuples, describing the
+            |  matches. A match tuple describes a span #[code doc[start:end]].
+            |  The #[code match_id] is the ID of the added match pattern.
+
++infobox("Important note")
+    |  By default, the matcher #[strong does not perform any action] on matches,
+    |  like tagging matched phrases with entity types. Instead, actions need to
+    |  be specified when #[strong adding patterns or entities], by
+    |  passing in a callback function as the #[code on_match] argument on
+    |  #[+api("matcher#add") #[code add]]. This allows you to define custom
+    |  actions per pattern within the same matcher. For example, you might only
+    |  want to merge some entity types, and set custom flags for other matched
+    |  patterns. For more details and examples, see the usage guide on
+    |  #[+a("/usage/linguistic-features#rule-based-matching") rule-based matching].
+
++h(2, "pipe") Matcher.pipe
+    +tag method
+
+p Match a stream of documents, yielding them in turn.
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    matcher = Matcher(nlp.vocab)
+    for doc in matcher.pipe(docs, batch_size=50, n_threads=4):
+        pass
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell iterable
+        +cell A stream of documents.
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of documents to accumulate into a working set.
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of threads with which to work on the buffer in
+            |  parallel, if the #[code Matcher] implementation supports
+            |  multi-threading.
+
+    +row
+        +cell #[code return_matches]
+            +tag-new(2.1)
+        +cell bool
+        +cell
+            |  Yield the match lists along with the docs, making results
+            |  #[code (doc, matches)] tuples.
+
+    +row
+        +cell #[code as_tuples]
+            +tag-new(2.1)
+        +cell bool
+        +cell
+            |  Interpret the input stream as #[code (doc, context)] tuples, and
+            |  yield #[code (result, context)] tuples out. If both
+            |  #[code return_matches] and #[code as_tuples] are #[code True],
+            |  the output will be a sequence of
+            |  #[code ((doc, matches), context)] tuples.
+
+    +row("foot")
+        +cell yields
+        +cell #[code Doc]
+        +cell Documents, in order.
+
++h(2, "len") Matcher.__len__
+    +tag method
+    +tag-new(2)
+
+p
+    |  Get the number of rules added to the matcher. Note that this only returns
+    |  the number of rules (identical with the number of IDs), not the number
+    |  of individual patterns.
+
++aside-code("Example").
+    matcher = Matcher(nlp.vocab)
+    assert len(matcher) == 0
+    matcher.add('Rule', None, [{'ORTH': 'test'}])
+    assert len(matcher) == 1
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of rules.
+
++h(2, "contains") Matcher.__contains__
+    +tag method
+    +tag-new(2)
+
+p Check whether the matcher contains rules for a match ID.
+
++aside-code("Example").
+    matcher = Matcher(nlp.vocab)
+    assert 'Rule' not in matcher
+    matcher.add('Rule', None, [{'ORTH': 'test'}])
+    assert 'Rule' in matcher
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode
+        +cell The match ID.
+
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell Whether the matcher contains rules for this match ID.
+
++h(2, "add") Matcher.add
+    +tag method
+    +tag-new(2)
+
+p
+    |  Add a rule to the matcher, consisting of an ID key, one or more patterns, and
+    |  a callback function to act on the matches. The callback function will
+    |  receive the arguments #[code matcher], #[code doc], #[code i] and
+    |  #[code matches]. If a pattern already exists for the given ID, the
+    |  patterns will be extended. An #[code on_match] callback will be
+    |  overwritten.
+
++aside-code("Example").
+    def on_match(matcher, doc, id, matches):
+        print('Matched!', matches)
+
+    matcher = Matcher(nlp.vocab)
+    matcher.add('HelloWorld', on_match, [{'LOWER': 'hello'}, {'LOWER': 'world'}])
+    matcher.add('GoogleMaps', on_match, [{'ORTH': 'Google'}, {'ORTH': 'Maps'}])
+    doc = nlp(u'HELLO WORLD on Google Maps.')
+    matches = matcher(doc)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code match_id]
+        +cell unicode
+        +cell An ID for the thing you're matching.
+
+    +row
+        +cell #[code on_match]
+        +cell callable or #[code None]
+        +cell
+            |  Callback function to act on matches. Takes the arguments
+            |  #[code matcher], #[code doc], #[code i] and #[code matches].
+
+    +row
+        +cell #[code *patterns]
+        +cell list
+        +cell
+            |  Match pattern. A pattern consists of a list of dicts, where each
+            |  dict describes a token.
+
++infobox("Changed in v2.0", "⚠️")
+    |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
+    |  are deprecated and have been replaced with a simpler
+    |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
+    |  patterns and a callback for a given match ID.
+
+    +code-wrapper
+        +code-new.
+            matcher.add('GoogleNow', merge_phrases, [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
+        +code-old.
+            matcher.add_entity('GoogleNow', on_match=merge_phrases)
+            matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
++h(2, "remove") Matcher.remove
+    +tag method
+    +tag-new(2)
+
+p
+    |  Remove a rule from the matcher. A #[code KeyError] is raised if the match
+    |  ID does not exist.
+
++aside-code("Example").
+    matcher.add('Rule', None, [{'ORTH': 'test'}])
+    assert 'Rule' in matcher
+    matcher.remove('Rule')
+    assert 'Rule' not in matcher
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode
+        +cell The ID of the match rule.
+
++h(2, "get") Matcher.get
+    +tag method
+    +tag-new(2)
+
+p
+    |  Retrieve the pattern stored for a key. Returns the rule as an
+    |  #[code (on_match, patterns)] tuple containing the callback and available
+    |  patterns.
+
++aside-code("Example").
+    pattern = [{'ORTH': 'test'}]
+    matcher.add('Rule', None, pattern)
+    on_match, patterns = matcher.get('Rule')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode
+        +cell The ID of the match rule.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell The rule, as an #[code (on_match, patterns)] tuple.

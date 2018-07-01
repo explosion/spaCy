@@ -1,0 +1,29 @@
+//- 💫 DOCS > USAGE
+
+include ../_includes/_mixins
+
+p
+    |  spaCy is compatible with #[strong 64-bit CPython 2.6+&#8725;3.3+] and
+    |  runs on #[strong Unix/Linux], #[strong macOS/OS X] and
+    |  #[strong Windows]. The latest spaCy releases are
+    |  available over #[+a("https://pypi.python.org/pypi/spacy") pip] (source
+    |  packages only) and #[+a("https://anaconda.org/conda-forge/spacy") conda].
+    |  Installation requires a working build environment. See notes on
+    |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") macOS/OS X]
+    |  and #[a(href="#source-windows") Windows] for details.
+
++legacy
+
++section("quickstart")
+    include _install/_quickstart
+
++section("instructions")
+    +h(2, "installation") Installation instructions
+    include _install/_instructions
+
++section("troubleshooting")
+    +h(2, "troubleshooting") Troubleshooting guide
+    include _install/_troubleshooting
+
++section("changelog")
+    include _install/_changelog

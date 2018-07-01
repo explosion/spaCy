@@ -27,21 +27,20 @@ cdef struct _Cached:
 cdef class Vocab:
     cdef Pool mem
     cpdef readonly StringStore strings
-    cpdef readonly Morphology morphology
+    cpdef public Morphology morphology
+    cpdef public object vectors
     cdef readonly int length
-    cdef public object _serializer
     cdef public object data_dir
     cdef public object lex_attr_getters
-    cdef public object serializer_freqs
+    cdef public object cfg
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL
     cdef const TokenC* make_fused_token(self, substrings) except NULL
-    
+
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL
 
     cdef PreshMap _by_hash
     cdef PreshMap _by_orth
-    cdef readonly int vectors_length

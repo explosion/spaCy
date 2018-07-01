@@ -1,0 +1,485 @@
+//- 💫 DOCS > API > TOP-LEVEL > UTIL
+
+p
+    |  spaCy comes with a small collection of utility functions located in
+    |  #[+src(gh("spaCy", "spacy/util.py")) #[code spacy/util.py]].
+    |  Because utility functions are mostly intended for
+    |  #[strong internal use within spaCy], their behaviour may change with
+    |  future releases. The functions documented on this page should be safe
+    |  to use and we'll try to ensure backwards compatibility. However, we
+    |  recommend having additional tests in place if your application depends on
+    |  any of spaCy's utilities.
+
++h(3, "util.get_data_path") util.get_data_path
+    +tag function
+
+p
+    |  Get path to the data directory where spaCy looks for models. Defaults to
+    |  #[code spacy/data].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code require_exists]
+        +cell bool
+        +cell Only return path if it exists, otherwise return #[code None].
+
+    +row("foot")
+        +cell returns
+        +cell #[code Path] / #[code None]
+        +cell Data path or #[code None].
+
++h(3, "util.set_data_path") util.set_data_path
+    +tag function
+
+p
+    |  Set custom path to the data directory where spaCy looks for models.
+
++aside-code("Example").
+    util.set_data_path('/custom/path')
+    util.get_data_path()
+    # PosixPath('/custom/path')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell Path to new data directory.
+
++h(3, "util.get_lang_class") util.get_lang_class
+    +tag function
+
+p
+    |  Import and load a #[code Language] class. Allows lazy-loading
+    |  #[+a("/usage/adding-languages") language data] and importing
+    |  languages using the two-letter language code. To add a language code
+    |  for a custom language class, you can use the
+    |  #[+api("top-level#util.set_lang_class") #[code set_lang_class]] helper.
+
++aside-code("Example").
+    for lang_id in ['en', 'de']:
+        lang_class = util.get_lang_class(lang_id)
+        lang = lang_class()
+        tokenizer = lang.Defaults.create_tokenizer()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lang]
+        +cell unicode
+        +cell Two-letter language code, e.g. #[code 'en'].
+
+    +row("foot")
+        +cell returns
+        +cell #[code Language]
+        +cell Language class.
+
++h(3, "util.set_lang_class") util.set_lang_class
+    +tag function
+
+p
+    |  Set a custom #[code Language] class name that can be loaded via
+    |  #[+api("top-level#util.get_lang_class") #[code get_lang_class]]. If
+    |  your model uses a custom language, this is required so that spaCy can
+    |  load the correct class from the two-letter language code.
+
++aside-code("Example").
+    from spacy.lang.xy import CustomLanguage
+
+    util.set_lang_class('xy', CustomLanguage)
+    lang_class = util.get_lang_class('xy')
+    nlp = lang_class()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Two-letter language code, e.g. #[code 'en'].
+
+    +row
+        +cell #[code cls]
+        +cell #[code Language]
+        +cell The language class, e.g. #[code English].
+
++h(3, "util.load_model") util.load_model
+    +tag function
+    +tag-new(2)
+
+p
+    |  Load a model from a shortcut link, package or data path. If called with a
+    |  shortcut link or package name, spaCy will assume the model is a Python
+    |  package and import and call its #[code load()] method. If called with a
+    |  path, spaCy will assume it's a data directory, read the language and
+    |  pipeline settings from the meta.json and initialise a #[code Language]
+    |  class. The model data will then be loaded in via
+    |  #[+api("language#from_disk") #[code Language.from_disk()]].
+
++aside-code("Example").
+    nlp = util.load_model('en')
+    nlp = util.load_model('en_core_web_sm', disable=['ner'])
+    nlp = util.load_model('/path/to/data')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Package name, shortcut link or model path.
+
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Language]
+        +cell #[code Language] class with the loaded model.
+
++h(3, "util.load_model_from_path") util.load_model_from_path
+    +tag function
+    +tag-new(2)
+
+p
+    |  Load a model from a data directory path. Creates the
+    |  #[+api("language") #[code Language]] class and pipeline based on the
+    |  directory's meta.json and then calls
+    |  #[+api("language#from_disk") #[code from_disk()]] with the path. This
+    |  function also makes it easy to test a new model that you haven't packaged
+    |  yet.
+
++aside-code("Example").
+    nlp = load_model_from_path('/path/to/data')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code model_path]
+        +cell unicode
+        +cell Path to model data directory.
+
+    +row
+        +cell #[code meta]
+        +cell dict
+        +cell
+            |  Model meta data. If #[code False], spaCy will try to load the
+            |  meta from a meta.json in the same directory.
+
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Language]
+        +cell #[code Language] class with the loaded model.
+
++h(3, "util.load_model_from_init_py") util.load_model_from_init_py
+    +tag function
+    +tag-new(2)
+
+p
+    |  A helper function to use in the #[code load()] method of a model package's
+    |  #[+src(gh("spacy-models", "template/model/xx_model_name/__init__.py")) #[code __init__.py]].
+
++aside-code("Example").
+    from spacy.util import load_model_from_init_py
+
+    def load(**overrides):
+        return load_model_from_init_py(__file__, **overrides)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code init_file]
+        +cell unicode
+        +cell Path to model's __init__.py, i.e. #[code __file__].
+
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Language]
+        +cell #[code Language] class with the loaded model.
+
++h(3, "util.get_model_meta") util.get_model_meta
+    +tag function
+    +tag-new(2)
+
+p
+    |  Get a model's meta.json from a directory path and validate its contents.
+
++aside-code("Example").
+    meta = util.get_model_meta('/path/to/model')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell Path to model directory.
+
+    +row("foot")
+        +cell returns
+        +cell dict
+        +cell The model's meta data.
+
++h(3, "util.is_package") util.is_package
+    +tag function
+
+p
+    |  Check if string maps to a package installed via pip. Mainly used to
+    |  validate #[+a("/usage/models") model packages].
+
++aside-code("Example").
+    util.is_package('en_core_web_sm') # True
+    util.is_package('xyz') # False
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of package.
+
+    +row("foot")
+        +cell returns
+        +cell #[code bool]
+        +cell #[code True] if installed package, #[code False] if not.
+
++h(3, "util.get_package_path") util.get_package_path
+    +tag function
+    +tag-new(2)
+
+p
+    |  Get path to an installed package. Mainly used to resolve the location of
+    |  #[+a("/usage/models") model packages]. Currently imports the package
+    |  to find its path.
+
++aside-code("Example").
+    util.get_package_path('en_core_web_sm')
+    # /usr/lib/python3.6/site-packages/en_core_web_sm
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code package_name]
+        +cell unicode
+        +cell Name of installed package.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Path]
+        +cell Path to model package directory.
+
++h(3, "util.is_in_jupyter") util.is_in_jupyter
+    +tag function
+    +tag-new(2)
+
+p
+    |  Check if user is running spaCy from a #[+a("https://jupyter.org") Jupyter]
+    |  notebook by detecting the IPython kernel. Mainly used for the
+    |  #[+api("top-level#displacy") #[code displacy]] visualizer.
+
++aside-code("Example").
+    html = '&lt;h1&gt;Hello world!&lt;/h1&gt;'
+    if util.is_in_jupyter():
+        from IPython.core.display import display, HTML
+        display(HTML(html))
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell #[code True] if in Jupyter, #[code False] if not.
+
++h(3, "util.update_exc") util.update_exc
+    +tag function
+
+p
+    |  Update, validate and overwrite
+    |  #[+a("/usage/adding-languages#tokenizer-exceptions") tokenizer exceptions].
+    |  Used to combine global  exceptions with custom, language-specific
+    |  exceptions. Will raise an error if key doesn't match #[code ORTH] values.
+
++aside-code("Example").
+    BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
+    NEW = {"a.": [{ORTH: "a.", LEMMA: "all"}]}
+    exceptions = util.update_exc(BASE, NEW)
+    # {"a.": [{ORTH: "a.", LEMMA: "all"}], ":)": [{ORTH: ":)"}]}
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code base_exceptions]
+        +cell dict
+        +cell Base tokenizer exceptions.
+
+    +row
+        +cell #[code *addition_dicts]
+        +cell dicts
+        +cell Exception dictionaries to add to the base exceptions, in order.
+
+    +row("foot")
+        +cell returns
+        +cell dict
+        +cell Combined tokenizer exceptions.
+
+
++h(3, "util.prints") util.prints
+    +tag function
+    +tag-new(2)
+
+p
+    |  Print a formatted, text-wrapped message with optional title. If a text
+    |  argument is a #[code Path], it's converted to a string. Should only
+    |  be used for interactive components like the command-line interface.
+
++aside-code("Example").
+    data_path = Path('/some/path')
+    if not path.exists():
+        util.prints("Can't find the path.", data_path,
+                    title="Error", exits=1)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code *texts]
+        +cell unicode
+        +cell Texts to print. Each argument is rendered as paragraph.
+
+    +row
+        +cell #[code **kwargs]
+        +cell -
+        +cell
+            |  #[code title] is rendered as coloured headline. #[code exits]
+            |  performs system exit after printing, using the value of the
+            |  argument as the exit code, e.g. #[code exits=1].
+
+
++h(3, "util.minibatch") util.minibatch
+    +tag function
+    +tag-new(2)
+
+p
+    |  Iterate over batches of items. #[code size] may be an iterator, so that
+    |  batch-size can vary on each step.
+
++aside-code("Example").
+    batches = minibatch(train_data)
+    for batch in batches:
+        texts, annotations = zip(*batch)
+        nlp.update(texts, annotations)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code items]
+        +cell iterable
+        +cell The items to batch up.
+
+    +row
+        +cell #[code size]
+        +cell int / iterable
+        +cell
+            |  The batch size(s). Use
+            |  #[+api("top-level#util.compounding") #[code util.compounding]] or
+            |  #[+api("top-level#util.decaying") #[code util.decaying]] or
+            |  for an infinite series of compounding or decaying values.
+
+    +row("foot")
+        +cell yields
+        +cell list
+        +cell The batches.
+
++h(3, "util.compounding") util.compounding
+    +tag function
+    +tag-new(2)
+
+p
+    |  Yield an infinite series of compounding values. Each time the generator
+    |  is called, a value is produced by multiplying the previous value by the
+    |  compound rate.
+
++aside-code("Example").
+    sizes = compounding(1., 10., 1.5)
+    assert next(sizes) == 1.
+    assert next(sizes) == 1. * 1.5
+    assert next(sizes) == 1.5 * 1.5
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start]
+        +cell int / float
+        +cell The first value.
+
+    +row
+        +cell #[code stop]
+        +cell int / float
+        +cell The maximum value.
+
+    +row
+        +cell #[code compound]
+        +cell int / float
+        +cell The compounding factor.
+
+    +row("foot")
+        +cell yields
+        +cell int
+        +cell Compounding values.
+
++h(3, "util.decaying") util.decaying
+    +tag function
+    +tag-new(2)
+
+p
+    |  Yield an infinite series of linearly decaying values.
+
++aside-code("Example").
+    sizes = decaying(1., 10., 0.001)
+    assert next(sizes) == 1.
+    assert next(sizes) == 1. - 0.001
+    assert next(sizes) == 0.999 - 0.001
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start]
+        +cell int / float
+        +cell The first value.
+
+    +row
+        +cell #[code end]
+        +cell int / float
+        +cell The maximum value.
+
+    +row
+        +cell #[code decay]
+        +cell int / float
+        +cell The decaying factor.
+
+    +row("foot")
+        +cell yields
+        +cell int
+        +cell The decaying values.
+
++h(3, "util.itershuffle") util.itershuffle
+    +tag function
+    +tag-new(2)
+
+p
+    |  Shuffle an iterator. This works by holding #[code bufsize] items back and
+    |  yielding them sometime later. Obviously, this is not unbiased – but
+    |  should be good enough for batching. Larger bufsize means less bias.
+
++aside-code("Example").
+    values = range(1000)
+    shuffled = itershuffle(values)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code iterable]
+        +cell iterable
+        +cell Iterator to shuffle.
+
+    +row
+        +cell #[code buffsize]
+        +cell int
+        +cell Items to hold back.
+
+    +row("foot")
+        +cell yields
+        +cell iterable
+        +cell The shuffled iterator.

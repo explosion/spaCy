@@ -1,0 +1,659 @@
+//- 💫 STYLEGUIDE
+
+include _includes/_mixins
+
++section("intro")
+    p
+        |  This styleguide is loosely based on the concept and principles of
+        |  #[+a("http://bradfrost.com/blog/post/atomic-web-design/") Atomic Design].
+        |  The templates consist of small elements (atoms) which are combined
+        |  and connected to form larger molecules and full components. The site
+        |  is compiled using #[+a("http://harpjs.com/") Harp], a static web
+        |  server with built-in preprocessing. Templates are written entirely in
+        |  #[+a("http://jade-lang.com") Jade] (aka. Pug), a clean,
+        |  whitespace-sensitive templating  language that compiles to HTML.
+        |  CSS is written in #[+a("http://sass-lang.com") Sass] and preprocessed
+        |  via Harp, JavaScript is written in ES6 syntax and compiled using
+        |  #[+a("https://babeljs.io") Babel].
+
++section("logo")
+    +h(2, "logo", "website/assets/img/logo.svg") Logo
+
+    p
+        |  If you would like to use the spaCy logo on your site, please get in
+        |  touch and ask us first. However, if you want to show support and tell
+        |  others that your project is using spaCy, you can grab one of our
+        |  #[+a("/usage/spacy-101#faq-project-with-spacy") spaCy badges].
+
+    +grid
+        each color in [["#09a3d5", "#fff"], ["#fff", "#09a3d5"]]
+            +grid-col("half").o-box.u-text-center.u-padding-medium(style="background: #{color[1]}; color: #{color[0]}")
+                +icon("spacy", 338, 108)(style="max-width: 100%")
+
++section("colors")
+    +h(2, "colors", "website/assets/css/_variables.sass") Colors
+
+    +grid
+        each color, label in {"dark": "#1a1e23", "medium": "#45505e", "light": "#dddddd", "faint": "#f6f6f6", "blue": "#09a3d5", "dark blue": "#077ea4", "green": "#05b083", "dark green": "#047e5e"}
+            +grid-col("quarter").u-text-small.o-card
+                div(style="height: 75px; background: #{color}; border-top-left-radius: 6px; border-top-right-radius: 6px")
+                .u-text-center.u-padding-medium
+                    +label=label
+                    code=color
+
+        each pattern in ["blue", "green"]
+            +grid-col("half").u-text-small.o-card
+                div(style="background: url('/assets/img/pattern_#{pattern}.jpg') center/100% repeat; height: 125px; border-top-left-radius: 6px; border-top-right-radius: 6px")
+                .u-text-center.u-padding-medium
+                    +label #{pattern} pattern
+                    .u-text-tiny.u-color-subtle by #[+a("https://dribbble.com/kemal").u-color-dark Kemal Şanlı]
+
++section("typography")
+    +h(2, "typography") Typography
+
+    +aside-code("Usage", "jade").
+        +h(2) Headline two
+        +h(3, "some-id") Headline three
+
+    p
+        |  Headlines are set in
+        |  #[+a("http://cargocollective.com/hanken/HK-Grotesk-Open-Source-Font") HK Grotesk]
+        |  by Hanken Design. All other body text and code uses the best-matching
+        |  default system font to provide a "native" reading experience.
+
+    each heading in [0, 1, 2, 3, 4, 5]
+        .o-block-small(class="u-heading-" + heading) Heading #{heading}
+    +label Label
+
++section("elements")
+    +h(2, "elements", "website/_includes/_mixins.jade") Elements
+
+    p
+        |  The site comes with a collection of simple content elements,
+        |  implemented as mixins. These elements can be used individually, or as
+        |  part of larger components.
+
+    +h(3, "text-links") Special text & links
+
+    +aside-code("Usage", "jade").
+        +api("token") &#35;[code Token]
+        +src("https://github.com") GitHub source
+        +help("Help text here")
+        +fn(1, "bibliography")
+
+    p
+        |  Special link styles are implemented as mixins and can be used to
+        |  mark links to the API documentation, or links to source code.
+        |  Additionally a "help" icon can be added to provide more information
+        |  via a tooltip.
+
+    p.o-inline-list
+        +a("#") Link
+        code Inline Code
+        +api("token") #[code Token]
+        +src(gh("spacy")) Source
+        span.u-color-dark.u-nowrap Help #[+help("Help text here")]
+        span Footnote#[+fn(1, "", "This marks a footnote and can link to a section")]
+
+    +h(3, "buttons") Buttons
+
+    +aside-code("Usage", "jade").
+        +button("https://spacy.io", true, "secondary")
+        +button("https://spacy.io", true, "primary", "small")
+
+    p
+        |  Link buttons come in two variants, #[code primary] and
+        |  #[code secondary] and two sizes, with an optional #[code small] size
+        |  modifier.Since they're mostly used as enhanced links, the buttons are
+        |  implemented as styled links instead of native button elements.
+
+    p.o-inline-list
+        +button("#", false, "primary") Primary
+        +button("#", false, "secondary") Secondary
+        +button("#", false, "primary", "small") Primary small
+        +button("#", false, "secondary", "small") Secondary small
+
+    +h(3, "tags") Tags
+
+    +aside-code("Usage", "jade").
+        +tag I'm a tag
+        +tag-new(2)
+        +tag-model("Named entities")
+
+    p
+        |  Tags can be used together with headlines, or next to properties
+        |  across the documentation, and combined with tooltips to provide
+        |  additional information. The #[code +tag-new] mixin takes a version
+        |  number and can mark new features. Using the mixin, visibility of this
+        |  tag can be toggled once the feature isn't considered new anymore.
+        |  The #[code +tag-model] mixin takes a description of model
+        |  capabilities and can be used to mark features that require a
+        |  respective model to be installed.
+
+    .o-block
+        p.o-inline-list
+            +tag I'm a tag
+            +tag-new(2)
+            +tag-model("Named entities")
+
+    +h(3, "icons", "website/_includes/_svg.jade") Icons
+
+    +aside-code("Usage", "jade").
+        +icon("github", 18)
+
+    p
+        |  Icons are implemented via an SVG sprite and can be included as a
+        |  mixin, using their name and an optional size value in #[code px].
+
+    +infobox.u-text-center
+        each icon in ["code", "arrow-right", "book", "chat", "star", "help_o", "help", "yes", "no", "neutral", "accept", "reject", "markdown", "course", "github", "jupyter"]
+            .u-inline-block.u-padding-small.u-color-dark(data-tooltip=icon data-tooltip-style="code" aria-label=icon)
+                +icon(icon, 20)
+
++section("components")
+    +h(2, "components", "website/_includes/_mixins.jade") Components
+
+    p
+        |  The site uses a collection of Jade mixins to make it easy to use
+        |  complex content elements across templates and blog posts. To read
+        |  more about the concept of modular markup components, check out our
+        |  #[+a("https://explosion.ai/blog/modular-markup", true) blog post] on
+        |  the subject.
+
+    +h(3, "grid") Grid
+
+    +aside-code("Usage", "jade").
+        +grid
+            +grid-col("half") Half
+            +grid-col("half") Half
+
+    p
+        |  For now, the grid is still implemented as a standard #[code flexbox]
+        |  grid, although it may be refactored to use CSS #[code grid] going
+        |  forward. The grid supports up to four columns and collapses on
+        |  small screens.
+
+    +grid
+        each count, label in {"full": 1, "half": 2, "third": 3, "quarter": 4}
+            each _ in Array(count)
+                +grid-col(label).o-box.u-text-center.u-text-label.u-color-dark=label
+
+    +h(3, "table") Table
+
+    +aside-code("Usage", "jade").
+        +table(["Header 1", "Header 2"])
+            +row
+                +cell Cell
+                +cell Cell
+
+    p
+        |  Tables are used to present data and API documentation. If a list of
+        |  headings is specified, those will be rendered as the table header.
+        |  An optional #[code +row("foot")] can be used to mark a footer row
+        |  with a distinct style, for example to visualise the return values
+        |  of a documented function.
+
+    - var table_cols = ["Header 1", "Header 2", "Header 3"]
+    +table(table_cols)
+        each row, i in Array(4)
+            +row((i == 3) ? "foot" : null)
+                each col, j in table_cols
+                    +cell
+                        if i == 3 && j == 0
+                            |  Footer
+
+                        else
+                            |  Row #{i + 1}, cell #{j + 1}
+
+    +h(3, "list") List
+
+    +aside-code("Usage", "jade").
+        +list("numbers", 3)
+            +item List item
+            +item List item
+
+    p
+        |  Lists are available as bulleted, numbered, lettered and lower roman.
+        |  Optionally, a start index can be defined as the second argument
+        |  on ordered lists.
+
+    +grid
+        +list
+            +item I am a bulleted list
+            +item I have nice bullets
+            +item Lorem ipsum dolor
+            +item consectetur adipiscing elit
+
+        +list("numbers")
+            +item I am an ordered list
+            +item I have nice numbers
+            +item Lorem ipsum dolor
+            +item consectetur adipiscing elit
+
+        +list("numbers", 10)
+            +item I am an numbered list
+            +item with a custom start number
+            +item Lorem ipsum dolor
+            +item consectetur adipiscing elit
+
+        +list("letters")
+            +item I am an ordered list
+            +item I have uppercase letters
+            +item Lorem ipsum dolor
+            +item consectetur adipiscing elit
+
+        +list("letters", 18)
+            +item I am an ordered list
+            +item with a custom start letter
+            +item Lorem ipsum dolor
+            +item consectetur adipiscing elit
+
+        +list("roman")
+            +item I am an ordered list
+            +item I have roman numerals
+            +item Lorem ipsum dolor
+            +item consectetur adipiscing elit
+
+    +h(3, "code") Code
+
+    +aside-code("Usage", "jade").
+        +code("Label", "python").
+            import spacy
+            nlp = spacy.load('en')
+            doc = nlp(u"This is a sentence.")
+
+    p
+        |  Code blocks use the #[+a("http://prismjs.com/") Prism] syntax
+        |  highlighter with a custom theme. The language can be set individually
+        |  on each block, and defaults to Python. An optional label can be
+        |  added as the first argument, which is displayed above the block.
+        |  When using the #[code +code] mixin, don't forget to append a period
+        |  #[code &period;] to the mixin call. This tells Jade to interpret the
+        |  indented block as plain text and preserve whitespace.
+
+    +code("Using spaCy").
+        import spacy
+        nlp = spacy.load('en')
+        doc = nlp(u"This is a sentence.")
+
+    +aside-code("Usage", "jade").
+        +code-new nlp.to_disk('/model')
+        +code-old nlp.save_to_directory('/model')
+
+    p
+        |  Code blocks can also be displayed with a coloured icon to visualise
+        |  correct and incorrect examples in comparison. This is useful to
+        |  show best practices or backwards incompatibilities in the API.
+
+    .o-block
+        +code-new nlp.to_disk('/model')
+        +code-old nlp.save_to_directory('/model')
+
+    +h(3, "aside") Aside
+
+    +aside-code("Usage", "jade").
+        +aside("Title") This is an aside
+        +aside-code("Title", "python").
+            nlp = spacy.load('en')
+
+    p
+        |  Asides can be used to display additional notes and content in the
+        |  right-hand column. Two mixins are available: #[code +aside] for
+        |  regular text with an optional title, #[code +aside-code], which
+        |  roughly mimicks the #[code +code] component. Visually, asides are
+        |  moved to the side on the X-axis, and displayed at the same level
+        |  they were inserted. On small screens, they collapse and are rendered
+        |  in their original position, in between the text.
+
+    +h(3, "infobox") Infobox
+
+    +aside-code("Usage", "jade").
+        +infobox("Label") This is text.
+        +infobox("Label", "⚠️") This is text.
+
+    p
+        |  Infoboxes can be used to add notes, updates, warnings or additional
+        |  information to a page or section. Semantically, they're implemented
+        |  and interpreted as an #[code aside] element. Since infobox titles
+        |  are especially nice with emoji, an emoji can be specified as the
+        |  second argument for optimal rendering and spacing.
+
+    +infobox("Infobox label") Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim ante, pretium a orci eget, varius dignissim augue. Nam eu dictum mauris, id tincidunt nisi. Integer commodo pellentesque tincidunt.
+
+    +infobox("Infobox label with emoji", "⚠️") Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim ante, pretium a orci eget, varius dignissim augue. Nam eu dictum mauris, id tincidunt nisi. Integer commodo pellentesque tincidunt.
+
+    +h(3, "card") Card
+
+    +aside-code("Usage", "jade").
+        +grid
+            +card("Title", "https://", "Author", "github")
+                |  Card content goes here
+    p
+        |  Cards can be used to present external content and links, like GitHub
+        |  projects, websites, books or articles. They can take an optional
+        |  value for the content author and icon, which is displayed in the
+        |  corner. The content supplied via an indented block can also include
+        |  formatting or other elements like images. Under the hood, cards are
+        |  styled grid columns and should therefore always be used as children
+        |  of #[code +grid].
+
+    +grid
+        +card("spaCy", "https://github.com/explosion/spaCy", "Explosion AI", "github")
+            |  An open-source library for industrial-strength Natural Language
+            |  Processing in Python.
+
+        +card("Prodigy", "https://prodi.gy", "Explosion AI", "star")
+            |  A new annotation tool for radically efficient machine teaching,
+            |  powered by active learning.
+
+    +h(3, "accordion") Accordion
+
+    +aside-code("Usage", "jade").
+        +accordion("Section 1")
+            p This text is shown on click.
+
+    p
+        |  Accordions are collapsible sections that are mostly used for lengthy
+        |  tables, like the tag and label annotation schemes for different
+        |  languages. They all need to be presented – but chances
+        |  are the user doesn't actually care about #[em all] of them,
+        |  especially not at the same time. So it's fairly reasonable to hide
+        |  them begin a click. This particular implementation was inspired by
+        |  the amazing
+        |  #[+a("https://inclusive-components.design/collapsible-sections/") Inclusive Components blog].
+
+
+    .o-block
+        for i in [1, 2, 3]
+            +accordion("Section " + i)
+                p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim ante, pretium a orci eget, varius dignissim augue. Nam eu dictum mauris, id tincidunt nisi. Integer commodo pellentesque tincidunt. Nam at turpis finibus tortor gravida sodales tincidunt sit amet est. Nullam euismod arcu in tortor auctor, sit amet dignissim justo congue. Sed varius vel dolor id dapibus. Curabitur pharetra fermentum arcu nec suscipit. Duis aliquet eros lorem, vitae interdum magna tempus quis.
+
++section("embeds")
+    +h(2, "embeds") Embeds
+
+    p
+        |  The framework also allows embedding content from selected sites via
+        |  mixins, usually styled wrappers for the respective embed codes.
+
+    +h(3, "codepen") CodePen
+
+    p
+        |  #[+a("https://codepen.io") CodePen] is a platform to share and
+        |  collaborate on front-end code. It comes with a powerful live editor,
+        |  and is mostly used on this site to present visualizations created by
+        |  spaCy's built-in visualizers. Embeds use a
+        |  #[+a("https://blog.codepen.io/documentation/pro-features/unlimited-embed-themes/") custom theme]
+        |  and are included using a mixin that takes the pen ID, and an optional
+        |  height to prevent content reflow on load.
+
+    +aside-code("Usage", "jade").
+        +codepen("2f2ad1408ff79fc6a326ea3aedbb353b", 160)
+
+    +codepen("2f2ad1408ff79fc6a326ea3aedbb353b", 160)
+
+    +h(3, "github") GitHub
+
+    p
+        |  GitHub only allows native embedding of Gists, but Gists are only
+        |  available for users, not organisations. So in order to be able to
+        |  embed examples from spaCy's #[+src(gh("spacy", "examples")) examples],
+        |  we ended up developing our own micro library. A #[code data-gh-embed]
+        |  attribute on the code block, set via the mixin, specifies the file
+        |  to load. The script then fetches the raw text via the GitHub API and
+        |  renders it in the container. This way, the example previews on the
+        |  site are always in sync with the examples in the repository.
+
+    +aside-code("Usage", "jade").
+        +github("spacy", "examples/training/train_textcat.py")
+
+    +github("spacy", "examples/training/train_textcat.py")
+
++section("markup")
+    +h(2, "markup") Markup reference
+
+    p
+        |  The spaCy website is implemented
+        |  in #[+a("https://www.jade-lang.org") Jade (aka Pug)], and is built or
+        |  served by #[+a("(https://harpjs.com") Harp]. Jade is an extensible
+        |  templating language with a readable syntax, that compiles to HTML.
+        |  The website source makes extensive use of Jade mixins, so that the
+        |  design system is abstracted away from the content you're writing. You
+        |  can read more about our approach in our blog post,
+        |  #[+a("https://explosion.ai/blog/modular-markup", true) "Rebuilding a Website with Modular Markup"].
+
+    +code("Viewing the site locally", "bash").
+        sudo npm install --global harp
+        git clone #{gh("spacy")}
+        cd spacy/website
+        harp server --port 9000
+
+    +h(3, "jade") Jade conventions
+
+    p
+        |  Jade/Pug is a whitespace-sensitive markup language that compiles to
+        |  HTML. Indentation is used to nest elements, and for template logic,
+        |  like #[code if], #[code else] or #[code for], mainly used to iterate
+        |  over objects and arrays in the meta data. It also allows inline
+        |  JavaScript expressions.
+
+    +grid.o-no-block
+        +grid-col("half")
+            +code("Input", "jade").
+                ul#some-id
+                    for item in ['a', 'b', 'c']
+                        li.test=item.toUpperCase()
+                            if item == 'a'
+                                |  🎉
+
+        +grid-col("half")
+            +code("Output", "markup").
+                &lt;ul id="some-id"&gt;
+                    &lt;li class="test"&gt;A 🎉&lt;li&gt;
+                    &lt;li class="test"&gt;B&lt;li&gt;
+                    &lt;li class="test"&gt;C&lt;li&gt;
+                &lt;/ul&gt;
+
+    p
+        |  For an overview of Harp and Jade, see
+        |  #[+a("https://ines.io/blog/the-ultimate-guide-static-websites-harp-jade") this blog post].
+        |  For more info on the Jade/Pug syntax, check out their
+        |  #[+a("https://pugjs.org") documentation]. In the spacy.io source, we
+        |  use 4 spaces to indent and hard-wrap at 80 characters.
+
+    +code(false, "jade").
+        p This is a very short paragraph. It stays inline.
+
+        p
+            |  This is a much longer paragraph. It's hard-wrapped at 80 characters to
+            |  make it easier to read on GitHub and in editors that do not have soft
+            |  wrapping enabled. To prevent Jade from interpreting each line as a new
+            |  element, it's prefixed with a pipe and two spaces. This ensures that no
+            |  spaces are dropped – for example, if your editor strips out trailing
+            |  whitespace by default. Inline links are added using the inline syntax,
+            |  like this: &#35;[+a("https://google.com") Google].
+
+    +aside("Plain HTML elements used")
+        +list.o-no-block
+            +item #[code p]: Regular paragraph.
+            +item #[code code]: Inline #[code code].
+            +item #[code em]: #[em Italicized] text.
+            +item #[code strong]: #[strong Bold] text.
+
+    p
+        |  Note that for external links, #[code &plus;a("...")] is used instead
+        |  of #[code a(href="...")] – it's a mixin that takes care of adding all
+        |  required attributes. If possible, always use a mixin instead of
+        |  regular HTML elements. With a few exceptions for practical reasons,
+        |  class names and other HTML attributes should
+        |  #[strong only live in mixins] and not in the site content.
+
+    +infobox("Mixins documentation")
+        |  For a more detailed overview and API documentation of the available
+        |  mixins and their arguments, see the source of the
+        |  #[+src(gh("spacy", "website/_includes/_mixins.jade")) #[code _includes/_mixins.jade]]
+        |  file.
+
+    +h(3, "directory-structure") Directory structure
+
+    p
+        |  Each section is represented by its own subdirectory, containing a
+        |  #[code _data.json] to store its meta information. All #[code .jade]
+        |  files that are not prefixed with an underscore are later converted to
+        |  #[code .html]. Site assets like images, styles, fonts and scripts are
+        |  loaded from a directory #[code assets]. Global variables like titles,
+        |  navigations, URLs and other settings are defined in the global
+        |  #[code _harp.json].
+
+    +code("website", "yaml").
+        ├── _includes         # layout partials, shared mixins, functions
+        ├── api
+        |   ├── _data.json    # meta data for API section
+        |   └── ...           # other pages and partials
+        ├── assets
+        |   ├── css           # Sass styles, will be converted to CSS
+        |   ├── fonts         # web fonts
+        |   ├── img           # images and icons
+        |   └── js            # scripts, custom and third-party
+        ├── models
+        |   ├── _data.json    # model meta data and meta for models section
+        |   └── ...           # other pages and partials
+        ├── usage
+        |   ├── _data.json    # meta data for usage section
+        |   └── ...           # other pages and partials
+        ├── _data.json        # meta data for pages in the root
+        ├── _harp.json        # global site configuration and variables
+        ├── _layout.jade      # global layout
+        ├── 404.jade          # 404 page
+        └── index.jade        # landing page
+
+    +h(3, "data-structure") Data structure
+
+    p
+        |  While all page content lives in the #[code .jade] files, article meta
+        |  (page titles, sidebars etc.) is stored as JSON. Each folder contains
+        |  a #[code _data.json] with all required meta for its files. Meta
+        |  information is keyed by the page's filename or slug, and becomes
+        |  available to the templates as variables. The #[code menu] specifies
+        |  the sub-navigation in the sidebar and maps titles to section IDs.
+
+    +code(false, "json").
+        "v2": {
+            "title": "What's New in v2.0",
+            "teaser": "New features, backwards incompatibilities and migration guide.",
+            "menu": {
+                "Summary": "summary",
+                "New features": "features",
+                "Backwards Incompatibilities": "incompat",
+                "Migrating from v1.x": "migrating",
+                "Benchmarks": "benchmarks"
+            }
+        }
+
+    p
+        |  Long pages with multiple sections are often split into separate
+        |  partials that live in their own subdirectory. Those partials can be
+        |  included on the page, and if needed, across the site to avoid content
+        |  duplication. Partials and partial directories are prefixed with an
+        |  underscore #[code _] to prevent Harp from building them as separate
+        |  files.
+
+    +code("spacy-101.jade", "jade").
+        +section("architecture")
+            +h(2, "architecture") Architecture
+            include _spacy-101/_architecture
+
+    +h(3, "model-data", "website/models/_data.json") Model data
+
+    p
+        |  The new #[+a("/models") models directory] uses the GitHub API to
+        |  fetch meta information from the latest
+        |  #[+a(gh("spacy-models") + "/releases") model releases]. This ensures
+        |  that the website is always up to date. However, some details, like
+        |  human-readable descriptions and the list of available models and
+        |  languages, is stored in the static CMS and used across the site.
+        |  This info only lives in one place, #[code models/_data.json].
+        |  Wherever possible, the model info is generated dynamically – for
+        |  example, in installation examples, quickstart widgets and even in the
+        |  total model and language count on the landing page.
+
+    p
+        |  The following data is stored and made available in the global scope:
+
+    +table(["Variable", "Description", "Example"])
+        +row
+            +cell #[code LANGUAGES]
+            +cell All languages supported by spaCy, code mapped to name.
+            +cell
+                +code(false, "json").o-no-block "en": "English"
+
+        +row
+            +cell #[code MODELS]
+            +cell Model names (without version). Language codes mapped to list of names.
+            +cell
+                +code(false, "json").o-no-block "xx": ["xx_ent_wiki_sm"]
+
+        +row
+            +cell #[code MODEL_META]
+            +cell Description for model name components and meta data, ID mapped to string.
+            +cell
+                +code(false, "json").o-no-block "vectors": "Word vectors"
+
+        +row
+            +cell #[code MODEL_LICENSES]
+            +cell License types mapped to license URL.
+            +cell
+                +code(false, "json").o-no-block "CC BY-SA 3.0": "http://..."
+
+        +row
+            +cell #[code MODEL_BENCHMARKS]
+            +cell Display labels for accuracy and speed.
+            +cell
+                +code(false, "json").o-no-block "ents_f": "NER F"
+
+        +row
+            +cell #[code EXAMPLE_SENTENCES]
+            +cell Example sentences for different languages.
+            +cell
+                +code(false, "json").o-no-block "es": "Esto es una frase."
+
+    +h(3, "functions", "website/_includes/_functions.jade") Template functions
+
+    p
+        |  Jade allows you to implement any custom logic as inline JavaScript
+        |  expressions. Reusable functions are organised in a
+        |  #[code _functions.jade], which is included via the mixins file and
+        |  makes them accessible on each page. However, most functions deal
+        |  with internals only, e.g. prefixing class names in mixins or
+        |  converting paths and links.
+
+    +h(4, "gh") gh
+        +tag function
+
+    p
+        |  Since GitHub links can be long and tricky, this function takes care
+        |  generating them automatically for spaCy and all repositories owned
+        |  by the #[+a(gh())=SOCIAL.github] organisation.
+
+    +aside-code("Example", "jade").
+        +a(gh("spacy", "spacy/language.py")) This is a link
+
+    +table(["Name", "Type", "Description"])
+        +row
+            +cell #[code repo]
+            +cell String
+            +cell Name of the repository, e.g. #[code "spacy"].
+
+        +row
+            +cell #[code filepath]
+            +cell String
+            +cell Logical path to the file, relative to the repository root.
+
+        +row
+            +cell #[code branch]
+            +cell String
+            +cell Optional branch. Defaults to #[code "master"].
+
+        +row("foot")
+            +cell returns
+            +cell String
+            +cell The full GitHub link to the file.

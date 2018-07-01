@@ -1,0 +1,251 @@
+{
+    "sidebar": {
+        "Overview": {
+            "Architecture": "./",
+            "Annotation Specs": "annotation",
+            "Command Line": "cli",
+            "Functions": "top-level"
+        },
+
+        "Containers": {
+            "Doc": "doc",
+            "Token": "token",
+            "Span": "span",
+            "Lexeme": "lexeme"
+        },
+
+        "Pipeline": {
+            "Language": "language",
+            "Pipe": "pipe",
+            "Tagger": "tagger",
+            "DependencyParser": "dependencyparser",
+            "EntityRecognizer": "entityrecognizer",
+            "TextCategorizer": "textcategorizer",
+            "Tokenizer": "tokenizer",
+            "Lemmatizer": "lemmatizer",
+            "Matcher": "matcher",
+            "PhraseMatcher": "phrasematcher"
+        },
+
+        "Other": {
+            "Vocab": "vocab",
+            "StringStore": "stringstore",
+            "Vectors": "vectors",
+            "GoldParse": "goldparse",
+            "GoldCorpus": "goldcorpus"
+        },
+
+        "Cython": {
+            "Architecture": "cython",
+            "Structs": "cython-structs",
+            "Classes": "cython-classes"
+        }
+    },
+
+    "index": {
+        "title": "Architecture",
+        "next": "annotation",
+        "menu": {
+            "Basics": "basics",
+            "Neural Network Model": "nn-model"
+        }
+    },
+
+    "cli": {
+        "title": "Command Line Interface",
+        "teaser": "Download, train and package models, and debug spaCy.",
+        "source": "spacy/cli"
+    },
+
+    "top-level": {
+        "title": "Top-level Functions",
+        "menu": {
+            "spacy": "spacy",
+            "displacy": "displacy",
+            "Utility Functions": "util",
+            "Compatibility": "compat"
+        }
+    },
+
+    "language": {
+        "title": "Language",
+        "tag": "class",
+        "teaser": "A text-processing pipeline.",
+        "source": "spacy/language.py"
+    },
+
+    "doc": {
+        "title": "Doc",
+        "tag": "class",
+        "teaser": "A container for accessing linguistic annotations.",
+        "source": "spacy/tokens/doc.pyx"
+    },
+
+    "token": {
+        "title": "Token",
+        "tag": "class",
+        "source": "spacy/tokens/token.pyx"
+    },
+
+    "span": {
+        "title": "Span",
+        "tag": "class",
+        "source": "spacy/tokens/span.pyx"
+    },
+
+    "lexeme": {
+        "title": "Lexeme",
+        "tag": "class",
+        "source": "spacy/lexeme.pyx"
+    },
+
+    "vocab": {
+        "title": "Vocab",
+        "teaser": "A storage class for vocabulary and other data shared across a language.",
+        "tag": "class",
+        "source": "spacy/vocab.pyx"
+    },
+
+    "stringstore": {
+        "title": "StringStore",
+        "tag": "class",
+        "source": "spacy/strings.pyx"
+    },
+
+    "matcher": {
+        "title": "Matcher",
+        "teaser": "Match sequences of tokens, based on pattern rules.",
+        "tag": "class",
+        "source": "spacy/matcher.pyx"
+    },
+
+    "phrasematcher": {
+        "title": "PhraseMatcher",
+        "teaser": "Match sequences of tokens, based on documents.",
+        "tag": "class",
+        "tag_new": 2,
+        "source": "spacy/matcher.pyx"
+    },
+
+    "pipe": {
+        "title": "Pipe",
+        "teaser": "Abstract base class defining the API for pipeline components.",
+        "tag": "class",
+        "tag_new": 2,
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "dependenyparser": {
+        "title": "DependencyParser",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "entityrecognizer": {
+        "title": "EntityRecognizer",
+        "teaser": "Annotate named entities on documents.",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "textcategorizer": {
+        "title": "TextCategorizer",
+        "teaser": "Add text categorization models to spaCy pipelines.",
+        "tag": "class",
+        "tag_new": 2,
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "dependencyparser": {
+        "title": "DependencyParser",
+        "teaser": "Annotate syntactic dependencies on documents.",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "tokenizer": {
+        "title": "Tokenizer",
+        "teaser": "Segment text into words, punctuations marks etc.",
+        "tag": "class",
+        "source": "spacy/tokenizer.pyx"
+    },
+
+    "lemmatizer": {
+        "title": "Lemmatizer",
+        "teaser": "Assign the base forms of words.",
+        "tag": "class",
+        "source": "spacy/lemmatizer.py"
+    },
+
+    "tagger": {
+        "title": "Tagger",
+        "teaser": "Annotate part-of-speech tags on documents.",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "goldparse": {
+        "title": "GoldParse",
+        "tag": "class",
+        "source": "spacy/gold.pyx"
+    },
+
+    "goldcorpus": {
+        "title": "GoldCorpus",
+        "teaser": "An annotated corpus, using the JSON file format.",
+        "tag": "class",
+        "tag_new": 2,
+        "source": "spacy/gold.pyx"
+    },
+
+    "vectors": {
+        "title": "Vectors",
+        "teaser": "Store, save and load word vectors.",
+        "tag": "class",
+        "tag_new": 2,
+        "source": "spacy/vectors.pyx"
+    },
+
+    "annotation": {
+        "title": "Annotation Specifications",
+        "teaser": "Schemes used for labels, tags and training data.",
+        "menu": {
+            "Text Processing": "text-processing",
+            "POS Tagging": "pos-tagging",
+            "Dependencies": "dependency-parsing",
+            "Named Entities": "named-entities",
+            "Models & Training": "training"
+        }
+    },
+
+    "cython": {
+        "title": "Cython Architecture",
+        "next": "cython-structs",
+        "menu": {
+            "Overview": "overview",
+            "Conventions": "conventions"
+        }
+    },
+
+    "cython-structs": {
+        "title": "Cython Structs",
+        "teaser": "C-language objects that let you group variables together in a single contiguous block.",
+        "next": "cython-classes",
+        "menu": {
+            "TokenC": "tokenc",
+            "LexemeC": "lexemec"
+        }
+    },
+
+    "cython-classes": {
+        "title": "Cython Classes",
+        "menu": {
+            "Doc": "doc",
+            "Token": "token",
+            "Span": "span",
+            "Lexeme": "lexeme",
+            "Vocab": "vocab",
+            "StringStore": "stringstore"
+        }
+    }
+}

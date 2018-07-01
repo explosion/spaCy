@@ -1,83 +1,86 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import plac
 import requests
 import os
 import subprocess
 import sys
 
-from .link import link_package
+from ._messages import Messages
+from .link import link
+from ..util import prints, get_package_path
 from .. import about
-from .. import util
 
 
-def download(model=None, direct=False):
-    check_error_depr(model)
-
+@plac.annotations(
+    model=("model to download, shortcut or name)", "positional", None, str),
+    direct=("force direct download. Needs model name with version and won't "
+            "perform compatibility check", "flag", "d", bool),
+    pip_args=("additional arguments to be passed to `pip install` when "
+              "installing the model"))
+def download(model, direct=False, *pip_args):
+    """
+    Download compatible model from default download path using pip. Model
+    can be shortcut, model name or, if --direct flag is set, full model name
+    with version.
+    """
     if direct:
-        download_model('{m}/{m}.tar.gz'.format(m=model))
+        dl = download_model('{m}/{m}.tar.gz#egg={m}'.format(m=model), pip_args)
     else:
-        model_name = check_shortcut(model)
+        shortcuts = get_json(about.__shortcuts__, "available shortcuts")
+        model_name = shortcuts.get(model, model)
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
-        link_package(model_name, model, force=True)
+        dl = download_model('{m}-{v}/{m}-{v}.tar.gz#egg={m}=={v}'
+                            .format(m=model_name, v=version), pip_args)
+        if dl != 0:  # if download subprocess doesn't return 0, exit
+            sys.exit(dl)
+        try:
+            # Get package path here because link uses
+            # pip.get_installed_distributions() to check if model is a
+            # package, which fails if model was just installed via
+            # subprocess
+            package_path = get_package_path(model_name)
+            link(model_name, model, force=True, model_path=package_path)
+        except:
+            # Dirty, but since spacy.download and the auto-linking is
+            # mostly a convenience wrapper, it's best to show a success
+            # message and loading instructions, even if linking fails.
+            prints(Messages.M001.format(name=model_name), title=Messages.M002)
 
 
 def get_json(url, desc):
     r = requests.get(url)
     if r.status_code != 200:
-        util.sys_exit(
-            "Couldn't fetch {d}. Please find the right model for your spaCy "
-            "installation (v{v}), and download it manually:".format(d=desc, v=about.__version__),
-            "python -m spacy.download [full model name + version] --direct",
-            title="Server error ({c})".format(c=r.status_code))
+        prints(Messages.M004.format(desc=desc, version=about.__version__),
+               title=Messages.M003.format(code=r.status_code), exits=1)
     return r.json()
-
-
-def check_shortcut(model):
-    shortcuts = get_json(about.__shortcuts__, "available shortcuts")
-    return shortcuts.get(model, model)
 
 
 def get_compatibility():
     version = about.__version__
+    version = version.rsplit('.dev', 1)[0]
     comp_table = get_json(about.__compatibility__, "compatibility table")
     comp = comp_table['spacy']
     if version not in comp:
-        util.sys_exit(
-            "No compatible models found for v{v} of spaCy.".format(v=version),
-            title="Compatibility error")
+        prints(Messages.M006.format(version=version), title=Messages.M005,
+               exits=1)
     return comp[version]
 
 
 def get_version(model, comp):
+    model = model.rsplit('.dev', 1)[0]
     if model not in comp:
-        util.sys_exit(
-            "No compatible model found for "
-            "'{m}' (spaCy v{v}).".format(m=model, v=about.__version__),
-            title="Compatibility error")
+        prints(Messages.M007.format(name=model, version=about.__version__),
+               title=Messages.M005, exits=1)
     return comp[model][0]
 
 
-def download_model(filename):
-    util.print_msg("Downloading {f}".format(f=filename))
+def download_model(filename, user_pip_args=None):
     download_url = about.__download_url__ + '/' + filename
-    subprocess.call([sys.executable, '-m',
-        'pip', 'install', '--no-cache-dir', download_url],
-        env=os.environ.copy())
-
-
-def check_error_depr(model):
-    if not model:
-        util.sys_exit(
-            "python -m spacy.download [name or shortcut]",
-            title="Missing model name or shortcut")
-
-    if model == 'all':
-        util.sys_exit(
-            "As of v1.7.0, the download all command is deprecated. Please "
-            "download the models individually via spacy.download [model name] "
-            "or pip install. For more info on this, see the documentation: "
-            "{d}".format(d=about.__docs_models__),
-            title="Deprecated command")
+    pip_args = ['--no-cache-dir', '--no-deps']
+    if user_pip_args:
+        pip_args.extend(user_pip_args)
+    cmd = [sys.executable, '-m', 'pip', 'install'] + pip_args + [download_url]
+    return subprocess.call(cmd, env=os.environ.copy())

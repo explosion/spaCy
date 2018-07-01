@@ -25,6 +25,8 @@ cdef int token_by_start(const TokenC* tokens, int length, int start_char) except
 cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 
 
+cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+
 cdef class Doc:
     cdef readonly Pool mem
     cdef readonly Vocab vocab
@@ -32,7 +34,8 @@ cdef class Doc:
     cdef public object _vector
     cdef public object _vector_norm
 
-    cdef public np.ndarray tensor
+    cdef public object tensor
+    cdef public object cats
     cdef public object user_data
 
     cdef TokenC* c
@@ -53,7 +56,9 @@ cdef class Doc:
 
     cdef public object noun_chunks_iterator
 
-    cdef int push_back(self, LexemeOrToken lex_or_tok, bint trailing_space) except -1
+    cdef object __weakref__
+
+    cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1
 
     cpdef np.ndarray to_array(self, object features)
 

@@ -1,0 +1,19 @@
+//- 💫 DOCS > USAGE > MODELS > AVAILABE MODELS
+
+p
+    |  Model differences are mostly statistical. In general, we do expect larger
+    |  models to be "better" and more accurate overall. Ultimately, it depends on
+    |  your use case and requirements. We recommend starting with the default
+    |  models (marked with a star below).
+
++table(["Name", "Language", "Type"])
+    for models, lang in MODELS
+        for model, i in models
+            - var comps = getModelComponents(model)
+            - var type = comps.size == "sm" && comps.type == "core" ? "core_sm" : comps.type
+            +row
+                +cell #[+a("/models/" + lang + "#" + model) #[code=model]]
+                    if i == 0
+                        +icon("star", 16).o-icon--inline.u-color-theme
+                +cell #{LANGUAGES[comps.lang]}
+                +cell #{MODEL_META[type]}

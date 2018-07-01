@@ -1,0 +1,449 @@
+//- 💫 DOCS > API > PIPE
+
+include ../_includes/_mixins
+
+//- This page can be used as a template for all other classes that inherit
+//-  from `Pipe`.
+
+if subclass
+    +infobox
+        |  This class is a subclass of #[+api("pipe") #[code Pipe]] and
+        |  follows the same API. The pipeline component is available in the
+        |  #[+a("/usage/processing-pipelines") processing pipeline] via the ID
+        |  #[code "#{pipeline_id}"].
+
+else
+    p
+        |  This class is not instantiated directly. Components inherit from it,
+        |  and it defines the interface that components should follow to
+        |  function as components in a spaCy analysis pipeline.
+
+- CLASSNAME = subclass || 'Pipe'
+- VARNAME = short || CLASSNAME.toLowerCase()
+
+
++h(2, "model") #{CLASSNAME}.Model
+    +tag classmethod
+
+p
+    |  Initialise a model for the pipe. The model should implement the
+    |  #[code thinc.neural.Model] API. Wrappers are under development for
+    |  most major machine learning libraries.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **kwargs]
+        +cell -
+        +cell Parameters for initialising the model
+
+    +row("foot")
+        +cell returns
+        +cell object
+        +cell The initialised model.
+
++h(2, "init") #{CLASSNAME}.__init__
+    +tag method
+
+p Create a new pipeline instance.
+
++aside-code("Example").
+    from spacy.pipeline import #{CLASSNAME}
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    #{VARNAME}.from_disk('/path/to/model')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The shared vocabulary.
+
+    +row
+        +cell #[code model]
+        +cell #[code thinc.neural.Model] or #[code True]
+        +cell
+            |  The model powering the pipeline component. If no model is
+            |  supplied, the model is created when you call
+            |  #[code begin_training], #[code from_disk] or #[code from_bytes].
+
+    +row
+        +cell #[code **cfg]
+        +cell -
+        +cell Configuration parameters.
+
+    +row("foot")
+        +cell returns
+        +cell #[code=CLASSNAME]
+        +cell The newly constructed object.
+
++h(2, "call") #{CLASSNAME}.__call__
+    +tag method
+
+p
+    |  Apply the pipe to one document. The document is modified in place, and
+    |  returned. Both #[code #{CLASSNAME}.__call__] and
+    |  #[code #{CLASSNAME}.pipe] should delegate to the
+    |  #[code #{CLASSNAME}.predict] and #[code #{CLASSNAME}.set_annotations]
+    |  methods.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    doc = nlp(u"This is a sentence.")
+    processed = #{VARNAME}(doc)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The document to process.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell The processed document.
+
++h(2, "pipe") #{CLASSNAME}.pipe
+    +tag method
+
+p
+    |  Apply the pipe to a stream of documents. Both
+    |  #[code #{CLASSNAME}.__call__] and #[code #{CLASSNAME}.pipe] should
+    |  delegate to the #[code #{CLASSNAME}.predict] and
+    |  #[code #{CLASSNAME}.set_annotations] methods.
+
++aside-code("Example").
+    texts = [u'One doc', u'...', u'Lots of docs']
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    for doc in #{VARNAME}.pipe(texts, batch_size=50):
+        pass
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code stream]
+        +cell iterable
+        +cell A stream of documents.
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of texts to buffer. Defaults to #[code 128].
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of worker threads to use. If #[code -1], OpenMP will
+            |  decide how many to use at run time. Default is #[code -1].
+
+    +row("foot")
+        +cell yields
+        +cell #[code Doc]
+        +cell Processed documents in the order of the original text.
+
++h(2, "predict") #{CLASSNAME}.predict
+    +tag method
+
+p
+    |  Apply the pipeline's model to a batch of docs, without modifying them.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    scores = #{VARNAME}.predict([doc1, doc2])
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell iterable
+        +cell The documents to predict.
+
+    +row("foot")
+        +cell returns
+        +cell -
+        +cell Scores from the model.
+
++h(2, "set_annotations") #{CLASSNAME}.set_annotations
+    +tag method
+
+p
+    |  Modify a batch of documents, using pre-computed scores.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    scores = #{VARNAME}.predict([doc1, doc2])
+    #{VARNAME}.set_annotations([doc1, doc2], scores)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell iterable
+        +cell The documents to modify.
+
+    +row
+        +cell #[code scores]
+        +cell -
+        +cell The scores to set, produced by #[code #{CLASSNAME}.predict].
+
++h(2, "update") #{CLASSNAME}.update
+    +tag method
+
+p
+    |  Learn from a batch of documents and gold-standard information, updating
+    |  the pipe's model. Delegates to #[code #{CLASSNAME}.predict] and
+    |  #[code #{CLASSNAME}.get_loss].
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    losses = {}
+    optimizer = nlp.begin_training()
+    #{VARNAME}.update([doc1, doc2], [gold1, gold2], losses=losses, sgd=optimizer)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell iterable
+        +cell A batch of documents to learn from.
+
+    +row
+        +cell #[code golds]
+        +cell iterable
+        +cell The gold-standard data. Must have the same length as #[code docs].
+
+    +row
+        +cell #[code drop]
+        +cell float
+        +cell The dropout rate.
+
+    +row
+        +cell #[code sgd]
+        +cell callable
+        +cell
+            |  The optimizer. Should take two arguments #[code weights] and
+            |  #[code gradient], and an optional ID.
+
+    +row
+        +cell #[code losses]
+        +cell dict
+        +cell
+            |  Optional record of the loss during training. The value keyed by
+            |  the model's name is updated.
+
++h(2, "get_loss") #{CLASSNAME}.get_loss
+    +tag method
+
+p
+    |  Find the loss and gradient of loss for the batch of documents and their
+    |  predicted scores.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    scores = #{VARNAME}.predict([doc1, doc2])
+    loss, d_loss = #{VARNAME}.get_loss([doc1, doc2], [gold1, gold2], scores)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell iterable
+        +cell The batch of documents.
+
+    +row
+        +cell #[code golds]
+        +cell iterable
+        +cell The gold-standard data. Must have the same length as #[code docs].
+
+    +row
+        +cell #[code scores]
+        +cell -
+        +cell Scores representing the model's predictions.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell The loss and the gradient, i.e. #[code (loss, gradient)].
+
++h(2, "begin_training") #{CLASSNAME}.begin_training
+    +tag method
+
+p
+    |  Initialise the pipe for training, using data exampes if available. If no
+    |  model has been initialised yet, the model is added.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    nlp.pipeline.append(#{VARNAME})
+    optimizer = #{VARNAME}.begin_training(pipeline=nlp.pipeline)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code gold_tuples]
+        +cell iterable
+        +cell
+            |  Optional gold-standard annotations from which to construct
+            |  #[+api("goldparse") #[code GoldParse]] objects.
+
+    +row
+        +cell #[code pipeline]
+        +cell list
+        +cell
+            |  Optional list of #[+api("pipe") #[code Pipe]] components that
+            |  this component is part of.
+
+    +row
+        +cell #[code sgd]
+        +cell callable
+        +cell
+            |  An optional optimizer. Should take two arguments #[code weights]
+            |  and #[code gradient], and an optional ID. Will be created via
+            |  #[+api(CLASSNAME.toLowerCase() + "#create_optimizer") #[code create_optimizer]]
+            |  if not set.
+
+    +row("foot")
+        +cell returns
+        +cell callable
+        +cell An optimizer.
+
++h(2, "create_optimizer") #{CLASSNAME}.create_optimizer
+    +tag method
+
+p
+    |  Create an optmizer for the pipeline component.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    optimizer = #{VARNAME}.create_optimizer()
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell callable
+        +cell The optimizer.
+
++h(2, "use_params") #{CLASSNAME}.use_params
+    +tag method
+    +tag contextmanager
+
+p Modify the pipe's model, to use the given parameter values.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    with #{VARNAME}.use_params():
+        #{VARNAME}.to_disk('/best_model')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code params]
+        +cell -
+        +cell
+            |  The parameter values to use in the model. At the end of the
+            |  context, the original parameters are restored.
+
++h(2, "add_label") #{CLASSNAME}.add_label
+    +tag method
+
+p Add a new label to the pipe.
+
+if CLASSNAME == "Tagger"
+    +aside-code("Example").
+        #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+        #{VARNAME}.add_label('MY_LABEL', {POS: 'NOUN'})
+else
+    +aside-code("Example").
+        #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+        #{VARNAME}.add_label('MY_LABEL')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code label]
+        +cell unicode
+        +cell The label to add.
+
+    if CLASSNAME == "Tagger"
+        +row
+            +cell #[code values]
+            +cell dict
+            +cell
+                |  Optional values to map to the label, e.g. a tag map
+                |  dictionary.
+
++h(2, "to_disk") #{CLASSNAME}.to_disk
+    +tag method
+
+p Serialize the pipe to disk.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    #{VARNAME}.to_disk('/path/to/#{VARNAME}')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
++h(2, "from_disk") #{CLASSNAME}.from_disk
+    +tag method
+
+p Load the pipe from disk. Modifies the object in place and returns it.
+
++aside-code("Example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    #{VARNAME}.from_disk('/path/to/#{VARNAME}')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +row("foot")
+        +cell returns
+        +cell #[code=CLASSNAME]
+        +cell The modified #[code=CLASSNAME] object.
+
++h(2, "to_bytes") #{CLASSNAME}.to_bytes
+    +tag method
+
++aside-code("example").
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    #{VARNAME}_bytes = #{VARNAME}.to_bytes()
+
+p Serialize the pipe to a bytestring.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being serialized.
+
+    +row("foot")
+        +cell returns
+        +cell bytes
+        +cell The serialized form of the #[code=CLASSNAME] object.
+
++h(2, "from_bytes") #{CLASSNAME}.from_bytes
+    +tag method
+
+p Load the pipe from a bytestring. Modifies the object in place and returns it.
+
++aside-code("Example").
+    #{VARNAME}_bytes = #{VARNAME}.to_bytes()
+    #{VARNAME} = #{CLASSNAME}(nlp.vocab)
+    #{VARNAME}.from_bytes(#{VARNAME}_bytes)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code bytes_data]
+        +cell bytes
+        +cell The data to load from.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being loaded.
+
+    +row("foot")
+        +cell returns
+        +cell #[code=CLASSNAME]
+        +cell The #[code=CLASSNAME] object.

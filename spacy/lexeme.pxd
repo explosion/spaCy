@@ -2,7 +2,7 @@ from .typedefs cimport attr_t, hash_t, flags_t, len_t, tag_t
 from .attrs cimport attr_id_t
 from .attrs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER, LANG
 
-from .structs cimport LexemeC
+from .structs cimport LexemeC, SerializedLexemeC
 from .strings cimport StringStore
 from .vocab cimport Vocab
 
@@ -22,7 +22,23 @@ cdef class Lexeme:
         self.c = lex
         self.vocab = vocab
         self.orth = lex.orth
-    
+
+    @staticmethod
+    cdef inline SerializedLexemeC c_to_bytes(const LexemeC* lex) nogil:
+        cdef SerializedLexemeC lex_data
+        buff = <const unsigned char*>&lex.flags
+        end = <const unsigned char*>&lex.sentiment + sizeof(lex.sentiment)
+        for i in range(sizeof(lex_data.data)):
+            lex_data.data[i] = buff[i]
+        return lex_data
+
+    @staticmethod
+    cdef inline void c_from_bytes(LexemeC* lex, SerializedLexemeC lex_data) nogil:
+        buff = <unsigned char*>&lex.flags
+        end = <unsigned char*>&lex.sentiment + sizeof(lex.sentiment)
+        for i in range(sizeof(lex_data.data)):
+            buff[i] = lex_data.data[i]
+
     @staticmethod
     cdef inline void set_struct_attr(LexemeC* lex, attr_id_t name, attr_t value) nogil:
         if name < (sizeof(flags_t) * 8):

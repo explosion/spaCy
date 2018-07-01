@@ -1,9 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import json
-from ...compat import json_dumps
-from ... import util
+from .._messages import Messages
+from ...compat import json_dumps, path2str
+from ...util import prints
 
 
 def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
@@ -28,12 +28,13 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
             docs.append(doc)
             sentences = []
 
+    output_filename = input_path.parts[-1].replace(".conll", ".json")
     output_filename = input_path.parts[-1].replace(".conllu", ".json")
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
-    util.print_msg("Created {} documents".format(len(docs)),
-                   title="Generated output file {}".format(output_file))
+    prints(Messages.M033.format(n_docs=len(docs)),
+           title=Messages.M032.format(name=path2str(output_file)))
 
 
 def read_conllx(input_path, use_morphology=False, n=0):
@@ -47,15 +48,16 @@ def read_conllx(input_path, use_morphology=False, n=0):
             tokens = []
             for line in lines:
 
-                id_, word, lemma, pos, tag, morph, head, dep, _1, \
-                _2 = line.split('\t')
+                parts = line.split('\t')
+                id_, word, lemma, pos, tag, morph, head, dep, _1, _2 = parts
                 if '-' in id_ or '.' in id_:
                     continue
                 try:
                     id_ = int(id_) - 1
                     head = (int(head) - 1) if head != '0' else id_
                     dep = 'ROOT' if dep == 'root' else dep
-                    tag = pos+'__'+morph  if use_morphology else pos
+                    tag = pos if tag == '_' else tag
+                    tag = tag+'__'+morph  if use_morphology else tag
                     tokens.append((id_, word, tag, head, dep, 'O'))
                 except:
                     print(line)
@@ -73,10 +75,10 @@ def generate_sentence(sent):
     tokens = []
     for i, id in enumerate(id_):
         token = {}
-        token["orth"] = word[id]
-        token["tag"] = tag[id]
-        token["head"] = head[id] - i
-        token["dep"] = dep[id]
+        token["orth"] = word[i]
+        token["tag"] = tag[i]
+        token["head"] = head[i] - id
+        token["dep"] = dep[i]
         tokens.append(token)
     sentence["tokens"] = tokens
     return sentence

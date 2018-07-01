@@ -1,0 +1,103 @@
+//- 💫 DOCS > USAGE > FACTS & FIGURES > BENCHMARKS > MODEL COMPARISON
+
+p
+    |  In this section, we provide benchmark accuracies for the pre-trained
+    |  model pipelines we distribute with spaCy. Evaluations are conducted
+    |  end-to-end from raw text, with no "gold standard" pre-processing, over
+    |  text from a mix of genres where possible.
+
++aside("Methodology")
+    |  The evaluation was conducted on raw text with no gold standard
+    |  information. The parser, tagger and entity recognizer were trained on the
+    |  #[+a("https://www.gabormelli.com/RKB/OntoNotes_Corpus") OntoNotes 5]
+    |  corpus, the word vectors on #[+a("http://commoncrawl.org") Common Crawl].
+
++h(4, "benchmarks-models-english") English
+
++table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
+    +row
+        +cell #[+a("/models/en#en_core_web_sm") #[code en_core_web_sm]] 2.0.0
+        +cell("num") 2.x
+        +cell neural
+        +cell("num") 91.7
+        +cell("num") 85.3
+        +cell("num") 97.0
+        +cell("num") 10.1k
+        +cell("num") #[strong 35MB]
+
+    +row
+        +cell #[+a("/models/en#en_core_web_md") #[code en_core_web_md]] 2.0.0
+        +cell("num") 2.x
+        +cell neural
+        +cell("num") 91.7
+        +cell("num") #[strong 85.9]
+        +cell("num") 97.1
+        +cell("num") 10.0k
+        +cell("num") 115MB
+
+    +row
+        +cell #[+a("/models/en#en_core_web_lg") #[code en_core_web_lg]] 2.0.0
+        +cell("num") 2.x
+        +cell neural
+        +cell("num") #[strong 91.9]
+        +cell("num") #[strong 85.9]
+        +cell("num") #[strong 97.2]
+        +cell("num") 10.0k
+        +cell("num") 812MB
+
+    +row("divider")
+        +cell #[code en_core_web_sm] 1.2.0
+        +cell("num") 1.x
+        +cell linear
+        +cell("num") 86.6
+        +cell("num") 78.5
+        +cell("num") 96.6
+        +cell("num") #[strong 25.7k]
+        +cell("num") 50MB
+
+    +row
+        +cell #[code en_core_web_md] 1.2.1
+        +cell("num") 1.x
+        +cell linear
+        +cell("num") 90.6
+        +cell("num") 81.4
+        +cell("num") 96.7
+        +cell("num") 18.8k
+        +cell("num") 1GB
+
++h(4, "benchmarks-models-spanish") Spanish
+
++aside("Evaluation note")
+    |  The NER accuracy refers to the "silver standard" annotations in the
+    |  WikiNER corpus. Accuracy on these annotations tends to be higher than
+    |  correct human annotations.
+
++table(["Model", "spaCy", "Type", "UAS", "NER F", "POS", "WPS", "Size"])
+    +row
+        +cell #[+a("/models/es#es_core_news_sm") #[code es_core_news_sm]] 2.0.0
+        +cell("num") 2.x
+        +cell("num") neural
+        +cell("num") 89.8
+        +cell("num") 88.7
+        +cell("num") #[strong 96.9]
+        +cell("num") #[em n/a]
+        +cell("num") #[strong 35MB]
+
+    +row
+        +cell #[+a("/models/es#es_core_news_md") #[code es_core_news_md]] 2.0.0
+        +cell("num") 2.x
+        +cell("num") neural
+        +cell("num") #[strong 90.2]
+        +cell("num") 89.0
+        +cell("num") 97.8
+        +cell("num") #[em n/a]
+        +cell("num") 93MB
+
+    +row("divider")
+        +cell #[code es_core_web_md] 1.1.0
+        each data in ["1.x", "linear", 87.5]
+            +cell("num")=data
+        +cell("num") #[strong 94.2]
+        +cell("num") 96.7
+        +cell("num") #[em n/a]
+        +cell("num") 377MB

@@ -14,8 +14,8 @@ def vectors():
 
 @pytest.fixture()
 def vocab(en_vocab, vectors):
-    return add_vecs_to_vocab(en_vocab, vectors)
-
+    add_vecs_to_vocab(en_vocab, vectors)
+    return en_vocab
 
 def test_vectors_similarity_LL(vocab, vectors):
     [(word1, vec1), (word2, vec2)] = vectors

@@ -1,0 +1,141 @@
+{
+    "sidebar": {
+        "Models": {
+            "Overview": "./"
+        },
+
+        "Language models": {
+            "English": "en",
+            "German": "de",
+            "Spanish": "es",
+            "Portuguese": "pt",
+            "French": "fr",
+            "Italian": "it",
+            "Dutch": "nl",
+            "Multi-Language": "xx"
+        }
+    },
+
+    "index": {
+        "title": "Models Overview",
+        "teaser": "Downloadable statistical models for spaCy to predict and assign linguistic features.",
+        "quickstart": true,
+        "menu": {
+            "Quickstart": "quickstart",
+            "Installation": "install",
+            "Naming Conventions": "conventions"
+        }
+    },
+
+    "comparison": {
+        "title": "Model Comparison",
+        "teaser": "Compare spaCy's statistical models and their accuracy.",
+        "tag": "experimental",
+        "compare_models": true,
+        "default_models": {
+            "model1": "en_core_web_sm",
+            "model2": "en_core_web_lg"
+        }
+    },
+
+    "MODELS": {
+        "en": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
+        "de": ["de_core_news_sm"],
+        "es": ["es_core_news_sm", "es_core_news_md"],
+        "pt": ["pt_core_news_sm"],
+        "fr": ["fr_core_news_sm", "fr_core_news_md"],
+        "it": ["it_core_news_sm"],
+        "nl": ["nl_core_news_sm"],
+        "xx": ["xx_ent_wiki_sm"]
+    },
+
+    "MODEL_META": {
+        "core": "Vocabulary, syntax, entities, vectors",
+        "core_sm": "Vocabulary, syntax, entities",
+        "dep": "Vocabulary, syntax",
+        "ent": "Named entities",
+        "vectors": "Word vectors",
+        "web": "written text (blogs, news, comments)",
+        "news": "written text (news, media)",
+        "wiki": "Wikipedia",
+        "uas": "Unlabelled dependencies",
+        "las": "Labelled dependencies",
+        "tags_acc": "Part-of-speech tags (fine grained tags, Token.tag)",
+        "ents_f": "Entities (F-score)",
+        "ents_p": "Entities (precision)",
+        "ents_r": "Entities (recall)",
+        "cpu": "words per second on CPU",
+        "gpu": "words per second on GPU",
+        "pipeline": "Processing pipeline components in order",
+        "sources": "Sources of training data",
+        "vecs": "Word vectors included in the model. Models that only support context vectors compute similarity via the tensors shared with the pipeline.",
+        "benchmark_parser": "Syntax accuracy",
+        "benchmark_ner": "NER accuracy",
+        "benchmark_speed": "Speed",
+        "compat": "Latest compatible model version for your spaCy installation"
+    },
+
+    "MODEL_LICENSES": {
+        "CC BY 4.0":       "https://creativecommons.org/licenses/by/4.0/",
+        "CC BY-SA":        "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA 3.0":    "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC BY-SA 4.0":    "https://creativecommons.org/licenses/by-sa/4.0/",
+        "CC BY-NC":        "https://creativecommons.org/licenses/by-nc/3.0/",
+        "CC BY-NC 3.0":    "https://creativecommons.org/licenses/by-nc/3.0/",
+        "CC-BY-NC-SA 3.0": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+        "GPL":             "https://www.gnu.org/licenses/gpl.html",
+        "LGPL":            "https://www.gnu.org/licenses/lgpl.html"
+    },
+
+    "MODEL_BENCHMARKS": {
+        "parser": { "uas": "UAS", "las": "LAS", "tags_acc": "POS" },
+        "ner":    { "ents_f": "NER F", "ents_p": "NER P", "ents_r": "NER R" }
+    },
+
+    "EXAMPLE_SENT_LANGS": [
+        "da", "de", "en", "es", "fa", "fr", "he", "hi", "hu", "id", "it", "ja",
+        "nb", "nl", "pl", "pt", "ru", "sv", "tr", "zh"
+    ],
+
+    "LANGUAGES": {
+        "en": "English",
+        "de": "German",
+        "fr": "French",
+        "es": "Spanish",
+        "it": "Italian",
+        "pt": "Portuguese",
+        "nl": "Dutch",
+        "sv": "Swedish",
+        "fi": "Finnish",
+        "nb": "Norwegian Bokmål",
+        "da": "Danish",
+        "hu": "Hungarian",
+        "pl": "Polish",
+        "ru": "Russian",
+        "ro": "Romanian",
+        "hr": "Croatian",
+        "tr": "Turkish",
+        "he": "Hebrew",
+        "fa": "Persian",
+        "ga": "Irish",
+        "bn": "Bengali",
+        "hi": "Hindi",
+        "id": "Indonesian",
+        "th": "Thai",
+        "zh": "Chinese",
+        "ja": "Japanese",
+        "vi": "Vietnamese",
+        "xx": "Multi-language"
+    },
+
+    "EXAMPLE_SENTENCES": {
+        "en": "This is a sentence.",
+        "de": "Dies ist ein Satz.",
+        "fr": "C'est une phrase.",
+        "es": "Esto es una frase.",
+        "pt": "Esta é uma frase.",
+        "it": "Questa è una frase.",
+        "nl": "Dit is een zin.",
+        "xx": "This is a sentence about Facebook."
+    }
+}

@@ -1,0 +1,26 @@
+//- 💫 DOCS > USAGE > PIPELINE
+
+include ../_includes/_mixins
+
+include _spacy-101/_pipelines
+
++section("pipelines")
+    +h(2, "pipelines") How pipelines work
+    include _processing-pipelines/_pipelines
+
++section("custom-components")
+    +h(2, "custom-components") Creating custom pipeline components
+    include _processing-pipelines/_custom-components
+
++section("custom-components-extensions")
+    +h(2, "custom-components-extensions") Extension attributes
+        +tag-new(2)
+    include _processing-pipelines/_extensions
+
++section("multithreading")
+    +h(2, "multithreading") Multi-threading
+    include _processing-pipelines/_multithreading
+
++section("serialization")
+    +h(2, "serialization") Serialization
+    include _processing-pipelines/_serialization

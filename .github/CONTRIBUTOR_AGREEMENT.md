@@ -78,7 +78,7 @@ took place before the date you sign these terms.
     * each contribution shall be in compliance with U.S. export control laws and
     other applicable export and import laws. You agree to notify us if you
     become aware of any circumstance which would make any of the foregoing
-    representations inaccurate in any respect. We may publicly disclose your 
+    representations inaccurate in any respect. We may publicly disclose your
     participation in the project, including the fact that you have signed the SCA.
 
 6. This SCA is governed by the laws of the State of California and applicable
@@ -87,8 +87,8 @@ U.S. Federal law. Any choice of law rules will not apply.
 7. Please place an “x” on one of the applicable statement below. Please do NOT
 mark both statements:
 
-    * [x] I am signing on behalf of myself as an individual and no other person
-    or entity, including my employer, has or will have rights with respect my
+    * [ ] I am signing on behalf of myself as an individual and no other person
+    or entity, including my employer, has or will have rights with respect to my
     contributions.
 
     * [ ] I am signing on behalf of my employer or a legal entity and I have the
@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           | Shuvanon Razik       |
+| Name                           |                      |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           | 3/12/2017            |
-| GitHub username                | shuvanon             |
+| Date                           |                      |
+| GitHub username                |                      |
 | Website (optional)             |                      |

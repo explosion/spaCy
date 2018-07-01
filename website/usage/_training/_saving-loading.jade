@@ -1,0 +1,192 @@
+//- 💫 DOCS > USAGE > TRAINING > SAVING & LOADING
+
+p
+    |  After training your model, you'll usually want to save its state, and load
+    |  it back later. You can do this with the
+    |  #[+api("language#to_disk") #[code Language.to_disk()]]
+    |  method:
+
++code.
+    nlp.to_disk('/home/me/data/en_example_model')
+
+p
+    |  The directory will be created if it doesn't exist, and the whole pipeline
+    |  will be written out. To make the model more convenient to deploy, we
+    |  recommend wrapping it as a Python package.
+
++h(3, "models-generating") Generating a model package
+
++infobox("Important note")
+    |  The model packages are #[strong not suitable] for the public
+    |  #[+a("https://pypi.python.org") pypi.python.org] directory, which is not
+    |  designed for binary data and files over 50 MB. However, if your company
+    |  is running an #[strong internal installation] of PyPi, publishing your
+    |  models on there can be a convenient way to share them with your team.
+
+p
+    |  spaCy comes with a handy CLI command that will create all required files,
+    |  and walk you through generating the meta data. You can also create the
+    |  meta.json manually and place it in the model data directory, or supply a
+    |  path to it using the #[code --meta] flag. For more info on this, see
+    |  the #[+api("cli#package") #[code package]] docs.
+
++aside-code("meta.json", "json").
+    {
+        "name": "example_model",
+        "lang": "en",
+        "version": "1.0.0",
+        "spacy_version": "&gt;=2.0.0,&lt;3.0.0",
+        "description": "Example model for spaCy",
+        "author": "You",
+        "email": "you@example.com",
+        "license": "CC BY-SA 3.0",
+        "pipeline": ["tagger", "parser", "ner"]
+    }
+
++code(false, "bash").
+    python -m spacy package /home/me/data/en_example_model /home/me/my_models
+
+p This command will create a model package directory that should look like this:
+
++code("Directory structure", "yaml").
+    └── /
+        ├── MANIFEST.in                   # to include meta.json
+        ├── meta.json                     # model meta data
+        ├── setup.py                      # setup file for pip installation
+        └── en_example_model              # model directory
+            ├── __init__.py               # init for pip installation
+            └── en_example_model-1.0.0    # model data
+
+p
+    |  You can also find templates for all files on
+    |  #[+src(gh("spacy-models", "template")) GitHub].
+    |  If you're creating the package manually, keep in mind that the directories
+    |  need to be named according to the naming conventions of
+    |  #[code lang_name] and #[code lang_name-version].
+
+
++h(3, "models-custom") Customising the model setup
+
+p
+    |  The meta.json includes the model details, like name, requirements and
+    |  license, and lets you customise how the model should be initialised and
+    |  loaded. You can define the language data to be loaded and the
+    |  #[+a("/usage/processing-pipelines") processing pipeline] to
+    |  execute.
+
++table(["Setting", "Type", "Description"])
+    +row
+        +cell #[code lang]
+        +cell unicode
+        +cell ID of the language class to initialise.
+
+    +row
+        +cell #[code pipeline]
+        +cell list
+        +cell
+            |  A list of strings mapping to the IDs of pipeline factories to
+            |  apply in that order. If not set, spaCy's
+            |  #[+a("/usage/processing-pipelines") default pipeline]
+            |  will be used.
+
+p
+    |  The #[code load()] method that comes with our model package
+    |  templates will take care of putting all this together and returning a
+    |  #[code Language] object with the loaded pipeline and data. If your model
+    |  requires custom #[+a("/usage/processing-pipelines") pipeline components]
+    |  or a custom language class, you can also
+    |  #[strong ship the code with your model]. For examples of this, check out
+    |  the implementations of spaCy's
+    |  #[+api("util#load_model_from_init_py") #[code load_model_from_init_py]]
+    |  and  #[+api("util#load_model_from_path") #[code load_model_from_path]]
+    |  utility functions.
+
++h(3, "models-building") Building the model package
+
+p
+    |  To build the package, run the following command from within the
+    |  directory. For more information on building Python packages, see the
+    |  docs on Python's
+    |  #[+a("https://setuptools.readthedocs.io/en/latest/") Setuptools].
+
++code(false, "bash").
+    python setup.py sdist
+
+p
+    |  This will create a #[code .tar.gz] archive in a directory #[code /dist].
+    |  The model can be installed by pointing pip to the path of the archive:
+
++code(false, "bash").
+    pip install /path/to/en_example_model-1.0.0.tar.gz
+
+p
+    |  You can then load the model via its name, #[code en_example_model], or
+    |  import it directly as a module and then call its #[code load()] method.
+
++h(3, "loading") Loading a custom model package
+
+p
+    |  To load a model from a data directory, you can use
+    |  #[+api("spacy#load") #[code spacy.load()]] with the local path. This will
+    |  look for a meta.json in the directory and use the #[code lang] and
+    |  #[code pipeline] settings to initialise a #[code Language] class with a
+    |  processing pipeline and load in the model data.
+
++code.
+    nlp = spacy.load('/path/to/model')
+
+p
+    |  If you want to #[strong load only the binary data], you'll have to create
+    |  a #[code Language] class and call
+    |  #[+api("language#from_disk") #[code from_disk]] instead.
+
++code.
+    nlp = spacy.blank('en').from_disk('/path/to/data')
+
++infobox("Important note: Loading data in v2.x")
+    .o-block
+        |  In spaCy 1.x, the distinction between #[code spacy.load()] and the
+        |  #[code Language] class constructor was quite unclear. You could call
+        |  #[code spacy.load()] when no model was present, and it would silently
+        |  return an empty object. Likewise, you could pass a path to
+        |  #[code English], even if the mode required a different language.
+        |  spaCy v2.0 solves this with a clear distinction between setting up
+        |  the instance and loading the data.
+
+    +code-new nlp = spacy.blank('en').from_disk('/path/to/data')
+    +code-old nlp = spacy.load('en', path='/path/to/data')
+
++h(3, "example-training-spacy") Example: How we're training and packaging models for spaCy
+
+p
+    |  Publishing a new version of spaCy often means re-training all available
+    |  models – currently, that's #{MODEL_COUNT} models for #{MODEL_LANG_COUNT}
+    |  languages. To make this run smoothly, we're using an automated build
+    |  process and a #[+api("cli#train") #[code spacy train]] template that
+    |  looks like this:
+
++code(false, "bash", "$", false, false, true).
+    python -m spacy train {lang} {models_dir}/{name} {train_data} {dev_data} -m meta/{name}.json -V {version} -g {gpu_id} -n {n_epoch} -ns {n_sents}
+
++aside-code("meta.json template", "json").
+    {
+        "lang": "en",
+        "name": "core_web_sm",
+        "license":"CC BY-SA 3.0",
+        "author":"Explosion AI",
+        "url":"https://explosion.ai",
+        "email":"contact@explosion.ai",
+        "sources": ["OntoNotes 5", "Common Crawl"],
+        "description":"English multi-task CNN trained on OntoNotes, with GloVe vectors trained on common crawl. Assigns word vectors, context-specific token vectors, POS tags, dependency parse and named entities."
+    }
+
+p In a directory #[code meta], we keep #[code meta.json] templates for the individual models, containing all relevant information that doesn't change across versions, like the name, description, author info and training data sources. When we train the model, we pass in the file to the meta template as the #[code --meta] argument, and specify the current model version as the #[code --version] argument.
+
+p On each epoch, the model is saved out with a #[code meta.json] using our template and added properties, like the #[code pipeline], #[code accuracy] scores and the #[code spacy_version] used to train the model. After training completion, the best model is selected automatically and packaged using the #[+api("cli#package") #[code package]] command. Since a full meta file is already present on the trained model, no further setup is required to build a valid model package.
+
++code(false, "bash").
+    python -m spacy package -f {best_model} dist/
+    cd dist/{model_name}
+    python setup.py sdist
+
+p This process allows us to quickly trigger the model training and build process for all available models and languages, and generate the correct meta data automatically.

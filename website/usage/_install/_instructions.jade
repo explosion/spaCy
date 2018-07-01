@@ -1,0 +1,247 @@
+//- 💫 DOCS > USAGE > INSTALL > INSTRUCTIONS
+
++h(3, "pip") pip
+    +badge("https://img.shields.io/pypi/v/spacy.svg?style=flat-square", "https://pypi.python.org/pypi/spacy")
+
+p Using pip, spaCy releases are currently only available as source packages.
+
++code(false, "bash").
+    pip install -U spacy
+
++aside("Download models")
+    |  After installation you need to download a language model. For more info
+    |  and available models, see the #[+a("/usage/models") docs on models].
+
+    +code.o-no-block.
+        python -m spacy download en
+
+        &gt;&gt;&gt; import spacy
+        &gt;&gt;&gt; nlp = spacy.load('en')
+
+p
+    |  When using pip it is generally recommended to install packages in a
+    |  virtual environment to avoid modifying system state:
+
++code(false, "bash").
+    venv .env
+    source .env/bin/activate
+    pip install spacy
+
++h(3, "conda") conda
+    +badge("https://anaconda.org/conda-forge/spacy/badges/version.svg", "https://anaconda.org/conda-forge/spacy")
+
+p
+    |  Thanks to our great community, we've finally re-added conda support. You
+    |  can now install spaCy via #[code conda-forge]:
+
++code(false, "bash").
+    conda install -c conda-forge spacy
+
+p
+    |  For the feedstock including the build recipe and configuration, check out
+    |  #[+a("https://github.com/conda-forge/spacy-feedstock") this repository].
+    |  Improvements and pull requests to the recipe and setup are always
+    |  appreciated.
+
++h(3, "upgrading") Upgrading spaCy
+
++aside("Upgrading from v1 to v2")
+    |  Although we've tried to keep breaking changes to a minimum, upgrading
+    |  from spaCy v1.x to v2.x may still require some changes to your code base.
+    |  For details see the sections on
+    |  #[+a("/usage/v2#incompat") backwards incompatibilities] and
+    |  #[+a("/usage/v2#migrating") migrating]. Also remember to download the new
+    |  models, and retrain your own models.
+
+p
+    |  When updating to a newer version of spaCy, it's generally recommended to
+    |  start with a clean virtual environment. If you're upgrading to a new
+    |  major version, make sure you have the latest #[strong compatible models]
+    |  installed, and that there are no old shortcut links or incompatible model
+    |  packages left over in your environment, as this can often lead to unexpected
+    |  results and errors.  If you've trained your own models, keep in mind that
+    |  your train and runtime inputs must match. This means you'll have to
+    |  #[strong retrain your models] with the new version.
+
+p
+    |  As of v2.0, spaCy also provides a #[+api("cli#validate") #[code validate]]
+    |  command, which lets you verify that all installed models are compatible
+    |  with your spaCy version. If incompatible models are found, tips and
+    |  installation instructions are printed. The command is also useful to
+    |  detect out-of-sync model links resulting from links created in different
+    |  virtual environments. It's recommended to run the command with
+    |  #[code python -m] to make sure you're executing the correct version of
+    |  spaCy.
+
++code(false, "bash").
+    pip install -U spacy
+    python -m spacy validate
+
++h(3, "gpu") Run spaCy with GPU
+    +tag experimental
+
++infobox("Important note", "⚠️")
+    |  The instructions below refer to installation with CUDA 8.0. In order to
+    |  install with CUDA 9.0, set the environment variable #[code CUDA9=1]
+    |  before installing Thinc. You'll also need to adjust the path to the
+    |  CUDA runtime.
+
+p
+    |  As of v2.0, spaCy's comes with neural network models that are implemented
+    |  in our machine learning library, #[+a(gh("thinc")) Thinc]. For GPU
+    |  support, we've been grateful to use the work of
+    |  Chainer's #[+a("https://cupy.chainer.org") CuPy] module, which provides
+    |  a NumPy-compatible interface for GPU arrays.
+
+p
+    |  First, install follows the normal CUDA installation procedure. Next, set
+    |  your environment variables so that the installation will be able to find
+    |  CUDA. Finally, install spaCy.
+
++code(false, "bash").
+    export CUDA_HOME=/usr/local/cuda-8.0  # or wherever your CUDA is
+    export PATH=$PATH:$CUDA_HOME/bin
+
+    pip install spacy
+    python -c "import thinc.neural.gpu_ops"  # check the GPU ops were built
+
++h(3, "source") Compile from source
+
+p
+    |  The other way to install spaCy is to clone its
+    |  #[+a(gh("spaCy")) GitHub repository] and build it from source. That is
+    |  the common way if you want to make changes to the code base. You'll need
+    |  to make sure that you have a development environment consisting of a
+    |  Python distribution including header files, a compiler,
+    |  #[+a("https://pip.pypa.io/en/latest/installing/") pip],
+    |  #[+a("https://virtualenv.pypa.io/") virtualenv] and
+    |  #[+a("https://git-scm.com") git] installed. The compiler part is the
+    |  trickiest. How to do that depends on your system. See notes on
+    |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") OS X] and
+    |  #[a(href="#source-windows") Windows] for details.
+
++code(false, "bash").
+    python -m pip install -U pip venv              # update pip & virtualenv
+    git clone #{gh("spaCy")}   # clone spaCy
+    cd spaCy                                       # navigate into directory
+
+    venv .env                                      # create environment in .env
+    source .env/bin/activate                       # activate virtual environment
+    export PYTHONPATH=`pwd`                        # set Python path to spaCy directory
+    pip install -r requirements.txt                # install all requirements
+    python setup.py build_ext --inplace            # compile spaCy
+
+p
+    |  Compared to regular install via pip, the
+    |  #[+src(gh("spaCy", "requirements.txt")) #[code requirements.txt]]
+    |  additionally installs developer dependencies such as Cython. See the
+    |  the #[+a("#section-quickstart") quickstart widget] to get the right
+    |  commands for your platform and Python version. Instead of the above
+    |  verbose commands, you can also use the following
+    |  #[+a("http://www.fabfile.org/") Fabric] commands:
+
++table(["Command", "Description"])
+    +row
+        +cell #[code fab env]
+        +cell Create a virtual environment and delete previous one, if it exists.
+
+    +row
+        +cell #[code fab make]
+        +cell Compile the source.
+
+    +row
+        +cell #[code fab clean]
+        +cell Remove compiled objects, including the generated C++.
+
+    +row
+        +cell #[code fab test]
+        +cell Run basic tests, aborting after first failure.
+
+p
+    |  All commands assume that your virtual environment is located in a
+    |  directory #[code .env]. If you're using a different directory, you can
+    |  change it via the environment variable #[code VENV_DIR], for example:
+
++code(false, "bash").
+    VENV_DIR=".custom-env" fab clean make
+
++h(4, "source-ubuntu") Ubuntu
+
+p Install system-level dependencies via #[code apt-get]:
+
++code(false, "bash").
+    sudo apt-get install build-essential python-dev git
+
++h(4, "source-osx") macOS / OS X
+
+p
+    |  Install a recent version of
+    |  #[+a("https://developer.apple.com/xcode/") XCode], including the
+    |  so-called "Command Line Tools". macOS and OS X ship with Python and git
+    |  preinstalled. To compile spaCy with multi-threading support on macOS / OS X,
+    |  #[+a("https://github.com/explosion/spaCy/issues/267") see here].
+
++h(4, "source-windows") Windows
+
+p
+    |  Install a version of the
+    |  #[+a("http://landinghub.visualstudio.com/visual-cpp-build-tools") Visual C++ Build Tools] or
+    |  #[+a("https://www.visualstudio.com/vs/visual-studio-express/") Visual Studio Express]
+    |  that matches the version that was used to compile your Python
+    |  interpreter. For official distributions these are:
+
++table([ "Distribution", "Version"])
+    +row
+        +cell Python 2.7
+        +cell Visual Studio 2008
+
+    +row
+        +cell Python 3.4
+        +cell Visual Studio 2010
+
+    +row
+        +cell Python 3.5+
+        +cell Visual Studio 2015
+
++h(3, "tests") Run tests
+
+p
+    |  spaCy comes with an #[+a(gh("spacy", "spacy/tests")) extensive test suite].
+    |  In order to run the tests, you'll usually want to clone the
+    |  #[+a(gh("spacy")) repository] and #[+a("#source") build spaCy from source].
+    |  This will also install the required development dependencies and test
+    |  utilities defined in the #[code requirements.txt].
+
+p
+    |  Alternatively, you can find out where spaCy is installed and run
+    |  #[code pytest] on that directory. Don't forget to also install the
+    |  test utilities via spaCy's
+    |  #[+a(gh("spacy", "requirements.txt")) #[code requirements.txt]]:
+
++code(false, "bash").
+    python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
+    pip install -r path/to/requirements.txt
+    python -m pytest &lt;spacy-directory&gt;
+
+p
+    |  Calling #[code pytest] on the spaCy directory will run only the basic
+    |  tests. The flags #[code --slow] and #[code --model] are optional and
+    |  enable additional tests that take longer or use specific models.
+
++code(false, "bash").
+    # make sure you are using recent pytest version
+    python -m pip install -U pytest
+
+    python -m pytest &lt;spacy-directory&gt;                 # basic tests
+    python -m pytest &lt;spacy-directory&gt; --slow          # basic and slow tests
+    python -m pytest &lt;spacy-directory&gt; --models --all  # basic and all model tests
+    python -m pytest &lt;spacy-directory&gt; --models --en   # basic and English model tests
+
++infobox("Note on model tests", "⚠️")
+    |  The test suite specifies a #[+a(gh("spacy", "spacy/tests/conftest.py")) list of models]
+    |  to run the tests on. If a model is not installed, the tests will be
+    |  skipped. If all models are installed, the respective tests will run once
+    |  for each model. The easiest way to find out which models and model
+    |  versions are available in your current environment is to run
+    |  #[+a("/api/cli#validate") #[code python -m spacy validate]]. This will
+    |  also show whether an installed model is out of date, and how to update it.

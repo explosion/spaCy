@@ -8,151 +8,155 @@ include _includes/_mixins
         | Natural Language#[br]
         | Processing
 
-    h2.c-landing__title.o-block.u-heading-1
-        | in Python
+    h2.c-landing__title.o-block.u-heading-3
+        span.u-text-label.u-text-label--light in Python
 
-    +landing-badge(gh("spaCy") + "/releases/tag/v2.0.0-alpha", "v2alpha", "Try spaCy v2.0.0 alpha!")
++grid.o-content.c-landing__blocks
+    +grid-col("third").c-landing__card.o-card.o-grid.o-grid--space
+        +h(3) Fastest in the world
+        p
+            |  spaCy excels at large-scale information extraction tasks.
+            |  It's written from the ground up in carefully memory-managed
+            |  Cython. Independent research has confirmed that spaCy is
+            |  the fastest in the world.  If your application needs to
+            |  process entire web dumps, spaCy is the library you want to
+            |  be using.
 
-    +grid.o-content
-        +grid-col("third").o-card
-            +h(2) Fastest in the world
-            p
-                |  spaCy excels at large-scale information extraction tasks.
-                |  It's written from the ground up in carefully memory-managed
-                |  Cython. Independent research has confirmed that spaCy is
-                |  the fastest in the world.  If your application needs to
-                |  process entire web dumps, spaCy is the library you want to
-                |  be using.
+        +button("/usage/facts-figures", true, "primary")
+            |  Facts & figures
 
-            +button("/docs/api", true, "primary")
-                |  Facts & figures
+    +grid-col("third").c-landing__card.o-card.o-grid.o-grid--space
+        +h(3) Get things done
+        p
+            |  spaCy is designed to help you do real work — to build real
+            |  products, or gather real insights. The library respects
+            |  your time, and tries to avoid wasting it. It's easy to
+            |  install, and its API is simple and productive. We like to
+            |  think of spaCy as the Ruby on Rails of Natural Language
+            |  Processing.
 
-        +grid-col("third").o-card
-            +h(2) Get things done
-            p
-                |  spaCy is designed to help you do real work — to build real
-                |  products, or gather real insights. The library respects
-                |  your time, and tries to avoid wasting it. It's easy to
-                |  install, and its API is simple and productive. I like to
-                |  think of spaCy as the Ruby on Rails of Natural Language
-                |  Processing.
+        +button("/usage", true, "primary")
+            |  Get started
 
-            +button("/docs/usage", true, "primary")
-                |  Get started
+    +grid-col("third").c-landing__card.o-card.o-grid.o-grid--space
+        +h(3) Deep learning
+        p
+            |  spaCy is the best way to prepare text for deep learning.
+            |  It interoperates seamlessly with TensorFlow, PyTorch,
+            |  scikit-learn, Gensim and the rest of Python's awesome AI
+            |  ecosystem. With spaCy, you can easily construct linguistically
+            |  sophisticated statistical models for a variety of NLP problems.
 
-        +grid-col("third").o-card
-            +h(2) Deep learning
-            p
-                |  spaCy is the best way to prepare text for deep learning.
-                |  It interoperates seamlessly with
-                |  #[+a("https://www.tensorflow.org") TensorFlow],
-                |  #[+a("https://keras.io") Keras],
-                |  #[+a("http://scikit-learn.org") Scikit-Learn],
-                |  #[+a("https://radimrehurek.com/gensim") Gensim] and the
-                |  rest of Python's awesome AI ecosystem. spaCy helps you
-                |  connect the statistical models trained by these libraries
-                |  to the rest of your application.
-
-            +button("/docs/usage/deep-learning", true, "primary")
-                |  Read more
-
-.o-inline-list.o-block.u-border-bottom.u-text-small.u-text-center.u-padding-small
-    +a(gh("spaCy") + "/releases")
-        strong.u-text-label.u-color-subtle #[+icon("code", 18)] Latest release:
-        |  v#{SPACY_VERSION}
-
-    if LATEST_NEWS
-        +a(LATEST_NEWS.url) #[+tag.o-icon New!] #{LATEST_NEWS.title}
+        +button("/usage/training", true, "primary")
+            |  Read more
 
 .o-content
     +grid
         +grid-col("two-thirds")
-            +terminal("lightning_tour.py").
-                # Install: pip install spacy && python -m spacy download en
+            +code-exec("Edit the code & try spaCy", true).
+                # pip install spacy
+                # python -m spacy download en_core_web_sm
+
                 import spacy
 
                 # Load English tokenizer, tagger, parser, NER and word vectors
-                nlp = spacy.load('en')
+                nlp = spacy.load('en_core_web_sm')
 
-                # Process a document, of any size
-                text = open('war_and_peace.txt').read()
+                # Process whole documents
+                text = (u"When Sebastian Thrun started working on self-driving cars at "
+                        u"Google in 2007, few people outside of the company took him "
+                        u"seriously. “I can tell you very senior CEOs of major American "
+                        u"car companies would shake my hand and turn away because I wasn’t "
+                        u"worth talking to,” said Thrun, now the co-founder and CEO of "
+                        u"online higher education startup Udacity, in an interview with "
+                        u"Recode earlier this week.")
                 doc = nlp(text)
 
-                # Hook in your own deep learning models
-                similarity_model = load_my_neural_network()
-                def install_similarity(doc):
-                    doc.user_hooks['similarity'] = similarity_model
-                nlp.pipeline.append(install_similarity)
+                # Find named entities, phrases and concepts
+                for entity in doc.ents:
+                    print(entity.text, entity.label_)
 
-                doc1 = nlp(u'the fries were gross')
-                doc2 = nlp(u'worst fries ever')
-                doc1.similarity(doc2)
+                # Determine semantic similarities
+                doc1 = nlp(u"my fries were super gross")
+                doc2 = nlp(u"such disgusting fries")
+                similarity = doc1.similarity(doc2)
+                print(doc1.text, doc2.text, similarity)
 
         +grid-col("third")
             +h(2) Features
             +list
                 +item Non-destructive #[strong tokenization]
-                +item Syntax-driven sentence segmentation
-                +item Pre-trained #[strong word vectors]
-                +item Part-of-speech tagging
                 +item #[strong Named entity] recognition
-                +item Labelled dependency parsing
-                +item Convenient string-to-int mapping
-                +item Export to numpy data arrays
-                +item GIL-free #[strong multi-threading]
-                +item Efficient binary serialization
+                +item Support for #[strong #{LANG_COUNT}+ languages]
+                +item #[strong #{MODEL_COUNT} statistical models] for #{MODEL_LANG_COUNT} languages
+                +item Pre-trained #[strong word vectors]
                 +item Easy #[strong deep learning] integration
-                +item Statistical models for #[strong English] and #[strong German]
+                +item Part-of-speech tagging
+                +item Labelled dependency parsing
+                +item Syntax-driven sentence segmentation
+                +item Built in #[strong visualizers] for syntax and NER
+                +item Convenient string-to-hash mapping
+                +item Export to numpy data arrays
+                +item Efficient binary serialization
+                +item Easy #[strong model packaging] and deployment
                 +item State-of-the-art speed
                 +item Robust, rigorously evaluated accuracy
 
++landing-banner("Convolutional neural network models", "New in v2.0")
+    p
+        |  spaCy v2.0 features new neural models for #[strong tagging],
+        |  #[strong parsing] and #[strong entity recognition]. The models have
+        |  been designed and implemented from scratch specifically for spaCy, to
+        |  give you an unmatched balance of speed, size and accuracy. A novel
+        |  bloom embedding strategy with subword features is used to support
+        |  huge vocabularies in tiny tables. Convolutional layers with residual
+        |  connections, layer normalization and maxout non-linearity are used,
+        |  giving much better efficiency than the standard BiLSTM solution.
+        |  Finally, the parser and NER use an imitation learning objective to
+        |  deliver accuracy in-line with the latest research systems,
+        |  even when  evaluated from raw text. With these innovations, spaCy
+        |  v2.0's models are #[strong 10&times; smaller],
+        |  #[strong 20% more accurate], and #[strong even cheaper to run] than
+        |  the previous generation.
+
+    .o-block-small.u-text-right
+        +button("/models", true, "secondary-light") Download models
+
++landing-logos("spaCy is trusted by", logos)
+    +button(gh("spacy") + "/stargazers", false, "secondary", "small")
+        |  and many more
+
++landing-logos("Featured on", features).o-block-small
+
++landing-banner("Prodigy: Radically efficient machine teaching", "From the makers of spaCy")
+    p
+        |  Prodigy is an #[strong annotation tool] so efficient that data scientists can
+        |  do the annotation themselves, enabling a new level of rapid
+        |  iteration. Whether you're working on entity recognition, intent
+        |  detection or image classification, Prodigy can help you
+        |  #[strong train and evaluate] your models faster. Stream in your own examples or
+        |  real-world data from live APIs, update your model in real-time and
+        |  chain models together to build more complex systems.
+
+    .o-block-small.u-text-right
+        +button("https://prodi.gy", true, "secondary-light") Try it out
+
+.o-content
+    +grid
+        +grid-col("half")
+            +h(2) Benchmarks
+
+            p
+                |  In 2015, independent researchers from Emory University and
+                |  Yahoo! Labs showed that spaCy offered the
+                |  #[strong fastest syntactic parser in the world] and that its
+                |  accuracy was #[strong within 1% of the best] available
+                |  (#[+a("https://aclweb.org/anthology/P/P15/P15-1038.pdf") Choi et al., 2015]).
+                |  spaCy v2.0, released in 2017, is more accurate than any of
+                |  the systems Choi et al. evaluated.
+
             .o-inline-list
-                +button("/docs/usage/lightning-tour", true, "secondary")
-                    | See examples
+                +button("/usage/facts-figures#benchmarks", true, "secondary") See details
 
-    .o-block.u-text-center.u-padding
-        h3.u-text-label.u-color-subtle.o-block spaCy is trusted by
-
-        each row in logos
-            +grid("center").o-inline-list
-                each details, name in row
-                    +a(details[0])
-                        img(src="/assets/img/logos/#{name}.png" alt=name width=(details[1] || 150)).u-padding-small
-
-.u-pattern.u-padding
-    +grid.o-card.o-content
-        +grid-col("quarter")
-            img(src="/assets/img/profile_matt.png" width="280")
-
-        +grid-col("three-quarters")
-            +h(2) What's spaCy all about?
-
-            p
-                |  By 2014, I'd been publishing NLP research for about 10
-                |  years. During that time, I saw a huge gap open between the
-                |  technology that Google-sized companies could take to market,
-                |  and what was available to everyone else. This was especially
-                |  clear when companies started trying to use my research. Like
-                |  most researchers, my work was free to read, but expensive to
-                |  apply. You could run my code, but its requirements were
-                |  narrow. My code's mission in life was to print results
-                |  tables for my papers — it was good at this job, and bad at
-                |  all others.
-
-            p
-                |  spaCy's #[+a("/docs/api/philosophy") mission] is to make
-                |  cutting-edge NLP practical and commonly available.  That's
-                |  why I left academia in 2014, to build a production-quality
-                |  open-source NLP library. It's why
-                |  #[+a("https://twitter.com/_inesmontani") Ines] joined the
-                |  project in 2015, to build visualisations, demos and
-                |  annotation tools that make NLP technologies less abstract
-                |  and easier to use. Together, we've founded
-                |  #[+a(COMPANY_URL, true) Explosion AI], to develop data packs
-                |  you can drop into spaCy to extend its capabilities. If
-                |  you're processing Hindi insurance claims, you need a model
-                |  for that. We can build it for you.
-
-            .o-block
-                +a("https://twitter.com/honnibal")
-                    +svg("graphics", "matt-signature", 60, 45).u-color-theme
+        +grid-col("half")
+            include usage/_facts-figures/_benchmarks-choi-2015

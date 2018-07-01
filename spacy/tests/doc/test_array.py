@@ -17,6 +17,26 @@ def test_doc_array_attr_of_token(en_tokenizer, en_vocab):
     assert feats_array[0][0] != feats_array[0][1]
 
 
+def test_doc_stringy_array_attr_of_token(en_tokenizer, en_vocab):
+    text = "An example sentence"
+    tokens = en_tokenizer(text)
+    example = tokens.vocab["example"]
+    assert example.orth != example.shape
+    feats_array = tokens.to_array((ORTH, SHAPE))
+    feats_array_stringy = tokens.to_array(("ORTH", "SHAPE"))
+    assert feats_array_stringy[0][0] == feats_array[0][0]
+    assert feats_array_stringy[0][1] == feats_array[0][1]
+
+
+def test_doc_scalar_attr_of_token(en_tokenizer, en_vocab):
+    text = "An example sentence"
+    tokens = en_tokenizer(text)
+    example = tokens.vocab["example"]
+    assert example.orth != example.shape
+    feats_array = tokens.to_array(ORTH)
+    assert feats_array.shape == (3,)
+
+
 def test_doc_array_tag(en_tokenizer):
     text = "A nice sentence."
     pos = ['DET', 'ADJ', 'NOUN', 'PUNCT']

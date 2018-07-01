@@ -19,6 +19,9 @@ body
 p
     @extend .o-block, .u-text
 
+p:empty
+    margin-bottom: 0
+
 
 //- Links
 
@@ -27,6 +30,9 @@ main table a,
 main > *:not(footer) li a,
 main aside a
     @extend .u-link
+
+a:focus
+    outline: 1px dotted $color-theme
 
 
 //- Selection

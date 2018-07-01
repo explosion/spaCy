@@ -1,0 +1,220 @@
+//- 💫 DOCS > USAGE > LINGUISTIC FEATURES > NAMED ENTITY RECOGNITION
+
+p
+    |  spaCy features an extremely fast statistical entity recognition system,
+    |  that assigns labels to contiguous spans of tokens. The default model
+    |  identifies a variety of named and numeric entities, including companies,
+    |  locations, organizations and products. You can add arbitrary classes to
+    |  the entity recognition system, and update the model with new examples.
+
++h(3, "101") Named Entity Recognition 101
+
+include ../_spacy-101/_named-entities
+
++h(3, "accessing") Accessing entity annotations
+
+p
+    |  The standard way to access entity annotations is the
+    |  #[+api("doc#ents") #[code doc.ents]] property, which produces a sequence
+    |  of #[+api("span") #[code Span]] objects. The entity type is accessible
+    |  either as a hash value or as a string, using the attributes
+    |  #[code ent.label] and #[code ent.label_]. The #[code Span] object acts
+    |  as a sequence of tokens, so you can iterate over the entity or index into
+    |  it. You can also get the text form of the whole entity, as though it were
+    |  a single token.
+
+p
+    |  You can also access token entity annotations using the
+    |  #[+api("token#attributes") #[code token.ent_iob]] and
+    |  #[+api("token#attributes") #[code token.ent_type]] attributes.
+    |  #[code token.ent_iob] indicates whether an entity starts, continues or
+    |  ends on the tag. If no entity type is set on a token, it will return an
+    |  empty string.
+
++aside("IOB Scheme")
+    |  #[code I] – Token is inside an entity.#[br]
+    |  #[code O] – Token is outside an entity.#[br]
+    |  #[code B] – Token is the beginning of an entity.#[br]
+
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u'San Francisco considers banning sidewalk delivery robots')
+
+    # document level
+    ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+    print(ents)
+
+    # token level
+    ent_san = [doc[0].text, doc[0].ent_iob_, doc[0].ent_type_]
+    ent_francisco = [doc[1].text, doc[1].ent_iob_, doc[1].ent_type_]
+    print(ent_san)  # [u'San', u'B', u'GPE']
+    print(ent_francisco)  # [u'Francisco', u'I', u'GPE']
+
++table(["Text", "ent_iob", "ent_iob_", "ent_type_", "Description"])
+    - var style = [0, 1, 1, 1, 0]
+    +annotation-row(["San", 3, "B", "GPE", "beginning of an entity"], style)
+    +annotation-row(["Francisco", 1, "I", "GPE", "inside an entity"], style)
+    +annotation-row(["considers", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["banning", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["sidewalk", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["delivery", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["robots", 2, "O", '""', "outside an entity"], style)
+
++h(3, "setting-entities") Setting entity annotations
+
+p
+    |  To ensure that the sequence of token annotations remains consistent, you
+    |  have to set entity annotations #[strong at the document level]. However,
+    |  you can't write directly to the #[code token.ent_iob] or
+    |  #[code token.ent_type] attributes, so the easiest way to set entities is
+    |  to assign to the #[+api("doc#ents") #[code doc.ents]] attribute
+    |  and create the new entity as a #[+api("span") #[code Span]].
+
++code-exec.
+    import spacy
+    from spacy.tokens import Span
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"FB is hiring a new Vice President of global policy")
+    ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+    print('Before', ents)
+    # the model didn't recognise "FB" as an entity :(
+
+    ORG = doc.vocab.strings[u'ORG']  # get hash value of entity label
+    fb_ent = Span(doc, 0, 1, label=ORG) # create a Span for the new entity
+    doc.ents = list(doc.ents) + [fb_ent]
+
+    ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+    print('After', ents)
+    # [(u'FB', 0, 2, 'ORG')] 🎉
+
+p
+    |  Keep in mind that you need to create a #[code Span] with the start and
+    |  end index of the #[strong token], not the start and end index of the
+    |  entity in the document. In this case, "FB" is token #[code (0, 1)] –
+    |  but at the document level, the entity will have the start and end
+    |  indices #[code (0, 2)].
+
++h(4, "setting-from-array") Setting entity annotations from array
+
+p
+    |  You can also assign entity annotations using the
+    |  #[+api("doc#from_array") #[code doc.from_array()]] method. To do this,
+    |  you should include both the #[code ENT_TYPE] and the #[code ENT_IOB]
+    |  attributes in the array you're importing from.
+
++code-exec.
+    import numpy
+    import spacy
+    from spacy.attrs import ENT_IOB, ENT_TYPE
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp.make_doc(u'London is a big city in the United Kingdom.')
+    print('Before', list(doc.ents))  # []
+
+    header = [ENT_IOB, ENT_TYPE]
+    attr_array = numpy.zeros((len(doc), len(header)))
+    attr_array[0, 0] = 3  # B
+    attr_array[0, 1] = doc.vocab.strings[u'GPE']
+    doc.from_array(header, attr_array)
+    print('After', list(doc.ents))  # [London]
+
++h(4, "setting-cython") Setting entity annotations in Cython
+
+p
+    |  Finally, you can always write to the underlying struct, if you compile
+    |  a #[+a("http://cython.org/") Cython] function. This is easy to do, and
+    |  allows you to write efficient native code.
+
++code.
+    # cython: infer_types=True
+    from spacy.tokens.doc cimport Doc
+
+    cpdef set_entity(Doc doc, int start, int end, int ent_type):
+        for i in range(start, end):
+            doc.c[i].ent_type = ent_type
+        doc.c[start].ent_iob = 3
+        for i in range(start+1, end):
+            doc.c[i].ent_iob = 2
+
+p
+    |  Obviously, if you write directly to the array of #[code TokenC*] structs,
+    |  you'll have responsibility for ensuring that the data is left in a
+    |  consistent state.
+
++h(3, "entity-types") Built-in entity types
+
++aside("Tip: Understanding entity types")
+    |  You can also use #[code spacy.explain()] to get the description for the
+    |  string representation of an entity label. For example,
+    |  #[code spacy.explain("LANGUAGE")] will return "any named language".
+
+include ../../api/_annotation/_named-entities
+
++h(3, "updating") Training and updating
+
+p
+    |  To provide training examples to the entity recogniser, you'll first need
+    |  to create an instance of the #[+api("goldparse") #[code GoldParse]] class.
+    |  You can specify your annotations in a stand-off format or as token tags.
+    |  If a character offset in your entity annotations don't fall on a token
+    |  boundary, the #[code GoldParse] class will treat that annotation as a
+    |  missing value.  This allows for more realistic training, because the
+    |  entity recogniser is allowed to learn from examples that may feature
+    |  tokenizer errors.
+
++code.
+    train_data = [('Who is Chaka Khan?', [(7, 17, 'PERSON')]),
+                  ('I like London and Berlin.', [(7, 13, 'LOC'), (18, 24, 'LOC')])]
+
++code.
+    doc = Doc(nlp.vocab, [u'rats', u'make', u'good', u'pets'])
+    gold = GoldParse(doc, entities=[u'U-ANIMAL', u'O', u'O', u'O'])
+
++infobox
+    |  For more details on #[strong training and updating] the named entity
+    |  recognizer, see the usage guides on #[+a("/usage/training") training]
+    |  or check out the runnable
+    |  #[+src(gh("spaCy", "examples/training/train_ner.py")) training script]
+    |  on GitHub.
+
++h(4, "updating-biluo") The BILUO Scheme
+
+p
+    |  You can also provide token-level entity annotation, using the
+    |  following tagging scheme to describe the entity boundaries:
+
+include ../../api/_annotation/_biluo
+
++h(3, "displacy") Visualizing named entities
+
+p
+    |  The #[+a(DEMOS_URL + "/displacy-ent/") displaCy #[sup ENT] visualizer]
+    |  lets you explore an entity recognition model's behaviour interactively.
+    |  If you're training a model, it's very useful to run the visualization
+    |  yourself. To help you do that, spaCy v2.0+ comes with a visualization
+    |  module. You can pass a #[code Doc] or a list of #[code Doc] objects to
+    |  displaCy and run #[+api("top-level#displacy.serve") #[code displacy.serve]] to
+    |  run the web server, or #[+api("top-level#displacy.render") #[code displacy.render]]
+    |  to generate the raw markup.
+
+p
+    |  For more details and examples, see the
+    |  #[+a("/usage/visualizers") usage guide on visualizing spaCy].
+
++code("Named Entity example").
+    import spacy
+    from spacy import displacy
+
+    text = """But Google is starting from behind. The company made a late push
+    into hardware, and Apple’s Siri, available on iPhones, and Amazon’s Alexa
+    software, which runs on its Echo and Dot devices, have clear leads in
+    consumer adoption."""
+
+    nlp = spacy.load('custom_ner_model')
+    doc = nlp(text)
+    displacy.serve(doc, style='ent')
+
++codepen("a73f8b68f9af3157855962b283b364e4", 345)

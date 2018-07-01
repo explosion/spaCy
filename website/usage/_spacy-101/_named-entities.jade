@@ -1,0 +1,41 @@
+//- 💫 DOCS > USAGE > SPACY 101 > NAMED ENTITIES
+
+p
+    |  A named entity is a "real-world object" that's assigned a name – for
+    |  example, a person, a country, a product or a book title. spaCy can
+    |  #[strong recognise] #[+a("/api/annotation#named-entities") various types]
+    |  of named entities in a document, by asking the model for a
+    |  #[strong prediction]. Because models are statistical and strongly depend
+    |  on the examples they were trained on, this doesn't always work
+    |  #[em perfectly] and might need some tuning later, depending on your use
+    |  case.
+
+p
+    |  Named entities are available as the #[code ents] property of a #[code Doc]:
+
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
+
+    for ent in doc.ents:
+        print(ent.text, ent.start_char, ent.end_char, ent.label_)
+
++aside
+    |  #[strong Text]: The original entity text.#[br]
+    |  #[strong Start]: Index of start of entity in the #[code Doc].#[br]
+    |  #[strong End]: Index of end of entity in the #[code Doc].#[br]
+    |  #[strong Label]: Entity label, i.e. type.
+
++table(["Text", "Start", "End", "Label", "Description"])
+    - var style = [0, 1, 1, 1, 0]
+    +annotation-row(["Apple", 0, 5, "ORG", "Companies, agencies, institutions."], style)
+    +annotation-row(["U.K.", 27, 31, "GPE", "Geopolitical entity, i.e. countries, cities, states."], style)
+    +annotation-row(["$1 billion", 44, 54, "MONEY", "Monetary values, including unit."], style)
+
+p
+    |  Using spaCy's built-in #[+a("/usage/visualizers") displaCy visualizer],
+    |  here's what our example sentence and its named entities look like:
+
++codepen("2f2ad1408ff79fc6a326ea3aedbb353b", 160)

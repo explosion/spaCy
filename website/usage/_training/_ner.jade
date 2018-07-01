@@ -1,0 +1,127 @@
+//- 💫 DOCS > USAGE > TRAINING > NER
+
+p
+    |  All #[+a("/models") spaCy models] support online learning, so
+    |  you can update a pre-trained model with new examples. You'll usually
+    |  need to provide many #[strong examples] to meaningfully improve the
+    |  system — a few hundred is a good start, although more is better.
+
+p
+    |  You should avoid iterating over the same few examples multiple times, or
+    |  the model is likely to "forget" how to annotate other examples. If you
+    |  iterate over the same few examples, you're effectively changing the loss
+    |  function. The optimizer will find a way to minimize the loss on your
+    |  examples, without regard for the consequences on the examples it's no
+    |  longer paying attention to. One way to avoid this
+    |  #[+a("https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting", true) "catastrophic forgetting" problem]
+    |  is to "remind"
+    |  the model of other examples by augmenting your annotations with sentences
+    |  annotated with entities automatically recognised by the original model.
+    |  Ultimately, this is an empirical process: you'll need to
+    |  #[strong experiment on your data] to find a solution that works best
+    |  for you.
+
++aside("Tip: Converting entity annotations", "💡")
+    |  You can train the entity recognizer with entity offsets or
+    |  annotations in the #[+a("/api/annotation#biluo") BILUO scheme]. The
+    |  #[code spacy.gold] module also exposes
+    |  #[+a("/api/goldparse#util") two helper functions] to convert offsets to
+    |  BILUO tags, and BILUO tags to entity offsets.
+
++h(3, "example-train-ner") Updating the Named Entity Recognizer
+
+p
+    |  This example shows how to update spaCy's entity recognizer
+    |  with your own examples, starting off with an existing, pre-trained
+    |  model, or from scratch using a blank #[code Language] class. To do
+    |  this, you'll need #[strong example texts] and the
+    |  #[strong character offsets] and #[strong labels] of each entity contained
+    |  in the texts.
+
+    +github("spacy", "examples/training/train_ner.py", 500)
+
++h(4) Step by step guide
+
++list("numbers")
+    +item
+        |  #[strong Load the model] you want to start with, or create an
+        |  #[strong empty model] using
+        |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
+        |  language. If you're using a blank model, don't forget to add the
+        |  entity recognizer to the pipeline. If you're using an existing model,
+        |  make sure to disable all other pipeline components during training
+        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
+        |  This way, you'll only be training the entity recognizer.
+
+    +item
+        |  #[strong Shuffle and loop over] the examples. For each example,
+        |  #[strong update the model] by calling
+        |  #[+api("language#update") #[code nlp.update]], which steps
+        |  through the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations to see whether
+        |  it was right. If it was wrong, it adjusts its weights so that the
+        |  correct action will score higher next time.
+
+    +item
+        |  #[strong Save] the trained model using
+        |  #[+api("language#to_disk") #[code nlp.to_disk]].
+
+    +item
+        |  #[strong Test] the model to make sure the entities in the training
+        |  data are recognised correctly.
+
++h(3, "example-new-entity-type") Training an additional entity type
+
+p
+    |  This script shows how to add a new entity type #[code ANIMAL] to an
+    |  existing pre-trained NER model, or an empty #[code Language] class. To
+    |  keep the example short and simple, only a few sentences are
+    |  provided as examples. In practice, you'll need many more — a few hundred
+    |  would be a good start. You will also likely need to mix in examples of
+    |  other entity types, which might be obtained by running the entity
+    |  recognizer over unlabelled sentences, and adding their annotations to the
+    |  training set.
+
++github("spacy", "examples/training/train_new_entity_type.py", 500)
+
++aside("Important note", "⚠️")
+    |  If you're using an existing model, make sure to mix in examples of
+    |  #[strong other entity types] that spaCy correctly recognized before.
+    |  Otherwise, your model might learn the new type, but "forget" what it
+    |  previously knew. This is also referred to as the
+    |  #[+a("https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting", true) "catastrophic forgetting" problem].
+
++h(4) Step by step guide
+
++list("numbers")
+    +item
+        |  #[strong Load the model] you want to start with, or create an
+        |  #[strong empty model] using
+        |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
+        |  language. If you're using a blank model, don't forget to add the
+        |  entity recognizer to the pipeline. If you're using an existing model,
+        |  make sure to disable all other pipeline components during training
+        |  using #[+api("language#disable_pipes") #[code nlp.disable_pipes]].
+        |  This way, you'll only be training the entity recognizer.
+
+    +item
+        |  #[strong Add the new entity label] to the entity recognizer using the
+        |  #[+api("entityrecognizer#add_label") #[code add_label]] method. You
+        |  can access the entity recognizer in the pipeline via
+        |  #[code nlp.get_pipe('ner')].
+
+    +item
+        |  #[strong Loop over] the examples and call
+        |  #[+api("language#update") #[code nlp.update]], which steps through
+        |  the words of the input. At each word, it makes a
+        |  #[strong prediction]. It then consults the annotations, to see
+        |  whether it was right. If it was wrong, it adjusts its weights so that
+        |  the correct action will score higher next time.
+
+    +item
+        |  #[strong Save] the trained model using
+        |  #[+api("language#to_disk") #[code nlp.to_disk]].
+
+    +item
+        |  #[strong Test] the model to make sure the new entity is recognised
+        |  correctly.

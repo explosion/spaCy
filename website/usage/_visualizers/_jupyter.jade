@@ -1,0 +1,36 @@
+//- 💫 DOCS > USAGE > VISUALIZERS > JUPYTER
+
+p
+    |  displaCy is able to detect whether you're working in a
+    |  #[+a("https://jupyter.org") Jupyter] notebook, and will return markup
+    |  that can be rendered in a cell straight away. When you export your
+    |  notebook, the visualizations will be included as HTML.
+
++code("Jupyter Example").
+    # don't forget to install a model, e.g.: python -m spacy download en
+    import spacy
+    from spacy import displacy
+
+    doc = nlp(u'Rats are various medium-sized, long-tailed rodents.')
+    displacy.render(doc, style='dep')
+
+    doc2 = nlp(LONG_NEWS_ARTICLE)
+    displacy.render(doc2, style='ent')
+
++aside("Enabling or disabling Jupyter mode")
+    |  To explicitly enable or disable "Jupyter mode", you can use the
+    |  #[code jupyter] keyword argument – e.g. to return raw HTML in a notebook,
+    |  or to force Jupyter rendering if auto-detection fails.
+
++image("/assets/img/displacy_jupyter.jpg", 700, false, "Example of using the displaCy dependency and named entity visualizer in a Jupyter notebook")
+
+p
+    |  Internally, displaCy imports #[code display] and #[code HTML] from
+    |  #[code IPython.core.display] and returns a Jupyter HTML object. If you
+    |  were doing it manually, it'd look like this:
+
++code.
+    from IPython.core.display import display, HTML
+
+    html = displacy.render(doc, style='dep')
+    display(HTML(html))

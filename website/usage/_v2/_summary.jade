@@ -1,0 +1,76 @@
+//- 💫 DOCS > USAGE > WHAT'S NEW IN V2.0 > SUMMARY
+
+p
+    |  We're very excited to finally introduce spaCy v2.0! On this page, you'll
+    |  find a summary of the new features, information on the backwards
+    |  incompatibilities, including a handy overview of what's been renamed or
+    |  deprecated. To help you make the most of v2.0, we also
+    |  #[strong re-wrote almost all of the usage guides and API docs], and added
+    |  more #[+a("/usage/examples") real-world examples]. If you're new to
+    |  spaCy, or just want to brush up on some NLP basics and the details of
+    |  the library, check out the
+    |  #[+a("/usage/spacy-101") spaCy 101 guide] that explains the most
+    |  important concepts with examples and illustrations.
+
++legacy
+
++h(2, "summary") Summary
+
++grid.o-no-block
+    +grid-col("half")
+
+        p
+            |  This release features entirely new
+            |  #[strong deep learning-powered models] for spaCy's tagger,
+            |  parser and entity recognizer. The new models are
+            |  #[strong 10&times; smaller], #[strong 20% more accurate] and
+            |  #[strong even cheaper to run] than the previous generation.
+
+        p
+            |  We've also made several usability improvements that are
+            |  particularly helpful for #[strong production deployments].
+            |  spaCy v2 now fully supports the Pickle protocol, making it
+            |  easy to use spaCy with
+            |  #[+a("https://spark.apache.org/") Apache Spark]. The
+            |  string-to-integer mapping is #[strong no longer stateful],
+            |  making it easy to reconcile annotations made in different
+            |  processes. Models are smaller and use less memory, and the
+            |  APIs for serialization are now much more consistent. Custom
+            |  pipeline components let you modify the #[code Doc] at any
+            |  stage in the pipeline. You can now also add your own
+            |  custom attributes, properties and methods to the #[code Doc],
+            |  #[code Token] and #[code Span].
+
+    +table-of-contents
+        +item #[+a("#summary") Summary]
+        +item #[+a("#features") New features]
+        +item #[+a("#features-models") Neural network models]
+        +item #[+a("#features-pipelines") Improved processing pipelines]
+        +item #[+a("#features-text-classification") Text classification]
+        +item #[+a("#features-hash-ids") Hash values as IDs]
+        +item #[+a("#features-vectors") Improved word vectors support]
+        +item #[+a("#features-serializer") Saving, loading and serialization]
+        +item #[+a("#features-displacy") displaCy visualizer]
+        +item #[+a("#features-language") Language data and lazy loading]
+        +item #[+a("#features-matcher") Revised matcher API and phrase matcher]
+        +item #[+a("#incompat") Backwards incompatibilities]
+        +item #[+a("#migrating") Migrating from spaCy v1.x]
+        +item #[+a("#benchmarks") Benchmarks]
+
+p
+    |  The main usability improvements you'll notice in spaCy v2.0 are around
+    |  #[strong defining, training and loading your own models] and components.
+    |  The new neural network models make it much easier to train a model from
+    |  scratch, or update an existing model with a few examples. In v1.x, the
+    |  statistical models depended on the state of the #[code Vocab]. If you
+    |  taught the model a new word, you would have to save and load a lot of
+    |  data — otherwise the model wouldn't correctly recall the features of your
+    |  new example. That's no longer the case.
+
+p
+    |  Due to some clever use of hashing, the statistical models
+    |  #[strong never change size], even as they learn new vocabulary items.
+    |  The whole pipeline is also now fully differentiable. Even if you don't
+    |  have explicitly annotated data, you can update spaCy using all the
+    |  #[strong latest deep learning tricks] like adversarial training, noise
+    |  contrastive estimation or reinforcement learning.

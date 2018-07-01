@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import pytest
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('text', [["a", "b", "c"]])
 def test_stringstore_freeze_oov(stringstore, text):
     assert stringstore[text[0]] == 1

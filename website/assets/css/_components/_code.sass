@@ -2,37 +2,118 @@
 
 //- Code block
 
-.c-code-block
+.c-code-block,
+.juniper-cell
     background: $color-front
-    color: $color-back
+    color: darken($color-back, 20)
     padding: 0.75em 0
-    border-radius: 2px
+    border-radius: $border-radius
     overflow: auto
     width: 100%
     max-width: 100%
     white-space: pre
     direction: ltr
 
+.c-code-block--has-icon
+    padding: 0
+    display: flex
+    border-top-left-radius: 0
+    border-bottom-left-radius: 0
+
+.c-code-block__icon
+    padding: 0 0 0 1rem
+    display: flex
+    justify-content: center
+    align-items: center
+
+    &.c-code-block__icon--border
+        border-left: 6px solid
 
 //- Code block content
 
-.c-code-block__content
+.c-code-block__content,
+.juniper-input,
+.jp-OutputArea
     display: block
-    font: normal 600 1.1rem/#{2} $font-code
+    font: normal normal 1.1rem/#{1.9} $font-code
     padding: 1em 2em
+
+.c-code-block__content[data-prompt]:before,
+    content: attr(data-prompt)
+    margin-right: 0.65em
+    display: inline-block
+    vertical-align: middle
+    opacity: 0.5
+
+//- Juniper
+
+[data-executable]
+    margin-bottom: 0
+
+.juniper-cell
+    border: 0
+
+.juniper-input
+    padding: 0
+
+.juniper-output
+    color: inherit
+    background: inherit
+    padding: 0
+
+.jp-OutputArea
+    &:not(:empty)
+        padding: 2rem 2rem 1rem
+        border-top: 1px solid $color-dark
+        margin-top: 2rem
+
+    .entities, svg
+        white-space: initial
+        font-family: inherit
+
+    .entities
+        font-size: 1.35rem
+
+.jp-OutputArea pre
+    font: inherit
+
+.jp-OutputPrompt.jp-OutputArea-prompt
+    padding-top: 0.5em
+    margin-right: 1rem
+    font-family: inherit
+    font-weight: bold
+
+.juniper-button
+    @extend .u-text-label, .u-text-label--dark
+    position: static
+
+.juniper-wrapper
+    position: relative
+
+.juniper-wrapper__text
+    @include position(absolute, top, right, 1.25rem, 1.25rem)
+    color: $color-subtle-dark
+    z-index: 10
+
+//- Code
+
+code, .CodeMirror, .jp-RenderedText, .jp-OutputArea
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
 
 
 //- Inline code
 
+*:not(a):not(.c-code-block) > code
+    color: $color-dark
+
 *:not(.c-code-block) > code
-    font: normal 600 0.8em/#{1} $font-code
-    background: rgba($color-front, 0.05)
-    box-shadow: 1px 1px 0 rgba($color-front, 0.1)
-    text-shadow: 1px 1px 0 rgba($color-back, 0.5)
-    color: $color-front
-    padding: 0.1em 0.5em
+    font-size: 90%
+    background-color: $color-subtle-light
+    padding: 0.2rem 0.4rem
+    border-radius: 0.25rem
+    font-family: $font-code
     margin: 0
-    border-radius: 1px
     box-decoration-break: clone
     white-space: nowrap
 
@@ -42,7 +123,7 @@
         text-shadow: none
 
 
-//- Syntax Highlighting
+//- Syntax Highlighting (Prism)
 
 [class*="language-"] .token
     &.comment, &.prolog, &.doctype, &.cdata, &.punctuation
@@ -72,3 +153,50 @@
 
     &.italic
         font-style: italic
+
+//- Syntax Highlighting (CodeMirror)
+
+.CodeMirror.cm-s-default
+    background: $color-front
+    color: darken($color-back, 20)
+
+    .CodeMirror-selected
+        background: $color-theme
+        color: $color-back
+
+    .CodeMirror-cursor
+        border-left-color: currentColor
+
+    .cm-variable-2
+        color: inherit
+        font-style: italic
+
+    .cm-comment
+        color: map-get($syntax-highlighting, comment)
+
+    .cm-keyword, .cm-builtin
+        color: map-get($syntax-highlighting, keyword)
+
+    .cm-operator
+        color: map-get($syntax-highlighting, operator)
+
+    .cm-string
+        color: map-get($syntax-highlighting, selector)
+
+    .cm-number
+        color: map-get($syntax-highlighting, number)
+
+    .cm-def
+        color: map-get($syntax-highlighting, function)
+
+//- Syntax highlighting (Jupyter)
+
+.jp-RenderedText pre
+    .ansi-cyan-fg
+        color: map-get($syntax-highlighting, function)
+
+    .ansi-green-fg
+        color: $color-green
+
+    .ansi-red-fg
+        color: map-get($syntax-highlighting, operator)

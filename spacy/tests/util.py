@@ -3,15 +3,50 @@ from __future__ import unicode_literals
 
 from ..tokens import Doc
 from ..attrs import ORTH, POS, HEAD, DEP
+from ..compat import path2str
 
+import pytest
 import numpy
+import tempfile
+import shutil
+import contextlib
+import msgpack
+from pathlib import Path
+
+
+MODELS = {}
+
+
+def load_test_model(model):
+    """Load a model if it's installed as a package, otherwise skip."""
+    if model not in MODELS:
+        module = pytest.importorskip(model)
+        MODELS[model] = module.load()
+    return MODELS[model]
+
+
+@contextlib.contextmanager
+def make_tempfile(mode='r'):
+    f = tempfile.TemporaryFile(mode=mode)
+    yield f
+    f.close()
+
+
+@contextlib.contextmanager
+def make_tempdir():
+    d = Path(tempfile.mkdtemp())
+    yield d
+    shutil.rmtree(path2str(d))
 
 
 def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):
     """Create Doc object from given vocab, words and annotations."""
     pos = pos or [''] * len(words)
+    tags = tags or [''] * len(words)
     heads = heads or [0] * len(words)
     deps = deps or [''] * len(words)
+    for value in (deps+tags+pos):
+        vocab.strings.add(value)
 
     doc = Doc(vocab, words=words)
     attrs = doc.to_array([POS, HEAD, DEP])
@@ -44,9 +79,9 @@ def add_vecs_to_vocab(vocab, vectors):
     """Add list of vector tuples to given vocab. All vectors need to have the
     same length. Format: [("text", [1, 2, 3])]"""
     length = len(vectors[0][1])
-    vocab.resize_vectors(length)
+    vocab.reset_vectors(width=length)
     for word, vec in vectors:
-        vocab[word].vector = vec
+        vocab.set_vector(word, vector=vec)
     return vocab
 
 
@@ -71,3 +106,13 @@ def assert_docs_equal(doc1, doc2):
     assert [ t.ent_type for t in doc1 ] == [ t.ent_type for t in doc2 ]
     assert [ t.ent_iob for t in doc1 ] == [ t.ent_iob for t in doc2 ]
     assert [ ent for ent in doc1.ents ] == [ ent for ent in doc2.ents ]
+
+
+def assert_packed_msg_equal(b1, b2):
+    """Assert that two packed msgpack messages are equal."""
+    msg1 = msgpack.loads(b1, encoding='utf8')
+    msg2 = msgpack.loads(b2, encoding='utf8')
+    assert sorted(msg1.keys()) == sorted(msg2.keys())
+    for (k1, v1), (k2, v2) in zip(sorted(msg1.items()), sorted(msg2.items())):
+        assert k1 == k2
+        assert v1 == v2

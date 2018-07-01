@@ -1,0 +1,37 @@
+//- 💫 DOCS > USAGE > INSTALL > CHANGELOG
+
++h(2, "changelog") Changelog
+    +button(gh("spacy") + "/releases", false, "secondary", "small").u-float-right.u-nowrap View releases
+
+section(data-vue="changelog")
+    +infobox(v-if="error")
+        |  Unable to load changelog from GitHub. Please see the
+        |  #[+a(gh("spacy") + "/releases") releases page] instead.
+
+    section(v-if="!error" v-cloak="")
+        +table(["Date", "Version", "Title"])(v-if="releases.length")
+            +row(v-for="version in releases")
+                +cell.u-nowrap #[+label(v-text="version.date")]
+                +cell
+                    +a(gh("spacy") + "/releases")(v-bind:href="version.url")
+                        code(v-text="version.tag")
+                +cell.u-text-small(v-text="version.title")
+
+    section(v-if="!error" v-cloak="")
+        +h(3) Pre-releases
+
+        +aside("About pre-releases")
+            .o-block-small
+                |  Pre-releases include alpha and beta versions, as well as release
+                |  candidates. They are not intended for production use. You can
+                |  download spaCy pre-releases via the #[code spacy-nightly] package
+                |  on pip.
+            +badge("https://img.shields.io/pypi/v/spacy-nightly.svg?style=flat-square", "https://pypi.python.org/pypi/spacy-nightly")
+
+        +table(["Date", "Version", "Title"])(v-if="prereleases.length")
+            +row(v-for="version in prereleases")
+                +cell.u-nowrap #[+label(v-text="version.date")]
+                +cell
+                    +a(gh("spacy") + "/releases")(v-bind:href="version.url")
+                        code(v-text="version.tag")
+                +cell.u-text-small(v-text="version.title")

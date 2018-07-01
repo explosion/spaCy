@@ -1,0 +1,81 @@
+//- 💫 DOCS > USAGE > MODELS > PRODUCTION USE
+
+p
+    |  If your application depends on one or more models,
+    |  you'll usually want to integrate them into your continuous integration
+    |  workflow and build process. While spaCy provides a range of useful helpers
+    |  for downloading, linking and loading models, the underlying functionality
+    |  is entirely based on native Python packages. This allows your application
+    |  to handle a model like any other package dependency.
+
++infobox("Training models for production")
+    |  For an example of an automated model training and build process, see
+    |  #[+a("/usage/training#example-training-spacy") this example] of how
+    |  we're training and packaging our models for spaCy.
+
++h(3, "models-download") Downloading and requiring model dependencies
+
+p
+    |  spaCy's built-in #[+api("cli#download") #[code download]] command
+    |  is mostly intended as a convenient, interactive wrapper. It performs
+    |  compatibility checks and prints detailed error messages and warnings.
+    |  However, if you're downloading models as part of an automated build
+    |  process, this only adds an unnecessary layer of complexity. If you know
+    |  which models your application needs, you should be specifying them directly.
+
+p
+    |  Because all models are valid Python packages, you can add them to your
+    |  application's #[code requirements.txt]. If you're running your own
+    |  internal PyPi installation, you can upload the models there. pip's
+    |  #[+a("https://pip.pypa.io/en/latest/reference/pip_install/#requirements-file-format") requirements file format]
+    |  supports both package names to download via a PyPi server, as well as direct
+    |  URLs.
+
++code("requirements.txt", "text").
+    spacy&gt;=2.0.0,&lt;3.0.0
+    #{gh("spacy-models")}/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz#en_core_web_sm
+
+p
+    |  Specifying #[code #egg=] with the package name tells pip
+    |  which package to expect from the download URL. This way, the
+    |  package won't be re-downloaded and overwritten if it's already
+    |  installed - just like when you're downloading a package from PyPi.
+
+p
+    |  All models are versioned and specify their spaCy dependency. This ensures
+    |  cross-compatibility and lets you specify exact version requirements for
+    |  each model. If you've trained your own model, you can use the
+    |  #[+api("cli#package") #[code package]] command to generate the required
+    |  meta data and turn it into a loadable package.
+
+
++h(3, "models-loading") Loading and testing models
+
+p
+    |  Downloading models directly via pip won't call spaCy's link
+    |  #[+api("cli#link") #[code link]] command, which creates
+    |  symlinks for model shortcuts. This means that you'll have to run this
+    |  command separately, or use the native #[code import] syntax to load the
+    |  models:
+
++code.
+    import en_core_web_sm
+    nlp = en_core_web_sm.load()
+
+p
+    |  In general, this approach is recommended for larger code bases, as it's
+    |  more "native", and doesn't depend on symlinks or rely on spaCy's loader
+    |  to resolve string names to model packages. If a model can't be
+    |  imported, Python will raise an #[code ImportError] immediately. And if a
+    |  model is imported but not used, any linter will catch that.
+
+p
+    |  Similarly, it'll give you more flexibility when writing tests that
+    |  require loading models. For example, instead of writing your own
+    |  #[code try] and #[code except] logic around spaCy's loader, you can use
+    |  #[+a("http://pytest.readthedocs.io/en/latest/") pytest]'s
+    |  #[+a("https://docs.pytest.org/en/latest/builtin.html#_pytest.outcomes.importorskip") #[code importorskip()]]
+    |  method to only run a test if a specific model or model version is
+    |  installed. Each model package exposes a #[code __version__] attribute
+    |  which you can also use to perform your own version compatibility checks
+    |  before loading a model.

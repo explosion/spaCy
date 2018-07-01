@@ -1,0 +1,154 @@
+//- 💫 DOCS > USAGE > PROCESSING PIPELINES > PIPELINES
+
+p
+    |  spaCy makes it very easy to create your own pipelines consisting of
+    |  reusable components – this includes spaCy's default tagger,
+    |  parser and entity regcognizer, but also your own custom processing
+    |  functions. A pipeline component can be added to an already existing
+    |  #[code nlp] object, specified when initialising a #[code Language] class,
+    |  or defined within a
+    |  #[+a("/usage/training#saving-loading") model package].
+
+p
+    |  When you load a model, spaCy first consults the model's
+    |  #[+a("/usage/training#saving-loading") #[code meta.json]]. The
+    |  meta typically includes the model details, the ID of a language class,
+    |  and an optional list of pipeline components. spaCy then does the
+    |  following:
+
++aside-code("meta.json (excerpt)", "json").
+    {
+        "name": "example_model",
+        "lang": "en"
+        "description": "Example model for spaCy",
+        "pipeline": ["tagger", "parser"]
+    }
+
++list("numbers")
+    +item
+        |  Load the #[strong language class and data] for the given ID via
+        |  #[+api("top-level#util.get_lang_class") #[code get_lang_class]] and initialise
+        |  it. The #[code Language] class contains the shared vocabulary,
+        |  tokenization rules and the language-specific annotation scheme.
+    +item
+        |  Iterate over the #[strong pipeline names] and create each component
+        |  using #[+api("language#create_pipe") #[code create_pipe]], which
+        |  looks them up in #[code Language.factories].
+    +item
+        |  Add each pipeline component to the pipeline in order, using
+        |  #[+api("language#add_pipe") #[code add_pipe]].
+    +item
+        |  Make the #[strong model data] available to the #[code Language] class
+        |  by calling #[+api("language#from_disk") #[code from_disk]] with the
+        |  path to the model data directory.
+
+p
+    |  So when you call this...
+
++code.
+    nlp = spacy.load('en')
+
+p
+    | ... the model tells spaCy to use the language #[code "en"] and the
+    |  pipeline #[code.u-break ["tagger", "parser", "ner"]]. spaCy will then
+    |  initialise #[code spacy.lang.en.English], and create each pipeline
+    |  component and add it to the processing pipeline. It'll then load in the
+    |  model's data from its data directory and return the modified
+    |  #[code Language] class for you to use as the #[code nlp] object.
+
+p
+    |  Fundamentally, a #[+a("/models") spaCy model] consists of three
+    |  components: #[strong the weights], i.e. binary data loaded in from a
+    |  directory, a #[strong pipeline] of functions called in order,
+    |  and #[strong language data] like the tokenization rules and annotation
+    |  scheme. All of this is specific to each model, and defined in the
+    |  model's #[code meta.json] – for example, a Spanish NER model requires
+    |  different weights, language data and pipeline components than an English
+    |  parsing and tagging model. This is also why the pipeline state is always
+    |  held by the #[code Language] class.
+    |  #[+api("spacy#load") #[code spacy.load]] puts this all together and
+    |  returns an instance of #[code Language]  with a pipeline set and access
+    |  to the binary data:
+
++code("spacy.load under the hood").
+    lang = 'en'
+    pipeline = ['tagger', 'parser', 'ner']
+    data_path = 'path/to/en_core_web_sm/en_core_web_sm-2.0.0'
+
+    cls = spacy.util.get_lang_class(lang)   # 1. get Language instance, e.g. English()
+    nlp = cls()                             # 2. initialise it
+    for name in pipeline:
+        component = nlp.create_pipe(name)   # 3. create the pipeline components
+        nlp.add_pipe(component)             # 4. add the component to the pipeline
+    nlp.from_disk(model_data_path)          # 5. load in the binary data
+
+p
+    |  When you call #[code nlp] on a text, spaCy will #[strong tokenize] it and
+    |  then #[strong call each component] on the #[code Doc], in order.
+    |  Since the model data is loaded, the components can access it to assign
+    |  annotations to the #[code Doc] object, and subsequently to the
+    |  #[code Token] and #[code Span] which are only views of the #[code Doc],
+    |  and don't own any data themselves. All components return the modified
+    |  document, which is then processed by the component next in the pipeline.
+
++code("The pipeline under the hood").
+    doc = nlp.make_doc(u'This is a sentence')   # create a Doc from raw text
+    for name, proc in nlp.pipeline:             # iterate over components in order
+        doc = proc(doc)                         # apply each component
+
+p
+    |  The current processing pipeline is available as #[code nlp.pipeline],
+    |  which returns a list of #[code (name, component)] tuples, or
+    |  #[code nlp.pipe_names], which only returns a list of human-readable
+    |  component names.
+
++code.
+    nlp.pipeline
+    # [('tagger', &lt;spacy.pipeline.Tagger&gt;), ('parser', &lt;spacy.pipeline.DependencyParser&gt;), ('ner', &lt;spacy.pipeline.EntityRecognizer&gt;)]
+    nlp.pipe_names
+    # ['tagger', 'parser', 'ner']
+
++h(3, "disabling") Disabling and modifying pipeline components
+
+p
+    |  If you don't need a particular component of the pipeline – for
+    |  example, the tagger or the parser, you can disable loading it. This can
+    |  sometimes make a big difference and improve loading speed. Disabled
+    |  component names can be provided to #[+api("spacy#load") #[code spacy.load()]],
+    |  #[+api("language#from_disk") #[code Language.from_disk()]] or the
+    |  #[code nlp] object itself as a list:
+
++code.
+    nlp = spacy.load('en', disable=['parser', 'tagger'])
+    nlp = English().from_disk('/model', disable=['ner'])
+
+p
+    |  You can also use the #[+api("language#remove_pipe") #[code remove_pipe]]
+    |  method to remove pipeline components from an existing pipeline, the
+    |  #[+api("language#rename_pipe") #[code rename_pipe]] method to rename them,
+    |  or the #[+api("language#replace_pipe") #[code replace_pipe]] method
+    |  to replace them with a custom component entirely (more details on this
+    |  in the section on #[+a("#custom-components") custom components].
+
++code.
+    nlp.remove_pipe('parser')
+    nlp.rename_pipe('ner', 'entityrecognizer')
+    nlp.replace_pipe('tagger', my_custom_tagger)
+
++infobox("Important note: disabling pipeline components")
+    .o-block
+        |  Since spaCy v2.0 comes with better support for customising the
+        |  processing pipeline components, the #[code parser], #[code tagger]
+        |  and #[code entity] keyword arguments have been replaced with
+        |  #[code disable], which takes a list of pipeline component names.
+        |  This lets you disable pre-defined components when loading
+        |  a model, or initialising a Language class via
+        |  #[+api("language#from_disk") #[code from_disk]].
+
+    +code-new.
+        nlp = spacy.load('en', disable=['ner'])
+        nlp.remove_pipe('parser')
+        doc = nlp(u"I don't want parsed")
+    +code-old.
+        nlp = spacy.load('en', tagger=False, entity=False)
+        doc = nlp(u"I don't want parsed", parse=False)

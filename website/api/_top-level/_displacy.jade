@@ -1,0 +1,247 @@
+//- 💫 DOCS > API > TOP-LEVEL > DISPLACY
+
+p
+    |  As of v2.0, spaCy comes with a built-in visualization suite. For more
+    |  info and examples, see the usage guide on
+    |  #[+a("/usage/visualizers") visualizing spaCy].
+
+
++h(3, "displacy.serve") displacy.serve
+    +tag method
+    +tag-new(2)
+
+p
+    |  Serve a dependency parse tree or named entity visualization to view it
+    |  in your browser. Will run a simple web server.
+
++aside-code("Example").
+    import spacy
+    from spacy import displacy
+    nlp = spacy.load('en')
+    doc1 = nlp(u'This is a sentence.')
+    doc2 = nlp(u'This is another sentence.')
+    displacy.serve([doc1, doc2], style='dep')
+
++table(["Name", "Type", "Description", "Default"])
+    +row
+        +cell #[code docs]
+        +cell list or #[code Doc]
+        +cell Document(s) to visualize.
+        +cell
+
+    +row
+        +cell #[code style]
+        +cell unicode
+        +cell Visualization style, #[code 'dep'] or #[code 'ent'].
+        +cell #[code 'dep']
+
+    +row
+        +cell #[code page]
+        +cell bool
+        +cell Render markup as full HTML page.
+        +cell #[code True]
+
+    +row
+        +cell #[code minify]
+        +cell bool
+        +cell Minify HTML markup.
+        +cell #[code False]
+
+    +row
+        +cell #[code options]
+        +cell dict
+        +cell #[+a("#options") Visualizer-specific options], e.g. colors.
+        +cell #[code {}]
+
+    +row
+        +cell #[code manual]
+        +cell bool
+        +cell
+            |  Don't parse #[code Doc] and instead, expect a dict or list of
+            |  dicts. #[+a("/usage/visualizers#manual-usage") See here]
+            |  for formats and examples.
+        +cell #[code False]
+
+    +row
+        +cell #[code port]
+        +cell int
+        +cell Port to serve visualization.
+        +cell #[code 5000]
+
++h(3, "displacy.render") displacy.render
+    +tag method
+    +tag-new(2)
+
+p Render a dependency parse tree or named entity visualization.
+
++aside-code("Example").
+    import spacy
+    from spacy import displacy
+    nlp = spacy.load('en')
+    doc = nlp(u'This is a sentence.')
+    html = displacy.render(doc, style='dep')
+
++table(["Name", "Type", "Description", "Default"])
+    +row
+        +cell #[code docs]
+        +cell list or #[code Doc]
+        +cell Document(s) to visualize.
+        +cell
+
+    +row
+        +cell #[code style]
+        +cell unicode
+        +cell Visualization style, #[code 'dep'] or #[code 'ent'].
+        +cell #[code 'dep']
+
+    +row
+        +cell #[code page]
+        +cell bool
+        +cell Render markup as full HTML page.
+        +cell #[code False]
+
+    +row
+        +cell #[code minify]
+        +cell bool
+        +cell Minify HTML markup.
+        +cell #[code False]
+
+    +row
+        +cell #[code jupyter]
+        +cell bool
+        +cell
+            |  Explicitly enable "#[+a("http://jupyter.org/") Jupyter] mode" to
+            |  return markup ready to be rendered in a notebook.
+        +cell detected automatically
+
+    +row
+        +cell #[code options]
+        +cell dict
+        +cell #[+a("#options") Visualizer-specific options], e.g. colors.
+        +cell #[code {}]
+
+    +row
+        +cell #[code manual]
+        +cell bool
+        +cell
+            |  Don't parse #[code Doc] and instead, expect a dict or list of
+            |  dicts. #[+a("/usage/visualizers#manual-usage") See here]
+            |  for formats and examples.
+        +cell #[code False]
+
+    +row("foot")
+        +cell returns
+        +cell unicode
+        +cell Rendered HTML markup.
+        +cell
+
++h(3, "displacy_options") Visualizer options
+
+p
+    |  The #[code options] argument lets you specify additional settings for
+    |  each visualizer. If a setting is not present in the options, the default
+    |  value will be used.
+
++h(4, "options-dep") Dependency Visualizer options
+
++aside-code("Example").
+    options = {'compact': True, 'color': 'blue'}
+    displacy.serve(doc, style='dep', options=options)
+
++table(["Name", "Type", "Description", "Default"])
+    +row
+        +cell #[code collapse_punct]
+        +cell bool
+        +cell
+            |  Attach punctuation to tokens. Can make the parse more readable,
+            |  as it prevents long arcs to attach punctuation.
+        +cell #[code True]
+
+    +row
+        +cell #[code compact]
+        +cell bool
+        +cell "Compact mode" with square arrows that takes up less space.
+        +cell #[code False]
+
+    +row
+        +cell #[code color]
+        +cell unicode
+        +cell Text color (HEX, RGB or color names).
+        +cell #[code '#000000']
+
+    +row
+        +cell #[code bg]
+        +cell unicode
+        +cell Background color (HEX, RGB or color names).
+        +cell #[code '#ffffff']
+
+    +row
+        +cell #[code font]
+        +cell unicode
+        +cell Font name or font family for all text.
+        +cell #[code 'Arial']
+
+    +row
+        +cell #[code offset_x]
+        +cell int
+        +cell Spacing on left side of the SVG in px.
+        +cell #[code 50]
+
+    +row
+        +cell #[code arrow_stroke]
+        +cell int
+        +cell Width of arrow path in px.
+        +cell #[code 2]
+
+    +row
+        +cell #[code arrow_width]
+        +cell int
+        +cell Width of arrow head in px.
+        +cell #[code 10] / #[code 8] (compact)
+
+    +row
+        +cell #[code arrow_spacing]
+        +cell int
+        +cell Spacing between arrows in px to avoid overlaps.
+        +cell #[code 20] / #[code 12] (compact)
+
+    +row
+        +cell #[code word_spacing]
+        +cell int
+        +cell Vertical spacing between words and arcs in px.
+        +cell #[code 45]
+
+    +row
+        +cell #[code distance]
+        +cell int
+        +cell Distance between words in px.
+        +cell #[code 175] / #[code 85] (compact)
+
++h(4, "displacy_options-ent") Named Entity Visualizer options
+
++aside-code("Example").
+    options = {'ents': ['PERSON', 'ORG', 'PRODUCT'],
+               'colors': {'ORG': 'yellow'}}
+    displacy.serve(doc, style='ent', options=options)
+
++table(["Name", "Type", "Description", "Default"])
+    +row
+        +cell #[code ents]
+        +cell list
+        +cell
+            |  Entity types to highlight (#[code None] for all types).
+        +cell #[code None]
+
+    +row
+        +cell #[code colors]
+        +cell dict
+        +cell
+            |  Color overrides. Entity types in uppercase should be mapped to
+            |  color names or values.
+        +cell #[code {}]
+
+p
+    |  By default, displaCy comes with colours for all
+    |  #[+a("/api/annotation#named-entities") entity types supported by spaCy].
+    |  If you're using custom entity types, you can use the #[code colors]
+    |  setting to add your own colours for them.

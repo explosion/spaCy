@@ -1,0 +1,32 @@
+//- 💫 DOCS > USAGE > FACTS & FIGURES
+
+include ../_includes/_mixins
+
++section("comparison")
+    +h(2, "comparison") Feature comparison
+    include _facts-figures/_feature-comparison
+
++section("benchmarks")
+    +h(2, "benchmarks") Benchmarks
+    include _facts-figures/_benchmarks
+
+
++section("powered-by")
+    +h(2, "powered-by") Powered by spaCy
+
+    p
+        |  Here's an overview of other tools and libraries that are using spaCy
+        |  behind the scenes.
+
+    +grid
+        +card("torchtext", "https://github.com/pytorch/text", "PyTorch", "github")
+            |  PyTorch's NLP datasets and loaders use spaCy for pre-processing
+            |  and tokenization.
+
+        +card("allennlp", "https://github.com/allenai/allennlp", "Allen Institute for Artificial Intelligence", "github")
+            |  The open-source NLP research library based on PyTorch uses spaCy
+            |  for pre-processing and tokenization.
+
++section("other-libraries")
+    +h(2, "other-libraries") spaCy and other libraries
+    include _facts-figures/_other-libraries

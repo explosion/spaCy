@@ -1,0 +1,179 @@
+//- 💫 DOCS > API > ANNOTATION > POS TAGS
+
+p
+    |  This section lists the fine-grained and coarse-grained part-of-speech
+    |  tags assigned by spaCy's #[+a("/models") models]. The individual mapping
+    |  is specific to the training corpus and can be defined in the respective
+    |  language data's #[+a("/usage/adding-languages#tag-map") #[code tag_map.py]].
+
++accordion("Universal Part-of-speech Tags")
+    p
+        |  spaCy also maps all language-specific part-of-speech tags to a small,
+        |  fixed set of word type tags following the
+        |  #[+a("http://universaldependencies.org/u/pos/") Universal Dependencies scheme].
+        |  The universal tags don't code for any morphological features and only
+        |  cover the word type. They're available as the
+        |  #[+api("token#attributes") #[code Token.pos]] and
+        |  #[+api("token#attributes") #[code Token.pos_]] attributes.
+
+    +table(["POS", "Description", "Examples"])
+        +ud-row("ADJ", "adjective", "big, old, green, incomprehensible, first")
+        +ud-row("ADP", "adposition", "in, to, during")
+        +ud-row("ADV", "adverb", "very, tomorrow, down, where, there")
+        +ud-row("AUX", "auxiliary", "is, has (done), will (do), should (do)")
+        +ud-row("CONJ", "conjunction", "and, or, but")
+        +ud-row("CCONJ", "coordinating conjunction", "and, or, but")
+        +ud-row("DET", "determiner", "a, an, the")
+        +ud-row("INTJ", "interjection", "psst, ouch, bravo, hello")
+        +ud-row("NOUN", "noun", "girl, cat, tree, air, beauty")
+        +ud-row("NUM", "numeral", "1, 2017, one, seventy-seven, IV, MMXIV")
+        +ud-row("PART", "particle", "'s, not, ")
+        +ud-row("PRON", "pronoun", "I, you, he, she, myself, themselves, somebody")
+        +ud-row("PROPN", "proper noun", "Mary, John, London, NATO, HBO")
+        +ud-row("PUNCT", "punctuation", "., (, ), ?")
+        +ud-row("SCONJ", "subordinating conjunction", "if, while, that")
+        +ud-row("SYM", "symbol", "$, %, §, ©, +, −, ×, ÷, =, :), 😝")
+        +ud-row("VERB", "verb", "run, runs, running, eat, ate, eating")
+        +ud-row("X", "other", "sfpksdpsxmsa")
+        +ud-row("SPACE", "space", "")
+
++accordion("English", "pos-en")
+    p
+        |  The English part-of-speech tagger uses the
+        |  #[+a("https://catalog.ldc.upenn.edu/LDC2013T19") OntoNotes 5] version of
+        |  the Penn Treebank tag set. We also map the tags to the simpler Google
+        |  Universal POS tag set.
+
+    +table(["Tag", "POS", "Morphology", "Description"])
+        +pos-row("-LRB-", "PUNCT", "PunctType=brck PunctSide=ini", "left round bracket")
+        +pos-row("-RRB-", "PUNCT", "PunctType=brck PunctSide=fin", "right round bracket")
+        +pos-row(",", "PUNCT", "PunctType=comm", "punctuation mark, comma")
+        +pos-row(":", "PUNCT", "", "punctuation mark, colon or ellipsis")
+        +pos-row(".", "PUNCT", "PunctType=peri", "punctuation mark, sentence closer")
+        +pos-row("''", "PUNCT", "PunctType=quot PunctSide=fin", "closing quotation mark")
+        +pos-row("\"\"", "PUNCT", "PunctType=quot PunctSide=fin", "closing quotation mark")
+        +pos-row("#", "SYM", "SymType=numbersign", "symbol, number sign")
+        +pos-row("``", "PUNCT", "PunctType=quot PunctSide=ini", "opening quotation mark")
+        +pos-row("$", "SYM", "SymType=currency", "symbol, currency")
+        +pos-row("ADD", "X", "", "email")
+        +pos-row("AFX", "ADJ", "Hyph=yes", "affix")
+        +pos-row("BES", "VERB", "", 'auxiliary "be"')
+        +pos-row("CC", "CONJ", "ConjType=coor", "conjunction, coordinating")
+        +pos-row("CD", "NUM", "NumType=card", "cardinal number")
+        +pos-row("DT", "DET", "determiner")
+        +pos-row("EX", "ADV", "AdvType=ex", "existential there")
+        +pos-row("FW", "X", "Foreign=yes", "foreign word")
+        +pos-row("GW", "X", "", "additional word in multi-word expression")
+        +pos-row("HVS", "VERB", "", 'forms of "have"')
+        +pos-row("HYPH", "PUNCT", "PunctType=dash", "punctuation mark, hyphen")
+        +pos-row("IN", "ADP", "", "conjunction, subordinating or preposition")
+        +pos-row("JJ", "ADJ", "Degree=pos", "adjective")
+        +pos-row("JJR", "ADJ", "Degree=comp", "adjective, comparative")
+        +pos-row("JJS", "ADJ", "Degree=sup", "adjective, superlative")
+        +pos-row("LS", "PUNCT", "NumType=ord", "list item marker")
+        +pos-row("MD", "VERB", "VerbType=mod", "verb, modal auxiliary")
+        +pos-row("NFP", "PUNCT", "", "superfluous punctuation")
+        +pos-row("NIL", "", "", "missing tag")
+        +pos-row("NN", "NOUN", "Number=sing", "noun, singular or mass")
+        +pos-row("NNP", "PROPN", "NounType=prop Number=sign", "noun, proper singular")
+        +pos-row("NNPS", "PROPN", "NounType=prop Number=plur", "noun, proper plural")
+        +pos-row("NNS", "NOUN", "Number=plur", "noun, plural")
+        +pos-row("PDT", "ADJ", "AdjType=pdt PronType=prn", "predeterminer")
+        +pos-row("POS", "PART", "Poss=yes", "possessive ending")
+        +pos-row("PRP", "PRON", "PronType=prs", "pronoun, personal")
+        +pos-row("PRP$", "ADJ", "PronType=prs Poss=yes", "pronoun, possessive")
+        +pos-row("RB", "ADV", "Degree=pos", "adverb")
+        +pos-row("RBR", "ADV", "Degree=comp", "adverb, comparative")
+        +pos-row("RBS", "ADV", "Degree=sup", "adverb, superlative")
+        +pos-row("RP", "PART", "", "adverb, particle")
+        +pos-row("_SP", "SPACE", "", "space")
+        +pos-row("SYM", "SYM", "", "symbol")
+        +pos-row("TO", "PART", "PartType=inf VerbForm=inf", "infinitival to")
+        +pos-row("UH", "INTJ", "", "interjection")
+        +pos-row("VB", "VERB", "VerbForm=inf", "verb, base form")
+        +pos-row("VBD", "VERB", "VerbForm=fin Tense=past", "verb, past tense")
+        +pos-row("VBG", "VERB", "VerbForm=part Tense=pres Aspect=prog", "verb, gerund or present participle")
+        +pos-row("VBN", "VERB", "VerbForm=part Tense=past Aspect=perf", "verb, past participle")
+        +pos-row("VBP", "VERB", "VerbForm=fin Tense=pres", "verb, non-3rd person singular present")
+        +pos-row("VBZ", "VERB", "VerbForm=fin Tense=pres Number=sing Person=3", "verb, 3rd person singular present")
+        +pos-row("WDT", "ADJ", "PronType=int|rel", "wh-determiner")
+        +pos-row("WP", "NOUN", "PronType=int|rel", "wh-pronoun, personal")
+        +pos-row("WP$", "ADJ", "Poss=yes PronType=int|rel", "wh-pronoun, possessive")
+        +pos-row("WRB", "ADV", "PronType=int|rel", "wh-adverb")
+        +pos-row("XX", "X", "", "unknown")
+
++accordion("German", "pos-de")
+    p
+        |  The German part-of-speech tagger uses the
+        |  #[+a("http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/TIGERCorpus/annotation/index.html") TIGER Treebank]
+        |  annotation scheme. We also map the tags to the simpler Google
+        |  Universal POS tag set.
+
+    +table(["Tag", "POS", "Morphology", "Description"])
+        +pos-row("$(", "PUNCT", "PunctType=brck", "other sentence-internal punctuation mark")
+        +pos-row("$,", "PUNCT", "PunctType=comm", "comma")
+        +pos-row("$.", "PUNCT", "PunctType=peri", "sentence-final punctuation mark")
+        +pos-row("ADJA", "ADJ", "", "adjective, attributive")
+        +pos-row("ADJD", "ADJ", "Variant=short", "adjective, adverbial or predicative")
+        +pos-row("ADV", "ADV", "", "adverb")
+        +pos-row("APPO", "ADP", "AdpType=post", "postposition")
+        +pos-row("APPR", "ADP", "AdpType=prep", "preposition; circumposition left")
+        +pos-row("APPRART", "ADP", "AdpType=prep PronType=art", "preposition with article")
+        +pos-row("APZR", "ADP", "AdpType=circ", "circumposition right")
+        +pos-row("ART", "DET", "PronType=art", "definite or indefinite article")
+        +pos-row("CARD", "NUM", "NumType=card", "cardinal number")
+        +pos-row("FM", "X", "Foreign=yes", "foreign language material")
+        +pos-row("ITJ", "INTJ", "", "interjection")
+        +pos-row("KOKOM", "CONJ", "ConjType=comp", "comparative conjunction")
+        +pos-row("KON", "CONJ", "", "coordinate conjunction")
+        +pos-row("KOUI", "SCONJ", "", 'subordinate conjunction with "zu" and infinitive')
+        +pos-row("KOUS", "SCONJ", "", "subordinate conjunction with sentence")
+        +pos-row("NE", "PROPN", "", "proper noun")
+        +pos-row("NNE", "PROPN", "", "proper noun")
+        +pos-row("NN", "NOUN", "", "noun, singular or mass")
+        +pos-row("PAV", "ADV", "PronType=dem", "pronominal adverb")
+        +pos-row("PROAV", "ADV", "PronType=dem", "pronominal adverb")
+        +pos-row("PDAT", "DET", "PronType=dem", "attributive demonstrative pronoun")
+        +pos-row("PDS", "PRON", "PronType=dem", "substituting demonstrative pronoun")
+        +pos-row("PIAT", "DET", "PronType=ind|neg|tot", "attributive indefinite pronoun without determiner")
+        +pos-row("PIDAT", "DET", "AdjType=pdt PronType=ind|neg|tot", "attributive indefinite pronoun with determiner")
+        +pos-row("PIS", "PRON", "PronType=ind|neg|tot", "substituting indefinite pronoun")
+        +pos-row("PPER", "PRON", "PronType=prs", "non-reflexive personal pronoun")
+        +pos-row("PPOSAT", "DET", "Poss=yes PronType=prs", "attributive possessive pronoun")
+        +pos-row("PPOSS", "PRON", "PronType=rel", "substituting possessive pronoun")
+        +pos-row("PRELAT", "DET", "PronType=rel", "attributive relative pronoun")
+        +pos-row("PRELS", "PRON", "PronType=rel", "substituting relative pronoun")
+        +pos-row("PRF", "PRON", "PronType=prs Reflex=yes", "reflexive personal pronoun")
+        +pos-row("PTKA", "PART", "", "particle with adjective or adverb")
+        +pos-row("PTKANT", "PART", "PartType=res", "answer particle")
+        +pos-row("PTKNEG", "PART", "Negative=yes", "negative particle")
+        +pos-row("PTKVZ", "PART", "PartType=vbp", "separable verbal particle")
+        +pos-row("PTKZU", "PART", "PartType=inf", '"zu" before infinitive')
+        +pos-row("PWAT", "DET", "PronType=int", "attributive interrogative pronoun")
+        +pos-row("PWAV", "ADV", "PronType=int", "adverbial interrogative or relative pronoun")
+        +pos-row("PWS", "PRON", "PronType=int", "substituting interrogative pronoun")
+        +pos-row("TRUNC", "X", "Hyph=yes", "word remnant")
+        +pos-row("VAFIN", "AUX", "Mood=ind VerbForm=fin", "finite verb, auxiliary")
+        +pos-row("VAIMP", "AUX", "Mood=imp VerbForm=fin", "imperative, auxiliary")
+        +pos-row("VAINF", "AUX", "VerbForm=inf", "infinitive, auxiliary")
+        +pos-row("VAPP", "AUX", "Aspect=perf VerbForm=fin", "perfect participle, auxiliary")
+        +pos-row("VMFIN", "VERB", "Mood=ind VerbForm=fin VerbType=mod", "finite verb, modal")
+        +pos-row("VMINF", "VERB", "VerbForm=fin VerbType=mod", "infinitive, modal")
+        +pos-row("VMPP", "VERB", "Aspect=perf VerbForm=part VerbType=mod", "perfect participle, modal")
+        +pos-row("VVFIN", "VERB", "Mood=ind VerbForm=fin", "finite verb, full")
+        +pos-row("VVIMP", "VERB", "Mood=imp VerbForm=fin", "imperative, full")
+        +pos-row("VVINF", "VERB", "VerbForm=inf", "infinitive, full")
+        +pos-row("VVIZU", "VERB", "VerbForm=inf", 'infinitive with "zu", full')
+        +pos-row("VVPP", "VERB", "Aspect=perf VerbForm=part", "perfect participle, full")
+        +pos-row("XY", "X", "", "non-word containing non-letter")
+        +pos-row("SP", "SPACE", "", "space")
+
+for _, lang in MODELS
+    - var exclude = ["en", "de", "xx"]
+    if !exclude.includes(lang)
+        - var lang_name = LANGUAGES[lang]
+        - var file_path = "lang/" + lang +  "/tag_map.py"
+        +accordion(lang_name, "pos-" + lang)
+            p
+                |  For details on the #{lang_name} tag map, see
+                |  #[+src(gh("spacy", "spacy/" + file_path)) #[code=file_path]].

@@ -13,21 +13,32 @@ Tests for spaCy modules and classes live in their own directories of the same na
 2. [Dos and don'ts](#dos-and-donts)
 3. [Parameters](#parameters)
 4. [Fixtures](#fixtures)
-5. [Helpers and utilities](#helpers-and-utilities)
-6. [Contributing to the tests](#contributing-to-the-tests)
+5. [Testing models](#testing-models)
+6. [Helpers and utilities](#helpers-and-utilities)
+7. [Contributing to the tests](#contributing-to-the-tests)
 
 
 ## Running the tests
 
+To show print statements, run the tests with `py.test -s`. To abort after the
+first failure, run them with `py.test -x`.
+
 ```bash
-py.test spacy                    # run basic tests
-py.test spacy --models           # run basic and model tests
-py.test spacy --slow             # run basic and slow tests
-py.test spacy --models --slow    # run all tests
+py.test spacy                        # run basic tests
+py.test spacy --models --en          # run basic and English model tests
+py.test spacy --models --all         # run basic and all model tests
+py.test spacy --slow                 # run basic and slow tests
+py.test spacy --models --all --slow  # run all tests
 ```
 
-To show print statements, run the tests with `py.test -s`. To abort after the first failure, run them with `py.test -x`.
+You can also run tests in a specific file or directory, or even only one
+specific test:
 
+```bash
+py.test spacy/tests/tokenizer  # run all tests in directory
+py.test spacy/tests/tokenizer/test_exceptions.py # run all tests in file
+py.test spacy/tests/tokenizer/test_exceptions.py::test_tokenizer_handles_emoji # run specific test
+```
 
 ## Dos and don'ts
 
@@ -83,14 +94,9 @@ These are the main fixtures that are currently available:
 | Fixture | Description |
 | --- | --- |
 | `tokenizer` | Creates **all available** language tokenizers and runs the test for **each of them**. |
-| `en_tokenizer` | Creates an English `Tokenizer` object. |
-| `de_tokenizer` | Creates a German `Tokenizer` object. |
-| `hu_tokenizer` | Creates a Hungarian `Tokenizer` object. |
-| `en_vocab` | Creates an English `Vocab` object. |
-| `en_entityrecognizer` | Creates an English `EntityRecognizer` object. |
-| `lemmatizer` | Creates a `Lemmatizer` object from the installed language data (`None` if no data is found).
-| `EN` | Creates an instance of `English`. Only use for tests that require the models. |
-| `DE` | Creates an instance of `German`. Only use for tests that require the models. |
+| `en_tokenizer`, `de_tokenizer`, ... | Creates an English, German etc. tokenizer. |
+| `en_vocab`, `en_entityrecognizer`, ... | Creates an instance of the English `Vocab`, `EntityRecognizer` object etc. |
+|  `EN`, `DE`, ... |  Creates a language class with a loaded model. For more info, see [Testing models](#testing-models). |
 | `text_file` | Creates an instance of `StringIO` to simulate reading from and writing to files. |
 | `text_file_b` | Creates an instance of `ByteIO` to simulate reading from and writing to files. |
 
@@ -103,6 +109,48 @@ def test_module_do_something(en_tokenizer):
 
 If all tests in a file require a specific configuration, or use the same complex example, it can be helpful to create a separate fixture. This fixture should be added at the top of each file. Make sure to use descriptive names for these fixtures and don't override any of the global fixtures listed above. **From looking at a test, it should immediately be clear which fixtures are used, and where they are coming from.**
 
+## Testing models
+
+Models should only be loaded and tested **if absolutely necessary** – for example, if you're specifically testing a model's performance, or if your test is related to model loading. If you only need an annotated `Doc`, you should use the `get_doc()` helper function to create it manually instead.
+
+To specify which language models a test is related to, set the language ID as an argument of `@pytest.mark.models`. This allows you to later run the tests with `--models --en`. You can then use the `EN` [fixture](#fixtures) to get a language
+class with a loaded model.
+
+```python
+@pytest.mark.models('en')
+def test_english_model(EN):
+    doc = EN(u'This is a test')
+```
+
+> ⚠️ **Important note:** In order to test models, they need to be installed as a packge. The [conftest.py](conftest.py) includes a list of all available models, mapped to their IDs, e.g. `en`. Unless otherwise specified, each model that's installed in your environment will be imported and tested. If you don't have a model installed, **the test will be skipped**.
+
+Under the hood, `pytest.importorskip` is used to import a model package and skip the test if the package is not installed. The `EN` fixture for example gets all
+available models for `en`, [parametrizes](#parameters) them to run the test for *each of them*, and uses `load_test_model()` to import the model and run the test, or skip it if the model is not installed.
+
+### Testing specific models
+
+Using the `load_test_model()` helper function, you can also write tests for specific models, or combinations of them:
+
+```python
+from .util import load_test_model
+
+@pytest.mark.models('en')
+def test_en_md_only():
+    nlp = load_test_model('en_core_web_md')
+    # test something specific to en_core_web_md
+
+@pytest.mark.models('en', 'fr')
+@pytest.mark.parametrize('model', ['en_core_web_md', 'fr_depvec_web_lg'])
+def test_different_models(model):
+    nlp = load_test_model(model)
+    # test something specific to the parametrized models
+```
+
+### Known issues and future improvements
+
+Using `importorskip` on a list of model packages is not ideal and we're looking to improve this in the future. But at the moment, it's the best way to ensure that tests are performed on specific model packages only, and that you'll always be able to run the tests, even if you don't have *all available models* installed. (If the tests made a call to `spacy.load('en')` instead, this would load whichever model you've created an `en` shortcut for. This may be one of spaCy's default models, but it could just as easily be your own custom English model.)
+
+The current setup also doesn't provide an easy way to only run tests on specific model versions. The `minversion` keyword argument on `pytest.importorskip` can take care of this, but it currently only checks for the package's `__version__` attribute. An alternative solution would be to load a model package's meta.json and skip if the model's version does not match the one specified in the test.
 
 ## Helpers and utilities
 
@@ -152,11 +200,11 @@ print([token.dep_ for token in doc])
 
 **Note:** There's currently no way of setting the serializer data for the parser without loading the models. If this is relevant to your test, constructing the `Doc` via `get_doc()` won't work.
 
-
 ### Other utilities
 
 | Name | Description |
 | --- | --- |
+| `load_test_model` | Load a model if it's installed as a package, otherwise skip test. |
 | `apply_transition_sequence(parser, doc, sequence)` | Perform a series of pre-specified transitions, to put the parser in a desired state. |
 | `add_vecs_to_vocab(vocab, vectors)` | Add list of vector tuples (`[("text", [1, 2, 3])]`) to given vocab. All vectors need to have the same length. |
 | `get_cosine(vec1, vec2)` | Get cosine for two given vectors. |

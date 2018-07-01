@@ -1,0 +1,250 @@
+//- 💫 DOCS > USAGE > WHAT'S NEW IN V2.0 > MIGRATING FROM SPACY 1.X
+
+p
+    |  Because we'e made so many architectural changes to the library, we've
+    |  tried to #[strong keep breaking changes to a minimum]. A lot of projects
+    |  follow the philosophy that if you're going to break anything, you may as
+    |  well break everything. We think migration is easier if there's a logic to
+    |  what has changed. We've therefore followed a policy of avoiding
+    |  breaking changes to the #[code Doc], #[code Span] and #[code Token]
+    |  objects. This way, you can focus on only migrating the code that
+    |  does training, loading and serialization — in other words, code that
+    |  works with the #[code nlp] object directly. Code that uses the
+    |  annotations should continue to work.
+
++infobox("Important note", "⚠️")
+    |  If you've trained your own models, keep in mind that your train and
+    |  runtime inputs must match. This means you'll have to
+    |  #[strong retrain your models] with spaCy v2.0.
+
++h(3, "migrating-document-processing") Document processing
+
+p
+    |  The #[+api("language#pipe") #[code Language.pipe]] method allows spaCy
+    |  to batch documents, which brings a
+    |  #[strong significant performance advantage] in v2.0. The new neural
+    |  networks introduce some overhead per batch, so if you're processing a
+    |  number of documents in a row, you should use #[code nlp.pipe] and process
+    |  the texts as a stream.
+
++code-new docs = nlp.pipe(texts)
++code-old docs = (nlp(text) for text in texts)
+
+p
+    |  To make usage easier, there's now a boolean #[code as_tuples]
+    |  keyword argument, that lets you pass in an iterator of
+    |  #[code (text, context)] pairs, so you can get back an iterator of
+    |  #[code (doc, context)] tuples.
+
++h(3, "migrating-saving-loading") Saving, loading and serialization
+
+p
+    |  Double-check all calls to #[code spacy.load()] and make sure they don't
+    |  use the #[code path] keyword argument. If you're only loading in binary
+    |  data and not a model package that can construct its own #[code Language]
+    |  class and pipeline, you should now use the
+    |  #[+api("language#from_disk") #[code Language.from_disk()]] method.
+
++code-new.
+    nlp = spacy.load('/model')
+    nlp = spacy.blank('en').from_disk('/model/data')
++code-old nlp = spacy.load('en', path='/model')
+
+p
+    |  Review all other code that writes state to disk or bytes.
+    |  All containers, now share the same, consistent API for saving and
+    |  loading. Replace saving with #[code to_disk()] or #[code to_bytes()], and
+    |  loading with #[code from_disk()] and #[code from_bytes()].
+
++code-new.
+    nlp.to_disk('/model')
+    nlp.vocab.to_disk('/vocab')
+
++code-old.
+    nlp.save_to_directory('/model')
+    nlp.vocab.dump('/vocab')
+
+p
+    |  If you've trained models with input from v1.x, you'll need to
+    |  #[strong retrain them] with spaCy v2.0. All previous models will not
+    |  be compatible with the new version.
+
++h(3, "migrating-languages") Processing pipelines and language data
+
+p
+    |  If you're importing language data or #[code Language] classes, make sure
+    |  to change your import statements to import from #[code spacy.lang]. If
+    |  you've added your own custom language, it needs to be moved to
+    |  #[code spacy/lang/xx] and adjusted accordingly.
+
+.o-block
+    +code-new from spacy.lang.en import English
+    +code-old from spacy.en import English
+
+p
+    |  If you've been using custom pipeline components, check out the new
+    |  guide on #[+a("/usage/processing-pipelines") processing pipelines].
+    |  Pipeline components are now #[code (name, func)] tuples. Appending
+    |  them to the pipeline still works – but the
+    |  #[+api("language#add_pipe") #[code add_pipe]] method now makes this
+    |  much more convenient. Methods for removing, renaming, replacing and
+    |  retrieving components have been added as well. Components can now
+    |  be disabled by passing a list of their names to the #[code disable]
+    |  keyword argument on load, or by using
+    |  #[+api("language#disable_pipes") #[code disable_pipes]] as a method
+    |  or contextmanager:
+
+.o-block
+    +code-new.
+        nlp = spacy.load('en', disable=['tagger', 'ner'])
+        with nlp.disable_pipes('parser'):
+            doc = nlp(u"I don't want parsed")
+    +code-old.
+        nlp = spacy.load('en', tagger=False, entity=False)
+        doc = nlp(u"I don't want parsed", parse=False)
+
+p
+    |  To add spaCy's built-in pipeline components to your pipeline,
+    |  you can still import and instantiate them directly – but it's more
+    |  convenient to use the new
+    |  #[+api("language#create_pipe") #[code create_pipe]] method with the
+    |  component name, i.e. #[code 'tagger'], #[code 'parser'], #[code 'ner']
+    |  or #[code 'textcat'].
+
++code-new.
+    tagger = nlp.create_pipe('tagger')
+    nlp.add_pipe(tagger, first=True)
+
++code-old.
+    from spacy.pipeline import Tagger
+    tagger = Tagger(nlp.vocab)
+    nlp.pipeline.insert(0, tagger)
+
++h(3, "migrating-training") Training
+
+p
+    |  All built-in pipeline components are now subclasses of
+    |  #[+api("pipe") #[code Pipe]], fully trainable and serializable,
+    |  and follow the same API. Instead of updating the model and telling
+    |  spaCy when to #[em stop], you can now explicitly call
+    |  #[+api("language#begin_training") #[code begin_training]], which
+    |  returns an optimizer you can pass into the
+    |  #[+api("language#update") #[code update]] function. While #[code update]
+    |  still accepts sequences of #[code Doc] and #[code GoldParse] objects,
+    |  you can now also pass in a list of strings and dictionaries describing
+    |  the annotations. We call this the #[+a("/usage/training#training-simple-style") "simple training style"].
+    |  This is also the recommended usage, as it removes one layer of
+    |  abstraction from the training.
+
++code-new.
+    optimizer = nlp.begin_training()
+    for itn in range(1000):
+        for texts, annotations in train_data:
+            nlp.update(texts, annotations, sgd=optimizer)
+    nlp.to_disk('/model')
++code-old.
+    for itn in range(1000):
+        for text, entities in train_data:
+            doc = Doc(text)
+            gold = GoldParse(doc, entities=entities)
+            nlp.update(doc, gold)
+    nlp.end_training()
+    nlp.save_to_directory('/model')
+
++h(3, "migrating-doc") Attaching custom data to the Doc
+
+p
+    |  Previously, you had to create a new container in order to attach custom
+    |  data to a #[code Doc] object. This often required converting the
+    | #[code Doc] objects to and from arrays. In spaCy v2.0, you can set your
+    |  own attributes, properties and methods on the #[code Doc], #[code Token]
+    |  and #[code Span] via
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom extensions].
+    |  This means that your application can – and should – only pass around
+    |  #[code Doc] objects and refer to them as the single source of truth.
+
++code-new.
+    Doc.set_extension('meta', getter=get_doc_meta)
+    doc_with_meta = nlp(u'This is a doc with meta data')
+    meta = doc._.meta
+
++code-old.
+    doc = nlp(u'This is a regular doc')
+    doc_array = doc.to_array(['ORTH', 'POS'])
+    doc_with_meta = {'doc_array': doc_array, 'meta': get_doc_meta(doc_array)}
+
+p
+    |  If you wrap your extension attributes in a
+    |  #[+a("/usage/processing-pipelines#custom-components") custom pipeline component],
+    |  they will be assigned automatically when you call #[code nlp] on a text.
+    |  If your application assigns custom data to spaCy's container objects,
+    |  or includes other utilities that interact with the pipeline, consider
+    |  moving this logic into its own extension module.
+
++code-new.
+    nlp.add_pipe(meta_component)
+    doc = nlp(u'Doc with a custom pipeline that assigns meta')
+    meta = doc._.meta
+
++code-old.
+    doc = nlp(u'Doc with a standard pipeline')
+    meta = get_meta(doc)
+
++h(3, "migrating-strings") Strings and hash values
+
+p
+    |  The change from integer IDs to hash values may not actually affect your
+    |  code very much. However, if you're adding strings to the vocab manually,
+    |  you now need to call #[+api("stringstore#add") #[code StringStore.add()]]
+    |  explicitly. You can also now be sure that the string-to-hash mapping will
+    |  always match across vocabularies.
+
++code-new.
+    nlp.vocab.strings.add(u'coffee')
+    nlp.vocab.strings[u'coffee']       # 3197928453018144401
+    other_nlp.vocab.strings[u'coffee'] # 3197928453018144401
+
++code-old.
+    nlp.vocab.strings[u'coffee']       # 3672
+    other_nlp.vocab.strings[u'coffee'] # 40259
+
++h(3, "migrating-matcher") Adding patterns and callbacks to the matcher
+
+p
+    |  If you're using the matcher, you can now add patterns in one step. This
+    |  should be easy to update – simply merge the ID, callback and patterns
+    |  into one call to #[+api("matcher#add") #[code Matcher.add()]]. The
+    |  matcher now also supports string keys, which saves you an extra import.
+    |  If you've been using #[strong acceptor functions], you'll need to move
+    |  this logic into the
+    |  #[+a("/usage/linguistic-features#on_match") #[code on_match] callbacks].
+    |  The callback function is invoked on every match and will give you access to
+    |  the doc, the index of the current match and all total matches. This lets
+    |  you both accept or reject the match, and define the actions to be
+    |  triggered.
+
+.o-block
+    +code-new.
+        matcher.add('GoogleNow', merge_phrases, [{'ORTH': 'Google'}, {'ORTH': 'Now'}])
+
+    +code-old.
+        matcher.add_entity('GoogleNow', on_match=merge_phrases)
+        matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
+p
+    |  If you need to match large terminology lists, you can now also
+    |  use the #[+api("phrasematcher") #[code PhraseMatcher]], which accepts
+    |  #[code Doc] objects as match patterns and is more efficient than the
+    |  regular, rule-based matcher.
+
++code-new.
+    from spacy.matcher import PhraseMatcher
+    matcher = PhraseMatcher(nlp.vocab)
+    patterns = [nlp(text) for text in large_terminology_list]
+    matcher.add('PRODUCT', None, *patterns)
+
++code-old.
+    matcher = Matcher(nlp.vocab)
+    matcher.add_entity('PRODUCT')
+    for text in large_terminology_list
+        matcher.add_pattern('PRODUCT', [{ORTH: text}])

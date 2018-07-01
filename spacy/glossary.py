@@ -3,6 +3,16 @@ from __future__ import unicode_literals
 
 
 def explain(term):
+    """Get a description for a given POS tag, dependency label or entity type.
+
+    term (unicode): The term to explain.
+    RETURNS (unicode): The explanation, or `None` if not found in the glossary.
+
+    EXAMPLE:
+        >>> spacy.explain(u'NORP')
+        >>> doc = nlp(u'Hello world')
+        >>> print([w.text, w.tag_, spacy.explain(w.tag_) for w in doc])
+    """
     if term in GLOSSARY:
         return GLOSSARY[term]
 
@@ -60,7 +70,7 @@ GLOSSARY = {
     'JJR':          'adjective, comparative',
     'JJS':          'adjective, superlative',
     'LS':           'list item marker',
-    'MD':           'verb, modal auxillary',
+    'MD':           'verb, modal auxiliary',
     'NIL':          'missing tag',
     'NN':           'noun, singular or mass',
     'NNP':          'noun, proper singular',
@@ -91,7 +101,7 @@ GLOSSARY = {
     'NFP':          'superfluous punctuation',
     'GW':           'additional word in multi-word expression',
     'XX':           'unknown',
-    'BES':          'auxillary "be"',
+    'BES':          'auxiliary "be"',
     'HVS':          'forms of "have"',
 
 
@@ -105,7 +115,7 @@ GLOSSARY = {
     'ADJA':         'adjective, attributive',
     'ADJD':         'adjective, adverbial or predicative',
     'APPO':         'postposition',
-    'APRP':         'preposition; circumposition left',
+    'APPR':         'preposition; circumposition left',
     'APPRART':      'preposition with article',
     'APZR':         'circumposition right',
     'ART':          'definite or indefinite article',
@@ -254,7 +264,6 @@ GLOSSARY = {
     'nk':           'noun kernel element',
     'nmc':          'numerical component',
     'oa':           'accusative object',
-    'oa':           'second accusative object',
     'oc':           'clausal object',
     'og':           'genitive object',
     'op':           'prepositional object',
@@ -283,6 +292,7 @@ GLOSSARY = {
     'PRODUCT':      'Objects, vehicles, foods, etc. (not services)',
     'EVENT':        'Named hurricanes, battles, wars, sports events, etc.',
     'WORK_OF_ART':  'Titles of books, songs, etc.',
+    'LAW':          'Named documents made into laws.',
     'LANGUAGE':     'Any named language',
     'DATE':         'Absolute or relative dates or periods',
     'TIME':         'Times smaller than a day',
@@ -290,5 +300,15 @@ GLOSSARY = {
     'MONEY':        'Monetary values, including unit',
     'QUANTITY':     'Measurements, as of weight or distance',
     'ORDINAL':      '"first", "second", etc.',
-    'CARDINAL':     'Numerals that do not fall under another type'
+    'CARDINAL':     'Numerals that do not fall under another type',
+
+
+    # Named Entity Recognition
+    # Wikipedia
+    # http://www.sciencedirect.com/science/article/pii/S0004370212000276
+    # https://pdfs.semanticscholar.org/5744/578cc243d92287f47448870bb426c66cc941.pdf
+
+    'PER':          'Named person or family.',
+    'MISC':         ('Miscellaneous entities, e.g. events, nationalities, '
+                     'products or works of art'),
 }

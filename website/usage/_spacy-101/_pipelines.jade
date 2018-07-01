@@ -1,0 +1,82 @@
+//- 💫 DOCS > USAGE > SPACY 101 > PIPELINES
+
+p
+    |  When you call #[code nlp] on a text, spaCy first tokenizes the text to
+    |  produce a #[code Doc] object. The #[code Doc] is then processed in several
+    |  different steps – this is also referred to as the
+    |  #[strong processing pipeline]. The pipeline used by the
+    |  #[+a("/models") default models] consists of a tagger, a parser and an
+    |  entity recognizer. Each pipeline component returns the processed
+    |  #[code Doc], which is then passed on to the next component.
+
++graphic("/assets/img/pipeline.svg")
+    include ../../assets/img/pipeline.svg
+
++aside
+    |  #[strong Name:] ID of the pipeline component.#[br]
+    |  #[strong Component:] spaCy's implementation of the component.#[br]
+    |  #[strong Creates:] Objects, attributes and properties modified and set by
+    |  the component.
+
++table(["Name", "Component", "Creates", "Description"])
+    +row
+        +cell #[strong tokenizer]
+        +cell #[+api("tokenizer") #[code Tokenizer]]
+        +cell #[code Doc]
+        +cell Segment text into tokens.
+
+    +row("divider")
+        +cell #[strong tagger]
+        +cell #[+api("tagger") #[code Tagger]]
+        +cell #[code Doc[i].tag]
+        +cell Assign part-of-speech tags.
+
+    +row
+        +cell #[strong parser]
+        +cell #[+api("dependencyparser") #[code DependencyParser]]
+        +cell
+            |  #[code Doc[i].head],
+            |  #[code Doc[i].dep],
+            |  #[code Doc.sents],
+            |  #[code Doc.noun_chunks]
+        +cell Assign dependency labels.
+
+    +row
+        +cell #[strong ner]
+        +cell #[+api("entityrecognizer") #[code EntityRecognizer]]
+        +cell #[code Doc.ents], #[code Doc[i].ent_iob], #[code Doc[i].ent_type]
+        +cell Detect and label named entities.
+
+    +row
+        +cell #[strong textcat]
+        +cell #[+api("textcategorizer") #[code TextCategorizer]]
+        +cell #[code Doc.cats]
+        +cell Assign document labels.
+
+    +row("divider")
+        +cell #[strong &period;&period;&period;]
+        +cell #[+a("/usage/processing-pipelines#custom-components") custom components]
+        +cell #[code Doc._.xxx], #[code Token._.xxx], #[code Span._.xxx]
+        +cell Assign custom attributes, methods or properties.
+
+p
+    |  The processing pipeline always #[strong depends on the statistical model]
+    |  and its capabilities. For example, a pipeline can only include an entity
+    |  recognizer component if the model includes data to make predictions of
+    |  entity labels. This is why each model will specify the pipeline to use
+    |  in its meta data, as a simple list containing the component names:
+
++code(false, "json").
+    "pipeline": ["tagger", "parser", "ner"]
+
+p
+    |  Although you can mix and match pipeline components, their
+    |  #[strong order and combination] is usually important. Some components may
+    |  require certain modifications on the #[code Doc] to process it. As the
+    |  processing pipeline is applied, spaCy encodes the document's internal
+    |  #[strong meaning representations] as an array of floats, also called a
+    |  #[strong tensor]. This includes the tokens and their context, which is
+    |  required for the first component, the tagger, to make predictions of the
+    |  part-of-speech tags. Because spaCy's models are neural network models,
+    |  they only "speak" tensors and expect the input #[code Doc] to have
+    |  a #[code tensor].

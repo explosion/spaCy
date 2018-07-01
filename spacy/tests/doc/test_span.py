@@ -1,0 +1,135 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
+from ..util import get_doc
+from ...attrs import ORTH, LENGTH
+from ...tokens import Doc
+from ...vocab import Vocab
+
+import pytest
+
+
+@pytest.fixture
+def doc(en_tokenizer):
+    text = "This is a sentence. This is another sentence. And a third."
+    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
+    deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
+            'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
+    tokens = en_tokenizer(text)
+    return get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
+
+
+def test_spans_sent_spans(doc):
+    sents = list(doc.sents)
+    assert sents[0].start == 0
+    assert sents[0].end == 5
+    assert len(sents) == 3
+    assert sum(len(sent) for sent in sents) == len(doc)
+
+
+def test_spans_root(doc):
+    span = doc[2:4]
+    assert len(span) == 2
+    assert span.text == 'a sentence'
+    assert span.root.text == 'sentence'
+    assert span.root.head.text == 'is'
+
+def test_spans_string_fn(doc):
+    span = doc[0:4]
+    assert len(span) == 4
+    assert span.text == 'This is a sentence'
+    assert span.upper_ == 'THIS IS A SENTENCE'
+    assert span.lower_ == 'this is a sentence'
+
+def test_spans_root2(en_tokenizer):
+    text = "through North and South Carolina"
+    heads = [0, 3, -1, -2, -4]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    assert doc[-2:].root.text == 'Carolina'
+
+
+def test_spans_span_sent(doc):
+    """Test span.sent property"""
+    assert len(list(doc.sents))
+    assert doc[:2].sent.root.text == 'is'
+    assert doc[:2].sent.text == 'This is a sentence .'
+    assert doc[6:7].sent.root.left_edge.text == 'This'
+
+
+def test_spans_lca_matrix(en_tokenizer):
+    """Test span's lca matrix generation"""
+    tokens = en_tokenizer('the lazy dog slept')
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
+    lca = doc[:2].get_lca_matrix()
+    assert(lca[0, 0] == 0)
+    assert(lca[0, 1] == -1)
+    assert(lca[1, 0] == -1)
+    assert(lca[1, 1] == 1)
+
+
+def test_span_similarity_match():
+    doc = Doc(Vocab(), words=['a', 'b', 'a', 'b'])
+    span1 = doc[:2]
+    span2 = doc[2:]
+    assert span1.similarity(span2) == 1.0
+    assert span1.similarity(doc) == 0.0
+    assert span1[:1].similarity(doc.vocab['a']) == 1.0
+
+
+def test_spans_default_sentiment(en_tokenizer):
+    """Test span.sentiment property's default averaging behaviour"""
+    text = "good stuff bad stuff"
+    tokens = en_tokenizer(text)
+    tokens.vocab[tokens[0].text].sentiment = 3.0
+    tokens.vocab[tokens[2].text].sentiment = -2.0
+    doc = get_doc(tokens.vocab, [t.text for t in tokens])
+    assert doc[:2].sentiment == 3.0 / 2
+    assert doc[-2:].sentiment == -2. / 2
+    assert doc[:-1].sentiment == (3.+-2) / 3.
+
+
+def test_spans_override_sentiment(en_tokenizer):
+    """Test span.sentiment property's default averaging behaviour"""
+    text = "good stuff bad stuff"
+    tokens = en_tokenizer(text)
+    tokens.vocab[tokens[0].text].sentiment = 3.0
+    tokens.vocab[tokens[2].text].sentiment = -2.0
+    doc = get_doc(tokens.vocab, [t.text for t in tokens])
+    doc.user_span_hooks['sentiment'] = lambda span: 10.0
+    assert doc[:2].sentiment == 10.0
+    assert doc[-2:].sentiment == 10.0
+    assert doc[:-1].sentiment == 10.0
+
+
+def test_spans_are_hashable(en_tokenizer):
+    """Test spans can be hashed."""
+    text = "good stuff bad stuff"
+    tokens = en_tokenizer(text)
+    span1 = tokens[:2]
+    span2 = tokens[2:4]
+    assert hash(span1) != hash(span2)
+    span3 = tokens[0:2]
+    assert hash(span3) == hash(span1)
+
+
+def test_spans_by_character(doc):
+    span1 = doc[1:-2]
+    span2 = doc.char_span(span1.start_char, span1.end_char, label='GPE')
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == 'GPE'
+
+
+def test_span_to_array(doc):
+    span = doc[1:-2]
+    arr = span.to_array([ORTH, LENGTH])
+    assert arr.shape == (len(span), 2)
+    assert arr[0, 0] == span[0].orth
+    assert arr[0, 1] == len(span[0])
+
+
+def test_span_as_doc(doc):
+    span = doc[4:10]
+    span_doc = span.as_doc()
+    assert span.text == span_doc.text.strip()

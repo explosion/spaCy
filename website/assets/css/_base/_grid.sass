@@ -15,6 +15,15 @@
         align-items: center
         justify-content: center
 
+    &.o-grid--vcenter
+        align-items: center
+
+    &.o-grid--space
+        justify-content: space-between
+
+    &.o-grid--nowrap
+        flex-wrap: nowrap
+
 
 //- Grid column
 
@@ -22,7 +31,7 @@
     $grid-gutter: 2rem
 
     margin-top: $grid-gutter
-    overflow: hidden
+    min-width: 0  // hack to prevent overflow
 
     @include breakpoint(min, lg)
         display: flex
@@ -39,6 +48,9 @@
     @include breakpoint(max, md)
         flex: 0 0 100%
         flex-flow: column wrap
+
+    &.o-grid__col--no-gutter
+        margin-top: 0
 
     // Fix overflow issue in old browsers
 

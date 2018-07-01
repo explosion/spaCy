@@ -1,4 +1,4 @@
-cpdef enum symbol_t:
+cdef enum symbol_t:
     NIL
     IS_ALPHA
     IS_ASCII
@@ -13,13 +13,13 @@ cpdef enum symbol_t:
     LIKE_EMAIL
     IS_STOP
     IS_OOV
+    IS_BRACKET
+    IS_QUOTE
+    IS_LEFT_PUNCT
+    IS_RIGHT_PUNCT
+    IS_CURRENCY
 
-    FLAG14 = 14
-    FLAG15
-    FLAG16
-    FLAG17
-    FLAG18
-    FLAG19
+    FLAG19 = 19
     FLAG20
     FLAG21
     FLAG22
@@ -82,6 +82,7 @@ cpdef enum symbol_t:
     ENT_IOB
     ENT_TYPE
     HEAD
+    SENT_START
     SPACY
     PROB
 
@@ -454,15 +455,6 @@ cpdef enum symbol_t:
     root
     xcomp
 
-# Move these up to FLAG14--FLAG18 once we finish the functionality
-# and are ready to regenerate the model.
-#IS_BRACKET
-#IS_QUOTE
-#IS_LEFT_PUNCT
-#IS_RIGHT_PUNCT
-
-# These symbols are currently missing. However, if we add them currently,
-# we'll throw off the integer index and the model will have to be retrained.
-# We therefore wait until the next data version to add them.
-# acl
-
+    acl
+    LAW
+    LANG

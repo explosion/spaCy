@@ -1,75 +1,98 @@
+#!/usr/bin/env python
+# coding: utf8
+"""Example of training spaCy dependency parser, starting off with an existing
+model or a blank model. For more details, see the documentation:
+* Training: https://spacy.io/usage/training
+* Dependency Parse: https://spacy.io/usage/linguistic-features#dependency-parse
+
+Compatible with: spaCy v2.0.0+
+"""
 from __future__ import unicode_literals, print_function
-import json
-import pathlib
+
+import plac
 import random
-
+from pathlib import Path
 import spacy
-from spacy.pipeline import DependencyParser
-from spacy.gold import GoldParse
-from spacy.tokens import Doc
 
 
-def train_parser(nlp, train_data, left_labels, right_labels):
-    parser = DependencyParser(
-                nlp.vocab,
-                left_labels=left_labels,
-                right_labels=right_labels)
-    for itn in range(1000):
-        random.shuffle(train_data)
-        loss = 0
-        for words, heads, deps in train_data:
-            doc = Doc(nlp.vocab, words=words)
-            gold = GoldParse(doc, heads=heads, deps=deps)
-            loss += parser.update(doc, gold)
-    parser.model.end_training()
-    return parser
+# training data
+TRAIN_DATA = [
+    ("They trade mortgage-backed securities.", {
+        'heads': [1, 1, 4, 4, 5, 1, 1],
+        'deps': ['nsubj', 'ROOT', 'compound', 'punct', 'nmod', 'dobj', 'punct']
+    }),
+    ("I like London and Berlin.", {
+        'heads': [1, 1, 1, 2, 2, 1],
+        'deps': ['nsubj', 'ROOT', 'dobj', 'cc', 'conj', 'punct']
+    })
+]
 
 
-def main(model_dir=None):
-    if model_dir is not None:
-        model_dir = pathlib.Path(model_dir)
-        if not model_dir.exists():
-            model_dir.mkdir()
-        assert model_dir.is_dir()
+@plac.annotations(
+    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    output_dir=("Optional output directory", "option", "o", Path),
+    n_iter=("Number of training iterations", "option", "n", int))
+def main(model=None, output_dir=None, n_iter=10):
+    """Load the model, set up the pipeline and train the parser."""
+    if model is not None:
+        nlp = spacy.load(model)  # load existing spaCy model
+        print("Loaded model '%s'" % model)
+    else:
+        nlp = spacy.blank('en')  # create blank Language class
+        print("Created blank 'en' model")
 
-    nlp = spacy.load('en', tagger=False, parser=False, entity=False, add_vectors=False)
+    # add the parser to the pipeline if it doesn't exist
+    # nlp.create_pipe works for built-ins that are registered with spaCy
+    if 'parser' not in nlp.pipe_names:
+        parser = nlp.create_pipe('parser')
+        nlp.add_pipe(parser, first=True)
+    # otherwise, get it, so we can add labels to it
+    else:
+        parser = nlp.get_pipe('parser')
 
-    train_data = [
-        (
-            ['They', 'trade',  'mortgage', '-', 'backed', 'securities', '.'],
-            [1, 1, 4, 4, 5, 1, 1],
-            ['nsubj', 'ROOT', 'compound', 'punct', 'nmod', 'dobj', 'punct']
-        ),
-        (
-            ['I', 'like', 'London', 'and', 'Berlin', '.'],
-            [1, 1, 1, 2, 2, 1],
-            ['nsubj', 'ROOT', 'dobj', 'cc', 'conj', 'punct']
-        )
-    ]
-    left_labels = set()
-    right_labels = set()
-    for _, heads, deps in train_data:
-        for i, (head, dep) in enumerate(zip(heads, deps)):
-            if i < head:
-                left_labels.add(dep)
-            elif i > head:
-                right_labels.add(dep)
-    parser = train_parser(nlp, train_data, sorted(left_labels), sorted(right_labels))
+    # add labels to the parser
+    for _, annotations in TRAIN_DATA:
+        for dep in annotations.get('deps', []):
+            parser.add_label(dep)
 
-    doc = Doc(nlp.vocab, words=['I', 'like', 'securities', '.'])
-    parser(doc)
-    for word in doc:
-        print(word.text, word.dep_, word.head.text)
+    # get names of other pipes to disable them during training
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'parser']
+    with nlp.disable_pipes(*other_pipes):  # only train parser
+        optimizer = nlp.begin_training()
+        for itn in range(n_iter):
+            random.shuffle(TRAIN_DATA)
+            losses = {}
+            for text, annotations in TRAIN_DATA:
+                nlp.update([text], [annotations], sgd=optimizer, losses=losses)
+            print(losses)
 
-    if model_dir is not None:
-        with (model_dir / 'config.json').open('w') as file_:
-            json.dump(parser.cfg, file_)
-        parser.model.dump(str(model_dir / 'model'))
+    # test the trained model
+    test_text = "I like securities."
+    doc = nlp(test_text)
+    print('Dependencies', [(t.text, t.dep_, t.head.text) for t in doc])
+
+    # save model to output directory
+    if output_dir is not None:
+        output_dir = Path(output_dir)
+        if not output_dir.exists():
+            output_dir.mkdir()
+        nlp.to_disk(output_dir)
+        print("Saved model to", output_dir)
+
+        # test the saved model
+        print("Loading from", output_dir)
+        nlp2 = spacy.load(output_dir)
+        doc = nlp2(test_text)
+        print('Dependencies', [(t.text, t.dep_, t.head.text) for t in doc])
 
 
 if __name__ == '__main__':
-    main()
-    # I nsubj like
-    # like ROOT like
-    # securities dobj like
-    # . cc securities
+    plac.call(main)
+
+    # expected result:
+    # [
+    #   ('I', 'nsubj', 'like'),
+    #   ('like', 'ROOT', 'like'),
+    #   ('securities', 'dobj', 'like'),
+    #   ('.', 'punct', 'like')
+    # ]

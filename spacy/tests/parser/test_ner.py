@@ -1,53 +1,73 @@
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
+
 import pytest
 
-from spacy.attrs import LOWER
-from spacy.matcher import Matcher
+from ...vocab import Vocab
+from ...syntax.ner import BiluoPushDown
+from ...gold import GoldParse
+from ...tokens import Doc
 
 
-@pytest.mark.models
-def test_simple_types(EN):
-    tokens = EN(u'Mr. Best flew to New York on Saturday morning.')
-    ents = list(tokens.ents)
-    assert ents[0].start == 1
-    assert ents[0].end == 2
-    assert ents[0].label_ == 'PERSON'
-    assert ents[1].start == 4
-    assert ents[1].end == 6
-    assert ents[1].label_ == 'GPE'
+@pytest.fixture
+def vocab():
+    return Vocab()
 
 
-@pytest.mark.models
-def test_consistency_bug(EN):
-    '''Test an arbitrary sequence-consistency bug encountered during speed test'''
-    tokens = EN(u'Where rap essentially went mainstream, illustrated by seminal Public Enemy, Beastie Boys and L.L. Cool J. tracks.')
-
-    tokens = EN(u'''Charity and other short-term aid have buoyed them so far, and a tax-relief bill working its way through Congress would help. But the September 11 Victim Compensation Fund, enacted by Congress to discourage people from filing lawsuits, will determine the shape of their lives for years to come.\n\n''', entity=False)
-    tokens.ents += tuple(EN.matcher(tokens))
-    EN.entity(tokens)
+@pytest.fixture
+def doc(vocab):
+    return Doc(vocab, words=['Casey', 'went', 'to', 'New', 'York', '.'])
 
 
-@pytest.mark.models
-def test_unit_end_gazetteer(EN):
-    '''Test a bug in the interaction between the NER model and the gazetteer'''
-    matcher = Matcher(EN.vocab,
-        {'MemberNames':
-            ('PERSON', {},
-                [
-                    [{LOWER: 'cal'}],
-                    [{LOWER: 'cal'}, {LOWER: 'henderson'}],
-                ]
-            )
-        }
-    )
-
-    doc = EN(u'who is cal the manager of?')
-    if len(list(doc.ents)) == 0:
-        ents = matcher(doc)
-        assert len(ents) == 1
-        doc.ents += tuple(ents)
-        EN.entity(doc)
-        assert list(doc.ents)[0].text == 'cal'
+@pytest.fixture
+def entity_annots(doc):
+    casey = doc[0:1]
+    ny = doc[3:5]
+    return [(casey.start_char, casey.end_char, 'PERSON'),
+            (ny.start_char, ny.end_char, 'GPE')]
 
 
- 
+@pytest.fixture
+def entity_types(entity_annots):
+    return sorted(set([label for (s, e, label) in entity_annots]))
+
+
+@pytest.fixture
+def tsys(vocab, entity_types):
+    actions = BiluoPushDown.get_actions(entity_types=entity_types)
+    return BiluoPushDown(vocab.strings, actions)
+
+
+def test_get_oracle_moves(tsys, doc, entity_annots):
+    gold = GoldParse(doc, entities=entity_annots)
+    tsys.preprocess_gold(gold)
+    act_classes = tsys.get_oracle_sequence(doc, gold)
+    names = [tsys.get_class_name(act) for act in act_classes]
+    assert names == ['U-PERSON', 'O', 'O', 'B-GPE', 'L-GPE', 'O']
+
+def test_get_oracle_moves_negative_entities(tsys, doc, entity_annots):
+    entity_annots = [(s, e, '!' + label) for s, e, label in entity_annots]
+    gold = GoldParse(doc, entities=entity_annots)
+    for i, tag in enumerate(gold.ner):
+        if tag == 'L-!GPE':
+            gold.ner[i] = '-'
+    tsys.preprocess_gold(gold)
+    act_classes = tsys.get_oracle_sequence(doc, gold)
+    names = [tsys.get_class_name(act) for act in act_classes]
+
+
+def test_get_oracle_moves_negative_entities2(tsys, vocab):
+    doc = Doc(vocab, words=['A', 'B', 'C', 'D'])
+    gold = GoldParse(doc, entities=[])
+    gold.ner = ['B-!PERSON', 'L-!PERSON', 'B-!PERSON', 'L-!PERSON']
+    tsys.preprocess_gold(gold)
+    act_classes = tsys.get_oracle_sequence(doc, gold)
+    names = [tsys.get_class_name(act) for act in act_classes]
+
+
+def test_get_oracle_moves_negative_O(tsys, vocab):
+    doc = Doc(vocab, words=['A', 'B', 'C', 'D'])
+    gold = GoldParse(doc, entities=[])
+    gold.ner = ['O', '!O', 'O', '!O']
+    tsys.preprocess_gold(gold)
+    act_classes = tsys.get_oracle_sequence(doc, gold)
+    names = [tsys.get_class_name(act) for act in act_classes]

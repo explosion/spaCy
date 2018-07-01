@@ -1,27 +1,28 @@
 //- 💫 INCLUDES > SCRIPTS
 
-script(src="/assets/js/main.js?v#{V_JS}")
-script(src="/assets/js/prism.js")
+- scripts = ["vendor/prism.min", "vendor/vue.min"]
+- if (SECTION == "universe") scripts.push("vendor/vue-markdown.min")
+- if (quickstart) scripts.push("vendor/quickstart.min")
+- if (IS_PAGE) scripts.push("vendor/in-view.min")
+- if (IS_PAGE || SECTION == "index") scripts.push("vendor/juniper.min")
 
-if SECTION == "docs"
-    if quickstart
-        script(src="/assets/js/quickstart.js")
-        script var qs = new Quickstart("#qs");
-
-    script.
-        ((window.gitter = {}).chat = {}).options = {
-            useStyles: false,
-            activationElement: '.js-gitter-button',
-            targetElement: '.js-gitter',
-            room: '!{SOCIAL.gitter}'
-        };
-
-    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
+for script in scripts
+    script(src="/assets/js/" + script + ".js")
+script(src="/assets/js/main.js?v#{V_JS}" type=(environment == "deploy") ? null : "module")
 
 if environment == "deploy"
+    script(src="https://www.google-analytics.com/analytics.js", async)
     script
         | window.ga=window.ga||function(){
         | (ga.q=ga.q||[]).push(arguments)}; ga.l=+new Date;
         | ga('create', '#{ANALYTICS}', 'auto'); ga('send', 'pageview');
 
-    script(async src="https://www.google-analytics.com/analytics.js")
+if IS_PAGE
+    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
+    script
+        | ((window.gitter = {}).chat = {}).options = {
+        |     useStyles: false,
+        |     activationElement: '.js-gitter-button',
+        |     targetElement: '.js-gitter',
+        |     room: '!{SOCIAL.gitter}'
+        | };

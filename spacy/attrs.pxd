@@ -1,5 +1,5 @@
 # Reserve 64 values for flag features
-cpdef enum attr_id_t:
+cdef enum attr_id_t:
     NULL_ATTR
     IS_ALPHA
     IS_ASCII
@@ -18,9 +18,9 @@ cpdef enum attr_id_t:
     IS_QUOTE
     IS_LEFT_PUNCT
     IS_RIGHT_PUNCT
+    IS_CURRENCY
 
-    FLAG18 = 18
-    FLAG19
+    FLAG19 = 19
     FLAG20
     FLAG21
     FLAG22
@@ -83,6 +83,7 @@ cpdef enum attr_id_t:
     ENT_IOB
     ENT_TYPE
     HEAD
+    SENT_START
     SPACY
     PROB
 

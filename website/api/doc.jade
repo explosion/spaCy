@@ -1,0 +1,795 @@
+//- 💫 DOCS > API > DOC
+
+include ../_includes/_mixins
+
+p
+    |  A #[code Doc] is a sequence of #[+api("token") #[code Token]] objects.
+    |  Access sentences and named entities, export annotations to numpy arrays,
+    |  losslessly serialize to compressed binary strings. The #[code Doc] object
+    |  holds an array of #[code TokenC] structs. The Python-level #[code Token]
+    |  and #[+api("span") #[code Span]] objects are views of this array, i.e.
+    |  they don't own the data themselves.
+
++aside-code("Example").
+    # Construction 1
+    doc = nlp(u'Some text')
+
+    # Construction 2
+    from spacy.tokens import Doc
+    doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
+                               spaces=[True, False, False])
+
++h(2, "init") Doc.__init__
+    +tag method
+
+p
+    |  Construct a #[code Doc] object. The most common way to get a #[code Doc]
+    |  object is via the #[code nlp] object.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A storage container for lexical types.
+
+    +row
+        +cell #[code words]
+        +cell -
+        +cell A list of strings to add to the container.
+
+    +row
+        +cell #[code spaces]
+        +cell -
+        +cell
+            |  A list of boolean values indicating whether each word has a
+            |  subsequent space. Must have the same length as #[code words], if
+            |  specified. Defaults to a sequence of #[code True].
+
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell The newly constructed object.
+
++h(2, "getitem") Doc.__getitem__
+    +tag method
+
+p
+    |  Get a #[+api("token") #[code Token]] object at position #[code i], where
+    |  #[code i] is an integer. Negative indexing is supported, and follows the
+    |  usual Python semantics, i.e. #[code doc[-2]] is #[code doc[len(doc) - 2]].
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    assert doc[0].text == 'Give'
+    assert doc[-1].text == '.'
+    span = doc[1:3]
+    assert span.text == 'it back'
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code i]
+        +cell int
+        +cell The index of the token.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Token]
+        +cell The token at #[code doc[i]].
+
+p
+    |  Get a #[+api("span") #[code Span]] object, starting at position
+    |  #[code start] (token index) and ending at position #[code end] (token
+    |  index).
+
+p
+    |  For instance, #[code doc[2:5]] produces a span consisting of tokens 2, 3
+    |  and 4. Stepped slices (e.g. #[code doc[start : end : step]]) are not
+    |  supported, as #[code Span] objects must be contiguous (cannot have gaps).
+    |  You can use negative indices and open-ended ranges, which have their
+    |  normal Python semantics.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start_end]
+        +cell tuple
+        +cell The slice of the document to get.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Span]
+        +cell The span at #[code doc[start : end]].
+
++h(2, "iter") Doc.__iter__
+    +tag method
+
+p
+    |  Iterate over #[code Token] objects, from which the annotations can be
+    |  easily accessed.
+
++aside-code("Example").
+    doc = nlp(u'Give it back')
+    assert [t.text for t in doc] == [u'Give', u'it', u'back']
+
+p
+    |  This is the main way of accessing #[+api("token") #[code Token]] objects,
+    |  which are the main way annotations are accessed from Python. If
+    |  faster-than-Python speeds are required, you can instead access the
+    |  annotations as a numpy array, or access the underlying C data directly
+    |  from Cython.
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code Token]
+        +cell A #[code Token] object.
+
++h(2, "len") Doc.__len__
+    +tag method
+
+p Get the number of tokens in the document.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    assert len(doc) == 7
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell int
+        +cell The number of tokens in the document.
+
++h(2, "set_extension") Doc.set_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Define a custom attribute on the #[code Doc] which becomes available via
+    |  #[code Doc._]. For details, see the documentation on
+    |  #[+a("/usage/processing-pipelines#custom-components-attributes") custom attributes].
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    city_getter = lambda doc: any(city in doc.text for city in ('New York', 'Paris', 'Berlin'))
+    Doc.set_extension('has_city', getter=city_getter)
+    doc = nlp(u'I like New York')
+    assert doc._.has_city
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell
+            |  Name of the attribute to set by the extension. For example,
+            |  #[code 'my_attr'] will be available as #[code doc._.my_attr].
+
+    +row
+        +cell #[code default]
+        +cell -
+        +cell
+            |  Optional default value of the attribute if no getter or method
+            |  is defined.
+
+    +row
+        +cell #[code method]
+        +cell callable
+        +cell
+            |  Set a custom method on the object, for example
+            |  #[code doc._.compare(other_doc)].
+
+    +row
+        +cell #[code getter]
+        +cell callable
+        +cell
+            |  Getter function that takes the object and returns an attribute
+            |  value. Is called when the user accesses the #[code ._] attribute.
+
+    +row
+        +cell #[code setter]
+        +cell callable
+        +cell
+            |  Setter function that takes the #[code Doc] and a value, and
+            |  modifies the object. Is called when the user writes to the
+            |  #[code Doc._] attribute.
+
++h(2, "get_extension") Doc.get_extension
+    +tag classmethod
+    +tag-new(2)
+
+p
+    |  Look up a previously registered extension by name. Returns a 4-tuple
+    |  #[code.u-break (default, method, getter, setter)] if the extension is
+    |  registered. Raises a #[code KeyError] otherwise.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    Doc.set_extension('is_city', default=False)
+    extension = Doc.get_extension('is_city')
+    assert extension == (False, None, None, None)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell
+            |  A #[code.u-break (default, method, getter, setter)] tuple of the
+            |  extension.
+
++h(2, "has_extension") Doc.has_extension
+    +tag classmethod
+    +tag-new(2)
+
+p Check whether an extension has been registered on the #[code Doc] class.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    Doc.set_extension('is_city', default=False)
+    assert Doc.has_extension('is_city')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension to check.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the extension has been registered.
+
++h(2, "char_span") Doc.char_span
+    +tag method
+    +tag-new(2)
+
+p
+    |  Create a #[code Span] object from the slice #[code doc.text[start : end]].
+    |  Returns #[code None] if the character indices don't map to a valid span.
+
++aside-code("Example").
+    doc = nlp(u'I like New York')
+    span = doc.char_span(7, 15, label=u'GPE')
+    assert span.text == 'New York'
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start]
+        +cell int
+        +cell The index of the first character of the span.
+
+    +row
+        +cell #[code end]
+        +cell int
+        +cell The index of the first character after the span.
+
+    +row
+        +cell #[code label]
+        +cell uint64 / unicode
+        +cell A label to attach to the Span, e.g. for named entities.
+
+    +row
+        +cell #[code vector]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A meaning representation of the span.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Span]
+        +cell The newly constructed object or #[code None].
+
++h(2, "similarity") Doc.similarity
+    +tag method
+    +tag-model("vectors")
+
+p
+    |  Make a semantic similarity estimate. The default estimate is cosine
+    |  similarity using an average of word vectors.
+
++aside-code("Example").
+    apples = nlp(u'I like apples')
+    oranges = nlp(u'I like oranges')
+    apples_oranges = apples.similarity(oranges)
+    oranges_apples = oranges.similarity(apples)
+    assert apples_oranges == oranges_apples
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code other]
+        +cell -
+        +cell
+            |  The object to compare with. By default, accepts #[code Doc],
+            |  #[code Span], #[code Token] and #[code Lexeme] objects.
+
+    +row("foot")
+        +cell returns
+        +cell float
+        +cell A scalar similarity score. Higher is more similar.
+
++h(2, "count_by") Doc.count_by
+    +tag method
+
+p
+    |  Count the frequencies of a given attribute. Produces a dict of
+    |  #[code {attr (int): count (ints)}] frequencies, keyed by the values
+    |  of the given attribute ID.
+
++aside-code("Example").
+    from spacy.attrs import ORTH
+    doc = nlp(u'apple apple orange banana')
+    assert doc.count_by(ORTH) == {7024L: 1, 119552L: 1, 2087L: 2}
+    doc.to_array([attrs.ORTH])
+    # array([[11880], [11880], [7561], [12800]])
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attr_id]
+        +cell int
+        +cell The attribute ID
+
+    +row("foot")
+        +cell returns
+        +cell dict
+        +cell A dictionary mapping attributes to integer counts.
+
++h(2, "get_lca_matrix") Doc.get_lca_matrix
+    +tag method
+
+p
+    |  Calculates the lowest common ancestor matrix for a given #[code Doc].
+    |  Returns LCA matrix containing the integer index of the ancestor, or
+    |  #[code -1] if no common ancestor is found, e.g. if span excludes a
+    |  necessary ancestor.
+
++aside-code("Example").
+    doc = nlp(u"This is a test")
+    matrix = doc.get_lca_matrix()
+    # array([[0, 1, 1, 1], [1, 1, 1, 1], [1, 1, 2, 3], [1, 1, 3, 3]], dtype=int32)
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
+        +cell The lowest common ancestor matrix of the #[code Doc].
+
++h(2, "to_array") Doc.to_array
+    +tag method
+
+p
+    |  Export given token attributes to a numpy #[code ndarray].
+    |  If #[code attr_ids] is a sequence of #[code M] attributes,
+    |  the output array will  be of shape #[code (N, M)], where #[code N]
+    |  is the length of the #[code Doc] (in tokens). If #[code attr_ids] is
+    |  a single attribute, the output shape will be #[code (N,)]. You can
+    |  specify attributes by integer ID (e.g. #[code spacy.attrs.LEMMA])
+    |  or string name (e.g. 'LEMMA' or 'lemma'). The values will be 64-bit
+    |  integers.
+
++aside-code("Example").
+    from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
+    doc = nlp(text)
+    # All strings mapped to integers, for easy export to numpy
+    np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
+    np_array = doc.to_array("POS")
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attr_ids]
+        +cell list or int or string
+        +cell
+            | A list of attributes (int IDs or string names) or
+            | a single attribute (int ID or string name)
+
+    +row("foot")
+        +cell returns
+        +cell
+            | #[code.u-break numpy.ndarray[ndim=2, dtype='uint64']] or
+            | #[code.u-break numpy.ndarray[ndim=1, dtype='uint64']] or
+        +cell
+            |  The exported attributes as a 2D numpy array, with one row per
+            |  token and one column per attribute (when #[code attr_ids] is a
+            |  list), or as a 1D numpy array, with one item per attribute (when
+            |  #[code attr_ids] is a single value).
+
++h(2, "from_array") Doc.from_array
+    +tag method
+
+p
+    |  Load attributes from a numpy array. Write to a #[code Doc] object, from
+    |  an #[code (M, N)] array of attributes.
+
++aside-code("Example").
+    from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
+    from spacy.tokens import Doc
+    doc = nlp("Hello world!")
+    np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
+    doc2 = Doc(doc.vocab, words=[t.text for t in doc])
+    doc2.from_array([LOWER, POS, ENT_TYPE, IS_ALPHA], np_array)
+    assert doc[0].pos_ == doc2[0].pos_
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attrs]
+        +cell ints
+        +cell A list of attribute ID ints.
+
+    +row
+        +cell #[code array]
+        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
+        +cell The attribute values to load.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell Itself.
+
++h(2, "to_disk") Doc.to_disk
+    +tag method
+    +tag-new(2)
+
+p Save the current state to a directory.
+
++aside-code("Example").
+    doc.to_disk('/path/to/doc')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
++h(2, "from_disk") Doc.from_disk
+    +tag method
+    +tag-new(2)
+
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    from spacy.vocab import Vocab
+    doc = Doc(Vocab()).from_disk('/path/to/doc')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell The modified #[code Doc] object.
+
++h(2, "to_bytes") Doc.to_bytes
+    +tag method
+
+p Serialize, i.e. export the document contents to a binary string.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    doc_bytes = doc.to_bytes()
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell bytes
+        +cell
+            |  A losslessly serialized copy of the #[code Doc], including all
+            |  annotations.
+
++h(2, "from_bytes") Doc.from_bytes
+    +tag method
+
+p Deserialize, i.e. import the document contents from a binary string.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    text = u'Give it back! He pleaded.'
+    doc = nlp(text)
+    bytes = doc.to_bytes()
+    doc2 = Doc(doc.vocab).from_bytes(bytes)
+    assert doc.text == doc2.text
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code data]
+        +cell bytes
+        +cell The string to load from.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Doc]
+        +cell The #[code Doc] object.
+
++h(2, "merge") Doc.merge
+    +tag method
+
+p
+    |  Retokenize the document, such that the span at
+    |  #[code doc.text[start_idx : end_idx]] is merged into a single token. If
+    |  #[code start_idx] and #[code end_idx] do not mark start and end token
+    |  boundaries, the document remains unchanged.
+
++aside-code("Example").
+    doc = nlp(u'Los Angeles start.')
+    doc.merge(0, len('Los Angeles'), 'NNP', 'Los Angeles', 'GPE')
+    assert [t.text for t in doc] == [u'Los Angeles', u'start', u'.']
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start_idx]
+        +cell int
+        +cell The character index of the start of the slice to merge.
+
+    +row
+        +cell #[code end_idx]
+        +cell int
+        +cell The character index after the end of the slice to merge.
+
+    +row
+        +cell #[code **attributes]
+        +cell -
+        +cell
+            |  Attributes to assign to the merged token. By default,
+            |  attributes are inherited from the syntactic root token of
+            |  the span.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Token]
+        +cell
+            |  The newly merged token, or #[code None] if the start and end
+            |  indices did not fall at token boundaries
+
++h(2, "print_tree") Doc.print_tree
+    +tag method
+    +tag-model("parse")
+
+p
+    |  Returns the parse trees in JSON (dict) format. Especially useful for
+    |  web applications.
+
++aside-code("Example").
+    doc = nlp('Alice ate the pizza.')
+    trees = doc.print_tree()
+    # {'modifiers': [
+    #   {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice', 'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Alice'},
+    #   {'modifiers': [{'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det', 'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}], 'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN', 'POS_fine': 'NN', 'lemma': 'pizza'},
+    #   {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct', 'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}
+    # ], 'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB', 'POS_fine': 'VBD', 'lemma': 'eat'}
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code light]
+        +cell bool
+        +cell Don't include lemmas or entities.
+
+    +row
+        +cell #[code flat]
+        +cell bool
+        +cell Don't include arcs or modifiers.
+
+    +row("foot")
+        +cell returns
+        +cell dict
+        +cell Parse tree as dict.
+
++h(2, "ents") Doc.ents
+    +tag property
+    +tag-model("NER")
+
+p
+    |  Iterate over the entities in the document. Yields named-entity
+    |  #[code Span] objects, if the entity recognizer has been applied to the
+    |  document.
+
++aside-code("Example").
+    tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
+    ents = list(tokens.ents)
+    assert ents[0].label == 346
+    assert ents[0].label_ == 'PERSON'
+    assert ents[0].text == 'Mr. Best'
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code Span]
+        +cell Entities in the document.
+
++h(2, "noun_chunks") Doc.noun_chunks
+    +tag property
+    +tag-model("parse")
+
+p
+    |  Iterate over the base noun phrases in the document. Yields base
+    |  noun-phrase #[code Span] objects, if the document has been syntactically
+    |  parsed. A base noun phrase, or "NP chunk", is a noun phrase that does not
+    |  permit other NPs to be nested within it – so no NP-level coordination, no
+    |  prepositional phrases, and no relative clauses.
+
++aside-code("Example").
+    doc = nlp(u'A phrase with another phrase occurs.')
+    chunks = list(doc.noun_chunks)
+    assert chunks[0].text == "A phrase"
+    assert chunks[1].text == "another phrase"
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code Span]
+        +cell Noun chunks in the document.
+
++h(2, "sents") Doc.sents
+    +tag property
+    +tag-model("parse")
+
+p
+    |  Iterate over the sentences in the document. Sentence spans have no label.
+    |  To improve accuracy on informal texts, spaCy calculates sentence boundaries
+    |  from the syntactic dependency parse. If the parser is disabled,
+    |  the #[code sents] iterator will be unavailable.
+
++aside-code("Example").
+    doc = nlp(u"This is a sentence. Here's another...")
+    sents = list(doc.sents)
+    assert len(sents) == 2
+    assert [s.root.text for s in sents] == ["is", "'s"]
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code Span]
+        +cell Sentences in the document.
+
++h(2, "has_vector") Doc.has_vector
+    +tag property
+    +tag-model("vectors")
+
+p
+    |  A boolean value indicating whether a word vector is associated with the
+    |  object.
+
++aside-code("Example").
+    doc = nlp(u'I like apples')
+    assert doc.has_vector
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the document has a vector data attached.
+
++h(2, "vector") Doc.vector
+    +tag property
+    +tag-model("vectors")
+
+p
+    |  A real-valued meaning representation. Defaults to an average of the
+    |  token vectors.
+
++aside-code("Example").
+    doc = nlp(u'I like apples')
+    assert doc.vector.dtype == 'float32'
+    assert doc.vector.shape == (300,)
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A 1D numpy array representing the document's semantics.
+
++h(2, "vector_norm") Doc.vector_norm
+    +tag property
+    +tag-model("vectors")
+
+p
+    |  The L2 norm of the document's vector representation.
+
++aside-code("Example").
+    doc1 = nlp(u'I like apples')
+    doc2 = nlp(u'I like oranges')
+    doc1.vector_norm # 4.54232424414368
+    doc2.vector_norm # 3.304373298575751
+    assert doc1.vector_norm != doc2.vector_norm
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell float
+        +cell The L2 norm of the vector representation.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell A unicode representation of the document text.
+
+    +row
+        +cell #[code text_with_ws]
+        +cell unicode
+        +cell
+            |  An alias of #[code Doc.text], provided for duck-type compatibility
+            |  with #[code Span] and #[code Token].
+
+    +row
+        +cell #[code mem]
+        +cell #[code Pool]
+        +cell The document's local memory heap, for all C data it owns.
+
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The store of lexical types.
+
+    +row
+        +cell #[code tensor] #[+tag-new(2)]
+        +cell object
+        +cell Container for dense vector representations.
+
+    +row
+        +cell #[code cats] #[+tag-new(2)]
+        +cell dictionary
+        +cell
+            |  Maps either a label to a score for categories applied to whole
+            |  document, or #[code (start_char, end_char, label)] to score for
+            |  categories applied to spans. #[code start_char] and #[code end_char]
+            |  should be character offsets, label can be either a string or an
+            |  integer ID, and score should be a float.
+
+    +row
+        +cell #[code user_data]
+        +cell -
+        +cell A generic storage area, for user custom data.
+
+    +row
+        +cell #[code is_tagged]
+        +cell bool
+        +cell
+            |  A flag indicating that the document has been part-of-speech
+            |  tagged.
+
+    +row
+        +cell #[code is_parsed]
+        +cell bool
+        +cell A flag indicating that the document has been syntactically parsed.
+
+    +row
+        +cell #[code sentiment]
+        +cell float
+        +cell The document's positivity/negativity score, if available.
+
+    +row
+        +cell #[code user_hooks]
+        +cell dict
+        +cell
+            |  A dictionary that allows customisation of the #[code Doc]'s
+            |  properties.
+
+    +row
+        +cell #[code user_token_hooks]
+        +cell dict
+        +cell
+            |  A dictionary that allows customisation of properties of
+            |  #[code Token] children.
+
+    +row
+        +cell #[code user_span_hooks]
+        +cell dict
+        +cell
+            |  A dictionary that allows customisation of properties of
+            |  #[code Span] children.
+
+    +row
+        +cell #[code _]
+        +cell #[code Underscore]
+        +cell
+            |  User space for adding custom
+            |  #[+a("/usage/processing-pipelines#custom-components-attributes") attribute extensions].

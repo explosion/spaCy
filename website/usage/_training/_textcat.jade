@@ -1,0 +1,63 @@
+//- 💫 DOCS > USAGE > TRAINING > TEXT CLASSIFICATION
+
++h(3, "example-textcat") Adding a text classifier to a spaCy model
+    +tag-new(2)
+
+p
+    |  This example shows how to train a convolutional neural
+    |  network text classifier on IMDB movie reviews, using spaCy's new
+    |  #[+api("textcategorizer") #[code TextCategorizer]] component. The
+    |  dataset will be loaded automatically via Thinc's built-in dataset
+    |  loader. Predictions are available via
+    |  #[+api("doc#attributes") #[code Doc.cats]].
+
++github("spacy", "examples/training/train_textcat.py", 500)
+
++h(4) Step by step guide
+
++list("numbers")
+    +item
+        |  #[strong Load the model] you want to start with, or create an
+        |  #[strong empty model] using
+        |  #[+api("spacy#blank") #[code spacy.blank]] with the ID of your
+        |  language. If you're using an existing model, make sure to disable all
+        |  other pipeline components during training using
+        |  #[+api("language#disable_pipes") #[code nlp.disable_pipes]]. This
+        |  way, you'll only be training the text classifier.
+
+    +item
+        |  #[strong Add the text classifier] to the pipeline, and add the labels
+        |  you want to train – for example, #[code POSITIVE].
+
+    +item
+        |  #[strong Load and pre-process the dataset], shuffle the data and
+        |  split off a part of it to hold back for evaluation. This way, you'll
+        |  be able to see results on each training iteration.
+
+    +item
+        |  #[strong Loop over] the training examples and partition them into
+        |  batches using spaCy's
+        |  #[+api("top-level#util.minibatch") #[code minibatch]] and
+        |  #[+api("top-level#util.compounding") #[code compounding]] helpers.
+
+    +item
+        |  #[strong Update the model] by calling
+        |  #[+api("language#update") #[code nlp.update]], which steps
+        |  through the examples and makes a #[strong prediction]. It then
+        |  consults the annotations to see whether it was right. If it was
+        |  wrong, it adjusts its weights so that the correct prediction will
+        |  score higher next time.
+
+    +item
+        |  Optionally, you can also #[strong evaluate the text classifier] on
+        |  each iteration, by checking how it performs on the development data
+        |  held back from the dataset. This lets you print the
+        |  #[strong precision], #[strong recall] and #[strong F-score].
+
+    +item
+        |  #[strong Save] the trained model using
+        |  #[+api("language#to_disk") #[code nlp.to_disk]].
+
+    +item
+        |  #[strong Test] the model to make sure the text classifier works as
+        |  expected.

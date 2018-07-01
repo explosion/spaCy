@@ -1,0 +1,22 @@
+//- 💫 DOCS > USAGE > WHAT'S NEW IN V2.0
+
+include ../_includes/_mixins
+
++section("summary")
+    include _v2/_summary
+
++section("features")
+    +h(2, "features") New features
+    include _v2/_features
+
++section("incompat")
+    +h(2, "incompat") Backwards incompatibilities
+    include _v2/_incompat
+
++section("migrating")
+    +h(2, "migrating") Migrating from spaCy 1.x
+    include _v2/_migrating
+
++section("benchmarks")
+    +h(2, "benchmarks") Benchmarks
+    include _facts-figures/_benchmarks-models

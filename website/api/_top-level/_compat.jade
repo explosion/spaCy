@@ -1,0 +1,90 @@
+//- 💫 DOCS > API > TOP-LEVEL > COMPATIBILITY
+
+p
+    |  All Python code is written in an
+    |  #[strong intersection of Python 2 and Python 3]. This is easy in Cython,
+    |  but somewhat ugly in Python. Logic that deals with Python or platform
+    |  compatibility only lives in #[code spacy.compat]. To distinguish them from
+    |  the builtin functions, replacement functions are suffixed with an
+    |  undersocre, e.e #[code unicode_].
+
++aside-code("Example").
+    from spacy.compat import unicode_, json_dumps
+
+    compatible_unicode = unicode_('hello world')
+    compatible_json = json_dumps({'key': 'value'})
+
++table(["Name", "Python 2", "Python 3"])
+    +row
+        +cell #[code compat.bytes_]
+        +cell #[code str]
+        +cell #[code bytes]
+
+    +row
+        +cell #[code compat.unicode_]
+        +cell #[code unicode]
+        +cell #[code str]
+
+    +row
+        +cell #[code compat.basestring_]
+        +cell #[code basestring]
+        +cell #[code str]
+
+    +row
+        +cell #[code compat.input_]
+        +cell #[code raw_input]
+        +cell #[code input]
+
+    +row
+        +cell #[code compat.json_dumps]
+        +cell #[code ujson.dumps] with #[code .decode('utf8')]
+        +cell #[code ujson.dumps]
+
+    +row
+        +cell #[code compat.path2str]
+        +cell #[code str(path)] with #[code .decode('utf8')]
+        +cell #[code str(path)]
+
++h(3, "is_config") compat.is_config
+    +tag function
+
+p
+    |  Check if a specific configuration of Python version and operating system
+    |  matches the user's setup. Mostly used to display targeted error messages.
+
++aside-code("Example").
+    from spacy.compat import is_config
+
+    if is_config(python2=True, windows=True):
+        print("You are using Python 2 on Windows.")
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code python2]
+        +cell bool
+        +cell spaCy is executed with Python 2.x.
+
+    +row
+        +cell #[code python3]
+        +cell bool
+        +cell spaCy is executed with Python 3.x.
+
+    +row
+        +cell #[code windows]
+        +cell bool
+        +cell spaCy is executed on Windows.
+
+    +row
+        +cell #[code linux]
+        +cell bool
+        +cell spaCy is executed on Linux.
+
+    +row
+        +cell #[code osx]
+        +cell bool
+        +cell spaCy is executed on OS X or macOS.
+
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the specified configuration matches the user's platform.
