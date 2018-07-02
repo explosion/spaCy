@@ -92,6 +92,7 @@ def lemmatize(string, index, exceptions, rules):
     forms = []
     forms.extend(exceptions.get(string, []))
     oov_forms = []
+    exp_forms = []
     if not forms:
         for old, new in rules:
             if string.endswith(old):
@@ -99,6 +100,7 @@ def lemmatize(string, index, exceptions, rules):
                 if not form:
                     pass
                 elif form in index or not form.isalpha():
+                    exp_forms.append((string[:len(string)-len(old)] , old, form))
                     forms.append(form)
                 else:
                     oov_forms.append(form)
@@ -106,4 +108,16 @@ def lemmatize(string, index, exceptions, rules):
         forms.extend(oov_forms)
     if not forms:
         forms.append(string)
+
+    if len(forms) > 1:
+        new_forms = []
+        for exp_form in exp_forms:
+            key = [key for key, value in exceptions.items() 
+                   if key.startswith(exp_form[0]) and key.endswith(exp_form[1]) 
+                   and value[0] == exp_form[2]]
+            if not key:
+                new_forms.append(exp_form[2])
+        if new_forms:
+            forms = new_forms
+
     return list(set(forms))
