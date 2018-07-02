@@ -90,6 +90,8 @@ class Lemmatizer(object):
 def lemmatize(string, index, exceptions, rules):
     string = string.lower()
     forms = []
+    if string in index:
+        return [string]
     forms.extend(exceptions.get(string, []))
     oov_forms = []
     if not forms:
