@@ -68,8 +68,8 @@ def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None, jsonl_loc=No
         lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith('.npz'):
-        vector_data = numpy.load(vectors_loc.open('rb'))
-        vectors_keys = [lex['orth'] for lex in lex_attrs if 'id' in lex]
+        vectors_data = numpy.load(vectors_loc.open('rb'))
+        vector_keys = [lex['orth'] for lex in lex_attrs if 'id' in lex]
     else:
         vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     nlp = create_model(lang, lex_attrs, vectors_data, vector_keys, prune_vectors)
