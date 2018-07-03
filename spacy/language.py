@@ -650,7 +650,7 @@ class Language(object):
         for name, proc in self.pipeline:
             if name in disable:
                 continue
-            if not hasattr(proc, 'to_disk'):
+            if not hasattr(proc, 'from_disk'):
                 continue
             deserializers[name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
         exclude = {p: False for p in disable}

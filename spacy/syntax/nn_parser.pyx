@@ -217,6 +217,8 @@ cdef class Parser:
     def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
         if isinstance(docs, Doc):
             docs = [docs]
+        if not any(len(doc) for doc in docs):
+            return self.moves.init_batch(docs)
         if beam_width < 2:
             return self.greedy_parse(docs, drop=drop)
         else:

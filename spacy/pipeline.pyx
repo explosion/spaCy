@@ -449,7 +449,10 @@ class Tagger(Pipe):
     def predict(self, docs):
         if not any(len(doc) for doc in docs):
             # Handle case where there are no tokens in any docs.
-            return [self.model.ops.allocate((0, self.model.nO)) for doc in docs]
+            n_labels = len(self.labels)
+            guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
+            tokvecs = self.model.ops.allocate((0, self.model.tok2vec.nO))
+            return guesses, tokvecs
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
         guesses = []
@@ -479,7 +482,7 @@ class Tagger(Pipe):
                     if lemma != 0 and lemma != doc.c[j].lex.orth:
                         doc.c[j].lemma = lemma
                 idx += 1
-            if tensors is not None:
+            if tensors is not None and len(tensors):
                 if isinstance(doc.tensor, numpy.ndarray) \
                 and not isinstance(tensors[i], numpy.ndarray):
                     doc.extend_tensor(tensors[i].get())
