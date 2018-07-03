@@ -29,7 +29,7 @@ except ImportError:
     lang=("model language", "positional", None, str),
     output_dir=("model output directory", "positional", None, Path),
     freqs_loc=("location of words frequencies file", "optional", "f", Path),
-    jsonl_loc=("location of JSONL-formatted attributes file", "optional", "j", Path),
+    jsonl_loc=("location of JSONL-formatted attributes file", "option", "j", Path),
     clusters_loc=("optional: location of brown clusters data",
                   "option", "c", str),
     vectors_loc=("optional: location of vectors file in Word2Vec format "
