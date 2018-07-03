@@ -132,7 +132,7 @@ def create_model(lang, lex_attrs, vectors_data, vector_keys, prune_vectors):
                 lexeme = nlp.vocab[word]
                 lexeme.is_oov = False
                 lex_added += 1
-    if vectors_data:
+    if vectors_data is not None:
         nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if prune_vectors >= 1:
         nlp.vocab.prune_vectors(prune_vectors)
