@@ -67,7 +67,16 @@ def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None, jsonl_loc=No
             prints(freqs_loc, title=Messages.M037, exits=1)
         lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
     vectors_loc = ensure_path(vectors_loc)
-    vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
+    if vectors_loc and vectors_loc.parts[-1].endswith('.npz'):
+        vector_data = numpy.load(vectors_loc.open('rb'))
+        nlp.vocab.vectors = Vectors(data=vector_data)
+        vectors_keys = []
+        for word in nlp.vocab:
+            if word.rank:
+                nlp.vocab.vectors.add(word.orth, row=word.rank)
+                vectors_keys.append(word.orth_)
+    else:
+        vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     nlp = create_model(lang, lex_attrs, vectors_data, vector_keys, prune_vectors)
     if not output_dir.exists():
         output_dir.mkdir()
