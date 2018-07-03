@@ -70,7 +70,7 @@ def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None, jsonl_loc=No
     if vectors_loc and vectors_loc.parts[-1].endswith('.npz'):
         vectors_data = numpy.load(vectors_loc.open('rb'))
         vector_keys = [lex['orth'] for lex in lex_attrs
-                       if 'rank' in lex and lex['rank'] < vectors_data.shape[0]]
+                       if 'id' in lex and lex['id'] < vectors_data.shape[0]]
     else:
         vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     nlp = create_model(lang, lex_attrs, vectors_data, vector_keys, prune_vectors)
@@ -101,7 +101,7 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     lex_attrs = {}
     sorted_probs = sorted(probs.items(), key=lambda item: item[1], reverse=True)
     for i, (word, prob) in tqdm(enumerate(sorted_probs)):
-        attrs = {'orth': word, 'rank': i, 'prob': prob}
+        attrs = {'orth': word, 'id': i, 'prob': prob}
         # Decode as a little-endian string, so that we can do & 15 to get
         # the first 4 bits. See _parse_features.pyx
         if word in clusters:
