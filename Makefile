@@ -10,7 +10,7 @@ dist/spacy.pex : spacy/*.py* spacy/*/*.py*
 	env3.6/bin/python setup.py sdist
 	env3.6/bin/python setup.py bdist_wheel
 	env3.6/bin/python -m pip install pex
-	env3.6/bin/pex dist/*.whl -e spacy -o dist/spacy-$(sha).pex
+	env3.6/bin/pex pytest dist/*.whl -e spacy -o dist/spacy-$(sha).pex
 	cp dist/spacy-$(sha).pex dist/spacy.pex
 	chmod a+rx dist/spacy.pex
 
