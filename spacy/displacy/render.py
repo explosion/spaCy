@@ -136,7 +136,7 @@ class DependencyRenderer(object):
         end (int): X-coordinate of arrow end point.
         RETURNS (unicode): Definition of the arrow head path ('d' attribute).
         """
-        if direction is 'left':
+        if direction == 'left':
             pos1, pos2, pos3 = (x, x-self.arrow_width+2, x+self.arrow_width-2)
         else:
             pos1, pos2, pos3 = (end, end+self.arrow_width-2,
