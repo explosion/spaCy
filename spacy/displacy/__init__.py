@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from .render import DependencyRenderer, EntityRenderer
-from ..tokens import Doc
+from ..tokens import Doc, Span
 from ..compat import b_to_str
 from ..errors import Errors, Warnings, user_warning
 from ..util import prints, is_in_jupyter
@@ -29,8 +29,11 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
                  'ent': (EntityRenderer, parse_ents)}
     if style not in factories:
         raise ValueError(Errors.E087.format(style=style))
-    if isinstance(docs, Doc) or isinstance(docs, dict):
+    if isinstance(docs, (Doc, Span, dict)):
         docs = [docs]
+    docs = [obj if not isinstance(obj, Span) else obj.as_doc() for obj in docs]
+    if not all(isinstance(obj, (Doc, Span, dict)) for obj in docs):
+        raise ValueError(Errors.E096)
     renderer, converter = factories[style]
     renderer = renderer(options=options)
     parsed = [converter(doc, options) for doc in docs] if not manual else docs

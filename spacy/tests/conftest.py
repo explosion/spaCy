@@ -15,7 +15,8 @@ from .. import util
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'ar', 'xx']
+              'it', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'ar', 'ut', 'tt',
+              'xx']
 
 _models = {'en': ['en_core_web_sm'],
            'de': ['de_core_news_sm'],
@@ -154,8 +155,16 @@ def tr_tokenizer():
     return util.get_lang_class('tr').Defaults.create_tokenizer()
 
 @pytest.fixture
+def tt_tokenizer():
+    return util.get_lang_class('tt').Defaults.create_tokenizer()
+
+@pytest.fixture
 def ar_tokenizer():
     return util.get_lang_class('ar').Defaults.create_tokenizer()
+
+@pytest.fixture
+def ur_tokenizer():
+    return util.get_lang_class('ur').Defaults.create_tokenizer()
 
 @pytest.fixture
 def ru_tokenizer():
