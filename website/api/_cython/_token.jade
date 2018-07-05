@@ -1,0 +1,73 @@
+//- 💫 DOCS > API > CYTHON > CLASSES > TOKEN
+
+p
+    |  A Cython class providing access and methods for a
+    |  #[+api("cython-structs#tokenc") #[code TokenC]] struct. Note that the
+    |  #[code Token] object does not own the struct. It only receives a pointer
+    |  to it.
+
++infobox
+    |  This section documents the extra C-level attributes and methods that
+    |  can't be accessed from Python. For the Python documentation, see
+    |  #[+api("token") #[code Token]].
+
++h(3, "token_attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A reference to the shared #[code Vocab] object.
+
+    +row
+        +cell #[code c]
+        +cell #[code TokenC*]
+        +cell
+            |  A pointer to a #[+api("cython-structs#tokenc") #[code TokenC]]
+            |  struct.
+
+    +row
+        +cell #[code i]
+        +cell #[code int]
+        +cell The offset of the token within the document.
+
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The parent document.
+
++h(3, "token_cinit") Token.cinit
+    +tag method
+
+p Create a #[code Token] object from a #[code TokenC*] pointer.
+
++aside-code("Example").
+    token = Token.cinit(&doc.c[3], doc, 3)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A reference to the shared #[code Vocab].
+
+    +row
+        +cell #[code c]
+        +cell #[code TokenC*]
+        +cell
+            |  A pointer to a #[+api("cython-structs#tokenc") #[code TokenC]]
+            |  struct.
+
+    +row
+        +cell #[code offset]
+        +cell #[code int]
+        +cell The offset of the token within the document.
+
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The parent document.
+
+    +row("foot")
+        +cell returns
+        +cell #[code Token]
+        +cell The newly constructed object.

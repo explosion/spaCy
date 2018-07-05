@@ -124,6 +124,12 @@ mixin help(tooltip, icon_size)
         +icon("help_o", icon_size || 16).o-icon--inline
 
 
+//- Abbreviation
+
+mixin abbr(title)
+    abbr.o-abbr(data-tooltip=title data-tooltip-style="code" aria-label=title)&attributes(attributes)
+        block
+
 //- Aside wrapper
     label - [string] aside label
 

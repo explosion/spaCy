@@ -608,6 +608,12 @@ class Tagger(Pipe):
             yield from docs
 
     def predict(self, docs):
+        if not any(len(doc) for doc in docs):
+            # Handle case where there are no tokens in any docs.
+            n_labels = len(self.labels)
+            guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
+            tokvecs = self.model.ops.allocate((0, self.model.tok2vec.nO))
+            return guesses, tokvecs
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
         guesses = []
@@ -637,7 +643,7 @@ class Tagger(Pipe):
                     if lemma != 0 and lemma != doc.c[j].lex.orth:
                         doc.c[j].lemma = lemma
                 idx += 1
-            if tensors is not None:
+            if tensors is not None and len(tensors):
                 if isinstance(doc.tensor, numpy.ndarray) \
                 and not isinstance(tensors[i], numpy.ndarray):
                     doc.extend_tensor(tensors[i].get())
@@ -662,15 +668,20 @@ class Tagger(Pipe):
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         guesses = scores.argmax(axis=1)
+        known_labels = numpy.ones((scores.shape[0], 1), dtype='f')
         for gold in golds:
             for tag in gold.tags:
                 if tag is None:
                     correct[idx] = guesses[idx]
-                else:
+                elif tag in tag_index:
                     correct[idx] = tag_index[tag]
+                else:
+                    correct[idx] = 0
+                    known_labels[idx] = 0.
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores *= known_labels
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
