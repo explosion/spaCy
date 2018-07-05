@@ -145,7 +145,6 @@ def add_vectors(nlp, vectors_loc, prune_vectors):
                 if word not in nlp.vocab:
                     lexeme = nlp.vocab[word]
                     lexeme.is_oov = False
-                    lex_added += 1
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     nlp.vocab.vectors.name = '%s_model.vectors' % nlp.meta['lang']
