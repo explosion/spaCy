@@ -60,9 +60,8 @@ def detailed_tokens(tokenizer, text):
         parts = node.feature.split(',')
         pos = ','.join(parts[0:4])
 
-        if len(parts) > 6:
+        if len(parts) > 7:
             # this information is only available for words in the tokenizer dictionary
-            reading = parts[6]
             base = parts[7]
 
         words.append( ShortUnitWord(surface, base, pos) )

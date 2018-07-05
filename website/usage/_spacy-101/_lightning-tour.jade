@@ -354,7 +354,7 @@ p
         string = ''.join(output)
         string = string.replace('\n', '')
         string = string.replace('\t', '    ')
-        return '&lt;pre&gt;{}&lt;/pre&gt;.format(string)
+        return '&lt;pre&gt;{}&lt;/pre&gt;'.format(string)
 
     nlp = spacy.load('en_core_web_sm')
     doc = nlp(u"This is a test.\n\nHello   world.")

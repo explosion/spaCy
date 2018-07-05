@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from ..util import ensure_path
 from .. import util
-from ..displacy import parse_deps, parse_ents
+from .. import displacy
 from ..tokens import Span
 from .util import get_doc
 from .._ml import PrecomputableAffine
@@ -34,18 +34,16 @@ def test_util_get_package_path(package):
     assert isinstance(path, Path)
 
 
-@pytest.mark.xfail
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
     doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
     doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings[u'ORG'])]
-    ents = parse_ents(doc)
+    ents = displacy.parse_ents(doc)
     assert isinstance(ents, dict)
     assert ents['text'] == 'But Google is starting from behind '
     assert ents['ents'] == [{'start': 4, 'end': 10, 'label': 'ORG'}]
 
 
-@pytest.mark.xfail
 def test_displacy_parse_deps(en_vocab):
     """Test that deps and tags on a Doc are converted into displaCy's format."""
     words = ["This", "is", "a", "sentence"]
@@ -55,7 +53,7 @@ def test_displacy_parse_deps(en_vocab):
     deps = ['nsubj', 'ROOT', 'det', 'attr']
     doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags,
                   deps=deps)
-    deps = parse_deps(doc)
+    deps = displacy.parse_deps(doc)
     assert isinstance(deps, dict)
     assert deps['words'] == [{'text': 'This', 'tag': 'DET'},
                             {'text': 'is', 'tag': 'VERB'},
@@ -66,7 +64,19 @@ def test_displacy_parse_deps(en_vocab):
                             {'start': 1, 'end': 3, 'label': 'attr', 'dir': 'right'}]
 
 
-@pytest.mark.xfail
+def test_displacy_spans(en_vocab):
+    """Test that displaCy can render Spans."""
+    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
+    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings[u'ORG'])]
+    html = displacy.render(doc[1:4], style='ent')
+    assert html.startswith('<div')
+
+
+def test_displacy_raises_for_wrong_type(en_vocab):
+    with pytest.raises(ValueError):
+        html = displacy.render('hello world')
+
+
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
     assert model.W.shape == (nF, nO, nP, nI)

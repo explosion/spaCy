@@ -76,6 +76,7 @@
     },
 
     "MODEL_LICENSES": {
+        "MIT":             "https://opensource.org/licenses/MIT",
         "CC BY 4.0":       "https://creativecommons.org/licenses/by/4.0/",
         "CC BY-SA":        "https://creativecommons.org/licenses/by-sa/3.0/",
         "CC BY-SA 3.0":    "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -118,6 +119,8 @@
         "he": "Hebrew",
         "ar": "Arabic",
         "fa": "Persian",
+        "ur": "Urdu",
+        "tt": "Tatar",
         "ga": "Irish",
         "bn": "Bengali",
         "hi": "Hindi",
