@@ -221,7 +221,7 @@ class EntityRuler(object):
             elif isinstance(pattern, list):
                 self.token_patterns[label].append(pattern)
             else:
-                raise ValueError(Errors.E096.format(pattern=pattern))
+                raise ValueError(Errors.E097.format(pattern=pattern))
         for label, patterns in self.token_patterns.items():
             self.matcher.add(label, None, *patterns)
         for label, patterns in self.phrase_patterns.items():
