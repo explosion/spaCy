@@ -350,6 +350,22 @@ cdef class Token:
         def __get__(self):
             return self.c.r_kids
 
+    property sent:
+        """RETURNS (Span): The sentence span that the span is a part of."""
+        def __get__(self):
+            if 'sent' in self.doc.user_span_hooks:
+                return self.doc.user_span_hooks['sent'](self)
+            # This should raise if we're not parsed.
+            self.doc.sents
+            cdef int n = 0
+            root = &self.doc.c[self.i]
+            while root.head != 0:
+                root += root.head
+                n += 1
+                if n >= self.doc.length:
+                    raise RuntimeError
+            return self.doc[root.l_edge:root.r_edge + 1]
+
     property sent_start:
         def __get__(self):
             # Raising a deprecation warning causes errors for autocomplete

@@ -56,6 +56,14 @@ def test_doc_token_api_str_builtin(en_tokenizer, text):
     assert str(tokens[0]) == text.split(' ')[0]
     assert str(tokens[1]) == text.split(' ')[1]
 
+@pytest.fixture
+def doc(en_tokenizer):
+    text = "This is a sentence. This is another sentence. And a third."
+    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
+    deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
+            'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
+    tokens = en_tokenizer(text)
+    return get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
 
 def test_doc_token_api_is_properties(en_vocab):
     text = ["Hi", ",", "my", "email", "is", "test@me.com"]
@@ -162,3 +170,11 @@ def test_is_sent_start(en_tokenizer):
     assert doc[5].is_sent_start is True
     doc.is_parsed = True
     assert len(list(doc.sents)) == 2
+
+def test_tokens_sent(doc):
+    """Test token.sent property"""
+    assert len(list(doc.sents)) == 3
+    assert doc[1].sent.text == 'This is a sentence .'
+    assert doc[7].sent.text == 'This is another sentence .'
+    assert doc[1].sent.root.left_edge.text == 'This'
+    assert doc[7].sent.root.left_edge.text == 'This'
