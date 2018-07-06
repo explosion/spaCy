@@ -400,11 +400,11 @@ cdef class Tokenizer:
             ('exceptions', lambda b: data.setdefault('rules', b))
         ))
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        if 'prefix_search' in data:
+        if data.get('prefix_search'):
             self.prefix_search = re.compile(data['prefix_search']).search
-        if 'suffix_search' in data:
+        if data.get('suffix_search'):
             self.suffix_search = re.compile(data['suffix_search']).search
-        if 'infix_finditer' in data:
+        if data.get('infix_finditer'):
             self.infix_finditer = re.compile(data['infix_finditer']).finditer
         if data.get('token_match'):
             self.token_match = re.compile(data['token_match']).search
