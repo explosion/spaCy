@@ -973,11 +973,11 @@ class TextCategorizer(Pipe):
                 "Add labels before training begins. This functionality was "
                 "available in previous versions, but had significant bugs that "
                 "let to poor performance")
-            smaller = self.model._layers[-1]
-            larger = Affine(len(self.labels)+1, smaller.nI)
-            copy_array(larger.W[:smaller.nO], smaller.W)
-            copy_array(larger.b[:smaller.nO], smaller.b)
-            self.model._layers[-1] = larger
+            #smaller = self.model._layers[-1]
+            #larger = Affine(len(self.labels)+1, smaller.nI)
+            #copy_array(larger.W[:smaller.nO], smaller.W)
+            #copy_array(larger.b[:smaller.nO], smaller.b)
+            #self.model._layers[-1] = larger
         self.labels.append(label)
         return 1
 
