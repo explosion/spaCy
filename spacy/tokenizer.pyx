@@ -375,11 +375,10 @@ cdef class Tokenizer:
         """
         serializers = OrderedDict((
             ('vocab', lambda: self.vocab.to_bytes()),
-            ('prefix_search', lambda: self.prefix_search.__self__.pattern),
-            ('suffix_search', lambda: self.suffix_search.__self__.pattern),
-            ('infix_finditer', lambda: self.infix_finditer.__self__.pattern),
-            ('token_match', lambda:
-                self.token_match.__self__.pattern if self.token_match else None),
+            ('prefix_search', _get_regex_pattern(self.prefix_search)),
+            ('suffix_search', _get_regex_pattern(self.suffix_search)),
+            ('infix_finditer', _get_regex_pattern(self.infix_finditer)),
+            ('token_match', _get_regex_pattern(self.token_match)),
             ('exceptions', lambda: OrderedDict(sorted(self._rules.items())))
         ))
         return util.to_bytes(serializers, exclude)
@@ -412,3 +411,7 @@ cdef class Tokenizer:
         for string, substrings in data.get('rules', {}).items():
             self.add_special_case(string, substrings)
         return self
+
+def _get_regex_pattern(regex):
+    '''Get a pattern string for a regex, or None if the pattern is None.'''
+    return None if regex is None else regex.__self__.pattern
