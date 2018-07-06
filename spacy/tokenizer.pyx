@@ -375,10 +375,10 @@ cdef class Tokenizer:
         """
         serializers = OrderedDict((
             ('vocab', lambda: self.vocab.to_bytes()),
-            ('prefix_search', _get_regex_pattern(self.prefix_search)),
-            ('suffix_search', _get_regex_pattern(self.suffix_search)),
-            ('infix_finditer', _get_regex_pattern(self.infix_finditer)),
-            ('token_match', _get_regex_pattern(self.token_match)),
+            ('prefix_search', lambda: _get_regex_pattern(self.prefix_search)),
+            ('suffix_search', lambda: _get_regex_pattern(self.suffix_search)),
+            ('infix_finditer', lambda: _get_regex_pattern(self.infix_finditer)),
+            ('token_match', lambda: _get_regex_pattern(self.token_match)),
             ('exceptions', lambda: OrderedDict(sorted(self._rules.items())))
         ))
         return util.to_bytes(serializers, exclude)
