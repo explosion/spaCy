@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ...util import get_lang_class
+from ...tokenizer import Tokenizer
 from ..util import make_tempdir, assert_packed_msg_equal
 
 import pytest
@@ -11,6 +12,14 @@ def load_tokenizer(b):
     tok = get_lang_class('en').Defaults.create_tokenizer()
     tok.from_bytes(b)
     return tok
+
+
+def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
+    """Test that custom tokenizer with not all functions defined can be
+    serialized and deserialized correctly (see #2494)."""
+    tokenizer = Tokenizer(en_vocab, suffix_search=en_tokenizer.suffix_search)
+    tokenizer_bytes = tokenizer.to_bytes()
+    new_tokenizer = Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
 
 
 @pytest.mark.skip(reason="Currently unreliable across platforms")
