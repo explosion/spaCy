@@ -20,29 +20,9 @@ from .attrs import FLAG61 as U_ENT
 from .attrs import FLAG60 as B2_ENT
 from .attrs import FLAG59 as B3_ENT
 from .attrs import FLAG58 as B4_ENT
-from .attrs import FLAG57 as B5_ENT
-from .attrs import FLAG56 as B6_ENT
-from .attrs import FLAG55 as B7_ENT
-from .attrs import FLAG54 as B8_ENT
-from .attrs import FLAG53 as B9_ENT
-from .attrs import FLAG52 as B10_ENT
-from .attrs import FLAG51 as I3_ENT
-from .attrs import FLAG50 as I4_ENT
-from .attrs import FLAG49 as I5_ENT
-from .attrs import FLAG48 as I6_ENT
-from .attrs import FLAG47 as I7_ENT
-from .attrs import FLAG46 as I8_ENT
-from .attrs import FLAG45 as I9_ENT
-from .attrs import FLAG44 as I10_ENT
 from .attrs import FLAG43 as L2_ENT
 from .attrs import FLAG42 as L3_ENT
 from .attrs import FLAG41 as L4_ENT
-from .attrs import FLAG40 as L5_ENT
-from .attrs import FLAG39 as L6_ENT
-from .attrs import FLAG38 as L7_ENT
-from .attrs import FLAG37 as L8_ENT
-from .attrs import FLAG36 as L9_ENT
-from .attrs import FLAG35 as L10_ENT
 
 
 cdef enum action_t:
@@ -73,13 +53,6 @@ cdef struct TokenPatternC:
     int32_t nr_attr
     quantifier_t quantifier
     hash_t key
-
-
-cdef struct ActionC:
-    char emit_match
-    char next_state_next_token
-    char next_state_same_token
-    char same_state_next_token
 
 
 cdef struct PatternStateC:
@@ -557,7 +530,8 @@ cdef class PhraseMatcher:
     cdef public object _callbacks
     cdef public object _patterns
 
-    def __init__(self, Vocab vocab, max_length=10):
+    def __init__(self, Vocab vocab, max_length=0):
+        # TODO: Add deprecation warning on max_length
         self.mem = Pool()
         self.max_length = max_length
         self.vocab = vocab
@@ -594,7 +568,7 @@ cdef class PhraseMatcher:
         return (self.__class__, (self.vocab,), None, None)
 
     def add(self, key, on_match, *docs):
-        """Add a match-rule to the matcher. A match-rule consists of: an ID
+        """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
         key (unicode): The match ID.
@@ -641,7 +615,7 @@ cdef class PhraseMatcher:
                 on_match(self, doc, i, matches)
         return matches
 
-    def pipe(self, stream, batch_size=1000, n_threads=2, return_matches=False,
+    def pipe(self, stream, batch_size=1000, n_threads=1, return_matches=False,
              as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
