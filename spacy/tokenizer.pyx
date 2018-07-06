@@ -412,6 +412,7 @@ cdef class Tokenizer:
             self.add_special_case(string, substrings)
         return self
 
+
 def _get_regex_pattern(regex):
-    '''Get a pattern string for a regex, or None if the pattern is None.'''
+    """Get a pattern string for a regex, or None if the pattern is None."""
     return None if regex is None else regex.__self__.pattern
