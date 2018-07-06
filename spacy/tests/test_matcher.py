@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from ..matcher import Matcher, PhraseMatcher
 from .util import get_doc
-from ..util import get_lang_class
 
 import pytest
 
