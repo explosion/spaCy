@@ -23,6 +23,10 @@ from .attrs import FLAG58 as B4_ENT
 from .attrs import FLAG43 as L2_ENT
 from .attrs import FLAG42 as L3_ENT
 from .attrs import FLAG41 as L4_ENT
+from .attrs import FLAG43 as I2_ENT
+from .attrs import FLAG42 as I3_ENT
+from .attrs import FLAG41 as I4_ENT
+
 
 
 cdef enum action_t:
