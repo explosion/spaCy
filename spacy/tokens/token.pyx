@@ -351,20 +351,11 @@ cdef class Token:
             return self.c.r_kids
 
     property sent:
-        """RETURNS (Span): The sentence span that the span is a part of."""
+        """RETURNS (Span): The sentence span that the token is a part of."""
         def __get__(self):
-            if 'sent' in self.doc.user_span_hooks:
-                return self.doc.user_span_hooks['sent'](self)
-            # This should raise if we're not parsed.
-            self.doc.sents
-            cdef int n = 0
-            root = &self.doc.c[self.i]
-            while root.head != 0:
-                root += root.head
-                n += 1
-                if n >= self.doc.length:
-                    raise RuntimeError
-            return self.doc[root.l_edge:root.r_edge + 1]
+            if 'sent' in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks['sent'](self)
+            return self.doc[self.i : self.i+1].sent
 
     property sent_start:
         def __get__(self):
