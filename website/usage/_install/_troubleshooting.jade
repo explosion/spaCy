@@ -192,8 +192,8 @@ p
     |  when commiting). While that's mostly fine for text files, a trained model
     |  written to disk has some binary files that should not go through this
     |  conversion. When they do, you get the error above. You can fix it by
-    |  either changing your #[+a("https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration", true) "core.autocrlf"]
-    |  setting to "false", or by commiting a #[+a("https://git-scm.com/docs/gitattributes", true) ".gitattributes file"]
+    |  either changing your #[+a("https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration") #[code core.autocrlf]]
+    |  setting to #[code "false"], or by commiting a #[+a("https://git-scm.com/docs/gitattributes") #[code .gitattributes] file]
     |  to your repository to tell git on which files or folders it shouldn't do
-    |  LF-to-CRLF conversion, with an entry like "path/to/your/trained/spacy/model/** -text".
+    |  LF-to-CRLF conversion, with an entry like #[code path&sol;to&sol;spacy&sol;model&sol;** -text].
     |  After you've done either of these, clone your repository again.
