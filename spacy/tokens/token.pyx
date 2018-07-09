@@ -361,6 +361,13 @@ cdef class Token:
         def __get__(self):
             return self.c.r_kids
 
+    property sent:
+        """RETURNS (Span): The sentence span that the token is a part of."""
+        def __get__(self):
+            if 'sent' in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks['sent'](self)
+            return self.doc[self.i : self.i+1].sent
+
     property sent_start:
         def __get__(self):
             # Raising a deprecation warning here causes errors for autocomplete
