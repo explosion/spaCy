@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 
 from ...compat import json_dumps, path2str
 from ...util import prints
+from ...gold import iob_to_biluo
 
-
-def conllubiluo2json(input_path, output_path, n_sents=10, use_morphology=False):
+def conllubio2json(input_path, output_path, n_sents=10, use_morphology=False):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
@@ -68,11 +68,11 @@ def read_conllx(input_path, use_morphology=False, n=0):
             if n >= 1 and i >= n:
                 break
 
-
 def generate_sentence(sent):
     (id_, word, tag, head, dep, ner) = sent
     sentence = {}
     tokens = []
+    ner = iob_to_biluo(ner)
     for i, id in enumerate(id_):
         token = {}
         token["orth"] = word[i]
