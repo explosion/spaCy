@@ -40,7 +40,7 @@
 
     "MODELS": {
         "en": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
-        "de": ["de_core_news_sm"],
+        "de": ["de_core_news_sm", "de_core_news_md"],
         "es": ["es_core_news_sm", "es_core_news_md"],
         "pt": ["pt_core_news_sm"],
         "fr": ["fr_core_news_sm", "fr_core_news_md"],
@@ -116,6 +116,7 @@
         "ro": "Romanian",
         "hr": "Croatian",
         "tr": "Turkish",
+        "el": "Greek",
         "he": "Hebrew",
         "ar": "Arabic",
         "fa": "Persian",

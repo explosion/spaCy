@@ -13,7 +13,7 @@
         "DEMOS_URL": "https://explosion.ai/demos",
         "MODELS_REPO": "explosion/spacy-models",
 
-        "SPACY_VERSION": "2.0",
+        "SPACY_VERSION": "2.1",
         "BINDER_VERSION": "2.0.11",
 
         "SOCIAL": {
