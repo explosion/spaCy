@@ -57,7 +57,7 @@ export default function(repo) {
                     },
                     orderedCompat() {
                         return Object.keys(this.compat)
-                            .filter(v => !v.includes('a') && !v.includes('dev') && !v.includes('rc'));
+                            .filter(v => this.$_isStableVersion(v));
                     },
                     hasAccuracy() {
                         return this.uas || this.las || this.tags_acc || this.ents_f || this.ents_p || this.ents_r;
@@ -98,8 +98,8 @@ export default function(repo) {
                     },
 
                     $_getLatestVersion(modelId) {
-                        for (let [spacy_v, models] of Object.entries(this.compat)) {
-                            if (models[modelId]) {
+                        for (let [version, models] of Object.entries(this.compat)) {
+                            if (this.$_isStableVersion(version) && models[modelId]) {
                                 return models[modelId][0];
                             }
                         }
@@ -116,6 +116,14 @@ export default function(repo) {
                         const nKeys = this.$_abbrNum(keys);
                         const nVectors = this.$_abbrNum(vectors);
                         return `${nKeys} keys, ${nVectors} unique vectors (${width} dimensions)`;
+                    },
+
+                    /**
+                     * Hacky check if a version number is stable and not alpha,
+                     * dev or a release candidate
+                     */
+                    $_isStableVersion(v) {
+                        return !v.includes('a') && !v.includes('b') && !v.includes('dev') && !v.includes('rc');
                     },
 
                     /**
