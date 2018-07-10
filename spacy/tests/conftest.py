@@ -14,7 +14,7 @@ from .. import util
 # These languages are used for generic tokenizer tests – only add a language
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
-_languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
+_languages = ['bn', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
               'it', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'ar', 'ut', 'tt',
               'xx']
 
@@ -157,6 +157,10 @@ def tr_tokenizer():
 @pytest.fixture
 def tt_tokenizer():
     return util.get_lang_class('tt').Defaults.create_tokenizer()
+
+@pytest.fixture
+def el_tokenizer():
+    return util.get_lang_class('el').Defaults.create_tokenizer()
 
 @pytest.fixture
 def ar_tokenizer():
