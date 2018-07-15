@@ -31,18 +31,19 @@ from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
-from .. import about
+from ..errors import Errors, Warnings, deprecation_warning
 from .. import util
-from .underscore import Underscore
+from .underscore import Underscore, get_ext_args
+from ._retokenize import Retokenizer
 
 DEF PADDING = 5
 
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
-        raise IndexError
+        raise IndexError(Errors.E026.format(i=i, length=length))
     if (i - padding) >= length:
-        raise IndexError
+        raise IndexError(Errors.E026.format(i=i, length=length))
 
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
@@ -94,11 +95,10 @@ cdef class Doc:
                       spaces=[True, False, False])
     """
     @classmethod
-    def set_extension(cls, name, default=None, method=None,
-                      getter=None, setter=None):
-        nr_defined = sum(t is not None for t in (default, getter, setter, method))
-        assert nr_defined == 1
-        Underscore.doc_extensions[name] = (default, method, getter, setter)
+    def set_extension(cls, name, **kwargs):
+        if cls.has_extension(name) and not kwargs.get('force', False):
+            raise ValueError(Errors.E090.format(name=name, obj='Doc'))
+        Underscore.doc_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):
@@ -107,6 +107,12 @@ cdef class Doc:
     @classmethod
     def has_extension(cls, name):
         return name in Underscore.doc_extensions
+
+    @classmethod
+    def remove_extension(cls, name):
+        if not cls.has_extension(name):
+            raise ValueError(Errors.E046.format(name=name))
+        return Underscore.doc_extensions.pop(name)
 
     def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None,
                  orths_and_spaces=None):
@@ -154,11 +160,7 @@ cdef class Doc:
             if spaces is None:
                 spaces = [True] * len(words)
             elif len(spaces) != len(words):
-                raise ValueError(
-                    "Arguments 'words' and 'spaces' should be sequences of "
-                    "the same length, or 'spaces' should be left default at "
-                    "None. spaces should be a sequence of booleans, with True "
-                    "meaning that the word owns a ' ' character following it.")
+                raise ValueError(Errors.E027)
             orths_and_spaces = zip(words, spaces)
         if orths_and_spaces is not None:
             for orth_space in orths_and_spaces:
@@ -166,10 +168,7 @@ cdef class Doc:
                     orth = orth_space
                     has_space = True
                 elif isinstance(orth_space, bytes):
-                    raise ValueError(
-                        "orths_and_spaces expects either List(unicode) or "
-                        "List((unicode, bool)). "
-                        "Got bytes instance: %s" % (str(orth_space)))
+                    raise ValueError(Errors.E028.format(value=orth_space))
                 else:
                     orth, has_space = orth_space
                 # Note that we pass self.mem here --- we have ownership, if LexemeC
@@ -185,6 +184,20 @@ cdef class Doc:
     @property
     def _(self):
         return Underscore(Underscore.doc_extensions, self)
+
+    @property
+    def is_sentenced(self):
+        # Check if the document has sentence boundaries,
+        # i.e at least one tok has the sent_start in (-1, 1)
+        if 'sents' in self.user_hooks:
+            return True
+        if self.is_parsed:
+            return True
+        for i in range(self.length):
+            if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
+                return True
+        else:
+            return False
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
@@ -305,7 +318,7 @@ cdef class Doc:
                         break
                 else:
                     return 1.0
- 
+
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -421,7 +434,9 @@ cdef class Doc:
             for i in range(self.length):
                 token = &self.c[i]
                 if token.ent_iob == 1:
-                    assert start != -1
+                    if start == -1:
+                        seq = ['%s|%s' % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        raise ValueError(Errors.E093.format(seq=' '.join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
                         output.append(Span(self, start, i, label=label))
@@ -446,10 +461,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
-                # At this point we don't know whether the NER has run over the
-                # Doc. If the ent_iob is missing, leave it missing.
-                if self.c[i].ent_iob != 0:
-                    self.c[i].ent_iob = 2  # Means O. Non-O are set from ents.
+                self.c[i].ent_iob = 0  # Means missing.
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
@@ -487,19 +499,16 @@ cdef class Doc:
         """
         def __get__(self):
             if not self.is_parsed:
-                raise ValueError(
-                    "noun_chunks requires the dependency parse, which "
-                    "requires a statistical model to be installed and loaded. "
-                    "For more info, see the "
-                    "documentation: \n%s\n" % about.__docs_models__)
+                raise ValueError(Errors.E029)
             # Accumulate the result before beginning to iterate over it. This
             # prevents the tokenisation from being changed out from under us
             # during the iteration. The tricky thing here is that Span accepts
             # its tokenisation changing, so it's okay once we have the Span
             # objects. See Issue #375.
             spans = []
-            for start, end, label in self.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+            if self.noun_chunks_iterator is not None:
+                for start, end, label in self.noun_chunks_iterator(self):
+                    spans.append(Span(self, start, end, label=label))
             for span in spans:
                 yield span
 
@@ -515,29 +524,18 @@ cdef class Doc:
             >>> assert [s.root.text for s in doc.sents] == ["is", "'s"]
         """
         def __get__(self):
+            if not self.is_sentenced:
+                raise ValueError(Errors.E030)
             if 'sents' in self.user_hooks:
                 yield from self.user_hooks['sents'](self)
-                return
-
-            cdef int i
-            if not self.is_parsed:
+            else:
+                start = 0
                 for i in range(1, self.length):
-                    if self.c[i].sent_start != 0:
-                        break
-                else:
-                    raise ValueError(
-                        "Sentence boundaries unset. You can add the 'sentencizer' "
-                        "component to the pipeline with: "
-                        "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
-                        "Alternatively, add the dependency parser, or set "
-                        "sentence boundaries by setting doc[i].sent_start")
-            start = 0
-            for i in range(1, self.length):
-                if self.c[i].sent_start == 1:
-                    yield Span(self, start, i)
-                    start = i
-            if start != self.length:
-                yield Span(self, start, self.length)
+                    if self.c[i].sent_start == 1:
+                        yield Span(self, start, i)
+                        start = i
+                if start != self.length:
+                    yield Span(self, start, self.length)
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
         if self.length == 0:
@@ -557,7 +555,8 @@ cdef class Doc:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
         t.l_edge = self.length
         t.r_edge = self.length
-        assert t.lex.orth != 0
+        if t.lex.orth == 0:
+            raise ValueError(Errors.E031.format(i=self.length))
         t.spacy = has_space
         self.length += 1
         return t.idx + t.lex.length + t.spacy
@@ -673,13 +672,7 @@ cdef class Doc:
 
     def from_array(self, attrs, array):
         if SENT_START in attrs and HEAD in attrs:
-            raise ValueError(
-                "Conflicting attributes specified in doc.from_array(): "
-                "(HEAD, SENT_START)\n"
-                "The HEAD attribute currently sets sentence boundaries "
-                "implicitly, based on the tree structure. This means the HEAD "
-                "attribute would potentially override the sentence boundaries "
-                "set by SENT_START.")
+            raise ValueError(Errors.E032)
         cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
@@ -701,9 +694,12 @@ cdef class Doc:
                 for i in range(length):
                     if array[i, col] != 0:
                         self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
-        set_children_from_heads(self.c, self.length)
+        # set flags
         self.is_parsed = bool(HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(TAG in attrs or POS in attrs)
+        # if document is parsed, set children
+        if self.is_parsed:
+            set_children_from_heads(self.c, self.length)
         return self
 
     def get_lca_matrix(self):
@@ -779,7 +775,16 @@ cdef class Doc:
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
         """
-        array_head = [LENGTH, SPACY, TAG, LEMMA, HEAD, DEP, ENT_IOB, ENT_TYPE]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+
+        if self.is_tagged:
+            array_head.append(TAG)
+        # if doc parsed add head and dep attribute
+        if self.is_parsed:
+            array_head.extend([HEAD, DEP])
+        # otherwise add sent_start
+        else:
+            array_head.append(SENT_START)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -805,7 +810,7 @@ cdef class Doc:
         RETURNS (Doc): Itself.
         """
         if self.length != 0:
-            raise ValueError("Cannot load into non-empty Doc")
+            raise ValueError(Errors.E033.format(length=self.length))
         deserializers = {
             'text': lambda b: None,
             'array_head': lambda b: None,
@@ -830,8 +835,11 @@ cdef class Doc:
 
         cdef attr_t[:, :] attrs
         cdef int i, start, end, has_space
-        self.sentiment = msg['sentiment']
-        self.tensor = msg['tensor']
+
+        if 'sentiment' not in exclude and 'sentiment' in msg:
+            self.sentiment = msg['sentiment']
+        if 'tensor' not in exclude and 'tensor' in msg:
+            self.tensor = msg['tensor']
 
         start = 0
         cdef const LexemeC* lex
@@ -856,7 +864,7 @@ cdef class Doc:
         computed by the models in the pipeline. Let's say a
         document with 30 words has a tensor with 128 dimensions
         per word. doc.tensor.shape will be (30, 128). After
-        calling doc.extend_tensor with an array of hape (30, 64),
+        calling doc.extend_tensor with an array of shape (30, 64),
         doc.tensor == (30, 192).
         '''
         xp = get_array_module(self.tensor)
@@ -865,6 +873,18 @@ cdef class Doc:
             copy_array(self.tensor, tensor)
         else:
             self.tensor = xp.hstack((self.tensor, tensor))
+
+    def retokenize(self):
+        '''Context manager to handle retokenization of the Doc.
+        Modifications to the Doc's tokenization are stored, and then
+        made all at once when the context manager exits. This is
+        much more efficient, and less error-prone.
+
+        All views of the Doc (Span and Token) created before the
+        retokenization are invalidated, although they may accidentally
+        continue to work.
+        '''
+        return Retokenizer(self)
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Retokenize the document, such that the span at
@@ -881,10 +901,7 @@ cdef class Doc:
         """
         cdef unicode tag, lemma, ent_type
         if len(args) == 3:
-            util.deprecated(
-                "Positional arguments to Doc.merge are deprecated. Instead, "
-                "use the keyword arguments, for example tag=, lemma= or "
-                "ent_type=.")
+            deprecation_warning(Warnings.W003)
             tag, lemma, ent_type = args
             attributes[TAG] = tag
             attributes[LEMMA] = lemma
@@ -898,13 +915,9 @@ cdef class Doc:
             if 'ent_type' in attributes:
                 attributes[ENT_TYPE] = attributes['ent_type']
         elif args:
-            raise ValueError(
-                "Doc.merge received %d non-keyword arguments. Expected either "
-                "3 arguments (deprecated), or 0 (use keyword arguments). "
-                "Arguments supplied:\n%s\n"
-                "Keyword arguments: %s\n" % (len(args), repr(args),
-                                             repr(attributes)))
-
+            raise ValueError(Errors.E034.format(n_args=len(args),
+                                                args=repr(args),
+                                                kwargs=repr(attributes)))
         # More deprecated attribute handling =/
         if 'label' in attributes:
             attributes['ent_type'] = attributes.pop('label')
@@ -919,59 +932,8 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = self[start:end]
-        # Get LexemeC for newly merged token
-        new_orth = ''.join([t.text_with_ws for t in span])
-        if span[-1].whitespace_:
-            new_orth = new_orth[:-len(span[-1].whitespace_)]
-        cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
-        # House the new merged token where it starts
-        cdef TokenC* token = &self.c[start]
-        token.spacy = self.c[end-1].spacy
-        for attr_name, attr_value in attributes.items():
-            if attr_name == TAG:
-                self.vocab.morphology.assign_tag(token, attr_value)
-            else:
-                Token.set_struct_attr(token, attr_name, attr_value)
-        # Begin by setting all the head indices to absolute token positions
-        # This is easier to work with for now than the offsets
-        # Before thinking of something simpler, beware the case where a
-        # dependency bridges over the entity. Here the alignment of the
-        # tokens changes.
-        span_root = span.root.i
-        token.dep = span.root.dep
-        # We update token.lex after keeping span root and dep, since
-        # setting token.lex will change span.start and span.end properties
-        # as it modifies the character offsets in the doc
-        token.lex = lex
-        for i in range(self.length):
-            self.c[i].head += i
-        # Set the head of the merged token, and its dep relation, from the Span
-        token.head = self.c[span_root].head
-        # Adjust deps before shrinking tokens
-        # Tokens which point into the merged token should now point to it
-        # Subtract the offset from all tokens which point to >= end
-        offset = (end - start) - 1
-        for i in range(self.length):
-            head_idx = self.c[i].head
-            if start <= head_idx < end:
-                self.c[i].head = start
-            elif head_idx >= end:
-                self.c[i].head -= offset
-        # Now compress the token array
-        for i in range(end, self.length):
-            self.c[i - offset] = self.c[i]
-        for i in range(self.length - offset, self.length):
-            memset(&self.c[i], 0, sizeof(TokenC))
-            self.c[i].lex = &EMPTY_LEXEME
-        self.length -= offset
-        for i in range(self.length):
-            # ...And, set heads back to a relative position
-            self.c[i].head -= i
-        # Set the left/right children, left/right edges
-        set_children_from_heads(self.c, self.length)
-        # Clear the cached Python objects
-        # Return the merged Python object
+        with self.retokenize() as retokenizer:
+            retokenizer.merge(self[start:end], attrs=attributes)
         return self[start]
 
     def print_tree(self, light=False, flat=False):

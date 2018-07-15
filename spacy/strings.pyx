@@ -13,6 +13,7 @@ from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
 from .typedefs cimport hash_t
 from .compat import json_dumps
+from .errors import Errors
 from . import util
 
 
@@ -59,7 +60,6 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
         string.p = <unsigned char*>mem.alloc(length + 1, sizeof(unsigned char))
         string.p[0] = length
         memcpy(&string.p[1], chars, length)
-        assert string.s[0] >= sizeof(string.s) or string.s[0] == 0, string.s[0]
         return string
     else:
         i = 0
@@ -69,7 +69,6 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
             string.p[i] = 255
         string.p[n_length_bytes-1] = length % 255
         memcpy(&string.p[n_length_bytes], chars, length)
-        assert string.s[0] >= sizeof(string.s) or string.s[0] == 0, string.s[0]
         return string
 
 
@@ -115,7 +114,7 @@ cdef class StringStore:
             self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
-                raise KeyError(string_or_id)
+                raise KeyError(Errors.E018.format(hash_value=string_or_id))
             else:
                 return decode_Utf8Str(utf8str)
 
@@ -136,8 +135,7 @@ cdef class StringStore:
             key = hash_utf8(string, len(string))
             self._intern_utf8(string, len(string))
         else:
-            raise TypeError(
-                "Can only add unicode or bytes. Got type: %s" % type(string))
+            raise TypeError(Errors.E017.format(value_type=type(string)))
         return key
 
     def __len__(self):

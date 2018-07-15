@@ -127,7 +127,7 @@ p
 
 +aside-code("Example").
     from spacy.tokens import Span
-    city_getter = lambda span: span.text in ('New York', 'Paris', 'Berlin')
+    city_getter = lambda span: any(city in span.text for city in ('New York', 'Paris', 'Berlin'))
     Span.set_extension('has_city', getter=city_getter)
     doc = nlp(u'I like New York in Autumn')
     assert doc[1:4]._.has_city

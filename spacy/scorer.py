@@ -2,6 +2,7 @@
 from __future__ import division, print_function, unicode_literals
 
 from .gold import tags_to_entities
+from .errors import Errors
 
 
 class PRFScore(object):
@@ -84,7 +85,8 @@ class Scorer(object):
         }
 
     def score(self, tokens, gold, verbose=False, punct_labels=('p', 'punct')):
-        assert len(tokens) == len(gold)
+        if len(tokens) != len(gold):
+            raise ValueError(Errors.E078.format(words_doc=len(tokens), words_gold=len(gold)))
         gold_deps = set()
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[-1]

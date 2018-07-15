@@ -115,7 +115,7 @@ GLOSSARY = {
     'ADJA':         'adjective, attributive',
     'ADJD':         'adjective, adverbial or predicative',
     'APPO':         'postposition',
-    'APRP':         'preposition; circumposition left',
+    'APPR':         'preposition; circumposition left',
     'APPRART':      'preposition with article',
     'APZR':         'circumposition right',
     'ART':          'definite or indefinite article',

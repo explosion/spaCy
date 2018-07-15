@@ -60,6 +60,13 @@
         padding-bottom: 4rem
         border-bottom: 1px dotted $color-subtle
 
+    &.o-section--small
+        overflow: auto
+
+        &:not(:last-child)
+            margin-bottom: 3.5rem
+            padding-bottom: 2rem
+
 .o-block
     margin-bottom: 4rem
 
@@ -142,6 +149,14 @@
 .o-badge
     border-radius: 1em
 
+.o-thumb
+    @include size(100px)
+    overflow: hidden
+    border-radius: 50%
+
+    &.o-thumb--small
+        @include size(35px)
+
 
 //- SVG
 
@@ -216,3 +231,19 @@
      border: none
      text-align-last: center
      width: 100%
+
+//- Abbreviations
+
+.o-abbr
+    +breakpoint(min, md)
+        cursor: help
+        border-bottom: 2px dotted $color-theme
+        padding-bottom: 3px
+
+    +breakpoint(max, sm)
+        &[data-tooltip]:before
+            content: none
+
+        &:after
+            content: " (" attr(aria-label) ")"
+            color: $color-subtle-dark

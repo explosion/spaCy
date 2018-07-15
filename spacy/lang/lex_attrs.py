@@ -69,6 +69,14 @@ def is_right_punct(text):
     return text in right_punct
 
 
+def is_currency(text):
+    # can be overwritten by lang with list of currency words, e.g. dollar, euro
+    for char in text:
+        if unicodedata.category(char) != 'Sc':
+            return False
+    return True
+
+
 def like_email(text):
     return bool(_like_email(text))
 
@@ -164,5 +172,6 @@ LEX_ATTRS = {
     attrs.IS_QUOTE: is_quote,
     attrs.IS_LEFT_PUNCT: is_left_punct,
     attrs.IS_RIGHT_PUNCT: is_right_punct,
+    attrs.IS_CURRENCY: is_currency,
     attrs.LIKE_URL: like_url
 }
