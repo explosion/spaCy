@@ -23,7 +23,7 @@ p
     |  virtual environment to avoid modifying system state:
 
 +code(false, "bash").
-    venv .env
+    python -m venv .env
     source .env/bin/activate
     pip install spacy
 
@@ -121,11 +121,11 @@ p
     |  #[a(href="#source-windows") Windows] for details.
 
 +code(false, "bash").
-    python -m pip install -U pip venv              # update pip & virtualenv
+    python -m pip install -U pip                   # update pip
     git clone #{gh("spaCy")}   # clone spaCy
     cd spaCy                                       # navigate into directory
 
-    venv .env                                      # create environment in .env
+    python -m venv .env                            # create environment in .env
     source .env/bin/activate                       # activate virtual environment
     export PYTHONPATH=`pwd`                        # set Python path to spaCy directory
     pip install -r requirements.txt                # install all requirements

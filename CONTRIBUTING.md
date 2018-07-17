@@ -138,11 +138,11 @@ files, a compiler, [pip](https://pip.pypa.io/en/latest/installing/),
 [git](https://git-scm.com) installed. The compiler is usually the trickiest part.
 
 ```
-python -m pip install -U pip venv
+python -m pip install -U pip
 git clone https://github.com/explosion/spaCy
 cd spaCy
 
-venv .env
+python -m venv .env
 source .env/bin/activate
 export PYTHONPATH=`pwd`
 pip install -r requirements.txt
