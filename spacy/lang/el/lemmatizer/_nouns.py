@@ -1,3 +1,4 @@
+# coding: utf8
 from __future__ import unicode_literals
 NOUNS = set("""
  -αλγία -βατώ -βατῶ -ούλα -πληξία -ώνυμο sofa table άβακας άβατο άβατον άβυσσος

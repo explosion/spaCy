@@ -1,3 +1,4 @@
+# coding: utf8
 from __future__ import unicode_literals
 ADVERBS = set("""
  άβλαβα άβολα άβουλα άγαν άγαρμπα άγγιχτα άγνωμα άγρια άγρυπνα άδηλα άδικα

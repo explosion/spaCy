@@ -1,3 +1,4 @@
+# coding: utf8
 from __future__ import unicode_literals
 VERBS = set("""
  'γγίζω άγομαι άγχομαι άγω άδω άπτομαι άπωσον άρχομαι άρχω άφτω έγκειται έκιοσε

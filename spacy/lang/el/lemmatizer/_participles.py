@@ -1,3 +1,4 @@
+# coding: utf8
 from __future__ import unicode_literals
 PARTICIPLES = set("""
  έρποντας έχοντας αβανιάζοντας αβγατισμένος αγαπημένος αγαπώντας αγγίζοντας
