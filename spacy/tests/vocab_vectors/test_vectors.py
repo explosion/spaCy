@@ -1,18 +1,23 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...vectors import Vectors
-from ...tokenizer import Tokenizer
-from ...strings import hash_string
-from ..util import add_vecs_to_vocab, get_doc
-
-import numpy
 import pytest
+import numpy
+from numpy.testing import assert_allclose
+from spacy._ml import cosine
+from spacy.vocab import Vocab
+from spacy.vectors import Vectors
+from spacy.tokenizer import Tokenizer
+from spacy.strings import hash_string
+from spacy.tokens import Doc
+
+from ..util import add_vecs_to_vocab
 
 
 @pytest.fixture
 def strings():
     return ["apple", "orange"]
+
 
 @pytest.fixture
 def vectors():
@@ -23,6 +28,7 @@ def vectors():
         ('juice', [5, 5, 10]),
         ('pie', [7, 6.3, 8.9])]
 
+
 @pytest.fixture
 def ngrams_vectors():
     return [
@@ -31,23 +37,34 @@ def ngrams_vectors():
         ('ppl', [-0.2, -0.3, -0.4]),
         ('pl', [0.7, 0.8, 0.9])
     ]
+
+
 @pytest.fixture()
 def ngrams_vocab(en_vocab, ngrams_vectors):
     add_vecs_to_vocab(en_vocab, ngrams_vectors)
     return en_vocab
 
+
 @pytest.fixture
 def data():
     return numpy.asarray([[0.0, 1.0, 2.0], [3.0, -2.0, 4.0]], dtype='f')
+
 
 @pytest.fixture
 def resize_data():
     return numpy.asarray([[0.0, 1.0], [2.0, 3.0]], dtype='f')
 
+
 @pytest.fixture()
 def vocab(en_vocab, vectors):
     add_vecs_to_vocab(en_vocab, vectors)
     return en_vocab
+
+
+@pytest.fixture()
+def tokenizer_v(vocab):
+    return Tokenizer(vocab, {}, None, None, None)
+
 
 def test_init_vectors_with_resize_shape(strings,resize_data):
     v = Vectors(shape=(len(strings), 3))
@@ -55,11 +72,13 @@ def test_init_vectors_with_resize_shape(strings,resize_data):
     assert v.shape == resize_data.shape
     assert v.shape != (len(strings), 3)
 
+
 def test_init_vectors_with_resize_data(data,resize_data):
     v = Vectors(data=data)
     v.resize(shape=resize_data.shape)
     assert v.shape == resize_data.shape
     assert v.shape != data.shape
+
 
 def test_get_vector_resize(strings, data,resize_data):
     v = Vectors(data=data)
@@ -73,9 +92,11 @@ def test_get_vector_resize(strings, data,resize_data):
     assert list(v[strings[1]]) != list(resize_data[0])
     assert list(v[strings[1]]) == list(resize_data[1])
 
+
 def test_init_vectors_with_data(strings, data):
     v = Vectors(data=data)
     assert v.shape == data.shape
+
 
 def test_init_vectors_with_shape(strings):
     v = Vectors(shape=(len(strings), 3))
@@ -103,11 +124,6 @@ def test_set_vector(strings, data):
     v[strings[0]] = data[1]
     assert list(v[strings[0]]) == list(orig[1])
     assert list(v[strings[0]]) != list(orig[0])
-
-
-@pytest.fixture()
-def tokenizer_v(vocab):
-    return Tokenizer(vocab, {}, None, None, None)
 
 
 @pytest.mark.parametrize('text', ["apple and orange"])
@@ -138,14 +154,14 @@ def test_vectors_lexeme_vector(vocab, text):
 
 @pytest.mark.parametrize('text', [["apple", "and", "orange"]])
 def test_vectors_doc_vector(vocab, text):
-    doc = get_doc(vocab, text)
+    doc = Doc(vocab, words=text)
     assert list(doc.vector)
     assert doc.vector_norm
 
 
 @pytest.mark.parametrize('text', [["apple", "and", "orange"]])
 def test_vectors_span_vector(vocab, text):
-    span = get_doc(vocab, text)[0:2]
+    span = Doc(vocab, words=text)[0:2]
     assert list(span.vector)
     assert span.vector_norm
 
@@ -167,21 +183,21 @@ def test_vectors_token_lexeme_similarity(tokenizer_v, vocab, text1, text2):
 
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_token_span_similarity(vocab, text):
-    doc = get_doc(vocab, text)
+    doc = Doc(vocab, words=text)
     assert doc[0].similarity(doc[1:3]) == doc[1:3].similarity(doc[0])
     assert -1. < doc[0].similarity(doc[1:3]) < 1.0
 
 
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_token_doc_similarity(vocab, text):
-    doc = get_doc(vocab, text)
+    doc = Doc(vocab, words=text)
     assert doc[0].similarity(doc) == doc.similarity(doc[0])
     assert -1. < doc[0].similarity(doc) < 1.0
 
 
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_lexeme_span_similarity(vocab, text):
-    doc = get_doc(vocab, text)
+    doc = Doc(vocab, words=text)
     lex = vocab[text[0]]
     assert lex.similarity(doc[1:3]) == doc[1:3].similarity(lex)
     assert -1. < doc.similarity(doc[1:3]) < 1.0
@@ -197,7 +213,7 @@ def test_vectors_lexeme_lexeme_similarity(vocab, text1, text2):
 
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_lexeme_doc_similarity(vocab, text):
-    doc = get_doc(vocab, text)
+    doc = Doc(vocab, words=text)
     lex = vocab[text[0]]
     assert lex.similarity(doc) == doc.similarity(lex)
     assert -1. < lex.similarity(doc) < 1.0
@@ -205,7 +221,7 @@ def test_vectors_lexeme_doc_similarity(vocab, text):
 
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_span_span_similarity(vocab, text):
-    doc = get_doc(vocab, text)
+    doc = Doc(vocab, words=text)
     with pytest.warns(None):
         assert doc[0:2].similarity(doc[1:3]) == doc[1:3].similarity(doc[0:2])
         assert -1. < doc[0:2].similarity(doc[1:3]) < 1.0
@@ -213,7 +229,7 @@ def test_vectors_span_span_similarity(vocab, text):
 
 @pytest.mark.parametrize('text', [["apple", "orange", "juice"]])
 def test_vectors_span_doc_similarity(vocab, text):
-    doc = get_doc(vocab, text)
+    doc = Doc(vocab, words=text)
     with pytest.warns(None):
         assert doc[0:2].similarity(doc) == doc.similarity(doc[0:2])
         assert -1. < doc[0:2].similarity(doc) < 1.0
@@ -222,7 +238,40 @@ def test_vectors_span_doc_similarity(vocab, text):
 @pytest.mark.parametrize('text1,text2', [
     (["apple", "and", "apple", "pie"], ["orange", "juice"])])
 def test_vectors_doc_doc_similarity(vocab, text1, text2):
-    doc1 = get_doc(vocab, text1)
-    doc2 = get_doc(vocab, text2)
+    doc1 = Doc(vocab, words=text1)
+    doc2 = Doc(vocab, words=text2)
     assert doc1.similarity(doc2) == doc2.similarity(doc1)
     assert -1. < doc1.similarity(doc2) < 1.0
+
+
+def test_vocab_add_vector():
+    vocab = Vocab()
+    data = numpy.ndarray((5,3), dtype='f')
+    data[0] = 1.
+    data[1] = 2.
+    vocab.set_vector(u'cat', data[0])
+    vocab.set_vector(u'dog', data[1])
+    cat = vocab[u'cat']
+    assert list(cat.vector) == [1., 1., 1.]
+    dog = vocab[u'dog']
+    assert list(dog.vector) == [2., 2., 2.]
+
+
+def test_vocab_prune_vectors():
+    vocab = Vocab()
+    _ = vocab[u'cat']
+    _ = vocab[u'dog']
+    _ = vocab[u'kitten']
+    data = numpy.ndarray((5,3), dtype='f')
+    data[0] = 1.
+    data[1] = 2.
+    data[2] = 1.1
+    vocab.set_vector(u'cat', data[0])
+    vocab.set_vector(u'dog', data[1])
+    vocab.set_vector(u'kitten', data[2])
+
+    remap = vocab.prune_vectors(2)
+    assert list(remap.keys()) == [u'kitten']
+    neighbour, similarity = list(remap.values())[0]
+    assert neighbour == u'cat', remap
+    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-6)

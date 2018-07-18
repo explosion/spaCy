@@ -4,9 +4,8 @@ from __future__ import unicode_literals
 import pytest
 import dill as pickle
 import numpy
-
-from ..vocab import Vocab
-from ..attrs import NORM
+from spacy.vocab import Vocab
+from spacy.attrs import NORM
 
 
 @pytest.mark.parametrize('text1,text2', [('hello', 'bye')])

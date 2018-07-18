@@ -2,11 +2,11 @@
 from __future__ import unicode_literals
 
 import pytest
+from spacy.language import Language
+from spacy.tokens import Span
 
 from ..util import get_doc
-from ...language import Language
-from ...tokens import Span
-from ... import util
+
 
 @pytest.fixture
 def doc(en_tokenizer):

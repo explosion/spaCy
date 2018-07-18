@@ -1,10 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..tokens import Doc
-from ..attrs import ORTH, POS, HEAD, DEP
-from ..compat import path2str
-
 import pytest
 import numpy
 import tempfile
@@ -12,17 +8,9 @@ import shutil
 import contextlib
 import msgpack
 from pathlib import Path
-
-
-MODELS = {}
-
-
-def load_test_model(model):
-    """Load a model if it's installed as a package, otherwise skip."""
-    if model not in MODELS:
-        module = pytest.importorskip(model)
-        MODELS[model] = module.load()
-    return MODELS[model]
+from spacy.tokens import Doc
+from spacy.attrs import ORTH, POS, HEAD, DEP
+from spacy.compat import path2str
 
 
 @contextlib.contextmanager

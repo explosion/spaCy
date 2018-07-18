@@ -1,7 +1,8 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
-from ...language import Language
-from ...compat import pickle, unicode_
+from spacy.language import Language
+from spacy.compat import pickle, unicode_
 
 
 def test_pickle_single_doc():

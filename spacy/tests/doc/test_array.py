@@ -1,10 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...attrs import ORTH, SHAPE, POS, DEP
-from ..util import get_doc
-
 import pytest
+from spacy.attrs import ORTH, SHAPE, POS, DEP
+
+from ..util import get_doc
 
 
 def test_doc_array_attr_of_token(en_tokenizer, en_vocab):

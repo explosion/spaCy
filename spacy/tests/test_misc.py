@@ -1,18 +1,17 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import ensure_path
-from .. import util
-from .. import displacy
-from ..tokens import Span
-from .util import get_doc
-from .._ml import PrecomputableAffine
-
-from pathlib import Path
 import pytest
+from pathlib import Path
 from thinc.neural._classes.maxout import Maxout
 from thinc.neural._classes.softmax import Softmax
 from thinc.api import chain
+from spacy import util
+from spacy import displacy
+from spacy.tokens import Span
+from spacy._ml import PrecomputableAffine
+
+from .util import get_doc
 
 
 @pytest.mark.parametrize('text', ['hello/world', 'hello world'])

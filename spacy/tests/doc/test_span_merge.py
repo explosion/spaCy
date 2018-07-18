@@ -1,11 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-from ...vocab import Vocab
-from ...tokens import Doc
-
 import pytest
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+
+from ..util import get_doc
 
 
 def test_spans_merge_tokens(en_tokenizer):

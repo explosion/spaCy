@@ -1,12 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-from ...attrs import ORTH, LENGTH
-from ...tokens import Doc
-from ...vocab import Vocab
-
 import pytest
+from spacy.attrs import ORTH, LENGTH
+from spacy.tokens import Doc
+from spacy.vocab import Vocab
+
+from ..util import get_doc
 
 
 @pytest.fixture

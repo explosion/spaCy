@@ -1,9 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-
 import pytest
+
+from ..util import get_doc
 
 
 @pytest.fixture

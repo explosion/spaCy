@@ -1,14 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import pytest
 from io import StringIO, BytesIO
 from pathlib import Path
-import pytest
-
-from .util import load_test_model
-from ..tokens import Doc
-from ..strings import StringStore
-from .. import util
+from spacy.tokens import Doc
+from spacy.strings import StringStore
+from spacy import util
 
 
 # These languages are used for generic tokenizer tests – only add a language
@@ -26,28 +24,11 @@ _models = {'en': ['en_core_web_sm'],
            'es_core_news_md': ['es_core_news_md']}
 
 
-# only used for tests that require loading the models
-# in all other cases, use specific instances
-
-@pytest.fixture(params=_models['en'])
-def EN(request):
-    return load_test_model(request.param)
-
-
-@pytest.fixture(params=_models['de'])
-def DE(request):
-    return load_test_model(request.param)
-
-
-@pytest.fixture(params=_models['fr'])
-def FR(request):
-    return load_test_model(request.param)
-
-
 @pytest.fixture()
 def RU(request):
     pymorphy = pytest.importorskip('pymorphy2')
     return util.get_lang_class('ru')()
+
 
 @pytest.fixture()
 def JA(request):
@@ -202,28 +183,10 @@ def text_file_b():
 
 
 def pytest_addoption(parser):
-    parser.addoption("--models", action="store_true",
-                     help="include tests that require full models")
-    parser.addoption("--vectors", action="store_true",
-                     help="include word vectors tests")
-    parser.addoption("--slow", action="store_true",
-                     help="include slow tests")
-
-    for lang in _languages + ['all']:
-        parser.addoption("--%s" % lang, action="store_true", help="Use %s models" % lang)
-    for model in _models:
-        if model not in _languages:
-            parser.addoption("--%s" % model, action="store_true", help="Use %s model" % model)
+    parser.addoption("--slow", action="store_true", help="include slow tests")
 
 
 def pytest_runtest_setup(item):
-    for opt in ['models', 'vectors', 'slow']:
+    for opt in ['slow']:
         if opt in item.keywords and not item.config.getoption("--%s" % opt):
             pytest.skip("need --%s option to run" % opt)
-
-    # Check if test is marked with models and has arguments set, i.e. specific
-    # language. If so, skip test if flag not set.
-    if item.get_marker('models'):
-        for arg in item.get_marker('models').args:
-            if not item.config.getoption("--%s" % arg) and not item.config.getoption("--all"):
-                pytest.skip("need --%s or --all option to run" % arg)

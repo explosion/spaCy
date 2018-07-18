@@ -1,10 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..matcher import Matcher, PhraseMatcher
-from .util import get_doc
-
 import pytest
+from spacy.matcher import Matcher, PhraseMatcher
+
+from .util import get_doc
 
 
 @pytest.fixture

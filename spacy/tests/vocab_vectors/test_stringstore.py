@@ -1,20 +1,19 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...strings import StringStore
-
 import pytest
+from spacy.strings import StringStore
 
 
 def test_string_hash(stringstore):
-    '''Test that string hashing is stable across platforms'''
+    """Test that string hashing is stable across platforms"""
     ss = stringstore
     assert ss.add('apple') == 8566208034543834098
     heart = '\U0001f499'
     print(heart)
     h = ss.add(heart)
     assert h == 11841826740069053588
- 
+
 
 def test_stringstore_from_api_docs(stringstore):
     apple_hash = stringstore.add('apple')
@@ -99,3 +98,22 @@ def test_stringstore_to_bytes(stringstore, text):
     serialized = stringstore.to_bytes()
     new_stringstore = StringStore().from_bytes(serialized)
     assert new_stringstore[store] == text
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize('text', [["a", "b", "c"]])
+def test_stringstore_freeze_oov(stringstore, text):
+    """Test the possibly temporary workaround of flushing the stringstore of
+    OOV words."""
+    assert stringstore[text[0]] == 1
+    assert stringstore[text[1]] == 2
+
+    stringstore.set_frozen(True)
+    s = stringstore[text[2]]
+    assert s >= 4
+    s_ = stringstore[s]
+    assert s_ == text[2]
+
+    stringstore.flush_oov()
+    with pytest.raises(IndexError):
+        s_ = stringstore[s]

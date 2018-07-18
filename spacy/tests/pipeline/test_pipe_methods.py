@@ -2,8 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
-
-from ...language import Language
+from spacy.language import Language
 
 
 @pytest.fixture

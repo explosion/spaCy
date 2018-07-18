@@ -1,12 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import make_tempdir
-from ...language import Language
-from ...tokenizer import Tokenizer
-
 import pytest
 import re
+from spacy.language import Language
+from spacy.tokenizer import Tokenizer
+
+from ..util import make_tempdir
 
 
 @pytest.fixture

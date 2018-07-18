@@ -1,11 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...tokens.doc import Doc
-from ...attrs import HEAD
-from ..util import get_doc, apply_transition_sequence
-
 import pytest
+
+from spacy.tokens.doc import Doc
+from spacy.attrs import HEAD
+
+from ..util import get_doc, apply_transition_sequence
 
 
 def test_parser_space_attachment(en_tokenizer):

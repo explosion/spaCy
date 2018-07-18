@@ -1,15 +1,16 @@
-'''Test the ability to add a label to a (potentially trained) parsing model.'''
+# coding: utf8
 from __future__ import unicode_literals
+
 import pytest
 import numpy.random
 from thinc.neural.optimizers import Adam
 from thinc.neural.ops import NumpyOps
+from spacy.attrs import NORM
+from spacy.gold import GoldParse
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+from spacy.pipeline import DependencyParser
 
-from ...attrs import NORM
-from ...gold import GoldParse
-from ...vocab import Vocab
-from ...tokens import Doc
-from ...pipeline import DependencyParser
 
 numpy.random.seed(0)
 
@@ -37,8 +38,10 @@ def parser(vocab):
         parser.update([doc], [gold], sgd=sgd, losses=losses)
     return parser
 
+
 def test_init_parser(parser):
     pass
+
 
 # TODO: This is flakey, because it depends on what the parser first learns.
 @pytest.mark.xfail
@@ -69,4 +72,3 @@ def test_add_label(parser):
     doc = parser(doc)
     assert doc[0].dep_ == 'right'
     assert doc[2].dep_ == 'left'
- 

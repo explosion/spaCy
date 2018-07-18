@@ -1,13 +1,13 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-from ...tokens import Doc
-from ...vocab import Vocab
-from ...attrs import LEMMA
-
 import pytest
 import numpy
+from spacy.tokens import Doc
+from spacy.vocab import Vocab
+from spacy.attrs import LEMMA
+
+from ..util import get_doc
 
 
 @pytest.mark.parametrize('text', [["one", "two", "three"]])

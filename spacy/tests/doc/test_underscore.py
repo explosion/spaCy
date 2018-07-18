@@ -3,10 +3,9 @@ from __future__ import unicode_literals
 
 import pytest
 from mock import Mock
-
-from ..vocab import Vocab
-from ..tokens import Doc, Span, Token
-from ..tokens.underscore import Underscore
+from spacy.vocab import Vocab
+from spacy.tokens import Doc, Span, Token
+from spacy.tokens.underscore import Underscore
 
 
 def test_create_doc_underscore():

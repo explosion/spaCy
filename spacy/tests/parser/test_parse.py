@@ -1,9 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc, apply_transition_sequence
-
 import pytest
+
+from ..util import get_doc, apply_transition_sequence
 
 
 def test_parser_root(en_tokenizer):

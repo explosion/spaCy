@@ -2,9 +2,8 @@
 from __future__ import unicode_literals
 
 import pytest
-
-from ...tokens.doc import Doc
-from ...vocab import Vocab
+from spacy.tokens import Doc
+from spacy.vocab import Vocab
 
 
 @pytest.fixture

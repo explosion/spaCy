@@ -1,34 +1,39 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...syntax.nonproj import ancestors, contains_cycle, is_nonproj_arc
-from ...syntax.nonproj import is_nonproj_tree
-from ...syntax import nonproj
-from ...attrs import DEP, HEAD
-from ..util import get_doc
-
 import pytest
+from spacy.syntax.nonproj import ancestors, contains_cycle, is_nonproj_arc
+from spacy.syntax.nonproj import is_nonproj_tree
+from spacy.syntax import nonproj
+from spacy.attrs import DEP, HEAD
+
+from ..util import get_doc
 
 
 @pytest.fixture
 def tree():
     return [1, 2, 2, 4, 5, 2, 2]
 
+
 @pytest.fixture
 def cyclic_tree():
     return [1, 2, 2, 4, 5, 3, 2]
+
 
 @pytest.fixture
 def partial_tree():
     return [1, 2, 2, 4, 5, None, 7, 4, 2]
 
+
 @pytest.fixture
 def nonproj_tree():
     return [1, 2, 2, 4, 5, 2, 7, 4, 2]
 
+
 @pytest.fixture
 def proj_tree():
     return [1, 2, 2, 4, 5, 2, 7, 5, 2]
+
 
 @pytest.fixture
 def multirooted_tree():

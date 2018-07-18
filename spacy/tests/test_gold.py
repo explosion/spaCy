@@ -1,10 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...gold import biluo_tags_from_offsets, offsets_from_biluo_tags
-from ...tokens.doc import Doc
-
 import pytest
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.tokens import Doc
 
 
 def test_gold_biluo_U(en_vocab):

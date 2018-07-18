@@ -1,14 +1,14 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
-from ...symbols import NOUN, VERB
-from ..util import get_doc
-from ...vocab import Vocab
-from ...tokens import Doc
-
 import pytest
 import numpy
+from spacy.attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
+from spacy.symbols import NOUN, VERB
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+
+from ..util import get_doc
 
 
 def test_doc_token_api_strings(en_tokenizer):

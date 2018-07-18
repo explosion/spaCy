@@ -1,10 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...attrs import LEMMA, ORTH, PROB, IS_ALPHA
-from ...parts_of_speech import NOUN, VERB
-
 import pytest
+from spacy.attrs import LEMMA, ORTH, PROB, IS_ALPHA
+from spacy.parts_of_speech import NOUN, VERB
 
 
 @pytest.mark.parametrize('text1,text2', [
