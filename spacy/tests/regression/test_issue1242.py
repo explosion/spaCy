@@ -11,13 +11,3 @@ def test_issue1242_empty_strings():
     docs = list(nlp.pipe(['', 'hello']))
     assert len(docs[0]) == 0
     assert len(docs[1]) == 1
-
-
-@pytest.mark.models('en')
-def test_issue1242_empty_strings_en_core_web_sm():
-    nlp = load_model('en_core_web_sm')
-    doc = nlp('')
-    assert len(doc) == 0
-    docs = list(nlp.pipe(['', 'hello']))
-    assert len(docs[0]) == 0
-    assert len(docs[1]) == 1
