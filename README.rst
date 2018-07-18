@@ -255,7 +255,7 @@ details.
 
 .. code:: bash
 
-    # make sure you are using recent pip/virtualenv versions
+    # make sure you are using the latest pip
     python -m pip install -U pip
     git clone https://github.com/explosion/spaCy
     cd spaCy
