@@ -24,17 +24,18 @@ def test_simple_train():
     assert doc.cats['answer'] >= 0.5
 
 
-def test_textcat_learns_multilabel(en_vocab):
+def test_textcat_learns_multilabel():
     random.seed(5)
     numpy.random.seed(5)
     docs = []
+    nlp = Language()
     letters = ['a', 'b', 'c']
     for w1 in letters:
         for w2 in letters:
             cats = {letter: float(w2==letter) for letter in letters}
-            docs.append((Doc(en_vocab, words=['d']*3 + [w1, w2] + ['d']*3), cats))
+            docs.append((Doc(nlp.vocab, words=['d']*3 + [w1, w2] + ['d']*3), cats))
     random.shuffle(docs)
-    model = TextCategorizer(en_vocab, width=8)
+    model = TextCategorizer(nlp.vocab, width=8)
     for letter in letters:
         model.add_label(letter)
     optimizer = model.begin_training()
@@ -46,7 +47,7 @@ def test_textcat_learns_multilabel(en_vocab):
         random.shuffle(docs)
     for w1 in letters:
         for w2 in letters:
-            doc = Doc(en_vocab, words=['d']*3 + [w1, w2] + ['d']*3)
+            doc = Doc(nlp.vocab, words=['d']*3 + [w1, w2] + ['d']*3)
             truth = {letter: w2==letter for letter in letters}
             model(doc)
             for cat, score in doc.cats.items():
