@@ -1,3 +1,4 @@
+# coding: utf8
 """  
 All wordforms are extracted from Norsk Ordbank in Norwegian Bokmål 2005
 (CLARINO NB - Språkbanken), Nasjonalbiblioteket, Norway:
@@ -6,7 +7,6 @@ License:
 Creative_Commons-BY (CC-BY) (https://creativecommons.org/licenses/by/4.0/)  
 """
 
-# coding: utf8
 from __future__ import unicode_literals
 
 LOOKUP = {
