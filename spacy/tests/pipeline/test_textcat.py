@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import pytest
 import random
 import numpy.random
 from spacy.language import Language
@@ -19,11 +20,12 @@ def test_simple_train():
         for text, answer in [('aaaa', 1.), ('bbbb', 0), ('aa', 1.),
                             ('bbbbbbbbb', 0.), ('aaaaaa', 1)]:
             nlp.update([text], [{'cats': {'answer': answer}}])
-    doc = nlp(u'aaa')
+    doc = nlp('aaa')
     assert 'answer' in doc.cats
     assert doc.cats['answer'] >= 0.5
 
 
+@pytest.mark.skip(reason="Test is flakey when run with others")
 def test_textcat_learns_multilabel():
     random.seed(5)
     numpy.random.seed(5)

@@ -36,7 +36,7 @@ def test_util_get_package_path(package):
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
     doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
-    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings[u'ORG'])]
+    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings['ORG'])]
     ents = displacy.parse_ents(doc)
     assert isinstance(ents, dict)
     assert ents['text'] == 'But Google is starting from behind '
@@ -66,7 +66,7 @@ def test_displacy_parse_deps(en_vocab):
 def test_displacy_spans(en_vocab):
     """Test that displaCy can render Spans."""
     doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
-    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings[u'ORG'])]
+    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings['ORG'])]
     html = displacy.render(doc[1:4], style='ent')
     assert html.startswith('<div')
 

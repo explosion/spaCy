@@ -165,7 +165,7 @@ def test_doc_token_api_head_setter(en_tokenizer):
 
 
 def test_is_sent_start(en_tokenizer):
-    doc = en_tokenizer(u'This is a sentence. This is another.')
+    doc = en_tokenizer('This is a sentence. This is another.')
     assert doc[5].is_sent_start is None
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True

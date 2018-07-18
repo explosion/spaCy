@@ -5,33 +5,33 @@ import pytest
 from spacy.strings import StringStore
 
 
+@pytest.fixture
+def stringstore():
+    return StringStore()
+
+
 def test_string_hash(stringstore):
     """Test that string hashing is stable across platforms"""
-    ss = stringstore
-    assert ss.add('apple') == 8566208034543834098
+    assert stringstore.add('apple') == 8566208034543834098
     heart = '\U0001f499'
-    print(heart)
-    h = ss.add(heart)
+    h = stringstore.add(heart)
     assert h == 11841826740069053588
 
 
 def test_stringstore_from_api_docs(stringstore):
     apple_hash = stringstore.add('apple')
     assert apple_hash == 8566208034543834098
-    assert stringstore[apple_hash] == u'apple'
-
-    assert u'apple' in stringstore
-    assert u'cherry' not in stringstore
-
+    assert stringstore[apple_hash] == 'apple'
+    assert 'apple' in stringstore
+    assert 'cherry' not in stringstore
     orange_hash = stringstore.add('orange')
     all_strings = [s for s in stringstore]
-    assert all_strings == [u'apple', u'orange']
-
+    assert all_strings == ['apple', 'orange']
     banana_hash = stringstore.add('banana')
     assert len(stringstore) == 3
     assert banana_hash == 2525716904149915114
-    assert stringstore[banana_hash] == u'banana'
-    assert stringstore[u'banana'] == banana_hash
+    assert stringstore[banana_hash] == 'banana'
+    assert stringstore['banana'] == banana_hash
 
 
 @pytest.mark.parametrize('text1,text2,text3', [(b'Hello', b'goodbye', b'hello')])

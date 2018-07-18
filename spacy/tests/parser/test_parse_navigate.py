@@ -8,7 +8,7 @@ from ..util import get_doc
 
 @pytest.fixture
 def text():
-    return u"""
+    return """
 It was a bright cold day in April, and the clocks were striking thirteen.
 Winston Smith, his chin nuzzled into his breast in an effort to escape the
 vile wind, slipped quickly through the glass doors of Victory Mansions,

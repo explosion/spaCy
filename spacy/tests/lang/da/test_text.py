@@ -22,7 +22,6 @@ Rundt om ager og eng var der store skove, og midt i skovene dybe søer; jo, der 
 def test_lex_attrs_like_number(da_tokenizer, text, match):
     tokens = da_tokenizer(text)
     assert len(tokens) == 1
-    print(tokens[0])
     assert tokens[0].like_num == match
 
 

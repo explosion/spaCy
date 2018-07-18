@@ -21,5 +21,4 @@ def test_ar_tokenizer_handles_exc_in_text(ar_tokenizer):
 def test_ar_tokenizer_handles_exc_in_text(ar_tokenizer):
     text = "يبلغ طول مضيق طارق 14كم "
     tokens = ar_tokenizer(text)
-    print([(tokens[i].text, tokens[i].suffix_) for i in range(len(tokens))])
     assert len(tokens) == 6

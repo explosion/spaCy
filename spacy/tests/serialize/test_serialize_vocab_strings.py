@@ -13,7 +13,7 @@ test_strings_attrs = [(['rats', 'are', 'cute'], 'Hello')]
 
 
 @pytest.mark.parametrize('strings1,strings2', test_strings)
-def test_serialize_vocab_roundtrip_bytes(strings1,strings2):
+def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     vocab1 = Vocab(strings=strings1)
     vocab2 = Vocab(strings=strings2)
     vocab1_b = vocab1.to_bytes()
@@ -75,7 +75,7 @@ def test_serialize_vocab_lex_attrs_disk(strings, lex_attr):
 
 
 @pytest.mark.parametrize('strings1,strings2', test_strings)
-def test_serialize_stringstore_roundtrip_bytes(strings1,strings2):
+def test_serialize_stringstore_roundtrip_bytes(strings1, strings2):
     sstore1 = StringStore(strings=strings1)
     sstore2 = StringStore(strings=strings2)
     sstore1_b = sstore1.to_bytes()
@@ -92,7 +92,7 @@ def test_serialize_stringstore_roundtrip_bytes(strings1,strings2):
 
 
 @pytest.mark.parametrize('strings1,strings2', test_strings)
-def test_serialize_stringstore_roundtrip_disk(strings1,strings2):
+def test_serialize_stringstore_roundtrip_disk(strings1, strings2):
     sstore1 = StringStore(strings=strings1)
     sstore2 = StringStore(strings=strings2)
     with make_tempdir() as d:

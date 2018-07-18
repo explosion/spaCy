@@ -69,7 +69,7 @@ def test_issue1537():
 # TODO: Currently segfaulting, due to l_edge and r_edge misalignment
 #def test_issue1537_model():
 #    nlp = load_spacy('en')
-#    doc = nlp(u'The sky is blue. The man is pink. The dog is purple.')
+#    doc = nlp('The sky is blue. The man is pink. The dog is purple.')
 #    sents = [s.as_doc() for s in doc.sents]
 #    print(list(sents[0].noun_chunks))
 #    print(list(sents[1].noun_chunks))
