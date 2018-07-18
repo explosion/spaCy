@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.attrs import ORTH, SHAPE, POS, DEP
 
 from ..util import get_doc
@@ -41,7 +40,7 @@ def test_doc_array_tag(en_tokenizer):
     text = "A nice sentence."
     pos = ['DET', 'ADJ', 'NOUN', 'PUNCT']
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], pos=pos)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], pos=pos)
     assert doc[0].pos != doc[1].pos != doc[2].pos != doc[3].pos
     feats_array = doc.to_array((ORTH, POS))
     assert feats_array[0][1] == doc[0].pos
@@ -54,7 +53,7 @@ def test_doc_array_dep(en_tokenizer):
     text = "A nice sentence."
     deps = ['det', 'amod', 'ROOT', 'punct']
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deps)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
     feats_array = doc.to_array((ORTH, DEP))
     assert feats_array[0][1] == doc[0].dep
     assert feats_array[1][1] == doc[1].dep

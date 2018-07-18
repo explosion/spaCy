@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.tokens import Doc
 
 from ...util import get_doc, apply_transition_sequence
 
@@ -12,7 +11,7 @@ from ...util import get_doc, apply_transition_sequence
 def test_en_sbd_single_punct(en_tokenizer, text, punct):
     heads = [2, 1, 0, -1] if punct else [2, 1, 0]
     tokens = en_tokenizer(text + punct)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert len(doc) == 4 if punct else 3
     assert len(list(doc.sents)) == 1
     assert sum(len(sent) for sent in doc.sents) == len(doc)
@@ -27,7 +26,7 @@ def test_en_sentence_breaks(en_tokenizer, en_parser):
     transition = ['L-nsubj', 'S', 'L-det', 'R-attr', 'D', 'R-punct', 'B-ROOT',
                   'L-nsubj', 'S', 'L-attr', 'R-attr', 'D', 'R-punct']
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     apply_transition_sequence(en_parser, doc, transition)
     assert len(list(doc.sents)) == 2
     for token in doc:

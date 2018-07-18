@@ -54,7 +54,7 @@ def heads():
 
 def test_parser_parse_navigate_consistency(en_tokenizer, text, heads):
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     for head in doc:
         for child in head.lefts:
             assert child.head == head
@@ -64,7 +64,7 @@ def test_parser_parse_navigate_consistency(en_tokenizer, text, heads):
 
 def test_parser_parse_navigate_child_consistency(en_tokenizer, text, heads):
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
 
     lefts = {}
     rights = {}
@@ -97,7 +97,7 @@ def test_parser_parse_navigate_child_consistency(en_tokenizer, text, heads):
 
 def test_parser_parse_navigate_edges(en_tokenizer, text, heads):
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     for token in doc:
         subtree = list(token.subtree)
         debug = '\t'.join((token.text, token.left_edge.text, subtree[0].text))

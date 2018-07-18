@@ -12,6 +12,15 @@ test_strings = [([], []), (['rats', 'are', 'cute'], ['i', 'like', 'rats'])]
 test_strings_attrs = [(['rats', 'are', 'cute'], 'Hello')]
 
 
+@pytest.mark.xfail
+@pytest.mark.parametrize('text', ['rat'])
+def test_serialize_vocab(en_vocab, text):
+    text_hash = en_vocab.strings.add(text)
+    vocab_bytes = en_vocab.to_bytes()
+    new_vocab = Vocab().from_bytes(vocab_bytes)
+    assert new_vocab.strings(text_hash) == text
+
+
 @pytest.mark.parametrize('strings1,strings2', test_strings)
 def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     vocab1 = Vocab(strings=strings1)

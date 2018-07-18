@@ -3,9 +3,6 @@ from __future__ import unicode_literals
 
 import pytest
 from pathlib import Path
-from thinc.neural._classes.maxout import Maxout
-from thinc.neural._classes.softmax import Softmax
-from thinc.api import chain
 from spacy import util
 from spacy import displacy
 from spacy.tokens import Span

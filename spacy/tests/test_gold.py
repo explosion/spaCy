@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.tokens import Doc
 

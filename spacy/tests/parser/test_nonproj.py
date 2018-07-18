@@ -5,7 +5,6 @@ import pytest
 from spacy.syntax.nonproj import ancestors, contains_cycle, is_nonproj_arc
 from spacy.syntax.nonproj import is_nonproj_tree
 from spacy.syntax import nonproj
-from spacy.attrs import DEP, HEAD
 
 from ..util import get_doc
 
@@ -80,14 +79,14 @@ def test_parser_pseudoprojectivity(en_tokenizer):
     def deprojectivize(proj_heads, deco_labels):
         tokens = en_tokenizer('whatever ' * len(proj_heads))
         rel_proj_heads = [head-i for i, head in enumerate(proj_heads)]
-        doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deco_labels, heads=rel_proj_heads)
+        doc = get_doc(tokens.vocab, words=[t.text for t in tokens],
+                      deps=deco_labels, heads=rel_proj_heads)
         nonproj.deprojectivize(doc)
         return [t.head.i for t in doc], [token.dep_ for token in doc]
 
     tree = [1, 2, 2]
     nonproj_tree = [1, 2, 2, 4, 5, 2, 7, 4, 2]
     nonproj_tree2 = [9, 1, 3, 1, 5, 6, 9, 8, 6, 1, 6, 12, 13, 10, 1]
-
     labels = ['det', 'nsubj', 'root', 'det', 'dobj', 'aux', 'nsubj', 'acl', 'punct']
     labels2 = ['advmod', 'root', 'det', 'nsubj', 'advmod', 'det', 'dobj', 'det', 'nmod', 'aux', 'nmod', 'advmod', 'det', 'amod', 'punct']
 

@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 import numpy
 import tempfile
 import shutil
@@ -9,7 +8,7 @@ import contextlib
 import msgpack
 from pathlib import Path
 from spacy.tokens import Doc
-from spacy.attrs import ORTH, POS, HEAD, DEP
+from spacy.attrs import POS, HEAD, DEP
 from spacy.compat import path2str
 
 

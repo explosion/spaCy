@@ -8,8 +8,6 @@ from spacy.syntax.ner import BiluoPushDown
 from spacy.gold import GoldParse
 from spacy.tokens import Doc
 
-from ..util import get_doc
-
 
 @pytest.fixture
 def vocab():
@@ -77,17 +75,13 @@ def test_get_oracle_moves_negative_O(tsys, vocab):
 
 
 def test_doc_add_entities_set_ents_iob(en_vocab):
-    text = ["This", "is", "a", "lion"]
-    doc = get_doc(en_vocab, text)
+    doc = Doc(en_vocab, words=["This", "is", "a", "lion"])
     ner = EntityRecognizer(en_vocab)
     ner.begin_training([])
     ner(doc)
-
     assert len(list(doc.ents)) == 0
     assert [w.ent_iob_ for w in doc] == (['O'] * len(doc))
-
     doc.ents = [(doc.vocab.strings['ANIMAL'], 3, 4)]
     assert [w.ent_iob_ for w in doc] == ['', '', '', 'B']
-
     doc.ents = [(doc.vocab.strings['WORD'], 0, 2)]
     assert [w.ent_iob_ for w in doc] == ['B', 'I', '', '']

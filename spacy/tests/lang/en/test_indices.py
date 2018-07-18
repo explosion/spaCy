@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
-
 
 def test_en_simple_punct(en_tokenizer):
     text = "to walk, do foo"

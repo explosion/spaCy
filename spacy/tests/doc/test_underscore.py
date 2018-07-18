@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import pytest
 from mock import Mock
-from spacy.vocab import Vocab
 from spacy.tokens import Doc, Span, Token
 from spacy.tokens.underscore import Underscore
 

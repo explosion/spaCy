@@ -2,11 +2,8 @@
 from __future__ import unicode_literals
 
 import pytest
-import numpy
-from thinc.neural import Model
-from spacy._ml import chain, Tok2Vec, doc2feats
+from spacy._ml import Tok2Vec
 from spacy.vocab import Vocab
-from spacy.pipeline import Tensorizer
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.nn_parser import Parser
 from spacy.tokens.doc import Doc

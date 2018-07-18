@@ -6,7 +6,6 @@ import random
 import numpy.random
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
-from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
 

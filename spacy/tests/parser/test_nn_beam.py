@@ -3,13 +3,12 @@ from __future__ import unicode_literals
 
 import pytest
 import numpy
-from thinc.api import layerize
 from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.pipeline import DependencyParser
 from spacy.syntax.arc_eager import ArcEager
 from spacy.tokens import Doc
-from spacy.syntax._beam_utils import ParserBeam, update_beam
+from spacy.syntax._beam_utils import ParserBeam
 from spacy.syntax.stateclass import StateClass
 from spacy.gold import GoldParse
 
@@ -68,6 +67,7 @@ def vector_size():
 @pytest.fixture
 def beam(moves, states, golds, beam_width):
     return ParserBeam(moves, states, golds, width=beam_width, density=0.0)
+
 
 @pytest.fixture
 def scores(moves, batch_size, beam_width):
