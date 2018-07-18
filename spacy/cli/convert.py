@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import plac
 from pathlib import Path
 
-from .converters import conllu2json, iob2json, conll_ner2json
+from .converters import conllu2json, conllubio2json, iob2json, conll_ner2json
 from ._messages import Messages
 from ..util import prints
 
@@ -12,6 +12,7 @@ from ..util import prints
 # entry to this dict with the file extension mapped to the converter function
 # imported from /converters.
 CONVERTERS = {
+    'conllubio': conllubio2json,
     'conllu': conllu2json,
     'conll': conllu2json,
     'ner': conll_ner2json,
