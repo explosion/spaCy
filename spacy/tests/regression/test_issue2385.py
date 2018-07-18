@@ -1,7 +1,8 @@
 # coding: utf-8
-import pytest
+from __future__ import unicode_literals
 
-from ...gold import iob_to_biluo
+import pytest
+from spacy.gold import iob_to_biluo
 
 
 @pytest.mark.xfail

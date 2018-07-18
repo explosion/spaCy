@@ -1,10 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
-import re
-
-from ...matcher import Matcher
 
 import pytest
+import re
+from spacy.matcher import Matcher
+
 
 pattern1	= [{'ORTH':'A','OP':'1'},{'ORTH':'A','OP':'*'}]
 pattern2	= [{'ORTH':'A','OP':'*'},{'ORTH':'A','OP':'1'}]

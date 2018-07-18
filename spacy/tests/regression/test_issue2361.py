@@ -1,14 +1,14 @@
+# coding: utf8
 from __future__ import unicode_literals
-import pytest
 
-from ...displacy import render
-from ..util import get_doc
+import pytest
+from spacy.displacy import render
+from spacy.tokens import Doc
+
 
 def test_issue2361(de_tokenizer):
+    chars = ('&lt;', '&gt;', '&amp;', '&quot;')
     tokens = de_tokenizer('< > & " ')
-    html = render(get_doc(tokens.vocab, [t.text for t in tokens]))
-
-    assert '&lt;' in html
-    assert '&gt;' in html
-    assert '&amp;' in html
-    assert '&quot;' in html
+    html = render(Doc(tokens.vocab, words=[t.text for t in tokens]))
+    for char in chars:
+        assert char in html

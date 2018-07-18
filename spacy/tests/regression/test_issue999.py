@@ -1,22 +1,14 @@
+# coding: utf-8
 from __future__ import unicode_literals
-import os
+
+import pytest
 import random
 import contextlib
 import shutil
-import pytest
 import tempfile
-from pathlib import Path
-
-
-import pathlib
-from ...gold import GoldParse
-from ...pipeline import EntityRecognizer
-from ...language import Language
-
-try:
-    unicode
-except NameError:
-    unicode = str
+from spacy.gold import GoldParse
+from spacy.pipeline import EntityRecognizer
+from spacy.language import Language
 
 
 @pytest.fixture

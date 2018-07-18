@@ -1,21 +1,19 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...language import Language
-from ...attrs import LANG
-from ...lang.fr.stop_words import STOP_WORDS
-from ...lang.fr.tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from ...lang.punctuation import TOKENIZER_INFIXES
-from ...lang.char_classes import ALPHA
-from ...util import update_exc
-
 import pytest
+from spacy.language import Language
+from spacy.attrs import LANG
+from spacy.lang.fr.stop_words import STOP_WORDS
+from spacy.lang.fr.tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from spacy.lang.punctuation import TOKENIZER_INFIXES
+from spacy.lang.char_classes import ALPHA
+from spacy.util import update_exc
 
 
 @pytest.fixture
 def fr_tokenizer_w_infix():
     SPLIT_INFIX = r'(?<=[{a}]\')(?=[{a}])'.format(a=ALPHA)
-
     # create new Language subclass to add to default infixes
     class French(Language):
         lang = 'fr'
