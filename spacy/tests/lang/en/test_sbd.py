@@ -1,10 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ....tokens import Doc
-from ...util import get_doc, apply_transition_sequence
-
 import pytest
+from spacy.tokens import Doc
+
+from ...util import get_doc, apply_transition_sequence
 
 
 @pytest.mark.parametrize('text', ["A test sentence"])
@@ -26,11 +26,9 @@ def test_en_sentence_breaks(en_tokenizer, en_parser):
             'attr', 'punct']
     transition = ['L-nsubj', 'S', 'L-det', 'R-attr', 'D', 'R-punct', 'B-ROOT',
                   'L-nsubj', 'S', 'L-attr', 'R-attr', 'D', 'R-punct']
-
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
     apply_transition_sequence(en_parser, doc, transition)
-
     assert len(list(doc.sents)) == 2
     for token in doc:
         assert token.dep != 0 or token.is_space

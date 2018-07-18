@@ -38,7 +38,7 @@ def test_en_tokenizer_splits_trailing_apos(en_tokenizer, text):
 
 
 @pytest.mark.parametrize('text', ["'em", "nothin'", "ol'"])
-def text_tokenizer_doesnt_split_apos_exc(en_tokenizer, text):
+def test_en_tokenizer_doesnt_split_apos_exc(en_tokenizer, text):
     tokens = en_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].text == text

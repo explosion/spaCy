@@ -1,11 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ....parts_of_speech import SPACE
-from ....compat import unicode_
 from ...util import get_doc
-
-import pytest
 
 
 def test_en_tagger_load_morph_exc(en_tokenizer):

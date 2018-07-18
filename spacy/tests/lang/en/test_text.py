@@ -1,10 +1,8 @@
 # coding: utf-8
-"""Test that longer and mixed texts are tokenized correctly."""
-
-
 from __future__ import unicode_literals
 
 import pytest
+from spacy.lang.en.lex_attrs import like_num
 
 
 def test_en_tokenizer_handles_long_text(en_tokenizer):
@@ -43,3 +41,9 @@ def test_lex_attrs_like_number(en_tokenizer, text, match):
     tokens = en_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
+
+
+@pytest.mark.parametrize('word', ['eleven'])
+def test_en_lex_attrs_capitals(word):
+    assert like_num(word)
+    assert like_num(word.upper())

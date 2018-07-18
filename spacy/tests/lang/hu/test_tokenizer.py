@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 
+
 DEFAULT_TESTS = [
     ('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
     pytest.mark.xfail(('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.'])),
@@ -277,7 +278,7 @@ TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS + HYPHEN_TEST
 
 
 @pytest.mark.parametrize('text,expected_tokens', TESTCASES)
-def test_tokenizer_handles_testcases(hu_tokenizer, text, expected_tokens):
+def test_hu_tokenizer_handles_testcases(hu_tokenizer, text, expected_tokens):
     tokens = hu_tokenizer(text)
     token_list = [token.text for token in tokens if not token.is_space]
     assert expected_tokens == token_list

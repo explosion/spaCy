@@ -1,13 +1,9 @@
 # coding: utf-8
-"""Test that open, closed and paired punctuation is split off correctly."""
-
-
 from __future__ import unicode_literals
 
 import pytest
-
-from ....util import compile_prefix_regex
-from ....lang.punctuation import TOKENIZER_PREFIXES
+from spacy.util import compile_prefix_regex
+from spacy.lang.punctuation import TOKENIZER_PREFIXES
 
 
 PUNCT_OPEN = ['(', '[', '{', '*']

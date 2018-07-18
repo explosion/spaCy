@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 
-def test_tokenizer_handles_long_text(ar_tokenizer):
+def test_ar_tokenizer_handles_long_text(ar_tokenizer):
     text = """نجيب محفوظ مؤلف و كاتب روائي عربي، يعد من أهم الأدباء العرب خلال القرن العشرين.
      ولد نجيب محفوظ في مدينة القاهرة، حيث ترعرع و تلقى تعليمه الجامعي في جامعتها،
       فتمكن من نيل شهادة في الفلسفة. ألف محفوظ على مدار حياته الكثير من الأعمال الأدبية، و في مقدمتها ثلاثيته الشهيرة.
