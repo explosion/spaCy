@@ -133,7 +133,7 @@ environment to avoid modifying system state:
 
 .. code:: bash
 
-    venv .env
+    python -m venv .env
     source .env/bin/activate
     pip install spacy
 
@@ -255,12 +255,12 @@ details.
 
 .. code:: bash
 
-    # make sure you are using recent pip/virtualenv versions
-    python -m pip install -U pip venv
+    # make sure you are using the latest pip
+    python -m pip install -U pip
     git clone https://github.com/explosion/spaCy
     cd spaCy
 
-    venv .env
+    python -m venv .env
     source .env/bin/activate
     export PYTHONPATH=`pwd`
     pip install -r requirements.txt

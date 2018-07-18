@@ -8,8 +8,11 @@ Example sentences to test spaCy and its language models.
 """
 
 sentences = [
-    "Apple harkitsee ostavansa startup-yrityksen UK:sta 1 miljardilla dollarilla.",
-    "Itseajavat autot siirtävät vakuutusriskin valmistajille.",
-    "San Francisco harkitsee jakelurobottien kieltämistä jalkakäytävillä.",
-    "Lontoo on iso kaupunki Iso-Britanniassa."
+    "Itseajavat autot siirtävät vakuutusvastuun autojen valmistajille",
+    "San Francisco harkitsee toimitusrobottien liikkumisen kieltämistä jalkakäytävillä",
+    "Lontoo on suuri kaupunki Yhdistyneessä Kuningaskunnassa.",
+    "Missä sinä olet?",
+    "Mikä on Yhdysvaltojen pääkaupunki?",
+    "Kuka on Suomen presidentti?",
+    "Milloin Sauli Niinistö on syntynyt?"
 ]

@@ -49,6 +49,11 @@ def RU(request):
     pymorphy = pytest.importorskip('pymorphy2')
     return util.get_lang_class('ru')()
 
+@pytest.fixture()
+def JA(request):
+    mecab = pytest.importorskip("MeCab")
+    return util.get_lang_class('ja')()
+
 
 #@pytest.fixture(params=_languages)
 #def tokenizer(request):
