@@ -18,6 +18,7 @@ from .lemmatizer import Lemmatizer
 from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
+from .pipeline import EntityRuler
 from .compat import json_dumps, izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
@@ -111,6 +112,7 @@ class Language(object):
         'merge_noun_chunks': lambda nlp, **cfg: merge_noun_chunks,
         'merge_entities': lambda nlp, **cfg: merge_entities,
         'merge_subtokens': lambda nlp, **cfg: merge_subtokens,
+        'entity_ruler': lambda nlp, **cfg: EntityRuler(nlp, **cfg)
     }
 
     def __init__(self, vocab=True, make_doc=True, max_length=10**6, meta={}, **kwargs):

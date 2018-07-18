@@ -259,6 +259,8 @@ class Errors(object):
             "error. Are you writing to a default function argument?")
     E096 = ("Invalid object passed to displaCy: Can only visualize Doc or "
              "Span objects, or dicts if set to manual=True.")
+    E097 = ("Invalid pattern: expected token pattern (list of dicts) or "
+            "phrase pattern (string) but got:\n{pattern}")
 
 
 @add_codes
