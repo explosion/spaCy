@@ -6,6 +6,7 @@ import random
 import contextlib
 import shutil
 import tempfile
+from pathlib import Path
 from spacy.gold import GoldParse
 from spacy.pipeline import EntityRecognizer
 from spacy.language import Language
