@@ -1,12 +1,12 @@
-"""  
+# coding: utf8
+"""
 All wordforms are extracted from Norsk Ordbank in Norwegian Bokmål 2005
 (CLARINO NB - Språkbanken), Nasjonalbiblioteket, Norway:
-https://www.nb.no/sprakbanken/show?serial=oai%3Anb.no%3Asbr-5&lang=en  
+https://www.nb.no/sprakbanken/show?serial=oai%3Anb.no%3Asbr-5&lang=en
 License:
-Creative_Commons-BY (CC-BY) (https://creativecommons.org/licenses/by/4.0/)  
+Creative_Commons-BY (CC-BY) (https://creativecommons.org/licenses/by/4.0/)
 """
 
-# coding: utf8
 from __future__ import unicode_literals
 
 ADJECTIVES_WORDFORMS = {
