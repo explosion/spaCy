@@ -12,16 +12,16 @@ from spacy.tokens import Doc
 from ..util import get_doc
 
 
-def test_issue118(en_tokenizer):
+@pytest.mark.parametrize('patterns', [
+    [[{'LOWER': 'celtics'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]],
+    [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'celtics'}]]])
+def test_issue118(en_tokenizer, patterns):
     """Test a bug that arose from having overlapping matches"""
     text = "how many points did lebron james score against the boston celtics last night"
-    pattern1 = [[{'LOWER': 'celtics'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]]
-    pattern2 = [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'celtics'}]]
+    doc = en_tokenizer(text)
     ORG = doc.vocab.strings['ORG']
     matcher = Matcher(doc.vocab)
-    matcher.add("BostonCeltics", None, pattern1, pattern2)
-
-    doc = en_tokenizer(text)
+    matcher.add("BostonCeltics", None, *patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
@@ -33,16 +33,16 @@ def test_issue118(en_tokenizer):
     assert ents[0].end == 11
 
 
-def test_issue118_prefix_reorder(en_tokenizer):
+@pytest.mark.parametrize('patterns', [
+    [[{'LOWER': 'boston'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]],
+    [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'boston'}]]])
+def test_issue118_prefix_reorder(en_tokenizer, patterns):
     """Test a bug that arose from having overlapping matches"""
     text = "how many points did lebron james score against the boston celtics last night"
-    pattern1 = [[{'LOWER': 'boston'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]]
-    pattern2 = [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'boston'}]]
+    doc = en_tokenizer(text)
     ORG = doc.vocab.strings['ORG']
     matcher = Matcher(doc.vocab)
-    matcher.add('BostonCeltics', None, pattern1, pattern2)
-
-    doc = en_tokenizer(text)
+    matcher.add('BostonCeltics', None, *patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     doc.ents += tuple(matches)[1:]

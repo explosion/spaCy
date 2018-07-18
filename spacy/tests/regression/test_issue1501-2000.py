@@ -8,7 +8,7 @@ import copy
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop
-from spacy.vectors import vectors
+from spacy.vectors import Vectors
 from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.tokens import Doc, Span
@@ -49,13 +49,6 @@ def test_issue1518():
     vectors.resize((5, 9))
 
 
-
-from __future__ import unicode_literals
-from ...tokens import Doc
-from ...vocab import Vocab
-from ... import load as load_spacy
-
-
 def test_issue1537():
     """Test that Span.as_doc() doesn't segfault."""
     string = 'The sky is blue . The man is pink . The dog is purple .'
@@ -88,7 +81,6 @@ def test_issue1539():
     v.resize((100,100))
 
 
-@pytest.mark.xfail
 def test_issue1547():
     """Test that entity labels still match after merging tokens."""
     words = ['\n', 'worda', '.', '\n', 'wordb', '-', 'Biosphere', '2', '-', ' \n']

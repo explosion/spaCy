@@ -8,7 +8,9 @@ from spacy.tokens import Doc
 
 def test_issue2361(de_tokenizer):
     chars = ('&lt;', '&gt;', '&amp;', '&quot;')
-    tokens = de_tokenizer('< > & " ')
-    html = render(Doc(tokens.vocab, words=[t.text for t in tokens]))
+    doc = de_tokenizer('< > & " ')
+    doc.is_parsed = True
+    doc.is_tagged = True
+    html = render(doc)
     for char in chars:
         assert char in html

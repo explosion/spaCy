@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.attrs import IS_ALPHA, IS_DIGIT,
+from spacy.attrs import IS_ALPHA, IS_DIGIT
 
 
 @pytest.mark.parametrize('text1,prob1,text2,prob2', [("NOUN", -1, "opera", -2)])

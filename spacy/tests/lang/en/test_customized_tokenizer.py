@@ -17,7 +17,7 @@ def custom_en_tokenizer(en_vocab):
                       # '(?<=[0-9]+),(?=[0-9]+)',
                       '[0-9]+(,[0-9]+)+',
                       '[\[\]!&:,()\*—–\/-]']
-    infix_re = util.compile_infix_regex(custom_infixes)
+    infix_re = compile_infix_regex(custom_infixes)
     return Tokenizer(en_vocab,
                      English.Defaults.tokenizer_exceptions,
                      prefix_re.search,

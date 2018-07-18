@@ -67,8 +67,7 @@ def test_to_from_bytes(parser, blank_parser):
     assert blank_parser.moves.n_moves == parser.moves.n_moves
 
 
-# This seems to be a dict ordering bug somewhere. Only failing on some platforms
-@pytest.mark.xfail
+@pytest.mark.skip(reason="This seems to be a dict ordering bug somewhere. Only failing on some platforms.")
 def test_serialize_tagger_roundtrip_bytes(en_vocab, taggers):
     tagger1, tagger2 = taggers
     tagger1_b = tagger1.to_bytes()

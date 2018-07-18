@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import pytest
 from spacy.lang.fr.lex_attrs import like_num
 
 
@@ -14,7 +15,6 @@ un humain dans une conversation écrite en temps réel, de façon suffisamment \
 convaincante que l'interlocuteur humain ne peut distinguer sûrement — sur la \
 base du seul contenu de la conversation — s'il interagit avec un programme \
 ou avec un autre vrai humain."""
-
     tokens = fr_tokenizer(text)
     assert len(tokens) == 113
 

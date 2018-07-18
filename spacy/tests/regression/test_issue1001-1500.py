@@ -118,7 +118,7 @@ def test_issue1488():
 def test_issue1494():
     infix_re = re.compile(r'''[^a-z]''')
     test_cases = [('token 123test', ['token', '1', '2', '3', 'test']),
-                  ('token 1test', ['token', '1test'])
+                  ('token 1test', ['token', '1test']),
                   ('hello...test', ['hello', '.', '.', '.', 'test'])]
     new_tokenizer = lambda nlp: Tokenizer(nlp.vocab, {}, infix_finditer=infix_re.finditer)
     nlp = English()
