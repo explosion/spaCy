@@ -61,8 +61,8 @@ def _merge(Doc doc, int start, int end, attributes):
     `start_idx` and `end_idx `do not mark start and end token boundaries,
     the document remains unchanged.
 
-    start_idx (int): Character index of the start of the slice to merge.
-    end_idx (int): Character index after the end of the slice to merge.
+    start (int): Token index of the start of the slice to merge.
+    end (int): Token index after the end of the slice to merge.
     **attributes: Attributes to assign to the merged token. By default,
         attributes are inherited from the syntactic root of the span.
     RETURNS (Token): The newly merged token, or `None` if the start and end
