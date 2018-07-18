@@ -1,24 +1,27 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import unicode_literals
-from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ,SPACE,PRON
+
+from ...symbols import POS, ADV, NOUN, ADP, PRON, SCONJ, PROPN, DET, SYM, INTJ
+from ...symbols import PUNCT, NUM, AUX, X, CONJ, ADJ, VERB, PART, SPACE, CCONJ
+
+
 
 TAG_MAP = {
-    "Adjective":    {POS:ADJ},
-    "Adposition":    {POS:ADP},
-    "Adverb":    {POS:ADV},
-    "Conjuction_Coordinating":    {POS:CCONJ},
-    "Conjuction_Subordinating":    {POS:SCONJ},
-    "Determiner":    {POS:DET},
-    "Interjection":    {POS:INTJ},
-    "Noun_Common":    {POS:NOUN},
-    "Noun_Proper":    {POS:PROPN},
-    "Numeral":    {POS:NUM},
-    "Other":    {POS:X},
-    "Particle":    {POS:PART},
-    "Pronoun":    {POS:PRON},
-    "Punctuation":    {POS:PUNCT},
-    "Symbol":    {POS:SYM},
-    "Verb":    {POS:VERB}
+	"ADJ": {POS: ADJ},
+	"ADV": {POS: ADV},
+	"INTJ": {POS: INTJ},
+	"NOUN": {POS: NOUN},
+	"PROPN": {POS: PROPN},
+	"VERB": {POS: VERB},
+	"ADP": {POS: ADP},
+	"CCONJ": {POS: CCONJ},
+	"SCONJ": {POS: SCONJ},
+	"PART": {POS: PART},
+	"PUNCT": {POS: PUNCT},
+	"SYM": {POS: SYM},
+	"NUM": {POS: NUM},
+	"PRON": {POS: PRON},
+	"AUX": {POS: AUX},
+	"SPACE": {POS: SPACE},
+	"DET": {POS: DET},
+	"X" : {POS: X}
 }
