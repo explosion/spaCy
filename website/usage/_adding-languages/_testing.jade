@@ -13,31 +13,6 @@ p
     |  practices for writing your own tests, see our
     |  #[+a(gh("spaCy", "spacy/tests")) tests documentation].
 
-p
-    |  The easiest way to test your new tokenizer is to run the
-    |  language-independent "tokenizer sanity" tests located in
-    |  #[+src(gh("spaCy", "spacy/tests/tokenizer")) #[code tests/tokenizer]].
-    |  This will test for basic behaviours like punctuation splitting, URL
-    |  matching and correct handling of whitespace. In the
-    |  #[+src(gh("spaCy", "spacy/tests/conftest.py")) #[code conftest.py]], add
-    |  the new language ID to the list of #[code _languages]:
-
-+code.
-    _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'it', 'nb',
-                  'nl', 'pl', 'pt', 'sv', 'xx'] # new language here
-
-+aside-code("Global tokenizer test example").
-    # use fixture by adding it as an argument
-    def test_with_all_languages(tokenizer):
-        # will be performed on ALL language tokenizers
-        tokens = tokenizer(u'Some text here.')
-
-p
-    |  The language will now be included in the #[code tokenizer] test fixture,
-    |  which is used by the basic tokenizer tests. If you want to add your own
-    |  tests that should be run over all languages, you can use this fixture as
-    |  an argument of your test function.
-
 +h(3, "testing-custom") Writing language-specific tests
 
 p

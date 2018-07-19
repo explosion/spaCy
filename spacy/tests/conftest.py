@@ -143,13 +143,3 @@ def ur_tokenizer():
 def ru_tokenizer():
     pymorphy = pytest.importorskip('pymorphy2')
     return get_lang_class('ru').Defaults.create_tokenizer()
-
-
-@pytest.fixture
-def text_file():
-    return StringIO()
-
-
-@pytest.fixture
-def text_file_b():
-    return BytesIO()

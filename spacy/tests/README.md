@@ -93,8 +93,6 @@ These are the main fixtures that are currently available:
 | `tokenizer` | Basic, language-independent tokenizer. Identical to the `xx` language class. |
 | `en_tokenizer`, `de_tokenizer`, ... | Creates an English, German etc. tokenizer. |
 | `en_vocab` | Creates an instance of the English `Vocab`. |
-| `text_file` | Creates an instance of `StringIO` to simulate reading from and writing to files. |
-| `text_file_b` | Creates an instance of `ByteIO` to simulate reading from and writing to files. |
 
 The fixtures can be used in all tests by simply setting them as an argument, like this:
 
