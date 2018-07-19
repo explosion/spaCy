@@ -939,6 +939,28 @@
                 "website": " http://kitaev.io"
             },
             "category": ["research", "pipeline"]
+        },
+        {
+            "id": "excelcy",
+            "title": "ExcelCy",
+            "slogan": "Excel Integration with SpaCy. Includes, Entity training, Entity matcher pipe.",
+            "description": "ExcelCy is a SpaCy toolkit to help improve the data training experiences. It provides easy annotation using Excel file format. It has helper to pre-train entity annotation with phrase and regex matcher pipe.",
+            "url": "https://github.com/kororo/excelcy",
+            "github": "kororo/excelcy",
+            "pip": "excelcy",
+            "code_example": [
+                "from excelcy import ExcelCy",
+                "",
+                "excelcy = ExcelCy()",
+                "# download data from here, https://github.com/kororo/excelcy/tree/master/excelcy/tests/data/test_data_28.xlsx",
+                "excelcy.train(data_path='test_data_28.xlsx')"
+            ],
+            "author": "Robertus Johansyah",
+            "author_links": {
+                "github": "kororo"
+            },
+            "category": ["pipeline"],
+            "tags": ["excel"]
         }
     ],
     "projectCats": {
