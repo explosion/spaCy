@@ -7,7 +7,7 @@ import shutil
 import contextlib
 import msgpack
 from pathlib import Path
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.attrs import POS, HEAD, DEP
 from spacy.compat import path2str
 
@@ -43,7 +43,8 @@ def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=No
         attrs[i, 2] = doc.vocab.strings[dep]
     doc.from_array([POS, HEAD, DEP], attrs)
     if ents:
-        doc.ents = [(ent_id, doc.vocab.strings[label], start, end) for ent_id, label, start, end in ents]
+        doc.ents = [Span(doc, start, end, label=doc.vocab.strings[label])
+                    for start, end, label in ents]
     if tags:
         for token in doc:
             token.tag_ = tags[token.i]

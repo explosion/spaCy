@@ -83,7 +83,7 @@ def test_spans_entity_merge(en_tokenizer):
     text = "Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale.\n"
     heads = [1, 1, 0, 1, 2, -1, -4, 1, -2, -1, -1, -3, -10, 1, -2, -13, -1]
     tags = ['NNP', 'NNP', 'VBZ', 'DT', 'VB', 'RP', 'NN', 'WP', 'VBZ', 'IN', 'NNP', 'CC', 'VBZ', 'NNP', 'NNP', '.', 'SP']
-    ents = [('Stewart Lee', 'PERSON', 0, 2), ('England', 'GPE', 10, 11), ('Joe Pasquale', 'PERSON', 13, 15)]
+    ents = [(0, 2, 'PERSON'), (10, 11, 'GPE'), (13, 15, 'PERSON')]
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, tags=tags, ents=ents)
     assert len(doc) == 17
