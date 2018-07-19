@@ -199,6 +199,20 @@ def test_doc_api_retokenizer_attrs(en_tokenizer):
     assert doc[4].ent_type_ == 'ORG'
 
 
+@pytest.mark.xfail
+def test_doc_api_retokenizer_lex_attrs(en_tokenizer):
+    """Test that lexical attributes can be changed (see #2390)."""
+    doc = en_tokenizer("WKRO played beach boys songs")
+    assert not any(token.is_stop for token in doc)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[2:4], attrs={'LEMMA': 'boys', 'IS_STOP': True})
+    assert doc[2].text == 'beach boys'
+    assert doc[2].lemma_ == 'boys'
+    assert doc[2].is_stop
+    new_doc = Doc(doc.vocab, words=['beach boys'])
+    assert new_doc[0].is_stop
+
+
 def test_doc_api_sents_empty_string(en_tokenizer):
     doc = en_tokenizer("")
     doc.is_parsed = True
