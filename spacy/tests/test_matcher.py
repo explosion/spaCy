@@ -52,33 +52,20 @@ def test_matcher_from_usage_docs(en_vocab):
     assert doc[1].norm_ == 'happy emoji'
 
 
-# @pytest.mark.parametrize('words', [["Some", "words"]])
-# def test_matcher_init(en_vocab, words):
-#     matcher = Matcher(en_vocab)
-#     doc = Doc(en_vocab, words=words)
-#     assert len(matcher) == 0
-#     assert matcher(doc) == []
-
-
-def test_matcher_contains(matcher):
+def test_matcher_len_contains(matcher):
+    assert len(matcher) == 3
     matcher.add('TEST', None, [{'ORTH': 'test'}])
     assert 'TEST' in matcher
     assert 'TEST2' not in matcher
 
 
 def test_matcher_no_match(matcher):
-    words = ["I", "like", "cheese", "."]
-    doc = Doc(matcher.vocab, words=words)
+    doc = Doc(matcher.vocab, words=["I", "like", "cheese", "."])
     assert matcher(doc) == []
 
 
-def test_matcher_compile(matcher):
-    assert len(matcher) == 3
-
-
 def test_matcher_match_start(matcher):
-    words = ["JavaScript", "is", "good"]
-    doc = Doc(matcher.vocab, words=words)
+    doc = Doc(matcher.vocab, words=["JavaScript", "is", "good"])
     assert matcher(doc) == [(matcher.vocab.strings['JS'], 0, 1)]
 
 
