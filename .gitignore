@@ -26,6 +26,7 @@ Profile.prof
 .Python
 .python-version
 __pycache__/
+.pytest_cache
 *.py[cod]
 .env/
 .env*
