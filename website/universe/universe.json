@@ -768,7 +768,7 @@
                 "✨ Starting the web server on port 8080..."
             ],
             "code_language": "bash",
-            "category": ["standalone"],
+            "category": ["standalone", "training"],
             "author": "Explosion AI",
             "author_links": {
                 "twitter": "explosion_ai",
@@ -959,7 +959,7 @@
             "author_links": {
                 "github": "kororo"
             },
-            "category": ["pipeline"],
+            "category": ["training"],
             "tags": ["excel"]
         }
     ],
@@ -967,6 +967,10 @@
         "pipeline": {
             "title": "Pipeline",
             "description": "Custom pipeline components and extensions"
+        },
+        "training": {
+            "title": "Training",
+            "description": "Helpers and toolkits for trainig spaCy models"
         },
         "conversational": {
             "title": "Conversational",
