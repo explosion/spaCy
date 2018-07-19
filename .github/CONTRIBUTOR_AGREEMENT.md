@@ -91,16 +91,16 @@ mark both statements:
     or entity, including my employer, has or will have rights with respect to my
     contributions.
 
-    * [x] I am signing on behalf of my employer or a legal entity and I have the
+    * [ ] I am signing on behalf of my employer or a legal entity and I have the
     actual authority to contractually bind that entity.
 
 ## Contributor Details
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           | Katarzyna Korsak     |
-| Company name (if applicable)   | Nav                  |
+| Name                           |                      |
+| Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           | 18.07.2018           |
-| GitHub username                | katarkor             |
+| Date                           |                      |
+| GitHub username                |                      |
 | Website (optional)             |                      |
