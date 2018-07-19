@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.matcher import Matcher, PhraseMatcher
+from spacy.matcher import Matcher
 from spacy.tokens import Doc
 
 
@@ -112,30 +112,6 @@ def test_matcher_operator_shadow(en_vocab):
     assert matches[0][1:] == (0, 3)
 
 
-def test_matcher_phrase_matcher(en_vocab):
-    doc = Doc(en_vocab, words=["Google", "Now"])
-    matcher = PhraseMatcher(en_vocab)
-    matcher.add('COMPANY', None, doc)
-    doc = Doc(en_vocab, words=["I", "like", "Google", "Now", "best"])
-    assert len(matcher(doc)) == 1
-
-
-def test_phrase_matcher_length(en_vocab):
-    matcher = PhraseMatcher(en_vocab)
-    assert len(matcher) == 0
-    matcher.add('TEST', None, Doc(en_vocab, words=['test']))
-    assert len(matcher) == 1
-    matcher.add('TEST2', None, Doc(en_vocab, words=['test2']))
-    assert len(matcher) == 2
-
-
-def test_phrase_matcher_contains(en_vocab):
-    matcher = PhraseMatcher(en_vocab)
-    matcher.add('TEST', None, Doc(en_vocab, words=['test']))
-    assert 'TEST' in matcher
-    assert 'TEST2' not in matcher
-
-
 def test_matcher_match_zero(matcher):
     words1 = 'He said , " some words " ...'.split()
     words2 = 'He said , " some three words " ...'.split()
@@ -178,56 +154,6 @@ def test_matcher_match_one_plus(matcher):
                                          {'ORTH': 'Philippe', 'OP': '+'}])
     m = matcher(doc)
     assert len(m) == 1
-
-
-def test_operator_combos(matcher):
-    cases = [
-        ('aaab', 'a a a b', True),
-        ('aaab', 'a+ b', True),
-        ('aaab', 'a+ a+ b', True),
-        ('aaab', 'a+ a+ a b', True),
-        ('aaab', 'a+ a+ a+ b', True),
-        ('aaab', 'a+ a a b', True),
-        ('aaab', 'a+ a a', True),
-        ('aaab', 'a+', True),
-        ('aaa', 'a+ b', False),
-        ('aaa', 'a+ a+ b', False),
-        ('aaa', 'a+ a+ a+ b', False),
-        ('aaa', 'a+ a b', False),
-        ('aaa', 'a+ a a b', False),
-        ('aaab', 'a+ a a', True),
-        ('aaab', 'a+', True),
-        ('aaab', 'a+ a b', True)
-    ]
-    for string, pattern_str, result in cases:
-        matcher = Matcher(matcher.vocab)
-        doc = Doc(matcher.vocab, words=list(string))
-        pattern = []
-        for part in pattern_str.split():
-            if part.endswith('+'):
-                pattern.append({'ORTH': part[0], 'OP': '+'})
-            else:
-                pattern.append({'ORTH': part})
-        matcher.add('PATTERN', None, pattern)
-        matches = matcher(doc)
-        if result:
-            assert matches, (string, pattern_str)
-        else:
-            assert not matches, (string, pattern_str)
-
-
-def test_matcher_end_zero_plus(matcher):
-    """Test matcher works when patterns end with * operator. (issue 1450)"""
-    matcher = Matcher(matcher.vocab)
-    pattern = [{'ORTH': "a"}, {'ORTH': "b", 'OP': "*"}]
-    matcher.add('TSTEND', None, pattern)
-    nlp = lambda string: Doc(matcher.vocab, words=string.split())
-    assert len(matcher(nlp('a'))) == 1
-    assert len(matcher(nlp('a b'))) == 2
-    assert len(matcher(nlp('a c'))) == 1
-    assert len(matcher(nlp('a b c'))) == 2
-    assert len(matcher(nlp('a b b c'))) == 3
-    assert len(matcher(nlp('a b b'))) == 3
 
 
 def test_matcher_any_token_operator(en_vocab):
