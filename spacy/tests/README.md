@@ -137,7 +137,7 @@ You can construct a `Doc` with the following arguments:
 | `pos` | List of POS tags as text values. |
 | `tag` | List of tag names as text values. |
 | `dep` | List of dependencies as text values. |
-| `ents` | List of entity tuples with `ent_id`, `label`, `start`, `end` (for example `('Stewart Lee', 'PERSON', 0, 2)`). The `label` will be looked up in `vocab.strings[label]`. |
+| `ents` | List of entity tuples with `start`, `end`, `label` (for example `(0, 2, 'PERSON')`). The `label` will be looked up in `vocab.strings[label]`. |
 
 Here's how to quickly get these values from within spaCy:
 
@@ -147,6 +147,7 @@ print([token.head.i-token.i for token in doc])
 print([token.tag_ for token in doc])
 print([token.pos_ for token in doc])
 print([token.dep_ for token in doc])
+print([(ent.start, ent.end, ent.label_) for ent in doc.ents])
 ```
 
 **Note:** There's currently no way of setting the serializer data for the parser without loading the models. If this is relevant to your test, constructing the `Doc` via `get_doc()` won't work.
