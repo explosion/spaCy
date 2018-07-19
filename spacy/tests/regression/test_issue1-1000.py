@@ -2,14 +2,16 @@
 from __future__ import unicode_literals
 
 import pytest
+import random
 from spacy.matcher import Matcher
 from spacy.attrs import IS_PUNCT, ORTH, LOWER
 from spacy.symbols import POS, VERB, VerbForm_inf
 from spacy.vocab import Vocab
+from spacy.language import Language
 from spacy.lemmatizer import Lemmatizer
 from spacy.tokens import Doc
 
-from ..util import get_doc
+from ..util import get_doc, make_tempdir
 
 
 @pytest.mark.parametrize('patterns', [
@@ -367,3 +369,52 @@ def test_issue957(en_tokenizer):
     for i in range(1, 100):
         string += '.%d' % i
     doc = en_tokenizer(string)
+
+
+@pytest.mark.xfail
+def test_issue999(train_data):
+    """Test that adding entities and resuming training works passably OK.
+    There are two issues here:
+    1) We have to readd labels. This isn't very nice.
+    2) There's no way to set the learning rate for the weight update, so we
+        end up out-of-scale, causing it to learn too fast.
+    """
+    TRAIN_DATA = [
+        ["hey", []],
+        ["howdy", []],
+        ["hey there", []],
+        ["hello", []],
+        ["hi", []],
+        ["i'm looking for a place to eat", []],
+        ["i'm looking for a place in the north of town", [[31,36,"LOCATION"]]],
+        ["show me chinese restaurants", [[8,15,"CUISINE"]]],
+        ["show me chines restaurants", [[8,14,"CUISINE"]]],
+    ]
+
+    nlp = Language()
+    ner = nlp.create_pipe('ner')
+    nlp.add_pipe(ner)
+    for _, offsets in TRAIN_DATA:
+        for start, end, label in offsets:
+            ner.add_label(label)
+    nlp.begin_training()
+    ner.model.learn_rate = 0.001
+    for itn in range(100):
+        random.shuffle(TRAIN_DATA)
+        for raw_text, entity_offsets in TRAIN_DATA:
+            nlp.update([raw_text], [{'entities': entity_offsets}])
+
+    with make_tempdir() as model_dir:
+        nlp.to_disk(model_dir)
+        nlp2 = Language().from_disk(model_dir)
+
+    for raw_text, entity_offsets in TRAIN_DATA:
+        doc = nlp2(raw_text)
+        ents = {(ent.start_char, ent.end_char): ent.label_ for ent in doc.ents}
+        for start, end, label in entity_offsets:
+            if (start, end) in ents:
+                assert ents[(start, end)] == label
+                break
+        else:
+            if entity_offsets:
+                raise Exception(ents)
