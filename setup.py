@@ -192,11 +192,11 @@ def setup_package():
                 'preshed>=1.0.0,<2.0.0',
                 'thinc==6.10.3.dev0',
                 'plac<1.0.0,>=0.9.6',
-                'pathlib',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
                 'regex==2017.4.5',
-                'requests>=2.13.0,<3.0.0'],
+                'requests>=2.13.0,<3.0.0',
+                'pathlib==1.0.1; python_version < "3.4"'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
