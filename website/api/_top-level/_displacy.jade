@@ -25,7 +25,7 @@ p
 +table(["Name", "Type", "Description", "Default"])
     +row
         +cell #[code docs]
-        +cell list or #[code Doc]
+        +cell list, #[code Doc], #[code Span]
         +cell Document(s) to visualize.
         +cell
 
@@ -84,7 +84,7 @@ p Render a dependency parse tree or named entity visualization.
 +table(["Name", "Type", "Description", "Default"])
     +row
         +cell #[code docs]
-        +cell list or #[code Doc]
+        +cell list, #[code Doc], #[code Span]
         +cell Document(s) to visualize.
         +cell
 
@@ -156,6 +156,12 @@ p
             |  Attach punctuation to tokens. Can make the parse more readable,
             |  as it prevents long arcs to attach punctuation.
         +cell #[code True]
+
+    +row
+        +cell #[code collapse_phrases]
+        +cell bool
+        +cell Merge noun phrases into one token.
+        +cell #[code False]
 
     +row
         +cell #[code compact]
