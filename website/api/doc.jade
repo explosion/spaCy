@@ -202,8 +202,8 @@ p
 
 +aside-code("Example").
     from spacy.tokens import Doc
-    Doc.set_extension('is_city', default=False)
-    extension = Doc.get_extension('is_city')
+    Doc.set_extension('has_city', default=False)
+    extension = Doc.get_extension('has_city')
     assert extension == (False, None, None, None)
 
 +table(["Name", "Type", "Description"])
@@ -227,8 +227,8 @@ p Check whether an extension has been registered on the #[code Doc] class.
 
 +aside-code("Example").
     from spacy.tokens import Doc
-    Doc.set_extension('is_city', default=False)
-    assert Doc.has_extension('is_city')
+    Doc.set_extension('has_city', default=False)
+    assert Doc.has_extension('has_city')
 
 +table(["Name", "Type", "Description"])
     +row
@@ -760,6 +760,13 @@ p
         +cell #[code is_parsed]
         +cell bool
         +cell A flag indicating that the document has been syntactically parsed.
+
+    +row
+        +cell #[code is_sentenced]
+        +cell bool
+        +cell
+            |  A flag indicating that sentence boundaries have been applied to
+            |  the document.
 
     +row
         +cell #[code sentiment]
