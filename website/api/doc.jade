@@ -241,6 +241,31 @@ p Check whether an extension has been registered on the #[code Doc] class.
         +cell bool
         +cell Whether the extension has been registered.
 
++h(2, "remove_extension") Doc.remove_extension
+    +tag classmethod
+    +tag-new("2.0.12")
+
+p Remove a previously registered extension.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    Doc.set_extension('has_city', default=False)
+    removed = Doc.remove_extension('has_city')
+    assert not Doc.has_extension('has_city')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell
+            |  A #[code.u-break (default, method, getter, setter)] tuple of the
+            |  removed extension.
+
 +h(2, "char_span") Doc.char_span
     +tag method
     +tag-new(2)
