@@ -831,12 +831,11 @@ cdef class Doc:
         # users don't mind getting a list instead of a tuple.
         if 'user_data' not in exclude and 'user_data_keys' in msg:
             user_data_keys = msgpack.loads(msg['user_data_keys'],
-                                           use_list=False)
-            user_data_values = msgpack.loads(msg['user_data_values'])
+                                           use_list=False, raw=False)
+            user_data_values = msgpack.loads(msg['user_data_values'], raw=False)
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
 
-        cdef attr_t[:, :] attrs
         cdef int i, start, end, has_space
 
         if 'sentiment' not in exclude and 'sentiment' in msg:
@@ -856,8 +855,7 @@ cdef class Doc:
             lex = self.vocab.get(self.mem, orth_)
             self.push_back(lex, has_space)
             start = end + has_space
-        self.from_array(msg['array_head'][2:],
-                        attrs[:, 2:])
+        self.from_array(msg['array_head'][2:], attrs[:, 2:])
         return self
 
     def extend_tensor(self, tensor):

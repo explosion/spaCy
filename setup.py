@@ -194,11 +194,11 @@ def setup_package():
                 'preshed>=1.0.0,<2.0.0',
                 'thinc>=6.11.2,<6.12.0',
                 'plac<1.0.0,>=0.9.6',
-                'pathlib',
                 'ujson>=1.35',
                 'regex==2017.4.5',
                 'dill>=0.2,<0.3',
-                'requests>=2.13.0,<3.0.0'],
+                'requests>=2.13.0,<3.0.0',
+                'pathlib==1.0.1; python_version < "3.4"'],
             setup_requires=['wheel'],
             extras_require={
                 'cuda': ['cupy>=4.0'],
