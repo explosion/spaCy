@@ -150,7 +150,7 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
-        cdef int has_special
+        cdef int has_special = 0
         orig_size = tokens.length
         span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes,
                                    &has_special)
