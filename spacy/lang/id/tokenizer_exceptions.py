@@ -23,6 +23,9 @@ for orth in ID_BASE_EXCEPTIONS:
     orth_lower = orth.lower()
     _exc[orth_lower] = [{ORTH: orth_lower}]
 
+    orth_first_upper = orth[0].upper() + orth[1:]
+    _exc[orth_first_upper] = [{ORTH: orth_first_upper}]
+
     if '-' in orth:
         orth_title = '-'.join([part.title() for part in orth.split('-')])
         _exc[orth_title] = [{ORTH: orth_title}]
