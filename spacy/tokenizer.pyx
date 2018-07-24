@@ -272,7 +272,7 @@ cdef class Tokenizer:
                           int has_special, int n) except -1:
         cdef int i
         for i in range(n):
-            if self.vocab._by_hash.get(tokens[i].lex.orth) == NULL:
+            if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
                 return 0
         # See https://github.com/explosion/spaCy/issues/1250
         if has_special:
