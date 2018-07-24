@@ -93,11 +93,6 @@ def de_tokenizer():
 
 
 @pytest.fixture(scope='session')
-def fr_tokenizer():
-    return util.get_lang_class('fr').Defaults.create_tokenizer()
-
-
-@pytest.fixture(scope='session')
 def hu_tokenizer():
     return util.get_lang_class('hu').Defaults.create_tokenizer()
 
