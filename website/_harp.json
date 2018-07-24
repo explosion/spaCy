@@ -14,7 +14,7 @@
         "MODELS_REPO": "explosion/spacy-models",
 
         "SPACY_VERSION": "2.0",
-        "BINDER_VERSION": "2.0.11",
+        "BINDER_VERSION": "2.0.12",
 
         "SOCIAL": {
             "twitter": "spacy_io",
