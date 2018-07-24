@@ -943,17 +943,19 @@
         {
             "id": "excelcy",
             "title": "ExcelCy",
-            "slogan": "Excel Integration with SpaCy. Includes, Entity training, Entity matcher pipe.",
-            "description": "ExcelCy is a SpaCy toolkit to help improve the data training experiences. It provides easy annotation using Excel file format. It has helper to pre-train entity annotation with phrase and regex matcher pipe.",
+            "slogan": "Excel Integration with spaCy. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG.",
+            "description": "ExcelCy is a toolkit to integrate Excel to spaCy NLP training experiences. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG. ExcelCy has pipeline to match Entity with PhraseMatcher or Matcher in regular expression.",
             "url": "https://github.com/kororo/excelcy",
             "github": "kororo/excelcy",
             "pip": "excelcy",
             "code_example": [
                 "from excelcy import ExcelCy",
-                "",
-                "excelcy = ExcelCy()",
-                "# download data from here, https://github.com/kororo/excelcy/tree/master/excelcy/tests/data/test_data_28.xlsx",
-                "excelcy.train(data_path='test_data_28.xlsx')"
+                "# collect sentences, annotate Entities and train NER using spaCy",
+                "excelcy = ExcelCy.execute(file_path='https://github.com/kororo/excelcy/raw/master/tests/data/test_data_01.xlsx')",
+                "# use the nlp object as per spaCy API",
+                "doc = excelcy.nlp('Google rebrands its business apps')",
+                "# or save it for faster bootstrap for application",
+                "excelcy.nlp.to_disk('/model')"
             ],
             "author": "Robertus Johansyah",
             "author_links": {
@@ -970,7 +972,7 @@
         },
         "training": {
             "title": "Training",
-            "description": "Helpers and toolkits for trainig spaCy models"
+            "description": "Helpers and toolkits for training spaCy models"
         },
         "conversational": {
             "title": "Conversational",
