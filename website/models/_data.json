@@ -95,7 +95,7 @@
 
     "EXAMPLE_SENT_LANGS": [
         "da", "de", "en", "es", "fa", "fr", "he", "hi", "hu", "id", "it", "ja",
-        "nb", "nl", "pl", "pt", "ru", "sv", "tr", "zh"
+        "nb", "pl", "pt", "ru", "sv", "tr", "zh"
     ],
 
     "LANGUAGES": {
