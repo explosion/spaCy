@@ -48,7 +48,6 @@ cdef class Vocab:
             lemmatizer = Lemmatizer({}, {}, {})
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
-        self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
         self.length = 0
@@ -118,13 +117,12 @@ cdef class Vocab:
             return &EMPTY_LEXEME
         cdef LexemeC* lex
         cdef hash_t key = hash_string(string)
-        lex = <LexemeC*>self._by_hash.get(key)
+        lex = <LexemeC*>self._by_orth.get(key)
         cdef size_t addr
         if lex != NULL:
-            if lex.orth != self.strings[string]:
+            if lex.orth != key:
                 raise KeyError(Errors.E064.format(string=lex.orth,
-                                                  orth=self.strings[string],
-                                                  orth_id=string))
+                                                  orth=key, orth_id=string))
             return lex
         else:
             return self._new_lexeme(mem, string)
@@ -165,14 +163,12 @@ cdef class Vocab:
                 elif value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
         if not is_oov:
-            key = hash_string(string)
-            self._add_lex_to_vocab(key, lex)
+            self._add_lex_to_vocab(lex.orth, lex)
         if lex == NULL:
             raise ValueError(Errors.E085.format(string=string))
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
-        self._by_hash.set(key, <void*>lex)
         self._by_orth.set(lex.orth, <void*>lex)
         self.length += 1
 
@@ -189,7 +185,7 @@ cdef class Vocab:
             int_key = hash_string(key)
         else:
             int_key = key
-        lex = self._by_hash.get(int_key)
+        lex = self._by_orth.get(int_key)
         return lex is not NULL
 
     def __iter__(self):
@@ -461,7 +457,7 @@ cdef class Vocab:
         cdef LexemeC* lexeme = NULL
         cdef SerializedLexemeC lex_data
         cdef int size = 0
-        for key, addr in self._by_hash.items():
+        for key, addr in self._by_orth.items():
             if addr == 0:
                 continue
             size += sizeof(lex_data.data)
@@ -469,7 +465,7 @@ cdef class Vocab:
         byte_ptr = <unsigned char*>byte_string
         cdef int j
         cdef int i = 0
-        for key, addr in self._by_hash.items():
+        for key, addr in self._by_orth.items():
             if addr == 0:
                 continue
             lexeme = <LexemeC*>addr
@@ -504,17 +500,12 @@ cdef class Vocab:
                 raise ValueError(Errors.E086.format(string=py_str,
                                                     orth_id=lexeme.orth,
                                                     hash_id=self.strings[py_str]))
-            key = hash_string(py_str)
-            self._by_hash.set(key, lexeme)
             self._by_orth.set(lexeme.orth, lexeme)
             self.length += 1
 
     def _reset_cache(self, keys, strings):
-        for k in keys:
-            del self._by_hash[k]
-
-        if len(strings) != 0:
-            self._by_orth = PreshMap()
+        # I'm not sure this made sense. Disable it for now.
+        raise NotImplementedError
 
 
 def pickle_vocab(vocab):
