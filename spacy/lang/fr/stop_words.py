@@ -44,7 +44,7 @@ lors lorsque lui lui-meme lui-même là lès
 
 m' m’ ma maint maintenant mais malgre malgré maximale me meme memes merci mes mien
 mienne miennes miens mille mince minimale moi moi-meme moi-même moindres moins
-mon moyennant multiple multiples même mêmes
+mon moyennant même mêmes
 
 n' n’ na naturel naturelle naturelles ne neanmoins necessaire necessairement neuf
 neuvième ni nombreuses nombreux non nos notamment notre nous nous-mêmes nouveau
