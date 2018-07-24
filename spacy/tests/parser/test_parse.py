@@ -1,9 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc, apply_transition_sequence
-
 import pytest
+
+from ..util import get_doc, apply_transition_sequence
 
 
 def test_parser_root(en_tokenizer):
@@ -11,7 +11,7 @@ def test_parser_root(en_tokenizer):
     heads = [3, 2, 1, 0, 1, -2]
     deps = ['nsubj', 'aux', 'neg', 'ROOT', 'amod', 'dobj']
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     for t in doc:
         assert t.dep != 0, t.text
 
@@ -20,7 +20,7 @@ def test_parser_root(en_tokenizer):
 @pytest.mark.parametrize('text', ["Hello"])
 def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[0], deps=['ROOT'])
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=['ROOT'])
 
     assert len(doc) == 1
     with en_parser.step_through(doc) as _:
@@ -33,10 +33,8 @@ def test_parser_initial(en_tokenizer, en_parser):
     text = "I ate the pizza with anchovies."
     heads = [1, 0, 1, -2, -3, -1, -5]
     transition = ['L-nsubj', 'S', 'L-det']
-
     tokens = en_tokenizer(text)
     apply_transition_sequence(en_parser, tokens, transition)
-
     assert tokens[0].head.i == 1
     assert tokens[1].head.i == 1
     assert tokens[2].head.i == 3
@@ -47,8 +45,7 @@ def test_parser_parse_subtrees(en_tokenizer, en_parser):
     text = "The four wheels on the bus turned quickly"
     heads = [2, 1, 4, -1, 1, -2, 0, -1]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
-
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert len(list(doc[2].lefts)) == 2
     assert len(list(doc[2].rights)) == 1
     assert len(list(doc[2].children)) == 3
@@ -63,11 +60,9 @@ def test_parser_merge_pp(en_tokenizer):
     heads = [1, 4, -1, 1, -2, 0]
     deps = ['det', 'nsubj', 'prep', 'det', 'pobj', 'ROOT']
     tags = ['DT', 'NN', 'IN', 'DT', 'NN', 'VBZ']
-
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deps, heads=heads, tags=tags)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, tags=tags)
     nps = [(np[0].idx, np[-1].idx + len(np[-1]), np.lemma_) for np in doc.noun_chunks]
-
     for start, end, lemma in nps:
         doc.merge(start, end, label='NP', lemma=lemma)
     assert doc[0].text == 'A phrase'

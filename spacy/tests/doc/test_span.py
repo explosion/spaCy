@@ -1,12 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-from ...attrs import ORTH, LENGTH
-from ...tokens import Doc
-from ...vocab import Vocab
-
 import pytest
+from spacy.attrs import ORTH, LENGTH
+from spacy.tokens import Doc
+from spacy.vocab import Vocab
+
+from ..util import get_doc
 
 
 @pytest.fixture
@@ -16,16 +16,16 @@ def doc(en_tokenizer):
     deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
             'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
     tokens = en_tokenizer(text)
-    return get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
+    return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
 
 @pytest.fixture
 def doc_not_parsed(en_tokenizer):
     text = "This is a sentence. This is another sentence. And a third."
     tokens = en_tokenizer(text)
-    d = get_doc(tokens.vocab, [t.text for t in tokens])
-    d.is_parsed = False
-    return d
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
+    doc.is_parsed = False
+    return doc
 
 
 def test_spans_sent_spans(doc):
@@ -56,7 +56,7 @@ def test_spans_root2(en_tokenizer):
     text = "through North and South Carolina"
     heads = [0, 3, -1, -2, -4]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert doc[-2:].root.text == 'Carolina'
 
 
@@ -76,7 +76,7 @@ def test_spans_span_sent(doc, doc_not_parsed):
 def test_spans_lca_matrix(en_tokenizer):
     """Test span's lca matrix generation"""
     tokens = en_tokenizer('the lazy dog slept')
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[2, 1, 1, 0])
     lca = doc[:2].get_lca_matrix()
     assert(lca[0, 0] == 0)
     assert(lca[0, 1] == -1)
@@ -100,7 +100,7 @@ def test_spans_default_sentiment(en_tokenizer):
     tokens = en_tokenizer(text)
     tokens.vocab[tokens[0].text].sentiment = 3.0
     tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = get_doc(tokens.vocab, [t.text for t in tokens])
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
     assert doc[:2].sentiment == 3.0 / 2
     assert doc[-2:].sentiment == -2. / 2
     assert doc[:-1].sentiment == (3.+-2) / 3.
@@ -112,7 +112,7 @@ def test_spans_override_sentiment(en_tokenizer):
     tokens = en_tokenizer(text)
     tokens.vocab[tokens[0].text].sentiment = 3.0
     tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = get_doc(tokens.vocab, [t.text for t in tokens])
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
     doc.user_span_hooks['sentiment'] = lambda span: 10.0
     assert doc[:2].sentiment == 10.0
     assert doc[-2:].sentiment == 10.0
@@ -146,7 +146,7 @@ def test_span_to_array(doc):
     assert arr[0, 1] == len(span[0])
 
 
-#def test_span_as_doc(doc):
-#    span = doc[4:10]
-#    span_doc = span.as_doc()
-#    assert span.text == span_doc.text.strip()
+def test_span_as_doc(doc):
+    span = doc[4:10]
+    span_doc = span.as_doc()
+    assert span.text == span_doc.text.strip()

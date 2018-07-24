@@ -1,7 +1,4 @@
 # coding: utf-8
-"""Test that tokenizer exceptions and emoticons are handles correctly."""
-
-
 from __future__ import unicode_literals
 
 import pytest

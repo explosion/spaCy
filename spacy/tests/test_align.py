@@ -1,6 +1,8 @@
+# coding: utf-8
 from __future__ import unicode_literals
+
 import pytest
-from .._align import align, multi_align
+from spacy._align import align, multi_align
 
 
 @pytest.mark.parametrize('string1,string2,cost', [

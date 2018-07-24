@@ -1,22 +1,31 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import make_tempdir, get_doc
-from ...tokens import Doc
-from ...compat import path2str
+from spacy.tokens import Doc
+from spacy.compat import path2str
 
-import pytest
+from ..util import make_tempdir
+
+
+def test_serialize_empty_doc(en_vocab):
+    doc = Doc(en_vocab)
+    data = doc.to_bytes()
+    doc2 = Doc(en_vocab)
+    doc2.from_bytes(data)
+    assert len(doc) == len(doc2)
+    for token1, token2 in zip(doc, doc2):
+        assert token1.text == token2.text
 
 
 def test_serialize_doc_roundtrip_bytes(en_vocab):
-    doc = get_doc(en_vocab, words=['hello', 'world'])
+    doc = Doc(en_vocab, words=['hello', 'world'])
     doc_b = doc.to_bytes()
     new_doc = Doc(en_vocab).from_bytes(doc_b)
     assert new_doc.to_bytes() == doc_b
 
 
 def test_serialize_doc_roundtrip_disk(en_vocab):
-    doc = get_doc(en_vocab, words=['hello', 'world'])
+    doc = Doc(en_vocab, words=['hello', 'world'])
     with make_tempdir() as d:
         file_path = d / 'doc'
         doc.to_disk(file_path)
@@ -25,7 +34,7 @@ def test_serialize_doc_roundtrip_disk(en_vocab):
 
 
 def test_serialize_doc_roundtrip_disk_str_path(en_vocab):
-    doc = get_doc(en_vocab, words=['hello', 'world'])
+    doc = Doc(en_vocab, words=['hello', 'world'])
     with make_tempdir() as d:
         file_path = d / 'doc'
         file_path = path2str(file_path)

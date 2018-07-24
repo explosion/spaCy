@@ -1,17 +1,16 @@
-# -*- coding: utf-8 -*-
-
+# coding: utf8
 from __future__ import unicode_literals
 
 import pytest
 
 
 @pytest.mark.parametrize('text', ["αριθ.", "τρισ.", "δισ.", "σελ."])
-def test_tokenizer_handles_abbr(el_tokenizer, text):
+def test_el_tokenizer_handles_abbr(el_tokenizer, text):
     tokens = el_tokenizer(text)
     assert len(tokens) == 1
 
 
-def test_tokenizer_handles_exc_in_text(el_tokenizer):
+def test_el_tokenizer_handles_exc_in_text(el_tokenizer):
     text = "Στα 14 τρισ. δολάρια το κόστος από την άνοδο της στάθμης της θάλασσας."
     tokens = el_tokenizer(text)
     assert len(tokens) == 14

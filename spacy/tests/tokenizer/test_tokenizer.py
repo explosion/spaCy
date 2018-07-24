@@ -1,11 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...vocab import Vocab
-from ...tokenizer import Tokenizer
-from ... import util
-
 import pytest
+from spacy.vocab import Vocab
+from spacy.tokenizer import Tokenizer
+from spacy.util import ensure_path
 
 
 def test_tokenizer_handles_no_word(tokenizer):
@@ -74,7 +73,7 @@ Phasellus tincidunt, augue quis porta finibus, massa sapien consectetur augue, n
 
 @pytest.mark.parametrize('file_name', ["sun.txt"])
 def test_tokenizer_handle_text_from_file(tokenizer, file_name):
-    loc = util.ensure_path(__file__).parent / file_name
+    loc = ensure_path(__file__).parent / file_name
     text = loc.open('r', encoding='utf8').read()
     assert len(text) != 0
     tokens = tokenizer(text)

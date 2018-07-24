@@ -1,11 +1,12 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
 import pytest
-
-from ...vocab import Vocab
-from ...syntax.ner import BiluoPushDown
-from ...gold import GoldParse
-from ...tokens import Doc
+from spacy.pipeline import EntityRecognizer
+from spacy.vocab import Vocab
+from spacy.syntax.ner import BiluoPushDown
+from spacy.gold import GoldParse
+from spacy.tokens import Doc
 
 
 @pytest.fixture
@@ -71,3 +72,16 @@ def test_get_oracle_moves_negative_O(tsys, vocab):
     tsys.preprocess_gold(gold)
     act_classes = tsys.get_oracle_sequence(doc, gold)
     names = [tsys.get_class_name(act) for act in act_classes]
+
+
+def test_doc_add_entities_set_ents_iob(en_vocab):
+    doc = Doc(en_vocab, words=["This", "is", "a", "lion"])
+    ner = EntityRecognizer(en_vocab)
+    ner.begin_training([])
+    ner(doc)
+    assert len(list(doc.ents)) == 0
+    assert [w.ent_iob_ for w in doc] == (['O'] * len(doc))
+    doc.ents = [(doc.vocab.strings['ANIMAL'], 3, 4)]
+    assert [w.ent_iob_ for w in doc] == ['', '', '', 'B']
+    doc.ents = [(doc.vocab.strings['WORD'], 0, 2)]
+    assert [w.ent_iob_ for w in doc] == ['B', 'I', '', '']

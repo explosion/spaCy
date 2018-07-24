@@ -1,18 +1,17 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-from ...vocab import Vocab
-from ...tokens import Doc
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
 
-import pytest
+from ..util import get_doc
 
 
 def test_spans_merge_tokens(en_tokenizer):
     text = "Los Angeles start."
     heads = [1, 1, 0, -1]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert len(doc) == 4
     assert doc[0].head.text == 'Angeles'
     assert doc[1].head.text == 'start'
@@ -21,7 +20,7 @@ def test_spans_merge_tokens(en_tokenizer):
     assert doc[0].text == 'Los Angeles'
     assert doc[0].head.text == 'start'
 
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert len(doc) == 4
     assert doc[0].head.text == 'Angeles'
     assert doc[1].head.text == 'start'
@@ -35,7 +34,7 @@ def test_spans_merge_heads(en_tokenizer):
     text = "I found a pilates class near work."
     heads = [1, 0, 2, 1, -3, -1, -1, -6]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
 
     assert len(doc) == 8
     doc.merge(doc[3].idx, doc[4].idx + len(doc[4]), tag=doc[4].tag_,
@@ -53,7 +52,7 @@ def test_span_np_merges(en_tokenizer):
     text = "displaCy is a parse tool built with Javascript"
     heads = [1, 0, 2, 1, -3, -1, -1, -1]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
 
     assert doc[4].head.i == 1
     doc.merge(doc[2].idx, doc[4].idx + len(doc[4]), tag='NP', lemma='tool',
@@ -63,7 +62,7 @@ def test_span_np_merges(en_tokenizer):
     text = "displaCy is a lightweight and modern dependency parse tree visualization tool built with CSS3 and JavaScript."
     heads = [1, 0, 8, 3, -1, -2, 4, 3, 1, 1, -9, -1, -1, -1, -1, -2, -15]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
 
     ents = [(e[0].idx, e[-1].idx + len(e[-1]), e.label_, e.lemma_) for e in doc.ents]
     for start, end, label, lemma in ents:
@@ -74,8 +73,7 @@ def test_span_np_merges(en_tokenizer):
     text = "One test with entities like New York City so the ents list is not void"
     heads = [1, 11, -1, -1, -1, 1, 1, -3, 4, 2, 1, 1, 0, -1, -2]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
-
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     for span in doc.ents:
         merged = doc.merge()
         assert merged != None, (span.start, span.end, span.label_, span.lemma_)
@@ -85,10 +83,9 @@ def test_spans_entity_merge(en_tokenizer):
     text = "Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale.\n"
     heads = [1, 1, 0, 1, 2, -1, -4, 1, -2, -1, -1, -3, -10, 1, -2, -13, -1]
     tags = ['NNP', 'NNP', 'VBZ', 'DT', 'VB', 'RP', 'NN', 'WP', 'VBZ', 'IN', 'NNP', 'CC', 'VBZ', 'NNP', 'NNP', '.', 'SP']
-    ents = [('Stewart Lee', 'PERSON', 0, 2), ('England', 'GPE', 10, 11), ('Joe Pasquale', 'PERSON', 13, 15)]
-
+    ents = [(0, 2, 'PERSON'), (10, 11, 'GPE'), (13, 15, 'PERSON')]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, tags=tags, ents=ents)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, tags=tags, ents=ents)
     assert len(doc) == 17
     for ent in doc.ents:
         label, lemma, type_ = (ent.root.tag_, ent.root.lemma_, max(w.ent_type_ for w in ent))
@@ -120,7 +117,7 @@ def test_spans_sentence_update_after_merge(en_tokenizer):
             'compound', 'dobj', 'punct']
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     sent1, sent2 = list(doc.sents)
     init_len = len(sent1)
     init_len2 = len(sent2)
@@ -138,7 +135,7 @@ def test_spans_subtree_size_check(en_tokenizer):
             'dobj']
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     sent1 = list(doc.sents)[0]
     init_len = len(list(sent1.root.subtree))
     doc[0:2].merge(label='none', lemma='none', ent_type='none')

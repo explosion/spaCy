@@ -1,11 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...util import get_lang_class
-from ...tokenizer import Tokenizer
-from ..util import make_tempdir, assert_packed_msg_equal
-
 import pytest
+from spacy.util import get_lang_class
+from spacy.tokenizer import Tokenizer
+
+from ..util import make_tempdir, assert_packed_msg_equal
 
 
 def load_tokenizer(b):

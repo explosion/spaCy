@@ -1,18 +1,20 @@
-'''Test that the parser respects preset sentence boundaries.'''
+# coding: utf8
 from __future__ import unicode_literals
+
 import pytest
 from thinc.neural.optimizers import Adam
 from thinc.neural.ops import NumpyOps
+from spacy.attrs import NORM
+from spacy.gold import GoldParse
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+from spacy.pipeline import DependencyParser
 
-from ...attrs import NORM
-from ...gold import GoldParse
-from ...vocab import Vocab
-from ...tokens import Doc
-from ...pipeline import DependencyParser
 
 @pytest.fixture
 def vocab():
     return Vocab(lex_attr_getters={NORM: lambda s: s})
+
 
 @pytest.fixture
 def parser(vocab):
@@ -31,6 +33,7 @@ def parser(vocab):
                 deps=['left', 'ROOT', 'left', 'ROOT'])
         parser.update([doc], [gold], sgd=sgd, losses=losses)
     return parser
+
 
 def test_no_sentences(parser):
     doc = Doc(parser.vocab, words=['a', 'b', 'c', 'd'])

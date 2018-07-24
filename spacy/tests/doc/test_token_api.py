@@ -1,14 +1,24 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
-from ...symbols import NOUN, VERB
-from ..util import get_doc
-from ...vocab import Vocab
-from ...tokens import Doc
-
 import pytest
 import numpy
+from spacy.attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
+from spacy.symbols import VERB
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+
+from ..util import get_doc
+
+
+@pytest.fixture
+def doc(en_tokenizer):
+    text = "This is a sentence. This is another sentence. And a third."
+    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
+    deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
+            'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
+    tokens = en_tokenizer(text)
+    return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
 
 def test_doc_token_api_strings(en_tokenizer):
@@ -18,7 +28,7 @@ def test_doc_token_api_strings(en_tokenizer):
     deps = ['ROOT', 'dobj', 'prt', 'punct', 'nsubj', 'ROOT', 'punct']
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], pos=pos, heads=heads, deps=deps)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], pos=pos, heads=heads, deps=deps)
     assert doc[0].orth_ == 'Give'
     assert doc[0].text == 'Give'
     assert doc[0].text_with_ws == 'Give '
@@ -57,18 +67,9 @@ def test_doc_token_api_str_builtin(en_tokenizer, text):
     assert str(tokens[0]) == text.split(' ')[0]
     assert str(tokens[1]) == text.split(' ')[1]
 
-@pytest.fixture
-def doc(en_tokenizer):
-    text = "This is a sentence. This is another sentence. And a third."
-    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
-    deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
-            'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
-    tokens = en_tokenizer(text)
-    return get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
 
 def test_doc_token_api_is_properties(en_vocab):
-    text = ["Hi", ",", "my", "email", "is", "test@me.com"]
-    doc = get_doc(en_vocab, text)
+    doc = Doc(en_vocab, words=["Hi", ",", "my", "email", "is", "test@me.com"])
     assert doc[0].is_title
     assert doc[0].is_alpha
     assert not doc[0].is_digit
@@ -86,7 +87,6 @@ def test_doc_token_api_vectors():
     vocab.set_vector('oranges', vector=numpy.asarray([0., 1.], dtype='f'))
     doc = Doc(vocab, words=['apples', 'oranges', 'oov'])
     assert doc.has_vector
-
     assert doc[0].has_vector
     assert doc[1].has_vector
     assert not doc[2].has_vector
@@ -101,7 +101,7 @@ def test_doc_token_api_ancestors(en_tokenizer):
     text = "Yesterday I saw a dog that barked loudly."
     heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert [t.text for t in doc[6].ancestors] == ["dog", "saw"]
     assert [t.text for t in doc[1].ancestors] == ["saw"]
     assert [t.text for t in doc[2].ancestors] == []
@@ -115,7 +115,7 @@ def test_doc_token_api_head_setter(en_tokenizer):
     text = "Yesterday I saw a dog that barked loudly."
     heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
 
     assert doc[6].n_lefts == 1
     assert doc[6].n_rights == 1
@@ -165,7 +165,7 @@ def test_doc_token_api_head_setter(en_tokenizer):
 
 
 def test_is_sent_start(en_tokenizer):
-    doc = en_tokenizer(u'This is a sentence. This is another.')
+    doc = en_tokenizer('This is a sentence. This is another.')
     assert doc[5].is_sent_start is None
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True

@@ -1,18 +1,18 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-from ...tokens import Doc
-from ...vocab import Vocab
-from ...attrs import LEMMA
-
 import pytest
 import numpy
+from spacy.tokens import Doc
+from spacy.vocab import Vocab
+from spacy.attrs import LEMMA
+
+from ..util import get_doc
 
 
 @pytest.mark.parametrize('text', [["one", "two", "three"]])
 def test_doc_api_compare_by_string_position(en_vocab, text):
-    doc = get_doc(en_vocab, text)
+    doc = Doc(en_vocab, words=text)
     # Get the tokens in this order, so their ID ordering doesn't match the idx
     token3 = doc[-1]
     token2 = doc[-2]
@@ -104,18 +104,18 @@ def test_doc_api_getitem(en_tokenizer):
                                   " Give it back! He pleaded. "])
 def test_doc_api_serialize(en_tokenizer, text):
     tokens = en_tokenizer(text)
-    new_tokens = get_doc(tokens.vocab).from_bytes(tokens.to_bytes())
+    new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
-    new_tokens = get_doc(tokens.vocab).from_bytes(
+    new_tokens = Doc(tokens.vocab).from_bytes(
         tokens.to_bytes(tensor=False), tensor=False)
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
-    new_tokens = get_doc(tokens.vocab).from_bytes(
+    new_tokens = Doc(tokens.vocab).from_bytes(
         tokens.to_bytes(sentiment=False), sentiment=False)
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
@@ -199,6 +199,20 @@ def test_doc_api_retokenizer_attrs(en_tokenizer):
     assert doc[4].ent_type_ == 'ORG'
 
 
+@pytest.mark.xfail
+def test_doc_api_retokenizer_lex_attrs(en_tokenizer):
+    """Test that lexical attributes can be changed (see #2390)."""
+    doc = en_tokenizer("WKRO played beach boys songs")
+    assert not any(token.is_stop for token in doc)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[2:4], attrs={'LEMMA': 'boys', 'IS_STOP': True})
+    assert doc[2].text == 'beach boys'
+    assert doc[2].lemma_ == 'boys'
+    assert doc[2].is_stop
+    new_doc = Doc(doc.vocab, words=['beach boys'])
+    assert new_doc[0].is_stop
+
+
 def test_doc_api_sents_empty_string(en_tokenizer):
     doc = en_tokenizer("")
     doc.is_parsed = True
@@ -215,7 +229,7 @@ def test_doc_api_runtime_error(en_tokenizer):
             'ROOT', 'amod', 'dobj']
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deps)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
 
     nps = []
     for np in doc.noun_chunks:
@@ -235,7 +249,7 @@ def test_doc_api_right_edge(en_tokenizer):
              -2, -7, 1, -19, 1, -2, -3, 2, 1, -3, -26]
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert doc[6].text == 'for'
     subtree = [w.text for w in doc[6].subtree]
     assert subtree == ['for', 'the', 'sake', 'of', 'such', 'as',
@@ -264,7 +278,7 @@ def test_doc_api_similarity_match():
 
 def test_lowest_common_ancestor(en_tokenizer):
     tokens = en_tokenizer('the lazy dog slept')
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[2, 1, 1, 0])
     lca = doc.get_lca_matrix()
     assert(lca[1, 1] == 1)
     assert(lca[0, 1] == 2)
@@ -277,7 +291,7 @@ def test_parse_tree(en_tokenizer):
     heads = [1, 0, 1, -2, -3, -1, -5]
     tags = ['PRP', 'IN', 'NNP', 'NNP', 'IN', 'NNP', '.']
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, tags=tags)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, tags=tags)
     # full method parse_tree(text) is a trivial composition
     trees = doc.print_tree()
     assert len(trees) > 0

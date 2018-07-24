@@ -1,28 +1,15 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..tokens import Doc
-from ..attrs import ORTH, POS, HEAD, DEP
-from ..compat import path2str
-
-import pytest
 import numpy
 import tempfile
 import shutil
 import contextlib
 import msgpack
 from pathlib import Path
-
-
-MODELS = {}
-
-
-def load_test_model(model):
-    """Load a model if it's installed as a package, otherwise skip."""
-    if model not in MODELS:
-        module = pytest.importorskip(model)
-        MODELS[model] = module.load()
-    return MODELS[model]
+from spacy.tokens import Doc, Span
+from spacy.attrs import POS, HEAD, DEP
+from spacy.compat import path2str
 
 
 @contextlib.contextmanager
@@ -56,7 +43,8 @@ def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=No
         attrs[i, 2] = doc.vocab.strings[dep]
     doc.from_array([POS, HEAD, DEP], attrs)
     if ents:
-        doc.ents = [(ent_id, doc.vocab.strings[label], start, end) for ent_id, label, start, end in ents]
+        doc.ents = [Span(doc, start, end, label=doc.vocab.strings[label])
+                    for start, end, label in ents]
     if tags:
         for token in doc:
             token.tag_ = tags[token.i]

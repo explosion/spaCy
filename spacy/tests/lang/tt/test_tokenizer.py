@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 
+
 INFIX_HYPHEN_TESTS = [
     ("Явым-төшем күләме.", "Явым-төшем күләме .".split()),
     ("Хатын-кыз киеме.", "Хатын-кыз киеме .".split())
@@ -64,12 +65,12 @@ NORM_TESTCASES = [
 
 
 @pytest.mark.parametrize("text,expected_tokens", TESTCASES)
-def test_tokenizer_handles_testcases(tt_tokenizer, text, expected_tokens):
+def test_tt_tokenizer_handles_testcases(tt_tokenizer, text, expected_tokens):
     tokens = [token.text for token in tt_tokenizer(text) if not token.is_space]
     assert expected_tokens == tokens
 
 
 @pytest.mark.parametrize('text,norms', NORM_TESTCASES)
-def test_tokenizer_handles_norm_exceptions(tt_tokenizer, text, norms):
+def test_tt_tokenizer_handles_norm_exceptions(tt_tokenizer, text, norms):
     tokens = tt_tokenizer(text)
     assert [token.norm_ for token in tokens] == norms

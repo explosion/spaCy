@@ -1,10 +1,10 @@
-'''Test Doc sets up tokens correctly.'''
+# coding: utf-8
 from __future__ import unicode_literals
-import pytest
 
-from ...vocab import Vocab
-from ...tokens.doc import Doc
-from ...lemmatizer import Lemmatizer
+import pytest
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+from spacy.lemmatizer import Lemmatizer
 
 
 @pytest.fixture

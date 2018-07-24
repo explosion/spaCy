@@ -2,11 +2,11 @@
 from __future__ import unicode_literals
 
 import pytest
+from spacy.language import Language
+from spacy.tokens import Span
 
 from ..util import get_doc
-from ...language import Language
-from ...tokens import Span
-from ... import util
+
 
 @pytest.fixture
 def doc(en_tokenizer):
@@ -16,7 +16,7 @@ def doc(en_tokenizer):
     pos = ['PRON', 'VERB', 'PROPN', 'PROPN', 'ADP', 'PROPN', 'PUNCT']
     deps = ['ROOT', 'prep', 'compound', 'pobj', 'prep', 'pobj', 'punct']
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads,
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads,
                   tags=tags, pos=pos, deps=deps)
     doc.ents = [Span(doc, 2, 4, doc.vocab.strings['GPE'])]
     doc.is_parsed = True

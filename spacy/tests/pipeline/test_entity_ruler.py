@@ -2,10 +2,9 @@
 from __future__ import unicode_literals
 
 import pytest
-
-from ...tokens import Span
-from ...language import Language
-from ...pipeline import EntityRuler
+from spacy.tokens import Span
+from spacy.language import Language
+from spacy.pipeline import EntityRuler
 
 
 @pytest.fixture

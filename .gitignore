@@ -36,6 +36,7 @@ venv/
 .dev
 .denv
 .pypyenv
+.pytest_cache/
 
 # Distribution / packaging
 env/

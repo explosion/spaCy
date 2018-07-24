@@ -4,13 +4,14 @@ from __future__ import unicode_literals
 import pytest
 import dill as pickle
 import numpy
-
-from ..vocab import Vocab
-from ..attrs import NORM
+from spacy.strings import StringStore
+from spacy.vocab import Vocab
+from spacy.attrs import NORM
 
 
 @pytest.mark.parametrize('text1,text2', [('hello', 'bye')])
-def test_pickle_string_store(stringstore, text1, text2):
+def test_pickle_string_store(text1, text2):
+    stringstore = StringStore()
     store1 = stringstore[text1]
     store2 = stringstore[text2]
     data = pickle.dumps(stringstore, protocol=-1)

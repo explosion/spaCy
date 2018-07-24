@@ -1,16 +1,13 @@
 # coding: utf8
 from __future__ import unicode_literals
-from thinc.neural import Model
-import pytest
-import numpy
 
-from ..._ml import chain, Tok2Vec, doc2feats
-from ...vocab import Vocab
-from ...pipeline import Tensorizer
-from ...syntax.arc_eager import ArcEager
-from ...syntax.nn_parser import Parser
-from ...tokens.doc import Doc
-from ...gold import GoldParse
+import pytest
+from spacy._ml import Tok2Vec
+from spacy.vocab import Vocab
+from spacy.syntax.arc_eager import ArcEager
+from spacy.syntax.nn_parser import Parser
+from spacy.tokens.doc import Doc
+from spacy.gold import GoldParse
 
 
 @pytest.fixture
@@ -37,9 +34,11 @@ def parser(vocab, arc_eager):
 def model(arc_eager, tok2vec):
     return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.nO)[0]
 
+
 @pytest.fixture
 def doc(vocab):
     return Doc(vocab, words=['a', 'b', 'c'])
+
 
 @pytest.fixture
 def gold(doc):
@@ -80,5 +79,3 @@ def test_update_doc_beam(parser, model, doc, gold):
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
     parser.update_beam([doc], [gold], sgd=optimize)
-
-

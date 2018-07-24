@@ -1,13 +1,14 @@
+# coding: utf8
 from __future__ import unicode_literals
-import pytest
 
-from ...vocab import Vocab
-from ...pipeline import DependencyParser
-from ...tokens import Doc
-from ...gold import GoldParse
-from ...syntax.nonproj import projectivize
-from ...syntax.stateclass import StateClass
-from ...syntax.arc_eager import ArcEager
+import pytest
+from spacy.vocab import Vocab
+from spacy.pipeline import DependencyParser
+from spacy.tokens import Doc
+from spacy.gold import GoldParse
+from spacy.syntax.nonproj import projectivize
+from spacy.syntax.stateclass import StateClass
+from spacy.syntax.arc_eager import ArcEager
 
 
 def get_sequence_costs(M, words, heads, deps, transitions):
@@ -105,7 +106,7 @@ annot_tuples = [
     (31, 'going', 'VBG', 26, 'parataxis', 'O'),
     (32, 'to', 'TO', 33, 'aux', 'O'),
     (33, 'spend', 'VB', 31, 'xcomp', 'O'),
-    (34, 'the', 'DT', 35, 'det', 'B-TIME'), 
+    (34, 'the', 'DT', 35, 'det', 'B-TIME'),
     (35, 'night', 'NN', 33, 'dobj', 'L-TIME'),
     (36, 'there', 'RB', 33, 'advmod', 'O'),
     (37, 'presumably', 'RB', 33, 'advmod', 'O'),
