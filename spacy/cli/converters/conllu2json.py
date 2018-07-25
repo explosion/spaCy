@@ -7,6 +7,7 @@ from ...util import prints
 from ...gold import iob_to_biluo
 import re
 
+
 def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
 
     """
@@ -52,13 +53,13 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
 
 
 def is_ner(tag):
-    
+
     """ 
     Check the 10th column of the first token to determine if the file contains
     NER tags 
     """
 
-    tag_match = re.match('([A-Z]+)-([A-Z]+)', tag)
+    tag_match = re.match('([A-Z_]+)-([A-Z_]+)', tag)
     if tag_match:
         return True
     elif tag == "O":
@@ -108,7 +109,7 @@ def simplify_tags(iob):
 
     new_iob = []
     for tag in iob:
-        tag_match = re.match('([A-Z]+)-([A-Z]+)', tag)
+        tag_match = re.match('([A-Z_]+)-([A-Z_]+)', tag)
         if tag_match:
             prefix = tag_match.group(1)
             suffix = tag_match.group(2)
