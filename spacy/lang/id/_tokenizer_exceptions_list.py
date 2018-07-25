@@ -3138,6 +3138,7 @@ sambung-bersambung
 sambung-menyambung
 sambut-menyambut
 samo-samo
+sampah-sampah
 sampai-sampai
 samping-menyamping
 sana-sini

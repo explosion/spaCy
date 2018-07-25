@@ -71,18 +71,6 @@ for exc_data in [
     {ORTH: "Des.", LEMMA: "Desember", NORM: "Desember"},
 
     {
-        ORTH: "a.l.",
-        LEMMA: "antara lain",
-        NORM: "antara lain"},
-    {
-        ORTH: "a.n.",
-        LEMMA: "atas nama",
-        NORM: "atas nama"},
-    {
-        ORTH: "a.s.",
-        LEMMA: "alaihi salam",
-        NORM: "alaihi salam"},
-    {
         ORTH: "AAI",
         LEMMA: "Asosiasi Advokat Indonesia",
         NORM: "Asosiasi Advokat Indonesia"},
@@ -110,6 +98,10 @@ for exc_data in [
         ORTH: "akad",
         LEMMA: "antarkerja antardaerah",
         NORM: "antarkerja antardaerah"},
+    {
+        ORTH: "AKBP",
+        LEMMA: "Ajun Komisaris Besar Polisi",
+        NORM: "Ajun Komisaris Besar Polisi"},
     {
         ORTH: "AKPOL",
         LEMMA: "Akademi Polisi",
@@ -290,10 +282,6 @@ for exc_data in [
         ORTH: "cerpen",
         LEMMA: "cerita pendek",
         NORM: "cerita pendek"},
-    {
-        ORTH: "d.a.",
-        LEMMA: "dengan alamat",
-        NORM: "dengan alamat"},
     {
         ORTH: "DAMRI",
         LEMMA: "Djawatan Angkutan Motor Republik Indonesia",
@@ -482,14 +470,6 @@ for exc_data in [
         ORTH: "DKI",
         LEMMA: "Daerah Khusus Ibukota",
         NORM: "Daerah Khusus Ibukota"},
-    {
-        ORTH: "dkk.",
-        LEMMA: "dan kawan-kawan",
-        NORM: "dan kawan-kawan"},
-    {
-        ORTH: "dll.",
-        LEMMA: "dan lain-lain",
-        NORM: "dan lain-lain"},
     {
         ORTH: "DPO",
         LEMMA: "Daftar Pencarian Orang",
