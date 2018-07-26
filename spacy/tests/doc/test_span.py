@@ -133,3 +133,24 @@ def test_span_as_doc(doc):
     span = doc[4:10]
     span_doc = span.as_doc()
     assert span.text == span_doc.text.strip()
+
+def test_span_ents_property(doc):
+    """Test span.ents for the """
+    doc.ents = [
+        (doc.vocab.strings['PRODUCT'], 7, 8),
+        (doc.vocab.strings['PRODUCT'], 11, 13)
+    ]
+    assert len(list(doc.ents)) == 2
+    sentences = list(doc.sents)
+    assert len(sentences) == 3
+    assert sentences[0].ents == []
+    assert len(sentences[1].ents) == 1
+    assert sentences[1].ents[0].text == "another"
+    assert sentences[1].ents[0].label_ == "PRODUCT"
+    assert sentences[1].ents[0].start == 7
+    assert sentences[1].ents[0].end == 8
+    # Third sentence ents
+    assert sentences[2].ents[0].text == "a third"
+    assert sentences[2].ents[0].label_ == "PRODUCT"
+    assert sentences[2].ents[0].start == 11
+    assert sentences[2].ents[0].end == 13
