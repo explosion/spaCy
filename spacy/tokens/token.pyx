@@ -12,6 +12,7 @@ import numpy
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
+from ..structs cimport get_left_edge,get_right_edge
 from .. import parts_of_speech
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
@@ -408,7 +409,7 @@ cdef class Token:
         """
         def __get__(self):
             cdef int nr_iter = 0
-            cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
+            cdef const TokenC* ptr = self.c - (self.i - get_left_edge(self.c))
             while ptr < self.c:
                 if ptr + ptr.head == self.c:
                     yield self.doc[ptr - (self.c - self.i)]
@@ -425,7 +426,7 @@ cdef class Token:
         YIELDS (Token): A right-child of the token.
         """
         def __get__(self):
-            cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
+            cdef const TokenC* ptr = self.c + (get_right_edge(self.c) - self.i)
             tokens = []
             cdef int nr_iter = 0
             while ptr > self.c:
@@ -467,7 +468,7 @@ cdef class Token:
         RETURNS (Token): The first token such that `self.is_ancestor(token)`.
         """
         def __get__(self):
-            return self.doc[self.c.l_edge]
+            return self.doc[get_left_edge(self.c)]
 
     property right_edge:
         """The rightmost token of this token's syntactic descendents.
@@ -475,7 +476,7 @@ cdef class Token:
         RETURNS (Token): The last token such that `self.is_ancestor(token)`.
         """
         def __get__(self):
-            return self.doc[self.c.r_edge]
+            return self.doc[get_right_edge(self.c)]
 
     property ancestors:
         """A sequence of this token's syntactic ancestors.
@@ -534,13 +535,13 @@ cdef class Token:
             # update number of deps of old head
             if self.c.head > 0:  # left dependent
                 old_head.c.l_kids -= 1
-                if self.c.l_edge == old_head.c.l_edge:
+                if get_left_edge(self.c) == get_left_edge(old_head.c):
                     # the token dominates the left edge so the left edge of
                     # the  head may change when the token is reattached, it may
                     # not change if the new head is a descendant of the current
                     # head
 
-                    new_edge = self.c.l_edge
+                    new_edge = get_left_edge(self.c)
                     # the new l_edge is the left-most l_edge on any of the
                     # other dependents where the l_edge is left of the head,
                     # otherwise it is the head
@@ -549,35 +550,35 @@ cdef class Token:
                         for child in old_head.children:
                             if child == self:
                                 continue
-                            if child.c.l_edge < new_edge:
-                                new_edge = child.c.l_edge
+                            if get_left_edge(child.c) < new_edge:
+                                new_edge = get_left_edge(child.c)
                         old_head.c.l_edge = new_edge
 
                     # walk up the tree from old_head and assign new l_edge to
                     # ancestors until an ancestor already has an l_edge that's
                     # further left
                     for anc in old_head.ancestors:
-                        if anc.c.l_edge <= new_edge:
+                        if get_left_edge(anc.c) <= new_edge:
                             break
                         anc.c.l_edge = new_edge
 
             elif self.c.head < 0:  # right dependent
                 old_head.c.r_kids -= 1
                 # do the same thing as for l_edge
-                if self.c.r_edge == old_head.c.r_edge:
-                    new_edge = self.c.r_edge
+                if get_right_edge(self.c) == get_right_edge(old_head.c):
+                    new_edge = get_right_edge(self.c)
 
                     if not is_desc:
                         new_edge = old_head.i
                         for child in old_head.children:
                             if child == self:
                                 continue
-                            if child.c.r_edge > new_edge:
-                                new_edge = child.c.r_edge
+                            if get_right_edge(child.c) > new_edge:
+                                new_edge = get_right_edge(child.c)
                         old_head.c.r_edge = new_edge
 
                     for anc in old_head.ancestors:
-                        if anc.c.r_edge >= new_edge:
+                        if get_right_edge(anc.c) >= new_edge:
                             break
                         anc.c.r_edge = new_edge
 
@@ -586,22 +587,22 @@ cdef class Token:
                 new_head.c.l_kids += 1
                 # walk up the tree from new head and set l_edge to self.l_edge
                 # until you hit a token with an l_edge further to the left
-                if self.c.l_edge < new_head.c.l_edge:
-                    new_head.c.l_edge = self.c.l_edge
+                if get_left_edge(self.c) < get_left_edge(new_head.c):
+                    new_head.c.l_edge = get_left_edge(self.c)
                     for anc in new_head.ancestors:
-                        if anc.c.l_edge <= self.c.l_edge:
+                        if anc.c.l_edge <= get_left_edge(self.c):
                             break
-                        anc.c.l_edge = self.c.l_edge
+                        anc.c.l_edge = get_left_edge(self.c)
 
             elif rel_newhead_i < 0:  # right dependent
                 new_head.c.r_kids += 1
                 # do the same as for l_edge
-                if self.c.r_edge > new_head.c.r_edge:
-                    new_head.c.r_edge = self.c.r_edge
+                if get_right_edge(self.c) > get_right_edge(new_head.c):
+                    new_head.c.r_edge = get_right_edge(self.c)
                     for anc in new_head.ancestors:
-                        if anc.c.r_edge >= self.c.r_edge:
+                        if get_right_edge(anc.c) >= get_right_edge(self.c):
                             break
-                        anc.c.r_edge = self.c.r_edge
+                        anc.c.r_edge = get_right_edge(self.c)
 
             # set new head
             self.c.head = rel_newhead_i
