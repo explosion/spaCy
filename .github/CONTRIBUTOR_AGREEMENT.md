@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           |     vikas yadav      |
 | Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
-| Website (optional)             |                      |
+| Title or role (if applicable)  | Data Scientist       |
+| Date                           |     1 August 2018    |
+| GitHub username                |   vikaskyadav        |
+| Website (optional)             |  www.vikaskyadav.tk  |
