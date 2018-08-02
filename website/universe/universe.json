@@ -965,6 +965,45 @@
             },
             "category": ["training"],
             "tags": ["excel"]
+        },
+        {
+            "id": "spacy-graphql",
+            "title": "spacy-graphql",
+            "slogan": "Query spaCy's linguistic annotations using GraphQL",
+            "github": "ines/spacy-graphql",
+            "description": "A very simple and experimental app that lets you query spaCy's linguistic annotations using [GraphQL](https://graphql.org/). The API currently supports most token attributes, named entities, sentences and text categories (if available as `doc.cats`, i.e. if you added a text classifier to a model). The `meta` field will return the model meta data. Models are only loaded once and kept in memory.",
+            "url": "https://explosion.ai/demos/spacy-graphql",
+            "category": ["apis"],
+            "tags": ["graphql"],
+            "thumb": "https://i.imgur.com/xC7zpTO.png",
+            "code_example": [
+                "{",
+                "  nlp(text: \"Zuckerberg is the CEO of Facebook.\", model: \"en_core_web_sm\") {",
+                "    meta {",
+                "      lang",
+                "      description",
+                "    }",
+                "    doc {",
+                "      text",
+                "      tokens {",
+                "        text",
+                "        pos_",
+                "      }",
+                "      ents {",
+                "        text",
+                "        label_",
+                "      }",
+                "    }",
+                "  }",
+                "}"
+            ],
+            "code_language": "json",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            }
         }
     ],
     "projectCats": {
