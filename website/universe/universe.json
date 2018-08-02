@@ -251,27 +251,29 @@
         },
         {
             "id": "spacy-lefff",
-            "slogan": "French lemmatization with Lefff",
-            "description": "spacy v2.0 extension and pipeline component for adding a French lemmatizer based on [Lefff](https://hal.inria.fr/inria-00521242/).",
+            "slogan": "POS and French lemmatization with Lefff",
+            "description": "spacy v2.0 extension and pipeline component for adding a French POS and lemmatizer based on [Lefff](https://hal.inria.fr/inria-00521242/).",
             "github": "sammous/spacy-lefff",
             "pip": "spacy-lefff",
             "code_example": [
                 "import spacy",
-                "from spacy_lefff import LefffLemmatizer",
+                "from spacy_lefff import LefffLemmatizer, POSTagger",
                 "",
                 "nlp = spacy.load('fr')",
-                "french_lemmatizer = LefffLemmatizer()",
-                "nlp.add_pipe(french_lemmatizer, name='lefff', after='parser')",
+                "pos = POSTagger()",
+                "french_lemmatizer = LefffLemmatizer(after_melt=True)",
+                "nlp.add_pipe(pos, name='pos', after='parser')",
+                "nlp.add_pipe(french_lemmatizer, name='lefff', after='pos')",
                 "doc = nlp(u\"Paris est une ville très chère.\")",
                 "for d in doc:",
-                "    print(d.text, d.pos_, d._.lefff_lemma, d.tag_)"
+                "    print(d.text, d.pos_, d._.melt_tagger, d._.lefff_lemma, d.tag_, d.lemma_)"
             ],
             "author": "Sami Moustachir",
             "author_links": {
                 "github": "sammous"
             },
             "category": ["pipeline"],
-            "tags": ["lemmatizer", "french"]
+            "tags": ["pos", "lemmatizer", "french"]
         },
         {
             "id": "lemmy",
