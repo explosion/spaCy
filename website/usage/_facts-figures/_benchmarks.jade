@@ -103,8 +103,8 @@ p
 +h(4, "ner-accuracy-ontonotes5") NER accuracy (OntoNotes 5, no pre-process)
 
 p
-    |  This is the evaluation we use to tune spaCy's parameters are decide which
-    |  algorithms are better than others. It's reasonably close to actual usage,
+    |  This is the evaluation we use to tune spaCy's parameters to decide which
+    |  algorithms are better than the others. It's reasonably close to actual usage,
     |  because it requires the parses to be produced from raw text, without any
     |  pre-processing.
 
@@ -157,7 +157,13 @@ p
 
 +infobox("Important note", "⚠️")
     |  This evaluation was conducted in 2015. We're working on benchmarks on
-    |  current CPU and GPU hardware.
+    |  current CPU and GPU hardware. In the meantime, we're grateful to the
+    |  Stanford folks for drawing our attention to what seems
+    |  to be #[+a("https://nlp.stanford.edu/software/tokenizer.html#Speed") a long-standing error] 
+    |  in our CoreNLP benchmarks, especially for their 
+    |  tokenizer. Until we run corrected experiments, we have updated the table
+    |  using their figures.
+
 
 +aside("Methodology")
     |  #[strong Set up:] 100,000 plain-text documents were streamed from an
@@ -183,14 +189,14 @@ p
     +row
         +cell #[strong spaCy]
         each data in [ "0.2ms", "1ms", "19ms"]
-            +cell("num") #[strong=data]
+            +cell("num")=data
 
         each data in ["1x", "1x", "1x"]
             +cell("num")=data
 
     +row
         +cell CoreNLP
-        each data in ["2ms", "10ms", "49ms", "10x", "10x", "2.6x"]
+        each data in ["0.18ms", "10ms", "49ms", "0.9x", "10x", "2.6x"]
             +cell("num")=data
     +row
         +cell ZPar

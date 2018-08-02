@@ -177,3 +177,23 @@ p
     |  your updates. You can also do this by running spaCy over some text,
     |  extracting a bunch of entities the model previously recognised correctly,
     |  and adding them to your training examples.
+
++h(3, "unhashable-list") Unhashable type: 'list'
+
++code(false, "text").
+    TypeError: unhashable type: 'list'
+
+p
+    |  If you're training models, writing them to disk, and versioning them with
+    |  git, you might encounter this error when trying to load them in a Windows
+    |  environment. This happens because a default install of Git for Windows is
+    |  configured to automatically convert Unix-style end-of-line characters
+    |  (LF) to Windows-style ones (CRLF) during file checkout (and the reverse
+    |  when commiting). While that's mostly fine for text files, a trained model
+    |  written to disk has some binary files that should not go through this
+    |  conversion. When they do, you get the error above. You can fix it by
+    |  either changing your #[+a("https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration") #[code core.autocrlf]]
+    |  setting to #[code "false"], or by commiting a #[+a("https://git-scm.com/docs/gitattributes") #[code .gitattributes] file]
+    |  to your repository to tell git on which files or folders it shouldn't do
+    |  LF-to-CRLF conversion, with an entry like #[code path&sol;to&sol;spacy&sol;model&sol;** -text].
+    |  After you've done either of these, clone your repository again.

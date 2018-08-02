@@ -6,7 +6,7 @@
     +qs({config: 'venv', python: 2}) python -m pip install -U virtualenv
     +qs({config: 'venv', python: 3}) python -m pip install -U venv
     +qs({config: 'venv', python: 2}) virtualenv .env
-    +qs({config: 'venv', python: 3}) venv .env
+    +qs({config: 'venv', python: 3}) python -m venv .env
     +qs({config: 'venv', os: 'mac'}) source .env/bin/activate
     +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
     +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate

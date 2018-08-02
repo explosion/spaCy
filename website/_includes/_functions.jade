@@ -10,7 +10,7 @@
 
 - MODEL_COUNT = Object.keys(MODELS).map(m => Object.keys(MODELS[m]).length).reduce((a, b) => a + b)
 - MODEL_LANG_COUNT = Object.keys(MODELS).length
-- LANG_COUNT = Object.keys(LANGUAGES).length
+- LANG_COUNT = Object.keys(LANGUAGES).length - 1
 
 - MODEL_META = public.models._data.MODEL_META
 - MODEL_LICENSES = public.models._data.MODEL_LICENSES

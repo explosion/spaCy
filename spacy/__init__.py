@@ -20,5 +20,5 @@ def blank(name, **kwargs):
     return LangClass(**kwargs)
 
 
-def info(model=None, markdown=False):
-    return cli_info(model, markdown)
+def info(model=None, markdown=False, silent=False):
+    return cli_info(model, markdown, silent)

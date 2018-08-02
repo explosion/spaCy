@@ -281,7 +281,7 @@ p
     html = '&lt;h1&gt;Hello world!&lt;/h1&gt;'
     if util.is_in_jupyter():
         from IPython.core.display import display, HTML
-        return display(HTML(html))
+        display(HTML(html))
 
 +table(["Name", "Type", "Description"])
     +row("foot")

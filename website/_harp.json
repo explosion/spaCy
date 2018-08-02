@@ -14,7 +14,7 @@
         "MODELS_REPO": "explosion/spacy-models",
 
         "SPACY_VERSION": "2.0",
-        "BINDER_VERSION": "2.0.11",
+        "BINDER_VERSION": "2.0.12",
 
         "SOCIAL": {
             "twitter": "spacy_io",
@@ -84,8 +84,8 @@
             }
         ],
 
-        "V_CSS": "2.1.3",
-        "V_JS": "2.1.2",
+        "V_CSS": "2.2.1",
+        "V_JS": "2.2.2",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {

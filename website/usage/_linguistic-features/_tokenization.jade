@@ -129,8 +129,8 @@ p
                     substring = substring[split:]
                 elif find_suffix(substring) is not None:
                     split = find_suffix(substring)
-                    suffixes.append(substring[split:])
-                    substring = substring[:split]
+                    suffixes.append(substring[-split:])
+                    substring = substring[:-split]
                 elif find_infixes(substring):
                     infixes = find_infixes(substring)
                     offset = 0

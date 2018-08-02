@@ -1,0 +1,15 @@
+//- 💫 DOCS > API > CYTHON > STRUCTS
+
+include ../_includes/_mixins
+
++section("tokenc")
+    +h(2, "tokenc", "spacy/structs.pxd") TokenC
+        +tag C struct
+
+    include _cython/_tokenc
+
++section("lexemec")
+    +h(2, "lexemec", "spacy/structs.pxd") LexemeC
+        +tag C struct
+
+    include _cython/_lexemec

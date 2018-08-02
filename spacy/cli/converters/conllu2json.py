@@ -4,9 +4,12 @@ from __future__ import unicode_literals
 from .._messages import Messages
 from ...compat import json_dumps, path2str
 from ...util import prints
+from ...gold import iob_to_biluo
+import re
 
 
 def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
+
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
@@ -14,15 +17,27 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
     """
     # by @dvsrepo, via #11 explosion/spacy-dev-resources
 
+    """     
+    Extract NER tags if available and convert them so that they follow
+    BILUO and the Wikipedia scheme
+    """
+    # by @katarkor
+
     docs = []
     sentences = []
     conll_tuples = read_conllx(input_path, use_morphology=use_morphology)
+    checked_for_ner = False
+    has_ner_tags = False
 
     for i, (raw_text, tokens) in enumerate(conll_tuples):
         sentence, brackets = tokens[0]
-        sentences.append(generate_sentence(sentence))
+        if not checked_for_ner:
+            has_ner_tags = is_ner(sentence[5][0])
+            checked_for_ner = True
+        sentences.append(generate_sentence(sentence, has_ner_tags))
         # Real-sized documents could be extracted using the comments on the
         # conluu document
+
         if(len(sentences) % n_sents == 0):
             doc = create_doc(sentences, i)
             docs.append(doc)
@@ -37,6 +52,21 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
            title=Messages.M032.format(name=path2str(output_file)))
 
 
+def is_ner(tag):
+
+    """ 
+    Check the 10th column of the first token to determine if the file contains
+    NER tags 
+    """
+
+    tag_match = re.match('([A-Z_]+)-([A-Z_]+)', tag)
+    if tag_match:
+        return True
+    elif tag == "O":
+        return True
+    else:
+        return False
+
 def read_conllx(input_path, use_morphology=False, n=0):
     text = input_path.open('r', encoding='utf-8').read()
     i = 0
@@ -49,7 +79,7 @@ def read_conllx(input_path, use_morphology=False, n=0):
             for line in lines:
 
                 parts = line.split('\t')
-                id_, word, lemma, pos, tag, morph, head, dep, _1, _2 = parts
+                id_, word, lemma, pos, tag, morph, head, dep, _1, iob = parts
                 if '-' in id_ or '.' in id_:
                     continue
                 try:
@@ -58,7 +88,7 @@ def read_conllx(input_path, use_morphology=False, n=0):
                     dep = 'ROOT' if dep == 'root' else dep
                     tag = pos if tag == '_' else tag
                     tag = tag+'__'+morph  if use_morphology else tag
-                    tokens.append((id_, word, tag, head, dep, 'O'))
+                    tokens.append((id_, word, tag, head, dep, iob))
                 except:
                     print(line)
                     raise
@@ -68,17 +98,47 @@ def read_conllx(input_path, use_morphology=False, n=0):
             if n >= 1 and i >= n:
                 break
 
+def simplify_tags(iob):
+   
+    """
+    Simplify tags obtained from the dataset in order to follow Wikipedia
+    scheme (PER, LOC, ORG, MISC). 'PER', 'LOC' and 'ORG' keep their tags, while
+    'GPE_LOC' is simplified to 'LOC', 'GPE_ORG' to 'ORG' and all remaining tags to
+    'MISC'.     
+    """
 
-def generate_sentence(sent):
-    (id_, word, tag, head, dep, _) = sent
+    new_iob = []
+    for tag in iob:
+        tag_match = re.match('([A-Z_]+)-([A-Z_]+)', tag)
+        if tag_match:
+            prefix = tag_match.group(1)
+            suffix = tag_match.group(2)
+            if suffix == 'GPE_LOC':
+                suffix = 'LOC'
+            elif suffix == 'GPE_ORG':
+                suffix = 'ORG'
+            elif suffix != 'PER' and suffix != 'LOC' and suffix != 'ORG':
+                suffix = 'MISC'
+            tag = prefix + '-' + suffix
+        new_iob.append(tag)
+    return new_iob
+
+def generate_sentence(sent, has_ner_tags):
+    (id_, word, tag, head, dep, iob) = sent
     sentence = {}
     tokens = []
+    if has_ner_tags:
+        iob = simplify_tags(iob)
+        biluo = iob_to_biluo(iob)
     for i, id in enumerate(id_):
         token = {}
+        token["id"] = id
         token["orth"] = word[i]
         token["tag"] = tag[i]
         token["head"] = head[i] - id
         token["dep"] = dep[i]
+        if has_ner_tags:
+            token["ner"] = biluo[i]
         tokens.append(token)
     sentence["tokens"] = tokens
     return sentence

@@ -60,9 +60,8 @@ def detailed_tokens(tokenizer, text):
         parts = node.feature.split(',')
         pos = ','.join(parts[0:4])
 
-        if len(parts) > 6:
+        if len(parts) > 7:
             # this information is only available for words in the tokenizer dictionary
-            reading = parts[6]
             base = parts[7]
 
         words.append( ShortUnitWord(surface, base, pos) )
@@ -83,6 +82,7 @@ class JapaneseTokenizer(object):
         for token, dtoken in zip(doc, dtokens):
             token._.mecab_tag = dtoken.pos
             token.tag_ = resolve_pos(dtoken)
+            token.lemma_ = dtoken.lemma
         return doc
 
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
