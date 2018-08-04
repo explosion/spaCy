@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 from ..norm_exceptions import BASE_NORMS
 from ...attrs import NORM
+from ...attrs import LIKE_NUM
 from ...util import add_lookups
-
 
 _stem_suffixes = [
     ["ो","े","ू","ु","ी","ि","ा"],
@@ -14,6 +14,13 @@ _stem_suffixes = [
     ["ाएंगी","ाएंगे","ाऊंगी","ाऊंगा","ाइयाँ","ाइयों","ाइयां"]
 ]
 
+#reference 1:https://en.wikipedia.org/wiki/Indian_numbering_system 
+#reference 2: https://blogs.transparent.com/hindi/hindi-numbers-1-100/
+
+_num_words = ['शून्य', 'एक',  'दो', 'तीन', 'चार', 'पांच', 'छह', 'सात', 'आठ', 'नौ', 'दस', 
+              'ग्यारह', 'बारह', 'तेरह', 'चौदह', 'पंद्रह', 'सोलह', 'सत्रह', 'अठारह', 'उन्नीस', 
+              'बीस', 'तीस', 'चालीस', 'पचास', 'साठ', 'सत्तर', 'अस्सी', 'नब्बे', 'सौ', 'हज़ार',
+              'लाख', 'करोड़', 'अरब', 'खरब']
 
 def norm(string):
     # normalise base exceptions, e.g. punctuation or currency symbols
@@ -32,7 +39,20 @@ def norm(string):
                 return string[:-length]
     return string
 
+def like_num(text):
+    text = text.replace(',', '').replace('.', '')
+    if text.isdigit():
+        return True
+    if text.count('/') == 1:
+        num, denom = text.split('/')
+        if num.isdigit() and denom.isdigit():
+            return True
+    if text.lower() in _num_words:
+        return True
+    return False
+
 
 LEX_ATTRS = {
     NORM: norm
+    LIKE_NUM: like_num
 }
