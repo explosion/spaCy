@@ -139,15 +139,13 @@ def oc2ud(oc_tag):
             'perf': 'Perf',
         },
         'Case': {
-            'ablt': 'Ins',
             'accs': 'Acc',
             'datv': 'Dat',
-            'gen1': 'Gen',
-            'gen2': 'Gen',
-            'gent': 'Gen',
-            'loc2': 'Loc',
+            'gen': 'Gen',
+            'instr': 'Ins',
             'loct': 'Loc',
             'nomn': 'Nom',
+            'pair': 'Pair',
             'voct': 'Voc',
         },
         'Degree': {
