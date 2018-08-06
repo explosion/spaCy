@@ -34,6 +34,9 @@ _exc = {
     "udh": "sudah",
     "dapetin": "mendapatkan",
     "ngelakuin": "melakukan",
+    "ngebuat": "membuat",
+    "membikin": "membuat",
+    "bikin": "buat",
 
     # Daftar kosakata yang sering salah dieja
     "malpraktik": "malapraktik",
