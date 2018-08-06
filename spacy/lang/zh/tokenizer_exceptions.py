@@ -1,8 +1,7 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ..symbols import *
-from ..language_data import PRON_LEMMA
+from ...symbols import *
 
 
 TOKENIZER_EXCEPTIONS = {
