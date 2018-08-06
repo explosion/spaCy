@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
+from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA, PUNCT
 
 
 _exc = {}
@@ -78,5 +78,11 @@ for orth in [
     "s.k.", "st.", "s:t", "t.ex.", "t.o.m.", "ung.", "äv.", "övers."]:
     _exc[orth] = [{ORTH: orth}]
 
+# Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
+# should be tokenized as two separate tokens.
+for orth in ["i", "m"]:
+    _exc[orth + "."] = [
+        {ORTH: orth, LEMMA: orth, NORM: orth},
+        {ORTH: ".", TAG: PUNCT}]
 
 TOKENIZER_EXCEPTIONS = _exc
