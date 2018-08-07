@@ -6,6 +6,9 @@ from ...language import Language
 from ...tokens import Doc
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
+from ...util import update_exc
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 
 class ChineseDefaults(Language.Defaults):
@@ -14,6 +17,7 @@ class ChineseDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
+
 
 class Chinese(Language):
     lang = 'zh'
