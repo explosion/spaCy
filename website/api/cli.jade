@@ -260,7 +260,7 @@ p
 +code(false, "bash", "$", false, false, true).
     python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter]
     [--n-sents] [--use-gpu] [--meta-path] [--vectors] [--no-tagger] [--no-parser]
-    [--no-entities] [--gold-preproc]
+    [--no-entities] [--gold-preproc] [--verbose]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -343,6 +343,11 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
+    +row
+        +cell #[code --verbose]
+        +cell flag
+        +cell Show more detail message during training.
 
     +row("foot")
         +cell creates
