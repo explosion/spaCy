@@ -37,7 +37,7 @@ from ..compat import json_dumps
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json. All relevant properties will be "
                "overwritten.", "option", "m", Path),
-    verbose=("Display more information for debug", "option", "v", bool))
+    verbose=("Display more information for debug", "option", None, bool))
 def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
          parser_multitasks='', entity_multitasks='',
           use_gpu=-1, vectors=None, no_tagger=False,
