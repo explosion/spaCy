@@ -1,5 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
+import warnings
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
 from .cli.info import info as cli_info
 from .glossary import explain
 from .about import __version__
