@@ -186,7 +186,7 @@ def setup_package():
             ext_modules=ext_modules,
             scripts=['bin/spacy'],
             install_requires=[
-                'numpy>=1.7',
+                'numpy>=1.15.0',
                 'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
