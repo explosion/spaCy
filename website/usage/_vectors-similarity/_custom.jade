@@ -62,8 +62,8 @@ p
 
 +code.
     nlp_latin = spacy.load('/tmp/la_vectors_wiki_lg')
-    doc1 = nlp(u"Caecilius est in horto")
-    doc2 = nlp(u"servus est in atrio")
+    doc1 = nlp_latin(u"Caecilius est in horto")
+    doc2 = nlp_latin(u"servus est in atrio")
     doc1.similarity(doc2)
 
 p
