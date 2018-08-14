@@ -493,7 +493,11 @@ cdef class Parser:
         cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
                                          min_freq=cfg.get('min_action_freq', 30))
+        previous_labels = dict(self.moves.labels)
         self.moves.initialize_actions(actions)
+        for action, label_freqs in previous_labels.items():
+            for label in label_freqs:
+                self.moves.add_action(action, label)
         cfg.setdefault('token_vector_width', 128)
         if self.model is True:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
