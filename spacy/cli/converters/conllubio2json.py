@@ -5,7 +5,7 @@ from ...compat import json_dumps, path2str
 from ...util import prints
 from ...gold import iob_to_biluo
 
-def conllubio2json(input_path, output_path, n_sents=10, use_morphology=False):
+def conllubio2json(input_path, output_path, n_sents=10, use_morphology=False, lang=None):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is

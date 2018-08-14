@@ -5,6 +5,7 @@ import plac
 from pathlib import Path
 
 from .converters import conllu2json, conllubio2json, iob2json, conll_ner2json
+from .converters import ner_jsonl2json
 from ._messages import Messages
 from ..util import prints
 
@@ -17,6 +18,7 @@ CONVERTERS = {
     'conll': conllu2json,
     'ner': conll_ner2json,
     'iob': iob2json,
+    'jsonl': ner_jsonl2json
 }
 
 
@@ -25,8 +27,10 @@ CONVERTERS = {
     output_dir=("output directory for converted file", "positional", None, str),
     n_sents=("Number of sentences per doc", "option", "n", int),
     converter=("Name of converter (auto, iob, conllu or ner)", "option", "c", str),
+    lang=("Language (if tokenizer required)", "option", "l", str),
     morphology=("Enable appending morphology to tags", "flag", "m", bool))
-def convert(input_file, output_dir, n_sents=1, morphology=False, converter='auto'):
+def convert(input_file, output_dir, n_sents=1, morphology=False, converter='auto',
+        lang=None):
     """
     Convert files into JSON format for use with train command and other
     experiment management functions.
@@ -44,4 +48,4 @@ def convert(input_file, output_dir, n_sents=1, morphology=False, converter='auto
                    title=Messages.M030, exits=1)
     func = CONVERTERS[converter]
     func(input_path, output_path,
-         n_sents=n_sents, use_morphology=morphology)
+         n_sents=n_sents, use_morphology=morphology, lang=lang)

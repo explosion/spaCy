@@ -72,3 +72,4 @@ class Messages(object):
     M051 = ("Development data not found")
     M052 = ("Not a valid meta.json format")
     M053 = ("Expected dict but got: {meta_type}")
+    M054 = ("No --lang specified, but tokenization required.")

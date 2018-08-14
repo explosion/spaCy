@@ -8,7 +8,7 @@ from ...gold import iob_to_biluo
 import re
 
 
-def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
+def conllu2json(input_path, output_path, n_sents=10, use_morphology=False, lang=None):
 
     """
     Convert conllu files into JSON format for use with train cli.

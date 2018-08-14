@@ -7,7 +7,7 @@ from ...util import prints
 from ...gold import iob_to_biluo
 
 
-def conll_ner2json(input_path, output_path, n_sents=10, use_morphology=False):
+def conll_ner2json(input_path, output_path, n_sents=10, use_morphology=False, lang=None):
     """
     Convert files in the CoNLL-2003 NER format into JSON format for use with
     train cli.
