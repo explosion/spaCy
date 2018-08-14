@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, TAG, NORM, ADP, DET
+from ...symbols import ORTH, LEMMA, NORM
 
 _exc = {}
 
