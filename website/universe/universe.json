@@ -251,27 +251,29 @@
         },
         {
             "id": "spacy-lefff",
-            "slogan": "French lemmatization with Lefff",
-            "description": "spacy v2.0 extension and pipeline component for adding a French lemmatizer based on [Lefff](https://hal.inria.fr/inria-00521242/).",
+            "slogan": "POS and French lemmatization with Lefff",
+            "description": "spacy v2.0 extension and pipeline component for adding a French POS and lemmatizer based on [Lefff](https://hal.inria.fr/inria-00521242/).",
             "github": "sammous/spacy-lefff",
             "pip": "spacy-lefff",
             "code_example": [
                 "import spacy",
-                "from spacy_lefff import LefffLemmatizer",
+                "from spacy_lefff import LefffLemmatizer, POSTagger",
                 "",
                 "nlp = spacy.load('fr')",
-                "french_lemmatizer = LefffLemmatizer()",
-                "nlp.add_pipe(french_lemmatizer, name='lefff', after='parser')",
+                "pos = POSTagger()",
+                "french_lemmatizer = LefffLemmatizer(after_melt=True)",
+                "nlp.add_pipe(pos, name='pos', after='parser')",
+                "nlp.add_pipe(french_lemmatizer, name='lefff', after='pos')",
                 "doc = nlp(u\"Paris est une ville très chère.\")",
                 "for d in doc:",
-                "    print(d.text, d.pos_, d._.lefff_lemma, d.tag_)"
+                "    print(d.text, d.pos_, d._.melt_tagger, d._.lefff_lemma, d.tag_, d.lemma_)"
             ],
             "author": "Sami Moustachir",
             "author_links": {
                 "github": "sammous"
             },
             "category": ["pipeline"],
-            "tags": ["lemmatizer", "french"]
+            "tags": ["pos", "lemmatizer", "french"]
         },
         {
             "id": "lemmy",
@@ -943,17 +945,19 @@
         {
             "id": "excelcy",
             "title": "ExcelCy",
-            "slogan": "Excel Integration with SpaCy. Includes, Entity training, Entity matcher pipe.",
-            "description": "ExcelCy is a SpaCy toolkit to help improve the data training experiences. It provides easy annotation using Excel file format. It has helper to pre-train entity annotation with phrase and regex matcher pipe.",
+            "slogan": "Excel Integration with spaCy. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG.",
+            "description": "ExcelCy is a toolkit to integrate Excel to spaCy NLP training experiences. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG. ExcelCy has pipeline to match Entity with PhraseMatcher or Matcher in regular expression.",
             "url": "https://github.com/kororo/excelcy",
             "github": "kororo/excelcy",
             "pip": "excelcy",
             "code_example": [
                 "from excelcy import ExcelCy",
-                "",
-                "excelcy = ExcelCy()",
-                "# download data from here, https://github.com/kororo/excelcy/tree/master/excelcy/tests/data/test_data_28.xlsx",
-                "excelcy.train(data_path='test_data_28.xlsx')"
+                "# collect sentences, annotate Entities and train NER using spaCy",
+                "excelcy = ExcelCy.execute(file_path='https://github.com/kororo/excelcy/raw/master/tests/data/test_data_01.xlsx')",
+                "# use the nlp object as per spaCy API",
+                "doc = excelcy.nlp('Google rebrands its business apps')",
+                "# or save it for faster bootstrap for application",
+                "excelcy.nlp.to_disk('/model')"
             ],
             "author": "Robertus Johansyah",
             "author_links": {
@@ -961,6 +965,45 @@
             },
             "category": ["training"],
             "tags": ["excel"]
+        },
+        {
+            "id": "spacy-graphql",
+            "title": "spacy-graphql",
+            "slogan": "Query spaCy's linguistic annotations using GraphQL",
+            "github": "ines/spacy-graphql",
+            "description": "A very simple and experimental app that lets you query spaCy's linguistic annotations using [GraphQL](https://graphql.org/). The API currently supports most token attributes, named entities, sentences and text categories (if available as `doc.cats`, i.e. if you added a text classifier to a model). The `meta` field will return the model meta data. Models are only loaded once and kept in memory.",
+            "url": "https://explosion.ai/demos/spacy-graphql",
+            "category": ["apis"],
+            "tags": ["graphql"],
+            "thumb": "https://i.imgur.com/xC7zpTO.png",
+            "code_example": [
+                "{",
+                "  nlp(text: \"Zuckerberg is the CEO of Facebook.\", model: \"en_core_web_sm\") {",
+                "    meta {",
+                "      lang",
+                "      description",
+                "    }",
+                "    doc {",
+                "      text",
+                "      tokens {",
+                "        text",
+                "        pos_",
+                "      }",
+                "      ents {",
+                "        text",
+                "        label_",
+                "      }",
+                "    }",
+                "  }",
+                "}"
+            ],
+            "code_language": "json",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            }
         }
     ],
     "projectCats": {
@@ -970,7 +1013,7 @@
         },
         "training": {
             "title": "Training",
-            "description": "Helpers and toolkits for trainig spaCy models"
+            "description": "Helpers and toolkits for training spaCy models"
         },
         "conversational": {
             "title": "Conversational",

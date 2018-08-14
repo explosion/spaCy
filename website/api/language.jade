@@ -513,11 +513,19 @@ p
 p
     |  Loads state from a directory. Modifies the object in place and returns
     |  it. If the saved #[code Language] object contains a model, the
-    |  #[strong model will be loaded].
+    |  model will be loaded. Note that this method is commonly used via the
+    |  subclasses like #[code English] or #[code German] to make
+    |  language-specific functionality like the
+    |  #[+a("/usage/adding-languages#lex-attrs") lexical attribute getters]
+    |  available to the loaded object.
 
 +aside-code("Example").
     from spacy.language import Language
-    nlp = Language().from_disk('/path/to/models')
+    nlp = Language().from_disk('/path/to/model')
+
+    # using language-specific subclass
+    from spacy.lang.en import English
+    nlp = English().from_disk('/path/to/en_model')
 
 +table(["Name", "Type", "Description"])
     +row
@@ -575,10 +583,15 @@ p Serialize the current state to a binary string.
 +h(2, "from_bytes") Language.from_bytes
     +tag method
 
-p Load state from a binary string.
+p
+    |  Load state from a binary string. Note that this method is commonly used
+    |  via the subclasses like #[code English] or #[code German] to make
+    |  language-specific functionality like the
+    |  #[+a("/usage/adding-languages#lex-attrs") lexical attribute getters]
+    |  available to the loaded object.
 
 +aside-code("Example").
-    fron spacy.lang.en import English
+    from spacy.lang.en import English
     nlp_bytes = nlp.to_bytes()
     nlp2 = English()
     nlp2.from_bytes(nlp_bytes)

@@ -1,8 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
-
+from ...symbols import LEMMA, NORM, ORTH, PRON_LEMMA, PUNCT, TAG
 
 _exc = {}
 
@@ -70,13 +69,25 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-for orth in [
-    "ang.", "anm.", "bil.", "bl.a.", "dvs.", "e.Kr.", "el.", "e.d.", "eng.",
-    "etc.", "exkl.", "f.d.", "fid.", "f.Kr.", "forts.", "fr.o.m.", "f.ö.",
-    "förf.", "inkl.", "jur.", "kl.", "kr.", "lat.", "m.a.o.", "max.", "m.fl.",
-    "min.", "m.m.", "obs.", "o.d.", "osv.", "p.g.a.", "ref.", "resp.", "s.a.s.",
-    "s.k.", "st.", "s:t", "t.ex.", "t.o.m.", "ung.", "äv.", "övers."]:
+ABBREVIATIONS = [
+    "ang", "anm", "bil", "bl.a", "d.v.s", "doc", "dvs", "e.d", "e.kr", "el",
+    "eng", "etc", "exkl", "f", "f.d", "f.kr", "f.n", "f.ö", "fid", "fig",
+    "forts", "fr.o.m", "förf", "inkl", "jur", "kap", "kl", "kor", "kr",
+    "kungl", "lat", "m.a.o", "m.fl", "m.m", "max", "milj", "min", "mos",
+    "mt", "o.d", "o.s.v", "obs", "osv", "p.g.a", "proc", "prof", "ref",
+    "resp", "s.a.s", "s.k", "s.t", "sid", "s:t", "t.ex", "t.h", "t.o.m", "t.v",
+    "tel", "ung", "vol", "äv", "övers"
+]
+ABBREVIATIONS = [abbr + "." for abbr in ABBREVIATIONS] + ABBREVIATIONS
+
+for orth in ABBREVIATIONS:
     _exc[orth] = [{ORTH: orth}]
 
+# Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
+# should be tokenized as two separate tokens.
+for orth in ["i", "m"]:
+    _exc[orth + "."] = [
+        {ORTH: orth, LEMMA: orth, NORM: orth},
+        {ORTH: ".", TAG: PUNCT}]
 
 TOKENIZER_EXCEPTIONS = _exc

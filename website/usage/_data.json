@@ -103,7 +103,7 @@
         "menu": {
             "How Pipelines Work": "pipelines",
             "Custom Components": "custom-components",
-            "Extension Attributes": "custom-components-extensions",
+            "Extension Attributes": "custom-components-attributes",
             "Multi-Threading": "multithreading",
             "Serialization": "serialization"
         }

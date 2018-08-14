@@ -1,5 +1,13 @@
 # coding: utf8
 from __future__ import unicode_literals
+import pytest
+
+from .... import util
+
+@pytest.fixture(scope='module')
+def fr_tokenizer():
+    return util.get_lang_class('fr').Defaults.create_tokenizer()
+
 
 import pytest
 from spacy.lang.fr.lex_attrs import like_num

@@ -96,48 +96,39 @@ def he_tokenizer():
 def nb_tokenizer():
     return get_lang_class('nb').Defaults.create_tokenizer()
 
-
 @pytest.fixture(scope='session')
 def da_tokenizer():
     return get_lang_class('da').Defaults.create_tokenizer()
-
 
 @pytest.fixture(scope='session')
 def ja_tokenizer():
     mecab = pytest.importorskip("MeCab")
     return get_lang_class('ja').Defaults.create_tokenizer()
 
-
 @pytest.fixture(scope='session')
 def th_tokenizer():
     pythainlp = pytest.importorskip("pythainlp")
     return get_lang_class('th').Defaults.create_tokenizer()
 
-
 @pytest.fixture(scope='session')
 def tr_tokenizer():
     return get_lang_class('tr').Defaults.create_tokenizer()
-
 
 @pytest.fixture(scope='session')
 def tt_tokenizer():
     return get_lang_class('tt').Defaults.create_tokenizer()
 
-
 @pytest.fixture(scope='session')
 def el_tokenizer():
     return get_lang_class('el').Defaults.create_tokenizer()
-
 
 @pytest.fixture(scope='session')
 def ar_tokenizer():
     return get_lang_class('ar').Defaults.create_tokenizer()
 
-
 @pytest.fixture(scope='session')
 def ur_tokenizer():
     return get_lang_class('ur').Defaults.create_tokenizer()
-
 
 @pytest.fixture(scope='session')
 def ru_tokenizer():

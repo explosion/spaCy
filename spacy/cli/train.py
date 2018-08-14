@@ -38,12 +38,13 @@ from ..compat import json_dumps
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json. All relevant properties will be "
-               "overwritten.", "option", "m", Path))
+               "overwritten.", "option", "m", Path),
+    verbose=("Display more information for debug", "option", None, bool))
 def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
          parser_multitasks='', entity_multitasks='',
           use_gpu=-1, vectors=None, no_tagger=False,
           no_parser=False, no_entities=False, gold_preproc=False,
-          version="0.0.0", meta_path=None):
+          version="0.0.0", meta_path=None, verbose=False):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
@@ -146,7 +147,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                                 gold_preproc=gold_preproc))
                 nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                 start_time = timer()
-                scorer = nlp_loaded.evaluate(dev_docs)
+                scorer = nlp_loaded.evaluate(dev_docs, verbose)
                 end_time = timer()
                 if use_gpu < 0:
                     gpu_wps = None

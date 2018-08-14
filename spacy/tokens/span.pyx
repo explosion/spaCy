@@ -324,6 +324,15 @@ cdef class Span:
                         break
                 return self.doc[start:end]
 
+    property ents:
+        """RETURNS (list): A list of tokens that belong to the current span."""
+        def __get__(self):
+            ents = []
+            for ent in self.doc.ents:
+                if ent.start >= self.start and ent.end <= self.end:
+                    ents.append(ent)
+            return ents
+
     property has_vector:
         """RETURNS (bool): Whether a word vector is associated with the object.
         """
