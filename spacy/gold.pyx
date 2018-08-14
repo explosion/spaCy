@@ -11,6 +11,7 @@ import tempfile
 import shutil
 from pathlib import Path
 import msgpack
+import json
 
 import ujson
 
@@ -347,7 +348,11 @@ def _json_iterate(loc):
             curly_depth -= 1
             if square_depth == 1 and curly_depth == 0:
                 py_str = py_raw[start : i+1].decode('utf8')
-                yield ujson.loads(py_str)
+                try:
+                    yield json.loads(py_str)
+                except:
+                    print(py_str)
+                    raise
                 start = -1
 
 
@@ -579,9 +584,11 @@ def docs_to_json(id, docs):
             json_sent = {'tokens': [], 'brackets': []}
             for token in sent:
                 json_token = {"id": token.i, "orth": token.text}
-                json_token['tag'] = token.tag_ if doc.is_tagged else None
-                json_token['head'] = (token.head.i-token.i) if doc.is_parsed else None
-                json_token['dep'] = token.dep_ if doc.is_parsed else None
+                if doc.is_tagged:
+                    json_token['tag'] = token.tag_
+                if doc.is_parsed:
+                    json_token['head'] = token.head.i-token.i
+                    json_token['dep'] = token.dep_
                 json_token['ner'] = biluo_tags[token.i]
                 json_sent['tokens'].append(json_token)
             json_para['sentences'].append(json_sent)
