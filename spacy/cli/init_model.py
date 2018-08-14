@@ -98,7 +98,7 @@ def open_file(loc):
 def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     probs, oov_prob = read_freqs(freqs_loc) if freqs_loc is not None else ({}, -20)
     clusters = read_clusters(clusters_loc) if clusters_loc else {}
-    lex_attrs = {}
+    lex_attrs = []
     sorted_probs = sorted(probs.items(), key=lambda item: item[1], reverse=True)
     for i, (word, prob) in tqdm(enumerate(sorted_probs)):
         attrs = {'orth': word, 'id': i, 'prob': prob}
