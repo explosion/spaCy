@@ -9,7 +9,6 @@ from collections import OrderedDict
 from thinc.neural.util import get_array_module
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
-from .strings cimport hash_string
 from .typedefs cimport attr_t
 from .tokens.token cimport Token
 from .attrs cimport PROB, LANG, ORTH, TAG
@@ -116,10 +115,11 @@ cdef class Vocab:
         if string == u'':
             return &EMPTY_LEXEME
         cdef LexemeC* lex
-        cdef hash_t key = hash_string(string)
+        cdef hash_t key = self.strings[string]
         lex = <LexemeC*>self._by_orth.get(key)
         cdef size_t addr
         if lex != NULL:
+            assert lex.orth in self.strings
             if lex.orth != key:
                 raise KeyError(Errors.E064.format(string=lex.orth,
                                                   orth=key, orth_id=string))
@@ -142,7 +142,6 @@ cdef class Vocab:
             return self._new_lexeme(mem, self.strings[orth])
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
-        cdef hash_t key
         if len(string) < 3 or self.length < 10000:
             mem = self.mem
         cdef bint is_oov = mem is not self.mem
@@ -180,9 +179,9 @@ cdef class Vocab:
         """
         cdef hash_t int_key
         if isinstance(key, bytes):
-            int_key = hash_string(key.decode('utf8'))
+            int_key = self.strings[key.decode('utf8')]
         elif isinstance(key, unicode):
-            int_key = hash_string(key)
+            int_key = self.strings[key]
         else:
             int_key = key
         lex = self._by_orth.get(int_key)
@@ -225,6 +224,7 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
+            self.strings.add(props[ORTH])
             props = intify_attrs(props, strings_map=self.strings,
                                  _do_deprecated=True)
             token = &tokens[i]
