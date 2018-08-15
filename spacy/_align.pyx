@@ -186,6 +186,10 @@ def _convert_sequence(seq):
     cdef np.ndarray output = numpy.zeros((len(seq),), dtype='uint32')
     cdef bytes item_bytes
     for i, item in enumerate(seq):
+        if item == "``":
+            item = '"'
+        elif item == "''":
+            item = '"'
         if isinstance(item, unicode):
             item_bytes = item.encode('utf8')
         else:
