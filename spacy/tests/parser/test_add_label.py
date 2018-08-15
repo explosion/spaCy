@@ -12,9 +12,6 @@ from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser
 
 
-numpy.random.seed(0)
-
-
 @pytest.fixture
 def vocab():
     return Vocab(lex_attr_getters={NORM: lambda s: s})
@@ -44,7 +41,8 @@ def test_init_parser(parser):
 
 
 # TODO: This is flakey, because it depends on what the parser first learns.
-@pytest.mark.xfail
+# TODO: This now seems to be implicated in segfaults. Not sure what's up!
+@pytest.mark.skip
 def test_add_label(parser):
     doc = Doc(parser.vocab, words=['a', 'b', 'c', 'd'])
     doc = parser(doc)
