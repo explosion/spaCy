@@ -10,6 +10,7 @@ from spacy.tokens import Doc
 from spacy.gold import GoldParse
 
 
+@pytest.mark.skip(reason="Test is flakey when run with others")
 def test_simple_train():
     nlp = Language()
     nlp.add_pipe(nlp.create_pipe('textcat'))
