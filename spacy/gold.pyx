@@ -76,8 +76,8 @@ def align(cand_words, gold_words):
     if cand_words == gold_words:
         alignment = numpy.arange(len(cand_words))
         return 0, alignment, alignment, {}, {}
-    cand_words = [w.replace(' ', '') for w in cand_words]
-    gold_words = [w.replace(' ', '') for w in gold_words]
+    cand_words = [w.replace(' ', '').lower() for w in cand_words]
+    gold_words = [w.replace(' ', '').lower() for w in gold_words]
     cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
     i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
                                 [len(w) for w in gold_words])
