@@ -34,6 +34,7 @@ from ..compat import json_dumps
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool),
     parser_multitasks=("Side objectives for parser CNN, e.g. dep dep,tag", "option", "pt", str),
+    noise_level=("Amount of corruption to add for data augmentation", "option", "nl", float),
     entity_multitasks=("Side objectives for ner CNN, e.g. dep dep,tag", "option", "et", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     version=("Model version", "option", "V", str),
@@ -42,7 +43,7 @@ from ..compat import json_dumps
     verbose=("Display more information for debug", "option", None, bool))
 def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
          parser_multitasks='', entity_multitasks='',
-          use_gpu=-1, vectors=None, no_tagger=False,
+          use_gpu=-1, vectors=None, no_tagger=False, noise_level=0.0,
           no_parser=False, no_entities=False, gold_preproc=False,
           version="0.0.0", meta_path=None, verbose=False):
     """
@@ -124,7 +125,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
     try:
         for i in range(n_iter):
-            train_docs = corpus.train_docs(nlp, noise_level=0.0,
+            train_docs = corpus.train_docs(nlp, noise_level=noise_level,
                                            gold_preproc=gold_preproc, max_length=0)
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
