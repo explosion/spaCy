@@ -12,7 +12,6 @@ def get_rule_id(nlp, matcher, doc):
         return rule_id
 
 
-@pytest.mark.xfail
 def test_issue2671():
     nlp = English()
     matcher = Matcher(nlp.vocab)
