@@ -1,7 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
-from spacy.lang.en import English
-from spacy.matcher import Matcher
+import pytest
+from ...lang.en import English
+from ...matcher import Matcher
 
 def get_rule_id(nlp, matcher, doc):
     matches = matcher(doc)
@@ -11,6 +12,7 @@ def get_rule_id(nlp, matcher, doc):
         return rule_id
 
 
+@pytest.mark.xfail
 def test_issue2671():
     nlp = English()
     matcher = Matcher(nlp.vocab)
