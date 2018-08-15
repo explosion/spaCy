@@ -13,6 +13,9 @@ def get_rule_id(nlp, matcher, doc):
 
 
 def test_issue2671():
+    '''Ensure the correct entity ID is returned for matches with quantifiers.
+    See also #2675
+    '''
     nlp = English()
     matcher = Matcher(nlp.vocab)
 
