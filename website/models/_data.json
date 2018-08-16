@@ -12,6 +12,7 @@
             "French": "fr",
             "Italian": "it",
             "Dutch": "nl",
+            "Greek": "el",
             "Multi-Language": "xx"
         }
     },
@@ -46,6 +47,7 @@
         "fr": ["fr_core_news_sm", "fr_core_news_md"],
         "it": ["it_core_news_sm"],
         "nl": ["nl_core_news_sm"],
+        "el": ["el_core_news_sm", "el_core_news_md"],
         "xx": ["xx_ent_wiki_sm"]
     },
 
@@ -83,6 +85,7 @@
         "CC BY-SA 4.0":    "https://creativecommons.org/licenses/by-sa/4.0/",
         "CC BY-NC":        "https://creativecommons.org/licenses/by-nc/3.0/",
         "CC BY-NC 3.0":    "https://creativecommons.org/licenses/by-nc/3.0/",
+        "CC BY-NC 4.0":    "https://creativecommons.org/licenses/by-nc/4.0/",
         "CC-BY-NC-SA 3.0": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
         "GPL":             "https://www.gnu.org/licenses/gpl.html",
         "LGPL":            "https://www.gnu.org/licenses/lgpl.html"
