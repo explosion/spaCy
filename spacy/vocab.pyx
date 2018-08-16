@@ -224,7 +224,6 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
-            self.strings.add(props[ORTH])
             props = intify_attrs(props, strings_map=self.strings,
                                  _do_deprecated=True)
             token = &tokens[i]
