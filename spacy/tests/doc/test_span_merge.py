@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from ..util import get_doc
 from ...vocab import Vocab
 from ...tokens import Doc
+from ...tokens import Span
 
 import pytest
 
@@ -16,7 +17,7 @@ def test_spans_merge_tokens(en_tokenizer):
     assert len(doc) == 4
     assert doc[0].head.text == 'Angeles'
     assert doc[1].head.text == 'start'
-    doc.merge(0, len('Los Angeles'), tag='NNP', lemma='Los Angeles', ent_type='GPE')
+    doc.bulk_merge([Span(doc, 0, 2)], [{'tag':'NNP', 'lemma':'Los Angeles', 'ent_type':'GPE'}])
     assert len(doc) == 3
     assert doc[0].text == 'Los Angeles'
     assert doc[0].head.text == 'start'
@@ -25,7 +26,7 @@ def test_spans_merge_tokens(en_tokenizer):
     assert len(doc) == 4
     assert doc[0].head.text == 'Angeles'
     assert doc[1].head.text == 'start'
-    doc.merge(0, len('Los Angeles'), tag='NNP', lemma='Los Angeles', label='GPE')
+    doc.bulk_merge([Span(doc, 0, 2)], [{'tag':'NNP', 'lemma':'Los Angeles', 'label':'GPE'}])
     assert len(doc) == 3
     assert doc[0].text == 'Los Angeles'
     assert doc[0].head.text == 'start'
@@ -38,8 +39,7 @@ def test_spans_merge_heads(en_tokenizer):
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
 
     assert len(doc) == 8
-    doc.merge(doc[3].idx, doc[4].idx + len(doc[4]), tag=doc[4].tag_,
-              lemma='pilates class', ent_type='O')
+    doc.bulk_merge([Span(doc, 3, 5)], [{'tag':doc[4].tag_, 'lemma':'pilates class', 'ent_type':'O'}])
     assert len(doc) == 7
     assert doc[0].head.i == 1
     assert doc[1].head.i == 1
