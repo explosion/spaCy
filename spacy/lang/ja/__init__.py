@@ -5,6 +5,7 @@ from ...language import Language
 from ...attrs import LANG
 from ...tokens import Doc, Token
 from ...tokenizer import Tokenizer
+from ... import util
 from .tag_map import TAG_MAP
 
 import re
@@ -12,15 +13,14 @@ from collections import namedtuple
 
 ShortUnitWord = namedtuple('ShortUnitWord', ['surface', 'lemma', 'pos'])
 
-# XXX Is this the right place for this?
-Token.set_extension('mecab_tag', default=None)
-
 def try_mecab_import():
     """Mecab is required for Japanese support, so check for it.
 
     It it's not available blow up and explain how to fix it."""
     try:
         import MeCab
+        # XXX Is this the right place for this?
+        Token.set_extension('mecab_tag', default=None)
         return MeCab
     except ImportError:
         raise ImportError("Japanese support requires MeCab: "
@@ -50,7 +50,7 @@ def resolve_pos(token):
 
 def detailed_tokens(tokenizer, text):
     """Format Mecab output into a nice data structure, based on Janome."""
-
+    tokenizer.parse(text)
     node = tokenizer.parseToNode(text)
     node = node.next # first node is beginning of sentence and empty, skip it
     words = []
@@ -102,12 +102,28 @@ class JapaneseTokenizer(object):
 class JapaneseCharacterSegmenter(object):
     def __init__(self, vocab):
         self.vocab = vocab
+        self._presegmenter = self._make_presegmenter(self.vocab)
+
+    def _make_presegmenter(self, vocab):
+        rules = Japanese.Defaults.tokenizer_exceptions
+        token_match = Japanese.Defaults.token_match
+        prefix_search = (util.compile_prefix_regex(Japanese.Defaults.prefixes).search
+                         if Japanese.Defaults.prefixes else None)
+        suffix_search = (util.compile_suffix_regex(Japanese.Defaults.suffixes).search
+                         if Japanese.Defaults.suffixes else None)
+        infix_finditer = (util.compile_infix_regex(Japanese.Defaults.infixes).finditer
+                          if Japanese.Defaults.infixes else None)
+        return Tokenizer(vocab, rules=rules,
+                         prefix_search=prefix_search,
+                         suffix_search=suffix_search,
+                         infix_finditer=infix_finditer,
+                         token_match=token_match)
 
     def __call__(self, text):
         words = []
         spaces = []
-        doc = self.tokenizer(text)
-        for token in self.tokenizer(text):
+        doc = self._presegmenter(text)
+        for token in doc:
             words.extend(list(token.text))
             spaces.extend([False]*len(token.text))
             spaces[-1] = bool(token.whitespace_)
@@ -125,7 +141,7 @@ class JapaneseDefaults(Language.Defaults):
         if cls.use_janome:
             return JapaneseTokenizer(cls, nlp)
         else:
-            return JapaneseCharacterSegmenter(cls, nlp.vocab)
+            return JapaneseCharacterSegmenter(nlp.vocab)
 
 class Japanese(Language):
     lang = 'ja'
