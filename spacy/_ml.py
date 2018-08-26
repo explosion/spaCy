@@ -248,27 +248,39 @@ def link_vectors_to_models(vocab):
 def Tok2Vec(width, embed_size, **kwargs):
     pretrained_vectors = kwargs.get('pretrained_vectors', None)
     cnn_maxout_pieces = kwargs.get('cnn_maxout_pieces', 2)
+    subword_features = kwargs.get('subword_features', True)
+    conv_depth = kwargs.get('conv_depth', 4)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone,
                                  '+': add, '*': reapply}):
         norm = HashEmbed(width, embed_size, column=cols.index(NORM),
                          name='embed_norm')
-        prefix = HashEmbed(width, embed_size//2, column=cols.index(PREFIX),
-                           name='embed_prefix')
-        suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX),
-                           name='embed_suffix')
-        shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE),
-                          name='embed_shape')
+        if subword_features:
+            prefix = HashEmbed(width, embed_size//2, column=cols.index(PREFIX),
+                               name='embed_prefix')
+            suffix = HashEmbed(width, embed_size//2, column=cols.index(SUFFIX),
+                               name='embed_suffix')
+            shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE),
+                              name='embed_shape')
+        else:
+            prefix, suffix, shape = None
         if pretrained_vectors is not None:
             glove = StaticVectors(pretrained_vectors, width, column=cols.index(ID))
 
-            embed = uniqued(
-                (glove | norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width*5, pieces=3)), column=cols.index(ORTH))
-        else:
+            if subword_features:
+                embed = uniqued(
+                    (glove | norm | prefix | suffix | shape)
+                    >> LN(Maxout(width, width*5, pieces=3)), column=cols.index(ORTH))
+            else:
+                embed = uniqued(
+                    (glove | norm)
+                    >> LN(Maxout(width, width*2, pieces=3)), column=cols.index(ORTH))
+        elif subword_features:
             embed = uniqued(
                 (norm | prefix | suffix | shape)
                 >> LN(Maxout(width, width*4, pieces=3)), column=cols.index(ORTH))
+        else:
+            embed = norm
 
         convolution = Residual(
             ExtractWindow(nW=1)
@@ -279,7 +291,7 @@ def Tok2Vec(width, embed_size, **kwargs):
             FeatureExtracter(cols)
             >> with_flatten(
                 embed
-                >> convolution ** 4, pad=4
+                >> convolution ** conv_depth, pad=conv_depth
             )
         )
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
@@ -424,11 +436,13 @@ def build_tagger_model(nr_class, **cfg):
     else:
         token_vector_width = util.env_opt('token_vector_width', 128)
     pretrained_vectors = cfg.get('pretrained_vectors')
+    subword_features = cfg.get('subword_features', True)
     with Model.define_operators({'>>': chain, '+': add}):
         if 'tok2vec' in cfg:
             tok2vec = cfg['tok2vec']
         else:
             tok2vec = Tok2Vec(token_vector_width, embed_size,
+                              subword_features=subword_features,
                               pretrained_vectors=pretrained_vectors)
         softmax = with_flatten(Softmax(nr_class, token_vector_width))
         model = (
