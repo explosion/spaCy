@@ -55,6 +55,9 @@ cdef class Parser:
     @classmethod
     def Model(cls, nr_class, **cfg):
         depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
+        subword_features = util.env_opt('subword_features',
+                            cfg.get('subword_features', True))
+        conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
         if depth != 1:
             raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
@@ -65,6 +68,8 @@ cdef class Parser:
         embed_size = util.env_opt('embed_size', cfg.get('embed_size', 5000))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
+                          conv_depth=conv_depth,
+                          subword_features=subword_features,
                           pretrained_vectors=pretrained_vectors)
         tok2vec = chain(tok2vec, flatten)
         lower = PrecomputableAffine(hidden_width,
