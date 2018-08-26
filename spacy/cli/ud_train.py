@@ -290,7 +290,9 @@ def initialize_pipeline(nlp, docs, golds, config, device):
         for tag in gold.tags:
             if tag is not None:
                 nlp.tagger.add_label(tag)
-    return nlp.begin_training(lambda: golds_to_gold_tuples(docs, golds), device=device)
+    return nlp.begin_training(
+        lambda: golds_to_gold_tuples(docs, golds), device=device,
+        subword_features=config.subword_features, config.conv_depth=conv_depth)
 
 
 ########################
@@ -300,10 +302,10 @@ def initialize_pipeline(nlp, docs, golds, config, device):
 class Config(object):
     def __init__(self, vectors=None, max_doc_length=10, multitask_tag=True,
                 multitask_sent=True, multitask_dep=True, multitask_vectors=False,
-                nr_epoch=30, batch_size=1000, dropout=0.2):
+                nr_epoch=30, batch_size=1000, dropout=0.2,
+                conv_depth=4, subword_features=True):
         for key, value in locals().items():
             setattr(self, key, value)
-                                                                 
     
     @classmethod
     def load(cls, loc):
@@ -365,7 +367,7 @@ def main(ud_dir, parses_dir, config, corpus, limit=0, use_gpu=-1, vectors_dir=No
     nlp = load_nlp(paths.lang, config, vectors=vectors_dir)
 
     docs, golds = read_data(nlp, paths.train.conllu.open(), paths.train.text.open(),
-                                        max_doc_length=None, limit=limit)
+                                        max_doc_length=3, limit=limit)
 
     optimizer = initialize_pipeline(nlp, docs, golds, config, use_gpu)
 
