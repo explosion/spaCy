@@ -292,7 +292,7 @@ def initialize_pipeline(nlp, docs, golds, config, device):
                 nlp.tagger.add_label(tag)
     return nlp.begin_training(
         lambda: golds_to_gold_tuples(docs, golds), device=device,
-        subword_features=config.subword_features, config.conv_depth=conv_depth)
+        subword_features=config.subword_features, conv_depth=config.conv_depth)
 
 
 ########################

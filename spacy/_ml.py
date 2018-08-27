@@ -263,7 +263,7 @@ def Tok2Vec(width, embed_size, **kwargs):
             shape = HashEmbed(width, embed_size//2, column=cols.index(SHAPE),
                               name='embed_shape')
         else:
-            prefix, suffix, shape = None
+            prefix, suffix, shape = (None, None, None)
         if pretrained_vectors is not None:
             glove = StaticVectors(pretrained_vectors, width, column=cols.index(ID))
 
