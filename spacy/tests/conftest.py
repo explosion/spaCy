@@ -212,13 +212,22 @@ def pytest_addoption(parser):
 
 
 def pytest_runtest_setup(item):
+    def getopt(opt):
+        # When using 'pytest --pyargs spacy' to test an installed copy of
+        # spacy, pytest skips running our pytest_addoption() hook. Later, when
+        # we call getoption(), pytest raises an error, because it doesn't
+        # recognize the option we're asking about. To avoid this, we need to
+        # pass a default value. We default to False, i.e., we act like all the
+        # options weren't given.
+        return item.config.getoption("--%s" % opt, False)
+
     for opt in ['models', 'vectors', 'slow']:
-        if opt in item.keywords and not item.config.getoption("--%s" % opt):
+        if opt in item.keywords and not getopt(opt):
             pytest.skip("need --%s option to run" % opt)
 
     # Check if test is marked with models and has arguments set, i.e. specific
     # language. If so, skip test if flag not set.
     if item.get_marker('models'):
         for arg in item.get_marker('models').args:
-            if not item.config.getoption("--%s" % arg) and not item.config.getoption("--all"):
+            if not getopt(arg) and not getopt("all"):
                 pytest.skip("need --%s or --all option to run" % arg)
