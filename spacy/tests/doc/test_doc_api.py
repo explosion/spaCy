@@ -160,9 +160,12 @@ def test_doc_api_merge(en_tokenizer):
     # merge both with bulk merge
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.bulk_merge([Span(doc, 4, 7), Span(doc, 7, 9)], [{'tag':'NAMED', 'lemma':'LEMMA',
-              'ent_type':'TYPE'}, {'tag':'NAMED', 'lemma':'LEMMA',
-              'ent_type':'TYPE'}])
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4: 7], attrs={'tag':'NAMED', 'lemma':'LEMMA',
+              'ent_type':'TYPE'})
+        retokenizer.merge(doc[7: 9], attrs={'tag':'NAMED', 'lemma':'LEMMA',
+              'ent_type':'TYPE'})
+
     assert len(doc) == 6
     assert doc[4].text == 'the beach boys'
     assert doc[4].text_with_ws == 'the beach boys '

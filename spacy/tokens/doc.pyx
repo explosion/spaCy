@@ -884,7 +884,7 @@ cdef class Doc:
         '''
         return Retokenizer(self)
 
-    def bulk_merge(self, spans, attributes):
+    def _bulk_merge(self, spans, attributes):
         """Retokenize the document, such that the spans given as arguments
          are merged into single tokens. The spans need to be in document
          order, and no span intersection is allowed.
@@ -902,8 +902,8 @@ cdef class Doc:
                                               str(len(spans))
         with self.retokenize() as retokenizer:
             for i, span in enumerate(spans):
-                self.fix_attributes(attributes[i])
-                self.remove_label_if_necessary(attributes[i])
+                fix_attributes(self, attributes[i])
+                remove_label_if_necessary(attributes[i])
                 retokenizer.merge(span, attributes[i])
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
@@ -927,12 +927,12 @@ cdef class Doc:
             attributes[LEMMA] = lemma
             attributes[ENT_TYPE] = ent_type
         elif not args:
-            self.fix_attributes(attributes)
+            fix_attributes(self, attributes)
         elif args:
             raise ValueError(Errors.E034.format(n_args=len(args),
                                                 args=repr(args),
                                                 kwargs=repr(attributes)))
-        self.remove_label_if_necessary(attributes)
+        remove_label_if_necessary(attributes)
 
         attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
 
@@ -947,20 +947,6 @@ cdef class Doc:
         with self.retokenize() as retokenizer:
             retokenizer.merge(self[start:end], attrs=attributes)
         return self[start]
-
-    def remove_label_if_necessary(self, attributes):
-        # More deprecated attribute handling =/
-        if 'label' in attributes:
-            attributes['ent_type'] = attributes.pop('label')
-
-    def fix_attributes(self, attributes):
-        if 'label' in attributes and 'ent_type' not in attributes:
-            if isinstance(attributes['label'], int):
-                attributes[ENT_TYPE] = attributes['label']
-            else:
-                attributes[ENT_TYPE] = self.vocab.strings[attributes['label']]
-        if 'ent_type' in attributes:
-            attributes[ENT_TYPE] = attributes['ent_type']
 
     def print_tree(self, light=False, flat=False):
         """Returns the parse trees in JSON (dict) format.
@@ -1062,3 +1048,17 @@ def unpickle_doc(vocab, hooks_and_data, bytes_data):
 
 
 copy_reg.pickle(Doc, pickle_doc, unpickle_doc)
+
+def remove_label_if_necessary(attributes):
+    # More deprecated attribute handling =/
+    if 'label' in attributes:
+        attributes['ent_type'] = attributes.pop('label')
+
+def fix_attributes(doc, attributes):
+    if 'label' in attributes and 'ent_type' not in attributes:
+        if isinstance(attributes['label'], int):
+            attributes[ENT_TYPE] = attributes['label']
+        else:
+            attributes[ENT_TYPE] = doc.vocab.strings[attributes['label']]
+    if 'ent_type' in attributes:
+        attributes[ENT_TYPE] = attributes['ent_type']
