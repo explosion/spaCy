@@ -2,8 +2,10 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.matcher import Matcher
+import re
+from spacy.matcher import Matcher, DependencyTreeMatcher
 from spacy.tokens import Doc
+from ..util import get_doc
 
 
 @pytest.fixture
@@ -166,3 +168,47 @@ def test_matcher_any_token_operator(en_vocab):
     assert matches[0] == 'test'
     assert matches[1] == 'test hello'
     assert matches[2] == 'test hello world'
+
+
+@pytest.fixture
+def text():
+    return u"The quick brown fox jumped over the lazy fox"
+
+@pytest.fixture
+def heads():
+    return [3,2,1,1,0,-1,2,1,-3]
+
+@pytest.fixture
+def deps():
+    return ['det', 'amod', 'amod', 'nsubj', 'prep', 'pobj', 'det', 'amod']
+
+@pytest.fixture
+def dependency_tree_matcher(en_vocab):
+    is_brown_yellow = lambda text: bool(re.compile(r'brown|yellow|over').match(text))
+    IS_BROWN_YELLOW = en_vocab.add_flag(is_brown_yellow)
+    pattern1 = [
+        {'SPEC': {'NODE_NAME': 'fox'}, 'PATTERN': {'ORTH': 'fox'}},
+        {'SPEC': {'NODE_NAME': 'q', 'NBOR_RELOP': '>', 'NBOR_NAME': 'fox'},'PATTERN': {'LOWER': u'quick'}},
+        {'SPEC': {'NODE_NAME': 'r', 'NBOR_RELOP': '>', 'NBOR_NAME': 'fox'}, 'PATTERN': {IS_BROWN_YELLOW: True}}
+    ]
+
+    pattern2 = [
+        {'SPEC': {'NODE_NAME': 'jumped'}, 'PATTERN': {'ORTH': 'jumped'}},
+        {'SPEC': {'NODE_NAME': 'fox', 'NBOR_RELOP': '>', 'NBOR_NAME': 'jumped'},'PATTERN': {'LOWER': u'fox'}},
+        {'SPEC': {'NODE_NAME': 'over', 'NBOR_RELOP': '>', 'NBOR_NAME': 'fox'}, 'PATTERN': {IS_BROWN_YELLOW: True}}
+    ]
+    matcher = DependencyTreeMatcher(en_vocab)
+    matcher.add('pattern1', None, pattern1)
+    matcher.add('pattern2', None, pattern2)
+    return matcher
+
+
+
+def test_dependency_tree_matcher_compile(dependency_tree_matcher):
+    assert len(dependency_tree_matcher) == 2
+
+def test_dependency_tree_matcher(dependency_tree_matcher,text,heads,deps):
+    doc = get_doc(dependency_tree_matcher.vocab,text.split(),heads=heads,deps=deps)
+    matches = dependency_tree_matcher(doc)
+    assert len(matches) == 2
+
