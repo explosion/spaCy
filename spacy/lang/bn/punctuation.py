@@ -20,12 +20,11 @@ _suffixes = (_list_punct + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS +
               r'(?<=[{}(?:{})])\.'.format('|'.join([ALPHA_LOWER, r'%²\-\)\]\+', QUOTES]), _currency)])
 
 _infixes = (LIST_ELLIPSES + LIST_ICONS +
-            [r'(?<=[{}])\.(?=[{}])'.format(ALPHA_LOWER, ALPHA_UPPER),
+            [r'(?<=[0-9{zero}-{nine}])[+\-\*^=](?=[0-9{zero}-{nine}-])'.format(zero=u'০', nine=u'৯'),
              r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
-             r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA),
-             r'(?<=[{a}])--(?=[{a}])'.format(a=ALPHA),
-             r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
-             r'(?<=[{a}])([{q}\)\]\(\[])(?=[\-{a}])'.format(a=ALPHA, q=_quotes)])
+             r'(?<=[{a}])[{h}](?={ae})'.format(a=ALPHA, h=HYPHENS, ae=u'এ'),
+             r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
+             r'(?<=[{a}"])[:<>=/](?=[{a}])'.format(a=ALPHA)])
 
 
 TOKENIZER_PREFIXES = _prefixes
