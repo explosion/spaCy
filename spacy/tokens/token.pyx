@@ -161,10 +161,12 @@ cdef class Token:
         elif hasattr(other, 'orth'):
             if self.c.lex.orth == other.orth:
                 return 1.0
-        if self.vector_norm == 0 or other.vector_norm == 0:
+        self_norm = self.vector_norm
+        other_norm = other.vector_norm
+        if self_norm == 0 or other_norm == 0:
             return 0.0
         return (numpy.dot(self.vector, other.vector) /
-                (self.vector_norm * other.vector_norm))
+                (self_norm * other_norm))
 
     property lex_id:
         """RETURNS (int): Sequential ID of the token's lexical type."""
