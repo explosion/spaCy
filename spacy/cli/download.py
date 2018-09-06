@@ -14,7 +14,7 @@ from .. import about
 
 
 @plac.annotations(
-    model=("model to download, shortcut or name)", "positional", None, str),
+    model=("model to download, shortcut or name", "positional", None, str),
     direct=("force direct download. Needs model name with version and won't "
             "perform compatibility check", "flag", "d", bool),
     pip_args=("additional arguments to be passed to `pip install` when "
