@@ -99,7 +99,7 @@ p
     |  Process texts as a stream, and yield #[code Doc] objects in order.
     |  Supports GIL-free multi-threading.
 
-+infobox("⚠️", "Important note for spaCy v2.0.x")
++infobox("Important note for spaCy v2.0.x", "⚠️")
     |  By default, multiple threads will be launched for matrix multiplication,
     |  which may be inefficient on multi-core machines. Setting
     |  #[code OPENBLAS_NUM_THREADS=1] should fix this problem. spaCy v2.1.x
