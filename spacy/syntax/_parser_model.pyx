@@ -192,6 +192,10 @@ class ParserModel(Model):
         Model.__init__(self)
         self._layers = [tok2vec, lower_model, upper_model]
 
+    @property
+    def tok2vec(self):
+        return self._layers[0]
+
     def begin_update(self, docs, drop=0.):
         step_model = ParserStepModel(docs, self._layers, drop=drop)
         def finish_parser_update(golds, sgd=None):
