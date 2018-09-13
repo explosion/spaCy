@@ -58,6 +58,7 @@ cdef class Parser:
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
         conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
+        bilstm_depth = util.env_opt('bilstm_depth', cfg.get('bilstm_depth', 0))
         if depth != 1:
             raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
@@ -70,7 +71,8 @@ cdef class Parser:
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           conv_depth=conv_depth,
                           subword_features=subword_features,
-                          pretrained_vectors=pretrained_vectors)
+                          pretrained_vectors=pretrained_vectors,
+                          bilstm_depth=bilstm_depth)
         tok2vec = chain(tok2vec, flatten)
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
@@ -87,6 +89,7 @@ cdef class Parser:
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
             'pretrained_vectors': pretrained_vectors,
+            'bilstm_depth': bilstm_depth
         }
         return ParserModel(tok2vec, lower, upper), cfg
 
