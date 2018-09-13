@@ -1172,7 +1172,7 @@ cdef class DependencyParser(Parser):
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
-            tok2vec = self.model[0]
+            tok2vec = self.model.tok2vec
             labeller.begin_training(get_gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec, sgd=sgd)
 
@@ -1193,7 +1193,7 @@ cdef class EntityRecognizer(Parser):
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
-            tok2vec = self.model[0]
+            tok2vec = self.model.tok2vec
             labeller.begin_training(get_gold_tuples, pipeline=pipeline,
                                     tok2vec=tok2vec)
 
