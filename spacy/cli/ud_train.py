@@ -367,7 +367,8 @@ def main(ud_dir, parses_dir, config, corpus, limit=0, use_gpu=-1, vectors_dir=No
     nlp = load_nlp(paths.lang, config, vectors=vectors_dir)
 
     docs, golds = read_data(nlp, paths.train.conllu.open(), paths.train.text.open(),
-                                        max_doc_length=3, limit=limit)
+                                        max_doc_length=config.max_doc_length,
+                                        limit=limit)
 
     optimizer = initialize_pipeline(nlp, docs, golds, config, use_gpu)
 
