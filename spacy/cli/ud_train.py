@@ -302,7 +302,7 @@ def initialize_pipeline(nlp, docs, golds, config, device):
 class Config(object):
     def __init__(self, vectors=None, max_doc_length=10, multitask_tag=False,
                 multitask_sent=False, multitask_dep=False, multitask_vectors=None,
-                nr_epoch=30, min_batch_size=100, max_batch_size=1000,
+                bilstm_depth=0, nr_epoch=30, min_batch_size=100, max_batch_size=1000,
                 batch_by_words=True, dropout=0.2, conv_depth=4, subword_features=True,
                 vectors_dir=None):
         if vectors_dir is not None:
