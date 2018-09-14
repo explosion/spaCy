@@ -426,6 +426,10 @@ class Language(object):
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
 
+        get_grads.alpha = sgd.alpha
+        get_grads.b1 = sgd.b1
+        get_grads.b2 = sgd.b2
+
         pipes = list(self.pipeline)
         random.shuffle(pipes)
         for name, proc in pipes:
