@@ -306,8 +306,9 @@ def Tok2Vec(width, embed_size, **kwargs):
                 embed
                 >> convolution ** conv_depth, pad=conv_depth
             )
-            >> PyTorchBiLSTM(width, width, bilstm_depth)
         )
+        if bilstm_depth >= 1:
+            tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
         tok2vec.embed = embed
