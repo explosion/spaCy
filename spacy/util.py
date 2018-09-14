@@ -434,6 +434,27 @@ def compounding(start, stop, compound):
         curr *= compound
 
 
+def stepping(start, stop, steps):
+    """Yield an infinite series of values that step from a start value to a
+    final value over some number of steps. Each step is (stop-start)/steps.
+
+    After the final value is reached, the generator continues yielding that
+    value.
+
+    EXAMPLE:
+      >>> sizes = stepping(1., 200., 100)
+      >>> assert next(sizes) == 1.
+      >>> assert next(sizes) == 1 * (200.-1.) / 100
+      >>> assert next(sizes) == 1 + (200.-1.) / 100 + (200.-1.) / 100
+    """
+    def clip(value):
+        return max(value, stop) if (start > stop) else min(value, stop)
+    curr = float(start)
+    while True:
+        yield clip(curr)
+        curr += (stop - start) / steps
+
+
 def decaying(start, stop, decay):
     """Yield an infinite series of linearly decaying values."""
     def clip(value):
