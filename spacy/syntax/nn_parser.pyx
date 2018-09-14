@@ -510,8 +510,15 @@ cdef class Parser:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
-            self.model.begin_training(
-                self.model.ops.allocate((5, cfg['token_vector_width'])))
+            doc_sample = []
+            gold_sample = []
+            for raw_text, annots_brackets in cytoolz.take(1000, get_gold_tuples()):
+                for annots, brackets in annots_brackets:
+                    ids, words, tags, heads, deps, ents = annots
+                    doc_sample.append(Doc(self.vocab, words=words))
+                    gold_sample.append(GoldParse(doc_sample[-1], words=words, tags=tags,
+                                                 heads=heads, deps=deps, ents=ents))
+            self.model.begin_training(doc_sample, gold_sample)
             if pipeline is not None:
                 self.init_multitask_objectives(get_gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)

@@ -211,6 +211,10 @@ class ParserModel(Model):
         copy_array(larger.W[:smaller.nO], smaller.W)
         copy_array(larger.b[:smaller.nO], smaller.b)
         self._layers[-1]._layers[-1] = larger
+
+    def begin_training(self, X, y=None):
+        for layer in self._layers:
+            layer.begin_training(X, y=y)
    
     @property
     def tok2vec(self):
