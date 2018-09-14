@@ -321,8 +321,7 @@ cdef class Parser:
                 doc.c[j] = state.c._sent[j]
             self.moves.finalize_doc(doc)
             for hook in self.postprocesses:
-                for doc in docs:
-                    hook(doc)
+                hook(doc)
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
      
