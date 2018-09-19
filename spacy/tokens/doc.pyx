@@ -993,25 +993,28 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
         tokens[i].r_edge = i
-    # Set left edges
-    for i in range(length):
-        child = &tokens[i]
-        head = &tokens[i + child.head]
-        if child < head:
-            head.l_kids += 1
-        if child.l_edge < head.l_edge:
-            head.l_edge = child.l_edge
-
-    # Set right edges --- same as above, but iterate in reverse
-    for i in range(length-1, -1, -1):
-        child = &tokens[i]
-        head = &tokens[i + child.head]
-        if child > head:
-            head.r_kids += 1
-        if child.r_edge > head.r_edge:
-            head.r_edge = child.r_edge
-
-
+    # Twice, for non-projectivity
+    for _ in range(2):
+        # Set left edges
+        for i in range(length):
+            child = &tokens[i]
+            head = &tokens[i + child.head]
+            if child < head:
+                head.l_kids += 1
+            if child.l_edge < head.l_edge:
+                head.l_edge = child.l_edge
+            if child.r_edge > head.r_edge:
+                head.r_edge = child.r_edge
+        # Set right edges --- same as above, but iterate in reverse
+        for i in range(length-1, -1, -1):
+            child = &tokens[i]
+            head = &tokens[i + child.head]
+            if child > head:
+                head.r_kids += 1
+            if child.r_edge > head.r_edge:
+                head.r_edge = child.r_edge
+            if child.l_edge < head.l_edge:
+                head.l_edge = child.l_edge
     # Set sentence starts
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:

@@ -2,7 +2,6 @@
 import pytest
 from ..util import get_doc
 
-@pytest.mark.xfail
 def test_issue2772(en_vocab):
     words = 'When we write or communicate virtually , we can hide our true feelings .'.split()
     # A tree with a non-projective (i.e. crossing) arc
