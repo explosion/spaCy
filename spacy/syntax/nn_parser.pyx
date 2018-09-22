@@ -525,7 +525,7 @@ cdef class Parser:
         else:
             if sgd is None:
                 sgd = self.create_optimizer()
-            self.model.begin_training()
+            self.model.begin_training([])
         self.cfg.update(cfg)
         return sgd
     
