@@ -23,7 +23,7 @@ _ordinal_words = ['primeiro', 'segundo', 'terceiro', 'quarto', 'quinto', 'sexto'
 
 
 def like_num(text):
-    text = text.replace(',', '').replace('.', '')
+    text = text.replace(',', '').replace('.', '').replace('º','').replace('ª','')
     if text.isdigit():
         return True
     if text.count('/') == 1:
