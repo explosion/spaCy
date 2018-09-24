@@ -2,6 +2,7 @@ from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
 
 from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
+from .morphology cimport univ_morph_t
 
 
 cdef struct LexemeC:
@@ -71,3 +72,6 @@ cdef struct TokenC:
     int ent_iob
     attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     hash_t ent_id
+
+
+
