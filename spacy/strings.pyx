@@ -98,9 +98,7 @@ cdef class StringStore:
             return u''
         elif string_or_id in SYMBOLS_BY_STR:
             return SYMBOLS_BY_STR[string_or_id]
-
         cdef hash_t key
-
         if isinstance(string_or_id, unicode):
             key = hash_string(string_or_id)
             return key
@@ -118,6 +116,20 @@ cdef class StringStore:
             else:
                 return decode_Utf8Str(utf8str)
 
+    def as_int(self, key):
+        """If key is an int, return it; otherwise, get the int value."""
+        if not isinstance(key, basestring):
+            return key
+        else:
+            return self[key]
+
+    def as_string(self, key):
+        """If key is a string, return it; otherwise, get the string value."""
+        if isinstance(key, basestring):
+            return key
+        else:
+            return self[key]
+ 
     def add(self, string):
         """Add a string to the StringStore.
 
