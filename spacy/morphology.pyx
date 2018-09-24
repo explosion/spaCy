@@ -125,17 +125,17 @@ cdef class Morphology:
         # figure out why the statistical model fails. Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
             tag_id = self.reverse_index[self.strings.add('_SP')]
+        tag_str = self.tag_names[tag_id]
+        features = dict(self.tag_map.get(tag_str, {}))
         lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
-        if lemma == 0:
-            tag_str = self.tag_names[tag_id]
-            features = dict(self.tag_map.get(tag_str, {}))
+        if lemma == 0 and features:
             pos = self.strings.as_int(features.pop('POS'))
             lemma = self.lemmatize(pos, token.lex.orth, features)
             self._cache.set(tag_id, token.lex.orth, lemma)
         token.lemma = lemma
         token.pos = pos
         token.tag = self.strings[tag_str]
-        token.morph = self.add(attrs)
+        token.morph = self.add(features)
 
     cdef update_morph(self, hash_t morph, features):
         """Update a morphological analysis with new feature values."""
@@ -175,10 +175,9 @@ cpdef intify_features(StringStore strings, features):
 cdef hash_t hash_tag(RichTagC tag) nogil:
     return mrmr.hash64(&tag, sizeof(tag), 0)
 
-cdef RichTagC create_rich_tag(pos_, features):
+cdef RichTagC create_rich_tag(features):
     cdef RichTagC tag
     cdef univ_morph_t feature
-    tag.pos = get_int_tag(pos_)
     for feature in features:
         set_feature(&tag, feature, 1)
     return tag

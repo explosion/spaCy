@@ -1,5 +1,5 @@
 from cymem.cymem cimport Pool
-from preshed.maps cimport PreshMap
+from preshed.maps cimport PreshMap, PreshMapArray
 from libc.stdint cimport uint64_t
 from murmurhash cimport mrmr
 
@@ -17,14 +17,17 @@ cdef class Morphology:
  
     cdef public object lemmatizer
     cdef readonly object tag_map
+    cdef readonly object tag_names
+    cdef readonly object reverse_index
+    cdef readonly object exc
+    cdef readonly int n_tags
 
     cdef hash_t insert(self, RichTagC tag) except 0
     
     cdef int assign_untagged(self, TokenC* token) except -1
     cdef int assign_tag(self, TokenC* token, tag) except -1
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
-    cdef update_token_morph(self, TokenC* token, features)
-    cdef set_token_morph(self, TokenC* token, pos, features)
+    cdef update_morph(self, hash_t morph, features)
 
 cdef enum univ_morph_t:
     NIL = 0
