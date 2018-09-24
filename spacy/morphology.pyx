@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from libc.string cimport memset
+import ujson as json
 
 from .attrs cimport POS, IS_SPACE
 from .attrs import LEMMA, intify_attrs
@@ -10,6 +11,7 @@ from .parts_of_speech cimport SPACE
 from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
 from .errors import Errors
+
 
 
 def _normalize_props(props):
@@ -32,9 +34,17 @@ def _normalize_props(props):
 
 
 cdef class Morphology:
+    '''Store the possible morphological analyses for a language, and index them
+    by hash.
+    
+    To save space on each token, tokens only know the hash of their morphological
+    analysis, so queries of morphological attributes are delegated
+    to this class.
+    '''
     def __init__(self, StringStore string_store, tag_map, lemmatizer, exc=None):
         self.mem = Pool()
         self.strings = string_store
+        self.tags = PreshMap()
         # Add special space symbol. We prefix with underscore, to make sure it
         # always sorts to the end.
         space_attrs = tag_map.get('SP', {POS: SPACE})
@@ -47,32 +57,46 @@ cdef class Morphology:
         self.lemmatizer = lemmatizer
         self.n_tags = len(tag_map)
         self.reverse_index = {}
-
-        self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags+1, sizeof(RichTagC))
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
-            self.strings.add(tag_str)
             self.tag_map[tag_str] = dict(attrs)
-            attrs = _normalize_props(attrs)
-            attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
-            self.rich_tags[i].id = i
-            self.rich_tags[i].name = self.strings.add(tag_str)
-            self.rich_tags[i].morph = 0
-            self.rich_tags[i].pos = attrs[POS]
-            self.reverse_index[self.rich_tags[i].name] = i
-        # Add a 'null' tag, which we can reference when assign morphology to
-        # untagged tokens.
-        self.rich_tags[self.n_tags].id = self.n_tags
+            self.reverse_index[i] = self.strings.add(tag_str)
 
         self._cache = PreshMapArray(self.n_tags)
         self.exc = {}
         if exc is not None:
             for (tag_str, orth_str), attrs in exc.items():
                 self.add_special_case(tag_str, orth_str, attrs)
+    
+    def add(self, features):
+        """Insert a morphological analysis in the morphology table, if not already
+        present. Returns the hash of the new analysis.
+        """
+        features = intify_features(self.strings, features)
+        cdef RichTagC tag = create_rich_tag(features)
+        cdef hash_t key = self.insert(tag)
+        return key
 
-    def __reduce__(self):
-        return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
-                             self.exc), None, None)
-
+    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
+        if orth not in self.strings:
+            return orth
+        cdef unicode py_string = self.strings[orth]
+        if self.lemmatizer is None:
+            return self.strings.add(py_string.lower())
+        cdef list lemma_strings
+        cdef unicode lemma_string
+        lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
+        lemma_string = lemma_strings[0]
+        lemma = self.strings.add(lemma_string)
+        return lemma
+ 
+    cdef hash_t insert(self, RichTagC tag) except 0:
+        cdef hash_t key = hash_tag(tag)
+        if self.tags.get(key) == NULL:
+            tag_ptr = <RichTagC*>self.mem.alloc(1, sizeof(RichTagC))
+            tag_ptr[0] = tag
+            self.tags.set(key, <void*>tag_ptr)
+        return key
+    
     cdef int assign_untagged(self, TokenC* token) except -1:
         """Set morphological attributes on a token without a POS tag. Uses
         the lemmatizer's lookup() method, which looks up the string in the
@@ -101,84 +125,284 @@ cdef class Morphology:
         # figure out why the statistical model fails. Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
             tag_id = self.reverse_index[self.strings.add('_SP')]
-        rich_tag = self.rich_tags[tag_id]
-        analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
-        if analysis is NULL:
-            analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
-            tag_str = self.strings[self.rich_tags[tag_id].name]
-            analysis.tag = rich_tag
-            analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
-                                            self.tag_map.get(tag_str, {}))
-            self._cache.set(tag_id, token.lex.orth, analysis)
-        token.lemma = analysis.lemma
-        token.pos = analysis.tag.pos
-        token.tag = analysis.tag.name
-        token.morph = analysis.tag.morph
+        lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
+        if lemma == 0:
+            tag_str = self.tag_names[tag_id]
+            features = dict(self.tag_map.get(tag_str, {}))
+            pos = self.strings.as_int(features.pop('POS'))
+            lemma = self.lemmatize(pos, token.lex.orth, features)
+            self._cache.set(tag_id, token.lex.orth, lemma)
+        token.lemma = lemma
+        token.pos = pos
+        token.tag = self.strings[tag_str]
+        token.morph = self.add(attrs)
 
-    cdef int assign_feature(self, uint64_t* flags, univ_morph_t flag_id, bint value) except -1:
-        cdef flags_t one = 1
-        if value:
-            flags[0] |= one << flag_id
-        else:
-            flags[0] &= ~(one << flag_id)
+    cdef update_morph(self, hash_t morph, features):
+        """Update a morphological analysis with new feature values."""
+        tag = (<RichTagC*>self.tags.get(morph))[0]
+        cdef univ_morph_t feature
+        cdef int value
+        for feature_, value in features.items():
+            feature = self.strings.as_int(feature_)
+            set_feature(&tag, feature, 1)
+        morph = self.insert_tag(tag)
+        return morph
 
-    def add_special_case(self, unicode tag_str, unicode orth_str, attrs,
-                         force=False):
-        """Add a special-case rule to the morphological analyser. Tokens whose
-        tag and orth match the rule will receive the specified properties.
+    def to_bytes(self):
+        json_tags = []
+        for key in self.tags:
+            tag_ptr = <RichTagC*>self.tags.get(key)
+            if tag_ptr != NULL:
+                json_tags.append(tag_to_json(tag_ptr[0]))
+        raise json.dumps(json_tags)
 
-        tag (unicode): The part-of-speech tag to key the exception.
-        orth (unicode): The word-form to key the exception.
-        """
-        # TODO: Currently we've assumed that we know the number of tags --
-        # RichTagC is an array, and _cache is a PreshMapArray
-        # This is really bad: it makes the morphology typed to the tagger
-        # classes, which is all wrong.
-        self.exc[(tag_str, orth_str)] = dict(attrs)
-        tag = self.strings.add(tag_str)
-        if tag not in self.reverse_index:
-            return
-        tag_id = self.reverse_index[tag]
-        orth = self.strings[orth_str]
-        cdef RichTagC rich_tag = self.rich_tags[tag_id]
-        attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
-        cached = <MorphAnalysisC*>self._cache.get(tag_id, orth)
-        if cached is NULL:
-            cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
-        elif force:
-            memset(cached, 0, sizeof(cached[0]))
-        else:
-            raise ValueError(Errors.E015.format(tag=tag_str, orth=orth_str))
+    def from_bytes(self, byte_string):
+        raise NotImplementedError
 
-        cached.tag = rich_tag
-        # TODO: Refactor this to take arbitrary attributes.
-        for name_id, value_id in attrs.items():
-            if name_id == LEMMA:
-                cached.lemma = value_id
-            else:
-                self.assign_feature(&cached.tag.morph, name_id, value_id)
-        if cached.lemma == 0:
-            cached.lemma = self.lemmatize(rich_tag.pos, orth, attrs)
-        self._cache.set(tag_id, orth, <void*>cached)
+    def to_disk(self, path):
+        raise NotImplementedError
 
-    def load_morph_exceptions(self, dict exc):
-        # Map (form, pos) to (lemma, rich tag)
-        for tag_str, entries in exc.items():
-            for form_str, attrs in entries.items():
-                self.add_special_case(tag_str, form_str, attrs)
+    def from_disk(self, path):
+        raise NotImplementedError
 
-    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
-        if orth not in self.strings:
-            return orth
-        cdef unicode py_string = self.strings[orth]
-        if self.lemmatizer is None:
-            return self.strings.add(py_string.lower())
-        cdef list lemma_strings
-        cdef unicode lemma_string
-        lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
-        lemma_string = lemma_strings[0]
-        lemma = self.strings.add(lemma_string)
-        return lemma
+
+cpdef univ_pos_t get_int_tag(pos_):
+    return <univ_pos_t>0
+
+cpdef intify_features(StringStore strings, features):
+    return {strings.as_int(feature) for feature in features}
+
+cdef hash_t hash_tag(RichTagC tag) nogil:
+    return mrmr.hash64(&tag, sizeof(tag), 0)
+
+cdef RichTagC create_rich_tag(pos_, features):
+    cdef RichTagC tag
+    cdef univ_morph_t feature
+    tag.pos = get_int_tag(pos_)
+    for feature in features:
+        set_feature(&tag, feature, 1)
+    return tag
+
+cdef tag_to_json(RichTagC tag):
+    return {}
+
+cdef RichTagC tag_from_json(json_tag):
+    cdef RichTagC tag
+    return tag
+ 
+cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) nogil:
+    if value == True:
+        value_ = feature
+    else:
+        value_ = NIL
+    if feature == NIL:
+        pass
+    if is_abbr_feature(feature):
+        tag.abbr = value_
+    elif is_adp_type_feature(feature):
+        tag.adp_type = value_
+    elif is_adv_type_feature(feature):
+        tag.adv_type = value_
+    elif is_animacy_feature(feature):
+        tag.animacy = value_
+    elif is_aspect_feature(feature):
+        tag.aspect = value_
+    elif is_case_feature(feature):
+        tag.case = value_
+    elif is_conj_type_feature(feature):
+        tag.conj_type = value_
+    elif is_connegative_feature(feature):
+        tag.connegative = value_
+    elif is_definite_feature(feature):
+        tag.definite = value_
+    elif is_degree_feature(feature):
+        tag.degree = value_
+    elif is_derivation_feature(feature):
+        tag.derivation = value_
+    elif is_echo_feature(feature):
+        tag.echo = value_
+    elif is_foreign_feature(feature):
+        tag.foreign = value_
+    elif is_gender_feature(feature):
+        tag.gender = value_
+    elif is_hyph_feature(feature):
+        tag.hyph = value_
+    elif is_inf_form_feature(feature):
+        tag.inf_form = value_
+    elif is_mood_feature(feature):
+        tag.mood = value_
+    elif is_negative_feature(feature):
+        tag.negative = value_
+    elif is_number_feature(feature):
+        tag.number = value_
+    elif is_name_type_feature(feature):
+        tag.name_type = value_
+    elif is_num_form_feature(feature):
+        tag.num_form = value_
+    elif is_num_value_feature(feature):
+        tag.num_value = value_
+    elif is_part_form_feature(feature):
+        tag.part_form = value_
+    elif is_part_type_feature(feature):
+        tag.part_type = value_
+    elif is_person_feature(feature):
+        tag.person = value_
+    elif is_polite_feature(feature):
+        tag.polite = value_
+    elif is_polarity_feature(feature):
+        tag.polarity = value_
+    elif is_poss_feature(feature):
+        tag.poss = value_
+    elif is_prefix_feature(feature):
+        tag.prefix = value_
+    elif is_prep_case_feature(feature):
+        tag.prep_case = value_
+    elif is_pron_type_feature(feature):
+        tag.pron_type = value_
+    elif is_punct_side_feature(feature):
+        tag.punct_type = value_
+    elif is_reflex_feature(feature):
+        tag.reflex = value_
+    elif is_style_feature(feature):
+        tag.style = value_
+    elif is_style_variant_feature(feature):
+        tag.style_variant = value_
+    elif is_tense_feature(feature):
+        tag.tense = value_
+    elif is_verb_form_feature(feature):
+        tag.verb_form = value_
+    elif is_voice_feature(feature):
+        tag.voice = value_
+    elif is_verb_type_feature(feature):
+        tag.verb_type = value_
+    else:
+        with gil:
+            raise ValueError("Unknown feature: %d" % feature)
+
+cdef int is_abbr_feature(univ_morph_t abbr) nogil:
+    return 0
+
+cdef int is_adp_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_adv_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_animacy_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_aspect_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_case_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_conj_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_connegative_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_definite_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_degree_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_derivation_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_echo_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_foreign_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_gender_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_hyph_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_inf_form_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_mood_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_negative_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_number_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_name_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_num_form_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_num_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_num_value_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_part_form_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_part_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_person_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_polite_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_polarity_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_poss_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_prefix_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_prep_case_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_pron_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_punct_side_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_punct_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_reflex_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_style_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_style_variant_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_tense_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_verb_form_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_voice_feature(univ_morph_t feature) nogil:
+    return 0
+
+cdef int is_verb_type_feature(univ_morph_t feature) nogil:
+    return 0
+
+
 
 
 IDS = {

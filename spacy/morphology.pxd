@@ -1,48 +1,30 @@
 from cymem.cymem cimport Pool
-from preshed.maps cimport PreshMapArray
+from preshed.maps cimport PreshMap
 from libc.stdint cimport uint64_t
+from murmurhash cimport mrmr
 
 from .structs cimport TokenC
 from .strings cimport StringStore
-from .typedefs cimport attr_t, flags_t
+from .typedefs cimport hash_t, attr_t, flags_t
 from .parts_of_speech cimport univ_pos_t
 
 from . cimport symbols
 
-
-cdef struct RichTagC:
-    uint64_t morph
-    int id
-    univ_pos_t pos
-    attr_t name
-
-
-cdef struct MorphAnalysisC:
-    RichTagC tag
-    attr_t lemma
-
-
 cdef class Morphology:
     cdef readonly Pool mem
     cdef readonly StringStore strings
+    cdef PreshMap tags # Keyed by hash, value is pointer to tag
+ 
     cdef public object lemmatizer
     cdef readonly object tag_map
-    cdef public object n_tags
-    cdef public object reverse_index
-    cdef public object tag_names
-    cdef public object exc
 
-    cdef RichTagC* rich_tags
-    cdef PreshMapArray _cache
-
+    cdef hash_t insert(self, RichTagC tag) except 0
+    
     cdef int assign_untagged(self, TokenC* token) except -1
-
     cdef int assign_tag(self, TokenC* token, tag) except -1
-
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
-
-    cdef int assign_feature(self, uint64_t* morph, univ_morph_t feat_id, bint value) except -1
-
+    cdef update_token_morph(self, TokenC* token, features)
+    cdef set_token_morph(self, TokenC* token, pos, features)
 
 cdef enum univ_morph_t:
     NIL = 0
@@ -298,4 +280,47 @@ cdef enum univ_morph_t:
     VerbType_mod # U
     VerbType_light # U
 
-
+cdef struct RichTagC:
+    univ_pos_t pos
+    
+    univ_morph_t abbr
+    univ_morph_t adp_type
+    univ_morph_t adv_type
+    univ_morph_t animacy
+    univ_morph_t aspect
+    univ_morph_t case
+    univ_morph_t conj_type
+    univ_morph_t connegative
+    univ_morph_t definite
+    univ_morph_t degree
+    univ_morph_t derivation
+    univ_morph_t echo
+    univ_morph_t foreign
+    univ_morph_t gender
+    univ_morph_t hyph
+    univ_morph_t inf_form
+    univ_morph_t mood
+    univ_morph_t negative
+    univ_morph_t number
+    univ_morph_t name_type
+    univ_morph_t num_form
+    univ_morph_t num_type
+    univ_morph_t num_value
+    univ_morph_t part_form
+    univ_morph_t part_type
+    univ_morph_t person
+    univ_morph_t polite
+    univ_morph_t polarity
+    univ_morph_t poss
+    univ_morph_t prefix
+    univ_morph_t prep_case
+    univ_morph_t pron_type
+    univ_morph_t punct_side
+    univ_morph_t punct_type
+    univ_morph_t reflex
+    univ_morph_t style
+    univ_morph_t style_variant
+    univ_morph_t tense
+    univ_morph_t verb_form
+    univ_morph_t voice
+    univ_morph_t verb_type
