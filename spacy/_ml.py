@@ -444,7 +444,46 @@ def getitem(i):
     return layerize(getitem_fwd)
 
 
-def build_tagger_model(nr_class, **cfg):
+@describe.attributes(
+    W=Synapses("Weights matrix",
+        lambda obj: (obj.nO, obj.nI),
+        lambda W, ops: None)
+)
+class MultiSoftmax(Affine):
+    '''Neural network layer that predicts several multi-class attributes at once.
+    For instance, we might predict one class with 6 variables, and another with 5.
+    We predict the 11 neurons required for this, and then softmax them such
+    that columns 0-6 make a probability distribution and coumns 6-11 make another.
+    '''
+    name = 'multisoftmax'
+
+    def __init__(self, out_sizes, nI=None, **kwargs):
+        Model.__init__(self, **kwargs)
+        self.out_sizes = out_sizes
+        self.nO = sum(out_sizes)
+        self.nI = nI
+
+    def predict(self, input__BI):
+        output__BO = self.ops.affine(self.W, self.b, input__BI)
+        i = 0
+        for out_size in self.out_sizes:
+            self.ops.softmax(output__BO[:, i : i+out_size], inplace=True)
+            i += out_size
+        return output__BO
+
+    def begin_update(self, input__BI, drop=0.):
+        output__BO = self.predict(input__BI)
+        def finish_update(grad__BO, sgd=None):
+            self.d_W += self.ops.gemm(grad__BO, input__BI, trans1=True)
+            self.d_b += grad__BO.sum(axis=0)
+            grad__BI = self.ops.gemm(grad__BO, self.W)
+            if sgd is not None:
+                sgd(self._mem.weights, self._mem.gradient, key=self.id)
+            return grad__BI
+        return output__BO, finish_update
+
+
+def build_tagger_model(class_nums, **cfg):
     embed_size = util.env_opt('embed_size', 7000)
     if 'token_vector_width' in cfg:
         token_vector_width = cfg['token_vector_width']
@@ -459,7 +498,8 @@ def build_tagger_model(nr_class, **cfg):
             tok2vec = Tok2Vec(token_vector_width, embed_size,
                               subword_features=subword_features,
                               pretrained_vectors=pretrained_vectors)
-        softmax = with_flatten(Softmax(nr_class, token_vector_width))
+        softmax = with_flatten(
+            MultiSoftmax(class_nums, token_vector_width))
         model = (
             tok2vec
             >> softmax
