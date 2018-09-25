@@ -12,7 +12,7 @@ from thinc.api import chain
 from thinc.neural.util import to_categorical, copy_array
 from . import util
 from .pipe import Pipe
-from ._ml import Tok2Vec, build_tagger_model
+from ._ml import Tok2Vec, build_morphologizer_model
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
 from .errors import Errors, TempErrors
@@ -20,6 +20,7 @@ from .compat import json_dumps, basestring_
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 from .morphology cimport Morphology
+from .pipeline import Pipe
 
 
 class Morphologizer(Pipe):
@@ -50,7 +51,7 @@ class Morphologizer(Pipe):
 
     def __call__(self, doc):
         features, tokvecs = self.predict([doc])
-        self.set_annotations([doc], tags, tensors=tokvecs)
+        self.set_annotations([doc], features, tensors=tokvecs)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
@@ -81,7 +82,7 @@ class Morphologizer(Pipe):
         cdef Doc doc
         cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
-            doc_feat_ids = batch_feat_ids[i]
+            doc_feat_ids = batch_feature_ids[i]
             if hasattr(doc_feat_ids, 'get'):
                 doc_feat_ids = doc_feat_ids.get()
             # Convert the neuron indices into feature IDs.
@@ -129,3 +130,9 @@ class Morphologizer(Pipe):
     def use_params(self, params):
         with self.model.use_params(params):
             yield
+
+def scores_to_guesses(scores, out_sizes):
+    raise NotImplementedError
+
+def feature_to_column(feature):
+    raise NotImplementedError
