@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from libc.string cimport memset
 import ujson as json
 
+from . import symbols
 from .attrs cimport POS, IS_SPACE
 from .attrs import LEMMA, intify_attrs
 from .parts_of_speech cimport SPACE
@@ -17,6 +18,24 @@ from .errors import Errors
 def _normalize_props(props):
     """Transform deprecated string keys to correct names."""
     out = {}
+    morph_keys = [
+        'PunctType', 'PunctSide', 'Other', 'Degree', 'AdvType', 'Number',
+        'VerbForm', 'PronType', 'Aspect', 'Tense', 'PartType', 'Poss',
+        'Hyph', 'ConjType', 'NumType', 'Foreign', 'VerbType', 'NounType',
+        'Gender', 'Mood', 'Negative', 'Tense', 'Voice', 'Abbr',
+        'Derivation', 'Echo', 'Foreign', 'NameType', 'NounType', 'NumForm',
+        'NumValue', 'PartType', 'Polite', 'StyleVariant',
+        'PronType', 'AdjType', 'Person', 'Variant', 'AdpType',
+        'Reflex', 'Negative', 'Mood', 'Aspect', 'Case',
+        'Polarity', 'PrepCase', 'Animacy' # U20
+    ]
+    props = dict(props)
+    for key in morph_keys:
+        if key in props:
+            attr = '%s_%s' % (key, props[key])
+            if attr in IDS:
+                props.pop(key)
+                props[attr] = True
     for key, value in props.items():
         if key == POS:
             if hasattr(value, 'upper'):
@@ -58,15 +77,16 @@ cdef class Morphology:
         self.n_tags = len(tag_map)
         self.reverse_index = {}
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
-            print(tag_str, attrs)
+            attrs = _normalize_props(attrs)
             self.tag_map[tag_str] = dict(attrs)
             self.reverse_index[self.strings.add(tag_str)] = i
 
         self._cache = PreshMapArray(self.n_tags)
         self.exc = {}
         if exc is not None:
-            for (tag_str, orth_str), attrs in exc.items():
-                self.add_special_case(tag_str, orth_str, attrs)
+            for (tag, orth), attrs in exc.items():
+                self.add_special_case(
+                    self.strings.as_string(tag), self.strings.as_string(orth), attrs)
 
     def __reduce__(self):
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
@@ -102,37 +122,10 @@ cdef class Morphology:
         tag (unicode): The part-of-speech tag to key the exception.
         orth (unicode): The word-form to key the exception.
         """
-        pass
-        ## TODO: Currently we've assumed that we know the number of tags --
-        ## RichTagC is an array, and _cache is a PreshMapArray
-        ## This is really bad: it makes the morphology typed to the tagger
-        ## classes, which is all wrong.
-        #self.exc[(tag_str, orth_str)] = dict(attrs)
-        #tag = self.strings.add(tag_str)
-        #if tag not in self.reverse_index:
-        #    return
-        #tag_id = self.reverse_index[tag]
-        #orth = self.strings[orth_str]
-        #cdef RichTagC rich_tag = self.rich_tags[tag_id]
-        #attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
-        #cached = <MorphAnalysisC*>self._cache.get(tag_id, orth)
-        #if cached is NULL:
-        #    cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
-        #elif force:
-        #    memset(cached, 0, sizeof(cached[0]))
-        #else:
-        #    raise ValueError(Errors.E015.format(tag=tag_str, orth=orth_str))
-
-        #cached.tag = rich_tag
-        ## TODO: Refactor this to take arbitrary attributes.
-        #for name_id, value_id in attrs.items():
-        #    if name_id == LEMMA:
-        #        cached.lemma = value_id
-        #    else:
-        #        self.assign_feature(&cached.tag.morph, name_id, value_id)
-        #if cached.lemma == 0:
-        #    cached.lemma = self.lemmatize(rich_tag.pos, orth, attrs)
-        #self._cache.set(tag_id, orth, <void*>cached)
+        attrs = dict(attrs)
+        attrs = _normalize_props(attrs)
+        attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
+        self.exc[(tag_str, self.strings.add(orth_str))] = attrs
  
     cdef hash_t insert(self, RichTagC tag) except 0:
         cdef hash_t key = hash_tag(tag)
@@ -171,17 +164,27 @@ cdef class Morphology:
             tag_id = self.reverse_index[self.strings.add('_SP')]
         tag_str = self.tag_names[tag_id]
         features = dict(self.tag_map.get(tag_str, {}))
-        cdef attr_t lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
-        if lemma == 0 and features:
+        if features:
             pos = self.strings.as_int(features.pop(POS))
-            lemma = self.lemmatize(pos, token.lex.orth, features)
-            self._cache.set(tag_id, token.lex.orth, <void*>lemma)
         else:
             pos = 0
+        cdef attr_t lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
+        if lemma == 0:
+            lemma = self.lemmatize(pos, token.lex.orth, features)
+            self._cache.set(tag_id, token.lex.orth, <void*>lemma)
         token.lemma = lemma
         token.pos = <univ_pos_t>pos
         token.tag = self.strings[tag_str]
         token.morph = self.add(features)
+        if (self.tag_names[tag_id], token.lex.orth) in self.exc:
+            self._assign_tag_from_exceptions(token, tag_id)
+
+    cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1:
+        key = (self.tag_names[tag_id], token.lex.orth)
+        cdef dict attrs
+        attrs = self.exc[key]
+        token.pos = attrs.get(POS, token.pos)
+        token.lemma = attrs.get(LEMMA, token.lemma)
 
     cdef update_morph(self, hash_t morph, features):
         """Update a morphological analysis with new feature values."""
@@ -193,6 +196,12 @@ cdef class Morphology:
             set_feature(&tag, feature, 1)
         morph = self.insert_tag(tag)
         return morph
+
+    def load_morph_exceptions(self, dict exc):
+        # Map (form, pos) to (lemma, rich tag)
+        for tag_str, entries in exc.items():
+            for form_str, attrs in entries.items():
+                self.add_special_case(tag_str, form_str, attrs)
 
     def to_bytes(self):
         json_tags = []

@@ -60,13 +60,13 @@ class Lemmatizer(object):
             return True
         elif univ_pos == 'adj' and morphology.get('Degree') == 'pos':
             return True
-        elif VerbForm_inf in morphology:
+        elif VerbForm_inf in morphology or 'VerbForm_inf' in morphology:
             return True
-        elif VerbForm_none in morphology:
+        elif VerbForm_none in morphology or 'VerbForm_none' in morphology:
             return True
-        elif Number_sing in morphology:
+        elif Number_sing in morphology or 'Number_sing' in morphology:
             return True
-        elif Degree_pos in morphology:
+        elif Degree_pos in morphology or 'Degree_pos' in morphology:
             return True
         else:
             return False

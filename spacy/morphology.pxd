@@ -30,6 +30,8 @@ cdef class Morphology:
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
     cdef update_morph(self, hash_t morph, features)
 
+    cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1
+
 cdef enum univ_morph_t:
     NIL = 0
     Animacy_anim = symbols.Animacy_anim
