@@ -24,7 +24,7 @@ cdef class GoldParse:
     cdef public int loss
     cdef public list words
     cdef public list tags
-    cdef public list morph
+    cdef public list morphology
     cdef public list heads
     cdef public list labels
     cdef public dict orths

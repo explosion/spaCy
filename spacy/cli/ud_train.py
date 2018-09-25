@@ -74,7 +74,7 @@ def read_data(nlp, conllu_file, text_file, raw_text=True, oracle_segments=False,
                 head = int(head)-1 if head != '0' else id_
                 sent['words'].append(word)
                 sent['tags'].append(tag)
-                sent['morph'].append(_parse_morph_string(morph))
+                sent['morphology'].append(_parse_morph_string(morph))
                 sent['heads'].append(head)
                 sent['deps'].append('ROOT' if dep == 'root' else dep)
                 sent['spaces'].append(space_after == '_')
