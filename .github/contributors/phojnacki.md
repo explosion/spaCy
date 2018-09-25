@@ -98,7 +98,7 @@ mark both statements:
 
 | Field                          | Entry                                 |
 |------------------------------- | ------------------------------------- |
-| Name                           | Przemyslaw Hojnacki                   |
+| Name                           | Przemysław Hojnacki                   |
 | Company name (if applicable)   |                                       |
 | Title or role (if applicable)  |                                       |
 | Date                           | 12/09/2018                            |
