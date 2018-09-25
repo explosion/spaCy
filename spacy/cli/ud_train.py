@@ -74,6 +74,7 @@ def read_data(nlp, conllu_file, text_file, raw_text=True, oracle_segments=False,
                 head = int(head)-1 if head != '0' else id_
                 sent['words'].append(word)
                 sent['tags'].append(tag)
+                sent['morph'].append(_parse_morph_string(morph))
                 sent['heads'].append(head)
                 sent['deps'].append('ROOT' if dep == 'root' else dep)
                 sent['spaces'].append(space_after == '_')
@@ -101,6 +102,16 @@ def read_data(nlp, conllu_file, text_file, raw_text=True, oracle_segments=False,
             return docs, golds
     return docs, golds
 
+def _parse_morph_string(morph_string):
+    if morph_string == '_':
+        return None
+    output = []
+    replacements = {'1': 'one', '2': 'two', '3': 'three'}
+    for feature in morph_string.split('|'):
+        key, value = feature.split('=')
+        value = replacements.get(value, value)
+        output.append('%s_%s' % (key, value.lower()))
+    return set(output)
 
 def read_conllu(file_):
     docs = []
