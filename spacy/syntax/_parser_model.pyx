@@ -213,8 +213,7 @@ class ParserModel(Model):
         self._layers[-1]._layers[-1] = larger
 
     def begin_training(self, X, y=None):
-        for layer in self._layers:
-            layer.begin_training(X, y=y)
+        self.lower.begin_training(X, y=y)
    
     @property
     def tok2vec(self):
