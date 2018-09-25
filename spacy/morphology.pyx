@@ -58,15 +58,20 @@ cdef class Morphology:
         self.n_tags = len(tag_map)
         self.reverse_index = {}
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
+            print(tag_str, attrs)
             self.tag_map[tag_str] = dict(attrs)
-            self.reverse_index[i] = self.strings.add(tag_str)
+            self.reverse_index[self.strings.add(tag_str)] = i
 
         self._cache = PreshMapArray(self.n_tags)
         self.exc = {}
         if exc is not None:
             for (tag_str, orth_str), attrs in exc.items():
                 self.add_special_case(tag_str, orth_str, attrs)
-    
+
+    def __reduce__(self):
+        return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
+                self.exc), None, None)
+
     def add(self, features):
         """Insert a morphological analysis in the morphology table, if not already
         present. Returns the hash of the new analysis.
@@ -88,6 +93,46 @@ cdef class Morphology:
         lemma_string = lemma_strings[0]
         lemma = self.strings.add(lemma_string)
         return lemma
+
+    def add_special_case(self, unicode tag_str, unicode orth_str, attrs,
+                         force=False):
+        """Add a special-case rule to the morphological analyser. Tokens whose
+        tag and orth match the rule will receive the specified properties.
+
+        tag (unicode): The part-of-speech tag to key the exception.
+        orth (unicode): The word-form to key the exception.
+        """
+        pass
+        ## TODO: Currently we've assumed that we know the number of tags --
+        ## RichTagC is an array, and _cache is a PreshMapArray
+        ## This is really bad: it makes the morphology typed to the tagger
+        ## classes, which is all wrong.
+        #self.exc[(tag_str, orth_str)] = dict(attrs)
+        #tag = self.strings.add(tag_str)
+        #if tag not in self.reverse_index:
+        #    return
+        #tag_id = self.reverse_index[tag]
+        #orth = self.strings[orth_str]
+        #cdef RichTagC rich_tag = self.rich_tags[tag_id]
+        #attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
+        #cached = <MorphAnalysisC*>self._cache.get(tag_id, orth)
+        #if cached is NULL:
+        #    cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
+        #elif force:
+        #    memset(cached, 0, sizeof(cached[0]))
+        #else:
+        #    raise ValueError(Errors.E015.format(tag=tag_str, orth=orth_str))
+
+        #cached.tag = rich_tag
+        ## TODO: Refactor this to take arbitrary attributes.
+        #for name_id, value_id in attrs.items():
+        #    if name_id == LEMMA:
+        #        cached.lemma = value_id
+        #    else:
+        #        self.assign_feature(&cached.tag.morph, name_id, value_id)
+        #if cached.lemma == 0:
+        #    cached.lemma = self.lemmatize(rich_tag.pos, orth, attrs)
+        #self._cache.set(tag_id, orth, <void*>cached)
  
     cdef hash_t insert(self, RichTagC tag) except 0:
         cdef hash_t key = hash_tag(tag)
@@ -107,9 +152,8 @@ cdef class Morphology:
             lemma = self.lemmatizer.lookup(orth_str)
             token.lemma = self.strings.add(lemma)
 
-    cdef int assign_tag(self, TokenC* token, tag) except -1:
-        if isinstance(tag, basestring):
-            tag = self.strings.add(tag)
+    cdef int assign_tag(self, TokenC* token, tag_str) except -1:
+        cdef attr_t tag = self.strings.as_int(tag_str)
         if tag in self.reverse_index:
             tag_id = self.reverse_index[tag]
             self.assign_tag_id(token, tag_id)
@@ -127,13 +171,15 @@ cdef class Morphology:
             tag_id = self.reverse_index[self.strings.add('_SP')]
         tag_str = self.tag_names[tag_id]
         features = dict(self.tag_map.get(tag_str, {}))
-        lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
+        cdef attr_t lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
         if lemma == 0 and features:
-            pos = self.strings.as_int(features.pop('POS'))
+            pos = self.strings.as_int(features.pop(POS))
             lemma = self.lemmatize(pos, token.lex.orth, features)
-            self._cache.set(tag_id, token.lex.orth, lemma)
+            self._cache.set(tag_id, token.lex.orth, <void*>lemma)
+        else:
+            pos = 0
         token.lemma = lemma
-        token.pos = pos
+        token.pos = <univ_pos_t>pos
         token.tag = self.strings[tag_str]
         token.morph = self.add(features)
 
@@ -178,8 +224,8 @@ cdef hash_t hash_tag(RichTagC tag) nogil:
 cdef RichTagC create_rich_tag(features):
     cdef RichTagC tag
     cdef univ_morph_t feature
-    for feature in features:
-        set_feature(&tag, feature, 1)
+    #for feature in features:
+    #    set_feature(&tag, feature, 1)
     return tag
 
 cdef tag_to_json(RichTagC tag):

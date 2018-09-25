@@ -20,6 +20,7 @@ cdef class Morphology:
     cdef readonly object tag_names
     cdef readonly object reverse_index
     cdef readonly object exc
+    cdef readonly PreshMapArray _cache
     cdef readonly int n_tags
 
     cdef hash_t insert(self, RichTagC tag) except 0
