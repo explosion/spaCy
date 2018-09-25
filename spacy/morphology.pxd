@@ -23,12 +23,12 @@ cdef class Morphology:
     cdef readonly PreshMapArray _cache
     cdef readonly int n_tags
 
+    cpdef update(self, hash_t morph, features)
     cdef hash_t insert(self, RichTagC tag) except 0
     
     cdef int assign_untagged(self, TokenC* token) except -1
     cdef int assign_tag(self, TokenC* token, tag) except -1
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
-    cpdef update_morph_key(self, hash_t morph, features)
 
     cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1
 

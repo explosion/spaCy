@@ -101,15 +101,14 @@ cdef class Morphology:
         cdef hash_t key = self.insert(tag)
         return key
     
-    cpdef update_morph_key(self, hash_t morph, features):
+    cpdef update(self, hash_t morph, features):
         """Update a morphological analysis with new feature values."""
         tag = (<RichTagC*>self.tags.get(morph))[0]
+        features = intify_features(features)
         cdef univ_morph_t feature
-        cdef int value
-        for feature_, value in features.items():
-            feature = self.strings.as_int(feature_)
+        for feature in features:
             set_feature(&tag, feature, 1)
-        morph = self.insert_tag(tag)
+        morph = self.insert(tag)
         return morph
 
 
@@ -237,8 +236,9 @@ cdef hash_t hash_tag(RichTagC tag) nogil:
 cdef RichTagC create_rich_tag(features):
     cdef RichTagC tag
     cdef univ_morph_t feature
-    #for feature in features:
-    #    set_feature(&tag, feature, 1)
+    memset(&tag, 0, sizeof(tag))
+    for feature in features:
+        set_feature(&tag, feature, 1)
     return tag
 
 cdef tag_to_json(RichTagC tag):
