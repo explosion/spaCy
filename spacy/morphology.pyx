@@ -52,6 +52,16 @@ def _normalize_props(props):
     return out
 
 
+def parse_feature(feature):
+    if not hasattr(feature, 'split'):
+        feature = NAMES[feature]
+    key, value = feature.split('_')
+    begin = 'begin_%s' % key
+    offset = IDS[feature] - IDS[begin]
+    field_id = FIELDS[key]
+    return (field_id, offset)
+
+
 cdef class Morphology:
     '''Store the possible morphological analyses for a language, and index them
     by hash.
@@ -716,7 +726,52 @@ IDS = {
 }
 
 
-NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
+FIELDS = {
+    'Abbr': 0,
+    'AdpType': 1,
+    'AdvType': 2,
+    'Animacy': 3,
+    'Aspect': 4,
+    'Case': 5,
+    'ConjType': 6,
+    'Connegative': 7,
+    'Definite': 8,
+    'Degree': 9,
+    'Derivation': 10,
+    'Echo': 11,
+    'Foreign': 12,
+    'Gender': 13,
+    'Hyph': 14,
+    'InfForm': 15,
+    'Mood': 16,
+    'Negative': 17,
+    'Number': 18,
+    'NameType': 19,
+    'NumForm': 20,
+    'NumType': 21,
+    'NumValue': 22,
+    'PartForm': 23,
+    'PartType': 24,
+    'Person': 25,
+    'Polite': 26,
+    'Polarity': 27,
+    'Poss': 28,
+    'Prefix': 29,
+    'PrepCase': 30,
+    'PronType': 31,
+    'PunctSide': 32,
+    'PunctType': 33,
+    'Reflex': 34,
+    'Style': 35,
+    'StyleVariant': 36,
+    'Tense': 37,
+    'VerbForm': 38,
+    'Voice': 39,
+    'VerbType': 40
+}
+
+
+NAMES = {value: key for key, value in IDS.items()}
 # Unfortunate hack here, to work around problem with long cpdef enum
 # (which is generating an enormous amount of C++ in Cython 0.24+)
 # We keep the enum cdef, and just make sure the names are available to Python
