@@ -524,8 +524,8 @@ def build_morphologizer_model(class_nums, **cfg):
             tok2vec = Tok2Vec(token_vector_width, embed_size,
                               subword_features=subword_features,
                               pretrained_vectors=pretrained_vectors)
-        softmax = with_flatten(
-            MultiSoftmax(class_nums, token_vector_width))
+        softmax = with_flatten(MultiSoftmax(class_nums, token_vector_width))
+        softmax.out_sizes = class_nums
         model = (
             tok2vec
             >> softmax
