@@ -4,12 +4,14 @@ from __future__ import unicode_literals
 from ...attrs import LIKE_NUM
 
 
-_num_words = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete',
-              'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'catorze',
-              'quinze', 'dezesseis', 'dezasseis', 'dezessete', 'dezassete', 'dezoito', 'dezenove', 'dezanove', 'vinte',
-              'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta',
-              'oitenta', 'noventa', 'cem', 'mil', 'milhão', 'bilhão', 'bilião', 'trilhão', 'trilião',
-              'quatrilhão']
+_num_words = ['zero', 'um', 'dois', 'três', 'tres', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez',
+              'onze', 'doze', 'dúzia', 'dúzias', 'duzia', 'duzias', 'treze', 'catorze', 'quinze', 'dezasseis', 
+              'dezassete', 'dezoito', 'dezanove', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta',
+              'setenta', 'oitenta', 'noventa', 'cem', 'cento', 'duzentos', 'trezentos', 'quatrocentos',
+              'quinhentos', 'seicentos', 'setecentos', 'oitocentos', 'novecentos', 'mil', 'milhão', 'milhao',
+              'milhões', 'milhoes', 'bilhão', 'bilhao', 'bilhões', 'bilhoes', 'trilhão', 'trilhao', 'trilhões',
+              'trilhoes', 'quadrilhão', 'quadrilhao', 'quadrilhões', 'quadrilhoes']
+
 
 _ordinal_words = ['primeiro', 'segundo', 'terceiro', 'quarto', 'quinto', 'sexto',
                   'sétimo', 'oitavo', 'nono', 'décimo', 'vigésimo', 'trigésimo',

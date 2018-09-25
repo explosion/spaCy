@@ -1,7 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...attrs import LIKE_NUM
+import unicodedata
+
+from .punctuation import LIST_CURRENCY
+from ...attrs import IS_CURRENCY, LIKE_NUM
 
 
 _num_words = ['nol', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh',
@@ -27,6 +30,17 @@ def like_num(text):
     return False
 
 
+def is_currency(text):
+    if text in LIST_CURRENCY:
+        return True
+
+    for char in text:
+        if unicodedata.category(char) != 'Sc':
+            return False
+    return True
+
+
 LEX_ATTRS = {
+    IS_CURRENCY: is_currency,
     LIKE_NUM: like_num
 }
