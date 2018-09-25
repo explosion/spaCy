@@ -26,6 +26,7 @@ MOD_NAMES = [
     'spacy.attrs',
     'spacy.morphology',
     'spacy.pipeline',
+    'spacy._morphologizer',
     'spacy.syntax.stateclass',
     'spacy.syntax._state',
     'spacy.tokenizer',
