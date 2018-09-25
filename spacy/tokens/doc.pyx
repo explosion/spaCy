@@ -867,7 +867,7 @@ cdef class Doc:
         '''
         xp = get_array_module(self.tensor)
         if self.tensor.size == 0:
-            self.tensor.resize(tensor.shape)
+            self.tensor.resize(tensor.shape, refcheck=False)
             copy_array(self.tensor, tensor)
         else:
             self.tensor = xp.hstack((self.tensor, tensor))
