@@ -96,10 +96,23 @@ cdef class Morphology:
         """Insert a morphological analysis in the morphology table, if not already
         present. Returns the hash of the new analysis.
         """
-        features = intify_features(self.strings, features)
+        features = intify_features(features)
         cdef RichTagC tag = create_rich_tag(features)
         cdef hash_t key = self.insert(tag)
         return key
+    
+    cpdef update_morph_key(self, hash_t morph, features):
+        """Update a morphological analysis with new feature values."""
+        tag = (<RichTagC*>self.tags.get(morph))[0]
+        cdef univ_morph_t feature
+        cdef int value
+        for feature_, value in features.items():
+            feature = self.strings.as_int(feature_)
+            set_feature(&tag, feature, 1)
+        morph = self.insert_tag(tag)
+        return morph
+
+
 
     def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
         if orth not in self.strings:
@@ -188,17 +201,6 @@ cdef class Morphology:
         token.pos = attrs.get(POS, token.pos)
         token.lemma = attrs.get(LEMMA, token.lemma)
 
-    cdef update_morph(self, hash_t morph, features):
-        """Update a morphological analysis with new feature values."""
-        tag = (<RichTagC*>self.tags.get(morph))[0]
-        cdef univ_morph_t feature
-        cdef int value
-        for feature_, value in features.items():
-            feature = self.strings.as_int(feature_)
-            set_feature(&tag, feature, 1)
-        morph = self.insert_tag(tag)
-        return morph
-
     def load_morph_exceptions(self, dict exc):
         # Map (form, pos) to attributes
         for tag_str, entries in exc.items():
@@ -226,8 +228,8 @@ cdef class Morphology:
 cpdef univ_pos_t get_int_tag(pos_):
     return <univ_pos_t>0
 
-cpdef intify_features(StringStore strings, features):
-    return {strings.as_int(feature) for feature in features}
+cpdef intify_features(features):
+    return {IDS.get(feature, feature) for feature in features}
 
 cdef hash_t hash_tag(RichTagC tag) nogil:
     return mrmr.hash64(&tag, sizeof(tag), 0)

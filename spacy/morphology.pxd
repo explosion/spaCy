@@ -28,7 +28,7 @@ cdef class Morphology:
     cdef int assign_untagged(self, TokenC* token) except -1
     cdef int assign_tag(self, TokenC* token, tag) except -1
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
-    cdef update_morph(self, hash_t morph, features)
+    cpdef update_morph_key(self, hash_t morph, features)
 
     cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1
 
