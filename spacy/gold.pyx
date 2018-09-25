@@ -399,7 +399,7 @@ cdef class GoldParse:
         return cls(doc, words=words, tags=tags, heads=heads, deps=deps,
                    entities=entities, make_projective=make_projective)
 
-    def __init__(self, doc, annot_tuples=None, words=None, tags=None,
+    def __init__(self, doc, annot_tuples=None, words=None, tags=None, morph=None,
                  heads=None, deps=None, entities=None, make_projective=False,
                  cats=None, **_):
         """Create a GoldParse.
@@ -436,6 +436,8 @@ cdef class GoldParse:
             deps = [None for _ in doc]
         if entities is None:
             entities = [None for _ in doc]
+        if morph is None:
+            morph = [None for _ in doc]
         elif len(entities) == 0:
             entities = ['O' for _ in doc]
         elif not isinstance(entities[0], basestring):
@@ -460,6 +462,7 @@ cdef class GoldParse:
         self.heads = [None] * len(doc)
         self.labels = [None] * len(doc)
         self.ner = [None] * len(doc)
+        self.morph = [None] * len(doc)
 
         # This needs to be done before we align the words
         if make_projective and heads is not None and deps is not None:
@@ -487,10 +490,12 @@ cdef class GoldParse:
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
+                self.morph[i] = set()
             if gold_i is None:
                 if i in i2j_multi:
                     self.words[i] = words[i2j_multi[i]]
                     self.tags[i] = tags[i2j_multi[i]]
+                    self.morph[i] = morph[i2j_multi[i]]
                     is_last = i2j_multi[i] != i2j_multi.get(i+1)
                     is_first = i2j_multi[i] != i2j_multi.get(i-1)
                     # Set next word in multi-token span as head, until last
