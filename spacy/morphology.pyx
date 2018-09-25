@@ -156,10 +156,12 @@ cdef class Morphology:
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1:
         if tag_id > self.n_tags:
             raise ValueError(Errors.E014.format(tag=tag_id))
-        # TODO: It's pretty arbitrary to put this logic here. I guess the
-        # justification is that this is where the specific word and the tag
-        # interact. Still, we should have a better way to enforce this rule, or
-        # figure out why the statistical model fails. Related to Issue #220
+        # Ensure spaces get tagged as space.
+        # It seems pretty arbitrary to put this logic here, but there's really
+        # nowhere better. I guess the justification is that this is where the
+        # specific word and the tag interact. Still, we should have a better
+        # way to enforce this rule, or figure out why the statistical model fails.
+        # Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
             tag_id = self.reverse_index[self.strings.add('_SP')]
         tag_str = self.tag_names[tag_id]
@@ -198,7 +200,7 @@ cdef class Morphology:
         return morph
 
     def load_morph_exceptions(self, dict exc):
-        # Map (form, pos) to (lemma, rich tag)
+        # Map (form, pos) to attributes
         for tag_str, entries in exc.items():
             for form_str, attrs in entries.items():
                 self.add_special_case(tag_str, form_str, attrs)
@@ -333,130 +335,128 @@ cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) nogil:
         with gil:
             raise ValueError("Unknown feature: %d" % feature)
 
-cdef int is_abbr_feature(univ_morph_t abbr) nogil:
-    return 0
+cdef int is_abbr_feature(univ_morph_t feature) nogil:
+    return feature > begin_Abbr  and feature < end_Abbr
 
 cdef int is_adp_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_AdpType and feature < end_AdpType
 
 cdef int is_adv_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_AdvType and feature < end_AdvType
 
 cdef int is_animacy_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Animacy and feature < end_Animacy
 
 cdef int is_aspect_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Aspect and feature < end_Aspect
 
 cdef int is_case_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Case and feature < end_Case
 
 cdef int is_conj_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_ConjType and feature < end_ConjType
 
 cdef int is_connegative_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Connegative and feature < end_Connegative
 
 cdef int is_definite_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Definite and feature < end_Definite
 
 cdef int is_degree_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Degree and feature < end_Degree
 
 cdef int is_derivation_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Derivation and feature < end_Derivation
 
 cdef int is_echo_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Echo and feature < end_Echo
 
 cdef int is_foreign_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Foreign and feature < end_Foreign
 
 cdef int is_gender_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Gender and feature < end_Gender
 
 cdef int is_hyph_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Hyph and feature < begin_Hyph
 
 cdef int is_inf_form_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_InfForm and feature < end_InfForm
 
 cdef int is_mood_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Mood and feature < end_Mood
 
 cdef int is_negative_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Negative and feature < end_Negative
 
 cdef int is_number_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Number and feature < end_Number
 
 cdef int is_name_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_NameType and feature < end_NameType
 
 cdef int is_num_form_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_NumForm and feature < end_NumForm
 
 cdef int is_num_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_NumType and feature < end_NumType
 
 cdef int is_num_value_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_NumValue and feature < end_NumValue
 
 cdef int is_part_form_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_PartForm and feature < end_PartForm
 
 cdef int is_part_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_PartType and feature < end_PartType
 
 cdef int is_person_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Person and feature < end_Person
 
 cdef int is_polite_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Polite and feature < end_Polite
 
 cdef int is_polarity_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Polarity and feature < end_Polarity
 
 cdef int is_poss_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Poss and feature < end_Poss
 
 cdef int is_prefix_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Prefix and feature < end_Prefix
 
 cdef int is_prep_case_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_PrepCase and feature < end_PrepCase
 
 cdef int is_pron_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_PronType and feature < end_PronType
 
 cdef int is_punct_side_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_PunctSide and feature < end_PunctSide
 
 cdef int is_punct_type_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_PunctType and feature < end_PunctType
 
 cdef int is_reflex_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Reflex and feature < end_Reflex
 
 cdef int is_style_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Style and feature < end_Style
 
 cdef int is_style_variant_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_StyleVariant and feature < end_StyleVariant
 
 cdef int is_tense_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Tense and feature < end_Tense
 
 cdef int is_verb_form_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_VerbForm and feature < end_VerbForm
 
 cdef int is_voice_feature(univ_morph_t feature) nogil:
-    return 0
+    return feature > begin_Voice and feature < end_Voice
 
 cdef int is_verb_type_feature(univ_morph_t feature) nogil:
-    return 0
-
-
+    return feature > begin_VerbType and feature < end_VerbType
 
 
 IDS = {
