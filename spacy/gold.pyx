@@ -429,17 +429,17 @@ cdef class GoldParse:
         if words is None:
             words = [token.text for token in doc]
         if tags is None:
-            tags = [None for _ in doc]
+            tags = [None for _ in words]
         if heads is None:
-            heads = [None for token in doc]
+            heads = [None for token in words]
         if deps is None:
-            deps = [None for _ in doc]
+            deps = [None for _ in words]
         if entities is None:
-            entities = [None for _ in doc]
+            entities = [None for _ in words]
         if morphology is None:
-            morphology = [None for _ in doc]
+            morphology = [None for _ in words]
         elif len(entities) == 0:
-            entities = ['O' for _ in doc]
+            entities = ['O' for _ in words]
         elif not isinstance(entities[0], basestring):
             # Assume we have entities specified by character offset.
             entities = biluo_tags_from_offsets(doc, entities)
@@ -532,6 +532,7 @@ cdef class GoldParse:
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
+                self.morphology[i] = morphology[gold_i]
                 if heads[gold_i] is None:
                     self.heads[i] = None
                 else:
