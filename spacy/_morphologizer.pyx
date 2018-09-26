@@ -20,7 +20,7 @@ from .compat import json_dumps, basestring_
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 from .morphology cimport Morphology
-from .morphology import parse_feature
+from .morphology import parse_feature, IDS, FIELDS, FIELD_SIZES, NAMES
 from .pipeline import Pipe
 
 
@@ -28,9 +28,11 @@ class Morphologizer(Pipe):
     name = 'morphologizer'
     
     @classmethod
-    def Model(cls, attr_nums, **cfg):
+    def Model(cls, attr_nums=None, **cfg):
         if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
             raise ValueError(TempErrors.T008)
+        if attr_nums is None:
+            attr_nums = list(FIELD_SIZES)
         return build_morphologizer_model(attr_nums, **cfg)
 
     def __init__(self, vocab, model=True, **cfg):
@@ -71,29 +73,34 @@ class Morphologizer(Pipe):
             return guesses, tokvecs
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
-        guesses = []
-        # Resolve multisoftmax into guesses
-        for doc_scores in scores:
-            guesses.append(scores_to_guesses(doc_scores, self.model.softmax.out_sizes))
-        return guesses, tokvecs
+        return scores, tokvecs
 
-    def set_annotations(self, docs, batch_feature_ids, tensors=None):
+    def set_annotations(self, docs, batch_scores, tensors=None):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
+        field_names = list(FIELDS)
+        offsets = [IDS['begin_%s' % field] for field in field_names]
         for i, doc in enumerate(docs):
-            doc_feat_ids = batch_feature_ids[i]
-            if hasattr(doc_feat_ids, 'get'):
-                doc_feat_ids = doc_feat_ids.get()
+            doc_scores = batch_scores[i]
+            doc_guesses = scores_to_guesses(doc_scores, self.model.softmax.out_sizes)
             # Convert the neuron indices into feature IDs.
-            offset = self.vocab.morphology.first_feature
-            for j, nr_feat in enumerate(self.model.softmax.out_sizes):
-                doc_feat_ids[:, j] += offset
-                offset += nr_feat
-            # Now add the analysis, and set the hash.
-            for j in range(doc_feat_ids.shape[0]):
-                doc.c[j].morph = self.vocab.morphology.add(doc_feat_ids[j])
+            doc_feat_ids = self.model.ops.allocate((len(doc), len(field_names)), dtype='i')
+            for j in range(len(doc)):
+                for k, offset in enumerate(offsets):
+                    if doc_guesses[j, k] == 0:
+                        doc_feat_ids[j, k] = 0
+                    else:
+                        doc_feat_ids[j, k] = offset + doc_guesses[j, k]
+                # Now add the analysis, and set the hash.
+                try:
+                    doc.c[j].morph = self.vocab.morphology.add(doc_feat_ids[j])
+                except:
+                    print(offsets)
+                    print(doc_guesses[j])
+                    print(doc_feat_ids[j])
+                    raise
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
@@ -110,17 +117,27 @@ class Morphologizer(Pipe):
         guesses = []
         for doc_scores in scores:
             guesses.append(scores_to_guesses(doc_scores, self.model.softmax.out_sizes))
-        guesses = self.model.ops.flatten(guesses)
+        guesses = self.model.ops.xp.vstack(guesses)
+        scores = self.model.ops.xp.vstack(scores)
         cdef int idx = 0
         target = numpy.zeros(scores.shape, dtype='f')
+        field_sizes = self.model.softmax.out_sizes
         for gold in golds:
             for features in gold.morphology:
                 if features is None:
-                    target[idx] = guesses[idx]
+                    target[idx] = scores[idx]
                 else:
+                    by_field = {}
                     for feature in features:
-                        _, column = parse_feature(feature)
-                        target[idx, column] = 1
+                        field, column = parse_feature(feature)
+                        by_field[field] = column
+                    col_offset = 0
+                    for field, field_size in enumerate(field_sizes):
+                        if field in by_field:
+                            target[idx, col_offset + by_field[field]] = 1.
+                        else:
+                            target[idx, col_offset] = 1.
+                        col_offset += field_size
                 idx += 1
         target = self.model.ops.xp.array(target, dtype='f')
         d_scores = scores - target
@@ -137,6 +154,8 @@ def scores_to_guesses(scores, out_sizes):
     guesses = xp.zeros((scores.shape[0], len(out_sizes)), dtype='i')
     offset = 0
     for i, size in enumerate(out_sizes):
-        guesses[:, i] = scores[:, offset : offset + size].argmax(axis=1)
+        slice_ = scores[:, offset : offset + size]
+        col_guesses = slice_.argmax(axis=1)
+        guesses[:, i] = col_guesses
         offset += size
     return guesses
