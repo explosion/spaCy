@@ -1,7 +1,8 @@
 # Semantic entailment/similarity with decomposable attention (using spaCy and Keras)
 # Practical state-of-the-art text entailment with spaCy and Keras
 
-from keras import layers, Model, models
+import numpy as np
+from keras import layers, Model, models, optimizers
 from keras import backend as K
 
 def build_model(vectors, shape, settings):
@@ -62,7 +63,7 @@ def build_model(vectors, shape, settings):
     model = Model([input1, input2], out)
     
     model.compile(
-        optimizer=Adam(lr=settings['lr']),
+        optimizer=optimizers.Adam(lr=settings['lr']),
         loss='categorical_crossentropy',
         metrics=['accuracy'])
     
@@ -105,7 +106,7 @@ def sum_word(x):
 
 
 def test_build_model():
-    vectors = numpy.ndarray((100, 8), dtype='float32')
+    vectors = np.ndarray((100, 8), dtype='float32')
     shape = (10, 16, 3)
     settings = {'lr': 0.001, 'dropout': 0.2, 'gru_encode':True, 'entail_dir':'both'}
     model = build_model(vectors, shape, settings)
