@@ -18,19 +18,8 @@ from .errors import Errors
 def _normalize_props(props):
     """Transform deprecated string keys to correct names."""
     out = {}
-    morph_keys = [
-        'PunctType', 'PunctSide', 'Other', 'Degree', 'AdvType', 'Number',
-        'VerbForm', 'PronType', 'Aspect', 'Tense', 'PartType', 'Poss',
-        'Hyph', 'ConjType', 'NumType', 'Foreign', 'VerbType', 'NounType',
-        'Gender', 'Mood', 'Negative', 'Tense', 'Voice', 'Abbr',
-        'Derivation', 'Echo', 'Foreign', 'NameType', 'NounType', 'NumForm',
-        'NumValue', 'PartType', 'Polite', 'StyleVariant',
-        'PronType', 'AdjType', 'Person', 'Variant', 'AdpType',
-        'Reflex', 'Negative', 'Mood', 'Aspect', 'Case',
-        'Polarity', 'PrepCase', 'Animacy' # U20
-    ]
     props = dict(props)
-    for key in morph_keys:
+    for key in FIELDS:
         if key in props:
             attr = '%s_%s' % (key, props[key])
             if attr in IDS:
@@ -57,6 +46,7 @@ def parse_feature(feature):
         feature = NAMES[feature]
     key, value = feature.split('_')
     begin = 'begin_%s' % key
+    # Note that this includes a 0 offset for the field, for no entry
     offset = IDS[feature] - IDS[begin]
     field_id = FIELDS[key]
     return (field_id, offset)
@@ -65,7 +55,8 @@ def parse_feature(feature):
 def get_field_size(field):
     begin = 'begin_%s' % field
     end = 'end_%s' % field
-    return (IDS[end] - IDS[begin]) - 1
+    # Extra field for no entry -- always 0
+    return IDS[end] - IDS[begin]
 
 
 cdef class Morphology:
@@ -113,9 +104,23 @@ cdef class Morphology:
         present. Returns the hash of the new analysis.
         """
         features = intify_features(features)
-        cdef RichTagC tag = create_rich_tag(features)
+        cdef univ_morph_t feature
+        for feature in features:
+            if feature != 0 and feature not in NAMES:
+                print(list(NAMES.keys())[:10])
+                print(NAMES.get(feature-1), NAMES.get(feature+1))
+                raise KeyError("Unknown feature: %d" % feature)
+        cdef RichTagC tag
+        tag = create_rich_tag(features)
         cdef hash_t key = self.insert(tag)
         return key
+
+    def get(self, hash_t morph):
+        tag = <RichTagC*>self.tags.get(morph)
+        if tag == NULL:
+            return []
+        else:
+            return tag_to_json(tag[0])
     
     cpdef update(self, hash_t morph, features):
         """Update a morphological analysis with new feature values."""
@@ -126,8 +131,6 @@ cdef class Morphology:
             set_feature(&tag, feature, 1)
         morph = self.insert(tag)
         return morph
-
-
 
     def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
         if orth not in self.strings:
@@ -205,7 +208,8 @@ cdef class Morphology:
         token.lemma = lemma
         token.pos = <univ_pos_t>pos
         token.tag = self.strings[tag_str]
-        token.morph = self.add(features)
+        #token.morph = self.add(features)
+        token.morph = 0
         if (self.tag_names[tag_id], token.lex.orth) in self.exc:
             self._assign_tag_from_exceptions(token, tag_id)
 
@@ -228,7 +232,7 @@ cdef class Morphology:
             tag_ptr = <RichTagC*>self.tags.get(key)
             if tag_ptr != NULL:
                 json_tags.append(tag_to_json(tag_ptr[0]))
-        raise json.dumps(json_tags)
+        return json.dumps(json_tags)
 
     def from_bytes(self, byte_string):
         raise NotImplementedError
@@ -249,7 +253,7 @@ cpdef intify_features(features):
 cdef hash_t hash_tag(RichTagC tag) nogil:
     return mrmr.hash64(&tag, sizeof(tag), 0)
 
-cdef RichTagC create_rich_tag(features):
+cdef RichTagC create_rich_tag(features) except *:
     cdef RichTagC tag
     cdef univ_morph_t feature
     memset(&tag, 0, sizeof(tag))
@@ -258,20 +262,105 @@ cdef RichTagC create_rich_tag(features):
     return tag
 
 cdef tag_to_json(RichTagC tag):
-    return {}
+    features = []
+    if tag.abbr != 0:
+        features.append(NAMES[tag.abbr])
+    if tag.adp_type != 0:
+        features.append(NAMES[tag.adp_type])
+    if tag.adv_type != 0:
+        features.append(NAMES[tag.adv_type])
+    if tag.animacy != 0:
+        features.append(NAMES[tag.animacy])
+    if tag.aspect != 0:
+        features.append(NAMES[tag.aspect])
+    if tag.case != 0:
+        features.append(NAMES[tag.case])
+    if tag.conj_type != 0:
+        features.append(NAMES[tag.conj_type])
+    if tag.connegative != 0:
+        features.append(NAMES[tag.connegative])
+    if tag.definite != 0:
+        features.append(NAMES[tag.definite])
+    if tag.degree != 0:
+        features.append(NAMES[tag.degree])
+    if tag.derivation != 0:
+        features.append(NAMES[tag.derivation])
+    if tag.echo != 0:
+        features.append(NAMES[tag.echo])
+    if tag.foreign != 0:
+        features.append(NAMES[tag.foreign])
+    if tag.gender != 0:
+        features.append(NAMES[tag.gender])
+    if tag.hyph != 0:
+        features.append(NAMES[tag.hyph])
+    if tag.inf_form != 0:
+        features.append(NAMES[tag.inf_form])
+    if tag.mood != 0:
+        features.append(NAMES[tag.mood])
+    if tag.negative != 0:
+        features.append(NAMES[tag.negative])
+    if tag.number != 0:
+        features.append(NAMES[tag.number])
+    if tag.name_type != 0:
+        features.append(NAMES[tag.name_type])
+    if tag.noun_type != 0:
+        features.append(NAMES[tag.noun_type])
+    if tag.num_form != 0:
+        features.append(NAMES[tag.num_form])
+    if tag.num_type != 0:
+        features.append(NAMES[tag.num_type])
+    if tag.num_value != 0:
+        features.append(NAMES[tag.num_value])
+    if tag.part_form != 0:
+        features.append(NAMES[tag.part_form])
+    if tag.part_type != 0:
+        features.append(NAMES[tag.part_type])
+    if tag.person != 0:
+        features.append(NAMES[tag.person])
+    if tag.polite != 0:
+        features.append(NAMES[tag.polite])
+    if tag.polarity != 0:
+        features.append(NAMES[tag.polarity])
+    if tag.poss != 0:
+        features.append(NAMES[tag.poss])
+    if tag.prefix != 0:
+        features.append(NAMES[tag.prefix])
+    if tag.prep_case != 0:
+        features.append(NAMES[tag.prep_case])
+    if tag.pron_type != 0:
+        features.append(NAMES[tag.pron_type])
+    if tag.punct_side != 0:
+        features.append(NAMES[tag.punct_side])
+    if tag.punct_type != 0:
+        features.append(NAMES[tag.punct_type])
+    if tag.reflex != 0:
+        features.append(NAMES[tag.reflex])
+    if tag.style != 0:
+        features.append(NAMES[tag.style])
+    if tag.style_variant != 0:
+        features.append(NAMES[tag.style_variant])
+    if tag.tense != 0:
+        features.append(NAMES[tag.tense])
+    if tag.verb_form != 0:
+        features.append(NAMES[tag.verb_form])
+    if tag.voice != 0:
+        features.append(NAMES[tag.voice])
+    if tag.verb_type != 0:
+        features.append(NAMES[tag.verb_type])
+    return features
 
 cdef RichTagC tag_from_json(json_tag):
     cdef RichTagC tag
     return tag
  
-cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) nogil:
+cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) except -1:
     if value == True:
         value_ = feature
     else:
         value_ = NIL
     if feature == NIL:
         pass
-    if is_abbr_feature(feature):
+    elif is_abbr_feature(feature):
         tag.abbr = value_
     elif is_adp_type_feature(feature):
         tag.adp_type = value_
@@ -311,8 +400,12 @@ cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) nogil:
         tag.number = value_
     elif is_name_type_feature(feature):
         tag.name_type = value_
+    elif is_noun_type_feature(feature):
+        tag.noun_type = value_
     elif is_num_form_feature(feature):
         tag.num_form = value_
+    elif is_num_type_feature(feature):
+        tag.num_type = value_
     elif is_num_value_feature(feature):
         tag.num_value = value_
     elif is_part_form_feature(feature):
@@ -334,6 +427,8 @@ cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) nogil:
     elif is_pron_type_feature(feature):
         tag.pron_type = value_
     elif is_punct_side_feature(feature):
+        tag.punct_side = value_
+    elif is_punct_type_feature(feature):
         tag.punct_type = value_
     elif is_reflex_feature(feature):
         tag.reflex = value_
@@ -343,6 +438,8 @@ cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) nogil:
         tag.style_variant = value_
     elif is_tense_feature(feature):
         tag.tense = value_
+    elif is_typo_feature(feature):
+        tag.typo = value_
     elif is_verb_form_feature(feature):
         tag.verb_form = value_
     elif is_voice_feature(feature):
@@ -350,131 +447,136 @@ cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) nogil:
     elif is_verb_type_feature(feature):
         tag.verb_type = value_
     else:
-        with gil:
-            raise ValueError("Unknown feature: %d" % feature)
+        raise ValueError("Unknown feature: %s (%d)" % (NAMES.get(feature), feature))
 
 cdef int is_abbr_feature(univ_morph_t feature) nogil:
-    return feature > begin_Abbr  and feature < end_Abbr
+    return feature >= begin_Abbr  and feature <= end_Abbr
 
 cdef int is_adp_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_AdpType and feature < end_AdpType
+    return feature >= begin_AdpType and feature <= end_AdpType
 
 cdef int is_adv_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_AdvType and feature < end_AdvType
+    return feature >= begin_AdvType and feature <= end_AdvType
 
 cdef int is_animacy_feature(univ_morph_t feature) nogil:
-    return feature > begin_Animacy and feature < end_Animacy
+    return feature >= begin_Animacy and feature <= end_Animacy
 
 cdef int is_aspect_feature(univ_morph_t feature) nogil:
-    return feature > begin_Aspect and feature < end_Aspect
+    return feature >= begin_Aspect and feature <= end_Aspect
 
 cdef int is_case_feature(univ_morph_t feature) nogil:
-    return feature > begin_Case and feature < end_Case
+    return feature >= begin_Case and feature <= end_Case
 
 cdef int is_conj_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_ConjType and feature < end_ConjType
+    return feature >= begin_ConjType and feature <= end_ConjType
 
 cdef int is_connegative_feature(univ_morph_t feature) nogil:
-    return feature > begin_Connegative and feature < end_Connegative
+    return feature >= begin_Connegative and feature <= end_Connegative
 
 cdef int is_definite_feature(univ_morph_t feature) nogil:
-    return feature > begin_Definite and feature < end_Definite
+    return feature >= begin_Definite and feature <= end_Definite
 
 cdef int is_degree_feature(univ_morph_t feature) nogil:
-    return feature > begin_Degree and feature < end_Degree
+    return feature >= begin_Degree and feature <= end_Degree
 
 cdef int is_derivation_feature(univ_morph_t feature) nogil:
-    return feature > begin_Derivation and feature < end_Derivation
+    return feature >= begin_Derivation and feature <= end_Derivation
 
 cdef int is_echo_feature(univ_morph_t feature) nogil:
-    return feature > begin_Echo and feature < end_Echo
+    return feature >= begin_Echo and feature <= end_Echo
 
 cdef int is_foreign_feature(univ_morph_t feature) nogil:
-    return feature > begin_Foreign and feature < end_Foreign
+    return feature >= begin_Foreign and feature <= end_Foreign
 
 cdef int is_gender_feature(univ_morph_t feature) nogil:
-    return feature > begin_Gender and feature < end_Gender
+    return feature >= begin_Gender and feature <= end_Gender
 
 cdef int is_hyph_feature(univ_morph_t feature) nogil:
-    return feature > begin_Hyph and feature < begin_Hyph
+    return feature >= begin_Hyph and feature <= end_Hyph
 
 cdef int is_inf_form_feature(univ_morph_t feature) nogil:
-    return feature > begin_InfForm and feature < end_InfForm
+    return feature >= begin_InfForm and feature <= end_InfForm
 
 cdef int is_mood_feature(univ_morph_t feature) nogil:
-    return feature > begin_Mood and feature < end_Mood
-
-cdef int is_negative_feature(univ_morph_t feature) nogil:
-    return feature > begin_Negative and feature < end_Negative
-
-cdef int is_number_feature(univ_morph_t feature) nogil:
-    return feature > begin_Number and feature < end_Number
+    return feature >= begin_Mood and feature <= end_Mood
 
 cdef int is_name_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_NameType and feature < end_NameType
+    return feature >= begin_NameType and feature < end_NameType
+
+cdef int is_negative_feature(univ_morph_t feature) nogil:
+    return feature >= begin_Negative and feature <= end_Negative
+
+cdef int is_noun_type_feature(univ_morph_t feature) nogil:
+    return feature >= begin_NounType and feature <= end_NounType
+
+cdef int is_number_feature(univ_morph_t feature) nogil:
+    return feature >= begin_Number and feature <= end_Number
 
 cdef int is_num_form_feature(univ_morph_t feature) nogil:
-    return feature > begin_NumForm and feature < end_NumForm
+    return feature >= begin_NumForm and feature <= end_NumForm
 
 cdef int is_num_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_NumType and feature < end_NumType
+    return feature >= begin_NumType and feature <= end_NumType
 
 cdef int is_num_value_feature(univ_morph_t feature) nogil:
-    return feature > begin_NumValue and feature < end_NumValue
+    return feature >= begin_NumValue and feature <= end_NumValue
 
 cdef int is_part_form_feature(univ_morph_t feature) nogil:
-    return feature > begin_PartForm and feature < end_PartForm
+    return feature >= begin_PartForm and feature <= end_PartForm
 
 cdef int is_part_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_PartType and feature < end_PartType
+    return feature >= begin_PartType and feature <= end_PartType
 
 cdef int is_person_feature(univ_morph_t feature) nogil:
-    return feature > begin_Person and feature < end_Person
+    return feature >= begin_Person and feature <= end_Person
 
 cdef int is_polite_feature(univ_morph_t feature) nogil:
-    return feature > begin_Polite and feature < end_Polite
+    return feature >= begin_Polite and feature <= end_Polite
 
 cdef int is_polarity_feature(univ_morph_t feature) nogil:
-    return feature > begin_Polarity and feature < end_Polarity
+    return feature >= begin_Polarity and feature <= end_Polarity
 
 cdef int is_poss_feature(univ_morph_t feature) nogil:
-    return feature > begin_Poss and feature < end_Poss
+    return feature >= begin_Poss and feature <= end_Poss
 
 cdef int is_prefix_feature(univ_morph_t feature) nogil:
-    return feature > begin_Prefix and feature < end_Prefix
+    return feature >= begin_Prefix and feature <= end_Prefix
 
 cdef int is_prep_case_feature(univ_morph_t feature) nogil:
-    return feature > begin_PrepCase and feature < end_PrepCase
+    return feature >= begin_PrepCase and feature <= end_PrepCase
 
 cdef int is_pron_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_PronType and feature < end_PronType
+    return feature >= begin_PronType and feature <= end_PronType
 
 cdef int is_punct_side_feature(univ_morph_t feature) nogil:
-    return feature > begin_PunctSide and feature < end_PunctSide
+    return feature >= begin_PunctSide and feature <= end_PunctSide
 
 cdef int is_punct_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_PunctType and feature < end_PunctType
+    return feature >= begin_PunctType and feature <= end_PunctType
 
 cdef int is_reflex_feature(univ_morph_t feature) nogil:
-    return feature > begin_Reflex and feature < end_Reflex
+    return feature >= begin_Reflex and feature <= end_Reflex
 
 cdef int is_style_feature(univ_morph_t feature) nogil:
-    return feature > begin_Style and feature < end_Style
+    return feature >= begin_Style and feature <= end_Style
 
 cdef int is_style_variant_feature(univ_morph_t feature) nogil:
-    return feature > begin_StyleVariant and feature < end_StyleVariant
+    return feature >= begin_StyleVariant and feature <= end_StyleVariant
 
 cdef int is_tense_feature(univ_morph_t feature) nogil:
-    return feature > begin_Tense and feature < end_Tense
+    return feature >= begin_Tense and feature <= end_Tense
+
+cdef int is_typo_feature(univ_morph_t feature) nogil:
+    return feature >= begin_Typo and feature <= end_Typo
 
 cdef int is_verb_form_feature(univ_morph_t feature) nogil:
-    return feature > begin_VerbForm and feature < end_VerbForm
+    return feature >= begin_VerbForm and feature <= end_VerbForm
 
 cdef int is_voice_feature(univ_morph_t feature) nogil:
-    return feature > begin_Voice and feature < end_Voice
+    return feature >= begin_Voice and feature <= end_Voice
 
 cdef int is_verb_type_feature(univ_morph_t feature) nogil:
-    return feature > begin_VerbType and feature < end_VerbType
+    return feature >= begin_VerbType and feature <= end_VerbType
 
 
 FIELDS = {
@@ -495,9 +597,9 @@ FIELDS = {
     'Hyph': 14,
     'InfForm': 15,
     'Mood': 16,
-    'Negative': 17,
-    'Number': 18,
-    'NameType': 19,
+    'NameType': 17,
+    'Negative': 18,
+    'Number': 19,
     'NumForm': 20,
     'NumType': 21,
     'NumValue': 22,
@@ -516,14 +618,15 @@ FIELDS = {
     'Style': 35,
     'StyleVariant': 36,
     'Tense': 37,
-    'VerbForm': 38,
-    'Voice': 39,
-    'VerbType': 40
+    'Typo': 38,
+    'VerbForm': 39,
+    'Voice': 40,
+    'VerbType': 41
 }
 
 IDS = {
    "begin_Abbr": begin_Abbr,
-   "Abbr_yes ": Abbr_yes ,
+   "Abbr_yes": Abbr_yes ,
    "end_Abbr": end_Abbr,
    "begin_AdpType": begin_AdpType,
    "AdpType_circ": AdpType_circ,
@@ -609,132 +712,6 @@ IDS = {
    "Degree_com": Degree_com,
    "Degree_dim": Degree_dim,
    "end_Degree": end_Degree,
-   "begin_Gender": begin_Gender,
-   "Gender_com": Gender_com,
-   "Gender_fem": Gender_fem,
-   "Gender_masc": Gender_masc,
-   "Gender_neut": Gender_neut,
-   "Gender_dat_masc": Gender_dat_masc,
-   "Gender_dat_fem": Gender_dat_fem,
-   "Gender_erg_masc": Gender_erg_masc,
-   "Gender_erg_fem": Gender_erg_fem,
-   "Gender_psor_masc": Gender_psor_masc,
-   "Gender_psor_fem": Gender_psor_fem,
-   "Gender_psor_neut": Gender_psor_neut,
-   "end_Gender": end_Gender,
-   "begin_Mood": begin_Mood,
-   "Mood_cnd": Mood_cnd,
-   "Mood_imp": Mood_imp,
-   "Mood_ind": Mood_ind,
-   "Mood_n": Mood_n,
-   "Mood_pot": Mood_pot,
-   "Mood_sub": Mood_sub,
-   "Mood_opt": Mood_opt,
-   "end_Mood": end_Mood,
-   "begin_Negative": begin_Negative,
-   "Negative_neg": Negative_neg,
-   "Negative_pos": Negative_pos,
-   "Negative_yes": Negative_yes,
-   "end_Negative": end_Negative,
-   "begin_Polarity": begin_Polarity,
-   "Polarity_neg": Polarity_neg,
-   "Polarity_pos": Polarity_pos,
-   "end_Polarity": end_Polarity,
-   "begin_Number": begin_Number,
-   "Number_com": Number_com,
-   "Number_dual": Number_dual,
-   "Number_none": Number_none,
-   "Number_plur": Number_plur,
-   "Number_sing": Number_sing,
-   "Number_ptan": Number_ptan,
-   "Number_count": Number_count,
-   "Number_abs_sing": Number_abs_sing,
-   "Number_abs_plur": Number_abs_plur,
-   "Number_dat_sing": Number_dat_sing,
-   "Number_dat_plur": Number_dat_plur,
-   "Number_erg_sing": Number_erg_sing,
-   "Number_erg_plur": Number_erg_plur,
-   "Number_psee_sing": Number_psee_sing,
-   "Number_psee_plur": Number_psee_plur,
-   "Number_psor_sing": Number_psor_sing,
-   "Number_psor_plur": Number_psor_plur,
-   "end_Number": end_Number,
-   "begin_NumType": begin_NumType,
-   "NumType_card": NumType_card,
-   "NumType_dist": NumType_dist,
-   "NumType_frac": NumType_frac,
-   "NumType_gen": NumType_gen,
-   "NumType_mult": NumType_mult,
-   "NumType_none": NumType_none,
-   "NumType_ord": NumType_ord,
-   "NumType_sets": NumType_sets,
-   "end_NumType": end_NumType,
-   "begin_Person": begin_Person,
-   "Person_one": Person_one,
-   "Person_two": Person_two,
-   "Person_three": Person_three,
-   "Person_none": Person_none,
-   "Person_abs_one": Person_abs_one,
-   "Person_abs_two": Person_abs_two,
-   "Person_abs_three": Person_abs_three,
-   "Person_dat_one": Person_dat_one,
-   "Person_dat_two": Person_dat_two,
-   "Person_dat_three": Person_dat_three,
-   "Person_erg_one": Person_erg_one,
-   "Person_erg_two": Person_erg_two,
-   "Person_erg_three": Person_erg_three,
-   "Person_psor_one": Person_psor_one,
-   "Person_psor_two": Person_psor_two,
-   "Person_psor_three": Person_psor_three,
-   "end_Person": end_Person,
-   "begin_Poss": begin_Poss,
-   "Poss_yes": Poss_yes,
-   "end_Poss": end_Poss,
-   "begin_PronType": begin_PronType,
-   "PronType_advPart": PronType_advPart,
-   "PronType_art": PronType_art,
-   "PronType_default": PronType_default,
-   "PronType_dem": PronType_dem,
-   "PronType_ind": PronType_ind,
-   "PronType_int": PronType_int,
-   "PronType_neg": PronType_neg,
-   "PronType_prs": PronType_prs,
-   "PronType_rcp": PronType_rcp,
-   "PronType_rel": PronType_rel,
-   "PronType_tot": PronType_tot,
-   "PronType_clit": PronType_clit,
-   "PronType_exc": PronType_exc,
-   "end_PronType": end_PronType,
-   "begin_Reflex": begin_Reflex,
-   "Reflex_yes": Reflex_yes,
-   "end_Reflex": end_Reflex,
-   "begin_Tense": begin_Tense,
-   "Tense_fut": Tense_fut,
-   "Tense_imp": Tense_imp,
-   "Tense_past": Tense_past,
-   "Tense_pres": Tense_pres,
-   "end_Tense": end_Tense,
-   "begin_VerbForm": begin_VerbForm,
-   "VerbForm_fin": VerbForm_fin,
-   "VerbForm_ger": VerbForm_ger,
-   "VerbForm_inf": VerbForm_inf,
-   "VerbForm_none": VerbForm_none,
-   "VerbForm_part": VerbForm_part,
-   "VerbForm_partFut": VerbForm_partFut,
-   "VerbForm_partPast": VerbForm_partPast,
-   "VerbForm_partPres": VerbForm_partPres,
-   "VerbForm_sup": VerbForm_sup,
-   "VerbForm_trans": VerbForm_trans,
-   "VerbForm_conv": VerbForm_conv,
-   "VerbForm_gdv": VerbForm_gdv,
-   "end_VerbForm": end_VerbForm,
-   "begin_Voice": begin_Voice,
-   "Voice_act": Voice_act,
-   "Voice_cau": Voice_cau,
-   "Voice_pass": Voice_pass,
-   "Voice_mid": Voice_mid,
-   "Voice_int": Voice_int,
-   "end_Voice": end_Voice,
    "begin_Derivation": begin_Derivation,
    "Derivation_minen": Derivation_minen,
    "Derivation_sti": Derivation_sti,
@@ -756,6 +733,19 @@ IDS = {
    "Foreign_tscript": Foreign_tscript,
    "Foreign_yes": Foreign_yes,
    "end_Foreign": end_Foreign,
+   "begin_Gender": begin_Gender,
+   "Gender_com": Gender_com,
+   "Gender_fem": Gender_fem,
+   "Gender_masc": Gender_masc,
+   "Gender_neut": Gender_neut,
+   "Gender_dat_masc": Gender_dat_masc,
+   "Gender_dat_fem": Gender_dat_fem,
+   "Gender_erg_masc": Gender_erg_masc,
+   "Gender_erg_fem": Gender_erg_fem,
+   "Gender_psor_masc": Gender_psor_masc,
+   "Gender_psor_fem": Gender_psor_fem,
+   "Gender_psor_neut": Gender_psor_neut,
+   "end_Gender": end_Gender,
    "begin_Hyph": begin_Hyph,
    "Hyph_yes": Hyph_yes,
    "end_Hyph": end_Hyph,
@@ -764,6 +754,15 @@ IDS = {
    "InfForm_two": InfForm_two,
    "InfForm_three": InfForm_three,
    "end_InfForm": end_InfForm,
+   "begin_Mood": begin_Mood,
+   "Mood_cnd": Mood_cnd,
+   "Mood_imp": Mood_imp,
+   "Mood_ind": Mood_ind,
+   "Mood_n": Mood_n,
+   "Mood_pot": Mood_pot,
+   "Mood_sub": Mood_sub,
+   "Mood_opt": Mood_opt,
+   "end_Mood": end_Mood,
    "begin_NameType": begin_NameType,
    "NameType_geo": NameType_geo,
    "NameType_prs": NameType_prs,
@@ -774,16 +773,50 @@ IDS = {
    "NameType_pro": NameType_pro,
    "NameType_oth": NameType_oth,
    "end_NameType": end_NameType,
+   "begin_Negative": begin_Negative,
+   "Negative_neg": Negative_neg,
+   "Negative_pos": Negative_pos,
+   "Negative_yes": Negative_yes,
+   "end_Negative": end_Negative,
    "begin_NounType": begin_NounType,
    "NounType_com": NounType_com,
    "NounType_prop": NounType_prop,
    "NounType_class": NounType_class,
    "end_NounType": end_NounType,
+   "begin_Number": begin_Number,
+   "Number_com": Number_com,
+   "Number_dual": Number_dual,
+   "Number_none": Number_none,
+   "Number_plur": Number_plur,
+   "Number_sing": Number_sing,
+   "Number_ptan": Number_ptan,
+   "Number_count": Number_count,
+   "Number_abs_sing": Number_abs_sing,
+   "Number_abs_plur": Number_abs_plur,
+   "Number_dat_sing": Number_dat_sing,
+   "Number_dat_plur": Number_dat_plur,
+   "Number_erg_sing": Number_erg_sing,
+   "Number_erg_plur": Number_erg_plur,
+   "Number_psee_sing": Number_psee_sing,
+   "Number_psee_plur": Number_psee_plur,
+   "Number_psor_sing": Number_psor_sing,
+   "Number_psor_plur": Number_psor_plur,
+   "end_Number": end_Number,
    "begin_NumForm": begin_NumForm,
    "NumForm_digit": NumForm_digit,
    "NumForm_roman": NumForm_roman,
    "NumForm_word": NumForm_word,
    "end_NumForm": end_NumForm,
+   "begin_NumType": begin_NumType,
+   "NumType_card": NumType_card,
+   "NumType_dist": NumType_dist,
+   "NumType_frac": NumType_frac,
+   "NumType_gen": NumType_gen,
+   "NumType_mult": NumType_mult,
+   "NumType_none": NumType_none,
+   "NumType_ord": NumType_ord,
+   "NumType_sets": NumType_sets,
+   "end_NumType": end_NumType,
    "begin_NumValue": begin_NumValue,
    "NumValue_one": NumValue_one,
    "NumValue_two": NumValue_two,
@@ -802,6 +835,29 @@ IDS = {
    "PartType_inf": PartType_inf,
    "PartType_vbp": PartType_vbp,
    "end_PartType": end_PartType,
+
+   "begin_Person": begin_Person,
+   "Person_one": Person_one,
+   "Person_two": Person_two,
+   "Person_three": Person_three,
+   "Person_none": Person_none,
+   "Person_abs_one": Person_abs_one,
+   "Person_abs_two": Person_abs_two,
+   "Person_abs_three": Person_abs_three,
+   "Person_dat_one": Person_dat_one,
+   "Person_dat_two": Person_dat_two,
+   "Person_dat_three": Person_dat_three,
+   "Person_erg_one": Person_erg_one,
+   "Person_erg_two": Person_erg_two,
+   "Person_erg_three": Person_erg_three,
+   "Person_psor_one": Person_psor_one,
+   "Person_psor_two": Person_psor_two,
+   "Person_psor_three": Person_psor_three,
+   "end_Person": end_Person,
+   "begin_Polarity": begin_Polarity,
+   "Polarity_neg": Polarity_neg,
+   "Polarity_pos": Polarity_pos,
+   "end_Polarity": end_Polarity,
    "begin_Polite": begin_Polite,
    "Polite_inf": Polite_inf,
    "Polite_pol": Polite_pol,
@@ -812,6 +868,9 @@ IDS = {
    "Polite_dat_inf": Polite_dat_inf,
    "Polite_dat_pol": Polite_dat_pol,
    "end_Polite": end_Polite,
+   "begin_Poss": begin_Poss,
+   "Poss_yes": Poss_yes,
+   "end_Poss": end_Poss,
    "begin_Prefix": begin_Prefix,
    "Prefix_yes": Prefix_yes,
    "end_Prefix": end_Prefix,
@@ -819,6 +878,21 @@ IDS = {
    "PrepCase_npr": PrepCase_npr,
    "PrepCase_pre": PrepCase_pre,
    "end_PrepCase": end_PrepCase,
+   "begin_PronType": begin_PronType,
+   "PronType_advPart": PronType_advPart,
+   "PronType_art": PronType_art,
+   "PronType_default": PronType_default,
+   "PronType_dem": PronType_dem,
+   "PronType_ind": PronType_ind,
+   "PronType_int": PronType_int,
+   "PronType_neg": PronType_neg,
+   "PronType_prs": PronType_prs,
+   "PronType_rcp": PronType_rcp,
+   "PronType_rel": PronType_rel,
+   "PronType_tot": PronType_tot,
+   "PronType_clit": PronType_clit,
+   "PronType_exc": PronType_exc,
+   "end_PronType": end_PronType,
    "begin_PunctSide": begin_PunctSide,
    "PunctSide_ini": PunctSide_ini,
    "PunctSide_fin": PunctSide_fin,
@@ -834,6 +908,9 @@ IDS = {
    "PunctType_semi": PunctType_semi,
    "PunctType_dash": PunctType_dash,
    "end_PunctType": end_PunctType,
+   "begin_Reflex": begin_Reflex,
+   "Reflex_yes": Reflex_yes,
+   "end_Reflex": end_Reflex,
    "begin_Style": begin_Style,
    "Style_arch": Style_arch,
    "Style_rare": Style_rare,
@@ -851,12 +928,42 @@ IDS = {
    "StyleVariant_styleShort": StyleVariant_styleShort,
    "StyleVariant_styleBound": StyleVariant_styleBound,
    "end_StyleVariant": end_StyleVariant,
+   "begin_Tense": begin_Tense,
+   "Tense_fut": Tense_fut,
+   "Tense_imp": Tense_imp,
+   "Tense_past": Tense_past,
+   "Tense_pres": Tense_pres,
+   "end_Tense": end_Tense,
+   "begin_Typo": begin_Typo,
+   "Typo_yes": Typo_yes,
+   "end_Typo": end_Typo,
+   "begin_VerbForm": begin_VerbForm,
+   "VerbForm_fin": VerbForm_fin,
+   "VerbForm_ger": VerbForm_ger,
+   "VerbForm_inf": VerbForm_inf,
+   "VerbForm_none": VerbForm_none,
+   "VerbForm_part": VerbForm_part,
+   "VerbForm_partFut": VerbForm_partFut,
+   "VerbForm_partPast": VerbForm_partPast,
+   "VerbForm_partPres": VerbForm_partPres,
+   "VerbForm_sup": VerbForm_sup,
+   "VerbForm_trans": VerbForm_trans,
+   "VerbForm_conv": VerbForm_conv,
+   "VerbForm_gdv": VerbForm_gdv,
+   "end_VerbForm": end_VerbForm,
    "begin_VerbType": begin_VerbType,
    "VerbType_aux": VerbType_aux,
    "VerbType_cop": VerbType_cop,
    "VerbType_mod": VerbType_mod,
    "VerbType_light": VerbType_light,
    "end_VerbType": end_VerbType,
+   "begin_Voice": begin_Voice,
+   "Voice_act": Voice_act,
+   "Voice_cau": Voice_cau,
+   "Voice_pass": Voice_pass,
+   "Voice_mid": Voice_mid,
+   "Voice_int": Voice_int,
+   "end_Voice": end_Voice,
 }
 
 
