@@ -4,7 +4,7 @@ import pytest
 from ...morphology import Morphology
 from ...strings import StringStore
 from ...lemmatizer import Lemmatizer
-from ...symbols import *
+from ...morphology import *
 
 @pytest.fixture
 def morphology():
