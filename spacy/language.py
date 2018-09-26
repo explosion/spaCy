@@ -19,6 +19,7 @@ from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
+from ._morphologizer import Morphologizer
 from .compat import json_dumps, izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
@@ -103,6 +104,7 @@ class Language(object):
         'tokenizer': lambda nlp: nlp.Defaults.create_tokenizer(nlp),
         'tensorizer': lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
         'tagger': lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        'morphologizer': lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
         'parser': lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         'ner': lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         'similarity': lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
