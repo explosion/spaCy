@@ -84,10 +84,12 @@ def read_data(nlp, conllu_file, text_file, raw_text=True, oracle_segments=False,
             if oracle_segments:
                 docs.append(Doc(nlp.vocab, words=sent['words'], spaces=sent['spaces']))
                 golds.append(GoldParse(docs[-1], **sent))
+                assert golds[-1].morphology is not None
 
             sent_annots.append(sent)
             if raw_text and max_doc_length and len(sent_annots) >= max_doc_length:
                 doc, gold = _make_gold(nlp, None, sent_annots)
+                assert gold.morphology is not None
                 sent_annots = []
                 docs.append(doc)
                 golds.append(gold)
@@ -104,12 +106,13 @@ def read_data(nlp, conllu_file, text_file, raw_text=True, oracle_segments=False,
 
 def _parse_morph_string(morph_string):
     if morph_string == '_':
-        return None
+        return set()
     output = []
     replacements = {'1': 'one', '2': 'two', '3': 'three'}
     for feature in morph_string.split('|'):
         key, value = feature.split('=')
         value = replacements.get(value, value)
+        value = value.split(',')[0]
         output.append('%s_%s' % (key, value.lower()))
     return set(output)
 
@@ -146,7 +149,7 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
     sent_starts = []
     for sent in sent_annots:
         flat['heads'].extend(len(flat['words'])+head for head in sent['heads'])
-        for field in ['words', 'tags', 'deps', 'entities', 'spaces']:
+        for field in ['words', 'tags', 'deps', 'morphology', 'entities', 'spaces']:
             flat[field].extend(sent[field])
         sent_starts.append(True)
         sent_starts.extend([False] * (len(sent['words'])-1))
@@ -238,22 +241,26 @@ def write_conllu(docs, file_):
 def print_progress(itn, losses, ud_scores):
     fields = {
         'dep_loss': losses.get('parser', 0.0),
+        'morph_loss': losses.get('morphologizer', 0.0),
         'tag_loss': losses.get('tagger', 0.0),
         'words': ud_scores['Words'].f1 * 100,
         'sents': ud_scores['Sentences'].f1 * 100,
         'tags': ud_scores['XPOS'].f1 * 100,
         'uas': ud_scores['UAS'].f1 * 100,
         'las': ud_scores['LAS'].f1 * 100,
+        'morph': ud_scores['Feats'].f1 * 100,
     }
-    header = ['Epoch', 'Loss', 'LAS', 'UAS', 'TAG', 'SENT', 'WORD']
+    header = ['Epoch', 'P.Loss', 'M.Loss', 'LAS', 'UAS', 'TAG', 'MORPH', 'SENT', 'WORD']
     if itn == 0:
         print('\t'.join(header))
     tpl = '\t'.join((
         '{:d}',
         '{dep_loss:.1f}',
+        '{morph_loss:.1f}',
         '{las:.1f}',
         '{uas:.1f}',
         '{tags:.1f}',
+        '{morph:.1f}',
         '{sents:.1f}',
         '{words:.1f}',
     ))
@@ -275,7 +282,19 @@ def get_token_conllu(token, i):
         head = 0
     else:
         head = i + (token.head.i - token.i) + 1
-    fields = [str(i+1), token.text, token.lemma_, token.pos_, token.tag_, '_',
+    features = token.vocab.morphology.get(token.morph_key)
+    feat_str = []
+    replacements = {'one': '1', 'two': '2', 'three': '3'}
+    for feat in features:
+        if not feat.startswith('begin') and not feat.startswith('end'):
+            key, value = feat.split('_')
+            value = replacements.get(value, value)
+            feat_str.append('%s=%s' % (key, value.title()))
+    if not feat_str:
+        feat_str = '_'
+    else:
+        feat_str = '|'.join(feat_str)
+    fields = [str(i+1), token.text, token.lemma_, token.pos_, token.tag_, feat_str,
               str(head), token.dep_.lower(), '_', '_']
     lines.append('\t'.join(fields))
     return '\n'.join(lines)
@@ -305,6 +324,7 @@ def load_nlp(corpus, config, vectors=None):
 
 def initialize_pipeline(nlp, docs, golds, config, device):
     nlp.add_pipe(nlp.create_pipe('tagger'))
+    nlp.add_pipe(nlp.create_pipe('morphologizer'))
     nlp.add_pipe(nlp.create_pipe('parser'))
     if config.multitask_tag:
         nlp.parser.add_multitask_objective('tag')
@@ -437,11 +457,11 @@ def main(ud_dir, parses_dir, corpus, config=None, limit=0, gpu_device=-1, vector
         with nlp.use_params(optimizer.averages):
             if use_oracle_segments:
                 parsed_docs, scores = evaluate(nlp, paths.dev.conllu,
-                                               paths.dev.conllu, out_path)
+                                                paths.dev.conllu, out_path)
             else:
                 parsed_docs, scores = evaluate(nlp, paths.dev.text,
-                                               paths.dev.conllu, out_path)
-            print_progress(i, losses, scores)
+                                                paths.dev.conllu, out_path)
+        print_progress(i, losses, scores)
 
 
 def _render_parses(i, to_render):
