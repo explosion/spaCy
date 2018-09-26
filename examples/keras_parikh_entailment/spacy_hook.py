@@ -1,8 +1,4 @@
-from keras.models import model_from_json
-import numpy
-import numpy.random
-import json
-from spacy.tokens.span import Span
+import numpy as np
 
 try:
     import cPickle as pickle
@@ -40,11 +36,19 @@ class KerasSimilarityShim(object):
 
 
 def get_embeddings(vocab, nr_unk=100):
-    nr_vector = max(lex.rank for lex in vocab) + 1
-    vectors = numpy.zeros((nr_vector+nr_unk+2, vocab.vectors_length), dtype='float32')
+    # the extra +1 is for a zero vector represting NULL for padding
+    num_vectors = max(lex.rank for lex in vocab) + 2 
+    
+    # create random vectors for OOV tokens
+    oov = np.random.normal(size=(num_oov, nlp.vocab.vectors_length))
+    oov = oov / oov.sum(axis=1, keepdims=True)
+    
+    vectors = np.zeros((num_vectors + num_oov, nlp.vocab.vectors_length), dtype='float32')
+    vectors[num_vectors:, ] = oov
     for lex in vocab:
-        if lex.has_vector:
-            vectors[lex.rank+1] = lex.vector / lex.vector_norm
+        if lex.has_vector and lex.vector_norm > 0:
+            vectors[lex.rank + 1] = lex.vector / lex.vector_norm if norm_vectors == True else lex.vector
+
     return vectors
 
 
