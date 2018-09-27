@@ -2,11 +2,7 @@
 
 # A decomposable attention model for Natural Language Inference
 **by Matthew Honnibal, [@honnibal](https://github.com/honnibal)**
-
-> ⚠️ **IMPORTANT NOTE:** This example is currently only compatible with spaCy
-> v1.x. We're working on porting the example over to Keras v2.x and spaCy v2.x.
-> See [#1445](https://github.com/explosion/spaCy/issues/1445) for details –
-> contributions welcome!
+**Updated for spaCy 2.0+ and Keras 2.2.2+ by John Stewart, [@free-variation](https://github.com/free-variation)**
 
 This directory contains an implementation of the entailment prediction model described
 by [Parikh et al. (2016)](https://arxiv.org/pdf/1606.01933.pdf). The model is notable
@@ -21,16 +17,18 @@ hook is installed to customise the `.similarity()` method of spaCy's `Doc`
 and `Span` objects:
 
 ```python
-def demo(model_dir):
-    nlp = spacy.load('en', path=model_dir,
-            create_pipeline=create_similarity_pipeline)
-    doc1 = nlp(u'Worst fries ever! Greasy and horrible...')
-    doc2 = nlp(u'The milkshakes are good. The fries are bad.')
-    print(doc1.similarity(doc2))
-    sent1a, sent1b = doc1.sents
-    print(sent1a.similarity(sent1b))
-    print(sent1a.similarity(doc2))
-    print(sent1b.similarity(doc2))
+def demo(shape):
+    nlp = spacy.load('en_vectors_web_lg')
+    nlp.add_pipe(KerasSimilarityShim.load(nlp.path / 'similarity', nlp, shape[0]))
+
+    doc1 = nlp(u'The king of France is bald.')
+    doc2 = nlp( u'France has no king.')
+
+    print("Sentence 1: ", doc1)
+    print("Sentence 2:", doc2)
+
+    entailment_type, confidence = doc1.entails(doc2)
+    print("Entailment type:", entailment_type, "(Confidence:", confidence, ")")
 ```
 
 I'm working on a blog post to explain Parikh et al.'s model in more detail.

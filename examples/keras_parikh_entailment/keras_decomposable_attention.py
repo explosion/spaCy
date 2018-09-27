@@ -1,5 +1,5 @@
 # Semantic entailment/similarity with decomposable attention (using spaCy and Keras)
-# Practical state-of-the-art text entailment with spaCy and Keras
+# Practical state-of-the-art textual entailment with spaCy and Keras
 
 import numpy as np
 from keras import layers, Model, models, optimizers

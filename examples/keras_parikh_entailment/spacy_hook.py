@@ -8,6 +8,8 @@ except ImportError:
 
 
 class KerasSimilarityShim(object):
+    entailment_types = ["entailment", "contradiction", "neutral"]
+
     @classmethod
     def load(cls, path, nlp, max_length=100, get_features=None):
         
@@ -22,6 +24,7 @@ class KerasSimilarityShim(object):
         embeddings = get_embeddings(nlp.vocab)
         weights.insert(1, embeddings)
         model.set_weights(weights)
+
         return cls(model, get_features=get_features, max_length=max_length)
 
     def __init__(self, model, get_features=None, max_length=100):
@@ -30,15 +33,17 @@ class KerasSimilarityShim(object):
         self.max_length = max_length
 
     def __call__(self, doc):
-        doc.user_hooks['similarity'] = self.predict
-        doc.user_span_hooks['similarity'] = self.predict
+        doc.user_hooks['entails'] = self.predict
+        doc.user_span_hooks['entails'] = self.predict
+        
         return doc
 
     def predict(self, doc1, doc2):
         x1 = self.get_features([doc1], max_length=self.max_length)
         x2 = self.get_features([doc2], max_length=self.max_length)
         scores = self.model.predict([x1, x2])
-        return scores[0]
+
+        return entailment_types[scores.argmax()], max(scores)
 
 
 def get_embeddings(vocab, nr_unk=100):
@@ -71,9 +76,3 @@ def get_word_ids(docs, max_length=100, nr_unk=100):
             if j >= max_length:
                 break
     return Xs
-
-
-def create_similarity_pipeline(nlp, max_length=100):
-    return [
-        KerasSimilarityShim.load(nlp.path / 'similarity', nlp, max_length)
-    ]

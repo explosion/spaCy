@@ -58,7 +58,7 @@ def evaluate(dev_loc, shape):
     for text1, text2, label in zip(dev_texts1, dev_texts2, dev_labels):
         doc1 = nlp(text1)
         doc2 = nlp(text2)
-        sim = doc1.similarity(doc2)
+        sim = doc1.entails(doc2)
         if sim.argmax() == label.argmax():
             correct += 1
         total += 1
@@ -68,18 +68,18 @@ def evaluate(dev_loc, shape):
 def demo(shape):
     nlp = spacy.load('en_vectors_web_lg')
     nlp.add_pipe(KerasSimilarityShim.load(nlp.path / 'similarity', nlp, shape[0]))
+
     doc1 = nlp(u'The king of France is bald.')
-    doc2 = nlp(
-        u'France has no king.')
+    doc2 = nlp( u'France has no king.')
+
     print("Sentence 1: ", doc1)
     print("Sentence 2:", doc2)
-    scores = doc1.similarity(doc2)
-    print("Entailment type:", INV_LABELS[scores.argmax()])
-    print( "Scores:", scores)
+
+    entailment_type, confidence = doc1.entails(doc2)
+    print("Entailment type:", entailment_type, "(Confidence:", confidence, ")")
 
 
 LABELS = {'entailment': 0, 'contradiction': 1, 'neutral': 2}
-INV_LABELS = {val: key for key, val in LABELS.items()}
 def read_snli(path):
     texts1 = []
     texts2 = []
@@ -129,14 +129,14 @@ def create_dataset(nlp, texts, hypotheses, num_unk, max_length):
 
 @plac.annotations(
     mode=("Mode to execute", "positional", None, str, ["train", "evaluate", "demo"]),
-    train_loc=("Path to training data", "positional", None, str),
-    dev_loc=("Path to development data", "positional", None, str),
+    train_loc=("Path to training data", "option", "t", str),
+    dev_loc=("Path to development or test data", "option", "s", str),
     max_length=("Length to truncate sentences", "option", "L", int),
     nr_hidden=("Number of hidden units", "option", "H", int),
     dropout=("Dropout level", "option", "d", float),
-    learn_rate=("Learning rate", "option", "e", float),
+    learn_rate=("Learning rate", "option", "r", float),
     batch_size=("Batch size for neural network training", "option", "b", int),
-    nr_epoch=("Number of training epochs", "option", "i", int),
+    nr_epoch=("Number of training epochs", "option", "e", int),
     entail_dir=("Direction of entailment", "option", "D", str, ["both", "left", "right"])
 )
 def main(mode, train_loc, dev_loc,
@@ -158,8 +158,14 @@ def main(mode, train_loc, dev_loc,
     }
 
     if mode == 'train':
+        if train_loc == None or dev_loc == None:
+            print("Train mode requires paths to training and development data sets.")
+            sys.exit(1)
         train(train_loc, dev_loc, shape, settings)
     elif mode == 'evaluate':
+        if  dev_loc == None:
+            print("Evaluate mode requires paths to test data set.")
+            sys.exit(1)
         correct, total = evaluate(dev_loc, shape)
         print(correct, '/', total, correct / total)
     else:
