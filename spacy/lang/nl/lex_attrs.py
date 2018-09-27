@@ -23,6 +23,8 @@ def like_num(text):
     # or matches one of the number words. In order to handle numbers like
     # "drieëntwintig", more work is required.
     # See this discussion: https://github.com/explosion/spaCy/pull/1177
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True

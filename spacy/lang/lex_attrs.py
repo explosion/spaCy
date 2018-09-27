@@ -38,6 +38,8 @@ def is_ascii(text):
 
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     # can be overwritten by lang with list of number words
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():

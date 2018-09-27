@@ -21,6 +21,8 @@ _num_words = ['μηδέν', 'ένας', 'δυο', 'δυό', 'τρεις', 'τέ�
 
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True
