@@ -43,7 +43,7 @@ class KerasSimilarityShim(object):
         x2 = self.get_features([doc2], max_length=self.max_length)
         scores = self.model.predict([x1, x2])
 
-        return entailment_types[scores.argmax()], max(scores)
+        return self.entailment_types[scores.argmax()], scores.max()
 
 
 def get_embeddings(vocab, nr_unk=100):
