@@ -1,4 +1,6 @@
 '''Test issue that arises when too many labels are added to NER model.'''
+from __future__ import unicode_literals
+
 import random
 from ...lang.en import English
 
