@@ -12,7 +12,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...util import update_exc, add_lookups
 from ...language import Language
-from ...attrs import LANG, LIKE_NUM, NORM
+from ...attrs import LANG, NORM
 
 
 class RussianDefaults(Language.Defaults):
