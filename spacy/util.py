@@ -483,7 +483,7 @@ def to_bytes(getters, exclude):
     for key, getter in getters.items():
         if key not in exclude:
             serialized[key] = getter()
-    return msgpack.dumps(serialized, use_bin_type=True, encoding='utf8')
+    return msgpack.dumps(serialized, use_bin_type=True)
 
 
 def from_bytes(bytes_data, setters, exclude):
