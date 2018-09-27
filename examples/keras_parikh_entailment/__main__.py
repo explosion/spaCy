@@ -58,8 +58,8 @@ def evaluate(dev_loc, shape):
     for text1, text2, label in zip(dev_texts1, dev_texts2, dev_labels):
         doc1 = nlp(text1)
         doc2 = nlp(text2)
-        sim = doc1.entails(doc2)
-        if sim.argmax() == label.argmax():
+        sim, _ = doc1.similarity(doc2)
+        if sim == KerasSimilarityShim.entailment_types[label.argmax()]:
             correct += 1
         total += 1
     return correct, total
@@ -75,7 +75,7 @@ def demo(shape):
     print("Sentence 1: ", doc1)
     print("Sentence 2:", doc2)
 
-    entailment_type, confidence = doc1.entails(doc2)
+    entailment_type, confidence = doc1.similarity(doc2)
     print("Entailment type:", entailment_type, "(Confidence:", confidence, ")")
 
 

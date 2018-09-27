@@ -33,9 +33,9 @@ class KerasSimilarityShim(object):
         self.max_length = max_length
 
     def __call__(self, doc):
-        doc.user_hooks['entails'] = self.predict
-        doc.user_span_hooks['entails'] = self.predict
-        
+        doc.user_hooks['similarity'] = self.predict
+        doc.user_span_hooks['similarity'] = self.predict
+
         return doc
 
     def predict(self, doc1, doc2):
