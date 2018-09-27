@@ -68,7 +68,7 @@ def get_word_ids(docs, max_length=100, nr_unk=100):
     
     for i, doc in enumerate(docs):
         for j, token in enumerate(doc):
-             if j == max_length:
+            if j == max_length:
                 break
             if token.has_vector:
                 Xs[i, j] = token.rank + nr_unk + 1
