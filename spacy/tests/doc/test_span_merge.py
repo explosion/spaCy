@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from ..util import get_doc
 from ...vocab import Vocab
 from ...tokens import Doc
+from ...tokens import Span
 
 import pytest
 
@@ -16,16 +17,8 @@ def test_spans_merge_tokens(en_tokenizer):
     assert len(doc) == 4
     assert doc[0].head.text == 'Angeles'
     assert doc[1].head.text == 'start'
-    doc.merge(0, len('Los Angeles'), tag='NNP', lemma='Los Angeles', ent_type='GPE')
-    assert len(doc) == 3
-    assert doc[0].text == 'Los Angeles'
-    assert doc[0].head.text == 'start'
-
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
-    assert len(doc) == 4
-    assert doc[0].head.text == 'Angeles'
-    assert doc[1].head.text == 'start'
-    doc.merge(0, len('Los Angeles'), tag='NNP', lemma='Los Angeles', label='GPE')
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0 : 2], attrs={'tag':'NNP', 'lemma':'Los Angeles', 'ent_type':'GPE'})
     assert len(doc) == 3
     assert doc[0].text == 'Los Angeles'
     assert doc[0].head.text == 'start'
@@ -38,8 +31,8 @@ def test_spans_merge_heads(en_tokenizer):
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
 
     assert len(doc) == 8
-    doc.merge(doc[3].idx, doc[4].idx + len(doc[4]), tag=doc[4].tag_,
-              lemma='pilates class', ent_type='O')
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[3 : 5], attrs={'tag':doc[4].tag_, 'lemma':'pilates class', 'ent_type':'O'})
     assert len(doc) == 7
     assert doc[0].head.i == 1
     assert doc[1].head.i == 1
@@ -48,6 +41,14 @@ def test_spans_merge_heads(en_tokenizer):
     assert doc[4].head.i in [1, 3]
     assert doc[5].head.i == 4
 
+def test_spans_merge_non_disjoint(en_tokenizer):
+    text = "Los Angeles start."
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens])
+    with pytest.raises(ValueError):
+        with doc.retokenize() as retokenizer:
+            retokenizer.merge(doc[0: 2], attrs={'tag': 'NNP', 'lemma': 'Los Angeles', 'ent_type': 'GPE'})
+            retokenizer.merge(doc[0: 1], attrs={'tag': 'NNP', 'lemma': 'Los Angeles', 'ent_type': 'GPE'})
 
 def test_span_np_merges(en_tokenizer):
     text = "displaCy is a parse tool built with Javascript"
@@ -110,6 +111,25 @@ def test_spans_entity_merge_iob():
     doc[0:1].merge()
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
+
+    words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+    doc = Doc(Vocab(), words=words)
+    doc.ents = [(doc.vocab.strings.add('ent-de'), 3, 5),
+                (doc.vocab.strings.add('ent-fg'), 5, 7)]
+    assert doc[3].ent_iob_ == "B"
+    assert doc[4].ent_iob_ == "I"
+    assert doc[5].ent_iob_ == "B"
+    assert doc[6].ent_iob_ == "I"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[2 : 4])
+        retokenizer.merge(doc[4 : 6])
+        retokenizer.merge(doc[7 : 9])
+    for token in doc:
+        print(token)
+        print(token.ent_iob)
+    assert len(doc) == 6
+    assert doc[3].ent_iob_ == "B"
+    assert doc[4].ent_iob_ == "I"
 
 
 def test_spans_sentence_update_after_merge(en_tokenizer):

@@ -249,6 +249,7 @@ class Errors(object):
             "error. Are you writing to a default function argument?")
     E096 = ("Invalid object passed to displaCy: Can only visualize Doc or "
              "Span objects, or dicts if set to manual=True.")
+    E097 = ("Can't merge non-disjoint spans. '{token}' is already part of tokens to merge")
 
 
 @add_codes

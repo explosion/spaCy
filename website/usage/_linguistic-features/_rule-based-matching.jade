@@ -352,7 +352,6 @@ p
                 span.merge()   # merge
                 for token in span:
                     token._.bad_html = True  # mark token as bad HTML
-                    doc.vocab[token.text].is_stop = True  # mark lexeme as stop word
             return doc
 
     nlp = spacy.load('en_core_web_sm')
