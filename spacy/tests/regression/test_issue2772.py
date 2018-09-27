@@ -1,8 +1,13 @@
-'''Test that deprojectivization doesn't mess up sentence boundaries.'''
+# coding: utf-8
+from __future__ import unicode_literals
+
 import pytest
+
 from ..util import get_doc
 
+
 def test_issue2772(en_vocab):
+    """Test that deprojectivization doesn't mess up sentence boundaries."""
     words = 'When we write or communicate virtually , we can hide our true feelings .'.split()
     # A tree with a non-projective (i.e. crossing) arc
     # The arcs (0, 4) and (2, 9) cross.

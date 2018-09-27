@@ -5,8 +5,24 @@ import pytest
 from spacy.tokens import Doc
 from spacy.displacy import render
 from spacy.gold import iob_to_biluo
+from spacy.lang.it import Italian
 
 from ..util import add_vecs_to_vocab
+
+
+@pytest.mark.xfail
+def test_issue2179():
+    """Test that spurious 'extra_labels' aren't created when initializing NER."""
+    nlp = Italian()
+    ner = nlp.create_pipe('ner')
+    ner.add_label('CITIZENSHIP')
+    nlp.add_pipe(ner)
+    nlp.begin_training()
+    nlp2 = Italian()
+    nlp2.add_pipe(nlp2.create_pipe('ner'))
+    nlp2.from_bytes(nlp.to_bytes())
+    assert 'extra_labels' not in nlp2.get_pipe('ner').cfg
+    assert nlp2.get_pipe('ner').labels == ['CITIZENSHIP']
 
 
 def test_issue2219(en_vocab):
