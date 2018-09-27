@@ -2,6 +2,7 @@ import numpy as np
 import ujson as json
 from keras.utils import to_categorical
 import plac
+import sys
 
 from keras_decomposable_attention import build_model
 from spacy_hook import get_embeddings, KerasSimilarityShim
