@@ -747,7 +747,8 @@ cdef class Parser:
 
     def transition_batch(self, states, float[:, ::1] scores):
         cdef StateClass state
-        cdef int[500] is_valid # TODO: Unhack
+        cdef Pool mem = Pool()
+        is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         cdef float* c_scores = &scores[0, 0]
         for state in states:
             self.moves.set_valid(is_valid, state.c)
