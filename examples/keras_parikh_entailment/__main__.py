@@ -70,9 +70,9 @@ def demo(shape):
     nlp.add_pipe(KerasSimilarityShim.load(nlp.path / 'similarity', nlp, shape[0]))
 
     doc1 = nlp(u'The king of France is bald.')
-    doc2 = nlp( u'France has no king.')
+    doc2 = nlp(u'France has no king.')
 
-    print("Sentence 1: ", doc1)
+    print("Sentence 1:", doc1)
     print("Sentence 2:", doc2)
 
     entailment_type, confidence = doc1.similarity(doc2)
