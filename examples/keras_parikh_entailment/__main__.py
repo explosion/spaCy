@@ -14,6 +14,27 @@ except ImportError:
 
 import spacy
 
+# workaround for keras/tensorflow bug
+# see https://github.com/tensorflow/tensorflow/issues/3388
+import os
+import importlib
+from keras import backend as K
+
+def set_keras_backend(backend):
+    if K.backend() != backend:
+        os.environ['KERAS_BACKEND'] = backend
+        importlib.reload(K)
+        assert K.backend() == backend
+    if backend == "tensorflow":
+        K.get_session().close()
+        cfg = K.tf.ConfigProto()
+        cfg.gpu_options.allow_growth = True
+        K.set_session(K.tf.Session(config=cfg))
+        K.clear_session()
+
+set_keras_backend("tensorflow") 
+
+
 def train(train_loc, dev_loc, shape, settings):
     train_texts1, train_texts2, train_labels = read_snli(train_loc)
     dev_texts1, dev_texts2, dev_labels = read_snli(dev_loc)
