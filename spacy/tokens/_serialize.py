@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 import numpy
 import msgpack
 import gzip
-import copyreg
 from thinc.neural.ops import NumpyOps
 
+from ..compat import copy_reg
 from ..tokens import Doc
 from ..attrs import SPACY, ORTH
 
