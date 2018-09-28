@@ -6,6 +6,7 @@ import gzip
 import copyreg
 from thinc.neural.ops import NumpyOps
 
+from ..tokens import Doc
 from ..attrs import SPACY, ORTH
 
 
