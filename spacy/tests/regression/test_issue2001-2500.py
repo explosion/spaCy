@@ -61,3 +61,10 @@ def test_issue2385():
 def test_issue2385_biluo(tags):
     """Test that BILUO-compatible tags aren't modified."""
     assert iob_to_biluo(tags) == list(tags)
+
+def test_issue2482():
+    '''Test we can serialize and deserialize a blank NER or parser model.'''
+    nlp = Italian()
+    nlp.add_pipe(nlp.create_pipe('ner'))
+    b = nlp.to_bytes()
+    nlp2 = Italian().from_bytes(b)
