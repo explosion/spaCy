@@ -1,598 +1,601 @@
+# coding: utf8
 from __future__ import unicode_literals
+
+
 ADJECTIVES = set("""
- abaissant abaissé abandonné abasourdi abasourdissant abattu abcédant aberrant
- abject abjurant aboli abondant abonné abordé abouti aboutissant abouté
- abricoté abrité abrouti abrupt abruti abrutissant abruzzain absent absolu
- absorbé abstinent abstrait abyssin abâtardi abêtissant abîmant abîmé acarpellé
- accablé accalminé accaparant accastillant accentué acceptant accepté accidenté
- accolé accombant accommodant accommodé accompagné accompli accordé accorné
- accoudé accouplé accoutumé accrescent accroché accru accréditant accrédité
- accueillant accumulé accusé accéléré acescent achalandé acharné achevé
- acidulé aciéré acotylé acquitté activé acuminé acutangulé acutifolié acutilobé
- adapté additionné additivé adextré adhérent adimensionné adiré adjacent
- adjoint adjugé adjuvant administré admirant adné adolescent adoptant adopté
- adossé adouci adoucissant adressé adroit adscrit adsorbant adultérin adéquat
- affaibli affaiblissant affairé affamé affectionné affecté affermi affidé
- affilé affin affligeant affluent affolant affolé affranchi affriolant affronté
- affété affûté afghan africain agaillardi agatin agatisé agaçant agglomérant
- agglutinant agglutiné aggravant agissant agitant agité agminé agnat agonisant
- agrafé agrandi agressé agrippant agrégé agréé aguichant ahanant ahuri
- aigretté aigri aigrissant aiguilleté aiguisé ailé aimant aimanté aimé ajourné
- ajusté alabastrin alambiqué alangui alanguissant alarmant alarmé albuginé
- alcalescent alcalifiant alcalin alcalinisant alcoolisé aldin alexandrin alezan
- aligoté alizé aliénant aliéné alkylant allaitant allant allemand allergisant
- alliciant allié allongé allumant allumé alluré alléchant allégeant allégé
- alphabloquant alphastimulant alphonsin alpin alternant alternifolié
- altérant altéré alucité alvin alvéolé alésé amaigri amaigrissant amalgamant
- amaril ambiant ambisexué ambivalent ambulant ami amiantacé amiantin amidé
- aminé ammoniacé ammoniaqué ammonié amnistiant amnistié amnésiant amoindrissant
- amorti amplifiant amplifié amplié ampoulé amputé amusant amusé amylacé
- américain amérisant anabolisant analgésiant anamorphosé anarchisant anastigmat
- anavirulent ancorné andin andorran anergisant anesthésiant angevin anglican
- angoissant angoissé angustifolié angustipenné animé anisé ankylosant ankylosé
- anobli anoblissant anodin anovulant ansé ansérin antenné anthropisé
- antialcalin antiallemand antiamaril antiautoadjoint antibrouillé
- anticipant anticipé anticoagulant anticontaminant anticonvulsivant
- antidécapant antidéflagrant antidérapant antidétonant antifeutrant
- antigivrant antiglissant antiliant antimonié antiméthémoglobinisant antinatal
+ abaissant abaissÃ© abandonnÃ© abasourdi abasourdissant abattu abcÃ©dant aberrant
+ abject abjurant aboli abondant abonnÃ© abordÃ© abouti aboutissant aboutÃ©
+ abricotÃ© abritÃ© abrouti abrupt abruti abrutissant abruzzain absent absolu
+ absorbÃ© abstinent abstrait abyssin abÃ¢tardi abÃªtissant abÃ®mant abÃ®mÃ© acarpellÃ©
+ accablÃ© accalminÃ© accaparant accastillant accentuÃ© acceptant acceptÃ© accidentÃ©
+ accolÃ© accombant accommodant accommodÃ© accompagnÃ© accompli accordÃ© accornÃ©
+ accoudÃ© accouplÃ© accoutumÃ© accrescent accrochÃ© accru accrÃ©ditant accrÃ©ditÃ©
+ accueillant accumulÃ© accusÃ© accÃ©lÃ©rÃ© acescent achalandÃ© acharnÃ© achevÃ©
+ acidulÃ© aciÃ©rÃ© acotylÃ© acquittÃ© activÃ© acuminÃ© acutangulÃ© acutifoliÃ© acutilobÃ©
+ adaptÃ© additionnÃ© additivÃ© adextrÃ© adhÃ©rent adimensionnÃ© adirÃ© adjacent
+ adjoint adjugÃ© adjuvant administrÃ© admirant adnÃ© adolescent adoptant adoptÃ©
+ adossÃ© adouci adoucissant adressÃ© adroit adscrit adsorbant adultÃ©rin adÃ©quat
+ affaibli affaiblissant affairÃ© affamÃ© affectionnÃ© affectÃ© affermi affidÃ©
+ affilÃ© affin affligeant affluent affolant affolÃ© affranchi affriolant affrontÃ©
+ affÃ©tÃ© affÃ»tÃ© afghan africain agaillardi agatin agatisÃ© agaÃ§ant agglomÃ©rant
+ agglutinant agglutinÃ© aggravant agissant agitant agitÃ© agminÃ© agnat agonisant
+ agrafÃ© agrandi agressÃ© agrippant agrÃ©gÃ© agrÃ©Ã© aguichant ahanant ahuri
+ aigrettÃ© aigri aigrissant aiguilletÃ© aiguisÃ© ailÃ© aimant aimantÃ© aimÃ© ajournÃ©
+ ajustÃ© alabastrin alambiquÃ© alangui alanguissant alarmant alarmÃ© albuginÃ©
+ alcalescent alcalifiant alcalin alcalinisant alcoolisÃ© aldin alexandrin alezan
+ aligotÃ© alizÃ© aliÃ©nant aliÃ©nÃ© alkylant allaitant allant allemand allergisant
+ alliciant alliÃ© allongÃ© allumant allumÃ© allurÃ© allÃ©chant allÃ©geant allÃ©gÃ©
+ alphabloquant alphastimulant alphonsin alpin alternant alternifoliÃ©
+ altÃ©rant altÃ©rÃ© alucitÃ© alvin alvÃ©olÃ© alÃ©sÃ© amaigri amaigrissant amalgamant
+ amaril ambiant ambisexuÃ© ambivalent ambulant ami amiantacÃ© amiantin amidÃ©
+ aminÃ© ammoniacÃ© ammoniaquÃ© ammoniÃ© amnistiant amnistiÃ© amnÃ©siant amoindrissant
+ amorti amplifiant amplifiÃ© ampliÃ© ampoulÃ© amputÃ© amusant amusÃ© amylacÃ©
+ amÃ©ricain amÃ©risant anabolisant analgÃ©siant anamorphosÃ© anarchisant anastigmat
+ anavirulent ancornÃ© andin andorran anergisant anesthÃ©siant angevin anglican
+ angoissant angoissÃ© angustifoliÃ© angustipennÃ© animÃ© anisÃ© ankylosant ankylosÃ©
+ anobli anoblissant anodin anovulant ansÃ© ansÃ©rin antennÃ© anthropisÃ©
+ antialcalin antiallemand antiamaril antiautoadjoint antibrouillÃ©
+ anticipant anticipÃ© anticoagulant anticontaminant anticonvulsivant
+ antidÃ©capant antidÃ©flagrant antidÃ©rapant antidÃ©tonant antifeutrant
+ antigivrant antiglissant antiliant antimoniÃ© antimÃ©thÃ©moglobinisant antinatal
  antiodorant antioxydant antiperspirant antiquisant antirassissant
- antiréfléchissant antirépublicain antirésonant antirésonnant antisymétrisé
- antivieillissant antiémétisant antécédent anténatal antéposé antérieur
- antérosupérieur anémiant anémié aoûté apaisant apeuré apicalisé aplati apocopé
- apparent apparenté apparié appartenant appaumé appelant appelé appendiculé
- appointé apposé apprivoisé approchant approché approfondi approprié approuvé
- apprêté appuyé appétissant apérianthé aquarellé aquitain arabisant araucan
- arborisé arboré arcelé archaïsant archiconnu archidiocésain architecturé
- ardent ardoisé ardu argentin argenté argilacé arillé armoricain armé
- arpégé arqué arrangeant arrivant arrivé arrogant arrondi arrosé arrêté arsénié
- articulé arénacé aréolé arétin ascendant ascosporé asexué asin asphyxiant
- aspirant aspiré assaillant assainissant assaisonné assassin assassinant
- asservissant assidu assimilé assistant assisté assiégeant assiégé associé
- assommant assonancé assonant assorti assoupi assoupissant assouplissant
- assujetti assujettissant assuré asséchant astreignant astringent atloïdé
- atonal atrophiant atrophié attachant attaquant attardé atteint attenant
- attendu attentionné atterrant attesté attirant attitré attrayant attristant
- atélectasié auriculé auscitain austral authentifiant autoadjoint autoagrippant
- autoancré autobronzant autocentré autocohérent autocollant autocommandé
- autocontraint autoconvergent autocopiant autoflagellant autofondant autoguidé
- autolubrifiant autolustrant autolégitimant autolégitimé automodifiant
- autonettoyant autoportant autoproduit autopropulsé autorepassant autorisé
- autosuffisant autotrempant auvergnat avachi avalant avalé avancé avarié
- aventuriné aventuré avenu averti aveuglant avianisé avili avilissant aviné
- avivé avoisinant avoué avéré azimuté azoté azuré azéri aéronaval aéroporté
- aéré aîné babillard badaud badgé badin bahaï bahreïni bai baillonné baissant
- balafré balancé balbutiant baleiné ballant ballonisé ballonné ballottant
- balzan bambochard banal banalisé bancal bandant bandé bangladeshi banlieusard
- bantou baraqué barbant barbarisant barbelé barbichu barbifiant barbu bardé
- baroquisant barré baryté basané basculant basculé basedowifiant basedowifié
- bastillé bastionné bataillé batifolant battant battu bavard becqué bedonnant
- bellifontain belligérant benoît benzolé benzoïné berçant beurré biacuminé
- bicarbonaté bicarré bicomponent bicomposé biconstitué bicontinu bicornu
- bidonnant bienfaisant bienséant bienveillant bigarré bigot bigourdan bigéminé
- bilié billeté bilobé bimaculé binoclard biodégradant bioluminescent biorienté
- biparti bipectiné bipinné bipolarisé bipédiculé biramé birman biréfringent
- biscuité bisexué bismuthé bisontin bispiralé bissexué bisublimé bisérié
- biterné bivalent bivitellin bivoltin blafard blanchissant blanchoyant blasé
- blessé bleu bleuissant bleuté blindé blond blondin blondissant blondoyant
- blousant blâmant blêmissant bodybuildé boisé boitillant bombé bonard
- bondé bonifié bonnard borain bordant borin borné boré bossagé bossu bot
- bouclé boudiné bouffant bouffi bouillant bouilli bouillonnant boulant bouleté
- bouqueté bourdonnant bourdonné bourgeonnant bourrant bourrelé bourru bourré
- boutonné bovin bracelé bradycardisant braillard branchu branché branlant
- bressan bretessé bretonnant breveté briard bridgé bridé brillant brillanté
- bringueballant brinquebalant brinqueballant briochin brioché brisant brisé
- broché bromé bronzant bronzé brouillé broutant bruissant brun brunissant brut
- brévistylé brûlant brûlé budgeté burelé buriné bursodépendant busqué busé
- butyracé buté byzantin bâtard bâti bâté béant béat bédouin bégayant bénard
- bénédictin béquetant béquillard bétonné bêlant bêtabloquant bêtifiant bômé
- cabochard cabotin cabriolant cabré cacaoté cachectisant cachemiri caché
- cadjin cadmié caducifolié cafard cagnard cagot cagoulé cahotant caillouté
- calcicordé calcifié calculé calmant calotin calé camard cambrousard cambré
- camisard campagnard camphré campé camé canaliculé canin cannelé canné cantalou
- canulant cané caoutchouté capitolin capitulant capitulard capité capricant
- capsulé captivant capuchonné caquetant carabiné caracolant caractérisé
- carbonaté carboné carburant carburé cardiocutané cardé carencé caressant
- carillonnant carillonné carié carminé carné carolin caronculé carpé carré
- caréné casqué cassant cassé castelroussin castillan catalan catastrophé
- catégorisé caudé caulescent causal causant cavalcadant celtisant cendré censé
- centraméricain centré cerclé cerdagnol cerdan cerné certain certifié cervelé
- chafouin chagrin chagrinant chagriné chaloupé chamoisé chamoniard chancelant
- chantant chançard chapeauté chapé charançonné chargé charmant charnu charpenté
- charrié chartrain chassant chasé chatoyant chaud chauffant chaussant chauvin
- chenillé chenu chevalin chevauchant chevelu chevelé chevillé chevronné
- chiant chicard chiffonné chiffré chimioluminescent chimiorésistant chiné
- chié chlamydé chleuh chlorurant chloruré chloré chocolaté choisi choké
- choral chronodépendant chryséléphantin chuintant chypré châtain chélatant
- chômé ciblé cicatrisant cilié cinglant cinglé cintré circiné circonspect
- circonvoisin circulant circumtempéré ciré cisalpin cisjuran cispadan citadin
- citronné citérieur civil civilisé clabotant clair claironnant clairsemé
- clandestin clapotant claquant clarifiant clariné classicisant claudicant
- clavelé clignotant climatisé clinquant cliquetant clissé clivant cloisonné
- cloqué clouté cloîtré clément clémentin coagulant coalescent coalisé coassocié
- cocciné cocu codant codirigeant codominant codé codélirant codétenu coexistant
- cogné cohérent coiffant coiffé coinché cokéfiant colicitant colitigant
- collant collodionné collé colmatant colombin colonisé colorant coloré
- combattant combinant combinard combiné comburant comité commandant commençant
- commun communard communiant communicant communiqué communisant compact
- comparé compassé compatissant compensé complaisant complexant compliqué
- composant composé comprimé compromettant computérisé compétent comtadin conard
- concertant concerté conciliant concluant concomitant concordant concourant
- concupiscent concurrent concédant condamné condensant condensé condescendant
- conditionné condupliqué confiant confident confiné confit confondant confédéré
- congru congruent conjoint conjugant conjugué connaissant connard connivent
- conné conquassant conquérant consacrant consacré consanguin conscient conscrit
- conservé consistant consolant consolidé consommé consonant constant constellé
- constipant constipé constituant constitué constringent consultant conséquent
- containeurisé contaminant contemporain content contenu contestant continent
- continu contondant contourné contractant contraignant contraint contraposé
- contrarié contrastant contrasté contravariant contrecollé contredisant
- contrefait contrevariant contrevenant contrit controuvé controversé contrôlé
- convaincu convalescent conventionné convenu convergent converti convoluté
- convulsivant convulsé conçu cooccupant cooccurrent coopérant coordiné
- coordonné copartageant coparticipant coquillé coquin coraillé corallin
- cordé cornard corniculé cornu corné corpulent correct correspondant corrigé
- corrodant corrompu corrélé corticodépendant corticorésistant cortisoné
- coréférent cossard cossu costaud costulé costumé cotisant couard couchant
- coulant coulissant coulissé coupant couperosé couplé coupé courant courbatu
- couronnant couronné court courtaud courtisan couru cousu couturé couvert
- covalent covariant coïncident coûtant crachotant craché cramoisi cramponnant
- craquelé cravachant crawlé crevant crevard crevé criant criard criblant criblé
- crispant cristallin cristallisant cristallisé crochu croisetté croiseté
- croissanté croisé crollé croquant crossé crotté croulant croupi croupissant
- croyant cru crucifié cruenté crustacé cryodesséché cryoprécipité crémant
- crépi crépitant crépu crétacé crétin crétinisant créé crêpelé crêté cubain
- cuirassé cuisant cuisiné cuit cuivré culminant culotté culpabilisant cultivé
- cuscuté cutané cyanosé câblé câlin cédant célébrant cérulé cérusé cévenol
- damassé damné dandinant dansant demeuré demi dentelé denticulé dentu denté
- dessalé dessiccant dessillant dessiné dessoudé desséchant deutéré diadémé
- diamanté diapré diastasé diazoté dicarbonylé dichloré diffamant diffamé
- diffractant diffringent diffusant différencié différent différé difluoré
- diiodé dilatant dilaté diligent dilobé diluant dimensionné dimidié dimidé
- diminué diocésain diphasé diplômant diplômé direct dirigeant dirigé dirimant
- discipliné discontinu discord discordant discriminant discuté disert disgracié
- disloqué disodé disparu dispersant dispersé disposé disproportionné disputé
- dissimulé dissipé dissociant dissocié dissolu dissolvant dissonant disséminé
- distant distinct distingué distrait distrayant distribué disubstitué disulfoné
- divagant divaguant divalent divergent divertissant divin divorcé djaïn
- dodu dogmatisant dolent domicilié dominant dominicain donjonné donnant donné
- dormant dorsalisant doré douci doué drageonnant dragéifié drainant dramatisant
- drapé dreyfusard drogué droit dru drupacé dual ductodépendant dulcifiant dur
- duveté dynamisant dynamité dyspnéisant dystrophiant déaminé débarqué débauché
- débilitant débloquant débordant débordé débouchant débourgeoisé déboussolé
- débridé débrouillard débroussaillant débroussé débutant décadent décaféiné
- décalant décalcifiant décalvant décapant décapité décarburant décati décavé
- décevant déchagriné décharné déchaînant déchaîné déchevelé déchiqueté
- déchiré déchloruré déchu décidu décidué décidé déclaré déclassé déclenchant
- décoiffant décolleté décolorant décoloré décompensé décomplémenté décomplété
- déconcertant déconditionné déconfit décongestionnant déconnant déconsidéré
- décontractant décontracturant décontracté décortiqué décoré découplé découpé
- décousu découvert décrispant décrochant décroissant décrépi décrépit décuman
- décussé décérébré dédoré défaillant défait défanant défatigant défavorisé
- déferlant déferlé défiant déficient défigé défilant défini déflagrant défleuri
- défléchi défoliant défoncé déformant défranchi défraîchi défrisant défroqué
- défâché défécant déférent dégagé dégingandé dégivrant déglutiné dégonflé
- dégourdi dégouttant dégoûtant dégoûté dégradant dégradé dégraissant dégriffé
- déguisé dégénérescent dégénéré déhanché déhiscent déjeté délabrant délabré
- délassant délavé délayé délibérant délibéré délicat délinquant déliquescent
- délitescent délié déloqué déluré délégué démagnétisant démaquillant démaqué
- dément démerdard démesuré démixé démodé démontant démonté démoralisant
- démotivant démotivé démystifiant démyélinisant démyélisant démêlant dénaturant
- dénigrant dénitrant dénitrifiant dénommé dénudé dénutri dénué déodorant
- dépapillé dépareillé dépassé dépaysant dépaysé dépeigné dépenaillé dépendant
- dépeuplé déphasé dépité déplacé déplaisant déplaquetté déplasmatisé dépliant
- déplumant déplumé déplété dépoitraillé dépolarisant dépoli dépolitisant
- déponent déporté déposant déposé dépouillé dépourvu dépoussiérant dépravant
- déprimant déprimé déprédé dépérissant dépétainisé déracinant déraciné
- dérangé dérapant dérestauré dérivant dérivé dérobé dérogeant déroulant
- déréalisant déréglé désabusé désaccordé désadapté désaffectivé désaffecté
- désaisonnalisé désaligné désaliénant désaltérant désaluminisé désambiguïsé
- désargenté désarmant désarçonnant désassorti désatomisé désaturant désaxé
- désemparé désenchanté désensibilisant désert désespérant désespéré
- désherbant déshonorant déshumanisant déshydratant déshydraté déshydrogénant
- désiconisé désillusionnant désincarné désincrustant désinfectant
- désintéressé désirant désobligeant désoblitérant désobéi désobéissant
- désodorisant désodé désoeuvré désolant désolé désopilant désordonné
- désorienté désossé désoxydant désoxygénant déstabilisant déstressant
- désuni déséquilibrant déséquilibré détachant détaché détartrant détendu détenu
- déterminant déterminé déterré détonant détonnant détourné détraqué détérioré
- développé déverbalisant dévergondé déversé dévertébré déviant dévissé
- dévoisé dévolu dévorant dévot dévoué dévoyé déwatté déçu effacé effarant
- effarouché effaré effervescent efficient effiloché effilé efflanqué
- effluent effondré effrangé effrayant effrayé effronté effréné efféminé
- emballant embarrassant embarrassé embellissant embiellé embouché embouti
- embrassant embrassé embrouillant embrouillé embroussaillé embruiné embryonné
- embusqué embêtant emmerdant emmiellant emmiélant emmotté empaillé empanaché
- empenné emperlé empesé empiétant emplumé empoignant empoisonnant emporté
- empressé emprunté empâté empêché empêtré encaissant encaissé encalminé
- encapsulant encapsulé encartouché encastré encerclant enchanté enchifrené
- encloisonné encloqué encombrant encombré encorné encourageant encroué
- encroûté enculé endenté endiablé endiamanté endimanché endogé endolori
- endormi endurant endurci enfantin enfariné enflammé enflé enfoiré enfoncé
- engageant engagé engainant englanté englobant engoulé engourdi engourdissant
- engraissant engravé engrenant engrené engrêlé enguiché enhardé enivrant
- enjambé enjoué enkikinant enkysté enlaidissant enlaçant enlevé enneigé ennemi
- ennuyant ennuyé enquiquinant enracinant enrageant enragé enregistrant enrhumé
- enrichissant enrobé enseignant enseigné ensellé ensoleillé ensommeillé
- ensoutané ensuqué entartré entendu enterré enthousiasmant entouré entrant
- entraînant entrecoupé entrecroisé entrelacé entrelardé entreprenant entresolé
- entrouvert enturbanné enté entêtant entêté envahissant envapé enveloppant
- envenimé enviné environnant envié envoyé envoûtant ergoté errant erroné
- escarpé espacé espagnol espagnolisant esquintant esquinté esseulé essorant
- estomaqué estompé estropié estudiantin euphorisant euphémisé eurafricain
- exacerbé exact exagéré exalbuminé exaltant exalté exaspérant excellent
- excepté excitant excité exclu excluant excommunié excru excédant exempt
- exercé exerçant exfoliant exhalant exhilarant exigeant exilé exinscrit
- exondé exorbitant exorbité exosporé exostosant expansé expatrié expectant
- expert expirant exploitant exploité exposé expropriant exproprié expulsé
- expérimenté extasié extemporané extradossé extrafort extraplat extrapériosté
- extraverti extroverti exténuant extérieur exubérant exultant facilitant
- faiblissant faignant failli faillé fainéant faisandé faisant fait falot falqué
- fané faraud farci fardé farfelu farinacé fasciculé fascinant fascisant fascié
- fassi fastigié fat fatal fatigant fatigué fauché favorisant façonné faïencé
- feint fendant fendillé fendu fenestré fenian fenêtré fermant fermentant
- ferritisant ferruginisé ferré fertilisant fervent fescennin fessu festal
- festival feuillagé feuilleté feuillu feuillé feutrant feutré fiancé fibrillé
- ficelé fichant fichu fieffé figulin figuré figé filant fileté filoguidé
- filé fimbrié fin final finalisé finaud fini finissant fiérot flabellé flagellé
- flagrant flamand flambant flamboyant flambé flamingant flammé flanchard
- flanquant flapi flatulent flavescent flemmard fleurdelisé fleuri fleurissant
- flippant florentin florissant flottant flottard flotté flou fluctuant fluent
- fluidifié fluocompact fluorescent fluoré flushé fléchissant fléché flémard
- flétrissant flûté foisonnant foliacé folié folliculé folâtrant foncé fondant
- fondé forain foraminé forcené forcé forfait forgé formalisé formaté formicant
- formé fort fortifiant fortrait fortuit fortuné fossilisé foudroyant fouettard
- fouillé fouinard foulant fourbu fourcheté fourchu fourché fourmillant fourni
- foutral foutu foxé fracassant fractal fractionné fragilisant fragrant
+ antirÃ©flÃ©chissant antirÃ©publicain antirÃ©sonant antirÃ©sonnant antisymÃ©trisÃ©
+ antivieillissant antiÃ©mÃ©tisant antÃ©cÃ©dent antÃ©natal antÃ©posÃ© antÃ©rieur
+ antÃ©rosupÃ©rieur anÃ©miant anÃ©miÃ© aoÃ»tÃ© apaisant apeurÃ© apicalisÃ© aplati apocopÃ©
+ apparent apparentÃ© appariÃ© appartenant appaumÃ© appelant appelÃ© appendiculÃ©
+ appointÃ© apposÃ© apprivoisÃ© approchant approchÃ© approfondi appropriÃ© approuvÃ©
+ apprÃªtÃ© appuyÃ© appÃ©tissant apÃ©rianthÃ© aquarellÃ© aquitain arabisant araucan
+ arborisÃ© arborÃ© arcelÃ© archaÃ¯sant archiconnu archidiocÃ©sain architecturÃ©
+ ardent ardoisÃ© ardu argentin argentÃ© argilacÃ© arillÃ© armoricain armÃ©
+ arpÃ©gÃ© arquÃ© arrangeant arrivant arrivÃ© arrogant arrondi arrosÃ© arrÃªtÃ© arsÃ©niÃ©
+ articulÃ© arÃ©nacÃ© arÃ©olÃ© arÃ©tin ascendant ascosporÃ© asexuÃ© asin asphyxiant
+ aspirant aspirÃ© assaillant assainissant assaisonnÃ© assassin assassinant
+ asservissant assidu assimilÃ© assistant assistÃ© assiÃ©geant assiÃ©gÃ© associÃ©
+ assommant assonancÃ© assonant assorti assoupi assoupissant assouplissant
+ assujetti assujettissant assurÃ© assÃ©chant astreignant astringent atloÃ¯dÃ©
+ atonal atrophiant atrophiÃ© attachant attaquant attardÃ© atteint attenant
+ attendu attentionnÃ© atterrant attestÃ© attirant attitrÃ© attrayant attristant
+ atÃ©lectasiÃ© auriculÃ© auscitain austral authentifiant autoadjoint autoagrippant
+ autoancrÃ© autobronzant autocentrÃ© autocohÃ©rent autocollant autocommandÃ©
+ autocontraint autoconvergent autocopiant autoflagellant autofondant autoguidÃ©
+ autolubrifiant autolustrant autolÃ©gitimant autolÃ©gitimÃ© automodifiant
+ autonettoyant autoportant autoproduit autopropulsÃ© autorepassant autorisÃ©
+ autosuffisant autotrempant auvergnat avachi avalant avalÃ© avancÃ© avariÃ©
+ aventurinÃ© aventurÃ© avenu averti aveuglant avianisÃ© avili avilissant avinÃ©
+ avivÃ© avoisinant avouÃ© avÃ©rÃ© azimutÃ© azotÃ© azurÃ© azÃ©ri aÃ©ronaval aÃ©roportÃ©
+ aÃ©rÃ© aÃ®nÃ© babillard badaud badgÃ© badin bahaÃ¯ bahreÃ¯ni bai baillonnÃ© baissant
+ balafrÃ© balancÃ© balbutiant baleinÃ© ballant ballonisÃ© ballonnÃ© ballottant
+ balzan bambochard banal banalisÃ© bancal bandant bandÃ© bangladeshi banlieusard
+ bantou baraquÃ© barbant barbarisant barbelÃ© barbichu barbifiant barbu bardÃ©
+ baroquisant barrÃ© barytÃ© basanÃ© basculant basculÃ© basedowifiant basedowifiÃ©
+ bastillÃ© bastionnÃ© bataillÃ© batifolant battant battu bavard becquÃ© bedonnant
+ bellifontain belligÃ©rant benoÃ®t benzolÃ© benzoÃ¯nÃ© berÃ§ant beurrÃ© biacuminÃ©
+ bicarbonatÃ© bicarrÃ© bicomponent bicomposÃ© biconstituÃ© bicontinu bicornu
+ bidonnant bienfaisant biensÃ©ant bienveillant bigarrÃ© bigot bigourdan bigÃ©minÃ©
+ biliÃ© billetÃ© bilobÃ© bimaculÃ© binoclard biodÃ©gradant bioluminescent biorientÃ©
+ biparti bipectinÃ© bipinnÃ© bipolarisÃ© bipÃ©diculÃ© biramÃ© birman birÃ©fringent
+ biscuitÃ© bisexuÃ© bismuthÃ© bisontin bispiralÃ© bissexuÃ© bisublimÃ© bisÃ©riÃ©
+ biternÃ© bivalent bivitellin bivoltin blafard blanchissant blanchoyant blasÃ©
+ blessÃ© bleu bleuissant bleutÃ© blindÃ© blond blondin blondissant blondoyant
+ blousant blÃ¢mant blÃªmissant bodybuildÃ© boisÃ© boitillant bombÃ© bonard
+ bondÃ© bonifiÃ© bonnard borain bordant borin bornÃ© borÃ© bossagÃ© bossu bot
+ bouclÃ© boudinÃ© bouffant bouffi bouillant bouilli bouillonnant boulant bouletÃ©
+ bouquetÃ© bourdonnant bourdonnÃ© bourgeonnant bourrant bourrelÃ© bourru bourrÃ©
+ boutonnÃ© bovin bracelÃ© bradycardisant braillard branchu branchÃ© branlant
+ bressan bretessÃ© bretonnant brevetÃ© briard bridgÃ© bridÃ© brillant brillantÃ©
+ bringueballant brinquebalant brinqueballant briochin briochÃ© brisant brisÃ©
+ brochÃ© bromÃ© bronzant bronzÃ© brouillÃ© broutant bruissant brun brunissant brut
+ brÃ©vistylÃ© brÃ»lant brÃ»lÃ© budgetÃ© burelÃ© burinÃ© bursodÃ©pendant busquÃ© busÃ©
+ butyracÃ© butÃ© byzantin bÃ¢tard bÃ¢ti bÃ¢tÃ© bÃ©ant bÃ©at bÃ©douin bÃ©gayant bÃ©nard
+ bÃ©nÃ©dictin bÃ©quetant bÃ©quillard bÃ©tonnÃ© bÃªlant bÃªtabloquant bÃªtifiant bÃ´mÃ©
+ cabochard cabotin cabriolant cabrÃ© cacaotÃ© cachectisant cachemiri cachÃ©
+ cadjin cadmiÃ© caducifoliÃ© cafard cagnard cagot cagoulÃ© cahotant cailloutÃ©
+ calcicordÃ© calcifiÃ© calculÃ© calmant calotin calÃ© camard cambrousard cambrÃ©
+ camisard campagnard camphrÃ© campÃ© camÃ© canaliculÃ© canin cannelÃ© cannÃ© cantalou
+ canulant canÃ© caoutchoutÃ© capitolin capitulant capitulard capitÃ© capricant
+ capsulÃ© captivant capuchonnÃ© caquetant carabinÃ© caracolant caractÃ©risÃ©
+ carbonatÃ© carbonÃ© carburant carburÃ© cardiocutanÃ© cardÃ© carencÃ© caressant
+ carillonnant carillonnÃ© cariÃ© carminÃ© carnÃ© carolin caronculÃ© carpÃ© carrÃ©
+ carÃ©nÃ© casquÃ© cassant cassÃ© castelroussin castillan catalan catastrophÃ©
+ catÃ©gorisÃ© caudÃ© caulescent causal causant cavalcadant celtisant cendrÃ© censÃ©
+ centramÃ©ricain centrÃ© cerclÃ© cerdagnol cerdan cernÃ© certain certifiÃ© cervelÃ©
+ chafouin chagrin chagrinant chagrinÃ© chaloupÃ© chamoisÃ© chamoniard chancelant
+ chantant chanÃ§ard chapeautÃ© chapÃ© charanÃ§onnÃ© chargÃ© charmant charnu charpentÃ©
+ charriÃ© chartrain chassant chasÃ© chatoyant chaud chauffant chaussant chauvin
+ chenillÃ© chenu chevalin chevauchant chevelu chevelÃ© chevillÃ© chevronnÃ©
+ chiant chicard chiffonnÃ© chiffrÃ© chimioluminescent chimiorÃ©sistant chinÃ©
+ chiÃ© chlamydÃ© chleuh chlorurant chlorurÃ© chlorÃ© chocolatÃ© choisi chokÃ©
+ choral chronodÃ©pendant chrysÃ©lÃ©phantin chuintant chyprÃ© chÃ¢tain chÃ©latant
+ chÃ´mÃ© ciblÃ© cicatrisant ciliÃ© cinglant cinglÃ© cintrÃ© circinÃ© circonspect
+ circonvoisin circulant circumtempÃ©rÃ© cirÃ© cisalpin cisjuran cispadan citadin
+ citronnÃ© citÃ©rieur civil civilisÃ© clabotant clair claironnant clairsemÃ©
+ clandestin clapotant claquant clarifiant clarinÃ© classicisant claudicant
+ clavelÃ© clignotant climatisÃ© clinquant cliquetant clissÃ© clivant cloisonnÃ©
+ cloquÃ© cloutÃ© cloÃ®trÃ© clÃ©ment clÃ©mentin coagulant coalescent coalisÃ© coassociÃ©
+ coccinÃ© cocu codant codirigeant codominant codÃ© codÃ©lirant codÃ©tenu coexistant
+ cognÃ© cohÃ©rent coiffant coiffÃ© coinchÃ© cokÃ©fiant colicitant colitigant
+ collant collodionnÃ© collÃ© colmatant colombin colonisÃ© colorant colorÃ©
+ combattant combinant combinard combinÃ© comburant comitÃ© commandant commenÃ§ant
+ commun communard communiant communicant communiquÃ© communisant compact
+ comparÃ© compassÃ© compatissant compensÃ© complaisant complexant compliquÃ©
+ composant composÃ© comprimÃ© compromettant computÃ©risÃ© compÃ©tent comtadin conard
+ concertant concertÃ© conciliant concluant concomitant concordant concourant
+ concupiscent concurrent concÃ©dant condamnÃ© condensant condensÃ© condescendant
+ conditionnÃ© condupliquÃ© confiant confident confinÃ© confit confondant confÃ©dÃ©rÃ©
+ congru congruent conjoint conjugant conjuguÃ© connaissant connard connivent
+ connÃ© conquassant conquÃ©rant consacrant consacrÃ© consanguin conscient conscrit
+ conservÃ© consistant consolant consolidÃ© consommÃ© consonant constant constellÃ©
+ constipant constipÃ© constituant constituÃ© constringent consultant consÃ©quent
+ containeurisÃ© contaminant contemporain content contenu contestant continent
+ continu contondant contournÃ© contractant contraignant contraint contraposÃ©
+ contrariÃ© contrastant contrastÃ© contravariant contrecollÃ© contredisant
+ contrefait contrevariant contrevenant contrit controuvÃ© controversÃ© contrÃ´lÃ©
+ convaincu convalescent conventionnÃ© convenu convergent converti convolutÃ©
+ convulsivant convulsÃ© conÃ§u cooccupant cooccurrent coopÃ©rant coordinÃ©
+ coordonnÃ© copartageant coparticipant coquillÃ© coquin coraillÃ© corallin
+ cordÃ© cornard corniculÃ© cornu cornÃ© corpulent correct correspondant corrigÃ©
+ corrodant corrompu corrÃ©lÃ© corticodÃ©pendant corticorÃ©sistant cortisonÃ©
+ corÃ©fÃ©rent cossard cossu costaud costulÃ© costumÃ© cotisant couard couchant
+ coulant coulissant coulissÃ© coupant couperosÃ© couplÃ© coupÃ© courant courbatu
+ couronnant couronnÃ© court courtaud courtisan couru cousu couturÃ© couvert
+ covalent covariant coÃ¯ncident coÃ»tant crachotant crachÃ© cramoisi cramponnant
+ craquelÃ© cravachant crawlÃ© crevant crevard crevÃ© criant criard criblant criblÃ©
+ crispant cristallin cristallisant cristallisÃ© crochu croisettÃ© croisetÃ©
+ croissantÃ© croisÃ© crollÃ© croquant crossÃ© crottÃ© croulant croupi croupissant
+ croyant cru crucifiÃ© cruentÃ© crustacÃ© cryodessÃ©chÃ© cryoprÃ©cipitÃ© crÃ©mant
+ crÃ©pi crÃ©pitant crÃ©pu crÃ©tacÃ© crÃ©tin crÃ©tinisant crÃ©Ã© crÃªpelÃ© crÃªtÃ© cubain
+ cuirassÃ© cuisant cuisinÃ© cuit cuivrÃ© culminant culottÃ© culpabilisant cultivÃ©
+ cuscutÃ© cutanÃ© cyanosÃ© cÃ¢blÃ© cÃ¢lin cÃ©dant cÃ©lÃ©brant cÃ©rulÃ© cÃ©rusÃ© cÃ©venol
+ damassÃ© damnÃ© dandinant dansant demeurÃ© demi dentelÃ© denticulÃ© dentu dentÃ©
+ dessalÃ© dessiccant dessillant dessinÃ© dessoudÃ© dessÃ©chant deutÃ©rÃ© diadÃ©mÃ©
+ diamantÃ© diaprÃ© diastasÃ© diazotÃ© dicarbonylÃ© dichlorÃ© diffamant diffamÃ©
+ diffractant diffringent diffusant diffÃ©renciÃ© diffÃ©rent diffÃ©rÃ© difluorÃ©
+ diiodÃ© dilatant dilatÃ© diligent dilobÃ© diluant dimensionnÃ© dimidiÃ© dimidÃ©
+ diminuÃ© diocÃ©sain diphasÃ© diplÃ´mant diplÃ´mÃ© direct dirigeant dirigÃ© dirimant
+ disciplinÃ© discontinu discord discordant discriminant discutÃ© disert disgraciÃ©
+ disloquÃ© disodÃ© disparu dispersant dispersÃ© disposÃ© disproportionnÃ© disputÃ©
+ dissimulÃ© dissipÃ© dissociant dissociÃ© dissolu dissolvant dissonant dissÃ©minÃ©
+ distant distinct distinguÃ© distrait distrayant distribuÃ© disubstituÃ© disulfonÃ©
+ divagant divaguant divalent divergent divertissant divin divorcÃ© djaÃ¯n
+ dodu dogmatisant dolent domiciliÃ© dominant dominicain donjonnÃ© donnant donnÃ©
+ dormant dorsalisant dorÃ© douci douÃ© drageonnant dragÃ©ifiÃ© drainant dramatisant
+ drapÃ© dreyfusard droguÃ© droit dru drupacÃ© dual ductodÃ©pendant dulcifiant dur
+ duvetÃ© dynamisant dynamitÃ© dyspnÃ©isant dystrophiant dÃ©aminÃ© dÃ©barquÃ© dÃ©bauchÃ©
+ dÃ©bilitant dÃ©bloquant dÃ©bordant dÃ©bordÃ© dÃ©bouchant dÃ©bourgeoisÃ© dÃ©boussolÃ©
+ dÃ©bridÃ© dÃ©brouillard dÃ©broussaillant dÃ©broussÃ© dÃ©butant dÃ©cadent dÃ©cafÃ©inÃ©
+ dÃ©calant dÃ©calcifiant dÃ©calvant dÃ©capant dÃ©capitÃ© dÃ©carburant dÃ©cati dÃ©cavÃ©
+ dÃ©cevant dÃ©chagrinÃ© dÃ©charnÃ© dÃ©chaÃ®nant dÃ©chaÃ®nÃ© dÃ©chevelÃ© dÃ©chiquetÃ©
+ dÃ©chirÃ© dÃ©chlorurÃ© dÃ©chu dÃ©cidu dÃ©ciduÃ© dÃ©cidÃ© dÃ©clarÃ© dÃ©classÃ© dÃ©clenchant
+ dÃ©coiffant dÃ©colletÃ© dÃ©colorant dÃ©colorÃ© dÃ©compensÃ© dÃ©complÃ©mentÃ© dÃ©complÃ©tÃ©
+ dÃ©concertant dÃ©conditionnÃ© dÃ©confit dÃ©congestionnant dÃ©connant dÃ©considÃ©rÃ©
+ dÃ©contractant dÃ©contracturant dÃ©contractÃ© dÃ©cortiquÃ© dÃ©corÃ© dÃ©couplÃ© dÃ©coupÃ©
+ dÃ©cousu dÃ©couvert dÃ©crispant dÃ©crochant dÃ©croissant dÃ©crÃ©pi dÃ©crÃ©pit dÃ©cuman
+ dÃ©cussÃ© dÃ©cÃ©rÃ©brÃ© dÃ©dorÃ© dÃ©faillant dÃ©fait dÃ©fanant dÃ©fatigant dÃ©favorisÃ©
+ dÃ©ferlant dÃ©ferlÃ© dÃ©fiant dÃ©ficient dÃ©figÃ© dÃ©filant dÃ©fini dÃ©flagrant dÃ©fleuri
+ dÃ©flÃ©chi dÃ©foliant dÃ©foncÃ© dÃ©formant dÃ©franchi dÃ©fraÃ®chi dÃ©frisant dÃ©froquÃ©
+ dÃ©fÃ¢chÃ© dÃ©fÃ©cant dÃ©fÃ©rent dÃ©gagÃ© dÃ©gingandÃ© dÃ©givrant dÃ©glutinÃ© dÃ©gonflÃ©
+ dÃ©gourdi dÃ©gouttant dÃ©goÃ»tant dÃ©goÃ»tÃ© dÃ©gradant dÃ©gradÃ© dÃ©graissant dÃ©griffÃ©
+ dÃ©guisÃ© dÃ©gÃ©nÃ©rescent dÃ©gÃ©nÃ©rÃ© dÃ©hanchÃ© dÃ©hiscent dÃ©jetÃ© dÃ©labrant dÃ©labrÃ©
+ dÃ©lassant dÃ©lavÃ© dÃ©layÃ© dÃ©libÃ©rant dÃ©libÃ©rÃ© dÃ©licat dÃ©linquant dÃ©liquescent
+ dÃ©litescent dÃ©liÃ© dÃ©loquÃ© dÃ©lurÃ© dÃ©lÃ©guÃ© dÃ©magnÃ©tisant dÃ©maquillant dÃ©maquÃ©
+ dÃ©ment dÃ©merdard dÃ©mesurÃ© dÃ©mixÃ© dÃ©modÃ© dÃ©montant dÃ©montÃ© dÃ©moralisant
+ dÃ©motivant dÃ©motivÃ© dÃ©mystifiant dÃ©myÃ©linisant dÃ©myÃ©lisant dÃ©mÃªlant dÃ©naturant
+ dÃ©nigrant dÃ©nitrant dÃ©nitrifiant dÃ©nommÃ© dÃ©nudÃ© dÃ©nutri dÃ©nuÃ© dÃ©odorant
+ dÃ©papillÃ© dÃ©pareillÃ© dÃ©passÃ© dÃ©paysant dÃ©paysÃ© dÃ©peignÃ© dÃ©penaillÃ© dÃ©pendant
+ dÃ©peuplÃ© dÃ©phasÃ© dÃ©pitÃ© dÃ©placÃ© dÃ©plaisant dÃ©plaquettÃ© dÃ©plasmatisÃ© dÃ©pliant
+ dÃ©plumant dÃ©plumÃ© dÃ©plÃ©tÃ© dÃ©poitraillÃ© dÃ©polarisant dÃ©poli dÃ©politisant
+ dÃ©ponent dÃ©portÃ© dÃ©posant dÃ©posÃ© dÃ©pouillÃ© dÃ©pourvu dÃ©poussiÃ©rant dÃ©pravant
+ dÃ©primant dÃ©primÃ© dÃ©prÃ©dÃ© dÃ©pÃ©rissant dÃ©pÃ©tainisÃ© dÃ©racinant dÃ©racinÃ©
+ dÃ©rangÃ© dÃ©rapant dÃ©restaurÃ© dÃ©rivant dÃ©rivÃ© dÃ©robÃ© dÃ©rogeant dÃ©roulant
+ dÃ©rÃ©alisant dÃ©rÃ©glÃ© dÃ©sabusÃ© dÃ©saccordÃ© dÃ©sadaptÃ© dÃ©saffectivÃ© dÃ©saffectÃ©
+ dÃ©saisonnalisÃ© dÃ©salignÃ© dÃ©saliÃ©nant dÃ©saltÃ©rant dÃ©saluminisÃ© dÃ©sambiguÃ¯sÃ©
+ dÃ©sargentÃ© dÃ©sarmant dÃ©sarÃ§onnant dÃ©sassorti dÃ©satomisÃ© dÃ©saturant dÃ©saxÃ©
+ dÃ©semparÃ© dÃ©senchantÃ© dÃ©sensibilisant dÃ©sert dÃ©sespÃ©rant dÃ©sespÃ©rÃ©
+ dÃ©sherbant dÃ©shonorant dÃ©shumanisant dÃ©shydratant dÃ©shydratÃ© dÃ©shydrogÃ©nant
+ dÃ©siconisÃ© dÃ©sillusionnant dÃ©sincarnÃ© dÃ©sincrustant dÃ©sinfectant
+ dÃ©sintÃ©ressÃ© dÃ©sirant dÃ©sobligeant dÃ©soblitÃ©rant dÃ©sobÃ©i dÃ©sobÃ©issant
+ dÃ©sodorisant dÃ©sodÃ© dÃ©soeuvrÃ© dÃ©solant dÃ©solÃ© dÃ©sopilant dÃ©sordonnÃ©
+ dÃ©sorientÃ© dÃ©sossÃ© dÃ©soxydant dÃ©soxygÃ©nant dÃ©stabilisant dÃ©stressant
+ dÃ©suni dÃ©sÃ©quilibrant dÃ©sÃ©quilibrÃ© dÃ©tachant dÃ©tachÃ© dÃ©tartrant dÃ©tendu dÃ©tenu
+ dÃ©terminant dÃ©terminÃ© dÃ©terrÃ© dÃ©tonant dÃ©tonnant dÃ©tournÃ© dÃ©traquÃ© dÃ©tÃ©riorÃ©
+ dÃ©veloppÃ© dÃ©verbalisant dÃ©vergondÃ© dÃ©versÃ© dÃ©vertÃ©brÃ© dÃ©viant dÃ©vissÃ©
+ dÃ©voisÃ© dÃ©volu dÃ©vorant dÃ©vot dÃ©vouÃ© dÃ©voyÃ© dÃ©wattÃ© dÃ©Ã§u effacÃ© effarant
+ effarouchÃ© effarÃ© effervescent efficient effilochÃ© effilÃ© efflanquÃ©
+ effluent effondrÃ© effrangÃ© effrayant effrayÃ© effrontÃ© effrÃ©nÃ© effÃ©minÃ©
+ emballant embarrassant embarrassÃ© embellissant embiellÃ© embouchÃ© embouti
+ embrassant embrassÃ© embrouillant embrouillÃ© embroussaillÃ© embruinÃ© embryonnÃ©
+ embusquÃ© embÃªtant emmerdant emmiellant emmiÃ©lant emmottÃ© empaillÃ© empanachÃ©
+ empennÃ© emperlÃ© empesÃ© empiÃ©tant emplumÃ© empoignant empoisonnant emportÃ©
+ empressÃ© empruntÃ© empÃ¢tÃ© empÃªchÃ© empÃªtrÃ© encaissant encaissÃ© encalminÃ©
+ encapsulant encapsulÃ© encartouchÃ© encastrÃ© encerclant enchantÃ© enchifrenÃ©
+ encloisonnÃ© encloquÃ© encombrant encombrÃ© encornÃ© encourageant encrouÃ©
+ encroÃ»tÃ© enculÃ© endentÃ© endiablÃ© endiamantÃ© endimanchÃ© endogÃ© endolori
+ endormi endurant endurci enfantin enfarinÃ© enflammÃ© enflÃ© enfoirÃ© enfoncÃ©
+ engageant engagÃ© engainant englantÃ© englobant engoulÃ© engourdi engourdissant
+ engraissant engravÃ© engrenant engrenÃ© engrÃªlÃ© enguichÃ© enhardÃ© enivrant
+ enjambÃ© enjouÃ© enkikinant enkystÃ© enlaidissant enlaÃ§ant enlevÃ© enneigÃ© ennemi
+ ennuyant ennuyÃ© enquiquinant enracinant enrageant enragÃ© enregistrant enrhumÃ©
+ enrichissant enrobÃ© enseignant enseignÃ© ensellÃ© ensoleillÃ© ensommeillÃ©
+ ensoutanÃ© ensuquÃ© entartrÃ© entendu enterrÃ© enthousiasmant entourÃ© entrant
+ entraÃ®nant entrecoupÃ© entrecroisÃ© entrelacÃ© entrelardÃ© entreprenant entresolÃ©
+ entrouvert enturbannÃ© entÃ© entÃªtant entÃªtÃ© envahissant envapÃ© enveloppant
+ envenimÃ© envinÃ© environnant enviÃ© envoyÃ© envoÃ»tant ergotÃ© errant erronÃ©
+ escarpÃ© espacÃ© espagnol espagnolisant esquintant esquintÃ© esseulÃ© essorant
+ estomaquÃ© estompÃ© estropiÃ© estudiantin euphorisant euphÃ©misÃ© eurafricain
+ exacerbÃ© exact exagÃ©rÃ© exalbuminÃ© exaltant exaltÃ© exaspÃ©rant excellent
+ exceptÃ© excitant excitÃ© exclu excluant excommuniÃ© excru excÃ©dant exempt
+ exercÃ© exerÃ§ant exfoliant exhalant exhilarant exigeant exilÃ© exinscrit
+ exondÃ© exorbitant exorbitÃ© exosporÃ© exostosant expansÃ© expatriÃ© expectant
+ expert expirant exploitant exploitÃ© exposÃ© expropriant expropriÃ© expulsÃ©
+ expÃ©rimentÃ© extasiÃ© extemporanÃ© extradossÃ© extrafort extraplat extrapÃ©riostÃ©
+ extraverti extroverti extÃ©nuant extÃ©rieur exubÃ©rant exultant facilitant
+ faiblissant faignant failli faillÃ© fainÃ©ant faisandÃ© faisant fait falot falquÃ©
+ fanÃ© faraud farci fardÃ© farfelu farinacÃ© fasciculÃ© fascinant fascisant fasciÃ©
+ fassi fastigiÃ© fat fatal fatigant fatiguÃ© fauchÃ© favorisant faÃ§onnÃ© faÃ¯encÃ©
+ feint fendant fendillÃ© fendu fenestrÃ© fenian fenÃªtrÃ© fermant fermentant
+ ferritisant ferruginisÃ© ferrÃ© fertilisant fervent fescennin fessu festal
+ festival feuillagÃ© feuilletÃ© feuillu feuillÃ© feutrant feutrÃ© fiancÃ© fibrillÃ©
+ ficelÃ© fichant fichu fieffÃ© figulin figurÃ© figÃ© filant filetÃ© filoguidÃ©
+ filÃ© fimbriÃ© fin final finalisÃ© finaud fini finissant fiÃ©rot flabellÃ© flagellÃ©
+ flagrant flamand flambant flamboyant flambÃ© flamingant flammÃ© flanchard
+ flanquant flapi flatulent flavescent flemmard fleurdelisÃ© fleuri fleurissant
+ flippant florentin florissant flottant flottard flottÃ© flou fluctuant fluent
+ fluidifiÃ© fluocompact fluorescent fluorÃ© flushÃ© flÃ©chissant flÃ©chÃ© flÃ©mard
+ flÃ©trissant flÃ»tÃ© foisonnant foliacÃ© foliÃ© folliculÃ© folÃ¢trant foncÃ© fondant
+ fondÃ© forain foraminÃ© forcenÃ© forcÃ© forfait forgÃ© formalisÃ© formatÃ© formicant
+ formÃ© fort fortifiant fortrait fortuit fortunÃ© fossilisÃ© foudroyant fouettard
+ fouillÃ© fouinard foulant fourbu fourchetÃ© fourchu fourchÃ© fourmillant fourni
+ foutral foutu foxÃ© fracassant fractal fractionnÃ© fragilisant fragrant
  franchouillard francisant franciscain franciscanisant frangeant frappant
- fratrisé frelaté fretté friand frigorifié fringant fringué friqué frisant
- frisotté frissonnant frisé frit froid froissant froncé frondescent frottant
- froussard fructifiant fruité frumentacé frustrant frustré frutescent
- fréquent fréquenté frétillant fugué fulgurant fulminant fumant fumé furfuracé
- furibond fusant fuselé futur futé fuyant fuyard fâché fébricitant fécond
- féculent fédéré félin féminin féminisant férin férié féru fêlé gabalitain
- gagé gai gaillard galant galbé gallican gallinacé galloisant galonné galopant
- ganglionné gangrené gangué gantelé garant garanti gardé garni garnissant
- gauchisant gazonnant gazonné gazouillant gazé gaël geignard gelé genouillé
- germanisant germé gestant gesticulant gibelin gigotant gigotté gigoté girond
- gironné gisant gitan givrant givré glabrescent glacial glacé glandouillant
- glapissant glaçant glissant glissé globalisant glomérulé glottalisé
- gloussant gloutonnant gluant glucosé glycosylé glycuroconjugué godillé
- goguenard gommant gommé goménolé gondolant gonflant gonflé gouleyant goulu
- gourmand gourmé goussaut gouvernant gouverné goûtu goûté gradué gradé graffité
- grand grandiloquent grandissant granité granoclassé granulé graphitisant
- grasseyant gratifiant gratiné gratuit gravant gravitant greffant grelottant
- grenelé grenu grené griffu grignard grilleté grillé grimaçant grimpant
- grinçant grippé grisant grisonnant grivelé grondant grossissant grouillant
- grésillant gueulard guignard guilloché guillotiné guindé guivré guéri gâté
- gélatinisant gélatiné gélifiant gélifié géminé gémissant géniculé généralisant
- géométrisant gérant gênant gêné gîté habilitant habilité habillé habitué
- hachuré haché hagard halbrené haletant halin hallucinant halluciné hanché
- hanté harassant harassé harcelant harcelé hardi harpé hasté haut hautain
- hennissant heptaperforé herbacé herborisé herbu herminé hernié hersé heurté
+ fratrisÃ© frelatÃ© frettÃ© friand frigorifiÃ© fringant fringuÃ© friquÃ© frisant
+ frisottÃ© frissonnant frisÃ© frit froid froissant froncÃ© frondescent frottant
+ froussard fructifiant fruitÃ© frumentacÃ© frustrant frustrÃ© frutescent
+ frÃ©quent frÃ©quentÃ© frÃ©tillant fuguÃ© fulgurant fulminant fumant fumÃ© furfuracÃ©
+ furibond fusant fuselÃ© futur futÃ© fuyant fuyard fÃ¢chÃ© fÃ©bricitant fÃ©cond
+ fÃ©culent fÃ©dÃ©rÃ© fÃ©lin fÃ©minin fÃ©minisant fÃ©rin fÃ©riÃ© fÃ©ru fÃªlÃ© gabalitain
+ gagÃ© gai gaillard galant galbÃ© gallican gallinacÃ© galloisant galonnÃ© galopant
+ ganglionnÃ© gangrenÃ© ganguÃ© gantelÃ© garant garanti gardÃ© garni garnissant
+ gauchisant gazonnant gazonnÃ© gazouillant gazÃ© gaÃ«l geignard gelÃ© genouillÃ©
+ germanisant germÃ© gestant gesticulant gibelin gigotant gigottÃ© gigotÃ© girond
+ gironnÃ© gisant gitan givrant givrÃ© glabrescent glacial glacÃ© glandouillant
+ glapissant glaÃ§ant glissant glissÃ© globalisant glomÃ©rulÃ© glottalisÃ©
+ gloussant gloutonnant gluant glucosÃ© glycosylÃ© glycuroconjuguÃ© godillÃ©
+ goguenard gommant gommÃ© gomÃ©nolÃ© gondolant gonflant gonflÃ© gouleyant goulu
+ gourmand gourmÃ© goussaut gouvernant gouvernÃ© goÃ»tu goÃ»tÃ© graduÃ© gradÃ© graffitÃ©
+ grand grandiloquent grandissant granitÃ© granoclassÃ© granulÃ© graphitisant
+ grasseyant gratifiant gratinÃ© gratuit gravant gravitant greffant grelottant
+ grenelÃ© grenu grenÃ© griffu grignard grilletÃ© grillÃ© grimaÃ§ant grimpant
+ grinÃ§ant grippÃ© grisant grisonnant grivelÃ© grondant grossissant grouillant
+ grÃ©sillant gueulard guignard guillochÃ© guillotinÃ© guindÃ© guivrÃ© guÃ©ri gÃ¢tÃ©
+ gÃ©latinisant gÃ©latinÃ© gÃ©lifiant gÃ©lifiÃ© gÃ©minÃ© gÃ©missant gÃ©niculÃ© gÃ©nÃ©ralisant
+ gÃ©omÃ©trisant gÃ©rant gÃªnant gÃªnÃ© gÃ®tÃ© habilitant habilitÃ© habillÃ© habituÃ©
+ hachurÃ© hachÃ© hagard halbrenÃ© haletant halin hallucinant hallucinÃ© hanchÃ©
+ hantÃ© harassant harassÃ© harcelant harcelÃ© hardi harpÃ© hastÃ© haut hautain
+ hennissant heptaperforÃ© herbacÃ© herborisÃ© herbu herminÃ© herniÃ© hersÃ© heurtÃ©
  hibernant hilarant hindou hircin hispanisant historicisant historisant
- hivernant hiérosolymitain holocristallin hominisé homogénéisé homoprothallé
- homoxylé honorant honoré hordéacé hormonodéprivé horodaté horrifiant
- hottentot hoyé huguenot huitard humain humectant humiliant humilié huppé
- hutu hyalin hydratant hydrocarboné hydrochloré hydrocuté hydrogénant hydrogéné
- hydrosalin hydrosodé hydroxylé hyperalcalin hypercalcifiant hypercalcémiant
- hypercoagulant hypercommunicant hypercorrect hyperfin hyperfractionné
- hyperisé hyperlordosé hypermotivé hyperphosphatémiant hyperplan hypersomnolent
- hypertrophiant hypertrophié hypervascularisé hypnotisant hypoalgésiant
- hypocalcémiant hypocarpogé hypocholestérolémiant hypocotylé hypoglycémiant
- hypolipidémiant hypophosphatémiant hyposodé hypotendu hypotonisant
- hypovirulent hypoxémiant hâlé hébraïsant hébété hélicosporé héliomarin
- hélitransporté hémicordé hémicristallin hémiplégié hémodialysé hémopigmenté
- hépatostrié hérissant hérissé hésitant hétéroprothallé hétérosporé hétérostylé
- identifié idiot idiotifiant idéal ignifugeant ignorant ignorantin ignoré igné
- illimité illuminé imaginant imaginé imagé imbriqué imbrûlé imbu imité immaculé
- immergé immigrant immigré imminent immodéré immortalisant immotivé immun
- immunocompétent immunodéprimant immunodéprimé immunostimulant immunosupprimé
- immédiat immérité impair impaludé imparfait imparidigité imparipenné impatient
- impayé impensé imperforé impermanent imperméabilisant impertinent implorant
- important importun importé imposant imposé impotent impressionnant imprimant
- impromptu impromulgué improuvé imprudent imprévoyant imprévu impudent
- impuni impur impénitent impétiginisé inabordé inabouti inabrité inabrogé
- inaccepté inaccompli inaccoutumé inachevé inactivé inadapté inadéquat
- inaguerri inaliéné inaltéré inanalysé inanimé inanitié inapaisé inaperçu
- inapparenté inappliqué inapprivoisé inapproprié inapprécié inapprêté
- inarticulé inassimilé inassorti inassouvi inassujetti inattaqué inattendu
- inavoué incandescent incapacitant incarnadin incarnat incarné incendié
- incessant inchangé inchâtié incident incidenté incitant incivil inclassé
- incliné inclément incohérent incombant incomitant incommodant incommuniqué
- incompétent inconditionné inconfessé incongru incongruent inconnu inconquis
- inconsidéré inconsistant inconsolé inconsommé inconstant inconséquent
- incontesté incontinent incontrôlé inconvenant incoordonné incorporant
- incorrect incorrigé incriminant incriminé incritiqué incroyant incrustant
- incréé incubant inculpé incultivé incurvé indeviné indifférencié indifférent
- indirect indirigé indiscipliné indiscriminé indiscuté indisposé indistinct
- indolent indompté indou indu induit indulgent indupliqué induré
- indébrouillé indécent indéchiffré indécidué indéfini indéfinisé indéfriché
- indélibéré indélicat indémontré indémêlé indépassé indépendant indépensé
- indéterminé ineffectué inefficient inemployé inentamé inentendu inespéré
- inexaucé inexercé inexistant inexpert inexpié inexpliqué inexploité inexploré
- inexprimé inexpérimenté inexécuté infamant infantilisant infarci infatué
- infectant infecté infestant infesté infichu infiltrant infini inflammé
- infléchi infondé informant informulé infortuné infoutu infréquenté infusé
- inféodé inférieur inférovarié ingrat ingénu inhabité inhalant inhibant inhibé
- inhérent inimité inintelligent ininterrompu inintéressant initié injecté
- innervant innocent innominé innommé innomé innovant inné inobservé inoccupé
- inondé inopiné inopportun inopérant inorganisé inoublié inouï inquiétant
- insatisfait insaturé inscrit insensé insermenté insignifiant insinuant
- insolent insondé insonorisant insonorisé insouciant insoupçonné inspirant
- inspécifié installé instant instantané instructuré instruit insubordonné
- insulinodépendant insulinorésistant insultant insulté insurgé insécurisant
- intelligent intempérant intentionné interallié interaméricain intercepté
- intercristallin intercurrent interdigité interdiocésain interdit
- interfacé interfécond interférent interloqué intermittent intermédié interpolé
- interprétant intersecté intersexué interstratifié interurbain intervenant
- intestin intimidant intolérant intoxicant intoxiqué intramontagnard
- intrigant introduit introjecté introverti intumescent intégrant intégrifolié
- intéressé intérieur inusité inutilisé invaincu invalidant invariant invendu
- inverti invertébré inviolé invitant involucré involuté invérifié invétéré
- inéclairci inécouté inédit inégalé inélégant inéprouvé inépuisé inéquivalent
- iodoformé ioduré iodylé iodé ionisant iridescent iridié irisé ironisant
- irraisonné irrassasié irritant irrité irréalisé irréfléchi irréfuté irrémunéré
- irrésolu irrévélé islamisant isohalin isolant isolé isosporé issant issu
- itinérant ivoirin jacent jacobin jaillissant jamaïcain jamaïquain jambé
- japonné jardiné jarreté jarré jaspé jauni jaunissant javelé jaïn jobard joint
- joli joufflu jouissant jovial jubilant juché judaïsant jumelé juponné juré
- juxtaposant juxtaposé kalmouk kanak kazakh kenyan kosovar kératinisé labié
- lacinié lactant lactescent lactosé lacté lai laid lainé laité lambin lambrissé
- lamifié laminé lampant lampassé lamé lancinant lancé lancéolé languissant
- lapon laqué lardacé larmoyant larvé laryngé lassant latent latifolié latin
- latté latéralisé lauré lauréat lavant lavé laïcisant lent lenticulé letton
- lettré leucopéniant leucosporé leucostimulant levant levantin levretté levé
- liant libertin libéré licencié lichénifié liftant lifté ligaturé lignifié
- ligulé lilacé limacé limitant limougeaud limousin lionné lippu liquéfiant
- lithiné lithié lité lié liégé lobulé lobé localisé loculé lointain lombard
- lorrain loré losangé loti louchant loupé lourd lourdaud lubrifiant luisant
- lunetté lunulé luné lusitain lustré luthé lutin lutéinisant lutéostimulant
- lyophilisé lyré léché lénifiant léonard léonin léopardé lézardé maboul maclé
- madré mafflu maghrébin magnésié magnétisant magrébin magyar mahométan maillant
- majeur majorant majorquin maladroit malaisé malavisé malbâti malentendant
- malformé malintentionné malnutri malodorant malotru malouin malpoli malsain
- malséant maltraitant malté malveillant malvoyant maléficié mamelonné mamelu
- manchot mandarin mandchou maniéré mannité manoeuvrant manquant manqué mansardé
- mantouan manuscrit manuélin maori maraîchin marbré marcescent marchand
- marial marin mariol marié marmottant marocain maronnant marquant marqueté
- marquésan marrant marri martelé martyr marxisant masculin masculinisant
- masqué massacrant massant massé massétérin mat matelassé mati matérialisé
- maugrabin maugrebin meilleur melonné membrané membru menacé menant menaçant
- mentholé menu merdoyant mesquin messin mesuré meublant mexicain micacé
- microencapsulé microgrenu microplissé microéclaté miellé mignard migrant
- militant millerandé millimétré millésimé mineur minidosé minorant minorquin
- miraculé miraillé miraud mirobolant miroitant miroité miré mitigé mitré mité
- mobiliérisé mochard modelant modifiant modulant modulé modélisant modéré
- mogol moiré moisi moleté molletonné mollissant momentané momifié mondain mondé
- monilié monobromé monochlamydé monochloré monocomposé monocontinu
- monofluoré monogrammé monohalogéné monohydraté mononucléé monophasé
- monopérianthé monoréfringent monosporé monotriphasé monovalent montagnard
- montpelliérain monté monténégrin monumenté moralisant mordant mordicant
+ hivernant hiÃ©rosolymitain holocristallin hominisÃ© homogÃ©nÃ©isÃ© homoprothallÃ©
+ homoxylÃ© honorant honorÃ© hordÃ©acÃ© hormonodÃ©privÃ© horodatÃ© horrifiant
+ hottentot hoyÃ© huguenot huitard humain humectant humiliant humiliÃ© huppÃ©
+ hutu hyalin hydratant hydrocarbonÃ© hydrochlorÃ© hydrocutÃ© hydrogÃ©nant hydrogÃ©nÃ©
+ hydrosalin hydrosodÃ© hydroxylÃ© hyperalcalin hypercalcifiant hypercalcÃ©miant
+ hypercoagulant hypercommunicant hypercorrect hyperfin hyperfractionnÃ©
+ hyperisÃ© hyperlordosÃ© hypermotivÃ© hyperphosphatÃ©miant hyperplan hypersomnolent
+ hypertrophiant hypertrophiÃ© hypervascularisÃ© hypnotisant hypoalgÃ©siant
+ hypocalcÃ©miant hypocarpogÃ© hypocholestÃ©rolÃ©miant hypocotylÃ© hypoglycÃ©miant
+ hypolipidÃ©miant hypophosphatÃ©miant hyposodÃ© hypotendu hypotonisant
+ hypovirulent hypoxÃ©miant hÃ¢lÃ© hÃ©braÃ¯sant hÃ©bÃ©tÃ© hÃ©licosporÃ© hÃ©liomarin
+ hÃ©litransportÃ© hÃ©micordÃ© hÃ©micristallin hÃ©miplÃ©giÃ© hÃ©modialysÃ© hÃ©mopigmentÃ©
+ hÃ©patostriÃ© hÃ©rissant hÃ©rissÃ© hÃ©sitant hÃ©tÃ©roprothallÃ© hÃ©tÃ©rosporÃ© hÃ©tÃ©rostylÃ©
+ identifiÃ© idiot idiotifiant idÃ©al ignifugeant ignorant ignorantin ignorÃ© ignÃ©
+ illimitÃ© illuminÃ© imaginant imaginÃ© imagÃ© imbriquÃ© imbrÃ»lÃ© imbu imitÃ© immaculÃ©
+ immergÃ© immigrant immigrÃ© imminent immodÃ©rÃ© immortalisant immotivÃ© immun
+ immunocompÃ©tent immunodÃ©primant immunodÃ©primÃ© immunostimulant immunosupprimÃ©
+ immÃ©diat immÃ©ritÃ© impair impaludÃ© imparfait imparidigitÃ© imparipennÃ© impatient
+ impayÃ© impensÃ© imperforÃ© impermanent impermÃ©abilisant impertinent implorant
+ important importun importÃ© imposant imposÃ© impotent impressionnant imprimant
+ impromptu impromulguÃ© improuvÃ© imprudent imprÃ©voyant imprÃ©vu impudent
+ impuni impur impÃ©nitent impÃ©tiginisÃ© inabordÃ© inabouti inabritÃ© inabrogÃ©
+ inacceptÃ© inaccompli inaccoutumÃ© inachevÃ© inactivÃ© inadaptÃ© inadÃ©quat
+ inaguerri inaliÃ©nÃ© inaltÃ©rÃ© inanalysÃ© inanimÃ© inanitiÃ© inapaisÃ© inaperÃ§u
+ inapparentÃ© inappliquÃ© inapprivoisÃ© inappropriÃ© inapprÃ©ciÃ© inapprÃªtÃ©
+ inarticulÃ© inassimilÃ© inassorti inassouvi inassujetti inattaquÃ© inattendu
+ inavouÃ© incandescent incapacitant incarnadin incarnat incarnÃ© incendiÃ©
+ incessant inchangÃ© inchÃ¢tiÃ© incident incidentÃ© incitant incivil inclassÃ©
+ inclinÃ© inclÃ©ment incohÃ©rent incombant incomitant incommodant incommuniquÃ©
+ incompÃ©tent inconditionnÃ© inconfessÃ© incongru incongruent inconnu inconquis
+ inconsidÃ©rÃ© inconsistant inconsolÃ© inconsommÃ© inconstant inconsÃ©quent
+ incontestÃ© incontinent incontrÃ´lÃ© inconvenant incoordonnÃ© incorporant
+ incorrect incorrigÃ© incriminant incriminÃ© incritiquÃ© incroyant incrustant
+ incrÃ©Ã© incubant inculpÃ© incultivÃ© incurvÃ© indevinÃ© indiffÃ©renciÃ© indiffÃ©rent
+ indirect indirigÃ© indisciplinÃ© indiscriminÃ© indiscutÃ© indisposÃ© indistinct
+ indolent indomptÃ© indou indu induit indulgent indupliquÃ© indurÃ©
+ indÃ©brouillÃ© indÃ©cent indÃ©chiffrÃ© indÃ©ciduÃ© indÃ©fini indÃ©finisÃ© indÃ©frichÃ©
+ indÃ©libÃ©rÃ© indÃ©licat indÃ©montrÃ© indÃ©mÃªlÃ© indÃ©passÃ© indÃ©pendant indÃ©pensÃ©
+ indÃ©terminÃ© ineffectuÃ© inefficient inemployÃ© inentamÃ© inentendu inespÃ©rÃ©
+ inexaucÃ© inexercÃ© inexistant inexpert inexpiÃ© inexpliquÃ© inexploitÃ© inexplorÃ©
+ inexprimÃ© inexpÃ©rimentÃ© inexÃ©cutÃ© infamant infantilisant infarci infatuÃ©
+ infectant infectÃ© infestant infestÃ© infichu infiltrant infini inflammÃ©
+ inflÃ©chi infondÃ© informant informulÃ© infortunÃ© infoutu infrÃ©quentÃ© infusÃ©
+ infÃ©odÃ© infÃ©rieur infÃ©rovariÃ© ingrat ingÃ©nu inhabitÃ© inhalant inhibant inhibÃ©
+ inhÃ©rent inimitÃ© inintelligent ininterrompu inintÃ©ressant initiÃ© injectÃ©
+ innervant innocent innominÃ© innommÃ© innomÃ© innovant innÃ© inobservÃ© inoccupÃ©
+ inondÃ© inopinÃ© inopportun inopÃ©rant inorganisÃ© inoubliÃ© inouÃ¯ inquiÃ©tant
+ insatisfait insaturÃ© inscrit insensÃ© insermentÃ© insignifiant insinuant
+ insolent insondÃ© insonorisant insonorisÃ© insouciant insoupÃ§onnÃ© inspirant
+ inspÃ©cifiÃ© installÃ© instant instantanÃ© instructurÃ© instruit insubordonnÃ©
+ insulinodÃ©pendant insulinorÃ©sistant insultant insultÃ© insurgÃ© insÃ©curisant
+ intelligent intempÃ©rant intentionnÃ© interalliÃ© interamÃ©ricain interceptÃ©
+ intercristallin intercurrent interdigitÃ© interdiocÃ©sain interdit
+ interfacÃ© interfÃ©cond interfÃ©rent interloquÃ© intermittent intermÃ©diÃ© interpolÃ©
+ interprÃ©tant intersectÃ© intersexuÃ© interstratifiÃ© interurbain intervenant
+ intestin intimidant intolÃ©rant intoxicant intoxiquÃ© intramontagnard
+ intrigant introduit introjectÃ© introverti intumescent intÃ©grant intÃ©grifoliÃ©
+ intÃ©ressÃ© intÃ©rieur inusitÃ© inutilisÃ© invaincu invalidant invariant invendu
+ inverti invertÃ©brÃ© inviolÃ© invitant involucrÃ© involutÃ© invÃ©rifiÃ© invÃ©tÃ©rÃ©
+ inÃ©clairci inÃ©coutÃ© inÃ©dit inÃ©galÃ© inÃ©lÃ©gant inÃ©prouvÃ© inÃ©puisÃ© inÃ©quivalent
+ iodoformÃ© iodurÃ© iodylÃ© iodÃ© ionisant iridescent iridiÃ© irisÃ© ironisant
+ irraisonnÃ© irrassasiÃ© irritant irritÃ© irrÃ©alisÃ© irrÃ©flÃ©chi irrÃ©futÃ© irrÃ©munÃ©rÃ©
+ irrÃ©solu irrÃ©vÃ©lÃ© islamisant isohalin isolant isolÃ© isosporÃ© issant issu
+ itinÃ©rant ivoirin jacent jacobin jaillissant jamaÃ¯cain jamaÃ¯quain jambÃ©
+ japonnÃ© jardinÃ© jarretÃ© jarrÃ© jaspÃ© jauni jaunissant javelÃ© jaÃ¯n jobard joint
+ joli joufflu jouissant jovial jubilant juchÃ© judaÃ¯sant jumelÃ© juponnÃ© jurÃ©
+ juxtaposant juxtaposÃ© kalmouk kanak kazakh kenyan kosovar kÃ©ratinisÃ© labiÃ©
+ laciniÃ© lactant lactescent lactosÃ© lactÃ© lai laid lainÃ© laitÃ© lambin lambrissÃ©
+ lamifiÃ© laminÃ© lampant lampassÃ© lamÃ© lancinant lancÃ© lancÃ©olÃ© languissant
+ lapon laquÃ© lardacÃ© larmoyant larvÃ© laryngÃ© lassant latent latifoliÃ© latin
+ lattÃ© latÃ©ralisÃ© laurÃ© laurÃ©at lavant lavÃ© laÃ¯cisant lent lenticulÃ© letton
+ lettrÃ© leucopÃ©niant leucosporÃ© leucostimulant levant levantin levrettÃ© levÃ©
+ liant libertin libÃ©rÃ© licenciÃ© lichÃ©nifiÃ© liftant liftÃ© ligaturÃ© lignifiÃ©
+ ligulÃ© lilacÃ© limacÃ© limitant limougeaud limousin lionnÃ© lippu liquÃ©fiant
+ lithinÃ© lithiÃ© litÃ© liÃ© liÃ©gÃ© lobulÃ© lobÃ© localisÃ© loculÃ© lointain lombard
+ lorrain lorÃ© losangÃ© loti louchant loupÃ© lourd lourdaud lubrifiant luisant
+ lunettÃ© lunulÃ© lunÃ© lusitain lustrÃ© luthÃ© lutin lutÃ©inisant lutÃ©ostimulant
+ lyophilisÃ© lyrÃ© lÃ©chÃ© lÃ©nifiant lÃ©onard lÃ©onin lÃ©opardÃ© lÃ©zardÃ© maboul maclÃ©
+ madrÃ© mafflu maghrÃ©bin magnÃ©siÃ© magnÃ©tisant magrÃ©bin magyar mahomÃ©tan maillant
+ majeur majorant majorquin maladroit malaisÃ© malavisÃ© malbÃ¢ti malentendant
+ malformÃ© malintentionnÃ© malnutri malodorant malotru malouin malpoli malsain
+ malsÃ©ant maltraitant maltÃ© malveillant malvoyant malÃ©ficiÃ© mamelonnÃ© mamelu
+ manchot mandarin mandchou maniÃ©rÃ© mannitÃ© manoeuvrant manquant manquÃ© mansardÃ©
+ mantouan manuscrit manuÃ©lin maori maraÃ®chin marbrÃ© marcescent marchand
+ marial marin mariol mariÃ© marmottant marocain maronnant marquant marquetÃ©
+ marquÃ©san marrant marri martelÃ© martyr marxisant masculin masculinisant
+ masquÃ© massacrant massant massÃ© massÃ©tÃ©rin mat matelassÃ© mati matÃ©rialisÃ©
+ maugrabin maugrebin meilleur melonnÃ© membranÃ© membru menacÃ© menant menaÃ§ant
+ mentholÃ© menu merdoyant mesquin messin mesurÃ© meublant mexicain micacÃ©
+ microencapsulÃ© microgrenu microplissÃ© microÃ©clatÃ© miellÃ© mignard migrant
+ militant millerandÃ© millimÃ©trÃ© millÃ©simÃ© mineur minidosÃ© minorant minorquin
+ miraculÃ© miraillÃ© miraud mirobolant miroitant miroitÃ© mirÃ© mitigÃ© mitrÃ© mitÃ©
+ mobiliÃ©risÃ© mochard modelant modifiant modulant modulÃ© modÃ©lisant modÃ©rÃ©
+ mogol moirÃ© moisi moletÃ© molletonnÃ© mollissant momentanÃ© momifiÃ© mondain mondÃ©
+ moniliÃ© monobromÃ© monochlamydÃ© monochlorÃ© monocomposÃ© monocontinu
+ monofluorÃ© monogrammÃ© monohalogÃ©nÃ© monohydratÃ© mononuclÃ©Ã© monophasÃ©
+ monopÃ©rianthÃ© monorÃ©fringent monosporÃ© monotriphasÃ© monovalent montagnard
+ montpelliÃ©rain montÃ© montÃ©nÃ©grin monumentÃ© moralisant mordant mordicant
  mordu morfal morfondu moribond moricaud mormon mort mortifiant morvandiot
- mosellan motivant motivé mouchard moucheté mouflé mouillant mouillé moulant
- moulé mourant moussant moussu moustachu moutonnant moutonné mouvant mouvementé
- moyé mozambicain mucroné mugissant mulard multiarticulé multidigité
- multilobé multinucléé multiperforé multiprogrammé multirésistant multisérié
- multivalent multivarié multivitaminé multivoltin munificent murin muriqué
- murrhin musard musclé musqué mussipontain musulman mutant mutilant mutin
- myorelaxant myrrhé mystifiant mythifiant myélinisant myélinisé mâtiné méchant
- méconnu mécontent mécréant médaillé médian médiat médicalisé médisant
- méfiant mélangé mélanostimulant méningé méplat méprisant méritant mérulé
- métallescent métallisé métamérisé métastasé méthoxylé méthyluré
- métropolitain météorisant mêlé mûr mûrissant nabot nacré nageant nain naissant
- nanti napolitain narcissisant nasard nasillard natal natté naturalisé naufragé
- naval navigant navrant nazi nervin nervuré nervé nettoyant neumé neuralisant
- neuroméningé neutralisant nickelé nictitant nidifiant nigaud nigérian
- nippon nitescent nitrant nitrifiant nitrosé nitrurant nitré noir noiraud
- nombrant nombré nominalisé nommé nonchalant normalisé normand normodosé
- normotendu normé notarié nourri nourrissant noué noyé nu nuagé nuancé nucléolé
- nullard numéroté nutant nué né nébulé nécessitant nécrosant négligent négligé
- néoformé néolatin néonatal névrosant névrosé obligeant obligé oblitérant
- obscur observant obsolescent obstiné obstrué obsédant obsédé obséquent
- obturé obéi obéissant obéré occitan occupant occupé occurrent ocellé ochracé
- oculé odorant odoriférant oeillé oeuvé offensant offensé officiant offrant
- olivacé oléacé oléfiant oléifiant oman ombellé ombiliqué ombragé ombré
- omniprésent omniscient ondoyant ondulant ondulé ondé onglé onguiculé ongulé
- opalescent opalin operculé opiacé opportun opposant oppositifolié opposé
- oppressé opprimant opprimé opsonisant optimalisant optimisant opulent opérant
- orant ordonné ordré oreillard oreillé orfévré organisé organochloré
- organosilicié orientalisant orienté oropharyngé orphelin orthonormé ortié
- osmié ossifiant ossifluent ossu ostial ostracé ostrogot ostrogoth ostréacé osé
- ouaté ourlé oursin outillé outrageant outragé outrecuidant outrepassé outré
- ouvragé ouvrant ouvré ovalisé ovillé ovin ovulant ové oxycarboné oxydant
- oxygéné ozoné oïdié pacifiant padan padouan pahlavi paillard pailleté pair
- palatin palermitain palissé pallotin palmatilobé palmatinervé palmatiséqué
- palmiséqué palmé palpitant panaché panafricain panard paniculé paniquant panné
- pantelant pantouflard pané papalin papelard papilionacé papillonnant
- papou papyracé paraffiné paralysant paralysé paramédian parcheminé parent
- parfumé paridigitidé paridigité parigot paripenné parlant parlé parmesan
- parsi partagé partant parti participant partisan partousard partouzard
- parvenu paré passant passepoilé passerillé passionnant passionné passé pataud
- patelin patelinant patent patenté patient patoisant patriotard pattu patté
- paumé pavé payant pectiné pehlevi peigné peinard peint pelliculant pelliculé
- peluché pelé penaud penchant penché pendant pendu pennatilobé pennatinervé
- penninervé penné pensant pensionné pentavalent pentu peptoné perchloraté
- percutant percutané perdant perdu perfectionné perfolié perforant performant
- perfusé perlant perluré perlé permanent permutant perphosporé perruqué persan
- persistant personnalisé personnifié personé persuadé persulfuré persécuté
- pertinent perturbant perverti perçant pesant pestiféré petiot petit peul
- pharmocodépendant pharyngé phasé philippin philistin phophorylé phosphaté
- phosphoré photoinduit photoluminescent photorésistant photosensibilisant
- phénolé phénotypé piaffant piaillant piaillard picard picoté pigeonnant
- pignonné pillard pilonnant pilosébacé pimpant pinaillé pinchard pincé pinné
- pinçard pionçant piquant piqué pisan pistillé pitchoun pivotant piégé
- placé plafonnant plaidant plaignant plain plaisant plan planant planté plané
- plasmolysé plastifiant plat plein pleurant pleurard pleurnichard pliant
- plissé plié plombé plongeant plumeté pluriarticulé plurihandicapé plurinucléé
- plurivalent pochard poché poignant poilant poilu pointillé pointu pointé
- poitevin poivré polarisant polarisé poli policé politicard polluant
- polycarburant polychloré polycontaminé polycopié polycristallin polydésaturé
- polyhandicapé polyinsaturé polylobé polynitré polynucléé polyparasité
- polysubstitué polysyphilisé polytransfusé polytraumatisé polyvalent
- polyvoltin pommelé pommeté pompant pompé ponctué pondéré pontifiant pontin
- poplité poqué porcelainé porcin porracé portant portoricain possédant possédé
- postillonné postnatal postnéonatal posté postérieur posé potelé potencé
- poupin pourprin pourri pourrissant poursuivant pourtournant poussant poussé
- pratiquant prenant prescient prescrit pressant pressionné pressé prieur primal
- privilégié probant prochain procombant procubain profilé profitant profond
- programmé prohibé projetant prolabé proliférant prolongé prompt promu
- prononcé propané proportionné proratisé proscrit prostré protestant protonant
- protubérant protéiné provenant provocant provoqué proéminent prudent pruiné
- préalpin prébendé précipitant précipité précité précompact préconscient
- précontraint préconçu précuit précédent prédesséché prédestiné prédiffusé
- prédisposant prédominant prédécoupé préemballé préencollé préenregistré
- préfabriqué préfixé préformant préfragmenté préférant préféré prégnant
- prélatin prématuré prémuni prémédité prénasalisé prénatal prénommé préoblitéré
- préoccupé préparant prépayé prépondérant prépositionné préprogrammé préroman
- présalé présanctifié présent présignifié présumé présupposé prétendu
- prétraité prévalant prévalent prévenant prévenu prévoyant prévu préémargé
- préétabli prêt prêtant prêté psychiatrisé psychostimulant psychoénergisant
- puant pubescent pudibond puissant pulsant pulsé pultacé pulvérulent puni pur
- puritain purpuracé purpurin purulent pustulé putrescent putréfié puéril puîné
- pyramidant pyramidé pyrazolé pyroxylé pâli pâlissant pédant pédantisant
- pédiculosé pédiculé pédonculé pékiné pélorié pénalisant pénard pénicillé
- pénétrant pénétré péquenaud pérennant périanthé périgourdin périmé périnatal
- pérégrin pérégrinant péréqué pétant pétaradant pétillant pétiolé pétochard
- pétrifiant pétrifié pétré pétulant pêchant qatari quadrifolié quadrigéminé
- quadriparti quadrivalent quadruplété qualifiant qualifié quantifié quart
- questionné quiescent quinaud quint quintessencié quintilobé quiné quérulent
- rabattable rabattant rabattu rabougri raccourci racorni racé radiant radicant
- radiodiffusé radiolipiodolé radiorésistant radiotransparent radiotélévisé
- raffermissant raffiné rafraîchi rafraîchissant rageant ragot ragoûtant
- raisonné rajeunissant rallié ramassé ramenard ramifié ramolli ramollissant
- ramé ranci rangé rapatrié rapiat raplati rappelé rapporté rapproché rarescent
- rasant rassasiant rassasié rassemblé rassurant rassuré rassérénant rasé
- ratiocinant rationalisé raté ravageant ravagé ravalé ravi ravigotant ravissant
- rayé rebattu rebondi rebondissant rebutant recalé recarburant recercelé
- rechigné recombinant recommandé reconnaissant reconnu reconstituant recoqueté
- recroiseté recroquevillé recru recrudescent recrutant rectifiant recueilli
- redenté redondant redoublant redoublé refait refoulant refoulé refroidissant
- regardant regrossi reinté relaxant relevé reluisant relâché relégué remarqué
- rempli remuant renaissant renchéri rendu renfermé renflé renfoncé renforçant
- rengagé renommé rentrant rentré renté renversant renversé repentant repenti
- reporté reposant reposé repoussant repoussé repressé représentant repu
- resarcelé rescapé rescindant rescié respirant resplendissant ressemblant
- ressortissant ressurgi ressuscité restant restreint restringent resurgi
- retardé retentissant retenu retiré retombant retrait retraité retrayant
- retroussé revanchard revigorant revitalisant reviviscent reçu rhinopharyngé
- rhodié rhumatisant rhumé rhénan rhônalpin riant ribaud riboulant ricain
- riciné ridé rifain rigolard ringard risqué riverain roidi romagnol romain
- romand romanisant rompu rond rondouillard ronflant rongeant rosacé rossard
- rotacé roublard roucoulant rouergat rougeaud rougeoyant rougi rougissant
- rouleauté roulotté roulé roumain rouquin rousseauisant routinisé roué rubané
- rubicond rubéfiant rudenté rugissant ruiné ruisselant ruminant rupin rurbain
- rusé rutilant rythmé râblé râlant râpé réadapté réalisant récalcitrant récent
- réchauffant réchauffé récidivant récitant réclamant réclinant récliné
- réconfortant récurant récurrent récurvé récusant réduit réentrant réflectorisé
- réfléchissant réformé réfrigérant réfrigéré réfringent réfugié référencé
- régissant réglant réglé régnant régressé régénérant régénéré réhabilité
- réitéré réjoui réjouissant rémanent rémittent rémunéré rénitent répandu
- réprouvé républicain répugnant réputé réservé résidant résident résigné
- résiné résistant résolu résolvant résonant résonnant résorbant résorciné
- résumé résupiné résurgent rétabli rétamé réticent réticulé rétrofléchi
- rétroréfléchissant rétréci réuni réussi réverbérant révoltant révolté révolu
- révulsant révulsé révélé révérend rééquilibrant rêvé rôti sabin saccadé
- sacchariné sacrifié sacré safrané sagitté sahraoui saignant saignotant
- sain saint saisi saisissant saladin salant salarié salicylé salin salissant
+ mosellan motivant motivÃ© mouchard mouchetÃ© mouflÃ© mouillant mouillÃ© moulant
+ moulÃ© mourant moussant moussu moustachu moutonnant moutonnÃ© mouvant mouvementÃ©
+ moyÃ© mozambicain mucronÃ© mugissant mulard multiarticulÃ© multidigitÃ©
+ multilobÃ© multinuclÃ©Ã© multiperforÃ© multiprogrammÃ© multirÃ©sistant multisÃ©riÃ©
+ multivalent multivariÃ© multivitaminÃ© multivoltin munificent murin muriquÃ©
+ murrhin musard musclÃ© musquÃ© mussipontain musulman mutant mutilant mutin
+ myorelaxant myrrhÃ© mystifiant mythifiant myÃ©linisant myÃ©linisÃ© mÃ¢tinÃ© mÃ©chant
+ mÃ©connu mÃ©content mÃ©crÃ©ant mÃ©daillÃ© mÃ©dian mÃ©diat mÃ©dicalisÃ© mÃ©disant
+ mÃ©fiant mÃ©langÃ© mÃ©lanostimulant mÃ©ningÃ© mÃ©plat mÃ©prisant mÃ©ritant mÃ©rulÃ©
+ mÃ©tallescent mÃ©tallisÃ© mÃ©tamÃ©risÃ© mÃ©tastasÃ© mÃ©thoxylÃ© mÃ©thylurÃ©
+ mÃ©tropolitain mÃ©tÃ©orisant mÃªlÃ© mÃ»r mÃ»rissant nabot nacrÃ© nageant nain naissant
+ nanti napolitain narcissisant nasard nasillard natal nattÃ© naturalisÃ© naufragÃ©
+ naval navigant navrant nazi nervin nervurÃ© nervÃ© nettoyant neumÃ© neuralisant
+ neuromÃ©ningÃ© neutralisant nickelÃ© nictitant nidifiant nigaud nigÃ©rian
+ nippon nitescent nitrant nitrifiant nitrosÃ© nitrurant nitrÃ© noir noiraud
+ nombrant nombrÃ© nominalisÃ© nommÃ© nonchalant normalisÃ© normand normodosÃ©
+ normotendu normÃ© notariÃ© nourri nourrissant nouÃ© noyÃ© nu nuagÃ© nuancÃ© nuclÃ©olÃ©
+ nullard numÃ©rotÃ© nutant nuÃ© nÃ© nÃ©bulÃ© nÃ©cessitant nÃ©crosant nÃ©gligent nÃ©gligÃ©
+ nÃ©oformÃ© nÃ©olatin nÃ©onatal nÃ©vrosant nÃ©vrosÃ© obligeant obligÃ© oblitÃ©rant
+ obscur observant obsolescent obstinÃ© obstruÃ© obsÃ©dant obsÃ©dÃ© obsÃ©quent
+ obturÃ© obÃ©i obÃ©issant obÃ©rÃ© occitan occupant occupÃ© occurrent ocellÃ© ochracÃ©
+ oculÃ© odorant odorifÃ©rant oeillÃ© oeuvÃ© offensant offensÃ© officiant offrant
+ olivacÃ© olÃ©acÃ© olÃ©fiant olÃ©ifiant oman ombellÃ© ombiliquÃ© ombragÃ© ombrÃ©
+ omniprÃ©sent omniscient ondoyant ondulant ondulÃ© ondÃ© onglÃ© onguiculÃ© ongulÃ©
+ opalescent opalin operculÃ© opiacÃ© opportun opposant oppositifoliÃ© opposÃ©
+ oppressÃ© opprimant opprimÃ© opsonisant optimalisant optimisant opulent opÃ©rant
+ orant ordonnÃ© ordrÃ© oreillard oreillÃ© orfÃ©vrÃ© organisÃ© organochlorÃ©
+ organosiliciÃ© orientalisant orientÃ© oropharyngÃ© orphelin orthonormÃ© ortiÃ©
+ osmiÃ© ossifiant ossifluent ossu ostial ostracÃ© ostrogot ostrogoth ostrÃ©acÃ© osÃ©
+ ouatÃ© ourlÃ© oursin outillÃ© outrageant outragÃ© outrecuidant outrepassÃ© outrÃ©
+ ouvragÃ© ouvrant ouvrÃ© ovalisÃ© ovillÃ© ovin ovulant ovÃ© oxycarbonÃ© oxydant
+ oxygÃ©nÃ© ozonÃ© oÃ¯diÃ© pacifiant padan padouan pahlavi paillard pailletÃ© pair
+ palatin palermitain palissÃ© pallotin palmatilobÃ© palmatinervÃ© palmatisÃ©quÃ©
+ palmisÃ©quÃ© palmÃ© palpitant panachÃ© panafricain panard paniculÃ© paniquant pannÃ©
+ pantelant pantouflard panÃ© papalin papelard papilionacÃ© papillonnant
+ papou papyracÃ© paraffinÃ© paralysant paralysÃ© paramÃ©dian parcheminÃ© parent
+ parfumÃ© paridigitidÃ© paridigitÃ© parigot paripennÃ© parlant parlÃ© parmesan
+ parsi partagÃ© partant parti participant partisan partousard partouzard
+ parvenu parÃ© passant passepoilÃ© passerillÃ© passionnant passionnÃ© passÃ© pataud
+ patelin patelinant patent patentÃ© patient patoisant patriotard pattu pattÃ©
+ paumÃ© pavÃ© payant pectinÃ© pehlevi peignÃ© peinard peint pelliculant pelliculÃ©
+ peluchÃ© pelÃ© penaud penchant penchÃ© pendant pendu pennatilobÃ© pennatinervÃ©
+ penninervÃ© pennÃ© pensant pensionnÃ© pentavalent pentu peptonÃ© perchloratÃ©
+ percutant percutanÃ© perdant perdu perfectionnÃ© perfoliÃ© perforant performant
+ perfusÃ© perlant perlurÃ© perlÃ© permanent permutant perphosporÃ© perruquÃ© persan
+ persistant personnalisÃ© personnifiÃ© personÃ© persuadÃ© persulfurÃ© persÃ©cutÃ©
+ pertinent perturbant perverti perÃ§ant pesant pestifÃ©rÃ© petiot petit peul
+ pharmocodÃ©pendant pharyngÃ© phasÃ© philippin philistin phophorylÃ© phosphatÃ©
+ phosphorÃ© photoinduit photoluminescent photorÃ©sistant photosensibilisant
+ phÃ©nolÃ© phÃ©notypÃ© piaffant piaillant piaillard picard picotÃ© pigeonnant
+ pignonnÃ© pillard pilonnant pilosÃ©bacÃ© pimpant pinaillÃ© pinchard pincÃ© pinnÃ©
+ pinÃ§ard pionÃ§ant piquant piquÃ© pisan pistillÃ© pitchoun pivotant piÃ©gÃ©
+ placÃ© plafonnant plaidant plaignant plain plaisant plan planant plantÃ© planÃ©
+ plasmolysÃ© plastifiant plat plein pleurant pleurard pleurnichard pliant
+ plissÃ© pliÃ© plombÃ© plongeant plumetÃ© pluriarticulÃ© plurihandicapÃ© plurinuclÃ©Ã©
+ plurivalent pochard pochÃ© poignant poilant poilu pointillÃ© pointu pointÃ©
+ poitevin poivrÃ© polarisant polarisÃ© poli policÃ© politicard polluant
+ polycarburant polychlorÃ© polycontaminÃ© polycopiÃ© polycristallin polydÃ©saturÃ©
+ polyhandicapÃ© polyinsaturÃ© polylobÃ© polynitrÃ© polynuclÃ©Ã© polyparasitÃ©
+ polysubstituÃ© polysyphilisÃ© polytransfusÃ© polytraumatisÃ© polyvalent
+ polyvoltin pommelÃ© pommetÃ© pompant pompÃ© ponctuÃ© pondÃ©rÃ© pontifiant pontin
+ poplitÃ© poquÃ© porcelainÃ© porcin porracÃ© portant portoricain possÃ©dant possÃ©dÃ©
+ postillonnÃ© postnatal postnÃ©onatal postÃ© postÃ©rieur posÃ© potelÃ© potencÃ©
+ poupin pourprin pourri pourrissant poursuivant pourtournant poussant poussÃ©
+ pratiquant prenant prescient prescrit pressant pressionnÃ© pressÃ© prieur primal
+ privilÃ©giÃ© probant prochain procombant procubain profilÃ© profitant profond
+ programmÃ© prohibÃ© projetant prolabÃ© prolifÃ©rant prolongÃ© prompt promu
+ prononcÃ© propanÃ© proportionnÃ© proratisÃ© proscrit prostrÃ© protestant protonant
+ protubÃ©rant protÃ©inÃ© provenant provocant provoquÃ© proÃ©minent prudent pruinÃ©
+ prÃ©alpin prÃ©bendÃ© prÃ©cipitant prÃ©cipitÃ© prÃ©citÃ© prÃ©compact prÃ©conscient
+ prÃ©contraint prÃ©conÃ§u prÃ©cuit prÃ©cÃ©dent prÃ©dessÃ©chÃ© prÃ©destinÃ© prÃ©diffusÃ©
+ prÃ©disposant prÃ©dominant prÃ©dÃ©coupÃ© prÃ©emballÃ© prÃ©encollÃ© prÃ©enregistrÃ©
+ prÃ©fabriquÃ© prÃ©fixÃ© prÃ©formant prÃ©fragmentÃ© prÃ©fÃ©rant prÃ©fÃ©rÃ© prÃ©gnant
+ prÃ©latin prÃ©maturÃ© prÃ©muni prÃ©mÃ©ditÃ© prÃ©nasalisÃ© prÃ©natal prÃ©nommÃ© prÃ©oblitÃ©rÃ©
+ prÃ©occupÃ© prÃ©parant prÃ©payÃ© prÃ©pondÃ©rant prÃ©positionnÃ© prÃ©programmÃ© prÃ©roman
+ prÃ©salÃ© prÃ©sanctifiÃ© prÃ©sent prÃ©signifiÃ© prÃ©sumÃ© prÃ©supposÃ© prÃ©tendu
+ prÃ©traitÃ© prÃ©valant prÃ©valent prÃ©venant prÃ©venu prÃ©voyant prÃ©vu prÃ©Ã©margÃ©
+ prÃ©Ã©tabli prÃªt prÃªtant prÃªtÃ© psychiatrisÃ© psychostimulant psychoÃ©nergisant
+ puant pubescent pudibond puissant pulsant pulsÃ© pultacÃ© pulvÃ©rulent puni pur
+ puritain purpuracÃ© purpurin purulent pustulÃ© putrescent putrÃ©fiÃ© puÃ©ril puÃ®nÃ©
+ pyramidant pyramidÃ© pyrazolÃ© pyroxylÃ© pÃ¢li pÃ¢lissant pÃ©dant pÃ©dantisant
+ pÃ©diculosÃ© pÃ©diculÃ© pÃ©donculÃ© pÃ©kinÃ© pÃ©loriÃ© pÃ©nalisant pÃ©nard pÃ©nicillÃ©
+ pÃ©nÃ©trant pÃ©nÃ©trÃ© pÃ©quenaud pÃ©rennant pÃ©rianthÃ© pÃ©rigourdin pÃ©rimÃ© pÃ©rinatal
+ pÃ©rÃ©grin pÃ©rÃ©grinant pÃ©rÃ©quÃ© pÃ©tant pÃ©taradant pÃ©tillant pÃ©tiolÃ© pÃ©tochard
+ pÃ©trifiant pÃ©trifiÃ© pÃ©trÃ© pÃ©tulant pÃªchant qatari quadrifoliÃ© quadrigÃ©minÃ©
+ quadriparti quadrivalent quadruplÃ©tÃ© qualifiant qualifiÃ© quantifiÃ© quart
+ questionnÃ© quiescent quinaud quint quintessenciÃ© quintilobÃ© quinÃ© quÃ©rulent
+ rabattable rabattant rabattu rabougri raccourci racorni racÃ© radiant radicant
+ radiodiffusÃ© radiolipiodolÃ© radiorÃ©sistant radiotransparent radiotÃ©lÃ©visÃ©
+ raffermissant raffinÃ© rafraÃ®chi rafraÃ®chissant rageant ragot ragoÃ»tant
+ raisonnÃ© rajeunissant ralliÃ© ramassÃ© ramenard ramifiÃ© ramolli ramollissant
+ ramÃ© ranci rangÃ© rapatriÃ© rapiat raplati rappelÃ© rapportÃ© rapprochÃ© rarescent
+ rasant rassasiant rassasiÃ© rassemblÃ© rassurant rassurÃ© rassÃ©rÃ©nant rasÃ©
+ ratiocinant rationalisÃ© ratÃ© ravageant ravagÃ© ravalÃ© ravi ravigotant ravissant
+ rayÃ© rebattu rebondi rebondissant rebutant recalÃ© recarburant recercelÃ©
+ rechignÃ© recombinant recommandÃ© reconnaissant reconnu reconstituant recoquetÃ©
+ recroisetÃ© recroquevillÃ© recru recrudescent recrutant rectifiant recueilli
+ redentÃ© redondant redoublant redoublÃ© refait refoulant refoulÃ© refroidissant
+ regardant regrossi reintÃ© relaxant relevÃ© reluisant relÃ¢chÃ© relÃ©guÃ© remarquÃ©
+ rempli remuant renaissant renchÃ©ri rendu renfermÃ© renflÃ© renfoncÃ© renforÃ§ant
+ rengagÃ© renommÃ© rentrant rentrÃ© rentÃ© renversant renversÃ© repentant repenti
+ reportÃ© reposant reposÃ© repoussant repoussÃ© repressÃ© reprÃ©sentant repu
+ resarcelÃ© rescapÃ© rescindant resciÃ© respirant resplendissant ressemblant
+ ressortissant ressurgi ressuscitÃ© restant restreint restringent resurgi
+ retardÃ© retentissant retenu retirÃ© retombant retrait retraitÃ© retrayant
+ retroussÃ© revanchard revigorant revitalisant reviviscent reÃ§u rhinopharyngÃ©
+ rhodiÃ© rhumatisant rhumÃ© rhÃ©nan rhÃ´nalpin riant ribaud riboulant ricain
+ ricinÃ© ridÃ© rifain rigolard ringard risquÃ© riverain roidi romagnol romain
+ romand romanisant rompu rond rondouillard ronflant rongeant rosacÃ© rossard
+ rotacÃ© roublard roucoulant rouergat rougeaud rougeoyant rougi rougissant
+ rouleautÃ© roulottÃ© roulÃ© roumain rouquin rousseauisant routinisÃ© rouÃ© rubanÃ©
+ rubicond rubÃ©fiant rudentÃ© rugissant ruinÃ© ruisselant ruminant rupin rurbain
+ rusÃ© rutilant rythmÃ© rÃ¢blÃ© rÃ¢lant rÃ¢pÃ© rÃ©adaptÃ© rÃ©alisant rÃ©calcitrant rÃ©cent
+ rÃ©chauffant rÃ©chauffÃ© rÃ©cidivant rÃ©citant rÃ©clamant rÃ©clinant rÃ©clinÃ©
+ rÃ©confortant rÃ©curant rÃ©current rÃ©curvÃ© rÃ©cusant rÃ©duit rÃ©entrant rÃ©flectorisÃ©
+ rÃ©flÃ©chissant rÃ©formÃ© rÃ©frigÃ©rant rÃ©frigÃ©rÃ© rÃ©fringent rÃ©fugiÃ© rÃ©fÃ©rencÃ©
+ rÃ©gissant rÃ©glant rÃ©glÃ© rÃ©gnant rÃ©gressÃ© rÃ©gÃ©nÃ©rant rÃ©gÃ©nÃ©rÃ© rÃ©habilitÃ©
+ rÃ©itÃ©rÃ© rÃ©joui rÃ©jouissant rÃ©manent rÃ©mittent rÃ©munÃ©rÃ© rÃ©nitent rÃ©pandu
+ rÃ©prouvÃ© rÃ©publicain rÃ©pugnant rÃ©putÃ© rÃ©servÃ© rÃ©sidant rÃ©sident rÃ©signÃ©
+ rÃ©sinÃ© rÃ©sistant rÃ©solu rÃ©solvant rÃ©sonant rÃ©sonnant rÃ©sorbant rÃ©sorcinÃ©
+ rÃ©sumÃ© rÃ©supinÃ© rÃ©surgent rÃ©tabli rÃ©tamÃ© rÃ©ticent rÃ©ticulÃ© rÃ©troflÃ©chi
+ rÃ©trorÃ©flÃ©chissant rÃ©trÃ©ci rÃ©uni rÃ©ussi rÃ©verbÃ©rant rÃ©voltant rÃ©voltÃ© rÃ©volu
+ rÃ©vulsant rÃ©vulsÃ© rÃ©vÃ©lÃ© rÃ©vÃ©rend rÃ©Ã©quilibrant rÃªvÃ© rÃ´ti sabin saccadÃ©
+ saccharinÃ© sacrifiÃ© sacrÃ© safranÃ© sagittÃ© sahraoui saignant saignotant
+ sain saint saisi saisissant saladin salant salariÃ© salicylÃ© salin salissant
  samaritain samoan sanctifiant sanglant sanglotant sanguin sanguinolent
- sanskrit santalin saoul saoulard saponacé sarrasin satané satiné satisfaisant
- saturant saturnin saturé saucissonné saucé saugrenu saumoné saumuré sautant
- sautillé sauté sauvagin savant savoyard scalant scarifié scellé sciant
- sclérosant sclérosé scolié scoriacé scorifiant scout script scrobiculé
- second secrétant semelé semi-fini sempervirent semé sensibilisant sensé senti
- serein serpentin serré servant servi seul sexdigité sexué sexvalent seyant
- sibyllin sidérant sifflant sigillé siglé signalé signifiant silicié silicosé
- simplifié simultané simulé sinapisé sinisant siphonné situé slavisant
- snobinard socialisant sociologisant sodé soiffard soignant soigné solognot
- somali sommeillant sommé somnolant somnolent sonnant sonné sorbonnard sortant
- souahéli soudain soudant soudé soufflant soufflé souffrant soufi soulevé
- sourd souriant soussigné soutenu souterrain souverain soûlant soûlard
- spatulé spermagglutinant spermimmobilisant sphacélé spiralé spirant spiritain
- splénectomisé spontané sporulé spumescent spécialisé stabilisant stagnant
- staphylin stationné stibié stigmatisant stigmatisé stimulant stipendié stipité
- stipulé stratifié stressant strict strident stridulant strié structurant
- stupéfait stupéfiant stylé sténohalin sténosant stérilisant stérilisé
+ sanskrit santalin saoul saoulard saponacÃ© sarrasin satanÃ© satinÃ© satisfaisant
+ saturant saturnin saturÃ© saucissonnÃ© saucÃ© saugrenu saumonÃ© saumurÃ© sautant
+ sautillÃ© sautÃ© sauvagin savant savoyard scalant scarifiÃ© scellÃ© sciant
+ sclÃ©rosant sclÃ©rosÃ© scoliÃ© scoriacÃ© scorifiant scout script scrobiculÃ©
+ second secrÃ©tant semelÃ© semi-fini sempervirent semÃ© sensibilisant sensÃ© senti
+ serein serpentin serrÃ© servant servi seul sexdigitÃ© sexuÃ© sexvalent seyant
+ sibyllin sidÃ©rant sifflant sigillÃ© siglÃ© signalÃ© signifiant siliciÃ© silicosÃ©
+ simplifiÃ© simultanÃ© simulÃ© sinapisÃ© sinisant siphonnÃ© situÃ© slavisant
+ snobinard socialisant sociologisant sodÃ© soiffard soignant soignÃ© solognot
+ somali sommeillant sommÃ© somnolant somnolent sonnant sonnÃ© sorbonnard sortant
+ souahÃ©li soudain soudant soudÃ© soufflant soufflÃ© souffrant soufi soulevÃ©
+ sourd souriant soussignÃ© soutenu souterrain souverain soÃ»lant soÃ»lard
+ spatulÃ© spermagglutinant spermimmobilisant sphacÃ©lÃ© spiralÃ© spirant spiritain
+ splÃ©nectomisÃ© spontanÃ© sporulÃ© spumescent spÃ©cialisÃ© stabilisant stagnant
+ staphylin stationnÃ© stibiÃ© stigmatisant stigmatisÃ© stimulant stipendiÃ© stipitÃ©
+ stipulÃ© stratifiÃ© stressant strict strident stridulant striÃ© structurant
+ stupÃ©fait stupÃ©fiant stylÃ© stÃ©nohalin stÃ©nosant stÃ©rilisant stÃ©rilisÃ©
  su suant subalpin subclaquant subconscient subintrant subit subjacent
- sublimant subneutralisant subordonnant subordonné subrogé subsident subséquent
- subulé suburbain subventionné subérifié succenturié succinct succulent
- sucrant sucré sucé suffisant suffocant suffragant suicidé suintant suivant
- sulfamidorésistant sulfamidé sulfaté sulfhydrylé sulfoné sulfurant sulfurisé
- superfin superfini superflu supergéant superhydratant superordonné superovarié
- suppliant supplicié suppléant supportant supposé suppurant suppuré
- supradivergent suprahumain supérieur surabondant suractivé surajouté suranné
- surbrillant surchargé surchauffé surclassé surcomposé surcomprimé surcouplé
- surdéterminant surdéterminé surdéveloppé surencombré surexcitant surexcité
- surfin surfondu surfrappé surgelé surgi surglacé surhaussé surhumain suri
- surmenant surmené surmultiplié surmusclé surneigé suroxygéné surperformé
- surplombant surplué surprenant surpressé surpuissant surréalisant sursalé
- sursaturé sursilicé surveillé survitaminé survivant survolté surémancipé
- susdit susdénommé susmentionné susnommé suspect suspendu susrelaté susurrant
- suzerain suédé swahili swahéli swazi swingant swingué sylvain sympathisant
- synanthéré synchronisé syncopé syndiqué synthétisant systématisé séant sébacé
- séchant sécurisant sécurisé séduisant ségrégué ségrégé sélectionné sélénié
- sémitisant sénescent séparé séquencé séquestrant sérigraphié séroconverti
- sérotonicodépendant sétacé sévillan tabou tabouisé tacheté taché tadjik taillé
- taloté taluté talé tamil tamisant tamisé tamoul tangent tannant tanné tapant
- tapissant taponné tapé taqueté taquin tarabiscoté taraudant tarentin tari
- tartré taré tassé tatar taupé taurin tavelé teint teintant teinté telluré
- tempérant tempéré tenaillant tenant tendu tentant ternifolié terraqué
- terrifiant terrorisant tessellé testacé texan texturant texturé thallosporé
- thermisé thermocollant thermodurci thermofixé thermoformé thermohalin
- thermoluminescent thermopropulsé thermorémanent thermorésistant thrombopéniant
- thrombosé thymodépendant thébain théocentré théorbé tibétain tiercé tigré tigé
- timbré timoré tintinnabulant tiqueté tirant tiré tisonné tissu titané titré
- tocard toisonné tolérant tombal tombant tombé tonal tondant tondu tonifiant
- tonnant tonsuré tonturé tophacé toquard toqué torché tordant tordu torsadé
+ sublimant subneutralisant subordonnant subordonnÃ© subrogÃ© subsident subsÃ©quent
+ subulÃ© suburbain subventionnÃ© subÃ©rifiÃ© succenturiÃ© succinct succulent
+ sucrant sucrÃ© sucÃ© suffisant suffocant suffragant suicidÃ© suintant suivant
+ sulfamidorÃ©sistant sulfamidÃ© sulfatÃ© sulfhydrylÃ© sulfonÃ© sulfurant sulfurisÃ©
+ superfin superfini superflu supergÃ©ant superhydratant superordonnÃ© superovariÃ©
+ suppliant suppliciÃ© supplÃ©ant supportant supposÃ© suppurant suppurÃ©
+ supradivergent suprahumain supÃ©rieur surabondant suractivÃ© surajoutÃ© surannÃ©
+ surbrillant surchargÃ© surchauffÃ© surclassÃ© surcomposÃ© surcomprimÃ© surcouplÃ©
+ surdÃ©terminant surdÃ©terminÃ© surdÃ©veloppÃ© surencombrÃ© surexcitant surexcitÃ©
+ surfin surfondu surfrappÃ© surgelÃ© surgi surglacÃ© surhaussÃ© surhumain suri
+ surmenant surmenÃ© surmultipliÃ© surmusclÃ© surneigÃ© suroxygÃ©nÃ© surperformÃ©
+ surplombant surpluÃ© surprenant surpressÃ© surpuissant surrÃ©alisant sursalÃ©
+ sursaturÃ© sursilicÃ© surveillÃ© survitaminÃ© survivant survoltÃ© surÃ©mancipÃ©
+ susdit susdÃ©nommÃ© susmentionnÃ© susnommÃ© suspect suspendu susrelatÃ© susurrant
+ suzerain suÃ©dÃ© swahili swahÃ©li swazi swingant swinguÃ© sylvain sympathisant
+ synanthÃ©rÃ© synchronisÃ© syncopÃ© syndiquÃ© synthÃ©tisant systÃ©matisÃ© sÃ©ant sÃ©bacÃ©
+ sÃ©chant sÃ©curisant sÃ©curisÃ© sÃ©duisant sÃ©grÃ©guÃ© sÃ©grÃ©gÃ© sÃ©lectionnÃ© sÃ©lÃ©niÃ©
+ sÃ©mitisant sÃ©nescent sÃ©parÃ© sÃ©quencÃ© sÃ©questrant sÃ©rigraphiÃ© sÃ©roconverti
+ sÃ©rotonicodÃ©pendant sÃ©tacÃ© sÃ©villan tabou tabouisÃ© tachetÃ© tachÃ© tadjik taillÃ©
+ talotÃ© talutÃ© talÃ© tamil tamisant tamisÃ© tamoul tangent tannant tannÃ© tapant
+ tapissant taponnÃ© tapÃ© taquetÃ© taquin tarabiscotÃ© taraudant tarentin tari
+ tartrÃ© tarÃ© tassÃ© tatar taupÃ© taurin tavelÃ© teint teintant teintÃ© tellurÃ©
+ tempÃ©rant tempÃ©rÃ© tenaillant tenant tendu tentant ternifoliÃ© terraquÃ©
+ terrifiant terrorisant tessellÃ© testacÃ© texan texturant texturÃ© thallosporÃ©
+ thermisÃ© thermocollant thermodurci thermofixÃ© thermoformÃ© thermohalin
+ thermoluminescent thermopropulsÃ© thermorÃ©manent thermorÃ©sistant thrombopÃ©niant
+ thrombosÃ© thymodÃ©pendant thÃ©bain thÃ©ocentrÃ© thÃ©orbÃ© tibÃ©tain tiercÃ© tigrÃ© tigÃ©
+ timbrÃ© timorÃ© tintinnabulant tiquetÃ© tirant tirÃ© tisonnÃ© tissu titanÃ© titrÃ©
+ tocard toisonnÃ© tolÃ©rant tombal tombant tombÃ© tonal tondant tondu tonifiant
+ tonnant tonsurÃ© tonturÃ© tophacÃ© toquard toquÃ© torchÃ© tordant tordu torsadÃ©
  tortu torturant toscan totalisant totipotent touchant touffu toulousain
- tourelé tourmentant tourmenté tournant tournoyant tourné tracassant tracté
- traitant tramaillé tranchant tranché tranquillisant transafricain transalpin
- transandin transcendant transcutané transfini transfixiant transformant
- transi transloqué transmutant transpadan transparent transperçant transpirant
- transposé transtévérin transylvain trapu traumatisant traumatisé travaillant
- traversant travesti traçant traînant traînard treillissé tremblant tremblotant
- trempant trempé tressaillant triboluminescent tributant trichiné tricoté
- tridenté trifoliolé trifolié trifurqué trigéminé trilobé trin trinervé
- triparti triphasé triphosphaté trisubstitué tritié trituberculé triturant
- trivialisé trompettant tronqué troublant trouillard trouvé troué truand
- truffé truité trypsiné trébuchant tréflé trémulant trépassé trépidant
- tuant tubard tubectomisé tuberculé tubulé tubéracé tubérifié tubérisé tufacé
- tuilé tumescent tuméfié tuniqué turbiné turbocompressé turbulent turgescent
- tutsi tué twisté typé tâtonnant téflonisé téléphoné télévisé ténorisant
- térébrant tétraphasé tétrasubstitué tétravalent têtu tôlé ulcéré ultraciblé
- ultracourt ultrafin ultramontain ultérieur uncinulé unciné uni unifiant
- uniformisant unilobé uninucléé uniovulé unipotent uniramé uniréfringent
- unistratifié unisérié unitegminé univalent univitellin univoltin urbain
- urgent urticant usagé usant usité usé utriculé utérin utérosacré vacant
- vacciné vachard vacillant vadrouillant vagabond vagabondant vaginé vagissant
- vain vaincu vairé valdôtain valgisant validant vallonné valorisant valué
- valvé vanadié vanilliné vanillé vanisé vanné vantard variolé varisant varié
- varvé vasard vascularisé vasostimulant vasouillard vaudou veinard veiné
- velu venaissin venant vendu ventripotent ventromédian ventru venté verdissant
- vergeté verglacé verglaçant vergé verjuté vermicellé vermiculé vermoulant
- verni vernissé verré versant versé vert verticillé vertébré vespertin vexant
- vibrionnant vicariant vicelard vicié vieilli vieillissant vigil vigilant
- vigorisant vil vilain violacé violent violoné vipérin virevoltant viril
- virulent visigoth vitaminé vitellin vitré vivant viverrin vivifiant vivotant
- vogoul voilé voisin voisé volant volanté volatil voletant voltigeant volvulé
- vorticellé voulu voussé voyant voûté vrai vrillé vrombissant vu vulnérant
- vulturin vécu végétant véhément vélin vélomotorisé vérolé vésicant vésiculé
- vêtu wallingant watté wisigoth youpin zazou zend zigzagant zinzolin zoné
- zoulou zélé zézayant âgé ânonnant ébahi ébaubi éberlué éblouissant ébouriffant
- éburnin éburné écaillé écartelé écarté écervelé échancré échantillonné échappé
- échauffant échauffé échevelé échiqueté échoguidé échu éclairant éclaircissant
- éclatant éclaté éclipsant éclopé écoeurant écorché écoté écoutant écranté
- écrasé écrit écru écrémé éculé écumant édenté édifiant édulcorant égaillé
- égaré égayant égrillard égrisé égrotant égueulé éhanché éhonté élaboré élancé
- électrisant électroconvulsivant électrofondu électroluminescent
- élevé élingué élisabéthain élizabéthain éloigné éloquent élu élégant
- émacié émanché émancipé émarginé émergent émergé émerillonné émerveillant
- émigré éminent émollient émotionnant émoulu émoustillant émouvant ému
- émulsionnant éméché émétisant énergisant énervant énervé épaississant épanoui
- épargnant épatant épaté épeigné éperdu épeuré épicotylé épicutané épicé
- épigé épinglé éploré éployé épointé époustouflant épouvanté éprouvant éprouvé
- épuisé épuré équicontinu équidistant équilibrant équilibré équin équipollent
- équipolé équipotent équipé équitant équivalent éraillé éreintant éreinté
- érubescent érudit érythématopultacé établi étagé éteint étendu éthéré
- étiolé étoffé étoilé étonnant étonné étouffant étouffé étourdi étourdissant
- étriquant étriqué étroit étudiant étudié étymologisant évacuant évacué évadé
+ tourelÃ© tourmentant tourmentÃ© tournant tournoyant tournÃ© tracassant tractÃ©
+ traitant tramaillÃ© tranchant tranchÃ© tranquillisant transafricain transalpin
+ transandin transcendant transcutanÃ© transfini transfixiant transformant
+ transi transloquÃ© transmutant transpadan transparent transperÃ§ant transpirant
+ transposÃ© transtÃ©vÃ©rin transylvain trapu traumatisant traumatisÃ© travaillant
+ traversant travesti traÃ§ant traÃ®nant traÃ®nard treillissÃ© tremblant tremblotant
+ trempant trempÃ© tressaillant triboluminescent tributant trichinÃ© tricotÃ©
+ tridentÃ© trifoliolÃ© trifoliÃ© trifurquÃ© trigÃ©minÃ© trilobÃ© trin trinervÃ©
+ triparti triphasÃ© triphosphatÃ© trisubstituÃ© tritiÃ© trituberculÃ© triturant
+ trivialisÃ© trompettant tronquÃ© troublant trouillard trouvÃ© trouÃ© truand
+ truffÃ© truitÃ© trypsinÃ© trÃ©buchant trÃ©flÃ© trÃ©mulant trÃ©passÃ© trÃ©pidant
+ tuant tubard tubectomisÃ© tuberculÃ© tubulÃ© tubÃ©racÃ© tubÃ©rifiÃ© tubÃ©risÃ© tufacÃ©
+ tuilÃ© tumescent tumÃ©fiÃ© tuniquÃ© turbinÃ© turbocompressÃ© turbulent turgescent
+ tutsi tuÃ© twistÃ© typÃ© tÃ¢tonnant tÃ©flonisÃ© tÃ©lÃ©phonÃ© tÃ©lÃ©visÃ© tÃ©norisant
+ tÃ©rÃ©brant tÃ©traphasÃ© tÃ©trasubstituÃ© tÃ©travalent tÃªtu tÃ´lÃ© ulcÃ©rÃ© ultraciblÃ©
+ ultracourt ultrafin ultramontain ultÃ©rieur uncinulÃ© uncinÃ© uni unifiant
+ uniformisant unilobÃ© uninuclÃ©Ã© uniovulÃ© unipotent uniramÃ© unirÃ©fringent
+ unistratifiÃ© unisÃ©riÃ© unitegminÃ© univalent univitellin univoltin urbain
+ urgent urticant usagÃ© usant usitÃ© usÃ© utriculÃ© utÃ©rin utÃ©rosacrÃ© vacant
+ vaccinÃ© vachard vacillant vadrouillant vagabond vagabondant vaginÃ© vagissant
+ vain vaincu vairÃ© valdÃ´tain valgisant validant vallonnÃ© valorisant valuÃ©
+ valvÃ© vanadiÃ© vanillinÃ© vanillÃ© vanisÃ© vannÃ© vantard variolÃ© varisant variÃ©
+ varvÃ© vasard vascularisÃ© vasostimulant vasouillard vaudou veinard veinÃ©
+ velu venaissin venant vendu ventripotent ventromÃ©dian ventru ventÃ© verdissant
+ vergetÃ© verglacÃ© verglaÃ§ant vergÃ© verjutÃ© vermicellÃ© vermiculÃ© vermoulant
+ verni vernissÃ© verrÃ© versant versÃ© vert verticillÃ© vertÃ©brÃ© vespertin vexant
+ vibrionnant vicariant vicelard viciÃ© vieilli vieillissant vigil vigilant
+ vigorisant vil vilain violacÃ© violent violonÃ© vipÃ©rin virevoltant viril
+ virulent visigoth vitaminÃ© vitellin vitrÃ© vivant viverrin vivifiant vivotant
+ vogoul voilÃ© voisin voisÃ© volant volantÃ© volatil voletant voltigeant volvulÃ©
+ vorticellÃ© voulu voussÃ© voyant voÃ»tÃ© vrai vrillÃ© vrombissant vu vulnÃ©rant
+ vulturin vÃ©cu vÃ©gÃ©tant vÃ©hÃ©ment vÃ©lin vÃ©lomotorisÃ© vÃ©rolÃ© vÃ©sicant vÃ©siculÃ©
+ vÃªtu wallingant wattÃ© wisigoth youpin zazou zend zigzagant zinzolin zonÃ©
+ zoulou zÃ©lÃ© zÃ©zayant Ã¢gÃ© Ã¢nonnant Ã©bahi Ã©baubi Ã©berluÃ© Ã©blouissant Ã©bouriffant
+ Ã©burnin Ã©burnÃ© Ã©caillÃ© Ã©cartelÃ© Ã©cartÃ© Ã©cervelÃ© Ã©chancrÃ© Ã©chantillonnÃ© Ã©chappÃ©
+ Ã©chauffant Ã©chauffÃ© Ã©chevelÃ© Ã©chiquetÃ© Ã©choguidÃ© Ã©chu Ã©clairant Ã©claircissant
+ Ã©clatant Ã©clatÃ© Ã©clipsant Ã©clopÃ© Ã©coeurant Ã©corchÃ© Ã©cotÃ© Ã©coutant Ã©crantÃ©
+ Ã©crasÃ© Ã©crit Ã©cru Ã©crÃ©mÃ© Ã©culÃ© Ã©cumant Ã©dentÃ© Ã©difiant Ã©dulcorant Ã©gaillÃ©
+ Ã©garÃ© Ã©gayant Ã©grillard Ã©grisÃ© Ã©grotant Ã©gueulÃ© Ã©hanchÃ© Ã©hontÃ© Ã©laborÃ© Ã©lancÃ©
+ Ã©lectrisant Ã©lectroconvulsivant Ã©lectrofondu Ã©lectroluminescent
+ Ã©levÃ© Ã©linguÃ© Ã©lisabÃ©thain Ã©lizabÃ©thain Ã©loignÃ© Ã©loquent Ã©lu Ã©lÃ©gant
+ Ã©maciÃ© Ã©manchÃ© Ã©mancipÃ© Ã©marginÃ© Ã©mergent Ã©mergÃ© Ã©merillonnÃ© Ã©merveillant
+ Ã©migrÃ© Ã©minent Ã©mollient Ã©motionnant Ã©moulu Ã©moustillant Ã©mouvant Ã©mu
+ Ã©mulsionnant Ã©mÃ©chÃ© Ã©mÃ©tisant Ã©nergisant Ã©nervant Ã©nervÃ© Ã©paississant Ã©panoui
+ Ã©pargnant Ã©patant Ã©patÃ© Ã©peignÃ© Ã©perdu Ã©peurÃ© Ã©picotylÃ© Ã©picutanÃ© Ã©picÃ©
+ Ã©pigÃ© Ã©pinglÃ© Ã©plorÃ© Ã©ployÃ© Ã©pointÃ© Ã©poustouflant Ã©pouvantÃ© Ã©prouvant Ã©prouvÃ©
+ Ã©puisÃ© Ã©purÃ© Ã©quicontinu Ã©quidistant Ã©quilibrant Ã©quilibrÃ© Ã©quin Ã©quipollent
+ Ã©quipolÃ© Ã©quipotent Ã©quipÃ© Ã©quitant Ã©quivalent Ã©raillÃ© Ã©reintant Ã©reintÃ©
+ Ã©rubescent Ã©rudit Ã©rythÃ©matopultacÃ© Ã©tabli Ã©tagÃ© Ã©teint Ã©tendu Ã©thÃ©rÃ©
+ Ã©tiolÃ© Ã©toffÃ© Ã©toilÃ© Ã©tonnant Ã©tonnÃ© Ã©touffant Ã©touffÃ© Ã©tourdi Ã©tourdissant
+ Ã©triquant Ã©triquÃ© Ã©troit Ã©tudiant Ã©tudiÃ© Ã©tymologisant Ã©vacuant Ã©vacuÃ© Ã©vadÃ©
 """.split())
