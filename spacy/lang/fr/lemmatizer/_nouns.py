@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 
-
 NOUNS = set("""
  abaca abacule abaisse abaissement abaisseur abaissée abajoue abalone abalé
  abandonnataire abandonnateur abandonnement abandonnique abandonnisme abandonné
