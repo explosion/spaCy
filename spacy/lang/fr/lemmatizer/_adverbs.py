@@ -1,550 +1,553 @@
+# coding: utf8
 from __future__ import unicode_literals
+
+
 ADVERBS = set("""
- abandonnément abjectement abominablement abondamment aboralement abouliquement
- abruptement abrégément abréviativement absconsement absconsément absolument
- abstraitement abstrusément absurdement abusivement académiquement
+ abandonnÃ©ment abjectement abominablement abondamment aboralement abouliquement
+ abruptement abrÃ©gÃ©ment abrÃ©viativement absconsement absconsÃ©ment absolument
+ abstraitement abstrusÃ©ment absurdement abusivement acadÃ©miquement
  accelerando acceptablement accessoirement accidentellement accortement
  acidement acoustiquement acrimonieusement acrobatiquement actiniquement
  actuellement adagio additionnellement additivement adiabatiquement
  adjectivement administrativement admirablement admirativement adorablement
- adultérieurement adverbialement adversativement adéquatement affablement
- affectionnément affectivement affectueusement affinement affirmativement
+ adultÃ©rieurement adverbialement adversativement adÃ©quatement affablement
+ affectionnÃ©ment affectivement affectueusement affinement affirmativement
  agilement agitato agnostiquement agogiquement agressivement agrestement
- agrologiquement agronomiquement agréablement aguicheusement aidant aigrement
- ailleurs aimablement ainsi aisément alchimiquement alcooliquement alentour
- algorithmiquement algébriquement alias alimentairement allegretto allegro
- allopathiquement allusivement allègrement allégoriquement allégrement allégro
- alphabétiquement alternativement altimétriquement altièrement altruistement
+ agrologiquement agronomiquement agrÃ©ablement aguicheusement aidant aigrement
+ ailleurs aimablement ainsi aisÃ©ment alchimiquement alcooliquement alentour
+ algorithmiquement algÃ©briquement alias alimentairement allegretto allegro
+ allopathiquement allusivement allÃ¨grement allÃ©goriquement allÃ©grement allÃ©gro
+ alphabÃ©tiquement alternativement altimÃ©triquement altiÃ¨rement altruistement
  amabile ambigument ambitieusement amiablement amicalement amiteusement
  amoroso amoureusement amphibologiquement amphigouriquement amplement
- amusément amènement amèrement anachroniquement anagogiquement
+ amusÃ©ment amÃ¨nement amÃ¨rement anachroniquement anagogiquement
  analogiquement analoguement analytiquement anaphoriquement anarchiquement
  ancestralement anciennement andante andantino anecdotiquement angulairement
- angéliquement anharmoniquement animalement animato annuellement anodinement
+ angÃ©liquement anharmoniquement animalement animato annuellement anodinement
  anormalement anthropocentriquement anthropologiquement anthropomorphiquement
- anticipativement anticonstitutionnellement antidémocratiquement
+ anticipativement anticonstitutionnellement antidÃ©mocratiquement
  antinomiquement antipathiquement antipatriotiquement antiquement
- antisocialement antisportivement antisymétriquement antithétiquement
- antiétatiquement antécédemment antérieurement anxieusement apathiquement
- apicalement apocalyptiquement apodictiquement apologétiquement apostoliquement
- appassionato approbativement approchant approximativement appréciablement
- après-demain aquatiquement arbitrairement arbitralement archaïquement
- architecturalement archéologiquement ardemment argotiquement aridement
- arithmétiquement aromatiquement arrière arrogamment articulairement
+ antisocialement antisportivement antisymÃ©triquement antithÃ©tiquement
+ antiÃ©tatiquement antÃ©cÃ©demment antÃ©rieurement anxieusement apathiquement
+ apicalement apocalyptiquement apodictiquement apologÃ©tiquement apostoliquement
+ appassionato approbativement approchant approximativement apprÃ©ciablement
+ aprÃ¨s-demain aquatiquement arbitrairement arbitralement archaÃ¯quement
+ architecturalement archÃ©ologiquement ardemment argotiquement aridement
+ arithmÃ©tiquement aromatiquement arriÃ¨re arrogamment articulairement
  artificiellement artificieusement artisanalement artistement artistiquement
  aseptiquement asiatiquement assai assertivement assertoriquement assez
- associativement assurément astrologiquement astrométriquement astronomiquement
- astucieusement asymptotiquement asymétriquement ataviquement ataxiquement
- atomiquement atrabilairement atrocement attenant attentionnément attentivement
+ associativement assurÃ©ment astrologiquement astromÃ©triquement astronomiquement
+ astucieusement asymptotiquement asymÃ©triquement ataviquement ataxiquement
+ atomiquement atrabilairement atrocement attenant attentionnÃ©ment attentivement
  attractivement atypiquement aucunement audacieusement audiblement
- auditivement auguralement augustement aujourd'hui auparavant auprès
- aussi aussitôt austèrement autant autarciquement authentiquement
+ auditivement auguralement augustement aujourd'hui auparavant auprÃ¨s
+ aussi aussitÃ´t austÃ¨rement autant autarciquement authentiquement
  autographiquement automatiquement autonomement autoritairement autrefois
  auxiliairement avant avant-hier avantageusement avarement avaricieusement
- aventurément aveuglément avidement avunculairement axialement axiologiquement
- aériennement aérodynamiquement aérostatiquement babéliquement bachiquement
+ aventurÃ©ment aveuglÃ©ment avidement avunculairement axialement axiologiquement
+ aÃ©riennement aÃ©rodynamiquement aÃ©rostatiquement babÃ©liquement bachiquement
  badaudement badinement balistiquement balourdement balsamiquement banalement
- barbarement barométriquement baroquement bas bassement batailleusement
- baveusement beau beaucoup bellement belliqueusement ben bene benoîtement
- bestialement bibliographiquement bibliquement bien bienheureusement bientôt
+ barbarement baromÃ©triquement baroquement bas bassement batailleusement
+ baveusement beau beaucoup bellement belliqueusement ben bene benoÃ®tement
+ bestialement bibliographiquement bibliquement bien bienheureusement bientÃ´t
  bigotement bigrement bihebdomadairement bijectivement bijournellement
- bileusement bilieusement bilinéairement bimensuellement bimestriellement
+ bileusement bilieusement bilinÃ©airement bimensuellement bimestriellement
  bioacoustiquement biochimiquement bioclimatiquement biodynamiquement
- biogénétiquement biologiquement biomédicalement bioniquement biophysiquement
- bioélectroniquement bioénergétiquement bipolairement biquotidiennement bis
- biunivoquement bizarrement bizarroïdement blafardement blagueusement
- blondement blâmablement bon bonassement bonnement bordéliquement botaniquement
+ biogÃ©nÃ©tiquement biologiquement biomÃ©dicalement bioniquement biophysiquement
+ bioÃ©lectroniquement bioÃ©nergÃ©tiquement bipolairement biquotidiennement bis
+ biunivoquement bizarrement bizarroÃ¯dement blafardement blagueusement
+ blondement blÃ¢mablement bon bonassement bonnement bordÃ©liquement botaniquement
  boueusement bouffonnement bougonnement bougrement boulimiquement
- bravachement bravement bredouilleusement bref brillamment brièvement
+ bravachement bravement bredouilleusement bref brillamment briÃ¨vement
  brumeusement brusquement brut brutalement bruyamment bucoliquement
- bureaucratiquement burlesquement byzantinement béatement bégueulement
- bénéfiquement bénévolement béotiennement bésef bézef bêtement cabalistiquement
- cabotinement cachottièrement cacophoniquement caf cafardeusement
+ bureaucratiquement burlesquement byzantinement bÃ©atement bÃ©gueulement
+ bÃ©nÃ©fiquement bÃ©nÃ©volement bÃ©otiennement bÃ©sef bÃ©zef bÃªtement cabalistiquement
+ cabotinement cachottiÃ¨rement cacophoniquement caf cafardeusement
  cajoleusement calamiteusement calligraphiquement calmement calmos
- calorimétriquement caloriquement canaillement cancérologiquement candidement
+ calorimÃ©triquement caloriquement canaillement cancÃ©rologiquement candidement
  cantabile capablement capillairement capitalement capitulairement
- captieusement caractériellement caractérologiquement cardiographiquement
- caricaturalement carrément cartographiquement cartésiennement casanièrement
+ captieusement caractÃ©riellement caractÃ©rologiquement cardiographiquement
+ caricaturalement carrÃ©ment cartographiquement cartÃ©siennement casaniÃ¨rement
  casuellement catalytiquement catastrophiquement catholiquement
- catégoriquement causalement causativement caustiquement cauteleusement
- caverneusement cellulairement censitairement censément centièmement
+ catÃ©goriquement causalement causativement caustiquement cauteleusement
+ caverneusement cellulairement censitairement censÃ©ment centiÃ¨mement
  cependant certainement certes cf chafouinement chagrinement chaleureusement
  chaotiquement charismatiquement charitablement charnellement chastement
  chattement chaud chaudement chauvinement chenuement cher chevaleresquement
- chichement chichiteusement chimiquement chimériquement chinoisement
- chiquement chirographairement chirographiquement chirurgicalement chiément
+ chichement chichiteusement chimiquement chimÃ©riquement chinoisement
+ chiquement chirographairement chirographiquement chirurgicalement chiÃ©ment
  chouettement chromatiquement chroniquement chronologiquement
- chrétiennement chèrement chétivement ci cinquantièmement cinquièmement
- cinématographiquement cinétiquement circonspectement circonstanciellement
+ chrÃ©tiennement chÃ¨rement chÃ©tivement ci cinquantiÃ¨mement cinquiÃ¨mement
+ cinÃ©matographiquement cinÃ©tiquement circonspectement circonstanciellement
  citadinement civilement civiquement clairement clandestinement classiquement
- climatologiquement cliniquement cléricalement cocassement cochonnement
- coextensivement collatéralement collectivement collusoirement collégialement
- coléreusement colériquement combien combinatoirement comiquement comme
- comment commercialement comminatoirement commodément communalement
- communément comparablement comparativement compatiblement compendieusement
- compensatoirement complaisamment complexement complètement complémentairement
- compréhensivement comptablement comptant compulsivement conardement
- conceptuellement concernant concevablement concisément concomitamment
+ climatologiquement cliniquement clÃ©ricalement cocassement cochonnement
+ coextensivement collatÃ©ralement collectivement collusoirement collÃ©gialement
+ colÃ©reusement colÃ©riquement combien combinatoirement comiquement comme
+ comment commercialement comminatoirement commodÃ©ment communalement
+ communÃ©ment comparablement comparativement compatiblement compendieusement
+ compensatoirement complaisamment complexement complÃ¨tement complÃ©mentairement
+ comprÃ©hensivement comptablement comptant compulsivement conardement
+ conceptuellement concernant concevablement concisÃ©ment concomitamment
  concurremment concussionnairement condamnablement conditionnellement confer
  confidemment confidentiellement conflictuellement conformationnellement
- confortablement confraternellement confusément confédéralement congrument
- congénitalement coniquement conjecturalement conjointement conjonctivement
+ confortablement confraternellement confusÃ©ment confÃ©dÃ©ralement congrument
+ congÃ©nitalement coniquement conjecturalement conjointement conjonctivement
  conjugalement connardement connement connotativement consciemment
- consensuellement conservatoirement considérablement considérément
+ consensuellement conservatoirement considÃ©rablement considÃ©rÃ©ment
  constamment constitutionnellement constitutivement consubstantiellement
- consécutivement conséquemment contagieusement contemplativement
- contestablement contextuellement continuellement continûment contractuellement
+ consÃ©cutivement consÃ©quemment contagieusement contemplativement
+ contestablement contextuellement continuellement continÃ»ment contractuellement
  contrairement contrapuntiquement contrastivement contre contributoirement
  convenablement conventionnellement conventuellement convivialement
- coopérativement copieusement coquettement coquinement cordialement coriacement
+ coopÃ©rativement copieusement coquettement coquinement cordialement coriacement
  coronairement corporativement corporellement corpusculairement correct
- correctionnellement corrosivement corrélativement cosmiquement
+ correctionnellement corrosivement corrÃ©lativement cosmiquement
  cosmographiquement cosmologiquement cossardement cotonneusement couardement
- courageusement couramment court courtement courtoisement coutumièrement
+ courageusement couramment court courtement courtoisement coutumiÃ¨rement
  craintivement crapuleusement crescendo criardement criminellement
  critiquablement critiquement croyez-en crucialement cruellement
- crânement crédiblement crédulement crépusculairement crétinement crûment
+ crÃ¢nement crÃ©diblement crÃ©dulement crÃ©pusculairement crÃ©tinement crÃ»ment
  cuistrement culinairement cultuellement culturellement cumulativement
- curativement curieusement cursivement curvilignement cybernétiquement
- cylindriquement cyniquement cynégétiquement cytogénétiquement cytologiquement
- célestement célibatairement cérébralement cérémoniellement cérémonieusement
- d'abondance d'abord d'ailleurs d'après d'arrache-pied d'avance d'emblée d'ici
- d'office d'urgence d'évidence dactylographiquement damnablement dangereusement
- debout decimo decrescendo dedans dehors demain densément depuis derechef
- dernièrement derrière descriptivement despotiquement deusio deuxièmement
+ curativement curieusement cursivement curvilignement cybernÃ©tiquement
+ cylindriquement cyniquement cynÃ©gÃ©tiquement cytogÃ©nÃ©tiquement cytologiquement
+ cÃ©lestement cÃ©libatairement cÃ©rÃ©bralement cÃ©rÃ©moniellement cÃ©rÃ©monieusement
+ d'abondance d'abord d'ailleurs d'aprÃ¨s d'arrache-pied d'avance d'emblÃ©e d'ici
+ d'office d'urgence d'Ã©vidence dactylographiquement damnablement dangereusement
+ debout decimo decrescendo dedans dehors demain densÃ©ment depuis derechef
+ derniÃ¨rement derriÃ¨re descriptivement despotiquement deusio deuxiÃ¨mement
  devant dextrement dextrorse dextrorsum diablement diaboliquement
  diacoustiquement diagonalement dialectalement dialectiquement
- dialogiquement diamétralement diantrement diatoniquement dichotomiquement
- didactiquement difficilement difficultueusement diffusément différemment
+ dialogiquement diamÃ©tralement diantrement diatoniquement dichotomiquement
+ didactiquement difficilement difficultueusement diffusÃ©ment diffÃ©remment
  digitalement dignement dilatoirement diligemment dimanche dimensionnellement
  dinguement diplomatiquement directement directo disciplinairement
- discontinûment discourtoisement discriminatoirement discrètement
+ discontinÃ»ment discourtoisement discriminatoirement discrÃ¨tement
  discursivement disertement disgracieusement disjonctivement disons-le
- dispendieusement disproportionnellement disproportionnément dissemblablement
- dissuasivement dissymétriquement distinctement distinctivement distraitement
+ dispendieusement disproportionnellement disproportionnÃ©ment dissemblablement
+ dissuasivement dissymÃ©triquement distinctement distinctivement distraitement
  distributivement dithyrambiquement dito diurnement diversement divinement
- dixièmement diététiquement docilement docimologiquement doctement
- doctrinairement doctrinalement documentairement dodécaphoniquement
+ dixiÃ¨mement diÃ©tÃ©tiquement docilement docimologiquement doctement
+ doctrinairement doctrinalement documentairement dodÃ©caphoniquement
  dogmatiquement dolce dolcissimo dolemment dolentement dolosivement
- dommageablement donc dont doriquement dorsalement dorénavant doublement
- doucereusement doucettement douceâtrement douillettement douloureusement
- doux douzièmement draconiennement dramatiquement drastiquement
- droit droitement drolatiquement dru drument drôlement dubitativement dur
- durement dynamiquement dynamogéniquement dysharmoniquement débilement
- décadairement décemment décidément décimalement décisivement déclamatoirement
- dédaigneusement déductivement défavorablement défectueusement défensivement
- définitivement dégoûtamment dégressivement dégueulassement déictiquement déjà
- délibérément délicatement délicieusement déloyalement délétèrement
- démentiellement démesurément démocratiquement démographiquement démoniaquement
- démonstrativement démotiquement déontologiquement départementalement
- déplaisamment déplorablement dépressivement dépréciativement déraisonnablement
- dérivationnellement dérogativement dérogatoirement désagréablement
- désastreusement désavantageusement désespéramment désespérément déshonnêtement
- désobligeamment désolamment désordonnément désormais déterminément
- dévotement dévotieusement dûment ecclésiastiquement ecclésiologiquement
- efficacement effrayamment effrontément effroyablement effrénément
- elliptiquement emblématiquement embryologiquement embryonnairement
- emphatiquement empiriquement encor encore encyclopédiquement
- endémiquement enfantinement enfin enjôleusement ennuyeusement ensemble
- ensuite enthousiastement entièrement entomologiquement enviablement
- environ ergonomiquement erratiquement erronément eschatologiquement
- espressivo essentiellement esthétiquement estimablement etc ethniquement
+ dommageablement donc dont doriquement dorsalement dorÃ©navant doublement
+ doucereusement doucettement douceÃ¢trement douillettement douloureusement
+ doux douziÃ¨mement draconiennement dramatiquement drastiquement
+ droit droitement drolatiquement dru drument drÃ´lement dubitativement dur
+ durement dynamiquement dynamogÃ©niquement dysharmoniquement dÃ©bilement
+ dÃ©cadairement dÃ©cemment dÃ©cidÃ©ment dÃ©cimalement dÃ©cisivement dÃ©clamatoirement
+ dÃ©daigneusement dÃ©ductivement dÃ©favorablement dÃ©fectueusement dÃ©fensivement
+ dÃ©finitivement dÃ©goÃ»tamment dÃ©gressivement dÃ©gueulassement dÃ©ictiquement dÃ©jÃ 
+ dÃ©libÃ©rÃ©ment dÃ©licatement dÃ©licieusement dÃ©loyalement dÃ©lÃ©tÃ¨rement
+ dÃ©mentiellement dÃ©mesurÃ©ment dÃ©mocratiquement dÃ©mographiquement dÃ©moniaquement
+ dÃ©monstrativement dÃ©motiquement dÃ©ontologiquement dÃ©partementalement
+ dÃ©plaisamment dÃ©plorablement dÃ©pressivement dÃ©prÃ©ciativement dÃ©raisonnablement
+ dÃ©rivationnellement dÃ©rogativement dÃ©rogatoirement dÃ©sagrÃ©ablement
+ dÃ©sastreusement dÃ©savantageusement dÃ©sespÃ©ramment dÃ©sespÃ©rÃ©ment dÃ©shonnÃªtement
+ dÃ©sobligeamment dÃ©solamment dÃ©sordonnÃ©ment dÃ©sormais dÃ©terminÃ©ment
+ dÃ©votement dÃ©votieusement dÃ»ment ecclÃ©siastiquement ecclÃ©siologiquement
+ efficacement effrayamment effrontÃ©ment effroyablement effrÃ©nÃ©ment
+ elliptiquement emblÃ©matiquement embryologiquement embryonnairement
+ emphatiquement empiriquement encor encore encyclopÃ©diquement
+ endÃ©miquement enfantinement enfin enjÃ´leusement ennuyeusement ensemble
+ ensuite enthousiastement entiÃ¨rement entomologiquement enviablement
+ environ ergonomiquement erratiquement erronÃ©ment eschatologiquement
+ espressivo essentiellement esthÃ©tiquement estimablement etc ethniquement
  ethnolinguistiquement ethnologiquement eucharistiquement euphoniquement
- euphémiquement euristiquement européennement eurythmiquement euréka exactement
- exaspérément excellemment excentriquement exceptionnellement excepté
- exclamativement exclusivement excédentairement exemplairement exhaustivement
+ euphÃ©miquement euristiquement europÃ©ennement eurythmiquement eurÃ©ka exactement
+ exaspÃ©rÃ©ment excellemment excentriquement exceptionnellement exceptÃ©
+ exclamativement exclusivement excÃ©dentairement exemplairement exhaustivement
  existentiellement exorbitamment exotiquement expansivement expertement
- explicativement explicitement explosivement explétivement exponentiellement
- expressément exprès expéditivement expérimentalement exquisément extatiquement
+ explicativement explicitement explosivement explÃ©tivement exponentiellement
+ expressÃ©ment exprÃ¨s expÃ©ditivement expÃ©rimentalement exquisÃ©ment extatiquement
  extensionnellement extensivement extra-muros extrajudiciairement
- extravagamment extrinsèquement extrêmement extérieurement exécrablement
- exégétiquement fabuleusement facheusement facile facilement facticement
- factitivement factuellement facultativement facétieusement fadassement
+ extravagamment extrinsÃ¨quement extrÃªmement extÃ©rieurement exÃ©crablement
+ exÃ©gÃ©tiquement fabuleusement facheusement facile facilement facticement
+ factitivement factuellement facultativement facÃ©tieusement fadassement
  faiblardement faiblement fallacieusement falotement fameusement familialement
- faméliquement fanatiquement fanfaronnement fangeusement fantaisistement
+ famÃ©liquement fanatiquement fanfaronnement fangeusement fantaisistement
  fantasmatiquement fantasquement fantastiquement fantomatiquement
  faramineusement faraudement farouchement fascistement fashionablement
  fastueusement fatalement fatalistement fatidiquement faussement fautivement
  favorablement ferme fermement ferroviairement fertilement fervemment
- fichtrement fichument fichûment fictivement fiduciairement fidèlement
- figurativement figurément filandreusement filialement filmiquement fin
- financièrement finaudement finement finiment fiscalement fissa fixement
- fiévreusement flagorneusement flasquement flatteusement flegmatiquement
- flexionnellement flexueusement flou fluidement flâneusement flémardement
- foireusement folkloriquement follement folâtrement foncièrement
- fondamentalement forcément forestièrement forfaitairement formellement
+ fichtrement fichument fichÃ»ment fictivement fiduciairement fidÃ¨lement
+ figurativement figurÃ©ment filandreusement filialement filmiquement fin
+ financiÃ¨rement finaudement finement finiment fiscalement fissa fixement
+ fiÃ©vreusement flagorneusement flasquement flatteusement flegmatiquement
+ flexionnellement flexueusement flou fluidement flÃ¢neusement flÃ©mardement
+ foireusement folkloriquement follement folÃ¢trement fonciÃ¨rement
+ fondamentalement forcÃ©ment forestiÃ¨rement forfaitairement formellement
  fort forte fortement fortissimo fortuitement fougueusement fourbement
- foutument foutûment fragilement fragmentairement frais franc franchement
- fraternellement frauduleusement fraîchement frigidement frigo frileusement
+ foutument foutÃ»ment fragilement fragmentairement frais franc franchement
+ fraternellement frauduleusement fraÃ®chement frigidement frigo frileusement
  frisquet frivolement froidement frontalement froussardement fructueusement
- frustement frénétiquement fréquemment frêlement fugacement fugitivement
- fumeusement funestement funèbrement funérairement furibardement furibondement
- furioso furtivement futilement futurement fâcheusement fébrilement fécondement
- félinement félonnement fémininement féodalement férocement fétidement
+ frustement frÃ©nÃ©tiquement frÃ©quemment frÃªlement fugacement fugitivement
+ fumeusement funestement funÃ¨brement funÃ©rairement furibardement furibondement
+ furioso furtivement futilement futurement fÃ¢cheusement fÃ©brilement fÃ©condement
+ fÃ©linement fÃ©lonnement fÃ©mininement fÃ©odalement fÃ©rocement fÃ©tidement
  gaffeusement gaiement gaillardement galamment gallicanement galvaniquement
- gammathérapiquement ganglionnairement gargantualement gastronomiquement
- gauloisement gaîment geignardement gentement gentiment gestuellement
+ gammathÃ©rapiquement ganglionnairement gargantualement gastronomiquement
+ gauloisement gaÃ®ment geignardement gentement gentiment gestuellement
  giratoirement glacialement glaciologiquement glaireusement glandulairement
- globalement glorieusement gloutonnement gnostiquement gnoséologiquement
- goguenardement goinfrement goniométriquement gothiquement gouailleusement
- goulûment gourdement gourmandement goutteusement gouvernementalement
+ globalement glorieusement gloutonnement gnostiquement gnosÃ©ologiquement
+ goguenardement goinfrement goniomÃ©triquement gothiquement gouailleusement
+ goulÃ»ment gourdement gourmandement goutteusement gouvernementalement
  gracilement gracioso graduellement grammaticalement grand grandement
  graphiquement graphologiquement gras grassement gratis gratuitement grave
- gravement grazioso grincheusement grivoisement grièvement grossement
- grotesquement grégairement guillerettement gutturalement guère guères
- gyroscopiquement gâteusement gélatineusement génialement génitalement
- généralement généreusement génériquement génétiquement géodynamiquement
- géographiquement géologiquement géométralement géométriquement géophysiquement
+ gravement grazioso grincheusement grivoisement griÃ¨vement grossement
+ grotesquement grÃ©gairement guillerettement gutturalement guÃ¨re guÃ¨res
+ gyroscopiquement gÃ¢teusement gÃ©latineusement gÃ©nialement gÃ©nitalement
+ gÃ©nÃ©ralement gÃ©nÃ©reusement gÃ©nÃ©riquement gÃ©nÃ©tiquement gÃ©odynamiquement
+ gÃ©ographiquement gÃ©ologiquement gÃ©omÃ©tralement gÃ©omÃ©triquement gÃ©ophysiquement
  habilement habituellement hagardement hagiographiquement haineusement
  hargneusement harmonieusement harmoniquement hasardeusement haut hautainement
- haïssablement hebdomadairement heptagonalement herméneutiquement
- heureusement heuristiquement hexagonalement hexaédriquement hideusement hier
+ haÃ¯ssablement hebdomadairement heptagonalement hermÃ©neutiquement
+ heureusement heuristiquement hexagonalement hexaÃ©driquement hideusement hier
  hippiatriquement hippiquement hippologiquement histologiquement historiquement
- hiératiquement hiéroglyphiquement homocentriquement homographiquement
- homologiquement homothétiquement homéopathiquement homériquement honnêtement
+ hiÃ©ratiquement hiÃ©roglyphiquement homocentriquement homographiquement
+ homologiquement homothÃ©tiquement homÃ©opathiquement homÃ©riquement honnÃªtement
  honorifiquement honteusement horizontalement hormis hormonalement horriblement
- hospitalièrement hostilement houleusement huileusement huitièmement
+ hospitaliÃ¨rement hostilement houleusement huileusement huitiÃ¨mement
  humanitairement humblement humidement humoristiquement humoureusement
  hydrauliquement hydrodynamiquement hydrographiquement hydrologiquement
- hydropneumatiquement hydrostatiquement hydrothérapiquement hygiéniquement
+ hydropneumatiquement hydrostatiquement hydrothÃ©rapiquement hygiÃ©niquement
  hypercorrectement hypnotiquement hypocondriaquement hypocoristiquement
- hypodermiquement hypostatiquement hypothécairement hypothétiquement
- hâtivement hébraïquement héliaquement hélicoïdalement héliographiquement
- hémiédriquement hémodynamiquement hémostatiquement héraldiquement héroïquement
- hérétiquement hétéroclitement hétérodoxement hétérogènement ibidem
+ hypodermiquement hypostatiquement hypothÃ©cairement hypothÃ©tiquement
+ hÃ¢tivement hÃ©braÃ¯quement hÃ©liaquement hÃ©licoÃ¯dalement hÃ©liographiquement
+ hÃ©miÃ©driquement hÃ©modynamiquement hÃ©mostatiquement hÃ©raldiquement hÃ©roÃ¯quement
+ hÃ©rÃ©tiquement hÃ©tÃ©roclitement hÃ©tÃ©rodoxement hÃ©tÃ©rogÃ¨nement ibidem
  ici ici-bas iconiquement iconographiquement id idem identiquement
  idiosyncrasiquement idiosyncratiquement idiotement idoinement idolatriquement
- idylliquement idéalement idéalistement idéellement idéographiquement
+ idylliquement idÃ©alement idÃ©alistement idÃ©ellement idÃ©ographiquement
  ignarement ignoblement ignominieusement ignoramment illicitement illico
- illogiquement illusoirement illustrement illégalement illégitimement
- imaginativement imbattablement imbécilement immaculément immanquablement
- immensément imminemment immobilement immodestement immodérément immondement
- immortellement immuablement immunitairement immunologiquement immédiatement
- immémorialement impairement impalpablement imparablement impardonnablement
+ illogiquement illusoirement illustrement illÃ©galement illÃ©gitimement
+ imaginativement imbattablement imbÃ©cilement immaculÃ©ment immanquablement
+ immensÃ©ment imminemment immobilement immodestement immodÃ©rÃ©ment immondement
+ immortellement immuablement immunitairement immunologiquement immÃ©diatement
+ immÃ©morialement impairement impalpablement imparablement impardonnablement
  impartialement impassiblement impatiemment impavidement impayablement
  impensablement imperceptiblement impersonnellement impertinemment
  impitoyablement implacablement implicitement impoliment impolitiquement
- importunément impossiblement imprescriptiblement impressivement improbablement
- impromptu improprement imprudemment imprécisément imprévisiblement impudemment
- impulsivement impunément impurement impénétrablement impérativement
- impérieusement impérissablement impétueusement inacceptablement
- inactivement inadmissiblement inadéquatement inaliénablement inaltérablement
- inamoviblement inappréciablement inassouvissablement inattaquablement
+ importunÃ©ment impossiblement imprescriptiblement impressivement improbablement
+ impromptu improprement imprudemment imprÃ©cisÃ©ment imprÃ©visiblement impudemment
+ impulsivement impunÃ©ment impurement impÃ©nÃ©trablement impÃ©rativement
+ impÃ©rieusement impÃ©rissablement impÃ©tueusement inacceptablement
+ inactivement inadmissiblement inadÃ©quatement inaliÃ©nablement inaltÃ©rablement
+ inamoviblement inapprÃ©ciablement inassouvissablement inattaquablement
  inaudiblement inauguralement inauthentiquement inavouablement incalculablement
  incertainement incessamment incestueusement incidemment incisivement
  inciviquement inclusivement incoerciblement incognito incommensurablement
- incommutablement incomparablement incomplètement incompréhensiblement
+ incommutablement incomparablement incomplÃ¨tement incomprÃ©hensiblement
  inconcevablement inconciliablement inconditionnellement inconfortablement
- inconsciemment inconsidérément inconsolablement inconstamment
- inconséquemment incontestablement incontinent incontournablement
+ inconsciemment inconsidÃ©rÃ©ment inconsolablement inconstamment
+ inconsÃ©quemment incontestablement incontinent incontournablement
  inconvenablement incorporellement incorrectement incorrigiblement
- increvablement incroyablement incrédulement incurablement indescriptiblement
- indicativement indiciairement indiciblement indifféremment indigemment
- indignement indirectement indiscernablement indiscontinûment indiscrètement
+ increvablement incroyablement incrÃ©dulement incurablement indescriptiblement
+ indicativement indiciairement indiciblement indiffÃ©remment indigemment
+ indignement indirectement indiscernablement indiscontinÃ»ment indiscrÃ¨tement
  indispensablement indissociablement indissolublement indistinctement
- indivisiblement indivisément indocilement indolemment indomptablement
- inductivement indulgemment industriellement industrieusement indécelablement
- indéchiffrablement indécrottablement indéfectiblement indéfendablement
- indéfinissablement indélicatement indélébilement indémontablement
- indépassablement indépendamment indéracinablement indésirablement
- indéterminément indévotement indûment ineffablement ineffaçablement
- ineptement inertement inespérément inesthétiquement inestimablement
+ indivisiblement indivisÃ©ment indocilement indolemment indomptablement
+ inductivement indulgemment industriellement industrieusement indÃ©celablement
+ indÃ©chiffrablement indÃ©crottablement indÃ©fectiblement indÃ©fendablement
+ indÃ©finissablement indÃ©licatement indÃ©lÃ©bilement indÃ©montablement
+ indÃ©passablement indÃ©pendamment indÃ©racinablement indÃ©sirablement
+ indÃ©terminÃ©ment indÃ©votement indÃ»ment ineffablement ineffaÃ§ablement
+ ineptement inertement inespÃ©rÃ©ment inesthÃ©tiquement inestimablement
  inexcusablement inexorablement inexpertement inexpiablement inexplicablement
  inexprimablement inexpugnablement inextinguiblement inextirpablement
  infailliblement infantilement infatigablement infectement infernalement
- infimement infiniment infinitésimalement inflexiblement informatiquement
- infra infructueusement infâmement inférieurement inglorieusement ingratement
- ingénieusement ingénument inhabilement inhabituellement inharmonieusement
- inhospitalièrement inhumainement inhéremment inimaginablement inimitablement
+ infimement infiniment infinitÃ©simalement inflexiblement informatiquement
+ infra infructueusement infÃ¢mement infÃ©rieurement inglorieusement ingratement
+ ingÃ©nieusement ingÃ©nument inhabilement inhabituellement inharmonieusement
+ inhospitaliÃ¨rement inhumainement inhÃ©remment inimaginablement inimitablement
  inintelligiblement inintentionnellement iniquement initialement
  injurieusement injustement injustifiablement inlassablement innocemment
- inoffensivement inopinément inopportunément inoubliablement inoxydablement
- inquisitorialement inquiètement insaisissablement insalubrement insanement
- insciemment insensiblement insensément insidieusement insignement
+ inoffensivement inopinÃ©ment inopportunÃ©ment inoubliablement inoxydablement
+ inquisitorialement inquiÃ¨tement insaisissablement insalubrement insanement
+ insciemment insensiblement insensÃ©ment insidieusement insignement
  insipidement insolemment insolitement insolublement insondablement
- insoucieusement insoupçonnablement insoutenablement instablement instamment
+ insoucieusement insoupÃ§onnablement insoutenablement instablement instamment
  instinctivement institutionnellement instructivement instrumentalement
  insulairement insupportablement insurmontablement insurpassablement
- inséparablement intangiblement intarissablement intellectuellement
+ insÃ©parablement intangiblement intarissablement intellectuellement
  intelligiblement intempestivement intemporellement intenablement
- intensivement intensément intentionnellement intercalairement
- interlinéairement interlopement interminablement intermusculairement
- interplanétairement interprofessionnellement interprétativement
- intersyndicalement intervocaliquement intimement intolérablement
+ intensivement intensÃ©ment intentionnellement intercalairement
+ interlinÃ©airement interlopement interminablement intermusculairement
+ interplanÃ©tairement interprofessionnellement interprÃ©tativement
+ intersyndicalement intervocaliquement intimement intolÃ©rablement
  intraitablement intramusculairement intransitivement intraveineusement
- introspectivement intrépidement intuitivement intègrement intégralement
- intérimairement inutilement invalidement invariablement inventivement
+ introspectivement intrÃ©pidement intuitivement intÃ¨grement intÃ©gralement
+ intÃ©rimairement inutilement invalidement invariablement inventivement
  invinciblement inviolablement invisiblement involontairement
- invulnérablement inébranlablement inégalablement inégalement inégalitairement
- inélégamment inénarrablement inépuisablement inéquitablement inévitablement
+ invulnÃ©rablement inÃ©branlablement inÃ©galablement inÃ©galement inÃ©galitairement
+ inÃ©lÃ©gamment inÃ©narrablement inÃ©puisablement inÃ©quitablement inÃ©vitablement
  ironiquement irraisonnablement irrationnellement irrattrapablement
- irrespectueusement irrespirablement irresponsablement irréconciliablement
- irrécusablement irréductiblement irréellement irréfragablement irréfutablement
- irréligieusement irrémissiblement irrémédiablement irréparablement
- irréprochablement irrépréhensiblement irrésistiblement irrésolument
- irrévocablement irrévéremment irrévérencieusement isolément isothermiquement
- isoédriquement item itou itérativement jacobinement jadis jalousement jamais
+ irrespectueusement irrespirablement irresponsablement irrÃ©conciliablement
+ irrÃ©cusablement irrÃ©ductiblement irrÃ©ellement irrÃ©fragablement irrÃ©futablement
+ irrÃ©ligieusement irrÃ©missiblement irrÃ©mÃ©diablement irrÃ©parablement
+ irrÃ©prochablement irrÃ©prÃ©hensiblement irrÃ©sistiblement irrÃ©solument
+ irrÃ©vocablement irrÃ©vÃ©remment irrÃ©vÃ©rencieusement isolÃ©ment isothermiquement
+ isoÃ©driquement item itou itÃ©rativement jacobinement jadis jalousement jamais
  jaune jeudi jeunement jobardement jointivement joliment journalistiquement
- jovialement joyeusement judaïquement judiciairement judicieusement
- juste justement justifiablement juvénilement juxtalinéairement jésuitement
- kaléidoscopiquement kilométriquement l'année l'après-midi l'avant-veille
+ jovialement joyeusement judaÃ¯quement judiciairement judicieusement
+ juste justement justifiablement juvÃ©nilement juxtalinÃ©airement jÃ©suitement
+ kalÃ©idoscopiquement kilomÃ©triquement l'annÃ©e l'aprÃ¨s-midi l'avant-veille
  labialement laborieusement labyrinthiquement laconiquement lactiquement
- ladrement laidement laiteusement lamentablement langagièrement langoureusement
+ ladrement laidement laiteusement lamentablement langagiÃ¨rement langoureusement
  languissamment lapidairement large largement larghetto largo lascivement
- latinement latéralement laxistement laïquement legato lentement lento lerch
+ latinement latÃ©ralement laxistement laÃ¯quement legato lentement lento lerch
  lestement lexicalement lexicographiquement lexicologiquement libertinement
- librement libéralement licencieusement licitement ligamentairement
- limitativement limpidement linguistiquement linéairement linéalement
- lisiblement lithographiquement lithologiquement litigieusement littérairement
+ librement libÃ©ralement licencieusement licitement ligamentairement
+ limitativement limpidement linguistiquement linÃ©airement linÃ©alement
+ lisiblement lithographiquement lithologiquement litigieusement littÃ©rairement
  liturgiquement lividement livresquement localement logarithmiquement
  logistiquement logographiquement loin lointainement loisiblement long
  longitudinalement longtemps longuement loquacement lors louablement
  louchement loufoquement lourd lourdaudement lourdement loyalement lubriquement
  lucrativement ludiquement lugubrement lumineusement lunairement lunatiquement
- lustralement luxueusement luxurieusement lymphatiquement lyriquement là là-bas
- là-dessous là-dessus là-haut lâchement légalement légendairement léger
- légitimement légèrement léthargiquement macabrement macache macaroniquement
+ lustralement luxueusement luxurieusement lymphatiquement lyriquement lÃ  lÃ -bas
+ lÃ -dessous lÃ -dessus lÃ -haut lÃ¢chement lÃ©galement lÃ©gendairement lÃ©ger
+ lÃ©gitimement lÃ©gÃ¨rement lÃ©thargiquement macabrement macache macaroniquement
  machinalement macrobiotiquement macroscopiquement maestoso magiquement
- magnanimement magnifiquement magnétiquement magnétohydrodynamiquement
+ magnanimement magnifiquement magnÃ©tiquement magnÃ©tohydrodynamiquement
  maigrement maintenant majestueusement majoritairement mal maladivement
- malaisément malcommodément malencontreusement malgracieusement malgré
- malheureusement malhonnêtement malicieusement malignement malproprement
- malveillamment maléfiquement maniaquement manifestement manuellement mardi
+ malaisÃ©ment malcommodÃ©ment malencontreusement malgracieusement malgrÃ©
+ malheureusement malhonnÃªtement malicieusement malignement malproprement
+ malveillamment malÃ©fiquement maniaquement manifestement manuellement mardi
  maritalement maritimement marmiteusement marotiquement marre martialement
- masochistement massivement maternellement mathématiquement matin matinalement
- matriarcalement matrilinéairement matrimonialement maturément matérialistement
+ masochistement massivement maternellement mathÃ©matiquement matin matinalement
+ matriarcalement matrilinÃ©airement matrimonialement maturÃ©ment matÃ©rialistement
  maupiteusement mauresquement maussadement mauvais mauvaisement maxi
- meilleur mensongèrement mensuellement mentalement menteusement menu
- mercredi merdeusement merveilleusement mesquinement mesurément mezzo
- micrographiquement micrométriquement microphysiquement microscopiquement
- miette mieux mignardement mignonnement militairement millimétriquement
- minablement mincement minimement ministériellement minoritairement
- minutieusement minéralogiquement miraculeusement mirifiquement mirobolamment
- misanthropiquement misogynement misérablement miséreusement
- miteusement mièvrement mnémoniquement mnémotechniquement mobilièrement
+ meilleur mensongÃ¨rement mensuellement mentalement menteusement menu
+ mercredi merdeusement merveilleusement mesquinement mesurÃ©ment mezzo
+ micrographiquement micromÃ©triquement microphysiquement microscopiquement
+ miette mieux mignardement mignonnement militairement millimÃ©triquement
+ minablement mincement minimement ministÃ©riellement minoritairement
+ minutieusement minÃ©ralogiquement miraculeusement mirifiquement mirobolamment
+ misanthropiquement misogynement misÃ©rablement misÃ©reusement
+ miteusement miÃ¨vrement mnÃ©moniquement mnÃ©motechniquement mobiliÃ¨rement
  modalement moderato modernement modestement modiquement modulairement
  moelleusement moindrement moins mollassement mollement mollo molto
- momentanément monacalement monarchiquement monastiquement mondainement
+ momentanÃ©ment monacalement monarchiquement monastiquement mondainement
  monocordement monographiquement monolithiquement monophoniquement monotonement
- monumentalement monétairement moqueusement moralement moralistement
+ monumentalement monÃ©tairement moqueusement moralement moralistement
  mordicus morganatiquement mornement morosement morphologiquement mortellement
- morveusement moult moutonnièrement moyennant moyennement moyenâgeusement
- multidisciplinairement multilatéralement multinationalement multiplement
+ morveusement moult moutonniÃ¨rement moyennant moyennement moyenÃ¢geusement
+ multidisciplinairement multilatÃ©ralement multinationalement multiplement
  multipolairement municipalement musculairement musculeusement musicalement
- mutuellement mystiquement mystérieusement mythiquement mythologiquement
- mécanographiquement méchamment médialement médiatement médiatiquement
- médicinalement médiocrement méditativement mélancoliquement mélodieusement
- mélodramatiquement mémorablement méphistophéliquement méprisablement
- méritoirement métaboliquement métalinguistiquement métalliquement
- métallurgiquement métalogiquement métamathématiquement métaphoriquement
- méthodiquement méthodologiquement méticuleusement métonymiquement métriquement
- météorologiquement même mêmement mûrement n'étant naguère narcissiquement
+ mutuellement mystiquement mystÃ©rieusement mythiquement mythologiquement
+ mÃ©canographiquement mÃ©chamment mÃ©dialement mÃ©diatement mÃ©diatiquement
+ mÃ©dicinalement mÃ©diocrement mÃ©ditativement mÃ©lancoliquement mÃ©lodieusement
+ mÃ©lodramatiquement mÃ©morablement mÃ©phistophÃ©liquement mÃ©prisablement
+ mÃ©ritoirement mÃ©taboliquement mÃ©talinguistiquement mÃ©talliquement
+ mÃ©tallurgiquement mÃ©talogiquement mÃ©tamathÃ©matiquement mÃ©taphoriquement
+ mÃ©thodiquement mÃ©thodologiquement mÃ©ticuleusement mÃ©tonymiquement mÃ©triquement
+ mÃ©tÃ©orologiquement mÃªme mÃªmement mÃ»rement n'Ã©tant naguÃ¨re narcissiquement
  narrativement nasalement nasillardement natalement nationalement nativement
- naturellement naïvement ne nenni nerveusement net nettement
+ naturellement naÃ¯vement ne nenni nerveusement net nettement
  neurolinguistiquement neurologiquement neurophysiologiquement
- neutrement neuvièmement niaisement nib nigaudement noblement nocivement
- noirement nomadement nombreusement nominalement nominativement nommément non
+ neutrement neuviÃ¨mement niaisement nib nigaudement noblement nocivement
+ noirement nomadement nombreusement nominalement nominativement nommÃ©ment non
  nonobstant noologiquement normalement normativement nostalgiquement
- notamment notarialement notoirement nouménalement nouvellement noétiquement
- nucléairement nuisiblement nuitamment nullement numismatiquement numériquement
- nuptialement néanmoins nébuleusement nécessairement néfastement négatif
- négligemment néologiquement névrotiquement nûment objectivement oblativement
- oblige obligeamment obliquement obrepticement obscurément obscènement
- obsessivement obstinément obséquieusement obtusément obèsement
- occultement octogonalement oculairement océanographiquement odieusement
+ notamment notarialement notoirement noumÃ©nalement nouvellement noÃ©tiquement
+ nuclÃ©airement nuisiblement nuitamment nullement numismatiquement numÃ©riquement
+ nuptialement nÃ©anmoins nÃ©buleusement nÃ©cessairement nÃ©fastement nÃ©gatif
+ nÃ©gligemment nÃ©ologiquement nÃ©vrotiquement nÃ»ment objectivement oblativement
+ oblige obligeamment obliquement obrepticement obscurÃ©ment obscÃ¨nement
+ obsessivement obstinÃ©ment obsÃ©quieusement obtusÃ©ment obÃ¨sement
+ occultement octogonalement oculairement ocÃ©anographiquement odieusement
  oenologiquement offensivement officiellement officieusement oiseusement
  olfactivement oligarchiquement ombrageusement onc oncques onctueusement
- oniriquement onomatopéiquement onques ontologiquement onzièmement onéreusement
- ophtalmologiquement opiniâtrement opportunistement opportunément opposément
+ oniriquement onomatopÃ©iquement onques ontologiquement onziÃ¨mement onÃ©reusement
+ ophtalmologiquement opiniÃ¢trement opportunistement opportunÃ©ment opposÃ©ment
  optimalement optimistement optionnellement optiquement opulemment
- opératoirement orageusement oralement oratoirement orbiculairement
- ordinairement ordurièrement ores organiquement organoleptiquement orgiaquement
+ opÃ©ratoirement orageusement oralement oratoirement orbiculairement
+ ordinairement orduriÃ¨rement ores organiquement organoleptiquement orgiaquement
  orgueilleusement orientalement originairement originalement originellement
  orographiquement orthodoxement orthogonalement orthographiquement
- orthopédiquement osmotiquement ostensiblement ostentatoirement oublieusement
- out outrageusement outrancièrement outre outre-atlantique outre-mer
+ orthopÃ©diquement osmotiquement ostensiblement ostentatoirement oublieusement
+ out outrageusement outranciÃ¨rement outre outre-atlantique outre-mer
  outrecuidamment ouvertement ovalement oviparement ovoviviparement
- pacifiquement paillardement pairement paisiblement palingénésiquement
- paléobotaniquement paléographiquement paléontologiquement panoptiquement
- pantagruéliquement papelardement paraboliquement paradigmatiquement
- paralittérairement parallactiquement parallèlement paramilitairement
+ pacifiquement paillardement pairement paisiblement palingÃ©nÃ©siquement
+ palÃ©obotaniquement palÃ©ographiquement palÃ©ontologiquement panoptiquement
+ pantagruÃ©liquement papelardement paraboliquement paradigmatiquement
+ paralittÃ©rairement parallactiquement parallÃ¨lement paramilitairement
  parasitairement parcellairement parcellement parcimonieusement pardon
  paresseusement parfaitement parfois parisiennement paritairement
- parodiquement paroxistiquement paroxystiquement partant parthénogénétiquement
- particulièrement partiellement partout pas passablement passagèrement passim
- passionnément passivement passé pastoralement pataudement patelinement
- paternellement paternement pathologiquement pathétiquement patibulairement
- patriarcalement patrilinéairement patrimonialement patriotiquement pauvrement
- païennement peinardement peineusement penaudement pendablement pendant
+ parodiquement paroxistiquement paroxystiquement partant parthÃ©nogÃ©nÃ©tiquement
+ particuliÃ¨rement partiellement partout pas passablement passagÃ¨rement passim
+ passionnÃ©ment passivement passÃ© pastoralement pataudement patelinement
+ paternellement paternement pathologiquement pathÃ©tiquement patibulairement
+ patriarcalement patrilinÃ©airement patrimonialement patriotiquement pauvrement
+ paÃ¯ennement peinardement peineusement penaudement pendablement pendant
  pensivement pentatoniquement perceptiblement perceptivement perdurablement
  permissivement pernicieusement perpendiculairement perplexement
  persifleusement perso personnellement perspicacement persuasivement
  pertinemment perversement pesamment pessimistement petit petitement peu
- peut-être pharisaïquement pharmacologiquement philanthropement
+ peut-Ãªtre pharisaÃ¯quement pharmacologiquement philanthropement
  philistinement philologiquement philosophiquement phobiquement phoniquement
- phonologiquement phonématiquement phonémiquement phonétiquement
- photographiquement photométriquement phrénologiquement phylogénétiquement
- physiologiquement physionomiquement physiquement phénoménalement
- phénoménologiquement pianissimo pianistiquement piano pictographiquement
+ phonologiquement phonÃ©matiquement phonÃ©miquement phonÃ©tiquement
+ photographiquement photomÃ©triquement phrÃ©nologiquement phylogÃ©nÃ©tiquement
+ physiologiquement physionomiquement physiquement phÃ©nomÃ©nalement
+ phÃ©nomÃ©nologiquement pianissimo pianistiquement piano pictographiquement
  pieusement pile pinailleusement pingrement piteusement pitoyablement
- piètrement più placidement plaignardement plaintivement plaisamment
- plantureusement planétairement plastiquement plat platement platoniquement
+ piÃ¨trement piÃ¹ placidement plaignardement plaintivement plaisamment
+ plantureusement planÃ©tairement plastiquement plat platement platoniquement
  plein pleinement pleutrement pluriannuellement pluridisciplinairement
- plurinationalement plus plutoniquement plutôt plébéiennement plénièrement
- pléthoriquement pneumatiquement point pointilleusement pointu poisseusement
+ plurinationalement plus plutoniquement plutÃ´t plÃ©bÃ©iennement plÃ©niÃ¨rement
+ plÃ©thoriquement pneumatiquement point pointilleusement pointu poisseusement
  poliment polissonnement politiquement poltronnement polygonalement
- polyédriquement polémiquement pomologiquement pompeusement ponctuellement
+ polyÃ©driquement polÃ©miquement pomologiquement pompeusement ponctuellement
  pontificalement populairement pornographiquement positionnellement
- possessivement possessoirement possiblement posthumement posthumément
- postérieurement posément potablement potentiellement pourquoi pourtant
- poétiquement pragmatiquement pratiquement premièrement presque prestement
- prestissimo presto primairement primesautièrement primitivement primo
- principalement princièrement printanièrement prioritairement privativement
- probablement probement problématiquement processionnellement prochainement
+ possessivement possessoirement possiblement posthumement posthumÃ©ment
+ postÃ©rieurement posÃ©ment potablement potentiellement pourquoi pourtant
+ poÃ©tiquement pragmatiquement pratiquement premiÃ¨rement presque prestement
+ prestissimo presto primairement primesautiÃ¨rement primitivement primo
+ principalement princiÃ¨rement printaniÃ¨rement prioritairement privativement
+ probablement probement problÃ©matiquement processionnellement prochainement
  proconsulairement prodigalement prodigieusement prodiguement productivement
- professionnellement professoralement profitablement profond profondément
+ professionnellement professoralement profitablement profond profondÃ©ment
  progressivement projectivement proleptiquement prolifiquement prolixement
- promptement pronominalement prophylactiquement prophétiquement propicement
- proportionnellement proportionnément proprement prosaïquement prosodiquement
- prospèrement protocolairement protohistoriquement prou proverbialement
+ promptement pronominalement prophylactiquement prophÃ©tiquement propicement
+ proportionnellement proportionnÃ©ment proprement prosaÃ¯quement prosodiquement
+ prospÃ¨rement protocolairement protohistoriquement prou proverbialement
  provincialement provisionnellement provisoirement prudement prudemment
- préalablement précairement précautionneusement précieusement précipitamment
- précisément précocement précédemment préférablement préférentiellement
- préjudiciablement préliminairement prélogiquement prématurément
- prépositivement préscolairement présentement présomptivement présomptueusement
- présumément prétendument prétentieusement préventivement prévisionnellement
+ prÃ©alablement prÃ©cairement prÃ©cautionneusement prÃ©cieusement prÃ©cipitamment
+ prÃ©cisÃ©ment prÃ©cocement prÃ©cÃ©demment prÃ©fÃ©rablement prÃ©fÃ©rentiellement
+ prÃ©judiciablement prÃ©liminairement prÃ©logiquement prÃ©maturÃ©ment
+ prÃ©positivement prÃ©scolairement prÃ©sentement prÃ©somptivement prÃ©somptueusement
+ prÃ©sumÃ©ment prÃ©tendument prÃ©tentieusement prÃ©ventivement prÃ©visionnellement
  psychanalytiquement psychiatriquement psychiquement psycholinguistiquement
- psychométriquement psychopathologiquement psychophysiologiquement
- psychosomatiquement psychothérapiquement puamment publicitairement
+ psychomÃ©triquement psychopathologiquement psychophysiologiquement
+ psychosomatiquement psychothÃ©rapiquement puamment publicitairement
  pudibondement pudiquement pugnacement puissamment pulmonairement
- purement puritainement pusillanimement putainement putassièrement putativement
- pyramidalement pyrométriquement pâlement pâteusement pécuniairement
- pédamment pédantement pédantesquement pédestrement péjorativement pénalement
- péniblement pénitentiairement pépèrement péremptoirement périlleusement
- périphériquement périscolairement pétrochimiquement pétrographiquement
- pêle-mêle quadrangulairement quadrimestriellement quadruplement
- quand quantitativement quarantièmement quarto quasi quasiment quater
- quatrièmement quellement quelque quelquefois question quinto quinzièmement
- quiètement quoique quotidiennement racialement racoleusement radiairement
+ purement puritainement pusillanimement putainement putassiÃ¨rement putativement
+ pyramidalement pyromÃ©triquement pÃ¢lement pÃ¢teusement pÃ©cuniairement
+ pÃ©damment pÃ©dantement pÃ©dantesquement pÃ©destrement pÃ©jorativement pÃ©nalement
+ pÃ©niblement pÃ©nitentiairement pÃ©pÃ¨rement pÃ©remptoirement pÃ©rilleusement
+ pÃ©riphÃ©riquement pÃ©riscolairement pÃ©trochimiquement pÃ©trographiquement
+ pÃªle-mÃªle quadrangulairement quadrimestriellement quadruplement
+ quand quantitativement quarantiÃ¨mement quarto quasi quasiment quater
+ quatriÃ¨mement quellement quelque quelquefois question quinto quinziÃ¨mement
+ quiÃ¨tement quoique quotidiennement racialement racoleusement radiairement
  radicalement radieusement radinement radiographiquement radiologiquement
- radiotélégraphiquement radioélectriquement rageusement raidement railleusement
+ radiotÃ©lÃ©graphiquement radioÃ©lectriquement rageusement raidement railleusement
  rapacement rapidement rapido rapidos rarement rarissimement ras rasibus
  recevablement reconventionnellement recta rectangulairement rectilignement
  redoutablement regrettablement relativement religieusement remarquablement
- reproductivement représentativement respectablement respectivement
- restrictivement revêchement rhomboédriquement rhéologiquement rhétoriquement
+ reproductivement reprÃ©sentativement respectablement respectivement
+ restrictivement revÃªchement rhomboÃ©driquement rhÃ©ologiquement rhÃ©toriquement
  richissimement ridiculement rieusement rigidement rigoureusement rinforzando
  risiblement ritardando rituellement robustement rocailleusement
- rogatoirement roguement roidement romainement romancièrement romanesquement
- rond rondement rondouillardement rosement rossement rotativement roturièrement
- rougement routinièrement royalement rubato rudement rudimentairement
+ rogatoirement roguement roidement romainement romanciÃ¨rement romanesquement
+ rond rondement rondouillardement rosement rossement rotativement roturiÃ¨rement
+ rougement routiniÃ¨rement royalement rubato rudement rudimentairement
  ruralement rustaudement rustiquement rustrement rythmiquement
- réactionnairement réalistement rébarbativement récemment réciproquement
- rédhibitoirement réellement réflexivement réfractairement référendairement
- régionalement réglementairement réglo régressivement régulièrement
- répréhensiblement répulsivement répétitivement résidentiellement
- résineusement résolument rétivement rétroactivement rétrospectivement
- révocablement révolutionnairement révéremment révérencieusement rêveusement
- sacerdotalement sacramentellement sacrilègement sacrément sadiquement
- sagement sagittalement sainement saintement saisonnièrement salacement
+ rÃ©actionnairement rÃ©alistement rÃ©barbativement rÃ©cemment rÃ©ciproquement
+ rÃ©dhibitoirement rÃ©ellement rÃ©flexivement rÃ©fractairement rÃ©fÃ©rendairement
+ rÃ©gionalement rÃ©glementairement rÃ©glo rÃ©gressivement rÃ©guliÃ¨rement
+ rÃ©prÃ©hensiblement rÃ©pulsivement rÃ©pÃ©titivement rÃ©sidentiellement
+ rÃ©sineusement rÃ©solument rÃ©tivement rÃ©troactivement rÃ©trospectivement
+ rÃ©vocablement rÃ©volutionnairement rÃ©vÃ©remment rÃ©vÃ©rencieusement rÃªveusement
+ sacerdotalement sacramentellement sacrilÃ¨gement sacrÃ©ment sadiquement
+ sagement sagittalement sainement saintement saisonniÃ¨rement salacement
  salaudement salement salubrement salutairement samedi sanguinairement
  saphiquement sarcastiquement sardoniquement sataniquement satiriquement
- satyriquement sauf saumâtrement sauvagement savamment savoureusement
+ satyriquement sauf saumÃ¢trement sauvagement savamment savoureusement
  scalairement scandaleusement scatologiquement sceptiquement scherzando scherzo
- schématiquement sciemment scientifiquement scolairement scolastiquement
- sculpturalement scélératement scéniquement sec secondairement secondement
- secrètement sectairement sectoriellement secundo seigneurialement seizièmement
+ schÃ©matiquement sciemment scientifiquement scolairement scolastiquement
+ sculpturalement scÃ©lÃ©ratement scÃ©niquement sec secondairement secondement
+ secrÃ¨tement sectairement sectoriellement secundo seigneurialement seiziÃ¨mement
  semestriellement sempiternellement senestrorsum sensationnellement
- sensuellement sensément sentencieusement sentimentalement septentrionalement
- septièmement sereinement serré serviablement servilement seul seulement sexto
- sforzando si sibyllinement sic sidéralement sidérurgiquement significativement
- similairement simplement simultanément sincèrement singulièrement sinistrement
- sinon sinueusement siouxement sirupeusement sitôt sixièmement smorzando
+ sensuellement sensÃ©ment sentencieusement sentimentalement septentrionalement
+ septiÃ¨mement sereinement serrÃ© serviablement servilement seul seulement sexto
+ sforzando si sibyllinement sic sidÃ©ralement sidÃ©rurgiquement significativement
+ similairement simplement simultanÃ©ment sincÃ¨rement singuliÃ¨rement sinistrement
+ sinon sinueusement siouxement sirupeusement sitÃ´t sixiÃ¨mement smorzando
  sobrement sociablement socialement sociolinguistiquement sociologiquement
- socratiquement soigneusement soit soixantièmement solairement soldatesquement
+ socratiquement soigneusement soit soixantiÃ¨mement solairement soldatesquement
  solidairement solidement solitairement somatiquement sombrement sommairement
  somptuairement somptueusement songeusement sonorement sophistiquement
  sordidement sororalement sostenuto sottement soucieusement soudain
- souhaitablement souplement soupçonneusement sourcilleusement sourdement
+ souhaitablement souplement soupÃ§onneusement sourcilleusement sourdement
  souterrainement souvent souventefois souverainement soyeusement spacieusement
- spasmodiquement spatialement spectaculairement spectralement sphériquement
- splendidement spontanément sporadiquement sportivement spécialement
- spécifiquement spéculairement spéculativement spéléologiquement stablement
+ spasmodiquement spatialement spectaculairement spectralement sphÃ©riquement
+ splendidement spontanÃ©ment sporadiquement sportivement spÃ©cialement
+ spÃ©cifiquement spÃ©culairement spÃ©culativement spÃ©lÃ©ologiquement stablement
  staliniennement stationnairement statiquement statistiquement statutairement
- stoechiométriquement stoïquement stratigraphiquement stratégiquement
+ stoechiomÃ©triquement stoÃ¯quement stratigraphiquement stratÃ©giquement
  stridemment strophiquement structuralement structurellement studieusement
- stylistiquement sténographiquement stérilement stéréographiquement
- stéréophoniquement suavement subalternement subconsciemment subitement subito
- sublimement subordinément subordonnément subrepticement subrogatoirement
- substantiellement substantivement subséquemment subtilement subversivement
+ stylistiquement stÃ©nographiquement stÃ©rilement stÃ©rÃ©ographiquement
+ stÃ©rÃ©ophoniquement suavement subalternement subconsciemment subitement subito
+ sublimement subordinÃ©ment subordonnÃ©ment subrepticement subrogatoirement
+ substantiellement substantivement subsÃ©quemment subtilement subversivement
  succinctement succulemment suffisamment suggestivement suicidairement
- superbement superficiellement superfinement superfétatoirement superlativement
- supplémentairement supplétivement supportablement supposément supra
- suprêmement supérieurement surabondamment surhumainement surnaturellement
- surréellement surtout surérogatoirement sus suspectement suspicieusement
+ superbement superficiellement superfinement superfÃ©tatoirement superlativement
+ supplÃ©mentairement supplÃ©tivement supportablement supposÃ©ment supra
+ suprÃªmement supÃ©rieurement surabondamment surhumainement surnaturellement
+ surrÃ©ellement surtout surÃ©rogatoirement sus suspectement suspicieusement
  syllabiquement syllogistiquement symbiotiquement symboliquement
- symphoniquement symptomatiquement symétriquement synchroniquement
+ symphoniquement symptomatiquement symÃ©triquement synchroniquement
  syndicalement synergiquement synonymiquement synoptiquement syntactiquement
- syntaxiquement synthétiquement systématiquement systémiquement sèchement
- séculièrement sédentairement séditieusement sélectivement sélénographiquement
- sémiologiquement sémiotiquement sémiquement séméiotiquement sénilement
- séquentiellement séraphiquement sériellement sérieusement sérologiquement
- sûr sûrement tabulairement tacitement taciturnement tactilement tactiquement
- talmudiquement tangentiellement tangiblement tant tantôt tapageusement
+ syntaxiquement synthÃ©tiquement systÃ©matiquement systÃ©miquement sÃ¨chement
+ sÃ©culiÃ¨rement sÃ©dentairement sÃ©ditieusement sÃ©lectivement sÃ©lÃ©nographiquement
+ sÃ©miologiquement sÃ©miotiquement sÃ©miquement sÃ©mÃ©iotiquement sÃ©nilement
+ sÃ©quentiellement sÃ©raphiquement sÃ©riellement sÃ©rieusement sÃ©rologiquement
+ sÃ»r sÃ»rement tabulairement tacitement taciturnement tactilement tactiquement
+ talmudiquement tangentiellement tangiblement tant tantÃ´t tapageusement
  tard tardivement tatillonnement tauromachiquement tautologiquement
  taxinomiquement taxonomiquement techniquement technocratiquement
  tectoniquement teigneusement tellement temporairement temporellement
  tenacement tendanciellement tendancieusement tendrement tennistiquement
  tenuto ter terminologiquement ternement terrible terriblement territorialement
  testimonialement texto textuellement thermiquement thermodynamiquement
- thermonucléairement thermoélectriquement thématiquement théocratiquement
- théologiquement théoriquement théosophiquement thérapeutiquement thétiquement
- timidement titulairement tièdement tiédassement tocardement tolérablement
+ thermonuclÃ©airement thermoÃ©lectriquement thÃ©matiquement thÃ©ocratiquement
+ thÃ©ologiquement thÃ©oriquement thÃ©osophiquement thÃ©rapeutiquement thÃ©tiquement
+ timidement titulairement tiÃ¨dement tiÃ©dassement tocardement tolÃ©rablement
  toniquement topiquement topographiquement topologiquement toponymiquement
  torrentueusement torridement tortueusement torvement totalement
  toujours touristiquement tout toute toutefois toxicologiquement
  traditionnellement tragediante tragiquement tranquillement
  transcendantalement transformationnellement transgressivement transitivement
- transversalement traumatologiquement traînardement traîtreusement
- trentièmement triangulairement tribalement tridimensionnellement
+ transversalement traumatologiquement traÃ®nardement traÃ®treusement
+ trentiÃ¨mement triangulairement tribalement tridimensionnellement
  trihebdomadairement trimestriellement triomphalement triplement
- tristement trivialement troisio troisièmement trompeusement trop
- très ttc tumultuairement tumultueusement turpidement tutélairement typiquement
- typologiquement tyranniquement télescopiquement téléautographiquement
- téléinformatiquement télématiquement téléologiquement télépathiquement
- télévisuellement témérairement ténébreusement tératologiquement tétaniquement
- tétraédriquement tôt ultimement ultimo ultérieurement unanimement uniformément
- unilinéairement uniment uninominalement unipolairement uniquement unitairement
- universitairement univoquement unièmement urbainement urgemment urologiquement
+ tristement trivialement troisio troisiÃ¨mement trompeusement trop
+ trÃ¨s ttc tumultuairement tumultueusement turpidement tutÃ©lairement typiquement
+ typologiquement tyranniquement tÃ©lescopiquement tÃ©lÃ©autographiquement
+ tÃ©lÃ©informatiquement tÃ©lÃ©matiquement tÃ©lÃ©ologiquement tÃ©lÃ©pathiquement
+ tÃ©lÃ©visuellement tÃ©mÃ©rairement tÃ©nÃ©breusement tÃ©ratologiquement tÃ©taniquement
+ tÃ©traÃ©driquement tÃ´t ultimement ultimo ultÃ©rieurement unanimement uniformÃ©ment
+ unilinÃ©airement uniment uninominalement unipolairement uniquement unitairement
+ universitairement univoquement uniÃ¨mement urbainement urgemment urologiquement
  usurairement utilement utilitairement utopiquement uvulairement vachardement
  vaginalement vaguement vaillamment vainement valablement valeureusement
  vaniteusement vantardement vaporeusement variablement vasculairement
- vasouillardement vastement velléitairement vendredi venimeusement ventralement
+ vasouillardement vastement vellÃ©itairement vendredi venimeusement ventralement
  verbeusement vernaculairement versatilement vertement verticalement
  vertueusement verveusement vestimentairement veulement vicieusement
  vieillottement vigesimo vigilamment vigoureusement vilain vilainement vilement
- vingtièmement violemment virginalement virilement virtuellement virulemment
- viscéralement visiblement visqueusement visuellement vitalement vite vitement
+ vingtiÃ¨mement violemment virginalement virilement virtuellement virulemment
+ viscÃ©ralement visiblement visqueusement visuellement vitalement vite vitement
  vivacement vivement viviparement vocalement vocaliquement voir voire
  volcaniquement volcanologiquement volontairement volontiers volubilement
  voluptueusement voracement voyez-vous vrai vraiment vraisemblablement
- vulgo végétalement végétativement véhémentement vélairement vélocement
- véniellement vénéneusement vénérablement véracement véridiquement
- vésaniquement vétilleusement vétustement xylographiquement xérographiquement
- zootechniquement âcrement âprement çà échocardiographiquement
- échométriquement éclatamment éclectiquement écologiquement économement
- économétriquement édéniquement également égalitairement égocentriquement
- égrillardement éhontément élastiquement électivement électoralement
- électrocardiographiquement électrochimiquement électrodynamiquement
- électromagnétiquement électromécaniquement électroniquement
- électropneumatiquement électrostatiquement électrotechniquement
- éliminatoirement élitistement élogieusement éloquemment élégamment
- élémentairement éminemment émotionnellement émotivement énergiquement
- énigmatiquement énièmement énormément épais épaissement éparsement épatamment
- éphémèrement épicuriennement épidermiquement épidémiologiquement
- épigrammatiquement épigraphiquement épileptiquement épiquement épiscopalement
- épistolairement épistémologiquement épouvantablement équitablement
- équivoquement érotiquement éruditement éruptivement érémitiquement
- étatiquement éternellement éthiquement éthologiquement étonnamment étourdiment
- étroitement étymologiquement évangéliquement évasivement éventuellement
+ vulgo vÃ©gÃ©talement vÃ©gÃ©tativement vÃ©hÃ©mentement vÃ©lairement vÃ©locement
+ vÃ©niellement vÃ©nÃ©neusement vÃ©nÃ©rablement vÃ©racement vÃ©ridiquement
+ vÃ©saniquement vÃ©tilleusement vÃ©tustement xylographiquement xÃ©rographiquement
+ zootechniquement Ã¢crement Ã¢prement Ã§Ã  Ã©chocardiographiquement
+ Ã©chomÃ©triquement Ã©clatamment Ã©clectiquement Ã©cologiquement Ã©conomement
+ Ã©conomÃ©triquement Ã©dÃ©niquement Ã©galement Ã©galitairement Ã©gocentriquement
+ Ã©grillardement Ã©hontÃ©ment Ã©lastiquement Ã©lectivement Ã©lectoralement
+ Ã©lectrocardiographiquement Ã©lectrochimiquement Ã©lectrodynamiquement
+ Ã©lectromagnÃ©tiquement Ã©lectromÃ©caniquement Ã©lectroniquement
+ Ã©lectropneumatiquement Ã©lectrostatiquement Ã©lectrotechniquement
+ Ã©liminatoirement Ã©litistement Ã©logieusement Ã©loquemment Ã©lÃ©gamment
+ Ã©lÃ©mentairement Ã©minemment Ã©motionnellement Ã©motivement Ã©nergiquement
+ Ã©nigmatiquement Ã©niÃ¨mement Ã©normÃ©ment Ã©pais Ã©paissement Ã©parsement Ã©patamment
+ Ã©phÃ©mÃ¨rement Ã©picuriennement Ã©pidermiquement Ã©pidÃ©miologiquement
+ Ã©pigrammatiquement Ã©pigraphiquement Ã©pileptiquement Ã©piquement Ã©piscopalement
+ Ã©pistolairement Ã©pistÃ©mologiquement Ã©pouvantablement Ã©quitablement
+ Ã©quivoquement Ã©rotiquement Ã©ruditement Ã©ruptivement Ã©rÃ©mitiquement
+ Ã©tatiquement Ã©ternellement Ã©thiquement Ã©thologiquement Ã©tonnamment Ã©tourdiment
+ Ã©troitement Ã©tymologiquement Ã©vangÃ©liquement Ã©vasivement Ã©ventuellement
 """.split())
