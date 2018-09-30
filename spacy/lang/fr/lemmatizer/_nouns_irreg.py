@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 
-
 NOUNS_IRREG = {
     "aa": ("aa",),
     "abatis": ("abatis",),
