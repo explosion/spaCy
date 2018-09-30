@@ -184,7 +184,7 @@
                 "from spacy_lookup import Entity",
                 "",
                 "nlp = spacy.load('en')",
-                "entity = Entity(nlp, keywords_list=['python', 'java platform'])",
+                "entity = Entity(keywords_list=['python', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
                 "doc = nlp(u\"I am a product manager for a java and python.\")",
