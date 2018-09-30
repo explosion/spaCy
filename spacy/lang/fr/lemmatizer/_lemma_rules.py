@@ -2,13 +2,13 @@
 from __future__ import unicode_literals
 
 
- ADJECTIVE_RULES = [
+ADJECTIVE_RULES = [
     ["s", ""],
     ["e", ""],
     ["es", ""] 
 ]
     
     
- NOUN_RULES = [
+NOUN_RULES = [
     ["s", ""]
 ]
