@@ -7,11 +7,12 @@ from ._adjectives_irreg import ADJECTIVES_IRREG
 from ._adverbs import ADVERBS
 from ._nouns import NOUNS
 from ._nouns_irreg import NOUNS_IRREG
+from ._verbs_irreg import VERBS_IRREG
 from ._lemma_rules import ADJECTIVE_RULES, NOUN_RULES
 
 
 LEMMA_INDEX = {'adj': ADJECTIVES, 'adv': ADVERBS, 'noun': NOUNS}
 
-LEMMA_EXC = {'adj': ADJECTIVES_IRREG, 'noun': NOUNS_IRREG}
+LEMMA_EXC = {'adj': ADJECTIVES_IRREG, 'noun': NOUNS_IRREG, 'verb': VERBS_IRREG}
 
 LEMMA_RULES = {'adj': ADJECTIVE_RULES, 'noun': NOUN_RULES}
