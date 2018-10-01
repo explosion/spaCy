@@ -9,6 +9,8 @@ _num_words = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bẩy',
 
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True

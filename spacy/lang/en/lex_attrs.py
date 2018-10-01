@@ -13,6 +13,8 @@ _num_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
 
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True

@@ -76,6 +76,8 @@ def like_num(text):
     """
     check if text resembles a number
     """
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True

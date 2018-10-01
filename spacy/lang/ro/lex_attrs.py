@@ -23,6 +23,8 @@ miilea mielea mia milionulea milioana miliardulea miliardelea miliarda enșpemia
 
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True
