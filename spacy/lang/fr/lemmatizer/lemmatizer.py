@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ....symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT
 from ....symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
+from .lookup import LOOKUP
 
 '''
 French language lemmatizer applies the default rule based lemmatization
@@ -120,6 +121,8 @@ def lemmatize(string, index, exceptions, rules):
                     oov_forms.append(form)
     if not forms:
         forms.extend(oov_forms)
+    if not forms and string in LOOKUP.keys():
+        forms.append(LOOKUP[string])
     if not forms:
         forms.append(string)
     return list(set(forms))
