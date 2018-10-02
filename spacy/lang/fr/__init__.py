@@ -7,6 +7,7 @@ from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC, LOOKUP
+from .lemmatizer.lemmatizer import FrenchLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -28,10 +29,16 @@ class FrenchDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     token_match = TOKEN_MATCH
     syntax_iterators = SYNTAX_ITERATORS
-    lemma_rules = LEMMA_RULES
-    lemma_index = LEMMA_INDEX
-    lemma_exc = LEMMA_EXC
-    lemma_lookup = LOOKUP
+    
+    
+    @classmethod
+    def create_lemmatizer(cls, nlp=None):
+        lemma_rules = LEMMA_RULES
+        lemma_index = LEMMA_INDEX
+        lemma_exc = LEMMA_EXC
+        lemma_lookup = LOOKUP
+        return FrenchLemmatizer(index=lemma_index, exceptions=lemma_exc,
+                                rules=lemma_rules, lookup=lemma_lookup)
 
 
 class French(Language):
