@@ -111,7 +111,7 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=10):
                 texts, annotations = zip(*batch)
                 nlp.update(texts, annotations, sgd=optimizer, drop=0.35,
                            losses=losses)
-            print(losses)
+            print('Losses', losses)
 
     # test the trained model
     test_text = 'Do you like horses?'

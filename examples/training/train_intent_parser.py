@@ -95,7 +95,7 @@ def main(model=None, output_dir=None, n_iter=15):
             for batch in batches:
                 texts, annotations = zip(*batch)
                 nlp.update(texts, annotations, sgd=optimizer, losses=losses)
-            print(losses)
+            print('Losses', losses)
 
     # test the trained model
     test_model(nlp)
