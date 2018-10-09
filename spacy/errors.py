@@ -261,8 +261,13 @@ class Errors(object):
              "Span objects, or dicts if set to manual=True.")
     E097 = ("Invalid pattern: expected token pattern (list of dicts) or "
             "phrase pattern (string) but got:\n{pattern}")
-
-
+    E098 = ("Invalid pattern specified: expected both SPEC and PATTERN.")
+    E099 = ("First node of pattern should be a root node. The root should "
+            "only contain NODE_NAME.")
+    E100 = ("Nodes apart from the root should contain NODE_NAME, NBOR_NAME and "
+            "NBOR_RELOP.")
+    E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
+            "have been declared in previous edges.")
 @add_codes
 class TempErrors(object):
     T001 = ("Max length currently 10 for phrase matching")
