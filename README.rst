@@ -32,9 +32,9 @@ integration. It's commercial open-source software, released under the MIT licens
     :target: https://anaconda.org/conda-forge/spacy
     :alt: conda Version
 
-.. image:: https://img.shields.io/badge/chat-join%20%E2%86%92-09a3d5.svg?style=flat-square&logo=gitter-white
-    :target: https://gitter.im/explosion/spaCy
-    :alt: spaCy on Gitter
+.. image:: https://img.shields.io/badge/wheels-%E2%9C%93-green.svg?longCache=true&style=flat-square&logo=python&logoColor=white
+    :target: https://github.com/explosion/wheelwright/releases
+    :alt: spaCy wheels
 
 .. image:: https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow
     :target: https://twitter.com/spacy_io
