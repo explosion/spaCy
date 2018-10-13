@@ -113,7 +113,7 @@ the `documentation <https://spacy.io/usage>`_.
 ==================== ===
 **Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
 **Python version**   CPython 2.7, 3.4+. Only 64 bit.
-**Package managers** `pip`_ (source packages only), `conda`_ (via ``conda-forge``)
+**Package managers** `pip`_, `conda`_ (via ``conda-forge``)
 ==================== ===
 
 .. _pip: https://pypi.python.org/pypi/spacy
@@ -122,7 +122,8 @@ the `documentation <https://spacy.io/usage>`_.
 pip
 ---
 
-Using pip, spaCy releases are currently only available as source packages.
+Using pip, spaCy releases are available as source packages and binary wheels
+(as of ``v2.0.13``).
 
 .. code:: bash
 
