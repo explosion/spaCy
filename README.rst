@@ -5,7 +5,7 @@ spaCy is a library for advanced Natural Language Processing in Python and Cython
 It's built on the very latest research, and was designed from day one to be
 used in real products. spaCy comes with
 `pre-trained statistical models <https://spacy.io/models>`_ and word
-vectors, and currently supports tokenization for **20+ languages**. It features
+vectors, and currently supports tokenization for **30+ languages**. It features
 the **fastest syntactic parser** in the world, convolutional **neural network models**
 for tagging, parsing and **named entity recognition** and easy **deep learning**
 integration. It's commercial open-source software, released under the MIT license.
