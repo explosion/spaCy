@@ -18,7 +18,6 @@ sentences = [
     "Лондон — это большой город в Соединённом Королевстве",
     
     #Native Russian sentences:
-    
     #Colloquial:
     "Да, нет, наверное!",#Typical polite refusal
     "Обратите внимание на необыкновенную красоту этого города-героя Москвы, столицы нашей Родины!",#From a tour guide speech
