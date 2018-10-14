@@ -7,6 +7,7 @@ from .. import displacy
 from ..tokens import Span
 from .util import get_doc
 from .._ml import PrecomputableAffine
+from .. import prefer_gpu, require_gpu
 
 from pathlib import Path
 import pytest
@@ -101,3 +102,10 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     assert model.d_pad[0, 2, 0, 0] == 0.
     model._backprop_padding(dY, ids)
     assert model.d_pad[0, 2, 0, 0] == 3.
+
+def test_prefer_gpu():
+    assert not prefer_gpu()
+
+def test_require_gpu():
+    with pytest.raises(ValueError):
+        require_gpu()
