@@ -200,12 +200,12 @@ def setup_package():
                 'requests>=2.13.0,<3.0.0',
                 'pathlib==1.0.1; python_version < "3.4"'],
             extras_require={
-                'cuda': ['thinc[cuda]>=6.10.6,<6.11.0'],
-                'cuda80': ['thinc[cuda80]>=6.10.6,<6.11.0'],
-                'cuda90': ['thinc[cuda91]>=6.10.6,<6.11.0'],
-                'cuda91': ['thinc[cuda91]>=6.10.6,<6.11.0'],
-                'cuda92': ['thinc[cuda92]>=6.10.6,<6.11.0'],
-                'cuda10': ['thinc[cuda100]>=6.10.6,<6.11.0'],
+                'cuda': ['cupy>=4.0'],
+                'cuda80': ['cupy-cuda80>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda90': ['cupy-cuda90>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda91': ['cupy-cuda91>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda92': ['cupy-cuda92>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda100': ['cupy-cuda100>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0']
             },
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
