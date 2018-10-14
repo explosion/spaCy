@@ -170,9 +170,14 @@ p
 
 +aside-code("Example").
     import spacy
-
-    spacy.prefer_gpu()  # or: spacy.require_gpu()
+    activated = spacy.prefer_gpu()
     nlp = spacy.load('en_core_web_sm')
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell Whether the GPU was activated.
 
 +h(3, "spacy.require_gpu") spacy.require_gpu
     +tag function
@@ -183,3 +188,14 @@ p
     |  raise an error if no GPU is available. If data has already been allocated
     |  on CPU, it will not be moved. Ideally, this function should be called
     |  right after importing spaCy and #[em before] loading any models.
+
++aside-code("Example").
+    import spacy
+    spacy.require_gpu()
+    nlp = spacy.load('en_core_web_sm')
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell returns
+        +cell bool
+        +cell #[code True]
