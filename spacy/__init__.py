@@ -5,7 +5,7 @@ warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 # These are imported as part of the API
-from thinc.neural.util import prefer_gpu, require_gpu
+from thinc.neural.util import prefer_gpu
 
 from .cli.info import info as cli_info
 from .glossary import explain
@@ -28,3 +28,14 @@ def blank(name, **kwargs):
 
 def info(model=None, markdown=False, silent=False):
     return cli_info(model, markdown, silent)
+
+def require_gpu():
+    from thinc.v2v import Model
+    from thinc.neural.ops import CupyOps
+    if CupyOps.xp is None:
+        raise ValueError(
+            "GPU is not accessible. Check your LD_LIBRARY_PATH enironment variable "
+            "and check that thinc was installed with GPU, e.g. thinc[cuda]")
+    Model.Ops = CupyOps
+    Model.ops = CupyOps()
+    return True
