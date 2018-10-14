@@ -80,13 +80,7 @@ p
     python -m spacy validate
 
 +h(3, "gpu") Run spaCy with GPU
-    +tag experimental
-
-+infobox("Important note", "⚠️")
-    |  The instructions below refer to installation with CUDA 8.0. In order to
-    |  install with CUDA 9.0, set the environment variable #[code CUDA9=1]
-    |  before installing Thinc. You'll also need to adjust the path to the
-    |  CUDA runtime.
+    +tag-new("2.0.14")
 
 p
     |  As of v2.0, spaCy's comes with neural network models that are implemented
@@ -96,16 +90,29 @@ p
     |  a NumPy-compatible interface for GPU arrays.
 
 p
-    |  First, install follows the normal CUDA installation procedure. Next, set
-    |  your environment variables so that the installation will be able to find
-    |  CUDA. Finally, install spaCy.
+    |  spaCy can be installed on GPU by specifying #[code spacy[cuda]],
+    |  #[code spacy[cuda90]], #[code spacy[cuda91]], #[code spacy[cuda92]] or
+    |  #[code spacy[cuda10]]. If you know your cuda version, using the more
+    |  explicit specifier allows cupy to be installed via wheel, saving some
+    |  compilation time. The specifiers should install two libraries:
+    |  #[+a("https://cupy.chainer.org") #[code cupy]] and
+    |  #[+a(gh("thinc_gpu_ops")) #[code thinc_gpu_ops]].
 
 +code(false, "bash").
-    export CUDA_HOME=/usr/local/cuda-8.0  # or wherever your CUDA is
-    export PATH=$PATH:$CUDA_HOME/bin
+    pip install -U spacy[cuda92]
 
-    pip install spacy
-    python -c "import thinc.neural.gpu_ops"  # check the GPU ops were built
+p
+    |  Once you have a GPU-enabled installation, the best way to activate it is
+    |  to call #[+api("top-level#spacy.prefer_gpu") #[code spacy.prefer_gpu()]]
+    |  or #[+api("top-level#spacy.require_gpu") #[code spacy.require_gpu()]]
+    |  somewhere in your script before any models have been loaded.
+    |  #[code require_gpu] will raise an error if no GPU is available.
+
++code.
+    import spacy
+
+    spacy.prefer_gpu()
+    nlp = spacy.load('en_core_web_sm')
 
 +h(3, "source") Compile from source
 
