@@ -581,7 +581,7 @@ p
     |  web applications.
 
 +aside-code("Example").
-    doc = nlp('Alice ate the pizza.')
+    doc = nlp(u'Alice ate the pizza.')
     trees = doc.print_tree()
     # {'modifiers': [
     #   {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice', 'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Alice'},
@@ -615,8 +615,8 @@ p
     |  document.
 
 +aside-code("Example").
-    tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
-    ents = list(tokens.ents)
+    doc = nlp(u'Mr. Best flew to New York on Saturday morning.')
+    ents = list(doc.ents)
     assert ents[0].label == 346
     assert ents[0].label_ == 'PERSON'
     assert ents[0].text == 'Mr. Best'

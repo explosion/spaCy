@@ -11,6 +11,7 @@ Example sentences to test spaCy and its language models.
 
 
 sentences = [
+    "මෙය වාක්‍යයකි.",
     "ඔබ කවුද?",
     "ගූගල් සමාගම ඩොලර් මිලියන 500 කට එම ආයතනය මිලදී ගන්නා ලදී.",
     "කොළඹ ශ්‍රී ලංකාවේ ප්‍රධානතම නගරය යි.",

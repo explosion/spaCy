@@ -27,17 +27,6 @@
         }
     },
 
-    "comparison": {
-        "title": "Model Comparison",
-        "teaser": "Compare spaCy's statistical models and their accuracy.",
-        "tag": "experimental",
-        "compare_models": true,
-        "default_models": {
-            "model1": "en_core_web_sm",
-            "model2": "en_core_web_lg"
-        }
-    },
-
     "MODELS": {
         "en": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
         "de": ["de_core_news_sm"],
@@ -122,6 +111,8 @@
         "fa": "Persian",
         "ur": "Urdu",
         "tt": "Tatar",
+        "te": "Telugu",
+        "si": "Sinhala",
         "ga": "Irish",
         "bn": "Bengali",
         "hi": "Hindi",

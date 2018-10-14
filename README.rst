@@ -5,7 +5,7 @@ spaCy is a library for advanced Natural Language Processing in Python and Cython
 It's built on the very latest research, and was designed from day one to be
 used in real products. spaCy comes with
 `pre-trained statistical models <https://spacy.io/models>`_ and word
-vectors, and currently supports tokenization for **20+ languages**. It features
+vectors, and currently supports tokenization for **30+ languages**. It features
 the **fastest syntactic parser** in the world, convolutional **neural network models**
 for tagging, parsing and **named entity recognition** and easy **deep learning**
 integration. It's commercial open-source software, released under the MIT license.
@@ -32,9 +32,9 @@ integration. It's commercial open-source software, released under the MIT licens
     :target: https://anaconda.org/conda-forge/spacy
     :alt: conda Version
 
-.. image:: https://img.shields.io/badge/chat-join%20%E2%86%92-09a3d5.svg?style=flat-square&logo=gitter-white
-    :target: https://gitter.im/explosion/spaCy
-    :alt: spaCy on Gitter
+.. image:: https://img.shields.io/badge/wheels-%E2%9C%93-4c1.svg?longCache=true&style=flat-square&logo=python&logoColor=white
+    :target: https://github.com/explosion/wheelwright/releases
+    :alt: Python wheels
 
 .. image:: https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow
     :target: https://twitter.com/spacy_io
@@ -113,7 +113,7 @@ the `documentation <https://spacy.io/usage>`_.
 ==================== ===
 **Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
 **Python version**   CPython 2.7, 3.4+. Only 64 bit.
-**Package managers** `pip`_ (source packages only), `conda`_ (via ``conda-forge``)
+**Package managers** `pip`_, `conda`_ (via ``conda-forge``)
 ==================== ===
 
 .. _pip: https://pypi.python.org/pypi/spacy
@@ -122,7 +122,8 @@ the `documentation <https://spacy.io/usage>`_.
 pip
 ---
 
-Using pip, spaCy releases are currently only available as source packages.
+Using pip, spaCy releases are available as source packages and binary wheels
+(as of ``v2.0.13``).
 
 .. code:: bash
 

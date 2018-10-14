@@ -349,6 +349,30 @@ p Retokenize the document, such that the span is merged into a single token.
         +cell #[code Token]
         +cell The newly merged token.
 
++h(2, "ents") Span.ents
+    +tag property
+    +tag-model("NER")
+
+p
+    |  Iterate over the entities in the span. Yields named-entity
+    |  #[code Span] objects, if the entity recognizer has been applied to the
+    |  parent document.
+
++aside-code("Example").
+    doc = nlp(u'Mr. Best flew to New York on Saturday morning.')
+    span = doc[0:6]
+    ents = list(span.ents)
+    assert ents[0].label == 346
+    assert ents[0].label_ == 'PERSON'
+    assert ents[0].text == 'Mr. Best'
+
++table(["Name", "Type", "Description"])
+    +row("foot")
+        +cell yields
+        +cell #[code Span]
+        +cell Entities in the document.
+
+
 +h(2, "as_doc") Span.as_doc
 
 p
