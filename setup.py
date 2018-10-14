@@ -185,6 +185,7 @@ def setup_package():
             license=about['__license__'],
             ext_modules=ext_modules,
             scripts=['bin/spacy'],
+            setup_requires=['wheel>=0.32.0,<0.33.0'],
             install_requires=[
                 'numpy>=1.15.0',
                 'msgpack-numpy<0.4.4.0'
