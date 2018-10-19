@@ -40,7 +40,7 @@
             },
             "Support": {
                 "Issue Tracker": "https://github.com/explosion/spaCy/issues",
-                "StackOverflow": "http://stackoverflow.com/questions/tagged/spacy",
+                "Stack Overflow": "http://stackoverflow.com/questions/tagged/spacy",
                 "Reddit Usergroup": "https://www.reddit.com/r/spacynlp/",
                 "Gitter Chat": "https://gitter.im/explosion/spaCy"
             },
