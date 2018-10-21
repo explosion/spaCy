@@ -29,7 +29,7 @@ MOD_NAMES = [
     'spacy.syntax._state',
     'spacy.syntax._beam_utils',
     'spacy.tokenizer',
-    'spacy.syntax.nn_parser',
+    'spacy.syntax.parser',
     'spacy.syntax.nonproj',
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
