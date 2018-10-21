@@ -41,188 +41,6 @@ from .transition_system cimport Transition
 from . import _beam_utils, nonproj
 
 
-def get_templates(*args, **kwargs):
-    return []
-
-
-DEBUG = False
-
-
-def set_debug(val):
-    global DEBUG
-    DEBUG = val
-
-
-cdef class precompute_hiddens:
-    """Allow a model to be "primed" by pre-computing input features in bulk.
-
-    This is used for the parser, where we want to take a batch of documents,
-    and compute vectors for each (token, position) pair. These vectors can then
-    be reused, especially for beam-search.
-
-    Let's say we're using 12 features for each state, e.g. word at start of
-    buffer, three words on stack, their children, etc. In the normal arc-eager
-    system, a document of length N is processed in 2*N states. This means we'll
-    create 2*N*12 feature vectors --- but if we pre-compute, we only need
-    N*12 vector computations. The saving for beam-search is much better:
-    if we have a beam of k, we'll normally make 2*N*12*K computations --
-    so we can save the factor k. This also gives a nice CPU/GPU division:
-    we can do all our hard maths up front, packed into large multiplications,
-    and do the hard-to-program parsing on the CPU.
-    """
-    cdef int nF, nO, nP
-    cdef bint _is_synchronized
-    cdef public object ops
-    cdef np.ndarray _features
-    cdef np.ndarray _cached
-    cdef np.ndarray bias
-    cdef object _cuda_stream
-    cdef object _bp_hiddens
-
-    def __init__(self, batch_size, tokvecs, lower_model, cuda_stream=None,
-                 drop=0.):
-        gpu_cached, bp_features = lower_model.begin_update(tokvecs, drop=drop)
-        cdef np.ndarray cached
-        if not isinstance(gpu_cached, numpy.ndarray):
-            # Note the passing of cuda_stream here: it lets
-            # cupy make the copy asynchronously.
-            # We then have to block before first use.
-            cached = gpu_cached.get(stream=cuda_stream)
-        else:
-            cached = gpu_cached
-        if not isinstance(lower_model.b, numpy.ndarray):
-            self.bias = lower_model.b.get()
-        else:
-            self.bias = lower_model.b
-        self.nF = cached.shape[1]
-        self.nP = getattr(lower_model, 'nP', 1)
-        self.nO = cached.shape[2]
-        self.ops = lower_model.ops
-        self._is_synchronized = False
-        self._cuda_stream = cuda_stream
-        self._cached = cached
-        self._bp_hiddens = bp_features
-
-    cdef const float* get_feat_weights(self) except NULL:
-        if not self._is_synchronized and self._cuda_stream is not None:
-            self._cuda_stream.synchronize()
-            self._is_synchronized = True
-        return <float*>self._cached.data
-
-    def __call__(self, X):
-        return self.begin_update(X)[0]
-
-    def begin_update(self, token_ids, drop=0.):
-        cdef np.ndarray state_vector = numpy.zeros(
-            (token_ids.shape[0], self.nO, self.nP), dtype='f')
-        # This is tricky, but (assuming GPU available);
-        # - Input to forward on CPU
-        # - Output from forward on CPU
-        # - Input to backward on GPU!
-        # - Output from backward on GPU
-        bp_hiddens = self._bp_hiddens
-
-        feat_weights = self.get_feat_weights()
-        cdef int[:, ::1] ids = token_ids
-        sum_state_features(<float*>state_vector.data,
-            feat_weights, &ids[0,0],
-            token_ids.shape[0], self.nF, self.nO*self.nP)
-        state_vector += self.bias
-        state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
-
-        def backward(d_state_vector_ids, sgd=None):
-            d_state_vector, token_ids = d_state_vector_ids
-            d_state_vector = bp_nonlinearity(d_state_vector, sgd)
-            # This will usually be on GPU
-            if not isinstance(d_state_vector, self.ops.xp.ndarray):
-                d_state_vector = self.ops.xp.array(d_state_vector)
-            d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
-            return d_tokens
-        return state_vector, backward
-
-    def _nonlinearity(self, state_vector):
-        if self.nP == 1:
-            state_vector = state_vector.reshape(state_vector.shape[:-1])
-            mask = state_vector >= 0.
-            state_vector *= mask
-        else:
-            state_vector, mask = self.ops.maxout(state_vector)
-
-        def backprop_nonlinearity(d_best, sgd=None):
-            if self.nP == 1:
-                d_best *= mask
-                d_best = d_best.reshape((d_best.shape + (1,)))
-                return d_best
-            else:
-                return self.ops.backprop_maxout(d_best, mask, self.nP)
-        return state_vector, backprop_nonlinearity
-
-
-cdef void sum_state_features(float* output,
-        const float* cached, const int* token_ids, int B, int F, int O) nogil:
-    cdef int idx, b, f, i
-    cdef const float* feature
-    padding = cached
-    cached += F * O
-    for b in range(B):
-        for f in range(F):
-            if token_ids[f] < 0:
-                feature = &padding[f*O]
-            else:
-                idx = token_ids[f] * F * O + f*O
-                feature = &cached[idx]
-            for i in range(O):
-                output[i] += feature[i]
-        output += O
-        token_ids += F
-
-
-cdef void cpu_log_loss(float* d_scores,
-        const float* costs, const int* is_valid, const float* scores,
-        int O) nogil:
-    """Do multi-label log loss"""
-    cdef double max_, gmax, Z, gZ
-    best = arg_max_if_gold(scores, costs, is_valid, O)
-    guess = arg_max_if_valid(scores, is_valid, O)
-    Z = 1e-10
-    gZ = 1e-10
-    max_ = scores[guess]
-    gmax = scores[best]
-    for i in range(O):
-        if is_valid[i]:
-            Z += exp(scores[i] - max_)
-            if costs[i] <= costs[best]:
-                gZ += exp(scores[i] - gmax)
-    for i in range(O):
-        if not is_valid[i]:
-            d_scores[i] = 0.
-        elif costs[i] <= costs[best]:
-            d_scores[i] = (exp(scores[i]-max_) / Z) - (exp(scores[i]-gmax)/gZ)
-        else:
-            d_scores[i] = exp(scores[i]-max_) / Z
-
-
-cdef void cpu_regression_loss(float* d_scores,
-        const float* costs, const int* is_valid, const float* scores,
-        int O) nogil:
-    cdef float eps = 2.
-    best = arg_max_if_gold(scores, costs, is_valid, O)
-    for i in range(O):
-        if not is_valid[i]:
-            d_scores[i] = 0.
-        elif scores[i] < scores[best]:
-            d_scores[i] = 0.
-        else:
-            # I doubt this is correct?
-            # Looking for something like Huber loss
-            diff = scores[i] - -costs[i]
-            if diff > eps:
-                d_scores[i] = eps
-            elif diff < -eps:
-                d_scores[i] = -eps
-            else:
-                d_scores[i] = diff
-
 
 def _collect_states(beams):
     cdef StateClass state
@@ -545,25 +363,26 @@ cdef class Parser:
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
-            return self.update_beam(docs, golds,
-                    self.cfg['beam_width'], self.cfg['beam_density'],
-                    drop=drop, sgd=sgd, losses=losses)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
-        cuda_stream = util.get_cuda_stream()
-        states, golds, max_steps = self._init_gold_batch(docs, golds)
-        (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
-                                                                            drop)
-        todo = [(s, g) for (s, g) in zip(states, golds)
-                if not s.is_final() and g is not None]
-        if not todo:
-            return None
+        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
+            return self.update_beam(docs, golds,
+                    self.cfg['beam_width'], self.cfg['beam_density'],
+                    drop=drop, sgd=sgd, losses=losses)
+        else:
+            return self.update_greedy(docs, golds, drop=drop, sgd=sgd, losses=losses)
 
-        backprops = []
+    def update_greedy(self, docs, golds, drop=0., sgd=None, losses=None):
+        tokvecs, bp_tokvecs = self.model.tok2vec(docs)
+        states = self.init_states(docs, tokvecs)
+        histories, get_costs = self.model.predict_histories(states)
+        costs = get_costs(golds)
+        d_tokens = self.model.update(states, histories, costs)
+        return bp_tokvecs(tokvecs)
+
         # Add a padding vector to the d_tokvecs gradient, so that missing
         # values don't affect the real gradient.
         d_tokvecs = state2vec.ops.allocate((tokvecs.shape[0]+1, tokvecs.shape[1]))
@@ -571,32 +390,11 @@ cdef class Parser:
         n_steps = 0
         while todo:
             states, golds = zip(*todo)
-            token_ids = self.get_token_ids(states)
-            vector, bp_vector = state2vec.begin_update(token_ids, drop=0.0)
-            if drop != 0:
-                mask = vec2scores.ops.get_dropout_mask(vector.shape, drop)
-                vector *= mask
-            hists = numpy.asarray([st.history for st in states], dtype='i')
-            if self.cfg.get('hist_size', 0):
-                scores, bp_scores = vec2scores.begin_update((vector, hists), drop=drop)
-            else:
-                scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
-
+            vector, bp_vector = state2vec.begin_update(states, drop=0.0)
+            scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
             d_scores = self.get_batch_loss(states, golds, scores)
-            d_scores /= len(docs)
             d_vector = bp_scores(d_scores, sgd=sgd)
-            if drop != 0:
-                d_vector *= mask
 
-            if isinstance(self.model[0].ops, CupyOps) \
-            and not isinstance(token_ids, state2vec.ops.xp.ndarray):
-                # Move token_ids and d_vector to GPU, asynchronously
-                backprops.append((
-                    util.get_async(cuda_stream, token_ids),
-                    util.get_async(cuda_stream, d_vector),
-                    bp_vector
-                ))
-            else:
                 backprops.append((token_ids, d_vector, bp_vector))
             self.transition_batch(states, scores)
             todo = [(st, gold) for (st, gold) in todo
@@ -658,7 +456,6 @@ cdef class Parser:
         for beam in beams:
             _cleanup(beam)
 
-
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
@@ -718,6 +515,11 @@ cdef class Parser:
             name = self.moves.move_name(self.moves.c[i].move, self.moves.c[i].label)
             names.append(name)
         return names
+
+    @property
+    def labels(self):
+        return [label.split('-')[1] for label in self.move_names
+                if '-' in label]
 
     def get_batch_model(self, docs, stream, dropout):
         tok2vec, lower, upper = self.model
