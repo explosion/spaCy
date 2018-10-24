@@ -26,7 +26,7 @@ also check the [troubleshooting guide](https://spacy.io/usage/#troubleshooting)
 to see if your problem is already listed there.
 
 If you're looking for help with your code, consider posting a question on
-[StackOverflow](http://stackoverflow.com/questions/tagged/spacy) instead. If you
+[Stack Overflow](http://stackoverflow.com/questions/tagged/spacy) instead. If you
 tag it `spacy` and `python`, more people will see it and hopefully be able to
 help. Please understand that we won't be able to provide individual support via
 email. We also believe that help is much more valuable if it's **shared publicly**,
