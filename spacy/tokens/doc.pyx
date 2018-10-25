@@ -458,6 +458,21 @@ cdef class Doc:
             #    prediction
             # 3. Test basic data-driven ORTH gazetteer
             # 4. Test more nuanced date and currency regex
+
+            tokens_in_ents = {}
+            cdef attr_t entity_type
+            cdef int ent_start, ent_end
+            for ent_info in ents:
+                entity_type, ent_start, ent_end = get_entity_info(ent_info)
+                for token_index in range(ent_start, ent_end):
+                    if token_index in tokens_in_ents.keys():
+                        raise ValueError(Errors.E098.format(
+                            span1=(tokens_in_ents[token_index][0],
+                                   tokens_in_ents[token_index][1],
+                                   self.vocab.strings[tokens_in_ents[token_index][2]]),
+                            span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
+                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type)
+
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
@@ -465,15 +480,7 @@ cdef class Doc:
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
-                if isinstance(ent_info, Span):
-                    ent_id = ent_info.ent_id
-                    ent_type = ent_info.label
-                    start = ent_info.start
-                    end = ent_info.end
-                elif len(ent_info) == 3:
-                    ent_type, start, end = ent_info
-                else:
-                    ent_id, ent_type, start, end = ent_info
+                ent_type, start, end = get_entity_info(ent_info)
                 if ent_type is None or ent_type < 0:
                     # Mark as O
                     for i in range(start, end):
@@ -1062,3 +1069,14 @@ def fix_attributes(doc, attributes):
             attributes[ENT_TYPE] = doc.vocab.strings[attributes['label']]
     if 'ent_type' in attributes:
         attributes[ENT_TYPE] = attributes['ent_type']
+
+def get_entity_info(ent_info):
+    if isinstance(ent_info, Span):
+        ent_type = ent_info.label
+        start = ent_info.start
+        end = ent_info.end
+    elif len(ent_info) == 3:
+        ent_type, start, end = ent_info
+    else:
+        ent_id, ent_type, start, end = ent_info
+    return ent_type, start, end

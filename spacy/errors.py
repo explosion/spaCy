@@ -250,7 +250,9 @@ class Errors(object):
     E096 = ("Invalid object passed to displaCy: Can only visualize Doc or "
              "Span objects, or dicts if set to manual=True.")
     E097 = ("Can't merge non-disjoint spans. '{token}' is already part of tokens to merge")
-
+    E098 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
+            " can only be part of one entity, so make sure the entities you're "
+            "setting don't overlap.")
 
 @add_codes
 class TempErrors(object):
