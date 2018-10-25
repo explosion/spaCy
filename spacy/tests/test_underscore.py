@@ -1,4 +1,11 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
+import pytest
 from mock import Mock
+
+from ..vocab import Vocab
+from ..tokens import Doc, Span, Token
 from ..tokens.underscore import Underscore
 
 
@@ -51,3 +58,42 @@ def test_token_underscore_method():
                                             None, None)
     token._ = Underscore(Underscore.token_extensions, token, start=token.idx)
     assert token._.hello() == 'cheese'
+
+
+@pytest.mark.parametrize('obj', [Doc, Span, Token])
+def test_doc_underscore_remove_extension(obj):
+    ext_name = 'to_be_removed'
+    obj.set_extension(ext_name, default=False)
+    assert obj.has_extension(ext_name)
+    obj.remove_extension(ext_name)
+    assert not obj.has_extension(ext_name)
+
+
+@pytest.mark.parametrize('obj', [Doc, Span, Token])
+def test_underscore_raises_for_dup(obj):
+    obj.set_extension('test', default=None)
+    with pytest.raises(ValueError):
+        obj.set_extension('test', default=None)
+
+
+@pytest.mark.parametrize('invalid_kwargs', [
+    {'getter': None, 'setter': lambda: None},
+    {'default': None, 'method': lambda: None, 'getter': lambda: None},
+    {'setter': lambda: None},
+    {'default': None, 'method': lambda: None},
+    {'getter': True}])
+def test_underscore_raises_for_invalid(invalid_kwargs):
+    invalid_kwargs['force'] = True
+    with pytest.raises(ValueError):
+        Doc.set_extension('test', **invalid_kwargs)
+
+
+@pytest.mark.parametrize('valid_kwargs', [
+    {'getter': lambda: None},
+    {'getter': lambda: None, 'setter': lambda: None},
+    {'default': 'hello'},
+    {'default': None},
+    {'method': lambda: None}])
+def test_underscore_accepts_valid(valid_kwargs):
+    valid_kwargs['force'] = True
+    Doc.set_extension('test', **valid_kwargs)

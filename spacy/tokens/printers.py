@@ -8,7 +8,7 @@ from ..symbols import HEAD, TAG, DEP, ENT_IOB, ENT_TYPE
 def merge_ents(doc):
     """Helper: merge adjacent entities into single tokens; modifies the doc."""
     for ent in doc.ents:
-        ent.merge(ent.root.tag_, ent.text, ent.label_)
+        ent.merge(tag=ent.root.tag_, lemma=ent.text, ent_type=ent.label_)
     return doc
 
 

@@ -34,6 +34,7 @@ from .._ml import link_vectors_to_models, create_default_optimizer
 from ..compat import json_dumps, copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
+from ..errors import Errors, TempErrors
 from .. import util
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -242,7 +243,7 @@ cdef class Parser:
     def Model(cls, nr_class, **cfg):
         depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
         if depth != 1:
-            raise ValueError("Currently parser depth is hard-coded to 1.")
+            raise ValueError(TempErrors.T004.format(value=depth))
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
@@ -252,11 +253,12 @@ cdef class Parser:
         hist_size = util.env_opt('history_feats', cfg.get('hist_size', 0))
         hist_width = util.env_opt('history_width', cfg.get('hist_width', 0))
         if hist_size != 0:
-            raise ValueError("Currently history size is hard-coded to 0")
+            raise ValueError(TempErrors.T005.format(value=hist_size))
         if hist_width != 0:
-            raise ValueError("Currently history width is hard-coded to 0")
+            raise ValueError(TempErrors.T006.format(value=hist_width))
+        pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
-                          pretrained_dims=cfg.get('pretrained_dims', 0))
+                          pretrained_vectors=pretrained_vectors)
         tok2vec = chain(tok2vec, flatten)
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
@@ -269,15 +271,13 @@ cdef class Parser:
                 zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
             )
 
-        # TODO: This is an unfortunate hack atm!
-        # Used to set input dimensions in network.
-        lower.begin_training(lower.ops.allocate((500, token_vector_width)))
         cfg = {
             'nr_class': nr_class,
             'hidden_depth': depth,
             'token_vector_width': token_vector_width,
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces,
+            'pretrained_vectors': pretrained_vectors,
             'hist_size': hist_size,
             'hist_width': hist_width
         }
@@ -297,9 +297,9 @@ cdef class Parser:
             unless True (default), in which case a new instance is created with
             `Parser.Moves()`.
         model (object): Defines how the parse-state is created, updated and
-            evaluated. The value is set to the .model attribute unless True
-            (default), in which case a new instance is created with
-            `Parser.Model()`.
+            evaluated. The value is set to the .model attribute. If set to True
+            (default), a new instance will be created with `Parser.Model()`
+            in parser.begin_training(), parser.from_disk() or parser.from_bytes().
         **cfg: Arbitrary configuration parameters. Set to the `.cfg` attribute
         """
         self.vocab = vocab
@@ -311,8 +311,6 @@ cdef class Parser:
             cfg['beam_width'] = util.env_opt('beam_width', 1)
         if 'beam_density' not in cfg:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
-        if 'pretrained_dims' not in cfg:
-            cfg['pretrained_dims'] = self.vocab.vectors.data.shape[1]
         cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
         if 'actions' in self.cfg:
@@ -434,7 +432,7 @@ cdef class Parser:
                                     [len(doc) for doc in docs])
         return state_objs, tokvecs
 
-    cdef void _parseC(self, StateC* state, 
+    cdef void _parseC(self, StateC* state,
             const float* feat_weights, const float* bias,
             const float* hW, const float* hb,
             int nr_class, int nr_hidden, int nr_feat, int nr_piece) nogil:
@@ -545,7 +543,13 @@ cdef class Parser:
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if not any(self.moves.has_gold(gold) for gold in golds):
             return None
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.0:
+        if len(docs) != len(golds):
+            raise ValueError(Errors.E077.format(value='update', n_docs=len(docs),
+                                                n_golds=len(golds)))
+        # The probability we use beam update, instead of falling back to
+        # a greedy update
+        beam_update_prob = 1-self.cfg.get('beam_update_prob', 0.5)
+        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= beam_update_prob:
             return self.update_beam(docs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
                     drop=drop, sgd=sgd, losses=losses)
@@ -554,6 +558,8 @@ cdef class Parser:
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
+        for multitask in self._multitasks:
+            multitask.update(docs, golds, drop=drop, sgd=sgd)
         cuda_stream = util.get_cuda_stream()
         states, golds, max_steps = self._init_gold_batch(docs, golds)
         (tokvecs, bp_tokvecs), state2vec, vec2scores = self.get_batch_model(docs, cuda_stream,
@@ -622,7 +628,6 @@ cdef class Parser:
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         lengths = [len(d) for d in docs]
-        assert min(lengths) >= 1
         states = self.moves.init_batch(docs)
         for gold in golds:
             self.moves.preprocess_gold(gold)
@@ -742,7 +747,8 @@ cdef class Parser:
 
     def transition_batch(self, states, float[:, ::1] scores):
         cdef StateClass state
-        cdef int[500] is_valid # TODO: Unhack
+        cdef Pool mem = Pool()
+        is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         cdef float* c_scores = &scores[0, 0]
         for state in states:
             self.moves.set_valid(is_valid, state.c)
@@ -830,17 +836,27 @@ cdef class Parser:
         for action, labels in actions.items():
             for label in labels:
                 self.moves.add_action(action, label)
+        cfg.setdefault('token_vector_width', 128)
         if self.model is True:
-            cfg['pretrained_dims'] = self.vocab.vectors_length
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
-            self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
+            self.model[1].begin_training(
+                    self.model[1].ops.allocate((5, cfg['token_vector_width'])))
+            if pipeline is not None:
+                self.init_multitask_objectives(gold_tuples, pipeline, sgd=sgd, **cfg)
             link_vectors_to_models(self.vocab)
-            self.cfg.update(cfg)
-        elif sgd is None:
-            sgd = self.create_optimizer()
+        else:
+            if sgd is None:
+                sgd = self.create_optimizer()
+            self.model[1].begin_training(
+                self.model[1].ops.allocate((5, cfg['token_vector_width'])))
+        self.cfg.update(cfg)
         return sgd
+
+    def add_multitask_objective(self, target):
+        # Defined in subclasses, to avoid circular import
+        raise NotImplementedError
 
     def init_multitask_objectives(self, gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
@@ -880,14 +896,16 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, strings=False),
-            'cfg': lambda p: self.cfg.update(ujson.load(p.open())),
+            'cfg': lambda p: self.cfg.update(util.read_json(p)),
             'model': lambda p: None
         }
         util.from_disk(path, deserializers, exclude)
         if 'model' not in exclude:
+            # TODO: Remove this once we don't have to handle previous models
+            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             path = util.ensure_path(path)
             if self.model is True:
-                self.cfg['pretrained_dims'] = self.vocab.vectors_length
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
@@ -930,12 +948,13 @@ cdef class Parser:
         ))
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
+            # TODO: Remove this once we don't have to handle previous models
+            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
+                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
-                cfg['pretrained_dims'] = self.vocab.vectors_length
             else:
                 cfg = {}
-            cfg['pretrained_dims'] = self.vocab.vectors_length
             if 'tok2vec_model' in msg:
                 self.model[0].from_bytes(msg['tok2vec_model'])
             if 'lower_model' in msg:
@@ -1008,15 +1027,11 @@ def _cleanup(Beam beam):
             del state
             seen.add(addr)
         else:
-            print(i, addr)
-            print(seen)
-            raise Exception
+            raise ValueError(Errors.E023.format(addr=addr, i=i))
         addr = <size_t>beam._states[i].content
         if addr not in seen:
             state = <StateC*>addr
             del state
             seen.add(addr)
         else:
-            print(i, addr)
-            print(seen)
-            raise Exception
+            raise ValueError(Errors.E023.format(addr=addr, i=i))

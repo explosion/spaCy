@@ -6,7 +6,8 @@ import pytest
 
 SV_TOKEN_EXCEPTION_TESTS = [
     ('Smörsåsen används bl.a. till fisk', ['Smörsåsen', 'används', 'bl.a.', 'till', 'fisk']),
-    ('Jag kommer först kl. 13 p.g.a. diverse förseningar', ['Jag', 'kommer', 'först', 'kl.', '13', 'p.g.a.', 'diverse', 'förseningar'])
+    ('Jag kommer först kl. 13 p.g.a. diverse förseningar', ['Jag', 'kommer', 'först', 'kl.', '13', 'p.g.a.', 'diverse', 'förseningar']),
+    ('Anders I. tycker om ord med i i.', ["Anders", "I.", "tycker", "om", "ord", "med", "i", "i", "."])
 ]
 
 

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS
 from .templates import TPL_ENT, TPL_ENTS, TPL_FIGURE, TPL_TITLE, TPL_PAGE
-from ..util import minify_html
+from ..util import minify_html, escape_html
 
 
 class DependencyRenderer(object):
@@ -84,7 +84,9 @@ class DependencyRenderer(object):
         """
         y = self.offset_y+self.word_spacing
         x = self.offset_x+i*self.distance
-        return TPL_DEP_WORDS.format(text=text, tag=tag, x=x, y=y)
+        html_text = escape_html(text)
+        return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
+
 
     def render_arrow(self, label, start, end, direction, i):
         """Render indivicual arrow.
@@ -134,7 +136,7 @@ class DependencyRenderer(object):
         end (int): X-coordinate of arrow end point.
         RETURNS (unicode): Definition of the arrow head path ('d' attribute).
         """
-        if direction is 'left':
+        if direction == 'left':
             pos1, pos2, pos3 = (x, x-self.arrow_width+2, x+self.arrow_width-2)
         else:
             pos1, pos2, pos3 = (end, end+self.arrow_width-2,

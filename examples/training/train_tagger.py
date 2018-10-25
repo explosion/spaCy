@@ -16,6 +16,7 @@ import plac
 import random
 from pathlib import Path
 import spacy
+from spacy.util import minibatch, compounding
 
 
 # You need to define a mapping from your data's part-of-speech tag names to the
@@ -63,9 +64,12 @@ def main(lang='en', output_dir=None, n_iter=25):
     for i in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
-        for text, annotations in TRAIN_DATA:
-            nlp.update([text], [annotations], sgd=optimizer, losses=losses)
-        print(losses)
+        # batch up the examples using spaCy's minibatch
+        batches = minibatch(TRAIN_DATA, size=compounding(4., 32., 1.001))
+        for batch in batches:
+            texts, annotations = zip(*batch)
+            nlp.update(texts, annotations, sgd=optimizer, losses=losses)
+        print('Losses', losses)
 
     # test the trained model
     test_text = "I like blue eggs"

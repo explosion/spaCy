@@ -10,6 +10,7 @@ import itertools
 
 from .syntax import nonproj
 from .tokens import Doc
+from .errors import Errors
 from . import util
 from .util import minibatch
 
@@ -28,7 +29,8 @@ def tags_to_entities(tags):
         elif tag == '-':
             continue
         elif tag.startswith('I'):
-            assert start is not None, tags[:i]
+            if start is None:
+                raise ValueError(Errors.E067.format(tags=tags[:i+1]))
             continue
         if tag.startswith('U'):
             entities.append((tag[2:], i, i))
@@ -38,7 +40,7 @@ def tags_to_entities(tags):
             entities.append((tag[2:], start, i))
             start = None
         else:
-            raise Exception(tag)
+            raise ValueError(Errors.E068.format(tag=tag))
     return entities
 
 
@@ -238,7 +240,9 @@ class GoldCorpus(object):
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples):
-        assert len(docs) == len(paragraph_tuples)
+        if len(docs) != len(paragraph_tuples):
+            raise ValueError(Errors.E070.format(n_docs=len(docs),
+                                                n_annots=len(paragraph_tuples)))
         if len(docs) == 1:
             return [GoldParse.from_annot_tuples(docs[0],
                                                 paragraph_tuples[0][0])]
@@ -349,12 +353,14 @@ def _consume_os(tags):
 def _consume_ent(tags):
     if not tags:
         return []
-    target = tags.pop(0).replace('B', 'I')
+    tag = tags.pop(0)
+    target_in = 'I' + tag[1:]
+    target_last = 'L' + tag[1:]
     length = 1
-    while tags and tags[0] == target:
+    while tags and tags[0] in {target_in, target_last}:
         length += 1
         tags.pop(0)
-    label = target[2:]
+    label = tag[2:]
     if length == 1:
         return ['U-' + label]
     else:
@@ -443,7 +449,7 @@ cdef class GoldParse:
         for i, gold_i in enumerate(self.cand_to_gold):
             if doc[i].text.isspace():
                 self.words[i] = doc[i].text
-                self.tags[i] = 'SP'
+                self.tags[i] = '_SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
@@ -461,7 +467,7 @@ cdef class GoldParse:
 
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
-            raise Exception("Cycle found: %s" % cycle)
+            raise ValueError(Errors.E069.format(cycle=cycle))
 
         if make_projective:
             proj_heads, _ = nonproj.projectivize(self.heads, self.labels)

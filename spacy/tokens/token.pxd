@@ -6,6 +6,7 @@ from ..typedefs cimport attr_t, flags_t
 from ..parts_of_speech cimport univ_pos_t
 from .doc cimport Doc
 from ..lexeme cimport Lexeme
+from ..errors import Errors
 
 
 cdef class Token:
@@ -17,8 +18,7 @@ cdef class Token:
     @staticmethod
     cdef inline Token cinit(Vocab vocab, const TokenC* token, int offset, Doc doc):
         if offset < 0 or offset >= doc.length:
-            msg = "Attempt to access token at %d, max length %d"
-            raise IndexError(msg % (offset, doc.length))
+            raise IndexError(Errors.E040.format(i=offset, max_length=doc.length))
         cdef Token self = Token.__new__(Token, vocab, doc, offset)
         return self
 
@@ -48,6 +48,8 @@ cdef class Token:
             return token.ent_iob
         elif feat_name == ENT_TYPE:
             return token.ent_type
+        elif feat_name == SENT_START:
+            return token.sent_start
         else:
             return Lexeme.get_struct_attr(token.lex, feat_name)
 
@@ -70,3 +72,5 @@ cdef class Token:
             token.ent_iob = value
         elif feat_name == ENT_TYPE:
             token.ent_type = value
+        elif feat_name == SENT_START:
+            token.sent_start = value

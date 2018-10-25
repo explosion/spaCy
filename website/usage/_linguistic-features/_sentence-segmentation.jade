@@ -1,0 +1,129 @@
+//- 💫 DOCS > USAGE > LINGUISTIC FEATURES > SENTENCE SEGMENTATION
+
+p
+    |  A #[+api("doc") #[code Doc]] object's sentences are available via the
+    |  #[code Doc.sents] property. Unlike other libraries, spaCy uses the
+    |  dependency parse to determine sentence boundaries. This is usually more
+    |  accurate than a rule-based approach, but it also means you'll need a
+    |  #[strong statistical model] and accurate predictions. If your
+    |  texts are closer to general-purpose news or web text, this should work
+    |  well out-of-the-box. For social media or conversational text that
+    |  doesn't follow the same rules, your application may benefit from a custom
+    |  rule-based implementation. You can either plug a rule-based component
+    |  into your #[+a("/usage/processing-pipelines") processing pipeline] or use
+    |  the #[code SentenceSegmenter] component with a custom stategy.
+
++h(3, "sbd-parser") Default: Using the dependency parse
+    +tag-model("dependency parser")
+
+p
+    |  To view a #[code Doc]'s sentences, you can iterate over the
+    |  #[code Doc.sents], a generator that yields
+    |  #[+api("span") #[code Span]] objects.
+
++code-exec.
+    import spacy
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(u"This is a sentence. This is another sentence.")
+    for sent in doc.sents:
+        print(sent.text)
+
++h(3, "sbd-manual") Setting boundaries manually
+
+p
+    |  spaCy's dependency parser respects already set boundaries, so you can
+    |  preprocess your #[code Doc] using custom rules #[code before] it's
+    |  parsed. This can be done by adding a
+    |  #[+a("/usage/processing-pipelines") custom pipeline component]. Depending
+    |  on your text, this may also improve accuracy, since the parser is
+    |  constrained to predict parses consistent with the sentence boundaries.
+
++infobox("Important note", "⚠️")
+    |  To prevent inconsitent state, you can only set boundaries #[em before] a
+    |  document is parsed (and #[code Doc.is_parsed] is #[code False]). To
+    |  ensure that your component is added in the right place, you can set
+    |  #[code before='parser'] or #[code first=True] when adding it to the
+    |  pipeline using #[+api("language#add_pipe") #[code nlp.add_pipe]].
+
+p
+    |  Here's an example of a component that implements a pre-processing rule
+    |  for splitting on #[code '...'] tokens. The component is added before
+    |  the parser, which is then used to further segment the text. This
+    |  approach can be useful if you want to implement #[em additional] rules
+    |  specific to your data, while still being able to take advantage of
+    |  dependency-based sentence segmentation.
+
++code-exec.
+    import spacy
+
+    text = u"this is a sentence...hello...and another sentence."
+
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(text)
+    print('Before:', [sent.text for sent in doc.sents])
+
+    def set_custom_boundaries(doc):
+        for token in doc[:-1]:
+            if token.text == '...':
+                doc[token.i+1].is_sent_start = True
+        return doc
+
+    nlp.add_pipe(set_custom_boundaries, before='parser')
+    doc = nlp(text)
+    print('After:', [sent.text for sent in doc.sents])
+
++h(3, "sbd-component") Rule-based pipeline component
+
+p
+    |  The #[code sentencizer] component is a
+    |  #[+a("/usage/processing-pipelines") pipeline component] that splits
+    |  sentences on punctuation like #[code &period;], #[code !] or #[code ?].
+    |  You can plug it into your pipeline if you only need sentence boundaries
+    |  without the dependency parse. Note that #[code Doc.sents] will
+    |  #[strong raise an error] if no sentence boundaries are set.
+
++code-exec.
+    import spacy
+    from spacy.lang.en import English
+
+    nlp = English()  # just the language with no model
+    sbd = nlp.create_pipe('sentencizer')   # or: nlp.create_pipe('sbd')
+    nlp.add_pipe(sbd)
+    doc = nlp(u"This is a sentence. This is another sentence.")
+    for sent in doc.sents:
+        print(sent.text)
+
++h(3, "sbd-custom") Custom rule-based strategy
+
+p
+    |  If you want to implement your own strategy that differs from the default
+    |  rule-based approach of splitting on sentences, you can also instantiate
+    |  the #[code SentenceSegmenter] directly and pass in your own strategy.
+    |  The strategy should be a function that takes a #[code Doc] object and
+    |  yields a #[code Span] for each sentence. Here's an example of a custom
+    |  segmentation strategy for splitting on newlines only:
+
++code-exec.
+    from spacy.lang.en import English
+    from spacy.pipeline import SentenceSegmenter
+
+    def split_on_newlines(doc):
+        start = 0
+        seen_newline = False
+        for word in doc:
+            if seen_newline and not word.is_space:
+                yield doc[start:word.i]
+                start = word.i
+                seen_newline = False
+            elif word.text == '\n':
+                seen_newline = True
+        if start &lt; len(doc):
+            yield doc[start:len(doc)]
+
+    nlp = English()  # just the language with no model
+    sbd = SentenceSegmenter(nlp.vocab, strategy=split_on_newlines)
+    nlp.add_pipe(sbd)
+    doc = nlp(u"This is a sentence\n\nThis is another sentence\nAnd more")
+    for sent in doc.sents:
+        print([token.text for token in sent])

@@ -1,0 +1,270 @@
+//- 💫 DOCS > API > CYTHON > STRUCTS > TOKENC
+
+p
+    |  Cython data container for the #[code Token] object.
+
++aside-code("Example").
+    token = &doc.c[3]
+    token_ptr = &doc.c[3]
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lex]
+        +cell #[code const LexemeC*]
+        +cell A pointer to the lexeme for the token.
+
+    +row
+        +cell #[code morph]
+        +cell #[code uint64_t]
+        +cell An ID allowing lookup of morphological attributes.
+
+    +row
+        +cell #[code pos]
+        +cell #[code univ_pos_t]
+        +cell Coarse-grained part-of-speech tag.
+
+    +row
+        +cell #[code spacy]
+        +cell #[code bint]
+        +cell A binary value indicating whether the token has trailing whitespace.
+
+    +row
+        +cell #[code tag]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Fine-grained part-of-speech tag.
+
+    +row
+        +cell #[code idx]
+        +cell #[code int]
+        +cell The character offset of the token within the parent document.
+
+    +row
+        +cell #[code lemma]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Base form of the token, with no inflectional suffixes.
+
+    +row
+        +cell #[code sense]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Space for storing a word sense ID, currently unused.
+
+    +row
+        +cell #[code head]
+        +cell #[code int]
+        +cell Offset of the syntactic parent relative to the token.
+
+    +row
+        +cell #[code dep]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Syntactic dependency relation.
+
+    +row
+        +cell #[code l_kids]
+        +cell #[code uint32_t]
+        +cell Number of left children.
+
+    +row
+        +cell #[code r_kids]
+        +cell #[code uint32_t]
+        +cell Number of right children.
+
+    +row
+        +cell #[code l_edge]
+        +cell #[code uint32_t]
+        +cell Offset of the leftmost token of this token's syntactic descendents.
+
+    +row
+        +cell #[code r_edge]
+        +cell #[code uint32_t]
+        +cell Offset of the rightmost token of this token's syntactic descendents.
+
+    +row
+        +cell #[code sent_start]
+        +cell #[code int]
+        +cell
+            |  Ternary value indicating whether the token is the first word of
+            |  a sentence. #[code 0] indicates a missing value, #[code -1]
+            |  indicates #[code False] and #[code 1] indicates #[code True]. The default value, 0,
+            |  is interpretted as no sentence break. Sentence boundary detectors will usually
+            |  set 0 for all tokens except tokens that follow a sentence boundary.
+
+    +row
+        +cell #[code ent_iob]
+        +cell #[code int]
+        +cell
+            |  IOB code of named entity tag. #[code 0] indicates a missing
+            |  value, #[code 1] indicates #[code I], #[code 2] indicates
+            |  #[code 0] and #[code 3] indicates #[code B].
+
+    +row
+        +cell #[code ent_type]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell Named entity type.
+
+    +row
+        +cell #[code ent_id]
+        +cell #[+abbr("uint64_t") #[code hash_t]]
+        +cell
+            |  ID of the entity the token is an instance of, if any. Currently
+            |  not used, but potentially for coreference resolution.
+
++h(3, "token_get_struct_attr", "spacy/tokens/token.pxd") Token.get_struct_attr
+    +tag staticmethod
+    +tag nogil
+
+p Get the value of an attribute from the #[code TokenC] struct by attribute ID.
+
++aside-code("Example").
+    from spacy.attrs cimport IS_ALPHA
+    from spacy.tokens cimport Token
+
+    is_alpha = Token.get_struct_attr(&doc.c[3], IS_ALPHA)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code token]
+        +cell #[code const TokenC*]
+        +cell A pointer to a #[code TokenC] struct.
+
+    +row
+        +cell #[code feat_name]
+        +cell #[code attr_id_t]
+        +cell
+            |  The ID of the attribute to look up. The attributes are
+            |  enumerated in #[code spacy.typedefs].
+
+    +row("foot")
+        +cell returns
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell The value of the attribute.
+
++h(3, "token_set_struct_attr", "spacy/tokens/token.pxd") Token.set_struct_attr
+    +tag staticmethod
+    +tag nogil
+
+p Set the value of an attribute of the #[code TokenC] struct by attribute ID.
+
++aside-code("Example").
+    from spacy.attrs cimport TAG
+    from spacy.tokens cimport Token
+
+    token = &doc.c[3]
+    Token.set_struct_attr(token, TAG, 0)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code token]
+        +cell #[code const TokenC*]
+        +cell A pointer to a #[code TokenC] struct.
+
+    +row
+        +cell #[code feat_name]
+        +cell #[code attr_id_t]
+        +cell
+            |  The ID of the attribute to look up. The attributes are
+            |  enumerated in #[code spacy.typedefs].
+
+    +row
+        +cell #[code value]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell The value to set.
+
++h(3, "token_by_start", "spacy/tokens/doc.pxd") token_by_start
+    +tag function
+
+p Find a token in a #[code TokenC*] array by the offset of its first character.
+
++aside-code("Example").
+    from spacy.tokens.doc cimport Doc, token_by_start
+    from spacy.vocab cimport Vocab
+
+    doc = Doc(Vocab(), words=[u'hello', u'world'])
+    assert token_by_start(doc.c, doc.length, 6) == 1
+    assert token_by_start(doc.c, doc.length, 4) == -1
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code tokens]
+        +cell #[code const TokenC*]
+        +cell A #[code TokenC*] array.
+
+    +row
+        +cell #[code length]
+        +cell #[code int]
+        +cell The number of tokens in the array.
+
+    +row
+        +cell #[code start_char]
+        +cell #[code int]
+        +cell The start index to search for.
+
+    +row("foot")
+        +cell returns
+        +cell #[code int]
+        +cell The index of the token in the array or #[code -1] if not found.
+
++h(3, "token_by_end", "spacy/tokens/doc.pxd") token_by_end
+    +tag function
+
+p Find a token in a #[code TokenC*] array by the offset of its final character.
+
++aside-code("Example").
+    from spacy.tokens.doc cimport Doc, token_by_end
+    from spacy.vocab cimport Vocab
+
+    doc = Doc(Vocab(), words=[u'hello', u'world'])
+    assert token_by_end(doc.c, doc.length, 5) == 0
+    assert token_by_end(doc.c, doc.length, 1) == -1
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code tokens]
+        +cell #[code const TokenC*]
+        +cell A #[code TokenC*] array.
+
+    +row
+        +cell #[code length]
+        +cell #[code int]
+        +cell The number of tokens in the array.
+
+    +row
+        +cell #[code end_char]
+        +cell #[code int]
+        +cell The end index to search for.
+
+    +row("foot")
+        +cell returns
+        +cell #[code int]
+        +cell The index of the token in the array or #[code -1] if not found.
+
++h(3, "set_children_from_heads", "spacy/tokens/doc.pxd") set_children_from_heads
+    +tag function
+
+p
+    |  Set attributes that allow lookup of syntactic children on a
+    |  #[code TokenC*] array. This function must be called after making changes
+    |  to the #[code TokenC.head] attribute, in order to make the parse tree
+    |  navigation consistent.
+
++aside-code("Example").
+    from spacy.tokens.doc cimport Doc, set_children_from_heads
+    from spacy.vocab cimport Vocab
+
+    doc = Doc(Vocab(), words=[u'Baileys', u'from', u'a', u'shoe'])
+    doc.c[0].head = 0
+    doc.c[1].head = 0
+    doc.c[2].head = 3
+    doc.c[3].head = 1
+    set_children_from_heads(doc.c, doc.length)
+    assert doc.c[3].l_kids == 1
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code tokens]
+        +cell #[code const TokenC*]
+        +cell A #[code TokenC*] array.
+
+    +row
+        +cell #[code length]
+        +cell #[code int]
+        +cell The number of tokens in the array.

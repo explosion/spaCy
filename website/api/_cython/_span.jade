@@ -1,0 +1,43 @@
+//- 💫 DOCS > API > CYTHON > CLASSES > SPAN
+
+p
+    |  A Cython class providing access and methods for a slice of a #[code Doc]
+    |  object.
+
++infobox
+    |  This section documents the extra C-level attributes and methods that
+    |  can't be accessed from Python. For the Python documentation, see
+    |  #[+api("span") #[code Span]].
+
++h(3, "span_attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The parent document.
+
+    +row
+        +cell #[code start]
+        +cell #[code int]
+        +cell The index of the first token of the span.
+
+    +row
+        +cell #[code end]
+        +cell #[code int]
+        +cell The index of the first token after the span.
+
+    +row
+        +cell #[code start_char]
+        +cell #[code int]
+        +cell The index of the first character of the span.
+
+    +row
+        +cell #[code end_char]
+        +cell #[code int]
+        +cell The index of the last character of the span.
+
+    +row
+        +cell #[code label]
+        +cell #[+abbr("uint64_t") #[code attr_t]]
+        +cell A label to attach to the span, e.g. for named entities.

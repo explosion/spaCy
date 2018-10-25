@@ -26,7 +26,7 @@ also check the [troubleshooting guide](https://spacy.io/usage/#troubleshooting)
 to see if your problem is already listed there.
 
 If you're looking for help with your code, consider posting a question on
-[StackOverflow](http://stackoverflow.com/questions/tagged/spacy) instead. If you
+[Stack Overflow](http://stackoverflow.com/questions/tagged/spacy) instead. If you
 tag it `spacy` and `python`, more people will see it and hopefully be able to
 help. Please understand that we won't be able to provide individual support via
 email. We also believe that help is much more valuable if it's **shared publicly**,
@@ -73,28 +73,8 @@ so it only becomes visible on click, making the issue easier to read and follow.
 ### Issue labels
 
 To distinguish issues that are opened by us, the maintainers, we usually add a
-💫 to the title. We also use the following system to tag our issues and pull
-requests:
-
-| Issue label | Description |
-| --- | --- |
-| [`bug`](https://github.com/explosion/spaCy/labels/bug) | Bugs and behaviour differing from documentation |
-| [`enhancement`](https://github.com/explosion/spaCy/labels/enhancement) | Feature requests and improvements |
-| [`install`](https://github.com/explosion/spaCy/labels/install) | Installation problems |
-| [`performance`](https://github.com/explosion/spaCy/labels/performance) | Accuracy, speed and memory use problems |
-| [`tests`](https://github.com/explosion/spaCy/labels/tests) | Missing or incorrect [tests](spacy/tests) |
-| [`docs`](https://github.com/explosion/spaCy/labels/docs), [`examples`](https://github.com/explosion/spaCy/labels/examples) | Issues related to the [documentation](https://spacy.io/docs) and [examples](spacy/examples) |
-| [`training`](https://github.com/explosion/spaCy/labels/training) | Issues related to training and updating models |
-| [`models`](https://github.com/explosion/spaCy/labels/models), `language / [name]` | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
-| [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
-| [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
-| [`compat`](https://github.com/explosion/spaCy/labels/compat) | Cross-platform and cross-Python compatibility issues |
-| [`wip`](https://github.com/explosion/spaCy/labels/wip) | Work in progress, mostly used for pull requests |
-| [`v1`](https://github.com/explosion/spaCy/labels/v1) | Reports related to spaCy v1.x |
-| [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
-| [`third-party`](https://github.com/explosion/spaCy/labels/third-party) | Issues related to third-party packages and services |
-| [`meta`](https://github.com/explosion/spaCy/labels/meta) | Meta topics, e.g. repo organisation and issue management |
-| [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted), [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions |
+💫 to the title. [See this page](https://github.com/explosion/spaCy/labels)
+for an overview of the system we use to tag our issues and pull requests.
 
 ## Contributing to the code base
 
@@ -150,7 +130,7 @@ recipes, that does provide some argument for bringing it "in house".
 
 ### Getting started
 
-To make changes to spaCy's code base, you need to clone the GitHub repository
+To make changes to spaCy's code base, you need to fork then clone the GitHub repository
 and build spaCy from source. You'll need to make sure that you have a
 development environment consisting of a Python distribution including header
 files, a compiler, [pip](https://pip.pypa.io/en/latest/installing/),
@@ -158,11 +138,11 @@ files, a compiler, [pip](https://pip.pypa.io/en/latest/installing/),
 [git](https://git-scm.com) installed. The compiler is usually the trickiest part.
 
 ```
-python -m pip install -U pip venv
+python -m pip install -U pip
 git clone https://github.com/explosion/spaCy
 cd spaCy
 
-venv .env
+python -m venv .env
 source .env/bin/activate
 export PYTHONPATH=`pwd`
 pip install -r requirements.txt
@@ -182,7 +162,7 @@ If you've made a contribution to spaCy, you should fill in the
 [spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that
 your contribution can be used across the project. If you agree to be bound by
 the terms of the agreement, fill in the [template](.github/CONTRIBUTOR_AGREEMENT.md)
-and include it with your pull request, or sumit it separately to
+and include it with your pull request, or submit it separately to
 [`.github/contributors/`](/.github/contributors). The name of the file should be
 your GitHub username, with the extension `.md`. For example, the user
 example_user would create the file `.github/contributors/example_user.md`.
@@ -220,7 +200,7 @@ All Python code must be written in an **intersection of Python 2 and Python 3**.
 This is easy in Cython, but somewhat ugly in Python. Logic that deals with
 Python or platform compatibility should only live in
 [`spacy.compat`](spacy/compat.py). To distinguish them from the builtin
-functions, replacement functions are suffixed with an undersocre, for example
+functions, replacement functions are suffixed with an underscore, for example
 `unicode_`. If you need to access the user's version or platform information,
 for example to show more specific error messages, you can use the `is_config()`
 helper function.

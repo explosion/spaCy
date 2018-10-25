@@ -149,7 +149,7 @@ p
 
 +aside-code("Example").
     from spacy.tokens import Doc
-    city_getter = lambda doc: doc.text in ('New York', 'Paris', 'Berlin')
+    city_getter = lambda doc: any(city in doc.text for city in ('New York', 'Paris', 'Berlin'))
     Doc.set_extension('has_city', getter=city_getter)
     doc = nlp(u'I like New York')
     assert doc._.has_city
@@ -202,8 +202,8 @@ p
 
 +aside-code("Example").
     from spacy.tokens import Doc
-    Doc.set_extension('is_city', default=False)
-    extension = Doc.get_extension('is_city')
+    Doc.set_extension('has_city', default=False)
+    extension = Doc.get_extension('has_city')
     assert extension == (False, None, None, None)
 
 +table(["Name", "Type", "Description"])
@@ -227,8 +227,8 @@ p Check whether an extension has been registered on the #[code Doc] class.
 
 +aside-code("Example").
     from spacy.tokens import Doc
-    Doc.set_extension('is_city', default=False)
-    assert Doc.has_extension('is_city')
+    Doc.set_extension('has_city', default=False)
+    assert Doc.has_extension('has_city')
 
 +table(["Name", "Type", "Description"])
     +row
@@ -241,11 +241,38 @@ p Check whether an extension has been registered on the #[code Doc] class.
         +cell bool
         +cell Whether the extension has been registered.
 
++h(2, "remove_extension") Doc.remove_extension
+    +tag classmethod
+    +tag-new("2.0.12")
+
+p Remove a previously registered extension.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    Doc.set_extension('has_city', default=False)
+    removed = Doc.remove_extension('has_city')
+    assert not Doc.has_extension('has_city')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of the extension.
+
+    +row("foot")
+        +cell returns
+        +cell tuple
+        +cell
+            |  A #[code.u-break (default, method, getter, setter)] tuple of the
+            |  removed extension.
+
 +h(2, "char_span") Doc.char_span
     +tag method
     +tag-new(2)
 
-p Create a #[code Span] object from the slice #[code doc.text[start : end]].
+p
+    |  Create a #[code Span] object from the slice #[code doc.text[start : end]].
+    |  Returns #[code None] if the character indices don't map to a valid span.
 
 +aside-code("Example").
     doc = nlp(u'I like New York')
@@ -261,7 +288,7 @@ p Create a #[code Span] object from the slice #[code doc.text[start : end]].
     +row
         +cell #[code end]
         +cell int
-        +cell The index of the first character after the span.
+        +cell The index of the last character after the span.
 
     +row
         +cell #[code label]
@@ -276,7 +303,7 @@ p Create a #[code Span] object from the slice #[code doc.text[start : end]].
     +row("foot")
         +cell returns
         +cell #[code Span]
-        +cell The newly constructed object.
+        +cell The newly constructed object or #[code None].
 
 +h(2, "similarity") Doc.similarity
     +tag method
@@ -401,11 +428,11 @@ p
 +aside-code("Example").
     from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
     from spacy.tokens import Doc
-    doc = nlp(text)
+    doc = nlp("Hello world!")
     np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
-    doc2 = Doc(doc.vocab)
+    doc2 = Doc(doc.vocab, words=[t.text for t in doc])
     doc2.from_array([LOWER, POS, ENT_TYPE, IS_ALPHA], np_array)
-    assert doc.text == doc2.text
+    assert doc[0].pos_ == doc2[0].pos_
 
 +table(["Name", "Type", "Description"])
     +row
@@ -554,7 +581,7 @@ p
     |  web applications.
 
 +aside-code("Example").
-    doc = nlp('Alice ate the pizza.')
+    doc = nlp(u'Alice ate the pizza.')
     trees = doc.print_tree()
     # {'modifiers': [
     #   {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice', 'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Alice'},
@@ -588,8 +615,8 @@ p
     |  document.
 
 +aside-code("Example").
-    tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
-    ents = list(tokens.ents)
+    doc = nlp(u'Mr. Best flew to New York on Saturday morning.')
+    ents = list(doc.ents)
     assert ents[0].label == 346
     assert ents[0].label_ == 'PERSON'
     assert ents[0].text == 'Mr. Best'
@@ -672,7 +699,7 @@ p
     |  token vectors.
 
 +aside-code("Example").
-    apples = nlp(u'I like apples')
+    doc = nlp(u'I like apples')
     assert doc.vector.dtype == 'float32'
     assert doc.vector.shape == (300,)
 
@@ -758,6 +785,13 @@ p
         +cell #[code is_parsed]
         +cell bool
         +cell A flag indicating that the document has been syntactically parsed.
+
+    +row
+        +cell #[code is_sentenced]
+        +cell bool
+        +cell
+            |  A flag indicating that sentence boundaries have been applied to
+            |  the document.
 
     +row
         +cell #[code sentiment]

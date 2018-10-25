@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 from copy import copy
 
 from ..tokens.doc cimport Doc
+from ..errors import Errors
 
 
 DELIMITER = '||'
@@ -131,7 +132,10 @@ cpdef deprojectivize(Doc doc):
 
 def _decorate(heads, proj_heads, labels):
     # uses decoration scheme HEAD from Nivre & Nilsson 2005
-    assert(len(heads) == len(proj_heads) == len(labels))
+    if (len(heads) != len(proj_heads)) or (len(proj_heads) != len(labels)):
+        raise ValueError(Errors.E082.format(n_heads=len(heads),
+                                            n_proj_heads=len(proj_heads),
+                                            n_labels=len(labels)))
     deco_labels = []
     for tokenid, head in enumerate(heads):
         if head != proj_heads[tokenid]:

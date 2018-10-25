@@ -28,12 +28,38 @@ def vectors():
 def data():
     return numpy.asarray([[0.0, 1.0, 2.0], [3.0, -2.0, 4.0]], dtype='f')
 
+@pytest.fixture
+def resize_data():
+    return numpy.asarray([[0.0, 1.0], [2.0, 3.0]], dtype='f')
 
 @pytest.fixture()
 def vocab(en_vocab, vectors):
     add_vecs_to_vocab(en_vocab, vectors)
     return en_vocab
 
+def test_init_vectors_with_resize_shape(strings,resize_data):
+    v = Vectors(shape=(len(strings), 3))
+    v.resize(shape=resize_data.shape)
+    assert v.shape == resize_data.shape
+    assert v.shape != (len(strings), 3)
+
+def test_init_vectors_with_resize_data(data,resize_data):
+    v = Vectors(data=data)
+    v.resize(shape=resize_data.shape)
+    assert v.shape == resize_data.shape
+    assert v.shape != data.shape
+
+def test_get_vector_resize(strings, data,resize_data):
+    v = Vectors(data=data)
+    v.resize(shape=resize_data.shape)
+    strings = [hash_string(s) for s in strings]
+    for i, string in enumerate(strings):
+        v.add(string, row=i)
+
+    assert list(v[strings[0]]) == list(resize_data[0])
+    assert list(v[strings[0]]) != list(resize_data[1])
+    assert list(v[strings[1]]) != list(resize_data[0])
+    assert list(v[strings[1]]) == list(resize_data[1])
 
 def test_init_vectors_with_data(strings, data):
     v = Vectors(data=data)

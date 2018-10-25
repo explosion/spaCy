@@ -28,7 +28,7 @@ if __name__ == '__main__':
     command = sys.argv.pop(1)
     sys.argv[0] = 'spacy %s' % command
     if command in commands:
-        plac.call(commands[command])
+        plac.call(commands[command], sys.argv[1:])
     else:
         prints(
             "Available: %s" % ', '.join(commands),

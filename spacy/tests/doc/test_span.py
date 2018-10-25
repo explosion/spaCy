@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from ..util import get_doc
 from ...attrs import ORTH, LENGTH
+from ...tokens import Doc
+from ...vocab import Vocab
 
 import pytest
 
@@ -66,6 +68,15 @@ def test_spans_lca_matrix(en_tokenizer):
     assert(lca[1, 1] == 1)
 
 
+def test_span_similarity_match():
+    doc = Doc(Vocab(), words=['a', 'b', 'a', 'b'])
+    span1 = doc[:2]
+    span2 = doc[2:]
+    assert span1.similarity(span2) == 1.0
+    assert span1.similarity(doc) == 0.0
+    assert span1[:1].similarity(doc.vocab['a']) == 1.0
+
+
 def test_spans_default_sentiment(en_tokenizer):
     """Test span.sentiment property's default averaging behaviour"""
     text = "good stuff bad stuff"
@@ -122,3 +133,31 @@ def test_span_as_doc(doc):
     span = doc[4:10]
     span_doc = span.as_doc()
     assert span.text == span_doc.text.strip()
+
+def test_span_ents_property(doc):
+    """Test span.ents for the """
+    doc.ents = [
+        (doc.vocab.strings['PRODUCT'], 0, 1),
+        (doc.vocab.strings['PRODUCT'], 7, 8),
+        (doc.vocab.strings['PRODUCT'], 11, 14)
+    ]
+    assert len(list(doc.ents)) == 3
+    sentences = list(doc.sents)
+    assert len(sentences) == 3
+    assert len(sentences[0].ents) == 1
+    # First sentence, also tests start of sentence
+    assert sentences[0].ents[0].text == "This"
+    assert sentences[0].ents[0].label_ == "PRODUCT"
+    assert sentences[0].ents[0].start == 0
+    assert sentences[0].ents[0].end == 1
+    # Second sentence
+    assert len(sentences[1].ents) == 1
+    assert sentences[1].ents[0].text == "another"
+    assert sentences[1].ents[0].label_ == "PRODUCT"
+    assert sentences[1].ents[0].start == 7
+    assert sentences[1].ents[0].end == 8
+    # Third sentence ents, Also tests end of sentence
+    assert sentences[2].ents[0].text == "a third ."
+    assert sentences[2].ents[0].label_ == "PRODUCT"
+    assert sentences[2].ents[0].start == 11
+    assert sentences[2].ents[0].end == 14

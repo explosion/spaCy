@@ -1,0 +1,9 @@
+{
+    "index": {
+        "title": "Universe",
+        "teaser": "This section collects the many great resources developed with or for spaCy. It includes standalone packages, plugins, extensions, educational materials, operational utilities and bindings for other languages.",
+        "description": "This section collects the many great resources developed with or for spaCy. It includes standalone packages, plugins, extensions, educational materials, operational utilities and bindings for other languages.",
+        "landing": true,
+        "preview": "universe"
+    }
+}

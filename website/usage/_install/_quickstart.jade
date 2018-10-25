@@ -6,7 +6,7 @@
     +qs({config: 'venv', python: 2}) python -m pip install -U virtualenv
     +qs({config: 'venv', python: 3}) python -m pip install -U venv
     +qs({config: 'venv', python: 2}) virtualenv .env
-    +qs({config: 'venv', python: 3}) venv .env
+    +qs({config: 'venv', python: 3}) python -m venv .env
     +qs({config: 'venv', os: 'mac'}) source .env/bin/activate
     +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
     +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
@@ -16,7 +16,9 @@
 
     +qs({package: 'source'}) git clone https://github.com/explosion/spaCy
     +qs({package: 'source'}) cd spaCy
-    +qs({package: 'source'}) export PYTHONPATH=`pwd`
+    +qs({package: 'source', os: 'mac'}) export PYTHONPATH=`pwd`
+    +qs({package: 'source', os: 'linux'}) export PYTHONPATH=`pwd`
+    +qs({package: 'source', os: 'windows'}) set PYTHONPATH=/path/to/spaCy
     +qs({package: 'source'}) pip install -r requirements.txt
     +qs({package: 'source'}) python setup.py build_ext --inplace
 

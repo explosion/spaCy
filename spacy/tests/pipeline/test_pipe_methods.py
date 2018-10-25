@@ -107,3 +107,9 @@ def test_add_lots_of_pipes(nlp, n_pipes):
     for i in range(n_pipes):
         nlp.add_pipe(lambda doc: doc, name='pipe_%d' % i)
     assert len(nlp.pipe_names) == n_pipes
+
+
+@pytest.mark.parametrize('component', ['ner', {'hello': 'world'}])
+def test_raise_for_invalid_components(nlp, component):
+    with pytest.raises(ValueError):
+        nlp.add_pipe(component)

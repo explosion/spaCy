@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ...attrs import intify_attrs, ORTH, NORM, LEMMA, IS_ALPHA
-from ...lang.lex_attrs import is_punct, is_ascii, like_url, word_shape
+from ...lang.lex_attrs import is_punct, is_ascii, is_currency, like_url, word_shape
 
 import pytest
 
@@ -35,6 +35,13 @@ def test_lex_attrs_is_punct(text, match):
 @pytest.mark.parametrize('text,match', [(',', True), ('£', False), ('♥', False)])
 def test_lex_attrs_is_ascii(text, match):
     assert is_ascii(text) == match
+
+
+@pytest.mark.parametrize('text,match', [('$', True), ('£', True), ('♥', False),
+    ('€', True), ('¥', True), ('¢', True),
+    ('a', False), ('www.google.com', False), ('dog', False)])
+def test_lex_attrs_is_currency(text, match):
+    assert is_currency(text) == match
 
 
 @pytest.mark.parametrize('text,match', [

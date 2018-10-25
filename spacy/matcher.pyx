@@ -16,6 +16,7 @@ from .typedefs cimport hash_t
 from .structs cimport TokenC
 from .tokens.doc cimport Doc, get_token_attr
 from .vocab cimport Vocab
+from .errors import Errors, TempErrors
 
 from .attrs import IDS
 from .attrs cimport attr_id_t, ID, NULL_ATTR
@@ -47,6 +48,7 @@ from .attrs import FLAG37 as L8_ENT
 from .attrs import FLAG36 as L9_ENT
 from .attrs import FLAG35 as L10_ENT
 
+DELIMITER = '||'
 
 cpdef enum quantifier_t:
     _META
@@ -65,7 +67,7 @@ cdef enum action_t:
     ACCEPT_PREV
     PANIC
 
-# A "match expression" conists of one or more token patterns
+# A "match expression" consists of one or more token patterns
 # Each token pattern consists of a quantifier and 0+ (attr, value) pairs.
 # A state is an (int, pattern pointer) pair, where the int is the start
 # position, and the pattern pointer shows where we're up to
@@ -75,15 +77,15 @@ cdef struct AttrValueC:
     attr_id_t attr
     attr_t value
 
-
 cdef struct TokenPatternC:
     AttrValueC* attrs
     int32_t nr_attr
     quantifier_t quantifier
 
-
 ctypedef TokenPatternC* TokenPatternC_ptr
 ctypedef pair[int, TokenPatternC_ptr] StateC
+
+DEF PADDING = 5
 
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
@@ -104,12 +106,12 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
     pattern[i].nr_attr = 0
     return pattern
 
-
 cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
     while pattern.nr_attr != 0:
         pattern += 1
     id_attr = pattern[0].attrs[0]
-    assert id_attr.attr == ID
+    if id_attr.attr != ID:
+        raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
     return id_attr.value
 
 
@@ -161,8 +163,8 @@ def _convert_strings(token_specs, string_store):
                 if value in operators:
                     ops = operators[value]
                 else:
-                    msg = "Unknown operator '%s'. Options: %s"
-                    raise KeyError(msg % (value, ', '.join(operators.keys())))
+                    keys = ', '.join(operators.keys())
+                    raise KeyError(Errors.E011.format(op=value, opts=keys))
             if isinstance(attr, basestring):
                 attr = IDS.get(attr.upper())
             if isinstance(value, basestring):
@@ -181,6 +183,14 @@ def merge_phrase(matcher, doc, i, matches):
     ent_id, label, start, end = matches[i]
     span = doc[start:end]
     span.merge(ent_type=label, ent_id=ent_id)
+
+
+def unpickle_matcher(vocab, patterns, callbacks):
+    matcher = Matcher(vocab)
+    for key, specs in patterns.items():
+        callback = callbacks.get(key, None)
+        matcher.add(key, callback, *specs)
+    return matcher
 
 
 cdef class Matcher:
@@ -206,7 +216,8 @@ cdef class Matcher:
         self.mem = Pool()
 
     def __reduce__(self):
-        return (self.__class__, (self.vocab, self._patterns), None, None)
+        data = (self.vocab, self._patterns, self._callbacks)
+        return (unpickle_matcher, data, None, None)
 
     def __len__(self):
         """Get the number of rules added to the matcher. Note that this only
@@ -251,20 +262,18 @@ cdef class Matcher:
 
         key (unicode): The match ID.
         on_match (callable): Callback executed on match.
-        *patterns (list): List of token descritions.
+        *patterns (list): List of token descriptions.
         """
         for pattern in patterns:
             if len(pattern) == 0:
-                msg = ("Cannot add pattern for zero tokens to matcher.\n"
-                       "key: {key}\n")
-                raise ValueError(msg.format(key=key))
+                raise ValueError(Errors.E012.format(key=key))
         key = self._normalize_key(key)
-        self._patterns.setdefault(key, [])
-        self._callbacks[key] = on_match
         for pattern in patterns:
             specs = _convert_strings(pattern, self.vocab.strings)
             self.patterns.push_back(init_pattern(self.mem, key, specs))
-            self._patterns[key].append(specs)
+        self._patterns.setdefault(key, [])
+        self._callbacks[key] = on_match
+        self._patterns[key].extend(patterns)
 
     def remove(self, key):
         """Remove a rule from the matcher. A KeyError is raised if the key does
@@ -339,13 +348,12 @@ cdef class Matcher:
             for state in partials:
                 action = get_action(state.second, token)
                 if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
+                    raise ValueError(Errors.E013)
                 while action == ADVANCE_ZERO:
                     state.second += 1
                     action = get_action(state.second, token)
                 if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
-
+                    raise ValueError(Errors.E013)
                 if action == REPEAT:
                     # Leave the state in the queue, and advance to next slot
                     # (i.e. we don't overwrite -- we want to greedily match
@@ -371,7 +379,7 @@ cdef class Matcher:
             for pattern in self.patterns:
                 action = get_action(pattern, token)
                 if action == PANIC:
-                    raise Exception("Error selecting action in matcher")
+                    raise ValueError(Errors.E013)
                 while action == ADVANCE_ZERO:
                     pattern += 1
                     action = get_action(pattern, token)
@@ -438,7 +446,7 @@ def get_bilou(length):
         return [B10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT, I10_ENT,
                 I10_ENT, I10_ENT, L10_ENT]
     else:
-        raise ValueError("Max length currently 10 for phrase matching")
+        raise ValueError(TempErrors.T001)
 
 
 cdef class PhraseMatcher:
@@ -497,11 +505,8 @@ cdef class PhraseMatcher:
         cdef Doc doc
         for doc in docs:
             if len(doc) >= self.max_length:
-                msg = (
-                    "Pattern length (%d) >= phrase_matcher.max_length (%d). "
-                    "Length can be set on initialization, up to 10."
-                )
-                raise ValueError(msg % (len(doc), self.max_length))
+                raise ValueError(TempErrors.T002.format(doc_len=len(doc),
+                                                        max_len=self.max_length))
         cdef hash_t ent_id = self.matcher._normalize_key(key)
         self._callbacks[ent_id] = on_match
         cdef int length
@@ -521,6 +526,7 @@ cdef class PhraseMatcher:
             self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
+
         """Find all sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
@@ -553,7 +559,9 @@ cdef class PhraseMatcher:
             yield doc
 
     def accept_match(self, Doc doc, int start, int end):
-        assert (end - start) < self.max_length
+        if (end - start) >= self.max_length:
+            raise ValueError(Errors.E075.format(length=end - start,
+                                                max_len=self.max_length))
         cdef int i, j
         for i in range(self.max_length):
             self._phrase_key[i] = 0
@@ -566,3 +574,236 @@ cdef class PhraseMatcher:
             return None
         else:
             return ent_id
+
+cdef class DependencyTreeMatcher:
+    """Match dependency parse tree based on pattern rules."""
+    cdef Pool mem
+    cdef readonly Vocab vocab
+    cdef readonly Matcher token_matcher
+    cdef public object _patterns
+    cdef public object _keys_to_token
+    cdef public object _root
+    cdef public object _entities
+    cdef public object _callbacks
+    cdef public object _nodes
+    cdef public object _tree
+
+    def __init__(self, vocab):
+        """Create the DependencyTreeMatcher.
+
+        vocab (Vocab): The vocabulary object, which must be shared with the
+            documents the matcher will operate on.
+        RETURNS (DependencyTreeMatcher): The newly constructed object.
+        """
+        size = 20
+        self.token_matcher = Matcher(vocab)
+        self._keys_to_token = {}
+        self._patterns = {}
+        self._root = {}
+        self._nodes = {}
+        self._tree = {}
+        self._entities = {}
+        self._callbacks = {}
+        self.vocab = vocab
+        self.mem = Pool()
+
+    def __reduce__(self):
+        data = (self.vocab, self._patterns,self._tree, self._callbacks)
+        return (unpickle_matcher, data, None, None)
+
+    def __len__(self):
+        """Get the number of rules, which are edges ,added to the dependency tree matcher.
+
+        RETURNS (int): The number of rules.
+        """
+        return len(self._patterns)
+
+    def __contains__(self, key):
+        """Check whether the matcher contains rules for a match ID.
+
+        key (unicode): The match ID.
+        RETURNS (bool): Whether the matcher contains rules for this match ID.
+        """
+        return self._normalize_key(key) in self._patterns
+
+
+    def add(self, key, on_match, *patterns):
+
+        # TODO : validations
+        # 1. check if input pattern is connected
+        # 2. check if pattern format is correct
+        # 3. check if atleast one root node is present
+        # 4. check if node names are not repeated
+        # 5. check if each node has only one head
+
+        for pattern in patterns:
+            if len(pattern) == 0:
+                raise ValueError(Errors.E012.format(key=key))
+
+        key = self._normalize_key(key)
+
+        _patterns = []
+        for pattern in patterns:
+            token_patterns = []
+            for i in range(len(pattern)):
+                token_pattern = [pattern[i]['PATTERN']]
+                token_patterns.append(token_pattern)
+            # self.patterns.append(token_patterns)
+            _patterns.append(token_patterns)
+
+        self._patterns.setdefault(key, [])
+        self._callbacks[key] = on_match
+        self._patterns[key].extend(_patterns)
+
+        # Add each node pattern of all the input patterns individually to the matcher.
+        # This enables only a single instance of Matcher to be used.
+        # Multiple adds are required to track each node pattern.
+        _keys_to_token_list = []
+        for i in range(len(_patterns)):
+            _keys_to_token = {}
+            # TODO : Better ways to hash edges in pattern?
+            for j in range(len(_patterns[i])):
+                k = self._normalize_key(unicode(key)+DELIMITER+unicode(i)+DELIMITER+unicode(j))
+                self.token_matcher.add(k,None,_patterns[i][j])
+                _keys_to_token[k] = j
+            _keys_to_token_list.append(_keys_to_token)
+
+        self._keys_to_token.setdefault(key, [])
+        self._keys_to_token[key].extend(_keys_to_token_list)
+
+        _nodes_list = []
+        for pattern in patterns:
+            nodes = {}
+            for i in range(len(pattern)):
+                nodes[pattern[i]['SPEC']['NODE_NAME']]=i
+            _nodes_list.append(nodes)
+
+        self._nodes.setdefault(key, [])
+        self._nodes[key].extend(_nodes_list)
+
+        # Create an object tree to traverse later on.
+        # This datastructure enable easy tree pattern match.
+        # Doc-Token based tree cannot be reused since it is memory heavy and tightly coupled with doc
+        self.retrieve_tree(patterns,_nodes_list,key)
+
+    def retrieve_tree(self,patterns,_nodes_list,key):
+
+        _heads_list = []
+        _root_list = []
+        for i in range(len(patterns)):
+            heads = {}
+            root = -1
+            for j in range(len(patterns[i])):
+                token_pattern = patterns[i][j]
+                if('NBOR_RELOP' not in token_pattern['SPEC']):
+                    heads[j] = j
+                    root = j
+                else:
+                    # TODO: Add semgrex rules
+                    # 1. >
+                    if(token_pattern['SPEC']['NBOR_RELOP'] == '>'):
+                        heads[j] = _nodes_list[i][token_pattern['SPEC']['NBOR_NAME']]
+                    # 2. <
+                    if(token_pattern['SPEC']['NBOR_RELOP'] == '<'):
+                        heads[_nodes_list[i][token_pattern['SPEC']['NBOR_NAME']]] = j
+
+            _heads_list.append(heads)
+            _root_list.append(root)
+
+        _tree_list = []
+        for i in range(len(patterns)):
+            tree = {}
+            for j in range(len(patterns[i])):
+                if(j == _heads_list[i][j]):
+                    continue
+                head = _heads_list[i][j]
+                if(head not in tree):
+                    tree[head] = []
+                tree[head].append(j)
+            _tree_list.append(tree)
+
+        self._tree.setdefault(key, [])
+        self._tree[key].extend(_tree_list)
+
+        self._root.setdefault(key, [])
+        self._root[key].extend(_root_list)
+
+    def has_key(self, key):
+        """Check whether the matcher has a rule with a given key.
+
+        key (string or int): The key to check.
+        RETURNS (bool): Whether the matcher has the rule.
+        """
+        key = self._normalize_key(key)
+        return key in self._patterns
+
+    def get(self, key, default=None):
+        """Retrieve the pattern stored for a key.
+
+        key (unicode or int): The key to retrieve.
+        RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
+        """
+        key = self._normalize_key(key)
+        if key not in self._patterns:
+            return default
+        return (self._callbacks[key], self._patterns[key])
+
+    def __call__(self, Doc doc):
+        matched_trees = []
+
+        matches = self.token_matcher(doc)
+        for key in list(self._patterns.keys()):
+            _patterns_list = self._patterns[key]
+            _keys_to_token_list = self._keys_to_token[key]
+            _root_list = self._root[key]
+            _tree_list = self._tree[key]
+            _nodes_list = self._nodes[key]
+            length = len(_patterns_list)
+            for i in range(length):
+                _keys_to_token = _keys_to_token_list[i]
+                _root = _root_list[i]
+                _tree = _tree_list[i]
+                _nodes = _nodes_list[i]
+
+                id_to_position = {}
+
+                # This could be taken outside to improve running time..?
+                for match_id, start, end in matches:
+                    if match_id in _keys_to_token:
+                        if _keys_to_token[match_id] not in id_to_position:
+                            id_to_position[_keys_to_token[match_id]] = []
+                        id_to_position[_keys_to_token[match_id]].append(start)
+
+                length = len(_nodes)
+                if _root in id_to_position:
+                    candidates = id_to_position[_root]
+                    for candidate in candidates:
+                        isVisited = {}
+                        self.dfs(candidate,_root,_tree,id_to_position,doc,isVisited)
+                        # to check if the subtree pattern is completely identified
+                        if(len(isVisited) == length):
+                            matched_trees.append((key,list(isVisited)))
+
+            for i, (ent_id, nodes) in enumerate(matched_trees):
+                on_match = self._callbacks.get(ent_id)
+                if on_match is not None:
+                    on_match(self, doc, i, matches)
+
+        return matched_trees
+
+    def dfs(self,candidate,root,tree,id_to_position,doc,isVisited):
+        if(root in id_to_position and candidate in id_to_position[root]):
+            # color the node since it is valid
+            isVisited[candidate] = True
+            candidate_children = doc[candidate].children
+            for candidate_child in candidate_children:
+                if root in tree:
+                    for root_child in tree[root]:
+                        self.dfs(candidate_child.i,root_child,tree,id_to_position,doc,isVisited)
+
+
+    def _normalize_key(self, key):
+        if isinstance(key, basestring):
+            return self.vocab.strings.add(key)
+        else:
+            return key

@@ -89,7 +89,7 @@ p Match a stream of documents, yielding them in turn.
 +aside-code("Example").
     from spacy.matcher import Matcher
     matcher = Matcher(nlp.vocab)
-    for doc in matcher.pipe(texts, batch_size=50, n_threads=4):
+    for doc in matcher.pipe(docs, batch_size=50, n_threads=4):
         pass
 
 +table(["Name", "Type", "Description"])
@@ -110,6 +110,25 @@ p Match a stream of documents, yielding them in turn.
             |  The number of threads with which to work on the buffer in
             |  parallel, if the #[code Matcher] implementation supports
             |  multi-threading.
+
+    +row
+        +cell #[code return_matches]
+            +tag-new(2.1)
+        +cell bool
+        +cell
+            |  Yield the match lists along with the docs, making results
+            |  #[code (doc, matches)] tuples.
+
+    +row
+        +cell #[code as_tuples]
+            +tag-new(2.1)
+        +cell bool
+        +cell
+            |  Interpret the input stream as #[code (doc, context)] tuples, and
+            |  yield #[code (result, context)] tuples out. If both
+            |  #[code return_matches] and #[code as_tuples] are #[code True],
+            |  the output will be a sequence of
+            |  #[code ((doc, matches), context)] tuples.
 
     +row("foot")
         +cell yields

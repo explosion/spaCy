@@ -99,6 +99,12 @@ p
     |  Process texts as a stream, and yield #[code Doc] objects in order.
     |  Supports GIL-free multi-threading.
 
++infobox("Important note for spaCy v2.0.x", "⚠️")
+    |  By default, multiple threads will be launched for matrix multiplication,
+    |  which may be inefficient on multi-core machines. Setting
+    |  #[code OPENBLAS_NUM_THREADS=1] should fix this problem. spaCy v2.1.x
+    |  will be switching to single-thread by default.
+
 +aside-code("Example").
     texts = [u'One document.', u'...', u'Lots of documents']
     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
@@ -513,11 +519,19 @@ p
 p
     |  Loads state from a directory. Modifies the object in place and returns
     |  it. If the saved #[code Language] object contains a model, the
-    |  #[strong model will be loaded].
+    |  model will be loaded. Note that this method is commonly used via the
+    |  subclasses like #[code English] or #[code German] to make
+    |  language-specific functionality like the
+    |  #[+a("/usage/adding-languages#lex-attrs") lexical attribute getters]
+    |  available to the loaded object.
 
 +aside-code("Example").
     from spacy.language import Language
-    nlp = Language().from_disk('/path/to/models')
+    nlp = Language().from_disk('/path/to/model')
+
+    # using language-specific subclass
+    from spacy.lang.en import English
+    nlp = English().from_disk('/path/to/en_model')
 
 +table(["Name", "Type", "Description"])
     +row
@@ -575,10 +589,15 @@ p Serialize the current state to a binary string.
 +h(2, "from_bytes") Language.from_bytes
     +tag method
 
-p Load state from a binary string.
+p
+    |  Load state from a binary string. Note that this method is commonly used
+    |  via the subclasses like #[code English] or #[code German] to make
+    |  language-specific functionality like the
+    |  #[+a("/usage/adding-languages#lex-attrs") lexical attribute getters]
+    |  available to the loaded object.
 
 +aside-code("Example").
-    fron spacy.lang.en import English
+    from spacy.lang.en import English
     nlp_bytes = nlp.to_bytes()
     nlp2 = English()
     nlp2.from_bytes(nlp_bytes)

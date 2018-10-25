@@ -12,10 +12,10 @@ p
     from spacy import displacy
 
     doc = nlp(u'Rats are various medium-sized, long-tailed rodents.')
-    displacy.render(doc, style='dep')
+    displacy.render(doc, style='dep', jupyter=True)
 
     doc2 = nlp(LONG_NEWS_ARTICLE)
-    displacy.render(doc2, style='ent')
+    displacy.render(doc2, style='ent', jupyter=True)
 
 +aside("Enabling or disabling Jupyter mode")
     |  To explicitly enable or disable "Jupyter mode", you can use the
@@ -33,4 +33,4 @@ p
     from IPython.core.display import display, HTML
 
     html = displacy.render(doc, style='dep')
-    return display(HTML(html))
+    display(HTML(html))

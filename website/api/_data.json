@@ -33,6 +33,12 @@
             "Vectors": "vectors",
             "GoldParse": "goldparse",
             "GoldCorpus": "goldcorpus"
+        },
+
+        "Cython": {
+            "Architecture": "cython",
+            "Structs": "cython-structs",
+            "Classes": "cython-classes"
         }
     },
 
@@ -41,8 +47,7 @@
         "next": "annotation",
         "menu": {
             "Basics": "basics",
-            "Neural Network Model": "nn-model",
-            "Cython Conventions": "cython"
+            "Neural Network Model": "nn-model"
         }
     },
 
@@ -210,6 +215,37 @@
             "Dependencies": "dependency-parsing",
             "Named Entities": "named-entities",
             "Models & Training": "training"
+        }
+    },
+
+    "cython": {
+        "title": "Cython Architecture",
+        "next": "cython-structs",
+        "menu": {
+            "Overview": "overview",
+            "Conventions": "conventions"
+        }
+    },
+
+    "cython-structs": {
+        "title": "Cython Structs",
+        "teaser": "C-language objects that let you group variables together in a single contiguous block.",
+        "next": "cython-classes",
+        "menu": {
+            "TokenC": "tokenc",
+            "LexemeC": "lexemec"
+        }
+    },
+
+    "cython-classes": {
+        "title": "Cython Classes",
+        "menu": {
+            "Doc": "doc",
+            "Token": "token",
+            "Span": "span",
+            "Lexeme": "lexeme",
+            "Vocab": "vocab",
+            "StringStore": "stringstore"
         }
     }
 }

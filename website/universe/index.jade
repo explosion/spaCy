@@ -1,0 +1,146 @@
+//- 💫 DOCS > UNIVERSE
+
+include ../_includes/_mixins
+
+mixin sidebar-section(title)
+    ul.c-sidebar__section.o-block-small
+        if title
+            li.u-text-label.u-color-dark=title
+        block
+
+section(data-vue="universe")
+    menu.c-sidebar.js-sidebar.u-text
+        +sidebar-section("Overview")
+            li.c-sidebar__item
+                a.u-hand(v-on:click="filterBy('all')" v-bind:class="{'is-active': activeMenu == 'all'}") All Projects
+
+        +sidebar-section("Projects")
+            li.c-sidebar__item(v-for="(data, id) in projectCats")
+                a.u-hand(v-on:click="filterBy(id, 'category')" v-text="data.title" v-bind:class="{ 'is-active': activeMenu == id }")
+
+        +sidebar-section("Education")
+            li.c-sidebar__item(v-for="(data, id) in educationCats")
+                a.u-hand(v-on:click="filterBy(id, 'category')" v-text="data.title" v-bind:class="{ 'is-active': activeMenu == id }")
+
+    main.o-main.o-main--sidebar.o-main--aside
+        article.o-content
+            transition-group(name="u-fade")
+                section(v-if="selected" key="selected" v-cloak="")
+                    +h(1).u-heading--title
+                        .u-float-right.o-thumb(v-if="selected.thumb")
+                            img(v-bind:src="selected.thumb" width="100" role="presentation")
+
+                        |  {{ selected.title || selected.id }}
+
+                        .u-heading__teaser.u-text-small.u-color-dark.o-block-small(v-if="selected.slogan") {{ selected.slogan }}
+
+                        p(v-if="selected.github")
+                            a.u-hide-link(v-bind:href="`https://github.com/${selected.github}`")
+                                |  #[img.o-badge(v-bind:src="`https://img.shields.io/github/release/${selected.github}/all.svg?style=flat-square`")]
+                                |  #[img.o-badge(v-bind:src="`https://img.shields.io/github/license/${selected.github}.svg?style=flat-square`")]
+                                |  #[img(v-bind:src="`https://img.shields.io/github/stars/${selected.github}.svg?style=social&label=Stars`")]
+
+                    div(v-if="selected.pip")
+                        +aside-code("Installation", "bash", "$").
+                            pip install {{ selected.pip }}
+
+                    div(v-else-if="selected.cran")
+                        +aside-code("Installation", "r").
+                            install.packages("{{ selected.cran }}")
+
+                    +section.o-section--small
+                        img.o-block-small.u-padding-medium.u-float-right(v-if="selected.cover" v-bind:src="selected.cover" v-bind:alt="selected.title" width="250" style="max-width: 50%")
+
+                        .x-markdown.o-block(v-if="selected.description")
+                            vue-markdown(v-bind:source="selected.description")
+
+                        .o-block(v-if="selected.code_example")
+                            +code("Example", "none")(v-bind:class="`lang-${selected.code_language||'#{DEFAULT_SYNTAX}'}`")
+                                | {{ selected.code_example.join('\n') }}
+
+                        figure.o-block.u-text(v-if="selected.image")
+                            img(v-bind:src="selected.image" width="800" v-bind:alt="selected.slogan || selected.title || selected.id")
+
+                        p(v-if="selected.url")
+                            +button("", false, "primary", "small")(target="_blank" v-bind:href="selected.url") View more
+
+                    +grid
+                        +grid-col("half")(v-if="selected.author")
+                            +label Author info
+                            p.o-inline-list
+                                span {{ selected.author }}
+
+                                span.u-color-subtle-dark(v-if="selected.author_links") &nbsp;
+                                    span(v-for="id in ['github', 'twitter', 'website']" v-if="selected.author_links[id]")
+                                        a.u-hide-link(rel="noopener nofollow" v-bind:href="getAuthorLink(id, selected.author_links[id])" v-bind:aria-label="id")
+                                            svg.o-icon(aria-hidden="true" viewBox="0 0 18 18" width="18" height="18")
+                                                use(v-bind:xlink:href="`#svg_${id}`")
+                                        |  &nbsp;
+
+                        +grid-col("half")(v-if="selected.github")
+                            +label GitHub
+                            p.o-no-block
+                                span.u-inline-block.u-nowrap
+                                    +a("", false)(target="_blank" v-bind:href="`https://github.com/${selected.github}`")
+                                        code.u-break.u-break--all(v-text="selected.github")
+                                    |   #[+icon("code", 16).o-icon--inline.u-color-theme]
+
+                        +grid-col("full")(v-if="selected.category")
+                            +label Categories
+                            p.o-no-block
+                                span(v-for="cat in selected.category" v-if="categories[cat]")
+                                    a.u-text.u-hand(v-on:click="filterBy(cat, 'category')")
+                                        code(v-text="cat")
+                                    |  &nbsp;
+
+                section(v-else="" key="overview")
+                    +h(1).u-heading--title
+                        span(v-if="activeMenu && categories[activeMenu]" v-cloak="")
+                            |  {{ categories[activeMenu].title }}
+                            +tag {{ resources.length }}
+                            .u-heading__teaser.u-text-small.u-color-dark(v-if="categories[activeMenu].description" v-text="categories[activeMenu].description")
+
+                        span(v-else)=title
+                            .u-heading__teaser.u-text-small.u-color-dark=teaser
+
+                    +section().o-section--small
+                        +infobox()(v-if="false")
+                            |  Couldn't load the projects overview. This may
+                            |  happen if there's a bug in our code, or if you
+                            |  have JavaScript disabled. The resources list
+                            |  displayed on this page is open-source and
+                            |  available on GitHub – see
+                            |  #[+src(gh("spacy", "website/universe/universe.json")) #[code universe.json]]
+                            |  for the full data.
+
+                        +grid()(v-cloak="" v-bind:data-loading="loading")
+                            +grid-col().u-text(v-for="resource in resources" v-bind:key="resource.id" v-bind:class="{'o-box': !resource.cover, 'o-grid__col--third': resource.cover, 'o-grid__col--half': !resource.cover}" v-if="(activeMenu && activeMenu != 'all') || resource.type != 'education'")
+                                a.u-hand(v-on:click="viewResource(resource.id)")
+                                    img(v-bind:src="resource.cover" v-bind:alt="resource.title" v-if="resource.cover")
+                                    div(v-else)
+                                        +h(5).o-block-small
+                                            .o-thumb.o-thumb--small.u-float-right(v-if="resource.thumb")
+                                                img(v-bind:src="resource.thumb" width="35" role="presentation")
+                                            span {{ resource.title || resource.id }}
+                                        .u-text-small.o-no-block(v-if="resource.slogan" v-text="resource.slogan")
+
+                    +section().o-section--small
+                        +h(3) Submit your project
+
+                        p
+                            |  If you have a project that you want the spaCy
+                            |  community to make use of, you can suggest it by
+                            |  submitting a pull request to the spaCy website
+                            |  repository. The Universe database is open-source
+                            |  and collected in a simple JSON file. For more
+                            |  details on the formats and available fields, see
+                            |  the documentation. Looking for inspiration your
+                            |  own spaCy plugin or extension? Check out the
+                            |  #[+a(gh("spacy") + "/labels/project%20idea") #[code project idea]]
+                            |  label on the issue tracker.
+
+                        p.o-inline-list
+                            +button(gh("spacy", "website/universe/README.md"), false, "small", "primary") Read the docs
+                            +button(gh("spacy", "website/universe/universe.json"), false, "small", "secondary") JSON source #[+icon("code", 16)]
+
+        include ../_includes/_footer

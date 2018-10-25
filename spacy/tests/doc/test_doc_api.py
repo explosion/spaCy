@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from ..util import get_doc
 from ...tokens import Doc
 from ...vocab import Vocab
+from ...attrs import LEMMA
+from ...tokens import Span
 
 import pytest
 import numpy
@@ -108,6 +110,18 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
+    new_tokens = get_doc(tokens.vocab).from_bytes(
+        tokens.to_bytes(tensor=False), tensor=False)
+    assert tokens.text == new_tokens.text
+    assert [t.text for t in tokens] == [t.text for t in new_tokens]
+    assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+
+    new_tokens = get_doc(tokens.vocab).from_bytes(
+        tokens.to_bytes(sentiment=False), sentiment=False)
+    assert tokens.text == new_tokens.text
+    assert [t.text for t in tokens] == [t.text for t in new_tokens]
+    assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+
 
 def test_doc_api_set_ents(en_tokenizer):
     text = "I use goggle chrone to surf the web"
@@ -143,6 +157,23 @@ def test_doc_api_merge(en_tokenizer):
     assert doc[7].text == 'all night'
     assert doc[7].text_with_ws == 'all night'
 
+    # merge both with bulk merge
+    doc = en_tokenizer(text)
+    assert len(doc) == 9
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4: 7], attrs={'tag':'NAMED', 'lemma':'LEMMA',
+              'ent_type':'TYPE'})
+        retokenizer.merge(doc[7: 9], attrs={'tag':'NAMED', 'lemma':'LEMMA',
+              'ent_type':'TYPE'})
+
+    assert len(doc) == 6
+    assert doc[4].text == 'the beach boys'
+    assert doc[4].text_with_ws == 'the beach boys '
+    assert doc[4].tag_ == 'NAMED'
+    assert doc[5].text == 'all night'
+    assert doc[5].text_with_ws == 'all night'
+    assert doc[5].tag_ == 'NAMED'
+
 
 def test_doc_api_merge_children(en_tokenizer):
     """Test that attachments work correctly after merging."""
@@ -164,6 +195,26 @@ def test_doc_api_merge_hang(en_tokenizer):
     doc = en_tokenizer(text)
     doc.merge(18, 32, tag='', lemma='', ent_type='ORG')
     doc.merge(8, 32, tag='', lemma='', ent_type='ORG')
+
+
+def test_doc_api_retokenizer(en_tokenizer):
+    doc = en_tokenizer("WKRO played songs by the beach boys all night")
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7])
+    assert len(doc) == 7
+    assert doc[4].text == 'the beach boys'
+
+
+def test_doc_api_retokenizer_attrs(en_tokenizer):
+    doc = en_tokenizer("WKRO played songs by the beach boys all night")
+    # test both string and integer attributes and values
+    attrs = {LEMMA: 'boys', 'ENT_TYPE': doc.vocab.strings['ORG']}
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7], attrs=attrs)
+    assert len(doc) == 7
+    assert doc[4].text == 'the beach boys'
+    assert doc[4].lemma_ == 'boys'
+    assert doc[4].ent_type_ == 'ORG'
 
 
 def test_doc_api_sents_empty_string(en_tokenizer):
@@ -217,6 +268,16 @@ def test_doc_api_has_vector():
     doc = Doc(vocab, words=['kitten'])
     assert doc.has_vector
 
+
+def test_doc_api_similarity_match():
+    doc = Doc(Vocab(), words=['a'])
+    assert doc.similarity(doc[0]) == 1.0
+    assert doc.similarity(doc.vocab['a']) == 1.0
+    doc2 = Doc(doc.vocab, words=['a', 'b', 'c'])
+    assert doc.similarity(doc2[:1]) == 1.0
+    assert doc.similarity(doc2) == 0.0
+
+
 def test_lowest_common_ancestor(en_tokenizer):
     tokens = en_tokenizer('the lazy dog slept')
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
@@ -224,6 +285,7 @@ def test_lowest_common_ancestor(en_tokenizer):
     assert(lca[1, 1] == 1)
     assert(lca[0, 1] == 2)
     assert(lca[1, 2] == 2)
+
 
 def test_parse_tree(en_tokenizer):
     """Tests doc.print_tree() method."""

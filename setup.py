@@ -37,6 +37,7 @@ MOD_NAMES = [
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
+    'spacy.tokens._retokenize',
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
@@ -46,9 +47,8 @@ MOD_NAMES = [
 
 COMPILE_OPTIONS =  {
     'msvc': ['/Ox', '/EHsc'],
-    'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
-    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function',
-               '-march=native']
+    'mingw32' : ['-O2', '-Wno-strict-prototypes', '-Wno-unused-function'],
+    'other' : ['-O2', '-Wno-strict-prototypes', '-Wno-unused-function']
 }
 
 
@@ -185,22 +185,28 @@ def setup_package():
             license=about['__license__'],
             ext_modules=ext_modules,
             scripts=['bin/spacy'],
+            setup_requires=['wheel>=0.32.0,<0.33.0'],
             install_requires=[
-                'numpy>=1.7',
-                'murmurhash>=0.28,<0.29',
-                'cymem>=1.30,<1.32',
-                'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.10.1,<6.11.0',
+                'numpy>=1.15.0',
+                'msgpack-numpy<0.4.4',
+                'murmurhash>=0.28.0,<1.1.0',
+                'cymem>=2.0.2,<2.1.0',
+                'preshed>=2.0.1,<2.1.0',
+                'thinc>=6.12.0,<6.13.0',
                 'plac<1.0.0,>=0.9.6',
-                'six',
-                'pathlib',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
+                'regex==2018.01.10',
                 'requests>=2.13.0,<3.0.0',
-                'regex==2017.4.5',
-                'ftfy>=4.4.2,<5.0.0',
-                'msgpack-python',
-                'msgpack-numpy==0.4.1'],
+                'pathlib==1.0.1; python_version < "3.4"'],
+            extras_require={
+                'cuda': ['cupy>=4.0'],
+                'cuda80': ['cupy-cuda80>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda90': ['cupy-cuda90>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda91': ['cupy-cuda91>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda92': ['cupy-cuda92>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'cuda100': ['cupy-cuda100>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0']
+            },
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

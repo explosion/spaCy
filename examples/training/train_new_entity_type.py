@@ -31,6 +31,7 @@ import plac
 import random
 from pathlib import Path
 import spacy
+from spacy.util import minibatch, compounding
 
 
 # new entity label
@@ -73,7 +74,7 @@ TRAIN_DATA = [
     new_model_name=("New model name for model meta.", "option", "nm", str),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int))
-def main(model=None, new_model_name='animal', output_dir=None, n_iter=20):
+def main(model=None, new_model_name='animal', output_dir=None, n_iter=10):
     """Set up the pipeline and entity recognizer, and train the new entity."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
@@ -81,7 +82,6 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=20):
     else:
         nlp = spacy.blank('en')  # create blank Language class
         print("Created blank 'en' model")
-
     # Add entity recognizer to model if it's not in the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if 'ner' not in nlp.pipe_names:
@@ -92,18 +92,26 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=20):
         ner = nlp.get_pipe('ner')
 
     ner.add_label(LABEL)   # add new entity label to entity recognizer
+    if model is None:
+        optimizer = nlp.begin_training()
+    else:
+        # Note that 'begin_training' initializes the models, so it'll zero out
+        # existing entity types.
+        optimizer = nlp.entity.create_optimizer()
 
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
     with nlp.disable_pipes(*other_pipes):  # only train NER
-        optimizer = nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
-            for text, annotations in TRAIN_DATA:
-                nlp.update([text], [annotations], sgd=optimizer, drop=0.35,
+            # batch up the examples using spaCy's minibatch
+            batches = minibatch(TRAIN_DATA, size=compounding(4., 32., 1.001))
+            for batch in batches:
+                texts, annotations = zip(*batch)
+                nlp.update(texts, annotations, sgd=optimizer, drop=0.35,
                            losses=losses)
-            print(losses)
+            print('Losses', losses)
 
     # test the trained model
     test_text = 'Do you like horses?'

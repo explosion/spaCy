@@ -136,7 +136,7 @@ p
 +aside-code("Example").
     from spacy.gold import biluo_tags_from_offsets
 
-    doc = nlp('I like London.')
+    doc = nlp(u'I like London.')
     entities = [(7, 13, 'LOC')]
     tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ['O', 'O', 'U-LOC', 'O']

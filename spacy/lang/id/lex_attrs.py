@@ -1,22 +1,16 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...attrs import LIKE_NUM
+import unicodedata
+
+from .punctuation import LIST_CURRENCY
+from ...attrs import IS_CURRENCY, LIKE_NUM
 
 
-_num_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
-              'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen',
-              'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty',
-              'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety',
-              'hundred', 'thousand', 'million', 'billion', 'trillion', 'quadrillion',
-              'gajillion', 'bazillion',
-              'nol', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh',
-              'delapan', 'sembilan', 'sepuluh', 'sebelas', 'duabelas', 'tigabelas',
-              'empatbelas', 'limabelas', 'enambelas', 'tujuhbelas', 'delapanbelas',
-              'sembilanbelas', 'duapuluh', 'seratus', 'seribu', 'sejuta',
-              'ribu', 'rb', 'juta', 'jt', 'miliar', 'biliun', 'triliun',
-              'kuadriliun', 'kuintiliun', 'sekstiliun', 'septiliun', 'oktiliun',
-              'noniliun', 'desiliun']
+_num_words = ['nol', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh',
+              'delapan', 'sembilan', 'sepuluh', 'sebelas', 'belas', 'puluh',
+              'ratus', 'ribu', 'juta', 'miliar', 'biliun', 'triliun', 'kuadriliun',
+              'kuintiliun', 'sekstiliun', 'septiliun', 'oktiliun', 'noniliun', 'desiliun']
 
 
 def like_num(text):
@@ -27,7 +21,7 @@ def like_num(text):
         num, denom = text.split('/')
         if num.isdigit() and denom.isdigit():
             return True
-    if text in _num_words:
+    if text.lower() in _num_words:
         return True
     if text.count('-') == 1:
         _, num = text.split('-')
@@ -36,6 +30,17 @@ def like_num(text):
     return False
 
 
+def is_currency(text):
+    if text in LIST_CURRENCY:
+        return True
+
+    for char in text:
+        if unicodedata.category(char) != 'Sc':
+            return False
+    return True
+
+
 LEX_ATTRS = {
+    IS_CURRENCY: is_currency,
     LIKE_NUM: like_num
 }

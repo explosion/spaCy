@@ -21,8 +21,9 @@ from __future__ import unicode_literals, print_function
 
 import plac
 import random
-import spacy
 from pathlib import Path
+import spacy
+from spacy.util import minibatch, compounding
 
 
 # training data: texts, heads and dependency labels
@@ -63,7 +64,7 @@ TRAIN_DATA = [
     model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int))
-def main(model=None, output_dir=None, n_iter=5):
+def main(model=None, output_dir=None, n_iter=15):
     """Load the model, set up the pipeline and train the parser."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
@@ -89,9 +90,12 @@ def main(model=None, output_dir=None, n_iter=5):
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
-            for text, annotations in TRAIN_DATA:
-                nlp.update([text], [annotations], sgd=optimizer, losses=losses)
-            print(losses)
+            # batch up the examples using spaCy's minibatch
+            batches = minibatch(TRAIN_DATA, size=compounding(4., 32., 1.001))
+            for batch in batches:
+                texts, annotations = zip(*batch)
+                nlp.update(texts, annotations, sgd=optimizer, losses=losses)
+            print('Losses', losses)
 
     # test the trained model
     test_model(nlp)
@@ -135,7 +139,8 @@ if __name__ == '__main__':
     # [
     #   ('find', 'ROOT', 'find'),
     #   ('cheapest', 'QUALITY', 'gym'),
-    #   ('gym', 'PLACE', 'find')
+    #   ('gym', 'PLACE', 'find'),
+    #   ('near', 'ATTRIBUTE', 'gym'),
     #   ('work', 'LOCATION', 'near')
     # ]
     # show me the best hotel in berlin

@@ -6,18 +6,15 @@ from pathlib import Path
 import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
-import random
-import numpy.random
 
+from ._messages import Messages
+from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus, minibatch
 from ..util import prints
 from .. import util
 from .. import about
 from .. import displacy
 from ..compat import json_dumps
-
-random.seed(0)
-numpy.random.seed(0)
 
 
 @plac.annotations(
@@ -34,17 +31,22 @@ numpy.random.seed(0)
     no_tagger=("Don't train tagger", "flag", "T", bool),
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool),
+    parser_multitasks=("Side objectives for parser CNN, e.g. dep dep,tag", "option", "pt", str),
+    entity_multitasks=("Side objectives for ner CNN, e.g. dep dep,tag", "option", "et", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json. All relevant properties will be "
-               "overwritten.", "option", "m", Path))
-def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
+               "overwritten.", "option", "m", Path),
+    verbose=("Display more information for debug", "option", None, bool))
+def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
+         parser_multitasks='', entity_multitasks='',
           use_gpu=-1, vectors=None, no_tagger=False,
           no_parser=False, no_entities=False, gold_preproc=False,
-          version="0.0.0", meta_path=None):
+          version="0.0.0", meta_path=None, verbose=False):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
+    util.fix_random_seed()
     util.set_env_log(True)
     n_sents = n_sents or None
     output_path = util.ensure_path(output_dir)
@@ -54,15 +56,15 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     if not output_path.exists():
         output_path.mkdir()
     if not train_path.exists():
-        prints(train_path, title="Training data not found", exits=1)
+        prints(train_path, title=Messages.M050, exits=1)
     if dev_path and not dev_path.exists():
-        prints(dev_path, title="Development data not found", exits=1)
+        prints(dev_path, title=Messages.M051, exits=1)
     if meta_path is not None and not meta_path.exists():
-        prints(meta_path, title="meta.json not found", exits=1)
+        prints(meta_path, title=Messages.M020, exits=1)
     meta = util.read_json(meta_path) if meta_path else {}
     if not isinstance(meta, dict):
-        prints("Expected dict but got: {}".format(type(meta)),
-               title="Not a valid meta.json format", exits=1)
+        prints(Messages.M053.format(meta_type=type(meta)),
+               title=Messages.M052, exits=1)
     meta.setdefault('lang', lang)
     meta.setdefault('name', 'unnamed')
 
@@ -93,13 +95,29 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     meta['pipeline'] = pipeline
     nlp.meta.update(meta)
     if vectors:
+        print("Load vectors model", vectors)
         util.load_model(vectors, vocab=nlp.vocab)
+        for lex in nlp.vocab:
+            values = {}
+            for attr, func in nlp.vocab.lex_attr_getters.items():
+                # These attrs are expected to be set by data. Others should
+                # be set by calling the language functions.
+                if attr not in (CLUSTER, PROB, IS_OOV, LANG):
+                    values[lex.vocab.strings[attr]] = func(lex.orth_)
+            lex.set_attrs(**values)
+            lex.is_oov = False
     for name in pipeline:
         nlp.add_pipe(nlp.create_pipe(name), name=name)
+    if parser_multitasks:
+        for objective in parser_multitasks.split(','):
+            nlp.parser.add_multitask_objective(objective)
+    if entity_multitasks:
+        for objective in entity_multitasks.split(','):
+            nlp.entity.add_multitask_objective(objective)
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
 
-    print("Itn.\tP.Loss\tN.Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
+    print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
     try:
         train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
                                        gold_preproc=gold_preproc, max_length=0)
@@ -126,7 +144,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                                 gold_preproc=gold_preproc))
                 nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                 start_time = timer()
-                scorer = nlp_loaded.evaluate(dev_docs)
+                scorer = nlp_loaded.evaluate(dev_docs, verbose)
                 end_time = timer()
                 if use_gpu < 0:
                     gpu_wps = None
@@ -190,17 +208,17 @@ def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores.update(dev_scores)
     scores['cpu_wps'] = cpu_wps
     scores['gpu_wps'] = gpu_wps or 0.0
-    tpl = '\t'.join((
-        '{:d}',
-        '{dep_loss:.3f}',
-        '{ner_loss:.3f}',
-        '{uas:.3f}',
-        '{ents_p:.3f}',
-        '{ents_r:.3f}',
-        '{ents_f:.3f}',
-        '{tags_acc:.3f}',
-        '{token_acc:.3f}',
-        '{cpu_wps:.1f}',
+    tpl = ''.join((
+        '{:<6d}',
+        '{dep_loss:<10.3f}',
+        '{ner_loss:<10.3f}',
+        '{uas:<8.3f}',
+        '{ents_p:<8.3f}',
+        '{ents_r:<8.3f}',
+        '{ents_f:<8.3f}',
+        '{tags_acc:<8.3f}',
+        '{token_acc:<9.3f}',
+        '{cpu_wps:<9.1f}',
         '{gpu_wps:.1f}',
     ))
     print(tpl.format(itn, **scores))

@@ -6,7 +6,6 @@ from ...attrs import NORM
 from ...attrs import LIKE_NUM
 from ...util import add_lookups
 
-
 _stem_suffixes = [
     ["ो", "े", "ू", "ु", "ी", "ि", "ा"],
     ["कर", "ाओ", "िए", "ाई", "ाए", "ने", "नी", "ना", "ते", "ीं", "ती", "ता", "ाँ", "ां", "ों", "ें"],
@@ -33,6 +32,13 @@ two-digit groups rather than the three-digit groups used in most other parts of 
 1 gulshan = 1 quintillion
 """
 
+#reference 1:https://en.wikipedia.org/wiki/Indian_numbering_system
+#reference 2: https://blogs.transparent.com/hindi/hindi-numbers-1-100/
+
+_num_words = ['शून्य', 'एक',  'दो', 'तीन', 'चार', 'पांच', 'छह', 'सात', 'आठ', 'नौ', 'दस',
+              'ग्यारह', 'बारह', 'तेरह', 'चौदह', 'पंद्रह', 'सोलह', 'सत्रह', 'अठारह', 'उन्नीस',
+              'बीस', 'तीस', 'चालीस', 'पचास', 'साठ', 'सत्तर', 'अस्सी', 'नब्बे', 'सौ', 'हज़ार',
+              'लाख', 'करोड़', 'अरब', 'खरब']
 
 def norm(string):
     # normalise base exceptions, e.g. punctuation or currency symbols
@@ -60,7 +66,7 @@ def like_num(text):
         num, denom = text.split('/')
         if num.isdigit() and denom.isdigit():
             return True
-    if text in _num_words:
+    if text.lower() in _num_words:
         return True
     return False
 
