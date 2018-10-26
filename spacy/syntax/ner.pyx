@@ -338,7 +338,7 @@ cdef class In:
     @staticmethod
     cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         move = IN
-        cdef int next_act = gold.ner[s.B(1)].move if s.B(0) < s.c.length else OUT
+        cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
         cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
