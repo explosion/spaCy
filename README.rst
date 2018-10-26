@@ -73,12 +73,12 @@ valuable if it's shared publicly, so that more people can benefit from it.
 
 ====================== ===
 **Bug Reports**        `GitHub Issue Tracker`_
-**Usage Questions**    `StackOverflow`_, `Gitter Chat`_, `Reddit User Group`_
+**Usage Questions**    `Stack Overflow`_, `Gitter Chat`_, `Reddit User Group`_
 **General Discussion** `Gitter Chat`_, `Reddit User Group`_
 ====================== ===
 
 .. _GitHub Issue Tracker: https://github.com/explosion/spaCy/issues
-.. _StackOverflow: http://stackoverflow.com/questions/tagged/spacy
+.. _Stack Overflow: http://stackoverflow.com/questions/tagged/spacy
 .. _Gitter Chat: https://gitter.im/explosion/spaCy
 .. _Reddit User Group: https://www.reddit.com/r/spacynlp
 

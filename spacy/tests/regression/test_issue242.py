@@ -17,9 +17,10 @@ def test_issue242(en_tokenizer):
     matcher.add('FOOD', None, *patterns)
 
     matches = [(ent_type, start, end) for ent_type, start, end in matcher(doc)]
-    doc.ents += tuple(matches)
     match1, match2 = matches
     assert match1[1] == 3
     assert match1[2] == 5
     assert match2[1] == 4
     assert match2[2] == 6
+
+    doc.ents += tuple([match2])
