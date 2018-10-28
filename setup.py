@@ -196,7 +196,7 @@ def setup_package():
                 'plac<1.0.0,>=0.9.6',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
-                'regex==2018.01.10',
+                'regex==2018.08.29',
                 'requests>=2.13.0,<3.0.0',
                 'pathlib==1.0.1; python_version < "3.4"'],
             extras_require={
