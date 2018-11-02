@@ -434,7 +434,7 @@ class Tensorizer(Pipe):
     name = 'tensorizer'
 
     @classmethod
-    def Model(cls, output_size=300, input_size=384, **cfg):
+    def Model(cls, output_size=300, input_size=128, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
@@ -442,11 +442,7 @@ class Tensorizer(Pipe):
         **cfg: Config parameters.
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
-        model = chain(
-                    SELU(output_size, input_size),
-                    SELU(output_size, output_size),
-                    zero_init(Affine(output_size, output_size)))
-        return model
+        return zero_init(Affine(output_size, input_size))
 
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
@@ -562,12 +558,11 @@ class Tensorizer(Pipe):
         gold_tuples (iterable): Gold-standard training data.
         pipeline (list): The pipeline the model is part of.
         """
-        for name, model in pipeline:
-            if getattr(model, 'tok2vec', None):
-                self.input_models.append(model.tok2vec)
+        if pipeline is not None:
+            for name, model in pipeline:
+                if getattr(model, 'tok2vec', None):
+                    self.input_models.append(model.tok2vec)
         if self.model is True:
-            self.cfg['input_size'] = 384
-            self.cfg['output_size'] = 300
             self.model = self.Model(**self.cfg)
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -1060,6 +1055,14 @@ class TextCategorizer(Pipe):
     @classmethod
     def Model(cls, nr_class, **cfg):
         return build_text_classifier(nr_class, **cfg)
+
+    @property
+    def tok2vec(self):
+        if self.model in (None, True, False):
+            return None
+        else:
+            return chain(self.model.tok2vec, flatten)
+
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
