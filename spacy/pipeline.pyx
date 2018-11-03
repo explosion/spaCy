@@ -430,7 +430,7 @@ def _load_cfg(path):
 
 
 class Tensorizer(Pipe):
-    """Assign position-sensitive vectors to tokens, using a CNN or RNN."""
+    """Pre-train position-sensitive vectors for tokens."""
     name = 'tensorizer'
 
     @classmethod
@@ -443,7 +443,7 @@ class Tensorizer(Pipe):
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
         input_size = util.env_opt('token_vector_width', cfg.get('input_size', 128))
-        return zero_init(Affine(output_size, input_size))
+        return zero_init(Affine(output_size, input_size, drop_factor=0.0))
 
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
@@ -1119,7 +1119,7 @@ class TextCategorizer(Pipe):
         d_scores = (scores-truths) / scores.shape[0]
         d_scores *= not_missing
         mean_square_error = ((scores-truths)**2).sum(axis=1).mean()
-        return mean_square_error, d_scores
+        return float(mean_square_error), d_scores
 
     def add_label(self, label):
         if label in self.labels:
