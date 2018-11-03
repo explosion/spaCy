@@ -1,4 +1,18 @@
-'''Not sure if this is useful -- try training the Tensorizer component.'''
+'''This script is experimental.
+
+Try pre-training the CNN component of the text categorizer using a cheap
+language modelling-like objective. Specifically, we load pre-trained vectors
+(from something like word2vec, GloVe, FastText etc), and use the CNN to
+predict the tokens' pre-trained vectors. This isn't as easy as it sounds:
+we're not merely doing compression here, because heavy dropout is applied,
+including over the input words. This means the model must often (50% of the time)
+use the context in order to predict the word.
+
+To evaluate the technique, we're pre-training with the 50k texts from the IMDB
+corpus, and then training with only 100 labels. Note that it's a bit dirty to
+pre-train with the development data, but also not *so* terrible: we're not using
+the development labels, after all --- only the unlabelled text.
+'''
 import plac
 import random
 import spacy
@@ -14,23 +28,28 @@ import numpy
 def load_texts(limit=0):
     train, dev = thinc.extra.datasets.imdb()
     train_texts, train_labels = zip(*train)
+    dev_texts, dev_labels = zip(*train)
+    train_texts = list(train_texts)
+    dev_texts = list(dev_texts)
+    random.shuffle(train_texts)
+    random.shuffle(dev_texts)
     if limit >= 1:
         return train_texts[:limit]
     else:
-        return train_texts
+        return list(train_texts) + list(dev_texts)
 
 
-def load_textcat_data(limit=0, split=0.8):
+def load_textcat_data(limit=0):
     """Load data from the IMDB dataset."""
     # Partition off part of the train data for evaluation
-    train_data, _ = thinc.extra.datasets.imdb()
+    train_data, eval_data = thinc.extra.datasets.imdb()
     random.shuffle(train_data)
     train_data = train_data[-limit:]
     texts, labels = zip(*train_data)
+    eval_texts, eval_labels = zip(*eval_data)
     cats = [{'POSITIVE': bool(y)} for y in labels]
-    split = int(len(train_data) * split)
-    return (texts[:split], cats[:split]), (texts[split:], cats[split:])
-
+    eval_cats = [{'POSITIVE': bool(y)} for y in eval_labels]
+    return (texts, cats), (eval_texts, eval_cats)
 
 
 def prefer_gpu():
@@ -50,9 +69,10 @@ def build_textcat_model(tok2vec, nr_class, width):
 
     with Model.define_operators({'>>': chain}):
         model = (
-            block_gradients(tok2vec)
+            tok2vec
             >> flatten_add_lengths
             >> Pooling(sum_pool, max_pool)
+            >> Residual(LayerNorm(Maxout(width*2, width*2, pieces=3)))
             >> Residual(LayerNorm(Maxout(width*2, width*2, pieces=3)))
             >> zero_init(Affine(nr_class, width*2, drop_factor=0.0))
             >> logistic
@@ -91,8 +111,9 @@ def train_tensorizer(nlp, texts, dropout, n_iter):
         print(losses)
     return optimizer
 
-def train_textcat(nlp, optimizer, n_texts, n_iter=10):
+def train_textcat(nlp, n_texts, n_iter=10):
     textcat = nlp.get_pipe('textcat')
+    tok2vec_weights = textcat.model.tok2vec.to_bytes()
     (train_texts, train_cats), (dev_texts, dev_cats) = load_textcat_data(limit=n_texts)
     print("Using {} examples ({} training, {} evaluation)"
           .format(n_texts, len(train_texts), len(dev_texts)))
@@ -102,6 +123,8 @@ def train_textcat(nlp, optimizer, n_texts, n_iter=10):
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'textcat']
     with nlp.disable_pipes(*other_pipes):  # only train textcat
+        optimizer = nlp.begin_training()
+        textcat.model.tok2vec.from_bytes(tok2vec_weights)
         print("Training the model...")
         print('{:^5}\t{:^5}\t{:^5}\t{:^5}'.format('LOSS', 'P', 'R', 'F'))
         for i in range(n_iter):
@@ -120,24 +143,12 @@ def train_textcat(nlp, optimizer, n_texts, n_iter=10):
                           scores['textcat_r'], scores['textcat_f']))
 
 
-def load_textcat_data(limit=0, split=0.8):
-    """Load data from the IMDB dataset."""
-    # Partition off part of the train data for evaluation
-    train_data, _ = thinc.extra.datasets.imdb()
-    random.shuffle(train_data)
-    train_data = train_data[-limit:]
-    texts, labels = zip(*train_data)
-    cats = [{'POSITIVE': bool(y)} for y in labels]
-    split = int(len(train_data) * split)
-    return (texts[:split], cats[:split]), (texts[split:], cats[split:])
-
-
 def evaluate_textcat(tokenizer, textcat, texts, cats):
     docs = (tokenizer(text) for text in texts)
-    tp = 1e-8  # True positives
-    fp = 1e-8  # False positives
-    fn = 1e-8  # False negatives
-    tn = 1e-8  # True negatives
+    tp = 1e-8
+    fp = 1e-8
+    tn = 1e-8
+    fn = 1e-8
     for i, doc in enumerate(textcat.pipe(docs)):
         gold = cats[i]
         for label, score in doc.cats.items():
@@ -167,7 +178,7 @@ def evaluate_textcat(tokenizer, textcat, texts, cats):
     vectors_model=("Name or path to vectors model to learn from")
 )
 def main(width: int, embed_size: int, vectors_model,
-        pretrain_iters=30, train_iters=30, train_examples=100):
+        pretrain_iters=30, train_iters=30, train_examples=1000):
     random.seed(0)
     cupy.random.seed(0)
     numpy.random.seed(0)
@@ -178,9 +189,9 @@ def main(width: int, embed_size: int, vectors_model,
     print("Load data")
     texts = load_texts(limit=0)
     print("Train tensorizer")
-    optimizer = train_tensorizer(nlp, texts, dropout=0.5, n_iter=pretrain_iters)
+    optimizer = train_tensorizer(nlp, texts, dropout=0.2, n_iter=pretrain_iters)
     print("Train textcat")
-    train_textcat(nlp, optimizer, train_examples, n_iter=train_iters)
+    train_textcat(nlp, train_examples, n_iter=train_iters)
 
 if __name__ == '__main__':
     plac.call(main)
