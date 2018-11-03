@@ -543,7 +543,7 @@ class Tensorizer(Pipe):
     def get_loss(self, docs, golds, prediction):
         ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
         target = self.vocab.vectors.data[ids]
-        d_scores = (prediction - target)
+        d_scores = (prediction - target) / prediction.shape[0]
         loss = (d_scores**2).sum()
         return loss, d_scores
 
