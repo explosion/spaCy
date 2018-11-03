@@ -31,7 +31,7 @@ from .matcher import Matcher
 
 from .matcher import Matcher, PhraseMatcher
 from .tokens.span import Span
-from .attrs import POS
+from .attrs import POS, ID
 from .parts_of_speech import X
 from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
 from ._ml import link_vectors_to_models, zero_init, flatten
@@ -434,7 +434,7 @@ class Tensorizer(Pipe):
     name = 'tensorizer'
 
     @classmethod
-    def Model(cls, output_size=300, input_size=128, **cfg):
+    def Model(cls, output_size=300, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
@@ -442,6 +442,7 @@ class Tensorizer(Pipe):
         **cfg: Config parameters.
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
+        input_size = util.env_opt('token_vector_width', cfg.get('input_size', 128))
         return zero_init(Affine(output_size, input_size))
 
     def __init__(self, vocab, model=True, **cfg):
@@ -540,12 +541,8 @@ class Tensorizer(Pipe):
         return loss
 
     def get_loss(self, docs, golds, prediction):
-        target = []
-        i = 0
-        for doc in docs:
-            vectors = self.model.ops.xp.vstack([w.vector for w in doc])
-            target.append(vectors)
-        target = self.model.ops.xp.vstack(target)
+        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+        target = self.vocab.vectors.data[ids]
         d_scores = (prediction - target)
         loss = (d_scores**2).sum()
         return loss, d_scores
