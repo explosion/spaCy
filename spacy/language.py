@@ -134,13 +134,13 @@ class Language(object):
         """
         self._meta = dict(meta)
         self._path = None
-        if vocab is True:
+        if vocab:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get('vocab', {}))
             if vocab.vectors.name is None:
                 vocab.vectors.name = meta.get('vectors', {}).get('name')
         self.vocab = vocab
-        if make_doc is True:
+        if make_doc:
             factory = self.Defaults.create_tokenizer
             make_doc = factory(self, **meta.get('tokenizer', {}))
         self.tokenizer = make_doc

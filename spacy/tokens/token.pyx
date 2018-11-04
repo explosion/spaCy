@@ -395,7 +395,7 @@ cdef class Token:
                 raise ValueError(Errors.E043)
             if value is None:
                 self.c.sent_start = 0
-            elif value is True:
+            elif value:
                 self.c.sent_start = 1
             elif value is False:
                 self.c.sent_start = -1

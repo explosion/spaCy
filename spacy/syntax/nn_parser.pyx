@@ -303,7 +303,7 @@ cdef class Parser:
         **cfg: Arbitrary configuration parameters. Set to the `.cfg` attribute
         """
         self.vocab = vocab
-        if moves is True:
+        if moves:
             self.moves = self.TransitionSystem(self.vocab.strings, {})
         else:
             self.moves = moves
@@ -837,7 +837,7 @@ cdef class Parser:
             for label in labels:
                 self.moves.add_action(action, label)
         cfg.setdefault('token_vector_width', 128)
-        if self.model is True:
+        if self.model:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
@@ -905,7 +905,7 @@ cdef class Parser:
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
             path = util.ensure_path(path)
-            if self.model is True:
+            if self.model:
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
@@ -951,7 +951,7 @@ cdef class Parser:
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
-            if self.model is True:
+            if self.model:
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}

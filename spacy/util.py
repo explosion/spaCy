@@ -144,7 +144,7 @@ def load_model_from_path(model_path, meta=False, **overrides):
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get('pipeline', [])
     disable = overrides.get('disable', [])
-    if pipeline is True:
+    if pipeline:
         pipeline = nlp.Defaults.pipe_names
     elif pipeline in (False, None):
         pipeline = []
