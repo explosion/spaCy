@@ -21,7 +21,6 @@ from spacy.util import minibatch, use_gpu, compounding
 import tqdm
 from spacy._ml import Tok2Vec
 from spacy.pipeline import TextCategorizer
-import cupy.random
 import numpy
 
 
@@ -57,6 +56,8 @@ def prefer_gpu():
     if used is None:
         return False
     else:
+        import cupy.random
+        cupy.random.seed(0)
         return True
 
 
@@ -177,7 +178,6 @@ def evaluate_textcat(tokenizer, textcat, texts, cats):
 def main(width: int, embed_size: int, vectors_model,
         pretrain_iters=30, train_iters=30, train_examples=1000):
     random.seed(0)
-    cupy.random.seed(0)
     numpy.random.seed(0)
     use_gpu = prefer_gpu()
     print("Using GPU?", use_gpu)
