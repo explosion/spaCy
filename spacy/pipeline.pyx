@@ -61,12 +61,13 @@ class SentenceSegmenter(object):
     def split_on_punct(doc):
         start = 0
         seen_period = False
+        punctuation = {'.', '!', '?'}
         for i, word in enumerate(doc):
             if seen_period and not word.is_punct:
                 yield doc[start:word.i]
                 start = word.i
                 seen_period = False
-            elif word.text in ['.', '!', '?']:
+            elif word.text in punctuation:
                 seen_period = True
         if start < len(doc):
             yield doc[start:len(doc)]
@@ -80,8 +81,8 @@ def merge_noun_chunks(doc):
     """
     if not doc.is_parsed:
         return doc
-    spans = [(np.start_char, np.end_char, np.root.tag, np.root.dep)
-             for np in doc.noun_chunks]
+    spans = ((np.start_char, np.end_char, np.root.tag, np.root.dep)
+             for np in doc.noun_chunks)
     for start, end, tag, dep in spans:
         doc.merge(start, end, tag=tag, dep=dep)
     return doc
@@ -93,8 +94,8 @@ def merge_entities(doc):
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged noun entities.
     """
-    spans = [(e.start_char, e.end_char, e.root.tag, e.root.dep, e.label)
-             for e in doc.ents]
+    spans = ((e.start_char, e.end_char, e.root.tag, e.root.dep, e.label)
+             for e in doc.ents)
     for start, end, tag, dep, ent_type in spans:
         doc.merge(start, end, tag=tag, dep=dep, ent_type=ent_type)
     return doc
@@ -179,7 +180,7 @@ class Pipe(object):
                        **kwargs):
         """Initialize the pipe for training, using data exampes if available.
         If no model has been initialized yet, the model is added."""
-        if self.model is True:
+        if self.model:
             self.model = self.Model(**self.cfg)
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -195,7 +196,7 @@ class Pipe(object):
         """Serialize the pipe to a bytestring."""
         serialize = OrderedDict()
         serialize['cfg'] = lambda: json_dumps(self.cfg)
-        if self.model in (True, False, None):
+        if self.model is None or isinstance(self.model, bool):
             serialize['model'] = lambda: self.model
         else:
             serialize['model'] = self.model.to_bytes
@@ -208,7 +209,7 @@ class Pipe(object):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
-            if self.model is True:
+            if self.model:
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(b)
 
@@ -225,7 +226,7 @@ class Pipe(object):
         serialize = OrderedDict()
         serialize['cfg'] = lambda p: p.open('w').write(json_dumps(self.cfg))
         serialize['vocab'] = lambda p: self.vocab.to_disk(p)
-        if self.model not in (None, True, False):
+        if self.model is None or isinstance(self.model, bool):
             serialize['model'] = lambda p: p.open('wb').write(self.model.to_bytes())
         util.to_disk(path, serialize, exclude)
 
@@ -235,7 +236,7 @@ class Pipe(object):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
-            if self.model is True:
+            if self.model:
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(p.open('rb').read())
 
@@ -270,9 +271,10 @@ class Tensorizer(Pipe):
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
         model = chain(
-                    SELU(output_size, input_size),
-                    SELU(output_size, output_size),
-                    zero_init(Affine(output_size, output_size)))
+            SELU(output_size, input_size),
+            SELU(output_size, output_size),
+            zero_init(Affine(output_size, output_size)),
+        )
         return model
 
     def __init__(self, vocab, model=True, **cfg):
@@ -372,7 +374,6 @@ class Tensorizer(Pipe):
 
     def get_loss(self, docs, golds, prediction):
         target = []
-        i = 0
         for doc in docs:
             vectors = self.model.ops.xp.vstack([w.vector for w in doc])
             target.append(vectors)
@@ -392,7 +393,7 @@ class Tensorizer(Pipe):
         for name, model in pipeline:
             if getattr(model, 'tok2vec', None):
                 self.input_models.append(model.tok2vec)
-        if self.model is True:
+        if self.model:
             self.cfg['input_size'] = 384
             self.cfg['output_size'] = 300
             self.model = self.Model(**self.cfg)
@@ -521,7 +522,7 @@ class Tagger(Pipe):
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
         self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
-        if self.model is True:
+        if self.model:
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -537,7 +538,7 @@ class Tagger(Pipe):
     def add_label(self, label, values=None):
         if label in self.labels:
             return 0
-        if self.model not in (True, False, None):
+        if self.model is None or isinstance(self.model, bool):
             # Here's how the model resizing will work, once the
             # neuron-to-tag mapping is no longer controlled by
             # the Morphology class, which sorts the tag names.
@@ -564,7 +565,7 @@ class Tagger(Pipe):
 
     def to_bytes(self, **exclude):
         serialize = OrderedDict()
-        if self.model in (None, True, False):
+        if self.model is None or isinstance(self.model, bool):
             serialize['model'] = lambda: self.model
         else:
             serialize['model'] = self.model.to_bytes
@@ -572,7 +573,10 @@ class Tagger(Pipe):
         serialize['cfg'] = lambda: ujson.dumps(self.cfg)
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize['tag_map'] = lambda: msgpack.dumps(
-            tag_map, use_bin_type=True, encoding='utf8')
+            tag_map,
+            use_bin_type=True,
+            encoding='utf8',
+        )
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -581,7 +585,7 @@ class Tagger(Pipe):
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
 
-            if self.model is True:
+            if self.model:
                 token_vector_width = util.env_opt(
                     'token_vector_width',
                     self.cfg.get('token_vector_width', 128))
@@ -612,7 +616,7 @@ class Tagger(Pipe):
             ('tag_map', lambda p: p.open('wb').write(msgpack.dumps(
                 tag_map, use_bin_type=True, encoding='utf8'))),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg)))
+            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg))),
         ))
         util.to_disk(path, serialize, exclude)
 
@@ -621,7 +625,7 @@ class Tagger(Pipe):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
                 self.cfg['pretrained_vectors'] = self.vocab.vectors.name
-            if self.model is True:
+            if self.model:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             with p.open('rb') as file_:
                 self.model.from_bytes(file_.read())
@@ -691,7 +695,7 @@ class MultitaskObjective(Tagger):
                     label = self.make_label(i, words, tags, heads, deps, ents)
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
-        if self.model is True:
+        if self.model:
             token_vector_width = util.env_opt('token_vector_width')
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)
         link_vectors_to_models(self.vocab)
@@ -705,7 +709,7 @@ class MultitaskObjective(Tagger):
         softmax = Softmax(n_tags, token_vector_width)
         model = chain(
             tok2vec,
-            softmax
+            softmax,
         )
         model.tok2vec = tok2vec
         model.softmax = softmax
@@ -821,7 +825,7 @@ class SimilarityHook(Pipe):
         gold_tuples (iterable): Gold-standard training data.
         pipeline (list): The pipeline the model is part of.
         """
-        if self.model is True:
+        if self.model:
             self.model = self.Model(pipeline[0].model.nO)
             link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -915,10 +919,9 @@ class TextCategorizer(Pipe):
         else:
             token_vector_width = 64
 
-        if self.model is True:
+        if self.model:
             self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
-            self.model = self.Model(len(self.labels), token_vector_width,
-                                    **self.cfg)
+            self.model = self.Model(len(self.labels), token_vector_width, **self.cfg)
             link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
@@ -944,8 +947,7 @@ cdef class DependencyParser(Parser):
                                     tok2vec=tok2vec, sgd=sgd)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.moves, self.model),
-                None, None)
+        return (DependencyParser, (self.vocab, self.moves, self.model), None, None)
 
 
 cdef class EntityRecognizer(Parser):
@@ -965,8 +967,7 @@ cdef class EntityRecognizer(Parser):
                                     tok2vec=tok2vec)
 
     def __reduce__(self):
-        return (EntityRecognizer, (self.vocab, self.moves, self.model),
-                None, None)
+        return (EntityRecognizer, (self.vocab, self.moves, self.model), None, None)
 
 
 __all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer']
