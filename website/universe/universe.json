@@ -1004,6 +1004,36 @@
                 "github": "ines",
                 "website": "https://ines.io"
             }
+        },
+        {
+            "id": "spacy-js",
+            "title": "spacy-js",
+            "slogan": "JavaScript API for spaCy with Python REST API",
+            "github": "ines/spacy-js",
+            "description": "JavaScript interface for accessing linguistic annotations provided by spaCy. This project is mostly experimental and was developed for fun to play around with different ways of mimicking spaCy's Python API.\n\nThe results will still be computed in Python and made available via a REST API. The JavaScript API resembles spaCy's Python API as closely as possible (with a few exceptions, as the values are all pre-computed and it's tricky to express complex recursive relationships).",
+            "code_language": "javascript",
+            "code_example": [
+                "const spacy = require('spacy');",
+                "",
+                "(async function() {",
+                "    const nlp = spacy.load('en_core_web_sm');",
+                "    const doc = await nlp('This is a text about Facebook.');",
+                "    for (let ent of doc.ents) {",
+                "        console.log(ent.text, ent.label);",
+                "    }",
+                "    for (let token of doc) {",
+                "        console.log(token.text, token.pos, token.head.text);",
+                "    }",
+                "})();"
+            ],
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            },
+            "category": ["nonpython"],
+            "tags": ["javascript"]
         }
     ],
     "projectCats": {
