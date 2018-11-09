@@ -1048,6 +1048,38 @@
             },
             "category": ["apis"],
             "tags": ["raspberrypi"]
+        },
+        {
+            "id": "spacy-wordnet",
+            "slogan": "wordnet meets spacy",
+            "description": "`spacy-wordnet` creates annotations that easily allow the use of wordnet and [wordnet domains](http://wndomains.fbk.eu/) by using the [nltk wordnet interface](http://www.nltk.org/howto/wordnet.html)",
+            "github": "recognai/spacy-wordnet",
+            "tags": ["wordnet", "synsets"],
+            "thumb": "https://pbs.twimg.com/profile_images/999591281239052288/2EZAed3J_400x400.jpg",
+            "code_example": [
+                "import spacy",
+                "from spacy_wordnet.wornet_annotator import WordnetAnnotator ",
+                "",
+                "# Load an spacy model (supported models are \"es\" and \"en\") ",
+                "nlp = spacy.load('en')",
+                "nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')",
+                "token = nlp('prices')[0]",
+                "",
+                "# wordnet object link spacy token with nltk wordnet interface by giving acces to",
+                "# synsets and lemmas ",
+                "token._.wordnet.synsets()",
+                "token._.wordnet.lemmas()",
+                "",
+                "# And automatically tags with wordnet domains",
+                "token._.wordnet.wordnet_domains()"
+            ],
+            "author": "recognai",
+            "author_links": {
+                "github": "recognai",
+                "twitter": "recogn_ai",
+                "website": "https://recogn.ai"
+            },
+            "category": ["pipeline"]
         }
     ],
     "projectCats": {
