@@ -1051,8 +1051,8 @@
         },
         {
             "id": "spacy-wordnet",
-            "slogan": "wordnet meets spacy",
-            "description": "`spacy-wordnet` creates annotations that easily allow the use of wordnet and [wordnet domains](http://wndomains.fbk.eu/) by using the [nltk wordnet interface](http://www.nltk.org/howto/wordnet.html)",
+            "slogan": "WordNet meets spaCy",
+            "description": "`spacy-wordnet` creates annotations that easily allow the use of WordNet and [WordNet Domains](http://wndomains.fbk.eu/) by using the [NLTK WordNet interface](http://www.nltk.org/howto/wordnet.html)",
             "github": "recognai/spacy-wordnet",
             "tags": ["wordnet", "synsets"],
             "thumb": "https://pbs.twimg.com/profile_images/999591281239052288/2EZAed3J_400x400.jpg",
