@@ -14,6 +14,7 @@ from .tokens.doc cimport Doc
 from .tokens.doc cimport get_token_attr
 from .attrs cimport ID, attr_id_t, NULL_ATTR
 from .errors import Errors, TempErrors
+from .errors import Errors, TempErrors, Warnings, deprecation_warning
 
 from .attrs import IDS
 from .attrs import FLAG61 as U_ENT
@@ -550,7 +551,8 @@ cdef class PhraseMatcher:
     cdef public object _patterns
 
     def __init__(self, Vocab vocab, max_length=0):
-        # TODO: Add deprecation warning on max_length
+        if max_length != 0:
+            deprecation_warning(Warnings.W010)
         self.mem = Pool()
         self.max_length = max_length
         self.vocab = vocab

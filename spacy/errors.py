@@ -48,6 +48,8 @@ class Warnings(object):
     W008 = ("Evaluating {obj}.similarity based on empty vectors.")
     W009 = ("Custom factory '{name}' provided by entry points of another "
             "package overwrites built-in factory.")
+    W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
+            "limit anymore, so the max_length argument is now deprecated.")
 
 
 @add_codes
@@ -268,6 +270,8 @@ class Errors(object):
             "NBOR_RELOP.")
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
+
+
 @add_codes
 class TempErrors(object):
     T001 = ("Max length currently 10 for phrase matching")
