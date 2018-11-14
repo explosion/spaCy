@@ -561,7 +561,7 @@ cdef class PhraseMatcher:
             self.attr = attr
         else:
             self.attr = self.vocab.strings[attr]
-^        self.phrase_ids = PreshMap()
+        self.phrase_ids = PreshMap()
         abstract_patterns = [
             [{U_ENT: True}],
             [{B2_ENT: True}, {L2_ENT: True}],
