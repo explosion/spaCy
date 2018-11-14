@@ -11,6 +11,7 @@ from .structs cimport TokenC
 from .lexeme cimport attr_id_t
 from .vocab cimport Vocab
 from .tokens.doc cimport Doc
+from .tokens.token cimport Token
 from .tokens.doc cimport get_token_attr
 from .attrs cimport ID, attr_id_t, NULL_ATTR
 from .errors import Errors, TempErrors
@@ -57,7 +58,11 @@ cdef struct AttrValueC:
 
 cdef struct TokenPatternC:
     AttrValueC* attrs
+    int32_t* py_predicates
+    attr_t* extra_attrs
     int32_t nr_attr
+    int32_t nr_extra_attr
+    int32_t nr_py
     quantifier_t quantifier
     hash_t key
 
@@ -74,19 +79,40 @@ cdef struct MatchC:
     int32_t length
 
 
-cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
+cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extra_getters=tuple(),
+        predicates=tuple()):
+    '''Find matches in a doc, with a compiled array of patterns. Matches are
+    returned as a list of (id, start, end) tuples.
+
+    To augment the compiled patterns, we optionally also take two Python lists.
+    
+    The "predicates" list contains functions that take a Python list and return a
+    boolean value. It's mostly used for regular expressions.
+    
+    The "extra_getters" list contains functions that take a Python list and return
+    an attr ID. It's mostly used for extension attributes.
+    '''
     cdef vector[PatternStateC] states
     cdef vector[MatchC] matches
     cdef PatternStateC state
-    cdef Pool mem = Pool()
-    # TODO: Prefill this with the extra attribute values.
-    extra_attrs = <attr_t**>mem.alloc(len(doc), sizeof(attr_t*))
-    # Main loop
     cdef int i, j
+    cdef Pool mem = Pool()
+    predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
+    extra_attrs = <attr_t*>mem.alloc(doc.length * len(extra_getters), sizeof(attr_t))
+    # Populate extra attrs
+    for i, token in enumerate(doc):
+        for j, getter in enumerate(extra_getters):
+            extra_attrs[i * doc.length + j] = getter(token)
+    # Main loop
+    cdef int nr_extra_getter = len(extra_getters)
+    cdef int nr_predicate = len(predicates)
     for i in range(doc.length):
         for j in range(n):
             states.push_back(PatternStateC(patterns[j], i, 0))
-        transition_states(states, matches, &doc.c[i], extra_attrs[i])
+        transition_states(states, matches, predicate_cache,
+            doc[i], extra_attrs, predicates)
+        predicate_cache += nr_predicate
+        extra_attrs += nr_extra_getter
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
     return [(matches[i].pattern_id, matches[i].start, matches[i].start+matches[i].length)
@@ -105,11 +131,17 @@ cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
 
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
-        const TokenC* token, const attr_t* extra_attrs) except *:
+                            char* cached_py_predicates,
+        Token token, const attr_t* extra_attrs, py_predicates) except *:
     cdef int q = 0
     cdef vector[PatternStateC] new_states
+    cdef int nr_predicate = len(py_predicates)
     for i in range(states.size()):
-        action = get_action(states[i], token, extra_attrs)
+        if states[i].pattern.nr_py != 0:
+            update_predicate_cache(cached_py_predicates,
+                states[i].pattern, token, py_predicates)
+        action = get_action(states[i], token.c, extra_attrs,
+                            cached_py_predicates, nr_predicate)
         if action == REJECT:
             continue
         state = states[i]
@@ -120,7 +152,11 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                     PatternStateC(pattern=state.pattern, start=state.start,
                                   length=state.length+1))
             states[q].pattern += 1
-            action = get_action(states[q], token, extra_attrs)
+            if states[q].pattern.nr_py != 0:
+                update_predicate_cache(cached_py_predicates,
+                    states[q].pattern, token, py_predicates)
+            action = get_action(states[q], token.c, extra_attrs,
+                                cached_py_predicates, nr_predicate)
         if action == REJECT:
             pass
         elif action == ADVANCE:
@@ -148,6 +184,25 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         states.push_back(new_states[i])
 
 
+cdef void update_predicate_cache(char* cache,
+        const TokenPatternC* pattern, Token token, predicates):
+    # If the state references any extra predicates, check whether they match.
+    # These are cached, so that we don't call these potentially expensive
+    # Python functions more than we need to.
+    for i in range(pattern.nr_py):
+        if cache[i] == 0:
+            predicate = predicates[pattern.py_predicates[i]]
+            result = predicate(token)
+            if result is True:
+                cache[i] = 1
+            elif result is False:
+                cache[i] = -1
+            elif result is None:
+                pass
+            else:
+                raise ValueError("Unexpected value: %s" % result)
+
+ 
 cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) except *:
     '''Handle states that end in zero-width patterns.'''
     cdef PatternStateC state
@@ -164,7 +219,9 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) 
                 state.pattern += 1
 
 
-cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) nogil:
+cdef action_t get_action(PatternStateC state,
+        const TokenC* token, const attr_t* extra_attrs,
+        const char* predicate_matches, int nr_predicate) nogil:
     '''We need to consider:
 
     a) Does the token match the specification? [Yes, No]
@@ -223,7 +280,7 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
     Problem: If a quantifier is matching, we're adding a lot of open partials
     '''
     cdef char is_match
-    is_match = get_is_match(state, token, extra_attrs)
+    is_match = get_is_match(state, token, extra_attrs, predicate_matches, nr_predicate)
     quantifier = get_quantifier(state)
     is_final = get_is_final(state)
     if quantifier == ZERO:
@@ -269,13 +326,20 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
           return RETRY
 
 
-cdef char get_is_match(PatternStateC state, const TokenC* token, const attr_t* extra_attrs) nogil:
+cdef char get_is_match(PatternStateC state,
+        const TokenC* token, const attr_t* extra_attrs,
+        const char* predicate_matches, int nr_predicate) nogil:
+    for i in range(nr_predicate):
+        if predicate_matches[i] == -1:
+            return 0
     spec = state.pattern
     for attr in spec.attrs[:spec.nr_attr]:
         if get_token_attr(token, attr.attr) != attr.value:
             return 0
-    else:
-        return 1
+    for i in range(spec.nr_extra_attr):
+        if spec.extra_attrs[i] != extra_attrs[i]:
+            return 0
+    return True
 
 
 cdef char get_is_final(PatternStateC state) nogil:
@@ -287,6 +351,7 @@ cdef char get_is_final(PatternStateC state) nogil:
 
 cdef char get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
+
 
 DEF PADDING = 5
 
