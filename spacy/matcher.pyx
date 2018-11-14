@@ -631,8 +631,9 @@ cdef class PhraseMatcher:
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
         matches = []
-        match_doc = doc
-        if self.attr != ORTH:
+        if self.attr == ORTH:
+            match_doc = doc
+        else:
             # If we're not matching on the ORTH, match_doc will be a Doc whose
             # token.orth values are the attribute values we're matching on,
             # e.g. Doc(nlp.vocab, words=[token.pos_ for token in doc])
