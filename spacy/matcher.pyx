@@ -13,7 +13,6 @@ from .vocab cimport Vocab
 from .tokens.doc cimport Doc
 from .tokens.doc cimport get_token_attr
 from .attrs cimport ID, attr_id_t, NULL_ATTR
-from .errors import Errors, TempErrors
 from .errors import Errors, TempErrors, Warnings, deprecation_warning
 
 from .attrs import IDS
@@ -663,7 +662,7 @@ cdef class PhraseMatcher:
             for doc in stream:
                 matches = self(doc)
                 if return_matches:
-                    yield (doc, matches) 
+                    yield (doc, matches)
                 else:
                     yield doc
 
