@@ -557,8 +557,11 @@ cdef class PhraseMatcher:
         self.max_length = max_length
         self.vocab = vocab
         self.matcher = Matcher(self.vocab)
-        self.attr = self.vocab.strings[attr]
-        self.phrase_ids = PreshMap()
+        if isinstance(attr, long):
+            self.attr = attr
+        else:
+            self.attr = self.vocab.strings[attr]
+^        self.phrase_ids = PreshMap()
         abstract_patterns = [
             [{U_ENT: True}],
             [{B2_ENT: True}, {L2_ENT: True}],
