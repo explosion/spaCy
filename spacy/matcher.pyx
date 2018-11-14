@@ -180,7 +180,7 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
 
     We'll code the actions as boolean strings, so 0000 means no to all 4,
     1000 means match but no states added, etc.
-    
+
     1:
       Yes, final:
         1000
@@ -209,8 +209,8 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
       No, non-final:
         0010
 
-    Possible combinations:  1000, 0100, 0000, 1001, 0011, 0010, 
-    
+    Possible combinations:  1000, 0100, 0000, 1001, 0011, 0010,
+
     We'll name the bits "match", "advance", "retry", "extend"
     REJECT = 0000
     MATCH = 1000
@@ -471,7 +471,7 @@ cdef class Matcher:
         if key not in self._patterns:
             return default
         return (self._callbacks[key], self._patterns[key])
-    
+
     def pipe(self, docs, batch_size=1000, n_threads=2):
         """Match a stream of documents, yielding them in turn.
 
@@ -616,7 +616,6 @@ cdef class PhraseMatcher:
             self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
-
         """Find all sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
