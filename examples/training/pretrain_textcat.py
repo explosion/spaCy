@@ -175,7 +175,7 @@ def evaluate_textcat(tokenizer, textcat, texts, cats):
     train_examples=("Number of labelled examples", "option", "eg", int),
     vectors_model=("Name or path to vectors model to learn from")
 )
-def main(width: int, embed_size: int, vectors_model,
+def main(width, embed_size, vectors_model,
         pretrain_iters=30, train_iters=30, train_examples=1000):
     random.seed(0)
     numpy.random.seed(0)
