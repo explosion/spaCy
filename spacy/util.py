@@ -20,7 +20,7 @@ import numpy.random
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
-from .compat import import_file
+from .compat import import_file, json_dumps
 from .errors import Errors
 
 # Import these directly from Thinc, so that we're sure we always have the
@@ -528,6 +528,16 @@ def read_json(location):
         return ujson.load(f)
 
 
+def write_json(file_path, contents):
+    """Create a .json file and dump contents.
+
+    file_path (unicode / Path): The path to the output file.
+    contents: The JSON-serializable contents to output.
+    """
+    with Path(file_path).open('w', encoding='utf8') as f:
+        f.write(json_dumps(contents))
+
+
 def read_jsonl(file_path):
     """Read a .jsonl file and yield its contents line by line.
 
@@ -540,6 +550,17 @@ def read_jsonl(file_path):
                 yield ujson.loads(line.strip())
             except ValueError:
                 continue
+
+
+def write_jsonl(file_path, lines):
+    """Create a .jsonl file and dump contents.
+
+    file_path (unicode / Path): The path to the output file.
+    lines (list): The JSON-serializable contents of each line.
+    """
+    data = [json_dumps(line) for line in lines]
+    with Path(file_path).open('w', encoding='utf-8') as f:
+        f.write('\n'.join(data))
 
 
 def is_json_serializable(obj):
