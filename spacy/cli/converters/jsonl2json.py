@@ -4,7 +4,7 @@ import ujson as json
 
 from .._messages import Messages
 from ...compat import json_dumps, path2str
-from ...util import prints, get_lang_class
+from ...util import prints, get_lang_class, read_jsonl
 from ...gold import docs_to_json
 
 
@@ -26,8 +26,3 @@ def ner_jsonl2json(input_path, output_path, lang=None, n_sents=10, use_morpholog
         file_.write(json_dumps(json_docs))
     prints(Messages.M033.format(n_docs=len(json_docs)),
            title=Messages.M032.format(name=path2str(output_loc)))
-
-def read_jsonl(input_path):
-    with input_path.open('r', encoding='utf8') as file_:
-        for line in file_:
-            yield json.loads(line)
