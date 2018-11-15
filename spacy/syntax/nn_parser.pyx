@@ -126,6 +126,10 @@ cdef class Parser:
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
+    
+    @property
+    def tok2vec(self):
+        return self.model.tok2vec
 
     @property
     def move_names(self):
