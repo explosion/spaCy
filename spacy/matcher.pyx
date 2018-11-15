@@ -12,7 +12,7 @@ from .lexeme cimport attr_id_t
 from .vocab cimport Vocab
 from .tokens.doc cimport Doc
 from .tokens.doc cimport get_token_attr
-from .attrs cimport ID, attr_id_t, NULL_ATTR
+from .attrs cimport ID, attr_id_t, NULL_ATTR, ORTH
 from .errors import Errors, TempErrors, Warnings, deprecation_warning
 
 from .attrs import IDS
@@ -546,16 +546,21 @@ cdef class PhraseMatcher:
     cdef Matcher matcher
     cdef PreshMap phrase_ids
     cdef int max_length
+    cdef attr_id_t attr
     cdef public object _callbacks
     cdef public object _patterns
 
-    def __init__(self, Vocab vocab, max_length=0):
+    def __init__(self, Vocab vocab, max_length=0, attr='ORTH'):
         if max_length != 0:
             deprecation_warning(Warnings.W010)
         self.mem = Pool()
         self.max_length = max_length
         self.vocab = vocab
         self.matcher = Matcher(self.vocab)
+        if isinstance(attr, long):
+            self.attr = attr
+        else:
+            self.attr = self.vocab.strings[attr]
         self.phrase_ids = PreshMap()
         abstract_patterns = [
             [{U_ENT: True}],
@@ -609,7 +614,8 @@ cdef class PhraseMatcher:
             tags = get_bilou(length)
             phrase_key = <attr_t*>mem.alloc(length, sizeof(attr_t))
             for i, tag in enumerate(tags):
-                lexeme = self.vocab[doc.c[i].lex.orth]
+                attr_value = self.get_lex_value(doc, i)
+                lexeme = self.vocab[attr_value]
                 lexeme.set_flag(tag, True)
                 phrase_key[i] = lexeme.orth
             phrase_hash = hash64(phrase_key,
@@ -625,8 +631,16 @@ cdef class PhraseMatcher:
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
         matches = []
-        for _, start, end in self.matcher(doc):
-            ent_id = self.accept_match(doc, start, end)
+        if self.attr == ORTH:
+            match_doc = doc
+        else:
+            # If we're not matching on the ORTH, match_doc will be a Doc whose
+            # token.orth values are the attribute values we're matching on,
+            # e.g. Doc(nlp.vocab, words=[token.pos_ for token in doc])
+            words = [self.get_lex_value(doc, i) for i in range(len(doc))]
+            match_doc = Doc(self.vocab, words=words)
+        for _, start, end in self.matcher(match_doc):
+            ent_id = self.accept_match(match_doc, start, end)
             if ent_id is not None:
                 matches.append((ent_id, start, end))
         for i, (ent_id, start, end) in enumerate(matches):
@@ -679,6 +693,23 @@ cdef class PhraseMatcher:
             return None
         else:
             return ent_id
+
+    def get_lex_value(self, Doc doc, int i):
+        if self.attr == ORTH:
+            # Return the regular orth value of the lexeme
+            return doc.c[i].lex.orth
+        # Get the attribute value instead, e.g. token.pos
+        attr_value = get_token_attr(&doc.c[i], self.attr)
+        if attr_value in (0, 1):
+            # Value is boolean, convert to string
+            string_attr_value = str(attr_value)
+        else:
+            string_attr_value = self.vocab.strings[attr_value]
+        string_attr_name = self.vocab.strings[self.attr]
+        # Concatenate the attr name and value to not pollute lexeme space
+        # e.g. 'POS-VERB' instead of just 'VERB', which could otherwise
+        # create false positive matches
+        return 'matcher:{}-{}'.format(string_attr_name, string_attr_value)
 
 
 cdef class DependencyTreeMatcher:
