@@ -542,6 +542,18 @@ def read_jsonl(file_path):
                 continue
 
 
+def is_json_serializable(obj):
+    """Check if a Python object is JSON-serializable."""
+    if hasattr(obj, '__call__'):
+        # Check this separately here to prevent infinite recursions
+        return False
+    try:
+        ujson.dumps(obj)
+        return True
+    except TypeError:
+        return False
+
+
 def get_raw_input(description, default=False):
     """Get user input from the command line via raw_input / input.
 

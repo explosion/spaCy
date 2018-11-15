@@ -273,6 +273,9 @@ class Errors(object):
     E102 = ("Can't find JSON schema for '{name}'.")
     E103 = ("The Doc.print_tree() method is now deprecated. Please use "
             "Doc.json() instead.")
+    E104 = ("Can't find doc._.{attr} attribute specified in the underscore "
+            "settings: {opts}")
+    E105 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
 
 
 @add_codes

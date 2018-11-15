@@ -28,7 +28,7 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
-from ..util import normalize_slice
+from ..util import normalize_slice, is_json_serializable
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
@@ -939,8 +939,46 @@ cdef class Doc:
     def print_tree(self, light=False, flat=False):
         raise ValueError(Errors.E103)
 
+    def to_json(self, underscore=None):
+        """Convert a Doc to JSON. Produces the same format used by the spacy
+        train command.
 
+        underscore (list): Optional list of string names of custom doc._.
+        attributes. Attribute values need to be JSON-serializable. Values will
+        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+        RETURNS (dict): The data in spaCy's JSON format.
         """
+        data = {'text': self.text}
+        data['ents'] = [{'start': ent.start_char, 'end': ent.end_char,
+                         'label': ent.label_} for ent in self.ents]
+        sents = list(self.sents)
+        if sents:
+            data['sents'] = [{'start': sent.start_char, 'end': sent.end_char}
+                             for sent in sents]
+        if self.cats:
+            data['cats'] = self.cats
+        data['tokens'] = []
+        for token in self:
+            token_data = {'id': token.i, 'start': token.idx, 'end': token.idx + len(token)}
+            if token.pos_:
+                token_data['pos'] = token.pos_
+            if token.tag_:
+                token_data['tag'] = token.tag_
+            if token.dep_:
+                token_data['dep'] = token.dep_
+            if token.head:
+                token_data['head'] = token.head.i
+            data['tokens'].append(token_data)
+        if underscore:
+            data['_'] = {}
+            for attr in underscore:
+                if not self.has_extension(attr):
+                    raise ValueError(Errors.E104.format(attr=attr, opts=underscore))
+                value = self._.get(attr)
+                if not is_json_serializable(value):
+                    raise ValueError(Errors.E105.format(attr=attr, value=repr(value)))
+                data['_'][attr] = value
+        return data
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:

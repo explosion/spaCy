@@ -15,7 +15,7 @@ import json
 
 import ujson
 
-from . import _align 
+from . import _align
 from .syntax import nonproj
 from .tokens import Doc
 from .errors import Errors
@@ -569,32 +569,19 @@ cdef class GoldParse:
                         self.c.sent_start[i] = 0
 
 
-def docs_to_json(id, docs):
-    '''Convert a list of Doc objects into the JSON-serializable format used by
-    the spacy train command. Each Doc in the list will be interpreted as a
-    paragraph.
-    '''
+def docs_to_json(docs, underscore=None):
+    """Convert a list of Doc objects into the JSON-serializable format used by
+    the spacy train command.
+
+    docs (iterable / Doc): The Doc object(s) to convert.
+    underscore (list): Optional list of string names of custom doc._.
+        attributes. Attribute values need to be JSON-serializable. Values will
+        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+    RETURNS (list): The data in spaCy's JSON format.
+    """
     if isinstance(docs, Doc):
         docs = [docs]
-    json_doc = {'id': id, 'paragraphs': []}
-    for i, doc in enumerate(docs):
-        json_para = {'raw': doc.text, 'sentences': []}
-        ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
-        for j, sent in enumerate(doc.sents):
-            json_sent = {'tokens': [], 'brackets': []}
-            for token in sent:
-                json_token = {"id": token.i, "orth": token.text}
-                if doc.is_tagged:
-                    json_token['tag'] = token.tag_
-                if doc.is_parsed:
-                    json_token['head'] = token.head.i-token.i
-                    json_token['dep'] = token.dep_
-                json_token['ner'] = biluo_tags[token.i]
-                json_sent['tokens'].append(json_token)
-            json_para['sentences'].append(json_sent)
-        json_doc['paragraphs'].append(json_para)
-    return json_doc
+    return [doc.to_json(underscore=underscore) for doc in docs]
 
 
 def biluo_tags_from_offsets(doc, entities, missing='O'):

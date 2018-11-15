@@ -5,7 +5,6 @@ import ujson as json
 from .._messages import Messages
 from ...compat import json_dumps, path2str
 from ...util import prints, get_lang_class, read_jsonl
-from ...gold import docs_to_json
 
 
 def ner_jsonl2json(input_path, output_path, lang=None, n_sents=10, use_morphology=False):
@@ -18,7 +17,7 @@ def ner_jsonl2json(input_path, output_path, lang=None, n_sents=10, use_morpholog
         doc = nlp.make_doc(raw_text)
         doc[0].is_sent_start = True
         doc.ents = [doc.char_span(s, e, label=L) for s, e, L in ents['entities']]
-        json_docs.append(docs_to_json(i, [doc]))
+        json_docs.append(doc.to_json())
 
     output_filename = input_path.parts[-1].replace(".jsonl", ".json")
     output_loc = output_path / output_filename
