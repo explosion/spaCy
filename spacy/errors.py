@@ -270,6 +270,7 @@ class Errors(object):
             "NBOR_RELOP.")
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
+    E102 = ("Can't find JSON schema for '{name}'.")
 
 
 @add_codes
