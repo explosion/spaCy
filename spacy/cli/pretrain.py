@@ -13,6 +13,7 @@ corpus, and then training with only 100 labels. Note that it's a bit dirty to
 pre-train with the development data, but also not *so* terrible: we're not using
 the development labels, after all --- only the unlabelled text.
 '''
+from __future__ import print_function, unicode_literals
 import plac
 import random
 import ujson as json
