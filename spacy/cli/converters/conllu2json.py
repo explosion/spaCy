@@ -17,7 +17,7 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False, lang=
     """
     # by @dvsrepo, via #11 explosion/spacy-dev-resources
 
-    """     
+    """
     Extract NER tags if available and convert them so that they follow
     BILUO and the Wikipedia scheme
     """
@@ -53,12 +53,10 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False, lang=
 
 
 def is_ner(tag):
-
-    """ 
-    Check the 10th column of the first token to determine if the file contains
-    NER tags 
     """
-
+    Check the 10th column of the first token to determine if the file contains
+    NER tags
+    """
     tag_match = re.match('([A-Z_]+)-([A-Z_]+)', tag)
     if tag_match:
         return True
@@ -66,6 +64,7 @@ def is_ner(tag):
         return True
     else:
         return False
+
 
 def read_conllx(input_path, use_morphology=False, n=0):
     text = input_path.open('r', encoding='utf-8').read()
@@ -99,14 +98,12 @@ def read_conllx(input_path, use_morphology=False, n=0):
                 break
 
 def simplify_tags(iob):
-   
     """
     Simplify tags obtained from the dataset in order to follow Wikipedia
     scheme (PER, LOC, ORG, MISC). 'PER', 'LOC' and 'ORG' keep their tags, while
     'GPE_LOC' is simplified to 'LOC', 'GPE_ORG' to 'ORG' and all remaining tags to
-    'MISC'.     
+    'MISC'.
     """
-
     new_iob = []
     for tag in iob:
         tag_match = re.match('([A-Z_]+)-([A-Z_]+)', tag)
@@ -122,6 +119,7 @@ def simplify_tags(iob):
             tag = prefix + '-' + suffix
         new_iob.append(tag)
     return new_iob
+
 
 def generate_sentence(sent, has_ner_tags):
     (id_, word, tag, head, dep, iob) = sent
@@ -144,7 +142,7 @@ def generate_sentence(sent, has_ner_tags):
     return sentence
 
 
-def create_doc(sentences,id):
+def create_doc(sentences, id):
     doc = {}
     paragraph = {}
     doc["id"] = id

@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import pytest
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc
-
 from ..util import get_doc
 
 

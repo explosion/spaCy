@@ -42,7 +42,7 @@ from ..compat import json_dumps
                "overwritten.", "option", "m", Path),
     verbose=("Display more information for debug", "option", None, bool))
 def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
-         parser_multitasks='', entity_multitasks='',
+          parser_multitasks='', entity_multitasks='',
           use_gpu=-1, vectors=None, no_tagger=False, noise_level=0.0,
           no_parser=False, no_entities=False, gold_preproc=False,
           version="0.0.0", meta_path=None, verbose=False):
@@ -68,7 +68,7 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
                title=Messages.M052, exits=1)
     meta.setdefault('lang', lang)
     meta.setdefault('name', 'unnamed')
-    
+
     if not output_path.exists():
         output_path.mkdir()
 

@@ -25,6 +25,7 @@ from .compat import json_dumps
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
+
 def tags_to_entities(tags):
     entities = []
     start = None
@@ -123,7 +124,7 @@ class GoldCorpus(object):
         for i, doc_tuple in enumerate(doc_tuples):
             with open(directory / '{}.msg'.format(i), 'wb') as file_:
                 msgpack.dump([doc_tuple], file_, use_bin_type=True, encoding='utf8')
-    
+
     @staticmethod
     def walk_corpus(path):
         path = util.ensure_path(path)
@@ -167,7 +168,7 @@ class GoldCorpus(object):
     def dev_tuples(self):
         locs = (self.tmp_dir / 'dev').iterdir()
         yield from self.read_tuples(locs, limit=self.limit)
-   
+
     @property
     def train_tuples(self):
         locs = (self.tmp_dir / 'train').iterdir()
