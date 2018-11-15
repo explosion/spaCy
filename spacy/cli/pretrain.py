@@ -14,18 +14,17 @@ pre-train with the development data, but also not *so* terrible: we're not using
 the development labels, after all --- only the unlabelled text.
 '''
 from __future__ import print_function, unicode_literals
-import plac
 import random
+import numpy
+import time
 import ujson as json
-from spacy.attrs import ID
-import spacy
-import tqdm
 from pathlib import Path
+
+import spacy
+from spacy.attrs import ID
 from spacy.util import minibatch, use_gpu, compounding, ensure_path
 from spacy._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
 from thinc.v2v import Affine
-import numpy
-import time
 
 
 def prefer_gpu():
@@ -186,7 +185,3 @@ def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
             with (output_dir / 'log.jsonl').open('a') as file_:
                 file_.write(json.dumps({'nr_word': tracker.nr_word,
                     'loss': tracker.loss, 'epoch': epoch}))
-
-
-if __name__ == '__main__':
-    plac.call(main)
