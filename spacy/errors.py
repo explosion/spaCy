@@ -271,6 +271,8 @@ class Errors(object):
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
     E102 = ("Can't find JSON schema for '{name}'.")
+    E103 = ("The Doc.print_tree() method is now deprecated. Please use "
+            "Doc.json() instead.")
 
 
 @add_codes

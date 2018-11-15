@@ -20,7 +20,6 @@ from .span cimport Span
 from .token cimport Token
 from .span cimport Span
 from .token cimport Token
-from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs import intify_attrs, IDS
@@ -938,31 +937,10 @@ cdef class Doc:
         return self[start]
 
     def print_tree(self, light=False, flat=False):
-        """Returns the parse trees in JSON (dict) format.
+        raise ValueError(Errors.E103)
 
-        light (bool): Don't include lemmas or entities.
-        flat (bool): Don't include arcs or modifiers.
-        RETURNS (dict): Parse tree as dict.
 
-        EXAMPLE:
-            >>> doc = nlp('Bob brought Alice the pizza. Alice ate the pizza.')
-            >>> trees = doc.print_tree()
-            >>> trees[1]
-            {'modifiers': [
-                {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice',
-                'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP',
-                'lemma': 'Alice'},
-                {'modifiers': [
-                    {'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det',
-                    'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}],
-                'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN',
-                'POS_fine': 'NN', 'lemma': 'pizza'},
-                {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct',
-                'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}],
-                'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB',
-                'POS_fine': 'VBD', 'lemma': 'eat'}
         """
-        return parse_tree(self, light=light, flat=flat)
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
