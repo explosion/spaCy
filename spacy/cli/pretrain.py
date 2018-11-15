@@ -188,8 +188,8 @@ def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 print(*progress)
-            if texts_loc == '-' and progress.words_per_epoch[epoch] >= 10**7:
-                break
+                if texts_loc == '-' and tracker.words_per_epoch[epoch] >= 10**7:
+                    break
         with model.use_params(optimizer.averages):
             with (output_dir / ('model%d.bin' % epoch)).open('wb') as file_:
                 file_.write(tok2vec.to_bytes())
