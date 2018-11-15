@@ -631,9 +631,15 @@ def prints(*texts, **kwargs):
     **kwargs: 'title' becomes coloured headline. exits=True performs sys exit.
     """
     exits = kwargs.get('exits', None)
+    nowrap = kwargs.get('nowrap', False)
     title = kwargs.get('title', None)
-    title = '\033[93m{}\033[0m\n'.format(_wrap(title)) if title else ''
-    message = '\n\n'.join([_wrap(text) for text in texts])
+    title_tpl = '\033[93m{}\033[0m\n'
+    if nowrap:
+        title = title_tpl.format(title) if title else ''
+        message = '\n\n'.join(texts)
+    else:
+        title = title_tpl.format(_wrap(title)) if title else ''
+        message = '\n\n'.join([_wrap(text) for text in texts])
     print('\n{}{}\n'.format(title, message))
     if exits is not None:
         sys.exit(exits)
