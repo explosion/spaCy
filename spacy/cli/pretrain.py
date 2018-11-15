@@ -21,6 +21,7 @@ import time
 import ujson as json
 from pathlib import Path
 import sys
+from collections import Counter
 
 import spacy
 from spacy.attrs import ID
@@ -179,7 +180,7 @@ def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
     optimizer = create_default_optimizer(model.ops)
     tracker = ProgressTracker()
     print('Epoch', '#Words', 'Loss', 'w/s')
-    texts = stream_texts() if text_loc == '-' else load_texts(texts_loc) 
+    texts = stream_texts() if texts_loc == '-' else load_texts(texts_loc) 
     for epoch in range(nr_iter):
         for batch in minibatch_by_words(texts, tuples=False, size=50000):
             docs = [nlp.make_doc(text) for text in batch]
