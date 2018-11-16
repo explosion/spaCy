@@ -47,7 +47,7 @@ def download(model, direct=False, *pip_args):
             # Dirty, but since spacy.download and the auto-linking is
             # mostly a convenience wrapper, it's best to show a success
             # message and loading instructions, even if linking fails.
-            prints(Messages.M001.format(name=model_name), title=Messages.M002)
+            prints(Messages.M001, title=Messages.M002.format(name=model_name))
 
 
 def get_json(url, desc):
