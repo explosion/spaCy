@@ -76,6 +76,11 @@ def main(path):
 
 
 if __name__ == '__main__':
+    import socket
+    try:
+        BrokenPipeError
+    except NameError:
+        BrokenPipeError = socket.error
     try:
         plac.call(main)
     except BrokenPipeError: 
