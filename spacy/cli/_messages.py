@@ -73,3 +73,14 @@ class Messages(object):
     M052 = ("Not a valid meta.json format")
     M053 = ("Expected dict but got: {meta_type}")
     M054 = ("No --lang specified, but tokenization required.")
+    M055 = ("Training pipeline: {pipeline}")
+    M056 = ("Starting with base model '{model}'")
+    M057 = ("Starting with blank model '{model}'")
+    M058 = ("Loading vector from model '{model}'")
+    M059 = ("Can't use multitask objective without '{pipe}' in the pipeline")
+    M060 = ("Counting training words (limit={limit})")
+    M061 = ("\nSaving model...")
+    M062 = ("Output directory is not empty. This can lead to unintended side "
+            "effects when saving the model. Please use an empty directory "
+            "or a different path instead. If the specified output path doesn't "
+            "exist, the directory will be created for you.")

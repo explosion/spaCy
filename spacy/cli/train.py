@@ -6,14 +6,13 @@ from pathlib import Path
 import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
-import json
 import shutil
 
 from ._messages import Messages
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
-from ..util import prints, minibatch, minibatch_by_words, write_json
+from ..util import prints
 from .. import util
 from .. import about
 
@@ -56,7 +55,7 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
           use_gpu=-1, version="0.0.0", meta_path=None, parser_multitasks='',
           entity_multitasks='', noise_level=0.0, gold_preproc=False,
           learn_tokens=False, verbose=False, debug=False):
-
+    """Train or update a spaCy model."""
     util.fix_random_seed()
     util.set_env_log(verbose)
 
@@ -71,6 +70,8 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
     if not isinstance(meta, dict):
         prints(Messages.M053.format(meta_type=type(meta)),
                title=Messages.M052, exits=1)
+    if output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
+        raise ValueError(Messages.M062)
     if not output_path.exists():
         output_path.mkdir()
 
@@ -78,9 +79,9 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
     # the model and make sure the pipeline matches the pipeline setting. If
     # training starts from a blank model, intitalize the language class.
     pipeline = [p.strip() for p in pipeline.split(',')]
-    print("Training pipeline: {}".format(pipeline))
+    print(Messages.M055.format(pipeline=pipeline))
     if base_model:
-        print("Starting with base model '{}'".format(base_model))
+        print(Messages.M056.format(model=base_model))
         nlp = util.load_model(base_model)
         other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipeline]
         nlp.disable_pipes(*other_pipes)
@@ -88,7 +89,7 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
             if pipe not in nlp.pipe_names:
                 nlp.add_pipe(nlp.create_pipe(pipe))
     else:
-        print("Starting with blank model '{}'".format(lang))
+        print(Messages.M057.format(model=lang))
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
         for pipe in pipeline:
@@ -98,6 +99,7 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
         nlp.add_pipe(nlp.create_pipe('merge_subtokens'))
 
     if vectors:
+        print(Messages.M058.format(model=vectors))
         _load_vectors(nlp, vectors)
 
     # Multitask objectives
@@ -105,13 +107,13 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
                                   ('ner', entity_multitasks)]:
         if multitasks:
             if not pipe_name in pipeline:
-                raise ValueError("Needs '{}' in pipeline".format(pipe_name))
+                raise ValueError(Messages.M059.format(pipe=pipe_name))
             pipe = nlp.get_pipe(pipe_name)
             for objective in multitasks.split(','):
                 pipe.add_multitask_objective(objective)
 
     # Prepare training corpus
-    print("Counting training words (limit={})".format(n_examples))
+    print(Messages.M060.format(limit=n_examples))
     corpus = GoldCorpus(train_path, dev_path, limit=n_examples)
     n_train_words = corpus.count_train()
 
@@ -131,7 +133,7 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
-                for batch in minibatch_by_words(train_docs, size=batch_sizes):
+                for batch in util.minibatch_by_words(train_docs, size=batch_sizes):
                     if not batch:
                         continue
                     docs, golds = zip(*batch)
@@ -165,7 +167,7 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
                         end_time = timer()
                         cpu_wps = nwords/(end_time-start_time)
                 acc_loc = output_path / ('model%d' % i) / 'accuracy.json'
-                write_json(acc_loc, scorer.scores)
+                util.write_json(acc_loc, scorer.scores)
 
                 # Update model meta.json
                 meta['lang'] = nlp.lang
@@ -180,24 +182,23 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
                 meta.setdefault('name', 'model%d' % i)
                 meta.setdefault('version', version)
                 meta_loc = output_path / ('model%d' % i) / 'meta.json'
-                write_json(meta_loc, meta)
+                util.write_json(meta_loc, meta)
 
                 util.set_env_log(verbose)
 
             print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps,
                            gpu_wps=gpu_wps)
     finally:
-        print("\nSaving model...")
+        print(Messages.M061)
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / 'model-final'
             nlp.to_disk(final_model_path)
-            print(final_model_path)
+            print(util.path2str(final_model_path))
 
     _collate_best_model(meta, output_path, nlp.pipe_names)
 
 
 def _load_vectors(nlp, vectors):
-    print("Load vectors model", vectors)
     util.load_model(vectors, vocab=nlp.vocab)
     for lex in nlp.vocab:
         values = {}
@@ -219,18 +220,17 @@ def _collate_best_model(meta, output_path, components):
     for component, best_component_src in bests.items():
         shutil.rmtree(best_dest / component)
         shutil.copytree(best_component_src / component, best_dest / component)
-        with (best_component_src / 'accuracy.json').open() as file_:
-            accs = json.load(file_)
+        accs = util.read_json(best_component_src / 'accuracy.json')
         for metric in _get_metrics(component):
             meta['accuracy'][metric] = accs[metric]
-    write_json(best_dest / 'meta.json', meta)
+    util.write_json(best_dest / 'meta.json', meta)
 
 
 def _find_best(experiment_dir, component):
     accuracies = []
     for epoch_model in experiment_dir.iterdir():
         if epoch_model.is_dir() and epoch_model.parts[-1] != "model-final":
-            accs = json.load((epoch_model / "accuracy.json").open())
+            accs = util.read_json(epoch_model / "accuracy.json")
             scores = [accs.get(metric, 0.0) for metric in _get_metrics(component)]
             accuracies.append((scores, epoch_model))
     if accuracies:
