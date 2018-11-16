@@ -25,7 +25,7 @@ from collections import Counter
 
 import spacy
 from spacy.attrs import ID
-from spacy.util import minibatch_by_words, use_gpu, compounding, ensure_path
+from spacy.util import minibatch, minibatch_by_words, use_gpu, compounding, ensure_path
 from spacy._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
 from thinc.v2v import Affine
 
@@ -85,7 +85,8 @@ def get_vectors_loss(ops, docs, prediction):
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
     d_scores = (prediction - target) / prediction.shape[0]
-    loss = (d_scores**2).sum()
+    # Don't want to return a cupy object here
+    loss = float((d_scores**2).sum())
     return loss, d_scores
 
 
@@ -97,11 +98,16 @@ def create_pretraining_model(nlp, tok2vec):
     '''
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = zero_init(Affine(output_size, drop_factor=0.0))
+    # This is annoying, but the parser etc have the flatten step after
+    # the tok2vec. To load the weights in cleanly, we need to match
+    # the shape of the models' components exactly. So what we cann
+    # "tok2vec" has to be the same set of processes as what the components do.
+    tok2vec = chain(tok2vec, flatten)
     model = chain(
         tok2vec,
-        flatten,
         output_layer
     )
+    model.tok2vec = tok2vec
     model.output_layer = output_layer
     model.begin_training([nlp.make_doc('Give it a doc to infer shapes')])
     return model
@@ -144,7 +150,7 @@ class ProgressTracker(object):
     nr_iter=("Number of iterations to pretrain", "option", "i", int),
 )
 def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
-        embed_rows=1000, dropout=0.2, nr_iter=1, seed=0):
+        embed_rows=1000, dropout=0.2, nr_iter=10, seed=0):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
     using an approximate language-modelling objective. Specifically, we load
@@ -170,29 +176,29 @@ def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
         file_.write(json.dumps(config))
     has_gpu = prefer_gpu()
     nlp = spacy.load(vectors_model)
-    tok2vec = Tok2Vec(width, embed_rows,
-                conv_depth=depth,
-                pretrained_vectors=nlp.vocab.vectors.name,
-                bilstm_depth=0, # Requires PyTorch. Experimental.
-                cnn_maxout_pieces=2, # You can try setting this higher
-                subword_features=True) # Set to False for character models, e.g. Chinese
-    model = create_pretraining_model(nlp, tok2vec)
+    model = create_pretraining_model(nlp,
+                Tok2Vec(width, embed_rows,
+                    conv_depth=depth,
+                    pretrained_vectors=nlp.vocab.vectors.name,
+                    bilstm_depth=0, # Requires PyTorch. Experimental.
+                    cnn_maxout_pieces=2, # You can try setting this higher
+                    subword_features=True)) # Set to False for character models, e.g. Chinese
     optimizer = create_default_optimizer(model.ops)
     tracker = ProgressTracker()
     print('Epoch', '#Words', 'Loss', 'w/s')
     texts = stream_texts() if texts_loc == '-' else load_texts(texts_loc) 
     for epoch in range(nr_iter):
-        for batch in minibatch_by_words(texts, tuples=False, size=50000):
+        for batch in minibatch(texts, size=64):
             docs = [nlp.make_doc(text) for text in batch]
             loss = make_update(model, docs, optimizer, drop=dropout)
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 print(*progress)
-                if texts_loc == '-' and tracker.words_per_epoch[epoch] >= 10**7:
+                if texts_loc == '-' and tracker.words_per_epoch[epoch] >= 10**6:
                     break
         with model.use_params(optimizer.averages):
             with (output_dir / ('model%d.bin' % epoch)).open('wb') as file_:
-                file_.write(tok2vec.to_bytes())
+                file_.write(model.tok2vec.to_bytes())
             with (output_dir / 'log.jsonl').open('a') as file_:
                 file_.write(json.dumps({'nr_word': tracker.nr_word,
                     'loss': tracker.loss, 'epoch': epoch}))
