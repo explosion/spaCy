@@ -210,6 +210,20 @@ def _load_vectors(nlp, vectors):
         lex.set_attrs(**values)
         lex.is_oov = False
 
+        
+def _load_pretrained_tok2vec(nlp, loc):
+    """Load pre-trained weights for the 'token-to-vector' part of the component
+    models, which is typically a CNN. See 'spacy pretrain'. Experimental.
+    """
+    with loc.open('rb') as file_:
+        weights_data = file_.read()
+    loaded = []
+    for name, component in nlp.pipeline:
+        if hasattr(component, 'model') and hasattr(component.model, 'tok2vec'):
+            component.tok2vec.from_bytes(weights_data)
+            loaded.append(name)
+    return loaded
+  
 
 def _collate_best_model(meta, output_path, components):
     bests = {}
