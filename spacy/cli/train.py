@@ -40,9 +40,11 @@ from ..compat import json_dumps
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json. All relevant properties will be "
                "overwritten.", "option", "m", Path),
+    init_tok2vec=("Path to pretrained weights for the token-to-vector parts "
+        "of the models. See 'spacy pretrain'. Experimental.", "option", "t2v", Path),
     verbose=("Display more information for debug", "option", None, bool))
 def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
-         parser_multitasks='', entity_multitasks='',
+         parser_multitasks='', entity_multitasks='', init_tok2vec=None,
           use_gpu=-1, vectors=None, no_tagger=False, noise_level=0.0,
           no_parser=False, no_entities=False, gold_preproc=False,
           version="0.0.0", meta_path=None, verbose=False):
@@ -120,6 +122,9 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
         for objective in entity_multitasks.split(','):
             nlp.entity.add_multitask_objective(objective)
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
+    if init_tok2vec is not None:
+        loaded = _load_pretrained_tok2vec(nlp, init_tok2vec)
+        print("Loaded pretrained tok2vec for:", loaded)
     nlp._optimizer = None
 
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
@@ -197,6 +202,20 @@ def train(lang, output_dir, train_data, dev_data, n_iter=30, n_sents=0,
     if not no_entities:
         components.append('ner')
     _collate_best_model(meta, output_path, components)
+
+
+def _load_pretrained_tok2vec(nlp, loc):
+    """Load pre-trained weights for the 'token-to-vector' part of the component
+    models, which is typically a CNN. See 'spacy pretrain'. Experimental.
+    """
+    with loc.open('rb') as file_:
+        weights_data = file_.read()
+    loaded = []
+    for name, component in nlp.pipeline:
+        if hasattr(component, 'model') and hasattr(component.model, 'tok2vec'):
+            component.tok2vec.from_bytes(weights_data)
+            loaded.append(name)
+    return loaded
 
 
 def _collate_best_model(meta, output_path, components):

@@ -6,7 +6,7 @@ from __future__ import print_function
 if __name__ == '__main__':
     import plac
     import sys
-    from spacy.cli import download, link, info, package, train, convert
+    from spacy.cli import download, link, info, package, train, pretrain, convert
     from spacy.cli import vocab, init_model, profile, evaluate, validate
     from spacy.cli import ud_train, ud_evaluate
     from spacy.util import prints
@@ -16,6 +16,7 @@ if __name__ == '__main__':
         'link': link,
         'info': info,
         'train': train,
+        'pretrain': pretrain,
         'ud-train': ud_train,
         'evaluate': evaluate,
         'ud-evaluate': ud_evaluate,
