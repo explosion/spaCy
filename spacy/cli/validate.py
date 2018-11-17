@@ -6,9 +6,10 @@ from pathlib import Path
 import sys
 import ujson
 import requests
+from wasabi import Printer
 
 from ._messages import Messages
-from ..compat import path2str, locale_escape
+from ..compat import path2str
 from ..util import prints, get_data_path, read_json
 from .. import about
 
@@ -17,6 +18,7 @@ def validate():
     """Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """
+    printer = Printer(no_print=True)
     r = requests.get(about.__compatibility__)
     if r.status_code != 200:
         prints(Messages.M021, title=Messages.M003.format(code=r.status_code),
@@ -46,9 +48,9 @@ def validate():
     if model_links or model_pkgs:
         print(get_row('TYPE', 'NAME', 'MODEL', 'VERSION', ''))
         for name, data in model_pkgs.items():
-            print(get_model_row(current_compat, name, data, 'package'))
+            print(get_model_row(current_compat, name, data, printer, 'package'))
         for name, data in model_links.items():
-            print(get_model_row(current_compat, name, data, 'link'))
+            print(get_model_row(current_compat, name, data, printer, 'link'))
     else:
         prints(Messages.M024, exits=0)
     if update_models:
@@ -92,15 +94,13 @@ def get_model_pkgs(compat, all_models):
     return pkgs
 
 
-def get_model_row(compat, name, data, type='package'):
-    tpl_red = '\x1b[38;5;1m{}\x1b[0m'
-    tpl_green = '\x1b[38;5;2m{}\x1b[0m'
+def get_model_row(compat, name, data, printer, type='package'):
     if data['compat']:
-        comp = tpl_green.format(locale_escape('✔', errors='ignore'))
-        version = tpl_green.format(data['version'])
+        comp = printer.good()
+        version = printer.text(data['version'], color='green')
     else:
+        version = printer.text(data['version'], color='red')
         comp = '--> {}'.format(compat.get(data['name'], ['n/a'])[0])
-        version = tpl_red.format(data['version'])
     return get_row(type, name, data['name'], version, comp)
 
 

@@ -17,6 +17,7 @@ import functools
 import cytoolz
 import itertools
 import numpy.random
+import wasabi
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
@@ -672,33 +673,8 @@ def prints(*texts, **kwargs):
     exits = kwargs.get('exits', None)
     nowrap = kwargs.get('nowrap', False)
     title = kwargs.get('title', None)
-    title_tpl = '\033[93m{}\033[0m\n'
-    if nowrap:
-        title = title_tpl.format(title) if title else ''
-        message = '\n\n'.join(texts)
-    else:
-        title = title_tpl.format(_wrap(title)) if title else ''
-        message = '\n\n'.join([_wrap(text) for text in texts])
-    print('\n{}{}\n'.format(title, message))
-    if exits is not None:
-        sys.exit(exits)
-
-
-def _wrap(text, wrap_max=80, indent=4):
-    """Wrap text at given width using textwrap module.
-
-    text (unicode): Text to wrap. If it's a Path, it's converted to string.
-    wrap_max (int): Maximum line length (indent is deducted).
-    indent (int): Number of spaces for indentation.
-    RETURNS (unicode): Wrapped text.
-    """
-    indent = indent * ' '
-    wrap_width = wrap_max - len(indent)
-    if isinstance(text, Path):
-        text = path2str(text)
-    return textwrap.fill(text, width=wrap_width, initial_indent=indent,
-                         subsequent_indent=indent, break_long_words=False,
-                         break_on_hyphens=False)
+    title = wasabi.color(title, fg='yellow') if title else None
+    return wasabi.print_message(*texts, exits=exits, nowrap=nowrap, title=title)
 
 
 def minify_html(html):

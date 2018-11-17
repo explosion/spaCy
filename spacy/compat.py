@@ -117,12 +117,3 @@ def import_file(name, loc):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
-
-
-def locale_escape(string, errors='replace'):
-    '''
-    Mangle non-supported characters, for savages with ascii terminals.
-    '''
-    encoding = locale.getpreferredencoding()
-    string = string.encode(encoding, errors).decode('utf8')
-    return string
