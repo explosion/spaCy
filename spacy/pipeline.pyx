@@ -1202,4 +1202,4 @@ cdef class EntityRecognizer(Parser):
                 None, None)
 
 
-__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer']
+__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer', 'TextCategorizer']
