@@ -267,6 +267,53 @@ def _corrupt(c, noise_level):
         return c.lower()
 
 
+def read_json_object(json_corpus_section):
+    """Take a list of JSON-formatted documents (e.g. from an already loaded
+    training data file) and yield tuples in the GoldParse format.
+
+    json_corpus_section (list): The data.
+    YIELDS (tuple): The reformatted data.
+    """
+    for json_doc in json_corpus_section:
+        tuple_doc = json_to_tuple(json_doc)
+        for tuple_paragraph in tuple_doc:
+            yield tuple_paragraph
+
+
+def json_to_tuple(doc):
+    """Convert an item in the JSON-formatted training data to the tuple format
+    used by GoldParse.
+
+    doc (dict): One entry in the training data.
+    YIELDS (tuple): The reformatted data.
+    """
+    paragraphs = []
+    for paragraph in doc['paragraphs']:
+        sents = []
+        for sent in paragraph['sentences']:
+            words = []
+            ids = []
+            tags = []
+            heads = []
+            labels = []
+            ner = []
+            for i, token in enumerate(sent['tokens']):
+                words.append(token['orth'])
+                ids.append(i)
+                tags.append(token.get('tag', '-'))
+                heads.append(token.get('head', 0) + i)
+                labels.append(token.get('dep', ''))
+                # Ensure ROOT label is case-insensitive
+                if labels[-1].lower() == 'root':
+                    labels[-1] = 'ROOT'
+                ner.append(token.get('ner', '-'))
+            sents.append([
+                [ids, words, tags, heads, labels, ner],
+                sent.get('brackets', [])])
+        if sents:
+            yield [paragraph.get('raw', None), sents]
+
+
 def read_json_file(loc, docs_filter=None, limit=None):
     loc = util.ensure_path(loc)
     if loc.is_dir():
@@ -276,31 +323,8 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
-            paragraphs = []
-            for paragraph in doc['paragraphs']:
-                sents = []
-                for sent in paragraph['sentences']:
-                    words = []
-                    ids = []
-                    tags = []
-                    heads = []
-                    labels = []
-                    ner = []
-                    for i, token in enumerate(sent['tokens']):
-                        words.append(token['orth'])
-                        ids.append(i)
-                        tags.append(token.get('tag', '-'))
-                        heads.append(token.get('head', 0) + i)
-                        labels.append(token.get('dep', ''))
-                        # Ensure ROOT label is case-insensitive
-                        if labels[-1].lower() == 'root':
-                            labels[-1] = 'ROOT'
-                        ner.append(token.get('ner', '-'))
-                    sents.append([
-                        [ids, words, tags, heads, labels, ner],
-                        sent.get('brackets', [])])
-                if sents:
-                    yield [paragraph.get('raw', None), sents]
+            for json_tuple in json_to_tuple(doc):
+                yield json_tuple
 
 
 def _json_iterate(loc):
