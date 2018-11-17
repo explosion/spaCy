@@ -8,7 +8,7 @@ if __name__ == '__main__':
     import sys
     from spacy.cli import download, link, info, package, train, pretrain, convert
     from spacy.cli import vocab, init_model, profile, evaluate, validate
-    from spacy.cli import ud_train, ud_evaluate
+    from spacy.cli import ud_train, ud_evaluate, debug_data
     from spacy.util import prints
 
     commands = {
@@ -17,6 +17,7 @@ if __name__ == '__main__':
         'info': info,
         'train': train,
         'pretrain': pretrain,
+        'debug-data': debug_data,
         'ud-train': ud_train,
         'evaluate': evaluate,
         'ud-evaluate': ud_evaluate,

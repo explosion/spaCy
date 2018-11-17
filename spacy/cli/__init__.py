@@ -5,6 +5,7 @@ from .package import package
 from .profile import profile
 from .train import train
 from .pretrain import pretrain
+from .debug_data import debug_data
 from .evaluate import evaluate
 from .convert import convert
 from .vocab import make_vocab as vocab
