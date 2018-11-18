@@ -11,6 +11,7 @@ import time
 from ..gold import GoldCorpus, read_json_object
 from ..util import load_model, get_lang_class, read_json, read_jsonl, prints
 from .schemas import get_schema, validate_json
+from ._messages import Messages
 
 
 # Minimum number of expected occurences of label in data to train new label
