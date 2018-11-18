@@ -5,11 +5,11 @@ from pathlib import Path
 from collections import Counter
 import plac
 import sys
-from wasabi import Printer, MESSAGES, prints
+from wasabi import Printer, MESSAGES
 import time
 
 from ..gold import GoldCorpus, read_json_object
-from ..util import load_model, get_lang_class, read_json, read_jsonl
+from ..util import load_model, get_lang_class, read_json, read_jsonl, prints
 from .schemas import get_schema, validate_json
 
 
