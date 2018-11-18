@@ -4,13 +4,12 @@ from __future__ import unicode_literals, print_function
 import pkg_resources
 from pathlib import Path
 import sys
-import ujson
 import requests
 from wasabi import Printer
 
 from ._messages import Messages
 from ..compat import path2str
-from ..util import prints, get_data_path, read_json
+from ..util import get_data_path, read_json
 from .. import about
 
 
@@ -18,16 +17,18 @@ def validate():
     """Validate that the currently installed version of spaCy is compatible
     with the installed models. Should be run after `pip install -U spacy`.
     """
-    printer = Printer(no_print=True)
-    r = requests.get(about.__compatibility__)
-    if r.status_code != 200:
-        prints(Messages.M021, title=Messages.M003.format(code=r.status_code),
-               exits=1)
+    msg = Printer()
+    with msg.loading("Loading compatibility table..."):
+        r = requests.get(about.__compatibility__)
+        if r.status_code != 200:
+            msg.fail(Messages.M003.format(code=r.status_code), Messages.M021,
+                     exits=1)
+    msg.good("Loaded compatibility table")
     compat = r.json()['spacy']
     current_compat = compat.get(about.__version__)
     if not current_compat:
-        prints(about.__compatibility__, exits=1,
-               title=Messages.M022.format(version=about.__version__))
+        msg.fail(Messages.M022.format(version=about.__version__),
+                 about.__compatibility__, exits=1)
     all_models = set()
     for spacy_v, models in dict(compat).items():
         all_models.update(models.keys())
@@ -42,26 +43,30 @@ def validate():
                             if not d['compat']])
     na_models = [m for m in incompat_models if m not in current_compat]
     update_models = [m for m in incompat_models if m in current_compat]
+    spacy_dir = Path(__file__).parent.parent
 
-    prints(path2str(Path(__file__).parent.parent),
-           title=Messages.M023.format(version=about.__version__))
+    msg.divider(Messages.M023.format(version=about.__version__))
+    msg.info("spaCy installation: {}".format(path2str(spacy_dir)))
+
     if model_links or model_pkgs:
-        print(get_row('TYPE', 'NAME', 'MODEL', 'VERSION', ''))
+        header = ('TYPE', 'NAME', 'MODEL', 'VERSION', '')
+        rows = []
         for name, data in model_pkgs.items():
-            print(get_model_row(current_compat, name, data, printer, 'package'))
+            rows.append(get_model_row(current_compat, name, data, msg))
         for name, data in model_links.items():
-            print(get_model_row(current_compat, name, data, printer, 'link'))
+            rows.append(get_model_row(current_compat, name, data, msg, 'link'))
+        msg.table(rows, header=header)
     else:
-        prints(Messages.M024, exits=0)
+        msg.text(Messages.M024, exits=0)
     if update_models:
-        cmd = '    python -m spacy download {}'
-        print("\n    " + Messages.M025)
-        print('\n'.join([cmd.format(pkg) for pkg in update_models]))
+        msg.divider("Install updates")
+        cmd = 'python -m spacy download {}'
+        print('\n'.join([cmd.format(pkg) for pkg in update_models]) + '\n')
     if na_models:
-        prints(Messages.M025.format(version=about.__version__,
-                                    models=', '.join(na_models)))
+        msg.text(Messages.M025.format(version=about.__version__,
+                                      models=', '.join(na_models)))
     if incompat_links:
-        prints(Messages.M027.format(path=path2str(get_data_path())))
+        msg.text(Messages.M027.format(path=path2str(get_data_path())))
     if incompat_models or incompat_links:
         sys.exit(1)
 
@@ -94,19 +99,14 @@ def get_model_pkgs(compat, all_models):
     return pkgs
 
 
-def get_model_row(compat, name, data, printer, type='package'):
+def get_model_row(compat, name, data, msg, model_type='package'):
     if data['compat']:
-        comp = printer.good()
-        version = printer.text(data['version'], color='green')
+        comp = msg.text('', color='green', icon='good', no_print=True)
+        version = msg.text(data['version'], color='green', no_print=True)
     else:
-        version = printer.text(data['version'], color='red')
+        version = msg.text(data['version'], color='red', no_print=True)
         comp = '--> {}'.format(compat.get(data['name'], ['n/a'])[0])
-    return get_row(type, name, data['name'], version, comp)
-
-
-def get_row(*args):
-    tpl_row = '    {:<10}' + ('  {:<20}' * 4)
-    return tpl_row.format(*args)
+    return (model_type, name, data['name'], version, comp)
 
 
 def is_model_path(model_path):

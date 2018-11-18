@@ -3,10 +3,10 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from timeit import default_timer as timer
+from wasabi import Printer
 
 from ._messages import Messages
 from ..gold import GoldCorpus
-from ..util import prints
 from .. import util
 from .. import displacy
 
@@ -26,7 +26,7 @@ def evaluate(model, data_path, gpu_id=-1, gold_preproc=False, displacy_path=None
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.
     """
-
+    msg = Printer()
     util.fix_random_seed()
     if gpu_id >= 0:
         util.use_gpu(gpu_id)
@@ -34,9 +34,9 @@ def evaluate(model, data_path, gpu_id=-1, gold_preproc=False, displacy_path=None
     data_path = util.ensure_path(data_path)
     displacy_path = util.ensure_path(displacy_path)
     if not data_path.exists():
-        prints(data_path, title=Messages.M034, exits=1)
+        msg.fail(Messages.M034, data_path, exits=1)
     if displacy_path and not displacy_path.exists():
-        prints(displacy_path, title=Messages.M035, exits=1)
+        msg.fail(Messages.M035, displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
     nlp = util.load_model(model)
     dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
@@ -44,15 +44,27 @@ def evaluate(model, data_path, gpu_id=-1, gold_preproc=False, displacy_path=None
     scorer = nlp.evaluate(dev_docs, verbose=False)
     end = timer()
     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
-    print_results(scorer, time=end - begin, words=nwords,
-                  wps=nwords / (end - begin))
+    results = {
+        'Time': '%.2f s' % end - begin,
+        'Words': nwords,
+        'Words/s': '%.0f' % nwords / (end - begin),
+        'TOK': '%.2f' % scorer.token_acc,
+        'POS': '%.2f' % scorer.tags_acc,
+        'UAS': '%.2f' % scorer.uas,
+        'LAS': '%.2f' % scorer.las,
+        'NER P': '%.2f' % scorer.ents_p,
+        'NER R': '%.2f' % scorer.ents_r,
+        'NER F': '%.2f' % scorer.ents_f
+    }
+    msg.table(results, title="Results")
+
     if displacy_path:
         docs, golds = zip(*dev_docs)
         render_deps = 'parser' in nlp.meta.get('pipeline', [])
         render_ents = 'ner' in nlp.meta.get('pipeline', [])
         render_parses(docs, displacy_path, model_name=model,
                       limit=displacy_limit, deps=render_deps, ents=render_ents)
-        prints(displacy_path, title=Messages.M036.format(n=displacy_limit))
+        msg.good(Messages.M036.format(n=displacy_limit), displacy_path)
 
 
 def render_parses(docs, output_path, model_name='', limit=250, deps=True,
@@ -91,18 +103,3 @@ def print_progress(itn, losses, dev_scores, wps=0.0):
         '{token_acc:.3f}',
         '{wps:.1f}'))
     print(tpl.format(itn, **scores))
-
-
-def print_results(scorer, time, words, wps):
-    results = {
-        'Time': '%.2f s' % time,
-        'Words': words,
-        'Words/s': '%.0f' % wps,
-        'TOK': '%.2f' % scorer.token_acc,
-        'POS': '%.2f' % scorer.tags_acc,
-        'UAS': '%.2f' % scorer.uas,
-        'LAS': '%.2f' % scorer.las,
-        'NER P': '%.2f' % scorer.ents_p,
-        'NER R': '%.2f' % scorer.ents_r,
-        'NER F': '%.2f' % scorer.ents_f}
-    util.print_table(results, title="Results")

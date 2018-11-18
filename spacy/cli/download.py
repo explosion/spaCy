@@ -6,11 +6,15 @@ import requests
 import os
 import subprocess
 import sys
+from wasabi import Printer
 
 from ._messages import Messages
 from .link import link
-from ..util import prints, get_package_path
+from ..util import get_package_path
 from .. import about
+
+
+msg = Printer()
 
 
 @plac.annotations(
@@ -43,18 +47,19 @@ def download(model, direct=False, *pip_args):
             # subprocess
             package_path = get_package_path(model_name)
             link(model_name, model, force=True, model_path=package_path)
-        except:
+        except:  # noqa: E722
             # Dirty, but since spacy.download and the auto-linking is
             # mostly a convenience wrapper, it's best to show a success
             # message and loading instructions, even if linking fails.
-            prints(Messages.M001, title=Messages.M002.format(name=model_name))
+            msg.warn(Messages.M002.format(name=model_name), Messages.M001)
 
 
 def get_json(url, desc):
     r = requests.get(url)
     if r.status_code != 200:
-        prints(Messages.M004.format(desc=desc, version=about.__version__),
-               title=Messages.M003.format(code=r.status_code), exits=1)
+        msg.fail(Messages.M003.format(code=r.status_code),
+                 Messages.M004.format(desc=desc, version=about.__version__),
+                 exits=1)
     return r.json()
 
 
@@ -64,16 +69,16 @@ def get_compatibility():
     comp_table = get_json(about.__compatibility__, "compatibility table")
     comp = comp_table['spacy']
     if version not in comp:
-        prints(Messages.M006.format(version=version), title=Messages.M005,
-               exits=1)
+        msg.fail(Messages.M005, Messages.M006.format(version=version), exits=1)
     return comp[version]
 
 
 def get_version(model, comp):
     model = model.rsplit('.dev', 1)[0]
     if model not in comp:
-        prints(Messages.M007.format(name=model, version=about.__version__),
-               title=Messages.M005, exits=1)
+        msg.fail(Messages.M005,
+                 Messages.M007.format(name=model, version=about.__version__),
+                 exits=1)
     return comp[model][0]
 
 

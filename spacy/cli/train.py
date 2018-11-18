@@ -7,12 +7,12 @@ import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import shutil
+from wasabi import Printer
 
 from ._messages import Messages
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
-from ..util import prints
 from .. import util
 from .. import about
 
@@ -56,22 +56,23 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
           entity_multitasks='', noise_level=0.0, gold_preproc=False,
           learn_tokens=False, verbose=False, debug=False):
     """Train or update a spaCy model."""
+    msg = Printer()
     util.fix_random_seed()
     util.set_env_log(verbose)
 
     # Make sure all files and paths exists if they are needed
     if not train_path.exists():
-        prints(train_path, title=Messages.M050, exits=1)
+        msg.fail(Messages.M050, train_path, exits=1)
     if not dev_path.exists():
-        prints(dev_path, title=Messages.M051, exits=1)
+        msg.fail(Messages.M051, dev_path, exits=1)
     if meta_path is not None and not meta_path.exists():
-        prints(meta_path, title=Messages.M020, exits=1)
+        msg.fail(Messages.M020, meta_path, exits=1)
     meta = util.read_json(meta_path) if meta_path else {}
     if not isinstance(meta, dict):
-        prints(Messages.M053.format(meta_type=type(meta)),
-               title=Messages.M052, exits=1)
+        msg.fail(Messages.M052, Messages.M053.format(meta_type=type(meta)),
+                 exits=1)
     if output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
-        raise ValueError(Messages.M062)
+        msg.fail(Messages.M062, Messages.M065)
     if not output_path.exists():
         output_path.mkdir()
 
@@ -79,9 +80,9 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
     # the model and make sure the pipeline matches the pipeline setting. If
     # training starts from a blank model, intitalize the language class.
     pipeline = [p.strip() for p in pipeline.split(',')]
-    print(Messages.M055.format(pipeline=pipeline))
+    msg.text(Messages.M055.format(pipeline=pipeline))
     if base_model:
-        print(Messages.M056.format(model=base_model))
+        msg.text(Messages.M056.format(model=base_model))
         nlp = util.load_model(base_model)
         other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipeline]
         nlp.disable_pipes(*other_pipes)
@@ -89,7 +90,7 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
             if pipe not in nlp.pipe_names:
                 nlp.add_pipe(nlp.create_pipe(pipe))
     else:
-        print(Messages.M057.format(model=lang))
+        msg.text(Messages.M057.format(model=lang))
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
         for pipe in pipeline:
@@ -99,21 +100,21 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
         nlp.add_pipe(nlp.create_pipe('merge_subtokens'))
 
     if vectors:
-        print(Messages.M058.format(model=vectors))
+        msg.text(Messages.M058.format(model=vectors))
         _load_vectors(nlp, vectors)
 
     # Multitask objectives
     for pipe_name, multitasks in [('parser', parser_multitasks),
                                   ('ner', entity_multitasks)]:
         if multitasks:
-            if not pipe_name in pipeline:
-                raise ValueError(Messages.M059.format(pipe=pipe_name))
+            if pipe_name not in pipeline:
+                msg.fail(Messages.M059.format(pipe=pipe_name))
             pipe = nlp.get_pipe(pipe_name)
             for objective in multitasks.split(','):
                 pipe.add_multitask_objective(objective)
 
     # Prepare training corpus
-    print(Messages.M060.format(limit=n_examples))
+    msg.text(Messages.M060.format(limit=n_examples))
     corpus = GoldCorpus(train_path, dev_path, limit=n_examples)
     n_train_words = corpus.count_train()
 
@@ -189,11 +190,11 @@ def train(lang, output_path, train_path, dev_path, base_model=None,
             print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps,
                            gpu_wps=gpu_wps)
     finally:
-        print(Messages.M061)
-        with nlp.use_params(optimizer.averages):
-            final_model_path = output_path / 'model-final'
-            nlp.to_disk(final_model_path)
-            print(util.path2str(final_model_path))
+        with msg.loading(Messages.M061):
+            with nlp.use_params(optimizer.averages):
+                final_model_path = output_path / 'model-final'
+                nlp.to_disk(final_model_path)
+        msg.good(Messages.M066, util.path2str(final_model_path))
 
     _collate_best_model(meta, output_path, nlp.pipe_names)
 
@@ -210,7 +211,7 @@ def _load_vectors(nlp, vectors):
         lex.set_attrs(**values)
         lex.is_oov = False
 
-        
+
 def _load_pretrained_tok2vec(nlp, loc):
     """Load pre-trained weights for the 'token-to-vector' part of the component
     models, which is typically a CNN. See 'spacy pretrain'. Experimental.
@@ -223,7 +224,7 @@ def _load_pretrained_tok2vec(nlp, loc):
             component.tok2vec.from_bytes(weights_data)
             loaded.append(name)
     return loaded
-  
+
 
 def _collate_best_model(meta, output_path, components):
     bests = {}

@@ -9,7 +9,7 @@ from wasabi import Printer, MESSAGES
 import time
 
 from ..gold import GoldCorpus, read_json_object
-from ..util import load_model, get_lang_class, read_json, read_jsonl, prints
+from ..util import load_model, get_lang_class, read_json, read_jsonl
 from .schemas import get_schema, validate_json
 from ._messages import Messages
 
@@ -39,9 +39,9 @@ def debug_data(lang, train_path, dev_path, base_model=None,
 
     # Make sure all files and paths exists if they are needed
     if not train_path.exists():
-        prints(train_path, title=Messages.M050, exits=1)
+        msg.fail(Messages.M050, train_path, exits=1)
     if not dev_path.exists():
-        prints(dev_path, title=Messages.M051, exits=1)
+        msg.fail(Messages.M051, dev_path, exits=1)
 
     # Initialize the model and pipeline
     pipeline = [p.strip() for p in pipeline.split(',')]
@@ -242,8 +242,8 @@ def _load_file(file_path, msg):
         data = read_jsonl(file_path)
         msg.good("Loaded {}".format(file_name))
         return data
-    prints("Expected .json or .jsonl", file_path, exits=1,
-           title="Can't load file extension {}".format(file_path.suffix))
+    msg.fail("Can't load file extension {}".format(file_path.suffix),
+             "Expected .json or .jsonl", exits=1)
 
 
 def _compile_gold(train_docs, pipeline):

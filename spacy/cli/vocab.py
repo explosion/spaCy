@@ -6,9 +6,10 @@ import json
 import spacy
 import numpy
 from pathlib import Path
+from wasabi import Printer
 
 from ..vectors import Vectors
-from ..util import prints, ensure_path
+from ..util import ensure_path
 
 
 @plac.annotations(
@@ -23,8 +24,9 @@ from ..util import prints, ensure_path
 )
 def make_vocab(lang, output_dir, lexemes_loc, vectors_loc=None, prune_vectors=-1):
     """Compile a vocabulary from a lexicon jsonl file and word vectors."""
+    msg = Printer()
     if not lexemes_loc.exists():
-        prints(lexemes_loc, title="Can't find lexical data", exits=1)
+        msg.fail("Can't find lexical data", lexemes_loc, exits=1)
     vectors_loc = ensure_path(vectors_loc)
     nlp = spacy.blank(lang)
     for word in nlp.vocab:
@@ -54,6 +56,7 @@ def make_vocab(lang, output_dir, lexemes_loc, vectors_loc=None, prune_vectors=-1
         output_dir.mkdir()
     nlp.to_disk(output_dir)
     vec_added = len(nlp.vocab.vectors)
-    prints("{} entries, {} vectors".format(lex_added, vec_added), output_dir,
-           title="Sucessfully compiled vocab and vectors, and saved model")
+    msg.good("Sucessfully compiled vocab and vectors, and saved model",
+             "{} entries, {} vectors".format(lex_added, vec_added))
+    msg.text(output_dir)
     return nlp

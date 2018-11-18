@@ -19,7 +19,7 @@ class Messages(object):
     M010 = ("Can't find the spaCy data path to create model symlink")
     M011 = ("Make sure a directory `/data` exists within your spaCy "
             "installation and try again. The data directory should be "
-            "located here:")
+            "located here: {path}")
     M012 = ("Link '{name}' already exists")
     M013 = ("To overwrite an existing link, use the --force flag.")
     M014 = ("Can't overwrite symlink '{name}'")
@@ -62,7 +62,7 @@ class Messages(object):
             "directory.")
     M044 = ("Package directory already exists")
     M045 = ("Please delete the directory and try again, or use the `--force` "
-            "flag to overwrite existing directories.")
+            "flag to overwrite existing directories. {path}")
     M046 = ("Generating meta.json")
     M047 = ("Enter the package settings for your model. The following "
             "information will be read from your model data: pipeline, vectors.")
@@ -80,7 +80,15 @@ class Messages(object):
     M059 = ("Can't use multitask objective without '{pipe}' in the pipeline")
     M060 = ("Counting training words (limit={limit})")
     M061 = ("\nSaving model...")
-    M062 = ("Output directory is not empty. This can lead to unintended side "
-            "effects when saving the model. Please use an empty directory "
-            "or a different path instead. If the specified output path doesn't "
-            "exist, the directory will be created for you.")
+    M062 = ("Output directory is not empty.")
+    M063 = ("Incompatible arguments")
+    M064 = ("The -f and -c arguments are deprecated, and not compatible with "
+            "the -j argument, which should specify the same information. "
+            "Either merge the frequencies and clusters data into the "
+            "JSONL-formatted file (recommended), or use only the -f and -c"
+            "files, without the other lexical attributes.")
+    M065 = ("This can lead to unintended side effects when saving the model. "
+            "Please use an empty directory or a different path instead. If "
+            "the specified output path doesn't exist, the directory will be "
+            "created for you.")
+    M066 = ("Saved model to output directory")

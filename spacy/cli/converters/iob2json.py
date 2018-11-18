@@ -4,7 +4,6 @@ from cytoolz import partition_all, concat
 
 from .._messages import Messages
 from ...compat import json_dumps, path2str
-from ...util import prints
 from ...gold import iob_to_biluo
 
 
@@ -19,8 +18,8 @@ def iob2json(input_path, output_path, n_sents=10, *a, **k):
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
-    prints(Messages.M033.format(n_docs=len(docs)),
-           title=Messages.M032.format(name=path2str(output_file)))
+    print(Messages.M032.format(name=path2str(output_file)))
+    print(Messages.M033.format(n_docs=len(docs)))
 
 
 def read_iob(raw_sents):
@@ -43,6 +42,7 @@ def read_iob(raw_sents):
     paragraphs = [{'sentences': [sent]} for sent in sentences]
     docs = [{'id': 0, 'paragraphs': [para]} for para in paragraphs]
     return docs
+
 
 def merge_sentences(docs, n_sents):
     counter = 0

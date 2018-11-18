@@ -320,37 +320,6 @@ p
         +cell dict
         +cell Combined tokenizer exceptions.
 
-
-+h(3, "util.prints") util.prints
-    +tag function
-    +tag-new(2)
-
-p
-    |  Print a formatted, text-wrapped message with optional title. If a text
-    |  argument is a #[code Path], it's converted to a string. Should only
-    |  be used for interactive components like the command-line interface.
-
-+aside-code("Example").
-    data_path = Path('/some/path')
-    if not path.exists():
-        util.prints("Can't find the path.", data_path,
-                    title="Error", exits=1)
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code *texts]
-        +cell unicode
-        +cell Texts to print. Each argument is rendered as paragraph.
-
-    +row
-        +cell #[code **kwargs]
-        +cell -
-        +cell
-            |  #[code title] is rendered as coloured headline. #[code exits]
-            |  performs system exit after printing, using the value of the
-            |  argument as the exit code, e.g. #[code exits=1].
-
-
 +h(3, "util.minibatch") util.minibatch
     +tag function
     +tag-new(2)

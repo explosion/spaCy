@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from .._messages import Messages
 from ...compat import json_dumps, path2str
-from ...util import prints
 from ...gold import iob_to_biluo
 import re
 
@@ -48,8 +47,8 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False, lang=
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
-    prints(Messages.M033.format(n_docs=len(docs)),
-           title=Messages.M032.format(name=path2str(output_file)))
+    print(Messages.M032.format(name=path2str(output_file)))
+    print(Messages.M033.format(n_docs=len(docs)))
 
 
 def is_ner(tag):

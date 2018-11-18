@@ -1,9 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from .._messages import Messages
 from ...compat import json_dumps, path2str
-from ...util import prints
 from ...gold import iob_to_biluo
+
 
 def conllubio2json(input_path, output_path, n_sents=10, use_morphology=False, lang=None):
     """
@@ -32,8 +33,8 @@ def conllubio2json(input_path, output_path, n_sents=10, use_morphology=False, la
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
-    prints("Created %d documents" % len(docs),
-           title="Generated output file %s" % path2str(output_file))
+    print(Messages.M032.forma(name=path2str(output_file)))
+    print(Messages.M033.format(n_docs=len(docs)))
 
 
 def read_conllx(input_path, use_morphology=False, n=0):
@@ -67,6 +68,7 @@ def read_conllx(input_path, use_morphology=False, n=0):
             i += 1
             if n >= 1 and i >= n:
                 break
+
 
 def generate_sentence(sent):
     (id_, word, tag, head, dep, ner) = sent

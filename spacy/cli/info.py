@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import plac
 import platform
 from pathlib import Path
+from wasabi import Printer
 
 from ._messages import Messages
 from ..compat import path2str
@@ -20,14 +21,15 @@ def info(model=None, markdown=False, silent=False):
     speficied as an argument, print model information. Flag --markdown
     prints details in Markdown for easy copy-pasting to GitHub issues.
     """
+    msg = Printer()
     if model:
         if util.is_package(model):
             model_path = util.get_package_path(model)
         else:
             model_path = util.get_data_path() / model
-        meta_path = model_path / 'meta.json'
+        meta_path = model_path / 'meta.jsonn'
         if not meta_path.is_file():
-            util.prints(meta_path, title=Messages.M020, exits=1)
+            msg.fail(Messages.M020, meta_path, exits=1)
         meta = util.read_json(meta_path)
         if model_path.resolve() != model_path:
             meta['link'] = path2str(model_path)
@@ -35,7 +37,13 @@ def info(model=None, markdown=False, silent=False):
         else:
             meta['source'] = path2str(model_path)
         if not silent:
-            print_info(meta, 'model %s' % model, markdown)
+            title = "Info about model '{}'".format(model)
+            model_meta = {key: value for key, value in meta.items()
+                          if key not in ('accuracy', 'speed')}
+            if markdown:
+                util.print_markdown(model_meta, title=title)
+            else:
+                msg.table(model_meta, title=title)
         return meta
     data = {'spaCy version': about.__version__,
             'Location': path2str(Path(__file__).parent.parent),
@@ -43,16 +51,12 @@ def info(model=None, markdown=False, silent=False):
             'Python version': platform.python_version(),
             'Models': list_models()}
     if not silent:
-        print_info(data, 'spaCy', markdown)
+        title = "Info about spaCy"
+        if markdown:
+            util.print_markdown(data, title=title)
+        else:
+            msg.table(data, title=title)
     return data
-
-
-def print_info(data, title, markdown):
-    title = 'Info about %s' % title
-    if markdown:
-        util.print_markdown(data, title=title)
-    else:
-        util.print_table(data, title=title)
 
 
 def list_models():

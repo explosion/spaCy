@@ -1,15 +1,14 @@
 # coding: utf8
 from __future__ import unicode_literals
-import ujson as json
 
 from .._messages import Messages
 from ...compat import json_dumps, path2str
-from ...util import prints, get_lang_class, read_jsonl
+from ...util import get_lang_class, read_jsonl
 
 
 def ner_jsonl2json(input_path, output_path, lang=None, n_sents=10, use_morphology=False):
     if lang is None:
-        prints(Messages.M054, exits=True)
+        raise ValueError(Messages.M054)
     json_docs = []
     input_tuples = list(read_jsonl(input_path))
     nlp = get_lang_class(lang)()
@@ -23,5 +22,5 @@ def ner_jsonl2json(input_path, output_path, lang=None, n_sents=10, use_morpholog
     output_loc = output_path / output_filename
     with (output_loc).open('w', encoding='utf8') as file_:
         file_.write(json_dumps(json_docs))
-    prints(Messages.M033.format(n_docs=len(json_docs)),
-           title=Messages.M032.format(name=path2str(output_loc)))
+    print(Messages.M032.format(name=path2str(output_loc)))
+    print(Messages.M033.format(n_docs=len(json_docs)))

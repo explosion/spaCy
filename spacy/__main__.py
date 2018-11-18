@@ -6,10 +6,12 @@ from __future__ import print_function
 if __name__ == '__main__':
     import plac
     import sys
+    from wasabi import Printer
     from spacy.cli import download, link, info, package, train, pretrain, convert
     from spacy.cli import vocab, init_model, profile, evaluate, validate
     from spacy.cli import ud_train, ud_evaluate, debug_data
-    from spacy.util import prints
+
+    msg = Printer()
 
     commands = {
         'download': download,
@@ -29,13 +31,11 @@ if __name__ == '__main__':
         'validate': validate
     }
     if len(sys.argv) == 1:
-        prints(', '.join(commands), title="Available commands", exits=1)
+        msg.info("Available commands", ', '.join(commands), exits=1)
     command = sys.argv.pop(1)
     sys.argv[0] = 'spacy %s' % command
     if command in commands:
         plac.call(commands[command], sys.argv[1:])
     else:
-        prints(
-            "Available: %s" % ', '.join(commands),
-            title="Unknown command: %s" % command,
-            exits=1)
+        available = "Available: {}".format(', '.join(commands))
+        msg.fail("Unknown command: {}".format(command), available, exits=1)
