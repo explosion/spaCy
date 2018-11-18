@@ -5,7 +5,7 @@ from pathlib import Path
 from collections import Counter
 import plac
 import sys
-from wasabi import Printer, MESSAGES
+from wasabi import Printer, MESSAGES, prints
 import time
 
 from ..gold import GoldCorpus, read_json_object
