@@ -13,7 +13,8 @@ from .. import util
 @plac.annotations(
     origin=("package name or local path to model", "positional", None, str),
     link_name=("name of shortuct link to create", "positional", None, str),
-    force=("force overwriting of existing link", "flag", "f", bool))
+    force=("force overwriting of existing link", "flag", "f", bool),
+)
 def link(origin, link_name, force=False, model_path=None):
     """
     Create a symlink for models within the spacy/data directory. Accepts
@@ -26,8 +27,9 @@ def link(origin, link_name, force=False, model_path=None):
     else:
         model_path = Path(origin) if model_path is None else Path(model_path)
     if not model_path.exists():
-        msg.fail(Messages.M008,
-                 Messages.M009.format(path=path2str(model_path)), exits=1)
+        msg.fail(
+            Messages.M008, Messages.M009.format(path=path2str(model_path)), exits=1
+        )
     data_path = util.get_data_path()
     if not data_path or not data_path.exists():
         spacy_loc = Path(__file__).parent.parent
@@ -41,8 +43,7 @@ def link(origin, link_name, force=False, model_path=None):
         link_path.unlink()
     elif link_path.exists():  # does it exist otherwise?
         # NB: Check this last because valid symlinks also "exist".
-        msg.fail(Messages.M014.format(name=link_name), Messages.M015,
-                 exits=1)
+        msg.fail(Messages.M014.format(name=link_name), Messages.M015, exits=1)
     details = "%s --> %s" % (path2str(model_path), path2str(link_path))
     try:
         symlink_to(link_path, model_path)

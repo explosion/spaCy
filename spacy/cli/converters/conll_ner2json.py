@@ -6,7 +6,9 @@ from ...compat import json_dumps, path2str
 from ...gold import iob_to_biluo
 
 
-def conll_ner2json(input_path, output_path, n_sents=10, use_morphology=False, lang=None):
+def conll_ner2json(
+    input_path, output_path, n_sents=10, use_morphology=False, lang=None
+):
     """
     Convert files in the CoNLL-2003 NER format into JSON format for use with
     train cli.
@@ -16,36 +18,38 @@ def conll_ner2json(input_path, output_path, n_sents=10, use_morphology=False, la
     output_filename = input_path.parts[-1].replace(".conll", "") + ".json"
     output_filename = input_path.parts[-1].replace(".conll", "") + ".json"
     output_file = output_path / output_filename
-    with output_file.open('w', encoding='utf-8') as f:
+    with output_file.open("w", encoding="utf-8") as f:
         f.write(json_dumps(docs))
     print(Messages.M032.format(name=path2str(output_file)))
     print(Messages.M033.format(n_docs=len(docs)))
 
 
 def read_conll_ner(input_path):
-    text = input_path.open('r', encoding='utf-8').read()
-    i = 0
-    delimit_docs = '-DOCSTART- -X- O O'
+    text = input_path.open("r", encoding="utf-8").read()
+    delimit_docs = "-DOCSTART- -X- O O"
     output_docs = []
     for doc in text.strip().split(delimit_docs):
         doc = doc.strip()
         if not doc:
             continue
         output_doc = []
-        for sent in doc.split('\n\n'):
+        for sent in doc.split("\n\n"):
             sent = sent.strip()
             if not sent:
                 continue
-            lines = [line.strip() for line in sent.split('\n') if line.strip()]
+            lines = [line.strip() for line in sent.split("\n") if line.strip()]
             words, tags, chunks, iob_ents = zip(*[line.split() for line in lines])
             biluo_ents = iob_to_biluo(iob_ents)
-            output_doc.append({'tokens': [
-                {'orth': w, 'tag': tag, 'ner': ent} for (w, tag, ent) in
-                zip(words, tags, biluo_ents)
-            ]})
-        output_docs.append({
-            'id': len(output_docs),
-            'paragraphs': [{'sentences': output_doc}]
-        })
+            output_doc.append(
+                {
+                    "tokens": [
+                        {"orth": w, "tag": tag, "ner": ent}
+                        for (w, tag, ent) in zip(words, tags, biluo_ents)
+                    ]
+                }
+            )
+        output_docs.append(
+            {"id": len(output_docs), "paragraphs": [{"sentences": output_doc}]}
+        )
         output_doc = []
     return output_docs
