@@ -8,7 +8,6 @@ from .pretrain import pretrain  # noqa: F401
 from .debug_data import debug_data  # noqa: F401
 from .evaluate import evaluate  # noqa: F401
 from .convert import convert  # noqa: F401
-from .vocab import make_vocab as vocab  # noqa: F401
 from .init_model import init_model  # noqa: F401
 from .validate import validate  # noqa: F401
 from .ud import ud_train, ud_evaluate  # noqa: F401
