@@ -26,7 +26,6 @@ if __name__ == "__main__":
         "ud-evaluate": ud_evaluate,
         "convert": convert,
         "package": package,
-        "vocab": vocab,
         "init-model": init_model,
         "profile": profile,
         "validate": validate,
