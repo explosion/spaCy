@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
+from .punctuation import TOKENIZER_INFIXES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -16,6 +17,7 @@ class PolishDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: 'pl'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    infixes = tuple(TOKENIZER_INFIXES)
     stop_words = STOP_WORDS
 
 
