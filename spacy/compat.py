@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import os
 import sys
 import ujson
 import itertools
@@ -80,12 +81,18 @@ def getattr_(obj, name, *default):
 
 
 def symlink_to(orig, dest):
-    if is_python2 and is_windows:
+    if is_windows:
         import subprocess
         subprocess.call(['mklink', '/d', path2str(orig), path2str(dest)], shell=True)
     else:
         orig.symlink_to(dest)
 
+def symlink_remove(link):
+    # https://stackoverflow.com/questions/26554135/cant-delete-unlink-a-symlink-to-directory-in-python-windows
+    if( os.path.isdir(path2str(link)) and is_windows ): # this should only be on Py2.7 and windows
+        os.rmdir(path2str(link))
+    else:
+        os.unlink(path2str(link))
 
 def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
     return (python2 in (None, is_python2) and
