@@ -135,22 +135,22 @@ def test_vectors_token_vector(tokenizer_v, vectors, text):
 
 
 @pytest.mark.parametrize("text", ["apple"])
-def test_vectors__ngrams_word(ngrams_vocab, text):
-    assert list(ngrams_vocab.get_vector(text)) == list(ngrams_vectors()[0][1])
+def test_vectors__ngrams_word(ngrams_vocab, ngrams_vectors, text):
+    assert list(ngrams_vocab.get_vector(text)) == list(ngrams_vectors[0][1])
 
 
 @pytest.mark.parametrize("text", ["applpie"])
-def test_vectors__ngrams_subword(ngrams_vocab, text):
+def test_vectors__ngrams_subword(ngrams_vocab, ngrams_vectors, text):
     truth = list(ngrams_vocab.get_vector(text, 1, 6))
     test = list(
         [
             (
-                ngrams_vectors()[1][1][i]
-                + ngrams_vectors()[2][1][i]
-                + ngrams_vectors()[3][1][i]
+                ngrams_vectors[1][1][i]
+                + ngrams_vectors[2][1][i]
+                + ngrams_vectors[3][1][i]
             )
             / 3
-            for i in range(len(ngrams_vectors()[1][1]))
+            for i in range(len(ngrams_vectors[1][1]))
         ]
     )
     eps = [abs(truth[i] - test[i]) for i in range(len(truth))]
