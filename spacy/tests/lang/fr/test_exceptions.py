@@ -57,6 +57,7 @@ def test_fr_tokenizer_handles_title(fr_tokenizer):
     assert tokens[2].lemma_ == "ce"
 
 
+@pytest.mark.xfail
 def test_fr_tokenizer_handles_title_2(fr_tokenizer):
     text = "Est-ce pas génial?"
     tokens = fr_tokenizer(text)
