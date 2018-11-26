@@ -4,6 +4,7 @@ from .link import link
 from .package import package
 from .profile import profile
 from .train import train
+from .pretrain import pretrain
 from .evaluate import evaluate
 from .convert import convert
 from .vocab import make_vocab as vocab

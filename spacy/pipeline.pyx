@@ -31,7 +31,7 @@ from .matcher import Matcher
 
 from .matcher import Matcher, PhraseMatcher
 from .tokens.span import Span
-from .attrs import POS
+from .attrs import POS, ID
 from .parts_of_speech import X
 from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
 from ._ml import link_vectors_to_models, zero_init, flatten
@@ -430,11 +430,11 @@ def _load_cfg(path):
 
 
 class Tensorizer(Pipe):
-    """Assign position-sensitive vectors to tokens, using a CNN or RNN."""
+    """Pre-train position-sensitive vectors for tokens."""
     name = 'tensorizer'
 
     @classmethod
-    def Model(cls, output_size=300, input_size=384, **cfg):
+    def Model(cls, output_size=300, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
@@ -442,11 +442,8 @@ class Tensorizer(Pipe):
         **cfg: Config parameters.
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
-        model = chain(
-                    SELU(output_size, input_size),
-                    SELU(output_size, output_size),
-                    zero_init(Affine(output_size, output_size)))
-        return model
+        input_size = util.env_opt('token_vector_width', cfg.get('input_size', 128))
+        return zero_init(Affine(output_size, input_size, drop_factor=0.0))
 
     def __init__(self, vocab, model=True, **cfg):
         """Construct a new statistical model. Weights are not allocated on
@@ -544,13 +541,9 @@ class Tensorizer(Pipe):
         return loss
 
     def get_loss(self, docs, golds, prediction):
-        target = []
-        i = 0
-        for doc in docs:
-            vectors = self.model.ops.xp.vstack([w.vector for w in doc])
-            target.append(vectors)
-        target = self.model.ops.xp.vstack(target)
-        d_scores = (prediction - target)
+        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+        target = self.vocab.vectors.data[ids]
+        d_scores = (prediction - target) / prediction.shape[0]
         loss = (d_scores**2).sum()
         return loss, d_scores
 
@@ -562,12 +555,11 @@ class Tensorizer(Pipe):
         gold_tuples (iterable): Gold-standard training data.
         pipeline (list): The pipeline the model is part of.
         """
-        for name, model in pipeline:
-            if getattr(model, 'tok2vec', None):
-                self.input_models.append(model.tok2vec)
+        if pipeline is not None:
+            for name, model in pipeline:
+                if getattr(model, 'tok2vec', None):
+                    self.input_models.append(model.tok2vec)
         if self.model is True:
-            self.cfg['input_size'] = 384
-            self.cfg['output_size'] = 300
             self.model = self.Model(**self.cfg)
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -1061,6 +1053,14 @@ class TextCategorizer(Pipe):
     def Model(cls, nr_class, **cfg):
         return build_text_classifier(nr_class, **cfg)
 
+    @property
+    def tok2vec(self):
+        if self.model in (None, True, False):
+            return None
+        else:
+            return chain(self.model.tok2vec, flatten)
+
+
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
@@ -1119,7 +1119,7 @@ class TextCategorizer(Pipe):
         d_scores = (scores-truths) / scores.shape[0]
         d_scores *= not_missing
         mean_square_error = ((scores-truths)**2).sum(axis=1).mean()
-        return mean_square_error, d_scores
+        return float(mean_square_error), d_scores
 
     def add_label(self, label):
         if label in self.labels:
@@ -1201,5 +1201,12 @@ cdef class EntityRecognizer(Parser):
         return (EntityRecognizer, (self.vocab, self.moves, self.model),
                 None, None)
 
+    @property
+    def labels(self):
+        # Get the labels from the model by looking at the available moves, e.g.
+        # B-PERSON, I-PERSON, L-PERSON, U-PERSON
+        return [move.split('-')[1] for move in self.move_names
+                if move[0] in ('B', 'I', 'L', 'U')]
 
-__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer']
+
+__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer', 'TextCategorizer']
