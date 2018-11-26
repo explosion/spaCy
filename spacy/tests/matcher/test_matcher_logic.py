@@ -39,15 +39,14 @@ def doc(en_tokenizer, text):
     return doc
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "pattern,re_pattern",
     [
-        (pattern1, re_pattern1),
-        (pattern2, re_pattern2),
-        (pattern3, re_pattern3),
+        pytest.param(pattern1, re_pattern1, marks=pytest.mark.xfail()),
+        pytest.param(pattern2, re_pattern2, marks=pytest.mark.xfail()),
+        pytest.param(pattern3, re_pattern3, marks=pytest.mark.xfail()),
         (pattern4, re_pattern4),
-        (pattern5, re_pattern5),
+        pytest.param(pattern5, re_pattern5, marks=pytest.mark.xfail()),
     ],
 )
 def test_greedy_matching(doc, text, pattern, re_pattern):
