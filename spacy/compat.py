@@ -5,6 +5,7 @@ import sys
 import ujson
 import itertools
 import locale
+import os
 
 from thinc.neural.util import copy_array
 
@@ -84,12 +85,21 @@ def getattr_(obj, name, *default):
 
 
 def symlink_to(orig, dest):
-    if is_python2 and is_windows:
+    if is_windows:
         import subprocess
 
         subprocess.call(["mklink", "/d", path2str(orig), path2str(dest)], shell=True)
     else:
         orig.symlink_to(dest)
+
+
+def symlink_remove(link):
+    # https://stackoverflow.com/q/26554135/6400719
+    if os.path.isdir(path2str(link)) and is_windows:
+        # this should only be on Py2.7 and windows
+        os.rmdir(path2str(link))
+    else:
+        os.unlink(path2str(link))
 
 
 def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
