@@ -19,6 +19,7 @@ import itertools
 import numpy.random
 import wasabi
 
+
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
 from .compat import import_file, json_dumps
@@ -629,21 +630,6 @@ def from_disk(path, readers, exclude):
     return path
 
 
-def print_table(data, title=None):
-    """Print data in table format.
-
-    data (dict or list of tuples): Label/value pairs.
-    title (unicode or None): Title, will be printed above.
-    """
-    if isinstance(data, dict):
-        data = list(data.items())
-    tpl_row = '    {:<15}' * len(data[0])
-    table = '\n'.join([tpl_row.format(l, unicode_(v)) for l, v in data])
-    if title:
-        print('\n    \033[93m{}\033[0m'.format(title))
-    print('\n{}\n'.format(table))
-
-
 def print_markdown(data, title=None):
     """Print data in GitHub-flavoured Markdown format for issues etc.
 
@@ -661,20 +647,6 @@ def print_markdown(data, title=None):
     if title:
         print("\n## {}".format(title))
     print('\n{}\n'.format('\n'.join(markdown)))
-
-
-def prints(*texts, **kwargs):
-    """Print formatted message (manual ANSI escape sequences to avoid
-    dependency)
-
-    *texts (unicode): Texts to print. Each argument is rendered as paragraph.
-    **kwargs: 'title' becomes coloured headline. exits=True performs sys exit.
-    """
-    exits = kwargs.get('exits', None)
-    nowrap = kwargs.get('nowrap', False)
-    title = kwargs.get('title', None)
-    title = wasabi.color(title, fg='yellow') if title else None
-    return wasabi.print_message(*texts, exits=exits, nowrap=nowrap, title=title)
 
 
 def minify_html(html):

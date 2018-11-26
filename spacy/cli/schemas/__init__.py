@@ -22,7 +22,7 @@ def get_schema(name):
     RETURNS (dict): The JSON schema.
     """
     if name not in SCHEMAS:
-        schema_path = Path(__file__).parent / '{}.json'.format(name)
+        schema_path = Path(__file__).parent / "{}.json".format(name)
         if not schema_path.exists():
             raise ValueError(Errors.E102.format(name=name))
         schema = read_json(schema_path)
@@ -44,8 +44,8 @@ def validate_json(data, schema):
     errors = []
     for err in sorted(validator.iter_errors(data), key=lambda e: e.path):
         if err.path:
-            err_path = '[{}]'.format(' -> '.join([str(p) for p in err.path]))
+            err_path = "[{}]".format(" -> ".join([str(p) for p in err.path]))
         else:
-            err_path = ''
-        errors.append(err.message + ' ' + err_path)
+            err_path = ""
+        errors.append(err.message + " " + err_path)
     return errors
