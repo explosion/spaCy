@@ -1,25 +1,19 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .._messages import Messages
-from ...compat import json_dumps, path2str
 from ...gold import iob_to_biluo
 
 
-def conllubio2json(
-    input_path, output_path, n_sents=10, use_morphology=False, lang=None
-):
+def conllubio2json(input_data, n_sents=10, use_morphology=False, lang=None):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
     useful for languages such as Spanish, where UD tags are not so rich.
     """
     # by @dvsrepo, via #11 explosion/spacy-dev-resources
-
     docs = []
     sentences = []
-    conll_tuples = read_conllx(input_path, use_morphology=use_morphology)
-
+    conll_tuples = read_conllx(input_data, use_morphology=use_morphology)
     for i, (raw_text, tokens) in enumerate(conll_tuples):
         sentence, brackets = tokens[0]
         sentences.append(generate_sentence(sentence))
@@ -29,20 +23,12 @@ def conllubio2json(
             doc = create_doc(sentences, i)
             docs.append(doc)
             sentences = []
-
-    output_filename = input_path.parts[-1].replace(".conll", ".json")
-    output_filename = input_path.parts[-1].replace(".conllu", ".json")
-    output_file = output_path / output_filename
-    with output_file.open("w", encoding="utf-8") as f:
-        f.write(json_dumps(docs))
-    print(Messages.M032.forma(name=path2str(output_file)))
-    print(Messages.M033.format(n_docs=len(docs)))
+    return docs
 
 
-def read_conllx(input_path, use_morphology=False, n=0):
-    text = input_path.open("r", encoding="utf-8").read()
+def read_conllx(input_data, use_morphology=False, n=0):
     i = 0
-    for sent in text.strip().split("\n\n"):
+    for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
             while lines[0].startswith("#"):

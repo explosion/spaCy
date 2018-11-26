@@ -71,3 +71,5 @@ class Messages(object):
     M066 = "Saved model to output directory"
     M067 = "Can't find lexical data"
     M068 = "Sucessfully compiled vocab and vectors, and saved model"
+    M069 = "Unknown file type: '{name}'"
+    M070 = "Supported file types: '{options}'"

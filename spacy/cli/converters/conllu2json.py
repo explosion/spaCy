@@ -1,13 +1,12 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .._messages import Messages
-from ...compat import json_dumps, path2str
-from ...gold import iob_to_biluo
 import re
 
+from ...gold import iob_to_biluo
 
-def conllu2json(input_path, output_path, n_sents=10, use_morphology=False, lang=None):
+
+def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
@@ -18,13 +17,11 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False, lang=
     """
     # by @dvsrepo, via #11 explosion/spacy-dev-resources
     # by @katarkor
-
     docs = []
     sentences = []
-    conll_tuples = read_conllx(input_path, use_morphology=use_morphology)
+    conll_tuples = read_conllx(input_data, use_morphology=use_morphology)
     checked_for_ner = False
     has_ner_tags = False
-
     for i, (raw_text, tokens) in enumerate(conll_tuples):
         sentence, brackets = tokens[0]
         if not checked_for_ner:
@@ -33,19 +30,11 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False, lang=
         sentences.append(generate_sentence(sentence, has_ner_tags))
         # Real-sized documents could be extracted using the comments on the
         # conluu document
-
         if len(sentences) % n_sents == 0:
             doc = create_doc(sentences, i)
             docs.append(doc)
             sentences = []
-
-    output_filename = input_path.parts[-1].replace(".conll", ".json")
-    output_filename = input_path.parts[-1].replace(".conllu", ".json")
-    output_file = output_path / output_filename
-    with output_file.open("w", encoding="utf-8") as f:
-        f.write(json_dumps(docs))
-    print(Messages.M032.format(name=path2str(output_file)))
-    print(Messages.M033.format(n_docs=len(docs)))
+    return docs
 
 
 def is_ner(tag):
@@ -62,10 +51,9 @@ def is_ner(tag):
         return False
 
 
-def read_conllx(input_path, use_morphology=False, n=0):
-    text = input_path.open("r", encoding="utf-8").read()
+def read_conllx(input_data, use_morphology=False, n=0):
     i = 0
-    for sent in text.strip().split("\n\n"):
+    for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
             while lines[0].startswith("#"):
