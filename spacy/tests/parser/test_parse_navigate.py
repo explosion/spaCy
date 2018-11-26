@@ -33,6 +33,7 @@ BIG BROTHER IS WATCHING YOU, the caption beneath it ran.
 
 @pytest.fixture
 def heads():
+    # fmt: off
     return [1, 1, 0, 3, 2, 1, -4, -1, -1, -7, -8, 1, -10, 2, 1, -3, -1, -15,
             -1, 1, 4, -1, 1, -3, 0, -1, 1, -2, -4, 1, -2, 1, -2, 3, -1, 1,
             -4, -13, -14, -1, -2, 2, 1, -3, -1, 1, -2, -9, -1, 3, 1, 1, -14,
@@ -50,6 +51,7 @@ def heads():
             0, -1, 1, -2, -4, 1, 0, -1, -1, 2, -1, -3, 1, -2, 1, -2, 3, 1,
             1, -4, -1, -2, 2, 1, -5, -19, -1, 1, 1, 0, 1, 6, -1, 1, -3, -1,
             -1, -8, -9, -1]
+    # fmt: on
 
 
 def test_parser_parse_navigate_consistency(en_tokenizer, text, heads):
@@ -100,7 +102,14 @@ def test_parser_parse_navigate_edges(en_tokenizer, text, heads):
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     for token in doc:
         subtree = list(token.subtree)
-        debug = '\t'.join((token.text, token.left_edge.text, subtree[0].text))
+        debug = "\t".join((token.text, token.left_edge.text, subtree[0].text))
         assert token.left_edge == subtree[0], debug
-        debug = '\t'.join((token.text, token.right_edge.text, subtree[-1].text, token.right_edge.head.text))
+        debug = "\t".join(
+            (
+                token.text,
+                token.right_edge.text,
+                subtree[-1].text,
+                token.right_edge.head.text,
+            )
+        )
         assert token.right_edge == subtree[-1], debug

@@ -9,7 +9,7 @@ from ..util import get_doc, apply_transition_sequence
 def test_parser_root(en_tokenizer):
     text = "i don't have other assistance"
     heads = [3, 2, 1, 0, 1, -2]
-    deps = ['nsubj', 'aux', 'neg', 'ROOT', 'amod', 'dobj']
+    deps = ["nsubj", "aux", "neg", "ROOT", "amod", "dobj"]
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     for t in doc:
@@ -17,10 +17,12 @@ def test_parser_root(en_tokenizer):
 
 
 @pytest.mark.xfail
-@pytest.mark.parametrize('text', ["Hello"])
+@pytest.mark.parametrize("text", ["Hello"])
 def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=['ROOT'])
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=["ROOT"]
+    )
 
     assert len(doc) == 1
     with en_parser.step_through(doc) as _:
@@ -32,7 +34,7 @@ def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
 def test_parser_initial(en_tokenizer, en_parser):
     text = "I ate the pizza with anchovies."
     heads = [1, 0, 1, -2, -3, -1, -5]
-    transition = ['L-nsubj', 'S', 'L-det']
+    transition = ["L-nsubj", "S", "L-det"]
     tokens = en_tokenizer(text)
     apply_transition_sequence(en_parser, tokens, transition)
     assert tokens[0].head.i == 1
@@ -58,17 +60,19 @@ def test_parser_parse_subtrees(en_tokenizer, en_parser):
 def test_parser_merge_pp(en_tokenizer):
     text = "A phrase with another phrase occurs"
     heads = [1, 4, -1, 1, -2, 0]
-    deps = ['det', 'nsubj', 'prep', 'det', 'pobj', 'ROOT']
-    tags = ['DT', 'NN', 'IN', 'DT', 'NN', 'VBZ']
+    deps = ["det", "nsubj", "prep", "det", "pobj", "ROOT"]
+    tags = ["DT", "NN", "IN", "DT", "NN", "VBZ"]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, tags=tags)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, tags=tags
+    )
     nps = [(np[0].idx, np[-1].idx + len(np[-1]), np.lemma_) for np in doc.noun_chunks]
     for start, end, lemma in nps:
-        doc.merge(start, end, label='NP', lemma=lemma)
-    assert doc[0].text == 'A phrase'
-    assert doc[1].text == 'with'
-    assert doc[2].text == 'another phrase'
-    assert doc[3].text == 'occurs'
+        doc.merge(start, end, label="NP", lemma=lemma)
+    assert doc[0].text == "A phrase"
+    assert doc[1].text == "with"
+    assert doc[2].text == "another phrase"
+    assert doc[3].text == "occurs"
 
 
 @pytest.mark.xfail
@@ -76,7 +80,7 @@ def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
     text = "a b c d e"
 
     # right branching
-    transition = ['R-nsubj', 'D', 'R-nsubj', 'R-nsubj', 'D', 'R-ROOT']
+    transition = ["R-nsubj", "D", "R-nsubj", "R-nsubj", "D", "R-ROOT"]
     tokens = en_tokenizer(text)
     apply_transition_sequence(en_parser, tokens, transition)
 
@@ -111,7 +115,7 @@ def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
     assert tokens[4].head.i == 2
 
     # left branching
-    transition = ['S', 'S', 'S', 'L-nsubj','L-nsubj','L-nsubj', 'L-nsubj']
+    transition = ["S", "S", "S", "L-nsubj", "L-nsubj", "L-nsubj", "L-nsubj"]
     tokens = en_tokenizer(text)
     apply_transition_sequence(en_parser, tokens, transition)
 

@@ -1,13 +1,5 @@
 # coding: utf8
 from __future__ import unicode_literals
-import pytest
-
-from .... import util
-
-@pytest.fixture(scope='module')
-def fr_tokenizer():
-    return util.get_lang_class('fr').Defaults.create_tokenizer()
-
 
 import pytest
 from spacy.lang.fr.lex_attrs import like_num
@@ -27,7 +19,7 @@ ou avec un autre vrai humain."""
     assert len(tokens) == 113
 
 
-@pytest.mark.parametrize('word', ['onze', 'onzième'])
+@pytest.mark.parametrize("word", ["onze", "onzième"])
 def test_fr_lex_attrs_capitals(word):
     assert like_num(word)
     assert like_num(word.upper())

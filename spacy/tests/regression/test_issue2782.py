@@ -5,8 +5,8 @@ from spacy.util import get_lang_class
 import pytest
 
 
-@pytest.mark.parametrize('text', ['-0.23', '+123,456', '±1'])
-@pytest.mark.parametrize('lang', ['en', 'xx'])
+@pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
+@pytest.mark.parametrize("lang", ["en", "xx"])
 def test_issue2782(text, lang):
     """Check that like_num handles + and - before number."""
     cls = get_lang_class(lang)

@@ -11,10 +11,12 @@ from ..util import get_doc
 
 @pytest.fixture
 def doc(en_tokenizer):
+    # fmt: off
     text = "This is a sentence. This is another sentence. And a third."
     heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
-    deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
-            'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
+    deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
+            "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
+    # fmt: on
     tokens = en_tokenizer(text)
     return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
@@ -39,17 +41,17 @@ def test_spans_sent_spans(doc):
 def test_spans_root(doc):
     span = doc[2:4]
     assert len(span) == 2
-    assert span.text == 'a sentence'
-    assert span.root.text == 'sentence'
-    assert span.root.head.text == 'is'
+    assert span.text == "a sentence"
+    assert span.root.text == "sentence"
+    assert span.root.head.text == "is"
 
 
 def test_spans_string_fn(doc):
     span = doc[0:4]
     assert len(span) == 4
-    assert span.text == 'This is a sentence'
-    assert span.upper_ == 'THIS IS A SENTENCE'
-    assert span.lower_ == 'this is a sentence'
+    assert span.text == "This is a sentence"
+    assert span.upper_ == "THIS IS A SENTENCE"
+    assert span.lower_ == "this is a sentence"
 
 
 def test_spans_root2(en_tokenizer):
@@ -57,15 +59,15 @@ def test_spans_root2(en_tokenizer):
     heads = [0, 3, -1, -2, -4]
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
-    assert doc[-2:].root.text == 'Carolina'
+    assert doc[-2:].root.text == "Carolina"
 
 
 def test_spans_span_sent(doc, doc_not_parsed):
     """Test span.sent property"""
     assert len(list(doc.sents))
-    assert doc[:2].sent.root.text == 'is'
-    assert doc[:2].sent.text == 'This is a sentence .'
-    assert doc[6:7].sent.root.left_edge.text == 'This'
+    assert doc[:2].sent.root.text == "is"
+    assert doc[:2].sent.text == "This is a sentence ."
+    assert doc[6:7].sent.root.left_edge.text == "This"
     # test on manual sbd
     doc_not_parsed[0].is_sent_start = True
     doc_not_parsed[5].is_sent_start = True
@@ -75,23 +77,23 @@ def test_spans_span_sent(doc, doc_not_parsed):
 
 def test_spans_lca_matrix(en_tokenizer):
     """Test span's lca matrix generation"""
-    tokens = en_tokenizer('the lazy dog slept')
+    tokens = en_tokenizer("the lazy dog slept")
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[2, 1, 1, 0])
     lca = doc[:2].get_lca_matrix()
-    assert(lca[0, 0] == 0)
-    assert(lca[0, 1] == -1)
-    assert(lca[1, 0] == -1)
-    assert(lca[1, 1] == 1)
+    assert lca[0, 0] == 0
+    assert lca[0, 1] == -1
+    assert lca[1, 0] == -1
+    assert lca[1, 1] == 1
 
 
 def test_span_similarity_match():
-    doc = Doc(Vocab(), words=['a', 'b', 'a', 'b'])
+    doc = Doc(Vocab(), words=["a", "b", "a", "b"])
     span1 = doc[:2]
     span2 = doc[2:]
     with pytest.warns(None):
         assert span1.similarity(span2) == 1.0
         assert span1.similarity(doc) == 0.0
-        assert span1[:1].similarity(doc.vocab['a']) == 1.0
+        assert span1[:1].similarity(doc.vocab["a"]) == 1.0
 
 
 def test_spans_default_sentiment(en_tokenizer):
@@ -102,8 +104,8 @@ def test_spans_default_sentiment(en_tokenizer):
     tokens.vocab[tokens[2].text].sentiment = -2.0
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
     assert doc[:2].sentiment == 3.0 / 2
-    assert doc[-2:].sentiment == -2. / 2
-    assert doc[:-1].sentiment == (3.+-2) / 3.
+    assert doc[-2:].sentiment == -2.0 / 2
+    assert doc[:-1].sentiment == (3.0 + -2) / 3.0
 
 
 def test_spans_override_sentiment(en_tokenizer):
@@ -113,7 +115,7 @@ def test_spans_override_sentiment(en_tokenizer):
     tokens.vocab[tokens[0].text].sentiment = 3.0
     tokens.vocab[tokens[2].text].sentiment = -2.0
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    doc.user_span_hooks['sentiment'] = lambda span: 10.0
+    doc.user_span_hooks["sentiment"] = lambda span: 10.0
     assert doc[:2].sentiment == 10.0
     assert doc[-2:].sentiment == 10.0
     assert doc[:-1].sentiment == 10.0
@@ -132,10 +134,10 @@ def test_spans_are_hashable(en_tokenizer):
 
 def test_spans_by_character(doc):
     span1 = doc[1:-2]
-    span2 = doc.char_span(span1.start_char, span1.end_char, label='GPE')
+    span2 = doc.char_span(span1.start_char, span1.end_char, label="GPE")
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
-    assert span2.label_ == 'GPE'
+    assert span2.label_ == "GPE"
 
 
 def test_span_to_array(doc):
@@ -151,12 +153,13 @@ def test_span_as_doc(doc):
     span_doc = span.as_doc()
     assert span.text == span_doc.text.strip()
 
+
 def test_span_ents_property(doc):
     """Test span.ents for the """
     doc.ents = [
-        (doc.vocab.strings['PRODUCT'], 0, 1),
-        (doc.vocab.strings['PRODUCT'], 7, 8),
-        (doc.vocab.strings['PRODUCT'], 11, 14)
+        (doc.vocab.strings["PRODUCT"], 0, 1),
+        (doc.vocab.strings["PRODUCT"], 7, 8),
+        (doc.vocab.strings["PRODUCT"], 11, 14),
     ]
     assert len(list(doc.ents)) == 3
     sentences = list(doc.sents)
