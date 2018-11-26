@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import pytest
-import numpy.random
 from thinc.neural.optimizers import Adam
 from thinc.neural.ops import NumpyOps
 from spacy.attrs import NORM

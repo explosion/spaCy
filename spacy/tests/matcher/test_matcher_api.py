@@ -196,7 +196,9 @@ def deps():
 
 @pytest.fixture
 def dependency_tree_matcher(en_vocab):
-    is_brown_yellow = lambda text: bool(re.compile(r"brown|yellow|over").match(text))
+    def is_brown_yellow(text):
+        return bool(re.compile(r"brown|yellow|over").match(text))
+
     IS_BROWN_YELLOW = en_vocab.add_flag(is_brown_yellow)
     pattern1 = [
         {"SPEC": {"NODE_NAME": "fox"}, "PATTERN": {"ORTH": "fox"}},

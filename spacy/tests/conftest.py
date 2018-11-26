@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import pytest
-from io import StringIO, BytesIO
 from spacy.util import get_lang_class
 
 

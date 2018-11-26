@@ -133,9 +133,10 @@ def test_issue1494():
         ("token 1test", ["token", "1test"]),
         ("hello...test", ["hello", ".", ".", ".", "test"]),
     ]
-    new_tokenizer = lambda nlp: Tokenizer(
-        nlp.vocab, {}, infix_finditer=infix_re.finditer
-    )
+
+    def new_tokenizer(nlp):
+        return Tokenizer(nlp.vocab, {}, infix_finditer=infix_re.finditer)
+
     nlp = English()
     nlp.tokenizer = new_tokenizer(nlp)
     for text, expected in test_cases:
