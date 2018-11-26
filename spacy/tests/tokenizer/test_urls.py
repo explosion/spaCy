@@ -47,16 +47,16 @@ URLS_SHOULD_MATCH = [
     "http://223.255.255.254",
     "http://a.b--c.de/", # this is a legit domain name see: https://gist.github.com/dperini/729294 comment on 9/9/2014
 
-    pytest.mark.xfail("http://foo.com/blah_blah_(wikipedia)"),
-    pytest.mark.xfail("http://foo.com/blah_blah_(wikipedia)_(again)"),
-    pytest.mark.xfail("http://⌘.ws"),
-    pytest.mark.xfail("http://⌘.ws/"),
-    pytest.mark.xfail("http://☺.damowmow.com/"),
-    pytest.mark.xfail("http://✪df.ws/123"),
-    pytest.mark.xfail("http://➡.ws/䨹"),
-    pytest.mark.xfail("http://مثال.إختبار"),
-    pytest.mark.xfail("http://例子.测试"),
-    pytest.mark.xfail("http://उदाहरण.परीक्षा"),
+    pytest.param("http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()),
+    pytest.param("http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()),
+    pytest.param("http://⌘.ws", marks=pytest.mark.xfail()),
+    pytest.param("http://⌘.ws/", marks=pytest.mark.xfail()),
+    pytest.param("http://☺.damowmow.com/", marks=pytest.mark.xfail()),
+    pytest.param("http://✪df.ws/123", marks=pytest.mark.xfail()),
+    pytest.param("http://➡.ws/䨹", marks=pytest.mark.xfail()),
+    pytest.param("http://مثال.إختبار", marks=pytest.mark.xfail()),
+    pytest.param("http://例子.测试", marks=pytest.mark.xfail()),
+    pytest.param("http://उदाहरण.परीक्षा", marks=pytest.mark.xfail()),
 ]
 
 URLS_SHOULD_NOT_MATCH = [
@@ -95,10 +95,10 @@ URLS_SHOULD_NOT_MATCH = [
     "http://10.1.1.1",
     "NASDAQ:GOOG",
 
-    pytest.mark.xfail("foo.com"),
-    pytest.mark.xfail("http://1.1.1.1.1"),
-    pytest.mark.xfail("http://www.foo.bar./"),
-    pytest.mark.xfail("http://-a.b.co"),
+    pytest.param("foo.com", marks=pytest.mark.xfail()),
+    pytest.param("http://1.1.1.1.1", marks=pytest.mark.xfail()),
+    pytest.param("http://www.foo.bar./", marks=pytest.mark.xfail()),
+    pytest.param("http://-a.b.co", marks=pytest.mark.xfail()),
 ]
 
 

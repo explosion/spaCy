@@ -7,7 +7,6 @@ from ...vocab import Vocab
 from ...tokens import Doc, Span
 
 
-@pytest.mark.xfail
 def test_issue1547():
     """Test that entity labels still match after merging tokens."""
     words = ['\n', 'worda', '.', '\n', 'wordb', '-', 'Biosphere', '2', '-', ' \n']
