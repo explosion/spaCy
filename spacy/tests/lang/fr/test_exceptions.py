@@ -65,7 +65,7 @@ def test_fr_tokenizer_handles_title_2(fr_tokenizer):
     assert tokens[0].lemma_ == "être"
 
 
-def test_fr_tokenizer_handles_title_2(fr_tokenizer):
+def test_fr_tokenizer_handles_title_3(fr_tokenizer):
     text = "Qu'est-ce que tu fais?"
     tokens = fr_tokenizer(text)
     assert len(tokens) == 7

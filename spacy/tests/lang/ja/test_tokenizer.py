@@ -38,12 +38,12 @@ def test_ja_tokenizer(ja_tokenizer, text, expected_tokens):
 
 
 @pytest.mark.parametrize("text,expected_tags", TAG_TESTS)
-def test_ja_tokenizer(ja_tokenizer, text, expected_tags):
+def test_ja_tokenizer_tags(ja_tokenizer, text, expected_tags):
     tags = [token.tag_ for token in ja_tokenizer(text)]
     assert tags == expected_tags
 
 
 @pytest.mark.parametrize("text,expected_pos", POS_TESTS)
-def test_ja_tokenizer(ja_tokenizer, text, expected_pos):
+def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
     assert pos == expected_pos
