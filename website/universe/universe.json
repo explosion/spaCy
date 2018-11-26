@@ -1051,6 +1051,7 @@
         },
         {
             "id": "spacy-wordnet",
+            "title": "spacy-wordnet",
             "slogan": "WordNet meets spaCy",
             "description": "`spacy-wordnet` creates annotations that easily allow the use of WordNet and [WordNet Domains](http://wndomains.fbk.eu/) by using the [NLTK WordNet interface](http://www.nltk.org/howto/wordnet.html)",
             "github": "recognai/spacy-wordnet",
@@ -1080,6 +1081,22 @@
                 "website": "https://recogn.ai"
             },
             "category": ["pipeline"]
+        },
+        {
+            "id": "spacy2conllu",
+            "title": "spaCy2CoNLLU",
+            "slogan": "Parse text with spaCy and print the output in CoNLL-U format",
+            "description": "Simple script to parse text with spaCy and print the output in CoNLL-U format",
+            "code_example": [
+                "python parse_as_conllu.py [-h] --input_file INPUT_FILE [--output_file OUTPUT_FILE] --model MODEL"
+            ],
+            "code_language": "bash",
+            "author": "Raquel G. Alhama",
+            "author_links": {
+                "github": "rgalhama"
+            },
+            "github": "rgalhama/spaCy2CoNLLU",
+            "category": ["training"]
         }
     ],
     "projectCats": {
