@@ -122,7 +122,7 @@ class GoldCorpus(object):
             directory.mkdir()
         for i, doc_tuple in enumerate(doc_tuples):
             with open(directory / '{}.msg'.format(i), 'wb') as file_:
-                msgpack.dump([doc_tuple], file_, use_bin_type=True, encoding='utf8')
+                msgpack.dump([doc_tuple], file_, use_bin_type=True)
     
     @staticmethod
     def walk_corpus(path):
@@ -153,7 +153,7 @@ class GoldCorpus(object):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith('msg'):
                 with loc.open('rb') as file_:
-                    gold_tuples = msgpack.load(file_, encoding='utf8')
+                    gold_tuples = msgpack.load(file_, raw=False)
             else:
                 msg = "Cannot read from file: %s. Supported formats: .json, .msg"
                 raise ValueError(msg % loc)
