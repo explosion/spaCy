@@ -532,7 +532,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             vectors = trained_vectors
             vectors_width = width
             static_vectors = None
-        cnn_model = (
+        tok2vec = (
             vectors
             >> with_flatten(
                 LN(Maxout(width, vectors_width))
@@ -540,6 +540,9 @@ def build_text_classifier(nr_class, width=64, **cfg):
                     (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
                 ) ** depth, pad=depth
             )
+        )
+        cnn_model = (
+            tok2vec
             >> flatten_add_lengths
             >> ParametricAttention(width)
             >> Pooling(sum_pool)
@@ -556,6 +559,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))
             >> logistic
         )
+        model.tok2vec = tok2vec
     model.nO = nr_class
     model.lsuv = False
     return model

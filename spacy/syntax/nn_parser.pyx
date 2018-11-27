@@ -27,7 +27,6 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
-from thinc cimport openblas
 
 from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
@@ -126,6 +125,10 @@ cdef class Parser:
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
+    
+    @property
+    def tok2vec(self):
+        return self.model.tok2vec
 
     @property
     def move_names(self):
@@ -531,7 +534,7 @@ cdef class Parser:
     
     def to_disk(self, path, **exclude):
         serializers = {
-            'model': lambda p: self.model.to_disk(p),
+            'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
             'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
@@ -560,7 +563,7 @@ cdef class Parser:
 
     def to_bytes(self, **exclude):
         serializers = OrderedDict((
-            ('model', lambda: self.model.to_bytes()),
+            ('model', lambda: (self.model.to_bytes() if self.model is not True else True)),
             ('vocab', lambda: self.vocab.to_bytes()),
             ('moves', lambda: self.moves.to_bytes(strings=False)),
             ('cfg', lambda: json.dumps(self.cfg, indent=2, sort_keys=True))

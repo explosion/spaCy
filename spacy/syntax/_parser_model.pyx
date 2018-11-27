@@ -25,8 +25,7 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
-from thinc cimport openblas
-
+cimport blis.cy
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
@@ -107,10 +106,14 @@ cdef void predict_states(ActivationsC* A, StateC** states,
             which = Vec.arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     memset(A.scores, 0, n.states * n.classes * sizeof(float))
+    cdef double one = 1.0
     # Compute hidden-to-output
-    openblas.simple_gemm(A.scores, n.states, n.classes,
-        A.hiddens, n.states, n.hiddens,
-        W.hidden_weights, n.classes, n.hiddens, 0, 1)
+    blis.cy.gemm(blis.cy.NO_TRANSPOSE, blis.cy.TRANSPOSE,
+        n.states, n.classes, n.hiddens, one,
+        <float*>A.hiddens, n.hiddens, 1,
+        <float*>W.hidden_weights, n.hiddens, 1,
+        one,
+        <float*>A.scores, n.classes, 1)
     # Add bias
     for i in range(n.states):
         VecVec.add_i(&A.scores[i*n.classes],
@@ -132,8 +135,9 @@ cdef void sum_state_features(float* output,
             else:
                 idx = token_ids[f] * id_stride + f*O
                 feature = &cached[idx]
-            openblas.simple_axpy(&output[b*O], O,
-                feature, one)
+            blis.cy.axpyv(blis.cy.NO_CONJUGATE, O, one,
+                <float*>feature, 1,
+                &output[b*O], 1)
         token_ids += F
 
 

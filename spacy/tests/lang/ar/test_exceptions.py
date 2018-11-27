@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.parametrize('text', ["ق.م", "إلخ", "ص.ب", "ت."])
+@pytest.mark.parametrize("text", ["ق.م", "إلخ", "ص.ب", "ت."])
 def test_ar_tokenizer_handles_abbr(ar_tokenizer, text):
     tokens = ar_tokenizer(text)
     assert len(tokens) == 1
@@ -18,7 +18,7 @@ def test_ar_tokenizer_handles_exc_in_text(ar_tokenizer):
     assert tokens[6].lemma_ == "قبل الميلاد"
 
 
-def test_ar_tokenizer_handles_exc_in_text(ar_tokenizer):
+def test_ar_tokenizer_handles_exc_in_text_2(ar_tokenizer):
     text = "يبلغ طول مضيق طارق 14كم "
     tokens = ar_tokenizer(text)
     assert len(tokens) == 6

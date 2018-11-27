@@ -15,17 +15,29 @@ Rundt om ager og eng var der store skove, og midt i skovene dybe søer; jo, der 
     assert len(tokens) == 84
 
 
-@pytest.mark.parametrize('text,match', [
-    ('10', True), ('1', True), ('10.000', True), ('10.00', True),
-    ('999,0', True), ('en', True), ('treoghalvfemsindstyvende', True), ('hundrede', True),
-    ('hund', False), (',', False), ('1/2', True)])
+@pytest.mark.parametrize(
+    "text,match",
+    [
+        ("10", True),
+        ("1", True),
+        ("10.000", True),
+        ("10.00", True),
+        ("999,0", True),
+        ("en", True),
+        ("treoghalvfemsindstyvende", True),
+        ("hundrede", True),
+        ("hund", False),
+        (",", False),
+        ("1/2", True),
+    ],
+)
 def test_lex_attrs_like_number(da_tokenizer, text, match):
     tokens = da_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
 
 
-@pytest.mark.parametrize('word', ['elleve', 'første'])
+@pytest.mark.parametrize("word", ["elleve", "første"])
 def test_da_lex_attrs_capitals(word):
     assert like_num(word)
     assert like_num(word.upper())

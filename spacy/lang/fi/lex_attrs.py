@@ -10,6 +10,8 @@ _num_words = ['nolla', 'yksi', 'kaksi', 'kolme', 'neljä', 'viisi', 'kuusi', 'se
 
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace('.', '').replace(',', '')
     if text.isdigit():
         return True

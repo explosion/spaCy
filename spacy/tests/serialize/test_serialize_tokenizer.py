@@ -9,7 +9,7 @@ from ..util import make_tempdir, assert_packed_msg_equal
 
 
 def load_tokenizer(b):
-    tok = get_lang_class('en').Defaults.create_tokenizer()
+    tok = get_lang_class("en").Defaults.create_tokenizer()
     tok.from_bytes(b)
     return tok
 
@@ -23,7 +23,7 @@ def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
 
 
 @pytest.mark.skip(reason="Currently unreliable across platforms")
-@pytest.mark.parametrize('text', ["I💜you", "they’re", "“hello”"])
+@pytest.mark.parametrize("text", ["I💜you", "they’re", "“hello”"])
 def test_serialize_tokenizer_roundtrip_bytes(en_tokenizer, text):
     tokenizer = en_tokenizer
     new_tokenizer = load_tokenizer(tokenizer.to_bytes())
@@ -38,7 +38,7 @@ def test_serialize_tokenizer_roundtrip_bytes(en_tokenizer, text):
 def test_serialize_tokenizer_roundtrip_disk(en_tokenizer):
     tokenizer = en_tokenizer
     with make_tempdir() as d:
-        file_path = d / 'tokenizer'
+        file_path = d / "tokenizer"
         tokenizer.to_disk(file_path)
         tokenizer_d = en_tokenizer.from_disk(file_path)
         assert tokenizer.to_bytes() == tokenizer_d.to_bytes()

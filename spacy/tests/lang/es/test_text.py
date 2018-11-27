@@ -20,12 +20,16 @@ en Montevideo y que pregona las bondades de la vida austera."""
     assert len(tokens) == 90
 
 
-@pytest.mark.parametrize('text,length', [
-    ("¿Por qué José Mujica?", 6),
-    ("“¿Oh no?”", 6),
-    ("""¡Sí! "Vámonos", contestó José Arcadio Buendía""", 11),
-    ("Corrieron aprox. 10km.", 5),
-    ("Y entonces por qué...", 5)])
+@pytest.mark.parametrize(
+    "text,length",
+    [
+        ("¿Por qué José Mujica?", 6),
+        ("“¿Oh no?”", 6),
+        ("""¡Sí! "Vámonos", contestó José Arcadio Buendía""", 11),
+        ("Corrieron aprox. 10km.", 5),
+        ("Y entonces por qué...", 5),
+    ],
+)
 def test_es_tokenizer_handles_cnts(es_tokenizer, text, length):
     tokens = es_tokenizer(text)
     assert len(tokens) == length

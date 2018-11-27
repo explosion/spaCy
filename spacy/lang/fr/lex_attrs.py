@@ -24,6 +24,8 @@ sextillionnième septillionnième octillionnième nonillionnième decillionnièm
 def like_num(text):
     # Might require more work?
     # See this discussion: https://github.com/explosion/spaCy/pull/1161
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True

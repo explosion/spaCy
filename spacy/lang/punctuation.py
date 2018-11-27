@@ -6,8 +6,8 @@ from .char_classes import LIST_ICONS, ALPHA_LOWER, ALPHA_UPPER, ALPHA, HYPHENS
 from .char_classes import QUOTES, CURRENCY, UNITS
 
 
-_prefixes = (['§', '%', '=', r'\+'] + LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES +
-             LIST_CURRENCY + LIST_ICONS)
+_prefixes = (['§', '%', '=', r'\+(?![0-9])'] + LIST_PUNCT + LIST_ELLIPSES +
+             LIST_QUOTES + LIST_CURRENCY + LIST_ICONS)
 
 
 _suffixes = (LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS +

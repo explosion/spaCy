@@ -14,11 +14,11 @@ _stem_suffixes = [
     ["ाएंगी","ाएंगे","ाऊंगी","ाऊंगा","ाइयाँ","ाइयों","ाइयां"]
 ]
 
-#reference 1:https://en.wikipedia.org/wiki/Indian_numbering_system 
+#reference 1:https://en.wikipedia.org/wiki/Indian_numbering_system
 #reference 2: https://blogs.transparent.com/hindi/hindi-numbers-1-100/
 
-_num_words = ['शून्य', 'एक',  'दो', 'तीन', 'चार', 'पांच', 'छह', 'सात', 'आठ', 'नौ', 'दस', 
-              'ग्यारह', 'बारह', 'तेरह', 'चौदह', 'पंद्रह', 'सोलह', 'सत्रह', 'अठारह', 'उन्नीस', 
+_num_words = ['शून्य', 'एक',  'दो', 'तीन', 'चार', 'पांच', 'छह', 'सात', 'आठ', 'नौ', 'दस',
+              'ग्यारह', 'बारह', 'तेरह', 'चौदह', 'पंद्रह', 'सोलह', 'सत्रह', 'अठारह', 'उन्नीस',
               'बीस', 'तीस', 'चालीस', 'पचास', 'साठ', 'सत्तर', 'अस्सी', 'नब्बे', 'सौ', 'हज़ार',
               'लाख', 'करोड़', 'अरब', 'खरब']
 
@@ -40,6 +40,8 @@ def norm(string):
     return string
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True

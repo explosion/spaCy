@@ -465,7 +465,7 @@ def decaying(start, stop, decay):
         nr_upd += 1
 
 
-def minibatch_by_words(items, size, count_words=len):
+def minibatch_by_words(items, size, tuples=True, count_words=len):
     '''Create minibatches of a given number of words.'''
     if isinstance(size, int):
         size_ = itertools.repeat(size)
@@ -477,13 +477,19 @@ def minibatch_by_words(items, size, count_words=len):
         batch = []
         while batch_size >= 0:
             try:
-                doc, gold = next(items)
+                if tuples:
+                    doc, gold = next(items)
+                else:
+                    doc = next(items)
             except StopIteration:
                 if batch:
                     yield batch
                 return
             batch_size -= count_words(doc)
-            batch.append((doc, gold))
+            if tuples:
+                batch.append((doc, gold))
+            else:
+                batch.append(doc)
         if batch:
             yield batch
 
@@ -560,7 +566,7 @@ def to_bytes(getters, exclude):
     for key, getter in getters.items():
         if key not in exclude:
             serialized[key] = getter()
-    return msgpack.dumps(serialized, use_bin_type=True, encoding='utf8')
+    return msgpack.dumps(serialized, use_bin_type=True)
 
 
 def from_bytes(bytes_data, setters, exclude):

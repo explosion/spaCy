@@ -13,6 +13,8 @@ _num_words = ['bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz',
 
 
 def like_num(text):
+    if text.startswith(('+', '-', '±', '~')):
+        text = text[1:]
     text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True
@@ -28,4 +30,3 @@ def like_num(text):
 LEX_ATTRS = {
     LIKE_NUM: like_num
 }
-
