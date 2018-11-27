@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.lang.en import English
 from spacy.matcher import Matcher
 
@@ -10,6 +9,7 @@ def test_issue2671():
     """Ensure the correct entity ID is returned for matches with quantifiers.
     See also #2675
     """
+
     def get_rule_id(nlp, matcher, doc):
         matches = matcher(doc)
         for match_id, start, end in matches:
@@ -19,10 +19,12 @@ def test_issue2671():
 
     nlp = English()
     matcher = Matcher(nlp.vocab)
-    pattern_id = 'test_pattern'
-    pattern = [{'LOWER': 'high'},
-               {'IS_PUNCT': True, 'OP': '?'},
-               {'LOWER': 'adrenaline'}]
+    pattern_id = "test_pattern"
+    pattern = [
+        {"LOWER": "high"},
+        {"IS_PUNCT": True, "OP": "?"},
+        {"LOWER": "adrenaline"},
+    ]
     matcher.add(pattern_id, None, pattern)
     doc1 = nlp("This is a high-adrenaline situation.")
     doc2 = nlp("This is a high adrenaline situation.")

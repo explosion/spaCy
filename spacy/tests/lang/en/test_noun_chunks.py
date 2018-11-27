@@ -12,14 +12,25 @@ from ...util import get_doc
 def test_en_noun_chunks_not_nested(en_tokenizer):
     text = "Peter has chronic command and control issues"
     heads = [1, 0, 4, 3, -1, -2, -5]
-    deps = ['nsubj', 'ROOT', 'amod', 'nmod', 'cc', 'conj', 'dobj']
+    deps = ["nsubj", "ROOT", "amod", "nmod", "cc", "conj", "dobj"]
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     tokens.from_array(
         [HEAD, DEP],
-        numpy.asarray([[1, nsubj], [0, root], [4, amod], [3, nmod], [-1, cc],
-                       [-2, conj], [-5, dobj]], dtype='uint64'))
-    tokens.noun_chunks_iterator = SYNTAX_ITERATORS['noun_chunks']
+        numpy.asarray(
+            [
+                [1, nsubj],
+                [0, root],
+                [4, amod],
+                [3, nmod],
+                [-1, cc],
+                [-2, conj],
+                [-5, dobj],
+            ],
+            dtype="uint64",
+        ),
+    )
+    tokens.noun_chunks_iterator = SYNTAX_ITERATORS["noun_chunks"]
     word_occurred = {}
     for chunk in tokens.noun_chunks:
         for word in chunk:

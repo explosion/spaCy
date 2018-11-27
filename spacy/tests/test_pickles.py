@@ -9,7 +9,7 @@ from spacy.vocab import Vocab
 from spacy.attrs import NORM
 
 
-@pytest.mark.parametrize('text1,text2', [('hello', 'bye')])
+@pytest.mark.parametrize("text1,text2", [("hello", "bye")])
 def test_pickle_string_store(text1, text2):
     stringstore = StringStore()
     store1 = stringstore[text1]
@@ -21,10 +21,10 @@ def test_pickle_string_store(text1, text2):
     assert len(stringstore) == len(unpickled)
 
 
-@pytest.mark.parametrize('text1,text2', [('dog', 'cat')])
+@pytest.mark.parametrize("text1,text2", [("dog", "cat")])
 def test_pickle_vocab(text1, text2):
     vocab = Vocab(lex_attr_getters={int(NORM): lambda string: string[:-1]})
-    vocab.set_vector('dog', numpy.ones((5,), dtype='f'))
+    vocab.set_vector("dog", numpy.ones((5,), dtype="f"))
     lex1 = vocab[text1]
     lex2 = vocab[text2]
     assert lex1.norm_ == text1[:-1]
@@ -37,4 +37,4 @@ def test_pickle_vocab(text1, text2):
     assert unpickled[text2].norm == lex2.norm
     assert unpickled[text1].norm != unpickled[text2].norm
     assert unpickled.vectors is not None
-    assert list(vocab['dog'].vector) == [1.,1.,1.,1.,1.]
+    assert list(vocab["dog"].vector) == [1.0, 1.0, 1.0, 1.0, 1.0]
