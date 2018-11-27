@@ -14,14 +14,20 @@ from spacy.tokens import Doc
 from ..util import get_doc, make_tempdir
 
 
-@pytest.mark.parametrize('patterns', [
-    [[{'LOWER': 'celtics'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]],
-    [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'celtics'}]]])
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        [[{"LOWER": "celtics"}], [{"LOWER": "boston"}, {"LOWER": "celtics"}]],
+        [[{"LOWER": "boston"}, {"LOWER": "celtics"}], [{"LOWER": "celtics"}]],
+    ],
+)
 def test_issue118(en_tokenizer, patterns):
     """Test a bug that arose from having overlapping matches"""
-    text = "how many points did lebron james score against the boston celtics last night"
+    text = (
+        "how many points did lebron james score against the boston celtics last night"
+    )
     doc = en_tokenizer(text)
-    ORG = doc.vocab.strings['ORG']
+    ORG = doc.vocab.strings["ORG"]
     matcher = Matcher(doc.vocab)
     matcher.add("BostonCeltics", None, *patterns)
     assert len(list(doc.ents)) == 0
@@ -35,16 +41,22 @@ def test_issue118(en_tokenizer, patterns):
     assert ents[0].end == 11
 
 
-@pytest.mark.parametrize('patterns', [
-    [[{'LOWER': 'boston'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]],
-    [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'boston'}]]])
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        [[{"LOWER": "boston"}], [{"LOWER": "boston"}, {"LOWER": "celtics"}]],
+        [[{"LOWER": "boston"}, {"LOWER": "celtics"}], [{"LOWER": "boston"}]],
+    ],
+)
 def test_issue118_prefix_reorder(en_tokenizer, patterns):
     """Test a bug that arose from having overlapping matches"""
-    text = "how many points did lebron james score against the boston celtics last night"
+    text = (
+        "how many points did lebron james score against the boston celtics last night"
+    )
     doc = en_tokenizer(text)
-    ORG = doc.vocab.strings['ORG']
+    ORG = doc.vocab.strings["ORG"]
     matcher = Matcher(doc.vocab)
-    matcher.add('BostonCeltics', None, *patterns)
+    matcher.add("BostonCeltics", None, *patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     doc.ents += tuple(matches)[1:]
@@ -59,11 +71,13 @@ def test_issue118_prefix_reorder(en_tokenizer, patterns):
 def test_issue242(en_tokenizer):
     """Test overlapping multi-word phrases."""
     text = "There are different food safety standards in different countries."
-    patterns = [[{'LOWER': 'food'}, {'LOWER': 'safety'}],
-                [{'LOWER': 'safety'}, {'LOWER': 'standards'}]]
+    patterns = [
+        [{"LOWER": "food"}, {"LOWER": "safety"}],
+        [{"LOWER": "safety"}, {"LOWER": "standards"}],
+    ]
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
-    matcher.add('FOOD', None, *patterns)
+    matcher.add("FOOD", None, *patterns)
 
     matches = [(ent_type, start, end) for ent_type, start, end in matcher(doc)]
     doc.ents += tuple(matches)
@@ -77,7 +91,9 @@ def test_issue242(en_tokenizer):
 def test_issue309(en_tokenizer):
     """Test Issue #309: SBD fails on empty string"""
     tokens = en_tokenizer(" ")
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=['ROOT'])
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=["ROOT"]
+    )
     doc.is_parsed = True
     assert len(doc) == 1
     sents = list(doc.sents)
@@ -93,11 +109,11 @@ def test_issue351(en_tokenizer):
 
 def test_issue360(en_tokenizer):
     """Test tokenization of big ellipsis"""
-    tokens = en_tokenizer('$45...............Asking')
+    tokens = en_tokenizer("$45...............Asking")
     assert len(tokens) > 2
 
 
-@pytest.mark.parametrize('text1,text2', [("cat", "dog")])
+@pytest.mark.parametrize("text1,text2", [("cat", "dog")])
 def test_issue361(en_vocab, text1, text2):
     """Test Issue #361: Equality of lexemes"""
     assert en_vocab[text1] == en_vocab[text1]
@@ -106,15 +122,19 @@ def test_issue361(en_vocab, text1, text2):
 
 def test_issue587(en_tokenizer):
     """Test that Matcher doesn't segfault on particular input"""
-    doc = en_tokenizer('a b; c')
+    doc = en_tokenizer("a b; c")
     matcher = Matcher(doc.vocab)
-    matcher.add('TEST1', None, [{ORTH: 'a'}, {ORTH: 'b'}])
+    matcher.add("TEST1", None, [{ORTH: "a"}, {ORTH: "b"}])
     matches = matcher(doc)
     assert len(matches) == 1
-    matcher.add('TEST2', None, [{ORTH: 'a'}, {ORTH: 'b'}, {IS_PUNCT: True}, {ORTH: 'c'}])
+    matcher.add(
+        "TEST2", None, [{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "c"}]
+    )
     matches = matcher(doc)
     assert len(matches) == 2
-    matcher.add('TEST3', None, [{ORTH: 'a'}, {ORTH: 'b'}, {IS_PUNCT: True}, {ORTH: 'd'}])
+    matcher.add(
+        "TEST3", None, [{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "d"}]
+    )
     matches = matcher(doc)
     assert len(matches) == 2
 
@@ -122,22 +142,26 @@ def test_issue587(en_tokenizer):
 def test_issue588(en_vocab):
     matcher = Matcher(en_vocab)
     with pytest.raises(ValueError):
-        matcher.add('TEST', None, [])
+        matcher.add("TEST", None, [])
 
 
 @pytest.mark.xfail
 def test_issue589():
     vocab = Vocab()
     vocab.strings.set_frozen(True)
-    doc = Doc(vocab, words=['whata'])
+    doc = Doc(vocab, words=["whata"])
 
 
 def test_issue590(en_vocab):
     """Test overlapping matches"""
-    doc = Doc(en_vocab, words=['n', '=', '1', ';', 'a', ':', '5', '%'])
+    doc = Doc(en_vocab, words=["n", "=", "1", ";", "a", ":", "5", "%"])
     matcher = Matcher(en_vocab)
-    matcher.add('ab', None, [{'IS_ALPHA': True}, {'ORTH': ':'}, {'LIKE_NUM': True}, {'ORTH': '%'}])
-    matcher.add('ab', None, [{'IS_ALPHA': True}, {'ORTH': '='}, {'LIKE_NUM': True}])
+    matcher.add(
+        "ab",
+        None,
+        [{"IS_ALPHA": True}, {"ORTH": ":"}, {"LIKE_NUM": True}, {"ORTH": "%"}],
+    )
+    matcher.add("ab", None, [{"IS_ALPHA": True}, {"ORTH": "="}, {"LIKE_NUM": True}])
     matches = matcher(doc)
     assert len(matches) == 2
 
@@ -145,14 +169,14 @@ def test_issue590(en_vocab):
 def test_issue595():
     """Test lemmatization of base forms"""
     words = ["Do", "n't", "feed", "the", "dog"]
-    tag_map = {'VB': {POS: VERB, VerbForm_inf: True}}
+    tag_map = {"VB": {POS: VERB, VerbForm_inf: True}}
     rules = {"verb": [["ed", "e"]]}
-    lemmatizer = Lemmatizer({'verb': {}}, {'verb': {}}, rules)
+    lemmatizer = Lemmatizer({"verb": {}}, {"verb": {}}, rules)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=words)
-    doc[2].tag_ = 'VB'
-    assert doc[2].text == 'feed'
-    assert doc[2].lemma_ == 'feed'
+    doc[2].tag_ = "VB"
+    assert doc[2].text == "feed"
+    assert doc[2].lemma_ == "feed"
 
 
 def test_issue599(en_vocab):
@@ -165,9 +189,9 @@ def test_issue599(en_vocab):
 
 
 def test_issue600():
-    vocab = Vocab(tag_map={'NN': {'pos': 'NOUN'}})
+    vocab = Vocab(tag_map={"NN": {"pos": "NOUN"}})
     doc = Doc(vocab, words=["hello"])
-    doc[0].tag_ = 'NN'
+    doc[0].tag_ = "NN"
 
 
 def test_issue615(en_tokenizer):
@@ -175,16 +199,17 @@ def test_issue615(en_tokenizer):
         """Merge a phrase. We have to be careful here because we'll change the
         token indices. To avoid problems, merge all the phrases once we're called
         on the last match."""
-        if i != len(matches)-1:
+        if i != len(matches) - 1:
             return None
-        spans = [(ent_id, ent_id, doc[start : end]) for ent_id, start, end in matches]
+        spans = [(ent_id, ent_id, doc[start:end]) for ent_id, start, end in matches]
         for ent_id, label, span in spans:
-            span.merge(tag='NNP' if label else span.root.tag_, lemma=span.text,
-                label=label)
+            span.merge(
+                tag="NNP" if label else span.root.tag_, lemma=span.text, label=label
+            )
             doc.ents = doc.ents + ((label, span.start, span.end),)
 
     text = "The golf club is broken"
-    pattern = [{'ORTH': "golf"}, {'ORTH': "club"}]
+    pattern = [{"ORTH": "golf"}, {"ORTH": "club"}]
     label = "Sport_Equipment"
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
@@ -195,7 +220,7 @@ def test_issue615(en_tokenizer):
     assert entities[0].label != 0
 
 
-@pytest.mark.parametrize('text,number', [("7am", "7"), ("11p.m.", "11")])
+@pytest.mark.parametrize("text,number", [("7am", "7"), ("11p.m.", "11")])
 def test_issue736(en_tokenizer, text, number):
     """Test that times like "7am" are tokenized correctly and that numbers are
     converted to string."""
@@ -204,7 +229,7 @@ def test_issue736(en_tokenizer, text, number):
     assert tokens[0].text == number
 
 
-@pytest.mark.parametrize('text', ["3/4/2012", "01/12/1900"])
+@pytest.mark.parametrize("text", ["3/4/2012", "01/12/1900"])
 def test_issue740(en_tokenizer, text):
     """Test that dates are not split and kept as one token. This behaviour is
     currently inconsistent, since dates separated by hyphens are still split.
@@ -214,14 +239,14 @@ def test_issue740(en_tokenizer, text):
 
 
 def test_issue743():
-    doc = Doc(Vocab(), ['hello', 'world'])
+    doc = Doc(Vocab(), ["hello", "world"])
     token = doc[0]
     s = set([token])
     items = list(s)
     assert items[0] is token
 
 
-@pytest.mark.parametrize('text', ["We were scared", "We Were Scared"])
+@pytest.mark.parametrize("text", ["We were scared", "We Were Scared"])
 def test_issue744(en_tokenizer, text):
     """Test that 'were' and 'Were' are excluded from the contractions
     generated by the English tokenizer exceptions."""
@@ -230,14 +255,15 @@ def test_issue744(en_tokenizer, text):
     assert tokens[1].text.lower() == "were"
 
 
-@pytest.mark.parametrize('text,is_num', [("one", True), ("ten", True),
-                                         ("teneleven", False)])
+@pytest.mark.parametrize(
+    "text,is_num", [("one", True), ("ten", True), ("teneleven", False)]
+)
 def test_issue759(en_tokenizer, text, is_num):
     tokens = en_tokenizer(text)
     assert tokens[0].like_num == is_num
 
 
-@pytest.mark.parametrize('text', ["Shell", "shell", "Shed", "shed"])
+@pytest.mark.parametrize("text", ["Shell", "shell", "Shed", "shed"])
 def test_issue775(en_tokenizer, text):
     """Test that 'Shell' and 'shell' are excluded from the contractions
     generated by the English tokenizer exceptions."""
@@ -246,28 +272,32 @@ def test_issue775(en_tokenizer, text):
     assert tokens[0].text == text
 
 
-@pytest.mark.parametrize('text', ["This is a string ", "This is a string\u0020"])
+@pytest.mark.parametrize("text", ["This is a string ", "This is a string\u0020"])
 def test_issue792(en_tokenizer, text):
     """Test for Issue #792: Trailing whitespace is removed after tokenization."""
     doc = en_tokenizer(text)
-    assert ''.join([token.text_with_ws for token in doc]) == text
+    assert "".join([token.text_with_ws for token in doc]) == text
 
 
-@pytest.mark.parametrize('text', ["This is a string", "This is a string\n"])
+@pytest.mark.parametrize("text", ["This is a string", "This is a string\n"])
 def test_control_issue792(en_tokenizer, text):
     """Test base case for Issue #792: Non-trailing whitespace"""
     doc = en_tokenizer(text)
-    assert ''.join([token.text_with_ws for token in doc]) == text
+    assert "".join([token.text_with_ws for token in doc]) == text
 
 
-@pytest.mark.parametrize('text,tokens', [
-    ('"deserve,"--and', ['"', "deserve", ',"--', "and"]),
-    ("exception;--exclusive", ["exception", ";--", "exclusive"]),
-    ("day.--Is", ["day", ".--", "Is"]),
-    ("refinement:--just", ["refinement", ":--", "just"]),
-    ("memories?--To", ["memories", "?--", "To"]),
-    ("Useful.=--Therefore", ["Useful", ".=--", "Therefore"]),
-    ("=Hope.=--Pandora", ["=", "Hope", ".=--", "Pandora"])])
+@pytest.mark.parametrize(
+    "text,tokens",
+    [
+        ('"deserve,"--and', ['"', "deserve", ',"--', "and"]),
+        ("exception;--exclusive", ["exception", ";--", "exclusive"]),
+        ("day.--Is", ["day", ".--", "Is"]),
+        ("refinement:--just", ["refinement", ":--", "just"]),
+        ("memories?--To", ["memories", "?--", "To"]),
+        ("Useful.=--Therefore", ["Useful", ".=--", "Therefore"]),
+        ("=Hope.=--Pandora", ["=", "Hope", ".=--", "Pandora"]),
+    ],
+)
 def test_issue801(en_tokenizer, text, tokens):
     """Test that special characters + hyphens are split correctly."""
     doc = en_tokenizer(text)
@@ -275,10 +305,19 @@ def test_issue801(en_tokenizer, text, tokens):
     assert [t.text for t in doc] == tokens
 
 
-@pytest.mark.parametrize('text,expected_tokens', [
-    ('Smörsåsen används bl.a. till fisk', ['Smörsåsen', 'används', 'bl.a.', 'till', 'fisk']),
-    ('Jag kommer först kl. 13 p.g.a. diverse förseningar', ['Jag', 'kommer', 'först', 'kl.', '13', 'p.g.a.', 'diverse', 'förseningar'])
-])
+@pytest.mark.parametrize(
+    "text,expected_tokens",
+    [
+        (
+            "Smörsåsen används bl.a. till fisk",
+            ["Smörsåsen", "används", "bl.a.", "till", "fisk"],
+        ),
+        (
+            "Jag kommer först kl. 13 p.g.a. diverse förseningar",
+            ["Jag", "kommer", "först", "kl.", "13", "p.g.a.", "diverse", "förseningar"],
+        ),
+    ],
+)
 def test_issue805(sv_tokenizer, text, expected_tokens):
     tokens = sv_tokenizer(text)
     token_list = [token.text for token in tokens if not token.is_space]
@@ -291,9 +330,9 @@ def test_issue850():
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
     IS_ANY_TOKEN = matcher.vocab.add_flag(lambda x: True)
-    pattern = [{'LOWER': "bob"}, {'OP': '*', 'IS_ANY_TOKEN': True}, {'LOWER': 'frank'}]
-    matcher.add('FarAway', None, pattern)
-    doc = Doc(matcher.vocab, words=['bob', 'and', 'and', 'frank'])
+    pattern = [{"LOWER": "bob"}, {"OP": "*", "IS_ANY_TOKEN": True}, {"LOWER": "frank"}]
+    matcher.add("FarAway", None, pattern)
+    doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
     match = matcher(doc)
     assert len(match) == 1
     ent_id, start, end = match[0]
@@ -306,9 +345,9 @@ def test_issue850_basic():
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
     IS_ANY_TOKEN = matcher.vocab.add_flag(lambda x: True)
-    pattern = [{'LOWER': "bob"}, {'OP': '*', 'LOWER': 'and'}, {'LOWER': 'frank'}]
-    matcher.add('FarAway', None, pattern)
-    doc = Doc(matcher.vocab, words=['bob', 'and', 'and', 'frank'])
+    pattern = [{"LOWER": "bob"}, {"OP": "*", "LOWER": "and"}, {"LOWER": "frank"}]
+    matcher.add("FarAway", None, pattern)
+    doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
     match = matcher(doc)
     assert len(match) == 1
     ent_id, start, end = match[0]
@@ -316,23 +355,25 @@ def test_issue850_basic():
     assert end == 4
 
 
-@pytest.mark.parametrize('text', ["au-delàs", "pair-programmâmes",
-                                  "terra-formées", "σ-compacts"])
+@pytest.mark.parametrize(
+    "text", ["au-delàs", "pair-programmâmes", "terra-formées", "σ-compacts"]
+)
 def test_issue852(fr_tokenizer, text):
     """Test that French tokenizer exceptions are imported correctly."""
     tokens = fr_tokenizer(text)
     assert len(tokens) == 1
 
 
-@pytest.mark.parametrize('text', ["aaabbb@ccc.com\nThank you!",
-                                  "aaabbb@ccc.com \nThank you!"])
+@pytest.mark.parametrize(
+    "text", ["aaabbb@ccc.com\nThank you!", "aaabbb@ccc.com \nThank you!"]
+)
 def test_issue859(en_tokenizer, text):
     """Test that no extra space is added in doc.text method."""
     doc = en_tokenizer(text)
     assert doc.text == text
 
 
-@pytest.mark.parametrize('text', ["Datum:2014-06-02\nDokument:76467"])
+@pytest.mark.parametrize("text", ["Datum:2014-06-02\nDokument:76467"])
 def test_issue886(en_tokenizer, text):
     """Test that token.idx matches the original text index for texts with newlines."""
     doc = en_tokenizer(text)
@@ -341,7 +382,7 @@ def test_issue886(en_tokenizer, text):
         assert text[token.idx] == token.text[0]
 
 
-@pytest.mark.parametrize('text', ["want/need"])
+@pytest.mark.parametrize("text", ["want/need"])
 def test_issue891(en_tokenizer, text):
     """Test that / infixes are split correctly."""
     tokens = en_tokenizer(text)
@@ -349,11 +390,10 @@ def test_issue891(en_tokenizer, text):
     assert tokens[1].text == "/"
 
 
-@pytest.mark.parametrize('text,tag,lemma', [
-    ("anus", "NN", "anus"),
-    ("princess", "NN", "princess"),
-    ("inner", "JJ", "inner")
-])
+@pytest.mark.parametrize(
+    "text,tag,lemma",
+    [("anus", "NN", "anus"), ("princess", "NN", "princess"), ("inner", "JJ", "inner")],
+)
 def test_issue912(en_vocab, text, tag, lemma):
     """Test base-forms are preserved."""
     doc = Doc(en_vocab, words=[text])
@@ -364,10 +404,10 @@ def test_issue912(en_vocab, text, tag, lemma):
 def test_issue957(en_tokenizer):
     """Test that spaCy doesn't hang on many periods."""
     # skip test if pytest-timeout is not installed
-    timeout = pytest.importorskip('pytest-timeout')
-    string = '0'
+    timeout = pytest.importorskip("pytest-timeout")
+    string = "0"
     for i in range(1, 100):
-        string += '.%d' % i
+        string += ".%d" % i
     doc = en_tokenizer(string)
 
 
@@ -386,13 +426,13 @@ def test_issue999(train_data):
         ["hello", []],
         ["hi", []],
         ["i'm looking for a place to eat", []],
-        ["i'm looking for a place in the north of town", [[31,36,"LOCATION"]]],
-        ["show me chinese restaurants", [[8,15,"CUISINE"]]],
-        ["show me chines restaurants", [[8,14,"CUISINE"]]],
+        ["i'm looking for a place in the north of town", [[31, 36, "LOCATION"]]],
+        ["show me chinese restaurants", [[8, 15, "CUISINE"]]],
+        ["show me chines restaurants", [[8, 14, "CUISINE"]]],
     ]
 
     nlp = Language()
-    ner = nlp.create_pipe('ner')
+    ner = nlp.create_pipe("ner")
     nlp.add_pipe(ner)
     for _, offsets in TRAIN_DATA:
         for start, end, label in offsets:
@@ -402,7 +442,7 @@ def test_issue999(train_data):
     for itn in range(100):
         random.shuffle(TRAIN_DATA)
         for raw_text, entity_offsets in TRAIN_DATA:
-            nlp.update([raw_text], [{'entities': entity_offsets}])
+            nlp.update([raw_text], [{"entities": entity_offsets}])
 
     with make_tempdir() as model_dir:
         nlp.to_disk(model_dir)

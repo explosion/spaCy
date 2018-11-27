@@ -5,14 +5,15 @@ environment:
     # For Python versions available on Appveyor, see
     # http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python27-x64"
+      #- PYTHON: "C:\\Python27-x64"
     #- PYTHON: "C:\\Python34"
     #- PYTHON: "C:\\Python35"
     #- DISTUTILS_USE_SDK: "1"
     #- PYTHON: "C:\\Python34-x64"
     #- DISTUTILS_USE_SDK: "1"
-    #- PYTHON: "C:\\Python35-x64"
+    - PYTHON: "C:\\Python35-x64"
     - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python37-x64"
 
 install:
   # We need wheel installed to build wheels

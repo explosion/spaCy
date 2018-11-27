@@ -4,79 +4,79 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.parametrize('text', ["(unter)"])
+@pytest.mark.parametrize("text", ["(unter)"])
 def test_de_tokenizer_splits_no_special(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
 
 
-@pytest.mark.parametrize('text', ["unter'm"])
+@pytest.mark.parametrize("text", ["unter'm"])
 def test_de_tokenizer_splits_no_punct(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 2
 
 
-@pytest.mark.parametrize('text', ["(unter'm"])
+@pytest.mark.parametrize("text", ["(unter'm"])
 def test_de_tokenizer_splits_prefix_punct(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
 
 
-@pytest.mark.parametrize('text', ["unter'm)"])
+@pytest.mark.parametrize("text", ["unter'm)"])
 def test_de_tokenizer_splits_suffix_punct(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
 
 
-@pytest.mark.parametrize('text', ["(unter'm)"])
+@pytest.mark.parametrize("text", ["(unter'm)"])
 def test_de_tokenizer_splits_even_wrap(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 4
 
 
-@pytest.mark.parametrize('text', ["(unter'm?)"])
+@pytest.mark.parametrize("text", ["(unter'm?)"])
 def test_de_tokenizer_splits_uneven_wrap(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 5
 
 
-@pytest.mark.parametrize('text,length', [("z.B.", 1), ("zb.", 2), ("(z.B.", 2)])
+@pytest.mark.parametrize("text,length", [("z.B.", 1), ("zb.", 2), ("(z.B.", 2)])
 def test_de_tokenizer_splits_prefix_interact(de_tokenizer, text, length):
     tokens = de_tokenizer(text)
     assert len(tokens) == length
 
 
-@pytest.mark.parametrize('text', ["z.B.)"])
+@pytest.mark.parametrize("text", ["z.B.)"])
 def test_de_tokenizer_splits_suffix_interact(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 2
 
 
-@pytest.mark.parametrize('text', ["(z.B.)"])
+@pytest.mark.parametrize("text", ["(z.B.)"])
 def test_de_tokenizer_splits_even_wrap_interact(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
 
 
-@pytest.mark.parametrize('text', ["(z.B.?)"])
+@pytest.mark.parametrize("text", ["(z.B.?)"])
 def test_de_tokenizer_splits_uneven_wrap_interact(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 4
 
 
-@pytest.mark.parametrize('text', ["0.1-13.5", "0.0-0.1", "103.27-300"])
+@pytest.mark.parametrize("text", ["0.1-13.5", "0.0-0.1", "103.27-300"])
 def test_de_tokenizer_splits_numeric_range(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
 
 
-@pytest.mark.parametrize('text', ["blau.Rot", "Hallo.Welt"])
+@pytest.mark.parametrize("text", ["blau.Rot", "Hallo.Welt"])
 def test_de_tokenizer_splits_period_infix(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
 
 
-@pytest.mark.parametrize('text', ["Hallo,Welt", "eins,zwei"])
+@pytest.mark.parametrize("text", ["Hallo,Welt", "eins,zwei"])
 def test_de_tokenizer_splits_comma_infix(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
@@ -85,13 +85,13 @@ def test_de_tokenizer_splits_comma_infix(de_tokenizer, text):
     assert tokens[2].text == text.split(",")[1]
 
 
-@pytest.mark.parametrize('text', ["blau...Rot", "blau...rot"])
+@pytest.mark.parametrize("text", ["blau...Rot", "blau...rot"])
 def test_de_tokenizer_splits_ellipsis_infix(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 3
 
 
-@pytest.mark.parametrize('text', ['Islam-Konferenz', 'Ost-West-Konflikt'])
+@pytest.mark.parametrize("text", ["Islam-Konferenz", "Ost-West-Konflikt"])
 def test_de_tokenizer_keeps_hyphens(de_tokenizer, text):
     tokens = de_tokenizer(text)
     assert len(tokens) == 1

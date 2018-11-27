@@ -27,7 +27,6 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
-from thinc cimport openblas
 
 from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss

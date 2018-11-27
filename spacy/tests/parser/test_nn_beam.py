@@ -21,19 +21,21 @@ def vocab():
 @pytest.fixture
 def moves(vocab):
     aeager = ArcEager(vocab.strings, {})
-    aeager.add_action(2, 'nsubj')
-    aeager.add_action(3, 'dobj')
-    aeager.add_action(2, 'aux')
+    aeager.add_action(2, "nsubj")
+    aeager.add_action(3, "dobj")
+    aeager.add_action(2, "aux")
     return aeager
 
 
 @pytest.fixture
 def docs(vocab):
-    return [Doc(vocab, words=['Rats', 'bite', 'things'])]
+    return [Doc(vocab, words=["Rats", "bite", "things"])]
+
 
 @pytest.fixture
 def states(docs):
     return [StateClass(doc) for doc in docs]
+
 
 @pytest.fixture
 def tokvecs(docs, vector_size):
@@ -73,9 +75,10 @@ def beam(moves, states, golds, beam_width):
 def scores(moves, batch_size, beam_width):
     return [
         numpy.asarray(
-            numpy.random.uniform(-0.1, 0.1, (batch_size, moves.n_moves)),
-            dtype='f')
-        for _ in range(batch_size)]
+            numpy.random.uniform(-0.1, 0.1, (batch_size, moves.n_moves)), dtype="f"
+        )
+        for _ in range(batch_size)
+    ]
 
 
 def test_create_beam(beam):
@@ -93,8 +96,8 @@ def test_beam_advance_too_few_scores(beam, scores):
 
 def test_beam_parse():
     nlp = Language()
-    nlp.add_pipe(DependencyParser(nlp.vocab), name='parser')
-    nlp.parser.add_label('nsubj')
+    nlp.add_pipe(DependencyParser(nlp.vocab), name="parser")
+    nlp.parser.add_label("nsubj")
     nlp.parser.begin_training([], token_vector_width=8, hidden_width=8)
-    doc = nlp.make_doc('Australia is a country')
+    doc = nlp.make_doc("Australia is a country")
     nlp.parser(doc, beam_width=2)

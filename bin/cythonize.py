@@ -38,7 +38,7 @@ import argparse
 HASH_FILE = 'cythonize.json'
 
 
-def process_pyx(fromfile, tofile):
+def process_pyx(fromfile, tofile, language_level='-2'):
     print('Processing %s' % fromfile)
     try:
         from Cython.Compiler.Version import version as cython_version
@@ -49,7 +49,7 @@ def process_pyx(fromfile, tofile):
     except ImportError:
         pass
 
-    flags = ['--fast-fail']
+    flags = ['--fast-fail', language_level]
     if tofile.endswith('.cpp'):
         flags += ['--cplus']
 
