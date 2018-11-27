@@ -73,7 +73,7 @@ def make_update(model, docs, optimizer, drop=0.):
     # Don't want to return a cupy object here
     # The gradients are modified in-place by the BERT MLM,
     # so we get an accurate loss
-    loss = float((gradients**2).sum())
+    loss = float((gradients**2).mean())
     return loss
 
 
@@ -109,7 +109,7 @@ def get_vectors_loss(ops, docs, prediction):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
-    d_scores = (prediction - target) / prediction.shape[0]
+    d_scores = prediction - target
     return d_scores
 
 
@@ -141,8 +141,8 @@ def masked_language_model(vocab, model, mask_prob=0.15):
     '''Convert a model into a BERT-style masked language model'''
     vocab_words = [lex.text for lex in vocab if lex.prob != 0.0]
     vocab_probs = [lex.prob for lex in vocab if lex.prob != 0.0]
-    vocab_words = vocab_words[:10000]
-    vocab_probs = vocab_probs[:10000]
+    vocab_words = vocab_words[:20000]
+    vocab_probs = vocab_probs[:20000]
     vocab_probs = numpy.exp(numpy.array(vocab_probs, dtype='f'))
     vocab_probs /= vocab_probs.sum()
     
@@ -177,6 +177,11 @@ def apply_mask(docs, vocab_texts, vocab_probs, mask_prob=0.15):
             words.append(word)
             i += 1
         spaces = [bool(w.whitespace_) for w in doc]
+        # NB: If you change this implementation to instead modify
+        # the docs in place, take care that the IDs reflect the original
+        # words. Currently we use the original docs to make the vectors
+        # for the target, so we don't lose the original tokens. But if
+        # you modified the docs in place here, you would.
         masked_docs.append(Doc(doc.vocab, words=words, spaces=spaces))
     return mask, masked_docs
 
