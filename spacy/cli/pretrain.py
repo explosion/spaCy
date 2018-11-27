@@ -233,12 +233,13 @@ class ProgressTracker(object):
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
     embed_rows=("Embedding rows", "option", "er", int),
+    use_vectors=("Whether to use the static vectors as input features", "flag", "uv")
     dropout=("Dropout", "option", "d", float),
     seed=("Seed for random number generators", "option", "s", float),
     nr_iter=("Number of iterations to pretrain", "option", "i", int),
 )
 def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
-        embed_rows=1000, dropout=0.2, nr_iter=10, seed=0):
+        embed_rows=1000, use_vectors=False, dropout=0.2, nr_iter=10, seed=0):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
     using an approximate language-modelling objective. Specifically, we load
@@ -265,10 +266,11 @@ def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
     has_gpu = prefer_gpu()
     print("Use GPU?", has_gpu)
     nlp = spacy.load(vectors_model)
+    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
     model = create_pretraining_model(nlp,
                 Tok2Vec(width, embed_rows,
                     conv_depth=depth,
-                    pretrained_vectors=None, #nlp.vocab.vectors.name,
+                    pretrained_vectors=pretrained_vectors,
                     bilstm_depth=0, # Requires PyTorch. Experimental.
                     cnn_maxout_pieces=2, # You can try setting this higher
                     subword_features=True)) # Set to False for character models, e.g. Chinese
