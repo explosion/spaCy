@@ -239,7 +239,7 @@ class ProgressTracker(object):
     nr_iter=("Number of iterations to pretrain", "option", "i", int),
 )
 def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
-        embed_rows=1000, use_vectors=False, dropout=0.2, nr_iter=10, seed=0):
+        embed_rows=5000, use_vectors=False, dropout=0.2, nr_iter=100, seed=0):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
     using an approximate language-modelling objective. Specifically, we load
