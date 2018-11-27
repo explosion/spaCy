@@ -233,7 +233,7 @@ class ProgressTracker(object):
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
     embed_rows=("Embedding rows", "option", "er", int),
-    use_vectors=("Whether to use the static vectors as input features", "flag", "uv")
+    use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
     dropout=("Dropout", "option", "d", float),
     seed=("Seed for random number generators", "option", "s", float),
     nr_iter=("Number of iterations to pretrain", "option", "i", int),
