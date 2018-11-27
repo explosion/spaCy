@@ -48,11 +48,11 @@ def cosine(vec1, vec2):
 
 def create_default_optimizer(ops, **cfg):
     learn_rate = util.env_opt('learn_rate', 0.001)
-    beta1 = util.env_opt('optimizer_B1', 0.9)
-    beta2 = util.env_opt('optimizer_B2', 0.9)
-    eps = util.env_opt('optimizer_eps', 1e-12)
+    beta1 = util.env_opt('optimizer_B1', 0.8)
+    beta2 = util.env_opt('optimizer_B2', 0.8)
+    eps = util.env_opt('optimizer_eps', 0.00001)
     L2 = util.env_opt('L2_penalty', 1e-6)
-    max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+    max_grad_norm = util.env_opt('grad_norm_clip', 5.)
     optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1,
                      beta2=beta2, eps=eps)
     optimizer.max_grad_norm = max_grad_norm
@@ -445,11 +445,11 @@ def getitem(i):
 
 
 def build_tagger_model(nr_class, **cfg):
-    embed_size = util.env_opt('embed_size', 7000)
+    embed_size = util.env_opt('embed_size', 2000)
     if 'token_vector_width' in cfg:
         token_vector_width = cfg['token_vector_width']
     else:
-        token_vector_width = util.env_opt('token_vector_width', 128)
+        token_vector_width = util.env_opt('token_vector_width', 96)
     pretrained_vectors = cfg.get('pretrained_vectors')
     subword_features = cfg.get('subword_features', True)
     with Model.define_operators({'>>': chain, '+': add}):
