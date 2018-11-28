@@ -25,7 +25,7 @@ from collections import Counter
 
 import spacy
 from spacy.tokens import Doc
-from spacy.attrs import ID
+from spacy.attrs import ID, HEAD
 from spacy.util import minibatch, minibatch_by_words, use_gpu, compounding, ensure_path
 from spacy._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
 from thinc.v2v import Affine
