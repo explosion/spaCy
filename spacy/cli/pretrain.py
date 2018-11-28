@@ -141,8 +141,8 @@ def masked_language_model(vocab, model, mask_prob=0.15):
     '''Convert a model into a BERT-style masked language model'''
     vocab_words = [lex.text for lex in vocab if lex.prob != 0.0]
     vocab_probs = [lex.prob for lex in vocab if lex.prob != 0.0]
-    vocab_words = vocab_words[:20000]
-    vocab_probs = vocab_probs[:20000]
+    vocab_words = vocab_words[:10000]
+    vocab_probs = vocab_probs[:10000]
     vocab_probs = numpy.exp(numpy.array(vocab_probs, dtype='f'))
     vocab_probs /= vocab_probs.sum()
     
