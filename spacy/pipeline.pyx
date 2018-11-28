@@ -759,7 +759,7 @@ class Tagger(Pipe):
             if self.model is True:
                 token_vector_width = util.env_opt(
                     'token_vector_width',
-                    self.cfg.get('token_vector_width', 128))
+                    self.cfg.get('token_vector_width', 96))
                 self.model = self.Model(self.vocab.morphology.n_tags,
                                         **self.cfg)
             self.model.from_bytes(b)
@@ -878,7 +878,7 @@ class MultitaskObjective(Tagger):
 
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
-        token_vector_width = util.env_opt('token_vector_width', 128)
+        token_vector_width = util.env_opt('token_vector_width', 96)
         softmax = Softmax(n_tags, token_vector_width)
         model = chain(
             tok2vec,
