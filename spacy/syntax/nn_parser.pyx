@@ -63,9 +63,9 @@ cdef class Parser:
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
-                                           cfg.get('token_vector_width', 128))
-        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 128))
-        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 5000))
+                                           cfg.get('token_vector_width', 96))
+        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
+        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           conv_depth=conv_depth,
