@@ -297,7 +297,7 @@ cdef class Vocab:
 
         self.vectors = Vectors(data=keep, keys=keys)
 
-        syn_keys, syn_rows, scores = self.vectors.most_similar(toss)
+        syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
 
         remap = {}
         for i, key in enumerate(keys[nr_row:]):
