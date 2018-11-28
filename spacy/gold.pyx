@@ -25,6 +25,7 @@ from .compat import json_dumps
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
+
 def tags_to_entities(tags):
     entities = []
     start = None
@@ -110,19 +111,23 @@ class GoldCorpus(object):
         # Write temp directory with one doc per file, so we can shuffle
         # and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
-        self.write_msgpack(self.tmp_dir / 'train', train)
-        self.write_msgpack(self.tmp_dir / 'dev', dev)
+        self.write_msgpack(self.tmp_dir / 'train', train, limit=self.limit)
+        self.write_msgpack(self.tmp_dir / 'dev', dev, limit=self.limit)
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
 
     @staticmethod
-    def write_msgpack(directory, doc_tuples):
+    def write_msgpack(directory, doc_tuples, limit=0):
         if not directory.exists():
             directory.mkdir()
+        n = 0
         for i, doc_tuple in enumerate(doc_tuples):
             with open(directory / '{}.msg'.format(i), 'wb') as file_:
                 msgpack.dump([doc_tuple], file_, use_bin_type=True)
+            n += len(doc_tuple[1])
+            if limit and n >= limit:
+                break
     
     @staticmethod
     def walk_corpus(path):
@@ -350,7 +355,7 @@ def _json_iterate(loc):
                 py_str = py_raw[start : i+1].decode('utf8')
                 try:
                     yield json.loads(py_str)
-                except:
+                except Exception:
                     print(py_str)
                     raise
                 start = -1
