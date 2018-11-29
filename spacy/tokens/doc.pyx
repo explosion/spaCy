@@ -958,7 +958,7 @@ cdef class Doc:
         return self[start]
 
     def print_tree(self, light=False, flat=False):
-        raise ValueError(Errors.E103)
+        raise ValueError(Errors.E105)
 
     def to_json(self, underscore=None):
         """Convert a Doc to JSON. Produces the same format used by the spacy
@@ -994,10 +994,10 @@ cdef class Doc:
             data['_'] = {}
             for attr in underscore:
                 if not self.has_extension(attr):
-                    raise ValueError(Errors.E104.format(attr=attr, opts=underscore))
+                    raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
                 value = self._.get(attr)
                 if not is_json_serializable(value):
-                    raise ValueError(Errors.E105.format(attr=attr, value=repr(value)))
+                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                 data['_'][attr] = value
         return data
 

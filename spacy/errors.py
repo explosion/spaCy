@@ -274,7 +274,6 @@ class Errors(object):
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
             " can only be part of one entity, so make sure the entities you're "
             "setting don't overlap.")
-    # TODO: those were E102-E105
     E104 = ("Can't find JSON schema for '{name}'.")
     E105 = ("The Doc.print_tree() method is now deprecated. Please use "
             "Doc.json() instead.")

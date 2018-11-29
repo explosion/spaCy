@@ -24,7 +24,7 @@ def get_schema(name):
     if name not in SCHEMAS:
         schema_path = Path(__file__).parent / "{}.json".format(name)
         if not schema_path.exists():
-            raise ValueError(Errors.E102.format(name=name))
+            raise ValueError(Errors.E104.format(name=name))
         schema = read_json(schema_path)
         # TODO: replace with (stable) Draft6Validator, if available
         validator = Draft4Validator(schema)
