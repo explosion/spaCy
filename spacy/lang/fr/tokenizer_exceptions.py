@@ -6,7 +6,7 @@ import regex as re
 from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS
 from ..tokenizer_exceptions import URL_PATTERN
-from ..char_classes import ALPHA_LOWER
+from ..char_classes import _latin_lower
 from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 
 
@@ -133,15 +133,15 @@ _elision_prefix = ['entr', 'grande?s?']
 _other_hyphens = ''.join([h for h in HYPHENS if h != '-'])
 
 _regular_exp = [
-    '^droits?[{hyphen}]de[{hyphen}]l\'homm[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^zig[{hyphen}]zag[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^prud[{elision}]homm[{alpha}]*$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
+    '^droits?[{hyphen}]de[{hyphen}]l\'homm[{alpha}]+$'.format(hyphen=HYPHENS, alpha=_latin_lower),
+    '^zig[{hyphen}]zag[{alpha}]*$'.format(hyphen=HYPHENS, alpha=_latin_lower),
+    '^prud[{elision}]homm[{alpha}]*$'.format(elision=ELISION, alpha=_latin_lower)]
 _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
                  prefix=p, hyphen=HYPHENS, other_hyphen=_other_hyphens,
-                 elision=ELISION, alpha=ALPHA_LOWER)
+                 elision=ELISION, alpha=_latin_lower)
                  for p in _hyphen_prefix]
 _regular_exp += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
-                 prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=ALPHA_LOWER)
+                 prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=_latin_lower)
                  for p in _elision_prefix]
 _regular_exp.append(URL_PATTERN)
 
