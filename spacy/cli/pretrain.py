@@ -28,8 +28,9 @@ from spacy.tokens import Doc
 from spacy.attrs import ID, HEAD
 from spacy.util import minibatch, minibatch_by_words, use_gpu, compounding, ensure_path
 from spacy._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
-from thinc.v2v import Affine
+from thinc.v2v import Affine, Maxout
 from thinc.api import wrap
+from thinc.misc import LayerNorm as LN
 
 
 def prefer_gpu():
@@ -120,7 +121,10 @@ def create_pretraining_model(nlp, tok2vec):
     Each array in the output needs to have one row per token in the doc.
     '''
     output_size = nlp.vocab.vectors.data.shape[1]
-    output_layer = zero_init(Affine(output_size, drop_factor=0.0))
+    output_layer = chain(
+        LN(Maxout(300, pieces=3)),
+        zero_init(Affine(output_size, drop_factor=0.0))
+    )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
     # the shape of the models' components exactly. So what we cann
@@ -139,16 +143,10 @@ def create_pretraining_model(nlp, tok2vec):
 
 def masked_language_model(vocab, model, mask_prob=0.15):
     '''Convert a model into a BERT-style masked language model'''
-    vocab_words = [lex.text for lex in vocab if lex.prob != 0.0]
-    vocab_probs = [lex.prob for lex in vocab if lex.prob != 0.0]
-    vocab_words = vocab_words[:10000]
-    vocab_probs = vocab_probs[:10000]
-    vocab_probs = numpy.exp(numpy.array(vocab_probs, dtype='f'))
-    vocab_probs /= vocab_probs.sum()
-    
+
+    random_words = RandomWords(vocab)
     def mlm_forward(docs, drop=0.):
-        mask, docs = apply_mask(docs, vocab_words, vocab_probs,
-                                mask_prob=mask_prob)
+        mask, docs = apply_mask(docs, random_words, mask_prob=mask_prob)
         mask = model.ops.asarray(mask).reshape((mask.shape[0], 1))
         output, backprop = model.begin_update(docs, drop=drop)
 
@@ -161,7 +159,7 @@ def masked_language_model(vocab, model, mask_prob=0.15):
     return wrap(mlm_forward, model)
 
 
-def apply_mask(docs, vocab_texts, vocab_probs, mask_prob=0.15):
+def apply_mask(docs, random_words, mask_prob=0.15):
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0., 1.0, (N,))
     mask = mask >= mask_prob
@@ -171,7 +169,7 @@ def apply_mask(docs, vocab_texts, vocab_probs, mask_prob=0.15):
         words = []
         for token in doc:
             if not mask[i]:
-                word = replace_word(token.text, vocab_texts, vocab_probs)
+                word = replace_word(token.text, random_words)
             else:
                 word = token.text
             words.append(word)
@@ -186,19 +184,35 @@ def apply_mask(docs, vocab_texts, vocab_probs, mask_prob=0.15):
     return mask, masked_docs
 
 
-def replace_word(word, vocab_texts, vocab_probs, mask='[MASK]'):
+def replace_word(word, random_words, mask='[MASK]'):
     roll = random.random()
     if roll < 0.8:
         return mask
     elif roll < 0.9:
-        index = numpy.random.choice(len(vocab_texts), p=vocab_probs)
-        return vocab_texts[index]
+        return random_words.next()
     else:
         return word
 
+class RandomWords(object):
+    def __init__(self, vocab):
+        self.words = [lex.text for lex in vocab if lex.prob != 0.0]
+        self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
+        self.words = self.words[:10000]
+        self.probs = self.probs[:10000]
+        self.probs = numpy.exp(numpy.array(self.probs, dtype='f'))
+        self.probs /= self.probs.sum()
+        self._cache = []
+
+    def next(self):
+        if not self._cache:
+            self._cache.extend(numpy.random.choice(len(self.words), 10000,
+                p=self.probs))
+        index = self._cache.pop()
+        return self.words[index]
+ 
 
 class ProgressTracker(object):
-    def __init__(self, frequency=100000):
+    def __init__(self, frequency=1000000):
         self.loss = 0.0
         self.prev_loss = 0.0
         self.nr_word = 0
@@ -206,9 +220,11 @@ class ProgressTracker(object):
         self.frequency = frequency
         self.last_time = time.time()
         self.last_update = 0
+        self.epoch_loss = 0.0
 
     def update(self, epoch, loss, docs):
         self.loss += loss
+        self.epoch_loss += loss
         words_in_batch = sum(len(doc) for doc in docs)
         self.words_per_epoch[epoch] += words_in_batch
         self.nr_word += words_in_batch
@@ -243,8 +259,8 @@ class ProgressTracker(object):
     seed=("Seed for random number generators", "option", "s", float),
     nr_iter=("Number of iterations to pretrain", "option", "i", int),
 )
-def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
-        embed_rows=5000, use_vectors=False, dropout=0.2, nr_iter=100, seed=0):
+def pretrain(texts_loc, vectors_model, output_dir, width=96, depth=4,
+        embed_rows=2000, use_vectors=False, dropout=0.2, nr_iter=1000, seed=0):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
     using an approximate language-modelling objective. Specifically, we load
@@ -284,8 +300,8 @@ def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
     print('Epoch', '#Words', 'Loss', 'w/s')
     texts = stream_texts() if texts_loc == '-' else load_texts(texts_loc) 
     for epoch in range(nr_iter):
-        for batch in minibatch(texts, size=256):
-            docs = make_docs(nlp, batch)
+        for batch in minibatch_by_words(((text, None) for text in texts), size=5000):
+            docs = make_docs(nlp, [text for (text, _) in batch])
             loss = make_update(model, docs, optimizer, drop=dropout)
             progress = tracker.update(epoch, loss, docs)
             if progress:
@@ -297,6 +313,8 @@ def pretrain(texts_loc, vectors_model, output_dir, width=128, depth=4,
                 file_.write(model.tok2vec.to_bytes())
             with (output_dir / 'log.jsonl').open('a') as file_:
                 file_.write(json.dumps({'nr_word': tracker.nr_word,
-                    'loss': tracker.loss, 'epoch': epoch}) + '\n')
+                    'loss': tracker.loss, 'epoch_loss': tracker.epoch_loss,
+                    'epoch': epoch}) + '\n')
+        tracker.epoch_loss = 0.0
         if texts_loc != '-':
             texts = load_texts(texts_loc)
