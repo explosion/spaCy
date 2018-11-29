@@ -1,10 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+
 import pytest
 from pathlib import Path
 from spacy import util
 from spacy import displacy
+from spacy import prefer_gpu, require_gpu
 from spacy.tokens import Span
 from spacy._ml import PrecomputableAffine
 
@@ -100,3 +102,12 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     assert model.d_pad[0, 2, 0, 0] == 0.0
     model._backprop_padding(dY, ids)
     assert model.d_pad[0, 2, 0, 0] == 3.0
+
+
+def test_prefer_gpu():
+    assert not prefer_gpu()
+
+
+def test_require_gpu():
+    with pytest.raises(ValueError):
+        require_gpu()

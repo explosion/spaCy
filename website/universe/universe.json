@@ -184,7 +184,7 @@
                 "from spacy_lookup import Entity",
                 "",
                 "nlp = spacy.load('en')",
-                "entity = Entity(nlp, keywords_list=['python', 'java platform'])",
+                "entity = Entity(keywords_list=['python', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
                 "doc = nlp(u\"I am a product manager for a java and python.\")",
@@ -1004,6 +1004,99 @@
                 "github": "ines",
                 "website": "https://ines.io"
             }
+        },
+        {
+            "id": "spacy-js",
+            "title": "spacy-js",
+            "slogan": "JavaScript API for spaCy with Python REST API",
+            "github": "ines/spacy-js",
+            "description": "JavaScript interface for accessing linguistic annotations provided by spaCy. This project is mostly experimental and was developed for fun to play around with different ways of mimicking spaCy's Python API.\n\nThe results will still be computed in Python and made available via a REST API. The JavaScript API resembles spaCy's Python API as closely as possible (with a few exceptions, as the values are all pre-computed and it's tricky to express complex recursive relationships).",
+            "code_language": "javascript",
+            "code_example": [
+                "const spacy = require('spacy');",
+                "",
+                "(async function() {",
+                "    const nlp = spacy.load('en_core_web_sm');",
+                "    const doc = await nlp('This is a text about Facebook.');",
+                "    for (let ent of doc.ents) {",
+                "        console.log(ent.text, ent.label);",
+                "    }",
+                "    for (let token of doc) {",
+                "        console.log(token.text, token.pos, token.head.text);",
+                "    }",
+                "})();"
+            ],
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            },
+            "category": ["nonpython"],
+            "tags": ["javascript"]
+        },
+        {
+            "id": "spacy-raspberry",
+            "title": "spacy-raspberry",
+            "slogan": "64bit Raspberry Pi image for spaCy and neuralcoref",
+            "github": "boehm-e/spacy-raspberry",
+            "thumb": "https://i.imgur.com/VCJMrE6.png",
+            "image": "https://raw.githubusercontent.com/boehm-e/spacy-raspberry/master/imgs/preview.png",
+            "author": "Erwan Boehm",
+            "author_links": {
+                "github": "boehm-e"
+            },
+            "category": ["apis"],
+            "tags": ["raspberrypi"]
+        },
+        {
+            "id": "spacy-wordnet",
+            "title": "spacy-wordnet",
+            "slogan": "WordNet meets spaCy",
+            "description": "`spacy-wordnet` creates annotations that easily allow the use of WordNet and [WordNet Domains](http://wndomains.fbk.eu/) by using the [NLTK WordNet interface](http://www.nltk.org/howto/wordnet.html)",
+            "github": "recognai/spacy-wordnet",
+            "tags": ["wordnet", "synsets"],
+            "thumb": "https://i.imgur.com/3y2uPUv.jpg",
+            "code_example": [
+                "import spacy",
+                "from spacy_wordnet.wornet_annotator import WordnetAnnotator ",
+                "",
+                "# Load an spacy model (supported models are \"es\" and \"en\") ",
+                "nlp = spacy.load('en')",
+                "nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')",
+                "token = nlp('prices')[0]",
+                "",
+                "# wordnet object link spacy token with nltk wordnet interface by giving acces to",
+                "# synsets and lemmas ",
+                "token._.wordnet.synsets()",
+                "token._.wordnet.lemmas()",
+                "",
+                "# And automatically tags with wordnet domains",
+                "token._.wordnet.wordnet_domains()"
+            ],
+            "author": "recognai",
+            "author_links": {
+                "github": "recognai",
+                "twitter": "recogn_ai",
+                "website": "https://recogn.ai"
+            },
+            "category": ["pipeline"]
+        },
+        {
+            "id": "spacy2conllu",
+            "title": "spaCy2CoNLLU",
+            "slogan": "Parse text with spaCy and print the output in CoNLL-U format",
+            "description": "Simple script to parse text with spaCy and print the output in CoNLL-U format",
+            "code_example": [
+                "python parse_as_conllu.py [-h] --input_file INPUT_FILE [--output_file OUTPUT_FILE] --model MODEL"
+            ],
+            "code_language": "bash",
+            "author": "Raquel G. Alhama",
+            "author_links": {
+                "github": "rgalhama"
+            },
+            "github": "rgalhama/spaCy2CoNLLU",
+            "category": ["training"]
         }
     ],
     "projectCats": {

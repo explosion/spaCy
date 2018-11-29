@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from ..punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from ..char_classes import merge_chars, split_chars, _currency, _units
 from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES
-from ..char_classes import QUOTES, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER, HYPHENS
+from ..char_classes import QUOTES, ALPHA, ALPHA_LOWER, ALPHA_UPPER, HYPHENS
 
 _units = (_units + 's bit Gbps Mbps mbps Kbps kbps ƒ ppi px '
           'Hz kHz MHz GHz mAh '
@@ -25,7 +25,7 @@ HTML_SUFFIX = r'</(b|strong|i|em|p|span|div|a)>'
 MONTHS = merge_chars(_months)
 LIST_CURRENCY = split_chars(_currency)
 
-TOKENIZER_PREFIXES.remove('#') # hashtag
+TOKENIZER_PREFIXES.remove('#')  # hashtag
 _prefixes = TOKENIZER_PREFIXES + LIST_CURRENCY + [HTML_PREFIX] + ['/', '—']
 
 _suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '-[KkMm]u', '[—-]'] + [
