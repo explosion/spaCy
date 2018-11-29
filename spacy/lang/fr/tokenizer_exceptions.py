@@ -141,7 +141,7 @@ _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]
                  elision=ELISION, alpha=ALPHA_LOWER)
                  for p in _hyphen_prefix]
 _regular_exp += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
-                 prefix=p, elision=HYPHENS, hyphen=_other_hyphens, alpha=ALPHA_LOWER)
+                 prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=ALPHA_LOWER)
                  for p in _elision_prefix]
 _regular_exp.append(URL_PATTERN)
 
