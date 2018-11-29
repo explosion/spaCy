@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
+import pytest
 
 from ..util import get_doc
 
