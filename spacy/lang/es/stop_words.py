@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 actualmente acuerdo adelante ademas además adrede afirmó agregó ahi ahora ahí
 al algo alguna algunas alguno algunos algún alli allí alrededor ambos ampleamos
 antano antaño ante anterior antes apenas aproximadamente aquel aquella aquellas
@@ -81,4 +82,5 @@ va vais valor vamos van varias varios vaya veces ver verdad verdadera verdadero
 vez vosotras vosotros voy vuestra vuestras vuestro vuestros
 
 ya yo
-""".split())
+""".split()
+)

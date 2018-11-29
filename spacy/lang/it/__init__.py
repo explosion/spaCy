@@ -14,8 +14,10 @@ from ...util import update_exc, add_lookups
 
 class ItalianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'it'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
+    lex_attr_getters[LANG] = lambda text: "it"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
     stop_words = STOP_WORDS
     lemma_lookup = LOOKUP
@@ -23,8 +25,8 @@ class ItalianDefaults(Language.Defaults):
 
 
 class Italian(Language):
-    lang = 'it'
+    lang = "it"
     Defaults = ItalianDefaults
 
 
-__all__ = ['Italian']
+__all__ = ["Italian"]

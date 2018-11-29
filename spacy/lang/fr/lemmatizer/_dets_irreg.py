@@ -45,5 +45,5 @@ DETS_IRREG = {
     "des": ("un",),
     "une": ("un",),
     "vingts": ("vingt",),
-    "vos": ("votre",)
+    "vos": ("votre",),
 }

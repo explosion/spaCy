@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-ADJECTIVES = set("""
+ADJECTIVES = set(
+    """
 .22-caliber .22-calibre .38-caliber .38-calibre .45-caliber .45-calibre 0 1 10
 10-membered 100 1000 1000th 100th 101 101st 105 105th 10th 11 110 110th 115
 115th 11th 12 120 120th 125 125th 12th 13 130 130th 135 135th 13th 14 140 140th
@@ -2824,4 +2825,5 @@ zealous zenithal zero zeroth zestful zesty zig-zag zigzag zillion zimbabwean
 zionist zippy zodiacal zoftig zoic zolaesque zonal zonary zoological zoonotic
 zoophagous zoroastrian zygodactyl zygomatic zygomorphic zygomorphous zygotic
 zymoid zymolytic zymotic
-""".split())
+""".split()
+)

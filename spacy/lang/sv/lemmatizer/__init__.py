@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .lookup import LOOKUP
+from .lookup import LOOKUP  # noqa: F401
 
 
 LEMMA_RULES = {
@@ -22,9 +22,8 @@ LEMMA_RULES = {
         ["lar", "el"],
         ["arna", "e"],
         ["arna", ""],
-        ["larna", "el"]
+        ["larna", "el"],
     ],
-
     "verb": [
         ["r", ""],
         ["de", ""],
@@ -87,9 +86,8 @@ LEMMA_RULES = {
         ["åt", "ät"],
         ["ar", "är"],
         ["alt", "ält"],
-        ["ultit", "ält"]
+        ["ultit", "ält"],
     ],
-
     "adj": [
         ["are", ""],
         ["ast", ""],
@@ -100,13 +98,7 @@ LEMMA_RULES = {
         ["ängre", "ång"],
         ["ängst", "ång"],
         ["örre", "or"],
-        ["örst", "or"]
+        ["örst", "or"],
     ],
-
-    "punct": [
-        ["“", "\""],
-        ["”", "\""],
-        ["\u2018", "'"],
-        ["\u2019", "'"]
-    ]
+    "punct": [["“", '"'], ["”", '"'], ["\u2018", "'"], ["\u2019", "'"]],
 }
