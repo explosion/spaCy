@@ -1,4 +1,6 @@
-'''Test issue that arises when too many labels are added to NER model.'''
+'''Test issue that arises when too many labels are added to NER model.
+NB: currently causes segfault!
+'''
 from __future__ import unicode_literals
 
 import random
@@ -32,5 +34,3 @@ def test_train_with_many_entity_types():
     entity_types = [str(i) for i in range(1000)]
 
     model = train_model(train_data, entity_types)
-
-    
