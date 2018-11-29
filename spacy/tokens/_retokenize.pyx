@@ -37,7 +37,7 @@ cdef class Retokenizer:
         """
         for token in span:
             if token.i in self.tokens_to_merge:
-                raise ValueError(Errors.E097.format(token=repr(token)))
+                raise ValueError(Errors.E102.format(token=repr(token)))
             self.tokens_to_merge.add(token.i)
 
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)

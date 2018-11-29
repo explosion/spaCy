@@ -469,7 +469,7 @@ cdef class Doc:
                 entity_type, ent_start, ent_end = get_entity_info(ent_info)
                 for token_index in range(ent_start, ent_end):
                     if token_index in tokens_in_ents.keys():
-                        raise ValueError(Errors.E098.format(
+                        raise ValueError(Errors.E103.format(
                             span1=(tokens_in_ents[token_index][0],
                                    tokens_in_ents[token_index][1],
                                    self.vocab.strings[tokens_in_ents[token_index][2]]),
