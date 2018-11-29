@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import os
 import sys
 import ujson
 import itertools

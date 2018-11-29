@@ -7,6 +7,7 @@ git diff-index --quiet HEAD
 
 git checkout $1
 git pull origin $1
+
 version=$(grep "__version__ = " spacy/about.py)
 version=${version/__version__ = }
 version=${version/\'/}

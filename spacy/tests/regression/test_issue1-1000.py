@@ -78,14 +78,16 @@ def test_issue242(en_tokenizer):
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
     matcher.add("FOOD", None, *patterns)
-
     matches = [(ent_type, start, end) for ent_type, start, end in matcher(doc)]
-    doc.ents += tuple(matches)
     match1, match2 = matches
     assert match1[1] == 3
     assert match1[2] == 5
     assert match2[1] == 4
     assert match2[2] == 6
+    with pytest.raises(ValueError):
+        # One token can only be part of one entity, so test that the matches
+        # can't be added as entities
+        doc.ents += tuple(matches)
 
 
 def test_issue309(en_tokenizer):

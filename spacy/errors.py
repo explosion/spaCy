@@ -270,13 +270,17 @@ class Errors(object):
             "NBOR_RELOP.")
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
-    E102 = ("Can't find JSON schema for '{name}'.")
-    E103 = ("The Doc.print_tree() method is now deprecated. Please use "
+    E102 = ("Can't merge non-disjoint spans. '{token}' is already part of tokens to merge")
+    E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
+            " can only be part of one entity, so make sure the entities you're "
+            "setting don't overlap.")
+    # TODO: those were E102-E105
+    E104 = ("Can't find JSON schema for '{name}'.")
+    E105 = ("The Doc.print_tree() method is now deprecated. Please use "
             "Doc.json() instead.")
-    E104 = ("Can't find doc._.{attr} attribute specified in the underscore "
+    E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
             "settings: {opts}")
-    E105 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
-
+    E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
 
 @add_codes
 class TempErrors(object):

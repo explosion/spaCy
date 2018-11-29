@@ -27,6 +27,7 @@ from .attrs import FLAG43 as I2_ENT
 from .attrs import FLAG42 as I3_ENT
 from .attrs import FLAG41 as I4_ENT
 
+DELIMITER = '||'
 
 DELIMITER = '||'
 INDEX_HEAD = 1
@@ -53,7 +54,6 @@ cdef enum quantifier_t:
 cdef struct AttrValueC:
     attr_id_t attr
     attr_t value
-
 
 cdef struct TokenPatternC:
     AttrValueC* attrs
@@ -287,6 +287,7 @@ cdef char get_is_final(PatternStateC state) nogil:
 
 cdef char get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
+
 
 DEF PADDING = 5
 
@@ -623,6 +624,7 @@ cdef class PhraseMatcher:
             self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
+
         """Find all sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
@@ -783,7 +785,6 @@ cdef class DependencyTreeMatcher:
             idx = idx + 1
 
     def add(self, key, on_match, *patterns):
-
         for pattern in patterns:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
