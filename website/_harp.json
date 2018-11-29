@@ -14,7 +14,7 @@
         "MODELS_REPO": "explosion/spacy-models",
 
         "SPACY_VERSION": "2.1",
-        "BINDER_VERSION": "2.0.12",
+        "BINDER_VERSION": "2.0.16",
 
         "SOCIAL": {
             "twitter": "spacy_io",
@@ -40,7 +40,7 @@
             },
             "Support": {
                 "Issue Tracker": "https://github.com/explosion/spaCy/issues",
-                "StackOverflow": "http://stackoverflow.com/questions/tagged/spacy",
+                "Stack Overflow": "http://stackoverflow.com/questions/tagged/spacy",
                 "Reddit Usergroup": "https://www.reddit.com/r/spacynlp/",
                 "Gitter Chat": "https://gitter.im/explosion/spaCy"
             },

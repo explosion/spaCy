@@ -67,7 +67,7 @@ for orth in _per_pron + _dem_pron + _und_pron:
 for orth in [
     "Adm.", "Dr.", "e.g.", "E.g.", "E.G.", "Gen.", "Gov.", "i.e.", "I.e.",
     "I.E.", "Jr.", "Ltd.", "p.m.", "Ph.D.", "Rep.", "Rev.", "Sen.", "Sr.",
-    "Sra.", "vs."]:
+    "Sra.", "vs.", "tel.", "pág.", "pag."]:
     _exc[orth] = [{ORTH: orth}]
 
 

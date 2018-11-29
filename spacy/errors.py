@@ -270,7 +270,10 @@ class Errors(object):
             "NBOR_RELOP.")
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
-
+    E102 = ("Can't merge non-disjoint spans. '{token}' is already part of tokens to merge")
+    E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
+            " can only be part of one entity, so make sure the entities you're "
+            "setting don't overlap.")
 
 @add_codes
 class TempErrors(object):

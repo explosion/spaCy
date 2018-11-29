@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+
 import pytest
 import numpy
 from spacy.tokens import Doc
@@ -168,6 +169,23 @@ def test_doc_api_merge(en_tokenizer):
     assert len(doc) == 8
     assert doc[7].text == "all night"
     assert doc[7].text_with_ws == "all night"
+
+    # merge both with bulk merge
+    doc = en_tokenizer(text)
+    assert len(doc) == 9
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4: 7], attrs={'tag':'NAMED', 'lemma':'LEMMA',
+              'ent_type':'TYPE'})
+        retokenizer.merge(doc[7: 9], attrs={'tag':'NAMED', 'lemma':'LEMMA',
+              'ent_type':'TYPE'})
+
+    assert len(doc) == 6
+    assert doc[4].text == 'the beach boys'
+    assert doc[4].text_with_ws == 'the beach boys '
+    assert doc[4].tag_ == 'NAMED'
+    assert doc[5].text == 'all night'
+    assert doc[5].text_with_ws == 'all night'
+    assert doc[5].tag_ == 'NAMED'
 
 
 def test_doc_api_merge_children(en_tokenizer):

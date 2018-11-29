@@ -30,7 +30,7 @@ class Thai(Language):
             from pythainlp.tokenize import word_tokenize
         except ImportError:
             raise ImportError("The Thai tokenizer requires the PyThaiNLP library: "
-                              "https://github.com/wannaphongcom/pythainlp/")
+                              "https://github.com/PyThaiNLP/pythainlp")
         words = [x for x in list(word_tokenize(text,"newmm"))]
         return Doc(self.vocab, words=words, spaces=[False]*len(words))
 

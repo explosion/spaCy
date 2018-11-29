@@ -55,6 +55,6 @@ def like_num(text):
 
 
 LEX_ATTRS = {
-    NORM: norm
+    NORM: norm,
     LIKE_NUM: like_num
 }

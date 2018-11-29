@@ -1,0 +1,24 @@
+# coding: utf8
+from __future__ import unicode_literals
+
+
+"""
+Example sentences to test spaCy and its language models.
+
+>>> from spacy.lang.te import Telugu
+>>> nlp = Telugu()
+>>> from spacy.lang.te.examples import sentences
+>>> docs = nlp.pipe(sentences)
+"""
+
+
+sentences = [
+    "ఆపిల్ 1 బిలియన్ డాలర్స్ కి యూ.కె. స్టార్ట్అప్ ని కొనాలని అనుకుంటుంది.",
+    "ఆటోనోమోస్ కార్లు భీమా బాధ్యతను తయారీదారులపైకి మళ్లిస్తాయి.",
+    "సాన్ ఫ్రాన్సిస్కో కాలిబాట డెలివరీ రోబోట్లను నిషేధించడానికి ఆలోచిస్తుంది.",
+    "లండన్ యునైటెడ్ కింగ్డమ్ లో పెద్ద సిటీ.",
+    "నువ్వు ఎక్కడ ఉన్నావ్?",
+    "ఫ్రాన్స్ అధ్యక్షుడు ఎవరు?",
+    "యునైటెడ్ స్టేట్స్ యొక్క రాజధాని ఏంటి?",
+    "బరాక్ ఒబామా ఎప్పుడు జన్మించారు?"
+]

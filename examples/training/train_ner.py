@@ -15,6 +15,7 @@ import plac
 import random
 from pathlib import Path
 import spacy
+from spacy.util import minibatch, compounding
 
 
 # training data
@@ -62,14 +63,17 @@ def main(model=None, output_dir=None, n_iter=100):
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
-            for text, annotations in TRAIN_DATA:
+            # batch up the examples using spaCy's minibatch
+            batches = minibatch(TRAIN_DATA, size=compounding(4., 32., 1.001))
+            for batch in batches:
+                texts, annotations = zip(*batch)
                 nlp.update(
-                    [text],  # batch of texts
-                    [annotations],  # batch of annotations
+                    texts,  # batch of texts
+                    annotations,  # batch of annotations
                     drop=0.5,  # dropout - make it harder to memorise data
                     sgd=optimizer,  # callable to update weights
                     losses=losses)
-            print(losses)
+            print('Losses', losses)
 
     # test the trained model
     for text, _ in TRAIN_DATA:

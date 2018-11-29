@@ -122,12 +122,6 @@ class Language(object):
             `Language.Defaults.create_vocab`.
         make_doc (callable): A function that takes text and returns a `Doc`
             object. Usually a `Tokenizer`.
-        pipeline (list): A list of annotation processes or IDs of annotation,
-            processes, e.g. a `Tagger` object, or `'tagger'`. IDs are looked
-            up in `Language.Defaults.factories`.
-        disable (list): A list of component names to exclude from the pipeline.
-            The disable list has priority over the pipeline list -- if the same
-            string occurs in both, the component is not loaded.
         meta (dict): Custom meta data for the Language class. Is written to by
             models to add model meta data.
         max_length (int) :
@@ -348,7 +342,7 @@ class Language(object):
             >>> tokens[0].text, tokens[0].head.tag_
             ('An', 'NN')
         """
-        if len(text) >= self.max_length:
+        if len(text) > self.max_length:
             raise ValueError(Errors.E088.format(length=len(text),
                                                 max_length=self.max_length))
         doc = self.make_doc(text)
