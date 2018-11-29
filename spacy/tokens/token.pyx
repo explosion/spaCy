@@ -167,7 +167,7 @@ cdef class Token:
             user_warning(Warnings.W008.format(obj='Token'))
             return 0.0
         return (numpy.dot(self.vector, other.vector) /
-                (self_norm * other_norm))
+                (self.vector_norm * other.vector_norm))
 
     property lex_id:
         """RETURNS (int): Sequential ID of the token's lexical type."""
