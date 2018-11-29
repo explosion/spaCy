@@ -114,7 +114,7 @@ def tr_tokenizer():
 
 @pytest.fixture(scope='session')
 def ca_tokenizer():
-    return util.get_lang_class('ca').Defaults.create_tokenizer()
+    return get_lang_class('ca').Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
