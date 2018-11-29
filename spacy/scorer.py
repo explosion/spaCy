@@ -37,7 +37,7 @@ class PRFScore(object):
 class Scorer(object):
     def __init__(self, eval_punct=False):
         self.tokens = PRFScore()
-        self.sbd = PRFScore()
+        self.sentencizer = PRFScore()
         self.unlabelled = PRFScore()
         self.labelled = PRFScore()
         self.tags = PRFScore()
