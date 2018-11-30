@@ -109,18 +109,18 @@ class Language(object):
     lang = None
 
     factories = {
-        'tokenizer': lambda nlp: nlp.Defaults.create_tokenizer(nlp),
-        'tensorizer': lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
-        'tagger': lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
-        'parser': lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
-        'ner': lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
-        'similarity': lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
-        'textcat': lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
-        'sentencizer': lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
-        'merge_noun_chunks': lambda nlp, **cfg: merge_noun_chunks,
-        'merge_entities': lambda nlp, **cfg: merge_entities,
-        'merge_subtokens': lambda nlp, **cfg: merge_subtokens,
-        'entity_ruler': lambda nlp, **cfg: EntityRuler(nlp, **cfg)
+        "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
+        "tensorizer": lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
+        "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
+        "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
+        "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
+        "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
+        "sentencizer": lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
+        "merge_noun_chunks": lambda nlp, **cfg: merge_noun_chunks,
+        "merge_entities": lambda nlp, **cfg: merge_entities,
+        "merge_subtokens": lambda nlp, **cfg: merge_subtokens,
+        "entity_ruler": lambda nlp, **cfg: EntityRuler(nlp, **cfg),
     }
 
     def __init__(
