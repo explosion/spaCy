@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# flake8: noqa
 
 # CoNLL 2017 UD Parsing evaluation script.
 #
@@ -214,7 +215,7 @@ def load_conllu(file):
                 start, end = map(int, columns[ID].split("-"))
             except:
                 raise UDError("Cannot parse multi-word token ID '{}'".format(columns[ID]))
-            
+
             for _ in range(start, end + 1):
                 word_line = file.readline().rstrip("\r\n")
                 word_columns = word_line.split("\t")

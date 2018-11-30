@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema",
+  "title": "Training data for spaCy models",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "title": "The text of the training example",
+        "type": "string",
+        "minLength": 1
+      },
+      "ents": {
+        "title": "Named entity spans in the text",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": {
+              "title": "Start character offset of the span",
+              "type": "integer",
+              "minimum": 0
+            },
+            "end": {
+              "title": "End character offset of the span",
+              "type": "integer",
+              "minimum": 0
+            },
+            "label": {
+              "title": "Entity label",
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Z0-9]*$"
+            }
+          },
+          "required": [
+            "start",
+            "end",
+            "label"
+          ]
+        }
+      },
+      "sents": {
+        "title": "Sentence spans in the text",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": {
+              "title": "Start character offset of the span",
+              "type": "integer",
+              "minimum": 0
+            },
+            "end": {
+              "title": "End character offset of the span",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "cats": {
+        "title": "Text categories for the text classifier",
+        "type": "object",
+        "patternProperties": {
+          "*": {
+            "title": "A text category",
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "number",
+                "minimum": 0
+              }
+            ]
+          }
+        },
+        "propertyNames": {
+          "pattern": "^[A-Z0-9]*$",
+          "minLength": 1
+        }
+      },
+      "tokens": {
+        "title": "The tokens in the text",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "id": {
+              "title": "Token ID, usually token index",
+              "type": "integer",
+              "minimum": 0
+            },
+            "start": {
+              "title": "Start character offset of the token",
+              "type": "integer",
+              "minimum": 0
+            },
+            "end": {
+              "title": "End character offset of the token",
+              "type": "integer",
+              "minimum": 0
+            },
+            "pos": {
+              "title": "Coarse-grained part-of-speech tag",
+              "type": "string",
+              "minLength": 1
+            },
+            "tag": {
+              "title": "Fine-grained part-of-speech tag",
+              "type": "string",
+              "minLength": 1
+            },
+            "dep": {
+              "title": "Dependency label",
+              "type": "string",
+              "minLength": 1
+            },
+            "head": {
+              "title": "Index of the token's head",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "_": {
+        "title": "Custom user space",
+        "type": "object"
+      }
+    },
+    "required": [
+      "text"
+    ]
+  }
+}

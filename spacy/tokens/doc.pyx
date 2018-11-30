@@ -20,7 +20,6 @@ from .span cimport Span
 from .token cimport Token
 from .span cimport Span
 from .token cimport Token
-from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs import intify_attrs, IDS
@@ -29,7 +28,7 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
-from ..util import normalize_slice
+from ..util import normalize_slice, is_json_serializable
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
@@ -959,31 +958,48 @@ cdef class Doc:
         return self[start]
 
     def print_tree(self, light=False, flat=False):
-        """Returns the parse trees in JSON (dict) format.
+        raise ValueError(Errors.E105)
 
-        light (bool): Don't include lemmas or entities.
-        flat (bool): Don't include arcs or modifiers.
-        RETURNS (dict): Parse tree as dict.
+    def to_json(self, underscore=None):
+        """Convert a Doc to JSON. Produces the same format used by the spacy
+        train command.
 
-        EXAMPLE:
-            >>> doc = nlp('Bob brought Alice the pizza. Alice ate the pizza.')
-            >>> trees = doc.print_tree()
-            >>> trees[1]
-            {'modifiers': [
-                {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice',
-                'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP',
-                'lemma': 'Alice'},
-                {'modifiers': [
-                    {'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det',
-                    'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}],
-                'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN',
-                'POS_fine': 'NN', 'lemma': 'pizza'},
-                {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct',
-                'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}],
-                'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB',
-                'POS_fine': 'VBD', 'lemma': 'eat'}
+        underscore (list): Optional list of string names of custom doc._.
+        attributes. Attribute values need to be JSON-serializable. Values will
+        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+        RETURNS (dict): The data in spaCy's JSON format.
         """
-        return parse_tree(self, light=light, flat=flat)
+        data = {'text': self.text}
+        data['ents'] = [{'start': ent.start_char, 'end': ent.end_char,
+                         'label': ent.label_} for ent in self.ents]
+        sents = list(self.sents)
+        if sents:
+            data['sents'] = [{'start': sent.start_char, 'end': sent.end_char}
+                             for sent in sents]
+        if self.cats:
+            data['cats'] = self.cats
+        data['tokens'] = []
+        for token in self:
+            token_data = {'id': token.i, 'start': token.idx, 'end': token.idx + len(token)}
+            if token.pos_:
+                token_data['pos'] = token.pos_
+            if token.tag_:
+                token_data['tag'] = token.tag_
+            if token.dep_:
+                token_data['dep'] = token.dep_
+            if token.head:
+                token_data['head'] = token.head.i
+            data['tokens'].append(token_data)
+        if underscore:
+            data['_'] = {}
+            for attr in underscore:
+                if not self.has_extension(attr):
+                    raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
+                value = self._.get(attr)
+                if not is_json_serializable(value):
+                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                data['_'][attr] = value
+        return data
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:

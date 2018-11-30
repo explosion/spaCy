@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 
+# fmt: off
+
 class Messages(object):
     M001 = ("Download successful but linking failed")
     M002 = ("Creating a shortcut link for 'en' didn't work (maybe you "
@@ -73,3 +75,31 @@ class Messages(object):
     M052 = ("Not a valid meta.json format")
     M053 = ("Expected dict but got: {meta_type}")
     M054 = ("No --lang specified, but tokenization required.")
+    M055 = ("Training pipeline: {pipeline}")
+    M056 = ("Starting with base model '{model}'")
+    M057 = ("Starting with blank model '{model}'")
+    M058 = ("Loading vector from model '{model}'")
+    M059 = ("Can't use multitask objective without '{pipe}' in the pipeline")
+    M060 = ("Counting training words (limit={limit})")
+    M061 = ("\nSaving model...")
+    M062 = ("Output directory is not empty.")
+    M063 = ("Incompatible arguments")
+    M064 = ("The -f and -c arguments are deprecated, and not compatible with "
+            "the -j argument, which should specify the same information. "
+            "Either merge the frequencies and clusters data into the "
+            "JSONL-formatted file (recommended), or use only the -f and -c "
+            "files, without the other lexical attributes.")
+    M065 = ("This can lead to unintended side effects when saving the model. "
+            "Please use an empty directory or a different path instead. If "
+            "the specified output path doesn't exist, the directory will be "
+            "created for you.")
+    M066 = ("Saved model to output directory")
+    M067 = ("Can't find lexical data")
+    M068 = ("Sucessfully compiled vocab and vectors, and saved model")
+    M069 = ("Unknown file type: '{name}'")
+    M070 = ("Supported file types: '{options}'")
+    M071 = ("Loaded pretrained tok2vec for: {components}")
+    M072 = ("Model language ('{model_lang}') doesn't match language specified "
+            "as `lang` argument ('{lang}') ")
+
+# fmt: on

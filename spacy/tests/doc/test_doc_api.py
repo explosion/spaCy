@@ -341,21 +341,3 @@ def test_lowest_common_ancestor(en_tokenizer):
     assert lca[1, 1] == 1
     assert lca[0, 1] == 2
     assert lca[1, 2] == 2
-
-
-def test_parse_tree(en_tokenizer):
-    """Tests doc.print_tree() method."""
-    text = "I like New York in Autumn."
-    heads = [1, 0, 1, -2, -3, -1, -5]
-    tags = ["PRP", "IN", "NNP", "NNP", "IN", "NNP", "."]
-    tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, tags=tags)
-    # full method parse_tree(text) is a trivial composition
-    trees = doc.print_tree()
-    assert len(trees) > 0
-    tree = trees[0]
-    assert all(
-        k in list(tree.keys())
-        for k in ["word", "lemma", "NE", "POS_fine", "POS_coarse", "arc", "modifiers"]
-    )
-    assert tree["word"] == "like"  # check root is correct
