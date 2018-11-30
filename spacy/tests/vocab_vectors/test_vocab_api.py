@@ -42,6 +42,6 @@ def test_vocab_api_symbols(en_vocab, string, symbol):
 
 @pytest.mark.parametrize("text", "Hello")
 def test_vocab_api_contains(en_vocab, text):
-    _ = en_vocab[text]
+    _ = en_vocab[text]  # noqa: F841
     assert text in en_vocab
     assert "LKsdjvlsakdvlaksdvlkasjdvljasdlkfvm" not in en_vocab

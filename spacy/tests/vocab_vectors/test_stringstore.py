@@ -24,7 +24,7 @@ def test_stringstore_from_api_docs(stringstore):
     assert stringstore[apple_hash] == "apple"
     assert "apple" in stringstore
     assert "cherry" not in stringstore
-    orange_hash = stringstore.add("orange")
+    stringstore.add("orange")
     all_strings = [s for s in stringstore]
     assert all_strings == ["apple", "orange"]
     banana_hash = stringstore.add("banana")
@@ -63,7 +63,7 @@ def test_stringstore_retrieve_id(stringstore, text):
 def test_stringstore_med_string(stringstore, text1, text2):
     store = stringstore.add(text1)
     assert stringstore[store] == text1.decode("utf8")
-    dummy = stringstore.add(text2)
+    stringstore.add(text2)
     assert stringstore[text1] == store
 
 

@@ -71,7 +71,7 @@ def test_parser_space_attachment_intermediate_trailing(en_tokenizer, en_parser):
 def test_parser_space_attachment_space(en_tokenizer, en_parser, text, length):
     doc = Doc(en_parser.vocab, words=text)
     assert len(doc) == length
-    with en_parser.step_through(doc) as _:
+    with en_parser.step_through(doc) as _:  # noqa: F841
         pass
     assert doc[0].is_space
     for token in doc:

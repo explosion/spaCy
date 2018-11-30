@@ -11,3 +11,4 @@ exclude =
     _tokenizer_exceptions_list.py,
     spacy/lang/fr/lemmatizer,
     spacy/lang/nb/lemmatizer
+    spacy/__init__.py

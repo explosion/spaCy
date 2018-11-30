@@ -22,9 +22,9 @@ def test_doc_underscore_getattr_setattr():
     doc.user_data = {}
     Underscore.doc_extensions["hello"] = (False, None, None, None)
     doc._ = Underscore(Underscore.doc_extensions, doc)
-    assert doc._.hello == False
+    assert doc._.hello is False
     doc._.hello = True
-    assert doc._.hello == True
+    assert doc._.hello is True
 
 
 def test_create_span_underscore():
