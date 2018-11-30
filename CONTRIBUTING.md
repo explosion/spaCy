@@ -192,7 +192,7 @@ Python modules. If you've built spaCy from source, you'll already have both
 tools installed.
 
 **⚠️ Note that formatting and linting is currently only possible for Python
-modules in `.py` files, not Cython modules in `.pyx` and `.pxy` files.**
+modules in `.py` files, not Cython modules in `.pyx` and `.pxd` files.**
 
 ### Code formatting
 
