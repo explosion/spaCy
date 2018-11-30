@@ -442,7 +442,7 @@ class Tensorizer(Pipe):
         **cfg: Config parameters.
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
-        input_size = util.env_opt('token_vector_width', cfg.get('input_size', 128))
+        input_size = util.env_opt('token_vector_width', cfg.get('input_size', 96))
         return zero_init(Affine(output_size, input_size, drop_factor=0.0))
 
     def __init__(self, vocab, model=True, **cfg):
