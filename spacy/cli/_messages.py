@@ -85,10 +85,10 @@ class Messages(object):
     M062 = ("Output directory is not empty.")
     M063 = ("Incompatible arguments")
     M064 = ("The -f and -c arguments are deprecated, and not compatible with "
-            "the -j argument, which should specify the same information. Either
-            "merge the frequencies and clusters data into the JSONL-formatted "
-            "file (recommended), or use only the -f and -c files, without the
-            "other lexical attributes.")
+            "the -j argument, which should specify the same information. "
+            "Either merge the frequencies and clusters data into the "
+            "JSONL-formatted file (recommended), or use only the -f and -c "
+            "files, without the other lexical attributes.")
     M065 = ("This can lead to unintended side effects when saving the model. "
             "Please use an empty directory or a different path instead. If "
             "the specified output path doesn't exist, the directory will be "
