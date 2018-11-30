@@ -72,10 +72,8 @@ def serve(
 
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server("0.0.0.0", port, app)
-    prints(
-        "Using the '{}' visualizer".format(style),
-        title="Serving on port {}...\n".format(port),
-    )
+    print("\nUsing the '{}' visualizer".format(style))
+    print("Serving on port {}...\n".format(port))
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
