@@ -284,6 +284,9 @@ class Errors(object):
     E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
             "settings: {opts}")
     E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
+    E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
+            "in favor of the pipe name `sentencizer`, which does the same "
+            "thing. For example, use `nlp.create_pipeline('sentencizer')`")
 
 
 @add_codes

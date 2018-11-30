@@ -49,7 +49,7 @@ class SentenceSegmenter(object):
     Sentence detection strategies should be generators that take `Doc` objects
     and yield `Span` objects for each sentence.
     """
-    name = 'sbd'
+    name = 'sentencizer'
 
     def __init__(self, vocab, strategy=None):
         self.vocab = vocab

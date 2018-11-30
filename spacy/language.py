@@ -116,7 +116,6 @@ class Language(object):
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
-        "sbd": lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
         "sentencizer": lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
         "merge_noun_chunks": lambda nlp, **cfg: merge_noun_chunks,
         "merge_entities": lambda nlp, **cfg: merge_entities,
@@ -243,7 +242,10 @@ class Language(object):
         RETURNS (callable): Pipeline component.
         """
         if name not in self.factories:
-            raise KeyError(Errors.E002.format(name=name))
+            if name == "sbd":
+                raise KeyError(Errors.E108.format(name=name))
+            else:
+                raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
         return factory(self, **config)
 
