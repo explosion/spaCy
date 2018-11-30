@@ -9,7 +9,7 @@ from ...util import get_doc
 
 @pytest.fixture
 def ru_lemmatizer():
-    pymorphy = pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy2")
     return Russian.Defaults.create_lemmatizer()
 
 

@@ -373,6 +373,8 @@ cdef class Parser:
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
+        for multitask in self._multitasks:
+            multitask.update(docs, golds, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
         beam_update_prob = self.cfg.get('beam_update_prob', 1.0)

@@ -11,6 +11,8 @@ ujson>=1.35
 dill>=0.2,<0.3
 regex==2018.01.10
 requests>=2.13.0,<3.0.0
+jsonschema>=2.6.0,<3.0.0
+wasabi>=0.0.8,<1.1.0
 pathlib==1.0.1; python_version < "3.4"
 # Development dependencies
 pytest>=4.0.0,<5.0.0

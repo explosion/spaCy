@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema",
+  "type": "object",
+  "properties": {
+    "lang": {
+      "title": "Two-letter language code, e.g. 'en'",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 2,
+      "pattern": "^[a-z]*$"
+    },
+    "name": {
+      "title": "Model name",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z_]*$"
+    },
+    "version": {
+      "title": "Model version",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[0-9a-z.-]*$"
+    },
+    "spacy_version": {
+      "title": "Compatible spaCy version identifier",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[0-9a-z.-><=]*$"
+    },
+    "parent_package": {
+      "title": "Name of parent spaCy package, e.g. spacy or spacy-nightly",
+      "type": "string",
+      "minLength": 1,
+      "default": "spacy"
+    },
+    "pipeline": {
+      "title": "Names of pipeline components",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "description": {
+      "title": "Model description",
+      "type": "string"
+    },
+    "license": {
+      "title": "Model license",
+      "type": "string"
+    },
+    "author": {
+      "title": "Model author name",
+      "type": "string"
+    },
+    "email": {
+      "title": "Model author email",
+      "type": "string",
+      "format": "email"
+    },
+    "url": {
+      "title": "Model author URL",
+      "type": "string",
+      "format": "uri"
+    },
+    "sources": {
+      "title": "Training data sources",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "vectors": {
+      "title": "Included word vectors",
+      "type": "object",
+      "properties": {
+        "keys": {
+          "title": "Number of unique keys",
+          "type": "integer",
+          "minimum": 0
+        },
+        "vectors": {
+          "title": "Number of unique vectors",
+          "type": "integer",
+          "minimum": 0
+        },
+        "width": {
+          "title": "Number of dimensions",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "accuracy": {
+      "title": "Accuracy numbers",
+      "type": "object",
+      "patternProperties": {
+        "*": {
+          "type": "number",
+          "minimum": 0.0
+        }
+      }
+    },
+    "speed": {
+      "title": "Speed evaluation numbers",
+      "type": "object",
+      "patternProperties": {
+        "*": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0.0
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        }
+      }
+    }
+  },
+  "required": [
+    "lang",
+    "name",
+    "version"
+  ]
+}

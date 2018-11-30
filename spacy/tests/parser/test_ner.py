@@ -57,6 +57,7 @@ def test_get_oracle_moves_negative_entities(tsys, doc, entity_annots):
     tsys.preprocess_gold(gold)
     act_classes = tsys.get_oracle_sequence(doc, gold)
     names = [tsys.get_class_name(act) for act in act_classes]
+    assert names
 
 
 def test_get_oracle_moves_negative_entities2(tsys, vocab):
@@ -66,6 +67,7 @@ def test_get_oracle_moves_negative_entities2(tsys, vocab):
     tsys.preprocess_gold(gold)
     act_classes = tsys.get_oracle_sequence(doc, gold)
     names = [tsys.get_class_name(act) for act in act_classes]
+    assert names
 
 
 def test_get_oracle_moves_negative_O(tsys, vocab):
@@ -75,6 +77,7 @@ def test_get_oracle_moves_negative_O(tsys, vocab):
     tsys.preprocess_gold(gold)
     act_classes = tsys.get_oracle_sequence(doc, gold)
     names = [tsys.get_class_name(act) for act in act_classes]
+    assert names
 
 
 def test_doc_add_entities_set_ents_iob(en_vocab):

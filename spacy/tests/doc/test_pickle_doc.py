@@ -16,7 +16,7 @@ def test_pickle_single_doc():
 def test_list_of_docs_pickles_efficiently():
     nlp = Language()
     for i in range(10000):
-        _ = nlp.vocab[unicode_(i)]
+        _ = nlp.vocab[unicode_(i)]  # noqa: F841
     one_pickled = pickle.dumps(nlp("0"), -1)
     docs = list(nlp.pipe(unicode_(i) for i in range(100)))
     many_pickled = pickle.dumps(docs, -1)
@@ -33,7 +33,7 @@ def test_user_data_from_disk():
     doc.user_data[(0, 1)] = False
     b = doc.to_bytes()
     doc2 = doc.__class__(doc.vocab).from_bytes(b)
-    assert doc2.user_data[(0, 1)] == False
+    assert doc2.user_data[(0, 1)] is False
 
 
 def test_user_data_unpickles():
@@ -42,7 +42,7 @@ def test_user_data_unpickles():
     doc.user_data[(0, 1)] = False
     b = pickle.dumps(doc)
     doc2 = pickle.loads(b)
-    assert doc2.user_data[(0, 1)] == False
+    assert doc2.user_data[(0, 1)] is False
 
 
 def test_hooks_unpickle():

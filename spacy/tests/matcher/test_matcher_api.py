@@ -51,7 +51,7 @@ def test_matcher_from_usage_docs(en_vocab):
 
     matcher = Matcher(en_vocab)
     matcher.add("HAPPY", label_sentiment, *pos_patterns)
-    matches = matcher(doc)
+    matcher(doc)
     assert doc.sentiment != 0
     assert doc[1].norm_ == "happy emoji"
 

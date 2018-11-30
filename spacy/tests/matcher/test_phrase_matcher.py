@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc
-
 from ..util import get_doc
 
 

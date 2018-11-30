@@ -15,7 +15,7 @@ import json
 
 import ujson
 
-from . import _align 
+from . import _align
 from .syntax import nonproj
 from .tokens import Doc
 from .errors import Errors
@@ -172,7 +172,7 @@ class GoldCorpus(object):
     def dev_tuples(self):
         locs = (self.tmp_dir / 'dev').iterdir()
         yield from self.read_tuples(locs, limit=self.limit)
-   
+
     @property
     def train_tuples(self):
         locs = (self.tmp_dir / 'train').iterdir()
@@ -271,6 +271,53 @@ def _corrupt(c, noise_level):
         return c.lower()
 
 
+def read_json_object(json_corpus_section):
+    """Take a list of JSON-formatted documents (e.g. from an already loaded
+    training data file) and yield tuples in the GoldParse format.
+
+    json_corpus_section (list): The data.
+    YIELDS (tuple): The reformatted data.
+    """
+    for json_doc in json_corpus_section:
+        tuple_doc = json_to_tuple(json_doc)
+        for tuple_paragraph in tuple_doc:
+            yield tuple_paragraph
+
+
+def json_to_tuple(doc):
+    """Convert an item in the JSON-formatted training data to the tuple format
+    used by GoldParse.
+
+    doc (dict): One entry in the training data.
+    YIELDS (tuple): The reformatted data.
+    """
+    paragraphs = []
+    for paragraph in doc['paragraphs']:
+        sents = []
+        for sent in paragraph['sentences']:
+            words = []
+            ids = []
+            tags = []
+            heads = []
+            labels = []
+            ner = []
+            for i, token in enumerate(sent['tokens']):
+                words.append(token['orth'])
+                ids.append(i)
+                tags.append(token.get('tag', '-'))
+                heads.append(token.get('head', 0) + i)
+                labels.append(token.get('dep', ''))
+                # Ensure ROOT label is case-insensitive
+                if labels[-1].lower() == 'root':
+                    labels[-1] = 'ROOT'
+                ner.append(token.get('ner', '-'))
+            sents.append([
+                [ids, words, tags, heads, labels, ner],
+                sent.get('brackets', [])])
+        if sents:
+            yield [paragraph.get('raw', None), sents]
+
+
 def read_json_file(loc, docs_filter=None, limit=None):
     loc = util.ensure_path(loc)
     if loc.is_dir():
@@ -280,31 +327,8 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
-            paragraphs = []
-            for paragraph in doc['paragraphs']:
-                sents = []
-                for sent in paragraph['sentences']:
-                    words = []
-                    ids = []
-                    tags = []
-                    heads = []
-                    labels = []
-                    ner = []
-                    for i, token in enumerate(sent['tokens']):
-                        words.append(token['orth'])
-                        ids.append(i)
-                        tags.append(token.get('tag', '-'))
-                        heads.append(token.get('head', 0) + i)
-                        labels.append(token.get('dep', ''))
-                        # Ensure ROOT label is case-insensitive
-                        if labels[-1].lower() == 'root':
-                            labels[-1] = 'ROOT'
-                        ner.append(token.get('ner', '-'))
-                    sents.append([
-                        [ids, words, tags, heads, labels, ner],
-                        sent.get('brackets', [])])
-                if sents:
-                    yield [paragraph.get('raw', None), sents]
+            for json_tuple in json_to_tuple(doc):
+                yield json_tuple
 
 
 def _json_iterate(loc):
@@ -573,32 +597,19 @@ cdef class GoldParse:
                         self.c.sent_start[i] = 0
 
 
-def docs_to_json(id, docs):
-    '''Convert a list of Doc objects into the JSON-serializable format used by
-    the spacy train command. Each Doc in the list will be interpreted as a
-    paragraph.
-    '''
+def docs_to_json(docs, underscore=None):
+    """Convert a list of Doc objects into the JSON-serializable format used by
+    the spacy train command.
+
+    docs (iterable / Doc): The Doc object(s) to convert.
+    underscore (list): Optional list of string names of custom doc._.
+        attributes. Attribute values need to be JSON-serializable. Values will
+        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+    RETURNS (list): The data in spaCy's JSON format.
+    """
     if isinstance(docs, Doc):
         docs = [docs]
-    json_doc = {'id': id, 'paragraphs': []}
-    for i, doc in enumerate(docs):
-        json_para = {'raw': doc.text, 'sentences': []}
-        ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
-        for j, sent in enumerate(doc.sents):
-            json_sent = {'tokens': [], 'brackets': []}
-            for token in sent:
-                json_token = {"id": token.i, "orth": token.text}
-                if doc.is_tagged:
-                    json_token['tag'] = token.tag_
-                if doc.is_parsed:
-                    json_token['head'] = token.head.i-token.i
-                    json_token['dep'] = token.dep_
-                json_token['ner'] = biluo_tags[token.i]
-                json_sent['tokens'].append(json_token)
-            json_para['sentences'].append(json_sent)
-        json_doc['paragraphs'].append(json_para)
-    return json_doc
+    return [doc.to_json(underscore=underscore) for doc in docs]
 
 
 def biluo_tags_from_offsets(doc, entities, missing='O'):

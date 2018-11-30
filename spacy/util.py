@@ -7,8 +7,6 @@ import pkg_resources
 import importlib
 import regex as re
 from pathlib import Path
-import sys
-import textwrap
 import random
 from collections import OrderedDict
 from thinc.neural._classes.model import Model
@@ -18,9 +16,10 @@ import cytoolz
 import itertools
 import numpy.random
 
+
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
-from .compat import import_file
+from .compat import import_file, json_dumps
 from .errors import Errors
 
 # Import these directly from Thinc, so that we're sure we always have the
@@ -541,6 +540,16 @@ def read_json(location):
         return ujson.load(f)
 
 
+def write_json(file_path, contents):
+    """Create a .json file and dump contents.
+
+    file_path (unicode / Path): The path to the output file.
+    contents: The JSON-serializable contents to output.
+    """
+    with Path(file_path).open("w", encoding="utf8") as f:
+        f.write(json_dumps(contents))
+
+
 def read_jsonl(file_path):
     """Read a .jsonl file and yield its contents line by line.
 
@@ -553,6 +562,29 @@ def read_jsonl(file_path):
                 yield ujson.loads(line.strip())
             except ValueError:
                 continue
+
+
+def write_jsonl(file_path, lines):
+    """Create a .jsonl file and dump contents.
+
+    file_path (unicode / Path): The path to the output file.
+    lines (list): The JSON-serializable contents of each line.
+    """
+    data = [json_dumps(line) for line in lines]
+    with Path(file_path).open("w", encoding="utf-8") as f:
+        f.write("\n".join(data))
+
+
+def is_json_serializable(obj):
+    """Check if a Python object is JSON-serializable."""
+    if hasattr(obj, "__call__"):
+        # Check this separately here to prevent infinite recursions
+        return False
+    try:
+        ujson.dumps(obj)
+        return True
+    except TypeError:
+        return False
 
 
 def get_raw_input(description, default=False):
@@ -602,21 +634,6 @@ def from_disk(path, readers, exclude):
     return path
 
 
-def print_table(data, title=None):
-    """Print data in table format.
-
-    data (dict or list of tuples): Label/value pairs.
-    title (unicode or None): Title, will be printed above.
-    """
-    if isinstance(data, dict):
-        data = list(data.items())
-    tpl_row = "    {:<15}" * len(data[0])
-    table = "\n".join([tpl_row.format(l, unicode_(v)) for l, v in data])
-    if title:
-        print("\n    \033[93m{}\033[0m".format(title))
-    print("\n{}\n".format(table))
-
-
 def print_markdown(data, title=None):
     """Print data in GitHub-flavoured Markdown format for issues etc.
 
@@ -636,44 +653,6 @@ def print_markdown(data, title=None):
     if title:
         print("\n## {}".format(title))
     print("\n{}\n".format("\n".join(markdown)))
-
-
-def prints(*texts, **kwargs):
-    """Print formatted message (manual ANSI escape sequences to avoid
-    dependency)
-
-    *texts (unicode): Texts to print. Each argument is rendered as paragraph.
-    **kwargs: 'title' becomes coloured headline. exits=True performs sys exit.
-    """
-    exits = kwargs.get("exits", None)
-    title = kwargs.get("title", None)
-    title = "\033[93m{}\033[0m\n".format(_wrap(title)) if title else ""
-    message = "\n\n".join([_wrap(text) for text in texts])
-    print("\n{}{}\n".format(title, message))
-    if exits is not None:
-        sys.exit(exits)
-
-
-def _wrap(text, wrap_max=80, indent=4):
-    """Wrap text at given width using textwrap module.
-
-    text (unicode): Text to wrap. If it's a Path, it's converted to string.
-    wrap_max (int): Maximum line length (indent is deducted).
-    indent (int): Number of spaces for indentation.
-    RETURNS (unicode): Wrapped text.
-    """
-    indent = indent * " "
-    wrap_width = wrap_max - len(indent)
-    if isinstance(text, Path):
-        text = path2str(text)
-    return textwrap.fill(
-        text,
-        width=wrap_width,
-        initial_indent=indent,
-        subsequent_indent=indent,
-        break_long_words=False,
-        break_on_hyphens=False,
-    )
 
 
 def minify_html(html):

@@ -273,9 +273,9 @@ def test_vocab_add_vector():
 
 def test_vocab_prune_vectors():
     vocab = Vocab()
-    _ = vocab["cat"]
-    _ = vocab["dog"]
-    _ = vocab["kitten"]
+    _ = vocab["cat"]  # noqa: F841
+    _ = vocab["dog"]  # noqa: F841
+    _ = vocab["kitten"]  # noqa: F841
     data = numpy.ndarray((5, 3), dtype="f")
     data[0] = 1.0
     data[1] = 2.0

@@ -20,7 +20,6 @@ def test_train_with_many_entity_types():
     optimizer = nlp.begin_training()
     for i in range(20):
         losses = {}
-        index = 0
         random.shuffle(train_data)
         for statement, entities in train_data:
             nlp.update([statement], [entities], sgd=optimizer, losses=losses, drop=0.5)

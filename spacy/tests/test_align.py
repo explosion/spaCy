@@ -45,7 +45,7 @@ def test_align_i2j(string1, string2, i2j):
         ("t", "catsie", [-1, -1, 0, -1, -1, -1]),
     ],
 )
-def test_align_i2j(string1, string2, j2i):
+def test_align_i2j_2(string1, string2, j2i):
     output_cost, output_i2j, output_j2i, matrix = align(string1, string2)
     assert list(output_j2i) == j2i
 
