@@ -230,9 +230,9 @@ class Language(object):
         """
         if name not in self.factories:
             if name == "sbd":
-                raise KeyError(Errors.E002.format(name=name))
-            else:
                 raise KeyError(Errors.E104.format(name=name))
+            else:
+                raise KeyError(Errors.E002.format(name=name))
         factory = self.factories[name]
         return factory(self, **config)
 
