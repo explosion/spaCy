@@ -1,7 +1,27 @@
 # coding: utf8
 from __future__ import unicode_literals
-from ...symbols import POS, ADJ, ADP, ADV, AUX, CCONJ, DET, INTJ, NOUN, NUM, PART, PRON, PROPN, PUNCT, SCONJ, VERB, X
 
+from ...symbols import (
+    POS,
+    ADJ,
+    ADP,
+    ADV,
+    AUX,
+    CCONJ,
+    DET,
+    INTJ,
+    NOUN,
+    NUM,
+    PART,
+    PRON,
+    PROPN,
+    PUNCT,
+    SCONJ,
+    VERB,
+    X,
+)
+
+# fmt: off
 TAG_MAP = {
     "adja": {POS: ADJ},
     "adjc": {POS: ADJ},
@@ -1626,3 +1646,4 @@ TAG_MAP = {
     "X___": {POS: X},
     "X__Abbr=Yes": {POS: X, "morph": "Abbr=Yes"}
 }
+# fmt: on

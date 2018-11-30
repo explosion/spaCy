@@ -19,5 +19,5 @@ sentences = [
     "Unde ești?",
     "Cine este președintele Franței?",
     "Care este capitala Statelor Unite?",
-    "Când s-a născut Barack Obama?"
+    "Când s-a născut Barack Obama?",
 ]

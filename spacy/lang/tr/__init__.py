@@ -14,17 +14,18 @@ from ...util import update_exc, add_lookups
 
 class TurkishDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'tr'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
+    lex_attr_getters[LANG] = lambda text: "tr"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     lemma_lookup = LOOKUP
 
 
 class Turkish(Language):
-    lang = 'tr'
+    lang = "tr"
     Defaults = TurkishDefaults
 
 
-__all__ = ['Turkish']
-
+__all__ = ["Turkish"]

@@ -2,16 +2,10 @@
 from __future__ import unicode_literals
 
 
-ADJECTIVE_RULES = [
-    ["s", ""],
-    ["e", ""],
-    ["es", ""] 
-]
-    
-    
-NOUN_RULES = [
-    ["s", ""]
-]
+ADJECTIVE_RULES = [["s", ""], ["e", ""], ["es", ""]]
+
+
+NOUN_RULES = [["s", ""]]
 
 
 VERB_RULES = [
@@ -52,5 +46,5 @@ VERB_RULES = [
     ["assions", "er"],
     ["assiez", "er"],
     ["assent", "er"],
-    ["ant", "er"]
+    ["ant", "er"],
 ]

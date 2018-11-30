@@ -82,5 +82,5 @@ AUXILIARY_VERBS_IRREG = {
     "eussions": ("avoir",),
     "eussiez": ("avoir",),
     "eussent": ("avoir",),
-    "ayant": ("avoir",)
+    "ayant": ("avoir",),
 }

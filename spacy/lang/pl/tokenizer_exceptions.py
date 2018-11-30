@@ -12,11 +12,11 @@ for exc_data in [
     {ORTH: "mgr.", LEMMA: "magister", POS: NOUN},
     {ORTH: "tzn.", LEMMA: "to znaczy", POS: ADV},
     {ORTH: "tj.", LEMMA: "to jest", POS: ADV},
-    {ORTH: "tzw.", LEMMA: "tak zwany", POS: ADJ}]:
+    {ORTH: "tzw.", LEMMA: "tak zwany", POS: ADJ},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
-for orth in [
-    "w.", "r."]:
+for orth in ["w.", "r."]:
     _exc[orth] = [{ORTH: orth}]
 
 

@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a ach ag agus an aon ar arna as
 
 ba beirt bhúr
@@ -42,4 +43,5 @@ um
 í
 
 ó ón óna ónár
-""".split())
+""".split()
+)

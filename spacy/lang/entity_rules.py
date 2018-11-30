@@ -30,8 +30,9 @@ for name, tag, patterns in [
     ("Facebook", "ORG", [[{LOWER: "facebook"}]]),
     ("Blizzard", "ORG", [[{LOWER: "blizzard"}]]),
     ("Ubuntu", "ORG", [[{LOWER: "ubuntu"}]]),
-    ("YouTube", "PRODUCT", [[{LOWER: "youtube"}]]),]:
-    ENTITY_RULES.append({ENT_ID: name, 'attrs': {ENT_TYPE: tag}, 'patterns': patterns})
+    ("YouTube", "PRODUCT", [[{LOWER: "youtube"}]]),
+]:
+    ENTITY_RULES.append({ENT_ID: name, "attrs": {ENT_TYPE: tag}, "patterns": patterns})
 
 
 FALSE_POSITIVES = [
@@ -46,5 +47,5 @@ FALSE_POSITIVES = [
     [{ORTH: "Yay"}],
     [{ORTH: "Ahh"}],
     [{ORTH: "Yea"}],
-    [{ORTH: "Bah"}]
+    [{ORTH: "Bah"}],
 ]

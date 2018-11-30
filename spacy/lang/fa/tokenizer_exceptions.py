@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
-import re
+from ...symbols import ORTH, LEMMA, TAG, NORM
+
 
 _exc = {
     '.ق ': [{LEMMA: 'قمری', ORTH: '.ق '}],
@@ -13,2039 +13,2039 @@ _exc = {
 }
 
 _exc.update({
-    "آبرویت": [ 
+    "آبرویت": [
         {ORTH: "آبروی", LEMMA: "آبروی", NORM: "آبروی", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "آب‌نباتش": [ 
+    "آب‌نباتش": [
         {ORTH: "آب‌نبات", LEMMA: "آب‌نبات", NORM: "آب‌نبات", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "آثارش": [ 
+    "آثارش": [
         {ORTH: "آثار", LEMMA: "آثار", NORM: "آثار", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "آخرش": [ 
+    "آخرش": [
         {ORTH: "آخر", LEMMA: "آخر", NORM: "آخر", TAG: "ADV"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "آدمهاست": [ 
+    "آدمهاست": [
         {ORTH: "آدمها", LEMMA: "آدمها", NORM: "آدمها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "آرزومندیم": [ 
+    "آرزومندیم": [
         {ORTH: "آرزومند", LEMMA: "آرزومند", NORM: "آرزومند", TAG: "ADJ"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "آزادند": [ 
+    "آزادند": [
         {ORTH: "آزاد", LEMMA: "آزاد", NORM: "آزاد", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "آسیب‌پذیرند": [ 
+    "آسیب‌پذیرند": [
         {ORTH: "آسیب‌پذیر", LEMMA: "آسیب‌پذیر", NORM: "آسیب‌پذیر", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "آفریده‌اند": [ 
+    "آفریده‌اند": [
         {ORTH: "آفریده‌", LEMMA: "آفریده‌", NORM: "آفریده‌", TAG: "NOUN"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "آمدنش": [ 
+    "آمدنش": [
         {ORTH: "آمدن", LEMMA: "آمدن", NORM: "آمدن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "آمریکاست": [ 
+    "آمریکاست": [
         {ORTH: "آمریکا", LEMMA: "آمریکا", NORM: "آمریکا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "آنجاست": [ 
+    "آنجاست": [
         {ORTH: "آنجا", LEMMA: "آنجا", NORM: "آنجا", TAG: "ADV"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "آنست": [ 
+    "آنست": [
         {ORTH: "آن", LEMMA: "آن", NORM: "آن", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "آنند": [ 
+    "آنند": [
         {ORTH: "آن", LEMMA: "آن", NORM: "آن", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "آن‌هاست": [ 
+    "آن‌هاست": [
         {ORTH: "آن‌ها", LEMMA: "آن‌ها", NORM: "آن‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "آپاداناست": [ 
+    "آپاداناست": [
         {ORTH: "آپادانا", LEMMA: "آپادانا", NORM: "آپادانا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "اجتماعی‌مان": [ 
+    "اجتماعی‌مان": [
         {ORTH: "اجتماعی‌", LEMMA: "اجتماعی‌", NORM: "اجتماعی‌", TAG: "ADJ"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "اجدادت": [ 
+    "اجدادت": [
         {ORTH: "اجداد", LEMMA: "اجداد", NORM: "اجداد", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "اجدادش": [ 
+    "اجدادش": [
         {ORTH: "اجداد", LEMMA: "اجداد", NORM: "اجداد", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اجدادی‌شان": [ 
+    "اجدادی‌شان": [
         {ORTH: "اجدادی‌", LEMMA: "اجدادی‌", NORM: "اجدادی‌", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "اجراست": [ 
+    "اجراست": [
         {ORTH: "اجرا", LEMMA: "اجرا", NORM: "اجرا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "اختیارش": [ 
+    "اختیارش": [
         {ORTH: "اختیار", LEMMA: "اختیار", NORM: "اختیار", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اخلاقشان": [ 
+    "اخلاقشان": [
         {ORTH: "اخلاق", LEMMA: "اخلاق", NORM: "اخلاق", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "ادعایمان": [ 
+    "ادعایمان": [
         {ORTH: "ادعای", LEMMA: "ادعای", NORM: "ادعای", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "اذیتش": [ 
+    "اذیتش": [
         {ORTH: "اذیت", LEMMA: "اذیت", NORM: "اذیت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اراده‌اش": [ 
+    "اراده‌اش": [
         {ORTH: "اراده‌", LEMMA: "اراده‌", NORM: "اراده‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "ارتباطش": [ 
+    "ارتباطش": [
         {ORTH: "ارتباط", LEMMA: "ارتباط", NORM: "ارتباط", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "ارتباطمان": [ 
+    "ارتباطمان": [
         {ORTH: "ارتباط", LEMMA: "ارتباط", NORM: "ارتباط", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "ارزشهاست": [ 
+    "ارزشهاست": [
         {ORTH: "ارزشها", LEMMA: "ارزشها", NORM: "ارزشها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "ارزی‌اش": [ 
+    "ارزی‌اش": [
         {ORTH: "ارزی‌", LEMMA: "ارزی‌", NORM: "ارزی‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "اره‌اش": [ 
+    "اره‌اش": [
         {ORTH: "اره‌", LEMMA: "اره‌", NORM: "اره‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "ازش": [ 
+    "ازش": [
         {ORTH: "از", LEMMA: "از", NORM: "از", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "ازین": [ 
+    "ازین": [
         {ORTH: "از", LEMMA: "از", NORM: "از", TAG: "ADP"},
         {ORTH: "ین", LEMMA: "ین", NORM: "ین", TAG: "NOUN"}],
-    "ازین‌هاست": [ 
+    "ازین‌هاست": [
         {ORTH: "از", LEMMA: "از", NORM: "از", TAG: "ADP"},
         {ORTH: "ین‌ها", LEMMA: "ین‌ها", NORM: "ین‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "استخوانند": [ 
+    "استخوانند": [
         {ORTH: "استخوان", LEMMA: "استخوان", NORM: "استخوان", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "اسلامند": [ 
+    "اسلامند": [
         {ORTH: "اسلام", LEMMA: "اسلام", NORM: "اسلام", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "اسلامی‌اند": [ 
+    "اسلامی‌اند": [
         {ORTH: "اسلامی‌", LEMMA: "اسلامی‌", NORM: "اسلامی‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "اسلحه‌هایشان": [ 
+    "اسلحه‌هایشان": [
         {ORTH: "اسلحه‌های", LEMMA: "اسلحه‌های", NORM: "اسلحه‌های", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "اسمت": [ 
+    "اسمت": [
         {ORTH: "اسم", LEMMA: "اسم", NORM: "اسم", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "اسمش": [ 
+    "اسمش": [
         {ORTH: "اسم", LEMMA: "اسم", NORM: "اسم", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اشتباهند": [ 
+    "اشتباهند": [
         {ORTH: "اشتباه", LEMMA: "اشتباه", NORM: "اشتباه", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "اصلش": [ 
+    "اصلش": [
         {ORTH: "اصل", LEMMA: "اصل", NORM: "اصل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اطاقش": [ 
+    "اطاقش": [
         {ORTH: "اطاق", LEMMA: "اطاق", NORM: "اطاق", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اعتقادند": [ 
+    "اعتقادند": [
         {ORTH: "اعتقاد", LEMMA: "اعتقاد", NORM: "اعتقاد", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "اعلایش": [ 
+    "اعلایش": [
         {ORTH: "اعلای", LEMMA: "اعلای", NORM: "اعلای", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "افتراست": [ 
+    "افتراست": [
         {ORTH: "افترا", LEMMA: "افترا", NORM: "افترا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "افطارت": [ 
+    "افطارت": [
         {ORTH: "افطار", LEMMA: "افطار", NORM: "افطار", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "اقوامش": [ 
+    "اقوامش": [
         {ORTH: "اقوام", LEMMA: "اقوام", NORM: "اقوام", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "امروزیش": [ 
+    "امروزیش": [
         {ORTH: "امروزی", LEMMA: "امروزی", NORM: "امروزی", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اموالش": [ 
+    "اموالش": [
         {ORTH: "اموال", LEMMA: "اموال", NORM: "اموال", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "امیدوارند": [ 
+    "امیدوارند": [
         {ORTH: "امیدوار", LEMMA: "امیدوار", NORM: "امیدوار", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "امیدواریم": [ 
+    "امیدواریم": [
         {ORTH: "امیدوار", LEMMA: "امیدوار", NORM: "امیدوار", TAG: "ADJ"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "انتخابهایم": [ 
+    "انتخابهایم": [
         {ORTH: "انتخابها", LEMMA: "انتخابها", NORM: "انتخابها", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "NOUN"}],
-    "انتظارم": [ 
+    "انتظارم": [
         {ORTH: "انتظار", LEMMA: "انتظار", NORM: "انتظار", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "انجمنم": [ 
+    "انجمنم": [
         {ORTH: "انجمن", LEMMA: "انجمن", NORM: "انجمن", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "اندرش": [ 
+    "اندرش": [
         {ORTH: "اندر", LEMMA: "اندر", NORM: "اندر", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "انشایش": [ 
+    "انشایش": [
         {ORTH: "انشای", LEMMA: "انشای", NORM: "انشای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "انگشتشان": [ 
+    "انگشتشان": [
         {ORTH: "انگشت", LEMMA: "انگشت", NORM: "انگشت", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "انگشتهایش": [ 
+    "انگشتهایش": [
         {ORTH: "انگشتهای", LEMMA: "انگشتهای", NORM: "انگشتهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اهمیتشان": [ 
+    "اهمیتشان": [
         {ORTH: "اهمیت", LEMMA: "اهمیت", NORM: "اهمیت", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "اهمیتند": [ 
+    "اهمیتند": [
         {ORTH: "اهمیت", LEMMA: "اهمیت", NORM: "اهمیت", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "اوایلش": [ 
+    "اوایلش": [
         {ORTH: "اوایل", LEMMA: "اوایل", NORM: "اوایل", TAG: "ADV"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اوست": [ 
+    "اوست": [
         {ORTH: "او", LEMMA: "او", NORM: "او", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "اولش": [ 
+    "اولش": [
         {ORTH: "اول", LEMMA: "اول", NORM: "اول", TAG: "ADV"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "اولشان": [ 
+    "اولشان": [
         {ORTH: "اول", LEMMA: "اول", NORM: "اول", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "اولم": [ 
+    "اولم": [
         {ORTH: "اول", LEMMA: "اول", NORM: "اول", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "اکثرشان": [ 
+    "اکثرشان": [
         {ORTH: "اکثر", LEMMA: "اکثر", NORM: "اکثر", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "ایتالیاست": [ 
+    "ایتالیاست": [
         {ORTH: "ایتالیا", LEMMA: "ایتالیا", NORM: "ایتالیا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "ایرانی‌اش": [ 
+    "ایرانی‌اش": [
         {ORTH: "ایرانی‌", LEMMA: "ایرانی‌", NORM: "ایرانی‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "اینجاست": [ 
+    "اینجاست": [
         {ORTH: "اینجا", LEMMA: "اینجا", NORM: "اینجا", TAG: "ADV"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "این‌هاست": [ 
+    "این‌هاست": [
         {ORTH: "این‌ها", LEMMA: "این‌ها", NORM: "این‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "بابات": [ 
+    "بابات": [
         {ORTH: "بابا", LEMMA: "بابا", NORM: "بابا", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "بارش": [ 
+    "بارش": [
         {ORTH: "بار", LEMMA: "بار", NORM: "بار", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بازیگرانش": [ 
+    "بازیگرانش": [
         {ORTH: "بازیگران", LEMMA: "بازیگران", NORM: "بازیگران", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بازیگرمان": [ 
+    "بازیگرمان": [
         {ORTH: "بازیگر", LEMMA: "بازیگر", NORM: "بازیگر", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "بازیگرهایم": [ 
+    "بازیگرهایم": [
         {ORTH: "بازیگرها", LEMMA: "بازیگرها", NORM: "بازیگرها", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "NOUN"}],
-    "بازی‌اش": [ 
+    "بازی‌اش": [
         {ORTH: "بازی‌", LEMMA: "بازی‌", NORM: "بازی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "بالاست": [ 
+    "بالاست": [
         {ORTH: "بالا", LEMMA: "بالا", NORM: "بالا", TAG: "ADV"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "باورند": [ 
+    "باورند": [
         {ORTH: "باور", LEMMA: "باور", NORM: "باور", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "بجاست": [ 
+    "بجاست": [
         {ORTH: "بجا", LEMMA: "بجا", NORM: "بجا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "بدان": [ 
+    "بدان": [
         {ORTH: "ب", LEMMA: "ب", NORM: "ب", TAG: "ADP"},
         {ORTH: "دان", LEMMA: "دان", NORM: "دان", TAG: "NOUN"}],
-    "بدش": [ 
+    "بدش": [
         {ORTH: "بد", LEMMA: "بد", NORM: "بد", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بدشان": [ 
+    "بدشان": [
         {ORTH: "بد", LEMMA: "بد", NORM: "بد", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "بدنم": [ 
+    "بدنم": [
         {ORTH: "بدن", LEMMA: "بدن", NORM: "بدن", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "بدهی‌ات": [ 
+    "بدهی‌ات": [
         {ORTH: "بدهی‌", LEMMA: "بدهی‌", NORM: "بدهی‌", TAG: "NOUN"},
         {ORTH: "ات", LEMMA: "ات", NORM: "ات", TAG: "NOUN"}],
-    "بدین": [ 
+    "بدین": [
         {ORTH: "ب", LEMMA: "ب", NORM: "ب", TAG: "ADP"},
         {ORTH: "دین", LEMMA: "دین", NORM: "دین", TAG: "NOUN"}],
-    "برابرش": [ 
+    "برابرش": [
         {ORTH: "برابر", LEMMA: "برابر", NORM: "برابر", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "برادرت": [ 
+    "برادرت": [
         {ORTH: "برادر", LEMMA: "برادر", NORM: "برادر", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "برادرش": [ 
+    "برادرش": [
         {ORTH: "برادر", LEMMA: "برادر", NORM: "برادر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "برایت": [ 
+    "برایت": [
         {ORTH: "برای", LEMMA: "برای", NORM: "برای", TAG: "ADP"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "برایتان": [ 
+    "برایتان": [
         {ORTH: "برای", LEMMA: "برای", NORM: "برای", TAG: "ADP"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "برایش": [ 
+    "برایش": [
         {ORTH: "برای", LEMMA: "برای", NORM: "برای", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "برایشان": [ 
+    "برایشان": [
         {ORTH: "برای", LEMMA: "برای", NORM: "برای", TAG: "ADP"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "برایم": [ 
+    "برایم": [
         {ORTH: "برای", LEMMA: "برای", NORM: "برای", TAG: "ADP"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "برایمان": [ 
+    "برایمان": [
         {ORTH: "برای", LEMMA: "برای", NORM: "برای", TAG: "ADP"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "برخوردارند": [ 
+    "برخوردارند": [
         {ORTH: "برخوردار", LEMMA: "برخوردار", NORM: "برخوردار", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "برنامه‌سازهاست": [ 
+    "برنامه‌سازهاست": [
         {ORTH: "برنامه‌سازها", LEMMA: "برنامه‌سازها", NORM: "برنامه‌سازها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "برهمش": [ 
+    "برهمش": [
         {ORTH: "برهم", LEMMA: "برهم", NORM: "برهم", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "برهنه‌اش": [ 
+    "برهنه‌اش": [
         {ORTH: "برهنه‌", LEMMA: "برهنه‌", NORM: "برهنه‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "برگهایش": [ 
+    "برگهایش": [
         {ORTH: "برگها", LEMMA: "برگها", NORM: "برگها", TAG: "NOUN"},
         {ORTH: "یش", LEMMA: "یش", NORM: "یش", TAG: "NOUN"}],
-    "برین": [ 
+    "برین": [
         {ORTH: "بر", LEMMA: "بر", NORM: "بر", TAG: "ADP"},
         {ORTH: "ین", LEMMA: "ین", NORM: "ین", TAG: "NOUN"}],
-    "بزرگش": [ 
+    "بزرگش": [
         {ORTH: "بزرگ", LEMMA: "بزرگ", NORM: "بزرگ", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بزرگ‌تری": [ 
+    "بزرگ‌تری": [
         {ORTH: "بزرگ‌تر", LEMMA: "بزرگ‌تر", NORM: "بزرگ‌تر", TAG: "ADJ"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "بساطش": [ 
+    "بساطش": [
         {ORTH: "بساط", LEMMA: "بساط", NORM: "بساط", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بعدش": [ 
+    "بعدش": [
         {ORTH: "بعد", LEMMA: "بعد", NORM: "بعد", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بعضیهایشان": [ 
+    "بعضیهایشان": [
         {ORTH: "بعضیهای", LEMMA: "بعضیهای", NORM: "بعضیهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "بعضی‌شان": [ 
+    "بعضی‌شان": [
         {ORTH: "بعضی", LEMMA: "بعضی", NORM: "بعضی", TAG: "NOUN"},
         {ORTH: "‌شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "بقیه‌اش": [ 
+    "بقیه‌اش": [
         {ORTH: "بقیه‌", LEMMA: "بقیه‌", NORM: "بقیه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "بلندش": [ 
+    "بلندش": [
         {ORTH: "بلند", LEMMA: "بلند", NORM: "بلند", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بناگوشش": [ 
+    "بناگوشش": [
         {ORTH: "بناگوش", LEMMA: "بناگوش", NORM: "بناگوش", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بنظرم": [ 
+    "بنظرم": [
         {ORTH: "ب", LEMMA: "ب", NORM: "ب", TAG: "ADP"},
         {ORTH: "نظر", LEMMA: "نظر", NORM: "نظر", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "بهت": [ 
+    "بهت": [
         {ORTH: "به", LEMMA: "به", NORM: "به", TAG: "ADP"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "بهترش": [ 
+    "بهترش": [
         {ORTH: "بهتر", LEMMA: "بهتر", NORM: "بهتر", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بهترم": [ 
+    "بهترم": [
         {ORTH: "بهتر", LEMMA: "بهتر", NORM: "بهتر", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "بهتری": [ 
+    "بهتری": [
         {ORTH: "بهتر", LEMMA: "بهتر", NORM: "بهتر", TAG: "ADJ"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "بهش": [ 
+    "بهش": [
         {ORTH: "به", LEMMA: "به", NORM: "به", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "به‌شان": [ 
+    "به‌شان": [
         {ORTH: "به‌", LEMMA: "به‌", NORM: "به‌", TAG: "ADP"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "بودمش": [ 
+    "بودمش": [
         {ORTH: "بودم", LEMMA: "بودم", NORM: "بودم", TAG: "VERB"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بودنش": [ 
+    "بودنش": [
         {ORTH: "بودن", LEMMA: "بودن", NORM: "بودن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بودن‌شان": [ 
+    "بودن‌شان": [
         {ORTH: "بودن‌", LEMMA: "بودن‌", NORM: "بودن‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "بوستانش": [ 
+    "بوستانش": [
         {ORTH: "بوستان", LEMMA: "بوستان", NORM: "بوستان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بویش": [ 
+    "بویش": [
         {ORTH: "بو", LEMMA: "بو", NORM: "بو", TAG: "NOUN"},
         {ORTH: "یش", LEMMA: "یش", NORM: "یش", TAG: "NOUN"}],
-    "بچه‌اش": [ 
+    "بچه‌اش": [
         {ORTH: "بچه‌", LEMMA: "بچه‌", NORM: "بچه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "بچه‌م": [ 
+    "بچه‌م": [
         {ORTH: "بچه‌", LEMMA: "بچه‌", NORM: "بچه‌", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "بچه‌هایش": [ 
+    "بچه‌هایش": [
         {ORTH: "بچه‌های", LEMMA: "بچه‌های", NORM: "بچه‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بیانیه‌شان": [ 
+    "بیانیه‌شان": [
         {ORTH: "بیانیه‌", LEMMA: "بیانیه‌", NORM: "بیانیه‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "بیدارم": [ 
+    "بیدارم": [
         {ORTH: "بیدار", LEMMA: "بیدار", NORM: "بیدار", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "بیناتری": [ 
+    "بیناتری": [
         {ORTH: "بیناتر", LEMMA: "بیناتر", NORM: "بیناتر", TAG: "ADJ"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "بی‌اطلاعند": [ 
+    "بی‌اطلاعند": [
         {ORTH: "بی‌اطلاع", LEMMA: "بی‌اطلاع", NORM: "بی‌اطلاع", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "بی‌اطلاعید": [ 
+    "بی‌اطلاعید": [
         {ORTH: "بی‌اطلاع", LEMMA: "بی‌اطلاع", NORM: "بی‌اطلاع", TAG: "ADJ"},
         {ORTH: "ید", LEMMA: "ید", NORM: "ید", TAG: "VERB"}],
-    "بی‌بهره‌اند": [ 
+    "بی‌بهره‌اند": [
         {ORTH: "بی‌بهره‌", LEMMA: "بی‌بهره‌", NORM: "بی‌بهره‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "بی‌تفاوتند": [ 
+    "بی‌تفاوتند": [
         {ORTH: "بی‌تفاوت", LEMMA: "بی‌تفاوت", NORM: "بی‌تفاوت", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "بی‌حسابش": [ 
+    "بی‌حسابش": [
         {ORTH: "بی‌حساب", LEMMA: "بی‌حساب", NORM: "بی‌حساب", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "بی‌نیش": [ 
+    "بی‌نیش": [
         {ORTH: "بی‌نی", LEMMA: "بی‌نی", NORM: "بی‌نی", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "تجربه‌هایم": [ 
+    "تجربه‌هایم": [
         {ORTH: "تجربه‌ها", LEMMA: "تجربه‌ها", NORM: "تجربه‌ها", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "NOUN"}],
-    "تحریم‌هاست": [ 
+    "تحریم‌هاست": [
         {ORTH: "تحریم‌ها", LEMMA: "تحریم‌ها", NORM: "تحریم‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "تحولند": [ 
+    "تحولند": [
         {ORTH: "تحول", LEMMA: "تحول", NORM: "تحول", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "تخیلی‌اش": [ 
+    "تخیلی‌اش": [
         {ORTH: "تخیلی‌", LEMMA: "تخیلی‌", NORM: "تخیلی‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "ترا": [ 
+    "ترا": [
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"},
         {ORTH: "را", LEMMA: "را", NORM: "را", TAG: "PART"}],
-    "ترسشان": [ 
+    "ترسشان": [
         {ORTH: "ترس", LEMMA: "ترس", NORM: "ترس", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "ترکش": [ 
+    "ترکش": [
         {ORTH: "ترک", LEMMA: "ترک", NORM: "ترک", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "تشنه‌ت": [ 
+    "تشنه‌ت": [
         {ORTH: "تشنه‌", LEMMA: "تشنه‌", NORM: "تشنه‌", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "تشکیلاتی‌اش": [ 
+    "تشکیلاتی‌اش": [
         {ORTH: "تشکیلاتی‌", LEMMA: "تشکیلاتی‌", NORM: "تشکیلاتی‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "تعلقش": [ 
+    "تعلقش": [
         {ORTH: "تعلق", LEMMA: "تعلق", NORM: "تعلق", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "تلاششان": [ 
+    "تلاششان": [
         {ORTH: "تلاش", LEMMA: "تلاش", NORM: "تلاش", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "تلاشمان": [ 
+    "تلاشمان": [
         {ORTH: "تلاش", LEMMA: "تلاش", NORM: "تلاش", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "تماشاگرش": [ 
+    "تماشاگرش": [
         {ORTH: "تماشاگر", LEMMA: "تماشاگر", NORM: "تماشاگر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "تمامشان": [ 
+    "تمامشان": [
         {ORTH: "تمام", LEMMA: "تمام", NORM: "تمام", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "تنش": [ 
+    "تنش": [
         {ORTH: "تن", LEMMA: "تن", NORM: "تن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "تنمان": [ 
+    "تنمان": [
         {ORTH: "تن", LEMMA: "تن", NORM: "تن", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "تنهایی‌اش": [ 
+    "تنهایی‌اش": [
         {ORTH: "تنهایی‌", LEMMA: "تنهایی‌", NORM: "تنهایی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "توانایی‌اش": [ 
+    "توانایی‌اش": [
         {ORTH: "توانایی‌", LEMMA: "توانایی‌", NORM: "توانایی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "توجهش": [ 
+    "توجهش": [
         {ORTH: "توجه", LEMMA: "توجه", NORM: "توجه", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "توست": [ 
+    "توست": [
         {ORTH: "تو", LEMMA: "تو", NORM: "تو", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "توصیه‌اش": [ 
+    "توصیه‌اش": [
         {ORTH: "توصیه‌", LEMMA: "توصیه‌", NORM: "توصیه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "تیغه‌اش": [ 
+    "تیغه‌اش": [
         {ORTH: "تیغه‌", LEMMA: "تیغه‌", NORM: "تیغه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "جاست": [ 
+    "جاست": [
         {ORTH: "جا", LEMMA: "جا", NORM: "جا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "جامعه‌اند": [ 
+    "جامعه‌اند": [
         {ORTH: "جامعه‌", LEMMA: "جامعه‌", NORM: "جامعه‌", TAG: "NOUN"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "جانم": [ 
+    "جانم": [
         {ORTH: "جان", LEMMA: "جان", NORM: "جان", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "جایش": [ 
+    "جایش": [
         {ORTH: "جای", LEMMA: "جای", NORM: "جای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "جایشان": [ 
+    "جایشان": [
         {ORTH: "جای", LEMMA: "جای", NORM: "جای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "جدیدش": [ 
+    "جدیدش": [
         {ORTH: "جدید", LEMMA: "جدید", NORM: "جدید", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "جرمزاست": [ 
+    "جرمزاست": [
         {ORTH: "جرمزا", LEMMA: "جرمزا", NORM: "جرمزا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "جلوست": [ 
+    "جلوست": [
         {ORTH: "جلو", LEMMA: "جلو", NORM: "جلو", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "جلویش": [ 
+    "جلویش": [
         {ORTH: "جلوی", LEMMA: "جلوی", NORM: "جلوی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "جمهوریست": [ 
+    "جمهوریست": [
         {ORTH: "جمهوری", LEMMA: "جمهوری", NORM: "جمهوری", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "جنسش": [ 
+    "جنسش": [
         {ORTH: "جنس", LEMMA: "جنس", NORM: "جنس", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "جنس‌اند": [ 
+    "جنس‌اند": [
         {ORTH: "جنس‌", LEMMA: "جنس‌", NORM: "جنس‌", TAG: "NOUN"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "جوانانش": [ 
+    "جوانانش": [
         {ORTH: "جوانان", LEMMA: "جوانان", NORM: "جوانان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "جویش": [ 
+    "جویش": [
         {ORTH: "جوی", LEMMA: "جوی", NORM: "جوی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "جگرش": [ 
+    "جگرش": [
         {ORTH: "جگر", LEMMA: "جگر", NORM: "جگر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "حاضرم": [ 
+    "حاضرم": [
         {ORTH: "حاضر", LEMMA: "حاضر", NORM: "حاضر", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "حالتهایشان": [ 
+    "حالتهایشان": [
         {ORTH: "حالتهای", LEMMA: "حالتهای", NORM: "حالتهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "حالیست": [ 
+    "حالیست": [
         {ORTH: "حالی", LEMMA: "حالی", NORM: "حالی", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "حالی‌مان": [ 
+    "حالی‌مان": [
         {ORTH: "حالی‌", LEMMA: "حالی‌", NORM: "حالی‌", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "حاکیست": [ 
+    "حاکیست": [
         {ORTH: "حاکی", LEMMA: "حاکی", NORM: "حاکی", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "حرامزادگی‌اش": [ 
+    "حرامزادگی‌اش": [
         {ORTH: "حرامزادگی‌", LEMMA: "حرامزادگی‌", NORM: "حرامزادگی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "حرفتان": [ 
+    "حرفتان": [
         {ORTH: "حرف", LEMMA: "حرف", NORM: "حرف", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "حرفش": [ 
+    "حرفش": [
         {ORTH: "حرف", LEMMA: "حرف", NORM: "حرف", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "حرفشان": [ 
+    "حرفشان": [
         {ORTH: "حرف", LEMMA: "حرف", NORM: "حرف", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "حرفم": [ 
+    "حرفم": [
         {ORTH: "حرف", LEMMA: "حرف", NORM: "حرف", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "حرف‌های‌شان": [ 
+    "حرف‌های‌شان": [
         {ORTH: "حرف‌های‌", LEMMA: "حرف‌های‌", NORM: "حرف‌های‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "حرکتمان": [ 
+    "حرکتمان": [
         {ORTH: "حرکت", LEMMA: "حرکت", NORM: "حرکت", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "حریفانشان": [ 
+    "حریفانشان": [
         {ORTH: "حریفان", LEMMA: "حریفان", NORM: "حریفان", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "حضورشان": [ 
+    "حضورشان": [
         {ORTH: "حضور", LEMMA: "حضور", NORM: "حضور", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "حمایتش": [ 
+    "حمایتش": [
         {ORTH: "حمایت", LEMMA: "حمایت", NORM: "حمایت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "حواسش": [ 
+    "حواسش": [
         {ORTH: "حواس", LEMMA: "حواس", NORM: "حواس", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "حواسشان": [ 
+    "حواسشان": [
         {ORTH: "حواس", LEMMA: "حواس", NORM: "حواس", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "حوصله‌مان": [ 
+    "حوصله‌مان": [
         {ORTH: "حوصله‌", LEMMA: "حوصله‌", NORM: "حوصله‌", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "حکومتش": [ 
+    "حکومتش": [
         {ORTH: "حکومت", LEMMA: "حکومت", NORM: "حکومت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "حکومتشان": [ 
+    "حکومتشان": [
         {ORTH: "حکومت", LEMMA: "حکومت", NORM: "حکومت", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "حیفم": [ 
+    "حیفم": [
         {ORTH: "حیف", LEMMA: "حیف", NORM: "حیف", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "خاندانش": [ 
+    "خاندانش": [
         {ORTH: "خاندان", LEMMA: "خاندان", NORM: "خاندان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خانه‌اش": [ 
+    "خانه‌اش": [
         {ORTH: "خانه‌", LEMMA: "خانه‌", NORM: "خانه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "خانه‌شان": [ 
+    "خانه‌شان": [
         {ORTH: "خانه‌", LEMMA: "خانه‌", NORM: "خانه‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خانه‌مان": [ 
+    "خانه‌مان": [
         {ORTH: "خانه‌", LEMMA: "خانه‌", NORM: "خانه‌", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "خانه‌هایشان": [ 
+    "خانه‌هایشان": [
         {ORTH: "خانه‌های", LEMMA: "خانه‌های", NORM: "خانه‌های", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خانواده‌ات": [ 
+    "خانواده‌ات": [
         {ORTH: "خانواده", LEMMA: "خانواده", NORM: "خانواده", TAG: "NOUN"},
         {ORTH: "‌ات", LEMMA: "ات", NORM: "ات", TAG: "NOUN"}],
-    "خانواده‌اش": [ 
+    "خانواده‌اش": [
         {ORTH: "خانواده‌", LEMMA: "خانواده‌", NORM: "خانواده‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "خانواده‌ام": [ 
+    "خانواده‌ام": [
         {ORTH: "خانواده‌", LEMMA: "خانواده‌", NORM: "خانواده‌", TAG: "NOUN"},
         {ORTH: "ام", LEMMA: "ام", NORM: "ام", TAG: "NOUN"}],
-    "خانواده‌شان": [ 
+    "خانواده‌شان": [
         {ORTH: "خانواده‌", LEMMA: "خانواده‌", NORM: "خانواده‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خداست": [ 
+    "خداست": [
         {ORTH: "خدا", LEMMA: "خدا", NORM: "خدا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "خدایش": [ 
+    "خدایش": [
         {ORTH: "خدا", LEMMA: "خدا", NORM: "خدا", TAG: "NOUN"},
         {ORTH: "یش", LEMMA: "یش", NORM: "یش", TAG: "NOUN"}],
-    "خدایشان": [ 
+    "خدایشان": [
         {ORTH: "خدای", LEMMA: "خدای", NORM: "خدای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خردسالش": [ 
+    "خردسالش": [
         {ORTH: "خردسال", LEMMA: "خردسال", NORM: "خردسال", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خروپفشان": [ 
+    "خروپفشان": [
         {ORTH: "خروپف", LEMMA: "خروپف", NORM: "خروپف", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خسته‌ای": [ 
+    "خسته‌ای": [
         {ORTH: "خسته‌", LEMMA: "خسته‌", NORM: "خسته‌", TAG: "ADJ"},
         {ORTH: "ای", LEMMA: "ای", NORM: "ای", TAG: "VERB"}],
-    "خطت": [ 
+    "خطت": [
         {ORTH: "خط", LEMMA: "خط", NORM: "خط", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "خوابمان": [ 
+    "خوابمان": [
         {ORTH: "خواب", LEMMA: "خواب", NORM: "خواب", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "خواندنش": [ 
+    "خواندنش": [
         {ORTH: "خواندن", LEMMA: "خواندن", NORM: "خواندن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خواهرش": [ 
+    "خواهرش": [
         {ORTH: "خواهر", LEMMA: "خواهر", NORM: "خواهر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خوبش": [ 
+    "خوبش": [
         {ORTH: "خوب", LEMMA: "خوب", NORM: "خوب", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خودت": [ 
+    "خودت": [
         {ORTH: "خود", LEMMA: "خود", NORM: "خود", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "خودتان": [ 
+    "خودتان": [
         {ORTH: "خود", LEMMA: "خود", NORM: "خود", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "خودش": [ 
+    "خودش": [
         {ORTH: "خود", LEMMA: "خود", NORM: "خود", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خودشان": [ 
+    "خودشان": [
         {ORTH: "خود", LEMMA: "خود", NORM: "خود", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خودمان": [ 
+    "خودمان": [
         {ORTH: "خود", LEMMA: "خود", NORM: "خود", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "خوردمان": [ 
+    "خوردمان": [
         {ORTH: "خورد", LEMMA: "خورد", NORM: "خورد", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "خوردنشان": [ 
+    "خوردنشان": [
         {ORTH: "خوردن", LEMMA: "خوردن", NORM: "خوردن", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خوشش": [ 
+    "خوشش": [
         {ORTH: "خوش", LEMMA: "خوش", NORM: "خوش", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خوشوقتم": [ 
+    "خوشوقتم": [
         {ORTH: "خوشوقت", LEMMA: "خوشوقت", NORM: "خوشوقت", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "خونشان": [ 
+    "خونشان": [
         {ORTH: "خون", LEMMA: "خون", NORM: "خون", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "خویش": [ 
+    "خویش": [
         {ORTH: "خوی", LEMMA: "خوی", NORM: "خوی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خویشتنم": [ 
+    "خویشتنم": [
         {ORTH: "خویشتن", LEMMA: "خویشتن", NORM: "خویشتن", TAG: "VERB"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "خیالش": [ 
+    "خیالش": [
         {ORTH: "خیال", LEMMA: "خیال", NORM: "خیال", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "خیسش": [ 
+    "خیسش": [
         {ORTH: "خیس", LEMMA: "خیس", NORM: "خیس", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "داراست": [ 
+    "داراست": [
         {ORTH: "دارا", LEMMA: "دارا", NORM: "دارا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "داستانهایش": [ 
+    "داستانهایش": [
         {ORTH: "داستانهای", LEMMA: "داستانهای", NORM: "داستانهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دخترمان": [ 
+    "دخترمان": [
         {ORTH: "دختر", LEMMA: "دختر", NORM: "دختر", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "دخیلند": [ 
+    "دخیلند": [
         {ORTH: "دخیل", LEMMA: "دخیل", NORM: "دخیل", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "درباره‌ات": [ 
+    "درباره‌ات": [
         {ORTH: "درباره", LEMMA: "درباره", NORM: "درباره", TAG: "ADP"},
         {ORTH: "‌ات", LEMMA: "ات", NORM: "ات", TAG: "NOUN"}],
-    "درباره‌اش": [ 
+    "درباره‌اش": [
         {ORTH: "درباره‌", LEMMA: "درباره‌", NORM: "درباره‌", TAG: "ADP"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "دردش": [ 
+    "دردش": [
         {ORTH: "درد", LEMMA: "درد", NORM: "درد", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دردشان": [ 
+    "دردشان": [
         {ORTH: "درد", LEMMA: "درد", NORM: "درد", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "درسته": [ 
+    "درسته": [
         {ORTH: "درست", LEMMA: "درست", NORM: "درست", TAG: "ADJ"},
         {ORTH: "ه", LEMMA: "ه", NORM: "ه", TAG: "VERB"}],
-    "درش": [ 
+    "درش": [
         {ORTH: "در", LEMMA: "در", NORM: "در", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "درون‌شان": [ 
+    "درون‌شان": [
         {ORTH: "درون‌", LEMMA: "درون‌", NORM: "درون‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "درین": [ 
+    "درین": [
         {ORTH: "در", LEMMA: "در", NORM: "در", TAG: "ADP"},
         {ORTH: "ین", LEMMA: "ین", NORM: "ین", TAG: "NOUN"}],
-    "دریچه‌هایش": [ 
+    "دریچه‌هایش": [
         {ORTH: "دریچه‌های", LEMMA: "دریچه‌های", NORM: "دریچه‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دزدانش": [ 
+    "دزدانش": [
         {ORTH: "دزدان", LEMMA: "دزدان", NORM: "دزدان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دستت": [ 
+    "دستت": [
         {ORTH: "دست", LEMMA: "دست", NORM: "دست", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "دستش": [ 
+    "دستش": [
         {ORTH: "دست", LEMMA: "دست", NORM: "دست", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دستمان": [ 
+    "دستمان": [
         {ORTH: "دست", LEMMA: "دست", NORM: "دست", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "دستهایشان": [ 
+    "دستهایشان": [
         {ORTH: "دستهای", LEMMA: "دستهای", NORM: "دستهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "دست‌یافتنی‌ست": [ 
+    "دست‌یافتنی‌ست": [
         {ORTH: "دست‌یافتنی‌", LEMMA: "دست‌یافتنی‌", NORM: "دست‌یافتنی‌", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "دشمنند": [ 
+    "دشمنند": [
         {ORTH: "دشمن", LEMMA: "دشمن", NORM: "دشمن", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "دشمنیشان": [ 
+    "دشمنیشان": [
         {ORTH: "دشمنی", LEMMA: "دشمنی", NORM: "دشمنی", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "دشمنیم": [ 
+    "دشمنیم": [
         {ORTH: "دشمن", LEMMA: "دشمن", NORM: "دشمن", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "دفترش": [ 
+    "دفترش": [
         {ORTH: "دفتر", LEMMA: "دفتر", NORM: "دفتر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دفنشان": [ 
+    "دفنشان": [
         {ORTH: "دفن", LEMMA: "دفن", NORM: "دفن", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "دلت": [ 
+    "دلت": [
         {ORTH: "دل", LEMMA: "دل", NORM: "دل", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "دلش": [ 
+    "دلش": [
         {ORTH: "دل", LEMMA: "دل", NORM: "دل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دلشان": [ 
+    "دلشان": [
         {ORTH: "دل", LEMMA: "دل", NORM: "دل", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "دلم": [ 
+    "دلم": [
         {ORTH: "دل", LEMMA: "دل", NORM: "دل", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "دلیلش": [ 
+    "دلیلش": [
         {ORTH: "دلیل", LEMMA: "دلیل", NORM: "دلیل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دنبالش": [ 
+    "دنبالش": [
         {ORTH: "دنبال", LEMMA: "دنبال", NORM: "دنبال", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دنباله‌اش": [ 
+    "دنباله‌اش": [
         {ORTH: "دنباله‌", LEMMA: "دنباله‌", NORM: "دنباله‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "دهاتی‌هایش": [ 
+    "دهاتی‌هایش": [
         {ORTH: "دهاتی‌های", LEMMA: "دهاتی‌های", NORM: "دهاتی‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دهانت": [ 
+    "دهانت": [
         {ORTH: "دهان", LEMMA: "دهان", NORM: "دهان", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "دهنش": [ 
+    "دهنش": [
         {ORTH: "دهن", LEMMA: "دهن", NORM: "دهن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دورش": [ 
+    "دورش": [
         {ORTH: "دور", LEMMA: "دور", NORM: "دور", TAG: "ADV"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دوروبریهاشان": [ 
+    "دوروبریهاشان": [
         {ORTH: "دوروبریها", LEMMA: "دوروبریها", NORM: "دوروبریها", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "دوستانش": [ 
+    "دوستانش": [
         {ORTH: "دوستان", LEMMA: "دوستان", NORM: "دوستان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دوستانشان": [ 
+    "دوستانشان": [
         {ORTH: "دوستان", LEMMA: "دوستان", NORM: "دوستان", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "دوستت": [ 
+    "دوستت": [
         {ORTH: "دوست", LEMMA: "دوست", NORM: "دوست", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "دوستش": [ 
+    "دوستش": [
         {ORTH: "دوست", LEMMA: "دوست", NORM: "دوست", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دومش": [ 
+    "دومش": [
         {ORTH: "دوم", LEMMA: "دوم", NORM: "دوم", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دویدنش": [ 
+    "دویدنش": [
         {ORTH: "دویدن", LEMMA: "دویدن", NORM: "دویدن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دکورهایمان": [ 
+    "دکورهایمان": [
         {ORTH: "دکورهای", LEMMA: "دکورهای", NORM: "دکورهای", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "دیدگاهش": [ 
+    "دیدگاهش": [
         {ORTH: "دیدگاه", LEMMA: "دیدگاه", NORM: "دیدگاه", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دیرت": [ 
+    "دیرت": [
         {ORTH: "دیر", LEMMA: "دیر", NORM: "دیر", TAG: "ADV"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "دیرم": [ 
+    "دیرم": [
         {ORTH: "دیر", LEMMA: "دیر", NORM: "دیر", TAG: "ADV"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "دینت": [ 
+    "دینت": [
         {ORTH: "دین", LEMMA: "دین", NORM: "دین", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "دینش": [ 
+    "دینش": [
         {ORTH: "دین", LEMMA: "دین", NORM: "دین", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دین‌شان": [ 
+    "دین‌شان": [
         {ORTH: "دین‌", LEMMA: "دین‌", NORM: "دین‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "دیواره‌هایش": [ 
+    "دیواره‌هایش": [
         {ORTH: "دیواره‌های", LEMMA: "دیواره‌های", NORM: "دیواره‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "دیوانه‌ای": [ 
+    "دیوانه‌ای": [
         {ORTH: "دیوانه‌", LEMMA: "دیوانه‌", NORM: "دیوانه‌", TAG: "ADJ"},
         {ORTH: "ای", LEMMA: "ای", NORM: "ای", TAG: "VERB"}],
-    "دیوی": [ 
+    "دیوی": [
         {ORTH: "دیو", LEMMA: "دیو", NORM: "دیو", TAG: "NOUN"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "دیگرم": [ 
+    "دیگرم": [
         {ORTH: "دیگر", LEMMA: "دیگر", NORM: "دیگر", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "دیگرمان": [ 
+    "دیگرمان": [
         {ORTH: "دیگر", LEMMA: "دیگر", NORM: "دیگر", TAG: "ADJ"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "ذهنش": [ 
+    "ذهنش": [
         {ORTH: "ذهن", LEMMA: "ذهن", NORM: "ذهن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "ذهنشان": [ 
+    "ذهنشان": [
         {ORTH: "ذهن", LEMMA: "ذهن", NORM: "ذهن", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "ذهنم": [ 
+    "ذهنم": [
         {ORTH: "ذهن", LEMMA: "ذهن", NORM: "ذهن", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "رئوسش": [ 
+    "رئوسش": [
         {ORTH: "رئوس", LEMMA: "رئوس", NORM: "رئوس", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "راهشان": [ 
+    "راهشان": [
         {ORTH: "راه", LEMMA: "راه", NORM: "راه", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "راهگشاست": [ 
+    "راهگشاست": [
         {ORTH: "راهگشا", LEMMA: "راهگشا", NORM: "راهگشا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "رایانه‌هایشان": [ 
+    "رایانه‌هایشان": [
         {ORTH: "رایانه‌های", LEMMA: "رایانه‌های", NORM: "رایانه‌های", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "رعایتشان": [ 
+    "رعایتشان": [
         {ORTH: "رعایت", LEMMA: "رعایت", NORM: "رعایت", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "رفتارش": [ 
+    "رفتارش": [
         {ORTH: "رفتار", LEMMA: "رفتار", NORM: "رفتار", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "رفتارشان": [ 
+    "رفتارشان": [
         {ORTH: "رفتار", LEMMA: "رفتار", NORM: "رفتار", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "رفتارمان": [ 
+    "رفتارمان": [
         {ORTH: "رفتار", LEMMA: "رفتار", NORM: "رفتار", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "رفتارهاست": [ 
+    "رفتارهاست": [
         {ORTH: "رفتارها", LEMMA: "رفتارها", NORM: "رفتارها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "رفتارهایشان": [ 
+    "رفتارهایشان": [
         {ORTH: "رفتارهای", LEMMA: "رفتارهای", NORM: "رفتارهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "رفقایم": [ 
+    "رفقایم": [
         {ORTH: "رفقا", LEMMA: "رفقا", NORM: "رفقا", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "NOUN"}],
-    "رقیق‌ترش": [ 
+    "رقیق‌ترش": [
         {ORTH: "رقیق‌تر", LEMMA: "رقیق‌تر", NORM: "رقیق‌تر", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "رنجند": [ 
+    "رنجند": [
         {ORTH: "رنج", LEMMA: "رنج", NORM: "رنج", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "رهگشاست": [ 
+    "رهگشاست": [
         {ORTH: "رهگشا", LEMMA: "رهگشا", NORM: "رهگشا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "رواست": [ 
+    "رواست": [
         {ORTH: "روا", LEMMA: "روا", NORM: "روا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "روبروست": [ 
+    "روبروست": [
         {ORTH: "روبرو", LEMMA: "روبرو", NORM: "روبرو", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "روحی‌اش": [ 
+    "روحی‌اش": [
         {ORTH: "روحی‌", LEMMA: "روحی‌", NORM: "روحی‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "روزنامه‌اش": [ 
+    "روزنامه‌اش": [
         {ORTH: "روزنامه‌", LEMMA: "روزنامه‌", NORM: "روزنامه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "روزه‌ست": [ 
+    "روزه‌ست": [
         {ORTH: "روزه‌", LEMMA: "روزه‌", NORM: "روزه‌", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "روسری‌اش": [ 
+    "روسری‌اش": [
         {ORTH: "روسری‌", LEMMA: "روسری‌", NORM: "روسری‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "روشتان": [ 
+    "روشتان": [
         {ORTH: "روش", LEMMA: "روش", NORM: "روش", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "رویش": [ 
+    "رویش": [
         {ORTH: "روی", LEMMA: "روی", NORM: "روی", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "زبانش": [ 
+    "زبانش": [
         {ORTH: "زبان", LEMMA: "زبان", NORM: "زبان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "زحماتشان": [ 
+    "زحماتشان": [
         {ORTH: "زحمات", LEMMA: "زحمات", NORM: "زحمات", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "زدنهایشان": [ 
+    "زدنهایشان": [
         {ORTH: "زدنهای", LEMMA: "زدنهای", NORM: "زدنهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "زرنگشان": [ 
+    "زرنگشان": [
         {ORTH: "زرنگ", LEMMA: "زرنگ", NORM: "زرنگ", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "زشتش": [ 
+    "زشتش": [
         {ORTH: "زشت", LEMMA: "زشت", NORM: "زشت", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "زشتکارانند": [ 
+    "زشتکارانند": [
         {ORTH: "زشتکاران", LEMMA: "زشتکاران", NORM: "زشتکاران", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "زلفش": [ 
+    "زلفش": [
         {ORTH: "زلف", LEMMA: "زلف", NORM: "زلف", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "زمن": [ 
+    "زمن": [
         {ORTH: "ز", LEMMA: "ز", NORM: "ز", TAG: "ADP"},
         {ORTH: "من", LEMMA: "من", NORM: "من", TAG: "NOUN"}],
-    "زنبوری‌اش": [ 
+    "زنبوری‌اش": [
         {ORTH: "زنبوری‌", LEMMA: "زنبوری‌", NORM: "زنبوری‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "زندانم": [ 
+    "زندانم": [
         {ORTH: "زندان", LEMMA: "زندان", NORM: "زندان", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "زنده‌ام": [ 
+    "زنده‌ام": [
         {ORTH: "زنده‌", LEMMA: "زنده‌", NORM: "زنده‌", TAG: "ADJ"},
         {ORTH: "ام", LEMMA: "ام", NORM: "ام", TAG: "VERB"}],
-    "زندگانی‌اش": [ 
+    "زندگانی‌اش": [
         {ORTH: "زندگانی‌", LEMMA: "زندگانی‌", NORM: "زندگانی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "زندگی‌اش": [ 
+    "زندگی‌اش": [
         {ORTH: "زندگی‌", LEMMA: "زندگی‌", NORM: "زندگی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "زندگی‌ام": [ 
+    "زندگی‌ام": [
         {ORTH: "زندگی‌", LEMMA: "زندگی‌", NORM: "زندگی‌", TAG: "NOUN"},
         {ORTH: "ام", LEMMA: "ام", NORM: "ام", TAG: "NOUN"}],
-    "زندگی‌شان": [ 
+    "زندگی‌شان": [
         {ORTH: "زندگی‌", LEMMA: "زندگی‌", NORM: "زندگی‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "زنش": [ 
+    "زنش": [
         {ORTH: "زن", LEMMA: "زن", NORM: "زن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "زنند": [ 
+    "زنند": [
         {ORTH: "زن", LEMMA: "زن", NORM: "زن", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "زو": [ 
+    "زو": [
         {ORTH: "ز", LEMMA: "ز", NORM: "ز", TAG: "ADP"},
         {ORTH: "و", LEMMA: "و", NORM: "و", TAG: "NOUN"}],
-    "زیاده": [ 
+    "زیاده": [
         {ORTH: "زیاد", LEMMA: "زیاد", NORM: "زیاد", TAG: "ADJ"},
         {ORTH: "ه", LEMMA: "ه", NORM: "ه", TAG: "VERB"}],
-    "زیباست": [ 
+    "زیباست": [
         {ORTH: "زیبا", LEMMA: "زیبا", NORM: "زیبا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "زیبایش": [ 
+    "زیبایش": [
         {ORTH: "زیبای", LEMMA: "زیبای", NORM: "زیبای", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "زیبایی": [ 
+    "زیبایی": [
         {ORTH: "زیبای", LEMMA: "زیبای", NORM: "زیبای", TAG: "ADJ"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "زیربناست": [ 
+    "زیربناست": [
         {ORTH: "زیربنا", LEMMA: "زیربنا", NORM: "زیربنا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "زیرک‌اند": [ 
+    "زیرک‌اند": [
         {ORTH: "زیرک‌", LEMMA: "زیرک‌", NORM: "زیرک‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "سؤالتان": [ 
+    "سؤالتان": [
         {ORTH: "سؤال", LEMMA: "سؤال", NORM: "سؤال", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "سؤالم": [ 
+    "سؤالم": [
         {ORTH: "سؤال", LEMMA: "سؤال", NORM: "سؤال", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "سابقه‌اش": [ 
+    "سابقه‌اش": [
         {ORTH: "سابقه‌", LEMMA: "سابقه‌", NORM: "سابقه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "ساختنم": [ 
+    "ساختنم": [
         {ORTH: "ساختن", LEMMA: "ساختن", NORM: "ساختن", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "ساده‌اش": [ 
+    "ساده‌اش": [
         {ORTH: "ساده‌", LEMMA: "ساده‌", NORM: "ساده‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "ساده‌اند": [ 
+    "ساده‌اند": [
         {ORTH: "ساده‌", LEMMA: "ساده‌", NORM: "ساده‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "سازمانش": [ 
+    "سازمانش": [
         {ORTH: "سازمان", LEMMA: "سازمان", NORM: "سازمان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "ساعتم": [ 
+    "ساعتم": [
         {ORTH: "ساعت", LEMMA: "ساعت", NORM: "ساعت", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "سالته": [ 
+    "سالته": [
         {ORTH: "سال", LEMMA: "سال", NORM: "سال", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"},
         {ORTH: "ه", LEMMA: "ه", NORM: "ه", TAG: "VERB"}],
-    "سالش": [ 
+    "سالش": [
         {ORTH: "سال", LEMMA: "سال", NORM: "سال", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سالهاست": [ 
+    "سالهاست": [
         {ORTH: "سالها", LEMMA: "سالها", NORM: "سالها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "ساله‌اش": [ 
+    "ساله‌اش": [
         {ORTH: "ساله‌", LEMMA: "ساله‌", NORM: "ساله‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "ساکتند": [ 
+    "ساکتند": [
         {ORTH: "ساکت", LEMMA: "ساکت", NORM: "ساکت", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "ساکنند": [ 
+    "ساکنند": [
         {ORTH: "ساکن", LEMMA: "ساکن", NORM: "ساکن", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "سبزشان": [ 
+    "سبزشان": [
         {ORTH: "سبز", LEMMA: "سبز", NORM: "سبز", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "سبیل‌مان": [ 
+    "سبیل‌مان": [
         {ORTH: "سبیل‌", LEMMA: "سبیل‌", NORM: "سبیل‌", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "ستم‌هایش": [ 
+    "ستم‌هایش": [
         {ORTH: "ستم‌های", LEMMA: "ستم‌های", NORM: "ستم‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سخنانش": [ 
+    "سخنانش": [
         {ORTH: "سخنان", LEMMA: "سخنان", NORM: "سخنان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سخنانشان": [ 
+    "سخنانشان": [
         {ORTH: "سخنان", LEMMA: "سخنان", NORM: "سخنان", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "سخنتان": [ 
+    "سخنتان": [
         {ORTH: "سخن", LEMMA: "سخن", NORM: "سخن", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "سخنش": [ 
+    "سخنش": [
         {ORTH: "سخن", LEMMA: "سخن", NORM: "سخن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سخنم": [ 
+    "سخنم": [
         {ORTH: "سخن", LEMMA: "سخن", NORM: "سخن", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "سردش": [ 
+    "سردش": [
         {ORTH: "سرد", LEMMA: "سرد", NORM: "سرد", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سرزمینشان": [ 
+    "سرزمینشان": [
         {ORTH: "سرزمین", LEMMA: "سرزمین", NORM: "سرزمین", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "سرش": [ 
+    "سرش": [
         {ORTH: "سر", LEMMA: "سر", NORM: "سر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سرمایه‌دارهاست": [ 
+    "سرمایه‌دارهاست": [
         {ORTH: "سرمایه‌دارها", LEMMA: "سرمایه‌دارها", NORM: "سرمایه‌دارها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "سرنوشتش": [ 
+    "سرنوشتش": [
         {ORTH: "سرنوشت", LEMMA: "سرنوشت", NORM: "سرنوشت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سرنوشتشان": [ 
+    "سرنوشتشان": [
         {ORTH: "سرنوشت", LEMMA: "سرنوشت", NORM: "سرنوشت", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "سروتهش": [ 
+    "سروتهش": [
         {ORTH: "سروته", LEMMA: "سروته", NORM: "سروته", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سرچشمه‌اش": [ 
+    "سرچشمه‌اش": [
         {ORTH: "سرچشمه‌", LEMMA: "سرچشمه‌", NORM: "سرچشمه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "سقمش": [ 
+    "سقمش": [
         {ORTH: "سقم", LEMMA: "سقم", NORM: "سقم", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سنش": [ 
+    "سنش": [
         {ORTH: "سن", LEMMA: "سن", NORM: "سن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سپاهش": [ 
+    "سپاهش": [
         {ORTH: "سپاه", LEMMA: "سپاه", NORM: "سپاه", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "سیاسیشان": [ 
+    "سیاسیشان": [
         {ORTH: "سیاسی", LEMMA: "سیاسی", NORM: "سیاسی", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "سیاه‌چاله‌هاست": [ 
+    "سیاه‌چاله‌هاست": [
         {ORTH: "سیاه‌چاله‌ها", LEMMA: "سیاه‌چاله‌ها", NORM: "سیاه‌چاله‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "شاخه‌هایشان": [ 
+    "شاخه‌هایشان": [
         {ORTH: "شاخه‌های", LEMMA: "شاخه‌های", NORM: "شاخه‌های", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "شالوده‌اش": [ 
+    "شالوده‌اش": [
         {ORTH: "شالوده‌", LEMMA: "شالوده‌", NORM: "شالوده‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "شانه‌هایش": [ 
+    "شانه‌هایش": [
         {ORTH: "شانه‌های", LEMMA: "شانه‌های", NORM: "شانه‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شاهدیم": [ 
+    "شاهدیم": [
         {ORTH: "شاهد", LEMMA: "شاهد", NORM: "شاهد", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "شاهکارهایش": [ 
+    "شاهکارهایش": [
         {ORTH: "شاهکارهای", LEMMA: "شاهکارهای", NORM: "شاهکارهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شخصیتش": [ 
+    "شخصیتش": [
         {ORTH: "شخصیت", LEMMA: "شخصیت", NORM: "شخصیت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شدنشان": [ 
+    "شدنشان": [
         {ORTH: "شدن", LEMMA: "شدن", NORM: "شدن", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "شرکتیست": [ 
+    "شرکتیست": [
         {ORTH: "شرکتی", LEMMA: "شرکتی", NORM: "شرکتی", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "شعارهاشان": [ 
+    "شعارهاشان": [
         {ORTH: "شعارها", LEMMA: "شعارها", NORM: "شعارها", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "شعورش": [ 
+    "شعورش": [
         {ORTH: "شعور", LEMMA: "شعور", NORM: "شعور", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شغلش": [ 
+    "شغلش": [
         {ORTH: "شغل", LEMMA: "شغل", NORM: "شغل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شماست": [ 
+    "شماست": [
         {ORTH: "شما", LEMMA: "شما", NORM: "شما", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "شمشیرش": [ 
+    "شمشیرش": [
         {ORTH: "شمشیر", LEMMA: "شمشیر", NORM: "شمشیر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شنیدنش": [ 
+    "شنیدنش": [
         {ORTH: "شنیدن", LEMMA: "شنیدن", NORM: "شنیدن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شوراست": [ 
+    "شوراست": [
         {ORTH: "شورا", LEMMA: "شورا", NORM: "شورا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "شومت": [ 
+    "شومت": [
         {ORTH: "شوم", LEMMA: "شوم", NORM: "شوم", TAG: "ADJ"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "شیرینترش": [ 
+    "شیرینترش": [
         {ORTH: "شیرینتر", LEMMA: "شیرینتر", NORM: "شیرینتر", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "شیطان‌اند": [ 
+    "شیطان‌اند": [
         {ORTH: "شیطان‌", LEMMA: "شیطان‌", NORM: "شیطان‌", TAG: "NOUN"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "شیوه‌هاست": [ 
+    "شیوه‌هاست": [
         {ORTH: "شیوه‌ها", LEMMA: "شیوه‌ها", NORM: "شیوه‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "صاحبش": [ 
+    "صاحبش": [
         {ORTH: "صاحب", LEMMA: "صاحب", NORM: "صاحب", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "صحنه‌اش": [ 
+    "صحنه‌اش": [
         {ORTH: "صحنه‌", LEMMA: "صحنه‌", NORM: "صحنه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "صدایش": [ 
+    "صدایش": [
         {ORTH: "صدای", LEMMA: "صدای", NORM: "صدای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "صددند": [ 
+    "صددند": [
         {ORTH: "صدد", LEMMA: "صدد", NORM: "صدد", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "صندوق‌هاست": [ 
+    "صندوق‌هاست": [
         {ORTH: "صندوق‌ها", LEMMA: "صندوق‌ها", NORM: "صندوق‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "صندوق‌هایش": [ 
+    "صندوق‌هایش": [
         {ORTH: "صندوق‌های", LEMMA: "صندوق‌های", NORM: "صندوق‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "صورتش": [ 
+    "صورتش": [
         {ORTH: "صورت", LEMMA: "صورت", NORM: "صورت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "ضروری‌اند": [ 
+    "ضروری‌اند": [
         {ORTH: "ضروری‌", LEMMA: "ضروری‌", NORM: "ضروری‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "ضمیرش": [ 
+    "ضمیرش": [
         {ORTH: "ضمیر", LEMMA: "ضمیر", NORM: "ضمیر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "طرفش": [ 
+    "طرفش": [
         {ORTH: "طرف", LEMMA: "طرف", NORM: "طرف", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "طلسمش": [ 
+    "طلسمش": [
         {ORTH: "طلسم", LEMMA: "طلسم", NORM: "طلسم", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "طوره": [ 
+    "طوره": [
         {ORTH: "طور", LEMMA: "طور", NORM: "طور", TAG: "NOUN"},
         {ORTH: "ه", LEMMA: "ه", NORM: "ه", TAG: "VERB"}],
-    "عاشوراست": [ 
+    "عاشوراست": [
         {ORTH: "عاشورا", LEMMA: "عاشورا", NORM: "عاشورا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "عبارتند": [ 
+    "عبارتند": [
         {ORTH: "عبارت", LEMMA: "عبارت", NORM: "عبارت", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "عزیزانتان": [ 
+    "عزیزانتان": [
         {ORTH: "عزیزان", LEMMA: "عزیزان", NORM: "عزیزان", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "عزیزانش": [ 
+    "عزیزانش": [
         {ORTH: "عزیزان", LEMMA: "عزیزان", NORM: "عزیزان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "عزیزش": [ 
+    "عزیزش": [
         {ORTH: "عزیز", LEMMA: "عزیز", NORM: "عزیز", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "عشرت‌طلبی‌اش": [ 
+    "عشرت‌طلبی‌اش": [
         {ORTH: "عشرت‌طلبی‌", LEMMA: "عشرت‌طلبی‌", NORM: "عشرت‌طلبی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "عقبیم": [ 
+    "عقبیم": [
         {ORTH: "عقب", LEMMA: "عقب", NORM: "عقب", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "علاقه‌اش": [ 
+    "علاقه‌اش": [
         {ORTH: "علاقه‌", LEMMA: "علاقه‌", NORM: "علاقه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "علمیمان": [ 
+    "علمیمان": [
         {ORTH: "علمی", LEMMA: "علمی", NORM: "علمی", TAG: "ADJ"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "عمرش": [ 
+    "عمرش": [
         {ORTH: "عمر", LEMMA: "عمر", NORM: "عمر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "عمرشان": [ 
+    "عمرشان": [
         {ORTH: "عمر", LEMMA: "عمر", NORM: "عمر", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "عملش": [ 
+    "عملش": [
         {ORTH: "عمل", LEMMA: "عمل", NORM: "عمل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "عملی‌اند": [ 
+    "عملی‌اند": [
         {ORTH: "عملی‌", LEMMA: "عملی‌", NORM: "عملی‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "عمویت": [ 
+    "عمویت": [
         {ORTH: "عموی", LEMMA: "عموی", NORM: "عموی", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "عمویش": [ 
+    "عمویش": [
         {ORTH: "عموی", LEMMA: "عموی", NORM: "عموی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "عمیقش": [ 
+    "عمیقش": [
         {ORTH: "عمیق", LEMMA: "عمیق", NORM: "عمیق", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "عواملش": [ 
+    "عواملش": [
         {ORTH: "عوامل", LEMMA: "عوامل", NORM: "عوامل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "عوضشان": [ 
+    "عوضشان": [
         {ORTH: "عوض", LEMMA: "عوض", NORM: "عوض", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "غذایی‌شان": [ 
+    "غذایی‌شان": [
         {ORTH: "غذایی‌", LEMMA: "غذایی‌", NORM: "غذایی‌", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "غریبه‌اند": [ 
+    "غریبه‌اند": [
         {ORTH: "غریبه‌", LEMMA: "غریبه‌", NORM: "غریبه‌", TAG: "NOUN"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "غلامانش": [ 
+    "غلامانش": [
         {ORTH: "غلامان", LEMMA: "غلامان", NORM: "غلامان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "غلطهاست": [ 
+    "غلطهاست": [
         {ORTH: "غلطها", LEMMA: "غلطها", NORM: "غلطها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "فراموشتان": [ 
+    "فراموشتان": [
         {ORTH: "فراموش", LEMMA: "فراموش", NORM: "فراموش", TAG: "ADJ"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "فردی‌اند": [ 
+    "فردی‌اند": [
         {ORTH: "فردی‌", LEMMA: "فردی‌", NORM: "فردی‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "فرزندانش": [ 
+    "فرزندانش": [
         {ORTH: "فرزندان", LEMMA: "فرزندان", NORM: "فرزندان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "فرزندش": [ 
+    "فرزندش": [
         {ORTH: "فرزند", LEMMA: "فرزند", NORM: "فرزند", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "فرم‌هایش": [ 
+    "فرم‌هایش": [
         {ORTH: "فرم‌های", LEMMA: "فرم‌های", NORM: "فرم‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "فرهنگی‌مان": [ 
+    "فرهنگی‌مان": [
         {ORTH: "فرهنگی‌", LEMMA: "فرهنگی‌", NORM: "فرهنگی‌", TAG: "ADJ"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "فریادشان": [ 
+    "فریادشان": [
         {ORTH: "فریاد", LEMMA: "فریاد", NORM: "فریاد", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "فضایی‌شان": [ 
+    "فضایی‌شان": [
         {ORTH: "فضایی‌", LEMMA: "فضایی‌", NORM: "فضایی‌", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "فقیرشان": [ 
+    "فقیرشان": [
         {ORTH: "فقیر", LEMMA: "فقیر", NORM: "فقیر", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "فوری‌شان": [ 
+    "فوری‌شان": [
         {ORTH: "فوری‌", LEMMA: "فوری‌", NORM: "فوری‌", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "قائلند": [ 
+    "قائلند": [
         {ORTH: "قائل", LEMMA: "قائل", NORM: "قائل", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "قائلیم": [ 
+    "قائلیم": [
         {ORTH: "قائل", LEMMA: "قائل", NORM: "قائل", TAG: "ADJ"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "قادرند": [ 
+    "قادرند": [
         {ORTH: "قادر", LEMMA: "قادر", NORM: "قادر", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "قانونمندش": [ 
+    "قانونمندش": [
         {ORTH: "قانونمند", LEMMA: "قانونمند", NORM: "قانونمند", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "قبلند": [ 
+    "قبلند": [
         {ORTH: "قبل", LEMMA: "قبل", NORM: "قبل", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "قبلی‌اش": [ 
+    "قبلی‌اش": [
         {ORTH: "قبلی‌", LEMMA: "قبلی‌", NORM: "قبلی‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "قبلی‌مان": [ 
+    "قبلی‌مان": [
         {ORTH: "قبلی‌", LEMMA: "قبلی‌", NORM: "قبلی‌", TAG: "ADJ"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "قدریست": [ 
+    "قدریست": [
         {ORTH: "قدری", LEMMA: "قدری", NORM: "قدری", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "قدمش": [ 
+    "قدمش": [
         {ORTH: "قدم", LEMMA: "قدم", NORM: "قدم", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "قسمتش": [ 
+    "قسمتش": [
         {ORTH: "قسمت", LEMMA: "قسمت", NORM: "قسمت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "قضایاست": [ 
+    "قضایاست": [
         {ORTH: "قضایا", LEMMA: "قضایا", NORM: "قضایا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "قضیه‌شان": [ 
+    "قضیه‌شان": [
         {ORTH: "قضیه‌", LEMMA: "قضیه‌", NORM: "قضیه‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "قهرمانهایشان": [ 
+    "قهرمانهایشان": [
         {ORTH: "قهرمانهای", LEMMA: "قهرمانهای", NORM: "قهرمانهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "قهرمانیش": [ 
+    "قهرمانیش": [
         {ORTH: "قهرمانی", LEMMA: "قهرمانی", NORM: "قهرمانی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "قومت": [ 
+    "قومت": [
         {ORTH: "قوم", LEMMA: "قوم", NORM: "قوم", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "لازمه‌اش": [ 
+    "لازمه‌اش": [
         {ORTH: "لازمه‌", LEMMA: "لازمه‌", NORM: "لازمه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "مأموریتش": [ 
+    "مأموریتش": [
         {ORTH: "مأموریت", LEMMA: "مأموریت", NORM: "مأموریت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مأموریتم": [ 
+    "مأموریتم": [
         {ORTH: "مأموریت", LEMMA: "مأموریت", NORM: "مأموریت", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "مأموریت‌اند": [ 
+    "مأموریت‌اند": [
         {ORTH: "مأموریت‌", LEMMA: "مأموریت‌", NORM: "مأموریت‌", TAG: "NOUN"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "مادرانشان": [ 
+    "مادرانشان": [
         {ORTH: "مادران", LEMMA: "مادران", NORM: "مادران", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مادرت": [ 
+    "مادرت": [
         {ORTH: "مادر", LEMMA: "مادر", NORM: "مادر", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "مادرش": [ 
+    "مادرش": [
         {ORTH: "مادر", LEMMA: "مادر", NORM: "مادر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مادرم": [ 
+    "مادرم": [
         {ORTH: "مادر", LEMMA: "مادر", NORM: "مادر", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "ماست": [ 
+    "ماست": [
         {ORTH: "ما", LEMMA: "ما", NORM: "ما", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "مالی‌اش": [ 
+    "مالی‌اش": [
         {ORTH: "مالی‌", LEMMA: "مالی‌", NORM: "مالی‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "ماهیتش": [ 
+    "ماهیتش": [
         {ORTH: "ماهیت", LEMMA: "ماهیت", NORM: "ماهیت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مایی": [ 
+    "مایی": [
         {ORTH: "ما", LEMMA: "ما", NORM: "ما", TAG: "NOUN"},
         {ORTH: "یی", LEMMA: "یی", NORM: "یی", TAG: "VERB"}],
-    "مجازاتش": [ 
+    "مجازاتش": [
         {ORTH: "مجازات", LEMMA: "مجازات", NORM: "مجازات", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مجبورند": [ 
+    "مجبورند": [
         {ORTH: "مجبور", LEMMA: "مجبور", NORM: "مجبور", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "محتاجند": [ 
+    "محتاجند": [
         {ORTH: "محتاج", LEMMA: "محتاج", NORM: "محتاج", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "محرمم": [ 
+    "محرمم": [
         {ORTH: "محرم", LEMMA: "محرم", NORM: "محرم", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "SCONJ"}],
-    "محلش": [ 
+    "محلش": [
         {ORTH: "محل", LEMMA: "محل", NORM: "محل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مخالفند": [ 
+    "مخالفند": [
         {ORTH: "مخالف", LEMMA: "مخالف", NORM: "مخالف", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مخدرش": [ 
+    "مخدرش": [
         {ORTH: "مخدر", LEMMA: "مخدر", NORM: "مخدر", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مدتهاست": [ 
+    "مدتهاست": [
         {ORTH: "مدتها", LEMMA: "مدتها", NORM: "مدتها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "مدرسه‌ات": [ 
+    "مدرسه‌ات": [
         {ORTH: "مدرسه", LEMMA: "مدرسه", NORM: "مدرسه", TAG: "NOUN"},
         {ORTH: "‌ات", LEMMA: "ات", NORM: "ات", TAG: "NOUN"}],
-    "مدرکم": [ 
+    "مدرکم": [
         {ORTH: "مدرک", LEMMA: "مدرک", NORM: "مدرک", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "مدیرانش": [ 
+    "مدیرانش": [
         {ORTH: "مدیران", LEMMA: "مدیران", NORM: "مدیران", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مدیونم": [ 
+    "مدیونم": [
         {ORTH: "مدیون", LEMMA: "مدیون", NORM: "مدیون", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "مذهبی‌اند": [ 
+    "مذهبی‌اند": [
         {ORTH: "مذهبی‌", LEMMA: "مذهبی‌", NORM: "مذهبی‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "مرا": [ 
+    "مرا": [
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"},
         {ORTH: "را", LEMMA: "را", NORM: "را", TAG: "PART"}],
-    "مرادت": [ 
+    "مرادت": [
         {ORTH: "مراد", LEMMA: "مراد", NORM: "مراد", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "مردمشان": [ 
+    "مردمشان": [
         {ORTH: "مردم", LEMMA: "مردم", NORM: "مردم", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مردمند": [ 
+    "مردمند": [
         {ORTH: "مردم", LEMMA: "مردم", NORM: "مردم", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مردم‌اند": [ 
+    "مردم‌اند": [
         {ORTH: "مردم‌", LEMMA: "مردم‌", NORM: "مردم‌", TAG: "NOUN"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "مرزشان": [ 
+    "مرزشان": [
         {ORTH: "مرز", LEMMA: "مرز", NORM: "مرز", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مرزهاشان": [ 
+    "مرزهاشان": [
         {ORTH: "مرزها", LEMMA: "مرزها", NORM: "مرزها", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مزدورش": [ 
+    "مزدورش": [
         {ORTH: "مزدور", LEMMA: "مزدور", NORM: "مزدور", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مسئولیتش": [ 
+    "مسئولیتش": [
         {ORTH: "مسئولیت", LEMMA: "مسئولیت", NORM: "مسئولیت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مسائلش": [ 
+    "مسائلش": [
         {ORTH: "مسائل", LEMMA: "مسائل", NORM: "مسائل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مستحضرید": [ 
+    "مستحضرید": [
         {ORTH: "مستحضر", LEMMA: "مستحضر", NORM: "مستحضر", TAG: "ADJ"},
         {ORTH: "ید", LEMMA: "ید", NORM: "ید", TAG: "VERB"}],
-    "مسلمانم": [ 
+    "مسلمانم": [
         {ORTH: "مسلمان", LEMMA: "مسلمان", NORM: "مسلمان", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "مسلمانند": [ 
+    "مسلمانند": [
         {ORTH: "مسلمان", LEMMA: "مسلمان", NORM: "مسلمان", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مشتریانش": [ 
+    "مشتریانش": [
         {ORTH: "مشتریان", LEMMA: "مشتریان", NORM: "مشتریان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مشتهایمان": [ 
+    "مشتهایمان": [
         {ORTH: "مشتهای", LEMMA: "مشتهای", NORM: "مشتهای", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "مشخصند": [ 
+    "مشخصند": [
         {ORTH: "مشخص", LEMMA: "مشخص", NORM: "مشخص", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مشغولند": [ 
+    "مشغولند": [
         {ORTH: "مشغول", LEMMA: "مشغول", NORM: "مشغول", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مشغولیم": [ 
+    "مشغولیم": [
         {ORTH: "مشغول", LEMMA: "مشغول", NORM: "مشغول", TAG: "ADJ"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "مشهورش": [ 
+    "مشهورش": [
         {ORTH: "مشهور", LEMMA: "مشهور", NORM: "مشهور", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مشکلاتشان": [ 
+    "مشکلاتشان": [
         {ORTH: "مشکلات", LEMMA: "مشکلات", NORM: "مشکلات", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مشکلم": [ 
+    "مشکلم": [
         {ORTH: "مشکل", LEMMA: "مشکل", NORM: "مشکل", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "مطمئنم": [ 
+    "مطمئنم": [
         {ORTH: "مطمئن", LEMMA: "مطمئن", NORM: "مطمئن", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "معامله‌مان": [ 
+    "معامله‌مان": [
         {ORTH: "معامله‌", LEMMA: "معامله‌", NORM: "معامله‌", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "معتقدم": [ 
+    "معتقدم": [
         {ORTH: "معتقد", LEMMA: "معتقد", NORM: "معتقد", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "معتقدند": [ 
+    "معتقدند": [
         {ORTH: "معتقد", LEMMA: "معتقد", NORM: "معتقد", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "معتقدیم": [ 
+    "معتقدیم": [
         {ORTH: "معتقد", LEMMA: "معتقد", NORM: "معتقد", TAG: "ADJ"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "معرفی‌اش": [ 
+    "معرفی‌اش": [
         {ORTH: "معرفی‌", LEMMA: "معرفی‌", NORM: "معرفی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "معروفش": [ 
+    "معروفش": [
         {ORTH: "معروف", LEMMA: "معروف", NORM: "معروف", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "معضلاتمان": [ 
+    "معضلاتمان": [
         {ORTH: "معضلات", LEMMA: "معضلات", NORM: "معضلات", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "معلمش": [ 
+    "معلمش": [
         {ORTH: "معلم", LEMMA: "معلم", NORM: "معلم", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "معنایش": [ 
+    "معنایش": [
         {ORTH: "معنای", LEMMA: "معنای", NORM: "معنای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مغزشان": [ 
+    "مغزشان": [
         {ORTH: "مغز", LEMMA: "مغز", NORM: "مغز", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مفیدند": [ 
+    "مفیدند": [
         {ORTH: "مفید", LEMMA: "مفید", NORM: "مفید", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مقابلش": [ 
+    "مقابلش": [
         {ORTH: "مقابل", LEMMA: "مقابل", NORM: "مقابل", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مقاله‌اش": [ 
+    "مقاله‌اش": [
         {ORTH: "مقاله‌", LEMMA: "مقاله‌", NORM: "مقاله‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "مقدمش": [ 
+    "مقدمش": [
         {ORTH: "مقدم", LEMMA: "مقدم", NORM: "مقدم", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مقرش": [ 
+    "مقرش": [
         {ORTH: "مقر", LEMMA: "مقر", NORM: "مقر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مقصدشان": [ 
+    "مقصدشان": [
         {ORTH: "مقصد", LEMMA: "مقصد", NORM: "مقصد", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مقصرند": [ 
+    "مقصرند": [
         {ORTH: "مقصر", LEMMA: "مقصر", NORM: "مقصر", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مقصودتان": [ 
+    "مقصودتان": [
         {ORTH: "مقصود", LEMMA: "مقصود", NORM: "مقصود", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "ملاقاتهایش": [ 
+    "ملاقاتهایش": [
         {ORTH: "ملاقاتهای", LEMMA: "ملاقاتهای", NORM: "ملاقاتهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "ممکنشان": [ 
+    "ممکنشان": [
         {ORTH: "ممکن", LEMMA: "ممکن", NORM: "ممکن", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "ممیزیهاست": [ 
+    "ممیزیهاست": [
         {ORTH: "ممیزیها", LEMMA: "ممیزیها", NORM: "ممیزیها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "منظورم": [ 
+    "منظورم": [
         {ORTH: "منظور", LEMMA: "منظور", NORM: "منظور", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "منی": [ 
+    "منی": [
         {ORTH: "من", LEMMA: "من", NORM: "من", TAG: "NOUN"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "منید": [ 
+    "منید": [
         {ORTH: "من", LEMMA: "من", NORM: "من", TAG: "NOUN"},
         {ORTH: "ید", LEMMA: "ید", NORM: "ید", TAG: "VERB"}],
-    "مهربانش": [ 
+    "مهربانش": [
         {ORTH: "مهربان", LEMMA: "مهربان", NORM: "مهربان", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "مهم‌اند": [ 
+    "مهم‌اند": [
         {ORTH: "مهم‌", LEMMA: "مهم‌", NORM: "مهم‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "مواجهند": [ 
+    "مواجهند": [
         {ORTH: "مواجه", LEMMA: "مواجه", NORM: "مواجه", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "مواجه‌اند": [ 
+    "مواجه‌اند": [
         {ORTH: "مواجه‌", LEMMA: "مواجه‌", NORM: "مواجه‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "مواخذه‌ات": [ 
+    "مواخذه‌ات": [
         {ORTH: "مواخذه", LEMMA: "مواخذه", NORM: "مواخذه", TAG: "NOUN"},
         {ORTH: "‌ات", LEMMA: "ات", NORM: "ات", TAG: "NOUN"}],
-    "مواضعشان": [ 
+    "مواضعشان": [
         {ORTH: "مواضع", LEMMA: "مواضع", NORM: "مواضع", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "مواضعمان": [ 
+    "مواضعمان": [
         {ORTH: "مواضع", LEMMA: "مواضع", NORM: "مواضع", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "موافقند": [ 
+    "موافقند": [
         {ORTH: "موافق", LEMMA: "موافق", NORM: "موافق", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "موجوداتش": [ 
+    "موجوداتش": [
         {ORTH: "موجودات", LEMMA: "موجودات", NORM: "موجودات", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "موجودند": [ 
+    "موجودند": [
         {ORTH: "موجود", LEMMA: "موجود", NORM: "موجود", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "موردش": [ 
+    "موردش": [
         {ORTH: "مورد", LEMMA: "مورد", NORM: "مورد", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "موضعشان": [ 
+    "موضعشان": [
         {ORTH: "موضع", LEMMA: "موضع", NORM: "موضع", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "موظفند": [ 
+    "موظفند": [
         {ORTH: "موظف", LEMMA: "موظف", NORM: "موظف", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "موهایش": [ 
+    "موهایش": [
         {ORTH: "موهای", LEMMA: "موهای", NORM: "موهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "موهایمان": [ 
+    "موهایمان": [
         {ORTH: "موهای", LEMMA: "موهای", NORM: "موهای", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "مویم": [ 
+    "مویم": [
         {ORTH: "مو", LEMMA: "مو", NORM: "مو", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "NOUN"}],
-    "ناخرسندند": [ 
+    "ناخرسندند": [
         {ORTH: "ناخرسند", LEMMA: "ناخرسند", NORM: "ناخرسند", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "ناراحتیش": [ 
+    "ناراحتیش": [
         {ORTH: "ناراحتی", LEMMA: "ناراحتی", NORM: "ناراحتی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "ناراضی‌اند": [ 
+    "ناراضی‌اند": [
         {ORTH: "ناراضی‌", LEMMA: "ناراضی‌", NORM: "ناراضی‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "نارواست": [ 
+    "نارواست": [
         {ORTH: "ناروا", LEMMA: "ناروا", NORM: "ناروا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "نازش": [ 
+    "نازش": [
         {ORTH: "ناز", LEMMA: "ناز", NORM: "ناز", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "نامش": [ 
+    "نامش": [
         {ORTH: "نام", LEMMA: "نام", NORM: "نام", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "نامشان": [ 
+    "نامشان": [
         {ORTH: "نام", LEMMA: "نام", NORM: "نام", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نامم": [ 
+    "نامم": [
         {ORTH: "نام", LEMMA: "نام", NORM: "نام", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "نامه‌ات": [ 
+    "نامه‌ات": [
         {ORTH: "نامه", LEMMA: "نامه", NORM: "نامه", TAG: "NOUN"},
         {ORTH: "‌ات", LEMMA: "ات", NORM: "ات", TAG: "NOUN"}],
-    "نامه‌ام": [ 
+    "نامه‌ام": [
         {ORTH: "نامه‌", LEMMA: "نامه‌", NORM: "نامه‌", TAG: "NOUN"},
         {ORTH: "ام", LEMMA: "ام", NORM: "ام", TAG: "NOUN"}],
-    "ناچارم": [ 
+    "ناچارم": [
         {ORTH: "ناچار", LEMMA: "ناچار", NORM: "ناچار", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "نخست‌وزیری‌اش": [ 
+    "نخست‌وزیری‌اش": [
         {ORTH: "نخست‌وزیری‌", LEMMA: "نخست‌وزیری‌", NORM: "نخست‌وزیری‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "نزدش": [ 
+    "نزدش": [
         {ORTH: "نزد", LEMMA: "نزد", NORM: "نزد", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "نشانم": [ 
+    "نشانم": [
         {ORTH: "نشان", LEMMA: "نشان", NORM: "نشان", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "نظرات‌شان": [ 
+    "نظرات‌شان": [
         {ORTH: "نظرات‌", LEMMA: "نظرات‌", NORM: "نظرات‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نظرتان": [ 
+    "نظرتان": [
         {ORTH: "نظر", LEMMA: "نظر", NORM: "نظر", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "نظرش": [ 
+    "نظرش": [
         {ORTH: "نظر", LEMMA: "نظر", NORM: "نظر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "نظرشان": [ 
+    "نظرشان": [
         {ORTH: "نظر", LEMMA: "نظر", NORM: "نظر", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نظرم": [ 
+    "نظرم": [
         {ORTH: "نظر", LEMMA: "نظر", NORM: "نظر", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "نظرهایشان": [ 
+    "نظرهایشان": [
         {ORTH: "نظرهای", LEMMA: "نظرهای", NORM: "نظرهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نفاقش": [ 
+    "نفاقش": [
         {ORTH: "نفاق", LEMMA: "نفاق", NORM: "نفاق", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "نفرند": [ 
+    "نفرند": [
         {ORTH: "نفر", LEMMA: "نفر", NORM: "نفر", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "نفوذیند": [ 
+    "نفوذیند": [
         {ORTH: "نفوذی", LEMMA: "نفوذی", NORM: "نفوذی", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "نقطه‌نظراتتان": [ 
+    "نقطه‌نظراتتان": [
         {ORTH: "نقطه‌نظرات", LEMMA: "نقطه‌نظرات", NORM: "نقطه‌نظرات", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "نمایشی‌مان": [ 
+    "نمایشی‌مان": [
         {ORTH: "نمایشی‌", LEMMA: "نمایشی‌", NORM: "نمایشی‌", TAG: "ADJ"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "نمایندگی‌شان": [ 
+    "نمایندگی‌شان": [
         {ORTH: "نمایندگی‌", LEMMA: "نمایندگی‌", NORM: "نمایندگی‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نمونه‌اش": [ 
+    "نمونه‌اش": [
         {ORTH: "نمونه‌", LEMMA: "نمونه‌", NORM: "نمونه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "نمی‌پذیرندش": [ 
+    "نمی‌پذیرندش": [
         {ORTH: "نمی‌پذیرند", LEMMA: "نمی‌پذیرند", NORM: "نمی‌پذیرند", TAG: "VERB"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "نوآوری‌اش": [ 
+    "نوآوری‌اش": [
         {ORTH: "نوآوری‌", LEMMA: "نوآوری‌", NORM: "نوآوری‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "نوشته‌هایشان": [ 
+    "نوشته‌هایشان": [
         {ORTH: "نوشته‌های", LEMMA: "نوشته‌های", NORM: "نوشته‌های", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نوشته‌هایم": [ 
+    "نوشته‌هایم": [
         {ORTH: "نوشته‌ها", LEMMA: "نوشته‌ها", NORM: "نوشته‌ها", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "NOUN"}],
-    "نکردنشان": [ 
+    "نکردنشان": [
         {ORTH: "نکردن", LEMMA: "نکردن", NORM: "نکردن", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نگاهداری‌شان": [ 
+    "نگاهداری‌شان": [
         {ORTH: "نگاهداری‌", LEMMA: "نگاهداری‌", NORM: "نگاهداری‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نگاهش": [ 
+    "نگاهش": [
         {ORTH: "نگاه", LEMMA: "نگاه", NORM: "نگاه", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "نگرانم": [ 
+    "نگرانم": [
         {ORTH: "نگران", LEMMA: "نگران", NORM: "نگران", TAG: "ADJ"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "VERB"}],
-    "نگرشهایشان": [ 
+    "نگرشهایشان": [
         {ORTH: "نگرشهای", LEMMA: "نگرشهای", NORM: "نگرشهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "نیازمندند": [ 
+    "نیازمندند": [
         {ORTH: "نیازمند", LEMMA: "نیازمند", NORM: "نیازمند", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "هدفش": [ 
+    "هدفش": [
         {ORTH: "هدف", LEMMA: "هدف", NORM: "هدف", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "همانست": [ 
+    "همانست": [
         {ORTH: "همان", LEMMA: "همان", NORM: "همان", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "همراهش": [ 
+    "همراهش": [
         {ORTH: "همراه", LEMMA: "همراه", NORM: "همراه", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "همسرتان": [ 
+    "همسرتان": [
         {ORTH: "همسر", LEMMA: "همسر", NORM: "همسر", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "همسرش": [ 
+    "همسرش": [
         {ORTH: "همسر", LEMMA: "همسر", NORM: "همسر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "همسرم": [ 
+    "همسرم": [
         {ORTH: "همسر", LEMMA: "همسر", NORM: "همسر", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "همفکرانش": [ 
+    "همفکرانش": [
         {ORTH: "همفکران", LEMMA: "همفکران", NORM: "همفکران", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "همه‌اش": [ 
+    "همه‌اش": [
         {ORTH: "همه‌", LEMMA: "همه‌", NORM: "همه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "همه‌شان": [ 
+    "همه‌شان": [
         {ORTH: "همه‌", LEMMA: "همه‌", NORM: "همه‌", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "همکارانش": [ 
+    "همکارانش": [
         {ORTH: "همکاران", LEMMA: "همکاران", NORM: "همکاران", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "هم‌نظریم": [ 
+    "هم‌نظریم": [
         {ORTH: "هم‌نظر", LEMMA: "هم‌نظر", NORM: "هم‌نظر", TAG: "ADJ"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "VERB"}],
-    "هنرش": [ 
+    "هنرش": [
         {ORTH: "هنر", LEMMA: "هنر", NORM: "هنر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "هواست": [ 
+    "هواست": [
         {ORTH: "هوا", LEMMA: "هوا", NORM: "هوا", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "هویتش": [ 
+    "هویتش": [
         {ORTH: "هویت", LEMMA: "هویت", NORM: "هویت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "وابسته‌اند": [ 
+    "وابسته‌اند": [
         {ORTH: "وابسته‌", LEMMA: "وابسته‌", NORM: "وابسته‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "واقفند": [ 
+    "واقفند": [
         {ORTH: "واقف", LEMMA: "واقف", NORM: "واقف", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "والدینشان": [ 
+    "والدینشان": [
         {ORTH: "والدین", LEMMA: "والدین", NORM: "والدین", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "وجدان‌تان": [ 
+    "وجدان‌تان": [
         {ORTH: "وجدان‌", LEMMA: "وجدان‌", NORM: "وجدان‌", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "وجودشان": [ 
+    "وجودشان": [
         {ORTH: "وجود", LEMMA: "وجود", NORM: "وجود", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "وطنم": [ 
+    "وطنم": [
         {ORTH: "وطن", LEMMA: "وطن", NORM: "وطن", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "وعده‌اش": [ 
+    "وعده‌اش": [
         {ORTH: "وعده‌", LEMMA: "وعده‌", NORM: "وعده‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "وقتمان": [ 
+    "وقتمان": [
         {ORTH: "وقت", LEMMA: "وقت", NORM: "وقت", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "ولادتش": [ 
+    "ولادتش": [
         {ORTH: "ولادت", LEMMA: "ولادت", NORM: "ولادت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پایانش": [ 
+    "پایانش": [
         {ORTH: "پایان", LEMMA: "پایان", NORM: "پایان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پایش": [ 
+    "پایش": [
         {ORTH: "پای", LEMMA: "پای", NORM: "پای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پایین‌ترند": [ 
+    "پایین‌ترند": [
         {ORTH: "پایین‌تر", LEMMA: "پایین‌تر", NORM: "پایین‌تر", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "پدرت": [ 
+    "پدرت": [
         {ORTH: "پدر", LEMMA: "پدر", NORM: "پدر", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "پدرش": [ 
+    "پدرش": [
         {ORTH: "پدر", LEMMA: "پدر", NORM: "پدر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پدرشان": [ 
+    "پدرشان": [
         {ORTH: "پدر", LEMMA: "پدر", NORM: "پدر", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "پدرم": [ 
+    "پدرم": [
         {ORTH: "پدر", LEMMA: "پدر", NORM: "پدر", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "پربارش": [ 
+    "پربارش": [
         {ORTH: "پربار", LEMMA: "پربار", NORM: "پربار", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پروردگارت": [ 
+    "پروردگارت": [
         {ORTH: "پروردگار", LEMMA: "پروردگار", NORM: "پروردگار", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "پسرتان": [ 
+    "پسرتان": [
         {ORTH: "پسر", LEMMA: "پسر", NORM: "پسر", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "پسرش": [ 
+    "پسرش": [
         {ORTH: "پسر", LEMMA: "پسر", NORM: "پسر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پسرعمویش": [ 
+    "پسرعمویش": [
         {ORTH: "پسرعموی", LEMMA: "پسرعموی", NORM: "پسرعموی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پسر‌عمویت": [ 
+    "پسر‌عمویت": [
         {ORTH: "پسر‌عموی", LEMMA: "پسر‌عموی", NORM: "پسر‌عموی", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "پشتش": [ 
+    "پشتش": [
         {ORTH: "پشت", LEMMA: "پشت", NORM: "پشت", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پشیمونی": [ 
+    "پشیمونی": [
         {ORTH: "پشیمون", LEMMA: "پشیمون", NORM: "پشیمون", TAG: "ADJ"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "پولش": [ 
+    "پولش": [
         {ORTH: "پول", LEMMA: "پول", NORM: "پول", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پژوهش‌هایش": [ 
+    "پژوهش‌هایش": [
         {ORTH: "پژوهش‌های", LEMMA: "پژوهش‌های", NORM: "پژوهش‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پیامبرش": [ 
+    "پیامبرش": [
         {ORTH: "پیامبر", LEMMA: "پیامبر", NORM: "پیامبر", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پیامبری": [ 
+    "پیامبری": [
         {ORTH: "پیامبر", LEMMA: "پیامبر", NORM: "پیامبر", TAG: "NOUN"},
         {ORTH: "ی", LEMMA: "ی", NORM: "ی", TAG: "VERB"}],
-    "پیامش": [ 
+    "پیامش": [
         {ORTH: "پیام", LEMMA: "پیام", NORM: "پیام", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پیداست": [ 
+    "پیداست": [
         {ORTH: "پیدا", LEMMA: "پیدا", NORM: "پیدا", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "پیراهنش": [ 
+    "پیراهنش": [
         {ORTH: "پیراهن", LEMMA: "پیراهن", NORM: "پیراهن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پیروانش": [ 
+    "پیروانش": [
         {ORTH: "پیروان", LEMMA: "پیروان", NORM: "پیروان", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "پیشانی‌اش": [ 
+    "پیشانی‌اش": [
         {ORTH: "پیشانی‌", LEMMA: "پیشانی‌", NORM: "پیشانی‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "پیمانت": [ 
+    "پیمانت": [
         {ORTH: "پیمان", LEMMA: "پیمان", NORM: "پیمان", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "پیوندشان": [ 
+    "پیوندشان": [
         {ORTH: "پیوند", LEMMA: "پیوند", NORM: "پیوند", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "چاپش": [ 
+    "چاپش": [
         {ORTH: "چاپ", LEMMA: "چاپ", NORM: "چاپ", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "چت": [ 
+    "چت": [
         {ORTH: "چ", LEMMA: "چ", NORM: "چ", TAG: "ADV"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "چته": [ 
+    "چته": [
         {ORTH: "چ", LEMMA: "چ", NORM: "چ", TAG: "ADV"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"},
         {ORTH: "ه", LEMMA: "ه", NORM: "ه", TAG: "VERB"}],
-    "چرخ‌هایش": [ 
+    "چرخ‌هایش": [
         {ORTH: "چرخ‌های", LEMMA: "چرخ‌های", NORM: "چرخ‌های", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "چشمم": [ 
+    "چشمم": [
         {ORTH: "چشم", LEMMA: "چشم", NORM: "چشم", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "چشمهایش": [ 
+    "چشمهایش": [
         {ORTH: "چشمهای", LEMMA: "چشمهای", NORM: "چشمهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "چشمهایشان": [ 
+    "چشمهایشان": [
         {ORTH: "چشمهای", LEMMA: "چشمهای", NORM: "چشمهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "چمنم": [ 
+    "چمنم": [
         {ORTH: "چمن", LEMMA: "چمن", NORM: "چمن", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "چهره‌اش": [ 
+    "چهره‌اش": [
         {ORTH: "چهره‌", LEMMA: "چهره‌", NORM: "چهره‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "چکاره‌اند": [ 
+    "چکاره‌اند": [
         {ORTH: "چکاره‌", LEMMA: "چکاره‌", NORM: "چکاره‌", TAG: "ADV"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "چیزهاست": [ 
+    "چیزهاست": [
         {ORTH: "چیزها", LEMMA: "چیزها", NORM: "چیزها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "چیزهایش": [ 
+    "چیزهایش": [
         {ORTH: "چیزهای", LEMMA: "چیزهای", NORM: "چیزهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "چیزیست": [ 
+    "چیزیست": [
         {ORTH: "چیزی", LEMMA: "چیزی", NORM: "چیزی", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "چیست": [ 
+    "چیست": [
         {ORTH: "چی", LEMMA: "چی", NORM: "چی", TAG: "ADV"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "کارش": [ 
+    "کارش": [
         {ORTH: "کار", LEMMA: "کار", NORM: "کار", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "کارشان": [ 
+    "کارشان": [
         {ORTH: "کار", LEMMA: "کار", NORM: "کار", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "کارم": [ 
+    "کارم": [
         {ORTH: "کار", LEMMA: "کار", NORM: "کار", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "کارند": [ 
+    "کارند": [
         {ORTH: "کار", LEMMA: "کار", NORM: "کار", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "کارهایم": [ 
+    "کارهایم": [
         {ORTH: "کارها", LEMMA: "کارها", NORM: "کارها", TAG: "NOUN"},
         {ORTH: "یم", LEMMA: "یم", NORM: "یم", TAG: "NOUN"}],
-    "کافیست": [ 
+    "کافیست": [
         {ORTH: "کافی", LEMMA: "کافی", NORM: "کافی", TAG: "ADJ"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "کتابخانه‌اش": [ 
+    "کتابخانه‌اش": [
         {ORTH: "کتابخانه‌", LEMMA: "کتابخانه‌", NORM: "کتابخانه‌", TAG: "NOUN"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "کتابش": [ 
+    "کتابش": [
         {ORTH: "کتاب", LEMMA: "کتاب", NORM: "کتاب", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "کتابهاشان": [ 
+    "کتابهاشان": [
         {ORTH: "کتابها", LEMMA: "کتابها", NORM: "کتابها", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "کجاست": [ 
+    "کجاست": [
         {ORTH: "کجا", LEMMA: "کجا", NORM: "کجا", TAG: "ADV"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "کدورتهایشان": [ 
+    "کدورتهایشان": [
         {ORTH: "کدورتهای", LEMMA: "کدورتهای", NORM: "کدورتهای", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "کردنش": [ 
+    "کردنش": [
         {ORTH: "کردن", LEMMA: "کردن", NORM: "کردن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "کرم‌خورده‌اش": [ 
+    "کرم‌خورده‌اش": [
         {ORTH: "کرم‌خورده‌", LEMMA: "کرم‌خورده‌", NORM: "کرم‌خورده‌", TAG: "ADJ"},
         {ORTH: "اش", LEMMA: "اش", NORM: "اش", TAG: "NOUN"}],
-    "کشش": [ 
+    "کشش": [
         {ORTH: "کش", LEMMA: "کش", NORM: "کش", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "کشورش": [ 
+    "کشورش": [
         {ORTH: "کشور", LEMMA: "کشور", NORM: "کشور", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "کشورشان": [ 
+    "کشورشان": [
         {ORTH: "کشور", LEMMA: "کشور", NORM: "کشور", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "کشورمان": [ 
+    "کشورمان": [
         {ORTH: "کشور", LEMMA: "کشور", NORM: "کشور", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "کشورهاست": [ 
+    "کشورهاست": [
         {ORTH: "کشورها", LEMMA: "کشورها", NORM: "کشورها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "کلیشه‌هاست": [ 
+    "کلیشه‌هاست": [
         {ORTH: "کلیشه‌ها", LEMMA: "کلیشه‌ها", NORM: "کلیشه‌ها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "کمبودهاست": [ 
+    "کمبودهاست": [
         {ORTH: "کمبودها", LEMMA: "کمبودها", NORM: "کمبودها", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "کمتره": [ 
+    "کمتره": [
         {ORTH: "کمتر", LEMMA: "کمتر", NORM: "کمتر", TAG: "ADJ"},
         {ORTH: "ه", LEMMA: "ه", NORM: "ه", TAG: "VERB"}],
-    "کمکم": [ 
+    "کمکم": [
         {ORTH: "کمک", LEMMA: "کمک", NORM: "کمک", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "کنارش": [ 
+    "کنارش": [
         {ORTH: "کنار", LEMMA: "کنار", NORM: "کنار", TAG: "ADP"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "کودکانشان": [ 
+    "کودکانشان": [
         {ORTH: "کودکان", LEMMA: "کودکان", NORM: "کودکان", TAG: "NOUN"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "کوچکش": [ 
+    "کوچکش": [
         {ORTH: "کوچک", LEMMA: "کوچک", NORM: "کوچک", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "کیست": [ 
+    "کیست": [
         {ORTH: "کی", LEMMA: "کی", NORM: "کی", TAG: "NOUN"},
         {ORTH: "ست", LEMMA: "ست", NORM: "ست", TAG: "VERB"}],
-    "کیفش": [ 
+    "کیفش": [
         {ORTH: "کیف", LEMMA: "کیف", NORM: "کیف", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گذشته‌اند": [ 
+    "گذشته‌اند": [
         {ORTH: "گذشته‌", LEMMA: "گذشته‌", NORM: "گذشته‌", TAG: "ADJ"},
         {ORTH: "اند", LEMMA: "اند", NORM: "اند", TAG: "VERB"}],
-    "گرانقدرش": [ 
+    "گرانقدرش": [
         {ORTH: "گرانقدر", LEMMA: "گرانقدر", NORM: "گرانقدر", TAG: "ADJ"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گرانقدرشان": [ 
+    "گرانقدرشان": [
         {ORTH: "گرانقدر", LEMMA: "گرانقدر", NORM: "گرانقدر", TAG: "ADJ"},
         {ORTH: "شان", LEMMA: "شان", NORM: "شان", TAG: "NOUN"}],
-    "گردنتان": [ 
+    "گردنتان": [
         {ORTH: "گردن", LEMMA: "گردن", NORM: "گردن", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "گردنش": [ 
+    "گردنش": [
         {ORTH: "گردن", LEMMA: "گردن", NORM: "گردن", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گرفتارند": [ 
+    "گرفتارند": [
         {ORTH: "گرفتار", LEMMA: "گرفتار", NORM: "گرفتار", TAG: "ADJ"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "گرفتنت": [ 
+    "گرفتنت": [
         {ORTH: "گرفتن", LEMMA: "گرفتن", NORM: "گرفتن", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "گروهند": [ 
+    "گروهند": [
         {ORTH: "گروه", LEMMA: "گروه", NORM: "گروه", TAG: "NOUN"},
         {ORTH: "ند", LEMMA: "ند", NORM: "ند", TAG: "VERB"}],
-    "گروگانهایش": [ 
+    "گروگانهایش": [
         {ORTH: "گروگانهای", LEMMA: "گروگانهای", NORM: "گروگانهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گریمش": [ 
+    "گریمش": [
         {ORTH: "گریم", LEMMA: "گریم", NORM: "گریم", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گفتارمان": [ 
+    "گفتارمان": [
         {ORTH: "گفتار", LEMMA: "گفتار", NORM: "گفتار", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "گلهایش": [ 
+    "گلهایش": [
         {ORTH: "گلهای", LEMMA: "گلهای", NORM: "گلهای", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گلویش": [ 
+    "گلویش": [
         {ORTH: "گلوی", LEMMA: "گلوی", NORM: "گلوی", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گناهت": [ 
+    "گناهت": [
         {ORTH: "گناه", LEMMA: "گناه", NORM: "گناه", TAG: "NOUN"},
         {ORTH: "ت", LEMMA: "ت", NORM: "ت", TAG: "NOUN"}],
-    "گوشش": [ 
+    "گوشش": [
         {ORTH: "گوش", LEMMA: "گوش", NORM: "گوش", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "گوشم": [ 
+    "گوشم": [
         {ORTH: "گوش", LEMMA: "گوش", NORM: "گوش", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "گولش": [ 
+    "گولش": [
         {ORTH: "گول", LEMMA: "گول", NORM: "گول", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
-    "یادتان": [ 
+    "یادتان": [
         {ORTH: "یاد", LEMMA: "یاد", NORM: "یاد", TAG: "NOUN"},
         {ORTH: "تان", LEMMA: "تان", NORM: "تان", TAG: "NOUN"}],
-    "یادم": [ 
+    "یادم": [
         {ORTH: "یاد", LEMMA: "یاد", NORM: "یاد", TAG: "NOUN"},
         {ORTH: "م", LEMMA: "م", NORM: "م", TAG: "NOUN"}],
-    "یادمان": [ 
+    "یادمان": [
         {ORTH: "یاد", LEMMA: "یاد", NORM: "یاد", TAG: "NOUN"},
         {ORTH: "مان", LEMMA: "مان", NORM: "مان", TAG: "NOUN"}],
-    "یارانش": [ 
+    "یارانش": [
         {ORTH: "یاران", LEMMA: "یاران", NORM: "یاران", TAG: "NOUN"},
         {ORTH: "ش", LEMMA: "ش", NORM: "ش", TAG: "NOUN"}],
 })

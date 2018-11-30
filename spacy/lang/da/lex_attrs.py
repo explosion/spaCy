@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 from ...attrs import LIKE_NUM
 
-# Source http://fjern-uv.dk/tal.php
 
+# Source http://fjern-uv.dk/tal.php
 _num_words = """nul
 en et to tre fire fem seks syv otte ni ti
 elleve tolv tretten fjorten femten seksten sytten atten nitten tyve
@@ -19,8 +19,8 @@ enoghalvfems tooghalvfems treoghalvfems fireoghalvfems femoghalvfems seksoghalvf
 million milliard billion billiard trillion trilliard
 """.split()
 
-# source http://www.duda.dk/video/dansk/grammatik/talord/talord.html
 
+# Source: http://www.duda.dk/video/dansk/grammatik/talord/talord.html
 _ordinal_words = """nulte
 første anden tredje fjerde femte sjette syvende ottende niende tiende
 elfte tolvte trettende fjortende femtende sekstende syttende attende nittende tyvende
@@ -33,14 +33,15 @@ enogfirsindstyvende toogfirsindstyvende treogfirsindstyvende fireogfirsindstyven
 enoghalvfemsindstyvende tooghalvfemsindstyvende treoghalvfemsindstyvende fireoghalvfemsindstyvende femoghalvfemsindstyvende seksoghalvfemsindstyvende syvoghalvfemsindstyvende otteoghalvfemsindstyvende nioghalvfemsindstyvende
 """.split()
 
+
 def like_num(text):
-    if text.startswith(('+', '-', '±', '~')):
+    if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
-    text = text.replace(',', '').replace('.', '')
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if text.count('/') == 1:
-        num, denom = text.split('/')
+    if text.count("/") == 1:
+        num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
     if text.lower() in _num_words:
@@ -49,6 +50,5 @@ def like_num(text):
         return True
     return False
 
-LEX_ATTRS = {
-    LIKE_NUM: like_num
-}
+
+LEX_ATTRS = {LIKE_NUM: like_num}
