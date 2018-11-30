@@ -20,7 +20,6 @@ from .span cimport Span
 from .token cimport Token
 from .span cimport Span
 from .token cimport Token
-from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs import intify_attrs, IDS
@@ -29,7 +28,7 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
-from ..util import normalize_slice
+from ..util import normalize_slice, is_json_serializable
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
@@ -461,6 +460,21 @@ cdef class Doc:
             #    prediction
             # 3. Test basic data-driven ORTH gazetteer
             # 4. Test more nuanced date and currency regex
+
+            tokens_in_ents = {}
+            cdef attr_t entity_type
+            cdef int ent_start, ent_end
+            for ent_info in ents:
+                entity_type, ent_start, ent_end = get_entity_info(ent_info)
+                for token_index in range(ent_start, ent_end):
+                    if token_index in tokens_in_ents.keys():
+                        raise ValueError(Errors.E103.format(
+                            span1=(tokens_in_ents[token_index][0],
+                                   tokens_in_ents[token_index][1],
+                                   self.vocab.strings[tokens_in_ents[token_index][2]]),
+                            span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
+                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type)
+
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
@@ -468,15 +482,7 @@ cdef class Doc:
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
-                if isinstance(ent_info, Span):
-                    ent_id = ent_info.ent_id
-                    ent_type = ent_info.label
-                    start = ent_info.start
-                    end = ent_info.end
-                elif len(ent_info) == 3:
-                    ent_type, start, end = ent_info
-                else:
-                    ent_id, ent_type, start, end = ent_info
+                ent_type, start, end = get_entity_info(ent_info)
                 if ent_type is None or ent_type < 0:
                     # Mark as O
                     for i in range(start, end):
@@ -870,7 +876,7 @@ cdef class Doc:
         '''
         xp = get_array_module(self.tensor)
         if self.tensor.size == 0:
-            self.tensor.resize(tensor.shape)
+            self.tensor.resize(tensor.shape, refcheck=False)
             copy_array(self.tensor, tensor)
         else:
             self.tensor = xp.hstack((self.tensor, tensor))
@@ -886,6 +892,28 @@ cdef class Doc:
         continue to work.
         '''
         return Retokenizer(self)
+
+    def _bulk_merge(self, spans, attributes):
+        """Retokenize the document, such that the spans given as arguments
+         are merged into single tokens. The spans need to be in document
+         order, and no span intersection is allowed.
+
+        spans (Span[]): Spans to merge, in document order, with all span
+            intersections empty. Cannot be emty.
+        attributes (Dictionary[]): Attributes to assign to the merged tokens. By default,
+            must be the same lenghth as spans, emty dictionaries are allowed.
+            attributes are inherited from the syntactic root of the span.
+        RETURNS (Token): The first newly merged token.
+        """
+        cdef unicode tag, lemma, ent_type
+
+        assert len(attributes) == len(spans), "attribute length should be equal to span length" + str(len(attributes)) +\
+                                              str(len(spans))
+        with self.retokenize() as retokenizer:
+            for i, span in enumerate(spans):
+                fix_attributes(self, attributes[i])
+                remove_label_if_necessary(attributes[i])
+                retokenizer.merge(span, attributes[i])
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Retokenize the document, such that the span at
@@ -908,20 +936,12 @@ cdef class Doc:
             attributes[LEMMA] = lemma
             attributes[ENT_TYPE] = ent_type
         elif not args:
-            if 'label' in attributes and 'ent_type' not in attributes:
-                if isinstance(attributes['label'], int):
-                    attributes[ENT_TYPE] = attributes['label']
-                else:
-                    attributes[ENT_TYPE] = self.vocab.strings[attributes['label']]
-            if 'ent_type' in attributes:
-                attributes[ENT_TYPE] = attributes['ent_type']
+            fix_attributes(self, attributes)
         elif args:
             raise ValueError(Errors.E034.format(n_args=len(args),
                                                 args=repr(args),
                                                 kwargs=repr(attributes)))
-        # More deprecated attribute handling =/
-        if 'label' in attributes:
-            attributes['ent_type'] = attributes.pop('label')
+        remove_label_if_necessary(attributes)
 
         attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
 
@@ -938,31 +958,48 @@ cdef class Doc:
         return self[start]
 
     def print_tree(self, light=False, flat=False):
-        """Returns the parse trees in JSON (dict) format.
+        raise ValueError(Errors.E105)
 
-        light (bool): Don't include lemmas or entities.
-        flat (bool): Don't include arcs or modifiers.
-        RETURNS (dict): Parse tree as dict.
+    def to_json(self, underscore=None):
+        """Convert a Doc to JSON. Produces the same format used by the spacy
+        train command.
 
-        EXAMPLE:
-            >>> doc = nlp('Bob brought Alice the pizza. Alice ate the pizza.')
-            >>> trees = doc.print_tree()
-            >>> trees[1]
-            {'modifiers': [
-                {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice',
-                'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP',
-                'lemma': 'Alice'},
-                {'modifiers': [
-                    {'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det',
-                    'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}],
-                'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN',
-                'POS_fine': 'NN', 'lemma': 'pizza'},
-                {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct',
-                'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}],
-                'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB',
-                'POS_fine': 'VBD', 'lemma': 'eat'}
+        underscore (list): Optional list of string names of custom doc._.
+        attributes. Attribute values need to be JSON-serializable. Values will
+        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+        RETURNS (dict): The data in spaCy's JSON format.
         """
-        return parse_tree(self, light=light, flat=flat)
+        data = {'text': self.text}
+        data['ents'] = [{'start': ent.start_char, 'end': ent.end_char,
+                         'label': ent.label_} for ent in self.ents]
+        sents = list(self.sents)
+        if sents:
+            data['sents'] = [{'start': sent.start_char, 'end': sent.end_char}
+                             for sent in sents]
+        if self.cats:
+            data['cats'] = self.cats
+        data['tokens'] = []
+        for token in self:
+            token_data = {'id': token.i, 'start': token.idx, 'end': token.idx + len(token)}
+            if token.pos_:
+                token_data['pos'] = token.pos_
+            if token.tag_:
+                token_data['tag'] = token.tag_
+            if token.dep_:
+                token_data['dep'] = token.dep_
+            if token.head:
+                token_data['head'] = token.head.i
+            data['tokens'].append(token_data)
+        if underscore:
+            data['_'] = {}
+            for attr in underscore:
+                if not self.has_extension(attr):
+                    raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
+                value = self._.get(attr)
+                if not is_json_serializable(value):
+                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                data['_'][attr] = value
+        return data
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
@@ -1040,3 +1077,28 @@ def unpickle_doc(vocab, hooks_and_data, bytes_data):
 
 
 copy_reg.pickle(Doc, pickle_doc, unpickle_doc)
+
+def remove_label_if_necessary(attributes):
+    # More deprecated attribute handling =/
+    if 'label' in attributes:
+        attributes['ent_type'] = attributes.pop('label')
+
+def fix_attributes(doc, attributes):
+    if 'label' in attributes and 'ent_type' not in attributes:
+        if isinstance(attributes['label'], int):
+            attributes[ENT_TYPE] = attributes['label']
+        else:
+            attributes[ENT_TYPE] = doc.vocab.strings[attributes['label']]
+    if 'ent_type' in attributes:
+        attributes[ENT_TYPE] = attributes['ent_type']
+
+def get_entity_info(ent_info):
+    if isinstance(ent_info, Span):
+        ent_type = ent_info.label
+        start = ent_info.start
+        end = ent_info.end
+    elif len(ent_info) == 3:
+        ent_type, start, end = ent_info
+    else:
+        ent_id, ent_type, start, end = ent_info
+    return ent_type, start, end

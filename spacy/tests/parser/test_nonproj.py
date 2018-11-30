@@ -47,34 +47,34 @@ def test_parser_ancestors(tree, cyclic_tree, partial_tree, multirooted_tree):
 
 
 def test_parser_contains_cycle(tree, cyclic_tree, partial_tree, multirooted_tree):
-    assert contains_cycle(tree) == None
+    assert contains_cycle(tree) is None
     assert contains_cycle(cyclic_tree) == set([3, 4, 5])
-    assert contains_cycle(partial_tree) == None
-    assert contains_cycle(multirooted_tree) == None
+    assert contains_cycle(partial_tree) is None
+    assert contains_cycle(multirooted_tree) is None
 
 
 def test_parser_is_nonproj_arc(nonproj_tree, partial_tree, multirooted_tree):
-    assert is_nonproj_arc(0, nonproj_tree) == False
-    assert is_nonproj_arc(1, nonproj_tree) == False
-    assert is_nonproj_arc(2, nonproj_tree) == False
-    assert is_nonproj_arc(3, nonproj_tree) == False
-    assert is_nonproj_arc(4, nonproj_tree) == False
-    assert is_nonproj_arc(5, nonproj_tree) == False
-    assert is_nonproj_arc(6, nonproj_tree) == False
-    assert is_nonproj_arc(7, nonproj_tree) == True
-    assert is_nonproj_arc(8, nonproj_tree) == False
-    assert is_nonproj_arc(7, partial_tree) == False
-    assert is_nonproj_arc(17, multirooted_tree) == False
-    assert is_nonproj_arc(16, multirooted_tree) == True
+    assert is_nonproj_arc(0, nonproj_tree) is False
+    assert is_nonproj_arc(1, nonproj_tree) is False
+    assert is_nonproj_arc(2, nonproj_tree) is False
+    assert is_nonproj_arc(3, nonproj_tree) is False
+    assert is_nonproj_arc(4, nonproj_tree) is False
+    assert is_nonproj_arc(5, nonproj_tree) is False
+    assert is_nonproj_arc(6, nonproj_tree) is False
+    assert is_nonproj_arc(7, nonproj_tree) is True
+    assert is_nonproj_arc(8, nonproj_tree) is False
+    assert is_nonproj_arc(7, partial_tree) is False
+    assert is_nonproj_arc(17, multirooted_tree) is False
+    assert is_nonproj_arc(16, multirooted_tree) is True
 
 
 def test_parser_is_nonproj_tree(
     proj_tree, nonproj_tree, partial_tree, multirooted_tree
 ):
-    assert is_nonproj_tree(proj_tree) == False
-    assert is_nonproj_tree(nonproj_tree) == True
-    assert is_nonproj_tree(partial_tree) == False
-    assert is_nonproj_tree(multirooted_tree) == True
+    assert is_nonproj_tree(proj_tree) is False
+    assert is_nonproj_tree(nonproj_tree) is True
+    assert is_nonproj_tree(partial_tree) is False
+    assert is_nonproj_tree(multirooted_tree) is True
 
 
 def test_parser_pseudoprojectivity(en_tokenizer):
@@ -100,8 +100,8 @@ def test_parser_pseudoprojectivity(en_tokenizer):
 
     assert nonproj.decompose("X||Y") == ("X", "Y")
     assert nonproj.decompose("X") == ("X", "")
-    assert nonproj.is_decorated("X||Y") == True
-    assert nonproj.is_decorated("X") == False
+    assert nonproj.is_decorated("X||Y") is True
+    assert nonproj.is_decorated("X") is False
 
     nonproj._lift(0, tree)
     assert tree == [2, 2, 2]

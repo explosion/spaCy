@@ -1,11 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import os
 import sys
 import ujson
 import itertools
-import locale
-import os
 
 from thinc.neural.util import copy_array
 
@@ -30,9 +29,9 @@ except ImportError:
     cupy = None
 
 try:
-    from thinc.neural.optimizers import Optimizer
+    from thinc.neural.optimizers import Optimizer  # noqa: F401
 except ImportError:
-    from thinc.neural.optimizers import Adam as Optimizer
+    from thinc.neural.optimizers import Adam as Optimizer  # noqa: F401
 
 pickle = pickle
 copy_reg = copy_reg
@@ -136,12 +135,3 @@ def import_file(name, loc):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
-
-
-def locale_escape(string, errors="replace"):
-    """
-    Mangle non-supported characters, for savages with ascii terminals.
-    """
-    encoding = locale.getpreferredencoding()
-    string = string.encode(encoding, errors).decode("utf8")
-    return string

@@ -78,14 +78,16 @@ def test_issue242(en_tokenizer):
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
     matcher.add("FOOD", None, *patterns)
-
     matches = [(ent_type, start, end) for ent_type, start, end in matcher(doc)]
-    doc.ents += tuple(matches)
     match1, match2 = matches
     assert match1[1] == 3
     assert match1[2] == 5
     assert match2[1] == 4
     assert match2[2] == 6
+    with pytest.raises(ValueError):
+        # One token can only be part of one entity, so test that the matches
+        # can't be added as entities
+        doc.ents += tuple(matches)
 
 
 def test_issue309(en_tokenizer):
@@ -150,6 +152,7 @@ def test_issue589():
     vocab = Vocab()
     vocab.strings.set_frozen(True)
     doc = Doc(vocab, words=["whata"])
+    assert doc
 
 
 def test_issue590(en_vocab):
@@ -214,7 +217,7 @@ def test_issue615(en_tokenizer):
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
     matcher.add(label, merge_phrases, pattern)
-    match = matcher(doc)
+    matcher(doc)
     entities = list(doc.ents)
     assert entities != []
     assert entities[0].label != 0
@@ -329,8 +332,7 @@ def test_issue850():
     handle the ambiguity correctly."""
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
-    IS_ANY_TOKEN = matcher.vocab.add_flag(lambda x: True)
-    pattern = [{"LOWER": "bob"}, {"OP": "*", "IS_ANY_TOKEN": True}, {"LOWER": "frank"}]
+    pattern = [{"LOWER": "bob"}, {"OP": "*"}, {"LOWER": "frank"}]
     matcher.add("FarAway", None, pattern)
     doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
     match = matcher(doc)
@@ -344,7 +346,6 @@ def test_issue850_basic():
     """Test Matcher matches with '*' operator and Boolean flag"""
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
-    IS_ANY_TOKEN = matcher.vocab.add_flag(lambda x: True)
     pattern = [{"LOWER": "bob"}, {"OP": "*", "LOWER": "and"}, {"LOWER": "frank"}]
     matcher.add("FarAway", None, pattern)
     doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
@@ -403,12 +404,13 @@ def test_issue912(en_vocab, text, tag, lemma):
 
 def test_issue957(en_tokenizer):
     """Test that spaCy doesn't hang on many periods."""
-    # skip test if pytest-timeout is not installed
-    timeout = pytest.importorskip("pytest-timeout")
+    # Skip test if pytest-timeout is not installed
+    pytest.importorskip("pytest-timeout")
     string = "0"
     for i in range(1, 100):
         string += ".%d" % i
     doc = en_tokenizer(string)
+    assert doc
 
 
 @pytest.mark.xfail

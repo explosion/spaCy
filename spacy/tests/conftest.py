@@ -97,19 +97,24 @@ def da_tokenizer():
 
 @pytest.fixture(scope="session")
 def ja_tokenizer():
-    mecab = pytest.importorskip("MeCab")
+    pytest.importorskip("MeCab")
     return get_lang_class("ja").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
 def th_tokenizer():
-    pythainlp = pytest.importorskip("pythainlp")
+    pytest.importorskip("pythainlp")
     return get_lang_class("th").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
 def tr_tokenizer():
     return get_lang_class("tr").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def ca_tokenizer():
+    return get_lang_class("ca").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
@@ -134,7 +139,7 @@ def ur_tokenizer():
 
 @pytest.fixture(scope="session")
 def ru_tokenizer():
-    pymorphy = pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy2")
     return get_lang_class("ru").Defaults.create_tokenizer()
 
 

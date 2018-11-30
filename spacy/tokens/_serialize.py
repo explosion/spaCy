@@ -11,14 +11,15 @@ from ..attrs import SPACY, ORTH
 
 
 class Binder(object):
-    '''Serialize analyses from a collection of doc objects.'''
+    """Serialize analyses from a collection of doc objects."""
+
     def __init__(self, attrs=None):
-        '''Create a Binder object, to hold serialized annotations.
-        
+        """Create a Binder object, to hold serialized annotations.
+
         attrs (list):
             List of attributes to serialize. 'orth' and 'spacy' are always
             serialized, so they're not required. Defaults to None.
-        '''
+        """
         attrs = attrs or []
         self.attrs = list(attrs)
         # Ensure ORTH is always attrs[0]
@@ -32,7 +33,7 @@ class Binder(object):
         self.strings = set()
 
     def add(self, doc):
-        '''Add a doc's annotations to the binder for serialization.'''
+        """Add a doc's annotations to the binder for serialization."""
         array = doc.to_array(self.attrs)
         if len(array.shape) == 1:
             array = array.reshape((array.shape[0], 1))
@@ -44,8 +45,7 @@ class Binder(object):
         self.strings.update(w.text for w in doc)
 
     def get_docs(self, vocab):
-        '''Recover Doc objects from the annotations, using the given vocab.'''
-        attrs = self.attrs
+        """Recover Doc objects from the annotations, using the given vocab."""
         for string in self.strings:
             vocab[string]
         orth_col = self.attrs.index(ORTH)
@@ -56,34 +56,34 @@ class Binder(object):
             yield doc
 
     def merge(self, other):
-        '''Extend the annotations of this binder with the annotations from another.'''
+        """Extend the annotations of this binder with the annotations from another."""
         assert self.attrs == other.attrs
         self.tokens.extend(other.tokens)
         self.spaces.extend(other.spaces)
         self.strings.update(other.strings)
 
     def to_bytes(self):
-        '''Serialize the binder's annotations into a byte string.'''
+        """Serialize the binder's annotations into a byte string."""
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape
         lengths = [len(tokens) for tokens in self.tokens]
         msg = {
-            'attrs': self.attrs,
-            'tokens': numpy.vstack(self.tokens).tobytes('C'),
-            'spaces': numpy.vstack(self.spaces).tobytes('C'),
-            'lengths': numpy.asarray(lengths, dtype='int32').tobytes('C'),
-            'strings': list(self.strings)
+            "attrs": self.attrs,
+            "tokens": numpy.vstack(self.tokens).tobytes("C"),
+            "spaces": numpy.vstack(self.spaces).tobytes("C"),
+            "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
+            "strings": list(self.strings),
         }
         return gzip.compress(msgpack.dumps(msg))
 
     def from_bytes(self, string):
-        '''Deserialize the binder's annotations from a byte string.'''
+        """Deserialize the binder's annotations from a byte string."""
         msg = msgpack.loads(gzip.decompress(string))
-        self.attrs = msg['attrs']
-        self.strings = set(msg['strings'])
-        lengths = numpy.fromstring(msg['lengths'], dtype='int32')
-        flat_spaces = numpy.fromstring(msg['spaces'], dtype=bool)
-        flat_tokens = numpy.fromstring(msg['tokens'], dtype='uint64')
+        self.attrs = msg["attrs"]
+        self.strings = set(msg["strings"])
+        lengths = numpy.fromstring(msg["lengths"], dtype="int32")
+        flat_spaces = numpy.fromstring(msg["spaces"], dtype=bool)
+        flat_tokens = numpy.fromstring(msg["tokens"], dtype="uint64")
         shape = (flat_tokens.size // len(self.attrs), len(self.attrs))
         flat_tokens = flat_tokens.reshape(shape)
         flat_spaces = flat_spaces.reshape((flat_spaces.size, 1))
@@ -95,7 +95,7 @@ class Binder(object):
 
 
 def merge_bytes(binder_strings):
-    '''Concatenate multiple serialized binders into one byte string.'''
+    """Concatenate multiple serialized binders into one byte string."""
     output = None
     for byte_string in binder_strings:
         binder = Binder().from_bytes(byte_string)

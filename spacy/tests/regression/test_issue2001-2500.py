@@ -74,4 +74,4 @@ def test_issue2482():
     nlp = Italian()
     nlp.add_pipe(nlp.create_pipe("ner"))
     b = nlp.to_bytes()
-    nlp2 = Italian().from_bytes(b)
+    Italian().from_bytes(b)

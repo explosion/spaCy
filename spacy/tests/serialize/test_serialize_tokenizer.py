@@ -19,7 +19,7 @@ def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
     serialized and deserialized correctly (see #2494)."""
     tokenizer = Tokenizer(en_vocab, suffix_search=en_tokenizer.suffix_search)
     tokenizer_bytes = tokenizer.to_bytes()
-    new_tokenizer = Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
+    Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
 
 
 @pytest.mark.skip(reason="Currently unreliable across platforms")

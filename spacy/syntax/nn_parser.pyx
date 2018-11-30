@@ -125,7 +125,7 @@ cdef class Parser:
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
-    
+
     @property
     def tok2vec(self):
         return self.model.tok2vec
@@ -139,7 +139,7 @@ cdef class Parser:
         return names
 
     nr_feature = 8
-   
+
     @property
     def labels(self):
         class_names = [self.moves.get_class_name(i) for i in range(self.moves.n_moves)]
@@ -154,7 +154,7 @@ cdef class Parser:
     def postprocesses(self):
         # Available for subclasses, e.g. to deprojectivize
         return []
-    
+
     def add_label(self, label):
         resized = False
         for action in self.moves.action_types:
@@ -163,11 +163,11 @@ cdef class Parser:
                 resized = True
         if self.model not in (True, False, None) and resized:
             self.model.resize_output(self.moves.n_moves)
-    
+
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
-    
+
     def init_multitask_objectives(self, get_gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
@@ -250,7 +250,7 @@ cdef class Parser:
             self._parseC(&states[0],
                 weights, sizes)
         return batch
-    
+
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
@@ -283,7 +283,7 @@ cdef class Parser:
             scores = model.vec2scores(vectors)
             todo = self.transition_beams(todo, scores)
         return beams
- 
+
     cdef void _parseC(self, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
@@ -303,7 +303,7 @@ cdef class Parser:
                 states[i] = unfinished[i]
             sizes.states = unfinished.size()
             unfinished.clear()
-    
+
     def set_annotations(self, docs, states_or_beams, tensors=None):
         cdef StateClass state
         cdef Beam beam
@@ -327,14 +327,14 @@ cdef class Parser:
                 hook(doc)
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
-     
+
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
         cdef float* c_scores = &scores[0, 0]
         cdef vector[StateC*] c_states
         for state in states:
             c_states.push_back(state.c)
-        self.c_transition_batch(&c_states[0], c_scores, scores.shape[1], scores.shape[0]) 
+        self.c_transition_batch(&c_states[0], c_scores, scores.shape[1], scores.shape[0])
         return [state for state in states if not state.c.is_final()]
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
@@ -362,7 +362,7 @@ cdef class Parser:
             beam.advance(_beam_utils.transition_state, NULL, <void*>self.moves.c)
             beam.check_done(_beam_utils.check_final_state, NULL)
         return [b for b in beams if not b.is_done]
- 
+
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
@@ -373,6 +373,8 @@ cdef class Parser:
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
+        for multitask in self._multitasks:
+            multitask.update(docs, golds, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
         beam_update_prob = self.cfg.get('beam_update_prob', 1.0)
@@ -430,7 +432,7 @@ cdef class Parser:
         cdef Beam beam
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
-    
+
     def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
@@ -489,11 +491,11 @@ cdef class Parser:
             losses.setdefault(self.name, 0.)
             losses[self.name] += (d_scores**2).sum()
         return d_scores
-     
+
     def create_optimizer(self):
         return create_default_optimizer(self.model.ops,
                                         **self.cfg.get('optimizer', {}))
-   
+
     def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
@@ -531,7 +533,7 @@ cdef class Parser:
             self.model.begin_training([])
         self.cfg.update(cfg)
         return sgd
-    
+
     def to_disk(self, path, **exclude):
         serializers = {
             'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),

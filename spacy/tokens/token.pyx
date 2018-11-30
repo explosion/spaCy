@@ -692,7 +692,7 @@ cdef class Token:
 
     property orth_:
         """RETURNS (unicode): Verbatim text content (identical to
-            `Token.text`). Existst mostly for consistency with the other
+            `Token.text`). Exists mostly for consistency with the other
             attributes.
         """
         def __get__(self):

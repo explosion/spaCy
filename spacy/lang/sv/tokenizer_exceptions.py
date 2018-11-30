@@ -16,13 +16,15 @@ for verb_data in [
     {ORTH: "hajar", LEMMA: "förstår"},
     {ORTH: "lever"},
     {ORTH: "serr", LEMMA: "ser"},
-    {ORTH: "fixar"}]:
+    {ORTH: "fixar"},
+]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
     for data in [verb_data, verb_data_tc]:
         _exc[data[ORTH] + "u"] = [
             dict(data),
-            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"}]
+            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"},
+        ]
 
 
 for exc_data in [
@@ -65,18 +67,74 @@ for exc_data in [
     {ORTH: "Lör.", LEMMA: "Lördag"},
     {ORTH: "Sön.", LEMMA: "Söndag"},
     {ORTH: "sthlm", LEMMA: "Stockholm"},
-    {ORTH: "gbg", LEMMA: "Göteborg"}]:
+    {ORTH: "gbg", LEMMA: "Göteborg"},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 
 ABBREVIATIONS = [
-    "ang", "anm", "bil", "bl.a", "d.v.s", "doc", "dvs", "e.d", "e.kr", "el",
-    "eng", "etc", "exkl", "f", "f.d", "f.kr", "f.n", "f.ö", "fid", "fig",
-    "forts", "fr.o.m", "förf", "inkl", "jur", "kap", "kl", "kor", "kr",
-    "kungl", "lat", "m.a.o", "m.fl", "m.m", "max", "milj", "min", "mos",
-    "mt", "o.d", "o.s.v", "obs", "osv", "p.g.a", "proc", "prof", "ref",
-    "resp", "s.a.s", "s.k", "s.t", "sid", "s:t", "t.ex", "t.h", "t.o.m", "t.v",
-    "tel", "ung", "vol", "äv", "övers"
+    "ang",
+    "anm",
+    "bil",
+    "bl.a",
+    "d.v.s",
+    "doc",
+    "dvs",
+    "e.d",
+    "e.kr",
+    "el",
+    "eng",
+    "etc",
+    "exkl",
+    "f",
+    "f.d",
+    "f.kr",
+    "f.n",
+    "f.ö",
+    "fid",
+    "fig",
+    "forts",
+    "fr.o.m",
+    "förf",
+    "inkl",
+    "jur",
+    "kap",
+    "kl",
+    "kor",
+    "kr",
+    "kungl",
+    "lat",
+    "m.a.o",
+    "m.fl",
+    "m.m",
+    "max",
+    "milj",
+    "min",
+    "mos",
+    "mt",
+    "o.d",
+    "o.s.v",
+    "obs",
+    "osv",
+    "p.g.a",
+    "proc",
+    "prof",
+    "ref",
+    "resp",
+    "s.a.s",
+    "s.k",
+    "s.t",
+    "sid",
+    "s:t",
+    "t.ex",
+    "t.h",
+    "t.o.m",
+    "t.v",
+    "tel",
+    "ung",
+    "vol",
+    "äv",
+    "övers",
 ]
 ABBREVIATIONS = [abbr + "." for abbr in ABBREVIATIONS] + ABBREVIATIONS
 
@@ -86,8 +144,6 @@ for orth in ABBREVIATIONS:
 # Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
 # should be tokenized as two separate tokens.
 for orth in ["i", "m"]:
-    _exc[orth + "."] = [
-        {ORTH: orth, LEMMA: orth, NORM: orth},
-        {ORTH: ".", TAG: PUNCT}]
+    _exc[orth + "."] = [{ORTH: orth, LEMMA: orth, NORM: orth}, {ORTH: ".", TAG: PUNCT}]
 
 TOKENIZER_EXCEPTIONS = _exc

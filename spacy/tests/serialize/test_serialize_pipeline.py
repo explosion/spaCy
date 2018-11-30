@@ -72,9 +72,8 @@ def test_to_from_bytes(parser, blank_parser):
     reason="This seems to be a dict ordering bug somewhere. Only failing on some platforms."
 )
 def test_serialize_tagger_roundtrip_bytes(en_vocab, taggers):
-    tagger1, tagger2 = taggers
+    tagger1 = taggers[0]
     tagger1_b = tagger1.to_bytes()
-    tagger2_b = tagger2.to_bytes()
     tagger1 = tagger1.from_bytes(tagger1_b)
     assert tagger1.to_bytes() == tagger1_b
     new_tagger1 = Tagger(en_vocab).from_bytes(tagger1_b)
@@ -114,4 +113,4 @@ def test_serialize_tensorizer_roundtrip_disk(en_vocab):
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
     textcat = TextCategorizer(en_vocab, labels=["ENTITY", "ACTION", "MODIFIER"])
-    textcat_bytes = textcat.to_bytes()
+    textcat.to_bytes()

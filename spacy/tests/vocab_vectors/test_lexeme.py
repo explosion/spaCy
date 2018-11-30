@@ -41,21 +41,21 @@ def test_vocab_lexeme_is_digit(en_vocab):
 
 def test_vocab_lexeme_add_flag_auto_id(en_vocab):
     is_len4 = en_vocab.add_flag(lambda string: len(string) == 4)
-    assert en_vocab["1999"].check_flag(is_len4) == True
-    assert en_vocab["1999"].check_flag(IS_DIGIT) == True
-    assert en_vocab["199"].check_flag(is_len4) == False
-    assert en_vocab["199"].check_flag(IS_DIGIT) == True
-    assert en_vocab["the"].check_flag(is_len4) == False
-    assert en_vocab["dogs"].check_flag(is_len4) == True
+    assert en_vocab["1999"].check_flag(is_len4) is True
+    assert en_vocab["1999"].check_flag(IS_DIGIT) is True
+    assert en_vocab["199"].check_flag(is_len4) is False
+    assert en_vocab["199"].check_flag(IS_DIGIT) is True
+    assert en_vocab["the"].check_flag(is_len4) is False
+    assert en_vocab["dogs"].check_flag(is_len4) is True
 
 
 def test_vocab_lexeme_add_flag_provided_id(en_vocab):
     is_len4 = en_vocab.add_flag(lambda string: len(string) == 4, flag_id=IS_DIGIT)
-    assert en_vocab["1999"].check_flag(is_len4) == True
-    assert en_vocab["199"].check_flag(is_len4) == False
-    assert en_vocab["199"].check_flag(IS_DIGIT) == False
-    assert en_vocab["the"].check_flag(is_len4) == False
-    assert en_vocab["dogs"].check_flag(is_len4) == True
+    assert en_vocab["1999"].check_flag(is_len4) is True
+    assert en_vocab["199"].check_flag(is_len4) is False
+    assert en_vocab["199"].check_flag(IS_DIGIT) is False
+    assert en_vocab["the"].check_flag(is_len4) is False
+    assert en_vocab["dogs"].check_flag(is_len4) is True
 
 
 def test_lexeme_bytes_roundtrip(en_vocab):

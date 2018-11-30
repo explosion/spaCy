@@ -1,66 +1,148 @@
-'''This script is experimental.
-
-Try pre-training the CNN component of the text categorizer using a cheap
-language modelling-like objective. Specifically, we load pre-trained vectors
-(from something like word2vec, GloVe, FastText etc), and use the CNN to
-predict the tokens' pre-trained vectors. This isn't as easy as it sounds:
-we're not merely doing compression here, because heavy dropout is applied,
-including over the input words. This means the model must often (50% of the time)
-use the context in order to predict the word.
-
-To evaluate the technique, we're pre-training with the 50k texts from the IMDB
-corpus, and then training with only 100 labels. Note that it's a bit dirty to
-pre-train with the development data, but also not *so* terrible: we're not using
-the development labels, after all --- only the unlabelled text.
-'''
+# coding: utf8
 from __future__ import print_function, unicode_literals
+
 import plac
 import random
 import numpy
 import time
-import ujson as json
-from pathlib import Path
+import ujson
 import sys
 from collections import Counter
-
-import spacy
-from spacy.tokens import Doc
-from spacy.attrs import ID, HEAD
-from spacy.util import minibatch, minibatch_by_words, use_gpu, compounding, ensure_path
-from spacy._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
+from pathlib import Path
 from thinc.v2v import Affine, Maxout
 from thinc.api import wrap
 from thinc.misc import LayerNorm as LN
+from thinc.neural.util import prefer_gpu
+from wasabi import Printer
+
+from ..tokens import Doc
+from ..attrs import ID, HEAD
+from ..compat import json_dumps
+from .._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
+from .. import util
 
 
-def prefer_gpu():
-    used = spacy.util.use_gpu(0)
-    if used is None:
-        return False
-    else:
-        import cupy.random
-        cupy.random.seed(0)
-        return True
+@plac.annotations(
+    texts_loc=("Path to jsonl file with texts to learn from", "positional", None, str),
+    vectors_model=("Name or path to vectors model to learn from"),
+    output_dir=("Directory to write models each epoch", "positional", None, str),
+    width=("Width of CNN layers", "option", "cw", int),
+    depth=("Depth of CNN layers", "option", "cd", int),
+    embed_rows=("Embedding rows", "option", "er", int),
+    use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
+    dropout=("Dropout", "option", "d", float),
+    seed=("Seed for random number generators", "option", "s", float),
+    nr_iter=("Number of iterations to pretrain", "option", "i", int),
+)
+def pretrain(
+    texts_loc,
+    vectors_model,
+    output_dir,
+    width=96,
+    depth=4,
+    embed_rows=2000,
+    use_vectors=False,
+    dropout=0.2,
+    nr_iter=1000,
+    seed=0,
+):
+    """
+    Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
+    using an approximate language-modelling objective. Specifically, we load
+    pre-trained vectors, and train a component like a CNN, BiLSTM, etc to predict
+    vectors which match the pre-trained ones. The weights are saved to a directory
+    after each epoch. You can then pass a path to one of these pre-trained weights
+    files to the 'spacy train' command.
 
+    This technique may be especially helpful if you have little labelled data.
+    However, it's still quite experimental, so your mileage may vary.
 
-def load_texts(path):
-    '''Load inputs from a jsonl file.
-    
-    Each line should be a dict like {"text": "..."}
-    '''
-    path = ensure_path(path)
-    with path.open('r', encoding='utf8') as file_:
-        texts = [json.loads(line) for line in file_]
-    random.shuffle(texts)
-    return texts
+    To load the weights back in during 'spacy train', you need to ensure
+    all settings are the same between pretraining and training. The API and
+    errors around this need some improvement.
+    """
+    config = dict(locals())
+    msg = Printer()
+    util.fix_random_seed(seed)
+
+    has_gpu = prefer_gpu()
+    msg.info("Using GPU" if has_gpu else "Not using GPU")
+
+    output_dir = Path(output_dir)
+    if not output_dir.exists():
+        output_dir.mkdir()
+        msg.good("Created output directory")
+    util.write_json(output_dir / "config.json", config)
+    msg.good("Saved settings to config.json")
+
+    # Load texts from file or stdin
+    if texts_loc != "-":  # reading from a file
+        texts_loc = Path(texts_loc)
+        if not texts_loc.exists():
+            msg.fail("Input text file doesn't exist", texts_loc, exits=1)
+        with msg.loading("Loading input texts..."):
+            texts = list(util.read_jsonl(texts_loc))
+        msg.good("Loaded input texts")
+        random.shuffle(texts)
+    else:  # reading from stdin
+        msg.text("Reading input text from stdin...")
+        texts = stream_texts()
+
+    with msg.loading("Loading model '{}'...".format(vectors_model)):
+        nlp = util.load_model(vectors_model)
+    msg.good("Loaded model '{}'".format(vectors_model))
+    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
+    model = create_pretraining_model(
+        nlp,
+        Tok2Vec(
+            width,
+            embed_rows,
+            conv_depth=depth,
+            pretrained_vectors=pretrained_vectors,
+            bilstm_depth=0,  # Requires PyTorch. Experimental.
+            cnn_maxout_pieces=2,  # You can try setting this higher
+            subword_features=True,
+        ),
+    )  # Set to False for character models, e.g. Chinese
+    optimizer = create_default_optimizer(model.ops)
+    tracker = ProgressTracker()
+    msg.divider("Pre-training tok2vec layer")
+    row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
+    msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
+    for epoch in range(nr_iter):
+        for batch in util.minibatch_by_words(
+            ((text, None) for text in texts), size=5000
+        ):
+            docs = make_docs(nlp, [text for (text, _) in batch])
+            loss = make_update(model, docs, optimizer, drop=dropout)
+            progress = tracker.update(epoch, loss, docs)
+            if progress:
+                msg.row(progress, **row_settings)
+                if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
+                    break
+        with model.use_params(optimizer.averages):
+            with (output_dir / ("model%d.bin" % epoch)).open("wb") as file_:
+                file_.write(model.tok2vec.to_bytes())
+            log = {
+                "nr_word": tracker.nr_word,
+                "loss": tracker.loss,
+                "epoch_loss": tracker.epoch_loss,
+                "epoch": epoch,
+            }
+            with (output_dir / "log.jsonl").open("a") as file_:
+                file_.write(json_dumps(log) + "\n")
+        tracker.epoch_loss = 0.0
+        if texts_loc != "-":
+            # Reshuffle the texts if texts were loaded from a file
+            random.shuffle(texts)
 
 
 def stream_texts():
     for line in sys.stdin:
-        yield json.loads(line)
+        yield ujson.loads(line)
 
 
-def make_update(model, docs, optimizer, drop=0.):
+def make_update(model, docs, optimizer, drop=0.0):
     """Perform an update over a single batch of documents.
 
     docs (iterable): A batch of `Doc` objects.
@@ -74,7 +156,7 @@ def make_update(model, docs, optimizer, drop=0.):
     # Don't want to return a cupy object here
     # The gradients are modified in-place by the BERT MLM,
     # so we get an accurate loss
-    loss = float((gradients**2).mean())
+    loss = float((gradients ** 2).mean())
     return loss
 
 
@@ -98,7 +180,7 @@ def make_docs(nlp, batch, min_length=1, max_length=500):
 
 def get_vectors_loss(ops, docs, prediction):
     """Compute a mean-squared error loss between the documents' vectors and
-    the prediction.    
+    the prediction.
 
     Note that this is ripe for customization! We could compute the vectors
     in some other word, e.g. with an LSTM language model, or use some other
@@ -115,43 +197,40 @@ def get_vectors_loss(ops, docs, prediction):
 
 
 def create_pretraining_model(nlp, tok2vec):
-    '''Define a network for the pretraining. We simply add an output layer onto
+    """Define a network for the pretraining. We simply add an output layer onto
     the tok2vec input model. The tok2vec input model needs to be a model that
     takes a batch of Doc objects (as a list), and returns a list of arrays.
     Each array in the output needs to have one row per token in the doc.
-    '''
+    """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        LN(Maxout(300, pieces=3)),
-        zero_init(Affine(output_size, drop_factor=0.0))
+        LN(Maxout(300, pieces=3)), zero_init(Affine(output_size, drop_factor=0.0))
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
     # the shape of the models' components exactly. So what we cann
     # "tok2vec" has to be the same set of processes as what the components do.
     tok2vec = chain(tok2vec, flatten)
-    model = chain(
-        tok2vec,
-        output_layer
-    )
+    model = chain(tok2vec, output_layer)
     model = masked_language_model(nlp.vocab, model)
     model.tok2vec = tok2vec
     model.output_layer = output_layer
-    model.begin_training([nlp.make_doc('Give it a doc to infer shapes')])
+    model.begin_training([nlp.make_doc("Give it a doc to infer shapes")])
     return model
 
 
 def masked_language_model(vocab, model, mask_prob=0.15):
-    '''Convert a model into a BERT-style masked language model'''
+    """Convert a model into a BERT-style masked language model"""
 
     random_words = RandomWords(vocab)
-    def mlm_forward(docs, drop=0.):
+
+    def mlm_forward(docs, drop=0.0):
         mask, docs = apply_mask(docs, random_words, mask_prob=mask_prob)
         mask = model.ops.asarray(mask).reshape((mask.shape[0], 1))
         output, backprop = model.begin_update(docs, drop=drop)
 
         def mlm_backward(d_output, sgd=None):
-            d_output *= 1-mask
+            d_output *= 1 - mask
             return backprop(d_output, sgd=sgd)
 
         return output, mlm_backward
@@ -161,7 +240,7 @@ def masked_language_model(vocab, model, mask_prob=0.15):
 
 def apply_mask(docs, random_words, mask_prob=0.15):
     N = sum(len(doc) for doc in docs)
-    mask = numpy.random.uniform(0., 1.0, (N,))
+    mask = numpy.random.uniform(0.0, 1.0, (N,))
     mask = mask >= mask_prob
     i = 0
     masked_docs = []
@@ -184,7 +263,7 @@ def apply_mask(docs, random_words, mask_prob=0.15):
     return mask, masked_docs
 
 
-def replace_word(word, random_words, mask='[MASK]'):
+def replace_word(word, random_words, mask="[MASK]"):
     roll = random.random()
     if roll < 0.8:
         return mask
@@ -193,23 +272,25 @@ def replace_word(word, random_words, mask='[MASK]'):
     else:
         return word
 
+
 class RandomWords(object):
     def __init__(self, vocab):
         self.words = [lex.text for lex in vocab if lex.prob != 0.0]
         self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         self.words = self.words[:10000]
         self.probs = self.probs[:10000]
-        self.probs = numpy.exp(numpy.array(self.probs, dtype='f'))
+        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))
         self.probs /= self.probs.sum()
         self._cache = []
 
     def next(self):
         if not self._cache:
-            self._cache.extend(numpy.random.choice(len(self.words), 10000,
-                p=self.probs))
+            self._cache.extend(
+                numpy.random.choice(len(self.words), 10000, p=self.probs)
+            )
         index = self._cache.pop()
         return self.words[index]
- 
+
 
 class ProgressTracker(object):
     def __init__(self, frequency=1000000):
@@ -245,76 +326,3 @@ class ProgressTracker(object):
             return status
         else:
             return None
-
-
-@plac.annotations(
-    texts_loc=("Path to jsonl file with texts to learn from", "positional", None, str),
-    vectors_model=("Name or path to vectors model to learn from"),
-    output_dir=("Directory to write models each epoch", "positional", None, str),
-    width=("Width of CNN layers", "option", "cw", int),
-    depth=("Depth of CNN layers", "option", "cd", int),
-    embed_rows=("Embedding rows", "option", "er", int),
-    use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
-    dropout=("Dropout", "option", "d", float),
-    seed=("Seed for random number generators", "option", "s", float),
-    nr_iter=("Number of iterations to pretrain", "option", "i", int),
-)
-def pretrain(texts_loc, vectors_model, output_dir, width=96, depth=4,
-        embed_rows=2000, use_vectors=False, dropout=0.2, nr_iter=1000, seed=0):
-    """
-    Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
-    using an approximate language-modelling objective. Specifically, we load
-    pre-trained vectors, and train a component like a CNN, BiLSTM, etc to predict
-    vectors which match the pre-trained ones. The weights are saved to a directory
-    after each epoch. You can then pass a path to one of these pre-trained weights
-    files to the 'spacy train' command.
-
-    This technique may be especially helpful if you have little labelled data.
-    However, it's still quite experimental, so your mileage may vary.
-
-    To load the weights back in during 'spacy train', you need to ensure
-    all settings are the same between pretraining and training. The API and
-    errors around this need some improvement.
-    """
-    config = dict(locals())
-    output_dir = ensure_path(output_dir)
-    random.seed(seed)
-    numpy.random.seed(seed)
-    if not output_dir.exists():
-        output_dir.mkdir()
-    with (output_dir / 'config.json').open('w') as file_:
-        file_.write(json.dumps(config))
-    has_gpu = prefer_gpu()
-    print("Use GPU?", has_gpu)
-    nlp = spacy.load(vectors_model)
-    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
-    model = create_pretraining_model(nlp,
-                Tok2Vec(width, embed_rows,
-                    conv_depth=depth,
-                    pretrained_vectors=pretrained_vectors,
-                    bilstm_depth=0, # Requires PyTorch. Experimental.
-                    cnn_maxout_pieces=2, # You can try setting this higher
-                    subword_features=True)) # Set to False for character models, e.g. Chinese
-    optimizer = create_default_optimizer(model.ops)
-    tracker = ProgressTracker()
-    print('Epoch', '#Words', 'Loss', 'w/s')
-    texts = stream_texts() if texts_loc == '-' else load_texts(texts_loc) 
-    for epoch in range(nr_iter):
-        for batch in minibatch_by_words(((text, None) for text in texts), size=5000):
-            docs = make_docs(nlp, [text for (text, _) in batch])
-            loss = make_update(model, docs, optimizer, drop=dropout)
-            progress = tracker.update(epoch, loss, docs)
-            if progress:
-                print(*progress)
-                if texts_loc == '-' and tracker.words_per_epoch[epoch] >= 10**7:
-                    break
-        with model.use_params(optimizer.averages):
-            with (output_dir / ('model%d.bin' % epoch)).open('wb') as file_:
-                file_.write(model.tok2vec.to_bytes())
-            with (output_dir / 'log.jsonl').open('a') as file_:
-                file_.write(json.dumps({'nr_word': tracker.nr_word,
-                    'loss': tracker.loss, 'epoch_loss': tracker.epoch_loss,
-                    'epoch': epoch}) + '\n')
-        tracker.epoch_loss = 0.0
-        if texts_loc != '-':
-            texts = load_texts(texts_loc)

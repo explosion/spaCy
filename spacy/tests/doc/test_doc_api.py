@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+
 import pytest
 import numpy
 from spacy.tokens import Doc
@@ -169,6 +170,25 @@ def test_doc_api_merge(en_tokenizer):
     assert doc[7].text == "all night"
     assert doc[7].text_with_ws == "all night"
 
+    # merge both with bulk merge
+    doc = en_tokenizer(text)
+    assert len(doc) == 9
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(
+            doc[4:7], attrs={"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
+        )
+        retokenizer.merge(
+            doc[7:9], attrs={"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
+        )
+
+    assert len(doc) == 6
+    assert doc[4].text == "the beach boys"
+    assert doc[4].text_with_ws == "the beach boys "
+    assert doc[4].tag_ == "NAMED"
+    assert doc[5].text == "all night"
+    assert doc[5].text_with_ws == "all night"
+    assert doc[5].tag_ == "NAMED"
+
 
 def test_doc_api_merge_children(en_tokenizer):
     """Test that attachments work correctly after merging."""
@@ -321,21 +341,3 @@ def test_lowest_common_ancestor(en_tokenizer):
     assert lca[1, 1] == 1
     assert lca[0, 1] == 2
     assert lca[1, 2] == 2
-
-
-def test_parse_tree(en_tokenizer):
-    """Tests doc.print_tree() method."""
-    text = "I like New York in Autumn."
-    heads = [1, 0, 1, -2, -3, -1, -5]
-    tags = ["PRP", "IN", "NNP", "NNP", "IN", "NNP", "."]
-    tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, tags=tags)
-    # full method parse_tree(text) is a trivial composition
-    trees = doc.print_tree()
-    assert len(trees) > 0
-    tree = trees[0]
-    assert all(
-        k in list(tree.keys())
-        for k in ["word", "lemma", "NE", "POS_fine", "POS_coarse", "arc", "modifiers"]
-    )
-    assert tree["word"] == "like"  # check root is correct

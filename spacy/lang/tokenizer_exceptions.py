@@ -56,7 +56,6 @@ URL_PATTERN = (
 TOKEN_MATCH = re.compile(URL_PATTERN, re.UNICODE).match
 
 
-
 BASE_EXCEPTIONS = {}
 
 
@@ -67,18 +66,52 @@ for exc_data in [
     {ORTH: "\n", POS: SPACE},
     {ORTH: "\\n", POS: SPACE},
     {ORTH: "\u2014", POS: PUNCT, LEMMA: "--"},
-    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  "}]:
+    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  "},
+]:
     BASE_EXCEPTIONS[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [
-    "'", "\\\")", "<space>", "''", "C++", "a.", "b.", "c.", "d.", "e.", "f.",
-    "g.", "h.", "i.", "j.", "k.", "l.", "m.", "n.", "o.", "p.", "q.", "r.",
-    "s.", "t.", "u.", "v.", "w.", "x.", "y.", "z.", "ä.", "ö.", "ü."]:
+    "'",
+    '\\")',
+    "<space>",
+    "''",
+    "C++",
+    "a.",
+    "b.",
+    "c.",
+    "d.",
+    "e.",
+    "f.",
+    "g.",
+    "h.",
+    "i.",
+    "j.",
+    "k.",
+    "l.",
+    "m.",
+    "n.",
+    "o.",
+    "p.",
+    "q.",
+    "r.",
+    "s.",
+    "t.",
+    "u.",
+    "v.",
+    "w.",
+    "x.",
+    "y.",
+    "z.",
+    "ä.",
+    "ö.",
+    "ü.",
+]:
     BASE_EXCEPTIONS[orth] = [{ORTH: orth}]
 
 
-emoticons = set("""
+emoticons = set(
+    """
 :)
 :-)
 :))
@@ -206,7 +239,8 @@ o.0
 ¯\(ツ)/¯
 (╯°□°）╯︵┻━┻
 ><(((*>
-""".split())
+""".split()
+)
 
 
 for orth in emoticons:
