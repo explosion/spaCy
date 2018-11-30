@@ -144,7 +144,7 @@ p
 +code-exec.
     import spacy
 
-    def sentencizer_component(doc):
+    def custom_sentencizer(doc):
         for i, token in enumerate(doc[:-2]):
             # define sentence start if period + titlecase token
             if token.text == '.' and doc[i+1].is_title:
