@@ -8,7 +8,6 @@ from .lemmatizer import LEMMA_EXC, LEMMA_INDEX, LOOKUP, LEMMA_RULES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from .tag_map import TAG_MAP
-from .morph_rules import MORPH_RULES
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
@@ -22,8 +21,10 @@ from .syntax_iterators import SYNTAX_ITERATORS
 
 class NorwegianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'nb'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
+    lex_attr_getters[LANG] = lambda text: "nb"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
@@ -36,8 +37,8 @@ class NorwegianDefaults(Language.Defaults):
 
 
 class Norwegian(Language):
-    lang = 'nb'
+    lang = "nb"
     Defaults = NorwegianDefaults
 
 
-__all__ = ['Norwegian']
+__all__ = ["Norwegian"]

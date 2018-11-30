@@ -8,23 +8,24 @@ from ...symbols import ORTH, LEMMA, NORM
 _exc = {
     "'acha'n": [
         {ORTH: "'ach", LEMMA: "gach", NORM: "gach", POS: DET},
-        {ORTH: "a'n", LEMMA: "aon", NORM: "aon", POS: DET}],
-
+        {ORTH: "a'n", LEMMA: "aon", NORM: "aon", POS: DET},
+    ],
     "dem'": [
         {ORTH: "de", LEMMA: "de", NORM: "de", POS: ADP},
-        {ORTH: "m'", LEMMA: "mo", NORM: "mo", POS: DET}],
-
+        {ORTH: "m'", LEMMA: "mo", NORM: "mo", POS: DET},
+    ],
     "ded'": [
         {ORTH: "de", LEMMA: "de", NORM: "de", POS: ADP},
-        {ORTH: "d'", LEMMA: "do", NORM: "do", POS: DET}],
-
+        {ORTH: "d'", LEMMA: "do", NORM: "do", POS: DET},
+    ],
     "lem'": [
         {ORTH: "le", LEMMA: "le", NORM: "le", POS: ADP},
-        {ORTH: "m'", LEMMA: "mo", NORM: "mo", POS: DET}],
-
+        {ORTH: "m'", LEMMA: "mo", NORM: "mo", POS: DET},
+    ],
     "led'": [
         {ORTH: "le", LEMMA: "le", NORM: "le", POS: ADP},
-        {ORTH: "d'", LEMMA: "mo", NORM: "do", POS: DET}]
+        {ORTH: "d'", LEMMA: "mo", NORM: "do", POS: DET},
+    ],
 }
 
 for exc_data in [
@@ -75,11 +76,11 @@ for exc_data in [
     {ORTH: "Teo.", LEMMA: "teoranta", POS: NOUN},
     {ORTH: "Uas.", LEMMA: "Uasal", POS: NOUN},
     {ORTH: "uimh.", LEMMA: "uimhir", POS: NOUN},
-    {ORTH: "Uimh.", LEMMA: "uimhir", POS: NOUN}]:
+    {ORTH: "Uimh.", LEMMA: "uimhir", POS: NOUN},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
-for orth in [
-    "d'", "D'"]:
+for orth in ["d'", "D'"]:
     _exc[orth] = [{ORTH: orth}]
 
 

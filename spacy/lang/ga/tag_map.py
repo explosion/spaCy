@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-
+# fmt: off
 TAG_MAP = {
     "ADJ__Case=Gen|Form=Len|Gender=Masc|Number=Sing": {"pos": "ADJ", "Case": "gen", "Gender": "masc", "Number": "sing", "Other": {"Form": "len"}},
     "ADJ__Case=Gen|Gender=Fem|Number=Sing": {"pos": "ADJ", "Case": "gen", "Gender": "fem", "Number": "sing"},
@@ -366,3 +366,4 @@ TAG_MAP = {
     "X__Foreign=Yes": {"pos": "X", "Foreign": "yes"},
     "X___": {"pos": "X"}
 }
+# fmt: on

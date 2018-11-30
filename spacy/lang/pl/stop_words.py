@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 
 # Source: http://www.ranks.nl/stopwords/polish
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 ach aj albo
 
 bardzo bez bo być
@@ -43,4 +44,5 @@ tak taki tam ten to tobą tobie tu tutaj twoi twój twoja twoje ty
 wam wami was wasi wasz wasza wasze we więc wszystko wtedy wy
 
 żaden zawsze że
-""".split())
+""".split()
+)

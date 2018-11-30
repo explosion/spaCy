@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-NOUNS = set("""
+NOUNS = set(
+    """
 'hood .22 0 1 1-dodecanol 1-hitter 10 100 1000 10000 100000 1000000 1000000000
 1000000000000 11 11-plus 12 120 13 14 144 15 1530s 16 17 1728 1750s 1760s 1770s
 1780s 1790s 18 1820s 1830s 1840s 1850s 1860s 1870s 1880s 1890s 19 1900s 1920s
@@ -7110,4 +7111,5 @@ zurvanism zweig zwieback zwingli zworykin zydeco zygnema zygnemales
 zygnemataceae zygnematales zygocactus zygoma zygomatic zygomycetes zygomycota
 zygomycotina zygophyllaceae zygophyllum zygoptera zygospore zygote zygotene
 zyloprim zymase zymogen zymology zymolysis zymosis zymurgy zyrian
-""".split())
+""".split()
+)

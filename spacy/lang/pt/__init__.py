@@ -18,8 +18,10 @@ from ...util import update_exc, add_lookups
 
 class PortugueseDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'pt'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS)
+    lex_attr_getters[LANG] = lambda text: "pt"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
+    )
     lex_attr_getters.update(LEX_ATTRS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
@@ -28,9 +30,10 @@ class PortugueseDefaults(Language.Defaults):
     infixes = TOKENIZER_INFIXES
     prefixes = TOKENIZER_PREFIXES
 
+
 class Portuguese(Language):
-    lang = 'pt'
+    lang = "pt"
     Defaults = PortugueseDefaults
 
 
-__all__ = ['Portuguese']
+__all__ = ["Portuguese"]

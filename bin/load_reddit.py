@@ -15,12 +15,13 @@ _unset = object()
 
 class Reddit(object):
     """Stream cleaned comments from Reddit."""
-    pre_format_re = re.compile(r'^[\`\*\~]')
-    post_format_re = re.compile(r'[\`\*\~]$')
-    url_re = re.compile(r'\[([^]]+)\]\(%%URL\)')
-    link_re = re.compile(r'\[([^]]+)\]\(https?://[^\)]+\)')
 
-    def __init__(self, file_path, meta_keys={'subreddit': 'section'}):
+    pre_format_re = re.compile(r"^[\`\*\~]")
+    post_format_re = re.compile(r"[\`\*\~]$")
+    url_re = re.compile(r"\[([^]]+)\]\(%%URL\)")
+    link_re = re.compile(r"\[([^]]+)\]\(https?://[^\)]+\)")
+
+    def __init__(self, file_path, meta_keys={"subreddit": "section"}):
         """
         file_path (unicode / Path): Path to archive or directory of archives.
         meta_keys (dict): Meta data key included in the Reddit corpus, mapped
@@ -45,28 +46,30 @@ class Reddit(object):
                         continue
                     comment = ujson.loads(line)
                     if self.is_valid(comment):
-                        text = self.strip_tags(comment['body'])
-                        yield {'text': text}
+                        text = self.strip_tags(comment["body"])
+                        yield {"text": text}
 
     def get_meta(self, item):
-        return {name: item.get(key, 'n/a') for key, name in self.meta.items()}
+        return {name: item.get(key, "n/a") for key, name in self.meta.items()}
 
     def iter_files(self):
         for file_path in self.files:
             yield file_path
 
     def strip_tags(self, text):
-        text = self.link_re.sub(r'\1', text)
-        text = text.replace('&gt;', '>').replace('&lt;', '<')
-        text = self.pre_format_re.sub('', text)
-        text = self.post_format_re.sub('', text)
-        text = re.sub(r'\s+', ' ', text)
+        text = self.link_re.sub(r"\1", text)
+        text = text.replace("&gt;", ">").replace("&lt;", "<")
+        text = self.pre_format_re.sub("", text)
+        text = self.post_format_re.sub("", text)
+        text = re.sub(r"\s+", " ", text)
         return text.strip()
 
     def is_valid(self, comment):
-        return comment['body'] is not None \
-            and comment['body'] != '[deleted]' \
-            and comment['body'] != '[removed]'
+        return (
+            comment["body"] is not None
+            and comment["body"] != "[deleted]"
+            and comment["body"] != "[removed]"
+        )
 
 
 def main(path):
@@ -75,16 +78,18 @@ def main(path):
         print(ujson.dumps(comment))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import socket
+
     try:
         BrokenPipeError
     except NameError:
         BrokenPipeError = socket.error
     try:
         plac.call(main)
-    except BrokenPipeError: 
+    except BrokenPipeError:
         import os, sys
+
         # Python flushes standard streams on exit; redirect remaining output
         # to devnull to avoid another BrokenPipeError at shutdown
         devnull = os.open(os.devnull, os.O_WRONLY)

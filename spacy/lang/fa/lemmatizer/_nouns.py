@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-NOUNS = set("""
+NOUNS = set(
+    """
 آ
 آئین‌نامه
 آب
@@ -8083,4 +8084,5 @@ NOUNS = set("""
 یک‌یک
 یی
 ‌ای
-""".split())
+""".split()
+)

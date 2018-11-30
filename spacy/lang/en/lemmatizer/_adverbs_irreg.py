@@ -9,5 +9,5 @@ ADVERBS_IRREG = {
     "farther": ("far",),
     "further": ("far",),
     "harder": ("hard",),
-    "hardest": ("hard",)
+    "hardest": ("hard",),
 }

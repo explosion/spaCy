@@ -5,49 +5,41 @@ from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 
 
 _exc = {
-    "auf'm": [
-        {ORTH: "auf", LEMMA: "auf"},
-        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
-
+    "auf'm": [{ORTH: "auf", LEMMA: "auf"}, {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
     "du's": [
         {ORTH: "du", LEMMA: PRON_LEMMA, TAG: "PPER"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"}],
-
+        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"},
+    ],
     "er's": [
         {ORTH: "er", LEMMA: PRON_LEMMA, TAG: "PPER"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"}],
-
+        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"},
+    ],
     "hinter'm": [
         {ORTH: "hinter", LEMMA: "hinter"},
-        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
-
+        {ORTH: "'m", LEMMA: "der", NORM: "dem"},
+    ],
     "ich's": [
         {ORTH: "ich", LEMMA: PRON_LEMMA, TAG: "PPER"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"}],
-
+        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"},
+    ],
     "ihr's": [
         {ORTH: "ihr", LEMMA: PRON_LEMMA, TAG: "PPER"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"}],
-
+        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"},
+    ],
     "sie's": [
         {ORTH: "sie", LEMMA: PRON_LEMMA, TAG: "PPER"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"}],
-
+        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"},
+    ],
     "unter'm": [
         {ORTH: "unter", LEMMA: "unter"},
-        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
-
-    "vor'm": [
-        {ORTH: "vor", LEMMA: "vor"},
-        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
-
+        {ORTH: "'m", LEMMA: "der", NORM: "dem"},
+    ],
+    "vor'm": [{ORTH: "vor", LEMMA: "vor"}, {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
     "wir's": [
         {ORTH: "wir", LEMMA: PRON_LEMMA, TAG: "PPER"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"}],
-
-    "über'm": [
-        {ORTH: "über", LEMMA: "über"},
-        {ORTH: "'m", LEMMA: "der", NORM: "dem"}]
+        {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER", NORM: "es"},
+    ],
+    "über'm": [{ORTH: "über", LEMMA: "über"}, {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
 }
 
 
@@ -162,21 +154,95 @@ for exc_data in [
     {ORTH: "z.Zt.", LEMMA: "zur Zeit"},
     {ORTH: "z.b.", LEMMA: "zum Beispiel"},
     {ORTH: "zzgl.", LEMMA: "zuzüglich"},
-    {ORTH: "österr.", LEMMA: "österreichisch", NORM: "österreichisch"}]:
+    {ORTH: "österr.", LEMMA: "österreichisch", NORM: "österreichisch"},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [
-    "A.C.", "a.D.", "A.D.", "A.G.", "a.M.", "a.Z.", "Abs.", "adv.", "al.",
-    "B.A.", "B.Sc.", "betr.", "biol.", "Biol.", "ca.", "Chr.", "Cie.", "co.",
-    "Co.", "D.C.", "Dipl.-Ing.", "Dipl.", "Dr.", "e.g.", "e.V.", "ehem.",
-    "entspr.", "erm.", "etc.", "ev.", "G.m.b.H.", "geb.", "Gebr.", "gem.",
-    "h.c.", "Hg.", "hrsg.", "Hrsg.", "i.A.", "i.e.", "i.G.", "i.Tr.", "i.V.",
-    "Ing.", "jr.", "Jr.", "jun.", "jur.", "K.O.", "L.A.", "lat.", "M.A.",
-    "m.E.", "m.M.", "M.Sc.", "Mr.", "N.Y.", "N.Y.C.", "nat.", "o.a.",
-    "o.ä.", "o.g.", "o.k.", "O.K.", "p.a.", "p.s.", "P.S.", "pers.", "phil.",
-    "q.e.d.", "R.I.P.", "rer.", "sen.", "St.", "std.", "u.a.", "U.S.", "U.S.A.",
-    "U.S.S.", "Vol.", "vs.", "wiss."]:
+    "A.C.",
+    "a.D.",
+    "A.D.",
+    "A.G.",
+    "a.M.",
+    "a.Z.",
+    "Abs.",
+    "adv.",
+    "al.",
+    "B.A.",
+    "B.Sc.",
+    "betr.",
+    "biol.",
+    "Biol.",
+    "ca.",
+    "Chr.",
+    "Cie.",
+    "co.",
+    "Co.",
+    "D.C.",
+    "Dipl.-Ing.",
+    "Dipl.",
+    "Dr.",
+    "e.g.",
+    "e.V.",
+    "ehem.",
+    "entspr.",
+    "erm.",
+    "etc.",
+    "ev.",
+    "G.m.b.H.",
+    "geb.",
+    "Gebr.",
+    "gem.",
+    "h.c.",
+    "Hg.",
+    "hrsg.",
+    "Hrsg.",
+    "i.A.",
+    "i.e.",
+    "i.G.",
+    "i.Tr.",
+    "i.V.",
+    "Ing.",
+    "jr.",
+    "Jr.",
+    "jun.",
+    "jur.",
+    "K.O.",
+    "L.A.",
+    "lat.",
+    "M.A.",
+    "m.E.",
+    "m.M.",
+    "M.Sc.",
+    "Mr.",
+    "N.Y.",
+    "N.Y.C.",
+    "nat.",
+    "o.a.",
+    "o.ä.",
+    "o.g.",
+    "o.k.",
+    "O.K.",
+    "p.a.",
+    "p.s.",
+    "P.S.",
+    "pers.",
+    "phil.",
+    "q.e.d.",
+    "R.I.P.",
+    "rer.",
+    "sen.",
+    "St.",
+    "std.",
+    "u.a.",
+    "U.S.",
+    "U.S.A.",
+    "U.S.S.",
+    "Vol.",
+    "vs.",
+    "wiss.",
+]:
     _exc[orth] = [{ORTH: orth}]
 
 

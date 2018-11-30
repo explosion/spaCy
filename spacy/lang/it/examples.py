@@ -14,5 +14,5 @@ sentences = [
     "Apple vuole comprare una startup del Regno Unito per un miliardo di dollari",
     "Le automobili a guida autonoma spostano la responsabilità assicurativa verso i produttori",
     "San Francisco prevede di bandire i robot di consegna porta a porta",
-    "Londra è una grande città del Regno Unito."
+    "Londra è una grande città del Regno Unito.",
 ]

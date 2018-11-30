@@ -6,7 +6,6 @@ import sys
 import ujson
 import itertools
 import locale
-import os
 
 from thinc.neural.util import copy_array
 
@@ -31,9 +30,9 @@ except ImportError:
     cupy = None
 
 try:
-    from thinc.neural.optimizers import Optimizer
+    from thinc.neural.optimizers import Optimizer  # noqa: F401
 except ImportError:
-    from thinc.neural.optimizers import Adam as Optimizer
+    from thinc.neural.optimizers import Adam as Optimizer  # noqa: F401
 
 pickle = pickle
 copy_reg = copy_reg

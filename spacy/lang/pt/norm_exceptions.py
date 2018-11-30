@@ -14,10 +14,10 @@ from __future__ import unicode_literals
 
 
 NORM_EXCEPTIONS = {
-    "R$": "$",    # Real
-    "r$": "$",    # Real
-    "Cz$": "$",   # Cruzado
-    "cz$": "$",   # Cruzado
+    "R$": "$",  # Real
+    "r$": "$",  # Real
+    "Cz$": "$",  # Cruzado
+    "cz$": "$",  # Cruzado
     "NCz$": "$",  # Cruzado Novo
-    "ncz$": "$"   # Cruzado Novo
+    "ncz$": "$",  # Cruzado Novo
 }

@@ -15,17 +15,20 @@ from ...util import update_exc, add_lookups
 
 class SwedishDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'sv'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
+    lex_attr_getters[LANG] = lambda text: "sv"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     lemma_rules = LEMMA_RULES
     lemma_lookup = LOOKUP
+    morph_rules = MORPH_RULES
 
 
 class Swedish(Language):
-    lang = 'sv'
+    lang = "sv"
     Defaults = SwedishDefaults
 
 
-__all__ = ['Swedish']
+__all__ = ["Swedish"]
