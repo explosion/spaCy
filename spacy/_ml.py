@@ -29,7 +29,7 @@ from . import util
 try:
     import torch.nn
     from thinc.extra.wrappers import PyTorchWrapperRNN
-except:
+except ImportError:
     torch = None
 
 VECTORS_KEY = "spacy_pretrained_vectors"

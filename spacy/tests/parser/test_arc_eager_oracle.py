@@ -145,4 +145,4 @@ def test_get_oracle_actions():
     heads, deps = projectivize(heads, deps)
     gold = GoldParse(doc, words=words, tags=tags, heads=heads, deps=deps)
     parser.moves.preprocess_gold(gold)
-    actions = parser.moves.get_oracle_sequence(doc, gold)
+    parser.moves.get_oracle_sequence(doc, gold)

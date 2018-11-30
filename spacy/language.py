@@ -479,14 +479,11 @@ class Language(object):
             for _, annots_brackets in get_gold_tuples():
                 for annots, _ in annots_brackets:
                     for word in annots[1]:
-                        _ = self.vocab[word]
-        contexts = []
+                        _ = self.vocab[word]  # noqa: F841
         if cfg.get("device", -1) >= 0:
-            device = util.use_gpu(cfg["device"])
+            util.use_gpu(cfg["device"])
             if self.vocab.vectors.data.shape[1] >= 1:
                 self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
-        else:
-            device = None
         link_vectors_to_models(self.vocab)
         if self.vocab.vectors.data.shape[1]:
             cfg["pretrained_vectors"] = self.vocab.vectors.name
@@ -742,7 +739,7 @@ class Language(object):
             if not hasattr(proc, "from_bytes"):
                 continue
             deserializers[i] = lambda b, proc=proc: proc.from_bytes(b, vocab=False)
-        msg = util.from_bytes(bytes_data, deserializers, {})
+        util.from_bytes(bytes_data, deserializers, {})
         return self
 
 

@@ -75,7 +75,7 @@ def test_displacy_spans(en_vocab):
 
 def test_displacy_raises_for_wrong_type(en_vocab):
     with pytest.raises(ValueError):
-        html = displacy.render("hello world")
+        displacy.render("hello world")
 
 
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):

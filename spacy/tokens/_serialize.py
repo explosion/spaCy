@@ -46,7 +46,6 @@ class Binder(object):
 
     def get_docs(self, vocab):
         """Recover Doc objects from the annotations, using the given vocab."""
-        attrs = self.attrs
         for string in self.strings:
             vocab[string]
         orth_col = self.attrs.index(ORTH)

@@ -25,7 +25,7 @@ def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     )
 
     assert len(doc) == 1
-    with en_parser.step_through(doc) as _:
+    with en_parser.step_through(doc) as _:  # noqa: F841
         pass
     assert doc[0].dep != 0
 
@@ -33,7 +33,7 @@ def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
 @pytest.mark.xfail
 def test_parser_initial(en_tokenizer, en_parser):
     text = "I ate the pizza with anchovies."
-    heads = [1, 0, 1, -2, -3, -1, -5]
+    # heads = [1, 0, 1, -2, -3, -1, -5]
     transition = ["L-nsubj", "S", "L-det"]
     tokens = en_tokenizer(text)
     apply_transition_sequence(en_parser, tokens, transition)

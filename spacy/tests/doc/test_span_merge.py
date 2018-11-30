@@ -87,7 +87,7 @@ def test_span_np_merges(en_tokenizer):
     ents = [(e[0].idx, e[-1].idx + len(e[-1]), e.label_, e.lemma_) for e in doc.ents]
     for start, end, label, lemma in ents:
         merged = doc.merge(start, end, tag=label, lemma=lemma, ent_type=label)
-        assert merged != None, (start, end, label, lemma)
+        assert merged is not None, (start, end, label, lemma)
 
     text = "One test with entities like New York City so the ents list is not void"
     heads = [1, 11, -1, -1, -1, 1, 1, -3, 4, 2, 1, 1, 0, -1, -2]
@@ -95,7 +95,7 @@ def test_span_np_merges(en_tokenizer):
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     for span in doc.ents:
         merged = doc.merge()
-        assert merged != None, (span.start, span.end, span.label_, span.lemma_)
+        assert merged is not None, (span.start, span.end, span.label_, span.lemma_)
 
 
 def test_spans_entity_merge(en_tokenizer):
