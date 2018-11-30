@@ -53,13 +53,13 @@ batch_sizes = util.compounding(
         Path,
     ),
     parser_multitasks=(
-        "Side objectives for parser CNN, e.g. dep dep,tag",
+        "Side objectives for parser CNN, e.g. 'dep' or 'dep,tag'",
         "option",
         "pt",
         str,
     ),
     entity_multitasks=(
-        "Side objectives for NER CNN, e.g. dep dep,tag",
+        "Side objectives for NER CNN, e.g. 'dep' or 'dep,tag'",
         "option",
         "et",
         str,
@@ -67,7 +67,7 @@ batch_sizes = util.compounding(
     noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
-    verbose=("Display more information for debug", "flag", "vv", bool),
+    verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
 )
 def train(
