@@ -9,7 +9,8 @@ from wasabi import Printer, MESSAGES
 
 from ..gold import GoldCorpus, read_json_object
 from ..util import load_model, get_lang_class, read_json, read_jsonl
-from .schemas import get_schema, validate_json
+
+# from .schemas import get_schema, validate_json
 from ._messages import Messages
 
 

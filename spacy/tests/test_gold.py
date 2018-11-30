@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.tokens import Doc
-from .util import get_doc
 
 
 def test_gold_biluo_U(en_vocab):

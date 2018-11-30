@@ -5,7 +5,6 @@ import os
 import sys
 import ujson
 import itertools
-import locale
 
 from thinc.neural.util import copy_array
 

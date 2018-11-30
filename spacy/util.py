@@ -7,8 +7,6 @@ import pkg_resources
 import importlib
 import regex as re
 from pathlib import Path
-import sys
-import textwrap
 import random
 from collections import OrderedDict
 from thinc.neural._classes.model import Model
@@ -17,7 +15,6 @@ import functools
 import cytoolz
 import itertools
 import numpy.random
-import wasabi
 
 
 from .symbols import ORTH
