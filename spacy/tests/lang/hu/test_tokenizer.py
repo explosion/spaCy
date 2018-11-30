@@ -5,11 +5,11 @@ import pytest
 
 DEFAULT_TESTS = [
     ('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
-    pytest.mark.xfail(('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.'])),
+    pytest.param('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.'], marks=pytest.mark.xfail()),
     ('Az egy.ketto pelda.', ['Az', 'egy.ketto', 'pelda', '.']),
     ('A pl. rovidites.', ['A', 'pl.', 'rovidites', '.']),
     ('A S.M.A.R.T. szo.', ['A', 'S.M.A.R.T.', 'szo', '.']),
-    pytest.mark.xfail(('A .hu.', ['A', '.hu', '.'])),
+    pytest.param('A .hu.', ['A', '.hu', '.'], marks=pytest.mark.xfail()),
     ('Az egy.ketto.', ['Az', 'egy.ketto', '.']),
     ('A pl.', ['A', 'pl.']),
     ('A S.M.A.R.T.', ['A', 'S.M.A.R.T.']),
@@ -227,11 +227,11 @@ QUOTE_TESTS = [
 
 DOT_TESTS = [
     ('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
-    pytest.mark.xfail(('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.'])),
+    pytest.param('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.'], marks=pytest.mark.xfail()),
     ('Az egy.ketto pelda.', ['Az', 'egy.ketto', 'pelda', '.']),
     ('A pl. rövidítés.', ['A', 'pl.', 'rövidítés', '.']),
     ('A S.M.A.R.T. szó.', ['A', 'S.M.A.R.T.', 'szó', '.']),
-    pytest.mark.xfail(('A .hu.', ['A', '.hu', '.'])),
+    pytest.param('A .hu.', ['A', '.hu', '.'], marks=pytest.mark.xfail()),
     ('Az egy.ketto.', ['Az', 'egy.ketto', '.']),
     ('A pl.', ['A', 'pl.']),
     ('A S.M.A.R.T.', ['A', 'S.M.A.R.T.']),
