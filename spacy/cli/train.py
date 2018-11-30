@@ -127,6 +127,8 @@ def train(
     if base_model:
         msg.text(Messages.M056.format(model=base_model))
         nlp = util.load_model(base_model)
+        if nlp.lang != lang:
+            msg.fail(Messages.M072.format(model_lang=nlp.lang, lang=lang), exits=1)
         other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipeline]
         nlp.disable_pipes(*other_pipes)
         for pipe in pipeline:

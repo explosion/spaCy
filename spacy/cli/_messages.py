@@ -99,5 +99,7 @@ class Messages(object):
     M069 = ("Unknown file type: '{name}'")
     M070 = ("Supported file types: '{options}'")
     M071 = ("Loaded pretrained tok2vec for: {components}")
+    M072 = ("Model language ('{model_lang}') doesn't match language specified "
+            "as `lang` argument ('{lang}') ")
 
 # fmt: on
