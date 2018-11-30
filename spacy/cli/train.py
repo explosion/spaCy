@@ -102,9 +102,12 @@ def train(
     util.set_env_log(verbose)
 
     # Make sure all files and paths exists if they are needed
-    if not train_path.exists():
+    train_path = util.ensure_path(train_path)
+    dev_path = util.ensure_path(dev_path)
+    meta_path = util.ensure_path(meta_path)
+    if not train_path or not train_path.exists():
         msg.fail(Messages.M050, train_path, exits=1)
-    if not dev_path.exists():
+    if not dev_path or not dev_path.exists():
         msg.fail(Messages.M051, dev_path, exits=1)
     if meta_path is not None and not meta_path.exists():
         msg.fail(Messages.M020, meta_path, exits=1)
