@@ -714,7 +714,7 @@ p The L2 norm of the token's vector representation.
         +cell bool
         +cell
             |  Does the token consist of ASCII characters? Equivalent to
-            |  #[code [any(ord(c) >= 128 for c in token.text)]].
+            |  #[code all(ord(c) &lt; 128 for c in token.text)].
 
     +row
         +cell #[code is_digit]
