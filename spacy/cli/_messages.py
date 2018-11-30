@@ -98,5 +98,6 @@ class Messages(object):
     M068 = ("Sucessfully compiled vocab and vectors, and saved model")
     M069 = ("Unknown file type: '{name}'")
     M070 = ("Supported file types: '{options}'")
+    M071 = ("Loaded pretrained tok2vec for: {components}")
 
 # fmt: on

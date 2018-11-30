@@ -46,6 +46,12 @@ batch_sizes = util.compounding(
     use_gpu=("Use GPU", "option", "g", int),
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
+    init_tok2vec=(
+        "Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.",
+        "option",
+        "t2v",
+        Path,
+    ),
     parser_multitasks=(
         "Side objectives for parser CNN, e.g. dep dep,tag",
         "option",
@@ -77,6 +83,7 @@ def train(
     use_gpu=-1,
     version="0.0.0",
     meta_path=None,
+    init_tok2vec=None,
     parser_multitasks="",
     entity_multitasks="",
     noise_level=0.0,
@@ -176,6 +183,11 @@ def train(
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
     nlp._optimizer = None
+
+    # Load in pre-trained weights
+    if init_tok2vec is not None:
+        components = _load_pretrained_tok2vec(nlp, init_tok2vec)
+        msg.text(Messages.M071.format(components=components))
 
     print(
         "\nItn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS"
