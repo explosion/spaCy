@@ -16,15 +16,18 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
+
 def _return_en(_):
-    return 'en'
+    return "en"
+
 
 class EnglishDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = _return_en
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
-                                         BASE_NORMS, NORM_EXCEPTIONS)
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
@@ -37,8 +40,8 @@ class EnglishDefaults(Language.Defaults):
 
 
 class English(Language):
-    lang = 'en'
+    lang = "en"
     Defaults = EnglishDefaults
 
 
-__all__ = ['English']
+__all__ = ["English"]

@@ -8,12 +8,16 @@ import inspect
 
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
+
     class ErrorsWithCodes(object):
         def __getattribute__(self, code):
             msg = getattr(err_cls, code)
-            return '[{code}] {msg}'.format(code=code, msg=msg)
+            return "[{code}] {msg}".format(code=code, msg=msg)
+
     return ErrorsWithCodes()
 
+
+# fmt: off
 
 @add_codes
 class Warnings(object):
@@ -260,7 +264,7 @@ class Errors(object):
     E095 = ("Can't write to frozen dictionary. This is likely an internal "
             "error. Are you writing to a default function argument?")
     E096 = ("Invalid object passed to displaCy: Can only visualize Doc or "
-             "Span objects, or dicts if set to manual=True.")
+            "Span objects, or dicts if set to manual=True.")
     E097 = ("Invalid pattern: expected token pattern (list of dicts) or "
             "phrase pattern (string) but got:\n{pattern}")
     E098 = ("Invalid pattern specified: expected both SPEC and PATTERN.")
@@ -274,6 +278,7 @@ class Errors(object):
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
             " can only be part of one entity, so make sure the entities you're "
             "setting don't overlap.")
+
 
 @add_codes
 class TempErrors(object):
@@ -292,55 +297,57 @@ class TempErrors(object):
             "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 
+# fmt: on
+
+
 class ModelsWarning(UserWarning):
     pass
 
 
 WARNINGS = {
-    'user': UserWarning,
-    'deprecation': DeprecationWarning,
-    'models': ModelsWarning,
+    "user": UserWarning,
+    "deprecation": DeprecationWarning,
+    "models": ModelsWarning,
 }
 
 
 def _get_warn_types(arg):
-    if arg == '':  # don't show any warnings
+    if arg == "":  # don't show any warnings
         return []
-    if not arg or arg == 'all':  # show all available warnings
+    if not arg or arg == "all":  # show all available warnings
         return WARNINGS.keys()
-    return [w_type.strip() for w_type in arg.split(',')
-            if w_type.strip() in WARNINGS]
+    return [w_type.strip() for w_type in arg.split(",") if w_type.strip() in WARNINGS]
 
 
 def _get_warn_excl(arg):
     if not arg:
         return []
-    return [w_id.strip() for w_id in arg.split(',')]
+    return [w_id.strip() for w_id in arg.split(",")]
 
 
-SPACY_WARNING_FILTER = os.environ.get('SPACY_WARNING_FILTER')
-SPACY_WARNING_TYPES = _get_warn_types(os.environ.get('SPACY_WARNING_TYPES'))
-SPACY_WARNING_IGNORE = _get_warn_excl(os.environ.get('SPACY_WARNING_IGNORE'))
+SPACY_WARNING_FILTER = os.environ.get("SPACY_WARNING_FILTER")
+SPACY_WARNING_TYPES = _get_warn_types(os.environ.get("SPACY_WARNING_TYPES"))
+SPACY_WARNING_IGNORE = _get_warn_excl(os.environ.get("SPACY_WARNING_IGNORE"))
 
 
 def user_warning(message):
-    _warn(message, 'user')
+    _warn(message, "user")
 
 
 def deprecation_warning(message):
-    _warn(message, 'deprecation')
+    _warn(message, "deprecation")
 
 
 def models_warning(message):
-    _warn(message, 'models')
+    _warn(message, "models")
 
 
-def _warn(message, warn_type='user'):
+def _warn(message, warn_type="user"):
     """
     message (unicode): The message to display.
     category (Warning): The Warning to show.
     """
-    w_id = message.split('[', 1)[1].split(']', 1)[0]  # get ID from string
+    w_id = message.split("[", 1)[1].split("]", 1)[0]  # get ID from string
     if warn_type in SPACY_WARNING_TYPES and w_id not in SPACY_WARNING_IGNORE:
         category = WARNINGS[warn_type]
         stack = inspect.stack()[-1]
