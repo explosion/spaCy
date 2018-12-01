@@ -165,8 +165,8 @@ def setup_package():
                 dylib_path = '@loader_path/%s/spacy/platform/darwin/lib' % dylib_path
                 extra_link_args.append('-Wl,-rpath,%s' % dylib_path)
                 # Try to fix OSX 10.7 problem. Running blind here too.
-                extra_compile_args.append('-std=libc++')
-                extra_link_args.append('-std=libc++')
+                extra_compile_args.append('-std=c++11')
+                extra_link_args.append('-std=c++11')
             ext_modules.append(
                 Extension(mod_name, [mod_path],
                     language='c++', include_dirs=include_dirs,
