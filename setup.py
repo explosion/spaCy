@@ -155,6 +155,7 @@ def setup_package():
         for mod_name in MOD_NAMES:
             mod_path = mod_name.replace('.', '/') + '.cpp'
             extra_link_args = []
+            extra_compile_args = []
             # ???
             # Imported from patch from @mikepb
             # See Issue #267. Running blind here...
@@ -163,10 +164,14 @@ def setup_package():
                 dylib_path = '/'.join(dylib_path)
                 dylib_path = '@loader_path/%s/spacy/platform/darwin/lib' % dylib_path
                 extra_link_args.append('-Wl,-rpath,%s' % dylib_path)
+                # Try to fix OSX 10.7 problem. Running blind here too.
+                extra_compile_args.append('-std=libc++')
+                extra_link_args.append('-std=libc++')
             ext_modules.append(
                 Extension(mod_name, [mod_path],
                     language='c++', include_dirs=include_dirs,
-                    extra_link_args=extra_link_args))
+                    extra_link_args=extra_link_args,
+                    extra_compile_args=extra_compile_args))
 
         if not is_source_release(root):
             generate_cython(root, 'spacy')
