@@ -10,7 +10,7 @@ the **fastest syntactic parser** in the world, convolutional **neural network mo
 for tagging, parsing and **named entity recognition** and easy **deep learning**
 integration. It's commercial open-source software, released under the MIT license.
 
-💫 **Version 2.0 out now!** `Check out the new features here. <https://spacy.io/usage/v2>`_
+💫 **Version 2.0 out now!** `Check out the release notes here. <https://github.com/explosion/spaCy/releases>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis
     :target: https://travis-ci.org/explosion/spaCy
@@ -88,7 +88,7 @@ Features
 * **Fastest syntactic parser** in the world
 * **Named entity** recognition
 * Non-destructive **tokenization**
-* Support for **20+ languages**
+* Support for **30+ languages**
 * Pre-trained `statistical models <https://spacy.io/models>`_ and word vectors
 * Easy **deep learning** integration
 * Part-of-speech tagging
@@ -199,11 +199,6 @@ or manually by pointing pip to a path or URL.
 
     # pip install .tar.gz archive from path or URL
     pip install /Users/you/en_core_web_sm-2.0.0.tar.gz
-
-If you have SSL certification problems, SSL customization options are described in the help:
-
-    # help for the download command
-    python -m spacy download --help
 
 Loading and using models
 ------------------------
