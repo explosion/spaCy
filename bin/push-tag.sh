@@ -12,5 +12,7 @@ version=$(grep "__version__ = " spacy/about.py)
 version=${version/__version__ = }
 version=${version/\'/}
 version=${version/\'/}
+version=${version/\"/}
+version=${version/\"/}
 git tag "v$version"
 git push origin --tags
