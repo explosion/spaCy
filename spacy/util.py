@@ -587,19 +587,6 @@ def is_json_serializable(obj):
         return False
 
 
-def get_raw_input(description, default=False):
-    """Get user input from the command line via raw_input / input.
-
-    description (unicode): Text to display before prompt.
-    default (unicode or False/None): Default value to display with prompt.
-    RETURNS (unicode): User input.
-    """
-    additional = " (default: %s)" % default if default else ""
-    prompt = "    %s%s: " % (description, additional)
-    user_input = input_(prompt)
-    return user_input
-
-
 def to_bytes(getters, exclude):
     serialized = OrderedDict()
     for key, getter in getters.items():
