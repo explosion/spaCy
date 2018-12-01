@@ -83,16 +83,11 @@ def print_markdown(data, title=None):
     data (dict or list of tuples): Label/value pairs.
     title (unicode or None): Title, will be rendered as headline 2.
     """
-
-    def excl_value(value):
-        # contains path, i.e. personal info
-        return isinstance(value, basestring_) and Path(value).exists()
-
-    if isinstance(data, dict):
-        data = list(data.items())
-    markdown = [
-        "* **{}:** {}".format(l, unicode_(v)) for l, v in data if not excl_value(v)
-    ]
+    markdown = []
+    for key, value in data.items():
+        if isinstance(value, basestring_) and Path(value).exists():
+            continue
+        markdown.append("* **{}:** {}".format(key, unicode_(value)))
     if title:
         print("\n## {}".format(title))
     print("\n{}\n".format("\n".join(markdown)))
