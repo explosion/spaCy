@@ -18,7 +18,7 @@ import numpy.random
 
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
+from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file, json_dumps
 from .errors import Errors
 
@@ -587,19 +587,6 @@ def is_json_serializable(obj):
         return False
 
 
-def get_raw_input(description, default=False):
-    """Get user input from the command line via raw_input / input.
-
-    description (unicode): Text to display before prompt.
-    default (unicode or False/None): Default value to display with prompt.
-    RETURNS (unicode): User input.
-    """
-    additional = " (default: %s)" % default if default else ""
-    prompt = "    %s%s: " % (description, additional)
-    user_input = input_(prompt)
-    return user_input
-
-
 def to_bytes(getters, exclude):
     serialized = OrderedDict()
     for key, getter in getters.items():
@@ -632,27 +619,6 @@ def from_disk(path, readers, exclude):
         if key not in exclude:
             reader(path / key)
     return path
-
-
-def print_markdown(data, title=None):
-    """Print data in GitHub-flavoured Markdown format for issues etc.
-
-    data (dict or list of tuples): Label/value pairs.
-    title (unicode or None): Title, will be rendered as headline 2.
-    """
-
-    def excl_value(value):
-        # contains path, i.e. personal info
-        return isinstance(value, basestring_) and Path(value).exists()
-
-    if isinstance(data, dict):
-        data = list(data.items())
-    markdown = [
-        "* **{}:** {}".format(l, unicode_(v)) for l, v in data if not excl_value(v)
-    ]
-    if title:
-        print("\n## {}".format(title))
-    print("\n{}\n".format("\n".join(markdown)))
 
 
 def minify_html(html):

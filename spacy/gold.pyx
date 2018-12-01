@@ -265,7 +265,7 @@ def _corrupt(c, noise_level):
         return '\n'
     elif c == '\n':
         return ' '
-    elif c in ['.', "'", "!", "?"]:
+    elif c in ['.', "'", "!", "?", ',']:
         return ''
     else:
         return c.lower()

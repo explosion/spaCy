@@ -160,7 +160,7 @@ def make_update(model, docs, optimizer, drop=0.0):
     return loss
 
 
-def make_docs(nlp, batch):
+def make_docs(nlp, batch, min_length=1, max_length=500):
     docs = []
     for record in batch:
         text = record["text"]
@@ -173,7 +173,7 @@ def make_docs(nlp, batch):
             heads = numpy.asarray(heads, dtype="uint64")
             heads = heads.reshape((len(doc), 1))
             doc = doc.from_array([HEAD], heads)
-        if len(doc) >= 1 and len(doc) < 200:
+        if len(doc) >= min_length and len(doc) < max_length:
             docs.append(doc)
     return docs
 

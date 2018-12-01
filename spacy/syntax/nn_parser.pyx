@@ -510,7 +510,7 @@ cdef class Parser:
         for action, label_freqs in previous_labels.items():
             for label in label_freqs:
                 self.moves.add_action(action, label)
-        cfg.setdefault('token_vector_width', 128)
+        cfg.setdefault('token_vector_width', 96)
         if self.model is True:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:

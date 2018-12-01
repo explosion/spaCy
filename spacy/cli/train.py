@@ -22,13 +22,13 @@ from .. import about
 # Batch size starts at 1 and grows, so that we make updates quickly
 # at the beginning of training.
 dropout_rates = util.decaying(
-    util.env_opt("dropout_from", 0.2),
-    util.env_opt("dropout_to", 0.2),
+    util.env_opt("dropout_from", 0.1),
+    util.env_opt("dropout_to", 0.1),
     util.env_opt("dropout_decay", 0.0),
 )
 batch_sizes = util.compounding(
-    util.env_opt("batch_from", 1000),
-    util.env_opt("batch_to", 1000),
+    util.env_opt("batch_from", 750),
+    util.env_opt("batch_to", 750),
     util.env_opt("batch_compound", 1.001),
 )
 
@@ -144,24 +144,6 @@ def train(
     if learn_tokens:
         nlp.add_pipe(nlp.create_pipe("merge_subtokens"))
 
-    # Take dropout and batch size as generators of values -- dropout
-    # starts high and decays sharply, to force the optimizer to explore.
-    # Batch size starts at 1 and grows, so that we make updates quickly
-    # at the beginning of training.
-    dropout_rates = util.decaying(
-        util.env_opt("dropout_from", 0.1),
-        util.env_opt("dropout_to", 0.1),
-        util.env_opt("dropout_decay", 0.0),
-    )
-    batch_sizes = util.compounding(
-        util.env_opt("batch_from", 750),
-        util.env_opt("batch_to", 750),
-        util.env_opt("batch_compound", 1.001),
-    )
-    lang_class = util.get_lang_class(lang)
-    nlp = lang_class()
-    meta["pipeline"] = pipeline
-    nlp.meta.update(meta)
     if vectors:
         msg.text(Messages.M058.format(model=vectors))
         _load_vectors(nlp, vectors)
@@ -187,6 +169,7 @@ def train(
     else:
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
+
     nlp._optimizer = None
 
     # Load in pre-trained weights
