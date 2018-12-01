@@ -7,7 +7,7 @@ from pathlib import Path
 from wasabi import Printer
 
 from ._messages import Messages
-from ..compat import path2str
+from ..compat import path2str, basestring_, unicode_
 from .. import util
 from .. import about
 
@@ -44,7 +44,7 @@ def info(model=None, markdown=False, silent=False):
                 k: v for k, v in meta.items() if k not in ("accuracy", "speed")
             }
             if markdown:
-                util.print_markdown(model_meta, title=title)
+                print_markdown(model_meta, title=title)
             else:
                 msg.table(model_meta, title=title)
         return meta
@@ -58,7 +58,7 @@ def info(model=None, markdown=False, silent=False):
     if not silent:
         title = "Info about spaCy"
         if markdown:
-            util.print_markdown(data, title=title)
+            print_markdown(data, title=title)
         else:
             msg.table(data, title=title)
     return data
@@ -75,3 +75,24 @@ def list_models():
         models = [f.parts[-1] for f in data_path.iterdir() if f.is_dir()]
         return ", ".join([m for m in models if not exclude_dir(m)])
     return "-"
+
+
+def print_markdown(data, title=None):
+    """Print data in GitHub-flavoured Markdown format for issues etc.
+
+    data (dict or list of tuples): Label/value pairs.
+    title (unicode or None): Title, will be rendered as headline 2.
+    """
+
+    def excl_value(value):
+        # contains path, i.e. personal info
+        return isinstance(value, basestring_) and Path(value).exists()
+
+    if isinstance(data, dict):
+        data = list(data.items())
+    markdown = [
+        "* **{}:** {}".format(l, unicode_(v)) for l, v in data if not excl_value(v)
+    ]
+    if title:
+        print("\n## {}".format(title))
+    print("\n{}\n".format("\n".join(markdown)))
