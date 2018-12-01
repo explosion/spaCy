@@ -13,7 +13,8 @@ from .util import msgpack
 from .util import msgpack_numpy
 
 from thinc.api import chain
-from thinc.v2v import Affine, SELU, Softmax
+from thinc.v2v import Affine, Maxout, Softmax
+from thinc.misc import LayerNorm
 from thinc.t2v import Pooling, max_pool, mean_pool
 from thinc.neural.util import to_categorical, copy_array
 from thinc.neural._classes.difference import Siamese, CauchySimilarity
@@ -879,9 +880,10 @@ class MultitaskObjective(Tagger):
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
         token_vector_width = util.env_opt('token_vector_width', 96)
-        softmax = Softmax(n_tags, token_vector_width)
+        softmax = Softmax(n_tags, token_vector_width*2)
         model = chain(
             tok2vec,
+            LayerNorm(Maxout(token_vector_width*2, token_vector_width, pieces=3)),
             softmax
         )
         model.tok2vec = tok2vec
