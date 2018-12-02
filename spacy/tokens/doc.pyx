@@ -12,6 +12,7 @@ import struct
 import dill
 import msgpack
 from thinc.neural.util import get_array_module, copy_array
+import srsly
 
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
@@ -28,7 +29,7 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
-from ..util import normalize_slice, is_json_serializable
+from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
@@ -996,7 +997,7 @@ cdef class Doc:
                 if not self.has_extension(attr):
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
                 value = self._.get(attr)
-                if not is_json_serializable(value):
+                if not srsly.is_json_serializable(value):
                     raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                 data['_'][attr] = value
         return data

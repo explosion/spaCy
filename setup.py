@@ -203,7 +203,6 @@ def setup_package():
                 "thinc==7.0.0.dev3",
                 "blis>=0.2.2,<0.3.0",
                 "plac<1.0.0,>=0.9.6",
-                "ujson>=1.35",
                 "regex==2018.01.10",
                 "dill>=0.2,<0.3",
                 "requests>=2.13.0,<3.0.0",

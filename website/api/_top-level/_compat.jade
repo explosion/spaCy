@@ -9,10 +9,9 @@ p
     |  underscore, e.e #[code unicode_].
 
 +aside-code("Example").
-    from spacy.compat import unicode_, json_dumps
+    from spacy.compat import unicode_
 
     compatible_unicode = unicode_('hello world')
-    compatible_json = json_dumps({'key': 'value'})
 
 +table(["Name", "Python 2", "Python 3"])
     +row
@@ -34,11 +33,6 @@ p
         +cell #[code compat.input_]
         +cell #[code raw_input]
         +cell #[code input]
-
-    +row
-        +cell #[code compat.json_dumps]
-        +cell #[code ujson.dumps] with #[code .decode('utf8')]
-        +cell #[code ujson.dumps]
 
     +row
         +cell #[code compat.path2str]

@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 import plac
 from pathlib import Path
 from wasabi import Printer
+import srsly
 
-from ..util import write_jsonl, write_json
-from ..compat import json_dumps, path2str
+from ..compat import path2str
 from .converters import conllu2json, conllubio2json, iob2json, conll_ner2json
 from .converters import ner_jsonl2json
 from ._messages import Messages
@@ -77,9 +77,9 @@ def convert(
         suffix = ".{}".format(file_type)
         output_file = Path(output_dir) / Path(input_path.parts[-1]).with_suffix(suffix)
         if file_type == "json":
-            write_json(output_file, data)
+            srsly.write_json(output_file, data)
         elif file_type == "jsonl":
-            write_jsonl(output_file, data)
+            srsly.write_jsonl(output_file, data)
         msg.good(
             Messages.M032.format(name=path2str(output_file)),
             Messages.M033.format(n_docs=len(data)),
@@ -87,7 +87,6 @@ def convert(
     else:
         # Print to stdout
         if file_type == "json":
-            print(json_dumps(data))
+            srsly.write_json("-", data)
         elif file_type == "jsonl":
-            for line in data:
-                print(json_dumps(line))
+            srsly.write_jsonl("-", data)

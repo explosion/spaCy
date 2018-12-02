@@ -11,9 +11,7 @@ import tempfile
 import shutil
 from pathlib import Path
 import msgpack
-import json
-
-import ujson
+import srsly
 
 from . import _align
 from .syntax import nonproj
@@ -21,7 +19,6 @@ from .tokens import Doc
 from .errors import Errors
 from . import util
 from .util import minibatch, itershuffle
-from .compat import json_dumps
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
 
@@ -128,7 +125,7 @@ class GoldCorpus(object):
             n += len(doc_tuple[1])
             if limit and n >= limit:
                 break
-    
+
     @staticmethod
     def walk_corpus(path):
         path = util.ensure_path(path)
@@ -378,7 +375,7 @@ def _json_iterate(loc):
             if square_depth == 1 and curly_depth == 0:
                 py_str = py_raw[start : i+1].decode('utf8')
                 try:
-                    yield json.loads(py_str)
+                    yield srsly.json_loads(py_str)
                 except Exception:
                     print(py_str)
                     raise

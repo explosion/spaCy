@@ -2,7 +2,6 @@
 from __future__ import absolute_import, unicode_literals
 
 import random
-import ujson
 import itertools
 import weakref
 import functools
@@ -10,6 +9,7 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from copy import copy
 from thinc.neural import Model
+import srsly
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -18,7 +18,7 @@ from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
-from .compat import json_dumps, izip, basestring_
+from .compat import izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
 from ._ml import link_vectors_to_models, create_default_optimizer
@@ -640,7 +640,7 @@ class Language(object):
         serializers = OrderedDict(
             (
                 ("tokenizer", lambda p: self.tokenizer.to_disk(p, vocab=False)),
-                ("meta.json", lambda p: p.open("w").write(json_dumps(self.meta))),
+                ("meta.json", lambda p: p.open("w").write(srsly.json_dumps(self.meta))),
             )
         )
         for name, proc in self.pipeline:
@@ -671,7 +671,7 @@ class Language(object):
         path = util.ensure_path(path)
         deserializers = OrderedDict(
             (
-                ("meta.json", lambda p: self.meta.update(util.read_json(p))),
+                ("meta.json", lambda p: self.meta.update(srsly.read_json(p))),
                 (
                     "vocab",
                     lambda p: (
@@ -705,7 +705,7 @@ class Language(object):
             (
                 ("vocab", lambda: self.vocab.to_bytes()),
                 ("tokenizer", lambda: self.tokenizer.to_bytes(vocab=False)),
-                ("meta", lambda: json_dumps(self.meta)),
+                ("meta", lambda: srsly.json_dumps(self.meta)),
             )
         )
         for i, (name, proc) in enumerate(self.pipeline):
@@ -725,7 +725,7 @@ class Language(object):
         """
         deserializers = OrderedDict(
             (
-                ("meta", lambda b: self.meta.update(ujson.loads(b))),
+                ("meta", lambda b: self.meta.update(srsly.json_loads(b))),
                 (
                     "vocab",
                     lambda b: (
