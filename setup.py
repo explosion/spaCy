@@ -76,6 +76,14 @@ if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
         COMPILE_OPTIONS['other'].append('-fopenmp')
         LINK_OPTIONS['other'].append('-fopenmp')
 
+if sys.platform == 'darwin':
+    # On Mac, use libc++ because Apple deprecated use of
+    # libstdc
+    COMPILE_OPTIONS['other'].append('-stdlib=libc++')
+    LINK_OPTIONS['other'].append('-lc++')
+    # g++ (used by unix compiler on mac) links to libstdc++ as a default lib.
+    # See: https://stackoverflow.com/questions/1653047/avoid-linking-to-libstdc
+    LINK_OPTIONS['other'].append('-nodefaultlibs')
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
