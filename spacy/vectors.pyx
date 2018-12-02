@@ -4,9 +4,7 @@ from __future__ import unicode_literals
 import functools
 import numpy
 from collections import OrderedDict
-
-from .util import msgpack
-from .util import msgpack_numpy
+import srsly
 
 cimport numpy as np
 from thinc.neural.util import get_array_module
@@ -353,7 +351,7 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr)
         serializers = OrderedDict((
             ('vectors', lambda p: save_array(self.data, p.open('wb'))),
-            ('key2row', lambda p: msgpack.dump(self.key2row, p.open('wb')))
+            ('key2row', lambda p: srsly.write_msgpack(p, self.key2row))
         ))
         return util.to_disk(path, serializers, exclude)
 
@@ -366,8 +364,7 @@ cdef class Vectors:
         """
         def load_key2row(path):
             if path.exists():
-                with path.open('rb') as file_:
-                    self.key2row = msgpack.load(file_)
+                self.key2row = srsly.read_msgpack(path)
             for key, row in self.key2row.items():
                 if self._unset.count(row):
                     self._unset.erase(self._unset.find(row))
@@ -401,9 +398,9 @@ cdef class Vectors:
             if hasattr(self.data, 'to_bytes'):
                 return self.data.to_bytes()
             else:
-                return msgpack.dumps(self.data)
+                return srsly.msgpack_dumps(self.data)
         serializers = OrderedDict((
-            ('key2row', lambda: msgpack.dumps(self.key2row)),
+            ('key2row', lambda: srsly.msgpack_dumps(self.key2row)),
             ('vectors', serialize_weights)
         ))
         return util.to_bytes(serializers, exclude)
@@ -419,10 +416,10 @@ cdef class Vectors:
             if hasattr(self.data, 'from_bytes'):
                 self.data.from_bytes()
             else:
-                self.data = msgpack.loads(b)
+                self.data = srsly.msgpack_loads(b)
 
         deserializers = OrderedDict((
-            ('key2row', lambda b: self.key2row.update(msgpack.loads(b))),
+            ('key2row', lambda b: self.key2row.update(srsly.msgpack_loads(b))),
             ('vectors', deserialize_weights)
         ))
         util.from_bytes(data, deserializers, exclude)

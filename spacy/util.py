@@ -21,11 +21,6 @@ from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file
 from .errors import Errors
 
-# Import these directly from Thinc, so that we're sure we always have the
-# same version.
-from thinc.neural._classes.model import msgpack  # noqa: F401
-from thinc.neural._classes.model import msgpack_numpy  # noqa: F401
-
 
 LANGUAGES = {}
 _data_path = Path(__file__).parent / "data"
@@ -533,11 +528,11 @@ def to_bytes(getters, exclude):
     for key, getter in getters.items():
         if key not in exclude:
             serialized[key] = getter()
-    return msgpack.dumps(serialized, use_bin_type=True)
+    return srsly.msgpack_dumps(serialized)
 
 
 def from_bytes(bytes_data, setters, exclude):
-    msg = msgpack.loads(bytes_data, raw=False)
+    msg = srsly.msgpack_loads(bytes_data)
     for key, setter in setters.items():
         if key not in exclude and key in msg:
             setter(msg[key])

@@ -10,7 +10,6 @@ import numpy
 import tempfile
 import shutil
 from pathlib import Path
-import msgpack
 import srsly
 
 from . import _align
@@ -120,8 +119,7 @@ class GoldCorpus(object):
             directory.mkdir()
         n = 0
         for i, doc_tuple in enumerate(doc_tuples):
-            with open(directory / '{}.msg'.format(i), 'wb') as file_:
-                msgpack.dump([doc_tuple], file_, use_bin_type=True)
+            srsly.write_msgpack(directory / '{}.msg'.format(i), [doc_tuple])
             n += len(doc_tuple[1])
             if limit and n >= limit:
                 break
@@ -154,8 +152,7 @@ class GoldCorpus(object):
             if loc.parts[-1].endswith('json'):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith('msg'):
-                with loc.open('rb') as file_:
-                    gold_tuples = msgpack.load(file_, raw=False)
+                gold_tuples = srsly.read_msgpack(loc)
             else:
                 msg = "Cannot read from file: %s. Supported formats: .json, .msg"
                 raise ValueError(msg % loc)

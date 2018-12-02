@@ -10,7 +10,6 @@ import numpy
 import numpy.linalg
 import struct
 import dill
-import msgpack
 from thinc.neural.util import get_array_module, copy_array
 import srsly
 
@@ -808,8 +807,8 @@ cdef class Doc:
         }
         if 'user_data' not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
-            serializers['user_data_keys'] = lambda: msgpack.dumps(user_data_keys)
-            serializers['user_data_values'] = lambda: msgpack.dumps(user_data_values)
+            serializers['user_data_keys'] = lambda: srsly.msgpack_dumps(user_data_keys)
+            serializers['user_data_values'] = lambda: srsly.msgpack_dumps(user_data_values)
 
         return util.to_bytes(serializers, exclude)
 
@@ -837,9 +836,8 @@ cdef class Doc:
         # keys, we must have tuples. In values we just have to hope
         # users don't mind getting a list instead of a tuple.
         if 'user_data' not in exclude and 'user_data_keys' in msg:
-            user_data_keys = msgpack.loads(msg['user_data_keys'],
-                                           use_list=False, raw=False)
-            user_data_values = msgpack.loads(msg['user_data_values'], raw=False)
+            user_data_keys = srsly.msgpack_loads(msg['user_data_keys'], use_list=False)
+            user_data_values = srsly.msgpack_loads(msg['user_data_values'])
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
 

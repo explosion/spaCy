@@ -9,9 +9,6 @@ import cytoolz
 from collections import OrderedDict, defaultdict
 import srsly
 
-from .util import msgpack
-from .util import msgpack_numpy
-
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
@@ -234,7 +231,7 @@ class EntityRuler(object):
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
         """
-        patterns = msgpack.loads(patterns_bytes, raw=False)
+        patterns = srsly.msgpack_loads(patterns_bytes)
         self.add_patterns(patterns)
         return self
 
@@ -243,7 +240,7 @@ class EntityRuler(object):
 
         RETURNS (bytes): The serialized patterns.
         """
-        return msgpack.dumps(self.patterns, use_bin_type=True)
+        return srsly.msgpack_dumps(self.patterns)
 
     def from_disk(self, path, **kwargs):
         """Load the entity ruler from a file. Expects a file containing
@@ -744,8 +741,7 @@ class Tagger(Pipe):
         serialize['vocab'] = self.vocab.to_bytes
         serialize['cfg'] = lambda: srsly.json_dumps(self.cfg)
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
-        serialize['tag_map'] = lambda: msgpack.dumps(
-            tag_map, use_bin_type=True)
+        serialize['tag_map'] = lambda: srsly.msgpack_dumps(tag_map)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -763,7 +759,7 @@ class Tagger(Pipe):
             self.model.from_bytes(b)
 
         def load_tag_map(b):
-            tag_map = msgpack.loads(b, raw=False)
+            tag_map = srsly.msgpack_loads(b)
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
@@ -782,8 +778,7 @@ class Tagger(Pipe):
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
-            ('tag_map', lambda p: p.open('wb').write(msgpack.dumps(
-                tag_map, use_bin_type=True))),
+            ('tag_map', lambda p: srsly.write_msgpack(p, tag_map)),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
             ('cfg', lambda p: srsly.write_json(p, self.cfg))
         ))
@@ -800,8 +795,7 @@ class Tagger(Pipe):
                 self.model.from_bytes(file_.read())
 
         def load_tag_map(p):
-            with p.open('rb') as file_:
-                tag_map = msgpack.loads(file_.read(), raw=False)
+            tag_map = srsly.read_msgpack(p)
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
