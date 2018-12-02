@@ -45,7 +45,7 @@ from __future__ import print_function, unicode_literals, division
 from bz2 import BZ2File
 import time
 import plac
-import ujson
+import json
 
 from spacy.matcher import PhraseMatcher
 import spacy
@@ -71,7 +71,7 @@ def main(patterns_loc, text_loc, n=10000, lang="en"):
 
 def read_gazetteer(tokenizer, loc, n=-1):
     for i, line in enumerate(open(loc)):
-        data = ujson.loads(line.strip())
+        data = json.loads(line.strip())
         phrase = tokenizer(data["text"])
         for w in phrase:
             _ = tokenizer.vocab[w.text]
@@ -82,7 +82,7 @@ def read_gazetteer(tokenizer, loc, n=-1):
 def read_text(bz2_loc, n=10000):
     with BZ2File(bz2_loc) as file_:
         for i, line in enumerate(file_):
-            data = ujson.loads(line)
+            data = json.loads(line)
             yield data["body"]
             if i >= n:
                 break
