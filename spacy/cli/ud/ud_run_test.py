@@ -44,7 +44,7 @@ from ...lang import ru
 # Data reading #
 ################
 
-space_re = re.compile("\s+")
+space_re = re.compile(r"\s+")
 
 
 def split_text(text):
