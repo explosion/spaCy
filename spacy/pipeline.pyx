@@ -395,7 +395,7 @@ class Pipe(object):
     def to_disk(self, path, **exclude):
         """Serialize the pipe to disk."""
         serialize = OrderedDict()
-        serialize['cfg'] = lambda p: srsly.write_json(p, self.cfg))
+        serialize['cfg'] = lambda p: srsly.write_json(p, self.cfg)
         serialize['vocab'] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
             serialize['model'] = lambda p: p.open('wb').write(self.model.to_bytes())

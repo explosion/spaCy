@@ -7,6 +7,7 @@ from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
 from collections import OrderedDict, Counter
+import srsly
 
 from . cimport _beam_utils
 from ..tokens.doc cimport Doc

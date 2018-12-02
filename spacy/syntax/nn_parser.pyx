@@ -538,7 +538,7 @@ cdef class Parser:
             'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
-            'cfg': lambda p: srsly.write_json(p, self.cfg))
+            'cfg': lambda p: srsly.write_json(p, self.cfg)
         }
         util.to_disk(path, serializers, exclude)
 
