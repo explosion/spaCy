@@ -7,6 +7,8 @@ from ...compat import json_dumps, path2str
 from ...util import prints
 from ...gold import iob_to_biluo
 
+import re
+
 
 def iob2json(input_path, output_path, n_sents=10, *a, **k):
     """
@@ -15,7 +17,9 @@ def iob2json(input_path, output_path, n_sents=10, *a, **k):
     with input_path.open('r', encoding='utf8') as file_:
         sentences = read_iob(file_)
     docs = merge_sentences(sentences, n_sents)
-    output_filename = input_path.parts[-1].replace(".iob", ".json")
+    output_filename = (input_path.parts[-1]
+                       .replace(".iob2", ".json")
+                       .replace(".iob", ".json"))
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
@@ -28,7 +32,7 @@ def read_iob(raw_sents):
     for line in raw_sents:
         if not line.strip():
             continue
-        tokens = [t.split('|') for t in line.split()]
+        tokens = [re.split('[^\w\-]', line.strip())]
         if len(tokens[0]) == 3:
             words, pos, iob = zip(*tokens)
         else:
