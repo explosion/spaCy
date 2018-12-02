@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from pathlib import Path
 from jsonschema import Draft4Validator
+import srsly
 
 from ...errors import Errors
 

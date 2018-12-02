@@ -5,8 +5,6 @@ import plac
 import random
 import numpy
 import time
-import srsly
-import sys
 from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
