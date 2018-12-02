@@ -35,7 +35,7 @@ from spacy.util import minibatch, compounding
 
 
 # new entity label
-LABEL = 'ANIMAL'
+LABEL = "ANIMAL"
 
 # training data
 # Note: If you're using an existing model, make sure to mix in examples of
@@ -43,29 +43,21 @@ LABEL = 'ANIMAL'
 # model might learn the new type, but "forget" what it previously knew.
 # https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting
 TRAIN_DATA = [
-    ("Horses are too tall and they pretend to care about your feelings", {
-        'entities': [(0, 6, 'ANIMAL')]
-    }),
-
-    ("Do they bite?", {
-        'entities': []
-    }),
-
-    ("horses are too tall and they pretend to care about your feelings", {
-        'entities': [(0, 6, 'ANIMAL')]
-    }),
-
-    ("horses pretend to care about your feelings", {
-        'entities': [(0, 6, 'ANIMAL')]
-    }),
-
-    ("they pretend to care about your feelings, those horses", {
-        'entities': [(48, 54, 'ANIMAL')]
-    }),
-
-    ("horses?", {
-        'entities': [(0, 6, 'ANIMAL')]
-    })
+    (
+        "Horses are too tall and they pretend to care about your feelings",
+        {"entities": [(0, 6, "ANIMAL")]},
+    ),
+    ("Do they bite?", {"entities": []}),
+    (
+        "horses are too tall and they pretend to care about your feelings",
+        {"entities": [(0, 6, "ANIMAL")]},
+    ),
+    ("horses pretend to care about your feelings", {"entities": [(0, 6, "ANIMAL")]}),
+    (
+        "they pretend to care about your feelings, those horses",
+        {"entities": [(48, 54, "ANIMAL")]},
+    ),
+    ("horses?", {"entities": [(0, 6, "ANIMAL")]}),
 ]
 
 
@@ -73,25 +65,26 @@ TRAIN_DATA = [
     model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
     new_model_name=("New model name for model meta.", "option", "nm", str),
     output_dir=("Optional output directory", "option", "o", Path),
-    n_iter=("Number of training iterations", "option", "n", int))
-def main(model=None, new_model_name='animal', output_dir=None, n_iter=10):
+    n_iter=("Number of training iterations", "option", "n", int),
+)
+def main(model=None, new_model_name="animal", output_dir=None, n_iter=10):
     """Set up the pipeline and entity recognizer, and train the new entity."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
     else:
-        nlp = spacy.blank('en')  # create blank Language class
+        nlp = spacy.blank("en")  # create blank Language class
         print("Created blank 'en' model")
     # Add entity recognizer to model if it's not in the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
-    if 'ner' not in nlp.pipe_names:
-        ner = nlp.create_pipe('ner')
+    if "ner" not in nlp.pipe_names:
+        ner = nlp.create_pipe("ner")
         nlp.add_pipe(ner)
     # otherwise, get it, so we can add labels to it
     else:
-        ner = nlp.get_pipe('ner')
+        ner = nlp.get_pipe("ner")
 
-    ner.add_label(LABEL)   # add new entity label to entity recognizer
+    ner.add_label(LABEL)  # add new entity label to entity recognizer
     if model is None:
         optimizer = nlp.begin_training()
     else:
@@ -100,21 +93,20 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=10):
         optimizer = nlp.entity.create_optimizer()
 
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
     with nlp.disable_pipes(*other_pipes):  # only train NER
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(TRAIN_DATA, size=compounding(4., 32., 1.001))
+            batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
                 texts, annotations = zip(*batch)
-                nlp.update(texts, annotations, sgd=optimizer, drop=0.35,
-                           losses=losses)
-            print('Losses', losses)
+                nlp.update(texts, annotations, sgd=optimizer, drop=0.35, losses=losses)
+            print("Losses", losses)
 
     # test the trained model
-    test_text = 'Do you like horses?'
+    test_text = "Do you like horses?"
     doc = nlp(test_text)
     print("Entities in '%s'" % test_text)
     for ent in doc.ents:
@@ -125,7 +117,7 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=10):
         output_dir = Path(output_dir)
         if not output_dir.exists():
             output_dir.mkdir()
-        nlp.meta['name'] = new_model_name  # rename model
+        nlp.meta["name"] = new_model_name  # rename model
         nlp.to_disk(output_dir)
         print("Saved model to", output_dir)
 
@@ -137,5 +129,5 @@ def main(model=None, new_model_name='animal', output_dir=None, n_iter=10):
             print(ent.label_, ent.text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     plac.call(main)

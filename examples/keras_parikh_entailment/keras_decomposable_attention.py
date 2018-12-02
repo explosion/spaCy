@@ -10,19 +10,19 @@ def build_model(vectors, shape, settings):
 
     input1 = layers.Input(shape=(max_length,), dtype='int32', name='words1')
     input2 = layers.Input(shape=(max_length,), dtype='int32', name='words2')
-    
+
     # embeddings (projected)
     embed = create_embedding(vectors, max_length, nr_hidden)
-   
+
     a = embed(input1)
     b = embed(input2)
-    
+
     # step 1: attend
     F = create_feedforward(nr_hidden)
     att_weights = layers.dot([F(a), F(b)], axes=-1)
-    
+
     G = create_feedforward(nr_hidden)
-    
+
     if settings['entail_dir'] == 'both':
         norm_weights_a = layers.Lambda(normalizer(1))(att_weights)
         norm_weights_b = layers.Lambda(normalizer(2))(att_weights)
@@ -55,18 +55,18 @@ def build_model(vectors, shape, settings):
         v1 = layers.TimeDistributed(G)(comp1)
         v1_sum = layers.Lambda(sum_word)(v1)
         concat = v1_sum
-    
+
     H = create_feedforward(nr_hidden)
     out = H(concat)
     out = layers.Dense(nr_class, activation='softmax')(out)
-    
+
     model = Model([input1, input2], out)
-    
+
     model.compile(
         optimizer=optimizers.Adam(lr=settings['lr']),
         loss='categorical_crossentropy',
         metrics=['accuracy'])
-    
+
     return model
 
 
@@ -78,7 +78,7 @@ def create_embedding(vectors, max_length, projected_dim):
             input_length=max_length,
             weights=[vectors],
             trainable=False),
-        
+
         layers.TimeDistributed(
             layers.Dense(projected_dim,
                          activation=None,
