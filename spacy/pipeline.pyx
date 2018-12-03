@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import numpy
 cimport numpy as np
-import cytoolz
 from collections import OrderedDict, defaultdict
 import srsly
 
@@ -302,7 +301,7 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensor=tensors)
@@ -479,7 +478,7 @@ class Tensorizer(Pipe):
         n_threads (int): Number of threads.
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             tensors = self.predict(docs)
             self.set_annotations(docs, tensors)
@@ -588,7 +587,7 @@ class Tagger(Pipe):
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             tag_ids, tokvecs = self.predict(docs)
             self.set_annotations(docs, tag_ids, tensors=tokvecs)
@@ -1073,7 +1072,7 @@ class TextCategorizer(Pipe):
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)

@@ -11,7 +11,6 @@ from collections import OrderedDict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
 import functools
-import cytoolz
 import itertools
 import numpy.random
 import srsly
@@ -403,7 +402,7 @@ def minibatch(items, size=8):
     items = iter(items)
     while True:
         batch_size = next(size_)
-        batch = list(cytoolz.take(int(batch_size), items))
+        batch = list(itertools.islice(items, int(batch_size)))
         if len(batch) == 0:
             break
         yield list(batch)

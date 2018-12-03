@@ -7,7 +7,6 @@ from __future__ import unicode_literals, print_function
 from collections import OrderedDict
 import numpy
 cimport cython.parallel
-import cytoolz
 import numpy.random
 cimport numpy as np
 from cpython.ref cimport PyObject, Py_XDECREF
@@ -213,10 +212,10 @@ cdef class Parser:
             beam_width = self.cfg.get('beam_width', 1)
         beam_density = self.cfg.get('beam_density', 0.)
         cdef Doc doc
-        for batch in cytoolz.partition_all(batch_size, docs):
+        for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
             by_length = sorted(batch_in_order, key=lambda doc: len(doc))
-            for subbatch in cytoolz.partition_all(8, by_length):
+            for subbatch in util.minibatch(by_length, size=8):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch, beam_width=beam_width,
                                             beam_density=beam_density)
