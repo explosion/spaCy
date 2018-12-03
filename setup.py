@@ -208,7 +208,7 @@ def setup_package():
                 "requests>=2.13.0,<3.0.0",
                 "jsonschema>=2.6.0,<3.0.0",
                 "wasabi>=0.0.8,<1.1.0",
-                "srsly>=0.0.4,<1.1.0",
+                "srsly>=0.0.5,<1.1.0",
                 'pathlib==1.0.1; python_version < "3.4"',
             ],
             setup_requires=["wheel"],
