@@ -7,7 +7,6 @@ from __future__ import unicode_literals, print_function
 from collections import OrderedDict
 import numpy
 cimport cython.parallel
-import cytoolz
 import numpy.random
 cimport numpy as np
 from libc.math cimport exp

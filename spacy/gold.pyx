@@ -4,7 +4,6 @@ from __future__ import unicode_literals, print_function
 
 import re
 import random
-import itertools
 import numpy
 import tempfile
 import shutil
