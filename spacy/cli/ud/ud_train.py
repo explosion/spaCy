@@ -25,7 +25,6 @@ from timeit import default_timer as timer
 import itertools
 import random
 import numpy.random
-import cytoolz
 
 from . import conll17_ud_eval
 

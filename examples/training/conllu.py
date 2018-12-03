@@ -22,7 +22,6 @@ from spacy.matcher import Matcher
 import itertools
 import random
 import numpy.random
-import cytoolz
 
 import conll17_ud_eval
 
