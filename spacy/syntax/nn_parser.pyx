@@ -9,6 +9,7 @@ import numpy
 cimport cython.parallel
 import numpy.random
 cimport numpy as np
+from itertools import islice
 from cpython.ref cimport PyObject, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.math cimport exp
@@ -515,7 +516,7 @@ cdef class Parser:
                 sgd = self.create_optimizer()
             doc_sample = []
             gold_sample = []
-            for raw_text, annots_brackets in cytoolz.take(1000, get_gold_tuples()):
+            for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
                     doc_sample.append(Doc(self.vocab, words=words))
