@@ -3,7 +3,7 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from pathlib import Path
-import ujson
+import srsly
 import cProfile
 import pstats
 import sys
@@ -64,6 +64,6 @@ def _read_inputs(loc, msg):
         msg.info("Using data from {}".format(input_path.parts[-1]))
         file_ = input_path.open()
     for line in file_:
-        data = ujson.loads(line)
+        data = srsly.json_loads(line)
         text = data["text"]
         yield text

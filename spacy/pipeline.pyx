@@ -7,10 +7,7 @@ import numpy
 cimport numpy as np
 import cytoolz
 from collections import OrderedDict, defaultdict
-import ujson
-
-from .util import msgpack
-from .util import msgpack_numpy
+import srsly
 
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
@@ -27,7 +24,6 @@ from .syntax.arc_eager cimport ArcEager
 from .morphology cimport Morphology
 from .vocab cimport Vocab
 from .syntax import nonproj
-from .compat import json_dumps
 from .matcher import Matcher
 
 from .matcher import Matcher, PhraseMatcher
@@ -38,7 +34,7 @@ from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
 from .errors import Errors, TempErrors
-from .compat import json_dumps, basestring_
+from .compat import basestring_
 from . import util
 
 
@@ -235,7 +231,7 @@ class EntityRuler(object):
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
         """
-        patterns = msgpack.loads(patterns_bytes, raw=False)
+        patterns = srsly.msgpack_loads(patterns_bytes)
         self.add_patterns(patterns)
         return self
 
@@ -244,7 +240,7 @@ class EntityRuler(object):
 
         RETURNS (bytes): The serialized patterns.
         """
-        return msgpack.dumps(self.patterns, use_bin_type=True)
+        return srsly.msgpack_dumps(self.patterns)
 
     def from_disk(self, path, **kwargs):
         """Load the entity ruler from a file. Expects a file containing
@@ -256,7 +252,7 @@ class EntityRuler(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix('.jsonl')
-        patterns = util.read_jsonl(path)
+        patterns = srsly.read_jsonl(path)
         self.add_patterns(patterns)
         return self
 
@@ -270,8 +266,7 @@ class EntityRuler(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix('.jsonl')
-        data = [json_dumps(line, indent=0) for line in self.patterns]
-        path.open('w').write('\n'.join(data))
+        srsly.write_jsonl(path, self.patterns)
 
 
 class Pipe(object):
@@ -368,7 +363,7 @@ class Pipe(object):
     def to_bytes(self, **exclude):
         """Serialize the pipe to a bytestring."""
         serialize = OrderedDict()
-        serialize['cfg'] = lambda: json_dumps(self.cfg)
+        serialize['cfg'] = lambda: srsly.json_dumps(self.cfg)
         if self.model in (True, False, None):
             serialize['model'] = lambda: self.model
         else:
@@ -387,7 +382,7 @@ class Pipe(object):
             self.model.from_bytes(b)
 
         deserialize = OrderedDict((
-            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('model', load_model),
         ))
@@ -397,7 +392,7 @@ class Pipe(object):
     def to_disk(self, path, **exclude):
         """Serialize the pipe to disk."""
         serialize = OrderedDict()
-        serialize['cfg'] = lambda p: p.open('w').write(json_dumps(self.cfg))
+        serialize['cfg'] = lambda p: srsly.write_json(p, self.cfg)
         serialize['vocab'] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
             serialize['model'] = lambda p: p.open('wb').write(self.model.to_bytes())
@@ -424,8 +419,7 @@ class Pipe(object):
 
 def _load_cfg(path):
     if path.exists():
-        with path.open() as file_:
-            return ujson.load(file_)
+        return srsly.read_json(path)
     else:
         return {}
 
@@ -745,10 +739,9 @@ class Tagger(Pipe):
         else:
             serialize['model'] = self.model.to_bytes
         serialize['vocab'] = self.vocab.to_bytes
-        serialize['cfg'] = lambda: ujson.dumps(self.cfg)
+        serialize['cfg'] = lambda: srsly.json_dumps(self.cfg)
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
-        serialize['tag_map'] = lambda: msgpack.dumps(
-            tag_map, use_bin_type=True)
+        serialize['tag_map'] = lambda: srsly.msgpack_dumps(tag_map)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -766,7 +759,7 @@ class Tagger(Pipe):
             self.model.from_bytes(b)
 
         def load_tag_map(b):
-            tag_map = msgpack.loads(b, raw=False)
+            tag_map = srsly.msgpack_loads(b)
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
@@ -775,7 +768,7 @@ class Tagger(Pipe):
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('tag_map', load_tag_map),
-            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
             ('model', lambda b: load_model(b)),
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -785,10 +778,9 @@ class Tagger(Pipe):
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
-            ('tag_map', lambda p: p.open('wb').write(msgpack.dumps(
-                tag_map, use_bin_type=True))),
+            ('tag_map', lambda p: srsly.write_msgpack(p, tag_map)),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg)))
+            ('cfg', lambda p: srsly.write_json(p, self.cfg))
         ))
         util.to_disk(path, serialize, exclude)
 
@@ -803,8 +795,7 @@ class Tagger(Pipe):
                 self.model.from_bytes(file_.read())
 
         def load_tag_map(p):
-            with p.open('rb') as file_:
-                tag_map = msgpack.loads(file_.read(), raw=False)
+            tag_map = srsly.read_msgpack(p)
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,

@@ -5,8 +5,6 @@
 from __future__ import unicode_literals, print_function
 
 from collections import OrderedDict
-import ujson
-import json
 import numpy
 cimport cython.parallel
 import cytoolz
@@ -29,7 +27,7 @@ cimport blis.cy
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
-from ..compat import json_dumps, copy_array
+from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
 from ..errors import Errors, TempErrors
@@ -119,7 +117,7 @@ cdef void predict_states(ActivationsC* A, StateC** states,
         VecVec.add_i(&A.scores[i*n.classes],
             W.hidden_bias, 1., n.classes)
 
-            
+
 cdef void sum_state_features(float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
     cdef int idx, b, f, i
@@ -165,7 +163,7 @@ cdef void cpu_log_loss(float* d_scores,
         else:
             d_scores[i] = exp(scores[i]-max_) / Z
 
- 
+
 cdef int arg_max_if_gold(const weight_t* scores, const weight_t* costs,
         const int* is_valid, int n) nogil:
     # Find minimum cost
@@ -218,15 +216,15 @@ class ParserModel(Model):
 
     def begin_training(self, X, y=None):
         self.lower.begin_training(X, y=y)
-   
+
     @property
     def tok2vec(self):
         return self._layers[0]
-    
+
     @property
     def lower(self):
         return self._layers[1]
-    
+
     @property
     def upper(self):
         return self._layers[2]
@@ -405,4 +403,3 @@ cdef class precompute_hiddens:
             else:
                 return self.ops.backprop_maxout(d_best, mask, self.nP)
         return state_vector, backprop_nonlinearity
-

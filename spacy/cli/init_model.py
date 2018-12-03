@@ -11,12 +11,13 @@ from preshed.counter import PreshCounter
 import tarfile
 import gzip
 import zipfile
+import srsly
 from wasabi import Printer
 
 from ._messages import Messages
 from ..vectors import Vectors
 from ..errors import Errors, Warnings, user_warning
-from ..util import ensure_path, get_lang_class, read_jsonl
+from ..util import ensure_path, get_lang_class
 
 try:
     import ftfy
@@ -59,7 +60,7 @@ def init_model(
                 settings.append("-c")
             msg.warn(Messages.M063, Messages.M064)
         jsonl_loc = ensure_path(jsonl_loc)
-        lex_attrs = read_jsonl(jsonl_loc)
+        lex_attrs = srsly.read_jsonl(jsonl_loc)
     else:
         clusters_loc = ensure_path(clusters_loc)
         freqs_loc = ensure_path(freqs_loc)

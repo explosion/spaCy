@@ -292,10 +292,9 @@ for example to show more specific error messages, you can use the `is_config()`
 helper function.
 
 ```python
-from .compat import unicode_, json_dumps, is_config
+from .compat import unicode_, is_config
 
 compatible_unicode = unicode_('hello world')
-compatible_json = json_dumps({'key': 'value'})
 if is_config(windows=True, python2=True):
     print("You are using Python 2 on Windows.")
 ```

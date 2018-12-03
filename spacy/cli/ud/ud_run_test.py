@@ -9,7 +9,7 @@ import tqdm
 from pathlib import Path
 import re
 import sys
-import json
+import srsly
 
 import spacy
 import spacy.util
@@ -44,7 +44,7 @@ from ...lang import ru
 # Data reading #
 ################
 
-space_re = re.compile("\s+")
+space_re = re.compile(r"\s+")
 
 
 def split_text(text):
@@ -332,8 +332,7 @@ def main(test_data_dir, experiment_dir, corpus):
                 / corpus
                 / "{section}-accuracy.json".format(section=section)
             )
-            with open(acc_path, "w") as file_:
-                file_.write(json.dumps(accuracy, indent=2))
+            srsly.write_json(acc_path, accuracy)
 
 
 if __name__ == "__main__":

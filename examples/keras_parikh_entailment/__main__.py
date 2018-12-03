@@ -1,5 +1,5 @@
 import numpy as np
-import ujson as json
+import json
 from keras.utils import to_categorical
 import plac
 import sys

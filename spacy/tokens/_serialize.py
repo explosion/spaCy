@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
 import numpy
-import msgpack
 import gzip
+import srsly
 from thinc.neural.ops import NumpyOps
 
 from ..compat import copy_reg
@@ -74,11 +74,11 @@ class Binder(object):
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
             "strings": list(self.strings),
         }
-        return gzip.compress(msgpack.dumps(msg))
+        return gzip.compress(srsly.msgpack_dumps(msg))
 
     def from_bytes(self, string):
         """Deserialize the binder's annotations from a byte string."""
-        msg = msgpack.loads(gzip.decompress(string))
+        msg = srsly.msgpack_loads(gzip.decompress(string))
         self.attrs = msg["attrs"]
         self.strings = set(msg["strings"])
         lengths = numpy.fromstring(msg["lengths"], dtype="int32")

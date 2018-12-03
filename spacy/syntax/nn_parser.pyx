@@ -5,8 +5,6 @@
 from __future__ import unicode_literals, print_function
 
 from collections import OrderedDict
-import ujson
-import json
 import numpy
 cimport cython.parallel
 import cytoolz
@@ -27,6 +25,7 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
+import srsly
 
 from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
@@ -34,7 +33,7 @@ from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
-from ..compat import json_dumps, copy_array
+from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
 from ..errors import Errors, TempErrors
@@ -539,7 +538,7 @@ cdef class Parser:
             'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
-            'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
+            'cfg': lambda p: srsly.write_json(p, self.cfg)
         }
         util.to_disk(path, serializers, exclude)
 
@@ -547,7 +546,7 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, strings=False),
-            'cfg': lambda p: self.cfg.update(util.read_json(p)),
+            'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
             'model': lambda p: None
         }
         util.from_disk(path, deserializers, exclude)
@@ -568,7 +567,7 @@ cdef class Parser:
             ('model', lambda: (self.model.to_bytes() if self.model is not True else True)),
             ('vocab', lambda: self.vocab.to_bytes()),
             ('moves', lambda: self.moves.to_bytes(strings=False)),
-            ('cfg', lambda: json.dumps(self.cfg, indent=2, sort_keys=True))
+            ('cfg', lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True))
         ))
         return util.to_bytes(serializers, exclude)
 
@@ -576,7 +575,7 @@ cdef class Parser:
         deserializers = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
-            ('cfg', lambda b: self.cfg.update(json.loads(b))),
+            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
             ('model', lambda b: None)
         ))
         msg = util.from_bytes(bytes_data, deserializers, exclude)

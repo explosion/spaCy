@@ -5,10 +5,11 @@ from pathlib import Path
 from collections import Counter
 import plac
 import sys
+import srsly
 from wasabi import Printer, MESSAGES
 
 from ..gold import GoldCorpus, read_json_object
-from ..util import load_model, get_lang_class, read_json, read_jsonl
+from ..util import load_model, get_lang_class
 
 # from .schemas import get_schema, validate_json
 from ._messages import Messages
@@ -320,11 +321,11 @@ def debug_data(
 def _load_file(file_path, msg):
     file_name = file_path.parts[-1]
     if file_path.suffix == ".json":
-        data = read_json(file_path)
+        data = srsly.read_json(file_path)
         msg.good("Loaded {}".format(file_name))
         return data
     elif file_path.suffix == ".jsonl":
-        data = read_jsonl(file_path)
+        data = srsly.read_jsonl(file_path)
         msg.good("Loaded {}".format(file_name))
         return data
     msg.fail(
