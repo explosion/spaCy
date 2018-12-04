@@ -56,5 +56,4 @@ VERB_RULES = [
     ["ante", "er"],
     ["ants", "er"],
     ["antes", "er"],
-    ["ont", "er"]
 ]
