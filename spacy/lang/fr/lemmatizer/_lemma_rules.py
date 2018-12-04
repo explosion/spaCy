@@ -52,5 +52,9 @@ VERB_RULES = [
     ["assions", "er"],
     ["assiez", "er"],
     ["assent", "er"],
-    ["ant", "er"]
+    ["ant", "er"],
+    ["ante", "er"],
+    ["ants", "er"],
+    ["antes", "er"],
+    ["ont", "er"]
 ]
