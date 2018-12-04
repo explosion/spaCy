@@ -78,6 +78,22 @@ NOUN_RULES = [
     ["ws", "w"],
     ["ys", "y"]
 
+    ["nt(e", "nt"],
+    ["nt(e)", "nt"],
+    ["al(e", "ale"],
+    ["é(", "é"],
+    ["é(e", "é"],
+    ["é.e", "é"],
+    ["el(le", "el"],
+    ["eurs(rices", "eur"],
+    ["eur(rice", "eur"],
+    ["eux(se", "eux"],
+    ["ial(e","ial"],
+    ["er(ère", "er"],
+    ["eur(se", "eur"],
+    ["teur(trice", "teur"],
+    ["teurs(trices", "teur"],
+
 ]
 
 
