@@ -76,6 +76,14 @@ if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
         COMPILE_OPTIONS['other'].append('-fopenmp')
         LINK_OPTIONS['other'].append('-fopenmp')
 
+if sys.platform == 'darwin':
+    # On Mac, use libc++ because Apple deprecated use of
+    # libstdc
+    COMPILE_OPTIONS['other'].append('-stdlib=libc++')
+    LINK_OPTIONS['other'].append('-lc++')
+    # g++ (used by unix compiler on mac) links to libstdc++ as a default lib.
+    # See: https://stackoverflow.com/questions/1653047/avoid-linking-to-libstdc
+    LINK_OPTIONS['other'].append('-nodefaultlibs')
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
@@ -155,6 +163,7 @@ def setup_package():
         for mod_name in MOD_NAMES:
             mod_path = mod_name.replace('.', '/') + '.cpp'
             extra_link_args = []
+            extra_compile_args = []
             # ???
             # Imported from patch from @mikepb
             # See Issue #267. Running blind here...
@@ -163,10 +172,14 @@ def setup_package():
                 dylib_path = '/'.join(dylib_path)
                 dylib_path = '@loader_path/%s/spacy/platform/darwin/lib' % dylib_path
                 extra_link_args.append('-Wl,-rpath,%s' % dylib_path)
+                # Try to fix OSX 10.7 problem. Running blind here too.
+                extra_compile_args.append('-std=c++11')
+                extra_link_args.append('-std=c++11')
             ext_modules.append(
                 Extension(mod_name, [mod_path],
                     language='c++', include_dirs=include_dirs,
-                    extra_link_args=extra_link_args))
+                    extra_link_args=extra_link_args,
+                    extra_compile_args=extra_compile_args))
 
         if not is_source_release(root):
             generate_cython(root, 'spacy')
@@ -188,11 +201,10 @@ def setup_package():
             setup_requires=['wheel>=0.32.0,<0.33.0'],
             install_requires=[
                 'numpy>=1.15.0',
-                'msgpack-numpy<0.4.4',
                 'murmurhash>=0.28.0,<1.1.0',
                 'cymem>=2.0.2,<2.1.0',
                 'preshed>=2.0.1,<2.1.0',
-                'thinc>=6.12.0,<6.13.0',
+                'thinc>=6.12.1,<6.13.0',
                 'plac<1.0.0,>=0.9.6',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
