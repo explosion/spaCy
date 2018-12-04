@@ -106,10 +106,10 @@ def load_data(limit=0, split=0.8):
 
 def evaluate(tokenizer, textcat, texts, cats):
     docs = (tokenizer(text) for text in texts)
-    tp = 1e-8  # True positives
+    tp = 0.0   # True positives
     fp = 1e-8  # False positives
     fn = 1e-8  # False negatives
-    tn = 1e-8  # True negatives
+    tn = 0.0   # True negatives
     for i, doc in enumerate(textcat.pipe(docs)):
         gold = cats[i]
         for label, score in doc.cats.items():
