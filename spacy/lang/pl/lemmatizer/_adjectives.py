@@ -78948,4 +78948,4 @@ zęzowy
 ósemkowy
 ósmy
 ówczesny
-""")
+""".split())
