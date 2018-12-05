@@ -1,0 +1,38 @@
+#coding: utf-8
+from __future__ import unicode_literals
+
+
+ADJECTIVE_RULES = [
+    ["[^CDHŁNRTZŻ]I", "[^CDHŁNRTZŻ]Y"],
+    ["CY", "CY"],
+    ["DZI", "DY"],
+    ["DZY", "GI"],
+    ["CY", "KI"],
+    ["[^OSZ]LI", "[^OSZ]ŁY"],
+    ["ŚLI", "SŁY"],
+    ["[^S]ŹLI", "[^S]ZŁY"],
+    ["SZLI", "SZŁY"],
+    ["[RŁ]ZLI", "[RŁ]ZŁY"],
+    ["[^S]OLI", "[^S]OŁY"],
+    ["SELI", "SOŁY"],
+    ["[^IŁRW]ENI", "[^IŁRW]ONY"],
+    ["[ŁRW]ONI", "[ŁRW]ONY"],
+    ["[^CZ]IENI", "[^CZ]IONY"],
+    ["CENI", "CIONY"],
+    ["[^D]ZIENI", "[^D]ZIONY"],
+    ["DZENI", "DZIONY"],
+    ["[^AY]ZNI", "[^AY]ZNY"],
+    ["[AY]ŹNI", "[AY]ZNY"],
+    ["ŚNI", "SNY"],
+    ["SI", "SZY"],
+    ["RZY", "RY"],
+    ["ZI", "ŻY"],
+    ["[^OSZ]NI", "[^OSZ]NY"],
+    ["[^S]CI", "[^S]TY"],
+    ["ŚCI", "STY"],
+    ["SI", "CHY"],
+    ["CI", "TEN"],
+    ["TE-", "TEN"],
+    ["DNE", "DEN"],
+    ["DNI", "DEN"],
+]
