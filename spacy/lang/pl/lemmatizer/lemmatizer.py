@@ -38,6 +38,9 @@ class PolishLemmatizer(object):
                                )
         return lemmas
 
+    def lookup(self, string):
+        return string.lower()
+
 
 def lemmatize(string, index, exceptions, rules):
     string = string.lower()
