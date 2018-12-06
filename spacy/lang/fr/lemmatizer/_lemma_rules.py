@@ -76,7 +76,7 @@ NOUN_RULES = [
     ["us", "u"],
     ["vs", "v"],
     ["ws", "w"],
-    ["ys", "y"]
+    ["ys", "y"],
 
     ["nt(e", "nt"],
     ["nt(e)", "nt"],
@@ -92,8 +92,7 @@ NOUN_RULES = [
     ["er(ère", "er"],
     ["eur(se", "eur"],
     ["teur(trice", "teur"],
-    ["teurs(trices", "teur"],
-
+    ["teurs(trices", "teur"]
 ]
 
 
@@ -143,5 +142,5 @@ VERB_RULES = [
     ["u(er", "u"],
     ["és(ées", "er"],
     ["é()e", "er"],
-    ["é()", "er"],
+    ["é()", "er"]
 ]
