@@ -34,7 +34,7 @@ msg = Printer()
     freqs_loc=("Location of words frequencies file", "option", "f", Path),
     jsonl_loc=("Location of JSONL-formatted attributes file", "option", "j", Path),
     clusters_loc=("Optional location of brown clusters data", "option", "c", str),
-    vectors_loc=("Optional vectors file in Word2Vec format" "option", "v", str),
+    vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
     prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
 )
 def init_model(
