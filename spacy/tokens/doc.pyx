@@ -9,7 +9,7 @@ cimport numpy as np
 import numpy
 import numpy.linalg
 import struct
-import dill
+import srsly
 from thinc.neural.util import get_array_module, copy_array
 import srsly
 
@@ -1061,11 +1061,11 @@ def pickle_doc(doc):
     bytes_data = doc.to_bytes(vocab=False, user_data=False)
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
                       doc.user_token_hooks)
-    return (unpickle_doc, (doc.vocab, dill.dumps(hooks_and_data), bytes_data))
+    return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
 
 
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
-    user_data, doc_hooks, span_hooks, token_hooks = dill.loads(hooks_and_data)
+    user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
 
     doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data,
                                                      exclude='user_data')
