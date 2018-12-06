@@ -29,8 +29,8 @@ def test_pickle_vocab(text1, text2):
     lex2 = vocab[text2]
     assert lex1.norm_ == text1[:-1]
     assert lex2.norm_ == text2[:-1]
-    data = pickle.dumps(vocab)
-    unpickled = pickle.loads(data)
+    data = srsly.pickle_dumps(vocab)
+    unpickled = srsly.pickle_loads(data)
     assert unpickled[text1].orth == lex1.orth
     assert unpickled[text2].orth == lex2.orth
     assert unpickled[text1].norm == lex1.norm
