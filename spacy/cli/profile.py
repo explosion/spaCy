@@ -8,7 +8,7 @@ import cProfile
 import pstats
 import sys
 import tqdm
-import cytoolz
+import itertools
 import thinc.extra.datasets
 from wasabi import Printer
 
@@ -40,7 +40,7 @@ def profile(model, inputs=None, n_texts=10000):
     with msg.loading("Loading model '{}'...".format(model)):
         nlp = load_model(model)
     msg.good("Loaded model '{}'".format(model))
-    texts = list(cytoolz.take(n_texts, inputs))
+    texts = list(itertools.islice(inputs, n_texts))
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
     msg.divider("Profile stats")
