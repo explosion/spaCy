@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 
 import pytest
-import dill as pickle
 import numpy
+import srsly
 from spacy.strings import StringStore
 from spacy.vocab import Vocab
 from spacy.attrs import NORM
@@ -14,8 +14,8 @@ def test_pickle_string_store(text1, text2):
     stringstore = StringStore()
     store1 = stringstore[text1]
     store2 = stringstore[text2]
-    data = pickle.dumps(stringstore, protocol=-1)
-    unpickled = pickle.loads(data)
+    data = srsly.pickle_dumps(stringstore, protocol=-1)
+    unpickled = srsly.pickle_loads(data)
     assert unpickled[text1] == store1
     assert unpickled[text2] == store2
     assert len(stringstore) == len(unpickled)
