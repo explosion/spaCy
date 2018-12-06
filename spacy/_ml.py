@@ -8,8 +8,9 @@ from thinc.t2t import ExtractWindow, ParametricAttention
 from thinc.t2v import Pooling, sum_pool
 from thinc.misc import Residual
 from thinc.misc import LayerNorm as LN
+from thinc.misc import FeatureExtracter
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.api import FeatureExtracter, with_getitem, flatten_add_lengths
+from thinc.api import with_getitem, flatten_add_lengths
 from thinc.api import uniqued, wrap, noop
 from thinc.api import with_square_sequences
 from thinc.linear.linear import LinearModel
