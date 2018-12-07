@@ -76,7 +76,7 @@ for verb, verb_lemma in [
                 {LEMMA: pronoun, ORTH: "-" + pronoun}]
 
 for verb, verb_lemma in [
-    ("est","être")]:
+    ("est", "être")]:
     for orth in [verb, verb.title()]:
         token = "{}-ce".format(orth)
         _exc[token] = [
@@ -87,16 +87,17 @@ for verb, verb_lemma in [
 for pre, pre_lemma in [
     ("qu'", "que"),
     ("n'", "ne")]:
-    for orth in [pre,pre.title()]:
+    for orth in [pre, pre.title()]:
         _exc['%sest-ce' % orth] = [
             {LEMMA: pre_lemma, ORTH: orth, TAG: "ADV"},
             {LEMMA: 'être', ORTH: "est", TAG: "VERB"},
             {LEMMA: 'ce', ORTH: '-ce'}]
 
-
 _infixes_exc = []
 orig_elision = "'"
 orig_hyphen = '-'
+
+print("FR_BASE_EXCEPTIONS _exc", len(FR_BASE_EXCEPTIONS))
 
 # loop through the elison and hyphen characters, and try to substitute the ones that weren't used in the original list
 for infix in FR_BASE_EXCEPTIONS:
@@ -105,7 +106,6 @@ for infix in FR_BASE_EXCEPTIONS:
         variants_infix.update([word.replace(orig_elision, elision_char) for word in variants_infix])
     for hyphen_char in [x for x in ['-', '‐'] if x != orig_hyphen]:
         variants_infix.update([word.replace(orig_hyphen, hyphen_char) for word in variants_infix])
-    # TODO SVL: the upper_first_letter() should be removed as well
     variants_infix.update([upper_first_letter(word) for word in variants_infix])
     _infixes_exc.extend(variants_infix)
 
@@ -133,11 +133,11 @@ _hyphen_prefix = [
     'passe', 'perce', 'pharmaco', 'ph[oy]to', 'pieds?', 'pique', 'poissons?', 'ponce',
     'pont', 'po[rs]t', 'primo', 'pro(?:cès|to)?', 'pare', 'petite?', 'porte',
     'pré', 'prêchi', 'pseudo', 'pêle', 'péri', 'puy', 'quasi', 'quatre', 'radio', 'recourt',
-    'rythmo', 'r[ée]', 'r[ée]tro', 'sans?', 'sa?inte?s?', 'semi', 'social',
+    'rythmo', 'r[ée]', 'r[ée]tro', 'sans?', 'sa?inte?s?', 'semi', 'serre', 'social',
     'sous', 'su[bdr]', 'super', 'tire', 'thermo', 'tiers', 'trans',
     'tr(?:i|ou)', 't[ée]l[ée]', 'vi[cd]e', 'vid[ée]o', 'vie(?:ux|illes?)',
     'vill(?:e|eneuve|ers|ette|iers|y)', 'ultra', 'à', '[ée]lectro', '[ée]qui',
-'Fontaine', 'La Chapelle', 'Marie', 'Le Mesnil', 'Neuville', 'Pierre', 'Val', 'Vaux']
+    'Fontaine', 'La Chapelle', 'Marie', 'Le Mesnil', 'Neuville', 'Pierre', 'Val', 'Vaux']
 
 _elision_prefix = ['entr', 'grande?s?']
 _other_hyphens = ''.join([h for h in HYPHENS if h != '-'])
@@ -145,7 +145,14 @@ _other_hyphens = ''.join([h for h in HYPHENS if h != '-'])
 _regular_exp = [
     '^droits?[{hyphen}]de[{hyphen}]l\'homm[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^zig[{hyphen}]zag[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^prud[{elision}]hom[{alpha}]*$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
+    '^[ée]tats[{hyphen}]uni[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^bouche[{hyphen}]por[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^black[{hyphen}]out[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^hard[{hyphen}]discount[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^plan[{hyphen}]socialis[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^jet[{hyphen}]set[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^new[{hyphen}]york[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^prud[{elision}]hom[{alpha}]+$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
 _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
                  prefix=p, hyphen=HYPHENS, other_hyphen=_other_hyphens,
                  elision=ELISION, alpha=ALPHA_LOWER)
