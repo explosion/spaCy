@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import bz2
 import regex as re
-import ujson
+import srsly
 import sys
 import random
 import datetime
@@ -44,7 +44,7 @@ class Reddit(object):
                     line = line.strip()
                     if not line:
                         continue
-                    comment = ujson.loads(line)
+                    comment = srsly.json_loads(line)
                     if self.is_valid(comment):
                         text = self.strip_tags(comment["body"])
                         yield {"text": text}
@@ -75,7 +75,7 @@ class Reddit(object):
 def main(path):
     reddit = Reddit(path)
     for comment in reddit:
-        print(ujson.dumps(comment))
+        print(srsly.json_dumps(comment))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import numpy as np
-import ujson as json
+import json
 from keras.utils import to_categorical
 import plac
 import sys
@@ -32,7 +32,7 @@ def set_keras_backend(backend):
         K.set_session(K.tf.Session(config=cfg))
         K.clear_session()
 
-set_keras_backend("tensorflow") 
+set_keras_backend("tensorflow")
 
 
 def train(train_loc, dev_loc, shape, settings):
@@ -42,7 +42,7 @@ def train(train_loc, dev_loc, shape, settings):
     print("Loading spaCy")
     nlp = spacy.load('en_vectors_web_lg')
     assert nlp.path is not None
-   
+
     print("Processing texts...")
     train_X = create_dataset(nlp, train_texts1, train_texts2, 100, shape[0])
     dev_X = create_dataset(nlp, dev_texts1, dev_texts2, 100, shape[0])
@@ -57,7 +57,7 @@ def train(train_loc, dev_loc, shape, settings):
         validation_data = (dev_X, dev_labels),
         epochs = settings['nr_epoch'],
         batch_size = settings['batch_size'])
-    
+
     if not (nlp.path / 'similarity').exists():
         (nlp.path / 'similarity').mkdir()
     print("Saving to", nlp.path / 'similarity')
@@ -74,7 +74,7 @@ def evaluate(dev_loc, shape):
     dev_texts1, dev_texts2, dev_labels = read_snli(dev_loc)
     nlp = spacy.load('en_vectors_web_lg')
     nlp.add_pipe(KerasSimilarityShim.load(nlp.path / 'similarity', nlp, shape[0]))
-    
+
     total = 0.
     correct = 0.
     for text1, text2, label in zip(dev_texts1, dev_texts2, dev_labels):
@@ -119,33 +119,33 @@ def read_snli(path):
 
 def create_dataset(nlp, texts, hypotheses, num_unk, max_length):
     sents = texts + hypotheses
-    
+
     sents_as_ids = []
     for sent in sents:
         doc = nlp(sent)
         word_ids = []
-        
+
         for i, token in enumerate(doc):
             # skip odd spaces from tokenizer
             if token.has_vector and token.vector_norm == 0:
                 continue
-                
+
             if i > max_length:
                 break
-                
+
             if token.has_vector:
                 word_ids.append(token.rank + num_unk + 1)
             else:
                 # if we don't have a vector, pick an OOV entry
-                word_ids.append(token.rank % num_unk + 1) 
-                
+                word_ids.append(token.rank % num_unk + 1)
+
         # there must be a simpler way of generating padded arrays from lists...
         word_id_vec = np.zeros((max_length), dtype='int')
         clipped_len = min(max_length, len(word_ids))
         word_id_vec[:clipped_len] = word_ids[:clipped_len]
         sents_as_ids.append(word_id_vec)
-        
-        
+
+
     return [np.array(sents_as_ids[:len(texts)]), np.array(sents_as_ids[len(texts):])]
 
 
@@ -169,7 +169,7 @@ def main(mode, train_loc, dev_loc,
         batch_size = 1024,
         nr_epoch = 10,
         entail_dir="both"):
-    
+
     shape = (max_length, nr_hidden, 3)
     settings = {
         'lr': learn_rate,

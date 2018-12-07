@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 
 from pathlib import Path
 from jsonschema import Draft4Validator
+import srsly
 
 from ...errors import Errors
-from ...util import read_json
 
 
 SCHEMAS = {}
@@ -25,7 +25,7 @@ def get_schema(name):
         schema_path = Path(__file__).parent / "{}.json".format(name)
         if not schema_path.exists():
             raise ValueError(Errors.E104.format(name=name))
-        schema = read_json(schema_path)
+        schema = srsly.read_json(schema_path)
         # TODO: replace with (stable) Draft6Validator, if available
         validator = Draft4Validator(schema)
         validator.check_schema(schema)

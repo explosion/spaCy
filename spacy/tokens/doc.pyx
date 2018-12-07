@@ -9,9 +9,9 @@ cimport numpy as np
 import numpy
 import numpy.linalg
 import struct
-import dill
-import msgpack
+import srsly
 from thinc.neural.util import get_array_module, copy_array
+import srsly
 
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
@@ -28,7 +28,7 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
-from ..util import normalize_slice, is_json_serializable
+from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
@@ -807,8 +807,8 @@ cdef class Doc:
         }
         if 'user_data' not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
-            serializers['user_data_keys'] = lambda: msgpack.dumps(user_data_keys)
-            serializers['user_data_values'] = lambda: msgpack.dumps(user_data_values)
+            serializers['user_data_keys'] = lambda: srsly.msgpack_dumps(user_data_keys)
+            serializers['user_data_values'] = lambda: srsly.msgpack_dumps(user_data_values)
 
         return util.to_bytes(serializers, exclude)
 
@@ -836,9 +836,8 @@ cdef class Doc:
         # keys, we must have tuples. In values we just have to hope
         # users don't mind getting a list instead of a tuple.
         if 'user_data' not in exclude and 'user_data_keys' in msg:
-            user_data_keys = msgpack.loads(msg['user_data_keys'],
-                                           use_list=False, raw=False)
-            user_data_values = msgpack.loads(msg['user_data_values'], raw=False)
+            user_data_keys = srsly.msgpack_loads(msg['user_data_keys'], use_list=False)
+            user_data_values = srsly.msgpack_loads(msg['user_data_values'])
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
 
@@ -996,7 +995,7 @@ cdef class Doc:
                 if not self.has_extension(attr):
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
                 value = self._.get(attr)
-                if not is_json_serializable(value):
+                if not srsly.is_json_serializable(value):
                     raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                 data['_'][attr] = value
         return data
@@ -1062,11 +1061,11 @@ def pickle_doc(doc):
     bytes_data = doc.to_bytes(vocab=False, user_data=False)
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
                       doc.user_token_hooks)
-    return (unpickle_doc, (doc.vocab, dill.dumps(hooks_and_data), bytes_data))
+    return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
 
 
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
-    user_data, doc_hooks, span_hooks, token_hooks = dill.loads(hooks_and_data)
+    user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
 
     doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data,
                                                      exclude='user_data')

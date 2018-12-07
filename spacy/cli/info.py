@@ -5,6 +5,7 @@ import plac
 import platform
 from pathlib import Path
 from wasabi import Printer
+import srsly
 
 from ._messages import Messages
 from ..compat import path2str, basestring_, unicode_
@@ -32,7 +33,7 @@ def info(model=None, markdown=False, silent=False):
         meta_path = model_path / "meta.json"
         if not meta_path.is_file():
             msg.fail(Messages.M020, meta_path, exits=1)
-        meta = util.read_json(meta_path)
+        meta = srsly.read_json(meta_path)
         if model_path.resolve() != model_path:
             meta["link"] = path2str(model_path)
             meta["source"] = path2str(model_path.resolve())

@@ -5,11 +5,12 @@ import pkg_resources
 from pathlib import Path
 import sys
 import requests
+import srsly
 from wasabi import Printer
 
 from ._messages import Messages
 from ..compat import path2str
-from ..util import get_data_path, read_json
+from ..util import get_data_path
 from .. import about
 
 
@@ -84,7 +85,7 @@ def get_model_links(compat):
             meta_path = Path(model) / "meta.json"
             if not meta_path.exists():
                 continue
-            meta = read_json(meta_path)
+            meta = srsly.read_json(meta_path)
             link = model.parts[-1]
             name = meta["lang"] + "_" + meta["name"]
             links[link] = {

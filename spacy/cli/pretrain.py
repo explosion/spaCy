@@ -5,8 +5,6 @@ import plac
 import random
 import numpy
 import time
-import ujson
-import sys
 from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
@@ -14,10 +12,10 @@ from thinc.api import wrap
 from thinc.misc import LayerNorm as LN
 from thinc.neural.util import prefer_gpu
 from wasabi import Printer
+import srsly
 
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from ..compat import json_dumps
 from .._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
 from .. import util
 
@@ -72,7 +70,7 @@ def pretrain(
     if not output_dir.exists():
         output_dir.mkdir()
         msg.good("Created output directory")
-    util.write_json(output_dir / "config.json", config)
+    srsly.write_json(output_dir / "config.json", config)
     msg.good("Saved settings to config.json")
 
     # Load texts from file or stdin
@@ -81,12 +79,12 @@ def pretrain(
         if not texts_loc.exists():
             msg.fail("Input text file doesn't exist", texts_loc, exits=1)
         with msg.loading("Loading input texts..."):
-            texts = list(util.read_jsonl(texts_loc))
+            texts = list(srsly.read_jsonl(texts_loc))
         msg.good("Loaded input texts")
         random.shuffle(texts)
     else:  # reading from stdin
         msg.text("Reading input text from stdin...")
-        texts = stream_texts()
+        texts = srsly.read_jsonl("-")
 
     with msg.loading("Loading model '{}'...".format(vectors_model)):
         nlp = util.load_model(vectors_model)
@@ -130,16 +128,11 @@ def pretrain(
                 "epoch": epoch,
             }
             with (output_dir / "log.jsonl").open("a") as file_:
-                file_.write(json_dumps(log) + "\n")
+                file_.write(srsly.json_dumps(log) + "\n")
         tracker.epoch_loss = 0.0
         if texts_loc != "-":
             # Reshuffle the texts if texts were loaded from a file
             random.shuffle(texts)
-
-
-def stream_texts():
-    for line in sys.stdin:
-        yield ujson.loads(line)
 
 
 def make_update(model, docs, optimizer, drop=0.0):

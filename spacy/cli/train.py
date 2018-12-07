@@ -7,6 +7,7 @@ import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import shutil
+import srsly
 from wasabi import Printer
 
 from ._messages import Messages
@@ -111,7 +112,7 @@ def train(
         msg.fail(Messages.M051, dev_path, exits=1)
     if meta_path is not None and not meta_path.exists():
         msg.fail(Messages.M020, meta_path, exits=1)
-    meta = util.read_json(meta_path) if meta_path else {}
+    meta = srsly.read_json(meta_path) if meta_path else {}
     if not isinstance(meta, dict):
         msg.fail(Messages.M052, Messages.M053.format(meta_type=type(meta)), exits=1)
     if output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
@@ -226,7 +227,7 @@ def train(
                         end_time = timer()
                         cpu_wps = nwords / (end_time - start_time)
                 acc_loc = output_path / ("model%d" % i) / "accuracy.json"
-                util.write_json(acc_loc, scorer.scores)
+                srsly.write_json(acc_loc, scorer.scores)
 
                 # Update model meta.json
                 meta["lang"] = nlp.lang
@@ -242,7 +243,7 @@ def train(
                 meta.setdefault("name", "model%d" % i)
                 meta.setdefault("version", version)
                 meta_loc = output_path / ("model%d" % i) / "meta.json"
-                util.write_json(meta_loc, meta)
+                srsly.write_json(meta_loc, meta)
 
                 util.set_env_log(verbose)
 
@@ -293,17 +294,17 @@ def _collate_best_model(meta, output_path, components):
     for component, best_component_src in bests.items():
         shutil.rmtree(best_dest / component)
         shutil.copytree(best_component_src / component, best_dest / component)
-        accs = util.read_json(best_component_src / "accuracy.json")
+        accs = srsly.read_json(best_component_src / "accuracy.json")
         for metric in _get_metrics(component):
             meta["accuracy"][metric] = accs[metric]
-    util.write_json(best_dest / "meta.json", meta)
+    srsly.write_json(best_dest / "meta.json", meta)
 
 
 def _find_best(experiment_dir, component):
     accuracies = []
     for epoch_model in experiment_dir.iterdir():
         if epoch_model.is_dir() and epoch_model.parts[-1] != "model-final":
-            accs = util.read_json(epoch_model / "accuracy.json")
+            accs = srsly.read_json(epoch_model / "accuracy.json")
             scores = [accs.get(metric, 0.0) for metric in _get_metrics(component)]
             accuracies.append((scores, epoch_model))
     if accuracies:

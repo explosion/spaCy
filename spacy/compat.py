@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import os
 import sys
-import ujson
 import itertools
 
 from thinc.neural.util import copy_array
@@ -54,9 +53,6 @@ if is_python2:
     unicode_ = unicode  # noqa: F821
     basestring_ = basestring  # noqa: F821
     input_ = raw_input  # noqa: F821
-    json_dumps = lambda data, indent=2: ujson.dumps(
-        data, indent=indent, escape_forward_slashes=False
-    ).decode("utf8")
     path2str = lambda path: str(path).decode("utf8")
 
 elif is_python3:
@@ -64,9 +60,6 @@ elif is_python3:
     unicode_ = str
     basestring_ = str
     input_ = input
-    json_dumps = lambda data, indent=2: ujson.dumps(
-        data, indent=indent, escape_forward_slashes=False
-    )
     path2str = lambda path: str(path)
 
 

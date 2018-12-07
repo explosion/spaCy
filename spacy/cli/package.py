@@ -5,9 +5,10 @@ import plac
 import shutil
 from pathlib import Path
 from wasabi import Printer, get_raw_input
+import srsly
 
 from ._messages import Messages
-from ..compat import path2str, json_dumps
+from ..compat import path2str
 from .. import util
 from .. import about
 
@@ -40,7 +41,7 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
 
     meta_path = meta_path or input_path / "meta.json"
     if meta_path.is_file():
-        meta = util.read_json(meta_path)
+        meta = srsly.read_json(meta_path)
         if not create_meta:  # only print if user doesn't want to overwrite
             msg.good(Messages.M041, meta_path)
         else:
@@ -64,7 +65,7 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
             )
     Path.mkdir(package_path, parents=True)
     shutil.copytree(path2str(input_path), path2str(package_path / model_name_v))
-    create_file(main_path / "meta.json", json_dumps(meta))
+    create_file(main_path / "meta.json", srsly.json_dumps(meta))
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)

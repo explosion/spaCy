@@ -5,7 +5,7 @@ import numpy
 import tempfile
 import shutil
 import contextlib
-import msgpack
+import srsly
 from pathlib import Path
 from spacy.tokens import Doc, Span
 from spacy.attrs import POS, HEAD, DEP
@@ -100,8 +100,8 @@ def assert_docs_equal(doc1, doc2):
 
 def assert_packed_msg_equal(b1, b2):
     """Assert that two packed msgpack messages are equal."""
-    msg1 = msgpack.loads(b1, encoding="utf8")
-    msg2 = msgpack.loads(b2, encoding="utf8")
+    msg1 = srsly.msgpack_loads(b1)
+    msg2 = srsly.msgpack_loads(b2)
     assert sorted(msg1.keys()) == sorted(msg2.keys())
     for (k1, v1), (k2, v2) in zip(sorted(msg1.items()), sorted(msg2.items())):
         assert k1 == k2

@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import ujson
 import pkg_resources
 import importlib
 import regex as re
@@ -12,20 +11,14 @@ from collections import OrderedDict
 from thinc.neural._classes.model import Model
 from thinc.neural.ops import NumpyOps
 import functools
-import cytoolz
 import itertools
 import numpy.random
-
+import srsly
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
-from .compat import import_file, json_dumps
+from .compat import import_file
 from .errors import Errors
-
-# Import these directly from Thinc, so that we're sure we always have the
-# same version.
-from thinc.neural._classes.model import msgpack  # noqa: F401
-from thinc.neural._classes.model import msgpack_numpy  # noqa: F401
 
 
 LANGUAGES = {}
@@ -185,7 +178,7 @@ def get_model_meta(path):
     meta_path = model_path / "meta.json"
     if not meta_path.is_file():
         raise IOError(Errors.E053.format(path=meta_path))
-    meta = read_json(meta_path)
+    meta = srsly.read_json(meta_path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
@@ -409,7 +402,7 @@ def minibatch(items, size=8):
     items = iter(items)
     while True:
         batch_size = next(size_)
-        batch = list(cytoolz.take(int(batch_size), items))
+        batch = list(itertools.islice(items, int(batch_size)))
         if len(batch) == 0:
             break
         yield list(batch)
@@ -529,74 +522,16 @@ def itershuffle(iterable, bufsize=1000):
         raise StopIteration
 
 
-def read_json(location):
-    """Open and load JSON from file.
-
-    location (Path): Path to JSON file.
-    RETURNS (dict): Loaded JSON content.
-    """
-    location = ensure_path(location)
-    with location.open("r", encoding="utf8") as f:
-        return ujson.load(f)
-
-
-def write_json(file_path, contents):
-    """Create a .json file and dump contents.
-
-    file_path (unicode / Path): The path to the output file.
-    contents: The JSON-serializable contents to output.
-    """
-    with Path(file_path).open("w", encoding="utf8") as f:
-        f.write(json_dumps(contents))
-
-
-def read_jsonl(file_path):
-    """Read a .jsonl file and yield its contents line by line.
-
-    file_path (unicode / Path): The file path.
-    YIELDS: The loaded JSON contents of each line.
-    """
-    with Path(file_path).open("r", encoding="utf8") as f:
-        for line in f:
-            try:  # hack to handle broken jsonl
-                yield ujson.loads(line.strip())
-            except ValueError:
-                continue
-
-
-def write_jsonl(file_path, lines):
-    """Create a .jsonl file and dump contents.
-
-    file_path (unicode / Path): The path to the output file.
-    lines (list): The JSON-serializable contents of each line.
-    """
-    data = [json_dumps(line) for line in lines]
-    with Path(file_path).open("w", encoding="utf-8") as f:
-        f.write("\n".join(data))
-
-
-def is_json_serializable(obj):
-    """Check if a Python object is JSON-serializable."""
-    if hasattr(obj, "__call__"):
-        # Check this separately here to prevent infinite recursions
-        return False
-    try:
-        ujson.dumps(obj)
-        return True
-    except TypeError:
-        return False
-
-
 def to_bytes(getters, exclude):
     serialized = OrderedDict()
     for key, getter in getters.items():
         if key not in exclude:
             serialized[key] = getter()
-    return msgpack.dumps(serialized, use_bin_type=True)
+    return srsly.msgpack_dumps(serialized)
 
 
 def from_bytes(bytes_data, setters, exclude):
-    msg = msgpack.loads(bytes_data, raw=False)
+    msg = srsly.msgpack_loads(bytes_data)
     for key, setter in setters.items():
         if key not in exclude and key in msg:
             setter(msg[key])

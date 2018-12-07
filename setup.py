@@ -7,8 +7,25 @@ import sys
 import contextlib
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
+import distutils.util
 from distutils import ccompiler, msvccompiler
 from setuptools import Extension, setup, find_packages
+
+
+def is_new_osx():
+    '''Check whether we're on OSX >= 10.10'''
+    name = distutils.util.get_platform()
+    if sys.platform != 'darwin':
+        return False
+    elif name.startswith('macosx-10'):
+        minor_version = int(name.split('-')[1].split('.')[1])
+        if minor_version >= 7:
+            return True
+        else:
+            return False
+    else:
+        return False
+
 
 
 PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens"]}
@@ -57,8 +74,17 @@ COMPILE_OPTIONS = {
 LINK_OPTIONS = {"msvc": [], "mingw32": [], "other": []}
 
 
-# I don't understand this very well yet. See Issue #267
-# Fingers crossed!
+if is_new_osx():
+    # On Mac, use libc++ because Apple deprecated use of
+    # libstdc
+    COMPILE_OPTIONS["other"].append("-stdlib=libc++")
+    LINK_OPTIONS["other"].append("-lc++")
+    # g++ (used by unix compiler on mac) links to libstdc++ as a default lib.
+    # See: https://stackoverflow.com/questions/1653047/avoid-linking-to-libstdc
+    LINK_OPTIONS["other"].append("-nodefaultlibs")
+
+
+
 USE_OPENMP_DEFAULT = "0" if sys.platform != "darwin" else None
 if os.environ.get("USE_OPENMP", USE_OPENMP_DEFAULT) == "1":
     if sys.platform == "darwin":
@@ -200,15 +226,14 @@ def setup_package():
                 "murmurhash>=0.28.0,<1.1.0",
                 "cymem>=2.0.2,<2.1.0",
                 "preshed>=2.0.1,<2.1.0",
-                "thinc==7.0.0.dev3",
+                "thinc==7.0.0.dev6",
                 "blis>=0.2.2,<0.3.0",
                 "plac<1.0.0,>=0.9.6",
-                "ujson>=1.35",
                 "regex==2018.01.10",
-                "dill>=0.2,<0.3",
                 "requests>=2.13.0,<3.0.0",
                 "jsonschema>=2.6.0,<3.0.0",
                 "wasabi>=0.0.8,<1.1.0",
+                "srsly>=0.0.5,<1.1.0",
                 'pathlib==1.0.1; python_version < "3.4"',
             ],
             setup_requires=["wheel"],

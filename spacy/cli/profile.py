@@ -3,12 +3,12 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from pathlib import Path
-import ujson
+import srsly
 import cProfile
 import pstats
 import sys
 import tqdm
-import cytoolz
+import itertools
 import thinc.extra.datasets
 from wasabi import Printer
 
@@ -40,7 +40,7 @@ def profile(model, inputs=None, n_texts=10000):
     with msg.loading("Loading model '{}'...".format(model)):
         nlp = load_model(model)
     msg.good("Loaded model '{}'".format(model))
-    texts = list(cytoolz.take(n_texts, inputs))
+    texts = list(itertools.islice(inputs, n_texts))
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
     msg.divider("Profile stats")
@@ -64,6 +64,6 @@ def _read_inputs(loc, msg):
         msg.info("Using data from {}".format(input_path.parts[-1]))
         file_ = input_path.open()
     for line in file_:
-        data = ujson.loads(line)
+        data = srsly.json_loads(line)
         text = data["text"]
         yield text
