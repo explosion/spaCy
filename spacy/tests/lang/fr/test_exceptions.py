@@ -17,7 +17,8 @@ def fr_tokenizer():
                                   "11-septembre", "11-Septembre",
                                   "K-POP", "K-Pop", "K-pop",
                                   "black-outeront", "états-unienne",
-                                  "courtes-pattes", "court-pattes"])
+                                  "courtes-pattes", "court-pattes",
+                                  "saut-de-ski", "Gy-les-Nonains"])
 def test_tokenizer_infix_exceptions(fr_tokenizer, text):
     tokens = fr_tokenizer(text)
     assert len(tokens) == 1

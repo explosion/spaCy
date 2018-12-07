@@ -153,13 +153,26 @@ _regular_exp = [
     '^jet[{hyphen}]set[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^new[{hyphen}]york[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^prud[{elision}]hom[{alpha}]+$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
+
+# catching cases like faux-vampire
 _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
                  prefix=p, hyphen=HYPHENS, other_hyphen=_other_hyphens,
                  elision=ELISION, alpha=ALPHA_LOWER)
                  for p in _hyphen_prefix]
+
+# catching cases like entr'abat
 _regular_exp += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
                  prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=ALPHA_LOWER)
                  for p in _elision_prefix]
+
+# catching cases like saut-de-ski
+# TODO SVL: l' and d'
+_hyphen_combination = ['l[èe]s?', 'la', 'en', 'des?', 'du', 'sur', 'sous', 'aux?', 'à']
+_regular_exp += ["^[{alpha}]+[{hyphen}]{hyphen_combo}[{hyphen}][{alpha}]+$".format(
+                 hyphen_combo=hc, hyphen=HYPHENS, alpha=ALPHA_LOWER)
+                 for hc in _hyphen_combination]
+
+# URLs
 _regular_exp.append(URL_PATTERN)
 
 print("size _regular_exp", len(_regular_exp))
