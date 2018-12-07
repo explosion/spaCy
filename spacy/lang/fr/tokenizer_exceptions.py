@@ -56,7 +56,7 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-for orth in FR_BASE_EXCEPTIONS + ["etc."]:
+for orth in ["etc."]:
     _exc[orth] = [{ORTH: orth}]
 
 
@@ -144,7 +144,7 @@ _other_hyphens = ''.join([h for h in HYPHENS if h != '-'])
 _regular_exp = [
     '^droits?[{hyphen}]de[{hyphen}]l\'homm[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^zig[{hyphen}]zag[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^prud[{elision}]homm[{alpha}]*$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
+    '^prud[{elision}]hom[{alpha}]*$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
 _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
                  prefix=p, hyphen=HYPHENS, other_hyphen=_other_hyphens,
                  elision=ELISION, alpha=ALPHA_LOWER)
