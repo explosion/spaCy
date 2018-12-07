@@ -165,11 +165,10 @@ _regular_exp += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".f
                  prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=ALPHA_LOWER)
                  for p in _elision_prefix]
 
-# catching cases like saut-de-ski
-# TODO SVL: l' and d'
-_hyphen_combination = ['l[èe]s?', 'la', 'en', 'des?', 'du', 'sur', 'sous', 'aux?', 'à']
-_regular_exp += ["^[{alpha}]+[{hyphen}]{hyphen_combo}[{hyphen}][{alpha}]+$".format(
-                 hyphen_combo=hc, hyphen=HYPHENS, alpha=ALPHA_LOWER)
+# catching cases like saut-de-ski, pet-en-l'air
+_hyphen_combination = ['l[èe]s?', 'la', 'en', 'des?', 'd[eu]', 'sur', 'sous', 'aux?', 'à', 'et', "près", "saint"]
+_regular_exp += ["^[{alpha}]+[{hyphen}]{hyphen_combo}[{hyphen}](?:l[{elision}])?[{alpha}]+$".format(
+                 hyphen_combo=hc, elision=ELISION, hyphen=HYPHENS, alpha=ALPHA_LOWER)
                  for hc in _hyphen_combination]
 
 # URLs
