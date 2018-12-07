@@ -116,43 +116,84 @@ for orth in _infixes_exc:
 
 
 _hyphen_prefix = [
-    'a[ée]ro', 'abat', 'a[fg]ro', 'after', 'am[ée]ricano', 'anglo', 'anti',
-    'apr[èe]s', 'arabo', 'arcs?', 'archi', 'arrières?', 'avant', 'auto',
-    'banc', 'bas(?:ses?)?', 'bec?', 'best', 'bio?', 'bien', 'blanc', 'bo[îi]te',
-    'bois', 'bou(?:c|rg)', 'b[êe]ta', 'cache', 'cap(?:ello)?', 'casse', 'champ',
-    'chapelle', 'ch[âa]teau(?:neuf)?', 'chasse', 'cha(?:ud|t)e?s?', 'chou', 'chromo', 'claire?s?',
+    'a[ée]ro', 'abat', 'a[fg]ro', 'after', 'aigues?', 'am[ée]ricano', 'anglo', 'anti',
+    'apr[èe]s', 'arabo', 'arcs?', 'archi', 'arrières?', 'avant', 'avion', 'auto',
+    'banc', 'bas(?:ses?)?', 'bateaux?', 'bec?', 'belles?', 'beau', 'best', 'bio?', 'bien', 'blanc', 'bo[îi]te',
+    'bonn?e?s?', 'bois', 'bou(?:c|rg)', 'b[êe]ta', 'cache', 'cap(?:ello)?', 'casse', 'castel', 'champ',
+    'chapelle', 'ch[âa]teau(?:neuf)?', 'chasse', 'cha(?:ud|t)e?s?', 'chauffe', 'chou', 'chromo', 'claire?s?',
     'co(?:de|ca)?', 'compte', 'contre', 'cordon', 'coupe?', 'courte?s?', 'couvre', 'crash',
     'crise', 'croche', 'cross', 'cyber', 'côte', 'demi', 'di(?:sney)?', 'dix',
-    'd[ée]s?', 'double', 'dys', 'e', 'entre', 'est', 'ethno', 'extra', 'extrême',
+    'd[ée]s?', 'dys', 'ex?', 'émirato', 'entre', 'est', 'ethno', 'ex', 'extra', 'extrême',
     '[ée]co', 'faux', 'fil', 'fort', 'franco?s?', 'gallo', 'gardes?', 'gastro',
-    'grande?', 'gratte', 'gr[ée]co', 'gros', 'g[ée]o', 'haute?s?', 'hyper',
+    'grande?', 'gratte', 'gr[ée]co', 'gros', 'g[ée]o', 'haute?s?', 'homm?es?' 'hors', 'hyper',
     'indo', 'infra', 'inter', 'intra', 'islamo', 'italo', 'jean', 'labio',
-    'latino', 'live', 'lot', 'louis', 'm[ai]cro', 'mesnil', 'mi(?:ni)?', 'mono',
+    'latino', 'live', 'lot', 'louis', 'm[ai]cro', 'mal', 'médio', 'mesnil', 'mi(?:ni)?', 'mono',
     'mont?s?', 'moyen', 'multi', 'm[ée]cano', 'm[ée]dico', 'm[ée]do', 'm[ée]ta',
-    'mots?', 'noix', 'non', 'nord', 'notre', 'n[ée]o', 'ouest', 'outre', 'ouvre',
+    'mots?', 'neuro', 'noix', 'non', 'nord', 'notre', 'n[ée]o', 'ouest', 'outre', 'ouvre',
     'passe', 'perce', 'pharmaco', 'ph[oy]to', 'pieds?', 'pique', 'poissons?', 'ponce',
-    'pont', 'po[rs]t', 'primo', 'pro(?:cès|to)?', 'pare', 'petite?', 'porte',
-    'pré', 'prêchi', 'pseudo', 'pêle', 'péri', 'puy', 'quasi', 'quatre', 'radio', 'recourt',
-    'rythmo', 'r[ée]', 'r[ée]tro', 'sans?', 'sa?inte?s?', 'semi', 'serre', 'social',
-    'sous', 'su[bdr]', 'super', 'tire', 'thermo', 'tiers', 'trans',
-    'tr(?:i|ou)', 't[ée]l[ée]', 'vi[cd]e', 'vid[ée]o', 'vie(?:ux|illes?)',
-    'vill(?:e|eneuve|ers|ette|iers|y)', 'ultra', 'à', '[ée]lectro', '[ée]qui',
+    'pont', 'po[rs]t', 'pousse', 'primo', 'pro(?:cès|to)?', 'pare', 'petite?s?', 'plessis', 'porte',
+    'pré', 'prêchi', 'protège', 'pseudo', 'pêle', 'péri', 'puy', 'quasi', 'quatre', 'radio', 'recourt',
+    'rythmo', '(?:re)?doubles?', 'r[ée]', 'r[ée]tro', 'requin', 'sans?', 'sa?inte?s?', 'semi',
+    'serre', 'sino', 'socio', 'sociale?s?', 'soixante', 'sous', 'su[bdrs]', 'super', 'taille',
+    'tire', 'thermo', 'tiers', 'tourne', 'toute?s?', 'tra[iî]ne?', 'trans', 'trente', 'trois', 'trousse'
+    'tr(?:i|ou)', 't[ée]l[ée]', 'utéro', 'vaso', 'vi[cd]e', 'vid[ée]o', 'vie(?:ux|i?lles?|i?l)',
+    'vill(?:e|eneuve|ers|ette|iers|y)', 'vingt', 'voitures?', 'wagons?', 'ultra',
+    'à', '[ée]lectro', '[ée]qui',
     'Fontaine', 'La Chapelle', 'Marie', 'Le Mesnil', 'Neuville', 'Pierre', 'Val', 'Vaux']
 
-_elision_prefix = ['entr', 'grande?s?']
 _other_hyphens = ''.join([h for h in HYPHENS if h != '-'])
 
 _regular_exp = [
-    '^droits?[{hyphen}]de[{hyphen}]l\'homm[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^zig[{hyphen}]zag[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^[ée]tats[{hyphen}]uni[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^bouche[{hyphen}]por[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^a[{hyphen}]sexualis[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^arginine[{hyphen}]méthyl[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^binge[{hyphen}]watch[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^black[{hyphen}]out[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^bouche[{hyphen}]por[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^burn[{hyphen}]out[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^by[{hyphen}]pass[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^ch[{elision}]tiis[{alpha}]+$'.format(elision=ELISION, alpha=ALPHA_LOWER),
+    '^chape[{hyphen}]chut[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^down[{hyphen}]load[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^[ée]tats[{hyphen}]uni[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^droits?[{hyphen}]de[{hyphen}]l\'homm[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^fac[{hyphen}]simil[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^fleur[{hyphen}]bleuis[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^flic[{hyphen}]flaqu[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^fox[{hyphen}]trott[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^google[{hyphen}]is[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^hard[{hyphen}]discount[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^plan[{hyphen}]socialis[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^hip[{hyphen}]hop[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^jet[{hyphen}]set[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^knock[{hyphen}]out[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^lèche[{hyphen}]bott[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^litho[{hyphen}]typographi[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^lock[{hyphen}]out[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^lombri[{hyphen}]compost[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^mac[{hyphen}]adamis[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^marque[{hyphen}]pag[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^mouton[{hyphen}]noiris[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     '^new[{hyphen}]york[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    '^prud[{elision}]hom[{alpha}]+$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
+    '^pair[{hyphen}]programm[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^people[{hyphen}]is[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^plan[{hyphen}]socialis[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^premier[{hyphen}]ministr[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^prud[{elision}]hom[{alpha}]+$'.format(elision=ELISION, alpha=ALPHA_LOWER),
+    '^réarc[{hyphen}]bout[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^refox[{hyphen}]trott[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^remicro[{hyphen}]ond[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^repique[{hyphen}]niqu[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^repetit[{hyphen}]déjeun[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^rick[{hyphen}]roll[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^rond[{hyphen}]ponn[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^shift[{hyphen}]cliqu[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^soudo[{hyphen}]bras[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^stabilo[{hyphen}]boss[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^strip[{hyphen}]teas[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^terra[{hyphen}]form[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^teuf[{hyphen}]teuf[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^yo[{hyphen}]yo[{alpha}]+$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^zig[{hyphen}]zag[{alpha}]*$'.format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    '^z[{elision}]yeut[{alpha}]+$'.format(elision=ELISION, alpha=ALPHA_LOWER)]
 
 # catching cases like faux-vampire
 _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
@@ -161,6 +202,7 @@ _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]
                  for p in _hyphen_prefix]
 
 # catching cases like entr'abat
+_elision_prefix = ['r?é?entr', 'grande?s?', 'r']
 _regular_exp += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
                  prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=ALPHA_LOWER)
                  for p in _elision_prefix]
