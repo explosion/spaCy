@@ -10,8 +10,14 @@ def fr_tokenizer():
     return util.get_lang_class('fr').Defaults.create_tokenizer()
 
 
-@pytest.mark.parametrize('text', ["aujourd'hui", "Aujourd'hui", "prud'hommes",
-                                  "prud’hommal", "entr'amis"])
+@pytest.mark.parametrize('text', ["aujourd'hui", "Aujourd'hui", "prud'hommes", "prud’hommal",
+                                  "audio-numérique", "Audio-numérique",
+                                  "entr'amis", "entr'abat", "grand'hamien"
+                                  "Châteauneuf-la-Forêt", "Château-Guibert",
+                                  "11-septembre", "11-Septembre",
+                                  "K-POP", "K-Pop", "K-pop",
+                                  "black-outeront", "états-unienne",
+                                  "courtes-pattes", "court-pattes"])
 def test_tokenizer_infix_exceptions(fr_tokenizer, text):
     tokens = fr_tokenizer(text)
     assert len(tokens) == 1
