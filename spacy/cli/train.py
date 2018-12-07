@@ -18,22 +18,6 @@ from .. import util
 from .. import about
 
 
-# Take dropout and batch size as generators of values -- dropout
-# starts high and decays sharply, to force the optimizer to explore.
-# Batch size starts at 1 and grows, so that we make updates quickly
-# at the beginning of training.
-dropout_rates = util.decaying(
-    util.env_opt("dropout_from", 0.1),
-    util.env_opt("dropout_to", 0.1),
-    util.env_opt("dropout_decay", 0.0),
-)
-batch_sizes = util.compounding(
-    util.env_opt("batch_from", 750),
-    util.env_opt("batch_to", 750),
-    util.env_opt("batch_compound", 1.001),
-)
-
-
 @plac.annotations(
     lang=("Model language", "positional", None, str),
     output_path=("Output directory to store model in", "positional", None, Path),
@@ -119,6 +103,21 @@ def train(
         msg.fail(Messages.M062, Messages.M065)
     if not output_path.exists():
         output_path.mkdir()
+
+    # Take dropout and batch size as generators of values -- dropout
+    # starts high and decays sharply, to force the optimizer to explore.
+    # Batch size starts at 1 and grows, so that we make updates quickly
+    # at the beginning of training.
+    dropout_rates = util.decaying(
+        util.env_opt("dropout_from", 0.1),
+        util.env_opt("dropout_to", 0.1),
+        util.env_opt("dropout_decay", 0.0),
+    )
+    batch_sizes = util.compounding(
+        util.env_opt("batch_from", 100.0),
+        util.env_opt("batch_to", 1000.0),
+        util.env_opt("batch_compound", 1.001),
+    )
 
     # Set up the base model and pipeline. If a base model is specified, load
     # the model and make sure the pipeline matches the pipeline setting. If
