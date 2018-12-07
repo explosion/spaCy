@@ -97,8 +97,6 @@ _infixes_exc = []
 orig_elision = "'"
 orig_hyphen = '-'
 
-print("FR_BASE_EXCEPTIONS _exc", len(FR_BASE_EXCEPTIONS))
-
 # loop through the elison and hyphen characters, and try to substitute the ones that weren't used in the original list
 for infix in FR_BASE_EXCEPTIONS:
     variants_infix = {infix}
@@ -108,8 +106,6 @@ for infix in FR_BASE_EXCEPTIONS:
         variants_infix.update([word.replace(orig_hyphen, hyphen_char) for word in variants_infix])
     variants_infix.update([upper_first_letter(word) for word in variants_infix])
     _infixes_exc.extend(variants_infix)
-
-print("size _infixes_exc 3", len(_infixes_exc))
 
 for orth in _infixes_exc:
     _exc[orth] = [{ORTH: orth}]
@@ -216,9 +212,6 @@ _regular_exp += ["^[{alpha}]+[{hyphen}]{hyphen_combo}[{hyphen}](?:l[{elision}])?
 # URLs
 _regular_exp.append(URL_PATTERN)
 
-print("size _regular_exp", len(_regular_exp))
-
 TOKENIZER_EXCEPTIONS = _exc
-print("size _exc", len(_exc))
 
 TOKEN_MATCH = re.compile('|'.join('(?:{})'.format(m) for m in _regular_exp), re.IGNORECASE).match
