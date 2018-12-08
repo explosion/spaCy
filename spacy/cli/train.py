@@ -112,8 +112,8 @@ def train(
     # Batch size starts at 1 and grows, so that we make updates quickly
     # at the beginning of training.
     dropout_rates = util.decaying(
-        util.env_opt("dropout_from", 0.1),
-        util.env_opt("dropout_to", 0.1),
+        util.env_opt("dropout_from", 0.2),
+        util.env_opt("dropout_to", 0.2),
         util.env_opt("dropout_decay", 0.0),
     )
     batch_sizes = util.compounding(
