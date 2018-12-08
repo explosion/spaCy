@@ -260,13 +260,13 @@ def train(
             )
             msg.row(progress, **row_settings)
     finally:
-        with msg.loading(Messages.M061):
-            with nlp.use_params(optimizer.averages):
-                final_model_path = output_path / "model-final"
-                nlp.to_disk(final_model_path)
+        with nlp.use_params(optimizer.averages):
+            final_model_path = output_path / "model-final"
+            nlp.to_disk(final_model_path)
         msg.good(Messages.M066, util.path2str(final_model_path))
-
-    _collate_best_model(meta, output_path, nlp.pipe_names)
+        with msg.loading("Creating best model..."):
+            best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
+        msg.good("Created best model", util.path2str(best_model_path))
 
 
 def _load_vectors(nlp, vectors):
