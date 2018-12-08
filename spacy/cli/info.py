@@ -7,7 +7,6 @@ from pathlib import Path
 from wasabi import Printer
 import srsly
 
-from ._messages import Messages
 from ..compat import path2str, basestring_, unicode_
 from .. import util
 from .. import about
@@ -32,7 +31,7 @@ def info(model=None, markdown=False, silent=False):
             model_path = util.get_data_path() / model
         meta_path = model_path / "meta.json"
         if not meta_path.is_file():
-            msg.fail(Messages.M020, meta_path, exits=1)
+            msg.fail("Can't find model meta.json", meta_path, exits=1)
         meta = srsly.read_json(meta_path)
         if model_path.resolve() != model_path:
             meta["link"] = path2str(model_path)

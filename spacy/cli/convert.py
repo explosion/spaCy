@@ -6,10 +6,8 @@ from pathlib import Path
 from wasabi import Printer
 import srsly
 
-from ..compat import path2str
 from .converters import conllu2json, conllubio2json, iob2json, conll_ner2json
 from .converters import ner_jsonl2json
-from ._messages import Messages
 
 
 # Converters are matched by file extension. To add a converter, add a new
@@ -56,18 +54,18 @@ def convert(
     input_path = Path(input_file)
     if file_type not in FILE_TYPES:
         msg.fail(
-            Messages.M069.format(name=file_type),
-            Messages.M070.format(options=", ".join(FILE_TYPES)),
+            "Unknown file type: '{}'".format(file_type),
+            "Supported file types: '{}'".format(", ".join(FILE_TYPES)),
             exits=1,
         )
     if not input_path.exists():
-        msg.fail(Messages.M028, input_path, exits=1)
+        msg.fail("Input file not found", input_path, exits=1)
     if output_dir != "-" and not Path(output_dir).exists():
-        msg.fail(Messages.M029, output_dir, exits=1)
+        msg.fail("Output directory not found", output_dir, exits=1)
     if converter == "auto":
         converter = input_path.suffix[1:]
     if converter not in CONVERTERS:
-        msg.fail(Messages.M030, Messages.M031.format(converter=converter), exits=1)
+        msg.fail("Can't find converter for {}".format(converter), exits=1)
     # Use converter function to convert data
     func = CONVERTERS[converter]
     input_data = input_path.open("r", encoding="utf-8").read()
@@ -80,10 +78,7 @@ def convert(
             srsly.write_json(output_file, data)
         elif file_type == "jsonl":
             srsly.write_jsonl(output_file, data)
-        msg.good(
-            Messages.M032.format(name=path2str(output_file)),
-            Messages.M033.format(n_docs=len(data)),
-        )
+        msg.good("Generated output file ({} documents)".format(len(data)), output_file)
     else:
         # Print to stdout
         if file_type == "json":

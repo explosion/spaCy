@@ -5,7 +5,6 @@ import plac
 from timeit import default_timer as timer
 from wasabi import Printer
 
-from ._messages import Messages
 from ..gold import GoldCorpus
 from .. import util
 from .. import displacy
@@ -39,9 +38,9 @@ def evaluate(
     data_path = util.ensure_path(data_path)
     displacy_path = util.ensure_path(displacy_path)
     if not data_path.exists():
-        msg.fail(Messages.M034, data_path, exits=1)
+        msg.fail("Evaluation data not found", data_path, exits=1)
     if displacy_path and not displacy_path.exists():
-        msg.fail(Messages.M035, displacy_path, exits=1)
+        msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
     nlp = util.load_model(model)
     dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
@@ -75,7 +74,7 @@ def evaluate(
             deps=render_deps,
             ents=render_ents,
         )
-        msg.good(Messages.M036.format(n=displacy_limit), displacy_path)
+        msg.good("Generated {} parses as HTML".format(displacy_limit), displacy_path)
 
 
 def render_parses(docs, output_path, model_name="", limit=250, deps=True, ents=True):
@@ -90,39 +89,3 @@ def render_parses(docs, output_path, model_name="", limit=250, deps=True, ents=T
                 docs[:limit], style="dep", page=True, options={"compact": True}
             )
             file_.write(html)
-
-
-def print_progress(itn, losses, dev_scores, wps=0.0):
-    scores = {}
-    for col in [
-        "dep_loss",
-        "tag_loss",
-        "uas",
-        "tags_acc",
-        "token_acc",
-        "ents_p",
-        "ents_r",
-        "ents_f",
-        "wps",
-    ]:
-        scores[col] = 0.0
-    scores["dep_loss"] = losses.get("parser", 0.0)
-    scores["ner_loss"] = losses.get("ner", 0.0)
-    scores["tag_loss"] = losses.get("tagger", 0.0)
-    scores.update(dev_scores)
-    scores["wps"] = wps
-    tpl = "\t".join(
-        (
-            "{:d}",
-            "{dep_loss:.3f}",
-            "{ner_loss:.3f}",
-            "{uas:.3f}",
-            "{ents_p:.3f}",
-            "{ents_r:.3f}",
-            "{ents_f:.3f}",
-            "{tags_acc:.3f}",
-            "{token_acc:.3f}",
-            "{wps:.1f}",
-        )
-    )
-    print(tpl.format(itn, **scores))

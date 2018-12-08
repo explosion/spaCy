@@ -12,7 +12,6 @@ from ..gold import GoldCorpus, read_json_object
 from ..util import load_model, get_lang_class
 
 # from .schemas import get_schema, validate_json
-from ._messages import Messages
 
 
 # Minimum number of expected occurences of label in data to train new label
@@ -58,9 +57,9 @@ def debug_data(
 
     # Make sure all files and paths exists if they are needed
     if not train_path.exists():
-        msg.fail(Messages.M050, train_path, exits=1)
+        msg.fail("Training data not found", train_path, exits=1)
     if not dev_path.exists():
-        msg.fail(Messages.M051, dev_path, exits=1)
+        msg.fail("Development data not found", dev_path, exits=1)
 
     # Initialize the model and pipeline
     pipeline = [p.strip() for p in pipeline.split(",")]

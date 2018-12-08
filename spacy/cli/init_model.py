@@ -14,7 +14,6 @@ import zipfile
 import srsly
 from wasabi import Printer
 
-from ._messages import Messages
 from ..vectors import Vectors
 from ..errors import Errors, Warnings, user_warning
 from ..util import ensure_path, get_lang_class
@@ -58,14 +57,21 @@ def init_model(
                 settings.append("-f")
             if clusters_loc:
                 settings.append("-c")
-            msg.warn(Messages.M063, Messages.M064)
+            msg.warn(
+                "Incompatible arguments",
+                "The -f and -c arguments are deprecated, and not compatible "
+                "with the -j argument, which should specify the same "
+                "information. Either merge the frequencies and clusters data "
+                "into the JSONL-formatted file (recommended), or use only the "
+                "-f and -c files, without the other lexical attributes.",
+            )
         jsonl_loc = ensure_path(jsonl_loc)
         lex_attrs = srsly.read_jsonl(jsonl_loc)
     else:
         clusters_loc = ensure_path(clusters_loc)
         freqs_loc = ensure_path(freqs_loc)
         if freqs_loc is not None and not freqs_loc.exists():
-            msg.fail(Messages.M037, freqs_loc, exits=1)
+            msg.fail("Can't find words frequencies file", freqs_loc, exits=1)
         lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
 
     with msg.loading("Creating model..."):
@@ -75,7 +81,10 @@ def init_model(
         add_vectors(nlp, vectors_loc, prune_vectors)
     vec_added = len(nlp.vocab.vectors)
     lex_added = len(nlp.vocab)
-    msg.good(Messages.M038, Messages.M039.format(entries=lex_added, vectors=vec_added))
+    msg.good(
+        "Sucessfully compiled vocab",
+        "{} entries, {} vectors".format(lex_added, vec_added),
+    )
     if not output_dir.exists():
         output_dir.mkdir()
     nlp.to_disk(output_dir)

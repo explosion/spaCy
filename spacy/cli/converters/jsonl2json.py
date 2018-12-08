@@ -4,12 +4,11 @@ from __future__ import unicode_literals
 import srsly
 
 from ...util import get_lang_class
-from .._messages import Messages
 
 
 def ner_jsonl2json(input_data, lang=None, n_sents=10, use_morphology=False):
     if lang is None:
-        raise ValueError(Messages.M054)
+        raise ValueError("No --lang specified, but tokenization required")
     json_docs = []
     input_tuples = [srsly.json_loads(line) for line in input_data]
     nlp = get_lang_class(lang)()
