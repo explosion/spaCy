@@ -178,9 +178,17 @@ def train(
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text(Messages.M071.format(components=components))
 
-    print(
-        "\nItn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS"
-    )
+    # fmt: off
+    row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
+    row_settings = {
+        "widths": (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
+        "aligns": ["r" for i in row_head],
+        "spacing": 2
+    }
+    # fmt: on
+    print("")
+    msg.row(row_head, **row_settings)
+    msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
     try:
         for i in range(n_iter):
             train_docs = corpus.train_docs(
@@ -247,7 +255,10 @@ def train(
 
                 util.set_env_log(verbose)
 
-            print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
+            progress = _get_progress(
+                i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+            )
+            msg.row(progress, **row_settings)
     finally:
         with msg.loading(Messages.M061):
             with nlp.use_params(optimizer.averages):
@@ -298,6 +309,7 @@ def _collate_best_model(meta, output_path, components):
         for metric in _get_metrics(component):
             meta["accuracy"][metric] = accs[metric]
     srsly.write_json(best_dest / "meta.json", meta)
+    return best_dest
 
 
 def _find_best(experiment_dir, component):
@@ -323,7 +335,7 @@ def _get_metrics(component):
     return ("token_acc",)
 
 
-def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
+def _get_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores = {}
     for col in [
         "dep_loss",
@@ -344,19 +356,16 @@ def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores.update(dev_scores)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
-    tpl = "".join(
-        (
-            "{:<6d}",
-            "{dep_loss:<10.3f}",
-            "{ner_loss:<10.3f}",
-            "{uas:<8.3f}",
-            "{ents_p:<8.3f}",
-            "{ents_r:<8.3f}",
-            "{ents_f:<8.3f}",
-            "{tags_acc:<8.3f}",
-            "{token_acc:<9.3f}",
-            "{cpu_wps:<9.1f}",
-            "{gpu_wps:.1f}",
-        )
-    )
-    print(tpl.format(itn, **scores))
+    return [
+        itn,
+        "{:.3f}".format(scores["dep_loss"]),
+        "{:.3f}".format(scores["ner_loss"]),
+        "{:.3f}".format(scores["uas"]),
+        "{:.3f}".format(scores["ents_p"]),
+        "{:.3f}".format(scores["ents_r"]),
+        "{:.3f}".format(scores["ents_f"]),
+        "{:.3f}".format(scores["tags_acc"]),
+        "{:.3f}".format(scores["token_acc"]),
+        "{:.0f}".format(scores["cpu_wps"]),
+        "{:.0f}".format(scores["gpu_wps"]),
+    ]
