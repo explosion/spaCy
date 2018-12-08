@@ -217,7 +217,8 @@ def setup_package():
                 'cuda90': ['cupy-cuda90>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
                 'cuda91': ['cupy-cuda91>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
                 'cuda92': ['cupy-cuda92>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
-                'cuda100': ['cupy-cuda100>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0']
+                'cuda100': ['cupy-cuda100>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
+                'ja': ['mecab-python3==0.7']
             },
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
