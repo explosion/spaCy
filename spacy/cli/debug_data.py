@@ -370,19 +370,6 @@ def _format_labels(labels, counts=False):
     return ", ".join(["'{}'".format(l) for l in labels])
 
 
-def _get_ner_counts(data):
-    counter = Counter()
-    # TODO: count illegal whitespace entities
-    for doc, gold in data:
-        for label in gold.ner:
-            if label.startswith(("B-", "U-")):
-                combined_label = label.split("-")[1]
-                counter[combined_label] += 1
-            elif label == "-":
-                counter["-"] += 1
-    return counter
-
-
 def _get_examples_without_label(data, label):
     count = 0
     for doc, gold in data:
