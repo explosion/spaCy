@@ -4,7 +4,7 @@ preshed>=2.0.1,<2.1.0
 thinc==7.0.0.dev6
 blis>=0.2.2,<0.3.0
 murmurhash>=0.28.0,<1.1.0
-wasabi>=0.0.10,<1.1.0
+wasabi>=0.0.12,<1.1.0
 srsly>=0.0.5,<1.1.0
 # Third party dependencies
 numpy>=1.15.0

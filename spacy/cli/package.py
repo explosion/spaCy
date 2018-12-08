@@ -7,7 +7,6 @@ from pathlib import Path
 from wasabi import Printer, get_raw_input
 import srsly
 
-from ._messages import Messages
 from ..compat import path2str
 from .. import util
 from .. import about
@@ -33,22 +32,26 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
     if not input_path or not input_path.exists():
-        msg.fail(Messages.M008, input_path, exits=1)
+        msg.fail("Can't locate model data", input_path, exits=1)
     if not output_path or not output_path.exists():
-        msg.fail(Messages.M040, output_path, exits=1)
+        msg.fail("Output directory not found", output_path, exits=1)
     if meta_path and not meta_path.exists():
-        msg.fail(Messages.M020, meta_path, exits=1)
+        msg.fail("Can't find model meta.json", meta_path, exits=1)
 
     meta_path = meta_path or input_path / "meta.json"
     if meta_path.is_file():
         meta = srsly.read_json(meta_path)
         if not create_meta:  # only print if user doesn't want to overwrite
-            msg.good(Messages.M041, meta_path)
+            msg.good("Loaded meta.json from file", meta_path)
         else:
             meta = generate_meta(input_dir, meta, msg)
     for key in ("lang", "name", "version"):
         if key not in meta or meta[key] == "":
-            msg.fail(Messages.M048.format(key=key), Messages.M049, exits=1)
+            msg.fail(
+                "No '{}' setting found in meta.json".format(key),
+                "This setting is required to build your package.",
+                exits=1,
+            )
     model_name = meta["lang"] + "_" + meta["name"]
     model_name_v = model_name + "-" + meta["version"]
     main_path = output_path / model_name_v
@@ -59,8 +62,10 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
             shutil.rmtree(path2str(package_path))
         else:
             msg.fail(
-                Messages.M044,
-                Messages.M045.format(path=path2str(package_path)),
+                "Package directory already exists",
+                "Please delete the directory and try again, or use the "
+                "`--force` flag to overwrite existing "
+                "directories.".format(path=path2str(package_path)),
                 exits=1,
             )
     Path.mkdir(package_path, parents=True)
@@ -69,8 +74,8 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)
-    msg.good(Messages.M042.format(name=model_name_v), main_path)
-    msg.text(Messages.M043)
+    msg.good("Successfully created package '{}'".format(model_name_v), main_path)
+    msg.text("To build the package, run `python setup.py sdist` in this directory.")
 
 
 def create_file(file_path, contents):
@@ -98,8 +103,11 @@ def generate_meta(model_path, existing_meta, msg):
         "vectors": len(nlp.vocab.vectors),
         "keys": nlp.vocab.vectors.n_keys,
     }
-    msg.divider(Messages.M046)
-    msg.text(Messages.M047)
+    msg.divider("Generating meta.json")
+    msg.text(
+        "Enter the package settings for your model. The following information "
+        "will be read from your model data: pipeline, vectors."
+    )
     for setting, desc, default in settings:
         response = get_raw_input(desc, default)
         meta[setting] = default if response == "" and default else response

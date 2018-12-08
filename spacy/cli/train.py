@@ -10,7 +10,6 @@ import shutil
 import srsly
 from wasabi import Printer
 
-from ._messages import Messages
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -91,16 +90,20 @@ def train(
     dev_path = util.ensure_path(dev_path)
     meta_path = util.ensure_path(meta_path)
     if not train_path or not train_path.exists():
-        msg.fail(Messages.M050, train_path, exits=1)
+        msg.fail("Training data not found", train_path, exits=1)
     if not dev_path or not dev_path.exists():
-        msg.fail(Messages.M051, dev_path, exits=1)
+        msg.fail("Development data not found", dev_path, exits=1)
     if meta_path is not None and not meta_path.exists():
-        msg.fail(Messages.M020, meta_path, exits=1)
+        msg.fail("Can't find model meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path) if meta_path else {}
-    if not isinstance(meta, dict):
-        msg.fail(Messages.M052, Messages.M053.format(meta_type=type(meta)), exits=1)
     if output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
-        msg.fail(Messages.M062, Messages.M065)
+        msg.warn(
+            "Output directory is not empty",
+            "This can lead to unintended side effects when saving the model. "
+            "Please use an empty directory or a different path instead. If "
+            "the specified output path doesn't exist, the directory will be "
+            "created for you.",
+        )
     if not output_path.exists():
         output_path.mkdir()
 
@@ -123,19 +126,23 @@ def train(
     # the model and make sure the pipeline matches the pipeline setting. If
     # training starts from a blank model, intitalize the language class.
     pipeline = [p.strip() for p in pipeline.split(",")]
-    msg.text(Messages.M055.format(pipeline=pipeline))
+    msg.text("Training pipeline: {}".format(pipeline))
     if base_model:
-        msg.text(Messages.M056.format(model=base_model))
+        msg.text("Starting with base model '{}'".format(base_model))
         nlp = util.load_model(base_model)
         if nlp.lang != lang:
-            msg.fail(Messages.M072.format(model_lang=nlp.lang, lang=lang), exits=1)
+            msg.fail(
+                "Model language ('{}') doesn't match language specified as "
+                "`lang` argument ('{}') ".format(nlp.lang, lang),
+                exits=1,
+            )
         other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipeline]
         nlp.disable_pipes(*other_pipes)
         for pipe in pipeline:
             if pipe not in nlp.pipe_names:
                 nlp.add_pipe(nlp.create_pipe(pipe))
     else:
-        msg.text(Messages.M057.format(model=lang))
+        msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
         for pipe in pipeline:
@@ -145,7 +152,7 @@ def train(
         nlp.add_pipe(nlp.create_pipe("merge_subtokens"))
 
     if vectors:
-        msg.text(Messages.M058.format(model=vectors))
+        msg.text("Loading vector from model '{}'".format(vectors))
         _load_vectors(nlp, vectors)
 
     # Multitask objectives
@@ -153,13 +160,16 @@ def train(
     for pipe_name, multitasks in multitask_options:
         if multitasks:
             if pipe_name not in pipeline:
-                msg.fail(Messages.M059.format(pipe=pipe_name))
+                msg.fail(
+                    "Can't use multitask objective without '{}' in the "
+                    "pipeline".format(pipe_name)
+                )
             pipe = nlp.get_pipe(pipe_name)
             for objective in multitasks.split(","):
                 pipe.add_multitask_objective(objective)
 
     # Prepare training corpus
-    msg.text(Messages.M060.format(limit=n_examples))
+    msg.text("Counting training words (limit={})".format(n_examples))
     corpus = GoldCorpus(train_path, dev_path, limit=n_examples)
     n_train_words = corpus.count_train()
 
@@ -175,11 +185,19 @@ def train(
     # Load in pre-trained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
-        msg.text(Messages.M071.format(components=components))
+        msg.text("Loaded pretrained tok2vec for: {}".format(components))
 
-    print(
-        "\nItn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS"
-    )
+    # fmt: off
+    row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
+    row_settings = {
+        "widths": (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
+        "aligns": ["r" for i in row_head],
+        "spacing": 2
+    }
+    # fmt: on
+    print("")
+    msg.row(row_head, **row_settings)
+    msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
     try:
         for i in range(n_iter):
             train_docs = corpus.train_docs(
@@ -246,15 +264,18 @@ def train(
 
                 util.set_env_log(verbose)
 
-            print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
+            progress = _get_progress(
+                i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+            )
+            msg.row(progress, **row_settings)
     finally:
-        with msg.loading(Messages.M061):
-            with nlp.use_params(optimizer.averages):
-                final_model_path = output_path / "model-final"
-                nlp.to_disk(final_model_path)
-        msg.good(Messages.M066, util.path2str(final_model_path))
-
-    _collate_best_model(meta, output_path, nlp.pipe_names)
+        with nlp.use_params(optimizer.averages):
+            final_model_path = output_path / "model-final"
+            nlp.to_disk(final_model_path)
+        msg.good("Saved model to output directory", final_model_path)
+        with msg.loading("Creating best model..."):
+            best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
+        msg.good("Created best model", best_model_path)
 
 
 def _load_vectors(nlp, vectors):
@@ -297,6 +318,7 @@ def _collate_best_model(meta, output_path, components):
         for metric in _get_metrics(component):
             meta["accuracy"][metric] = accs[metric]
     srsly.write_json(best_dest / "meta.json", meta)
+    return best_dest
 
 
 def _find_best(experiment_dir, component):
@@ -322,7 +344,7 @@ def _get_metrics(component):
     return ("token_acc",)
 
 
-def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
+def _get_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores = {}
     for col in [
         "dep_loss",
@@ -343,19 +365,16 @@ def print_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores.update(dev_scores)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
-    tpl = "".join(
-        (
-            "{:<6d}",
-            "{dep_loss:<10.3f}",
-            "{ner_loss:<10.3f}",
-            "{uas:<8.3f}",
-            "{ents_p:<8.3f}",
-            "{ents_r:<8.3f}",
-            "{ents_f:<8.3f}",
-            "{tags_acc:<8.3f}",
-            "{token_acc:<9.3f}",
-            "{cpu_wps:<9.1f}",
-            "{gpu_wps:.1f}",
-        )
-    )
-    print(tpl.format(itn, **scores))
+    return [
+        itn,
+        "{:.3f}".format(scores["dep_loss"]),
+        "{:.3f}".format(scores["ner_loss"]),
+        "{:.3f}".format(scores["uas"]),
+        "{:.3f}".format(scores["ents_p"]),
+        "{:.3f}".format(scores["ents_r"]),
+        "{:.3f}".format(scores["ents_f"]),
+        "{:.3f}".format(scores["tags_acc"]),
+        "{:.3f}".format(scores["token_acc"]),
+        "{:.0f}".format(scores["cpu_wps"]),
+        "{:.0f}".format(scores["gpu_wps"]),
+    ]
