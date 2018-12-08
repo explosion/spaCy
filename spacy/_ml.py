@@ -271,7 +271,7 @@ def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
 
 def Tok2Vec(width, embed_size, **kwargs):
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
-    cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 2)
+    cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
