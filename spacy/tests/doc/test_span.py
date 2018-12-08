@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 from spacy.attrs import ORTH, LENGTH
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 
 from ..util import get_doc
@@ -153,6 +153,17 @@ def test_span_as_doc(doc):
     span_doc = span.as_doc()
     assert span.text == span_doc.text.strip()
 
+
+def test_span_string_label(doc):
+    span = Span(doc, 0, 1, label='hello')
+    assert span.label_ == 'hello'
+    assert span.label == doc.vocab.strings['hello']
+
+def test_span_string_set_label(doc):
+    span = Span(doc, 0, 1)
+    span.label_ = 'hello'
+    assert span.label_ == 'hello'
+    assert span.label == doc.vocab.strings['hello']
 
 def test_span_ents_property(doc):
     """Test span.ents for the """
