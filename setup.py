@@ -13,19 +13,18 @@ from setuptools import Extension, setup, find_packages
 
 
 def is_new_osx():
-    '''Check whether we're on OSX >= 10.10'''
+    """Check whether we're on OSX >= 10.10"""
     name = distutils.util.get_platform()
-    if sys.platform != 'darwin':
+    if sys.platform != "darwin":
         return False
-    elif name.startswith('macosx-10'):
-        minor_version = int(name.split('-')[1].split('.')[1])
+    elif name.startswith("macosx-10"):
+        minor_version = int(name.split("-")[1].split(".")[1])
         if minor_version >= 7:
             return True
         else:
             return False
     else:
         return False
-
 
 
 PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens"]}
@@ -82,7 +81,6 @@ if is_new_osx():
     # g++ (used by unix compiler on mac) links to libstdc++ as a default lib.
     # See: https://stackoverflow.com/questions/1653047/avoid-linking-to-libstdc
     LINK_OPTIONS["other"].append("-nodefaultlibs")
-
 
 
 USE_OPENMP_DEFAULT = "0" if sys.platform != "darwin" else None
