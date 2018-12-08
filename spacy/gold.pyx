@@ -346,11 +346,11 @@ def _json_iterate(loc):
     cdef char close_curly = ord('}')
     for i in range(len(py_raw)):
         c = raw[i]
-        if c == backslash:
-            escape = True
-            continue
         if escape:
             escape = False
+            continue
+        if c == backslash:
+            escape = True
             continue
         if c == quote:
             inside_string = not inside_string

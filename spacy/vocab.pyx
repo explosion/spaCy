@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 import numpy
-import dill
+import srsly
 
 from collections import OrderedDict
 from thinc.neural.util import get_array_module
@@ -17,7 +17,7 @@ from .structs cimport SerializedLexemeC
 from .compat import copy_reg, basestring_
 from .errors import Errors
 from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs
+from .attrs import intify_attrs, NORM
 from .vectors import Vectors
 from ._ml import link_vectors_to_models
 from . import util
@@ -234,7 +234,10 @@ cdef class Vocab:
                 self.morphology.assign_tag(token, props[TAG])
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
-                Lexeme.set_struct_attr(lex, attr_id, value)
+                # NORM is the only one that overlaps between the two
+                # (which is maybe not great?)
+                if attr_id != NORM:
+                    Lexeme.set_struct_attr(lex, attr_id, value)
         return tokens
 
     @property
@@ -513,7 +516,7 @@ def pickle_vocab(vocab):
     morph = vocab.morphology
     length = vocab.length
     data_dir = vocab.data_dir
-    lex_attr_getters = dill.dumps(vocab.lex_attr_getters)
+    lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
     lexemes_data = vocab.lexemes_to_bytes()
     return (unpickle_vocab,
             (sstore, vectors, morph, data_dir, lex_attr_getters, lexemes_data, length))
@@ -527,7 +530,7 @@ def unpickle_vocab(sstore, vectors, morphology, data_dir,
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.data_dir = data_dir
-    vocab.lex_attr_getters = dill.loads(lex_attr_getters)
+    vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
     return vocab

@@ -1,9 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import cytoolz
-
 from ...gold import iob_to_biluo
+from ...util import minibatch
 
 
 def iob2json(input_data, n_sents=10, *args, **kwargs):
@@ -11,7 +10,7 @@ def iob2json(input_data, n_sents=10, *args, **kwargs):
     Convert IOB files into JSON format for use with train cli.
     """
     docs = []
-    for group in cytoolz.partition_all(n_sents, docs):
+    for group in minibatch(docs, n_sents):
         group = list(group)
         first = group.pop(0)
         to_extend = first["paragraphs"][0]["sentences"]
