@@ -169,6 +169,7 @@ def debug_data(
         existing_labels = [l for l in labels if l in model_labels]
         has_low_data_warning = False
         has_no_neg_warning = False
+        has_ws_ents_error = False
 
         msg.divider("Named Entity Recognition")
         msg.info(
@@ -198,6 +199,10 @@ def debug_data(
                 "Existing: {}".format(_format_labels(existing_labels)), show=verbose
             )
 
+        if gold_data["ws_ents"]:
+            msg.fail("{} invalid whitespace entity spans".format(gold_data["ws_ents"]))
+            has_ws_ents_error = True
+
         for label in new_labels:
             if label_counts[label] <= NEW_LABEL_THRESHOLD:
                 msg.warn(
@@ -219,6 +224,8 @@ def debug_data(
             msg.good("Good amount of examples for all labels")
         if not has_no_neg_warning:
             msg.good("Examples without occurences available for all labels")
+        if not has_ws_ents_error:
+            msg.good("No entities consisting of or starting/ending with whitespace")
 
         if has_low_data_warning:
             msg.text(
@@ -232,6 +239,11 @@ def debug_data(
                 "in context, as well as examples without a given entity "
                 "type.",
                 show=verbose,
+            )
+        if has_ws_ents_error:
+            msg.text(
+                "As of spaCy v2.1.0, entity spans consisting of or starting/ending "
+                "with whitespace characters are considered invalid."
             )
 
     if "textcat" in pipeline:
@@ -341,6 +353,7 @@ def _compile_gold(train_docs, pipeline):
         "tags": Counter(),
         "deps": Counter(),
         "words": Counter(),
+        "ws_ents": 0,
         "n_words": 0,
         "texts": set(),
     }
@@ -349,7 +362,10 @@ def _compile_gold(train_docs, pipeline):
         data["n_words"] += len(gold.words)
         data["texts"].add(doc.text)
         if "ner" in pipeline:
-            for label in gold.ner:
+            for i, label in enumerate(gold.ner):
+                if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
+                    # "Illegal" whitespace entity
+                    data["ws_ents"] += 1
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
