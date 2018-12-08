@@ -273,10 +273,10 @@ def train(
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
-        msg.good("Saved model to output directory", util.path2str(final_model_path))
+        msg.good("Saved model to output directory", final_model_path)
         with msg.loading("Creating best model..."):
             best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
-        msg.good("Created best model", util.path2str(best_model_path))
+        msg.good("Created best model", best_model_path)
 
 
 def _load_vectors(nlp, vectors):
