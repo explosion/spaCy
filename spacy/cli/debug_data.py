@@ -373,6 +373,7 @@ def _format_labels(labels, counts=False):
 
 def _get_ner_counts(data):
     counter = Counter()
+    # TODO: count illegal whitespace entities
     for doc, gold in data:
         for label in gold.ner:
             if label.startswith(("B-", "U-")):
