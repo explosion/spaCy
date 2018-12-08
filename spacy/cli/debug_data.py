@@ -71,10 +71,8 @@ def debug_data(
 
     msg.divider("Data format validation")
     # Load the data in one – might take a while but okay in this case
-    with msg.loading("Loading {}...".format(train_path.parts[-1])):
-        train_data = _load_file(train_path, msg)
-    with msg.loading("Loading {}...".format(dev_path.parts[-1])):
-        dev_data = _load_file(dev_path, msg)
+    train_data = _load_file(train_path, msg)
+    dev_data = _load_file(dev_path, msg)
 
     # Validate data format using the JSON schema
     # TODO: update once the new format is ready
@@ -320,11 +318,13 @@ def debug_data(
 def _load_file(file_path, msg):
     file_name = file_path.parts[-1]
     if file_path.suffix == ".json":
-        data = srsly.read_json(file_path)
+        with msg.loading("Loading {}...".format(file_name)):
+            data = srsly.read_json(file_path)
         msg.good("Loaded {}".format(file_name))
         return data
     elif file_path.suffix == ".jsonl":
-        data = srsly.read_jsonl(file_path)
+        with msg.loading("Loading {}...".format(file_name)):
+            data = srsly.read_jsonl(file_path)
         msg.good("Loaded {}".format(file_name))
         return data
     msg.fail(
