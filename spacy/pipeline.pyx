@@ -32,6 +32,7 @@ from .parts_of_speech import X
 from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
+from ._ml import masked_language_model
 from .errors import Errors, TempErrors
 from .compat import basestring_
 from . import util
@@ -984,6 +985,53 @@ class MultitaskObjective(Tagger):
                 sent_tags[span[-1]] = 'L-SENT'
         return sent_tags[target]
 
+
+class ClozeMultitask(Tagger):
+    @classmethod
+    def Model(cls, vocab, tok2vec, **cfg):
+        output_size = vocab.vectors.data.shape[1]
+        output_layer = chain(
+            LN(Maxout(output_size, pieces=3)),
+            zero_init(Affine(output_size, drop_factor=0.0))
+        )
+        model = chain(tok2vec, output_layer)
+        model = masked_language_model(vocab, model)
+        model.tok2vec = tok2vec
+        model.output_layer = output_layer
+        return model
+
+    def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
+        self.vocab = vocab
+        self.model = model
+
+    def set_annotations(self, docs, dep_ids, tensors=None):
+        pass
+
+    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, tok2vec=None,
+                       sgd=None, **kwargs):
+        link_vectors_to_models(self.vocab)
+        if self.model is True:
+            self.model = self.Model(self.vocab, tok2vec)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
+
+    def predict(self, docs):
+        tokvecs = self.model.tok2vec(docs)
+        vectors = self.model.output_layer(tokvecs)
+        return tokvecs, vectors
+
+    def get_loss(self, docs, _, prediction):
+        # The simplest way to implement this would be to vstack the
+        # token.vector values, but that's a bit inefficient, especially on GPU.
+        # Instead we fetch the index into the vectors table for each of our tokens,
+        # and look them up all at once. This prevents data copying.
+        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+        target = self.vocab.vectors.data[ids]
+        gradient = prediction - target
+        loss = (gradient**2).sum()
+        return float(loss), gradient
+ 
 
 class SimilarityHook(Pipe):
     """
