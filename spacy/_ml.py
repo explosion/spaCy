@@ -26,6 +26,7 @@ import thinc.extra.load_nlp
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from .errors import Errors
 from . import util
+from .tokens.doc import Doc
 
 try:
     import torch.nn
@@ -678,7 +679,7 @@ def _apply_mask(docs, random_words, mask_prob=0.15):
 
 
 def _replace_word(word, random_words, mask="[MASK]"):
-    roll = random.random()
+    roll = numpy.random.random()
     if roll < 0.8:
         return mask
     elif roll < 0.9:
