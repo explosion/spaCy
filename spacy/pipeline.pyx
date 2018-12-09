@@ -991,7 +991,7 @@ class ClozeMultitask(Tagger):
     def Model(cls, vocab, tok2vec, **cfg):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
-            LN(Maxout(output_size, pieces=3)),
+            LayerNorm(Maxout(output_size, pieces=3)),
             zero_init(Affine(output_size, drop_factor=0.0))
         )
         model = chain(tok2vec, output_layer)
@@ -1000,20 +1000,22 @@ class ClozeMultitask(Tagger):
         model.output_layer = output_layer
         return model
 
-    def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
+    def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self.cfg = cfg
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, tok2vec=None,
+    def begin_training(self, docs=[], pipeline=None, tok2vec=None,
                        sgd=None, **kwargs):
         link_vectors_to_models(self.vocab)
         if self.model is True:
             self.model = self.Model(self.vocab, tok2vec)
         if sgd is None:
             sgd = self.create_optimizer()
+        self.model.begin_training(docs)
         return sgd
 
     def predict(self, docs):
@@ -1028,7 +1030,7 @@ class ClozeMultitask(Tagger):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
         target = self.vocab.vectors.data[ids]
-        gradient = prediction - target
+        gradient = (prediction - target) / target.shape[0]
         loss = (gradient**2).sum()
         return float(loss), gradient
  
