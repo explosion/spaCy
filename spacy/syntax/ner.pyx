@@ -319,10 +319,10 @@ cdef class In:
             return False
         # TODO: Is this quite right? I think it's supposed to be ensuring the
         # gazetteer matches are maintained
-        elif st.B_(1).ent_iob != preset_ent_iob:
+        elif st.B(1) != -1 and st.B_(1).ent_iob != preset_ent_iob:
             return False
         # Don't allow entities to extend across sentence boundaries
-        elif st.B_(1).sent_start == 1:
+        elif st.B(1) != -1 and st.B_(1).sent_start == 1:
             return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
@@ -370,9 +370,6 @@ cdef class Last:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         if st.B_(1).ent_iob == 1:
-            return False
-        # Don't allow entities to end on whitespace
-        elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
