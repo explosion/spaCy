@@ -9,6 +9,7 @@ from timeit import default_timer as timer
 import shutil
 import srsly
 from wasabi import Printer
+from thinc.rates import slanted_triangular
 
 from ._messages import Messages
 from .._ml import create_default_optimizer
@@ -23,13 +24,13 @@ from .. import about
 # Batch size starts at 1 and grows, so that we make updates quickly
 # at the beginning of training.
 dropout_rates = util.decaying(
-    util.env_opt("dropout_from", 0.1),
-    util.env_opt("dropout_to", 0.1),
+    util.env_opt("dropout_from", 0.2),
+    util.env_opt("dropout_to", 0.2),
     util.env_opt("dropout_decay", 0.0),
 )
 batch_sizes = util.compounding(
-    util.env_opt("batch_from", 750),
-    util.env_opt("batch_to", 750),
+    util.env_opt("batch_from", 100),
+    util.env_opt("batch_to", 1000),
     util.env_opt("batch_compound", 1.001),
 )
 
@@ -171,6 +172,8 @@ def train(
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
 
+    optimizer.b1_decay = 0.0001
+    optimizer.b2_decay = 0.0001
     nlp._optimizer = None
 
     # Load in pre-trained weights
