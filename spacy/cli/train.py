@@ -218,7 +218,7 @@ def train(
             if raw_text:
                 random.shuffle(raw_text)
                 raw_batches = util.minibatch((nlp.make_doc(rt['text'])
-                                              for rt in raw_text), size=8)
+                                              for rt in raw_text), size=32)
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
@@ -241,9 +241,8 @@ def train(
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / ("model%d" % i)
-                #nlp.to_disk(epoch_model_path)
-                #nlp_loaded = util.load_model_from_path(epoch_model_path)
-                nlp_loaded = nlp
+                nlp.to_disk(epoch_model_path)
+                nlp_loaded = util.load_model_from_path(epoch_model_path)
                 dev_docs = list(corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc))
                 nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                 start_time = timer()
@@ -255,7 +254,7 @@ def train(
                 else:
                     gpu_wps = nwords / (end_time - start_time)
                     with Model.use_device("cpu"):
-                        #nlp_loaded = util.load_model_from_path(epoch_model_path)
+                        nlp_loaded = util.load_model_from_path(epoch_model_path)
                         dev_docs = list(
                             corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
                         )
@@ -264,7 +263,7 @@ def train(
                         end_time = timer()
                         cpu_wps = nwords / (end_time - start_time)
                 acc_loc = output_path / ("model%d" % i) / "accuracy.json"
-                #srsly.write_json(acc_loc, scorer.scores)
+                srsly.write_json(acc_loc, scorer.scores)
 
                 # Update model meta.json
                 meta["lang"] = nlp.lang
@@ -280,7 +279,7 @@ def train(
                 meta.setdefault("name", "model%d" % i)
                 meta.setdefault("version", version)
                 meta_loc = output_path / ("model%d" % i) / "meta.json"
-                #srsly.write_json(meta_loc, meta)
+                srsly.write_json(meta_loc, meta)
 
                 util.set_env_log(verbose)
 
