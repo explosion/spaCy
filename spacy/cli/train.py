@@ -191,7 +191,7 @@ def train(
     row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
     row_settings = {
         "widths": (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
-        "aligns": ["r" for i in row_head],
+        "aligns": tuple(["r" for i in row_head]),
         "spacing": 2
     }
     # fmt: on
