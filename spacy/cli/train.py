@@ -9,7 +9,9 @@ from timeit import default_timer as timer
 import shutil
 import srsly
 from wasabi import Printer
+import random
 
+from ..pipeline import ClozeMultitask
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -22,6 +24,7 @@ from .. import about
     output_path=("Output directory to store model in", "positional", None, Path),
     train_path=("Location of JSON-formatted training data", "positional", None, Path),
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
+    raw_text=("Path to jsonl file with unlabelled text documents.", "option", 'rt', Path),
     base_model=("Name of model to update (optional)", "option", "b", str),
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     vectors=("Model to load vectors from", "option", "v", str),
@@ -59,6 +62,7 @@ def train(
     output_path,
     train_path,
     dev_path,
+    raw_text=None,
     base_model=None,
     pipeline="tagger,parser,ner",
     vectors=None,
@@ -89,6 +93,8 @@ def train(
     train_path = util.ensure_path(train_path)
     dev_path = util.ensure_path(dev_path)
     meta_path = util.ensure_path(meta_path)
+    if raw_text is not None:
+        raw_text = list(srsly.read_jsonl(raw_text))
     if not train_path or not train_path.exists():
         msg.fail("Training data not found", train_path, exits=1)
     if not dev_path or not dev_path.exists():
@@ -180,7 +186,13 @@ def train(
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
 
+    if raw_text:
+        cloze = ClozeMultitask(nlp.vocab)
+        cloze.begin_training([nlp.make_doc('Example doc')], tok2vec=nlp.get_pipe('parser').model.tok2vec)
+
     nlp._optimizer = None
+    optimizer.b1_decay = 0.003
+    optimizer.b2_decay = 0.003
 
     # Load in pre-trained weights
     if init_tok2vec is not None:
@@ -203,6 +215,10 @@ def train(
             train_docs = corpus.train_docs(
                 nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
             )
+            if raw_text:
+                random.shuffle(raw_text)
+                raw_batches = util.minibatch((nlp.make_doc(rt['text'])
+                                              for rt in raw_text), size=8)
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
@@ -215,15 +231,19 @@ def train(
                         golds,
                         sgd=optimizer,
                         drop=next(dropout_rates),
-                        losses=losses,
+                        losses=losses
                     )
+                    if raw_text:
+                        raw_batch = next(raw_batches)
+                        cloze.update(raw_batch, None, sgd=optimizer, losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
                 epoch_model_path = output_path / ("model%d" % i)
-                nlp.to_disk(epoch_model_path)
-                nlp_loaded = util.load_model_from_path(epoch_model_path)
+                #nlp.to_disk(epoch_model_path)
+                #nlp_loaded = util.load_model_from_path(epoch_model_path)
+                nlp_loaded = nlp
                 dev_docs = list(corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc))
                 nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                 start_time = timer()
@@ -235,7 +255,7 @@ def train(
                 else:
                     gpu_wps = nwords / (end_time - start_time)
                     with Model.use_device("cpu"):
-                        nlp_loaded = util.load_model_from_path(epoch_model_path)
+                        #nlp_loaded = util.load_model_from_path(epoch_model_path)
                         dev_docs = list(
                             corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
                         )
@@ -244,7 +264,7 @@ def train(
                         end_time = timer()
                         cpu_wps = nwords / (end_time - start_time)
                 acc_loc = output_path / ("model%d" % i) / "accuracy.json"
-                srsly.write_json(acc_loc, scorer.scores)
+                #srsly.write_json(acc_loc, scorer.scores)
 
                 # Update model meta.json
                 meta["lang"] = nlp.lang
@@ -260,7 +280,7 @@ def train(
                 meta.setdefault("name", "model%d" % i)
                 meta.setdefault("version", version)
                 meta_loc = output_path / ("model%d" % i) / "meta.json"
-                srsly.write_json(meta_loc, meta)
+                #srsly.write_json(meta_loc, meta)
 
                 util.set_env_log(verbose)
 
