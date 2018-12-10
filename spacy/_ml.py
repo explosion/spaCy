@@ -5,7 +5,7 @@ import numpy
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
 from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow, ParametricAttention
-from thinc.t2v import Pooling, sum_pool
+from thinc.t2v import Pooling, sum_pool, mean_pool
 from thinc.misc import Residual
 from thinc.misc import LayerNorm as LN
 from thinc.misc import FeatureExtracter
@@ -572,6 +572,32 @@ def build_text_classifier(nr_class, width=64, **cfg):
         model.tok2vec = tok2vec
     model.nO = nr_class
     model.lsuv = False
+    return model
+
+
+def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=True, **cfg):
+    """
+    Build a simple CNN text classifier, given a token-to-vector model as inputs.
+    If exclusive_classes=True, a softmax non-linearity is applied, so that the
+    outputs sum to 1. If exclusive_classes=False, a logistic non-linearity
+    is applied instead, so that outputs are in the range [0, 1].
+    """
+    with Model.define_operators({">>": chain}):
+        if exclusive_classes:
+            output_layer = Softmax(nr_class, tok2vec.nO)
+        else:
+            output_layer = (
+                zero_init(Affine(nr_class, tok2vec.nO))
+                >> logistic
+            )
+        model = (
+            tok2vec
+            >> flatten_add_lengths
+            >> Pooling(mean_pool)
+            >> output_layer
+        )
+    model.tok2vec = chain(tok2vec, flatten)
+    model.nO = nr_class
     return model
 
 
