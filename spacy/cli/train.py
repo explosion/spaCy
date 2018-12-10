@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, division, print_function
 
 import plac
+import os
 from pathlib import Path
 import tqdm
 from thinc.neural._classes.model import Model
@@ -9,7 +10,8 @@ from timeit import default_timer as timer
 import shutil
 import srsly
 from wasabi import Printer
-from thinc.rates import slanted_triangular
+import contextlib
+import random
 
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
@@ -207,7 +209,7 @@ def train(
                 nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
             )
             words_seen = 0
-            with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
+            with _create_progress_bar(n_train_words) as pbar:
                 losses = {}
                 for batch in util.minibatch_by_words(train_docs, size=batch_sizes):
                     if not batch:
@@ -220,7 +222,8 @@ def train(
                         drop=next(dropout_rates),
                         losses=losses,
                     )
-                    pbar.update(sum(len(doc) for doc in docs))
+                    if not int(os.environ.get('LOG_FRIENDLY', 0)):
+                        pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
                 util.set_env_log(False)
@@ -279,6 +282,15 @@ def train(
         with msg.loading("Creating best model..."):
             best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
         msg.good("Created best model", best_model_path)
+
+
+@contextlib.contextmanager
+def _create_progress_bar(total):
+    if int(os.environ.get('LOG_FRIENDLY', 0)):
+        yield
+    else:
+        pbar = tqdm.tqdm(total=total, leave=False)
+        yield pbar
 
 
 def _load_vectors(nlp, vectors):
