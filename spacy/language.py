@@ -573,7 +573,7 @@ class Language(object):
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
         for name, proc in self.pipeline:
-            if hasattr(proc, "rehearse"):
+            if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)
         return self._optimizer
 
