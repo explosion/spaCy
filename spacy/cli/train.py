@@ -123,7 +123,7 @@ def train(
     )
     batch_sizes = util.compounding(
         util.env_opt("batch_from", 100.0),
-        util.env_opt("batch_to", 1000.0),
+        util.env_opt("batch_to", 2000.0),
         util.env_opt("batch_compound", 1.001),
     )
 
@@ -185,6 +185,8 @@ def train(
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
 
+    optimizer.b1_decay = 0.0001
+    optimizer.b2_decay = 0.0001
     nlp._optimizer = None
     optimizer.b1_decay = 0.003
     optimizer.b2_decay = 0.003
