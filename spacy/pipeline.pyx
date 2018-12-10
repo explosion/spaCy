@@ -30,6 +30,7 @@ from .tokens.span import Span
 from .attrs import POS, ID
 from .parts_of_speech import X
 from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
+from ._ml import build_simple_cnn_text_classifier
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
 from .errors import Errors, TempErrors
@@ -1043,15 +1044,20 @@ class TextCategorizer(Pipe):
 
     @classmethod
     def Model(cls, nr_class, **cfg):
-        return build_text_classifier(nr_class, **cfg)
+        embed_size = util.env_opt("embed_size", 2000)
+        if "token_vector_width" in cfg:
+            token_vector_width = cfg["token_vector_width"]
+        else:
+            token_vector_width = util.env_opt("token_vector_width", 96)
+        tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
+        return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
 
     @property
     def tok2vec(self):
         if self.model in (None, True, False):
             return None
         else:
-            return chain(self.model.tok2vec, flatten)
-
+            return self.model.tok2vec
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
