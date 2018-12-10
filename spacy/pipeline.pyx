@@ -989,7 +989,7 @@ class MultitaskObjective(Tagger):
         return sent_tags[target]
 
 
-class ClozeMultitask(Tagger):
+class ClozeMultitask(Pipe):
     @classmethod
     def Model(cls, vocab, tok2vec, **cfg):
         output_size = vocab.vectors.data.shape[1]
@@ -1011,8 +1011,8 @@ class ClozeMultitask(Tagger):
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
 
-    def begin_training(self, docs=[], pipeline=None, tok2vec=None,
-                       sgd=None, **kwargs):
+    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None,
+                        tok2vec=None, sgd=None, **kwargs):
         link_vectors_to_models(self.vocab)
         if self.model is True:
             self.model = self.Model(self.vocab, tok2vec)
@@ -1225,8 +1225,12 @@ cdef class DependencyParser(Parser):
         return [nonproj.deprojectivize]
 
     def add_multitask_objective(self, target):
-        labeller = MultitaskObjective(self.vocab, target=target)
-        self._multitasks.append(labeller)
+        if target == 'cloze':
+            cloze = ClozeMultitask(self.vocab)
+            self._multitasks.append(cloze)
+        else:
+            labeller = MultitaskObjective(self.vocab, target=target)
+            self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
@@ -1246,8 +1250,12 @@ cdef class EntityRecognizer(Parser):
     nr_feature = 6
 
     def add_multitask_objective(self, target):
-        labeller = MultitaskObjective(self.vocab, target=target)
-        self._multitasks.append(labeller)
+        if target == 'cloze':
+            cloze = ClozeMultitask(self.vocab)
+            self._multitasks.append(cloze)
+        else:
+            labeller = MultitaskObjective(self.vocab, target=target)
+            self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
