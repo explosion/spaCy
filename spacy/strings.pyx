@@ -9,11 +9,30 @@ from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64, hash32
 import srsly
 
+from .compat import basestring_
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
 from .typedefs cimport hash_t
 from .errors import Errors
 from . import util
+
+
+def get_string_id(key):
+    """Get a string ID, handling the reserved symbols correctly. If the key is
+    already an ID, return it.
+    
+    This function optimises for convenience over performance, so shouldn't be
+    used in tight loops.
+    """
+    if not isinstance(key, basestring_):
+        return key
+    elif key in SYMBOLS_BY_STR:
+        return SYMBOLS_BY_STR[key]
+    elif not key:
+        return 0
+    else:
+        chars = key.encode('utf8')
+        return hash_utf8(chars, len(chars))
 
 
 cpdef hash_t hash_string(unicode string) except 0:
