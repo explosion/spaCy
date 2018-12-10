@@ -326,6 +326,9 @@ class Pipe(object):
         """
         raise NotImplementedError
 
+    def rehearse(self, docs, sgd=None, losses=None, **config):
+        pass
+
     def get_loss(self, docs, golds, scores):
         """Find the loss and gradient of loss for the batch of
         documents and their predicted scores."""
