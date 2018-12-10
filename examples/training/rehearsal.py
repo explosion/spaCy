@@ -4,7 +4,7 @@ import plac
 import random
 import srsly
 import spacy
-import spacy.gold
+from spacy.gold import GoldParse
 from spacy.util import minibatch
 
 
