@@ -72,6 +72,7 @@ cdef class Parser:
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
         tok2vec = chain(tok2vec, flatten)
+        tok2vec.nO = token_vector_width
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
                     nP=parser_maxout_pieces)
