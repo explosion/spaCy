@@ -10,7 +10,8 @@ cimport numpy as np
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
 
-from .strings cimport StringStore, hash_string
+from .strings cimport StringStore
+from .strings import get_string_id
 from .compat import basestring_, path2str
 from .errors import Errors
 from . import util
@@ -218,12 +219,10 @@ cdef class Vectors:
             raise ValueError(Errors.E059.format(kwargs=bad_kwargs))
         xp = get_array_module(self.data)
         if key is not None:
-            if isinstance(key, basestring_):
-                key = hash_string(key)
+            key = get_string_id(key)
             return self.key2row.get(key, -1)
         elif keys is not None:
-            keys = [hash_string(key) if isinstance(key, basestring_) else key
-                    for key in keys]
+            keys = [get_string_id(key) for key in keys]
             rows = [self.key2row.get(key, -1.) for key in keys]
             return xp.asarray(rows, dtype='i')
         else:
@@ -248,8 +247,7 @@ cdef class Vectors:
         row (int / None): The row number of a vector to map the key to.
         RETURNS (int): The row the vector was added to.
         """
-        if isinstance(key, basestring):
-            key = hash_string(key)
+        key = get_string_id(key)
         if row is None and key in self.key2row:
             row = self.key2row[key]
         elif row is None:
