@@ -994,8 +994,8 @@ class ClozeMultitask(Pipe):
     def Model(cls, vocab, tok2vec, **cfg):
         output_size = vocab.vectors.data.shape[1]
         output_layer = chain(
-            LayerNorm(Maxout(output_size, pieces=3)),
-            zero_init(Affine(output_size, drop_factor=0.0))
+            LayerNorm(Maxout(output_size, tok2vec.nO, pieces=3)),
+            zero_init(Affine(output_size, output_size, drop_factor=0.0))
         )
         model = chain(tok2vec, output_layer)
         model = masked_language_model(vocab, model)
@@ -1016,9 +1016,10 @@ class ClozeMultitask(Pipe):
         link_vectors_to_models(self.vocab)
         if self.model is True:
             self.model = self.Model(self.vocab, tok2vec)
+        X = self.model.ops.allocate((5, self.model.tok2vec.nO))
+        self.model.output_layer.begin_training(X)
         if sgd is None:
             sgd = self.create_optimizer()
-        self.model.output_layer.begin_training(self.model.tok2vec(docs))
         return sgd
 
     def predict(self, docs):
