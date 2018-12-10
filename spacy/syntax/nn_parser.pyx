@@ -72,13 +72,15 @@ cdef class Parser:
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
         tok2vec = chain(tok2vec, flatten)
+        tok2vec.nO = token_vector_width
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
                     nP=parser_maxout_pieces)
         lower.nP = parser_maxout_pieces
 
         with Model.use_device('cpu'):
-            upper = zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
+            upper = Affine(nr_class, hidden_width, drop_factor=0.0)
+        upper.W *= 0
 
         cfg = {
             'nr_class': nr_class,
@@ -121,6 +123,7 @@ cdef class Parser:
         self.cfg = cfg
         self.model = model
         self._multitasks = []
+        self._rehearsal_model = None
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
@@ -404,6 +407,43 @@ cdef class Parser:
         finish_update(golds, sgd=sgd)
         return losses
 
+    def rehearse(self, docs, sgd=None, losses=None, **cfg):
+        """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
+        if isinstance(docs, Doc):
+            docs = [docs]
+        if losses is None:
+            losses = {}
+        for multitask in self._multitasks:
+            if hasattr(multitask, 'rehearse'):
+                multitask.rehearse(docs, losses=losses, sgd=sgd)
+        if self._rehearsal_model is None:
+            return None
+        losses.setdefault(self.name, 0.)
+        # Prepare the stepwise model, and get the callback for finishing the batch
+        tutor = self._rehearsal_model(docs)
+        model, finish_update = self.model.begin_update(docs, drop=0.0)
+        states = self.moves.init_batch(docs)
+        n_scores = 0.
+        loss = 0.
+        non_zeroed_classes = self._rehearsal_model.upper.W.any(axis=1)
+        while states: 
+            targets, _ = tutor.begin_update(states)
+            guesses, backprop = model.begin_update(states)
+            d_scores = (targets - guesses) / targets.shape[0]
+            d_scores *= non_zeroed_classes
+            # If all weights for an output are 0 in the original model, don't
+            # supervise that output. This allows us to add classes.
+            loss += (d_scores**2).sum()
+            backprop(d_scores, sgd=sgd)
+            # Follow the predicted action
+            self.transition_states(states, guesses)
+            states = [state for state in states if not state.is_final()]
+            n_scores += d_scores.size
+        # Do the backprop
+        finish_update(docs, sgd=sgd)
+        losses[self.name] += loss / n_scores
+        return losses
+
     def update_beam(self, docs, golds, width, drop=0., sgd=None, losses=None,
                     beam_density=0.0):
         lengths = [len(d) for d in docs]
@@ -416,7 +456,7 @@ cdef class Parser:
             model.vec2scores, width, drop=drop, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
-            losses[self.name] += (d_scores**2).sum()
+            losses[self.name] += (d_scores**2).mean()
             ids, bp_vectors, bp_scores = backprops[i]
             d_vector = bp_scores(d_scores, sgd=sgd)
             if isinstance(model.ops, CupyOps) \

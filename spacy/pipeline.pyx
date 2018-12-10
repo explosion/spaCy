@@ -33,6 +33,7 @@ from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
 from ._ml import build_simple_cnn_text_classifier
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
+from ._ml import masked_language_model
 from .errors import Errors, TempErrors
 from .compat import basestring_
 from . import util
@@ -326,6 +327,9 @@ class Pipe(object):
         """
         raise NotImplementedError
 
+    def rehearse(self, docs, sgd=None, losses=None, **config):
+        pass
+
     def get_loss(self, docs, golds, scores):
         """Find the loss and gradient of loss for the batch of
         documents and their predicted scores."""
@@ -568,6 +572,7 @@ class Tagger(Pipe):
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.cfg = OrderedDict(sorted(cfg.items()))
         self.cfg.setdefault('cnn_maxout_pieces', 2)
 
@@ -648,6 +653,20 @@ class Tagger(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        """Perform a 'rehearsal' update, where we try to match the output of
+        an initial model.
+        """
+        if self._rehearsal_model is None:
+            return
+        guesses, backprop = self.model.begin_update(docs, drop=drop)
+        target = self._rehearsal_model(docs)
+        gradient = guesses - target
+        backprop(gradient, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -986,6 +1005,69 @@ class MultitaskObjective(Tagger):
         return sent_tags[target]
 
 
+class ClozeMultitask(Pipe):
+    @classmethod
+    def Model(cls, vocab, tok2vec, **cfg):
+        output_size = vocab.vectors.data.shape[1]
+        output_layer = chain(
+            LayerNorm(Maxout(output_size, tok2vec.nO, pieces=3)),
+            zero_init(Affine(output_size, output_size, drop_factor=0.0))
+        )
+        model = chain(tok2vec, output_layer)
+        model = masked_language_model(vocab, model)
+        model.tok2vec = tok2vec
+        model.output_layer = output_layer
+        return model
+
+    def __init__(self, vocab, model=True, **cfg):
+        self.vocab = vocab
+        self.model = model
+        self.cfg = cfg
+
+    def set_annotations(self, docs, dep_ids, tensors=None):
+        pass
+
+    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None,
+                        tok2vec=None, sgd=None, **kwargs):
+        link_vectors_to_models(self.vocab)
+        if self.model is True:
+            self.model = self.Model(self.vocab, tok2vec)
+        X = self.model.ops.allocate((5, self.model.tok2vec.nO))
+        self.model.output_layer.begin_training(X)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
+
+    def predict(self, docs):
+        tokvecs = self.model.tok2vec(docs)
+        vectors = self.model.output_layer(tokvecs)
+        return tokvecs, vectors
+
+    def get_loss(self, docs, vectors, prediction):
+        # The simplest way to implement this would be to vstack the
+        # token.vector values, but that's a bit inefficient, especially on GPU.
+        # Instead we fetch the index into the vectors table for each of our tokens,
+        # and look them up all at once. This prevents data copying.
+        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+        target = vectors[ids]
+        gradient = (prediction - target) / prediction.shape[0]
+        loss = (gradient**2).sum()
+        return float(loss), gradient
+ 
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        pass
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        if losses is not None and self.name not in losses:
+            losses[self.name] = 0.
+        predictions, bp_predictions = self.model.begin_update(docs, drop=drop)
+        loss, d_predictions = self.get_loss(docs, self.vocab.vectors.data, predictions)
+        bp_predictions(d_predictions, sgd=sgd)
+
+        if losses is not None:
+            losses[self.name] += loss
+
+
 class SimilarityHook(Pipe):
     """
     Experimental: A pipeline component to install a hook for supervised
@@ -1062,6 +1144,7 @@ class TextCategorizer(Pipe):
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.cfg = dict(cfg)
 
     @property
@@ -1102,6 +1185,17 @@ class TextCategorizer(Pipe):
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        if self._rehearsal_model is None:
+            return
+        scores, bp_scores = self.model.begin_update(docs, drop=drop)
+        target = self._rehearsal_model(docs)
+        gradient = scores - target
+        bp_scores(gradient, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, docs, golds, scores):
         truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
@@ -1165,8 +1259,12 @@ cdef class DependencyParser(Parser):
         return [nonproj.deprojectivize]
 
     def add_multitask_objective(self, target):
-        labeller = MultitaskObjective(self.vocab, target=target)
-        self._multitasks.append(labeller)
+        if target == 'cloze':
+            cloze = ClozeMultitask(self.vocab)
+            self._multitasks.append(cloze)
+        else:
+            labeller = MultitaskObjective(self.vocab, target=target)
+            self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
@@ -1186,8 +1284,12 @@ cdef class EntityRecognizer(Parser):
     nr_feature = 6
 
     def add_multitask_objective(self, target):
-        labeller = MultitaskObjective(self.vocab, target=target)
-        self._multitasks.append(labeller)
+        if target == 'cloze':
+            cloze = ClozeMultitask(self.vocab)
+            self._multitasks.append(cloze)
+        else:
+            labeller = MultitaskObjective(self.vocab, target=target)
+            self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:

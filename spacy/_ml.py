@@ -586,16 +586,8 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=True, 
         if exclusive_classes:
             output_layer = Softmax(nr_class, tok2vec.nO)
         else:
-            output_layer = (
-                zero_init(Affine(nr_class, tok2vec.nO))
-                >> logistic
-            )
-        model = (
-            tok2vec
-            >> flatten_add_lengths
-            >> Pooling(mean_pool)
-            >> output_layer
-        )
+            output_layer = zero_init(Affine(nr_class, tok2vec.nO)) >> logistic
+        model = tok2vec >> flatten_add_lengths >> Pooling(mean_pool) >> output_layer
     model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
     return model
@@ -637,3 +629,79 @@ def concatenate_lists(*layers, **kwargs):  # pragma: no cover
 
     model = wrap(concatenate_lists_fwd, concat)
     return model
+
+
+def masked_language_model(vocab, model, mask_prob=0.15):
+    """Convert a model into a BERT-style masked language model"""
+
+    random_words = _RandomWords(vocab)
+
+    def mlm_forward(docs, drop=0.0):
+        mask, docs = _apply_mask(docs, random_words, mask_prob=mask_prob)
+        mask = model.ops.asarray(mask).reshape((mask.shape[0], 1))
+        output, backprop = model.begin_update(docs, drop=drop)
+
+        def mlm_backward(d_output, sgd=None):
+            d_output *= 1 - mask
+            return backprop(d_output, sgd=sgd)
+
+        return output, mlm_backward
+
+    return wrap(mlm_forward, model)
+
+
+class _RandomWords(object):
+    def __init__(self, vocab):
+        self.words = [lex.text for lex in vocab if lex.prob != 0.0]
+        self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
+        self.words = self.words[:10000]
+        self.probs = self.probs[:10000]
+        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))
+        self.probs /= self.probs.sum()
+        self._cache = []
+
+    def next(self):
+        if not self._cache:
+            self._cache.extend(
+                numpy.random.choice(len(self.words), 10000, p=self.probs)
+            )
+        index = self._cache.pop()
+        return self.words[index]
+
+
+def _apply_mask(docs, random_words, mask_prob=0.15):
+    # This needs to be here to avoid circular imports
+    from .tokens.doc import Doc
+
+    N = sum(len(doc) for doc in docs)
+    mask = numpy.random.uniform(0.0, 1.0, (N,))
+    mask = mask >= mask_prob
+    i = 0
+    masked_docs = []
+    for doc in docs:
+        words = []
+        for token in doc:
+            if not mask[i]:
+                word = _replace_word(token.text, random_words)
+            else:
+                word = token.text
+            words.append(word)
+            i += 1
+        spaces = [bool(w.whitespace_) for w in doc]
+        # NB: If you change this implementation to instead modify
+        # the docs in place, take care that the IDs reflect the original
+        # words. Currently we use the original docs to make the vectors
+        # for the target, so we don't lose the original tokens. But if
+        # you modified the docs in place here, you would.
+        masked_docs.append(Doc(doc.vocab, words=words, spaces=spaces))
+    return mask, masked_docs
+
+
+def _replace_word(word, random_words, mask="[MASK]"):
+    roll = numpy.random.random()
+    if roll < 0.8:
+        return mask
+    elif roll < 0.9:
+        return random_words.next()
+    else:
+        return word

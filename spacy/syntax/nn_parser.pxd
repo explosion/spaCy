@@ -12,6 +12,7 @@ from ._parser_model cimport WeightsC, ActivationsC, SizesC
 cdef class Parser:
     cdef readonly Vocab vocab
     cdef public object model
+    cdef public object _rehearsal_model
     cdef readonly TransitionSystem moves
     cdef readonly object cfg
     cdef public object _multitasks
@@ -21,4 +22,3 @@ cdef class Parser:
  
     cdef void c_transition_batch(self, StateC** states, const float* scores,
             int nr_class, int batch_size) nogil
- 

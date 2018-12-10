@@ -193,10 +193,6 @@ class ParserModel(Model):
         Model.__init__(self)
         self._layers = [tok2vec, lower_model, upper_model]
 
-    @property
-    def tok2vec(self):
-        return self._layers[0]
-
     def begin_update(self, docs, drop=0.):
         step_model = ParserStepModel(docs, self._layers, drop=drop)
         def finish_parser_update(golds, sgd=None):
@@ -205,13 +201,20 @@ class ParserModel(Model):
         return step_model, finish_parser_update
 
     def resize_output(self, new_output):
+        smaller = self.upper
+        larger = Affine(new_output, smaller.nI)
+        larger.W *= 0
+        # It seems very unhappy if I pass these as smaller.W?
+        # Seems to segfault. Maybe it's a descriptor protocol thing?
+        smaller_W = smaller.W
+        larger_W = larger.W
+        smaller_b = smaller.b
+        larger_b = larger.b
         # Weights are stored in (nr_out, nr_in) format, so we're basically
         # just adding rows here.
-        smaller = self._layers[-1]._layers[-1]
-        larger = Affine(self.moves.n_moves, smaller.nI)
-        copy_array(larger.W[:smaller.nO], smaller.W)
-        copy_array(larger.b[:smaller.nO], smaller.b)
-        self._layers[-1]._layers[-1] = larger
+        larger_W[:smaller.nO] = smaller_W
+        larger_b[:smaller.nO] = smaller_b
+        self._layers[-1] = larger
 
     def begin_training(self, X, y=None):
         self.lower.begin_training(X, y=y)

@@ -7,7 +7,7 @@ import weakref
 import functools
 from collections import OrderedDict
 from contextlib import contextmanager
-from copy import copy
+from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
 
@@ -453,6 +453,59 @@ class Language(object):
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
 
+    def rehearse(self, docs, sgd=None, losses=None, config=None):
+        """Make a "rehearsal" update to the models in the pipeline, to prevent
+        forgetting. Rehearsal updates run an initial copy of the model over some
+        data, and update the model so its current predictions are more like the
+        initial ones. This is useful for keeping a pre-trained model on-track,
+        even if you're updating it with a smaller set of examples.
+
+        docs (iterable): A batch of `Doc` objects.
+        drop (float): The droput rate.
+        sgd (callable): An optimizer.
+        RETURNS (dict): Results from the update.
+
+        EXAMPLE:
+            >>> raw_text_batches = minibatch(raw_texts)
+            >>> for labelled_batch in minibatch(zip(train_docs, train_golds)):
+            >>>     docs, golds = zip(*train_docs) 
+            >>>     nlp.update(docs, golds)
+            >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
+            >>>     nlp.rehearse(raw_batch)
+        """
+        if len(docs) == 0:
+            return
+        if sgd is None:
+            if self._optimizer is None:
+                self._optimizer = create_default_optimizer(Model.ops)
+            sgd = self._optimizer
+        docs = list(docs)
+        for i, doc in enumerate(docs):
+            if isinstance(doc, basestring_):
+                docs[i] = self.make_doc(doc)
+        pipes = list(self.pipeline)
+        random.shuffle(pipes)
+        if config is None:
+            config = {}
+        grads = {}
+
+        def get_grads(W, dW, key=None):
+            grads[key] = (W, dW)
+
+        get_grads.alpha = sgd.alpha
+        get_grads.b1 = sgd.b1
+        get_grads.b2 = sgd.b2
+
+        for name, proc in pipes:
+            if not hasattr(proc, "rehearse"):
+                continue
+            grads = {}
+            proc.rehearse(docs, sgd=get_grads, losses=losses, **config.get(name, {}))
+            for key, (W, dW) in grads.items():
+                sgd(W, dW, key=key)
+
+        return losses
+
     def preprocess_gold(self, docs_golds):
         """Can be called before training to pre-process gold data. By default,
         it handles nonprojectivity and adds missing tags to the tag map.
@@ -497,6 +550,30 @@ class Language(object):
                 proc.begin_training(
                     get_gold_tuples, pipeline=self.pipeline, sgd=self._optimizer, **cfg
                 )
+        return self._optimizer
+
+    def resume_training(self, sgd=None, **cfg):
+        """Continue training a pre-trained model.
+        
+        Create and return an optimizer, and initialize "rehearsal" for any pipeline
+        component that has a .rehearse() method. Rehearsal is used to prevent
+        models from "forgetting" their initialised "knowledge". To perform
+        rehearsal, collect samples of text you want the models to retain performance
+        on, and call nlp.rehearse() with a batch of Doc objects.
+        """
+        if cfg.get("device", -1) >= 0:
+            util.use_gpu(cfg["device"])
+            if self.vocab.vectors.data.shape[1] >= 1:
+                self.vocab.vectors.data = Model.ops.asarray(self.vocab.vectors.data)
+        link_vectors_to_models(self.vocab)
+        if self.vocab.vectors.data.shape[1]:
+            cfg["pretrained_vectors"] = self.vocab.vectors.name
+        if sgd is None:
+            sgd = create_default_optimizer(Model.ops)
+        self._optimizer = sgd
+        for name, proc in self.pipeline:
+            if hasattr(proc, "_rehearsal_model"):
+                proc._rehearsal_model = deepcopy(proc.model)
         return self._optimizer
 
     def evaluate(self, docs_golds, verbose=False):

@@ -25,6 +25,12 @@ from .. import about
     output_path=("Output directory to store model in", "positional", None, Path),
     train_path=("Location of JSON-formatted training data", "positional", None, Path),
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
+    raw_text=(
+        "Path to jsonl file with unlabelled text documents.",
+        "option",
+        "rt",
+        Path,
+    ),
     base_model=("Name of model to update (optional)", "option", "b", str),
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     vectors=("Model to load vectors from", "option", "v", str),
@@ -62,6 +68,7 @@ def train(
     output_path,
     train_path,
     dev_path,
+    raw_text=None,
     base_model=None,
     pipeline="tagger,parser,ner",
     vectors=None,
@@ -92,6 +99,8 @@ def train(
     train_path = util.ensure_path(train_path)
     dev_path = util.ensure_path(dev_path)
     meta_path = util.ensure_path(meta_path)
+    if raw_text is not None:
+        raw_text = list(srsly.read_jsonl(raw_text))
     if not train_path or not train_path.exists():
         msg.fail("Training data not found", train_path, exits=1)
     if not dev_path or not dev_path.exists():
@@ -186,6 +195,8 @@ def train(
     optimizer.b1_decay = 0.0001
     optimizer.b2_decay = 0.0001
     nlp._optimizer = None
+    optimizer.b1_decay = 0.003
+    optimizer.b2_decay = 0.003
 
     # Load in pre-trained weights
     if init_tok2vec is not None:
@@ -208,6 +219,11 @@ def train(
             train_docs = corpus.train_docs(
                 nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
             )
+            if raw_text:
+                random.shuffle(raw_text)
+                raw_batches = util.minibatch(
+                    (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
+                )
             words_seen = 0
             with _create_progress_bar(n_train_words) as pbar:
                 losses = {}
@@ -222,7 +238,12 @@ def train(
                         drop=next(dropout_rates),
                         losses=losses,
                     )
-                    if not int(os.environ.get('LOG_FRIENDLY', 0)):
+                    if raw_text:
+                        # If raw text is available, perform 'rehearsal' updates,
+                        # which use unlabelled data to reduce overfitting.
+                        raw_batch = list(next(raw_batches))
+                        nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
+                    if not int(os.environ.get("LOG_FRIENDLY", 0)):
                         pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
@@ -286,7 +307,7 @@ def train(
 
 @contextlib.contextmanager
 def _create_progress_bar(total):
-    if int(os.environ.get('LOG_FRIENDLY', 0)):
+    if int(os.environ.get("LOG_FRIENDLY", 0)):
         yield
     else:
         pbar = tqdm.tqdm(total=total, leave=False)
