@@ -188,7 +188,9 @@ def train(
 
     if raw_text:
         cloze = ClozeMultitask(nlp.vocab)
-        cloze.begin_training([nlp.make_doc('Example doc')], tok2vec=nlp.get_pipe('parser').model.tok2vec)
+        cloze.begin_training(
+            [nlp.make_doc('Example doc')],
+            tok2vec=nlp.get_pipe('parser').model.tok2vec)
 
     nlp._optimizer = None
     optimizer.b1_decay = 0.003
@@ -234,8 +236,8 @@ def train(
                         losses=losses
                     )
                     if raw_text:
-                        raw_batch = next(raw_batches)
-                        cloze.update(raw_batch, None, sgd=optimizer, losses=losses)
+                        raw_batch = list(next(raw_batches))
+                        cloze.rehearse(raw_batch, sgd=optimizer, losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
