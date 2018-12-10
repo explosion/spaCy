@@ -249,7 +249,10 @@ cdef class Token:
             or norm exceptions.
         """
         def __get__(self):
-            return self.c.lex.norm
+            if self.c.norm == 0:
+                return self.c.lex.norm
+            else:
+                return self.c.norm
 
     property shape:
         """RETURNS (uint64): ID of the token's shape, a transform of the
@@ -711,7 +714,10 @@ cdef class Token:
             norm exceptions.
         """
         def __get__(self):
-            return self.vocab.strings[self.c.lex.norm]
+            return self.vocab.strings[self.norm]
+
+        def __set__(self, unicode norm_):
+            self.c.norm = self.vocab.strings.add(norm_)
 
     property shape_:
         """RETURNS (unicode): Transform of the tokens's string, to show

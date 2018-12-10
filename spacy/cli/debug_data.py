@@ -12,7 +12,6 @@ from ..gold import GoldCorpus, read_json_object
 from ..util import load_model, get_lang_class
 
 # from .schemas import get_schema, validate_json
-from ._messages import Messages
 
 
 # Minimum number of expected occurences of label in data to train new label
@@ -58,9 +57,9 @@ def debug_data(
 
     # Make sure all files and paths exists if they are needed
     if not train_path.exists():
-        msg.fail(Messages.M050, train_path, exits=1)
+        msg.fail("Training data not found", train_path, exits=1)
     if not dev_path.exists():
-        msg.fail(Messages.M051, dev_path, exits=1)
+        msg.fail("Development data not found", dev_path, exits=1)
 
     # Initialize the model and pipeline
     pipeline = [p.strip() for p in pipeline.split(",")]
@@ -72,10 +71,8 @@ def debug_data(
 
     msg.divider("Data format validation")
     # Load the data in one – might take a while but okay in this case
-    with msg.loading("Loading {}...".format(train_path.parts[-1])):
-        train_data = _load_file(train_path, msg)
-    with msg.loading("Loading {}...".format(dev_path.parts[-1])):
-        dev_data = _load_file(dev_path, msg)
+    train_data = _load_file(train_path, msg)
+    dev_data = _load_file(dev_path, msg)
 
     # Validate data format using the JSON schema
     # TODO: update once the new format is ready
@@ -172,6 +169,7 @@ def debug_data(
         existing_labels = [l for l in labels if l in model_labels]
         has_low_data_warning = False
         has_no_neg_warning = False
+        has_ws_ents_error = False
 
         msg.divider("Named Entity Recognition")
         msg.info(
@@ -201,6 +199,10 @@ def debug_data(
                 "Existing: {}".format(_format_labels(existing_labels)), show=verbose
             )
 
+        if gold_data["ws_ents"]:
+            msg.fail("{} invalid whitespace entity spans".format(gold_data["ws_ents"]))
+            has_ws_ents_error = True
+
         for label in new_labels:
             if label_counts[label] <= NEW_LABEL_THRESHOLD:
                 msg.warn(
@@ -222,6 +224,8 @@ def debug_data(
             msg.good("Good amount of examples for all labels")
         if not has_no_neg_warning:
             msg.good("Examples without occurences available for all labels")
+        if not has_ws_ents_error:
+            msg.good("No entities consisting of or starting/ending with whitespace")
 
         if has_low_data_warning:
             msg.text(
@@ -235,6 +239,11 @@ def debug_data(
                 "in context, as well as examples without a given entity "
                 "type.",
                 show=verbose,
+            )
+        if has_ws_ents_error:
+            msg.text(
+                "As of spaCy v2.1.0, entity spans consisting of or starting/ending "
+                "with whitespace characters are considered invalid."
             )
 
     if "textcat" in pipeline:
@@ -321,11 +330,13 @@ def debug_data(
 def _load_file(file_path, msg):
     file_name = file_path.parts[-1]
     if file_path.suffix == ".json":
-        data = srsly.read_json(file_path)
+        with msg.loading("Loading {}...".format(file_name)):
+            data = srsly.read_json(file_path)
         msg.good("Loaded {}".format(file_name))
         return data
     elif file_path.suffix == ".jsonl":
-        data = srsly.read_jsonl(file_path)
+        with msg.loading("Loading {}...".format(file_name)):
+            data = srsly.read_jsonl(file_path)
         msg.good("Loaded {}".format(file_name))
         return data
     msg.fail(
@@ -342,6 +353,7 @@ def _compile_gold(train_docs, pipeline):
         "tags": Counter(),
         "deps": Counter(),
         "words": Counter(),
+        "ws_ents": 0,
         "n_words": 0,
         "texts": set(),
     }
@@ -350,7 +362,10 @@ def _compile_gold(train_docs, pipeline):
         data["n_words"] += len(gold.words)
         data["texts"].add(doc.text)
         if "ner" in pipeline:
-            for label in gold.ner:
+            for i, label in enumerate(gold.ner):
+                if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
+                    # "Illegal" whitespace entity
+                    data["ws_ents"] += 1
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
@@ -369,18 +384,6 @@ def _format_labels(labels, counts=False):
     if counts:
         return ", ".join(["'{}' ({})".format(l, c) for l, c in labels])
     return ", ".join(["'{}'".format(l) for l in labels])
-
-
-def _get_ner_counts(data):
-    counter = Counter()
-    for doc, gold in data:
-        for label in gold.ner:
-            if label.startswith(("B-", "U-")):
-                combined_label = label.split("-")[1]
-                counter[combined_label] += 1
-            elif label == "-":
-                counter["-"] += 1
-    return counter
 
 
 def _get_examples_without_label(data, label):

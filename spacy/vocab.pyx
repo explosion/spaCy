@@ -17,7 +17,7 @@ from .structs cimport SerializedLexemeC
 from .compat import copy_reg, basestring_
 from .errors import Errors
 from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs
+from .attrs import intify_attrs, NORM
 from .vectors import Vectors
 from ._ml import link_vectors_to_models
 from . import util
@@ -234,7 +234,10 @@ cdef class Vocab:
                 self.morphology.assign_tag(token, props[TAG])
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
-                Lexeme.set_struct_attr(lex, attr_id, value)
+                # NORM is the only one that overlaps between the two
+                # (which is maybe not great?)
+                if attr_id != NORM:
+                    Lexeme.set_struct_attr(lex, attr_id, value)
         return tokens
 
     @property

@@ -58,7 +58,7 @@ cdef struct TokenC:
     attr_t tag
     int idx
     attr_t lemma
-    attr_t sense
+    attr_t norm
     int head
     attr_t dep
 

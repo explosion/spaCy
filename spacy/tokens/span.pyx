@@ -15,7 +15,7 @@ from ..parts_of_speech cimport univ_pos_t
 from ..util import normalize_slice
 from ..attrs cimport IS_PUNCT, IS_SPACE
 from ..lexeme cimport Lexeme
-from ..compat import is_config
+from ..compat import is_config, basestring_
 from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
 from .underscore import Underscore, get_ext_args
 
@@ -42,7 +42,7 @@ cdef class Span:
             raise ValueError(Errors.E046.format(name=name))
         return Underscore.span_extensions.pop(name)
 
-    def __cinit__(self, Doc doc, int start, int end, attr_t label=0,
+    def __cinit__(self, Doc doc, int start, int end, label=0,
                   vector=None, vector_norm=None):
         """Create a `Span` object from the slice `doc[start : end]`.
 
@@ -64,6 +64,8 @@ cdef class Span:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
             self.end_char = 0
+        if isinstance(label, basestring_):
+            label = doc.vocab.strings.add(label)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
         self.label = label
@@ -601,6 +603,8 @@ cdef class Span:
         """RETURNS (unicode): The span's label."""
         def __get__(self):
             return self.doc.vocab.strings[self.label]
+        def __set__(self, unicode label_):
+            self.label = self.doc.vocab.strings.add(label_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:

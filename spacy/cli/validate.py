@@ -8,7 +8,6 @@ import requests
 import srsly
 from wasabi import Printer
 
-from ._messages import Messages
 from ..compat import path2str
 from ..util import get_data_path
 from .. import about
@@ -23,13 +22,17 @@ def validate():
     with msg.loading("Loading compatibility table..."):
         r = requests.get(about.__compatibility__)
         if r.status_code != 200:
-            msg.fail(Messages.M003.format(code=r.status_code), Messages.M021, exits=1)
+            msg.fail(
+                "Server error ({})".format(r.status_code),
+                "Couldn't fetch compatibility table.",
+                exits=1,
+            )
     msg.good("Loaded compatibility table")
     compat = r.json()["spacy"]
     current_compat = compat.get(about.__version__)
     if not current_compat:
         msg.fail(
-            Messages.M022.format(version=about.__version__),
+            "Can't find spaCy v{} in compatibility table".format(about.__version__),
             about.__compatibility__,
             exits=1,
         )
@@ -49,7 +52,7 @@ def validate():
     update_models = [m for m in incompat_models if m in current_compat]
     spacy_dir = Path(__file__).parent.parent
 
-    msg.divider(Messages.M023.format(version=about.__version__))
+    msg.divider("Installed models (spaCy v{})".format(about.__version__))
     msg.info("spaCy installation: {}".format(path2str(spacy_dir)))
 
     if model_links or model_pkgs:
@@ -61,17 +64,24 @@ def validate():
             rows.append(get_model_row(current_compat, name, data, msg, "link"))
         msg.table(rows, header=header)
     else:
-        msg.text(Messages.M024, exits=0)
+        msg.text("No models found in your current environment.", exits=0)
     if update_models:
         msg.divider("Install updates")
+        msg.text("Use the following commands to update the model packages:")
         cmd = "python -m spacy download {}"
         print("\n".join([cmd.format(pkg) for pkg in update_models]) + "\n")
     if na_models:
         msg.text(
-            Messages.M025.format(version=about.__version__, models=", ".join(na_models))
+            "The following models are not available for spaCy "
+            "v{}: {}".format(about.__version__, ", ".join(na_models))
         )
     if incompat_links:
-        msg.text(Messages.M027.format(path=path2str(get_data_path())))
+        msg.text(
+            "You may also want to overwrite the incompatible links using the "
+            "`python -m spacy link` command with `--force`, or remove them "
+            "from the data directory. "
+            "Data path: {path}".format(path=path2str(get_data_path()))
+        )
     if incompat_models or incompat_links:
         sys.exit(1)
 

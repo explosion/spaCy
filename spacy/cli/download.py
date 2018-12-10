@@ -8,7 +8,6 @@ import subprocess
 import sys
 from wasabi import Printer
 
-from ._messages import Messages
 from .link import link
 from ..util import get_package_path
 from .. import about
@@ -50,15 +49,24 @@ def download(model, direct=False, *pip_args):
             # Dirty, but since spacy.download and the auto-linking is
             # mostly a convenience wrapper, it's best to show a success
             # message and loading instructions, even if linking fails.
-            msg.warn(Messages.M002.format(name=model_name), Messages.M001)
+            msg.warn(
+                "Download successful but linking failed",
+                "Creating a shortcut link for 'en' didn't work (maybe you "
+                "don't have admin permissions?), but you can still load the "
+                "model via its full package name: "
+                "nlp = spacy.load('{}')".format(model_name),
+            )
 
 
 def get_json(url, desc):
     r = requests.get(url)
     if r.status_code != 200:
         msg.fail(
-            Messages.M003.format(code=r.status_code),
-            Messages.M004.format(desc=desc, version=about.__version__),
+            "Server error ({})".format(r.status_code),
+            "Couldn't fetch {}. Please find a model for your spaCy "
+            "installation (v{}), and download it manually. For more "
+            "details, see the documentation: "
+            "https://spacy.io/usage/models".format(desc, about.__version__),
             exits=1,
         )
     return r.json()
@@ -70,7 +78,7 @@ def get_compatibility():
     comp_table = get_json(about.__compatibility__, "compatibility table")
     comp = comp_table["spacy"]
     if version not in comp:
-        msg.fail(Messages.M005, Messages.M006.format(version=version), exits=1)
+        msg.fail("No compatible models found for v{} of spaCy".format(version), exits=1)
     return comp[version]
 
 
@@ -78,8 +86,8 @@ def get_version(model, comp):
     model = model.rsplit(".dev", 1)[0]
     if model not in comp:
         msg.fail(
-            Messages.M005,
-            Messages.M007.format(name=model, version=about.__version__),
+            "No compatible model found for '{}' "
+            "(spaCy v{}).".format(model, about.__version__),
             exits=1,
         )
     return comp[model][0]
