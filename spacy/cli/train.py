@@ -25,7 +25,12 @@ from .. import about
     output_path=("Output directory to store model in", "positional", None, Path),
     train_path=("Location of JSON-formatted training data", "positional", None, Path),
     dev_path=("Location of JSON-formatted development data", "positional", None, Path),
-    raw_text=("Path to jsonl file with unlabelled text documents.", "option", 'rt', Path),
+    raw_text=(
+        "Path to jsonl file with unlabelled text documents.",
+        "option",
+        "rt",
+        Path,
+    ),
     base_model=("Name of model to update (optional)", "option", "b", str),
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     vectors=("Model to load vectors from", "option", "v", str),
@@ -216,8 +221,9 @@ def train(
             )
             if raw_text:
                 random.shuffle(raw_text)
-                raw_batches = util.minibatch((nlp.make_doc(rt['text'])
-                                              for rt in raw_text), size=8)
+                raw_batches = util.minibatch(
+                    (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
+                )
             words_seen = 0
             with _create_progress_bar(n_train_words) as pbar:
                 losses = {}
@@ -230,14 +236,14 @@ def train(
                         golds,
                         sgd=optimizer,
                         drop=next(dropout_rates),
-                        losses=losses
+                        losses=losses,
                     )
                     if raw_text:
                         # If raw text is available, perform 'rehearsal' updates,
                         # which use unlabelled data to reduce overfitting.
                         raw_batch = list(next(raw_batches))
                         nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
-                    if not int(os.environ.get('LOG_FRIENDLY', 0)):
+                    if not int(os.environ.get("LOG_FRIENDLY", 0)):
                         pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
@@ -301,7 +307,7 @@ def train(
 
 @contextlib.contextmanager
 def _create_progress_bar(total):
-    if int(os.environ.get('LOG_FRIENDLY', 0)):
+    if int(os.environ.get("LOG_FRIENDLY", 0)):
         yield
     else:
         pbar = tqdm.tqdm(total=total, leave=False)

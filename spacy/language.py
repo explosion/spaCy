@@ -500,8 +500,7 @@ class Language(object):
             if not hasattr(proc, "rehearse"):
                 continue
             grads = {}
-            proc.rehearse(docs, sgd=get_grads, losses=losses,
-                          **config.get(name, {}))
+            proc.rehearse(docs, sgd=get_grads, losses=losses, **config.get(name, {}))
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
 

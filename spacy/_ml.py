@@ -586,16 +586,8 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=True, 
         if exclusive_classes:
             output_layer = Softmax(nr_class, tok2vec.nO)
         else:
-            output_layer = (
-                zero_init(Affine(nr_class, tok2vec.nO))
-                >> logistic
-            )
-        model = (
-            tok2vec
-            >> flatten_add_lengths
-            >> Pooling(mean_pool)
-            >> output_layer
-        )
+            output_layer = zero_init(Affine(nr_class, tok2vec.nO)) >> logistic
+        model = tok2vec >> flatten_add_lengths >> Pooling(mean_pool) >> output_layer
     model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
     return model
@@ -677,10 +669,10 @@ class _RandomWords(object):
         return self.words[index]
 
 
-
 def _apply_mask(docs, random_words, mask_prob=0.15):
     # This needs to be here to avoid circular imports
     from .tokens.doc import Doc
+
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))
     mask = mask >= mask_prob
@@ -713,5 +705,3 @@ def _replace_word(word, random_words, mask="[MASK]"):
         return random_words.next()
     else:
         return word
-
-

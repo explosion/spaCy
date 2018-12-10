@@ -29,8 +29,8 @@ TRAIN_DATA = [
 
 def read_raw_data(nlp, jsonl_loc):
     for json_obj in srsly.read_jsonl(jsonl_loc):
-        if json_obj['text'].strip():
-            doc = nlp.make_doc(json_obj['text'])
+        if json_obj["text"].strip():
+            doc = nlp.make_doc(json_obj["text"])
             yield doc
 
 
@@ -38,8 +38,8 @@ def read_gold_data(nlp, gold_loc):
     docs = []
     golds = []
     for json_obj in srsly.read_jsonl(gold_loc):
-        doc = nlp.make_doc(json_obj['text'])
-        ents = [(ent['start'], ent['end'], ent['label']) for ent in json_obj['spans']]
+        doc = nlp.make_doc(json_obj["text"])
+        ents = [(ent["start"], ent["end"], ent["label"]) for ent in json_obj["spans"]]
         gold = GoldParse(doc, entities=ents)
         docs.append(doc)
         golds.append(gold)
@@ -73,5 +73,5 @@ def main(model_name, unlabelled_loc):
             print("R. Losses", r_losses)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     plac.call(main)
