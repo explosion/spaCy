@@ -11,7 +11,6 @@ import srsly
 from wasabi import Printer
 import random
 
-from ..pipeline import ClozeMultitask
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
@@ -186,12 +185,6 @@ def train(
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
 
-    if raw_text:
-        cloze = ClozeMultitask(nlp.vocab)
-        cloze.begin_training(
-            [nlp.make_doc('Example doc')],
-            tok2vec=nlp.get_pipe('parser').model.tok2vec)
-
     nlp._optimizer = None
     optimizer.b1_decay = 0.003
     optimizer.b2_decay = 0.003
@@ -236,9 +229,10 @@ def train(
                         losses=losses
                     )
                     if raw_text:
+                        # If raw text is available, perform 'rehearsal' updates,
+                        # which use unlabelled data to reduce overfitting.
                         raw_batch = list(next(raw_batches))
-                        cloze.rehearse(raw_batch, sgd=optimizer, losses=losses,
-                            drop=0.05)
+                        nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):
