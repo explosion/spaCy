@@ -1015,7 +1015,7 @@ class ClozeMultitask(Tagger):
             self.model = self.Model(self.vocab, tok2vec)
         if sgd is None:
             sgd = self.create_optimizer()
-        self.model.begin_training(docs)
+        self.model.output_layer.begin_training(self.model.tok2vec(docs))
         return sgd
 
     def predict(self, docs):
@@ -1023,17 +1023,30 @@ class ClozeMultitask(Tagger):
         vectors = self.model.output_layer(tokvecs)
         return tokvecs, vectors
 
-    def get_loss(self, docs, _, prediction):
+    def get_loss(self, docs, vectors, prediction):
         # The simplest way to implement this would be to vstack the
         # token.vector values, but that's a bit inefficient, especially on GPU.
         # Instead we fetch the index into the vectors table for each of our tokens,
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
-        target = self.vocab.vectors.data[ids]
+        target = vectors[ids]
         gradient = (prediction - target) / target.shape[0]
         loss = (gradient**2).sum()
         return float(loss), gradient
  
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        pass
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        if losses is not None and self.name not in losses:
+            losses[self.name] = 0.
+        predictions, bp_predictions = self.model.begin_update(docs, drop=drop)
+        loss, d_predictions = self.get_loss(docs, self.vocab.vectors.data, predictions)
+        bp_predictions(d_predictions, sgd=sgd)
+
+        if losses is not None:
+            losses[self.name] += loss
+
 
 class SimilarityHook(Pipe):
     """
