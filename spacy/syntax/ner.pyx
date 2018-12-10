@@ -207,15 +207,16 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             label_id = label_name
         if action == OUT and label_id != 0:
-            return
+            return None
         if action == MISSING or action == ISNT:
-            return
+            return None
         # Check we're not creating a move we already have, so that this is
         # idempotent
         for trans in self.c[:self.n_moves]:
             if trans.move == action and trans.label == label_id:
                 return 0
         if self.n_moves >= self._size:
+            self._size = self.n_moves
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
