@@ -571,6 +571,7 @@ class Tagger(Pipe):
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.cfg = OrderedDict(sorted(cfg.items()))
         self.cfg.setdefault('cnn_maxout_pieces', 2)
 
@@ -651,6 +652,20 @@ class Tagger(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        """Perform a 'rehearsal' update, where we try to match the output of
+        an initial model.
+        """
+        if self._rehearsal_model is None:
+            return
+        guesses, backprop = self.model.begin_update(docs, drop=drop)
+        target = self._rehearsal_model(docs)
+        gradient = guesses - target
+        backprop(gradient, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -1123,6 +1138,7 @@ class TextCategorizer(Pipe):
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.cfg = dict(cfg)
 
     @property
@@ -1163,6 +1179,17 @@ class TextCategorizer(Pipe):
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        if self._rehearsal_model is None:
+            return
+        scores, bp_scores = self.model.begin_update(docs, drop=drop)
+        target = self._rehearsal_model(docs)
+        gradient = scores - target
+        bp_scores(gradient, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, docs, golds, scores):
         truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
