@@ -412,7 +412,11 @@ cdef class Parser:
             docs = [docs]
         if losses is None:
             losses = {}
-        assert self._rehearsal_model.upper.W.shape == self.model.upper.W.shape
+        for multitask in self._multitasks:
+            if hasattr(multitask, 'rehearse'):
+                multitask.rehearse(docs, losses=losses, sgd=sgd)
+        if self._rehearsal_model is None:
+            return None
         losses.setdefault(self.name, 0.)
         # Prepare the stepwise model, and get the callback for finishing the batch
         tutor = self._rehearsal_model(docs)
