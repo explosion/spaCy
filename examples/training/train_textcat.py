@@ -44,6 +44,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
 
     # add label to text classifier
     textcat.add_label("POSITIVE")
+    textcat.add_label("NEGATIVE")
 
     # load the IMDB dataset
     print("Loading IMDB data...")
@@ -64,7 +65,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
         for i in range(n_iter):
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+            batches = minibatch(train_data, size=compounding(4.0, 16.0, 1.001))
             for batch in batches:
                 texts, annotations = zip(*batch)
                 nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
@@ -106,21 +107,23 @@ def load_data(limit=0, split=0.8):
     random.shuffle(train_data)
     train_data = train_data[-limit:]
     texts, labels = zip(*train_data)
-    cats = [{"POSITIVE": bool(y)} for y in labels]
+    cats = [{"POSITIVE": bool(y), "NEGATIVE": not bool(y)} for y in labels]
     split = int(len(train_data) * split)
     return (texts[:split], cats[:split]), (texts[split:], cats[split:])
 
 
 def evaluate(tokenizer, textcat, texts, cats):
     docs = (tokenizer(text) for text in texts)
-    tp = 1e-8  # True positives
+    tp = 0.0  # True positives
     fp = 1e-8  # False positives
     fn = 1e-8  # False negatives
-    tn = 1e-8  # True negatives
+    tn = 0.0  # True negatives
     for i, doc in enumerate(textcat.pipe(docs)):
         gold = cats[i]
         for label, score in doc.cats.items():
             if label not in gold:
+                continue
+            if label == "NEGATIVE":
                 continue
             if score >= 0.5 and gold[label] >= 0.5:
                 tp += 1.0
