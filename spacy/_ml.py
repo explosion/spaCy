@@ -26,7 +26,6 @@ import thinc.extra.load_nlp
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
 from .errors import Errors
 from . import util
-from .tokens.doc import Doc
 
 try:
     import torch.nn
@@ -654,6 +653,8 @@ class _RandomWords(object):
 
 
 def _apply_mask(docs, random_words, mask_prob=0.15):
+    # This needs to be here to avoid circular imports
+    from .tokens.doc import Doc
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))
     mask = mask >= mask_prob
