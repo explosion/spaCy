@@ -295,7 +295,8 @@ cdef class Vectors:
 
         xp = get_array_module(self.data)
         row2key = {row: key for key, row in self.key2row.items()}
-        keys = xp.asarray([row2key[row] for row in best_rows], dtype='uint64')
+        keys = xp.asarray(
+            [row2key[row] for row in best_rows if row in row2key], dtype='uint64')
         return (keys, best_rows, scores)
 
     def from_glove(self, path):
