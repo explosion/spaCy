@@ -220,7 +220,7 @@ def train(
             if raw_text:
                 random.shuffle(raw_text)
                 raw_batches = util.minibatch((nlp.make_doc(rt['text'])
-                                              for rt in raw_text), size=32)
+                                              for rt in raw_text), size=8)
             words_seen = 0
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
@@ -237,7 +237,8 @@ def train(
                     )
                     if raw_text:
                         raw_batch = list(next(raw_batches))
-                        cloze.rehearse(raw_batch, sgd=optimizer, losses=losses)
+                        cloze.rehearse(raw_batch, sgd=optimizer, losses=losses,
+                            drop=0.05)
                     pbar.update(sum(len(doc) for doc in docs))
                     words_seen += sum(len(doc) for doc in docs)
             with nlp.use_params(optimizer.averages):

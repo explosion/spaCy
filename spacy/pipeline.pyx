@@ -1033,7 +1033,7 @@ class ClozeMultitask(Tagger):
         # and look them up all at once. This prevents data copying.
         ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
         target = vectors[ids]
-        gradient = (prediction - target) / target.shape[0]
+        gradient = (prediction - target) / prediction.shape[0]
         loss = (gradient**2).sum()
         return float(loss), gradient
  
