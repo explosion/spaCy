@@ -1,5 +1,4 @@
 """Prevent catastrophic forgetting with rehearsal updates."""
-import tqdm
 import plac
 import random
 import srsly
@@ -28,12 +27,12 @@ TRAIN_DATA = [
 ]
 
 
-
 def read_raw_data(nlp, jsonl_loc):
     for json_obj in srsly.read_jsonl(jsonl_loc):
         if json_obj['text'].strip():
             doc = nlp.make_doc(json_obj['text'])
             yield doc
+
 
 def read_gold_data(nlp, gold_loc):
     docs = []
@@ -51,11 +50,9 @@ def main(model_name, unlabelled_loc):
     n_iter = 10
     dropout = 0.2
     batch_size = 4
-    print("Load")
     nlp = spacy.load(model_name)
     nlp.get_pipe("ner").add_label(LABEL)
     raw_docs = list(read_raw_data(nlp, unlabelled_loc))
-    
     optimizer = nlp.resume_training()
 
     # get names of other pipes to disable them during training
@@ -67,9 +64,9 @@ def main(model_name, unlabelled_loc):
             losses = {}
             r_losses = {}
             # batch up the examples using spaCy's minibatch
-            raw_batches = minibatch(raw_docs, size=4)
+            raw_batches = minibatch(raw_docs, size=batch_size)
             for doc, gold in TRAIN_DATA:
-                nlp.update([doc], [gold], sgd=optimizer, drop=0.2, losses=losses)
+                nlp.update([doc], [gold], sgd=optimizer, drop=dropout, losses=losses)
                 raw_batch = list(next(raw_batches))
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)
             print("Losses", losses)
