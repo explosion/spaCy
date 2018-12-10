@@ -110,7 +110,7 @@ def pretrain(
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
     for epoch in range(nr_iter):
         for batch in util.minibatch_by_words(
-            ((text, None) for text in texts), size=5000
+            ((text, None) for text in texts), size=3000
         ):
             docs = make_docs(nlp, [text for (text, _) in batch])
             loss = make_update(model, docs, optimizer, drop=dropout)
