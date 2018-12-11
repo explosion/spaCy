@@ -50,11 +50,9 @@ def lemmatize(string, index, exceptions, rules):
 
     oov_forms = []
 
-    for old, new in rules:
-        if re.search(r'{}$'.format(old), string):
-            new_word_suf = old.replace('[', '([').replace(']', '])')
-            new_lemma_suf = re.sub(r'\[.*\]', r'\\1', new)
-            form = re.sub(r'{}$'.format(new_word_suf), r'{}'.format(new_lemma_suf), string)
+    for word_suf, lemma_suf in rules:
+        if re.search(word_suf, string):
+            form = re.sub(word_suf, lemma_suf, string)
             if form in index or not form.isalpha():
                 forms.append(form)
             else:
