@@ -192,11 +192,7 @@ def train(
         # Start with a blank model, call begin_training
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
 
-    optimizer.b1_decay = 0.0001
-    optimizer.b2_decay = 0.0001
     nlp._optimizer = None
-    optimizer.b1_decay = 0.003
-    optimizer.b2_decay = 0.003
 
     # Load in pre-trained weights
     if init_tok2vec is not None:
