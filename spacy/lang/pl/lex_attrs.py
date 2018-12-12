@@ -4,14 +4,16 @@ from __future__ import unicode_literals
 from ...attrs import LIKE_NUM
 
 
-_num_words = ['zero', 'jeden', 'dwa', 'trzy', 'cztery', 'pięć', 'sześć', 
-              'siedem', 'osiem', 'dziewięć', 'dziesięć', 'jedenaście', 
+_num_words = ['zero', 'jeden', 'dwa', 'trzy', 'cztery', 'pięć', 'sześć',
+              'siedem', 'osiem', 'dziewięć', 'dziesięć', 'jedenaście',
               'dwanaście', 'trzynaście', 'czternaście',
               'pietnaście', 'szesnaście', 'siedemnaście', 'osiemnaście',
-              'dziewiętnaście', 'dwadzieścia', 'trzydzieści', 'czterdzieści', 
-              'pięćdziesiąt', 'szcześćdziesiąt', 'siedemdziesiąt', 
-              'osiemdziesiąt', 'dziewięćdziesiąt', 'sto', 'tysiąc', 'milion', 
-              'miliard', 'bilion', 'trylion']
+              'dziewiętnaście', 'dwadzieścia', 'trzydzieści', 'czterdzieści',
+              'pięćdziesiąt', 'szcześćdziesiąt', 'siedemdziesiąt',
+              'osiemdziesiąt', 'dziewięćdziesiąt', 'sto',
+              'dwieście', 'trzysta', 'czterysta', 'pięćset', 'sześćset',
+              'siedemset', 'osiemset', 'dziewięćset', 'tysiąc', 'milion',
+              'miliard', 'bilion', 'biliard', 'trylion', 'tryliard', 'kwadrylion']
 
 
 def like_num(text):
