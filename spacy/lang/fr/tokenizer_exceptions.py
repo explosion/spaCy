@@ -53,7 +53,7 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-for orth in FR_BASE_EXCEPTIONS + ["etc."]:
+for orth in ["etc."]:
     _exc[orth] = [{ORTH: orth}]
 
 
@@ -93,14 +93,18 @@ for pre, pre_lemma in [("qu'", "que"), ("n'", "ne")]:
 
 
 _infixes_exc = []
-for elision_char in ELISION:
-    for hyphen_char in ["-", "‐"]:
-        _infixes_exc += [
-            infix.replace("'", elision_char).replace("-", hyphen_char)
-            for infix in FR_BASE_EXCEPTIONS
-        ]
-_infixes_exc += [upper_first_letter(word) for word in _infixes_exc]
-_infixes_exc = list(set(_infixes_exc))
+orig_elision = "'"
+orig_hyphen = '-'
+
+# loop through the elison and hyphen characters, and try to substitute the ones that weren't used in the original list
+for infix in FR_BASE_EXCEPTIONS:
+    variants_infix = {infix}
+    for elision_char in [x for x in ELISION if x != orig_elision]:
+        variants_infix.update([word.replace(orig_elision, elision_char) for word in variants_infix])
+    for hyphen_char in [x for x in ['-', '‐'] if x != orig_hyphen]:
+        variants_infix.update([word.replace(orig_hyphen, hyphen_char) for word in variants_infix])
+    variants_infix.update([upper_first_letter(word) for word in variants_infix])
+    _infixes_exc.extend(variants_infix)
 
 for orth in _infixes_exc:
     _exc[orth] = [{ORTH: orth}]
@@ -111,6 +115,7 @@ _hyphen_prefix = [
     "abat",
     "a[fg]ro",
     "after",
+    "aigues?",
     "am[ée]ricano",
     "anglo",
     "anti",
@@ -120,24 +125,33 @@ _hyphen_prefix = [
     "archi",
     "arrières?",
     "avant",
+    "avion",
     "auto",
     "banc",
     "bas(?:ses?)?",
+    "bateaux?",
     "bec?",
+    "belles?",
+    "beau",
     "best",
     "bio?",
     "bien",
     "blanc",
     "bo[îi]te",
+    "bonn?e?s?",
     "bois",
     "bou(?:c|rg)",
     "b[êe]ta",
     "cache",
     "cap(?:ello)?",
+    "casse",
+    "castel",
     "champ",
     "chapelle",
-    "ch[âa]teau",
+    "ch[âa]teau(?:neuf)?",
+    "chasse",
     "cha(?:ud|t)e?s?",
+    "chauffe",
     "chou",
     "chromo",
     "claire?s?",
@@ -146,7 +160,8 @@ _hyphen_prefix = [
     "contre",
     "cordon",
     "coupe?",
-    "court",
+    "courte?s?",
+    "couvre",
     "crash",
     "crise",
     "croche",
@@ -155,15 +170,19 @@ _hyphen_prefix = [
     "côte",
     "demi",
     "di(?:sney)?",
+    "dix",
     "d[ée]s?",
-    "double",
     "dys",
+    "ex?",
+    "émirato",
     "entre",
     "est",
     "ethno",
+    "ex",
     "extra",
     "extrême",
     "[ée]co",
+    "faux",
     "fil",
     "fort",
     "franco?s?",
@@ -176,6 +195,8 @@ _hyphen_prefix = [
     "gros",
     "g[ée]o",
     "haute?s?",
+    "homm?es?",
+    "hors",
     "hyper",
     "indo",
     "infra",
@@ -190,6 +211,8 @@ _hyphen_prefix = [
     "lot",
     "louis",
     "m[ai]cro",
+    "mal",
+    "médio",
     "mesnil",
     "mi(?:ni)?",
     "mono",
@@ -201,6 +224,7 @@ _hyphen_prefix = [
     "m[ée]do",
     "m[ée]ta",
     "mots?",
+    "neuro",
     "noix",
     "non",
     "nord",
@@ -213,60 +237,137 @@ _hyphen_prefix = [
     "perce",
     "pharmaco",
     "ph[oy]to",
+    "pieds?",
     "pique",
     "poissons?",
     "ponce",
     "pont",
     "po[rs]t",
+    "pousse",
     "primo",
     "pro(?:cès|to)?",
     "pare",
-    "petite?",
+    "petite?s?",
+    "plessis",
     "porte",
     "pré",
     "prêchi",
+    "protège",
     "pseudo",
     "pêle",
     "péri",
     "puy",
     "quasi",
+    "quatre",
+    "radio",
     "recourt",
     "rythmo",
+    "(?:re)?doubles?",
     "r[ée]",
     "r[ée]tro",
-    "sans",
-    "sainte?s?",
+    "requin",
+    "sans?",
+    "sa?inte?s?",
     "semi",
-    "social",
+    "serre",
+    "sino",
+    "socio",
+    "sociale?s?",
+    "soixante",
     "sous",
-    "su[bdr]",
+    "su[bdrs]",
     "super",
+    "taille",
     "tire",
     "thermo",
     "tiers",
+    "tourne",
+    "toute?s?",
+    "tra[iî]ne?",
     "trans",
+    "trente",
+    "trois",
+    "trousse",
     "tr(?:i|ou)",
     "t[ée]l[ée]",
+    "utéro",
+    "vaso",
     "vi[cd]e",
     "vid[ée]o",
-    "vie(?:ux|illes?)",
+    "vie(?:ux|i?lles?|i?l)",
     "vill(?:e|eneuve|ers|ette|iers|y)",
+    "vingt",
+    "voitures?",
+    "wagons?",
     "ultra",
     "à",
     "[ée]lectro",
     "[ée]qui",
+    "Fontaine",
+    "La Chapelle",
+    "Marie",
+    "Le Mesnil",
+    "Neuville",
+    "Pierre",
+    "Val",
+    "Vaux",
 ]
 
-_elision_prefix = ["entr", "grande?s?"]
 _other_hyphens = "".join([h for h in HYPHENS if h != "-"])
 
 _regular_exp = [
-    "^droits?[{hyphen}]de[{hyphen}]l'homm[{alpha}]+$".format(
-        hyphen=HYPHENS, alpha=ALPHA_LOWER
-    ),
+    "^a[{hyphen}]sexualis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^arginine[{hyphen}]méthyl[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^binge[{hyphen}]watch[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^black[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^bouche[{hyphen}]por[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^burn[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^by[{hyphen}]pass[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^ch[{elision}]tiis[{alpha}]+$".format(elision=ELISION, alpha=ALPHA_LOWER),
+    "^chape[{hyphen}]chut[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^down[{hyphen}]load[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^[ée]tats[{hyphen}]uni[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^droits?[{hyphen}]de[{hyphen}]l'homm[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^fac[{hyphen}]simil[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^fleur[{hyphen}]bleuis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^flic[{hyphen}]flaqu[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^fox[{hyphen}]trott[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^google[{hyphen}]is[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^hard[{hyphen}]discount[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^hip[{hyphen}]hop[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^jet[{hyphen}]set[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^knock[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^lèche[{hyphen}]bott[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^litho[{hyphen}]typographi[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^lock[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^lombri[{hyphen}]compost[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^mac[{hyphen}]adamis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^marque[{hyphen}]pag[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^mouton[{hyphen}]noiris[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^new[{hyphen}]york[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^pair[{hyphen}]programm[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^people[{hyphen}]is[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^plan[{hyphen}]socialis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^premier[{hyphen}]ministr[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^prud[{elision}]hom[{alpha}]+$".format(elision=ELISION, alpha=ALPHA_LOWER),
+    "^réarc[{hyphen}]bout[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^refox[{hyphen}]trott[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^remicro[{hyphen}]ond[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^repique[{hyphen}]niqu[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^repetit[{hyphen}]déjeun[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^rick[{hyphen}]roll[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^rond[{hyphen}]ponn[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^shift[{hyphen}]cliqu[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^soudo[{hyphen}]bras[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^stabilo[{hyphen}]boss[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^strip[{hyphen}]teas[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^terra[{hyphen}]form[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^teuf[{hyphen}]teuf[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
+    "^yo[{hyphen}]yo[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
     "^zig[{hyphen}]zag[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^prud[{elision}]homm[{alpha}]*$".format(elision=ELISION, alpha=ALPHA_LOWER),
+    "^z[{elision}]yeut[{alpha}]+$".format(elision=ELISION, alpha=ALPHA_LOWER),
 ]
+# catching cases like faux-vampire
 _regular_exp += [
     "^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
         prefix=p,
@@ -277,12 +378,32 @@ _regular_exp += [
     )
     for p in _hyphen_prefix
 ]
+
+# catching cases like entr'abat
+_elision_prefix = ['r?é?entr', 'grande?s?', 'r']
 _regular_exp += [
     "^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
-        prefix=p, elision=HYPHENS, hyphen=_other_hyphens, alpha=ALPHA_LOWER
+        prefix=p,
+        elision=ELISION,
+        hyphen=_other_hyphens,
+        alpha=ALPHA_LOWER,
     )
     for p in _elision_prefix
 ]
+
+# catching cases like saut-de-ski, pet-en-l'air
+_hyphen_combination = ['l[èe]s?', 'la', 'en', 'des?', 'd[eu]', 'sur', 'sous', 'aux?', 'à', 'et', "près", "saint"]
+_regular_exp += [
+    "^[{alpha}]+[{hyphen}]{hyphen_combo}[{hyphen}](?:l[{elision}])?[{alpha}]+$".format(
+        hyphen_combo=hc,
+        elision=ELISION,
+        hyphen=HYPHENS,
+        alpha=ALPHA_LOWER,
+    )
+    for hc in _hyphen_combination
+]
+
+# URLs
 _regular_exp.append(URL_PATTERN)
 
 
