@@ -8,9 +8,9 @@ import time
 from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
-from thinc.api import wrap
+from thinc.api import wrap, layerize
 from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu
+from thinc.neural.util import prefer_gpu, get_array_module
 from wasabi import Printer
 import srsly
 
@@ -99,7 +99,7 @@ def pretrain(
             conv_depth=depth,
             pretrained_vectors=pretrained_vectors,
             bilstm_depth=0,  # Requires PyTorch. Experimental.
-            cnn_maxout_pieces=2,  # You can try setting this higher
+            cnn_maxout_pieces=3,  # You can try setting this higher
             subword_features=True,
         ),
     )  # Set to False for character models, e.g. Chinese
@@ -136,7 +136,7 @@ def pretrain(
             random.shuffle(texts)
 
 
-def make_update(model, docs, optimizer, drop=0.0):
+def make_update(model, docs, optimizer, drop=0.0, objective='cosine'):
     """Perform an update over a single batch of documents.
 
     docs (iterable): A batch of `Doc` objects.
@@ -145,12 +145,12 @@ def make_update(model, docs, optimizer, drop=0.0):
     RETURNS loss: A float for the loss.
     """
     predictions, backprop = model.begin_update(docs, drop=drop)
-    gradients = get_vectors_loss(model.ops, docs, predictions)
+    gradients = get_vectors_loss(model.ops, docs, predictions, objective)
     backprop(gradients, sgd=optimizer)
     # Don't want to return a cupy object here
     # The gradients are modified in-place by the BERT MLM,
     # so we get an accurate loss
-    loss = float((gradients ** 2).mean())
+    loss = float((gradients ** 2).sum())
     return loss
 
 
@@ -172,7 +172,7 @@ def make_docs(nlp, batch, min_length=1, max_length=500):
     return docs
 
 
-def get_vectors_loss(ops, docs, prediction):
+def get_vectors_loss(ops, docs, prediction, objective):
     """Compute a mean-squared error loss between the documents' vectors and
     the prediction.
 
@@ -186,20 +186,82 @@ def get_vectors_loss(ops, docs, prediction):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
-    d_scores = prediction - target
+    if objective == 'L2':
+        d_scores = prediction - target
+    elif objective == 'nllvmf':
+        d_scores = get_nllvmf_loss(prediction, target)
+    else:
+        d_scores = get_cossim_loss(prediction, target)
     return d_scores
 
 
-def create_pretraining_model(nlp, tok2vec):
+def get_cossim_loss(yh, y):
+    # Add a small constant to avoid 0 vectors
+    yh = yh + 1e-8
+    y = y + 1e-8
+    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+    xp = get_array_module(yh)
+    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+    mul_norms = norm_yh * norm_y
+    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh**2))
+    return d_yh
+
+
+def get_nllvmf_loss(Yh, Y):
+    """Compute the gradient of the negative log likelihood von Mises-Fisher loss,
+    from Kumar and Tsetskov.
+    Yh: Predicted vectors.
+    Y: True vectors
+    Returns dYh: Gradient of loss with respect to prediction.
+    """
+    # Warning: Probably wrong? Also needs normalization
+    xp = get_array_module(Yh)
+    assert not xp.isnan(Yh).any()
+    assert not xp.isnan(Y).any()
+    return _backprop_bessel(Yh) * Y
+
+
+def _backprop_bessel(k, approximate=True):
+    if approximate:
+        return -_ratio(k.shape[1]/2, k)
+    from scipy.special import ive
+    xp = get_array_module(k)
+    if not isinstance(k, numpy.ndarray):
+        k = k.get()
+    k = numpy.asarray(k, dtype='float64')
+    assert not numpy.isnan(k).any()
+    m = k.shape[1]
+    numerator = ive(m/2, k)
+    assert not numpy.isnan(numerator).any()
+    denom = ive(m/2-1, k)
+    assert not numpy.isnan(denom).any()
+    x = -(numerator / (denom+1e-8))
+    assert not numpy.isnan(x).any()
+    return xp.array(x, dtype='f')
+
+
+def _ratio(v, z):
+    return z/(v-1+numpy.sqrt((v+1)**2 + z**2, dtype='f'))
+
+
+
+def create_pretraining_model(nlp, tok2vec, normalized=False):
     """Define a network for the pretraining. We simply add an output layer onto
     the tok2vec input model. The tok2vec input model needs to be a model that
     takes a batch of Doc objects (as a list), and returns a list of arrays.
     Each array in the output needs to have one row per token in the doc.
     """
+    if normalized:
+        normalize_vectors(nlp.vocab.vectors.data)
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        LN(Maxout(300, pieces=3)), zero_init(Affine(output_size, drop_factor=0.0))
+        LN(Maxout(300, pieces=3)),
+        Affine(output_size, drop_factor=0.0),
     )
+    if normalized:
+        output_layer = chain(output_layer, normalize)
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
     # the shape of the models' components exactly. So what we cann
@@ -211,6 +273,28 @@ def create_pretraining_model(nlp, tok2vec):
     model.output_layer = output_layer
     model.begin_training([nlp.make_doc("Give it a doc to infer shapes")])
     return model
+
+
+@layerize
+def normalize(X, drop=0.):
+    xp = get_array_module(X)
+    norms = xp.sqrt((X**2).sum(axis=1, keepdims=True)+1e-8)
+    Y = X / norms
+    def backprop_normalize(dY, sgd=None):
+        d_norms = 2 * norms
+        #dY = (dX * norms - X * d_norms) / norms**2
+        #dY * norms**2 = dX * norms - X * d_norms
+        #dY * norms**2 + X * d_norms = dX * norms
+        #(dY * norms**2 + X * d_norms) / norms = dX
+        dX = (dY * norms**2 + X * d_norms) / norms
+        return dX
+    return Y, backprop_normalize
+ 
+
+def normalize_vectors(vectors_data):
+    xp = get_array_module(vectors_data)
+    norms = xp.sqrt((vectors_data**2).sum(axis=1, keepdims=True)+1e-8)
+    vectors_data /= norms
 
 
 class ProgressTracker(object):
@@ -239,8 +323,8 @@ class ProgressTracker(object):
             status = (
                 epoch,
                 self.nr_word,
-                "%.5f" % self.loss,
-                "%.4f" % loss_per_word,
+                "%.8f" % self.loss,
+                "%.8f" % loss_per_word,
                 int(wps),
             )
             self.prev_loss = float(self.loss)
