@@ -130,7 +130,7 @@ def train(
     )
     batch_sizes = util.compounding(
         util.env_opt("batch_from", 100.0),
-        util.env_opt("batch_to", 2000.0),
+        util.env_opt("batch_to", 1000.0),
         util.env_opt("batch_compound", 1.001),
     )
 
