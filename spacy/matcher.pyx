@@ -342,6 +342,8 @@ def _convert_strings(token_specs, string_store):
                     keys = ', '.join(operators.keys())
                     raise KeyError(Errors.E011.format(op=value, opts=keys))
             if isinstance(attr, basestring):
+                if attr.upper() == 'TEXT':
+                    attr = 'ORTH'
                 attr = IDS.get(attr.upper())
             if isinstance(value, basestring):
                 value = string_store.add(value)
