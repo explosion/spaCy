@@ -1,13 +1,17 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 import pytest
-import spacy
+
+from ...lang.ja import Japanese
 
 
 def test_issue2901():
-    '''Test that `nlp` doesn't fail.'''
+    """Test that `nlp` doesn't fail."""
     try:
-        nlp = spacy.blank('ja')
+        nlp = Japanese()
     except ImportError:
         pytest.skip()
 
-    doc = nlp('pythonが大好きです')
+    doc = nlp("pythonが大好きです")
     assert doc
