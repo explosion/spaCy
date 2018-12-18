@@ -426,7 +426,7 @@ cdef class Parser:
         n_scores = 0.
         loss = 0.
         non_zeroed_classes = self._rehearsal_model.upper.W.any(axis=1)
-        while states: 
+        while states:
             targets, _ = tutor.begin_update(states)
             guesses, backprop = model.begin_update(states)
             d_scores = (targets - guesses) / targets.shape[0]

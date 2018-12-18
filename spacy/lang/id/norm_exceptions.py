@@ -1,3 +1,10 @@
+"""
+Slang and abbreviations
+
+Daftar kosakata yang sering salah dieja
+https://id.wikipedia.org/wiki/Wikipedia:Daftar_kosakata_bahasa_Indonesia_yang_sering_salah_dieja
+
+"""
 # coding: utf8
 from __future__ import unicode_literals
 

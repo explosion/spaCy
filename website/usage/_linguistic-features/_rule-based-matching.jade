@@ -206,7 +206,8 @@ p
     nlp = spacy.load('en_core_web_sm')
     matcher = PhraseMatcher(nlp.vocab)
     terminology_list = ['Barack Obama', 'Angela Merkel', 'Washington, D.C.']
-    patterns = [nlp(text) for text in terminology_list]
+    # Only run nlp.make_doc to speed things up
+    patterns = [nlp.make_doc(text) for text in terminology_list]
     matcher.add('TerminologyList', None, *patterns)
 
     doc = nlp(u"German Chancellor Angela Merkel and US President Barack Obama "

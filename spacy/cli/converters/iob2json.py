@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from ...gold import iob_to_biluo
 from ...util import minibatch
 
+import re
+
 
 def iob2json(input_data, n_sents=10, *args, **kwargs):
     """
@@ -25,7 +27,8 @@ def read_iob(raw_sents):
     for line in raw_sents:
         if not line.strip():
             continue
-        tokens = [t.split("|") for t in line.split()]
+        # tokens = [t.split("|") for t in line.split()]
+        tokens = [re.split("[^\w\-]", line.strip())]
         if len(tokens[0]) == 3:
             words, pos, iob = zip(*tokens)
         else:

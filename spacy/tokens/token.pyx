@@ -865,7 +865,7 @@ cdef class Token:
             return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
 
     property is_right_punct:
-        """RETURNS (bool): Whether the token is a left punctuation mark."""
+        """RETURNS (bool): Whether the token is a right punctuation mark."""
         def __get__(self):
             return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
 

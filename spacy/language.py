@@ -468,7 +468,7 @@ class Language(object):
         EXAMPLE:
             >>> raw_text_batches = minibatch(raw_texts)
             >>> for labelled_batch in minibatch(zip(train_docs, train_golds)):
-            >>>     docs, golds = zip(*train_docs) 
+            >>>     docs, golds = zip(*train_docs)
             >>>     nlp.update(docs, golds)
             >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
@@ -554,7 +554,7 @@ class Language(object):
 
     def resume_training(self, sgd=None, **cfg):
         """Continue training a pre-trained model.
-        
+
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
         component that has a .rehearse() method. Rehearsal is used to prevent
         models from "forgetting" their initialised "knowledge". To perform

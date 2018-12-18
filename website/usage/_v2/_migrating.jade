@@ -240,7 +240,7 @@ p
 +code-new.
     from spacy.matcher import PhraseMatcher
     matcher = PhraseMatcher(nlp.vocab)
-    patterns = [nlp(text) for text in large_terminology_list]
+    patterns = [nlp.make_doc(text) for text in large_terminology_list]
     matcher.add('PRODUCT', None, *patterns)
 
 +code-old.

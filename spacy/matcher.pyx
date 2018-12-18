@@ -291,6 +291,8 @@ cdef char get_quantifier(PatternStateC state) nogil:
 
 DEF PADDING = 5
 
+DEF PADDING = 5
+
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
                                  object token_specs) except NULL:

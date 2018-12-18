@@ -59,7 +59,7 @@ def main(model=None, output_dir=None, n_iter=100):
         # reset and initialize the weights randomly – but only if we're
         # training a new model
         if model is None:
-            optimizer = nlp.begin_training()
+            nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
