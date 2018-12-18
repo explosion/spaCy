@@ -1,19 +1,17 @@
-<!--- Provide a general summary of your changes in the title. -->
+Added alpha support for Tagalog language
 
 ## Description
-<!--- Use this section to describe your changes. If your changes required
-testing, include information about the testing environment and the tests you
-ran. If your test fixes a bug reported in an issue, don't forget to include the
-issue number. If your PR is still a work in progress, that's totally fine – just
-include a note to let us know. -->
+
+I have added alpha support for the Tagalog language from the Philippines. It is the basis for the country's national language Filipino. I have heavily based the format to the EN and ES languages.
+
+I have provided several words in the lemmatizer lookup table, added stop words from a source, translated numeric words to its Tagalog counterpart, added some tokenizer exceptions, and kept the tag map the same as the English language.
+
+While the alpha language passed the preliminary testing that you provided, I think it needs more data to be useful for most cases.
 
 ### Types of change
-<!-- What type of change does your PR cover? Is it a bug fix, an enhancement
-or new feature, or a change to the documentation? -->
+New feature
 
 ## Checklist
-<!--- Before you submit the PR, go over this checklist and make sure you can
-tick off all the boxes. [] -> [x] -->
-- [ ] I have submitted the spaCy Contributor Agreement.
-- [ ] I ran the tests, and all new and existing tests passed.
-- [ ] My changes don't require a change to the documentation, or if they do, I've added all required information.
+- [X] I have submitted the spaCy Contributor Agreement.
+- [X] I ran the tests, and all new and existing tests passed.
+- [X] My changes don't require a change to the documentation, or if they do, I've added all required information.
