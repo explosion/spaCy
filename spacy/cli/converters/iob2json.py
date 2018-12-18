@@ -1,10 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import re
+
 from ...gold import iob_to_biluo
 from ...util import minibatch
-
-import re
 
 
 def iob2json(input_data, n_sents=10, *args, **kwargs):

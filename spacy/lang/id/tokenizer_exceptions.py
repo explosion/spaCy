@@ -1,7 +1,3 @@
-"""
-Daftar singkatan dan Akronim dari:
-https://id.wiktionary.org/wiki/Wiktionary:Daftar_singkatan_dan_akronim_bahasa_Indonesia#A
-"""
 # coding: utf8
 from __future__ import unicode_literals
 

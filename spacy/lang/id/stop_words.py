@@ -1,6 +1,3 @@
-"""
-List of stop words in Bahasa Indonesia.
-"""
 # coding: utf8
 from __future__ import unicode_literals
 
