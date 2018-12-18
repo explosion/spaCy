@@ -31,7 +31,7 @@ def resolve_pos(token):
 
     Under Universal Dependencies, sometimes the same Unidic POS tag can
     be mapped differently depending on the literal token or its context
-    in the sentence. This function adds information to the POS tag to 
+    in the sentence. This function adds information to the POS tag to
     resolve ambiguous mappings.
     """
 
@@ -74,6 +74,7 @@ class JapaneseTokenizer(object):
 
         MeCab = try_mecab_import()
         self.tokenizer = MeCab.Tagger()
+        self.tokenizer.parseToNode('')  # see #2901
 
     def __call__(self, text):
         dtokens = detailed_tokens(self.tokenizer, text)
