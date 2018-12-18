@@ -82,6 +82,7 @@ class JapaneseTokenizer(object):
 
         MeCab = try_mecab_import()
         self.tokenizer = MeCab.Tagger()
+        self.tokenizer.parseToNode('')  # see #2901
 
     def __call__(self, text):
         dtokens = detailed_tokens(self.tokenizer, text)
