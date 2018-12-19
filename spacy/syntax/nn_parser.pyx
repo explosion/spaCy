@@ -341,7 +341,7 @@ cdef class Parser:
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
             int nr_class, int batch_size) nogil:
-        cdef int[500] is_valid # TODO: Unhack
+        is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
         cdef int i, guess
         cdef Transition action
         for i in range(batch_size):
@@ -350,6 +350,7 @@ cdef class Parser:
             action = self.moves.c[guess]
             action.do(states[i], action.label)
             states[i].push_hist(guess)
+        free(is_valid)
 
     def transition_beams(self, beams, float[:, ::1] scores):
         cdef Beam beam
