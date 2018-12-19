@@ -241,8 +241,12 @@ cdef class Parser:
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
-        model = self.model(docs)
         batch = self.moves.init_batch(docs)
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output.
+        self.model.resize_output(self.moves.n_moves)
+        model = self.model(docs)
         weights = get_c_weights(model)
         for state in batch:
             if not state.is_final():
@@ -257,8 +261,12 @@ cdef class Parser:
         cdef Beam beam
         cdef Doc doc
         cdef np.ndarray token_ids
-        model = self.model(docs)
         beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output. 
+        self.model.resize_output(self.moves.n_moves)
+        model = self.model(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
@@ -420,10 +428,14 @@ cdef class Parser:
         if self._rehearsal_model is None:
             return None
         losses.setdefault(self.name, 0.)
+        states = self.moves.init_batch(docs)
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output.
+        self.model.resize_output(self.moves.n_moves)
         # Prepare the stepwise model, and get the callback for finishing the batch
         tutor = self._rehearsal_model(docs)
         model, finish_update = self.model.begin_update(docs, drop=0.0)
-        states = self.moves.init_batch(docs)
         n_scores = 0.
         loss = 0.
         non_zeroed_classes = self._rehearsal_model.upper.W.any(axis=1)
