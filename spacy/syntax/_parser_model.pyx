@@ -201,6 +201,8 @@ class ParserModel(Model):
         return step_model, finish_parser_update
 
     def resize_output(self, new_output):
+        if new_output == self.upper.nO:
+            return
         smaller = self.upper
         larger = Affine(new_output, smaller.nI)
         larger.W *= 0
