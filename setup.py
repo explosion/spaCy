@@ -27,7 +27,7 @@ def is_new_osx():
         return False
 
 
-PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", ".json"]}
+PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", "*.json"]}
 
 
 PACKAGES = find_packages()
