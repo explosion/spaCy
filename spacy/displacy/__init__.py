@@ -182,6 +182,5 @@ def set_render_wrapper(func):
     """
     global RENDER_WRAPPER
     if not hasattr(func, "__call__"):
-        msg = "Invalid displaCy render wrapper. Expected callable, got: {obj}"
-        raise ValueError(msg.format(obj=type(func)))
+        raise ValueError(Errors.E110.format(obj=type(func)))
     RENDER_WRAPPER = func

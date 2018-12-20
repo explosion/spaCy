@@ -295,6 +295,7 @@ class Errors(object):
             "thing. For example, use `nlp.create_pipeline('sentencizer')`")
     E109 = ("Model for component '{name}' not initialized. Did you forget to load "
             "a model, or forget to call begin_training()?")
+    E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
 
 
 @add_codes
