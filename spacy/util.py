@@ -43,6 +43,11 @@ def get_lang_class(lang):
     RETURNS (Language): Language class.
     """
     global LANGUAGES
+    # Check if an entry point is exposed for the language code
+    entry_point = get_entry_point("spacy_languages", lang)
+    if entry_point is not None:
+        LANGUAGES[lang] = entry_point
+        return entry_point
     if lang not in LANGUAGES:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
@@ -228,6 +233,19 @@ def get_entry_points(key):
     for entry_point in pkg_resources.iter_entry_points(key):
         result[entry_point.name] = entry_point.load()
     return result
+
+
+def get_entry_point(key, value):
+    """Check if registered entry point is available for a given name and
+    load it. Otherwise, return None.
+
+    key (unicode): Entry point name.
+    value (unicode): Name of entry point to load.
+    RETURNS: The loaded entry point or None.
+    """
+    for entry_point in pkg_resources.iter_entry_points(key):
+        if entry_point.name == value:
+            return entry_point.load()
 
 
 def is_in_jupyter():
