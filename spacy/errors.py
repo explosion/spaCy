@@ -287,6 +287,8 @@ class Errors(object):
     E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
             "in favor of the pipe name `sentencizer`, which does the same "
             "thing. For example, use `nlp.create_pipeline('sentencizer')`")
+    E109 = ("Model for component '{name}' not initialized. Did you forget to load "
+            "a model, or forget to call begin_training()?")
 
 
 @add_codes
