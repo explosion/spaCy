@@ -102,8 +102,6 @@ cdef void predict_states(ActivationsC* A, StateC** states,
             index = i * n.hiddens * n.pieces + j * n.pieces
             which = Vec.arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
-            if A.hiddens[i*n.hiddens + j] < 0:
-                A.hiddens[i*n.hiddens + j] = 0
     memset(A.scores, 0, n.states * n.classes * sizeof(float))
     cdef double one = 1.0
     # Compute hidden-to-output
@@ -396,18 +394,16 @@ cdef class precompute_hiddens:
     def _nonlinearity(self, state_vector):
         if self.nP == 1:
             state_vector = state_vector.reshape(state_vector.shape[:-1])
+            mask = state_vector >= 0.
+            state_vector *= mask
         else:
-            state_vector, which = self.ops.maxout(state_vector)
-        # Apply a relu filter, so that classes that don't occur get zero prob.
-        mask = state_vector >= 0.
-        state_vector *= mask
+            state_vector, mask = self.ops.maxout(state_vector)
 
         def backprop_nonlinearity(d_best, sgd=None):
-            d_best *= mask
             if self.nP == 1:
+                d_best *= mask
                 d_best = d_best.reshape((d_best.shape + (1,)))
                 return d_best
             else:
-                d_state_vector = self.ops.backprop_maxout(d_best, which, self.nP)
-                return d_state_vector
+                return self.ops.backprop_maxout(d_best, mask, self.nP)
         return state_vector, backprop_nonlinearity
