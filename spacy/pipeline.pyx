@@ -293,9 +293,15 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
+        self.require_model()
         scores, tensors = self.predict([doc])
         self.set_annotations([doc], scores, tensors=tensors)
         return doc
+
+    def require_model(self):
+        """Raise an error if the component's model is not initialized."""
+        if getattr(self, 'model', None) in (None, True, False):
+            raise ValueError(Errors.E109.format(name=self.name))
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         """Apply the pipe to a stream of documents.
@@ -313,6 +319,7 @@ class Pipe(object):
         """Apply the pipeline's model to a batch of docs, without
         modifying them.
         """
+        self.require_model()
         raise NotImplementedError
 
     def set_annotations(self, docs, scores, tensors=None):
@@ -325,6 +332,7 @@ class Pipe(object):
 
         Delegates to predict() and get_loss().
         """
+        self.require_model()
         raise NotImplementedError
 
     def rehearse(self, docs, sgd=None, losses=None, **config):
@@ -495,6 +503,7 @@ class Tensorizer(Pipe):
         docs (iterable): A sequence of `Doc` objects.
         RETURNS (object): Vector representations for each token in the docs.
         """
+        self.require_model()
         inputs = self.model.ops.flatten([doc.tensor for doc in docs])
         outputs = self.model(inputs)
         return self.model.ops.unflatten(outputs, [len(d) for d in docs])
@@ -519,6 +528,7 @@ class Tensorizer(Pipe):
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
         """
+        self.require_model()
         if isinstance(docs, Doc):
             docs = [docs]
         inputs = []
@@ -600,6 +610,7 @@ class Tagger(Pipe):
             yield from docs
 
     def predict(self, docs):
+        self.require_model()
         if not any(len(doc) for doc in docs):
             # Handle case where there are no tokens in any docs.
             n_labels = len(self.labels)
@@ -644,6 +655,7 @@ class Tagger(Pipe):
             doc.is_tagged = True
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        self.require_model()
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
@@ -904,6 +916,7 @@ class MultitaskObjective(Tagger):
         return model
 
     def predict(self, docs):
+        self.require_model()
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
         return tokvecs, scores
@@ -1042,6 +1055,7 @@ class ClozeMultitask(Pipe):
         return sgd
 
     def predict(self, docs):
+        self.require_model()
         tokvecs = self.model.tok2vec(docs)
         vectors = self.model.output_layer(tokvecs)
         return tokvecs, vectors
@@ -1061,6 +1075,7 @@ class ClozeMultitask(Pipe):
         pass
 
     def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        self.require_model()
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         predictions, bp_predictions = self.model.begin_update(docs, drop=drop)
@@ -1105,9 +1120,11 @@ class SimilarityHook(Pipe):
             yield self(doc)
 
     def predict(self, doc1, doc2):
+        self.require_model()
         return self.model.predict([(doc1, doc2)])
 
     def update(self, doc1_doc2, golds, sgd=None, drop=0.):
+        self.require_model()
         sims, bp_sims = self.model.begin_update(doc1_doc2, drop=drop)
 
     def begin_training(self, _=tuple(), pipeline=None, sgd=None, **kwargs):
@@ -1171,6 +1188,7 @@ class TextCategorizer(Pipe):
             yield from docs
 
     def predict(self, docs):
+        self.require_model()
         scores = self.model(docs)
         scores = self.model.ops.asarray(scores)
         tensors = [doc.tensor for doc in docs]
