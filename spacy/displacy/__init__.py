@@ -81,6 +81,9 @@ def serve(
     """
     from wsgiref import simple_server
 
+    if IS_JUPYTER:
+        user_warning(Warnings.W011)
+
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server(host, port, app)
     print("\nUsing the '{}' visualizer".format(style))

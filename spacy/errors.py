@@ -54,6 +54,12 @@ class Warnings(object):
             "package overwrites built-in factory.")
     W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
             "limit anymore, so the max_length argument is now deprecated.")
+    W011 = ("It looks like you're calling displacy.serve from within a "
+            "Jupyter notebook or a similar environment. This likely means "
+            "you're already running a local web server, so there's no need to "
+            "make displaCy start another one. Instead, you should be able to "
+            "replace displacy.serve with displacy.render to show the "
+            "visualization.")
 
 
 @add_codes
