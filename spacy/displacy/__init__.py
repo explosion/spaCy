@@ -10,6 +10,7 @@ from ..util import is_in_jupyter
 
 _html = {}
 IS_JUPYTER = is_in_jupyter()
+RENDER_WRAPPER = None
 
 
 def render(
@@ -48,6 +49,8 @@ def render(
     parsed = [converter(doc, options) for doc in docs] if not manual else docs
     _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html["parsed"]
+    if RENDER_WRAPPER is not None:
+        html = RENDER_WRAPPER(html)
     if jupyter:  # return HTML rendered by IPython display()
         from IPython.core.display import display, HTML
 
@@ -153,3 +156,21 @@ def parse_ents(doc, options={}):
         user_warning(Warnings.W006)
     title = doc.user_data.get("title", None) if hasattr(doc, "user_data") else None
     return {"text": doc.text, "ents": ents, "title": title}
+
+
+def set_render_wrapper(func):
+    """Set an optional wrapper function that is called around the generated
+    HTML markup on displacy.render. This can be used to allow integration into
+    other platforms, similar to Jupyter Notebooks that require functions to be
+    called around the HTML. It can also be used to implement custom callbacks
+    on render, or to embed the visualization in a custom page.
+
+    func (callable): Function to call around markup before rendering it. Needs
+        to take one argument, the HTML markup, and should return the desired
+        output of displacy.render.
+    """
+    global RENDER_WRAPPER
+    if not hasattr(func, "__call__"):
+        msg = "Invalid displaCy render wrapper. Expected callable, got: {obj}"
+        raise ValueError(msg.format(obj=type(func)))
+    RENDER_WRAPPER = func

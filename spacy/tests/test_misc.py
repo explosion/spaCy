@@ -72,6 +72,20 @@ def test_displacy_spans(en_vocab):
     assert html.startswith("<div")
 
 
+def test_displacy_render_wrapper(en_vocab):
+    """Test that displaCy accepts custom rendering wrapper."""
+
+    def wrapper(html):
+        return "TEST" + html + "TEST"
+
+    displacy.set_render_wrapper(wrapper)
+    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
+    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"])]
+    html = displacy.render(doc, style="ent")
+    assert html.startswith("TEST<div")
+    assert html.endswith("/div>TEST")
+
+
 def test_displacy_raises_for_wrong_type(en_vocab):
     with pytest.raises(ValueError):
         displacy.render("hello world")
