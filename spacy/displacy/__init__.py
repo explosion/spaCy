@@ -59,7 +59,14 @@ def render(
 
 
 def serve(
-    docs, style="dep", page=True, minify=False, options={}, manual=False, port=5000
+    docs,
+    style="dep",
+    page=True,
+    minify=False,
+    options={},
+    manual=False,
+    port=5000,
+    host="0.0.0.0",
 ):
     """Serve displaCy visualisation.
 
@@ -70,13 +77,14 @@ def serve(
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
+    host (unicode): Host to serve visualisation.
     """
     from wsgiref import simple_server
 
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
-    httpd = simple_server.make_server("0.0.0.0", port, app)
+    httpd = simple_server.make_server(host, port, app)
     print("\nUsing the '{}' visualizer".format(style))
-    print("Serving on port {}...\n".format(port))
+    print("Serving on http://{}:{} ...\n".format(host, port))
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
