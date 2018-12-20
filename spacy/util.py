@@ -230,6 +230,19 @@ def get_entry_points(key):
     return result
 
 
+def get_entry_point(key, value):
+    """Check if registered entry point is available for a given name and
+    load it. Otherwise, return None.
+
+    key (unicode): Entry point name.
+    value (unicode): Name of entry point to load.
+    RETURNS: The loaded entry point or None.
+    """
+    for entry_point in pkg_resources.iter_entry_points(key):
+        if entry_point.name == value:
+            return entry_point.load()
+
+
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
