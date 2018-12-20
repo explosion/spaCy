@@ -236,12 +236,13 @@ def is_in_jupyter():
 
     RETURNS (bool): True if in Jupyter, False if not.
     """
+    # https://stackoverflow.com/a/39662359/6400719
     try:
-        cfg = get_ipython().config
-        if cfg["IPKernelApp"]["parent_appname"] == "ipython-notebook":
-            return True
+        shell = get_ipython().__class__.__name__
+        if shell == "ZMQInteractiveShell":
+            return True  # Jupyter notebook or qtconsole
     except NameError:
-        return False
+        return False  # Probably standard Python interpreter
     return False
 
 

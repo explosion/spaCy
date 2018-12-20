@@ -10,6 +10,7 @@ from ..util import is_in_jupyter
 
 _html = {}
 IS_JUPYTER = is_in_jupyter()
+RENDER_WRAPPER = None
 
 
 def render(
@@ -48,6 +49,8 @@ def render(
     parsed = [converter(doc, options) for doc in docs] if not manual else docs
     _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html["parsed"]
+    if RENDER_WRAPPER is not None:
+        html = RENDER_WRAPPER(html)
     if jupyter:  # return HTML rendered by IPython display()
         from IPython.core.display import display, HTML
 
@@ -56,7 +59,14 @@ def render(
 
 
 def serve(
-    docs, style="dep", page=True, minify=False, options={}, manual=False, port=5000
+    docs,
+    style="dep",
+    page=True,
+    minify=False,
+    options={},
+    manual=False,
+    port=5000,
+    host="0.0.0.0",
 ):
     """Serve displaCy visualisation.
 
@@ -67,13 +77,17 @@ def serve(
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
+    host (unicode): Host to serve visualisation.
     """
     from wsgiref import simple_server
 
+    if IS_JUPYTER:
+        user_warning(Warnings.W011)
+
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
-    httpd = simple_server.make_server("0.0.0.0", port, app)
+    httpd = simple_server.make_server(host, port, app)
     print("\nUsing the '{}' visualizer".format(style))
-    print("Serving on port {}...\n".format(port))
+    print("Serving on http://{}:{} ...\n".format(host, port))
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
@@ -153,3 +167,20 @@ def parse_ents(doc, options={}):
         user_warning(Warnings.W006)
     title = doc.user_data.get("title", None) if hasattr(doc, "user_data") else None
     return {"text": doc.text, "ents": ents, "title": title}
+
+
+def set_render_wrapper(func):
+    """Set an optional wrapper function that is called around the generated
+    HTML markup on displacy.render. This can be used to allow integration into
+    other platforms, similar to Jupyter Notebooks that require functions to be
+    called around the HTML. It can also be used to implement custom callbacks
+    on render, or to embed the visualization in a custom page.
+
+    func (callable): Function to call around markup before rendering it. Needs
+        to take one argument, the HTML markup, and should return the desired
+        output of displacy.render.
+    """
+    global RENDER_WRAPPER
+    if not hasattr(func, "__call__"):
+        raise ValueError(Errors.E110.format(obj=type(func)))
+    RENDER_WRAPPER = func

@@ -54,6 +54,12 @@ class Warnings(object):
             "package overwrites built-in factory.")
     W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
             "limit anymore, so the max_length argument is now deprecated.")
+    W011 = ("It looks like you're calling displacy.serve from within a "
+            "Jupyter notebook or a similar environment. This likely means "
+            "you're already running a local web server, so there's no need to "
+            "make displaCy start another one. Instead, you should be able to "
+            "replace displacy.serve with displacy.render to show the "
+            "visualization.")
 
 
 @add_codes
@@ -289,6 +295,7 @@ class Errors(object):
             "thing. For example, use `nlp.create_pipeline('sentencizer')`")
     E109 = ("Model for component '{name}' not initialized. Did you forget to load "
             "a model, or forget to call begin_training()?")
+    E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
 
 
 @add_codes
@@ -358,8 +365,12 @@ def _warn(message, warn_type="user"):
     message (unicode): The message to display.
     category (Warning): The Warning to show.
     """
-    w_id = message.split("[", 1)[1].split("]", 1)[0]  # get ID from string
-    if warn_type in SPACY_WARNING_TYPES and w_id not in SPACY_WARNING_IGNORE:
+    if message.startswith("["):
+        w_id = message.split("[", 1)[1].split("]", 1)[0]  # get ID from string
+    else:
+        w_id = None
+    ignore_warning = w_id and w_id in SPACY_WARNING_IGNORE
+    if warn_type in SPACY_WARNING_TYPES and not ignore_warning:
         category = WARNINGS[warn_type]
         stack = inspect.stack()[-1]
         with warnings.catch_warnings():
