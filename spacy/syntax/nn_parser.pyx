@@ -228,6 +228,7 @@ cdef class Parser:
                 yield doc
 
     def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
+        self.require_model()
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
@@ -375,6 +376,7 @@ cdef class Parser:
         return [b for b in beams if not b.is_done]
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        self.require_model()
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
