@@ -362,8 +362,12 @@ def _warn(message, warn_type="user"):
     message (unicode): The message to display.
     category (Warning): The Warning to show.
     """
-    w_id = message.split("[", 1)[1].split("]", 1)[0]  # get ID from string
-    if warn_type in SPACY_WARNING_TYPES and w_id not in SPACY_WARNING_IGNORE:
+    if message.startswith("["):
+        w_id = message.split("[", 1)[1].split("]", 1)[0]  # get ID from string
+    else:
+        w_id = None
+    ignore_warning = w_id and w_id in SPACY_WARNING_IGNORE
+    if warn_type in SPACY_WARNING_TYPES and not ignore_warning:
         category = WARNINGS[warn_type]
         stack = inspect.stack()[-1]
         with warnings.catch_warnings():
