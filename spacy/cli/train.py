@@ -221,7 +221,7 @@ def train(
                     (nlp.make_doc(rt["text"]) for rt in raw_text), size=8
                 )
             words_seen = 0
-            with _create_progress_bar(n_train_words) as pbar:
+            with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
                 for batch in util.minibatch_by_words(train_docs, size=batch_sizes):
                     if not batch:

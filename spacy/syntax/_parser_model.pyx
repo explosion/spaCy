@@ -205,7 +205,9 @@ class ParserModel(Model):
             return
         smaller = self.upper
         larger = Affine(new_output, smaller.nI)
-        larger.W *= 0
+        # Set nan as value for unseen classes, to prevent prediction.
+        larger.W.fill(self.ops.xp.nan)
+        larger.b.fill(self.ops.xp.nan)
         # It seems very unhappy if I pass these as smaller.W?
         # Seems to segfault. Maybe it's a descriptor protocol thing?
         smaller_W = smaller.W
@@ -254,8 +256,23 @@ class ParserStepModel(Model):
         if mask is not None:
             vector *= mask
         scores, get_d_vector = self.vec2scores.begin_update(vector, drop=drop)
+        # We can have nans from unseen classes.
+        # For backprop purposes, we want to treat unseen classes as having the
+        # lowest score.
+        # numpy's nan_to_num function doesn't take a value, and nan is replaced
+        # by 0...-inf is replaced by minimum, so we go via that. Ugly to the max.
+        scores[self.ops.xp.isnan(scores)] = -self.ops.xp.inf
+        self.ops.xp.nan_to_num(scores, copy=False)
 
         def backprop_parser_step(d_scores, sgd=None):
+            # If we have a non-zero gradient for a previously unseen class,
+            # replace the weight with 0.
+            new_classes = self.ops.xp.logical_and(
+                self.vec2scores.ops.xp.isnan(self.vec2scores.b),
+                d_scores.any(axis=0)
+            )
+            self.vec2scores.b[new_classes] = 0.
+            self.vec2scores.W[new_classes] = 0.
             d_vector = get_d_vector(d_scores, sgd=sgd)
             if mask is not None:
                 d_vector *= mask
@@ -400,6 +417,8 @@ cdef class precompute_hiddens:
             state_vector, mask = self.ops.maxout(state_vector)
 
         def backprop_nonlinearity(d_best, sgd=None):
+            # Fix nans (which can occur from unseen classes.)
+            d_best[self.ops.xp.isnan(d_best)] = 0.
             if self.nP == 1:
                 d_best *= mask
                 d_best = d_best.reshape((d_best.shape + (1,)))
