@@ -265,6 +265,14 @@ class ParserStepModel(Model):
         self.ops.xp.nan_to_num(scores, copy=False)
 
         def backprop_parser_step(d_scores, sgd=None):
+            # If we have a non-zero gradient for a previously unseen class,
+            # replace the weight with 0.
+            new_classes = self.ops.xp.logical_and(
+                self.vec2scores.ops.xp.isnan(self.vec2scores.b),
+                d_scores.any(axis=0)
+            )
+            self.vec2scores.b[new_classes] = 0.
+            self.vec2scores.W[new_classes] = 0.
             d_vector = get_d_vector(d_scores, sgd=sgd)
             if mask is not None:
                 d_vector *= mask
