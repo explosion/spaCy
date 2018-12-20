@@ -43,6 +43,11 @@ def get_lang_class(lang):
     RETURNS (Language): Language class.
     """
     global LANGUAGES
+    # Check if an entry point is exposed for the language code
+    entry_point = get_entry_point("spacy_languages", lang)
+    if entry_point is not None:
+        LANGUAGES[lang] = entry_point
+        return entry_point
     if lang not in LANGUAGES:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
