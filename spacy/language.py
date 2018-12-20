@@ -28,7 +28,7 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors
 from . import util
 from . import about
 
@@ -146,9 +146,6 @@ class Language(object):
         RETURNS (Language): The newly constructed object.
         """
         user_factories = util.get_entry_points("spacy_factories")
-        for factory in user_factories.keys():
-            if factory in self.factories:
-                user_warning(Warnings.W009.format(name=factory))
         self.factories.update(user_factories)
         self._meta = dict(meta)
         self._path = None
