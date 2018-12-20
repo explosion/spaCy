@@ -226,6 +226,11 @@ cdef class Parser:
                 self.set_annotations(subbatch, parse_states, tensors=None)
             for doc in batch_in_order:
                 yield doc
+                
+    def require_model(self):
+        """Raise an error if the component's model is not initialized."""
+        if getattr(self, 'model', None) in (None, True, False):
+            raise ValueError(Errors.E109.format(name=self.name))
 
     def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
         self.require_model()
