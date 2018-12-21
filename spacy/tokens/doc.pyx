@@ -1,3 +1,4 @@
+
 # coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
@@ -713,9 +714,7 @@ cdef class Doc:
         """Calculates the lowest common ancestor matrix for a given `Doc`.
         Returns LCA matrix containing the integer index of the ancestor, or -1
         if no common ancestor is found (ex if span excludes a necessary
-        ancestor). Apologies about the recursion, but the impact on
-        performance is negligible given the natural limitations on the depth
-        of a typical human sentence.
+        ancestor).
         """
         # Efficiency notes:
         # We can easily improve the performance here by iterating in Cython.
@@ -724,32 +723,36 @@ cdef class Doc:
         #     head = token + token.head
         # Both token and head will be TokenC* here. The token.head attribute
         # is an integer offset.
-        def __pairwise_lca(token_j, token_k, lca_matrix):
-            if lca_matrix[token_j.i][token_k.i] != -2:
-                return lca_matrix[token_j.i][token_k.i]
-            elif token_j == token_k:
-                lca_index = token_j.i
-            elif token_k.head == token_j:
-                lca_index = token_j.i
+        def __pairwise_lca(token_j, token_k):
+            if token_j == token_k:
+                return token_j.i
             elif token_j.head == token_k:
-                lca_index = token_k.i
-            elif (token_j.head == token_j) and (token_k.head == token_k):
-                lca_index = -1
-            else:
-                lca_index = __pairwise_lca(token_j.head, token_k.head,
-                                           lca_matrix)
-            lca_matrix[token_j.i][token_k.i] = lca_index
-            lca_matrix[token_k.i][token_j.i] = lca_index
+                return token_k.i
+            elif token_k.head == token_j:
+                return token_j.i
+            
+            token_j_ancestors = set(token_j.ancestors)
+            if token_k in token_j_ancestors:
+                return token_k.i
+            
+            for token_k_ancestor in token_k.ancestors:
+                
+                if token_k_ancestor == token_j:
+                    return token_j.i
+                
+                if token_k_ancestor in token_j_ancestors:
+                    return token_k_ancestor.i
 
-            return lca_index
+            return -1
 
         lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
         lca_matrix.fill(-2)
+
         for j in range(len(self)):
             token_j = self[j]
             for k in range(j, len(self)):
                 token_k = self[k]
-                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix)
+                lca_matrix[j][k] = __pairwise_lca(token_j, token_k)
                 lca_matrix[k][j] = lca_matrix[j][k]
         return lca_matrix
 
