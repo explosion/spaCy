@@ -39,7 +39,6 @@ def test_ru_lemmatizer_noun_lemmas(ru_lemmatizer, text, lemmas):
     assert sorted(ru_lemmatizer.noun(text)) == lemmas
 
 
-@pytest.mark.models("ru")
 @pytest.mark.parametrize(
     "text,pos,morphology,lemma",
     [

@@ -1,6 +1,13 @@
 # coding: utf8
+from __future__ import unicode_literals
+
 from ...symbols import ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
 from ...lemmatizer import Lemmatizer
+
+try:
+    Str = unicode
+except NameError:
+    Str = str
 
 
 class RussianLemmatizer(Lemmatizer):
@@ -81,7 +88,7 @@ class RussianLemmatizer(Lemmatizer):
 
     @staticmethod
     def normalize_univ_pos(univ_pos):
-        if isinstance(univ_pos, str):
+        if isinstance(univ_pos, Str):
             return univ_pos.upper()
 
         symbols_to_str = {
