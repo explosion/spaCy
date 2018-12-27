@@ -76,6 +76,7 @@ TAG_MAP = {
     "ADJ___": {"morph": "_", POS: ADJ},
     "ADP___": {"morph": "_", POS: ADP},
     "ADV___": {"morph": "_", POS: ADV},
+    "ADV__Gender=Masc": {"morph": "Gender=Masc", POS: ADV},
     "AUX__Mood=Imp|VerbForm=Fin": {"morph": "Mood=Imp|VerbForm=Fin", POS: AUX},
     "AUX__Mood=Ind|Tense=Past|VerbForm=Fin": {
         "morph": "Mood=Ind|Tense=Past|VerbForm=Fin",
@@ -90,6 +91,7 @@ TAG_MAP = {
         POS: AUX,
     },
     "AUX__VerbForm=Inf": {"morph": "VerbForm=Inf", POS: AUX},
+    "AUX__VerbForm=Inf|Voice=Pass": {"morph": "VerbForm=Inf|Voice=Pass", POS: AUX},
     "AUX__VerbForm=Part": {"morph": "VerbForm=Part", POS: AUX},
     "CONJ___": {"morph": "_", POS: CONJ},
     "DET__Case=Gen|Definite=Ind|Gender=Masc|Number=Sing|PronType=Dem": {
@@ -310,6 +312,7 @@ TAG_MAP = {
         POS: NOUN,
     },
     "NOUN__Definite=Ind|Number=Plur": {"morph": "Definite=Ind|Number=Plur", POS: NOUN},
+    "NOUN__Definite=Ind|Number=Sing": {"morph": "Definite=Ind|Number=Sing", POS: NOUN},
     "NOUN__Gender=Fem": {"morph": "Gender=Fem", POS: NOUN},
     "NOUN__Gender=Masc": {"morph": "Gender=Masc", POS: NOUN},
     "NOUN__Gender=Masc|Number=Sing": {"morph": "Gender=Masc|Number=Sing", POS: NOUN},
@@ -409,6 +412,10 @@ TAG_MAP = {
     "PRON__Case=Acc|Reflex=Yes": {"morph": "Case=Acc|Reflex=Yes", POS: PRON},
     "PRON__Case=Nom|Number=Plur|Person=3|PronType=Prs": {
         "morph": "Case=Nom|Number=Plur|Person=",
+        POS: PRON,
+    },
+    "PRON__Case=Gen|Number=Plur|Person=3|PronType=Prs": {
+        "morph": "Case=Gen|Number=Plur|Person=3|PronType=Prs",
         POS: PRON,
     },
     "PRON__Gender=Fem,Masc|Number=Sing|Person=3|PronType=Prs": {
