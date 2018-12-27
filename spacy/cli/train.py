@@ -279,6 +279,7 @@ def train(
                     "width": nlp.vocab.vectors_length,
                     "vectors": len(nlp.vocab.vectors),
                     "keys": nlp.vocab.vectors.n_keys,
+                    "name": nlp.vocab.vectors.name
                 }
                 meta.setdefault("name", "model%d" % i)
                 meta.setdefault("version", version)
