@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import random
+import uuid
 
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS
 from .templates import TPL_ENT, TPL_ENTS, TPL_FIGURE, TPL_TITLE, TPL_PAGE
@@ -42,7 +42,7 @@ class DependencyRenderer(object):
         """
         # Create a random ID prefix to make sure parses don't receive the
         # same ID, even if they're identical
-        id_prefix = random.randint(0, 999)
+        id_prefix = uuid.uuid4().hex
         rendered = [self.render_svg('{}-{}'.format(id_prefix, i), p['words'], p['arcs'])
                     for i, p in enumerate(parsed)]
         if page:
