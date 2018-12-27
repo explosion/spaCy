@@ -49,9 +49,9 @@ def evaluate(
     end = timer()
     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
     results = {
-        "Time": "%.2f s" % end - begin,
+        "Time": "%.2f s" % (end - begin),
         "Words": nwords,
-        "Words/s": "%.0f" % nwords / (end - begin),
+        "Words/s": "%.0f" % (nwords / (end - begin)),
         "TOK": "%.2f" % scorer.token_acc,
         "POS": "%.2f" % scorer.tags_acc,
         "UAS": "%.2f" % scorer.uas,
