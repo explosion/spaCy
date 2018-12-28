@@ -9,7 +9,7 @@ from ...attrs import LIKE_NUM
 _num_words = ['bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz',
               'dokuz', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış',
               'yetmiş', 'seksen', 'doksan', 'yüz', 'bin', 'milyon',
-              'milyar', 'katrilyon', 'kentilyon']
+              'milyar', 'trilyon', 'katrilyon', 'kentilyon']
 
 
 def like_num(text):
