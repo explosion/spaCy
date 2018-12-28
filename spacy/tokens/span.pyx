@@ -7,7 +7,7 @@ import numpy
 import numpy.linalg
 from libc.math cimport sqrt
 
-from .doc cimport token_by_start, token_by_end, get_token_attr
+from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
 from .token cimport TokenC
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t, hash_t
@@ -182,6 +182,16 @@ cdef class Span:
         return self.doc.merge(self.start_char, self.end_char, *args,
                               **attributes)
 
+    def get_lca_matrix(self):
+        """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
+        `Span`, where LCA[i, j] is the index of the lowest common ancestor among
+        the tokens ith and jth within the span.
+
+        RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
+            (n, n), where n = len(self).
+        """
+        return _get_lca_matrix(self.doc, self.start, self.end)
+
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.
@@ -204,50 +214,6 @@ cdef class Span:
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
-
-    def get_lca_matrix(self):
-        """Calculates the lowest common ancestor matrix for a given `Span`.
-        Returns LCA matrix containing the integer index of the ancestor, or -1
-        if no common ancestor is found (ex if span excludes a necessary
-        ancestor). Apologies about the recursion, but the impact on
-        performance is negligible given the natural limitations on the depth
-        of a typical human sentence.
-        """
-        def __pairwise_lca(token_j, token_k):
-            if token_j == token_k:
-                return token_j.i
-            elif token_j.head == token_k:
-                return token_k.i
-            elif token_k.head == token_j:
-                return token_j.i
-
-            token_j_ancestors = set(token_j.ancestors)
-            
-            if token_k in token_j_ancestors:
-                return token_k.i
-
-            for token_k_ancestor in token_k.ancestors:
-
-                if token_k_ancestor == token_j:
-                    return token_j.i
-
-                if token_k_ancestor in token_j_ancestors:
-                    return token_k_ancestor.i
-
-            return -1
-
-        n_tokens= len(self)        
-        lca_matrix = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
-        cdef int [:, :] lca_matrix_view = lca_matrix
-
-        for j in range(n_tokens):
-            token_j = self[j]
-            for k in range(j, n_tokens):
-                token_k = self[k]
-                lca_matrix_view[j, k] = __pairwise_lca(token_j, token_k)
-                lca_matrix_view[k, j] = lca_matrix_view[j, k]
-                
-        return lca_matrix
 
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy

@@ -711,12 +711,14 @@ cdef class Doc:
         return self
 
     def get_lca_matrix(self):
-        """Calculates the lowest common ancestor matrix for a given `Doc`.
-        Returns LCA matrix containing the integer index of the ancestor, or -1
-        if no common ancestor is found (ex if span excludes a necessary
-        ancestor). Internally calls Span.get_lca_matrix().
+        """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
+        `Doc`, where LCA[i, j] is the index of the lowest common ancestor among
+        token i and j.
+
+        RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
+            (n, n), where n = len(self).
         """
-        return self[:].get_lca_matrix()
+        return _get_lca_matrix(self, 0, len(self))
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
@@ -999,6 +1001,66 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
+
+
+cdef int _get_tokens_lca(Token token_j, Token token_k):
+    """Given two tokens, returns the index of the lowest common ancestor
+    (LCA) among the two. If they have no common ancestor, -1 is returned.
+
+    token_j (Token): a token.
+    token_k (Token): another token.
+    RETURNS (int): index of lowest common ancestor, or -1 if the tokens
+        have no common ancestor.
+    """
+
+    if token_j == token_k:
+        return token_j.i
+    elif token_j.head == token_k:
+        return token_k.i
+    elif token_k.head == token_j:
+        return token_j.i
+
+    token_j_ancestors = set(token_j.ancestors)
+
+    if token_k in token_j_ancestors:
+        return token_k.i
+
+    for token_k_ancestor in token_k.ancestors:
+
+        if token_k_ancestor == token_j:
+            return token_j.i
+
+        if token_k_ancestor in token_j_ancestors:
+            return token_k_ancestor.i
+
+    return -1
+
+
+cdef np.ndarray _get_lca_matrix(Doc doc, int start, int end):
+    """Given a doc and a start and end position defining a set of contiguous
+    tokens within it, returns a matrix of Lowest Common Ancestors (LCA), where
+    LCA[i, j] is the index of the lowest common ancestor among token i and j.
+
+    doc (Doc): The index of the token, or the slice of the document
+    start (int): First token to be included in the LCA matrix.
+    end (int): Position of next to last token included in the LCA matrix.
+    RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
+        (n, n), where n = len(doc).
+    """
+    cdef np.ndarray lca_matrix
+
+    tokens = doc[start:end]
+    n_tokens= end - start
+    lca_matrix = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
+
+    for j in range(n_tokens):
+        token_j = tokens[j]
+        for k in range(j, n_tokens):
+            token_k = tokens[k]
+            lca_matrix[j, k] = _get_tokens_lca(token_j, token_k)
+            lca_matrix[k, j] = lca_matrix[j, k]
+
+    return lca_matrix
 
 
 def pickle_doc(doc):
