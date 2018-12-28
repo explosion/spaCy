@@ -9207,4 +9207,4 @@ NOUNS = set("""
  zwinglianisme zwinglien zygène zygina zygnema zygolophodon zygoma zygomatique
  zygomorphie zygomycète zygopétale zygophyllacée zygoptère zygospore zygote
  zyklon zymase zymogène zymologie zymonématose zymotechnie zython zythum
-"""
+""".split())
