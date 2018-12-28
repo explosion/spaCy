@@ -714,47 +714,9 @@ cdef class Doc:
         """Calculates the lowest common ancestor matrix for a given `Doc`.
         Returns LCA matrix containing the integer index of the ancestor, or -1
         if no common ancestor is found (ex if span excludes a necessary
-        ancestor).
+        ancestor). Internally calls Span.get_lca_matrix().
         """
-        # Efficiency notes:
-        # We can easily improve the performance here by iterating in Cython.
-        # To loop over the tokens in Cython, the easiest way is:
-        # for token in doc.c[:doc.c.length]:
-        #     head = token + token.head
-        # Both token and head will be TokenC* here. The token.head attribute
-        # is an integer offset.
-        def __pairwise_lca(token_j, token_k):
-            if token_j == token_k:
-                return token_j.i
-            elif token_j.head == token_k:
-                return token_k.i
-            elif token_k.head == token_j:
-                return token_j.i
-            
-            token_j_ancestors = set(token_j.ancestors)
-            if token_k in token_j_ancestors:
-                return token_k.i
-            
-            for token_k_ancestor in token_k.ancestors:
-                
-                if token_k_ancestor == token_j:
-                    return token_j.i
-                
-                if token_k_ancestor in token_j_ancestors:
-                    return token_k_ancestor.i
-
-            return -1
-
-        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
-        lca_matrix.fill(-2)
-
-        for j in range(len(self)):
-            token_j = self[j]
-            for k in range(j, len(self)):
-                token_k = self[k]
-                lca_matrix[j][k] = __pairwise_lca(token_j, token_k)
-                lca_matrix[k][j] = lca_matrix[j][k]
-        return lca_matrix
+        return self[:].get_lca_matrix()
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.

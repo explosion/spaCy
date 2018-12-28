@@ -8,6 +8,7 @@ import numpy.linalg
 from libc.math cimport sqrt
 
 from .doc cimport token_by_start, token_by_end, get_token_attr
+from .token cimport TokenC
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t, hash_t
 from ..attrs cimport attr_id_t
@@ -212,37 +213,40 @@ cdef class Span:
         performance is negligible given the natural limitations on the depth
         of a typical human sentence.
         """
-        def __pairwise_lca(token_j, token_k, lca_matrix, margins):
-            offset = margins[0]
-            token_k_head = token_k.head if token_k.head.i in range(*margins) else token_k
-            token_j_head = token_j.head if token_j.head.i in range(*margins) else token_j
-            token_j_i = token_j.i - offset
-            token_k_i = token_k.i - offset
-            if lca_matrix[token_j_i][token_k_i] != -2:
-                return lca_matrix[token_j_i][token_k_i]
-            elif token_j == token_k:
-                lca_index = token_j_i
-            elif token_k_head == token_j:
-                lca_index = token_j_i
-            elif token_j_head == token_k:
-                lca_index = token_k_i
-            elif (token_j_head == token_j) and (token_k_head == token_k):
-                lca_index = -1
-            else:
-                lca_index = __pairwise_lca(token_j_head, token_k_head, lca_matrix, margins)
-            lca_matrix[token_j_i][token_k_i] = lca_index
-            lca_matrix[token_k_i][token_j_i] = lca_index
-            return lca_index
+        def __pairwise_lca(token_j, token_k):
+            if token_j == token_k:
+                return token_j.i
+            elif token_j.head == token_k:
+                return token_k.i
+            elif token_k.head == token_j:
+                return token_j.i
 
-        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
-        lca_matrix.fill(-2)
-        margins = [self.start, self.end]
-        for j in range(len(self)):
+            token_j_ancestors = set(token_j.ancestors)
+            
+            if token_k in token_j_ancestors:
+                return token_k.i
+
+            for token_k_ancestor in token_k.ancestors:
+
+                if token_k_ancestor == token_j:
+                    return token_j.i
+
+                if token_k_ancestor in token_j_ancestors:
+                    return token_k_ancestor.i
+
+            return -1
+
+        n_tokens= len(self)        
+        lca_matrix = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
+        cdef int [:, :] lca_matrix_view = lca_matrix
+
+        for j in range(n_tokens):
             token_j = self[j]
-            for k in range(len(self)):
+            for k in range(j, n_tokens):
                 token_k = self[k]
-                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix, margins)
-                lca_matrix[k][j] = lca_matrix[j][k]
+                lca_matrix_view[j, k] = __pairwise_lca(token_j, token_k)
+                lca_matrix_view[k, j] = lca_matrix_view[j, k]
+                
         return lca_matrix
 
     cpdef np.ndarray to_array(self, object py_attr_ids):
