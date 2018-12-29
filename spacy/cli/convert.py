@@ -69,7 +69,7 @@ def convert(
     # Use converter function to convert data
     func = CONVERTERS[converter]
     input_data = input_path.open("r", encoding="utf-8").read()
-    data = func(input_data, nsents=n_sents, use_morphology=morphology, lang=lang)
+    data = func(input_data, n_sents=n_sents, use_morphology=morphology, lang=lang)
     if output_dir != "-":
         # Export data to a file
         suffix = ".{}".format(file_type)

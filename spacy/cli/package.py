@@ -102,6 +102,7 @@ def generate_meta(model_path, existing_meta, msg):
         "width": nlp.vocab.vectors_length,
         "vectors": len(nlp.vocab.vectors),
         "keys": nlp.vocab.vectors.n_keys,
+        "name": nlp.vocab.vectors.name,
     }
     msg.divider("Generating meta.json")
     msg.text(
