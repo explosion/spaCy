@@ -1,3 +1,4 @@
+
 # coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
@@ -710,48 +711,14 @@ cdef class Doc:
         return self
 
     def get_lca_matrix(self):
-        """Calculates the lowest common ancestor matrix for a given `Doc`.
-        Returns LCA matrix containing the integer index of the ancestor, or -1
-        if no common ancestor is found (ex if span excludes a necessary
-        ancestor). Apologies about the recursion, but the impact on
-        performance is negligible given the natural limitations on the depth
-        of a typical human sentence.
+        """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
+        `Doc`, where LCA[i, j] is the index of the lowest common ancestor among
+        token i and j.
+
+        RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
+            (n, n), where n = len(self).
         """
-        # Efficiency notes:
-        # We can easily improve the performance here by iterating in Cython.
-        # To loop over the tokens in Cython, the easiest way is:
-        # for token in doc.c[:doc.c.length]:
-        #     head = token + token.head
-        # Both token and head will be TokenC* here. The token.head attribute
-        # is an integer offset.
-        def __pairwise_lca(token_j, token_k, lca_matrix):
-            if lca_matrix[token_j.i][token_k.i] != -2:
-                return lca_matrix[token_j.i][token_k.i]
-            elif token_j == token_k:
-                lca_index = token_j.i
-            elif token_k.head == token_j:
-                lca_index = token_j.i
-            elif token_j.head == token_k:
-                lca_index = token_k.i
-            elif (token_j.head == token_j) and (token_k.head == token_k):
-                lca_index = -1
-            else:
-                lca_index = __pairwise_lca(token_j.head, token_k.head,
-                                           lca_matrix)
-            lca_matrix[token_j.i][token_k.i] = lca_index
-            lca_matrix[token_k.i][token_j.i] = lca_index
-
-            return lca_index
-
-        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
-        lca_matrix.fill(-2)
-        for j in range(len(self)):
-            token_j = self[j]
-            for k in range(j, len(self)):
-                token_k = self[k]
-                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix)
-                lca_matrix[k][j] = lca_matrix[j][k]
-        return lca_matrix
+        return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
@@ -1034,6 +1001,73 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
+
+
+cdef int _get_tokens_lca(Token token_j, Token token_k):
+    """Given two tokens, returns the index of the lowest common ancestor
+    (LCA) among the two. If they have no common ancestor, -1 is returned.
+
+    token_j (Token): a token.
+    token_k (Token): another token.
+    RETURNS (int): index of lowest common ancestor, or -1 if the tokens
+        have no common ancestor.
+    """
+    if token_j == token_k:
+        return token_j.i
+    elif token_j.head == token_k:
+        return token_k.i
+    elif token_k.head == token_j:
+        return token_j.i
+
+    token_j_ancestors = set(token_j.ancestors)
+
+    if token_k in token_j_ancestors:
+        return token_k.i
+
+    for token_k_ancestor in token_k.ancestors:
+
+        if token_k_ancestor == token_j:
+            return token_j.i
+
+        if token_k_ancestor in token_j_ancestors:
+            return token_k_ancestor.i
+
+    return -1
+
+
+cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
+    """Given a doc and a start and end position defining a set of contiguous
+    tokens within it, returns a matrix of Lowest Common Ancestors (LCA), where
+    LCA[i, j] is the index of the lowest common ancestor among token i and j.
+    If the tokens have no common ancestor within the specified span,
+    LCA[i, j] will be -1.
+
+    doc (Doc): The index of the token, or the slice of the document
+    start (int): First token to be included in the LCA matrix.
+    end (int): Position of next to last token included in the LCA matrix.
+    RETURNS (int [:, :]): memoryview of numpy.array[ndim=2, dtype=numpy.int32],
+        with shape (n, n), where n = len(doc).
+    """
+    cdef int [:,:] lca_matrix
+
+    n_tokens= end - start
+    lca_matrix = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
+
+    for j in range(start, end):
+        token_j = doc[j]
+        # the common ancestor of token and itself is itself:
+        lca_matrix[j, j] = j
+        for k in range(j + 1, end):
+            lca = _get_tokens_lca(token_j, doc[k])
+            # if lca is outside of span, we set it to -1
+            if not start <= lca < end:
+                lca_matrix[j, k] = -1
+                lca_matrix[k, j] = -1
+            else:
+                lca_matrix[j, k] = lca
+                lca_matrix[k, j] = lca
+
+    return lca_matrix
 
 
 def pickle_doc(doc):
