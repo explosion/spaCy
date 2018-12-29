@@ -594,10 +594,13 @@ cdef class Doc:
         cdef attr_id_t feature
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
-        if not hasattr(py_attr_ids, '__iter__') \
-        and not isinstance(py_attr_ids, basestring_):
+        # See also #3064
+        if isinstance(py_attr_ids, basestring_):
+            # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
-
+        elif not hasattr(py_attr_ids, '__iter__'):
+            # Handle inputs like doc.to_array(ORTH)
+            py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
                        for id_ in py_attr_ids]
