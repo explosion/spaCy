@@ -39,6 +39,7 @@ cdef enum action_t:
     ADVANCE = 0100
     RETRY = 0010
     RETRY_EXTEND = 0011
+    RETRY_ADVANCE = 0110
     MATCH_EXTEND = 1001
     MATCH_REJECT = 2000
 
@@ -89,8 +90,21 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
         transition_states(states, matches, &doc.c[i], extra_attrs[i])
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
-    return [(matches[i].pattern_id, matches[i].start, matches[i].start+matches[i].length)
-            for i in range(matches.size())]
+    output = []
+    seen = set()
+    for i in range(matches.size()):
+        match = (
+            matches[i].pattern_id,
+            matches[i].start,
+            matches[i].start+matches[i].length
+        )
+        # We need to deduplicate, because we could otherwise arrive at the same
+        # match through two paths, e.g. .?.? matching 'a'. Are we matching the
+        # first .?, or the second .? -- it doesn't matter, it's just one match.
+        if match not in seen:
+            output.append(match)
+            seen.add(match)
+    return output
 
 
 cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
@@ -114,10 +128,16 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             continue
         state = states[i]
         states[q] = state
-        while action in (RETRY, RETRY_EXTEND):
+        while action in (RETRY, RETRY_ADVANCE, RETRY_EXTEND):
             if action == RETRY_EXTEND:
+                # This handles the 'extend'
                 new_states.push_back(
                     PatternStateC(pattern=state.pattern, start=state.start,
+                                  length=state.length+1))
+            if action == RETRY_ADVANCE:
+                # This handles the 'advance'
+                new_states.push_back(
+                    PatternStateC(pattern=state.pattern+1, start=state.start,
                                   length=state.length+1))
             states[q].pattern += 1
             action = get_action(states[q], token, extra_attrs)
@@ -209,7 +229,7 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
       No, non-final:
         0010
 
-    Possible combinations:  1000, 0100, 0000, 1001, 0011, 0010,
+    Possible combinations:  1000, 0100, 0000, 1001, 0110, 0011, 0010,
 
     We'll name the bits "match", "advance", "retry", "extend"
     REJECT = 0000
@@ -217,6 +237,7 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
     ADVANCE = 0100
     RETRY = 0010
     MATCH_EXTEND = 1001
+    RETRY_ADVANCE = 0110
     RETRY_EXTEND = 0011
     MATCH_REJECT = 2000 # Match, but don't include last token
 
@@ -259,8 +280,11 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
           # Yes, final: 1000
           return MATCH
       elif is_match and not is_final:
-          # Yes, non-final: 0100
-          return ADVANCE
+          # Yes, non-final: 0110
+          # We need both branches here, consider a pair like:
+          # pattern: .?b string: b
+          # If we 'ADVANCE' on the .?, we miss the match.
+          return RETRY_ADVANCE
       elif not is_match and is_final:
           # No, final 2000 (note: Don't include last token!)
           return MATCH_REJECT
