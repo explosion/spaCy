@@ -89,8 +89,21 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc):
         transition_states(states, matches, &doc.c[i], extra_attrs[i])
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
-    return [(matches[i].pattern_id, matches[i].start, matches[i].start+matches[i].length)
-            for i in range(matches.size())]
+    output = []
+    seen = set()
+    for i in range(matches.size()):
+        match = (
+            matches[i].pattern_id,
+            matches[i].start,
+            matches[i].start+matches[i].length
+        )
+        # We need to deduplicate, because we could otherwise arrive at the same
+        # match through two paths, e.g. .?.? matching 'a'. Are we matching the
+        # first .?, or the second .? -- it doesn't matter, it's just one match.
+        if match not in seen:
+            output.append(match)
+            seen.add(match)
+    return output
 
 
 cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
