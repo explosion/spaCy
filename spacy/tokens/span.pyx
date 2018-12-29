@@ -185,12 +185,13 @@ cdef class Span:
     def get_lca_matrix(self):
         """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
         `Span`, where LCA[i, j] is the index of the lowest common ancestor among
-        the tokens ith and jth within the span.
+        the tokens span[i] and span[j]. If they have no common ancestor within
+        the span, LCA[i, j] will be -1.
 
         RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
             (n, n), where n = len(self).
         """
-        return _get_lca_matrix(self.doc, self.start, self.end)
+        return numpy.asarray(_get_lca_matrix(self.doc, self.start, self.end))
 
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine

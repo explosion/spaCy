@@ -718,7 +718,7 @@ cdef class Doc:
         RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
             (n, n), where n = len(self).
         """
-        return _get_lca_matrix(self, 0, len(self))
+        return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
@@ -1039,24 +1039,28 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
     """Given a doc and a start and end position defining a set of contiguous
     tokens within it, returns a matrix of Lowest Common Ancestors (LCA), where
     LCA[i, j] is the index of the lowest common ancestor among token i and j.
+    If the tokens have no common ancestor within the specified span,
+    LCA[i, j] will be -1.
 
     doc (Doc): The index of the token, or the slice of the document
     start (int): First token to be included in the LCA matrix.
     end (int): Position of next to last token included in the LCA matrix.
-    RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
-        (n, n), where n = len(doc).
+    RETURNS (int [:, :]): memoryview of numpy.array[ndim=2, dtype=numpy.int32],
+        with shape (n, n), where n = len(doc).
     """
     cdef int [:,:] lca_matrix
 
     n_tokens= end - start
     lca_matrix = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
 
-    for j in range(n_tokens):
+    for j in range(start, end):
         token_j = doc[j]
         # the common ancestor of token and itself is itself:
         lca_matrix[j, j] = j
-        for k in range(j + 1, n_tokens):
+        for k in range(j + 1, end):
             lca_matrix[j, k] = _get_tokens_lca(token_j, doc[k])
+            if not start <= lca_matrix[j, k] < end:
+                lca_matrix[j, k] = -1
             # matrix is symmetric:
             lca_matrix[k, j] = lca_matrix[j, k]
 
