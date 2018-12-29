@@ -39,6 +39,7 @@ cdef enum action_t:
     ADVANCE = 0100
     RETRY = 0010
     RETRY_EXTEND = 0011
+    RETRY_ADVANCE = 0110
     MATCH_EXTEND = 1001
     MATCH_REJECT = 2000
 
@@ -127,10 +128,16 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             continue
         state = states[i]
         states[q] = state
-        while action in (RETRY, RETRY_EXTEND):
+        while action in (RETRY, RETRY_ADVANCE, RETRY_EXTEND):
             if action == RETRY_EXTEND:
+                # This handles the 'extend'
                 new_states.push_back(
                     PatternStateC(pattern=state.pattern, start=state.start,
+                                  length=state.length+1))
+            if action == RETRY_ADVANCE:
+                # This handles the 'advance'
+                new_states.push_back(
+                    PatternStateC(pattern=state.pattern+1, start=state.start,
                                   length=state.length+1))
             states[q].pattern += 1
             action = get_action(states[q], token, extra_attrs)
@@ -222,7 +229,7 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
       No, non-final:
         0010
 
-    Possible combinations:  1000, 0100, 0000, 1001, 0011, 0010,
+    Possible combinations:  1000, 0100, 0000, 1001, 0110, 0011, 0010,
 
     We'll name the bits "match", "advance", "retry", "extend"
     REJECT = 0000
@@ -230,6 +237,7 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
     ADVANCE = 0100
     RETRY = 0010
     MATCH_EXTEND = 1001
+    RETRY_ADVANCE = 0110
     RETRY_EXTEND = 0011
     MATCH_REJECT = 2000 # Match, but don't include last token
 
@@ -272,8 +280,11 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
           # Yes, final: 1000
           return MATCH
       elif is_match and not is_final:
-          # Yes, non-final: 0100
-          return ADVANCE
+          # Yes, non-final: 0110
+          # We need both branches here, consider a pair like:
+          # pattern: .?b string: b
+          # If we 'ADVANCE' on the .?, we miss the match.
+          return RETRY_ADVANCE
       elif not is_match and is_final:
           # No, final 2000 (note: Don't include last token!)
           return MATCH_REJECT
