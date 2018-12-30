@@ -5,10 +5,13 @@ from ..util import get_doc
 
 import pytest
 import numpy
+from numpy.testing import assert_array_equal
 
-@pytest.mark.parametrize('sentence,matrix', [
+
+@pytest.mark.parametrize('words,heads,matrix', [
     (
-        'She created a test for spacy',
+        'She created a test for spacy'.split(),
+        [1, 0, 1, -2, -1, -1],
         numpy.array([
             [0, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 1],
@@ -18,10 +21,11 @@ import numpy
             [1, 1, 3, 3, 4, 5]], dtype=numpy.int32)
     )
     ])
-def test_issue2396(EN, sentence, matrix):
-    doc = EN(sentence)
+def test_issue2396(en_vocab, words, heads, matrix):
+    doc = get_doc(en_vocab, words=words, heads=heads)
+
     span = doc[:]
-    assert (doc.get_lca_matrix() == matrix).all()
-    assert (span.get_lca_matrix() == matrix).all()
+    assert_array_equal(doc.get_lca_matrix(), matrix)
+    assert_array_equal(span.get_lca_matrix(), matrix)
 
 
