@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 # back-tracking. See Issue #957
 import regex as re
 
-from ..symbols import ORTH, POS, LEMMA, SPACE, PUNCT
+from ..symbols import ORTH, POS, TAG, LEMMA, SPACE, PUNCT
 
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
@@ -60,13 +60,13 @@ BASE_EXCEPTIONS = {}
 
 
 for exc_data in [
-    {ORTH: " ", POS: SPACE},
-    {ORTH: "\t", POS: SPACE},
-    {ORTH: "\\t", POS: SPACE},
-    {ORTH: "\n", POS: SPACE},
-    {ORTH: "\\n", POS: SPACE},
-    {ORTH: "\u2014", POS: PUNCT, LEMMA: "--"},
-    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  "},
+    {ORTH: " ", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\t", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\\t", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\n", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\\n", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\u2014"},
+    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  ", TAG: "_SP"},
 ]:
     BASE_EXCEPTIONS[exc_data[ORTH]] = [exc_data]
 

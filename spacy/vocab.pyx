@@ -11,7 +11,7 @@ from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .typedefs cimport attr_t
 from .tokens.token cimport Token
-from .attrs cimport PROB, LANG, ORTH, TAG
+from .attrs cimport PROB, LANG, ORTH, TAG, POS
 from .structs cimport SerializedLexemeC
 
 from .compat import copy_reg, basestring_
@@ -232,6 +232,10 @@ cdef class Vocab:
             token.lex = lex
             if TAG in props:
                 self.morphology.assign_tag(token, props[TAG])
+            elif POS in props:
+                # Don't allow POS to be set without TAG -- this causes problems,
+                # see #1773
+                props.pop(POS)
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
                 # NORM is the only one that overlaps between the two
