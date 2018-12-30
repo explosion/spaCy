@@ -7,7 +7,9 @@ from __future__ import unicode_literals
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 
+import numpy
 from cymem.cymem cimport Pool
+from thinc.neural.util import get_array_module
 
 from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end
 from .span cimport Span
@@ -83,6 +85,11 @@ def _merge(Doc doc, int start, int end, attributes):
     cdef Span span = doc[start:end]
     cdef int start_char = span.start_char
     cdef int end_char = span.end_char
+    # Resize the doc.tensor, if it's set. Let the last row for each token stand
+    # for the merged region. To do this, we create a boolean array indicating
+    # whether the row is to be deleted, then use numpy.delete
+    if doc.tensor is not None and doc.tensor.size != 0:
+        doc.tensor = _resize_tensor(doc.tensor, [(start, end)])
     # Get LexemeC for newly merged token
     new_orth = ''.join([t.text_with_ws for t in span])
     if span[-1].whitespace_:
@@ -182,7 +189,12 @@ def _bulk_merge(Doc doc, merges):
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
 
-
+    # Resize the doc.tensor, if it's set. Let the last row for each token stand
+    # for the merged region. To do this, we create a boolean array indicating
+    # whether the row is to be deleted, then use numpy.delete
+    if doc.tensor is not None and doc.tensor.size != 0:
+        doc.tensor = _resize_tensor(doc.tensor,
+            [(m[1][0].start, m[1][0].end) for m in merges])
     # Memorize span roots and sets dependencies of the newly merged
     # tokens to the dependencies of their roots.
     span_roots = []
@@ -276,6 +288,14 @@ def _bulk_merge(Doc doc, merges):
                 else:
                     # If they're not the same entity type, let them be two entities
                     doc.c[token_after_span_position].ent_iob = 3
-
     # Return the merged Python object
     return doc[spans[0].start]
+
+
+def _resize_tensor(tensor, ranges):
+    delete = []
+    for start, end in ranges:
+        for i in range(start, end-1):
+            delete.append(i)
+    xp = get_array_module(tensor)
+    return xp.delete(tensor, delete, axis=0)
