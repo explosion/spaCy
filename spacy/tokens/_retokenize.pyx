@@ -88,7 +88,7 @@ def _merge(Doc doc, int start, int end, attributes):
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
     # for the merged region. To do this, we create a boolean array indicating
     # whether the row is to be deleted, then use numpy.delete
-    if doc.tensor is not None:
+    if doc.tensor is not None and doc.tensor.size != 0:
         doc.tensor = _resize_tensor(doc.tensor, [(start, end)])
     # Get LexemeC for newly merged token
     new_orth = ''.join([t.text_with_ws for t in span])
@@ -192,7 +192,7 @@ def _bulk_merge(Doc doc, merges):
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
     # for the merged region. To do this, we create a boolean array indicating
     # whether the row is to be deleted, then use numpy.delete
-    if doc.tensor is not None:
+    if doc.tensor is not None and doc.tensor.size != 0:
         doc.tensor = _resize_tensor(doc.tensor,
             [(m[1][0].start, m[1][0].end) for m in merges])
     # Memorize span roots and sets dependencies of the newly merged
