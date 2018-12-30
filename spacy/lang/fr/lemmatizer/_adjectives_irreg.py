@@ -51184,5 +51184,5 @@ ADJECTIVES_IRREG = {
     "zygotique": ("zygotique",),
     "zymogène": ("zymogène",),
     "zymonucléique": ("zymonucléique",),
-    "zymotique": ("zymotiqueg",)
+    "zymotique": ("zymotique",)
 }
