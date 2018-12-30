@@ -14,7 +14,7 @@ from ..typedefs cimport flags_t, attr_t, hash_t
 from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 from ..util import normalize_slice
-from ..attrs cimport IS_PUNCT, IS_SPACE
+from ..attrs cimport *
 from ..lexeme cimport Lexeme
 from ..compat import is_config, basestring_
 from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
@@ -149,23 +149,32 @@ cdef class Span:
 
     def as_doc(self):
         # TODO: fix
-        """Create a `Doc` object view of the Span's data. This is mostly
-        useful for C-typed interfaces.
+        """Create a `Doc` object with a copy of the Span's data.
 
-        RETURNS (Doc): The `Doc` view of the span.
+        RETURNS (Doc): The `Doc` copy of the span.
         """
-        cdef Doc doc = Doc(self.doc.vocab)
-        doc.length = self.end-self.start
-        doc.c = &self.doc.c[self.start]
-        doc.mem = self.doc.mem
-        doc.is_parsed = self.doc.is_parsed
-        doc.is_tagged = self.doc.is_tagged
+        cdef Doc doc = Doc(self.doc.vocab,
+            words=[t.text for t in self],
+            spaces=[bool(t.whitespace_) for t in self])
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+        if self.doc.is_tagged:
+            array_head.append(TAG)
+        # if doc parsed add head and dep attribute
+        if self.doc.is_parsed:
+            array_head.extend([HEAD, DEP])
+        # otherwise add sent_start
+        else:
+            array_head.append(SENT_START)
+        array = self.doc.to_array(array_head)
+        doc.from_array(array_head, array[self.start : self.end])
+ 
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
         doc.user_token_hooks = self.doc.user_token_hooks
         doc.vector = self.vector
         doc.vector_norm = self.vector_norm
+        doc.tensor = self.doc.tensor[self.start : self.end]
         for key, value in self.doc.cats.items():
             if hasattr(key, '__len__') and len(key) == 3:
                 cat_start, cat_end, cat_label = key
