@@ -247,6 +247,16 @@ def test_issue1945():
     assert matches[1][1:] == (1, 3)
 
 
+def test_issue1963(en_tokenizer):
+    """Test that doc.merge() resizes doc.tensor"""
+    doc = en_tokenizer('a b c d')
+    doc.tensor = numpy.ones((len(doc), 128), dtype='f')
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2])
+    assert len(doc) == 3
+    assert doc.tensor.shape == (3, 128)
+
+
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
     ner = EntityRecognizer(Vocab())
