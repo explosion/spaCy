@@ -708,8 +708,8 @@ cdef class Doc:
                     if array[i, col] != 0:
                         self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
         # set flags
-        self.is_parsed = bool(HEAD in attrs or DEP in attrs)
-        self.is_tagged = bool(TAG in attrs or POS in attrs)
+        self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
+        self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # if document is parsed, set children
         if self.is_parsed:
             set_children_from_heads(self.c, self.length)
