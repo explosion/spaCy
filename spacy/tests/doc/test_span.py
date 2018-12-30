@@ -152,6 +152,9 @@ def test_span_as_doc(doc):
     span = doc[4:10]
     span_doc = span.as_doc()
     assert span.text == span_doc.text.strip()
+    assert isinstance(span_doc, doc.__class__)
+    assert span_doc is not doc
+    assert span_doc[0].idx == 0
 
 
 def test_span_string_label(doc):
