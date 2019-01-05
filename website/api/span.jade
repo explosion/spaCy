@@ -489,7 +489,7 @@ p
     +tag property
     +tag-model("parse")
 
-p Tokens that descend from tokens in the span, but fall outside it.
+p Tokens within the span and tokens which descend from them.
 
 +aside-code("Example").
     doc = nlp(u'Give it back! He pleaded.')
@@ -500,7 +500,7 @@ p Tokens that descend from tokens in the span, but fall outside it.
     +row("foot")
         +cell yields
         +cell #[code Token]
-        +cell A descendant of a token within the span.
+        +cell A token within the span, or a descendant from it.
 
 +h(2, "has_vector") Span.has_vector
     +tag property
