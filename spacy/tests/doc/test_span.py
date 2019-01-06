@@ -62,10 +62,24 @@ def test_spans_lca_matrix(en_tokenizer):
     tokens = en_tokenizer('the lazy dog slept')
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
     lca = doc[:2].get_lca_matrix()
-    assert(lca[0, 0] == 0)
-    assert(lca[0, 1] == -1)
-    assert(lca[1, 0] == -1)
-    assert(lca[1, 1] == 1)
+    assert lca.shape == (2, 2)
+    assert lca[0, 0] == 0  # the & the -> the
+    assert lca[0, 1] == -1 # the & lazy -> dog (out of span)
+    assert lca[1, 0] == -1 # lazy & the -> dog (out of span)
+    assert lca[1, 1] == 1  # lazy & lazy -> lazy
+
+    lca = doc[1:].get_lca_matrix()
+    assert lca.shape == (3, 3)
+    assert lca[0, 0] == 0 # lazy & lazy -> lazy
+    assert lca[0, 1] == 1 # lazy & dog -> dog
+    assert lca[0, 2] == 2 # lazy & slept -> slept
+
+    lca = doc[2:].get_lca_matrix()
+    assert lca.shape == (2, 2)
+    assert lca[0, 0] == 0 # dog & dog -> dog
+    assert lca[0, 1] == 1 # dog & slept -> slept
+    assert lca[1, 0] == 1 # slept & dog -> slept
+    assert lca[1, 1] == 1 # slept & slept -> slept
 
 
 def test_span_similarity_match():
