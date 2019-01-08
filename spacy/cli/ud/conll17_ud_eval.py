@@ -51,7 +51,7 @@
 #   - evaluate the given gold and system CoNLL-U files (loaded with load_conllu)
 #   - raises UDError if the concatenated tokens of gold and system file do not match
 #   - returns a dictionary with the metrics described above, each metrics having
-#     three fields: precision, recall and f1
+#     four fields: precision, recall, f1 and aligned_accuracy
 
 # Description of token matching
 # -----------------------------
