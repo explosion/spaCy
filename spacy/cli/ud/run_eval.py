@@ -50,14 +50,15 @@ def split_text(text):
 
 
 if __name__ == "__main__":
+    run_eval = False
 
     # STEP 0 : loading raw text
     flat_text = read_english_training(conllu=False, get_file=False)
 
     # STEP 1: load model
     start = time.time()
-    nlp = load_model(modelname='en_core_web_sm')
-    # load_english_model()
+    # nlp = load_model(modelname='en_core_web_sm')
+    nlp = load_english_model()
     end_loading = time.time()
     loading_time = end_loading - start
 
@@ -68,26 +69,31 @@ if __name__ == "__main__":
     tokenization_time = end_tokenization - end_loading
 
     # STEP 3: write and evaluate predicted tokenization
-    output_path = os.path.join(os.path.dirname(__file__), 'nlp_output.conllu')
-    with open(output_path, "w", encoding="utf8") as out_file:
-        write_conllu(docs, out_file)
-    gold_file = read_english_training(conllu=True, get_file=True)
-    gold_ud = conll17_ud_eval.load_conllu(gold_file)
-    with open(output_path, "r", encoding="utf8") as sys_file:
-        sys_ud = conll17_ud_eval.load_conllu(sys_file)
-    scores = conll17_ud_eval.evaluate(gold_ud, sys_ud)
+    if run_eval:
+        output_path = os.path.join(os.path.dirname(__file__), 'nlp_output_english.conllu')
+        with open(output_path, "w", encoding="utf8") as out_file:
+            write_conllu(docs, out_file)
+        gold_file = read_english_training(conllu=True, get_file=True)
+        gold_ud = conll17_ud_eval.load_conllu(gold_file)
+        with open(output_path, "r", encoding="utf8") as sys_file:
+            sys_ud = conll17_ud_eval.load_conllu(sys_file)
+        scores = conll17_ud_eval.evaluate(gold_ud, sys_ud)
 
-    for score_name, score in scores.items():
-        print(score_name)
-        print(" p", score.precision)
-        print(" r", score.recall)
-        print(" F", score.f1)
-        print(" acc", score.aligned_accuracy)
+        for score_name, score in scores.items():
+            print(score_name)
+            print(" p", score.precision)
+            print(" r", score.recall)
+            print(" F", score.f1)
+            print(" acc", score.aligned_accuracy)
+            print()
+
+        print("word number in gold:", len(gold_ud.words))
+        print("token number in gold:", len(gold_ud.tokens))
         print()
 
-    print("word number in gold:", len(gold_ud.words))
-    print("token number in gold:", len(gold_ud.tokens))
-    print()
     print("Loading model took {} seconds: {}".format(loading_time, nlp))
     print("Tokenizing text took {} seconds: {}".format(tokenization_time, nlp))
-    print(" which is {} tokens per second".format(len(gold_ud.tokens) / tokenization_time))
+
+    if run_eval:
+        print(" which is {} tokens per second".format(len(gold_ud.tokens) / tokenization_time))
+
