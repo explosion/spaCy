@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ....symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT
+from ....symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP, SCONJ, CCONJ
 from ....symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 from .lookup import LOOKUP
 
@@ -9,7 +9,7 @@ from .lookup import LOOKUP
 French language lemmatizer applies the default rule based lemmatization
 procedure with some modifications for better French language support.
 
-The parts of speech 'ADV', 'PRON', 'DET' and 'AUX' are added to use the 
+The parts of speech 'ADV', 'PRON', 'DET', 'ADP' and 'AUX' are added to use the 
 rule-based lemmatization. As a last resort, the lemmatizer checks in 
 the lookup table.
 '''
@@ -34,16 +34,22 @@ class FrenchLemmatizer(object):
             univ_pos = 'verb'
         elif univ_pos in (ADJ, 'ADJ', 'adj'):
             univ_pos = 'adj'
+        elif univ_pos in (ADP, 'ADP', 'adp'):
+            univ_pos = 'adp'
         elif univ_pos in (ADV, 'ADV', 'adv'):
             univ_pos = 'adv'
-        elif univ_pos in (PRON, 'PRON', 'pron'):
-            univ_pos = 'pron'
-        elif univ_pos in (DET, 'DET', 'det'):
-            univ_pos = 'det'
         elif univ_pos in (AUX, 'AUX', 'aux'):
             univ_pos = 'aux'
+        elif univ_pos in (CCONJ, 'CCONJ', 'cconj'):
+            univ_pos = 'cconj'
+        elif univ_pos in (DET, 'DET', 'det'):
+            univ_pos = 'det'
+        elif univ_pos in (PRON, 'PRON', 'pron'):
+            univ_pos = 'pron'
         elif univ_pos in (PUNCT, 'PUNCT', 'punct'):
             univ_pos = 'punct'
+        elif univ_pos in (SCONJ, 'SCONJ', 'sconj'):
+            univ_pos = 'sconj'
         else:
             return [self.lookup(string)]
         # See Issue #435 for example of where this logic is requied.
