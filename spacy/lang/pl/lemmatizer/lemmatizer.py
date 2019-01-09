@@ -31,9 +31,11 @@ class PolishLemmatizer(object):
             rules_all = [rule for rule_list in self.rules.values() for rule in rule_list]
             lemmas = lemmatize(string, index_all, exc_all, rules_all)
         else:
+            exceptions = self.exc.get(univ_pos, {}).copy()
+            exceptions.update(self.exc.get('other', {}))
             lemmas = lemmatize(string,
                                self.index.get(univ_pos, {}) | self.index.get('other', {}),
-                               self.exc.get(univ_pos, {}).update(self.exc.get('other', {})),
+                               exceptions,
                                self.rules.get(univ_pos, []) + self.rules.get('other', {})
                                )
         return lemmas
