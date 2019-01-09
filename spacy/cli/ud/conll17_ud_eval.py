@@ -98,7 +98,7 @@ class UDError(Exception):
     pass
 
 # Load given CoNLL-U file into internal representation
-def load_conllu(file):
+def load_conllu(file, check_parse=True):
     # Internal representation classes
     class UDRepresentation:
         def __init__(self):
@@ -182,8 +182,9 @@ def load_conllu(file):
                 process_word(word)
 
             # Check there is a single root node
-            if len([word for word in ud.words[sentence_start:] if word.parent is None]) != 1:
-                raise UDError("There are multiple roots in a sentence")
+            if check_parse:
+                if len([word for word in ud.words[sentence_start:] if word.parent is None]) != 1:
+                    raise UDError("There are multiple roots in a sentence")
 
             # End the sentence
             ud.sentences[-1].end = index
@@ -199,7 +200,7 @@ def load_conllu(file):
         if "." in columns[ID]:
             continue
 
-        # Delete spaces from FORM  so gold.characters == system.characters
+        # Delete spaces from FORM so gold.characters == system.characters
         # even if one of them tokenizes the space.
         columns[FORM] = columns[FORM].replace(" ", "")
         if not columns[FORM]:
@@ -248,7 +249,7 @@ def load_conllu(file):
     return ud
 
 # Evaluate the gold and system treebanks (loaded using load_conllu).
-def evaluate(gold_ud, system_ud, deprel_weights=None):
+def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
     class Score:
         def __init__(self, gold_total, system_total, correct, aligned_total=None):
             self.precision = correct / system_total if system_total else 0.0
@@ -426,18 +427,28 @@ def evaluate(gold_ud, system_ud, deprel_weights=None):
     alignment = align_words(gold_ud.words, system_ud.words)
 
     # Compute the F1-scores
-    result = {
-        "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
-        "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
-        "Words": alignment_score(alignment, None),
-        "UPOS": alignment_score(alignment, lambda w, parent: w.columns[UPOS]),
-        "XPOS": alignment_score(alignment, lambda w, parent: w.columns[XPOS]),
-        "Feats": alignment_score(alignment, lambda w, parent: w.columns[FEATS]),
-        "AllTags": alignment_score(alignment, lambda w, parent: (w.columns[UPOS], w.columns[XPOS], w.columns[FEATS])),
-        "Lemmas": alignment_score(alignment, lambda w, parent: w.columns[LEMMA]),
-        "UAS": alignment_score(alignment, lambda w, parent: parent),
-        "LAS": alignment_score(alignment, lambda w, parent: (parent, w.columns[DEPREL])),
-    }
+    if check_parse:
+        result = {
+            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
+            "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
+            "Words": alignment_score(alignment, None),
+            "UPOS": alignment_score(alignment, lambda w, parent: w.columns[UPOS]),
+            "XPOS": alignment_score(alignment, lambda w, parent: w.columns[XPOS]),
+            "Feats": alignment_score(alignment, lambda w, parent: w.columns[FEATS]),
+            "AllTags": alignment_score(alignment, lambda w, parent: (w.columns[UPOS], w.columns[XPOS], w.columns[FEATS])),
+            "Lemmas": alignment_score(alignment, lambda w, parent: w.columns[LEMMA]),
+            "UAS": alignment_score(alignment, lambda w, parent: parent),
+            "LAS": alignment_score(alignment, lambda w, parent: (parent, w.columns[DEPREL])),
+        }
+    else:
+        result = {
+            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
+            "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
+            "Words": alignment_score(alignment, None),
+            "Feats": alignment_score(alignment, lambda w, parent: w.columns[FEATS]),
+            "Lemmas": alignment_score(alignment, lambda w, parent: w.columns[LEMMA]),
+        }
+
 
     # Add WeightedLAS if weights are given
     if deprel_weights is not None:

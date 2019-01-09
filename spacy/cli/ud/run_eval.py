@@ -44,6 +44,8 @@ if __name__ == "__main__":
     # RUN PARAMETERS
     run_eval = True
     my_model = 'en_core_web_sm'
+    # my_model = 'English'
+    check_parse = False
 
     # STEP 0 : loading raw text
     # English treebanks: ESL, EWT, GUM, LinES, ParTUT, PUD
@@ -73,7 +75,7 @@ if __name__ == "__main__":
     tokens_per_s = int(len(gold_ud.tokens) / tokenization_time)
 
     print_header = ['train_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
-    print_string = [os.path.basename(train_path), len(gold_ud.tokens), my_model,
+    print_string = [os.path.basename(train_path) + ' ' + ud_version, len(gold_ud.tokens), my_model,
                     "%.2f" % loading_time, "%.2f" % tokenization_time, tokens_per_s]
 
     # STEP 4: evaluate predicted tokens and features
@@ -82,11 +84,14 @@ if __name__ == "__main__":
         with open(output_path, "w", encoding="utf8") as out_file:
             write_conllu(docs, out_file)
         with open(output_path, "r", encoding="utf8") as sys_file:
-            sys_ud = conll17_ud_eval.load_conllu(sys_file)
-        scores = conll17_ud_eval.evaluate(gold_ud, sys_ud)
+            sys_ud = conll17_ud_eval.load_conllu(sys_file, check_parse=check_parse)
+        scores = conll17_ud_eval.evaluate(gold_ud, sys_ud, check_parse=check_parse)
 
-        # fixed order for normalized printing
-        for score_name in ['Tokens', 'Words', 'Lemmas', 'Sentences', 'UPOS', 'XPOS', 'Feats', 'AllTags', 'UAS', 'LAS']:
+        # fixed order for normalized printing. don't print the last few columns if we don't have a parse
+        eval_headers = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats', 'UPOS', 'XPOS', 'AllTags', 'UAS', 'LAS']
+        if not check_parse:
+            eval_headers = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats']
+        for score_name in eval_headers:
             score = scores[score_name]
             print_string.extend(["%.2f" % score.precision,
                                  "%.2f" % score.recall,
