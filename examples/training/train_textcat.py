@@ -81,7 +81,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     if output_dir is not None:
         output_dir = Path(output_dir)
         if not output_dir.exists():
-            output_dir.mkdir()
+            output_dir.mkdir(parents=True)
         with nlp.use_params(optimizer.averages):
             nlp.to_disk(output_dir)
         print("Saved model to", output_dir)
