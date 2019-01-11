@@ -288,49 +288,54 @@ def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
 
     def spans_score(gold_spans, system_spans, to_print=False):
         correct, gi, si = 0, 0, 0
-        si_start_earlier, gi_start_earlier, end_si_earlier, end_gi_earlier = 0, 0, 0, 0
+        undersegment, oversegment, combo = 0, 0, 0
+        previous_end_si_earlier = False
+        previous_end_gi_earlier = False
         while gi < len(gold_spans) and si < len(system_spans):
             previous_si = system_spans[si-1] if si > 0 else None
             previous_gi = gold_spans[gi-1] if gi > 0 else None
             next_si = system_spans[si+1] if si+1 < len(system_spans) else None
             next_gi = gold_spans[gi+1] if gi+1 < len(gold_spans) else None
             if system_spans[si].start < gold_spans[gi].start:
-                si_start_earlier += 1
-                if to_print:
-                    print("syst start earlier", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start, system_spans[si].end)
-                    print("gold              ", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
-                    print()
+                if to_print and not previous_end_si_earlier:
+                    combo += 1
+                    oversegment += 1
+                    print("oversegment: system --> gold: ", previous_si, system_spans[si], next_si, '-->', previous_gi, gold_spans[gi], next_gi)
+                    print("combo")
                 si += 1
             elif gold_spans[gi].start < system_spans[si].start:
-                gi_start_earlier += 1
-                if to_print:
-                    print("gold start earlier", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
-                    print("syst              ", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start,
-                          system_spans[si].end)
-                    print()
+                if to_print and not previous_end_gi_earlier:
+                    combo += 1
+                    undersegment += 1
+                    print("undersegment: system --> gold: ", previous_si, system_spans[si], next_si, '-->', previous_gi, gold_spans[gi], next_gi)
+                    print("combo")
                 gi += 1
             else:
                 correct += gold_spans[gi].end == system_spans[si].end
                 if gold_spans[gi].end < system_spans[si].end:
-                    end_gi_earlier += 1
+                    undersegment += 1
+                    previous_end_gi_earlier = True
+                    previous_end_si_earlier = False
                     if to_print:
-                        print("gold end earlier", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
-                        print("syst            ", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start, system_spans[si].end)
-                        print()
+                        print("undersegment: system --> gold: ", previous_si, system_spans[si], next_si, '-->', previous_gi, gold_spans[gi], next_gi)
                 elif gold_spans[gi].end > system_spans[si].end:
-                    end_si_earlier += 1
+                    oversegment += 1
+                    previous_end_si_earlier = True
+                    previous_end_gi_earlier = False
                     if to_print:
-                        print("syst end earlier", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start, system_spans[si].end)
-                        print("gold            ", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
-                        print()
+                        print("oversegment: system --> gold: ", previous_si, system_spans[si], next_si, '-->', previous_gi, gold_spans[gi], next_gi)
+                else:
+                    previous_end_gi_earlier = False
+                    previous_end_si_earlier = False
                 si += 1
                 gi += 1
 
         if to_print:
-            print("si_start_earlier", si_start_earlier)
-            print("gi_start_earlier", gi_start_earlier)
-            print("end_si_earlier", end_si_earlier)
-            print("end_gi_earlier", end_gi_earlier)
+            print()
+            print("oversegment", oversegment)
+            print("undersegment", undersegment)
+            print("combo", combo)
+            print()
 
         return Score(len(gold_spans), len(system_spans), correct)
 
