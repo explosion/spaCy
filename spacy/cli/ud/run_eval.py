@@ -2,9 +2,11 @@ import os
 import spacy
 import time
 import re
+import operator
 
 from spacy.cli.ud import conll17_ud_eval
 from spacy.cli.ud.ud_train import write_conllu
+from spacy.lang.lex_attrs import word_shape
 
 # TODO: remove hardcoded path
 ud_location = os.path.join('C:', os.sep, 'Users', 'Sofie', 'Documents', 'data', 'UD_2_3', 'ud-treebanks-v2.3')
@@ -40,12 +42,28 @@ def split_text(text):
     return [space_re.sub(" ", par.strip()) for par in text.split("\n\n")]
 
 
+def print_high_freq(my_list, threshold):
+    d = {}
+    for token in my_list:
+        d.setdefault(token, 0)
+        d[token] += 1
+    for token, count in sorted(d.items(), key=operator.itemgetter(1), reverse=True):
+        if count >= threshold:
+            print(token, '\t', count)
+    print()
+
+
 if __name__ == "__main__":
     # RUN PARAMETERS
     run_eval = True
     # my_model = 'en_core_web_sm'
+    # my_model = 'en_core_web_md'
+    # my_model = 'en_core_web_lg'
+    # my_model = 'en_vectors_web_lg'
     my_model = 'English'
+
     check_parse = False
+    print_threshold = 10  # set high (eg 1000) not to print anything
 
     # STEP 0 : loading raw text
     # English treebanks: ESL, EWT, GUM, LinES, ParTUT, PUD
@@ -74,8 +92,8 @@ if __name__ == "__main__":
     gold_ud = conll17_ud_eval.load_conllu(gold_file)
     tokens_per_s = int(len(gold_ud.tokens) / tokenization_time)
 
-    print_header = ['train_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
-    print_string = [os.path.basename(train_path) + ' ' + ud_version, len(gold_ud.tokens), my_model,
+    print_header_1 = ['train_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
+    print_string_1 = [os.path.basename(train_path) + ' ' + ud_version, len(gold_ud.tokens), my_model,
                     "%.2f" % loading_time, "%.2f" % tokenization_time, tokens_per_s]
 
     # STEP 4: evaluate predicted tokens and features
@@ -93,22 +111,36 @@ if __name__ == "__main__":
             eval_headers = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats']
         for score_name in eval_headers:
             score = scores[score_name]
-            print_string.extend(["%.2f" % score.precision,
+            print_string_1.extend(["%.2f" % score.precision,
                                  "%.2f" % score.recall,
                                  "%.2f" % score.f1])
-            print_string.append("-" if score.aligned_accuracy is None else "%.2f" % score.aligned_accuracy)
-            print_string.append("-" if score.undersegmented is None else len(score.undersegmented))
-            print_string.append("-" if score.oversegmented is None else len(score.oversegmented))
+            print_string_1.append("-" if score.aligned_accuracy is None else "%.2f" % score.aligned_accuracy)
+            print_string_1.append("-" if score.undersegmented is None else len(score.undersegmented))
+            print_string_1.append("-" if score.oversegmented is None else len(score.oversegmented))
 
-            print_header.extend([score_name + '_p', score_name + '_r', score_name + '_F', score_name + '_acc',
+            print_header_1.extend([score_name + '_p', score_name + '_r', score_name + '_F', score_name + '_acc',
                                  'undersegmented', 'oversegmented'])
 
+            if score_name == "Tokens":
+                print()
+                print(score_name, "undersegmented:")
+                print_high_freq(score.undersegmented, print_threshold)
+                print_high_freq([word_shape(x) for x in score.undersegmented], print_threshold)
+
+                print(score_name, "oversegmented:")
+                print_high_freq(score.oversegmented, print_threshold)
+                print_high_freq([word_shape(x) for x in score.oversegmented], print_threshold)
+
+
     # STEP 5: print the results
+    print()
     print(" Loading model took {} seconds: {}".format(loading_time, nlp))
     print(" Tokenizing text took {} seconds".format(tokenization_time))
     print(" Tokens per second: {}".format(tokens_per_s))
     print()
 
-    print(';'.join(map(str, print_header)))
-    print(';'.join(map(str, print_string)))
+    print(';'.join(map(str, print_header_1)))
+    print(';'.join(map(str, print_string_1)))
+    print()
+
 

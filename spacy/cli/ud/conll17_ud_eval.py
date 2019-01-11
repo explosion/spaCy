@@ -302,22 +302,22 @@ def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
                 # avoid counting the same mistake twice
                 if not previous_end_si_earlier:
                     combo += 1
-                    oversegmented.append(previous_gi)
+                    oversegmented.append(str(previous_gi).strip())
                 si += 1
             elif gold_spans[gi].start < system_spans[si].start:
                 # avoid counting the same mistake twice
                 if not previous_end_gi_earlier:
                     combo += 1
-                    undersegmented.append(previous_si)
+                    undersegmented.append(str(previous_si).strip())
                 gi += 1
             else:
                 correct += gold_spans[gi].end == system_spans[si].end
                 if gold_spans[gi].end < system_spans[si].end:
-                    undersegmented.append(system_spans[si])
+                    undersegmented.append(str(system_spans[si]).strip())
                     previous_end_gi_earlier = True
                     previous_end_si_earlier = False
                 elif gold_spans[gi].end > system_spans[si].end:
-                    oversegmented.append(gold_spans[gi])
+                    oversegmented.append(str(gold_spans[gi]).strip())
                     previous_end_si_earlier = True
                     previous_end_gi_earlier = False
                 else:
