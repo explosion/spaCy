@@ -97,7 +97,11 @@ if __name__ == "__main__":
                                  "%.2f" % score.recall,
                                  "%.2f" % score.f1])
             print_string.append("-" if score.aligned_accuracy is None else "%.2f" % score.aligned_accuracy)
-            print_header.extend([score_name + '_p', score_name + '_r', score_name + '_F', score_name + '_acc'])
+            print_string.append("-" if score.undersegmented is None else len(score.undersegmented))
+            print_string.append("-" if score.oversegmented is None else len(score.oversegmented))
+
+            print_header.extend([score_name + '_p', score_name + '_r', score_name + '_F', score_name + '_acc',
+                                 'undersegmented', 'oversegmented'])
 
     # STEP 5: print the results
     print(" Loading model took {} seconds: {}".format(loading_time, nlp))
