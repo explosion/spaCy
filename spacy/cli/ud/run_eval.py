@@ -43,8 +43,8 @@ def split_text(text):
 if __name__ == "__main__":
     # RUN PARAMETERS
     run_eval = True
-    my_model = 'en_core_web_sm'
-    # my_model = 'English'
+    # my_model = 'en_core_web_sm'
+    my_model = 'English'
     check_parse = False
 
     # STEP 0 : loading raw text
@@ -58,8 +58,8 @@ if __name__ == "__main__":
 
     # STEP 1: load model
     start = time.time()
-    nlp = load_model(modelname=my_model)
-    # nlp = load_english_model()
+    # nlp = load_model(modelname=my_model)
+    nlp = load_english_model()
     end_loading = time.time()
     loading_time = end_loading - start
 

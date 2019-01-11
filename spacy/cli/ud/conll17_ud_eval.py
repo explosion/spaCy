@@ -286,17 +286,51 @@ def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
             return text.decode("utf-8").lower()
         return text.lower()
 
-    def spans_score(gold_spans, system_spans):
+    def spans_score(gold_spans, system_spans, to_print=False):
         correct, gi, si = 0, 0, 0
+        si_start_earlier, gi_start_earlier, end_si_earlier, end_gi_earlier = 0, 0, 0, 0
         while gi < len(gold_spans) and si < len(system_spans):
+            previous_si = system_spans[si-1] if si > 0 else None
+            previous_gi = gold_spans[gi-1] if gi > 0 else None
+            next_si = system_spans[si+1] if si+1 < len(system_spans) else None
+            next_gi = gold_spans[gi+1] if gi+1 < len(gold_spans) else None
             if system_spans[si].start < gold_spans[gi].start:
+                si_start_earlier += 1
+                if to_print:
+                    print("syst start earlier", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start, system_spans[si].end)
+                    print("gold              ", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
+                    print()
                 si += 1
             elif gold_spans[gi].start < system_spans[si].start:
+                gi_start_earlier += 1
+                if to_print:
+                    print("gold start earlier", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
+                    print("syst              ", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start,
+                          system_spans[si].end)
+                    print()
                 gi += 1
             else:
                 correct += gold_spans[gi].end == system_spans[si].end
+                if gold_spans[gi].end < system_spans[si].end:
+                    end_gi_earlier += 1
+                    if to_print:
+                        print("gold end earlier", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
+                        print("syst            ", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start, system_spans[si].end)
+                        print()
+                elif gold_spans[gi].end > system_spans[si].end:
+                    end_si_earlier += 1
+                    if to_print:
+                        print("syst end earlier", "SI_" + str(si), previous_si, system_spans[si], next_si, system_spans[si].start, system_spans[si].end)
+                        print("gold            ", "GI_" + str(gi), previous_gi, gold_spans[gi], next_gi, gold_spans[gi].start, gold_spans[gi].end)
+                        print()
                 si += 1
                 gi += 1
+
+        if to_print:
+            print("si_start_earlier", si_start_earlier)
+            print("gi_start_earlier", gi_start_earlier)
+            print("end_si_earlier", end_si_earlier)
+            print("end_gi_earlier", end_gi_earlier)
 
         return Score(len(gold_spans), len(system_spans), correct)
 
@@ -429,7 +463,7 @@ def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
     # Compute the F1-scores
     if check_parse:
         result = {
-            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
+            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens, to_print=True),
             "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
             "Words": alignment_score(alignment, None),
             "UPOS": alignment_score(alignment, lambda w, parent: w.columns[UPOS]),
@@ -442,7 +476,7 @@ def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
         }
     else:
         result = {
-            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
+            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens, to_print=True),
             "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
             "Words": alignment_score(alignment, None),
             "Feats": alignment_score(alignment, lambda w, parent: w.columns[FEATS]),
