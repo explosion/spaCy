@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           | Loghi Perinpanayagam                     |
 | Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
+| Title or role (if applicable)  |   Student                   |
+| Date                           |   13 Jan, 2019                    |
+| GitHub username                |   loghijiaha                  |
 | Website (optional)             |                      |
