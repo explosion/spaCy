@@ -146,7 +146,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
                     word = literal_eval(key)
                 except SyntaxError:
                     # Take odd strings literally.
-                    word = literal_eval("'%s'" % word)
+                    word = literal_eval("'%s'" % key)
                 smooth_count = counts.smoother(int(freq))
                 probs[word] = math.log(smooth_count) - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total
