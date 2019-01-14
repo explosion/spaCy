@@ -1,3 +1,4 @@
+
 //- 💫 DOCS > API > TOKEN
 
 include ../_includes/_mixins
@@ -405,7 +406,7 @@ p
     +tag property
     +tag-model("parse")
 
-p A sequence of all the token's syntactic descendants.
+p A sequence containing the token and all the token's syntactic descendants.
 
 +aside-code("Example").
     doc = nlp(u'Give it back! He pleaded.')
@@ -416,7 +417,7 @@ p A sequence of all the token's syntactic descendants.
     +row("foot")
         +cell yields
         +cell #[code Token]
-        +cell A descendant token such that #[code self.is_ancestor(descendant)].
+        +cell A descendant token such that #[code self.is_ancestor(token) or token == self].
 
 +h(2, "is_sent_start") Token.is_sent_start
     +tag property

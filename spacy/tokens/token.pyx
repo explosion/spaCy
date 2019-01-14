@@ -451,10 +451,11 @@ cdef class Token:
             yield from self.rights
 
     property subtree:
-        """A sequence of all the token's syntactic descendents.
+        """A sequence containing the token and all the token's syntactic
+        descendants.
 
         YIELDS (Token): A descendent token such that
-            `self.is_ancestor(descendent)`.
+            `self.is_ancestor(descendent) or token == self`.
         """
         def __get__(self):
             for word in self.lefts:
@@ -854,7 +855,7 @@ cdef class Token:
             return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
 
     property is_right_punct:
-        """RETURNS (bool): Whether the token is a left punctuation mark."""
+        """RETURNS (bool): Whether the token is a right punctuation mark."""
         def __get__(self):
             return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
 

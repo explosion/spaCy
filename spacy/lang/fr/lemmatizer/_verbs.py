@@ -3,48 +3,49 @@ from __future__ import unicode_literals
 
 
 VERBS = set("""
- abaisser abandonner abdiquer abecquer abéliser aberrer abhorrer abîmer abjurer
- ablater abluer ablutionner abominer abonder abonner aborder aborner aboucher
- abouler abouter abraquer abraser abreuver abricoter abriter absenter absinther
- absolutiser absorber abuser académifier académiser acagnarder accabler
- accagner accaparer accastiller accentuer accepter accessoiriser accidenter
- acclamer acclimater accointer accolader accoler accommoder accompagner
- accorder accorer accoster accoter accoucher accouder accouer accoupler
- accoutrer accoutumer accouver accrassiner accréditer accrocher acculer
- acculturer accumuler accuser acenser acétaliser acétyler achalander acharner
- acheminer achopper achromatiser aciduler aciériser acliquer acoquiner acquêter
- acquitter acter actiniser actionner activer actoriser actualiser acupuncturer
- acyler adapter additionner adenter adieuser adirer adjectiver adjectiviser
- adjurer adjuver administrer admirer admonester adoniser adonner adopter adorer
- adorner adosser adouber adresser adsorber aduler adverbialiser aéroporter
- aérosoliser aérosonder aérotransporter affabuler affacturer affairer affaisser
- affaiter affaler affamer affecter affectionner affermer afficher affider
- affiler affiner affirmer affistoler affixer affleurer afflouer affluer affoler
- afforester affouiller affourcher affriander affricher affrioler affriquer
- affriter affronter affruiter affubler affurer affûter afghaniser afistoler
- africaniser agatiser agenouiller agglutiner aggraver agioter agiter agoniser
- agourmander agrafer agrainer agrémenter agresser agriffer agripper
- agroalimentariser agrouper aguetter aguicher ahaner aheurter aicher aider
- aigretter aiguer aiguiller aiguillonner aiguiser ailer ailler ailloliser
- aimanter aimer airer ajointer ajourer ajourner ajouter ajuster ajuter
- alambiquer alarmer albaniser albitiser alcaliniser alcaliser alcooliser
- alcoolyser alcoyler aldoliser alerter aleviner algébriser algérianiser
- algorithmiser aligner alimenter alinéater alinéatiser aliter alkyler allaiter
- allectomiser allégoriser allitiser allivrer allocutionner alloter allouer
- alluder allumer allusionner alluvionner allyler aloter alpaguer alphabétiser
- alterner aluminer aluminiser aluner alvéoler alvéoliser amabiliser amadouer
- amalgamer amariner amarrer amateloter ambitionner ambler ambrer ambuler
- améliorer amender amenuiser américaniser ameulonner ameuter amhariser amiauler
- amicoter amidonner amignarder amignoter amignotter aminer ammoniaquer
- ammoniser ammoxyder amocher amouiller amouracher amourer amphotériser ampouler
- amputer amunitionner amurer amuser anagrammatiser anagrammer analyser
- anamorphoser anaphylactiser anarchiser anastomoser anathématiser anatomiser
- ancher anchoiter ancrer anecdoter anecdotiser angéliser anglaiser angler
- angliciser angoisser anguler animaliser animer aniser ankyloser annexer
- annihiler annoter annualiser annuler anodiser ânonner anser antagoniser
- antéposer antérioriser anthropomorphiser anticiper anticoaguler antidater
- antiparasiter antiquer antiseptiser anuiter aoûter apaiser apériter apetisser
- apeurer apicaliser apiquer aplaner apologiser aponévrotomiser aponter aposter
+ abaisser abandonner abdiquer abecquer abéliser aberrer abhorrer abîmer
+ abjurer  ablater abluer ablutionner abominer abonder abonner aborder aborner
+ aboucher  abouler abouter abraquer abraser abreuver abricoter abriter absenter
+ absinther  absolutiser absorber abuser académifier académiser acagnarder
+ accabler  accagner accaparer accastiller accentuer accepter accessoiriser
+ accidenter  acclamer acclimater accointer accolader accoler accommoder
+ accompagner  accorder accorer accoster accoter accoucher accouder accouer
+ accoupler  accoutrer accoutumer accouver accrassiner accréditer accrocher
+ acculer  acculturer accumuler accuser acenser acétaliser acétyler achalander
+ acharner  acheminer achopper achromatiser aciduler aciériser acliquer
+ acoquiner acquêter  acquitter acter actiniser actionner activer actoriser
+ actualiser acupuncturer  acyler adapter additionner adenter adieuser adirer
+ adjectiver adjectiviser  adjurer adjuver administrer admirer admonester
+ adoniser adonner adopter adorer  adorner adosser adouber adresser adsorber
+ aduler adverbialiser aéroporter  aérosoliser aérosonder aérotransporter
+ affabuler affacturer affairer affaisser  affaiter affaler affamer affecter
+ affectionner affermer afficher affider  affiler affiner affirmer affistoler
+ affixer affleurer afflouer affluer affoler  afforester affouiller affourcher
+ affriander affricher affrioler affriquer  affriter affronter affruiter
+ affubler affurer affûter afghaniser afistoler  africaniser agatiser
+ agenouiller agglutiner aggraver agioter agiter agoniser  agourmander agrafer
+ agrainer agrémenter agresser agriffer agripper  agroalimentariser agrouper
+ aguetter aguicher ahaner aheurter aicher aider  aigretter aiguer aiguiller
+ aiguillonner aiguiser ailer ailler ailloliser  aimanter aimer airer ajointer
+ ajourer ajourner ajouter ajuster ajuter  alambiquer alarmer albaniser
+ albitiser alcaliniser alcaliser alcooliser  alcoolyser alcoyler aldoliser
+ alerter aleviner algébriser algérianiser  algorithmiser aligner alimenter
+ alinéater alinéatiser aliter alkyler allaiter  allectomiser allégoriser
+ allitiser allivrer allocutionner alloter allouer  alluder allumer allusionner
+ alluvionner allyler aloter alpaguer alphabétiser  alterner aluminer aluminiser
+ aluner alvéoler alvéoliser amabiliser amadouer  amalgamer amariner amarrer
+ amateloter ambitionner ambler ambrer ambuler  améliorer amender amenuiser
+ américaniser ameulonner ameuter amhariser amiauler  amicoter amidonner
+ amignarder amignoter amignotter aminer ammoniaquer  ammoniser ammoxyder
+ amocher amouiller amouracher amourer amphotériser ampouler  amputer
+ amunitionner amurer amuser anagrammatiser anagrammer analyser  anamorphoser
+ anaphylactiser anarchiser anastomoser anathématiser anatomiser  ancher
+ anchoiter ancrer anecdoter anecdotiser angéliser anglaiser angler  angliciser
+ angoisser anguler animaliser animer aniser ankyloser annexer  annihiler
+ annoter annualiser annuler anodiser ânonner anser antagoniser  antéposer
+ antérioriser anthropomorphiser anticiper anticoaguler antidater  antiparasiter
+ antiquer antiseptiser anuiter aoûter apaiser apériter apetisser  apeurer
+ apicaliser apiquer aplaner apologiser aponévrotomiser aponter aposter
  apostiller apostoliser apostropher apostumer apothéoser appareiller apparenter
  appeauter appertiser appliquer appointer appoltronner apponter apporter
  apposer appréhender apprêter apprivoiser approcher approuver approvisionner
@@ -72,10 +73,10 @@ VERBS = set("""
  autodéterminer autodévelopper autodévorer autodicter autodiscipliner
  autodupliquer autoéduquer autoenchâsser autoenseigner autoépurer autoéquiper
  autoévaporiser autoévoluer autoféconder autofertiliser autoflageller
- autofonder autoformer autofretter autogouverner autogreffer autoguider auto-
- immuniser auto-ioniser autolégitimer autolimiter autoliquider autolyser
- automatiser automédiquer automitrailler automutiler autonomiser auto-
- optimaliser auto-optimiser autoorganiser autoperpétuer autopersuader
+ autofonder autoformer autofretter autogouverner autogreffer autoguider
+ auto-immuniser auto-ioniser autolégitimer autolimiter autoliquider autolyser
+ automatiser automédiquer automitrailler automutiler autonomiser
+ auto-optimaliser auto-optimiser autoorganiser autoperpétuer autopersuader
  autopiloter autopolliniser autoporter autopositionner autoproclamer
  autopropulser autoréaliser autorecruter autoréglementer autoréguler
  autorelaxer autoréparer autoriser autosélectionner autosevrer autostabiliser
@@ -878,8 +879,8 @@ VERBS = set("""
  raccommoder raccompagner raccorder raccoutrer raccoutumer raccrocher racémiser
  rachalander racher raciner racketter racler râcler racoler raconter racoquiner
  radariser rader radicaliser radiner radioactiver radiobaliser radiocommander
- radioconserver radiodétecter radiodiffuser radioexposer radioguider radio-
- immuniser radiolocaliser radiopasteuriser radiosonder radiostériliser
+ radioconserver radiodétecter radiodiffuser radioexposer radioguider
+ radio-immuniser radiolocaliser radiopasteuriser radiosonder radiostériliser
  radiotéléphoner radiotéléviser radoter radouber rafaler raffermer raffiler
  raffiner raffluer raffoler raffûter rafistoler rafler ragoter ragoûter
  ragrafer raguer raguser raiguiser railler rainer rainurer raisonner rajouter
@@ -1122,8 +1123,8 @@ VERBS = set("""
  sommer somnambuler somniloquer somnoler sonder sonnailler sonner sonoriser
  sophistiquer sorguer soubresauter souder souffler souffroter soufrer souhaiter
  souiller souillonner soûler souligner soûlotter soumissionner soupailler
- soupçonner souper soupirer souquer sourciller sourdiner sous-capitaliser sous-
- catégoriser sousestimer sous-estimer sous-industrialiser sous-médicaliser
+ soupçonner souper soupirer souquer sourciller sourdiner sous-capitaliser
+ sous-catégoriser sousestimer sous-estimer sous-industrialiser sous-médicaliser
  sousperformer sous-qualifier soussigner sous-titrer sous-utiliser soutacher
  souter soutirer soviétiser spammer spasmer spatialiser spatuler spécialiser
  spéculer sphéroïdiser spilitiser spiraler spiraliser spirantiser spiritualiser
