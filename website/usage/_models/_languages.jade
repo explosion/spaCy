@@ -31,13 +31,13 @@ p
         nlp = spacy.blank('fi')  # blank instance
 
 +table(["Language", "Code", "Language data"])
-    for lang, code in LANGUAGES
-        if !Object.keys(MODELS).includes(code)
-            +row
-                +cell #{LANGUAGES[code]}
-                +cell #[code=code]
-                +cell
-                    +src(gh("spaCy", "spacy/lang/" + code)) #[code lang/#{code}]
+    - var sorted_langs = Object.assign({}, ...Object.keys(LANGUAGES).filter(key => !MODELS[key]).sort().map(key => ({ [key]: LANGUAGES[key] })))
+    for lang, code in sorted_langs
+        +row
+            +cell #{LANGUAGES[code]}
+            +cell #[code=code]
+            +cell
+                +src(gh("spaCy", "spacy/lang/" + code)) #[code lang/#{code}]
 
 +infobox("Dependencies")
     .o-block-small Some language tokenizers require external dependencies.

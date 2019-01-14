@@ -33,7 +33,6 @@ def test_de_tokenizer_norm_exceptions(de_tokenizer, text, norms):
     assert [token.norm_ for token in tokens] == norms
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize('text,norm', [("daß", "dass")])
 def test_de_lex_attrs_norm_exceptions(de_tokenizer, text, norm):
     tokens = de_tokenizer(text)

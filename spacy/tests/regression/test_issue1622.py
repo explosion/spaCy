@@ -7,7 +7,6 @@ import pytest
 from ...cli.train import train
 
 
-@pytest.mark.xfail
 def test_cli_trained_model_can_be_saved(tmpdir):
     lang = 'nl'
     output_dir = str(tmpdir)
