@@ -24,14 +24,15 @@ for verb_data in [
             dict(data),
             {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"}]
 
-
+# Abbreviations for weekdays "sön." (for "söndag" / "söner")
+# are left out because they are ambiguous. The same is the case
+# for abbreviations "jul." and "Jul." ("juli" / "jul").
 for exc_data in [
     {ORTH: "jan.", LEMMA: "januari"},
     {ORTH: "febr.", LEMMA: "februari"},
     {ORTH: "feb.", LEMMA: "februari"},
     {ORTH: "apr.", LEMMA: "april"},
     {ORTH: "jun.", LEMMA: "juni"},
-    {ORTH: "jul.", LEMMA: "juli"},
     {ORTH: "aug.", LEMMA: "augusti"},
     {ORTH: "sept.", LEMMA: "september"},
     {ORTH: "sep.", LEMMA: "september"},
@@ -44,13 +45,11 @@ for exc_data in [
     {ORTH: "tors.", LEMMA: "torsdag"},
     {ORTH: "fre.", LEMMA: "fredag"},
     {ORTH: "lör.", LEMMA: "lördag"},
-    {ORTH: "sön.", LEMMA: "söndag"},
     {ORTH: "Jan.", LEMMA: "Januari"},
     {ORTH: "Febr.", LEMMA: "Februari"},
     {ORTH: "Feb.", LEMMA: "Februari"},
     {ORTH: "Apr.", LEMMA: "April"},
     {ORTH: "Jun.", LEMMA: "Juni"},
-    {ORTH: "Jul.", LEMMA: "Juli"},
     {ORTH: "Aug.", LEMMA: "Augusti"},
     {ORTH: "Sept.", LEMMA: "September"},
     {ORTH: "Sep.", LEMMA: "September"},
@@ -63,7 +62,6 @@ for exc_data in [
     {ORTH: "Tors.", LEMMA: "Torsdag"},
     {ORTH: "Fre.", LEMMA: "Fredag"},
     {ORTH: "Lör.", LEMMA: "Lördag"},
-    {ORTH: "Sön.", LEMMA: "Söndag"},
     {ORTH: "sthlm", LEMMA: "Stockholm"},
     {ORTH: "gbg", LEMMA: "Göteborg"}]:
     _exc[exc_data[ORTH]] = [exc_data]
