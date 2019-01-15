@@ -69,19 +69,30 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
+# Specific case abbreviations only
+for orth in ["AB", "Dr.", "H.M.", "H.K.H.", "m/s", "M/S", "Ph.d.", "S:t", "s:t"]:
+    _exc[orth] = [{ORTH: orth}]
+
+
 ABBREVIATIONS = [
-    "ang", "anm", "bil", "bl.a", "d.v.s", "doc", "dvs", "e.d", "e.kr", "el",
-    "eng", "etc", "exkl", "f", "f.d", "f.kr", "f.n", "f.ö", "fid", "fig",
-    "forts", "fr.o.m", "förf", "inkl", "jur", "kap", "kl", "kor", "kr",
-    "kungl", "lat", "m.a.o", "m.fl", "m.m", "max", "milj", "min", "mos",
-    "mt", "o.d", "o.s.v", "obs", "osv", "p.g.a", "proc", "prof", "ref",
-    "resp", "s.a.s", "s.k", "s.t", "sid", "s:t", "t.ex", "t.h", "t.o.m", "t.v",
-    "tel", "ung", "vol", "äv", "övers"
+    "ang", "anm", "bl.a", "d.v.s", "doc", "dvs", "e.d", "e.kr", "el.",
+    "eng", "etc", "exkl", "ev", "f.", "f.d", "f.kr", "f.n", "f.ö", "fid", "fig",
+    "forts", "fr.o.m", "förf", "inkl", "iofs", "jur.", "kap", "kl", "kor.", "kr",
+    "kungl", "lat", "m.a.o", "m.fl", "m.m", "max", "milj", "min.", "mos",
+    "mt", "mvh", "o.d", "o.s.v", "obs", "osv", "p.g.a", "proc", "prof", "ref",
+    "resp", "s.a.s", "s.k", "s.t", "sid", "t.ex", "t.h", "t.o.m", "t.v",
+    "tel", "ung.", "vol", "v.", "äv", "övers"
 ]
-ABBREVIATIONS = [abbr + "." for abbr in ABBREVIATIONS] + ABBREVIATIONS
+
+# Add abbreviation for trailing punctuation too. If the abbreviation already has a trailing punctuation - skip it.
+for abbr in ABBREVIATIONS:
+    if abbr.endswith(".") == False:
+        ABBREVIATIONS.append(abbr + ".")
 
 for orth in ABBREVIATIONS:
     _exc[orth] = [{ORTH: orth}]
+    capitalized = orth.capitalize()
+    _exc[capitalized] = [{ORTH: capitalized}]
 
 # Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
 # should be tokenized as two separate tokens.
