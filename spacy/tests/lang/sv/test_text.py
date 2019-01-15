@@ -13,3 +13,9 @@ röda ben och snackade engelska, för det språket hade han lärt sig av sin mor
 Runt om åkrar och äng låg den stora skogen, och mitt i skogen fanns djupa sjöar; jo, det var verkligen trevligt ute på landet!"""
     tokens = sv_tokenizer(text)
     assert len(tokens) == 86
+
+
+def test_sv_tokenizer_handles_trailing_dot_for_i_in_sentence(sv_tokenizer):
+    text = "Provar att tokenisera en mening med ord i."
+    tokens = sv_tokenizer(text)
+    assert len(tokens) == 9
