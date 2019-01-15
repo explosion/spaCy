@@ -39,7 +39,7 @@ def read_iob(raw_sents):
             words, iob = zip(*tokens)
             pos = ['-'] * len(words)
         else:
-            raise Exception('The iob/iob2 file is not formatted correctly. Try checking whitespace and delimiters.')
+            raise ValueError('The iob/iob2 file is not formatted correctly. Try checking whitespace and delimiters.')
         biluo = iob_to_biluo(iob)
         sentences.append([
             {'orth': w, 'tag': p, 'ner': ent}
