@@ -3,6 +3,7 @@ import spacy
 import time
 import re
 import operator
+import datetime
 
 from spacy.cli.ud import conll17_ud_eval
 from spacy.cli.ud.ud_train import write_conllu
@@ -11,8 +12,8 @@ from spacy.lang.lex_attrs import word_shape
 # TODO: remove hardcoded path
 ud_location = os.path.join('C:', os.sep, 'Users', 'Sofie', 'Documents', 'data', 'UD_2_3', 'ud-treebanks-v2.3')
 ud_version = '2.3'
-ud_folder = 'UD_French-'
-ud_lang = 'fr_'
+ud_folder = 'UD_English-'
+ud_lang = 'en_'
 
 space_re = re.compile("\s+")
 
@@ -50,12 +51,12 @@ def split_text(text):
     return [space_re.sub(" ", par.strip()) for par in text.split("\n\n")]
 
 
-def get_freq_dict(my_list):
+def get_freq_tuples(my_list, print_total_threshold):
     d = {}
     for token in my_list:
         d.setdefault(token, 0)
         d[token] += 1
-    return d
+    return sorted(d.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]
 
 
 def run_single_eval(nlp, model_print_name, train_path, gold_ud, tmp_output_path):
@@ -72,8 +73,8 @@ def run_single_eval(nlp, model_print_name, train_path, gold_ud, tmp_output_path)
     # STEP 3: record stats and timings
     tokens_per_s = int(len(gold_ud.tokens) / tokenization_time)
 
-    print_header_1 = ['train_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
-    print_string_1 = [os.path.basename(train_path) + ' ' + ud_version, len(gold_ud.tokens), model_print_name,
+    print_header_1 = ['date', 'train_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
+    print_string_1 = [str(datetime.date.today()), os.path.basename(train_path) + ' ' + ud_version, len(gold_ud.tokens), model_print_name,
                       "%.2f" % loading_time, "%.2f" % tokenization_time, tokens_per_s]
 
     # STEP 4: evaluate predicted tokens and features
@@ -104,26 +105,22 @@ def run_single_eval(nlp, model_print_name, train_path, gold_ud, tmp_output_path)
             print_header_1.extend([score_name + '_word_under_ex', score_name + '_shape_under_ex',
                                    score_name + '_word_over_ex', score_name + '_shape_over_ex'])
 
-            d_under_words = get_freq_dict(score.undersegmented)
-            d_under_shapes = get_freq_dict([word_shape(x) for x in score.undersegmented])
-            d_over_words = get_freq_dict(score.oversegmented)
-            d_over_shapes = get_freq_dict([word_shape(x) for x in score.oversegmented])
+            d_under_words = get_freq_tuples(score.undersegmented, print_total_threshold)
+            d_under_shapes = get_freq_tuples([word_shape(x) for x in score.undersegmented], print_total_threshold)
+            d_over_words = get_freq_tuples(score.oversegmented, print_total_threshold)
+            d_over_shapes = get_freq_tuples([word_shape(x) for x in score.oversegmented], print_total_threshold)
 
-            print_string_1.append(str(sorted(d_under_words.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]))
-            print_string_1.append(str(sorted(d_under_shapes.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]))
-            print_string_1.append(str(sorted(d_over_words.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]))
-            print_string_1.append(str(sorted(d_over_shapes.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]))
+            print_string_1.append(str({k: v for k, v in d_under_words if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
+            print_string_1.append(str({k: v for k, v in d_under_shapes if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
+            print_string_1.append(str({k: v for k, v in d_over_words if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
+            print_string_1.append(str({k: v for k, v in d_over_shapes if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
 
     # STEP 5: print the results
-    print()
-    print(" Loading model took {} seconds: {}".format(loading_time, my_model))
-    print(" Tokenizing text took {} seconds".format(tokenization_time))
-    print(" Tokens per second: {}".format(tokens_per_s))
-    print()
+    fname = os.path.join(os.path.dirname(__file__), 'output.csv')
+    with open(fname, 'w') as file:       # , 'a'
+        file.write(';'.join(map(str, print_header_1)) + '\n')
+        file.write(';'.join(map(str, print_string_1)) + '\n')
 
-    print(';'.join(map(str, print_header_1)))
-    print(';'.join(map(str, print_string_1)))
-    print()
 
 
 def main(nlp_list, ud_folder, treebank_list):
@@ -136,25 +133,25 @@ if __name__ == "__main__":
     # my_model = 'en_core_web_sm'
     # my_model = 'en_core_web_md'
     # my_model = 'en_core_web_lg'
-    # my_model = 'English'
-    my_model = 'French'
+    my_model = 'English'
+    # my_model = 'French'
 
     check_parse = False
-    print_freq_threshold = 0  # minimum frequency an error should have to be printed
+    print_freq_threshold = 5  # minimum frequency an error should have to be printed
     print_total_threshold = 10  # maximum number of errors printed per category
 
     # STEP 0 : loading raw text
     # English treebanks: ESL, EWT, GUM, LinES, ParTUT, PUD
     # ESL does not contain the actual texts, PUD does not contain a train/dev portion
     # EWT is the biggest one, ParTUT is the only one with fusion tokens
-    my_treebank = "GSD"
+    my_treebank = "EWT"
     my_train_path = get_training_path(my_treebank, conllu=False)
 
     # STEP 1: load model
     start = time.time()
     # my_nlp = load_model(modelname=my_model)
-    # my_nlp = load_english_model()
-    my_nlp = load_french_model()
+    my_nlp = load_english_model()
+    # my_nlp = load_french_model()
     end = time.time()
     loading_time = end - start
 
