@@ -9,21 +9,13 @@ from spacy.cli.ud import conll17_ud_eval
 from spacy.cli.ud.ud_train import write_conllu
 from spacy.lang.lex_attrs import word_shape
 
-# TODO: remove hardcoded path
-ud_location = os.path.join('C:', os.sep, 'Users', 'Sofie', 'Documents', 'data', 'UD_2_3', 'ud-treebanks-v2.3')
 ud_version = '2.3'
-ud_folder = 'UD_English-'
-ud_lang = 'en_'
+
+check_parse = False
+print_freq_threshold = 5  # minimum frequency an error should have to be printed
+print_total_threshold = 10  # maximum number of errors printed per category
 
 space_re = re.compile("\s+")
-
-
-def get_training_path(treebank, conllu=False):
-    ud_path = os.path.join(ud_location, ud_folder + treebank)
-    train_file = os.path.join(ud_path, ud_lang + treebank.lower() + '-ud-train.txt')
-    if conllu:
-        train_file = train_file.replace('.txt', '.conllu')
-    return train_file
 
 
 def load_model(modelname):
@@ -47,6 +39,15 @@ def load_french_model():
     return nlp
 
 
+def get_long_lang(lang):
+    if lang == 'en':
+        return "English"
+    if lang == 'fr':
+        return "French"
+    return "Unknown"
+
+
+# TODO: remove this ?
 def split_text(text):
     return [space_re.sub(" ", par.strip()) for par in text.split("\n\n")]
 
@@ -59,7 +60,7 @@ def get_freq_tuples(my_list, print_total_threshold):
     return sorted(d.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]
 
 
-def run_single_eval(nlp, model_print_name, train_path, gold_ud, tmp_output_path):
+def run_single_eval(nlp, model_print_name, train_path, gold_ud, tmp_output_path, file, print_header):
     with open(train_path, 'r', encoding='utf-8') as fin:
         flat_text = fin.read()
 
@@ -73,9 +74,10 @@ def run_single_eval(nlp, model_print_name, train_path, gold_ud, tmp_output_path)
     # STEP 3: record stats and timings
     tokens_per_s = int(len(gold_ud.tokens) / tokenization_time)
 
-    print_header_1 = ['date', 'train_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
-    print_string_1 = [str(datetime.date.today()), os.path.basename(train_path) + ' ' + ud_version, len(gold_ud.tokens), model_print_name,
-                      "%.2f" % loading_time, "%.2f" % tokenization_time, tokens_per_s]
+    print_header_1 = ['date', 'train_path', 'gold_tokens', 'model', 'tokenization_time', 'tokens_per_s']
+    print_string_1 = [str(datetime.date.today()), os.path.basename(train_path) + ' ' + ud_version, len(gold_ud.tokens),
+                      model_print_name,
+                      "%.2f" % tokenization_time, tokens_per_s]
 
     # STEP 4: evaluate predicted tokens and features
     # TODO Sofie: do we need a tmp file ?!
@@ -110,56 +112,66 @@ def run_single_eval(nlp, model_print_name, train_path, gold_ud, tmp_output_path)
             d_over_words = get_freq_tuples(score.oversegmented, print_total_threshold)
             d_over_shapes = get_freq_tuples([word_shape(x) for x in score.oversegmented], print_total_threshold)
 
-            print_string_1.append(str({k: v for k, v in d_under_words if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
-            print_string_1.append(str({k: v for k, v in d_under_shapes if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
-            print_string_1.append(str({k: v for k, v in d_over_words if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
-            print_string_1.append(str({k: v for k, v in d_over_shapes if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
+            print_string_1.append(
+                str({k: v for k, v in d_under_words if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
+            print_string_1.append(
+                str({k: v for k, v in d_under_shapes if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
+            print_string_1.append(
+                str({k: v for k, v in d_over_words if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
+            print_string_1.append(
+                str({k: v for k, v in d_over_shapes if v > print_freq_threshold}).replace(";", "*SEMICOLON*"))
 
     # STEP 5: print the results
-    fname = os.path.join(os.path.dirname(__file__), 'output.csv')
-    with open(fname, 'w') as file:       # , 'a'
+    if print_header:
         file.write(';'.join(map(str, print_header_1)) + '\n')
-        file.write(';'.join(map(str, print_string_1)) + '\n')
+    file.write(';'.join(map(str, print_string_1)) + '\n')
 
 
+def main(models, treebanks, file):
+    my_tmp_output_path = os.path.join(os.path.dirname(__file__), 'nlp_output_english.conllu')
+    print_header = True
 
-def main(nlp_list, ud_folder, treebank_list):
-    pass
+    for tb_lang, treebank_list in treebanks.items():
+        print("Language", tb_lang)
+        for treebank in treebank_list:
+            ud_path = os.path.join(my_ud_folder, 'UD_' + get_long_lang(tb_lang) + '-' + treebank)
+            train_path = os.path.join(ud_path, tb_lang + '_' + treebank.lower() + '-ud-train.txt')
+            print(" Evaluating on", train_path)
+
+            gold_path = train_path.replace('.txt', '.conllu')
+            print("  Gold data from ", gold_path)
+
+            with open(gold_path, 'r', encoding='utf-8') as gold_file:
+                gold_ud = conll17_ud_eval.load_conllu(gold_file)
+
+            for nlp, nlp_name in models[tb_lang]:
+                print("   Benchmarking", nlp_name)
+                try:
+                    run_single_eval(nlp, nlp_name, train_path, gold_ud, my_tmp_output_path, file, print_header)
+                    print_header = False
+                except Exception as e:
+                    print("    Ran into trouble: ", str(e))
 
 
 if __name__ == "__main__":
-    # RUN PARAMETERS
-    run_eval = True
-    # my_model = 'en_core_web_sm'
-    # my_model = 'en_core_web_md'
-    # my_model = 'en_core_web_lg'
-    my_model = 'English'
-    # my_model = 'French'
+    my_ud_folder = os.path.join('C:', os.sep, 'Users', 'Sofie', 'Documents', 'data', 'UD_2_3', 'ud-treebanks-v2.3')
 
-    check_parse = False
-    print_freq_threshold = 5  # minimum frequency an error should have to be printed
-    print_total_threshold = 10  # maximum number of errors printed per category
+    treebanks = dict()
+    treebanks['en'] = ['ESL', 'EWT', 'GUM', 'LinES', 'ParTUT', 'PUD']
+    treebanks['fr'] = ['FTB', 'GSD', 'ParTUT', 'PUD', 'Sequoia', 'Spoken']
 
-    # STEP 0 : loading raw text
-    # English treebanks: ESL, EWT, GUM, LinES, ParTUT, PUD
-    # ESL does not contain the actual texts, PUD does not contain a train/dev portion
-    # EWT is the biggest one, ParTUT is the only one with fusion tokens
-    my_treebank = "EWT"
-    my_train_path = get_training_path(my_treebank, conllu=False)
+    my_models = dict()
+    my_models['en'] = [
+        (load_english_model(), 'English + sentencizer'),
+        (load_model('en_core_web_sm'), 'en_core_web_sm'),
+        (load_model('en_core_web_md'), 'en_core_web_md'),
+        (load_model('en_core_web_lg'), 'en_core_web_lg')]
 
-    # STEP 1: load model
-    start = time.time()
-    # my_nlp = load_model(modelname=my_model)
-    my_nlp = load_english_model()
-    # my_nlp = load_french_model()
-    end = time.time()
-    loading_time = end - start
+    my_models['fr'] = [
+        (load_french_model(), 'French + sentencizer'),
+        (load_model('fr_core_news_sm'), 'fr_core_news_sm'),
+        (load_model('fr_core_news_md'), 'fr_core_news_md')]
 
-    gold_file = open(get_training_path(my_treebank, conllu=True), 'r', encoding='utf-8')
-    my_gold_ud = conll17_ud_eval.load_conllu(gold_file)
-
-    my_tmp_output_path = os.path.join(os.path.dirname(__file__), 'nlp_output_english.conllu')
-
-    run_single_eval(my_nlp, my_model, my_train_path, my_gold_ud, my_tmp_output_path)
-
-
+    fname = os.path.join(os.path.dirname(__file__), 'output.csv')
+    with open(fname, 'w') as my_file:  # , 'a'
+        main(my_models, treebanks, my_file)
