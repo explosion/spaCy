@@ -258,6 +258,8 @@ def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
             self.aligned_accuracy = correct / aligned_total if aligned_total else aligned_total
             self.undersegmented = undersegmented
             self.oversegmented = oversegmented
+            self.under_perc = len(undersegmented) / gold_total if gold_total and undersegmented else 0.0
+            self.over_perc = len(oversegmented) / gold_total if gold_total and oversegmented else 0.0
     class AlignmentWord:
         def __init__(self, gold_word, system_word):
             self.gold_word = gold_word

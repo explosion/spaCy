@@ -2,25 +2,28 @@ import os
 import spacy
 import time
 import re
+import plac
 import operator
 import datetime
+from pathlib import Path
 
 from spacy.cli.ud import conll17_ud_eval
 from spacy.cli.ud.ud_train import write_conllu
 from spacy.lang.lex_attrs import word_shape
 from spacy.util import get_lang_class
 
+# All languages in spaCy - in UD format (note that Norwegian is 'no' instead of 'nb')
+ALL_LANGUAGES = "ar, ca, da, de, el, en, es, fa, fi, fr, ga, he, hi, hr, hu, id, " \
+                "it, ja, no, nl, pl, pt, ro, ru, sv, te, th, tl, tr, ur, vi, zh"
+
 # Non-parsing tasks that will be evaluated (works for default models)
 EVAL_NO_PARSE = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats']
 
-# Tasks that will be evaluated if check_parse=True and there are no default models in the list
+# Tasks that will be evaluated if check_parse=True (does not work for default models)
 EVAL_PARSE = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats', 'UPOS', 'XPOS', 'AllTags', 'UAS', 'LAS']
 
-# Tasks for which to print high-freq error cases. Includes verbose output!
-PRINT_ERROR_EXAMPLES = []  # ['Tokens']
-
 # Minimum frequency an error should have to be printed
-PRINT_FREQ = 5
+PRINT_FREQ = 20
 
 # Maximum number of errors printed per category
 PRINT_TOTAL = 10
@@ -28,12 +31,16 @@ PRINT_TOTAL = 10
 space_re = re.compile("\s+")
 
 
-def load_model(modelname):
+def load_model(modelname, add_sentencizer=False):
     """ Load a specific spaCy model """
     loading_start = time.time()
     nlp = spacy.load(modelname)
+    if add_sentencizer:
+        nlp.add_pipe(nlp.create_pipe('sentencizer'))
     loading_end = time.time()
     loading_time = loading_end - loading_start
+    if add_sentencizer:
+        return nlp, loading_time, modelname + '_sentencizer'
     return nlp, loading_time, modelname
 
 
@@ -46,15 +53,6 @@ def load_default_model_sentencizer(lang):
     loading_end = time.time()
     loading_time = loading_end - loading_start
     return nlp, loading_time, lang + "_default_" + 'sentencizer'
-
-
-def get_long_lang(lang):
-    """" Helper method to compile the UD path for a certain treebank """
-    if lang == 'en':
-        return "English"
-    if lang == 'fr':
-        return "French"
-    return "Unknown"
 
 
 def split_text(text):
@@ -70,9 +68,31 @@ def get_freq_tuples(my_list, print_total_threshold):
     return sorted(d.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]
 
 
-def run_single_eval(nlp, loading_time, print_name, train_path, gold_ud, tmp_output_path, file, print_header):
+def fetch_all_treebanks(ud_dir, languages, corpus):
+    """" Fetch the txt files for all treebanks for a given set of languages """
+    all_treebanks = dict()
+    for l in languages:
+        all_treebanks[l] = []
+
+    for treebank in os.listdir(ud_dir):
+        for file in os.listdir(os.path.join(ud_dir, treebank)):
+            if file.endswith('-ud-' + corpus + '.txt'):
+                file_lang = file.split('_')[0]
+                if file_lang in languages:
+                    file_path = os.path.join(ud_dir, treebank, file)
+                    with open(file_path, encoding='utf-8') as f:
+                        first_line = f.readline()
+                        # ignore treebanks where the texts are not publicly available
+                        if not first_line.startswith("_ _ _ _"):
+                            all_treebanks[file_lang].append(file_path)
+
+    return all_treebanks
+
+
+def run_single_eval(nlp, loading_time, print_name, text_path, gold_ud, tmp_output_path, file, print_header, check_parse,
+                    print_freq_tasks):
     """" Run an evaluation of a model nlp on a certain specified treebank """
-    with open(train_path, 'r', encoding='utf-8') as fin:
+    with open(text_path, 'r', encoding='utf-8') as fin:
         flat_text = fin.read()
 
     # STEP 1: tokenize text
@@ -85,8 +105,8 @@ def run_single_eval(nlp, loading_time, print_name, train_path, gold_ud, tmp_outp
     # STEP 2: record stats and timings
     tokens_per_s = int(len(gold_ud.tokens) / tokenization_time)
 
-    print_header_1 = ['date', 'train_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
-    print_string_1 = [str(datetime.date.today()), os.path.basename(train_path), len(gold_ud.tokens),
+    print_header_1 = ['date', 'text_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
+    print_string_1 = [str(datetime.date.today()), os.path.basename(text_path), len(gold_ud.tokens),
                       print_name, "%.2f" % loading_time, "%.2f" % tokenization_time, tokens_per_s]
 
     # STEP 3: evaluate predicted tokens and features
@@ -108,13 +128,13 @@ def run_single_eval(nlp, loading_time, print_name, train_path, gold_ud, tmp_outp
                                "%.2f" % score.recall,
                                "%.2f" % score.f1])
         print_string_1.append("-" if score.aligned_accuracy is None else "%.2f" % score.aligned_accuracy)
-        print_string_1.append("-" if score.undersegmented is None else len(score.undersegmented))
-        print_string_1.append("-" if score.oversegmented is None else len(score.oversegmented))
+        print_string_1.append("-" if score.undersegmented is None else "%.4f" % score.under_perc)
+        print_string_1.append("-" if score.oversegmented is None else "%.4f" % score.over_perc)
 
         print_header_1.extend([score_name + '_p', score_name + '_r', score_name + '_F', score_name + '_acc',
                                score_name + '_under', score_name + '_over'])
 
-        if score_name in PRINT_ERROR_EXAMPLES:
+        if score_name in print_freq_tasks:
             print_header_1.extend([score_name + '_word_under_ex', score_name + '_shape_under_ex',
                                    score_name + '_word_over_ex', score_name + '_shape_over_ex'])
 
@@ -139,62 +159,107 @@ def run_single_eval(nlp, loading_time, print_name, train_path, gold_ud, tmp_outp
     file.write(';'.join(map(str, print_string_1)) + '\n')
 
 
-def main(models, treebanks, file):
+def run_all_evals(models, treebanks, file, check_parse, print_freq_tasks):
     """" Run an evaluation for each language with its specified models and treebanks """
-    my_tmp_output_path = os.path.join(os.path.dirname(__file__), 'tmp_nlp_output.conllu')
     print_header = True
 
     for tb_lang, treebank_list in treebanks.items():
         print()
         print("Language", tb_lang)
-        for treebank in treebank_list:
-            ud_path = os.path.join(my_ud_folder, 'UD_' + get_long_lang(tb_lang) + '-' + treebank)
-            train_path = os.path.join(ud_path, tb_lang + '_' + treebank.lower() + '-ud-train.txt')
-            print(" Evaluating on", train_path)
+        for text_path in treebank_list:
+            print(" Evaluating on", text_path)
 
-            gold_path = train_path.replace('.txt', '.conllu')
+            gold_path = text_path.replace('.txt', '.conllu')
             print("  Gold data from ", gold_path)
 
+            # nested try blocks to ensure the code can continue with the next iteration after a failure
             try:
                 with open(gold_path, 'r', encoding='utf-8') as gold_file:
                     gold_ud = conll17_ud_eval.load_conllu(gold_file)
 
                 for nlp, nlp_loading_time, nlp_name in models[tb_lang]:
-                    print("   Benchmarking", nlp_name)
-
-                    run_single_eval(nlp, nlp_loading_time, nlp_name, train_path, gold_ud, my_tmp_output_path, file,
-                                    print_header)
-                    print_header = False
+                    try:
+                        print("   Benchmarking", nlp_name)
+                        tmp_output_path = os.path.join(os.path.dirname(__file__), 'tmp_' + nlp_name + '.conllu')
+                        run_single_eval(nlp, nlp_loading_time, nlp_name, text_path, gold_ud, tmp_output_path, file,
+                                        print_header, check_parse, print_freq_tasks)
+                        print_header = False
+                    except Exception as e:
+                        print("    Ran into trouble: ", str(e))
             except Exception as e:
                 print("   Ran into trouble: ", str(e))
 
 
+@plac.annotations(
+    out_path=("Path to output CSV file", "positional", None, Path),
+    ud_dir=("Path to Universal Dependencies corpus", "positional", None, Path),
+    check_parse=("Set flag to evaluate parsing performance", "flag", "p", bool),
+    langs=("Enumeration of languages to evaluate (default: all)", "option", "l", str),
+    exclude_trained_models=("Set flag to exclude trained models", "flag", "t", bool),
+    exclude_multi=("Set flag to exclude the multi-language model as default baseline", "flag", "m", bool),
+    hide_freq=("Set flag to avoid printing out more detailed high-freq tokenization errors", "flag", "f", bool),
+    corpus=("Whether to run on train, dev or test", "option", "c", str)
+)
+def main(out_path, ud_dir, check_parse=False, langs=ALL_LANGUAGES, exclude_trained_models=False, exclude_multi=False,
+         hide_freq=False, corpus='train'):
+    """"
+    Assemble all treebanks and models to run evaluations with.
+    When setting check_parse to True, the default models will not be evaluated as they don't have parsing functionality
+    """
+    languages = [lang.strip() for lang in langs.split(",")]
+
+    print_freq_tasks = []
+    if not hide_freq:
+        print_freq_tasks = ['Tokens']
+
+    # fetching all treebank from the directory
+    # This may include cases without training data that will be automatically skipped, such as 'PUD'
+    # May also include cases with blinded text such as 'FTB' and 'ESL' for which accuracy will be artificially high
+    treebanks = fetch_all_treebanks(ud_dir, languages, corpus)
+
+    print("Loading all relevant models for", languages)
+    models = dict()
+
+    # multi-lang model
+    multi = None
+    if not exclude_multi and not check_parse:
+        multi = load_model('xx_ent_wiki_sm', add_sentencizer=True)
+
+    # initialize all models with the multi-lang model
+    for lang in languages:
+        models[lang] = [multi] if multi else []
+        # add default models if we don't want to evaluate parsing info
+        if not check_parse:
+            # Norwegian is 'nb' in spaCy but 'no' in the UD corpora
+            if lang == 'no':
+                models['no'].append(load_default_model_sentencizer('nb'))
+            else:
+                models[lang].append(load_default_model_sentencizer(lang))
+
+    # language-specific trained models
+    if not exclude_trained_models:
+        if 'de' in models:
+            models['de'].append(load_model('de_core_news_sm'))
+        if 'es' in models:
+            models['es'].append(load_model('es_core_news_sm'))
+            models['es'].append(load_model('es_core_news_md'))
+        if 'pt' in models:
+            models['pt'].append(load_model('pt_core_news_sm'))
+        if 'it' in models:
+            models['it'].append(load_model('it_core_news_sm'))
+        if 'nl' in models:
+            models['nl'].append(load_model('nl_core_news_sm'))
+        if 'en' in models:
+            models['en'].append(load_model('en_core_web_sm'))
+            models['en'].append(load_model('en_core_web_md'))
+            models['en'].append(load_model('en_core_web_lg'))
+        if 'fr' in models:
+            models['fr'].append(load_model('fr_core_news_sm'))
+            models['fr'].append(load_model('fr_core_news_md'))
+
+    with open(out_path, 'w', encoding='utf-8') as out_file:  # , 'a'
+        run_all_evals(models, treebanks, out_file, check_parse, print_freq_tasks)
+
+
 if __name__ == "__main__":
-    """" Hardcoded setting for a quick batch run """
-    my_ud_folder = os.path.join('C:', os.sep, 'Users', 'Sofie', 'Documents', 'data', 'UD_2_3', 'ud-treebanks-v2.3')
-
-    my_treebanks = dict()
-    # Note: 'PUD' doesn't have training data
-    # Note: 'FTB' and 'ESL' have blinded text
-    my_treebanks['en'] = ['EWT', 'GUM', 'LinES', 'ParTUT']  # 'ESL', 'PUD'
-    my_treebanks['fr'] = ['GSD', 'ParTUT', 'Sequoia', 'Spoken']  # 'FTB', 'PUD'
-
-    # When set to True, remove the default models from the list as they don't have parsing functionality
-    check_parse = False
-
-    print("Loading all models")
-    my_models = dict()
-    my_models['en'] = [
-        load_default_model_sentencizer('en'),
-        load_model('en_core_web_sm')]  # ,
-    # (load_model('en_core_web_md'), 'en_core_web_md'),
-    # (load_model('en_core_web_lg'), 'en_core_web_lg')]
-
-    my_models['fr'] = [
-        load_default_model_sentencizer('fr')]  # ,
-    # (load_model('fr_core_news_sm'), 'fr_core_news_sm'),
-    # (load_model('fr_core_news_md'), 'fr_core_news_md')]
-
-    fname = os.path.join(os.path.dirname(__file__), 'output.csv')
-    with open(fname, 'w', encoding='utf-8') as my_file:  # , 'a'
-        main(my_models, my_treebanks, my_file)
+    plac.call(main)
