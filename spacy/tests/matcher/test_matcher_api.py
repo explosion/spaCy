@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 import re
 from spacy.matcher import Matcher, DependencyTreeMatcher
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 from ..util import get_doc
 
 
@@ -188,6 +188,9 @@ def test_matcher_extension_attribute(en_vocab):
     doc = Doc(en_vocab, words=['an', 'apple'])
     matches = matcher(doc)
     assert len(matches) == 1
+    doc = Doc(en_vocab, words=['an', 'aardvark'])
+    matches = matcher(doc)
+    assert len(matches) == 0
 
 
 @pytest.fixture
