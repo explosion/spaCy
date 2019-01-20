@@ -6,6 +6,7 @@ import plac
 import operator
 import datetime
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 from spacy.cli.ud import conll17_ud_eval
 from spacy.cli.ud.ud_train import write_conllu
@@ -14,7 +15,7 @@ from spacy.util import get_lang_class
 
 # All languages in spaCy - in UD format (note that Norwegian is 'no' instead of 'nb')
 ALL_LANGUAGES = "ar, ca, da, de, el, en, es, fa, fi, fr, ga, he, hi, hr, hu, id, " \
-                "it, ja, no, nl, pl, pt, ro, ru, sv, te, th, tl, tr, ur, vi, zh"
+                "it, ja, no, nl, pl, pt, ro, ru, sv, tr, ur, vi, zh"
 
 # Non-parsing tasks that will be evaluated (works for default models)
 EVAL_NO_PARSE = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats']
@@ -68,23 +69,48 @@ def get_freq_tuples(my_list, print_total_threshold):
     return sorted(d.items(), key=operator.itemgetter(1), reverse=True)[:print_total_threshold]
 
 
-def fetch_all_treebanks(ud_dir, languages, corpus):
+def _contains_blinded_text(stats_xml):
+    """ Heuristic to determine whether the treebank has blinded texts or not """
+    tree = ET.parse(stats_xml)
+    root = tree.getroot()
+    total_tokens = int(root.find('size/total/tokens').text)
+    unique_lemmas = int(root.find('lemmas').get('unique'))
+
+    # assume the corpus is largely blinded when there are less than 1% unique tokens
+    if (unique_lemmas / total_tokens) < 0.01:
+        return True
+
+    return False
+
+
+def fetch_all_treebanks(ud_dir, languages, corpus, best_per_language):
     """" Fetch the txt files for all treebanks for a given set of languages """
     all_treebanks = dict()
+    treebank_size = dict()
     for l in languages:
         all_treebanks[l] = []
+        treebank_size[l] = 0
 
     for treebank in os.listdir(ud_dir):
         for file in os.listdir(os.path.join(ud_dir, treebank)):
             if file.endswith('-ud-' + corpus + '.txt'):
                 file_lang = file.split('_')[0]
                 if file_lang in languages:
-                    file_path = os.path.join(ud_dir, treebank, file)
-                    with open(file_path, encoding='utf-8') as f:
-                        first_line = f.readline()
-                        # ignore treebanks where the texts are not publicly available
-                        if not first_line.startswith("_ _ _ _"):
-                            all_treebanks[file_lang].append(file_path)
+                    txt_path = os.path.join(ud_dir, treebank, file)
+                    gold_path = txt_path.replace('.txt', '.conllu')
+                    stats_xml = os.path.join(ud_dir, treebank, "stats.xml")
+                    # ignore treebanks where the texts are not publicly available
+                    if not _contains_blinded_text(stats_xml):
+                        if not best_per_language:
+                            all_treebanks[file_lang].append(txt_path)
+                        # check the tokens in the gold annotation to keep only the biggest treebank per language
+                        else:
+                            with open(gold_path, 'r', encoding='utf-8') as gold_file:
+                                gold_ud = conll17_ud_eval.load_conllu(gold_file)
+                                gold_tokens = len(gold_ud.tokens)
+                            if treebank_size[file_lang] < gold_tokens:
+                                all_treebanks[file_lang] = [txt_path]
+                                treebank_size[file_lang] = gold_tokens
 
     return all_treebanks
 
@@ -198,10 +224,11 @@ def run_all_evals(models, treebanks, file, check_parse, print_freq_tasks):
     exclude_trained_models=("Set flag to exclude trained models", "flag", "t", bool),
     exclude_multi=("Set flag to exclude the multi-language model as default baseline", "flag", "m", bool),
     hide_freq=("Set flag to avoid printing out more detailed high-freq tokenization errors", "flag", "f", bool),
-    corpus=("Whether to run on train, dev or test", "option", "c", str)
+    corpus=("Whether to run on train, dev or test", "option", "c", str),
+    best_per_language=("Set flag to only keep the largest treebank for each language", "flag", "b", bool)
 )
 def main(out_path, ud_dir, check_parse=False, langs=ALL_LANGUAGES, exclude_trained_models=False, exclude_multi=False,
-         hide_freq=False, corpus='train'):
+         hide_freq=False, corpus='train', best_per_language=False):
     """"
     Assemble all treebanks and models to run evaluations with.
     When setting check_parse to True, the default models will not be evaluated as they don't have parsing functionality
@@ -212,11 +239,10 @@ def main(out_path, ud_dir, check_parse=False, langs=ALL_LANGUAGES, exclude_train
     if not hide_freq:
         print_freq_tasks = ['Tokens']
 
-    # fetching all treebank from the directory
-    # This may include cases without training data that will be automatically skipped, such as 'PUD'
-    # May also include cases with blinded text such as 'FTB' and 'ESL' for which accuracy will be artificially high
-    treebanks = fetch_all_treebanks(ud_dir, languages, corpus)
+    # fetching all relevant treebank from the directory
+    treebanks = fetch_all_treebanks(ud_dir, languages, corpus, best_per_language)
 
+    print()
     print("Loading all relevant models for", languages)
     models = dict()
 
