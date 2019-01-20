@@ -16,6 +16,7 @@ from .tokens.token cimport Token
 from .tokens.doc cimport get_token_attr
 from .attrs cimport ID, attr_id_t, NULL_ATTR, ORTH
 from .errors import Errors, TempErrors, Warnings, deprecation_warning
+from .strings import get_string_id
 
 from .attrs import IDS
 from .attrs import FLAG61 as U_ENT
@@ -221,13 +222,14 @@ cdef void update_predicate_cache(char* cache,
     # These are cached, so that we don't call these potentially expensive
     # Python functions more than we need to.
     for i in range(pattern.nr_py):
-        if cache[i] == 0:
-            predicate = predicates[pattern.py_predicates[i]]
+        index = pattern.py_predicates[i]
+        if cache[index] == 0:
+            predicate = predicates[index]
             result = predicate(token)
             if result is True:
-                cache[i] = 1
+                cache[index] = 1
             elif result is False:
-                cache[i] = -1
+                cache[index] = -1
             elif result is None:
                 pass
             else:
@@ -473,23 +475,25 @@ class _RegexPredicate(object):
         self.predicate = predicate
         assert self.predicate == 'REGEX'
 
-    def __call__(self, token):
-        return bool(self.value.search(getattr(token, self.attr)))
+    def __call__(self, Token token):
+        value = token.vocab.strings[get_token_attr(token.c, self.attr)]
+        return bool(self.value.search(value))
 
 
 class _SetMemberPredicate(object):
     def __init__(self, i, attr, value, predicate):
         self.i = i
         self.attr = attr
-        self.value = set(value)
+        self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         assert self.predicate in ('IN', 'NOT_IN')
 
-    def __call__(self, token):
+    def __call__(self, Token token):
+        value = get_token_attr(token.c, self.attr)
         if self.predicate == 'IN':
-            return getattr(token, self.attr) in self.value
+            return value in self.value
         else:
-            return getattr(token, self.attr) not in self.value
+            return value not in self.value
 
 
 class _ComparisonPredicate(object):
@@ -500,8 +504,8 @@ class _ComparisonPredicate(object):
         self.predicate = predicate
         assert self.predicate in ('==', '!=', '>=', '<=', '>', '<')
 
-    def __call__(self, token):
-        value = getattr(token, self.attr)
+    def __call__(self, Token token):
+        value = get_token_attr(token.c, self.attr)
         if self.predicate == '==':
             return value == self.value
         if self.predicate == '!=':
@@ -529,10 +533,19 @@ def _get_extra_predicates(spec, extra_predicates):
     }
     output = []
     for attr, value in spec.items():
+        if isinstance(attr, basestring):
+            if attr == '_':
+                continue
+            elif attr.upper() == 'OP':
+                continue
+            if attr.upper() == 'TEXT':
+                attr = 'ORTH'
+            attr = IDS.get(attr.upper())
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
                     predicate = cls(len(extra_predicates), attr, value[type_], type_)
+                    extra_predicates.append(predicate)
                     output.append(predicate.i)
     return output
  
@@ -587,7 +600,7 @@ cdef class Matcher:
         self._entities = {}
         self._callbacks = {}
         self._extensions = {}
-        self._extra_predicates = {}
+        self._extra_predicates = []
         self.vocab = vocab
         self.mem = Pool()
 
@@ -711,7 +724,8 @@ cdef class Matcher:
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
         matches = find_matches(&self.patterns[0], self.patterns.size(), doc,
-                               extensions=self._extensions)
+                               extensions=self._extensions,
+                               predicates=self._extra_predicates)
         for i, (key, start, end) in enumerate(matches):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
