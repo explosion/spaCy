@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 
 # Source: https://github.com/taranjeet/hindi-tokenizer/blob/master/stopwords.txt
-
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 अंदर
 अत
 अदि
@@ -233,5 +233,5 @@ STOP_WORDS = set("""
 होते
 होना
 होने
-
-""".split())
+""".split()
+)

@@ -4,15 +4,14 @@ from __future__ import unicode_literals
 import functools
 import numpy
 from collections import OrderedDict
-
-from .util import msgpack
-from .util import msgpack_numpy
+import srsly
 
 cimport numpy as np
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
 
-from .strings cimport StringStore, hash_string
+from .strings cimport StringStore
+from .strings import get_string_id
 from .compat import basestring_, path2str
 from .errors import Errors
 from . import util
@@ -220,12 +219,10 @@ cdef class Vectors:
             raise ValueError(Errors.E059.format(kwargs=bad_kwargs))
         xp = get_array_module(self.data)
         if key is not None:
-            if isinstance(key, basestring_):
-                key = hash_string(key)
+            key = get_string_id(key)
             return self.key2row.get(key, -1)
         elif keys is not None:
-            keys = [hash_string(key) if isinstance(key, basestring_) else key
-                    for key in keys]
+            keys = [get_string_id(key) for key in keys]
             rows = [self.key2row.get(key, -1.) for key in keys]
             return xp.asarray(rows, dtype='i')
         else:
@@ -250,8 +247,7 @@ cdef class Vectors:
         row (int / None): The row number of a vector to map the key to.
         RETURNS (int): The row the vector was added to.
         """
-        if isinstance(key, basestring):
-            key = hash_string(key)
+        key = get_string_id(key)
         if row is None and key in self.key2row:
             row = self.key2row[key]
         elif row is None:
@@ -299,7 +295,8 @@ cdef class Vectors:
 
         xp = get_array_module(self.data)
         row2key = {row: key for key, row in self.key2row.items()}
-        keys = xp.asarray([row2key[row] for row in best_rows], dtype='uint64')
+        keys = xp.asarray(
+            [row2key[row] for row in best_rows if row in row2key], dtype='uint64')
         return (keys, best_rows, scores)
 
     def from_glove(self, path):
@@ -353,7 +350,7 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr)
         serializers = OrderedDict((
             ('vectors', lambda p: save_array(self.data, p.open('wb'))),
-            ('key2row', lambda p: msgpack.dump(self.key2row, p.open('wb')))
+            ('key2row', lambda p: srsly.write_msgpack(p, self.key2row))
         ))
         return util.to_disk(path, serializers, exclude)
 
@@ -366,8 +363,7 @@ cdef class Vectors:
         """
         def load_key2row(path):
             if path.exists():
-                with path.open('rb') as file_:
-                    self.key2row = msgpack.load(file_)
+                self.key2row = srsly.read_msgpack(path)
             for key, row in self.key2row.items():
                 if self._unset.count(row):
                     self._unset.erase(self._unset.find(row))
@@ -401,9 +397,9 @@ cdef class Vectors:
             if hasattr(self.data, 'to_bytes'):
                 return self.data.to_bytes()
             else:
-                return msgpack.dumps(self.data)
+                return srsly.msgpack_dumps(self.data)
         serializers = OrderedDict((
-            ('key2row', lambda: msgpack.dumps(self.key2row)),
+            ('key2row', lambda: srsly.msgpack_dumps(self.key2row)),
             ('vectors', serialize_weights)
         ))
         return util.to_bytes(serializers, exclude)
@@ -419,10 +415,10 @@ cdef class Vectors:
             if hasattr(self.data, 'from_bytes'):
                 self.data.from_bytes()
             else:
-                self.data = msgpack.loads(b)
+                self.data = srsly.msgpack_loads(b)
 
         deserializers = OrderedDict((
-            ('key2row', lambda b: self.key2row.update(msgpack.loads(b))),
+            ('key2row', lambda b: self.key2row.update(srsly.msgpack_loads(b))),
             ('vectors', deserialize_weights)
         ))
         util.from_bytes(data, deserializers, exclude)

@@ -15,14 +15,15 @@ import spacy
 
 
 TEXTS = [
-    'Net income was $9.4 million compared to the prior year of $2.7 million.',
-    'Revenue exceeded twelve billion dollars, with a loss of $1b.',
+    "Net income was $9.4 million compared to the prior year of $2.7 million.",
+    "Revenue exceeded twelve billion dollars, with a loss of $1b.",
 ]
 
 
 @plac.annotations(
-    model=("Model to load (needs parser and NER)", "positional", None, str))
-def main(model='en_core_web_sm'):
+    model=("Model to load (needs parser and NER)", "positional", None, str)
+)
+def main(model="en_core_web_sm"):
     nlp = spacy.load(model)
     print("Loaded model '%s'" % model)
     print("Processing %d texts" % len(TEXTS))
@@ -31,7 +32,7 @@ def main(model='en_core_web_sm'):
         doc = nlp(text)
         relations = extract_currency_relations(doc)
         for r1, r2 in relations:
-            print('{:<10}\t{}\t{}'.format(r1.text, r2.ent_type_, r2.text))
+            print("{:<10}\t{}\t{}".format(r1.text, r2.ent_type_, r2.text))
 
 
 def extract_currency_relations(doc):
@@ -41,18 +42,18 @@ def extract_currency_relations(doc):
         span.merge()
 
     relations = []
-    for money in filter(lambda w: w.ent_type_ == 'MONEY', doc):
-        if money.dep_ in ('attr', 'dobj'):
-            subject = [w for w in money.head.lefts if w.dep_ == 'nsubj']
+    for money in filter(lambda w: w.ent_type_ == "MONEY", doc):
+        if money.dep_ in ("attr", "dobj"):
+            subject = [w for w in money.head.lefts if w.dep_ == "nsubj"]
             if subject:
                 subject = subject[0]
                 relations.append((subject, money))
-        elif money.dep_ == 'pobj' and money.head.dep_ == 'prep':
+        elif money.dep_ == "pobj" and money.head.dep_ == "prep":
             relations.append((money.head.head, money))
     return relations
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     plac.call(main)
 
     # Expected output:

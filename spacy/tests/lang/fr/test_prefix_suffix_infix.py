@@ -7,11 +7,12 @@ from spacy.lang.punctuation import TOKENIZER_INFIXES
 from spacy.lang.char_classes import ALPHA
 
 
-@pytest.mark.parametrize('text,expected_tokens', [
-    ("l'avion", ["l'", "avion"]), ("j'ai", ["j'", "ai"])])
+@pytest.mark.parametrize(
+    "text,expected_tokens", [("l'avion", ["l'", "avion"]), ("j'ai", ["j'", "ai"])]
+)
 def test_issue768(text, expected_tokens):
     """Allow zero-width 'infix' token during the tokenization process."""
-    SPLIT_INFIX = r'(?<=[{a}]\')(?=[{a}])'.format(a=ALPHA)
+    SPLIT_INFIX = r"(?<=[{a}]\')(?=[{a}])".format(a=ALPHA)
 
     class FrenchTest(Language):
         class Defaults(Language.Defaults):

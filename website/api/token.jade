@@ -544,7 +544,7 @@ p The L2 norm of the token's vector representation.
         +cell #[code orth_]
         +cell unicode
         +cell
-            |  Verbatim text content (identical to #[code Token.text]). Existst
+            |  Verbatim text content (identical to #[code Token.text]). Exists
             |  mostly for consistency with the other attributes.
 
     +row
@@ -714,7 +714,7 @@ p The L2 norm of the token's vector representation.
         +cell bool
         +cell
             |  Does the token consist of ASCII characters? Equivalent to
-            |  #[code [any(ord(c) >= 128 for c in token.text)]].
+            |  #[code all(ord(c) &lt; 128 for c in token.text)].
 
     +row
         +cell #[code is_digit]

@@ -14,5 +14,5 @@ sentences = [
     "Apple overvejer at købe et britisk startup for 1 milliard dollar",
     "Selvkørende biler flytter forsikringsansvaret over på producenterne",
     "San Francisco overvejer at forbyde udbringningsrobotter på fortov",
-    "London er en stor by i Storbritannien"
+    "London er en stor by i Storbritannien",
 ]

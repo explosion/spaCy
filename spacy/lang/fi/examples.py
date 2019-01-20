@@ -14,5 +14,5 @@ sentences = [
     "Missä sinä olet?",
     "Mikä on Yhdysvaltojen pääkaupunki?",
     "Kuka on Suomen presidentti?",
-    "Milloin Sauli Niinistö on syntynyt?"
+    "Milloin Sauli Niinistö on syntynyt?",
 ]

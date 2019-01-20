@@ -11,14 +11,14 @@ from ...util import update_exc
 
 class HebrewDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'he'
+    lex_attr_getters[LANG] = lambda text: "he"
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
     stop_words = STOP_WORDS
 
 
 class Hebrew(Language):
-    lang = 'he'
+    lang = "he"
     Defaults = HebrewDefaults
 
 
-__all__ = ['Hebrew']
+__all__ = ["Hebrew"]

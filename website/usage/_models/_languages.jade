@@ -31,20 +31,20 @@ p
         nlp = spacy.blank('fi')  # blank instance
 
 +table(["Language", "Code", "Language data"])
-    for lang, code in LANGUAGES
-        if !Object.keys(MODELS).includes(code)
-            +row
-                +cell #{LANGUAGES[code]}
-                +cell #[code=code]
-                +cell
-                    +src(gh("spaCy", "spacy/lang/" + code)) #[code lang/#{code}]
+    - var sorted_langs = Object.assign({}, ...Object.keys(LANGUAGES).filter(key => !MODELS[key]).sort().map(key => ({ [key]: LANGUAGES[key] })))
+    for lang, code in sorted_langs
+        +row
+            +cell #{LANGUAGES[code]}
+            +cell #[code=code]
+            +cell
+                +src(gh("spaCy", "spacy/lang/" + code)) #[code lang/#{code}]
 
 +infobox("Dependencies")
     .o-block-small Some language tokenizers require external dependencies.
 
     +list.o-no-block
         +item #[strong Chinese]: #[+a("https://github.com/fxsjy/jieba") Jieba]
-        +item #[strong Japanese]: #[+a("https://github.com/taku910/mecab") MeCab]
+        +item #[strong Japanese]: #[+a("https://github.com/taku910/mecab") MeCab] with #[+a("http://unidic.ninjal.ac.jp/back_number#unidic_cwj") Unidic]
         +item #[strong Thai]: #[+a("https://github.com/wannaphongcom/pythainlp") pythainlp]
         +item #[strong Vietnamese]: #[+a("https://github.com/trungtv/pyvi") Pyvi]
         +item #[strong Russian]: #[+a("https://github.com/kmike/pymorphy2") pymorphy2]

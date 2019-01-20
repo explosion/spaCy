@@ -13,31 +13,35 @@ from ..util import get_doc
 
 @pytest.fixture
 def doc(en_tokenizer):
+    # fmt: off
     text = "This is a sentence. This is another sentence. And a third."
     heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
-    deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
-            'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
+    deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
+            "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
+    # fmt: on
     tokens = en_tokenizer(text)
     return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
 
 def test_doc_token_api_strings(en_tokenizer):
     text = "Give it back! He pleaded."
-    pos = ['VERB', 'PRON', 'PART', 'PUNCT', 'PRON', 'VERB', 'PUNCT']
+    pos = ["VERB", "PRON", "PART", "PUNCT", "PRON", "VERB", "PUNCT"]
     heads = [0, -1, -2, -3, 1, 0, -1]
-    deps = ['ROOT', 'dobj', 'prt', 'punct', 'nsubj', 'ROOT', 'punct']
+    deps = ["ROOT", "dobj", "prt", "punct", "nsubj", "ROOT", "punct"]
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], pos=pos, heads=heads, deps=deps)
-    assert doc[0].orth_ == 'Give'
-    assert doc[0].text == 'Give'
-    assert doc[0].text_with_ws == 'Give '
-    assert doc[0].lower_ == 'give'
-    assert doc[0].shape_ == 'Xxxx'
-    assert doc[0].prefix_ == 'G'
-    assert doc[0].suffix_ == 'ive'
-    assert doc[0].pos_ == 'VERB'
-    assert doc[0].dep_ == 'ROOT'
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, heads=heads, deps=deps
+    )
+    assert doc[0].orth_ == "Give"
+    assert doc[0].text == "Give"
+    assert doc[0].text_with_ws == "Give "
+    assert doc[0].lower_ == "give"
+    assert doc[0].shape_ == "Xxxx"
+    assert doc[0].prefix_ == "G"
+    assert doc[0].suffix_ == "ive"
+    assert doc[0].pos_ == "VERB"
+    assert doc[0].dep_ == "ROOT"
 
 
 def test_doc_token_api_flags(en_tokenizer):
@@ -53,7 +57,7 @@ def test_doc_token_api_flags(en_tokenizer):
     # TODO: Test more of these, esp. if a bug is found
 
 
-@pytest.mark.parametrize('text', ["Give it back! He pleaded."])
+@pytest.mark.parametrize("text", ["Give it back! He pleaded."])
 def test_doc_token_api_prob_inherited_from_vocab(en_tokenizer, text):
     word = text.split()[0]
     en_tokenizer.vocab[word].prob = -1
@@ -61,11 +65,11 @@ def test_doc_token_api_prob_inherited_from_vocab(en_tokenizer, text):
     assert tokens[0].prob != 0
 
 
-@pytest.mark.parametrize('text', ["one two"])
+@pytest.mark.parametrize("text", ["one two"])
 def test_doc_token_api_str_builtin(en_tokenizer, text):
     tokens = en_tokenizer(text)
-    assert str(tokens[0]) == text.split(' ')[0]
-    assert str(tokens[1]) == text.split(' ')[1]
+    assert str(tokens[0]) == text.split(" ")[0]
+    assert str(tokens[1]) == text.split(" ")[1]
 
 
 def test_doc_token_api_is_properties(en_vocab):
@@ -83,16 +87,16 @@ def test_doc_token_api_is_properties(en_vocab):
 def test_doc_token_api_vectors():
     vocab = Vocab()
     vocab.reset_vectors(width=2)
-    vocab.set_vector('apples', vector=numpy.asarray([0., 2.], dtype='f'))
-    vocab.set_vector('oranges', vector=numpy.asarray([0., 1.], dtype='f'))
-    doc = Doc(vocab, words=['apples', 'oranges', 'oov'])
+    vocab.set_vector("apples", vector=numpy.asarray([0.0, 2.0], dtype="f"))
+    vocab.set_vector("oranges", vector=numpy.asarray([0.0, 1.0], dtype="f"))
+    doc = Doc(vocab, words=["apples", "oranges", "oov"])
     assert doc.has_vector
     assert doc[0].has_vector
     assert doc[1].has_vector
     assert not doc[2].has_vector
-    apples_norm = (0*0 + 2*2) ** 0.5
-    oranges_norm = (0*0 + 1*1) ** 0.5
-    cosine = ((0*0) + (2*1)) / (apples_norm * oranges_norm)
+    apples_norm = (0 * 0 + 2 * 2) ** 0.5
+    oranges_norm = (0 * 0 + 1 * 1) ** 0.5
+    cosine = ((0 * 0) + (2 * 1)) / (apples_norm * oranges_norm)
     assert doc[0].similarity(doc[1]) == cosine
 
 
@@ -165,7 +169,7 @@ def test_doc_token_api_head_setter(en_tokenizer):
 
 
 def test_is_sent_start(en_tokenizer):
-    doc = en_tokenizer('This is a sentence. This is another.')
+    doc = en_tokenizer("This is a sentence. This is another.")
     assert doc[5].is_sent_start is None
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True
@@ -174,17 +178,17 @@ def test_is_sent_start(en_tokenizer):
 
 
 def test_set_pos():
-    doc = Doc(Vocab(), words=['hello', 'world'])
-    doc[0].pos_ = 'NOUN'
-    assert doc[0].pos_ == 'NOUN'
+    doc = Doc(Vocab(), words=["hello", "world"])
+    doc[0].pos_ = "NOUN"
+    assert doc[0].pos_ == "NOUN"
     doc[1].pos = VERB
-    assert doc[1].pos_ == 'VERB'
+    assert doc[1].pos_ == "VERB"
 
 
 def test_tokens_sent(doc):
     """Test token.sent property"""
     assert len(list(doc.sents)) == 3
-    assert doc[1].sent.text == 'This is a sentence .'
-    assert doc[7].sent.text == 'This is another sentence .'
-    assert doc[1].sent.root.left_edge.text == 'This'
-    assert doc[7].sent.root.left_edge.text == 'This'
+    assert doc[1].sent.text == "This is a sentence ."
+    assert doc[7].sent.text == "This is another sentence ."
+    assert doc[1].sent.root.left_edge.text == "This"
+    assert doc[7].sent.root.left_edge.text == "This"

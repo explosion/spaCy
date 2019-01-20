@@ -13,7 +13,7 @@ from ...util import update_exc
 
 class TatarDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'tt'
+    lex_attr_getters[LANG] = lambda text: "tt"
 
     lex_attr_getters.update(LEX_ATTRS)
 
@@ -24,8 +24,8 @@ class TatarDefaults(Language.Defaults):
 
 
 class Tatar(Language):
-    lang = 'tt'
+    lang = "tt"
     Defaults = TatarDefaults
 
 
-__all__ = ['Tatar']
+__all__ = ["Tatar"]

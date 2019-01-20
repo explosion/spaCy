@@ -5,15 +5,12 @@ from __future__ import unicode_literals
 
 import numpy
 cimport numpy as np
-import cytoolz
 from collections import OrderedDict, defaultdict
-import ujson
-
-from .util import msgpack
-from .util import msgpack_numpy
+import srsly
 
 from thinc.api import chain
-from thinc.v2v import Affine, SELU, Softmax
+from thinc.v2v import Affine, Maxout, Softmax
+from thinc.misc import LayerNorm
 from thinc.t2v import Pooling, max_pool, mean_pool
 from thinc.neural.util import to_categorical, copy_array
 from thinc.neural._classes.difference import Siamese, CauchySimilarity
@@ -26,7 +23,6 @@ from .syntax.arc_eager cimport ArcEager
 from .morphology cimport Morphology
 from .vocab cimport Vocab
 from .syntax import nonproj
-from .compat import json_dumps
 from .matcher import Matcher
 
 from .matcher import Matcher, PhraseMatcher
@@ -34,10 +30,12 @@ from .tokens.span import Span
 from .attrs import POS, ID
 from .parts_of_speech import X
 from ._ml import Tok2Vec, build_text_classifier, build_tagger_model
+from ._ml import build_simple_cnn_text_classifier
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
+from ._ml import masked_language_model
 from .errors import Errors, TempErrors
-from .compat import json_dumps, basestring_
+from .compat import basestring_
 from . import util
 
 
@@ -49,7 +47,7 @@ class SentenceSegmenter(object):
     Sentence detection strategies should be generators that take `Doc` objects
     and yield `Span` objects for each sentence.
     """
-    name = 'sbd'
+    name = 'sentencizer'
 
     def __init__(self, vocab, strategy=None):
         self.vocab = vocab
@@ -234,7 +232,7 @@ class EntityRuler(object):
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
         """
-        patterns = msgpack.loads(patterns_bytes)
+        patterns = srsly.msgpack_loads(patterns_bytes)
         self.add_patterns(patterns)
         return self
 
@@ -243,7 +241,7 @@ class EntityRuler(object):
 
         RETURNS (bytes): The serialized patterns.
         """
-        return msgpack.dumps(self.patterns)
+        return srsly.msgpack_dumps(self.patterns)
 
     def from_disk(self, path, **kwargs):
         """Load the entity ruler from a file. Expects a file containing
@@ -255,7 +253,7 @@ class EntityRuler(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix('.jsonl')
-        patterns = util.read_jsonl(path)
+        patterns = srsly.read_jsonl(path)
         self.add_patterns(patterns)
         return self
 
@@ -269,8 +267,7 @@ class EntityRuler(object):
         """
         path = util.ensure_path(path)
         path = path.with_suffix('.jsonl')
-        data = [json_dumps(line, indent=0) for line in self.patterns]
-        path.open('w').write('\n'.join(data))
+        srsly.write_jsonl(path, self.patterns)
 
 
 class Pipe(object):
@@ -296,9 +293,15 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
+        self.require_model()
         scores, tensors = self.predict([doc])
         self.set_annotations([doc], scores, tensors=tensors)
         return doc
+
+    def require_model(self):
+        """Raise an error if the component's model is not initialized."""
+        if getattr(self, 'model', None) in (None, True, False):
+            raise ValueError(Errors.E109.format(name=self.name))
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         """Apply the pipe to a stream of documents.
@@ -306,7 +309,7 @@ class Pipe(object):
         Both __call__ and pipe should delegate to the `predict()`
         and `set_annotations()` methods.
         """
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensor=tensors)
@@ -316,6 +319,7 @@ class Pipe(object):
         """Apply the pipeline's model to a batch of docs, without
         modifying them.
         """
+        self.require_model()
         raise NotImplementedError
 
     def set_annotations(self, docs, scores, tensors=None):
@@ -328,7 +332,11 @@ class Pipe(object):
 
         Delegates to predict() and get_loss().
         """
+        self.require_model()
         raise NotImplementedError
+
+    def rehearse(self, docs, sgd=None, losses=None, **config):
+        pass
 
     def get_loss(self, docs, golds, scores):
         """Find the loss and gradient of loss for the batch of
@@ -367,7 +375,7 @@ class Pipe(object):
     def to_bytes(self, **exclude):
         """Serialize the pipe to a bytestring."""
         serialize = OrderedDict()
-        serialize['cfg'] = lambda: json_dumps(self.cfg)
+        serialize['cfg'] = lambda: srsly.json_dumps(self.cfg)
         if self.model in (True, False, None):
             serialize['model'] = lambda: self.model
         else:
@@ -386,7 +394,7 @@ class Pipe(object):
             self.model.from_bytes(b)
 
         deserialize = OrderedDict((
-            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('model', load_model),
         ))
@@ -396,7 +404,7 @@ class Pipe(object):
     def to_disk(self, path, **exclude):
         """Serialize the pipe to disk."""
         serialize = OrderedDict()
-        serialize['cfg'] = lambda p: p.open('w').write(json_dumps(self.cfg))
+        serialize['cfg'] = lambda p: srsly.write_json(p, self.cfg)
         serialize['vocab'] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
             serialize['model'] = lambda p: p.open('wb').write(self.model.to_bytes())
@@ -423,8 +431,7 @@ class Pipe(object):
 
 def _load_cfg(path):
     if path.exists():
-        with path.open() as file_:
-            return ujson.load(file_)
+        return srsly.read_json(path)
     else:
         return {}
 
@@ -442,7 +449,7 @@ class Tensorizer(Pipe):
         **cfg: Config parameters.
         RETURNS (Model): A `thinc.neural.Model` or similar instance.
         """
-        input_size = util.env_opt('token_vector_width', cfg.get('input_size', 128))
+        input_size = util.env_opt('token_vector_width', cfg.get('input_size', 96))
         return zero_init(Affine(output_size, input_size, drop_factor=0.0))
 
     def __init__(self, vocab, model=True, **cfg):
@@ -484,7 +491,7 @@ class Tensorizer(Pipe):
         n_threads (int): Number of threads.
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             tensors = self.predict(docs)
             self.set_annotations(docs, tensors)
@@ -496,6 +503,7 @@ class Tensorizer(Pipe):
         docs (iterable): A sequence of `Doc` objects.
         RETURNS (object): Vector representations for each token in the docs.
         """
+        self.require_model()
         inputs = self.model.ops.flatten([doc.tensor for doc in docs])
         outputs = self.model(inputs)
         return self.model.ops.unflatten(outputs, [len(d) for d in docs])
@@ -520,6 +528,7 @@ class Tensorizer(Pipe):
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
         """
+        self.require_model()
         if isinstance(docs, Doc):
             docs = [docs]
         inputs = []
@@ -573,6 +582,7 @@ class Tagger(Pipe):
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.cfg = OrderedDict(sorted(cfg.items()))
         self.cfg.setdefault('cnn_maxout_pieces', 2)
 
@@ -593,13 +603,14 @@ class Tagger(Pipe):
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             tag_ids, tokvecs = self.predict(docs)
             self.set_annotations(docs, tag_ids, tensors=tokvecs)
             yield from docs
 
     def predict(self, docs):
+        self.require_model()
         if not any(len(doc) for doc in docs):
             # Handle case where there are no tokens in any docs.
             n_labels = len(self.labels)
@@ -644,6 +655,7 @@ class Tagger(Pipe):
             doc.is_tagged = True
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        self.require_model()
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
 
@@ -653,6 +665,20 @@ class Tagger(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        """Perform a 'rehearsal' update, where we try to match the output of
+        an initial model.
+        """
+        if self._rehearsal_model is None:
+            return
+        guesses, backprop = self.model.begin_update(docs, drop=drop)
+        target = self._rehearsal_model(docs)
+        gradient = guesses - target
+        backprop(gradient, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -697,6 +723,9 @@ class Tagger(Pipe):
                                           exc=vocab.morphology.exc)
         self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
         if self.model is True:
+            for hp in ['token_vector_width', 'conv_depth']:
+                if hp in kwargs:
+                    self.cfg[hp] = kwargs[hp]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -744,10 +773,9 @@ class Tagger(Pipe):
         else:
             serialize['model'] = self.model.to_bytes
         serialize['vocab'] = self.vocab.to_bytes
-        serialize['cfg'] = lambda: ujson.dumps(self.cfg)
+        serialize['cfg'] = lambda: srsly.json_dumps(self.cfg)
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
-        serialize['tag_map'] = lambda: msgpack.dumps(
-            tag_map, use_bin_type=True, encoding='utf8')
+        serialize['tag_map'] = lambda: srsly.msgpack_dumps(tag_map)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -759,13 +787,13 @@ class Tagger(Pipe):
             if self.model is True:
                 token_vector_width = util.env_opt(
                     'token_vector_width',
-                    self.cfg.get('token_vector_width', 128))
+                    self.cfg.get('token_vector_width', 96))
                 self.model = self.Model(self.vocab.morphology.n_tags,
                                         **self.cfg)
             self.model.from_bytes(b)
 
         def load_tag_map(b):
-            tag_map = msgpack.loads(b, encoding='utf8')
+            tag_map = srsly.msgpack_loads(b)
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
@@ -774,7 +802,7 @@ class Tagger(Pipe):
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('tag_map', load_tag_map),
-            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
             ('model', lambda b: load_model(b)),
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -784,10 +812,9 @@ class Tagger(Pipe):
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
-            ('tag_map', lambda p: p.open('wb').write(msgpack.dumps(
-                tag_map, use_bin_type=True, encoding='utf8'))),
+            ('tag_map', lambda p: srsly.write_msgpack(p, tag_map)),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('cfg', lambda p: p.open('w').write(json_dumps(self.cfg)))
+            ('cfg', lambda p: srsly.write_json(p, self.cfg))
         ))
         util.to_disk(path, serialize, exclude)
 
@@ -802,8 +829,7 @@ class Tagger(Pipe):
                 self.model.from_bytes(file_.read())
 
         def load_tag_map(p):
-            with p.open('rb') as file_:
-                tag_map = msgpack.loads(file_.read(), encoding='utf8')
+            tag_map = srsly.read_msgpack(p)
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
@@ -878,10 +904,11 @@ class MultitaskObjective(Tagger):
 
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
-        token_vector_width = util.env_opt('token_vector_width', 128)
-        softmax = Softmax(n_tags, token_vector_width)
+        token_vector_width = util.env_opt('token_vector_width', 96)
+        softmax = Softmax(n_tags, token_vector_width*2)
         model = chain(
             tok2vec,
+            LayerNorm(Maxout(token_vector_width*2, token_vector_width, pieces=3)),
             softmax
         )
         model.tok2vec = tok2vec
@@ -889,6 +916,7 @@ class MultitaskObjective(Tagger):
         return model
 
     def predict(self, docs):
+        self.require_model()
         tokvecs = self.model.tok2vec(docs)
         scores = self.model.softmax(tokvecs)
         return tokvecs, scores
@@ -993,6 +1021,71 @@ class MultitaskObjective(Tagger):
         return sent_tags[target]
 
 
+class ClozeMultitask(Pipe):
+    @classmethod
+    def Model(cls, vocab, tok2vec, **cfg):
+        output_size = vocab.vectors.data.shape[1]
+        output_layer = chain(
+            LayerNorm(Maxout(output_size, tok2vec.nO, pieces=3)),
+            zero_init(Affine(output_size, output_size, drop_factor=0.0))
+        )
+        model = chain(tok2vec, output_layer)
+        model = masked_language_model(vocab, model)
+        model.tok2vec = tok2vec
+        model.output_layer = output_layer
+        return model
+
+    def __init__(self, vocab, model=True, **cfg):
+        self.vocab = vocab
+        self.model = model
+        self.cfg = cfg
+
+    def set_annotations(self, docs, dep_ids, tensors=None):
+        pass
+
+    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None,
+                        tok2vec=None, sgd=None, **kwargs):
+        link_vectors_to_models(self.vocab)
+        if self.model is True:
+            self.model = self.Model(self.vocab, tok2vec)
+        X = self.model.ops.allocate((5, self.model.tok2vec.nO))
+        self.model.output_layer.begin_training(X)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
+
+    def predict(self, docs):
+        self.require_model()
+        tokvecs = self.model.tok2vec(docs)
+        vectors = self.model.output_layer(tokvecs)
+        return tokvecs, vectors
+
+    def get_loss(self, docs, vectors, prediction):
+        # The simplest way to implement this would be to vstack the
+        # token.vector values, but that's a bit inefficient, especially on GPU.
+        # Instead we fetch the index into the vectors table for each of our tokens,
+        # and look them up all at once. This prevents data copying.
+        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+        target = vectors[ids]
+        gradient = (prediction - target) / prediction.shape[0]
+        loss = (gradient**2).sum()
+        return float(loss), gradient
+ 
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        pass
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        self.require_model()
+        if losses is not None and self.name not in losses:
+            losses[self.name] = 0.
+        predictions, bp_predictions = self.model.begin_update(docs, drop=drop)
+        loss, d_predictions = self.get_loss(docs, self.vocab.vectors.data, predictions)
+        bp_predictions(d_predictions, sgd=sgd)
+
+        if losses is not None:
+            losses[self.name] += loss
+
+
 class SimilarityHook(Pipe):
     """
     Experimental: A pipeline component to install a hook for supervised
@@ -1027,9 +1120,11 @@ class SimilarityHook(Pipe):
             yield self(doc)
 
     def predict(self, doc1, doc2):
+        self.require_model()
         return self.model.predict([(doc1, doc2)])
 
     def update(self, doc1_doc2, golds, sgd=None, drop=0.):
+        self.require_model()
         sims, bp_sims = self.model.begin_update(doc1_doc2, drop=drop)
 
     def begin_training(self, _=tuple(), pipeline=None, sgd=None, **kwargs):
@@ -1051,19 +1146,25 @@ class TextCategorizer(Pipe):
 
     @classmethod
     def Model(cls, nr_class, **cfg):
-        return build_text_classifier(nr_class, **cfg)
+        embed_size = util.env_opt("embed_size", 2000)
+        if "token_vector_width" in cfg:
+            token_vector_width = cfg["token_vector_width"]
+        else:
+            token_vector_width = util.env_opt("token_vector_width", 96)
+        tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
+        return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
 
     @property
     def tok2vec(self):
         if self.model in (None, True, False):
             return None
         else:
-            return chain(self.model.tok2vec, flatten)
-
+            return self.model.tok2vec
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.cfg = dict(cfg)
 
     @property
@@ -1080,13 +1181,14 @@ class TextCategorizer(Pipe):
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             scores, tensors = self.predict(docs)
             self.set_annotations(docs, scores, tensors=tensors)
             yield from docs
 
     def predict(self, docs):
+        self.require_model()
         scores = self.model(docs)
         scores = self.model.ops.asarray(scores)
         tensors = [doc.tensor for doc in docs]
@@ -1104,6 +1206,17 @@ class TextCategorizer(Pipe):
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += loss
+
+    def rehearse(self, docs, drop=0., sgd=None, losses=None):
+        if self._rehearsal_model is None:
+            return
+        scores, bp_scores = self.model.begin_update(docs, drop=drop)
+        target = self._rehearsal_model(docs)
+        gradient = scores - target
+        bp_scores(gradient, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, docs, golds, scores):
         truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
@@ -1167,8 +1280,12 @@ cdef class DependencyParser(Parser):
         return [nonproj.deprojectivize]
 
     def add_multitask_objective(self, target):
-        labeller = MultitaskObjective(self.vocab, target=target)
-        self._multitasks.append(labeller)
+        if target == 'cloze':
+            cloze = ClozeMultitask(self.vocab)
+            self._multitasks.append(cloze)
+        else:
+            labeller = MultitaskObjective(self.vocab, target=target)
+            self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
@@ -1188,8 +1305,12 @@ cdef class EntityRecognizer(Parser):
     nr_feature = 6
 
     def add_multitask_objective(self, target):
-        labeller = MultitaskObjective(self.vocab, target=target)
-        self._multitasks.append(labeller)
+        if target == 'cloze':
+            cloze = ClozeMultitask(self.vocab)
+            self._multitasks.append(cloze)
+        else:
+            labeller = MultitaskObjective(self.vocab, target=target)
+            self._multitasks.append(labeller)
 
     def init_multitask_objectives(self, get_gold_tuples, pipeline, sgd=None, **cfg):
         for labeller in self._multitasks:
@@ -1201,5 +1322,12 @@ cdef class EntityRecognizer(Parser):
         return (EntityRecognizer, (self.vocab, self.moves, self.model),
                 None, None)
 
+    @property
+    def labels(self):
+        # Get the labels from the model by looking at the available moves, e.g.
+        # B-PERSON, I-PERSON, L-PERSON, U-PERSON
+        return [move.split('-')[1] for move in self.move_names
+                if move[0] in ('B', 'I', 'L', 'U')]
 
-__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer']
+
+__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer', 'TextCategorizer']

@@ -2,12 +2,7 @@
 from __future__ import unicode_literals
 
 
-ADJECTIVE_RULES = [
-    ["er", ""],
-    ["est", ""],
-    ["er", "e"],
-    ["est", "e"]
-]
+ADJECTIVE_RULES = [["er", ""], ["est", ""], ["er", "e"], ["est", "e"]]
 
 
 NOUN_RULES = [
@@ -19,7 +14,7 @@ NOUN_RULES = [
     ["ches", "ch"],
     ["shes", "sh"],
     ["men", "man"],
-    ["ies", "y"]
+    ["ies", "y"],
 ]
 
 
@@ -31,13 +26,8 @@ VERB_RULES = [
     ["ed", "e"],
     ["ed", ""],
     ["ing", "e"],
-    ["ing", ""]
+    ["ing", ""],
 ]
 
 
-PUNCT_RULES = [
-    ["“", "\""],
-    ["”", "\""],
-    ["\u2018", "'"],
-    ["\u2019", "'"]
-]
+PUNCT_RULES = [["“", '"'], ["”", '"'], ["\u2018", "'"], ["\u2019", "'"]]

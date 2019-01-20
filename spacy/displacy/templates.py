@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 
-# setting explicit height and max-width: none on the SVG is required for
+# Setting explicit height and max-width: none on the SVG is required for
 # Jupyter to render it properly in a cell
 
 TPL_DEP_SVG = """

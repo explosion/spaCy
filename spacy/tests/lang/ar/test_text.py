@@ -9,5 +9,5 @@ def test_ar_tokenizer_handles_long_text(ar_tokenizer):
       و قد نجح في الحصول على جائزة نوبل للآداب، ليكون بذلك العربي الوحيد الذي فاز بها."""
 
     tokens = ar_tokenizer(text)
-    assert tokens[3].is_stop == True
+    assert tokens[3].is_stop is True
     assert len(tokens) == 77

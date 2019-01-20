@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 
 # Stop words
-
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a about above across after afterwards again against all almost alone along
 already also although always am among amongst amount an and another any anyhow
 anyone anything anyway anywhere are around as at
@@ -68,4 +68,5 @@ whither who whoever whole whom whose why will with within without would
 yet you your yours yourself yourselves
 
 'd 'll 'm 're 's 've
-""".split())
+""".split()
+)

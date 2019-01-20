@@ -1,0 +1,23 @@
+# coding: utf8
+from __future__ import unicode_literals
+
+
+"""
+Example sentences to test spaCy and its language models.
+
+>>> from spacy.lang.si.examples import sentences
+>>> docs = nlp.pipe(sentences)
+"""
+
+
+sentences = [
+    "මෙය වාක්‍යයකි.",
+    "ඔබ කවුද?",
+    "ගූගල් සමාගම ඩොලර් මිලියන 500 කට එම ආයතනය මිලදී ගන්නා ලදී.",
+    "කොළඹ ශ්‍රී ලංකාවේ ප්‍රධානතම නගරය යි.",
+    "ප්‍රංශයේ ජනාධිපති කවරෙක් ද?",
+    "මට බිස්කට් 1 ක් දෙන්න",
+    "ඔවුන් ලකුණු 59 කින් තරඟය පරාජයට පත් විය.",
+    "1 ත් 10 ත් අතර සංඛ්‍යාවක් කියන්න",
+    "ඔහු සහ ඇය නුවර හෝ කොළඹ පදිංචි කරුවන් නොවේ",
+]

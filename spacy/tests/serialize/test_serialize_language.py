@@ -12,14 +12,14 @@ from ..util import make_tempdir
 @pytest.fixture
 def meta_data():
     return {
-        'name': 'name-in-fixture',
-        'version': 'version-in-fixture',
-        'description': 'description-in-fixture',
-        'author': 'author-in-fixture',
-        'email': 'email-in-fixture',
-        'url': 'url-in-fixture',
-        'license': 'license-in-fixture',
-        'vectors': {'width': 0, 'vectors': 0, 'keys': 0, 'name': None}
+        "name": "name-in-fixture",
+        "version": "version-in-fixture",
+        "description": "description-in-fixture",
+        "author": "author-in-fixture",
+        "email": "email-in-fixture",
+        "url": "url-in-fixture",
+        "license": "license-in-fixture",
+        "vectors": {"width": 0, "vectors": 0, "keys": 0, "name": None},
     }
 
 
@@ -35,16 +35,18 @@ def test_serialize_with_custom_tokenizer():
     """Test that serialization with custom tokenizer works without token_match.
     See: https://support.prodi.gy/t/how-to-save-a-custom-tokenizer/661/2
     """
-    prefix_re = re.compile(r'''1/|2/|:[0-9][0-9][A-K]:|:[0-9][0-9]:''')
-    suffix_re = re.compile(r'''''')
-    infix_re = re.compile(r'''[~]''')
+    prefix_re = re.compile(r"""1/|2/|:[0-9][0-9][A-K]:|:[0-9][0-9]:""")
+    suffix_re = re.compile(r"""""")
+    infix_re = re.compile(r"""[~]""")
 
     def custom_tokenizer(nlp):
-        return Tokenizer(nlp.vocab,
-                         {},
-                         prefix_search=prefix_re.search,
-                         suffix_search=suffix_re.search,
-                         infix_finditer=infix_re.finditer)
+        return Tokenizer(
+            nlp.vocab,
+            {},
+            prefix_search=prefix_re.search,
+            suffix_search=suffix_re.search,
+            infix_finditer=infix_re.finditer,
+        )
 
     nlp = Language()
     nlp.tokenizer = custom_tokenizer(nlp)

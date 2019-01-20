@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 import numpy
-import dill
+import srsly
 
 from collections import OrderedDict
 from thinc.neural.util import get_array_module
@@ -11,13 +11,13 @@ from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .typedefs cimport attr_t
 from .tokens.token cimport Token
-from .attrs cimport PROB, LANG, ORTH, TAG
+from .attrs cimport PROB, LANG, ORTH, TAG, POS
 from .structs cimport SerializedLexemeC
 
 from .compat import copy_reg, basestring_
 from .errors import Errors
 from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs
+from .attrs import intify_attrs, NORM
 from .vectors import Vectors
 from ._ml import link_vectors_to_models
 from . import util
@@ -232,9 +232,16 @@ cdef class Vocab:
             token.lex = lex
             if TAG in props:
                 self.morphology.assign_tag(token, props[TAG])
+            elif POS in props:
+                # Don't allow POS to be set without TAG -- this causes problems,
+                # see #1773
+                props.pop(POS)
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
-                Lexeme.set_struct_attr(lex, attr_id, value)
+                # NORM is the only one that overlaps between the two
+                # (which is maybe not great?)
+                if attr_id != NORM:
+                    Lexeme.set_struct_attr(lex, attr_id, value)
         return tokens
 
     @property
@@ -292,7 +299,7 @@ cdef class Vocab:
 
         self.vectors = Vectors(data=keep, keys=keys)
 
-        syn_keys, syn_rows, scores = self.vectors.most_similar(toss)
+        syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
 
         remap = {}
         for i, key in enumerate(keys[nr_row:]):
@@ -513,7 +520,7 @@ def pickle_vocab(vocab):
     morph = vocab.morphology
     length = vocab.length
     data_dir = vocab.data_dir
-    lex_attr_getters = dill.dumps(vocab.lex_attr_getters)
+    lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
     lexemes_data = vocab.lexemes_to_bytes()
     return (unpickle_vocab,
             (sstore, vectors, morph, data_dir, lex_attr_getters, lexemes_data, length))
@@ -527,7 +534,7 @@ def unpickle_vocab(sstore, vectors, morphology, data_dir,
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.data_dir = data_dir
-    vocab.lex_attr_getters = dill.loads(lex_attr_getters)
+    vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
     return vocab

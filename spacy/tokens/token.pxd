@@ -34,6 +34,11 @@ cdef class Token:
             return Lexeme.c_check_flag(token.lex, feat_name)
         elif feat_name == LEMMA:
             return token.lemma
+        elif feat_name == NORM:
+            if token.norm == 0:
+                return token.lex.norm
+            else:
+                return token.norm
         elif feat_name == POS:
             return token.pos
         elif feat_name == TAG:
@@ -58,6 +63,8 @@ cdef class Token:
                                        attr_t value) nogil:
         if feat_name == LEMMA:
             token.lemma = value
+        elif feat_name == NORM:
+            token.norm = value
         elif feat_name == POS:
             token.pos = <univ_pos_t>value
         elif feat_name == TAG:
