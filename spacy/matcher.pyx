@@ -423,6 +423,7 @@ cdef class Matcher:
     cdef Pool mem
     cdef vector[TokenPatternC*] patterns
     cdef readonly Vocab vocab
+    cdef public object _extra_predicates
     cdef public object _patterns
     cdef public object _entities
     cdef public object _callbacks
@@ -434,6 +435,7 @@ cdef class Matcher:
             documents the matcher will operate on.
         RETURNS (Matcher): The newly constructed object.
         """
+        self._extra_predicates = []
         self._patterns = {}
         self._entities = {}
         self._callbacks = {}
@@ -494,6 +496,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E012.format(key=key))
         key = self._normalize_key(key)
         for pattern in patterns:
+            # TODO: Handle extra predicates
             specs = _convert_strings(pattern, self.vocab.strings)
             self.patterns.push_back(init_pattern(self.mem, key, specs))
         self._patterns.setdefault(key, [])
@@ -558,7 +561,8 @@ cdef class Matcher:
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
-        matches = find_matches(&self.patterns[0], self.patterns.size(), doc)
+        matches = find_matches(&self.patterns[0], self.patterns.size(), doc,
+                               extra_getters=self.extra_predicates)
         for i, (key, start, end) in enumerate(matches):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
