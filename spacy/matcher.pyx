@@ -57,10 +57,14 @@ cdef struct AttrValueC:
     attr_id_t attr
     attr_t value
 
+cdef struct IndexValueC:
+    int32_t index
+    attr_t value
+
 cdef struct TokenPatternC:
     AttrValueC* attrs
     int32_t* py_predicates
-    attr_t* extra_attrs
+    IndexValueC* extra_attrs
     int32_t nr_attr
     int32_t nr_extra_attr
     int32_t nr_py
@@ -80,7 +84,16 @@ cdef struct MatchC:
     int32_t length
 
 
-cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extra_getters=tuple(),
+class _ExtensionGetter(object):
+    def __init__(self, i, attr):
+        self.i = i
+        self.attr = attr
+
+    def __call__(self, token):
+        return token._.get(self.attr)
+
+
+cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
         predicates=tuple()):
     '''Find matches in a doc, with a compiled array of patterns. Matches are
     returned as a list of (id, start, end) tuples.
@@ -96,24 +109,30 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extra_getters=tuple(
     cdef vector[PatternStateC] states
     cdef vector[MatchC] matches
     cdef PatternStateC state
-    cdef int i, j
+    cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
     predicate_cache = <char*>mem.alloc(doc.length * len(predicates), sizeof(char))
-    extra_attrs = <attr_t*>mem.alloc(doc.length * len(extra_getters), sizeof(attr_t))
-    # Populate extra attrs
+    if extensions is not None and len(extensions) >= 1:
+        nr_extra_attr = max(extensions.values())
+        extra_attr_values = <attr_t*>mem.alloc(doc.length * nr_extra_attr, sizeof(attr_t))
+    else:
+        nr_extra_attr = 0
+        extra_attr_values = <attr_t*>mem.alloc(doc.length, sizeof(attr_t))
     for i, token in enumerate(doc):
-        for j, getter in enumerate(extra_getters):
-            extra_attrs[i * doc.length + j] = getter(token)
+        for name, index in extensions.items():
+            value = token._.get(name)
+            if isinstance(value, basestring):
+                value = token.vocab.strings[value]
+            extra_attr_values[i * nr_extra_attr + index] = value
     # Main loop
-    cdef int nr_extra_getter = len(extra_getters)
     cdef int nr_predicate = len(predicates)
     for i in range(doc.length):
         for j in range(n):
             states.push_back(PatternStateC(patterns[j], i, 0))
         transition_states(states, matches, predicate_cache,
-            doc[i], extra_attrs, predicates)
+            doc[i], extra_attr_values, predicates)
         predicate_cache += nr_predicate
-        extra_attrs += nr_extra_getter
+        extra_attr_values += nr_extra_attr
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
     output = []
@@ -361,7 +380,7 @@ cdef char get_is_match(PatternStateC state,
         if get_token_attr(token, attr.attr) != attr.value:
             return 0
     for i in range(spec.nr_extra_attr):
-        if spec.extra_attrs[i] != extra_attrs[i]:
+        if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
             return 0
     return True
 
@@ -380,17 +399,21 @@ cdef char get_quantifier(PatternStateC state) nogil:
 DEF PADDING = 5
 
 
-cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
-                                 object token_specs) except NULL:
+cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
     cdef int i
-    for i, (quantifier, spec) in enumerate(token_specs):
+    for i, (quantifier, spec, extensions) in enumerate(token_specs):
         pattern[i].quantifier = quantifier
         pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
         pattern[i].nr_attr = len(spec)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
+        pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
+        for j, (index, value) in enumerate(extensions):
+            pattern[i].extra_attrs[j].index = index
+            pattern[i].extra_attrs[j].value = value
+        pattern[i].nr_extra_attr = len(extensions)
         pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
@@ -409,39 +432,65 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
             raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
     return id_attr.value
 
-def _convert_strings(token_specs, string_store):
-    # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
-    operators = {'*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
-                 '?': (ZERO_ONE,), '1': (ONE,), '!': (ZERO,)}
+def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predicates):
     tokens = []
-    op = ONE
     for spec in token_specs:
         if not spec:
             # Signifier for 'any token'
-            tokens.append((ONE, [(NULL_ATTR, 0)]))
+            tokens.append((ONE, [(NULL_ATTR, 0)], []))
             continue
-        token = []
-        ops = (ONE,)
-        for attr, value in spec.items():
-            if isinstance(attr, basestring) and attr.upper() == 'OP':
-                if value in operators:
-                    ops = operators[value]
-                else:
-                    keys = ', '.join(operators.keys())
-                    raise KeyError(Errors.E011.format(op=value, opts=keys))
-            if isinstance(attr, basestring):
-                if attr.upper() == 'TEXT':
-                    attr = 'ORTH'
-                attr = IDS.get(attr.upper())
-            if isinstance(value, basestring):
-                value = string_store.add(value)
-            if isinstance(value, bool):
-                value = int(value)
-            if attr is not None:
-                token.append((attr, value))
+        ops = _get_operators(spec)
+        attr_values = _get_attr_values(spec, string_store)
+        extensions = _get_extensions(spec, string_store, extensions_table)
         for op in ops:
-            tokens.append((op, token))
+            tokens.append((op, list(attr_values), list(extensions)))
     return tokens
+
+def _get_attr_values(spec, string_store):
+    attr_values = []
+    for attr, value in spec.items():
+        if isinstance(attr, basestring):
+            if attr == '_':
+                continue
+            elif attr.upper() == 'OP':
+                continue
+            if attr.upper() == 'TEXT':
+                attr = 'ORTH'
+            attr = IDS.get(attr.upper())
+        if isinstance(value, basestring):
+            value = string_store.add(value)
+        if isinstance(value, bool):
+            value = int(value)
+        if attr is not None:
+            attr_values.append((attr, value))
+    return attr_values
+
+
+def _get_operators(spec):
+    # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
+    lookup = {'*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
+                 '?': (ZERO_ONE,), '1': (ONE,), '!': (ZERO,)}
+    # Fix casing
+    spec = {key.upper(): values for key, values in spec.items()
+            if isinstance(key, basestring)}
+    if 'OP' not in spec:
+        return (ONE,)
+    elif spec['OP'] in lookup:
+        return lookup[spec['OP']]
+    else:
+        keys = ', '.join(lookup.keys())
+        raise KeyError(Errors.E011.format(op=spec['OP'], opts=keys))
+
+
+def _get_extensions(spec, string_store, name2index):
+    attr_values = []
+    for name, value in spec.get('_', {}).items():
+        if isinstance(value, basestring):
+            value = string_store.add(value)
+        if name not in name2index:
+            name2index[name] = len(name2index)
+        attr_values.append((name2index[name], value))
+    return attr_values
 
 
 cdef class Matcher:
@@ -449,10 +498,11 @@ cdef class Matcher:
     cdef Pool mem
     cdef vector[TokenPatternC*] patterns
     cdef readonly Vocab vocab
-    cdef public object _extra_predicates
     cdef public object _patterns
     cdef public object _entities
     cdef public object _callbacks
+    cdef public object _extensions
+    cdef public object _extra_predicates
 
     def __init__(self, vocab):
         """Create the Matcher.
@@ -465,6 +515,8 @@ cdef class Matcher:
         self._patterns = {}
         self._entities = {}
         self._callbacks = {}
+        self._extensions = {}
+        self._extra_predicates = {}
         self.vocab = vocab
         self.mem = Pool()
 
@@ -523,7 +575,8 @@ cdef class Matcher:
         key = self._normalize_key(key)
         for pattern in patterns:
             # TODO: Handle extra predicates
-            specs = _convert_strings(pattern, self.vocab.strings)
+            specs = _preprocess_pattern(pattern, self.vocab.strings,
+                self._extensions, self._extra_predicates)
             self.patterns.push_back(init_pattern(self.mem, key, specs))
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
@@ -588,7 +641,7 @@ cdef class Matcher:
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
         matches = find_matches(&self.patterns[0], self.patterns.size(), doc,
-                               extra_getters=self.extra_predicates)
+                               extensions=self._extensions)
         for i, (key, start, end) in enumerate(matches):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
