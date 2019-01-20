@@ -1,6 +1,7 @@
 # cython: infer_types=True
 # cython: profile=True
 from __future__ import unicode_literals
+import re
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, uint64_t, uint16_t
 from preshed.maps cimport PreshMap
@@ -82,15 +83,6 @@ cdef struct MatchC:
     attr_t pattern_id
     int32_t start
     int32_t length
-
-
-class _ExtensionGetter(object):
-    def __init__(self, i, attr):
-        self.i = i
-        self.attr = attr
-
-    def __call__(self, token):
-        return token._.get(self.attr)
 
 
 cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
@@ -402,7 +394,7 @@ DEF PADDING = 5
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
     cdef int i
-    for i, (quantifier, spec, extensions) in enumerate(token_specs):
+    for i, (quantifier, spec, extensions, predicates) in enumerate(token_specs):
         pattern[i].quantifier = quantifier
         pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
         pattern[i].nr_attr = len(spec)
@@ -414,6 +406,10 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
             pattern[i].extra_attrs[j].index = index
             pattern[i].extra_attrs[j].value = value
         pattern[i].nr_extra_attr = len(extensions)
+        pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
+        for j, index in enumerate(predicates):
+            pattern[i].py_predicates[j] = index
+        pattern[i].nr_py = len(predicates)
         pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
     pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
@@ -437,13 +433,14 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
     for spec in token_specs:
         if not spec:
             # Signifier for 'any token'
-            tokens.append((ONE, [(NULL_ATTR, 0)], []))
+            tokens.append((ONE, [(NULL_ATTR, 0)], [], []))
             continue
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
+        predicates = _get_extra_predicates(spec, extra_predicates)
         for op in ops:
-            tokens.append((op, list(attr_values), list(extensions)))
+            tokens.append((op, list(attr_values), list(extensions), list(predicates)))
     return tokens
 
 def _get_attr_values(spec, string_store):
@@ -459,12 +456,86 @@ def _get_attr_values(spec, string_store):
             attr = IDS.get(attr.upper())
         if isinstance(value, basestring):
             value = string_store.add(value)
-        if isinstance(value, bool):
+        elif isinstance(value, bool):
             value = int(value)
+        elif isinstance(value, dict):
+            continue
         if attr is not None:
             attr_values.append((attr, value))
     return attr_values
 
+
+class _RegexPredicate(object):
+    def __init__(self, i, attr, value, predicate):
+        self.i = i
+        self.attr = attr
+        self.value = re.compile(value)
+        self.predicate = predicate
+        assert self.predicate == 'REGEX'
+
+    def __call__(self, token):
+        return bool(self.value.search(getattr(token, self.attr)))
+
+
+class _SetMemberPredicate(object):
+    def __init__(self, i, attr, value, predicate):
+        self.i = i
+        self.attr = attr
+        self.value = set(value)
+        self.predicate = predicate
+        assert self.predicate in ('IN', 'NOT_IN')
+
+    def __call__(self, token):
+        if self.predicate == 'IN':
+            return getattr(token, self.attr) in self.value
+        else:
+            return getattr(token, self.attr) not in self.value
+
+
+class _ComparisonPredicate(object):
+    def __init__(self, i, attr, value, predicate):
+        self.i = i
+        self.attr = attr
+        self.value = set(value)
+        self.predicate = predicate
+        assert self.predicate in ('==', '!=', '>=', '<=', '>', '<')
+
+    def __call__(self, token):
+        value = getattr(token, self.attr)
+        if self.predicate == '==':
+            return value == self.value
+        if self.predicate == '!=':
+            return value != self.value
+        elif self.predicate == '>=':
+            return value >= self.value
+        elif self.predicate == '<=':
+            return value <= self.value
+        elif self.predicate == '>':
+            return value > self.value
+        elif self.predicate == '<':
+            return value <= self.value
+
+
+def _get_extra_predicates(spec, extra_predicates):
+    predicate_types = {
+        'REGEX': _RegexPredicate,
+        'IN': _SetMemberPredicate,
+        'NOT_IN': _SetMemberPredicate,
+        '==': _ComparisonPredicate,
+        '>=': _ComparisonPredicate,
+        '<=': _ComparisonPredicate,
+        '>': _ComparisonPredicate,
+        '<': _ComparisonPredicate,
+    }
+    output = []
+    for attr, value in spec.items():
+        if isinstance(value, dict):
+            for type_, cls in predicate_types.items():
+                if type_ in value:
+                    predicate = cls(len(extra_predicates), attr, value[type_], type_)
+                    output.append(predicate.i)
+    return output
+ 
 
 def _get_operators(spec):
     # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
@@ -574,7 +645,6 @@ cdef class Matcher:
                 raise ValueError(Errors.E012.format(key=key))
         key = self._normalize_key(key)
         for pattern in patterns:
-            # TODO: Handle extra predicates
             specs = _preprocess_pattern(pattern, self.vocab.strings,
                 self._extensions, self._extra_predicates)
             self.patterns.push_back(init_pattern(self.mem, key, specs))
