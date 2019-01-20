@@ -170,6 +170,17 @@ def test_matcher_any_token_operator(en_vocab):
     assert matches[2] == 'test hello world'
 
 
+def test_matcher_extension_attribute(en_vocab):
+    matcher = Matcher(en_vocab)
+    Token.set_extension('is_fruit',
+        getter=lambda token: token.text in ('apple', 'banana'), force=True)
+    pattern = [{'ORTH': 'an'}, {'_': {'is_fruit': True}}]
+    matcher.add('HAVING_FRUIT', None, pattern)
+    doc = Doc(en_vocab, words=['an', 'apple'])
+    matches = matcher(doc)
+    assert len(matches) == 1
+
+
 @pytest.fixture
 def text():
     return u"The quick brown fox jumped over the lazy fox"
