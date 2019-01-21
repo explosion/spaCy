@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 import re
 from spacy.matcher import Matcher, DependencyTreeMatcher
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 from ..util import get_doc
 
 
@@ -177,6 +177,80 @@ def test_matcher_any_token_operator(en_vocab):
     assert matches[0] == "test"
     assert matches[1] == "test hello"
     assert matches[2] == "test hello world"
+
+
+def test_matcher_extension_attribute(en_vocab):
+    matcher = Matcher(en_vocab)
+    Token.set_extension('is_fruit',
+        getter=lambda token: token.text in ('apple', 'banana'), force=True)
+    pattern = [{'ORTH': 'an'}, {'_': {'is_fruit': True}}]
+    matcher.add('HAVING_FRUIT', None, pattern)
+    doc = Doc(en_vocab, words=['an', 'apple'])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    doc = Doc(en_vocab, words=['an', 'aardvark'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+
+def test_matcher_set_value(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{'ORTH': {'IN': ['an', 'a']}}]
+    matcher.add('A_OR_AN', None, pattern)
+    doc = Doc(en_vocab, words=['an', 'a', 'apple'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['aardvark'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+
+def test_matcher_regex(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{'ORTH': {'REGEX': r'(?:a|an)'}}]
+    matcher.add('A_OR_AN', None, pattern)
+    doc = Doc(en_vocab, words=['an', 'a', 'hi'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['bye'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+def test_matcher_regex_shape(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{'SHAPE': {'REGEX': r'^[^x]+$'}}]
+    matcher.add('NON_ALPHA', None, pattern)
+    doc = Doc(en_vocab, words=['99', 'problems', '!'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['bye'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+def test_matcher_compare_length(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{'LENGTH': {'>=': 2}}]
+    matcher.add('LENGTH_COMPARE', None, pattern)
+    doc = Doc(en_vocab, words=['a', 'aa', 'aaa'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['a'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+
+def test_matcher_extension_set_membership(en_vocab):
+    matcher = Matcher(en_vocab)
+    Token.set_extension('reversed',
+        getter=lambda token: ''.join(reversed(token.text)), force=True)
+    pattern = [{'_': {'reversed': {"IN": ["eyb", "ih"]}}}]
+    matcher.add('REVERSED', None, pattern)
+    doc = Doc(en_vocab, words=['hi', 'bye', 'hello'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['aardvark'])
+    matches = matcher(doc)
+    assert len(matches) == 0
 
 
 @pytest.fixture
