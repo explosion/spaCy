@@ -205,6 +205,55 @@ def test_matcher_set_value(en_vocab):
     assert len(matches) == 0
 
 
+def test_matcher_regex(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{'ORTH': {'REGEX': r'(?:a|an)'}}]
+    matcher.add('A_OR_AN', None, pattern)
+    doc = Doc(en_vocab, words=['an', 'a', 'hi'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['bye'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+def test_matcher_regex_shape(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{'SHAPE': {'REGEX': r'^[^x]+$'}}]
+    matcher.add('NON_ALPHA', None, pattern)
+    doc = Doc(en_vocab, words=['99', 'problems', '!'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['bye'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+def test_matcher_compare_length(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{'LENGTH': {'>=': 2}}]
+    matcher.add('LENGTH_COMPARE', None, pattern)
+    doc = Doc(en_vocab, words=['a', 'aa', 'aaa'])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['a'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+
+def test_matcher_extension_set_membership(en_vocab):
+    matcher = Matcher(en_vocab)
+    Token.set_extension('reversed',
+        getter=lambda token: ''.join(reversed(token.text)), force=True)
+    pattern = [{'_': {'reversed': {"IN": ["eyb", "ih"]}}}]
+    matcher.add('REVERSED', None, pattern)
+    doc = Doc(en_vocab, words=['hi', 'bye', 'hello'])
+    print([t._.reversed for t in doc])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=['aardvark'])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+
 @pytest.fixture
 def text():
     return "The quick brown fox jumped over the lazy fox"
