@@ -2,6 +2,7 @@
 # cython: profile=True
 from __future__ import unicode_literals
 import re
+import json
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, uint64_t, uint16_t
 from preshed.maps cimport PreshMap
@@ -432,7 +433,21 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
 
 
 def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predicates):
+    """This function interprets the pattern, converting the various bits of
+    syntactic sugar before we compile it into a struct with init_pattern.
+
+    We need to split the pattern up into three parts:
+    * Normal attribute/value pairs, which are stored on either the token or lexeme,
+        can be handled directly.
+    * Extension attributes are handled specially, as we need to prefetch the
+        values from Python for the doc before we begin matching.
+    * Extra predicates also call Python functions, so we have to create the
+        functions and store them. So we store these specially as well.
+    * Extension attributes that have extra predicates are stored within the
+        extra_predicates.
+    """
     tokens = []
+    seen_predicates = {}
     for spec in token_specs:
         if not spec:
             # Signifier for 'any token'
@@ -441,7 +456,7 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
-        predicates = _get_extra_predicates(spec, extra_predicates)
+        predicates = _get_extra_predicates(spec, extra_predicates, seen_predicates)
         for op in ops:
             tokens.append((op, list(attr_values), list(extensions), list(predicates)))
     return tokens
@@ -468,6 +483,8 @@ def _get_attr_values(spec, string_store):
             attr_values.append((attr, value))
     return attr_values
 
+# These predicate helper classes are used to match the REGEX, IN, >= etc
+# extensions to the matcher introduced in #3173.
 
 class _RegexPredicate(object):
     def __init__(self, i, attr, value, predicate, is_extension=False):
@@ -534,7 +551,7 @@ class _ComparisonPredicate(object):
             return value < self.value
 
 
-def _get_extra_predicates(spec, extra_predicates):
+def _get_extra_predicates(spec, extra_predicates, seen_predicates):
     predicate_types = {
         'REGEX': _RegexPredicate,
         'IN': _SetMemberPredicate,
@@ -551,7 +568,8 @@ def _get_extra_predicates(spec, extra_predicates):
             if attr == '_':
                 output.extend(
                     _get_extension_extra_predicates(
-                        value, extra_predicates, predicate_types))
+                        value, extra_predicates, predicate_types,
+                        seen_predicates))
                 continue
             elif attr.upper() == 'OP':
                 continue
@@ -561,23 +579,35 @@ def _get_extra_predicates(spec, extra_predicates):
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    predicate = cls(len(extra_predicates), attr, value[type_], type_)
-                    extra_predicates.append(predicate)
-                    output.append(predicate.i)
+                    key = (attr, type_, json.dumps(value[type_], sort_keys=True))
+                    # Don't create a redundant predicates.
+                    # This helps with efficiency, as we're caching the results.
+                    if key in seen_predicates:
+                        output.append(seen_predicates[key])
+                    else:
+                        predicate = cls(len(extra_predicates), attr, value[type_], type_)
+                        extra_predicates.append(predicate)
+                        output.append(predicate.i)
+                        seen_predicates[key] = predicate.i
     return output
 
 
-def _get_extension_extra_predicates(spec, extra_predicates, predicate_types):
+def _get_extension_extra_predicates(spec, extra_predicates, predicate_types,
+        seen_predicates):
     output = []
-    print("Extension extras", spec)
     for attr, value in spec.items():
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    predicate = cls(len(extra_predicates), attr, value[type_], type_,
-                                    is_extension=True)
-                    extra_predicates.append(predicate)
-                    output.append(predicate.i)
+                    key = (attr, type_, json.dumps(value[type_], sort_keys=True))
+                    if key in seen_predicates:
+                        output.append(seen_predicates[key])
+                    else:
+                        predicate = cls(len(extra_predicates), attr, value[type_], type_,
+                                        is_extension=True)
+                        extra_predicates.append(predicate)
+                        output.append(predicate.i)
+                        seen_predicates[key] = predicate.i
     return output
 
 
