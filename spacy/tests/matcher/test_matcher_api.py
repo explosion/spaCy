@@ -246,7 +246,6 @@ def test_matcher_extension_set_membership(en_vocab):
     pattern = [{'_': {'reversed': {"IN": ["eyb", "ih"]}}}]
     matcher.add('REVERSED', None, pattern)
     doc = Doc(en_vocab, words=['hi', 'bye', 'hello'])
-    print([t._.reversed for t in doc])
     matches = matcher(doc)
     assert len(matches) == 2
     doc = Doc(en_vocab, words=['aardvark'])
