@@ -2,7 +2,7 @@
 # cython: profile=True
 from __future__ import unicode_literals
 import re
-import json
+import srsly
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, uint64_t, uint16_t
 from preshed.maps cimport PreshMap
@@ -579,7 +579,7 @@ def _get_extra_predicates(spec, extra_predicates, seen_predicates):
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    key = (attr, type_, json.dumps(value[type_], sort_keys=True))
+                    key = (attr, type_, srsly.json_dumps(value[type_], sort_keys=True))
                     # Don't create a redundant predicates.
                     # This helps with efficiency, as we're caching the results.
                     if key in seen_predicates:
@@ -599,7 +599,7 @@ def _get_extension_extra_predicates(spec, extra_predicates, predicate_types,
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    key = (attr, type_, json.dumps(value[type_], sort_keys=True))
+                    key = (attr, type_, srsly.json_dumps(value[type_], sort_keys=True))
                     if key in seen_predicates:
                         output.append(seen_predicates[key])
                     else:
