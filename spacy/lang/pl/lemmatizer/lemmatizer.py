@@ -22,22 +22,23 @@ class PolishLemmatizer(object):
             univ_pos = 'verb'
         elif univ_pos in (ADJ, 'ADJ', 'adj'):
             univ_pos = 'adj'
+        elif univ_pos in (ADV, 'ADV', 'adv'):
+            univ_pos = 'adv'
+        elif univ_pos in (PART, 'PART', 'part'):
+            univ_pos = 'part'
         else:
-            univ_pos = 'any'
+            return self.lookup(string)
 
-        if univ_pos == 'any':
-            index_all = {word for word_list in self.index.values() for word in word_list}
-            exc_all = [exc for exc_list in self.exc.values() for exc in exc_list]
-            rules_all = [rule for rule_list in self.rules.values() for rule in rule_list]
-            lemmas = lemmatize(string, index_all, exc_all, rules_all)
-        else:
-            exceptions = self.exc.get(univ_pos, {}).copy()
-            exceptions.update(self.exc.get('other', {}))
-            lemmas = lemmatize(string,
-                               self.index.get(univ_pos, {}) | self.index.get('other', {}),
-                               exceptions,
-                               self.rules.get(univ_pos, []) + self.rules.get('other', {})
-                               )
+        # TODO check if is base form
+
+        exceptions = self.exc.get(univ_pos, {}).copy()
+        exceptions.update(self.exc.get('other', {}))
+        lemmas = lemmatize(
+            string,
+            self.index.get(univ_pos, {}) | self.index.get('other', {}),
+            exceptions,
+            self.rules.get(univ_pos, []) + self.rules.get('other', {})
+        )
         return lemmas
 
     def lookup(self, string):
