@@ -430,6 +430,7 @@ cdef attr_t get_pattern_key(const TokenPatternC* pattern) nogil:
             raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
     return id_attr.value
 
+
 def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predicates):
     tokens = []
     for spec in token_specs:
@@ -444,6 +445,7 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
         for op in ops:
             tokens.append((op, list(attr_values), list(extensions), list(predicates)))
     return tokens
+
 
 def _get_attr_values(spec, string_store):
     attr_values = []
@@ -468,28 +470,36 @@ def _get_attr_values(spec, string_store):
 
 
 class _RegexPredicate(object):
-    def __init__(self, i, attr, value, predicate):
+    def __init__(self, i, attr, value, predicate, is_extension=False):
         self.i = i
         self.attr = attr
         self.value = re.compile(value)
         self.predicate = predicate
+        self.is_extension = is_extension
         assert self.predicate == 'REGEX'
 
     def __call__(self, Token token):
-        value = token.vocab.strings[get_token_attr(token.c, self.attr)]
+        if self.is_extension:
+            value = token._.get(self.attr)
+        else:
+            value = token.vocab.strings[get_token_attr(token.c, self.attr)]
         return bool(self.value.search(value))
 
 
 class _SetMemberPredicate(object):
-    def __init__(self, i, attr, value, predicate):
+    def __init__(self, i, attr, value, predicate, is_extension=False):
         self.i = i
         self.attr = attr
         self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
+        self.is_extension = is_extension
         assert self.predicate in ('IN', 'NOT_IN')
 
     def __call__(self, Token token):
-        value = get_token_attr(token.c, self.attr)
+        if self.is_extension:
+            value = get_string_id(token._.get(self.attr))
+        else:
+            value = get_token_attr(token.c, self.attr)
         if self.predicate == 'IN':
             return value in self.value
         else:
@@ -497,15 +507,19 @@ class _SetMemberPredicate(object):
 
 
 class _ComparisonPredicate(object):
-    def __init__(self, i, attr, value, predicate):
+    def __init__(self, i, attr, value, predicate, is_extension=False):
         self.i = i
         self.attr = attr
-        self.value = set(value)
+        self.value = value
         self.predicate = predicate
+        self.is_extension = is_extension
         assert self.predicate in ('==', '!=', '>=', '<=', '>', '<')
 
     def __call__(self, Token token):
-        value = get_token_attr(token.c, self.attr)
+        if self.is_extension:
+            value = token._.get(self.attr)
+        else:
+            value = get_token_attr(token.c, self.attr)
         if self.predicate == '==':
             return value == self.value
         if self.predicate == '!=':
@@ -517,7 +531,7 @@ class _ComparisonPredicate(object):
         elif self.predicate == '>':
             return value > self.value
         elif self.predicate == '<':
-            return value <= self.value
+            return value < self.value
 
 
 def _get_extra_predicates(spec, extra_predicates):
@@ -535,6 +549,9 @@ def _get_extra_predicates(spec, extra_predicates):
     for attr, value in spec.items():
         if isinstance(attr, basestring):
             if attr == '_':
+                output.extend(
+                    _get_extension_extra_predicates(
+                        value, extra_predicates, predicate_types))
                 continue
             elif attr.upper() == 'OP':
                 continue
@@ -548,7 +565,21 @@ def _get_extra_predicates(spec, extra_predicates):
                     extra_predicates.append(predicate)
                     output.append(predicate.i)
     return output
- 
+
+
+def _get_extension_extra_predicates(spec, extra_predicates, predicate_types):
+    output = []
+    print("Extension extras", spec)
+    for attr, value in spec.items():
+        if isinstance(value, dict):
+            for type_, cls in predicate_types.items():
+                if type_ in value:
+                    predicate = cls(len(extra_predicates), attr, value[type_], type_,
+                                    is_extension=True)
+                    extra_predicates.append(predicate)
+                    output.append(predicate.i)
+    return output
+
 
 def _get_operators(spec):
     # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
@@ -569,6 +600,9 @@ def _get_operators(spec):
 def _get_extensions(spec, string_store, name2index):
     attr_values = []
     for name, value in spec.get('_', {}).items():
+        if isinstance(value, dict):
+            # Handle predicates (e.g. "IN", in the extra_predicates, not here.
+            continue
         if isinstance(value, basestring):
             value = string_store.add(value)
         if name not in name2index:
