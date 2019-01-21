@@ -1,4 +1,3 @@
-import os
 import spacy
 import time
 import re
@@ -77,10 +76,7 @@ def _contains_blinded_text(stats_xml):
     unique_lemmas = int(root.find('lemmas').get('unique'))
 
     # assume the corpus is largely blinded when there are less than 1% unique tokens
-    if (unique_lemmas / total_tokens) < 0.01:
-        return True
-
-    return False
+    return (unique_lemmas / total_tokens) < 0.01
 
 
 def fetch_all_treebanks(ud_dir, languages, corpus, best_per_language):
@@ -91,35 +87,35 @@ def fetch_all_treebanks(ud_dir, languages, corpus, best_per_language):
         all_treebanks[l] = []
         treebank_size[l] = 0
 
-    for treebank in os.listdir(ud_dir):
-        for file in os.listdir(os.path.join(ud_dir, treebank)):
-            if file.endswith('-ud-' + corpus + '.txt'):
-                file_lang = file.split('_')[0]
-                if file_lang in languages:
-                    txt_path = os.path.join(ud_dir, treebank, file)
-                    gold_path = txt_path.replace('.txt', '.conllu')
-                    stats_xml = os.path.join(ud_dir, treebank, "stats.xml")
-                    # ignore treebanks where the texts are not publicly available
-                    if not _contains_blinded_text(stats_xml):
-                        if not best_per_language:
-                            all_treebanks[file_lang].append(txt_path)
-                        # check the tokens in the gold annotation to keep only the biggest treebank per language
-                        else:
-                            with open(gold_path, 'r', encoding='utf-8') as gold_file:
-                                gold_ud = conll17_ud_eval.load_conllu(gold_file)
-                                gold_tokens = len(gold_ud.tokens)
-                            if treebank_size[file_lang] < gold_tokens:
-                                all_treebanks[file_lang] = [txt_path]
-                                treebank_size[file_lang] = gold_tokens
+    for treebank_dir in ud_dir.iterdir():
+        if treebank_dir.is_dir():
+            for txt_path in treebank_dir.iterdir():
+                if txt_path.name.endswith('-ud-' + corpus + '.txt'):
+                    file_lang = txt_path.name.split('_')[0]
+                    if file_lang in languages:
+                        gold_path = treebank_dir / txt_path.name.replace('.txt', '.conllu')
+                        stats_xml = treebank_dir / "stats.xml"
+                        # ignore treebanks where the texts are not publicly available
+                        if not _contains_blinded_text(stats_xml):
+                            if not best_per_language:
+                                all_treebanks[file_lang].append(txt_path)
+                            # check the tokens in the gold annotation to keep only the biggest treebank per language
+                            else:
+                                with gold_path.open(mode='r', encoding='utf-8') as gold_file:
+                                    gold_ud = conll17_ud_eval.load_conllu(gold_file)
+                                    gold_tokens = len(gold_ud.tokens)
+                                if treebank_size[file_lang] < gold_tokens:
+                                    all_treebanks[file_lang] = [txt_path]
+                                    treebank_size[file_lang] = gold_tokens
 
     return all_treebanks
 
 
-def run_single_eval(nlp, loading_time, print_name, text_path, gold_ud, tmp_output_path, file, print_header, check_parse,
-                    print_freq_tasks):
+def run_single_eval(nlp, loading_time, print_name, text_path, gold_ud, tmp_output_path, out_file, print_header,
+                    check_parse, print_freq_tasks):
     """" Run an evaluation of a model nlp on a certain specified treebank """
-    with open(text_path, 'r', encoding='utf-8') as fin:
-        flat_text = fin.read()
+    with text_path.open(mode='r', encoding='utf-8') as f:
+        flat_text = f.read()
 
     # STEP 1: tokenize text
     tokenization_start = time.time()
@@ -132,15 +128,15 @@ def run_single_eval(nlp, loading_time, print_name, text_path, gold_ud, tmp_outpu
     tokens_per_s = int(len(gold_ud.tokens) / tokenization_time)
 
     print_header_1 = ['date', 'text_path', 'gold_tokens', 'model', 'loading_time', 'tokenization_time', 'tokens_per_s']
-    print_string_1 = [str(datetime.date.today()), os.path.basename(text_path), len(gold_ud.tokens),
+    print_string_1 = [str(datetime.date.today()), text_path.name, len(gold_ud.tokens),
                       print_name, "%.2f" % loading_time, "%.2f" % tokenization_time, tokens_per_s]
 
     # STEP 3: evaluate predicted tokens and features
-    with open(tmp_output_path, "w", encoding="utf8") as out_file:
-        write_conllu(docs, out_file)
-    with open(tmp_output_path, "r", encoding="utf8") as sys_file:
+    with tmp_output_path.open(mode="w", encoding="utf8") as tmp_out_file:
+        write_conllu(docs, tmp_out_file)
+    with tmp_output_path.open(mode="r", encoding="utf8") as sys_file:
         sys_ud = conll17_ud_eval.load_conllu(sys_file, check_parse=check_parse)
-    os.remove(tmp_output_path)
+    tmp_output_path.unlink()
     scores = conll17_ud_eval.evaluate(gold_ud, sys_ud, check_parse=check_parse)
 
     # STEP 4: format the scoring results
@@ -181,11 +177,11 @@ def run_single_eval(nlp, loading_time, print_name, text_path, gold_ud, tmp_outpu
 
     # STEP 5: print the formatted results to CSV
     if print_header:
-        file.write(';'.join(map(str, print_header_1)) + '\n')
-    file.write(';'.join(map(str, print_string_1)) + '\n')
+        out_file.write(';'.join(map(str, print_header_1)) + '\n')
+    out_file.write(';'.join(map(str, print_string_1)) + '\n')
 
 
-def run_all_evals(models, treebanks, file, check_parse, print_freq_tasks):
+def run_all_evals(models, treebanks, out_file, check_parse, print_freq_tasks):
     """" Run an evaluation for each language with its specified models and treebanks """
     print_header = True
 
@@ -195,19 +191,19 @@ def run_all_evals(models, treebanks, file, check_parse, print_freq_tasks):
         for text_path in treebank_list:
             print(" Evaluating on", text_path)
 
-            gold_path = text_path.replace('.txt', '.conllu')
+            gold_path = text_path.parent / (text_path.stem + '.conllu')
             print("  Gold data from ", gold_path)
 
             # nested try blocks to ensure the code can continue with the next iteration after a failure
             try:
-                with open(gold_path, 'r', encoding='utf-8') as gold_file:
+                with gold_path.open(mode='r', encoding='utf-8') as gold_file:
                     gold_ud = conll17_ud_eval.load_conllu(gold_file)
 
                 for nlp, nlp_loading_time, nlp_name in models[tb_lang]:
                     try:
                         print("   Benchmarking", nlp_name)
-                        tmp_output_path = os.path.join(os.path.dirname(__file__), 'tmp_' + nlp_name + '.conllu')
-                        run_single_eval(nlp, nlp_loading_time, nlp_name, text_path, gold_ud, tmp_output_path, file,
+                        tmp_output_path = text_path.parent / str('tmp_' + nlp_name + '.conllu')
+                        run_single_eval(nlp, nlp_loading_time, nlp_name, text_path, gold_ud, tmp_output_path, out_file,
                                         print_header, check_parse, print_freq_tasks)
                         print_header = False
                     except Exception as e:
@@ -283,7 +279,7 @@ def main(out_path, ud_dir, check_parse=False, langs=ALL_LANGUAGES, exclude_train
             models['fr'].append(load_model('fr_core_news_sm'))
             models['fr'].append(load_model('fr_core_news_md'))
 
-    with open(out_path, 'w', encoding='utf-8') as out_file:  # , 'a'
+    with out_path.open(mode='w', encoding='utf-8') as out_file:
         run_all_evals(models, treebanks, out_file, check_parse, print_freq_tasks)
 
 
