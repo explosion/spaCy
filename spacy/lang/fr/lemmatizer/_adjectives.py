@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 
-NOUNS = set("""
+ADJECTIVES = set("""
  aalénien abactérien abaissable abaissant abaisser abaisseur abandonné
  abandonnique abarticulaire abasourdi abasourdissant abattable abattu abaxial
  abaza abbasside abbatial abbevillien abbevillois abcédant abcéder abdicataire
