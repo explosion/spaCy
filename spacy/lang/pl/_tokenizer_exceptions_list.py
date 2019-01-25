@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
+
 # The following list consists of:
 # - exceptions generated from polish_srx_rules [1]
 #    (https://github.com/milekpl/polish_srx_rules)
@@ -5,7 +9,7 @@
 # - some manually added exceptions
 #
 # [1] M. Miłkowski and J. Lipski,
-#  “Using SRX Standard for Sentence Segmentation,” in LTC 2009,
+#  "Using SRX Standard for Sentence Segmentation," in LTC 2009,
 #  Lecture Notes in Artificial Intelligence 6562,
 #  Z. Vetulani, Ed. Berlin Heidelberg: Springer-Verlag, 2011, pp. 172–182.
 PL_BASE_EXCEPTIONS = ['0.',
