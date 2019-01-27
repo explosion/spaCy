@@ -134,8 +134,8 @@ def parse_number(number: str) -> ([None,int], [None,bool]):
             ut = units_and_tens_re.match(number)
             if ut:
                 # 20 - 99
-                t = ut['tens']
-                u = ut['units'][:-1]
+                t = ut.group('tens')
+                u = ut.group('units')[:-1]
                 value = text_lookup[t] + text_lookup[u]
     if not(value or h):
         return (None, None)
