@@ -62,7 +62,7 @@ def split_of_hundreds(number):
     return h, number
 
 
-def parse_number(number: str) -> ([None,int], [None,bool]):
+def parse_number(number):
     """Accepts Dutch text representing a number which can be written as a single word
        in the range of 0-999 and their multiples of 1 thousand.
        After 'duizend' a space is required
