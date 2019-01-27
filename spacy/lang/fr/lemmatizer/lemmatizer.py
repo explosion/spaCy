@@ -131,7 +131,7 @@ def lemmatize(string, index, exceptions, rules):
     if not forms:
         forms.extend(oov_forms)
     if not forms and string in LOOKUP.keys():
-        forms.append(LOOKUP[string])
+        forms.append(LOOKUP[string][0])
     if not forms:
         forms.append(string)
     return list(set(forms))
