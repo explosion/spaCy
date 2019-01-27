@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.parametrize('text,match', [
+@pytest.mark.parametrize('text,value,match', [
     ('10.000', 10000, True), ('999,0', 999.0, True),
     ('biljoen', 1000000000000, True),
     ('dog', False, False), (',', False, False), ('1/2', 0.5, True),
