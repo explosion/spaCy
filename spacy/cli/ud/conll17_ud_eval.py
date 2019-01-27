@@ -51,7 +51,8 @@
 #   - evaluate the given gold and system CoNLL-U files (loaded with load_conllu)
 #   - raises UDError if the concatenated tokens of gold and system file do not match
 #   - returns a dictionary with the metrics described above, each metrics having
-#     three fields: precision, recall and f1
+#     four fields: precision, recall, f1 and aligned_accuracy (when using aligned
+#     words, otherwise this is None)
 
 # Description of token matching
 # -----------------------------
@@ -97,7 +98,7 @@ class UDError(Exception):
     pass
 
 # Load given CoNLL-U file into internal representation
-def load_conllu(file):
+def load_conllu(file, check_parse=True):
     # Internal representation classes
     class UDRepresentation:
         def __init__(self):
@@ -181,8 +182,9 @@ def load_conllu(file):
                 process_word(word)
 
             # Check there is a single root node
-            if len([word for word in ud.words[sentence_start:] if word.parent is None]) != 1:
-                raise UDError("There are multiple roots in a sentence")
+            if check_parse:
+                if len([word for word in ud.words[sentence_start:] if word.parent is None]) != 1:
+                    raise UDError("There are multiple roots in a sentence")
 
             # End the sentence
             ud.sentences[-1].end = index
@@ -198,7 +200,7 @@ def load_conllu(file):
         if "." in columns[ID]:
             continue
 
-        # Delete spaces from FORM  so gold.characters == system.characters
+        # Delete spaces from FORM so gold.characters == system.characters
         # even if one of them tokenizes the space.
         columns[FORM] = columns[FORM].replace(" ", "")
         if not columns[FORM]:
@@ -247,13 +249,17 @@ def load_conllu(file):
     return ud
 
 # Evaluate the gold and system treebanks (loaded using load_conllu).
-def evaluate(gold_ud, system_ud, deprel_weights=None):
+def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
     class Score:
-        def __init__(self, gold_total, system_total, correct, aligned_total=None):
+        def __init__(self, gold_total, system_total, correct, aligned_total=None, undersegmented=None, oversegmented=None):
             self.precision = correct / system_total if system_total else 0.0
             self.recall = correct / gold_total if gold_total else 0.0
             self.f1 = 2 * correct / (system_total + gold_total) if system_total + gold_total else 0.0
             self.aligned_accuracy = correct / aligned_total if aligned_total else aligned_total
+            self.undersegmented = undersegmented
+            self.oversegmented = oversegmented
+            self.under_perc = len(undersegmented) / gold_total if gold_total and undersegmented else 0.0
+            self.over_perc = len(oversegmented) / gold_total if gold_total and oversegmented else 0.0
     class AlignmentWord:
         def __init__(self, gold_word, system_word):
             self.gold_word = gold_word
@@ -286,17 +292,43 @@ def evaluate(gold_ud, system_ud, deprel_weights=None):
 
     def spans_score(gold_spans, system_spans):
         correct, gi, si = 0, 0, 0
+        undersegmented = list()
+        oversegmented = list()
+        combo = 0
+        previous_end_si_earlier = False
+        previous_end_gi_earlier = False
         while gi < len(gold_spans) and si < len(system_spans):
+            previous_si = system_spans[si-1] if si > 0 else None
+            previous_gi = gold_spans[gi-1] if gi > 0 else None
             if system_spans[si].start < gold_spans[gi].start:
+                # avoid counting the same mistake twice
+                if not previous_end_si_earlier:
+                    combo += 1
+                    oversegmented.append(str(previous_gi).strip())
                 si += 1
             elif gold_spans[gi].start < system_spans[si].start:
+                # avoid counting the same mistake twice
+                if not previous_end_gi_earlier:
+                    combo += 1
+                    undersegmented.append(str(previous_si).strip())
                 gi += 1
             else:
                 correct += gold_spans[gi].end == system_spans[si].end
+                if gold_spans[gi].end < system_spans[si].end:
+                    undersegmented.append(str(system_spans[si]).strip())
+                    previous_end_gi_earlier = True
+                    previous_end_si_earlier = False
+                elif gold_spans[gi].end > system_spans[si].end:
+                    oversegmented.append(str(gold_spans[gi]).strip())
+                    previous_end_si_earlier = True
+                    previous_end_gi_earlier = False
+                else:
+                    previous_end_gi_earlier = False
+                    previous_end_si_earlier = False
                 si += 1
                 gi += 1
 
-        return Score(len(gold_spans), len(system_spans), correct)
+        return Score(len(gold_spans), len(system_spans), correct, None, undersegmented, oversegmented)
 
     def alignment_score(alignment, key_fn, weight_fn=lambda w: 1):
         gold, system, aligned, correct = 0, 0, 0, 0
@@ -425,18 +457,28 @@ def evaluate(gold_ud, system_ud, deprel_weights=None):
     alignment = align_words(gold_ud.words, system_ud.words)
 
     # Compute the F1-scores
-    result = {
-        "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
-        "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
-        "Words": alignment_score(alignment, None),
-        "UPOS": alignment_score(alignment, lambda w, parent: w.columns[UPOS]),
-        "XPOS": alignment_score(alignment, lambda w, parent: w.columns[XPOS]),
-        "Feats": alignment_score(alignment, lambda w, parent: w.columns[FEATS]),
-        "AllTags": alignment_score(alignment, lambda w, parent: (w.columns[UPOS], w.columns[XPOS], w.columns[FEATS])),
-        "Lemmas": alignment_score(alignment, lambda w, parent: w.columns[LEMMA]),
-        "UAS": alignment_score(alignment, lambda w, parent: parent),
-        "LAS": alignment_score(alignment, lambda w, parent: (parent, w.columns[DEPREL])),
-    }
+    if check_parse:
+        result = {
+            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
+            "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
+            "Words": alignment_score(alignment, None),
+            "UPOS": alignment_score(alignment, lambda w, parent: w.columns[UPOS]),
+            "XPOS": alignment_score(alignment, lambda w, parent: w.columns[XPOS]),
+            "Feats": alignment_score(alignment, lambda w, parent: w.columns[FEATS]),
+            "AllTags": alignment_score(alignment, lambda w, parent: (w.columns[UPOS], w.columns[XPOS], w.columns[FEATS])),
+            "Lemmas": alignment_score(alignment, lambda w, parent: w.columns[LEMMA]),
+            "UAS": alignment_score(alignment, lambda w, parent: parent),
+            "LAS": alignment_score(alignment, lambda w, parent: (parent, w.columns[DEPREL])),
+        }
+    else:
+        result = {
+            "Tokens": spans_score(gold_ud.tokens, system_ud.tokens),
+            "Sentences": spans_score(gold_ud.sentences, system_ud.sentences),
+            "Words": alignment_score(alignment, None),
+            "Feats": alignment_score(alignment, lambda w, parent: w.columns[FEATS]),
+            "Lemmas": alignment_score(alignment, lambda w, parent: w.columns[LEMMA]),
+        }
+
 
     # Add WeightedLAS if weights are given
     if deprel_weights is not None:
