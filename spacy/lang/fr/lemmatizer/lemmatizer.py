@@ -106,7 +106,7 @@ class FrenchLemmatizer(object):
 
     def lookup(self, string):
         if string in self.lookup_table:
-            return self.lookup_table[string]
+            return self.lookup_table[string][0]
         return string
 
 
