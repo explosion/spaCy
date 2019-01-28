@@ -51,7 +51,8 @@ text_lookup = {}
 for number, text in numeric_lookup.items():
     text_lookup[text] = number
 
-def split_of_hundreds(number):
+
+def split_off_hundreds(number):
     # 200 - 999
     for hundreds in range(2, 10):
         x_honderd = numeric_lookup[hundreds] + HONDERD
@@ -98,7 +99,8 @@ def parse_number(number):
        After 'duizend' a space is required
        :param number: text string that may be a number
        :return: a tuple consisting of
-                * either None or the value number represents as an int
+                * either None or the value number represents as an int, a float
+                  or a string that can be passed to eval()
                 * None:  This string cannot be converted to a valid number
                   False: This string represents a cardinal number
                   True:  This string represents an ordinal number"""
@@ -117,6 +119,8 @@ def parse_number(number):
         return 1000, False
     elif number == DUIZEND + 'ste':
         return 1000, True
+    elif number == 'driekwart': # '3/4 is the only fraction that can be written in one word in Dutch
+        return 0.75, False
 
     # Can it be an ordinal number?
     number, ordinal = is_ordinal(number)
@@ -125,7 +129,7 @@ def parse_number(number):
     k, number = multiple_of_1000(number)
 
     value = None
-    h, number = split_of_hundreds(number)
+    h, number = split_off_hundreds(number)
     if h:
         value = 0
 
@@ -155,6 +159,7 @@ def parse_number(number):
         # or not a multiple of 100
         return None, None
     return (h*100 + value) * k, ordinal
+
 
 def like_num(text):
     text = text.replace(',', '').replace('.', '')
