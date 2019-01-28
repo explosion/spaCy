@@ -103,23 +103,6 @@ def parse_number(number):
                   False: This string represents a cardinal number
                   True:  This string represents an ordinal number"""
 
-    if number[-3:] in ('tal'):
-        return None, None
-    if number[-4:] in ('maal', 'hoog', 'hoge', 'voud', 'werf', 'poot'):
-        return None, None
-    if number[-5:] in ('jarig', 'delig', 'potig', 'armig', 'benig'):
-        return None, None
-    if number[-6:] in ('jarige', 'delige', 'potige', 'armige', 'benige',
-                       'koppig', 'voudig', 'tallig'):
-        return None, None
-    if number[-7:] in ('koppige', 'voudige', 'tallige'):
-        return None, None
-    if number in ['honderdhout', 'honderdman', 'honderdponder', 'honderduit',
-                  'duizendblad', 'duizenddingendoekje', 'duizenddollarvis', 'duizenderlei',
-                  'duizendguldenkruid', 'duizendklapper', 'duizendknoop',
-                  'duizendkunstenaar', 'duizendschoon']:
-        return None, None
-
     if number == 'nul':
         return 0, False
     elif number == 'nulde':
@@ -157,7 +140,7 @@ def parse_number(number):
             if unit in [VIJF, ZES, ZEVEN, ACHT, NEGEN]:
                 u = text_lookup[unit]
                 value = 10 + u
-            number = number.replace(unit, '')
+            number = number.replace(unit + TIEN, '')
         if not value:
             ut = units_and_tens_re.match(number)
             if ut:
@@ -165,8 +148,11 @@ def parse_number(number):
                 t = ut.group('tens')
                 u = ut.group('units')[:-1]
                 value = text_lookup[t] + text_lookup[u]
-                number = number.replace(u + 'n' + t, '')
-    if not(value or h):
+                number = number.replace(ut.group('units') + 'n' + t, '')
+    if number or not(value or h):
+        # If there is still something left in number
+        # or no value could be determined for last 2 digits
+        # or not a multiple of 100
         return None, None
     return (h*100 + value) * k, ordinal
 
