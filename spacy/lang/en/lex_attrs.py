@@ -9,7 +9,7 @@ _num_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
               'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty',
               'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety',
               'hundred', 'thousand', 'million', 'billion', 'trillion', 'quadrillion',
-              'gajillion', 'bazillion']
+              'gazillion', 'bazillion']
 
 
 def like_num(text):
