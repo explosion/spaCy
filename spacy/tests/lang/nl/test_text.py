@@ -169,4 +169,3 @@ def test_lex_attrs_like_number(nl_tokenizer, text, value, match):
     tokens = nl_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
-    #assert tokens[0].parse_number == value
