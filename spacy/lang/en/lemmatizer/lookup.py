@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 LOOKUP = {
-    " furtherst": "further",
+    " furthest": "further",
     " skilled": "skill",
     "'cause": "because",
     "'d": "would",
