@@ -29,10 +29,8 @@ _suffixes = (
         r"(?<=[0-9])(?:{})".format(CURRENCY),
         r"(?<=[0-9])(?:{})".format(UNITS),
         r"(?<=[0-9{}{}(?:[{}])])\.".format(ALPHA_LOWER, r"%²\-\+", CONCAT_QUOTES),
-        r"(?<=[{a}][{a}])\.".format(a=ALPHA_UPPER),
     ]
 )
-# print(r"(?<=[0-9{}{}(?:[{}])])\.".format(_greek_lower, r"%²\-\)\]\+", CONCAT_QUOTES))
 
 
 _infixes = (
