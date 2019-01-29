@@ -639,7 +639,7 @@ for orth in [
 _ord_num_or_date = "([A-Z0-9]+[./-])*(\d+\.?)"
 _num = "[+\-]?\d+([,.]\d+)*"
 _ops = "[=<>+\-\*/^()÷%²]"
-_suffixes = "-[{a}]+".format(a=ALPHA_LOWER)
+_suffixes = "-[{al}]+".format(al=ALPHA_LOWER)
 _numeric_exp = "({n})(({o})({n}))*[%]?".format(n=_num, o=_ops)
 _time_exp = "\d+(:\d+)*(\.\d+)?"
 

@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 from .char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
-from .char_classes import LIST_ICONS, ALPHA_LOWER, ALPHA_UPPER, ALPHA, HYPHENS
+from .char_classes import LIST_ICONS, HYPHENS
 from .char_classes import CURRENCY, UNITS
-from .char_classes import CONCAT_QUOTES
+from .char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
 
 
 _prefixes = (
@@ -28,7 +28,7 @@ _suffixes = (
         r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[0-9{o}{e}(?:[{q}])])\.".format(o=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES),
+        r"(?<=[0-9{al}{e}(?:[{q}])])\.".format(al=ALPHA_LOWER, e=r"%²\-\)\]\+", q=CONCAT_QUOTES),
     ]
 )
 
@@ -38,13 +38,12 @@ _infixes = (
     + LIST_ICONS
     + [
         r"(?<=[0-9])[+\-\*^](?=[0-9-])",
-        r"(?<={o})\.(?={u})".format(o=ALPHA_LOWER, u=ALPHA_UPPER),
-        r"(?<={a}),(?={a})".format(a=ALPHA),
-        r'(?<={a})(?:{h})(?={a})'.format(a=ALPHA, h=HYPHENS),
-        r'(?<={a})[:<>=/](?={a})'.format(a=ALPHA),
+        r"(?<=[{al}])\.(?=[{au}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER),
+        r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
+        r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
+        r'(?<=[{a}])[:<>=/](?=[{a}])'.format(a=ALPHA),
     ]
 )
-
 
 TOKENIZER_PREFIXES = _prefixes
 TOKENIZER_SUFFIXES = _suffixes
