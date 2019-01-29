@@ -7,6 +7,7 @@ re.DEFAULT_VERSION = re.VERSION1
 merge_char_classes = lambda classes: "[{}]".format("||".join(classes))
 split_chars = lambda char: list(char.strip().split(" "))
 merge_chars = lambda char: char.strip().replace(" ", "|")
+group_chars = lambda char: char.strip().replace(" ", "")
 
 # used https://unicode.org/cldr/utility/list-unicodeset.jsp to convert categories into code points
 # \p{L}&&\p{Bengali}
@@ -62,7 +63,7 @@ _currency = r"\$ £ € ¥ ฿ US\$ C\$ A\$ ₽ ﷼"
 _punct = (
     r"… …… , : ; \! \? ¿ ؟ ¡ \( \) \[ \] \{ \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪"
 )
-_quotes = r'\' \'\' " ” “ `` ` ‘ ´ ‘‘ ’’ ‚ , „ » « 「 」 『 』 （ ） 〔 〕 【 】 《 》 〈 〉'
+_quotes = r'\' " ” “ ` ‘ ´ ’ ‚ , „ » « 「 」 『 』 （ ） 〔 〕 【 】 《 》 〈 〉'
 _hyphens = "- – — -- --- —— ~"
 
 # Various symbols like dingbats, but also emoji
@@ -83,3 +84,5 @@ LIST_PUNCT = split_chars(_punct)
 LIST_HYPHENS = split_chars(_hyphens)
 LIST_ELLIPSES = [r"\.\.+", "…"]
 LIST_ICONS = [_other_symbols]
+
+CONCAT_QUOTES = group_chars(_quotes)
