@@ -405,7 +405,7 @@ def test_issue912(en_vocab, text, tag, lemma):
 def test_issue957(en_tokenizer):
     """Test that spaCy doesn't hang on many periods."""
     # Skip test if pytest-timeout is not installed
-    pytest.importorskip("pytest-timeout")
+    pytest.importorskip("pytest_timeout")
     string = "0"
     for i in range(1, 100):
         string += ".%d" % i
