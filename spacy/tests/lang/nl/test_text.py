@@ -179,7 +179,13 @@ def nl_tokenizer():
     ('negenhonderdzesennegentig', 996, True),
     ('negenhonderdzevenennegentig', 997, True),
     ('negenhonderdachtennegentig', 998, True),
-    ('negenhonderdnegenennegentig', 999, True), ('duizend', 1000, True)])
+    ('negenhonderdnegenennegentig', 999, True), ('duizend', 1000, True),
+    ('eende', None, False), ('vierhonderdeneende', None , False), ('achthonderdeende', None , False),
+    ('eerste', None, True), ('vierhonderdeneerste', None , True), ('achthonderdeerste', None , True),
+    ('driede', None, False), ('vierhonderdendriede', None , False), ('achthonderddriede', None , False),
+    ('derde', None, True), ('vierhonderdenderde', None , True), ('achthonderdderde', None , True),
+    ])
+
 def test_lex_attrs_like_number(nl_tokenizer, text, value, match):
     tokens = nl_tokenizer(text)
     assert len(tokens) == 1

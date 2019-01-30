@@ -14,8 +14,37 @@ TIEN = 'tien'
 HONDERD = "honderd"
 DUIZEND = "duizend"
 
-units_and_tens_re = re.compile(
-    r"(?P<units>(eene|tweeë|drieë|viere|vijfe|zese|zevene|achte|negene))n(?P<tens>(twin|der|veer|vijf|zes|zeven|tach|negen)tig)")
+wrong_ordinals_re = re.compile(r"""(?x)
+.*(?P<wrong>nulste|eende|tweeste|driede|vierste|vijfste|zeste|zesste|achtde|tienste|honderdde|duizendde)
+$""")
+
+hundreds_units_and_tens_thousand_re = re.compile(r"""(?x)
+      (
+        (?P<hundreds>twee|drie|vier|vijf|zes|zeven|acht|negen)honderd
+        |
+        (?P<hundred>honderd)
+      )*
+      (
+        (?:
+          (?P<units>eene|tweeë|drieë|viere|vijfe|zese|zevene|achte|negene)
+          n
+        )*
+        (?P<tens>(twin|der|veer|vijf|zes|zeven|tach|negen)tig)
+        |
+        (
+          (?P<from_13_to_19>(der|veer|vijf|zes|zeven|acht|negen)tien)
+          |
+          (?:
+            (?P<en>en)*
+            (?P<from_1_to_12>een|twee|drie|vier|vijf|zes|zeven|acht|negen|tien|elf|twaalf)
+          )
+        )
+      )*
+      (?P<thousand>duizend)*
+      (?:en)*(?:(?P<ordinal_1>eerste)|(?P<ordinal_3>derde))*
+      (?P<ordinal>ste|de)*
+      (?P<rest>.*)""")
+
 numeric_lookup = {0:  'nul',
                   1:  'een',
                   2:  'twee',
@@ -52,48 +81,7 @@ for number, text in numeric_lookup.items():
     text_lookup[text] = number
 
 
-def split_off_hundreds(number):
-    # 200 - 999
-    for hundreds in range(2, 10):
-        x_honderd = numeric_lookup[hundreds] + HONDERD
-        if x_honderd in number:
-            number = number.replace(x_honderd + "en", "")
-            number = number.replace(x_honderd, "")
-            break
-        else:
-            hundreds = 0
-    # 100 - 199
-    if HONDERD in number:
-        honderd = HONDERD
-        number = number.replace(honderd + "en", "")
-        number = number.replace(honderd, "")
-        hundreds = 1
-    return hundreds, number
-
-
-def is_ordinal(number):
-    ordinal = False
-    n = number
-    if number.endswith("ste"):
-        ordinal = True
-        n = number[:-3]
-    elif number.endswith("de"):
-        ordinal = True
-        n = number[:-2]
-    return n, ordinal
-
-
-def multiple_of_1000(number):
-    if number.endswith(DUIZEND):
-        k = 1000
-        n = number.replace(DUIZEND, "")
-    else:
-        k = 1
-        n = number
-    return k, n
-
-
-def parse_number(number):
+def parse_number(number, determine_value = False):
     """Accepts Dutch text representing a number which can be written as a single word
        in the range of 0-999 and their multiples of 1 thousand.
        After 'duizend' a space is required
@@ -105,60 +93,85 @@ def parse_number(number):
                   False: This string represents a cardinal number
                   True:  This string represents an ordinal number"""
 
-    if number == 'nul':
-        return 0, False
+    if number in ['']:
+        if determine_value:
+            return None, None
+        else:
+            return False
+    elif number == 'nul':
+        if determine_value:
+            return 0, False
+        else:
+            return True
     elif number == 'nulde':
-        return 0, True
+        if determine_value:
+            return 0, True
+        else:
+            return True
     elif number == 'één':
-        return 1, False
-    elif number == 'eerste':
-        return 1, True
-    elif number == 'derde':
-        return 3, True
-    elif number == DUIZEND:
-        return 1000, False
-    elif number == DUIZEND + 'ste':
-        return 1000, True
+        if determine_value:
+            return 1, False
+        else:
+            return True
     elif number == 'driekwart': # '3/4 is the only fraction that can be written in one word in Dutch
-        return 0.75, False
-
-    # Can it be an ordinal number?
-    number, ordinal = is_ordinal(number)
-
-    # Is it a multiple of 1000?
-    k, number = multiple_of_1000(number)
-
-    value = None
-    h, number = split_off_hundreds(number)
-    if h:
-        value = 0
-
-    if number:
-        if number in text_lookup:
-            # 01 - 14
-            value = int(text_lookup[number])
-            number = number.replace(number, '')
-        elif number.endswith(TIEN):
-            # 15 - 19
-            unit = number.replace(TIEN, '')
-            if unit in [VIJF, ZES, ZEVEN, ACHT, NEGEN]:
-                u = text_lookup[unit]
-                value = 10 + u
-            number = number.replace(unit + TIEN, '')
-        if not value:
-            ut = units_and_tens_re.match(number)
-            if ut:
-                # 20 - 99
-                t = ut.group('tens')
-                u = ut.group('units')[:-1]
-                value = text_lookup[t] + text_lookup[u]
-                number = number.replace(ut.group('units') + 'n' + t, '')
-    if number or not(value or h):
-        # If there is still something left in number
-        # or no value could be determined for last 2 digits
-        # or not a multiple of 100
-        return None, None
-    return (h*100 + value) * k, ordinal
+        if determine_value:
+            return 0.75, False
+        else:
+            return True
+    test_ordinals = wrong_ordinals_re.match(number)
+    if test_ordinals and test_ordinals.group('wrong'):
+        if determine_value:
+            return None, None
+        else:
+            return False
+    value = 0
+    ut = hundreds_units_and_tens_thousand_re.match(number)
+    if ut:
+        if ut.group('ordinal'):
+            ordinal = True
+        if ut.group('ordinal_1') == 'eerste':
+            ordinal = True
+            value = 1
+        elif ut.group('ordinal_3') == 'derde':
+            ordinal = True
+            value = 3
+        else:
+            ordinal = False
+        if determine_value:
+            if ut.group('rest'):
+                return None, None
+            else:
+                if ut.group('hundreds'):
+                    value += 100 * text_lookup[ut.group('hundreds')]
+                elif ut.group('hundred'):
+                    value += 100
+                if ut.group('from_1_to_12'):
+                    value += text_lookup[ut.group('from_1_to_12')]
+                elif ut.group('from_13_to_19'):
+                    if ut.group('from_13_to_19') == 'der':
+                        value += 13
+                    elif ut.group('from_13_to_19') == 'veer':
+                        value += 14
+                    else:
+                        try:
+                            value += text_lookup[ut.group('from_13_to_19')]
+                        except KeyError:
+                            value += 10 + text_lookup[ut.group('from_13_to_19').replace('tien', '')]
+                if ut.group('tens'):
+                    value += text_lookup[ut.group('tens')]
+                if ut.group('units'):
+                    value += text_lookup[ut.group('units')[:-1]]
+                if ut.group('thousand'):
+                    if value:
+                        value *= 1000
+                    else:
+                        value = 1000
+                return value, ordinal
+        else:
+            if ut.group('rest'):
+                return False
+            else:
+                return True
 
 
 def like_num(text):
@@ -169,9 +182,7 @@ def like_num(text):
         num, denom = text.split('/')
         if num.isdigit() and denom.isdigit():
             return True
-    if parse_number(text)[1] is not None:
-        return True
-    return False
+    return parse_number(text)
 
 
 LEX_ATTRS = {
