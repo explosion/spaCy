@@ -1,10 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
+from .char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY, LIST_ICONS
 from .char_classes import HYPHENS
 from .char_classes import CURRENCY, UNITS
-from .char_classes import CONCAT_QUOTES, CONCAT_ICONS, ALPHA_LOWER, ALPHA_UPPER, ALPHA
+from .char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
 
 
 _prefixes = (
@@ -13,7 +13,7 @@ _prefixes = (
     + LIST_ELLIPSES
     + LIST_QUOTES
     + LIST_CURRENCY
-    + [CONCAT_ICONS]
+    + LIST_ICONS
 )
 
 
@@ -21,7 +21,7 @@ _suffixes = (
     LIST_PUNCT
     + LIST_ELLIPSES
     + LIST_QUOTES
-    + [CONCAT_ICONS]
+    + LIST_ICONS
     + ["'s", "'S", "’s", "’S"]
     + [
         r"(?<=[0-9])\+",
@@ -34,7 +34,7 @@ _suffixes = (
 
 _infixes = (
     LIST_ELLIPSES
-    + [CONCAT_ICONS]
+    + LIST_ICONS
     + [
         r"(?<=[0-9])[+\-\*^](?=[0-9-])",
         r"(?<=[{al}])\.(?=[{au}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER),

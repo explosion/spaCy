@@ -38,7 +38,7 @@ URL_PATTERN = (
     # host name
     r"(?:(?:[a-z0-9\-]*)?[a-z0-9]+)"
     # domain name
-    r"(?:\.(?:[a-z0-9\-])*[a-z0-9]+)*"
+    r"(?:\.(?:[a-z0-9])(?:[a-z0-9\-])*[a-z0-9])?"
     # TLD identifier
     r"(?:\.(?:[a-z]{2,}))"
     r")"

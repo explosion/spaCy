@@ -76,8 +76,7 @@ LIST_QUOTES = split_chars(_quotes)
 LIST_PUNCT = split_chars(_punct)
 LIST_HYPHENS = split_chars(_hyphens)
 LIST_ELLIPSES = [r"\.\.+", "…"]
-# TODO Sofie
-LIST_ICONS = [_other_symbols]
+LIST_ICONS = [r"[{i}]".format(i=_other_symbols)]
 
 CONCAT_QUOTES = group_chars(_quotes)
 CONCAT_ICONS = _other_symbols
