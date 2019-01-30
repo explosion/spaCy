@@ -5,7 +5,7 @@ from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_ICONS
 from ..char_classes import ALPHA_LOWER, ALPHA, HYPHENS, CONCAT_QUOTES, UNITS
 
 
-_currency = r"\$|¢|£|€|¥|฿|৳"
+_currency = r"\$¢£€¥฿৳"
 _quotes = CONCAT_QUOTES.replace("'", "")
 _list_punct = LIST_PUNCT + "। ॥".strip().split()
 
@@ -20,9 +20,9 @@ _suffixes = (
     + [
         r"(?<=[0-9])\+",
         r"(?<=°[FfCcKk])\.",
-        r"(?<=[0-9])(?:{c})".format(c=_currency),
+        r"(?<=[0-9])(?:[{c}])".format(c=_currency),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[{al}{e}{q}(?:{c})])\.".format(al=ALPHA_LOWER, e=r"%²\-\)\]\+", q=CONCAT_QUOTES, c=_currency),
+        r"(?<=[{al}{e}{q}(?:{c})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency),
     ]
 )
 
@@ -34,7 +34,7 @@ _infixes = (
             zero="০", nine="৯"
         ),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
-        r"(?<=[{a}])[{h}](?=[{ae}])".format(a=ALPHA, h=HYPHENS, ae="এ"),
+        r"(?<=[{a}])({h})(?=[{ae}])".format(a=ALPHA, h=HYPHENS, ae="এ"),
         r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
         r'(?<=[{a}])[:<>=/](?=[{a}])'.format(a=ALPHA),
     ]

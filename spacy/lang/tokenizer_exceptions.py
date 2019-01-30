@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 # The use of this module turns out to be important, to avoid pathological
 # back-tracking. See Issue #957
-import regex as re
+import re
 
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE, PUNCT
 
@@ -49,6 +49,7 @@ URL_PATTERN = (
     # query parameters
     r"\??(:?\S*)?"
     # in order to support the suffix tokenization (see suffix test cases in test_urls),
+    # TODO Sofie
     r"(?<=[\w/])"
     r"$"
 ).strip()

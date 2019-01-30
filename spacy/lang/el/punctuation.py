@@ -57,9 +57,9 @@ _suffixes = (
         r"^([0-9]){1}\)$",  # 12)
         r"(?<=°[FfCcKk])\.",
         r"([0-9])+\&",  # 12&
-        r"(?<=[0-9])(?:{})".format(CURRENCY),
-        r"(?<=[0-9])(?:{})".format(UNITS),
-        r"(?<=[0-9{al}{e}(?:[{q}])])\.".format(al=ALPHA_LOWER, e=r"²\-\)\]\+", q=CONCAT_QUOTES),
+        r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
+        r"(?<=[0-9])(?:{u})".format(u=UNITS),
+        r"(?<=[0-9{al}{e}(?:{q})])\.".format(al=ALPHA_LOWER, e=r"²\-\+", q=CONCAT_QUOTES),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
         r"(?<=[Α-Ωα-ωίϊΐόάέύϋΰήώ])\-",  # όνομα-
         r"(?<=[Α-Ωα-ωίϊΐόάέύϋΰήώ])\.",

@@ -4,7 +4,7 @@ from __future__ import unicode_literals, print_function
 import os
 import pkg_resources
 import importlib
-import regex as re
+import re
 from pathlib import Path
 import random
 from collections import OrderedDict

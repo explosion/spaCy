@@ -11,8 +11,8 @@ _suffixes = (
     + [
         r"(?<=[0-9])\+",
         # Arabic is written from Right-To-Left
-        r"(?<=[0-9])(?:{})".format(CURRENCY),
-        r"(?<=[0-9])(?:{})".format(UNITS),
+        r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
+        r"(?<=[0-9])(?:{u})".format(u=UNITS),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
     ]
 )
