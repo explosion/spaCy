@@ -289,6 +289,7 @@ def test_control_issue792(en_tokenizer, text):
     assert "".join([token.text_with_ws for token in doc]) == text
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     "text,tokens",
     [
