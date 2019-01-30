@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from ...attrs import LIKE_NUM
 
-import re
+import regex
 
 VIJF = 'vijf'
 ZES = 'zes'
@@ -14,11 +14,11 @@ TIEN = 'tien'
 HONDERD = "honderd"
 DUIZEND = "duizend"
 
-wrong_ordinals_re = re.compile(r"""(?x)
+wrong_ordinals_re = regex.compile(r"""(?x)
 .*(?P<wrong>nulste|eende|tweeste|driede|vierste|vijfste|zeste|zesste|achtde|tienste|honderdde|duizendde)
 $""")
 
-hundreds_units_and_tens_thousand_re = re.compile(r"""(?x)
+hundreds_units_and_tens_thousand_re = regex.compile(r"""(?x)
       (
         (?P<hundreds>twee|drie|vier|vijf|zes|zeven|acht|negen)honderd
         |
@@ -31,17 +31,33 @@ hundreds_units_and_tens_thousand_re = re.compile(r"""(?x)
         )*
         (?P<tens>(twin|der|veer|vijf|zes|zeven|tach|negen)tig)
         |
+        (?P<en>en)??
         (
-          (?P<from_13_to_19>(der|veer|vijf|zes|zeven|acht|negen)tien)
+          (?P<from_13_to_19>(der|veer|vijf|zes|zeven|acht|negen)
+                             tien
+          )
           |
           (?:
-            (?P<en>en)*
-            (?P<from_1_to_12>een|twee|drie|vier|vijf|zes|zeven|acht|negen|tien|elf|twaalf)
+            (?P<from_1_to_12>  een|twee|drie |vier|vijf|zes|
+                             zeven|acht|negen|tien|elf |twaalf
+            )
           )
         )
       )*
       (?P<thousand>duizend)*
-      (?:en)*(?:(?P<ordinal_1>eerste)|(?P<ordinal_3>derde))*
+      (?P<ordinal_1_12>(?<en_ordinal>en)*(?:(?P<ordinal_1>eerste)
+                              |
+                              (?P<ordinal_3>derde)
+                              |
+                              (?P<ordinal_8>achtste)
+                              |
+                              (?P<ordinal_245679_10_11_12>(twee |vier|vijf|zes|zeven|
+                                                           negen|tien|elf |twaalf
+                                                           )
+                                                           de
+                              )
+                              )$
+      )*
       (?P<ordinal>ste|de)*
       (?P<rest>.*)""")
 
@@ -125,50 +141,53 @@ def parse_number(number, determine_value = False):
         else:
             return False
     value = 0
-    ut = hundreds_units_and_tens_thousand_re.match(number)
-    if ut:
-        if ut.group('ordinal'):
+    m = hundreds_units_and_tens_thousand_re.match(number)
+    if m:
+        if m.group('ordinal'):
             ordinal = True
-        if ut.group('ordinal_1') == 'eerste':
+        elif m.group('ordinal_1_12'):
             ordinal = True
-            value = 1
-        elif ut.group('ordinal_3') == 'derde':
-            ordinal = True
-            value = 3
+            if m.group('ordinal_1'):
+                value = 1
+            elif m.group('ordinal_3'):
+                value = 3
+            elif m.group('ordinal_8'):
+                value = 8
+            elif m.group('ordinal_245679_10_11_12'):
+                value = text_lookup[m.group('ordinal_245679_10_11_12')]
         else:
             ordinal = False
+
         if determine_value:
-            if ut.group('rest'):
+            if m.group('rest'):
                 return None, None
             else:
-                if ut.group('hundreds'):
-                    value += 100 * text_lookup[ut.group('hundreds')]
-                elif ut.group('hundred'):
+                if m.group('hundreds'):
+                    value += 100 * text_lookup[m.group('hundreds')]
+                elif m.group('hundred'):
                     value += 100
-                if ut.group('from_1_to_12'):
-                    value += text_lookup[ut.group('from_1_to_12')]
-                elif ut.group('from_13_to_19'):
-                    if ut.group('from_13_to_19') == 'der':
-                        value += 13
-                    elif ut.group('from_13_to_19') == 'veer':
-                        value += 14
-                    else:
-                        try:
-                            value += text_lookup[ut.group('from_13_to_19')]
-                        except KeyError:
-                            value += 10 + text_lookup[ut.group('from_13_to_19').replace('tien', '')]
-                if ut.group('tens'):
-                    value += text_lookup[ut.group('tens')]
-                if ut.group('units'):
-                    value += text_lookup[ut.group('units')[:-1]]
-                if ut.group('thousand'):
+                if m.group('from_1_to_12'):
+                    value += text_lookup[m.group('from_1_to_12')]
+                elif m.group('from_13_to_19'):
+                    if m.group('en'):
+                        return None, None
+                    try:
+                        value += text_lookup[m.group('from_13_to_19')]
+                    except KeyError:
+                        # 15 - 19
+                        value += 10 + text_lookup[m.group('from_13_to_19').replace('tien', '')]
+                if m.group('tens'):
+                    value += text_lookup[m.group('tens')]
+                if m.group('units'):
+                    value += text_lookup[m.group('units')[:-1]]
+                if m.group('thousand'):
                     if value:
                         value *= 1000
                     else:
                         value = 1000
                 return value, ordinal
         else:
-            if ut.group('rest'):
+            if m.group('rest') or (m.group('from_13_to_19') and m.group('en')):
                 return False
             else:
                 return True

@@ -184,7 +184,21 @@ def nl_tokenizer():
     ('eerste', None, True), ('vierhonderdeneerste', None , True), ('achthonderdeerste', None , True),
     ('driede', None, False), ('vierhonderdendriede', None , False), ('achthonderddriede', None , False),
     ('derde', None, True), ('vierhonderdenderde', None , True), ('achthonderdderde', None , True),
+    ('tweede', None, True), ('vijfhonderdentweede', None , True), ('negenhonderdtweede', None , True),
+    ('vierde', None, True), ('zeshonderdenvierde', None , True), ('zevenhonderdvierde', None , True),
+    ('vijfde', None, True), ('vierhonderdenvijfde', None , True), ('achthonderdvijfde', None , True),
+    ('zesde', None, True), ('vierhonderdenzesde', None , True), ('achthonderdzesde', None , True),
+    ('zevende', None, True), ('vierhonderdenzevende', None , True), ('achthonderdzevende', None , True),
+    ('achtste', None, True), ('vierhonderdenachtste', None , True), ('achthonderdachtste', None , True),
+    ('negende', None, True), ('vierhonderdennegende', None , True), ('achthonderdnegende', None , True),
+    ('tiende', None, True), ('vierhonderdentiende', None , True), ('achthonderdtiende', None , True),
+    ('elfde', None, True), ('vierhonderdenelfde', None , True), ('achthonderdelfde', None , True),
+    ('twaalfde', None, True), ('vierhonderdentwaalfde', None , True), ('achthonderdtwaalfde', None , True),
+    ('dertiende', None, True), ('vierhonderdendertiende', None , False), ('achthonderdenveertiende', None , False),
+    ('driehonderdenvijftiende', None, False), ('zeshonderdenzestiende', None , False), ('achthonderdenzeventiende', None , False),
+    ('driehonderdenachttiende', None, False), ('zeshonderdennegentiende', None , False), ('achthonderdnegentiende', None , True),
     ])
+
 
 def test_lex_attrs_like_number(nl_tokenizer, text, value, match):
     tokens = nl_tokenizer(text)
