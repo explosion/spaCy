@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import bz2
-import regex as re
+import re
 import srsly
 import sys
 import random
@@ -16,8 +16,8 @@ _unset = object()
 class Reddit(object):
     """Stream cleaned comments from Reddit."""
 
-    pre_format_re = re.compile(r"^[\`\*\~]")
-    post_format_re = re.compile(r"[\`\*\~]$")
+    pre_format_re = re.compile(r"^[`*~]")
+    post_format_re = re.compile(r"[`*~]$")
     url_re = re.compile(r"\[([^]]+)\]\(%%URL\)")
     link_re = re.compile(r"\[([^]]+)\]\(https?://[^\)]+\)")
 
