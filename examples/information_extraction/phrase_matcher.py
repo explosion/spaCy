@@ -57,7 +57,7 @@ import spacy
     n=("Number of texts to read", "option", "n", int),
     lang=("Language class to initialise", "option", "l", str))
 def main(patterns_loc, text_loc, n=10000, lang='en'):
-    nlp = spacy.blank('en')
+    nlp = spacy.blank(lang)
     nlp.vocab.lex_attr_getters = {}
     phrases = read_gazetteer(nlp.tokenizer, patterns_loc)
     count = 0
