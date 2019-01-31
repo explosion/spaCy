@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-# The use of this module turns out to be important, to avoid pathological
-# back-tracking. See Issue #957
 import re
 
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE, PUNCT
