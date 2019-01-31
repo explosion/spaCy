@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import regex as re
+import re
 
 from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS

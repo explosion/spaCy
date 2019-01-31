@@ -403,15 +403,19 @@ def test_issue912(en_vocab, text, tag, lemma):
     assert doc[0].lemma_ == lemma
 
 
+@pytest.mark.slow
 def test_issue957(en_tokenizer):
-    """Test that spaCy doesn't hang on many periods."""
+    """Test that spaCy doesn't hang on many punctuation characters.
+    If this test hangs, check (new) regular expressions for conflicting greedy operators
+    """
     # Skip test if pytest-timeout is not installed
     pytest.importorskip("pytest_timeout")
-    string = "0"
-    for i in range(1, 100):
-        string += ".%d" % i
-    doc = en_tokenizer(string)
-    assert doc
+    for punct in ['.', ',', '\'', '\"', ':', '?', '!', ';', '-']:
+        string = "0"
+        for i in range(1, 100):
+            string += punct + str(i)
+        doc = en_tokenizer(string)
+        assert doc
 
 
 @pytest.mark.xfail

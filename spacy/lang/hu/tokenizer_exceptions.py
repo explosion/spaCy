@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import regex as re
+import re
 
 from ..punctuation import ALPHA_LOWER, CURRENCY
 from ..tokenizer_exceptions import URL_PATTERN
