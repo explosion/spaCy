@@ -106,7 +106,7 @@ class FrenchLemmatizer(object):
 
     def lookup(self, string):
         if string in self.lookup_table:
-            return self.lookup_table[string]
+            return self.lookup_table[string][0]
         return string
 
 
@@ -131,7 +131,7 @@ def lemmatize(string, index, exceptions, rules):
     if not forms:
         forms.extend(oov_forms)
     if not forms and string in LOOKUP.keys():
-        forms.append(LOOKUP[string])
+        forms.append(LOOKUP[string][0])
     if not forms:
         forms.append(string)
     return list(set(forms))

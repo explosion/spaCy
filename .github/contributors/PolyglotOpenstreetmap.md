@@ -96,11 +96,11 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                   |
-|------------------------------- | ----------------------- |
-| Name                           | Amandine Périnet        |
-| Company name (if applicable)   | 365Talents              |
-| Title or role (if applicable)  | Data Science Researcher |
-| Date                           | 28/01/2019              |
-| GitHub username                | amperinet               |
-| Website (optional)             |                         |
+| Field                          | Entry                |
+|------------------------------- | -------------------- |
+| Name                           | Jo                   |
+| Company name (if applicable)   |                      |
+| Title or role (if applicable)  |                      |
+| Date                           | 2018-01-26           |
+| GitHub username                | PolyglotOpenstreetmap|
+| Website (optional)             |                      |
