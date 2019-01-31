@@ -49,7 +49,6 @@ URL_PATTERN = (
     # query parameters
     r"\??(:?\S*)?"
     # in order to support the suffix tokenization (see suffix test cases in test_urls),
-    # TODO Sofie
     r"(?<=[\w/])"
     r"$"
 ).strip()

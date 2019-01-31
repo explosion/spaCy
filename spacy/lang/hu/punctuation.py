@@ -30,7 +30,6 @@ _suffixes = (
         r"(?<=[0-9])(?:[{c}])".format(c=_currency),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
         r"(?<=[{al}{e}{q}(?:{c})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency),
-        # TODO Sofie
         r"(?<=[{al})])-e".format(al=ALPHA_LOWER),
     ]
 )
@@ -44,7 +43,6 @@ _infixes = (
         r'(?<=[{a}])[:<>=](?=[{a}])'.format(a=ALPHA),
         r"(?<=[{a}])--(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
-        # TODO Sofie
         r"(?<=[{a}])([{q}\)\]\(\[])(?=[\-{a}])".format(a=ALPHA, q=_quotes),
     ]
 )

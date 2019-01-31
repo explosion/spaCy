@@ -35,11 +35,11 @@ _suffixes = (
     TOKENIZER_SUFFIXES
     + [r"\-[Nn]ya", "-[KkMm]u", "[—-]"]
     + [
-        # TODO Sofie: variable width currency variable !
+        # disabled: variable width currency variable
         # r"(?<={c})(?:[0-9]+)".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
         r"(?<=[0-9])%",
-        # TODO Sofie: variable width HTML_SUFFIX variable !
+        # disabled: variable width HTML_SUFFIX variable
         # r"(?<=[0-9{a}]{h})(?:[\.,:-])".format(a=ALPHA, h=HTML_SUFFIX),
         r"(?<=[0-9{a}])(?:{h})".format(a=ALPHA, h=HTML_SUFFIX),
     ]
@@ -48,9 +48,9 @@ _suffixes = (
 _infixes = TOKENIZER_INFIXES + [
     r"(?<=[0-9])[\\/](?=[0-9%-])",
     r"(?<=[0-9])%(?=[{a}0-9/])".format(a=ALPHA),
-    # TODO Sofie: variable width units variable !
+    # disabled: variable width units variable
     # r"(?<={u})[\/-](?=[0-9])".format(u=UNITS),
-    # TODO Sofie: variable width months variable !
+    # disabled: variable width months variable
     # r"(?<={m})[\/-](?=[0-9])".format(m=MONTHS),
     r'(?<=[0-9)][.,])"(?=[0-9])',
     r'(?<=[{a})][.,\'])["—](?=[{a}])'.format(a=ALPHA),
