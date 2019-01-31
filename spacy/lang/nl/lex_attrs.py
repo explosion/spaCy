@@ -102,44 +102,37 @@ def parse_number(number, determine_value = False):
        in the range of 0-999 and their multiples of 1 thousand.
        After 'duizend' a space is required
        :param number: text string that may be a number
-       :return: a tuple consisting of
-                * either None or the value number represents as an int, a float
-                  or a string that can be passed to eval()
-                * None:  This string cannot be converted to a valid number
-                  False: This string represents a cardinal number
-                  True:  This string represents an ordinal number"""
-
+       :param determine_value: calculate the value number represents as well
+       :return: if determine_value: a tuple consisting of
+                  * either None or the value number represents as an int or a float
+                  * None:  This string cannot be converted to a valid number
+                    False: This string represents a cardinal number
+                    True:  This string represents an ordinal number
+                otherwise a boolean
+                  * True:  This string represents a numeral
+                  * False: Can't be a correctly spelled numeral"""
+    result = None
     if number in ['']:
-        if determine_value:
-            return None, None
-        else:
-            return False
+        result = None, None
     elif number == 'nul':
-        if determine_value:
-            return 0, False
-        else:
-            return True
+        result = 0, False
     elif number == 'nulde':
-        if determine_value:
-            return 0, True
-        else:
-            return True
+        result = 0, True
     elif number == 'één':
-        if determine_value:
-            return 1, False
-        else:
-            return True
+        result = 1, False
     elif number == 'driekwart': # '3/4 is the only fraction that can be written in one word in Dutch
-        if determine_value:
-            return 0.75, False
-        else:
-            return True
+        result = 0.75, False
+
     test_ordinals = wrong_ordinals_re.match(number)
     if test_ordinals and test_ordinals.group('wrong'):
+        result = None, None
+
+    if result:
         if determine_value:
-            return None, None
+            return result
         else:
-            return False
+            return not result[1] is None
+
     value = 0
     m = hundreds_units_and_tens_thousand_re.match(number)
     if m:
@@ -159,7 +152,7 @@ def parse_number(number, determine_value = False):
             ordinal = False
 
         if determine_value:
-            if m.group('rest'):
+            if m.group('rest') or (m.group('from_13_to_19') and m.group('en')):
                 return None, None
             else:
                 if m.group('hundreds'):
