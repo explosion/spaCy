@@ -6,7 +6,7 @@ import re
 from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS
 from ..tokenizer_exceptions import URL_PATTERN
-from ..char_classes import ALPHA_LOWER
+from ..char_classes import ALPHA_LOWER, ALPHA
 from ...symbols import ORTH, LEMMA, TAG
 
 
@@ -375,12 +375,12 @@ _regular_exp = [
 ]
 # catching cases like faux-vampire
 _regular_exp += [
-    "^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
+    "^{prefix}[{hyphen}][{al}][{al}{elision}{other_hyphen}\-]*$".format(
         prefix=p,
         hyphen=HYPHENS,
         other_hyphen=_other_hyphens,
         elision=ELISION,
-        alpha=ALPHA_LOWER,
+        al=ALPHA_LOWER,
     )
     for p in _hyphen_prefix
 ]
@@ -388,8 +388,8 @@ _regular_exp += [
 # catching cases like entr'abat
 _elision_prefix = ["r?é?entr", "grande?s?", "r"]
 _regular_exp += [
-    "^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
-        prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=ALPHA_LOWER
+    "^{prefix}[{elision}][{al}][{al}{elision}{hyphen}\-]*$".format(
+        prefix=p, elision=ELISION, hyphen=_other_hyphens, al=ALPHA_LOWER
     )
     for p in _elision_prefix
 ]
@@ -410,8 +410,8 @@ _hyphen_combination = [
     "saint",
 ]
 _regular_exp += [
-    "^[{alpha}]+[{hyphen}]{hyphen_combo}[{hyphen}](?:l[{elision}])?[{alpha}]+$".format(
-        hyphen_combo=hc, elision=ELISION, hyphen=HYPHENS, alpha=ALPHA_LOWER
+    "^[{a}]+[{hyphen}]{hyphen_combo}[{hyphen}](?:l[{elision}])?[{a}]+$".format(
+        hyphen_combo=hc, elision=ELISION, hyphen=HYPHENS, a=ALPHA
     )
     for hc in _hyphen_combination
 ]
