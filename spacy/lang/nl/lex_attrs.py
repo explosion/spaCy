@@ -5,15 +5,6 @@ from ...attrs import LIKE_NUM
 
 import re
 
-VIJF = 'vijf'
-ZES = 'zes'
-ZEVEN = 'zeven'
-ACHT = 'acht'
-NEGEN = 'negen'
-TIEN = 'tien'
-HONDERD = "honderd"
-DUIZEND = "duizend"
-
 wrong_ordinals_re = re.compile(r"""(?x)
 .*(?P<wrong>nulste|eende|tweeste|driede|vierste|vijfste|
             zeste|zesste|zevenste|achtde|negenste|tienste|
@@ -55,17 +46,17 @@ hundreds_units_and_tens_thousand_re = re.compile(r"""(?x)
       (?P<ordinal>ste|de)?
       (?P<rest>.*)""")
 
-numeric_lookup = {0:  'nul',
-                  1:  'een',
-                  2:  'twee',
-                  3:  'drie',
-                  4:  'vier',
-                  5:  VIJF,
-                  6:  ZES,
-                  7:  ZEVEN,
-                  8:  ACHT,
-                  9:  NEGEN,
-                  10: TIEN,
+numeric_lookup = {0: 'nul',
+                  1: 'een',
+                  2: 'twee',
+                  3: 'drie',
+                  4: 'vier',
+                  5: 'vijf',
+                  6: 'zes',
+                  7: 'zeven',
+                  8: 'acht',
+                  9: 'negen',
+                  10: 'tien',
                   11: 'elf',
                   12: 'twaalf',
                   13: 'dertien',
