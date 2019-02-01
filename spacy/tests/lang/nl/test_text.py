@@ -17,10 +17,7 @@ def nl_tokenizer():
 
 
 @pytest.mark.parametrize('text,value,match', [
-    #('10.000', (10000, False), True), ('999,0', 999.0, True),
-    #('biljoen', (1000000000000, False), True),
     ('dog', (None, None), False), (',', (None, None), False),
-    #('1/2', 0.5, True),
     ('vijftal', (None, None), False), ('driemaal', (None, None), False),
     ('driehoog', (None, None), False), ('vierhoge', (None, None), False),
     ('eenvoud', (None, None), False), ('vijfvoud', (None, None), False),
@@ -199,7 +196,20 @@ def nl_tokenizer():
     ('dertiende', (13, True), True), ('vierhonderdendertiende', (None, None), False), ('achthonderdenveertiende', (None, None), False),
     ('driehonderdenvijftiende', (None, None), False), ('zeshonderdenzestiende', (None, None), False), ('achthonderdenzeventiende', (None, None), False),
     ('driehonderdenachttiende', (None, None), False), ('zeshonderdennegentiende', (None, None), False), ('achthonderdnegentiende', (819, True), True),
-    ])
+    ('duizend', (1000, False), True), ('miljoen', (1000000, False), True), ('miljard', (1000000000, False), True),
+    ('biljoen', (1000000000000, False), True), ('biljard', (1000000000000000, False), True),
+    ('triljoen', (1000000000000000000, False), True), ('triljard', (1000000000000000000000, False), True),
+    ('quadriljoen', (1000000000000000000000000, False), True), ('quadriljard', (1000000000000000000000000000, False), True),
+    ('nulste', (None, None), False), ('eende', (None, None), False),
+    ('tweeste', (None, None), False), ('driede', (None, None), False),
+    ('vierste', (None, None), False), ('vijfste', (None, None), False),
+    ('zeste', (None, None), False), ('zesste', (None, None), False),
+    ('zevenste', (None, None), False), ('achtde', (None, None), False),
+    ('zevenste', (None, None), False), ('achtde', (None, None), False),
+    ('negenste', (None, None), False), ('tienste', (None, None), False),
+    ('honderdde', (None, None), False), ('duizendde', (None, None), False),
+    ('driekwart', (0.75, False), True), ('driekwartste', (0.75, True), True),
+])
 def test_lex_attrs_like_number(nl_tokenizer, text, value, match):
     tokens = nl_tokenizer(text)
     assert len(tokens) == 1

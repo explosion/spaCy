@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from ...attrs import LIKE_NUM
 
-import regex
+import re
 
 VIJF = 'vijf'
 ZES = 'zes'
@@ -14,22 +14,22 @@ TIEN = 'tien'
 HONDERD = "honderd"
 DUIZEND = "duizend"
 
-wrong_ordinals_re = regex.compile(r"""(?x)
-.*(?P<wrong>nulste|eende|tweeste|driede|vierste|vijfste|zeste|zesste|achtde|tienste|honderdde|duizendde)
-$""")
+wrong_ordinals_re = re.compile(r"""(?x)
+.*(?P<wrong>nulste|eende|tweeste|driede|vierste|vijfste|
+            zeste|zesste|zevenste|achtde|negenste|tienste|
+            honderdde|duizendde)
+   $""")
 
-hundreds_units_and_tens_thousand_re = regex.compile(r"""(?x)
+hundreds_units_and_tens_thousand_re = re.compile(r"""(?x)
       (
-        (?P<hundreds>twee|drie|vier|vijf|zes|zeven|acht|negen)honderd
-        |
+        (?P<hundreds>twee|drie|vier|vijf|zes|zeven|acht|negen)?
         (?P<hundred>honderd)
       )*
       (
-        (?:
-          (?P<units>eene|tweeë|drieë|viere|vijfe|zese|zevene|achte|negene)
-          n
-        )*
-        (?P<tens>(twin|der|veer|vijf|zes|zeven|tach|negen)tig)
+        (?P<units>eenen|tweeën|drieën|vieren|vijfen|zesen|zevenen|achten|negenen)?
+        (?P<tens>(twin|der|veer|vijf|zes|zeven|tach|negen)
+                 tig
+        )
         |
         (?P<en>en)??
         (
@@ -44,21 +44,15 @@ hundreds_units_and_tens_thousand_re = regex.compile(r"""(?x)
           )
         )
       )*
-      (?P<thousand>duizend)*
-      (?P<ordinal_1_12>(?<en_ordinal>en)*(?:(?P<ordinal_1>eerste)
-                              |
-                              (?P<ordinal_3>derde)
-                              |
-                              (?P<ordinal_8>achtste)
-                              |
-                              (?P<ordinal_245679_10_11_12>(twee |vier|vijf|zes|zeven|
-                                                           negen|tien|elf |twaalf
-                                                           )
-                                                           de
-                              )
-                              )$
-      )*
-      (?P<ordinal>ste|de)*
+      (?P<thousand>duizend)??
+      (?P<ordinal_1_12>(?P<en_ordinal>en)??
+                       (?:
+                         (?P<ordinal_1>eerste)
+                         |
+                         (?P<ordinal_3>derde)
+                       )$
+      )?
+      (?P<ordinal>ste|de)?
       (?P<rest>.*)""")
 
 numeric_lookup = {0:  'nul',
@@ -84,12 +78,16 @@ numeric_lookup = {0:  'nul',
                   70: 'zeventig',
                   80: 'tachtig',
                   90: 'negentig',
+                  100: 'honderd',
+                  1000: 'duizend',
                   1000000: 'miljoen',
                   1000000000: 'miljard',
                   1000000000000: 'biljoen',
                   1000000000000000: 'biljard',
                   1000000000000000000: 'triljoen',
                   1000000000000000000000: 'triljard',
+                  1000000000000000000000000: 'quadriljoen',
+                  1000000000000000000000000000: 'quadriljard',
                   }
 
 text_lookup = {}
@@ -110,19 +108,31 @@ def parse_number(number, determine_value = False):
                     True:  This string represents an ordinal number
                 otherwise a boolean
                   * True:  This string represents a numeral
-                  * False: Can't be a correctly spelled numeral"""
+                  * False: Can't be a correctly spelled numeral in Standard Dutch"""
     result = None
-    if number in ['']:
+    if number == '':
         result = None, None
-    elif number == 'nul':
-        result = 0, False
-    elif number == 'nulde':
-        result = 0, True
     elif number == 'één':
         result = 1, False
-    elif number == 'driekwart': # '3/4 is the only fraction that can be written in one word in Dutch
+    elif number == 'driekwart':  # '3/4 is the only fraction that can be written in one word in Dutch
         result = 0.75, False
+    elif number == 'driekwartste':  # Farfetched indeed, except maybe in Harry Potter book
+        result = 0.75, True
 
+    # First a simple check using dictionary lookup
+    ordinal = False
+    base = number
+    if base.endswith('ste'):
+        base = base[:-3]
+        ordinal = True
+    elif base.endswith('de'):
+        base = base[:-2]
+        ordinal = True
+    if base in text_lookup:
+        result = text_lookup[base], ordinal
+
+    # But that naive approach needs to be counteracted
+    # using a lightweight regex
     test_ordinals = wrong_ordinals_re.match(number)
     if test_ordinals and test_ordinals.group('wrong'):
         result = None, None
@@ -133,6 +143,7 @@ def parse_number(number, determine_value = False):
         else:
             return not result[1] is None
 
+    # And then we can bring out the heavyweight regex
     value = 0
     m = hundreds_units_and_tens_thousand_re.match(number)
     if m:
@@ -144,15 +155,13 @@ def parse_number(number, determine_value = False):
                 value = 1
             elif m.group('ordinal_3'):
                 value = 3
-            elif m.group('ordinal_8'):
-                value = 8
-            elif m.group('ordinal_245679_10_11_12'):
-                value = text_lookup[m.group('ordinal_245679_10_11_12')]
         else:
             ordinal = False
 
         if determine_value:
-            if m.group('rest') or (m.group('from_13_to_19') and m.group('en')):
+            if (m.group('rest') or
+                (m.group('from_13_to_19') and
+                 m.group('en'))):
                 return None, None
             else:
                 if m.group('hundreds'):
@@ -172,7 +181,7 @@ def parse_number(number, determine_value = False):
                 if m.group('tens'):
                     value += text_lookup[m.group('tens')]
                 if m.group('units'):
-                    value += text_lookup[m.group('units')[:-1]]
+                    value += text_lookup[m.group('units')[:-2]]
                 if m.group('thousand'):
                     if value:
                         value *= 1000
@@ -180,7 +189,9 @@ def parse_number(number, determine_value = False):
                         value = 1000
                 return value, ordinal
         else:
-            if m.group('rest') or (m.group('from_13_to_19') and m.group('en')):
+            if (m.group('rest') or
+                (m.group('from_13_to_19') and
+                 m.group('en'))):
                 return False
             else:
                 return True
