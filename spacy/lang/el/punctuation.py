@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
 from ..char_classes import LIST_ICONS, ALPHA_LOWER, ALPHA_UPPER, ALPHA, HYPHENS
-from ..char_classes import QUOTES, CURRENCY
+from ..char_classes import CONCAT_QUOTES, CURRENCY
 
 _units = (
     "km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm nm yd in ft "
@@ -57,10 +57,10 @@ _suffixes = (
         r"^([0-9]){1}\)$",  # 12)
         r"(?<=°[FfCcKk])\.",
         r"([0-9])+\&",  # 12&
-        r"(?<=[0-9])(?:{})".format(CURRENCY),
-        r"(?<=[0-9])(?:{})".format(UNITS),
-        r"(?<=[0-9{}{}(?:{})])\.".format(ALPHA_LOWER, r"²\-\)\]\+", QUOTES),
-        r"(?<=[{a}][{a}])\.".format(a=ALPHA_UPPER),
+        r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
+        r"(?<=[0-9])(?:{u})".format(u=UNITS),
+        r"(?<=[0-9{al}{e}(?:{q})])\.".format(al=ALPHA_LOWER, e=r"²\-\+", q=CONCAT_QUOTES),
+        r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
         r"(?<=[Α-Ωα-ωίϊΐόάέύϋΰήώ])\-",  # όνομα-
         r"(?<=[Α-Ωα-ωίϊΐόάέύϋΰήώ])\.",
         r"^[Α-Ω]{1}\.",
@@ -85,10 +85,10 @@ _infixes = (
         r"([0-9]){1,4}[\/]([0-9]){1,2}([\/]([0-9]){0,4}){0,1}",
         r"[A-Za-z]+\@[A-Za-z]+(\-[A-Za-z]+)*\.[A-Za-z]+",  # abc@cde-fgh.a
         r"([a-zA-Z]+)(\-([a-zA-Z]+))+",  # abc-abc
-        r"(?<=[{}])\.(?=[{}])".format(ALPHA_LOWER, ALPHA_UPPER),
+        r"(?<=[{al}])\.(?=[{au}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
-        r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
-        r'(?<=[{a}"])[:<>=/](?=[{a}])'.format(a=ALPHA),
+        r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
+        r'(?<=[{a}])[:<>=/](?=[{a}])'.format(a=ALPHA),
     ]
 )
 

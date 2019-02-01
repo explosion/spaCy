@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import unicodedata
-import regex as re
+import re
 
 from .. import attrs
 

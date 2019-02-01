@@ -1,9 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-# The use of this module turns out to be important, to avoid pathological
-# back-tracking. See Issue #957
-import regex as re
+import re
 
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE, PUNCT
 
@@ -38,7 +36,7 @@ URL_PATTERN = (
     # host name
     r"(?:(?:[a-z0-9\-]*)?[a-z0-9]+)"
     # domain name
-    r"(?:\.(?:[a-z0-9\-])*[a-z0-9]+)*"
+    r"(?:\.(?:[a-z0-9])(?:[a-z0-9\-])*[a-z0-9])?"
     # TLD identifier
     r"(?:\.(?:[a-z]{2,}))"
     r")"

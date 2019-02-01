@@ -28,6 +28,12 @@ def test_tokenizer_handles_punct(tokenizer):
     assert tokens[1].text != "Lorem"
 
 
+def test_tokenizer_handles_punct_braces(tokenizer):
+    text = "Lorem, (ipsum)."
+    tokens = tokenizer(text)
+    assert len(tokens) == 6
+
+
 def test_tokenizer_handles_digits(tokenizer):
     exceptions = ["hu", "bn"]
     text = "Lorem ipsum: 1984."

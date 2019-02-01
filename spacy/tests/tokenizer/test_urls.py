@@ -94,10 +94,10 @@ URLS_SHOULD_NOT_MATCH = [
     "http://.www.foo.bar./",
     "http://10.1.1.1",
     "NASDAQ:GOOG",
+    "http://-a.b.co",
     pytest.param("foo.com", marks=pytest.mark.xfail()),
     pytest.param("http://1.1.1.1.1", marks=pytest.mark.xfail()),
     pytest.param("http://www.foo.bar./", marks=pytest.mark.xfail()),
-    pytest.param("http://-a.b.co", marks=pytest.mark.xfail()),
 ]
 
 

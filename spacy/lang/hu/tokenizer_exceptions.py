@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import regex as re
+import re
 
 from ..punctuation import ALPHA_LOWER, CURRENCY
 from ..tokenizer_exceptions import URL_PATTERN
@@ -639,7 +639,7 @@ for orth in [
 _ord_num_or_date = "([A-Z0-9]+[./-])*(\d+\.?)"
 _num = "[+\-]?\d+([,.]\d+)*"
 _ops = "[=<>+\-\*/^()÷%²]"
-_suffixes = "-[{a}]+".format(a=ALPHA_LOWER)
+_suffixes = "-[{al}]+".format(al=ALPHA_LOWER)
 _numeric_exp = "({n})(({o})({n}))*[%]?".format(n=_num, o=_ops)
 _time_exp = "\d+(:\d+)*(\.\d+)?"
 

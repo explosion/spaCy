@@ -1,12 +1,12 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import regex as re
+import re
 
 from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS
 from ..tokenizer_exceptions import URL_PATTERN
-from ..char_classes import ALPHA_LOWER
+from ..char_classes import ALPHA_LOWER, ALPHA
 from ...symbols import ORTH, LEMMA, TAG
 
 
@@ -320,67 +320,67 @@ _hyphen_prefix = [
 _other_hyphens = "".join([h for h in HYPHENS if h != "-"])
 
 _regular_exp = [
-    "^a[{hyphen}]sexualis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^arginine[{hyphen}]méthyl[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^binge[{hyphen}]watch[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^black[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^bouche[{hyphen}]por[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^burn[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^by[{hyphen}]pass[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^ch[{elision}]tiis[{alpha}]+$".format(elision=ELISION, alpha=ALPHA_LOWER),
-    "^chape[{hyphen}]chut[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^down[{hyphen}]load[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^[ée]tats[{hyphen}]uni[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^droits?[{hyphen}]de[{hyphen}]l'homm[{alpha}]+$".format(
-        hyphen=HYPHENS, alpha=ALPHA_LOWER
+    "^a[{hyphen}]sexualis[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^arginine[{hyphen}]méthyl[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^binge[{hyphen}]watch[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^black[{hyphen}]out[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^bouche[{hyphen}]por[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^burn[{hyphen}]out[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^by[{hyphen}]pass[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^ch[{elision}]tiis[{al}]+$".format(elision=ELISION, al=ALPHA_LOWER),
+    "^chape[{hyphen}]chut[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^down[{hyphen}]load[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^[ée]tats[{hyphen}]uni[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^droits?[{hyphen}]de[{hyphen}]l'homm[{al}]+$".format(
+        hyphen=HYPHENS, al=ALPHA_LOWER
     ),
-    "^fac[{hyphen}]simil[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^fleur[{hyphen}]bleuis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^flic[{hyphen}]flaqu[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^fox[{hyphen}]trott[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^google[{hyphen}]is[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^hard[{hyphen}]discount[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^hip[{hyphen}]hop[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^jet[{hyphen}]set[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^knock[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^lèche[{hyphen}]bott[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^litho[{hyphen}]typographi[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^lock[{hyphen}]out[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^lombri[{hyphen}]compost[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^mac[{hyphen}]adamis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^marque[{hyphen}]pag[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^mouton[{hyphen}]noiris[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^new[{hyphen}]york[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^pair[{hyphen}]programm[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^people[{hyphen}]is[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^plan[{hyphen}]socialis[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^premier[{hyphen}]ministr[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^prud[{elision}]hom[{alpha}]+$".format(elision=ELISION, alpha=ALPHA_LOWER),
-    "^réarc[{hyphen}]bout[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^refox[{hyphen}]trott[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^remicro[{hyphen}]ond[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^repique[{hyphen}]niqu[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^repetit[{hyphen}]déjeun[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^rick[{hyphen}]roll[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^rond[{hyphen}]ponn[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^shift[{hyphen}]cliqu[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^soudo[{hyphen}]bras[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^stabilo[{hyphen}]boss[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^strip[{hyphen}]teas[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^terra[{hyphen}]form[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^teuf[{hyphen}]teuf[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^yo[{hyphen}]yo[{alpha}]+$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^zig[{hyphen}]zag[{alpha}]*$".format(hyphen=HYPHENS, alpha=ALPHA_LOWER),
-    "^z[{elision}]yeut[{alpha}]+$".format(elision=ELISION, alpha=ALPHA_LOWER),
+    "^fac[{hyphen}]simil[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^fleur[{hyphen}]bleuis[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^flic[{hyphen}]flaqu[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^fox[{hyphen}]trott[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^google[{hyphen}]is[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^hard[{hyphen}]discount[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^hip[{hyphen}]hop[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^jet[{hyphen}]set[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^knock[{hyphen}]out[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^lèche[{hyphen}]bott[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^litho[{hyphen}]typographi[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^lock[{hyphen}]out[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^lombri[{hyphen}]compost[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^mac[{hyphen}]adamis[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^marque[{hyphen}]pag[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^mouton[{hyphen}]noiris[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^new[{hyphen}]york[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^pair[{hyphen}]programm[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^people[{hyphen}]is[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^plan[{hyphen}]socialis[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^premier[{hyphen}]ministr[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^prud[{elision}]hom[{al}]+$".format(elision=ELISION, al=ALPHA_LOWER),
+    "^réarc[{hyphen}]bout[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^refox[{hyphen}]trott[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^remicro[{hyphen}]ond[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^repique[{hyphen}]niqu[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^repetit[{hyphen}]déjeun[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^rick[{hyphen}]roll[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^rond[{hyphen}]ponn[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^shift[{hyphen}]cliqu[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^soudo[{hyphen}]bras[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^stabilo[{hyphen}]boss[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^strip[{hyphen}]teas[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^terra[{hyphen}]form[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^teuf[{hyphen}]teuf[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^yo[{hyphen}]yo[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^zig[{hyphen}]zag[{al}]*$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
+    "^z[{elision}]yeut[{al}]+$".format(elision=ELISION, al=ALPHA_LOWER),
 ]
 # catching cases like faux-vampire
 _regular_exp += [
-    "^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]*$".format(
+    "^{prefix}[{hyphen}][{al}][{al}{elision}{other_hyphen}\-]*$".format(
         prefix=p,
         hyphen=HYPHENS,
         other_hyphen=_other_hyphens,
         elision=ELISION,
-        alpha=ALPHA_LOWER,
+        al=ALPHA_LOWER,
     )
     for p in _hyphen_prefix
 ]
@@ -388,8 +388,8 @@ _regular_exp += [
 # catching cases like entr'abat
 _elision_prefix = ["r?é?entr", "grande?s?", "r"]
 _regular_exp += [
-    "^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
-        prefix=p, elision=ELISION, hyphen=_other_hyphens, alpha=ALPHA_LOWER
+    "^{prefix}[{elision}][{al}][{al}{elision}{hyphen}\-]*$".format(
+        prefix=p, elision=ELISION, hyphen=_other_hyphens, al=ALPHA_LOWER
     )
     for p in _elision_prefix
 ]
@@ -410,8 +410,8 @@ _hyphen_combination = [
     "saint",
 ]
 _regular_exp += [
-    "^[{alpha}]+[{hyphen}]{hyphen_combo}[{hyphen}](?:l[{elision}])?[{alpha}]+$".format(
-        hyphen_combo=hc, elision=ELISION, hyphen=HYPHENS, alpha=ALPHA_LOWER
+    "^[{a}]+[{hyphen}]{hyphen_combo}[{hyphen}](?:l[{elision}])?[{a}]+$".format(
+        hyphen_combo=hc, elision=ELISION, hyphen=HYPHENS, a=ALPHA
     )
     for hc in _hyphen_combination
 ]

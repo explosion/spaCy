@@ -8,7 +8,7 @@ from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-import regex as re
+import re
 cimport cython
 
 from .tokens.doc cimport Doc

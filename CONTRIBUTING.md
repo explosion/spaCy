@@ -55,7 +55,7 @@ even format them as Markdown to copy-paste into GitHub issues:
 `python -m spacy info --markdown`.
 
 * **Checking the model compatibility:** If you're having problems with a
-[statistical model](https://spacy.io/models), it may be because to the
+[statistical model](https://spacy.io/models), it may be because the
 model is incompatible with your spaCy installation. In spaCy v2.0+, you can check
 this on the command line by running `python -m spacy validate`.
 
@@ -320,7 +320,7 @@ of other types these names. For instance, don't name a text string `doc` — you
 should usually call this `text`. Two general code style preferences further help
 with naming. First, **lean away from introducing temporary variables**, as these
 clutter your namespace. This is one reason why comprehension expressions are
-often preferred. Second, **keep your functions shortish**, so that can work in a
+often preferred. Second, **keep your functions shortish**, so they can work in a
 smaller scope. Of course, this is a question of trade-offs.
 
 ### Cython conventions
@@ -438,7 +438,7 @@ avoid unnecessary imports.
 Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
 Tests that require the model to be loaded should be marked with
 `@pytest.mark.models`. Loading the models is expensive and not necessary if
-you're not actually testing the model performance. If all you needs ia a `Doc`
+you're not actually testing the model performance. If all you need is a `Doc`
 object with annotations like heads, POS tags or the dependency parse, you can
 use the `get_doc()` utility function to construct it manually.
 

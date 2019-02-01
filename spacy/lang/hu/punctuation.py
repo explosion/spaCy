@@ -1,20 +1,21 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES
-from ..char_classes import QUOTES, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
+from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_ICONS
+from ..char_classes import CONCAT_QUOTES, CONCAT_ICONS, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
 
-LIST_ICONS = [r"[\p{So}--[°]]"]
+# removing ° from the special icons to keep e.g. 99° as one token
+_concat_icons = CONCAT_ICONS.replace("\u00B0", "")
 
-_currency = r"\$|¢|£|€|¥|฿"
-_quotes = QUOTES.replace("'", "")
+_currency = r"\$¢£€¥฿"
+_quotes = CONCAT_QUOTES.replace("'", "")
 
 _prefixes = (
     [r"\+"]
     + LIST_PUNCT
     + LIST_ELLIPSES
     + LIST_QUOTES
-    + LIST_ICONS
+    + [_concat_icons]
     + [r"[,.:](?=[{a}])".format(a=ALPHA)]
 )
 
@@ -22,24 +23,24 @@ _suffixes = (
     LIST_PUNCT
     + LIST_ELLIPSES
     + LIST_QUOTES
-    + LIST_ICONS
+    + [_concat_icons]
     + [
         r"(?<=[0-9])\+",
         r"(?<=°[FfCcKk])\.",
-        r"(?<=[0-9])(?:{})".format(_currency),
-        r"(?<=[0-9])(?:{})".format(UNITS),
-        r"(?<=[{}{}{}(?:{})])\.".format(ALPHA_LOWER, r"%²\-\)\]\+", QUOTES, _currency),
-        r"(?<=[{})])-e".format(ALPHA_LOWER),
+        r"(?<=[0-9])(?:[{c}])".format(c=_currency),
+        r"(?<=[0-9])(?:{u})".format(u=UNITS),
+        r"(?<=[{al}{e}{q}(?:{c})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency),
+        r"(?<=[{al})])-e".format(al=ALPHA_LOWER),
     ]
 )
 
 _infixes = (
     LIST_ELLIPSES
-    + LIST_ICONS
+    + [_concat_icons]
     + [
-        r"(?<=[{}])\.(?=[{}])".format(ALPHA_LOWER, ALPHA_UPPER),
+        r"(?<=[{al}])\.(?=[{au}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r"(?<=[{a}])[,!?](?=[{a}])".format(a=ALPHA),
-        r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA),
+        r'(?<=[{a}])[:<>=](?=[{a}])'.format(a=ALPHA),
         r"(?<=[{a}])--(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}])([{q}\)\]\(\[])(?=[\-{a}])".format(a=ALPHA, q=_quotes),

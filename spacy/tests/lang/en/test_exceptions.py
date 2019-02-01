@@ -81,7 +81,7 @@ def test_en_tokenizer_excludes_ambiguous(en_tokenizer, exc):
 
 
 @pytest.mark.parametrize(
-    "wo_punct,w_punct", [("We've", "``We've"), ("couldn't", "couldn't)")]
+    "wo_punct,w_punct", [("We've", "`We've"), ("couldn't", "couldn't)")]
 )
 def test_en_tokenizer_splits_defined_punct(en_tokenizer, wo_punct, w_punct):
     tokens = en_tokenizer(wo_punct)
