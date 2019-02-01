@@ -86,12 +86,13 @@ for number, text in numeric_lookup.items():
     text_lookup[text] = number
 
 
-def parse_number(number, determine_value = False):
+def parse_number(number, determine_value=False, strict_AN_spelling=False):
     """Accepts Dutch text representing a number which can be written as a single word
        in the range of 0-999 and their multiples of 1 thousand.
        After 'duizend' a space is required
-       :param number: text string that may be a number
-       :param determine_value: calculate the value number represents as well
+       :param number:             text string that may be a number
+       :param determine_value:    calculate the value it represents as well
+       :param strict_AN_spelling: only allow valid AN spelling
        :return: if determine_value: a tuple consisting of
                   * either None or the value number represents as an int or a float
                   * None:  This string cannot be converted to a valid number
@@ -123,10 +124,12 @@ def parse_number(number, determine_value = False):
         result = text_lookup[base], ordinal
 
     # But that naive approach needs to be counteracted
-    # using a lightweight regex
-    test_ordinals = wrong_ordinals_re.match(number)
-    if test_ordinals and test_ordinals.group('wrong'):
-        result = None, None
+    # using a lightweight regex in case strict adherence to
+    # AN spelling is desired.
+    if strict_AN_spelling:
+        test_ordinals = wrong_ordinals_re.match(number)
+        if test_ordinals and test_ordinals.group('wrong'):
+            result = None, None
 
     if result:
         if determine_value:
