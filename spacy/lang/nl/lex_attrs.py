@@ -15,11 +15,11 @@ hundreds_units_and_tens_thousand_re = re.compile(r"""(?x)
       (
         (?P<hundreds>twee|drie|vier|vijf|zes|zeven|acht|negen)?
         (?P<hundred>honderd)
-      )*
+      )?
       (
-        (?P<units>eenen|tweeën|drieën|vieren|vijfen|zesen|zevenen|achten|negenen)?
-        (?P<tens>(twin|der|veer|vijf|zes|zeven|tach|negen)
-                 tig
+        (?P<units>eenen|tweeën|drieën|vieren|vijfen|zesen|zevenen| achten|negenen)?
+        (?P<tens>(      twin  |der   |veer  |vijf  |zes  |zeven  |tach   |negen)
+                  tig
         )
         |
         (?P<en>en)??
@@ -34,7 +34,7 @@ hundreds_units_and_tens_thousand_re = re.compile(r"""(?x)
             )
           )
         )
-      )*
+      )?
       (?P<thousand>duizend)??
       (?P<ordinal_1_12>(?P<en_ordinal>en)??
                        (?:
@@ -93,12 +93,14 @@ def parse_number(number, determine_value=False, strict_AN_spelling=False):
        :param number:             text string that may be a number
        :param determine_value:    calculate the value it represents as well
        :param strict_AN_spelling: only allow valid AN spelling
-       :return: if determine_value: a tuple consisting of
+       :return: in case determine_value=True:
+                 a tuple consisting of
                   * either None or the value number represents as an int or a float
                   * None:  This string cannot be converted to a valid number
                     False: This string represents a cardinal number
                     True:  This string represents an ordinal number
-                otherwise a boolean
+                in case determine_value=False:
+                 a tuple consisting of
                   * True:  This string represents a numeral
                   * False: Can't be a correctly spelled numeral in Standard Dutch"""
     result = None
