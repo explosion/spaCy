@@ -317,8 +317,6 @@ _hyphen_prefix = [
     "Vaux",
 ]
 
-_other_hyphens = "".join([h for h in HYPHENS if h != "-"])
-
 _regular_exp = [
     "^a[{hyphen}]sexualis[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
     "^arginine[{hyphen}]méthyl[{al}]+$".format(hyphen=HYPHENS, al=ALPHA_LOWER),
@@ -375,10 +373,9 @@ _regular_exp = [
 ]
 # catching cases like faux-vampire
 _regular_exp += [
-    "^{prefix}[{hyphen}][{al}][{al}{elision}{other_hyphen}\-]*$".format(
+    "^{prefix}[{hyphen}][{al}][{hyphen}{al}{elision}]*$".format(
         prefix=p,
-        hyphen=HYPHENS,
-        other_hyphen=_other_hyphens,
+        hyphen=HYPHENS,   # putting the - first in the [] range avoids having to use a backslash
         elision=ELISION,
         al=ALPHA_LOWER,
     )
@@ -388,8 +385,8 @@ _regular_exp += [
 # catching cases like entr'abat
 _elision_prefix = ["r?é?entr", "grande?s?", "r"]
 _regular_exp += [
-    "^{prefix}[{elision}][{al}][{al}{elision}{hyphen}\-]*$".format(
-        prefix=p, elision=ELISION, hyphen=_other_hyphens, al=ALPHA_LOWER
+    "^{prefix}[{elision}][{al}][{hyphen}{al}{elision}]*$".format(
+        prefix=p, elision=ELISION, hyphen=HYPHENS, al=ALPHA_LOWER
     )
     for p in _elision_prefix
 ]
