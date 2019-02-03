@@ -18,7 +18,7 @@ def test_ca_tokenizer_handles_long_text(ca_tokenizer):
     una gerra de cervesa. Ens asseiem -fotògraf i periodista- en una terrassa buida."""
 
     tokens = ca_tokenizer(text)
-    assert len(tokens) == 136
+    assert len(tokens) == 138
 
 
 @pytest.mark.parametrize('text,length', [

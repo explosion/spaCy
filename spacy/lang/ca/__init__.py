@@ -12,6 +12,8 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
+from .punctuation import TOKENIZER_INFIXES
+
 
 class CatalanDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
@@ -23,6 +25,7 @@ class CatalanDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     lemma_lookup = LOOKUP
+    infixes = TOKENIZER_INFIXES
 
 
 class Catalan(Language):
