@@ -11,6 +11,8 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
+from .punctuation import TOKENIZER_INFIXES
+
 
 class ItalianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
@@ -22,6 +24,7 @@ class ItalianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     lemma_lookup = LOOKUP
     tag_map = TAG_MAP
+    infixes = TOKENIZER_INFIXES
 
 
 class Italian(Language):
