@@ -11,5 +11,4 @@ def test_contractions(it_tokenizer, text, expected_tokens):
     """ Test that the contractions are split into two tokens"""
     tokens = it_tokenizer(text)
     assert len(tokens) == 2
-    print([t.text for t in tokens])
     assert [t.text for t in tokens] == expected_tokens
