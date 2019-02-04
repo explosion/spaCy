@@ -9,6 +9,8 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
 
+from .punctuation import TOKENIZER_SUFFIXES
+
 
 class UrduDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
@@ -18,6 +20,7 @@ class UrduDefaults(Language.Defaults):
     tokenizer_exceptions = BASE_EXCEPTIONS
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
+    suffixes = TOKENIZER_SUFFIXES
 
 
 class Urdu(Language):
