@@ -66,6 +66,11 @@ def id_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def it_tokenizer():
+    return get_lang_class("it").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def sv_tokenizer():
     return get_lang_class("sv").Defaults.create_tokenizer()
 
