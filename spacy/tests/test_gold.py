@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.gold import spans_from_biluo_tags
 from spacy.tokens import Doc
 
 
@@ -50,3 +51,14 @@ def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
     assert biluo_tags_converted == biluo_tags
     offsets_converted = offsets_from_biluo_tags(doc, biluo_tags)
     assert offsets_converted == offsets
+
+
+def test_biluo_spans(en_tokenizer):
+    doc = en_tokenizer("I flew to Silicon Valley via London.")
+    biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
+    spans = spans_from_biluo_tags(doc, biluo_tags)
+    assert len(spans) == 2
+    assert spans[0].text == "Silicon Valley"
+    assert spans[0].label_ == "LOC"
+    assert spans[1].text == "London"
+    assert spans[1].label_ == "GPE"
