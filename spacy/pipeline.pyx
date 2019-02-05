@@ -1145,7 +1145,7 @@ class TextCategorizer(Pipe):
     name = 'textcat'
 
     @classmethod
-    def Model(cls, nr_class, **cfg):
+    def Model(cls, nr_class=1, **cfg):
         embed_size = util.env_opt("embed_size", 2000)
         if "token_vector_width" in cfg:
             token_vector_width = cfg["token_vector_width"]
