@@ -1070,7 +1070,7 @@ class ClozeMultitask(Pipe):
         gradient = (prediction - target) / prediction.shape[0]
         loss = (gradient**2).sum()
         return float(loss), gradient
- 
+
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         pass
 
