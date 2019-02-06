@@ -736,15 +736,3 @@ def unpickle_matcher(vocab, patterns, callbacks):
         callback = callbacks.get(key, None)
         matcher.add(key, callback, *specs)
     return matcher
-
-
-def _get_longest_matches(matches):
-    '''Filter out matches that have a longer equivalent.'''
-    longest_matches = {}
-    for pattern_id, start, end in matches:
-        key = (pattern_id, start)
-        length = end-start
-        if key not in longest_matches or length > longest_matches[key]:
-            longest_matches[key] = length
-    return [(pattern_id, start, start+length)
-              for (pattern_id, start), length in longest_matches.items()]
