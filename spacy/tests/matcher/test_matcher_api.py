@@ -205,6 +205,19 @@ def test_matcher_set_value(en_vocab):
     assert len(matches) == 0
 
 
+@pytest.mark.xfail
+def test_matcher_set_value_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": {"IN": ["a", "the"]}, "OP": "?"}, {"ORTH": "house"}]
+    matcher.add("DET_HOUSE", None, pattern)
+    doc = Doc(en_vocab, words=["In", "a", "house"])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    doc = Doc(en_vocab, words=["my", "house"])
+    matches = matcher(doc)
+    assert len(matches) == 1
+
+
 def test_matcher_regex(en_vocab):
     matcher = Matcher(en_vocab)
     pattern = [{"ORTH": {"REGEX": r"(?:a|an)"}}]
