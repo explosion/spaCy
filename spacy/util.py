@@ -14,6 +14,8 @@ import functools
 import itertools
 import numpy.random
 import srsly
+from jsonschema import Draft4Validator
+
 
 try:
     import cupy.random
@@ -624,6 +626,31 @@ def fix_random_seed(seed=0):
     numpy.random.seed(seed)
     if cupy is not None:
         cupy.random.seed(seed)
+
+
+def validate_schema(schema):
+    # TODO: replace with (stable) Draft6Validator, if available
+    validator = Draft4Validator(schema)
+    validator.check_schema(schema)
+
+
+def validate_json(data, schema):
+    """Validate data against a given JSON schema (see https://json-schema.org).
+
+    data: JSON-serializable data to validate.
+    schema (dict): The JSON schema.
+    RETURNS (list): A list of error messages, if available.
+    """
+    # TODO: replace with (stable) Draft6Validator, if available
+    validator = Draft4Validator(schema)
+    errors = []
+    for err in sorted(validator.iter_errors(data), key=lambda e: e.path):
+        if err.path:
+            err_path = "[{}]".format(" -> ".join([str(p) for p in err.path]))
+        else:
+            err_path = ""
+        errors.append(err.message + " " + err_path)
+    return errors
 
 
 class SimpleFrozenDict(dict):

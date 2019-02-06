@@ -1,20 +1,20 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from spacy.cli.schemas import validate_json, get_schema
+from spacy.util import validate_json, validate_schema
+from spacy.cli._schemas import META_SCHEMA, TRAINING_SCHEMA
 import pytest
 
 
-@pytest.fixture(scope="session")
-def training_schema():
-    return get_schema("training")
+def test_validate_schema():
+    validate_schema({"type": "object"})
+    with pytest.raises(Exception):
+        validate_schema({"type": lambda x: x})
 
 
-def test_json_schema_get():
-    schema = get_schema("training")
-    assert schema
-    with pytest.raises(ValueError):
-        schema = get_schema("xxx")
+@pytest.mark.parametrize("schema", [TRAINING_SCHEMA, META_SCHEMA])
+def test_schemas(schema):
+    validate_schema(schema)
 
 
 @pytest.mark.parametrize(
@@ -24,8 +24,8 @@ def test_json_schema_get():
         {"text": "Hello", "ents": [{"start": 0, "end": 5, "label": "TEST"}]},
     ],
 )
-def test_json_schema_training_valid(data, training_schema):
-    errors = validate_json([data], training_schema)
+def test_json_schema_training_valid(data):
+    errors = validate_json([data], TRAINING_SCHEMA)
     assert not errors
 
 
@@ -39,6 +39,6 @@ def test_json_schema_training_valid(data, training_schema):
         ({"text": "spaCy", "tokens": [{"pos": "PROPN"}]}, 2),
     ],
 )
-def test_json_schema_training_invalid(data, n_errors, training_schema):
-    errors = validate_json([data], training_schema)
+def test_json_schema_training_invalid(data, n_errors):
+    errors = validate_json([data], TRAINING_SCHEMA)
     assert len(errors) == n_errors

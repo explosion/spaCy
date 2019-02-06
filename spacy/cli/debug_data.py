@@ -11,8 +11,6 @@ from wasabi import Printer, MESSAGES
 from ..gold import GoldCorpus, read_json_object
 from ..util import load_model, get_lang_class
 
-# from .schemas import get_schema, validate_json
-
 
 # Minimum number of expected occurences of label in data to train new label
 NEW_LABEL_THRESHOLD = 50
@@ -76,7 +74,6 @@ def debug_data(
 
     # Validate data format using the JSON schema
     # TODO: update once the new format is ready
-    # schema = get_schema("training")
     train_data_errors = []  # TODO: validate_json(train_data, schema)
     dev_data_errors = []  # TODO: validate_json(dev_data, schema)
     if not train_data_errors:
