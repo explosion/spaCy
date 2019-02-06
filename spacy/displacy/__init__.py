@@ -9,10 +9,9 @@ from ..util import prints, is_in_jupyter
 
 
 _html = {}
-IS_JUPYTER = is_in_jupyter()
 
 
-def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
+def render(docs, style='dep', page=False, minify=False, jupyter=False,
            options={}, manual=False):
     """Render displaCy visualisation.
 
@@ -39,7 +38,7 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
     parsed = [converter(doc, options) for doc in docs] if not manual else docs
     _html['parsed'] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html['parsed']
-    if jupyter:  # return HTML rendered by IPython display()
+    if jupyter or is_in_jupyter():  # return HTML rendered by IPython display()
         from IPython.core.display import display, HTML
         return display(HTML(html))
     return html

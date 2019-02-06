@@ -220,6 +220,7 @@ def setup_package():
                 'cuda100': ['cupy-cuda100>=4.0', 'thinc_gpu_ops>=0.0.3,<0.1.0'],
                 'ja': ['mecab-python3==0.7']
             },
+            python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
@@ -236,6 +237,7 @@ def setup_package():
                 'Programming Language :: Python :: 3.4',
                 'Programming Language :: Python :: 3.5',
                 'Programming Language :: Python :: 3.6',
+                'Programming Language :: Python :: 3.7',
                 'Topic :: Scientific/Engineering'],
             cmdclass = {
                 'build_ext': build_ext_subclass},

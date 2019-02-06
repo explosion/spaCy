@@ -90,15 +90,16 @@ def create_model(lang, probs, oov_prob, clusters, vectors_data, vector_keys, pru
             lexeme.cluster = 0
         lex_added += 1
     nlp.vocab.cfg.update({'oov_prob': oov_prob})
-    for word in vector_keys:
-        if word not in nlp.vocab:
-            lexeme = nlp.vocab[word]
-            lexeme.is_oov = False
-            lex_added += 1
-    if len(vectors_data):
-        nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
-    if prune_vectors >= 1:
-        nlp.vocab.prune_vectors(prune_vectors)
+    if vector_keys is not None:
+        for word in vector_keys:
+            if word not in nlp.vocab:
+                lexeme = nlp.vocab[word]
+                lexeme.is_oov = False
+                lex_added += 1
+        if len(vectors_data):
+            nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
+        if prune_vectors >= 1:
+            nlp.vocab.prune_vectors(prune_vectors)
     vec_added = len(nlp.vocab.vectors)
     prints(Messages.M039.format(entries=lex_added, vectors=vec_added),
            title=Messages.M038)
@@ -141,7 +142,11 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
             doc_freq = int(doc_freq)
             freq = int(freq)
             if doc_freq >= min_doc_freq and freq >= min_freq and len(key) < max_length:
-                word = literal_eval(key)
+                try:
+                    word = literal_eval(key)
+                except SyntaxError:
+                    # Take odd strings literally.
+                    word = literal_eval("'%s'" % key)
                 smooth_count = counts.smoother(int(freq))
                 probs[word] = math.log(smooth_count) - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total

@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | Amandine Périnet        |
 | Company name (if applicable)   | 365Talents              |
 | Title or role (if applicable)  | Data Science Researcher |
-| Date                           | 12/12/2018              |
+| Date                           | 28/01/2019              |
 | GitHub username                | amperinet               |
 | Website (optional)             |                         |

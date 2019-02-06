@@ -1083,20 +1083,31 @@
             "category": ["pipeline"]
         },
         {
-            "id": "spacy2conllu",
-            "title": "spaCy2CoNLLU",
+            "id": "spacy-conll",
+            "title": "spacy_conll",
             "slogan": "Parse text with spaCy and print the output in CoNLL-U format",
-            "description": "Simple script to parse text with spaCy and print the output in CoNLL-U format",
+            "description": "This module allows you to parse a text to CoNLL-U format. You can use it as a command line tool, or embed it in your own scripts.",
             "code_example": [
-                "python parse_as_conllu.py [-h] --input_file INPUT_FILE [--output_file OUTPUT_FILE] --model MODEL"
+                "from spacy_conll import Spacy2ConllParser",
+                "spacyconll = Spacy2ConllParser()",
+                "",
+                "# `parse` returns a generator of the parsed sentences",
+                "for parsed_sent in spacyconll.parse(input_str='I like cookies.\nWhat about you?\nI don't like 'em!'):",
+                "    do_something_(parsed_sent)",
+                "",
+                "# `parseprint` prints output to stdout (default) or a file (use `output_file` parameter)",
+                "# This method is called when using the command line",
+                "spacyconll.parseprint(input_str='I like cookies.')"
             ],
-            "code_language": "bash",
-            "author": "Raquel G. Alhama",
+            "code_language": "python",
+            "author": "Bram Vanroy",
             "author_links": {
-                "github": "rgalhama"
+                "github": "BramVanroy",
+                "website": "https://bramvanroy.be"
+
             },
-            "github": "rgalhama/spaCy2CoNLLU",
-            "category": ["training"]
+            "github": "BramVanroy/spacy_conll",
+            "category": ["standalone"]
         }
     ],
     "projectCats": {
