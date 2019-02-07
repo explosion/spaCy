@@ -1,5 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
+
 from ...attrs import LIKE_NUM
 
 
@@ -80,5 +81,6 @@ def like_num(text):
         return True
 
     return False
+
 
 LEX_ATTRS = {LIKE_NUM: like_num}
