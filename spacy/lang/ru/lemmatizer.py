@@ -9,7 +9,7 @@ from ...compat import unicode_
 class RussianLemmatizer(Lemmatizer):
     _morph = None
 
-    def __init__(self):
+    def __init__(self, pymorphy2_lang='ru'):
         super(RussianLemmatizer, self).__init__()
         try:
             from pymorphy2 import MorphAnalyzer
@@ -20,7 +20,7 @@ class RussianLemmatizer(Lemmatizer):
             )
 
         if RussianLemmatizer._morph is None:
-            RussianLemmatizer._morph = MorphAnalyzer()
+            RussianLemmatizer._morph = MorphAnalyzer(lang=pymorphy2_lang)
 
     def __call__(self, string, univ_pos, morphology=None):
         univ_pos = self.normalize_univ_pos(univ_pos)
