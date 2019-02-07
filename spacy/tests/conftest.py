@@ -15,7 +15,7 @@ from .. import util
 # here if it's using spaCy's tokenizer (not a different library)
 # TODO: re-implement generic tokenizer tests
 _languages = ['bn', 'ca', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr', 'ga', 'he', 'hu', 'id',
-              'it', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'ar', 'ur', 'tt',
+              'it', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'ar', 'ur', 'tt', 'uk',
               'xx']
 
 _models = {'en': ['en_core_web_sm'],
@@ -48,6 +48,11 @@ def FR(request):
 def RU(request):
     pymorphy = pytest.importorskip('pymorphy2')
     return util.get_lang_class('ru')()
+
+@pytest.fixture()
+def UK(request):
+    pymorphy = pytest.importorskip('pymorphy2')
+    return util.get_lang_class('uk')()
 
 @pytest.fixture()
 def JA(request):
@@ -174,6 +179,11 @@ def ur_tokenizer():
 def ru_tokenizer():
     pymorphy = pytest.importorskip('pymorphy2')
     return util.get_lang_class('ru').Defaults.create_tokenizer()
+
+@pytest.fixture(scope='session')
+def uk_tokenizer():
+    pymorphy = pytest.importorskip('pymorphy2')
+    return util.get_lang_class('uk').Defaults.create_tokenizer()
 
 @pytest.fixture(scope='session')
 def ca_tokenizer():
