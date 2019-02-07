@@ -1,5 +1,4 @@
 recursive-include include *.h
-recursive-include spacy/cli/schemas *.json
 include LICENSE
 include README.md
 include bin/spacy
