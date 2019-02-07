@@ -10,15 +10,17 @@ from ...util import update_exc
 # create Defaults class in the module scope (necessary for pickling!)
 class TamilDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'ta' # language ISO code
+    lex_attr_getters[LANG] = lambda text: "ta"  # language ISO code
 
     # optional: replace flags with custom functions, e.g. like_num()
     lex_attr_getters.update(LEX_ATTRS)
 
+
 # create actual Language class
 class Tamil(Language):
-    lang = 'ta' # language ISO code
-    Defaults = TamilDefaults # override defaults
+    lang = "ta"  # language ISO code
+    Defaults = TamilDefaults  # override defaults
+
 
 # set default export – this allows the language class to be lazy-loaded
-__all__ = ['Tamil']
+__all__ = ["Tamil"]

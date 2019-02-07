@@ -672,7 +672,7 @@ class DummyTokenizer(object):
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
     def to_bytes(self, **exclude):
-        return b''
+        return b""
 
     def from_bytes(self, _bytes_data, **exclude):
         return self
