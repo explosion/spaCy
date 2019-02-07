@@ -21,15 +21,329 @@ from ..syntax.arc_eager cimport ArcEager
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
-from .pipe import Pipe, load_cfg
 from ..syntax import nonproj
 from ..attrs import POS, ID
 from ..parts_of_speech import X
 from .._ml import Tok2Vec, build_tagger_model, build_simple_cnn_text_classifier
 from .._ml import link_vectors_to_models, zero_init, flatten
-from .._ml import masked_language_model
+from .._ml import masked_language_model, create_default_optimizer
 from ..errors import Errors, TempErrors
 from .. import util
+
+
+def _load_cfg(path):
+    if path.exists():
+        return srsly.read_json(path)
+    else:
+        return {}
+
+
+class Pipe(object):
+    """This class is not instantiated directly. Components inherit from it, and
+    it defines the interface that components should follow to function as
+    components in a spaCy analysis pipeline.
+    """
+
+    name = None
+
+    @classmethod
+    def Model(cls, *shape, **kwargs):
+        """Initialize a model for the pipe."""
+        raise NotImplementedError
+
+    def __init__(self, vocab, model=True, **cfg):
+        """Create a new pipe instance."""
+        raise NotImplementedError
+
+    def __call__(self, doc):
+        """Apply the pipe to one document. The document is
+        modified in-place, and returned.
+
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        """
+        self.require_model()
+        scores, tensors = self.predict([doc])
+        self.set_annotations([doc], scores, tensors=tensors)
+        return doc
+
+    def require_model(self):
+        """Raise an error if the component's model is not initialized."""
+        if getattr(self, "model", None) in (None, True, False):
+            raise ValueError(Errors.E109.format(name=self.name))
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        """Apply the pipe to a stream of documents.
+
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        """
+        for docs in util.minibatch(stream, size=batch_size):
+            docs = list(docs)
+            scores, tensors = self.predict(docs)
+            self.set_annotations(docs, scores, tensor=tensors)
+            yield from docs
+
+    def predict(self, docs):
+        """Apply the pipeline's model to a batch of docs, without
+        modifying them.
+        """
+        self.require_model()
+        raise NotImplementedError
+
+    def set_annotations(self, docs, scores, tensors=None):
+        """Modify a batch of documents, using pre-computed scores."""
+        raise NotImplementedError
+
+    def update(self, docs, golds, drop=0.0, sgd=None, losses=None):
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model.
+
+        Delegates to predict() and get_loss().
+        """
+        self.require_model()
+        raise NotImplementedError
+
+    def rehearse(self, docs, sgd=None, losses=None, **config):
+        pass
+
+    def get_loss(self, docs, golds, scores):
+        """Find the loss and gradient of loss for the batch of
+        documents and their predicted scores."""
+        raise NotImplementedError
+
+    def add_label(self, label):
+        """Add an output label, to be predicted by the model.
+
+        It's possible to extend pre-trained models with new labels,
+        but care should be taken to avoid the "catastrophic forgetting"
+        problem.
+        """
+        raise NotImplementedError
+
+    def create_optimizer(self):
+        return create_default_optimizer(self.model.ops, **self.cfg.get("optimizer", {}))
+
+    def begin_training(
+        self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs
+    ):
+        """Initialize the pipe for training, using data exampes if available.
+        If no model has been initialized yet, the model is added."""
+        if self.model is True:
+            self.model = self.Model(**self.cfg)
+        link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
+
+    def use_params(self, params):
+        """Modify the pipe's model, to use the given parameter values."""
+        with self.model.use_params(params):
+            yield
+
+    def to_bytes(self, **exclude):
+        """Serialize the pipe to a bytestring."""
+        serialize = OrderedDict()
+        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        if self.model in (True, False, None):
+            serialize["model"] = lambda: self.model
+        else:
+            serialize["model"] = self.model.to_bytes
+        serialize["vocab"] = self.vocab.to_bytes
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        """Load the pipe from a bytestring."""
+
+        def load_model(b):
+            # TODO: Remove this once we don't have to handle previous models
+            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
+                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            self.model.from_bytes(b)
+
+        deserialize = OrderedDict(
+            (
+                ("cfg", lambda b: self.cfg.update(srsly.json_loads(b))),
+                ("vocab", lambda b: self.vocab.from_bytes(b)),
+                ("model", load_model),
+            )
+        )
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
+    def to_disk(self, path, **exclude):
+        """Serialize the pipe to disk."""
+        serialize = OrderedDict()
+        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p)
+        if self.model not in (None, True, False):
+            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, **exclude):
+        """Load the pipe from disk."""
+
+        def load_model(p):
+            # TODO: Remove this once we don't have to handle previous models
+            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
+                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            self.model.from_bytes(p.open("rb").read())
+
+        deserialize = OrderedDict(
+            (
+                ("cfg", lambda p: self.cfg.update(_load_cfg(p))),
+                ("vocab", lambda p: self.vocab.from_disk(p)),
+                ("model", load_model),
+            )
+        )
+        util.from_disk(path, deserialize, exclude)
+        return self
+
+
+class Tensorizer(Pipe):
+    """Pre-train position-sensitive vectors for tokens."""
+
+    name = "tensorizer"
+
+    @classmethod
+    def Model(cls, output_size=300, **cfg):
+        """Create a new statistical model for the class.
+
+        width (int): Output size of the model.
+        embed_size (int): Number of vectors in the embedding table.
+        **cfg: Config parameters.
+        RETURNS (Model): A `thinc.neural.Model` or similar instance.
+        """
+        input_size = util.env_opt("token_vector_width", cfg.get("input_size", 96))
+        return zero_init(Affine(output_size, input_size, drop_factor=0.0))
+
+    def __init__(self, vocab, model=True, **cfg):
+        """Construct a new statistical model. Weights are not allocated on
+        initialisation.
+
+        vocab (Vocab): A `Vocab` instance. The model must share the same
+            `Vocab` instance with the `Doc` objects it will process.
+        model (Model): A `Model` instance or `True` allocate one later.
+        **cfg: Config parameters.
+
+        EXAMPLE:
+            >>> from spacy.pipeline import TokenVectorEncoder
+            >>> tok2vec = TokenVectorEncoder(nlp.vocab)
+            >>> tok2vec.model = tok2vec.Model(128, 5000)
+        """
+        self.vocab = vocab
+        self.model = model
+        self.input_models = []
+        self.cfg = dict(cfg)
+        self.cfg.setdefault("cnn_maxout_pieces", 3)
+
+    def __call__(self, doc):
+        """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
+        model. Vectors are set to the `Doc.tensor` attribute.
+
+        docs (Doc or iterable): One or more documents to add vectors to.
+        RETURNS (dict or None): Intermediate computations.
+        """
+        tokvecses = self.predict([doc])
+        self.set_annotations([doc], tokvecses)
+        return doc
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        """Process `Doc` objects as a stream.
+
+        stream (iterator): A sequence of `Doc` objects to process.
+        batch_size (int): Number of `Doc` objects to group.
+        n_threads (int): Number of threads.
+        YIELDS (iterator): A sequence of `Doc` objects, in order of input.
+        """
+        for docs in util.minibatch(stream, size=batch_size):
+            docs = list(docs)
+            tensors = self.predict(docs)
+            self.set_annotations(docs, tensors)
+            yield from docs
+
+    def predict(self, docs):
+        """Return a single tensor for a batch of documents.
+
+        docs (iterable): A sequence of `Doc` objects.
+        RETURNS (object): Vector representations for each token in the docs.
+        """
+        self.require_model()
+        inputs = self.model.ops.flatten([doc.tensor for doc in docs])
+        outputs = self.model(inputs)
+        return self.model.ops.unflatten(outputs, [len(d) for d in docs])
+
+    def set_annotations(self, docs, tensors):
+        """Set the tensor attribute for a batch of documents.
+
+        docs (iterable): A sequence of `Doc` objects.
+        tensors (object): Vector representation for each token in the docs.
+        """
+        for doc, tensor in zip(docs, tensors):
+            if tensor.shape[0] != len(doc):
+                raise ValueError(
+                    Errors.E076.format(rows=tensor.shape[0], words=len(doc))
+                )
+            doc.tensor = tensor
+
+    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+        """Update the model.
+
+        docs (iterable): A batch of `Doc` objects.
+        golds (iterable): A batch of `GoldParse` objects.
+        drop (float): The droput rate.
+        sgd (callable): An optimizer.
+        RETURNS (dict): Results from the update.
+        """
+        self.require_model()
+        if isinstance(docs, Doc):
+            docs = [docs]
+        inputs = []
+        bp_inputs = []
+        for tok2vec in self.input_models:
+            tensor, bp_tensor = tok2vec.begin_update(docs, drop=drop)
+            inputs.append(tensor)
+            bp_inputs.append(bp_tensor)
+        inputs = self.model.ops.xp.hstack(inputs)
+        scores, bp_scores = self.model.begin_update(inputs, drop=drop)
+        loss, d_scores = self.get_loss(docs, golds, scores)
+        d_inputs = bp_scores(d_scores, sgd=sgd)
+        d_inputs = self.model.ops.xp.split(d_inputs, len(self.input_models), axis=1)
+        for d_input, bp_input in zip(d_inputs, bp_inputs):
+            bp_input(d_input, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += loss
+        return loss
+
+    def get_loss(self, docs, golds, prediction):
+        ids = self.model.ops.flatten([doc.to_array(ID).ravel() for doc in docs])
+        target = self.vocab.vectors.data[ids]
+        d_scores = (prediction - target) / prediction.shape[0]
+        loss = (d_scores ** 2).sum()
+        return loss, d_scores
+
+    def begin_training(self, gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
+        """Allocate models, pre-process training data and acquire an
+        optimizer.
+
+        gold_tuples (iterable): Gold-standard training data.
+        pipeline (list): The pipeline the model is part of.
+        """
+        if pipeline is not None:
+            for name, model in pipeline:
+                if getattr(model, "tok2vec", None):
+                    self.input_models.append(model.tok2vec)
+        if self.model is True:
+            self.model = self.Model(**self.cfg)
+        link_vectors_to_models(self.vocab)
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
 
 
 class Tagger(Pipe):
@@ -292,7 +606,7 @@ class Tagger(Pipe):
                 exc=self.vocab.morphology.exc)
 
         deserialize = OrderedDict((
-            ('cfg', lambda p: self.cfg.update(load_cfg(p))),
+            ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
             ('vocab', lambda p: self.vocab.from_disk(p)),
             ('tag_map', load_tag_map),
             ('model', load_model),
