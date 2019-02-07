@@ -10,7 +10,7 @@ def test_issue2901():
     """Test that `nlp` doesn't fail."""
     try:
         nlp = Japanese()
-    except:
+    except ImportError:
         pytest.skip()
 
     doc = nlp("pythonが大好きです")

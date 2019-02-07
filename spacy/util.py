@@ -253,7 +253,6 @@ def get_entry_point(key, value):
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
-
     RETURNS (bool): True if in Jupyter, False if not.
     """
     # https://stackoverflow.com/a/39662359/6400719
@@ -667,3 +666,19 @@ class SimpleFrozenDict(dict):
 
     def update(self, other):
         raise NotImplementedError(Errors.E095)
+
+
+class DummyTokenizer(object):
+    # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
+    # allow serialization (see #1557)
+    def to_bytes(self, **exclude):
+        return b''
+
+    def from_bytes(self, _bytes_data, **exclude):
+        return self
+
+    def to_disk(self, _path, **exclude):
+        return None
+
+    def from_disk(self, _path, **exclude):
+        return self

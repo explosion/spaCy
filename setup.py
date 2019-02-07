@@ -246,6 +246,7 @@ def setup_package():
                 "cuda92": ["cupy-cuda92>=4.0"],
                 "cuda100": ["cupy-cuda100>=4.0"],
             },
+            python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
             classifiers=[
                 "Development Status :: 5 - Production/Stable",
                 "Environment :: Console",

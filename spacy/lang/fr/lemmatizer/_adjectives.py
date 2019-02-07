@@ -25,7 +25,7 @@ ADJECTIVES = set(
  acaricide acarpe acatalecte acatalectique acataleptique acatène acaule
  accablant accabler accaparant accaparer accapareur accastiller accélérateur
  accéléré accentuable accentué accentuel acceptable acceptant accepter
- accepteur accessible accessoire accessoiriser accidenté accidentel
+ accepteur accesseur accessible accessoire accessoiriser accidenté accidentel
  accidentogène accidentologique acclamer acclimatable acclimater accolé
  accommodable accommodant accommodateur accommodatice accommodé accompagnateur
  accompagné accompli accordable accorder accore accostable accoster accoter
@@ -56,7 +56,7 @@ ADJECTIVES = set(
  acuminé acuminifère acupunctural acutangle acutirostre acyclique acyloïnique
  adamantin adamien adamique adamite adaptable adaptatif adapté addictif additif
  additionnable additionné additionnel adducteur adénoïde adénoïdien adénomateux
- adénoviral adénylique adéphage adextré adhérent adhésif adiabatique
+ adénoviral adénylique adéphage adéquat adextré adhérent adhésif adiabatique
  adiaphorétique adiaphoriste adimensionnel adipeux adipique adipokinétique
  adiré adjacent adjectif adjectival adjectivé adjectiviser adjoint adjudicatif
  adjugé adjurer adjuvant adlérien administrable administratif administré
@@ -83,8 +83,8 @@ ADJECTIVES = set(
  affouillable affouiller affourager affourcher affranchissable affranchisseur
  affréter affreux affriander affriolant affrioler affriqué affronté affubler
  affûté afghan afghaniser afocal africain africaniser africaniste afrikaander
- afrikander afrikaner afro afroaméricain afro-américain afroasiatique afro-
- asiatique afro-brésilien afrocentriste afro-cubain agaçant agacer agame
+ afrikander afrikaner afro afroaméricain afro-américain afroasiatique
+ afro-asiatique afro-brésilien afrocentriste afro-cubain agaçant agacer agame
  agatifier agatisé âgé agenais agencer agénésique agenois agentif aggadique
  agglomérant agglomératif aggloméré agglutinable agglutinant agglutiné
  aggravant aggraver agile agioter agissant agitant agité aglomérulaire aglosse
@@ -94,134 +94,138 @@ ADJECTIVES = set(
  agréable agréer agrégatif agrégé agrégeable agrémenter agressé agresseur
  agressif agreste agricole agripper agroalimentaire agro-alimentaire
  agroalimentariser agrobiologique agrochimique agroclimatologique
- agrogéologique agro-industriel agrologique agrométéorologique agronomique
- agropastoral agrotechnique aguichant aguicher aguicheur ahanant ahistorique
- ahuri ahurissant aider aigre aigre-doux aigrelet aigretté aigri aigu aiguiller
- aiguilleté aiguillonner aiguisable aiguisé aiguiseur ailé aillé ailloliser
- aimable aimant aimanté aimé aîné aïnou aise aisé aixois ajaccien ajacéen
- ajiste ajointer ajouré ajournable ajourné ajouter ajustable ajusté akinétique
- akkadien akritique alaire alambiqué alangui alaouite alarmant alarmé alarmiste
- albanais albaniser albanophone albien albigeois albitiser alboche albuginé
- albuminé albumineux albuminoïde albuminorachique albuminurique albumoïde
- alcaïque alcalescent alcalifiant alcalimétrique alcalin alcalinisant
- alcaliniser alcalinoterreux alcaliser alcaloïdique alcaloïfère alchimique
- alcoolémique alcoolifier alcoolique alcoolisable alcoolisé alcoométrique
- alcyonien aldéhydique aldin aldoliser aldonique aléatoire alémanique alénois
- aléoute aléoutien alerte alerter alésable alésé aléseur alésien aléthique
- aleucémique aleurobie aleviner alexandrin alexique alezan alfatier algal
- algébrique algérianiser algérien algérois algésiogène algésique algide
- alginique algique algogène algoïde algologique algonkien algonquien algonquin
- algophile algophobe algorithmique alicyclique aliénable aliénant aliéné
- aliéniste alifère aliforme aliginique aligner aligoté alimentaire alimentateur
- alimenter alinéaire alinéatiser aliphatique aliquant aliquot aliter alizé
- alizéen allaitant allaiter allant allantoïdien allate alléchant allécher
- allégable allégé allégeable allégeant allégorique allégoriser allègre alléguer
- allèle allélique allélogène allélomorphe allélomorphique allélotrope allemand
- allénique allénolique allergène allergénique allergique allergisant
- allergologique aller-retour alliable alliacé allié allitératif allitique
- allitiser allocatif allocentriste allochtone allodial allogame allogène
- allogénique alloglotte allométrique allongé allongeable allopathe allopathique
- allopatrique allophanique allophone allostérique allotonique allotropique
- allotypique allouable allouer alloxurique allumant allumé allumettier allumeur
- alluré allusif alluvial alluvionnaire alluvionner allylique aloétique alogique
- alopécique alourdissable alourdissant alpaguer alpestre alpha alphabète
- alphabétique alphabétiser alphalinoléique alphalytique alphamimétique
- alphanumérique alpharécepteur alphatique alpien alpin alsacien altaïque
- altazimutal altérable altéragène altérant altératif altéré alternant
+ agro-environnemental agrogéologique agro-industriel agrologique
+ agrométéorologique agronomique agropastoral agro-pastoral agrotechnique
+ aguichant aguicher aguicheur ahanant ahistorique ahuri ahurissant aider aigre
+ aigre-doux aigrelet aigretté aigri aigu aiguiller aiguilleté aiguillonner
+ aiguisable aiguisé aiguiseur ailé aillé ailloliser aimable aimant aimanté aimé
+ aîné aïnou aise aisé aixois ajaccien ajacéen ajiste ajointer ajouré ajournable
+ ajourné ajouter ajustable ajusté akinétique akkadien akritique alaire
+ alambiqué alangui alaouite alarmant alarmé alarmiste albanais albaniser
+ albanophone albien albigeois albitiser alboche albuginé albuminé albumineux
+ albuminoïde albuminorachique albuminurique albumoïde alcaïque alcalescent
+ alcalifiant alcalimétrique alcalin alcalinisant alcaliniser alcalinoterreux
+ alcaliser alcaloïdique alcaloïfère alchimique alcoolémique alcoolifier
+ alcoolique alcoolisable alcoolisé alcoométrique alcyonien aldéhydique aldin
+ aldoliser aldonique aléatoire alémanique alençonnais alénois aléoute aléoutien
+ alerte alerter alésable alésé aléseur alésien aléthique aleucémique aleurobie
+ aleviner alexandrin alexique alezan alfatier algal algébrique algérianiser
+ algérien algérois algésiogène algésique algide alginique algique algogène
+ algoïde algologique algonkien algonquien algonquin algophile algophobe
+ algorithmique alicyclique aliénable aliénant aliéné aliéniste alifère aliforme
+ aliginique aligner aligoté alimentaire alimentateur alimenter alinéaire
+ alinéatiser aliphatique aliquant aliquot aliter alizé alizéen allaitant
+ allaiter allant allantoïdien allate alléchant allécher allégable allégé
+ allégeable allégeant allégorique allégoriser allègre alléguer allèle allélique
+ allélogène allélomorphe allélomorphique allélotrope allemand allénique
+ allénolique allergène allergénique allergique allergisant allergologique
+ aller-retour alliable alliacé allié allitératif allitique allitiser allocatif
+ allocentriste allochtone allodial allogame allogène allogénique alloglotte
+ allométrique allongé allongeable allopathe allopathique allopatrique
+ allophanique allophone allostérique allotonique allotropique allotypique
+ allouable allouer alloxurique allumant allumé allumettier allumeur alluré
+ allusif alluvial alluvionnaire alluvionner allylique almeydiste aloétique
+ alogique alopécique alourdissable alourdissant alpaguer alpestre alpha
+ alphabète alphabétique alphabétiser alphalinoléique alphalytique
+ alphamimétique alphanumérique alpharécepteur alphatique alpien alpin alsacien
+ altaïque altazimutal altérable altéragène altérant altératif altéré alternant
  alternatif alterne alterné altier altimétrique altimontain altitudinaire
  altitudinal altogovien altruiste aluminaire aluminer alumineux aluminifère
  aluminique aluminiser aluner alunifère alvéolaire alvéolé alvéoliser
  alvéolodentaire alvéopalatal alvin amabiliser amadouer amaigri amaigrissant
- amalgamer amaril amariner amarnien amarrer amasser amateur amaurotique
- amazonien ambassadorial ambiant ambidextre ambiéqual ambigu ambiophonique
- ambipare ambisexué ambitieux ambitionner ambivalent ambler ambleur amblyope
- ambré ambroisien ambrosiaque ambrosien ambulacraire ambulacral ambulancier
- ambulant ambulatoire ambuler améliorable améliorant améliorateur amélioratif
- améliorer aménageable aménager amendable amender amène amener amensal
- amentifère amenuiser amer américain américaniser américaniste américanophile
- américanophobe amérindien amétabole amétallique amétrope ameutable ameuter
+ amalfitain amalgamer amaril amariner amarnien amarrer amasser amateur
+ amaurotique amazonien ambassadorial ambiant ambidextre ambiéqual ambigu
+ ambiophonique ambipare ambisexué ambitieux ambitionner ambivalent ambler
+ ambleur amblyope ambré ambroisien ambrosiaque ambrosien ambulacraire
+ ambulacral ambulancier ambulant ambulatoire ambuler améliorable améliorant
+ améliorateur amélioratif améliorer aménageable aménager amendable amender
+ amène amener amensal amentifère amenuiser amer américain américaniser
+ américaniste américano-japonais américanophile américanophobe
+ américano-suédois amérindien amétabole amétallique amétrope ameutable ameuter
  amharique amhariser ami amiable amiantifère amibien amiboïde amical amicaliste
  amicrobien amictique amido amidomercureux amidomercurique amidonner amidonnier
  amiénois amimique amincissant aminé aminoazoïque aminobenzoïque aminobutyrique
  aminocaproïque aminocéphalosporanique aminolévulique aminopénicillanique
  aminoptérinique aminosalicylique amiral amissible amitotique ammoniac
- ammoniacal ammonifier ammonique ammoniser ammonotélique ammophile amnésique
- amnestique amnicole amniotique amnistiable amnistiant amnistié amocher amodier
- amoebicide amoindrissant amollissant amonceler amoral amoraliste amorcer
- amorphe amorti amortissable amortisseur amouillante amoureux amovible ampérien
- amphétaminique amphibie amphibien amphibiotique amphibolique amphibologique
- amphictyonique amphidiploïde amphidromique amphigourique amphipathique
- amphiphile amphipode amphiprostyle amphitone amphophile amphorique amphotère
- amphotériser ample amplectif amplexicaule ampliatif amplifiant amplificateur
- amplificatif amplifié ampliforme ampoulé ampullaire amputé amstellodamien
- amstellodamois amurer amusable amusant amusé amyélinique amygdalaire
- amygdalien amygdaliforme amygdaloïde amylacé amylique amyloïde amylolytique
- amyotonique amyotrophique anabaptiste anabatique anabiotique anabolique
- anabolisant anacamptique anachorétique anachronique anaclinal anaclitique
- anacréontique anacrotique anacyclique anadrome anaérobie anagapique anagène
- anaglyptique anagogique anagrammatique anal analeptique analgésique
- anallagmatique anallatique anallatiseur anallergique analogique analogue
- analphabète analysable analyser analyseur analytique anamnestique anamorphe
- anamorphoseur anamorphotique anapeiratique anapestique anaphasique anaphorique
- anaphrodisiaque anaphylactique anaphylactiser anaphylactoïde anaphylatoxinique
- anaplasique anar anarchique anarchisant anarchiser anarchiste anarcho-
- syndicaliste anarthrique anascitique anastatique anastigmat anastigmatique
- anastomosé anastomotique anathématique anathématiser anathème anatifère
- anatolien anatomique anatomiser anatomoclinique anatomopathologique
+ ammoniacal ammoniaqué ammonifier ammonique ammoniser ammonotélique ammophile
+ amnésique amnestique amnicole amniotique amnistiable amnistiant amnistié
+ amocher amodier amoebicide amoindrissant amollissant amonceler amoral
+ amoraliste amorcer amorphe amorti amortissable amortisseur amouillante
+ amoureux amovible ampérien amphétaminique amphibie amphibien amphibiotique
+ amphibolique amphibologique amphictyonique amphidiploïde amphidromique
+ amphigourique amphipathique amphiphile amphipode amphiprostyle amphitone
+ amphophile amphorique amphotère amphotériser ample amplectif amplexicaule
+ ampliatif amplifiant amplificateur amplificatif amplifié ampliforme ampoulé
+ ampullaire amputé amstellodamien amstellodamois amurer amusable amusant amusé
+ amyélinique amygdalaire amygdalien amygdaliforme amygdaloïde amylacé amylique
+ amyloïde amylolytique amyotonique amyotrophique anabaptiste anabatique
+ anabiotique anabolique anabolisant anacamptique anachorétique anachronique
+ anaclinal anaclitique anacréontique anacrotique anacyclique anadrome anaérobie
+ anagapique anagène anaglyptique anagogique anagrammatique anal analeptique
+ analgésique anallagmatique anallatique anallatiseur anallergique analogique
+ analogue analphabète analysable analyser analyseur analytique anamnestique
+ anamorphe anamorphoseur anamorphotique anapeiratique anapestique anaphasique
+ anaphorique anaphrodisiaque anaphylactique anaphylactiser anaphylactoïde
+ anaphylatoxinique anaplasique anar anarchique anarchisant anarchiser
+ anarchiste anarcho-syndicaliste anarthrique anascitique anastatique anastigmat
+ anastigmatique anastomosé anastomotique anathématique anathématiser anathème
+ anatifère anatolien anatomique anatomiser anatomoclinique anatomopathologique
  anatomophysiologique anatoxique anatrope ancestral ancien ancillaire ancrer
- andalou andésitique andin andorran androcéphale androgène androgénétique
- androgénique androgyne androgyniflore androïde androlâtre androphore anecdoter
- anecdotique anéchoïde anéchoïque anélastique anémiant anémié anémique
- anémochore anémogame anémométrique anémophile anencéphale anencéphalique
- anépigraphe anérète anergique anéroïde anesthésiable anesthésiant anesthésier
- anesthésiologique anesthésique aneuploïde aneurogène anévrismal anévrysmal
- angéiographique angéiologique angélique angevin angiectasique angineux
- angiocarpe angiographique angiohématique angiolithique angiologique
- angiomateux angioneurotique angiopathique angioplastique angiospasmodique
- angiospastique angiotensinogène angkorien anglais anglaiser anglican
- anglicisant angliciser anglo-américain anglo-angevin anglo-arabe anglo-
- irlandais anglomane anglo-normand anglo-nubienne anglophile anglophobe
- anglophone anglo-saxon angoissant angoissé angoisseux angolais angora
- angoumois anguiforme anguilliforme anguilloïde angulaire anguleux angusticole
- angusticolle angustifolié angustirostre anharmonique anhéler anhidrotique
- anhiste anhistorique anhydre anhystérétique anictérique animal animalier
- animaliser animateur animé animiste anionique anionotropique anisé anisien
- anisique anisochrone anisodonte anisométrique anisomyaire anisopaque
- anisopétale anisostémone anisotonique anisotrope anisotropique ankylosant
- ankylosé annal annamite annamitique annécien annelé annexe annexer annexiel
- annexionniste annihiler anniversaire annonaire annoncer annonciateur annoter
- annualiser annuel annulable annulaire annulateur annulatif annuler anobjectal
- anobli anoblissant anodin anodique anodiser anodonte anomal anomalistique
- anomérique anomique ânonnant ânonner anonyme anopisthographique anorexigène
- anorexique anorganique anorgasmique anormal anorogénique anosmatique anosmique
- anosognosique anote anoure anovulatoire anoxémique anoxique ansé ansériforme
- ansérin antagonique antagoniser antagoniste antalgique antarctique
- antébrachial antécambrien antécédent antéconciliaire antéconsonantique
- antédiluvien antéhypophysaire antéislamique antenais antennaire antennifère
- antenniforme anténuptial antépénultième antéposer antéprédicatif antérieur
- antérioriser antérograde antéro-inférieur antérolatéral antétectonique
- anthelminthique anthogénésique anthologique anthophage anthophile
- anthracénique anthracifère anthraciteux anthracologique anthracosique
- anthraflavique anthranilique anthraquinonique anthropien anthropique
- anthropobiologique anthropocentrique anthropographique anthropoïde
+ andalou andéen andésitique andin andorran androcéphale androgène
+ androgénétique androgénique androgyne androgyniflore androïde androlâtre
+ androphore anecdoter anecdotique anéchoïde anéchoïque anélastique anémiant
+ anémié anémique anémochore anémogame anémométrique anémophile anencéphale
+ anencéphalique anépigraphe anérète anergique anéroïde anesthésiable
+ anesthésiant anesthésier anesthésiologique anesthésique aneuploïde aneurogène
+ anévrismal anévrysmal angéiographique angéiologique angélique angevin
+ angiectasique angineux angiocarpe angiographique angiohématique angiolithique
+ angiologique angiomateux angioneurotique angiopathique angioplastique
+ angiospasmodique angiospastique angiotensinogène angkorien anglais anglaiser
+ anglican anglicisant angliciser anglo-américain anglo-angevin anglo-arabe
+ anglo-français anglo-irlandais anglomane anglo-normand anglo-nubienne
+ anglophile anglophobe anglophone anglo-russe anglo-saxon angoissant angoissé
+ angoisseux angolais angora angoumois anguiforme anguilliforme anguilloïde
+ angulaire anguleux angusticole angusticolle angustifolié angustirostre
+ anharmonique anhéler anhidrotique anhiste anhistorique anhydre anhystérétique
+ anictérique animal animalier animaliser animateur animé animiste anionique
+ anionotropique anisé anisien anisique anisochrone anisodonte anisométrique
+ anisomyaire anisopaque anisopétale anisostémone anisotonique anisotrope
+ anisotropique ankylosant ankylosé annal annamite annamitique annécien annelé
+ annexe annexer annexiel annexionniste annihiler anniversaire annonaire
+ annoncer annonciateur annoter annualiser annuel annulable annulaire annulateur
+ annulatif annuler anobjectal anobli anoblissant anodin anodique anodiser
+ anodonte anomal anomalistique anomérique anomique ânonnant ânonner anonyme
+ anopisthographique anorexigène anorexique anorganique anorgasmique anormal
+ anorogénique anosmatique anosmique anosognosique anote anoure anovulatoire
+ anoxémique anoxique ansé ansériforme ansérin antagonique antagoniser
+ antagoniste antalgique antarctique antébrachial antécambrien antécédent
+ antéconciliaire antéconsonantique antédiluvien antéhypophysaire antéislamique
+ antenais antennaire antennifère antenniforme anténuptial antépénultième
+ antéposer antéprédicatif antérieur antérioriser antérograde antéro-inférieur
+ antérolatéral antétectonique anthelminthique anthogénésique anthologique
+ anthophage anthophile anthracénique anthracifère anthraciteux anthracologique
+ anthracosique anthraflavique anthranilique anthraquinonique anthropien
+ anthropique anthropobiologique anthropocentrique anthropographique anthropoïde
  anthropolâtrique anthropologique anthropométrique anthropomorphe
  anthropomorphique anthropomorphiser anthropomorphiste anthroponymique
  anthropophage anthropophagique anthropophile anthroposomatologique
  anthroposophique anthropotechnique anthropothéiste anthropozoïque
  anthropozoochore antiabolitionniste antiacnéique antiacridien antiadhésif
- antiaérien antialcool antialcoolique antiallergique antiamaril antiaméricain
- anti-américain antianaphylactique antiandrogénique antianémique antiangineux
- antiangoreux antiapartheid antiarthritique antiarythmique antiasthmatique
- antiatomique antiautoritaire antibactéricide antibactérien antibactériologique
- antibalistique antibelge antibiotique antiblanchiment antibotulique
+ antiaérien anti-aérien antialcool antialcoolique antiallergique antiamaril
+ antiaméricain anti-américain antianaphylactique antiandrogénique antianémique
+ antiangineux antiangoreux antiapartheid antiarthritique antiarythmique
+ antiasthmatique antiatomique anti-atomique antiautoritaire antibactéricide
+ antibactérien antibactériologique antibalistique antibelge antibiotique
+ antiblanchiment antibolchevique anti-bombe anti-boson antibotulique
  antibourgeois antiboycott antibrachial antibrouillard antibrouillé antibruit
- antibureaucratique anticabreur anticalcaire anticalcique anticalorique
- anticancéreux anticapillaire anticapitaliste anti-capitaliste anticasseur
- anticasseurs anticastriste anticaustique antichar antichinois antichoc
- anticholérique anticholinergique anticholinestérasique antichrésiste
- antichrétien anticipant anticipateur anticipatif anticipatoire anticipé
- anticité anticlérical anticlinal anticoagulant anticoccidien anticollision
- anticolonial anticolonialiste anticommuniste anticommutatif anticomplément
+ antibureaucratique anticabreur anticalcaire anticalcique anti-calcique
+ anticalorique anticancéreux anticapillaire anticapitaliste anti-capitaliste
+ anticasseur anticasseurs anticastriste anti-castriste anticatalyseur
+ anticaustique anti-célibataire antichar antichinois antichoc anticholérique
+ anticholinergique anticholinestérasique antichrésiste antichrétien anticipant
+ anticipateur anticipatif anticipatoire anticipé anticité anticlérical
+ anticlinal anticoagulant anticoccidien anticollision anticolonial
+ anticolonialiste anticommuniste anticommutatif anticomplément
  anticomplémentaire anticompound anticonceptionnel anticoncordataire
  anticoncurrentiel anticonformiste anticongélation anticonjoncturel
  anticonstitutionnel anticoquelucheux anticorrosif anticorrosion anticoup
@@ -237,8 +241,8 @@ ADJECTIVES = set(
  antifolinique antifolique antifongique antifouling antifrançais antifriction
  antifungique antigalactique antigang antigangréneux antigaspi antigauchiste
  antigaulliste antigel antigène antigénémique antigénique antigiratoire
- antiglaucomateux antigonide antigoutteux antigouvernemental anti-
- gouvernemental antigravitationnel antigrégaire antigrippal antigrisouteux
+ antiglaucomateux antigonide antigoutteux antigouvernemental
+ anti-gouvernemental antigravitationnel antigrégaire antigrippal antigrisouteux
  antiguérilla antihalo antihélicoptère antihelminthique antihémophilique
  antihémorragique antihermitien antihistaminique antiholomorphe antihoraire
  antihumaniste antihygiénique antihypertenseur antiimpéraliste anti-infectieux
@@ -272,74 +276,75 @@ ADJECTIVES = set(
  antiscabieux antiscientifique anti-scientifique antiscorbutique
  antiséborrhéique antisécrétoire antisecte antiségrégationniste antiséisme
  antisémite antisémitique antiseptique antiseptiser antisexiste antisida
- antisioniste antisismique antisocial antisocialiste antisolaire anti-sous-
- marin antisoviétique anti-spam antispasmodique antispastique antisportif
- antistalinien antistatique antistreptococcique antistress antistructuraliste
- antisudoral antisymétrique antisyndical antisynthétique antisyphilitique
- antitabac antitabagique antiterne antiterroriste antitétanique antithermique
- antithétique antithyroïdien antitissulaire antitotalitaire antitout
- antitoxique antitrac antitrinitaire antitrinitarien antitrust antituberculeux
- antitumoral anti-tumoral antitussif antityphique antityphoïdique
- antityphoparatyphique antiulcéreux antiunitaire antivaricelleux antivariolique
- antivénéneux antivénérien antivenimeux antivibratile antiviral antivitaminique
- antivivisectionniste antivol antivomitif antivrilleur antixérophtalmique
- antizymique antoiniste antonine antonyme antonymique antral anurique anversois
- anxieux anxiogène anxiolytique aoristique aortique aoûté apache apagogique
- apaisant apaiser apanager apathique apatride aperceptible aperceptif
- apercevable apériodique apériteur apéritif apétale apeuré apexien aphake
- aphaque aphasique aphétique aphlogistique aphone aphonique aphoristique
- aphotique aphrodisiaque aphteux aphtoïde aphylactique aphylle aphytal apical
- apicaliser apiciflore apiciforme apicodental apico-dental apicolabial apicole
- apicultural apiforme apifuge apiquer apitoyer apivore aplacentaire aplanétique
- aplasique aplastique aplati apneustique apocalyptique apocarpique
- apochromatique apocryphe apocytaire apode apodictique apogamique apolitique
- apollinaire apollinariste apollinien apologétique apologiser apolytique
- apomorphe aponévrotique aponévrotomiser apophantique apophatique apophysaire
- apoplectiforme apoplectique apoplectoïde aporétique aposématique apostasier
- apostat aposter apostérioriste apostiller apostolique apostoliser apostropher
- apotropaïque appalachien appareillable appareiller apparent apparenté apparié
- appartenant appâter appelable appelant appelé appellatif appendiculaire
- appertiser appétible appétissant appienne applaudissable applicable
- applicateur applicatif appliqué appointé apporter apporteur apposé appositif
- appréciable appréciateur appréciatif apprécier appréhender appréhensif apprêté
- apprimé apprivoisable apprivoisé apprivoiseur approbateur approbatif
- approchable approchant approché approfondi appropriable approprié approuvable
- approuvé approvisionner approvisionneur approximatif appuyé apractognosique
- apragmatique apraxique âpre apriorique aprioriste aprioristique aprioritique
- apriste aprotique apsidal apte aptère apulien apurer apyre apyrétique
- apyrogène aquacole aquafortiste aquarellable aquariophile aquatique
- aquatubulaire aqueux aquicole aquifère aquilain aquilant aquilin aquisextain
- aquitain aquitanien arabe arabica arabique arabisant arabiser arabiste arable
- arabo-berbère arabo-musulman arabonique arabophone arachidique arachidonique
- arachinodique arachnéen arachnodactyle arachnoïde arachnoïdien arachnologique
- aragonais araméen araméiser araméophone aramide aranéen aranéeux aranéologique
- araser aratoire arbitrable arbitragiste arbitraire arbitral arbitrer arboisien
- arboré arborescent arboricole arborisé arbustif arcadien arcbouter arc-bouter
- archaïque archaïsant archaïser archangélique archanthropien archéen
- archéologique archéozoïque archéozoologique archétypal archétypique
- archicérébelleux archidiocésain archiducal archiépiscopal archifou
- archiloquien archimédien archimillionnaire archipallial archipélagique
- archiplein archipresbytéral architectonique architectural architecturé
- archiver archivistique arciforme arctique ardasse ardéchois ardennais ardent
- ardoisé ardoisier ardu aréflexique arégénératif aréique areligieux arénacé
- arénicole arénigien aréniser arénophile arénophite aréographique aréolaire
- aréolé aréométrique arêtière argental argenté argentifère argentin
- argentiniser argentique argien argilacé argileux argilique argilo-calcaire
- argotique argotiser arguer argumentaire argumental argumentatif argumenter
- argyrophile aride ariégeois arien arillé arioso ariser aristo aristocrate
- aristocratique aristocratiser aristophanesque aristotélicien aristotélique
- arithmétique arithmétiser arithmologique arithmomane arlequin arlésien armé
- arménien armillaire arminien armoirié armorial armoricain armorié armorique
- armurier arnaquer aromal aromatique aromatisant aromatiser arpégé arpenter
- arpenteur arqué arracher arrageois arraisonner arrangeable arrangeant arranger
+ antisioniste antisismique antisocial antisocialiste antisolaire
+ anti-sous-marin antisoviétique anti-spam antispasmodique antispastique
+ antisportif antistalinien antistatique antistreptococcique antistress
+ antistructuraliste antisudoral antisymétrique antisyndical antisynthétique
+ antisyphilitique antitabac antitabagique antiterne antiterroriste
+ antitétanique antithermique antithétique antithyroïdien antitissulaire
+ antitotalitaire antitout antitoxique antitrac antitrinitaire antitrinitarien
+ antitrust antituberculeux antitumoral anti-tumoral antitussif antityphique
+ antityphoïdique antityphoparatyphique antiulcéreux antiunitaire
+ antivaricelleux antivariolique antivénéneux antivénérien antivenimeux
+ antivibratile antiviral antivitaminique antivivisectionniste antivol
+ antivomitif antivrilleur antixérophtalmique antizymique antoiniste antonine
+ antonyme antonymique antral anurique anversois anxieux anxiogène anxiolytique
+ aoristique aortique aoûté apache apagogique apaisant apaiser apanager
+ apathique apatride aperceptible aperceptif apercevable apériodique apériteur
+ apéritif apétale apeuré apexien aphake aphaque aphasique aphétique
+ aphlogistique aphone aphonique aphoristique aphotique aphrodisiaque aphteux
+ aphtoïde aphylactique aphylle aphytal apical apicaliser apiciflore apiciforme
+ apicodental apico-dental apicolabial apicole apicultural apiforme apifuge
+ apiquer apitoyer apivore aplacentaire aplanétique aplasique aplastique aplati
+ apneustique apocalyptique apocarpique apochromatique apocryphe apocytaire
+ apode apodictique apogamique apolitique apollinaire apollinariste apollinien
+ apologétique apologiser apolytique apomorphe aponévrotique aponévrotomiser
+ apophantique apophatique apophysaire apoplectiforme apoplectique apoplectoïde
+ aporétique aposématique apostasier apostat aposter apostérioriste apostiller
+ apostolique apostoliser apostropher apotropaïque appalachien appareillable
+ appareiller apparent apparenté apparié appartenant appâter appelable appelant
+ appelé appellatif appendiculaire appertiser appétible appétissant appienne
+ applaudissable applicable applicateur applicatif appliqué appointé apporter
+ apporteur apposé appositif appréciable appréciateur appréciatif apprécier
+ appréhender appréhensif apprêté apprimé apprivoisable apprivoisé apprivoiseur
+ approbateur approbatif approchable approchant approché approfondi appropriable
+ approprié approuvable approuvé approvisionner approvisionneur approximatif
+ appuyé apractognosique apragmatique apraxique âpre apriorique aprioriste
+ aprioristique aprioritique apriste aprotique apsidal apte aptère apulien
+ apurer apyre apyrétique apyrogène aquacole aquafortiste aquarellable
+ aquariophile aquatique aquatubulaire aqueux aquicole aquifère aquilain
+ aquilant aquilin aquisextain aquitain aquitanien arabe arabica arabique
+ arabisant arabiser arabiste arable arabo-berbère arabo-musulman arabonique
+ arabophone arachidique arachidonique arachinodique arachnéen arachnodactyle
+ arachnoïde arachnoïdien arachnologique aragonais araméen araméiser araméophone
+ aramide aranéen aranéeux aranéologique araser aratoire araucanien arbitrable
+ arbitragiste arbitraire arbitral arbitrer arboisien arboré arborescent
+ arboricole arborisé arbustif arcadien arcbouter arc-bouter archaïque
+ archaïsant archaïser archangélique archanthropien archéen archéologique
+ archéozoïque archéozoologique archétypal archétypique archicérébelleux
+ archidiocésain archiducal archiépiscopal archifou archiloquien archimédien
+ archimillionnaire archipallial archipélagique archiplein archipresbytéral
+ archi-sophistiqué architectonique architectural architecturé archiver
+ archivistique arciforme arctique ardasse ardéchois ardennais ardent ardoisé
+ ardoisier ardu aréflexique arégénératif aréique areligieux arénacé arénicole
+ arénigien aréniser arénophile arénophite aréographique aréolaire aréolé
+ aréométrique arêtière argental argenté argentifère argentin argentiniser
+ argentique argien argilacé argileux argilique argilo-calcaire argotique
+ argotiser arguer argumentaire argumental argumentatif argumenter argyrophile
+ aride ariégeois arien arillé arioso ariser aristo aristocrate aristocratique
+ aristocratiser aristophanesque aristotélicien aristotélique arithmétique
+ arithmétiser arithmologique arithmomane arlequin arlésien armé arménien
+ armillaire arminien armoirié armorial armoricain armorié armorique armurier
+ arnaquer aromal aromatique aromatisant aromatiser arpégé arpenter arpenteur
+ arqué arracher arrageois arraisonner arrangeable arrangeant arranger
  arraphique arrecteur arrérager arrêter arrhénotoque arriéré arrimer arriser
  arrivant arrivé arriviste arrogant arroger arrondi arrosable arrosé arroseur
  arsenical arsénieux arsénifère arsénique arsin arsinique arsonique arsouille
  artérialiser artériel artériolaire artériolocapillaire artériopathique
  artérioscléreux artério-veineux artéritique artésien arthralgique arthritique
  arthromyalgique arthropathique arthroscopique arthrosique arthrosynovial
- articulaire articulateur articulatoire articulé artificialiser artificiel
- artificieux artisanal artiste artistique arvale arvicole aryaniser
+ arthurien articulaire articulateur articulatoire articulé artificialiser
+ artificiel artificieux artisanal artiste artistique arvale arvicole aryaniser
  aryballisque aryen aryténoïde aryténoïdien arythmique ascendant ascensionnel
  ascétique ascétiser ascitique asclépiade asconique ascorbique aséismique
  asémantique aseptique aseptiser asexué asexuel ashkenaze ashkénaze asianique
@@ -357,37 +362,38 @@ ADJECTIVES = set(
  assurable assuranciel assurer assyrien assyriologique astacologique astatique
  astéréognosique asthénique asthénodépressif asthmatique asticoter astigmate
  astiquer astome astragalien astral astreignant astringent astrogéodésique
- astrologique astrométrique astronautique astronomique astrophotographique
- astrophysique astucieux asturien asyllogistique asymétrique asymptomatique
- asymptote asymptotique asynchrone asyntactique asyntaxique asystolique
- ataraxique atavique ataxique atélectasique atéléiotique atélique atemporel
- atérien atermoyer athée athéistique athématique athénien athermane athermique
- athéromateux athéroscléreux athétosique athlétique athrepsique athrombopénique
- athymique atlantique atlantiser atlantiste atloïdien atmosphérique atomique
- atomisé atomiste atomistique atonal atone atonique atopique atoxique
- atrabilaire atramentaire atrésique atrial atriodigital atroce atrophiant
- atrophié atrophique atropinique atropiniser atropique atroque attabler
- attachant attacher attalide attaquable attaquant attaquer attardé atteignable
- atteint attelable atteler attenant attendrissant attentatoire attentif
- attentionné attentionnel attentiste atténuant atténuer atterrant atterrer
- attester attifer attiger attique attirable attirant attirer attiser attitré
- attractif attraper attrayant attribuable attribuer attributif attributionniste
- attristant attrister attrouper atypique aubère aubois auburn auburnien auchois
- aucun audacieux audible audiencier audimétrique audio audiodigital
- audiologique audiométrique audionumérique audio-oral audiophonologique
- audiovisualiser audiovisuel audio-visuel audit auditif auditionner audois
- audomarois audonien augeron augmentable augmentatif augmenter augural augurer
- augustal auguste augustinien aulique aurélien auréoler aureux auriculaire
- auriculo-cardiaque auriculo-temporal auriculo-ventriculaire aurifère aurifier
- aurifique aurignacien aurique aurocéramique auroral auscitain auscultatoire
- ausculter ausonnien austénitique austénoferritique austère austral
- australanthropien australien austrégal austro-bavarois austro-hongrois
- austromarxiste austronésien autarcique authentifier authentique authentiquer
- authonnier autiste autistique autoaccusateur autoaccuser autoadaptatif
- autoadhésif auto-adhésif autoadministrer autoagressif autoalimenter
- autoamorceur autoanalytique autoantigénique autobiographique autocassable
- autocélébrer autocéphale autochrome autochtone autochtoniser autocinétique
- autociter autoclavable autoclave autocollant autocollimateur autocompatible
+ astrologique astrométrique astronautique astronomique astrononique
+ astrophotographique astrophysique astucieux asturien asyllogistique
+ asymétrique asymptomatique asymptote asymptotique asynchrone asyntactique
+ asyntaxique asystolique ataraxique atavique ataxique atélectasique
+ atéléiotique atélique atemporel atérien atermoyer athée athéistique
+ athématique athénien athermane athermique athéromateux athéroscléreux
+ athétosique athlétique athrepsique athrombopénique athymique atlantique
+ atlantiser atlantiste atloïdien atmosphérique atomique atomisé atomiste
+ atomistique atonal atone atonique atopique atoxique atrabilaire atramentaire
+ atrésique atrial atriodigital atroce atrophiant atrophié atrophique
+ atropinique atropiniser atropique atroque attabler attachant attacher attalide
+ attaquable attaquant attaquer attardé atteignable atteint attelable atteler
+ attenant attendrissant attentatoire attentif attentionné attentionnel
+ attentiste atténuant atténuer atterrant atterrer attester attifer attiger
+ attique attirable attirant attirer attiser attitré attractif attraper
+ attrayant attribuable attribuer attributif attributionniste attristant
+ attrister attrouper atypique aubère aubois auburn auburnien auchois aucun
+ audacieux audible audiencier audimétrique audio audiodigital audiologique
+ audiométrique audionumérique audio-oral audiophonologique audiovisualiser
+ audiovisuel audio-visuel audit auditif auditionner audois audomarois audonien
+ augeron augmentable augmentatif augmenter augural augurer augustal auguste
+ augustinien aulique aurélien auréoler aureux auriculaire auriculo-cardiaque
+ auriculo-temporal auriculo-ventriculaire aurifère aurifier aurifique
+ aurignacien aurique aurocéramique auroral auscitain auscultatoire ausculter
+ ausonnien austénitique austénoferritique austère austral australanthropien
+ australien austrégal austro-bavarois austro-hongrois austromarxiste
+ austronésien autarcique authentifier authentique authentiquer authonnier
+ autiste autistique autoaccusateur autoaccuser autoadaptatif autoadhésif
+ auto-adhésif autoadministrer autoagressif autoalimenter autoamorceur
+ autoanalytique autoantigénique autobiographique autocassable autocélébrer
+ autocéphale autochrome autochtone autochtoniser autocinétique autociter
+ autoclavable autoclave autocollant autocollimateur autocompatible
  autocompensateur autocomplimenter autocongratuler autocopique autocorrecteur
  autocorrectif autocratique autocratiser autodéclarer autodéfroissable
  autodénoncer autodépréciatif autodestructeur autodévelopper autodévorer
@@ -402,7 +408,7 @@ ADJECTIVES = set(
  automoteur automutilateur autonettoyant autonome autonomiser autonomiste
  autonyme autonymique auto-optimaliser auto-optimiser autoorganiser
  autoperceuse autoperpétuer autophagique autopiloter autoplastique autopolaire
- autopolliniser autoportant autoporteur autopropulsé autopropulseur
+ autopolliniser autoportant autoporté autoporteur autopropulsé autopropulseur
  autoprotéger autopsier autopublicitaire autopunitif autoradio autoréactif
  autoréaliser autorecruter autoréducteur autoréférentiel autoréglable
  autoréglementer autorégler autorégulateur autorenforcer autoréparable
@@ -411,7 +417,7 @@ ADJECTIVES = set(
  autosomal autosomique autostabiliser autostable autostérile autostimuler
  autosuffisant autosuggestif autosymétrique autotoxique autotracter
  autotransformer autotrophe autovérificateur autovérifier autovireur autre
- autrichien auvergnat auxiliaire auxiliateur auxologique avachi aval
+ autrichien auvergnat auxerrois auxiliaire auxiliateur auxologique avachi aval
  avalancheux avalant avalé avaliser avaliseur avaliste avancé avant avantager
  avantageux avant-coureur avant-dernier avant-gardiste avare avaricieux avarié
  avasculaire avenant aventuré aventureux aventurier aventuriste avenu
@@ -424,41 +430,42 @@ ADJECTIVES = set(
  azéotrope azéotropique azerbaïdjanais azéri azilien azimutal azimuté azoïque
  azonal azoté azotémique azoteux azothydrique azotique azoxyque aztèque
  azulénique azulmique azuré azuréen azyme azymique baasiste baassiste baba
- babelien babi babillard babiste baby babylonien baccifère bacciforme bâcher
- bachique bachoter bachoteur bacillaire bacilliforme bâcler baconien baconique
- bactéricide bactériémique bactérien bactériologique bactériolytique
- bactériostatique bactrien badaud badegoulien badger badigeonner badin badois
- baffer bafouer bafouiller bafouilleur bâfrer bagager bagarreur bagué
- baguenauder baha'i bai baigner bâiller bailliager bâillonner baîllonner
- baisable baiser baisoter baissant baissé bajocasse bakéliser balader baladeur
- balafré balancé balayer balbutiant balbutier baléare baleiné baleinier balèze
- balinais baliser balistique balkanique balkaniser balladuriser ballant
- ballaster ballonné ballot ballotter balnéaire bâlois balourd baloutche
- balsamique balte baltique balzacien balzan bambara bambochard bambocheur
- bamiléké banal banalisé bananier bancable bancaire bancal bancariser bancher
- banco bancroche bandana bandant bandé bangalais bangladais banlieusard banner
- banni bannissable banquable banquer bantoïde bantou banyamulenge baoulé
- baptiser baptismal baptistaire baptiste baragouiner baraqué baratiner
- baratineur baratter barbant barbare barbaresque barbariser barbe barbeau
- barbelé barber barbifiant barbifier barbiturique barboter barbouiller barbu
- barcelonais bardé barguigner bariolé barlong barocentrique barométrique
- baronifier baroniser baronnal baronne baronner baronnial baroque baroqueux
- baroquiser barotraumatique barotrope barré barricader barrois barycentrique
- baryonique baryton basal basalaire basaltique basané basculant basculer
- basedowien baser basifier basifuge basilaire basilical basilique basiphile
- basique bas-jointé basocellulaire basochien basophile basquais basque
- bassamois bassinant bassiner bastiais bastillé bastionné bastonner basvestier
- bataillé batailleur batak bâtard batave batavique batch bâté bateau bateler
- bateleur batésien bath bathyal bathymétrique bathypélagique bâti batifolant
- bâtissable bâtonnable bâtonner battable battant battu baudelairien bauxitique
- bauxitiser bavard bavarois baveur baveux bavocher bayadère bayésien bazarder
- béant béarnais béat béatifier béatifique beau beauceron beauvaisien beauvaisin
- beauvoirien bébé bébête bêcher bêcheveter béchique bécoter becqué becqueter
- becter bedonnant bedonner bédouin bée beethovenien beethovénien bégayant
- bégayer bégayeur bégu bégueter bégueule behavioriste béhavioriste
- béhaviouriste beidellitique beige beigeasse beigeâtre bêlant belge
- belgoluxembourgeois belgradois bellâtre bellegardien belliciste bellifontain
- belligène belligérant belliqueux bellot bémol bémoliser bénard benchmarker
+ babelien babi babillard babiste babouviste baby babylonien baccifère
+ bacciforme bâcher bachique bachoter bachoteur bacillaire bacilliforme bâcler
+ baconien baconique bactéricide bactériémique bactérien bactériologique
+ bactériolytique bactériostatique bactrien badaud badegoulien badger
+ badigeonner badin badois baffer bafouer bafouiller bafouilleur bâfrer bagager
+ bagarreur bagué baguenauder baha'i bai baigner bâiller bailliager bâillonner
+ baîllonner baisable baiser baisoter baissant baissé bajocasse bakéliser
+ balader baladeur balafré balancé balayer balbutiant balbutier baléare baleiné
+ baleinier balèze balinais baliser balistique balkanique balkaniser
+ balladuriser ballant ballaster ballonné ballot ballotter balnéaire bâlois
+ balourd baloutche balsamique balte baltique balzacien balzan bambara
+ bambochard bambocheur bamiléké banal banalisé bananier bancable bancaire
+ bancal bancariser bancher banco bancroche bandana bandant bandé bangalais
+ bangladais banlieusard banner banni bannissable banquable banquer bantoïde
+ bantou banyamulenge baoulé baptiser baptismal baptistaire baptiste baragouiner
+ baraqué baratiner baratineur baratter barbant barbare barbaresque barbariser
+ barbe barbeau barbelé barber barbifiant barbifier barbiturique barboter
+ barbouiller barbu barcelonais bardé barguigner bariolé barlong barocentrique
+ barométrique baronifier baroniser baronnal baronne baronner baronnial baroque
+ baroqueux baroquiser barotraumatique barotrope barré barricader barriste
+ barrois barycentrique baryonique baryton basal basalaire basaltique basané
+ basculant basculer basedowien baser basifier basifuge basilaire basilical
+ basilique basiphile basique bas-jointé basocellulaire basochien basophile
+ basquais basque bassamois bassinant bassiner bastiais bastillé bastionné
+ bastonner bastonneur basvestier bataillé batailleur bataillonnaire batak
+ bâtard batave batavique batch bâté bateau bateler bateleur batésien bath
+ bathyal bathymétrique bathypélagique bâti batifolant bâtissable bâtonnable
+ bâtonner battable battant battu baudelairien bauxitique bauxitiser bavard
+ bavarois baveur baveux bavocher bayadère bayésien bazarder béant béarnais béat
+ béatifier béatifique beau beauceron beauvaisien beauvaisin beauvoirien bébé
+ bébête bêcher bêcheveter béchique bécoter becqué becqueter becter bedonnant
+ bedonner bédouin bée beethovenien beethovénien bégayant bégayer bégayeur bégu
+ bégueter bégueule behavioriste béhavioriste béhaviouriste beidellitique beige
+ beigeasse beigeâtre bêlant belge belgicain belgoluxembourgeois belgradois
+ bellâtre bellegardien bellevillois belliciste bellifontain belligène
+ belligérant belliqueux bellot beloteur bémol bémoliser bénard benchmarker
  bénédictin bénéfactif bénéficiaire bénéficial bénéfique benêt bénévole
  bengalais bengali bengalophone bénin béninois bénisseur bénit benoît benthique
  benzènedisulfonique benzènesulfinique benzènesulfonique benzénique
@@ -469,130 +476,131 @@ ADJECTIVES = set(
  berrichon berruyer besogner besogneux bessemeriser besson bestial bestialiser
  bêta bête bêtifiant bêtifier bétonné betteravier beugler beurré beurrier
  beylical biacide biacromial biacuminé biafrais biais biaiser biannuel biarrot
- biaural biauriculaire biaxe biaxial bibasique biberonner bibliographique
- bibliologique bibliomane bibliomaniaque bibliométrique bibliophage
- bibliophilique bibliothécaire bibliothéconomique biblique bicâble bicalcique
- bicaméral bicarbone bicarré bicentenaire bicéphale bichonner bichromatique
- bichrome bichromique bicipital bicirculaire biclonal bicollatéral bicolore
- biconcave biconditionnel bicondylien biconfessionnel biconique biconvexe
- bicorne bicourant bicristal biculturel bicuspide bicyclique bidentate
- bidimensionnel bidirectionnel bidisciplinaire bidon bidonnant bidouiller
- biélorusse bien bien-aimé bienfaisant bienfaiteur bien-fondé bienheureux
- biennal bien-pensant bienséant bienveillant bienvenant bienvenu biethnique
- biface bifacial bifactoriel biffer bifide bifilaire biflèche bifocal bifoliolé
- bifonctionnel bifurque bifurqué big bigame bigarré bigénique bigle bigler
- bigleux bigorner bigot bigouden bigourdan bigrille bihari bihebdomadaire
- bijectif bilabial bilabié bilantiel bilatéral bileux bilharzien biliaire bilié
- bilieux bilinéaire bilingue bilinguiser bilio-digestif biliopancréatique
- bilioseptique bilirubinémique billeté bilobé bilocal biloculaire bimane
- bimanuel bimensuel bimestriel bimétallique bimétalliste bimillénaire bimodal
- bimoléculaire bimoteur binaire binasal binational binaural binauriculaire
- biner binoclard binoculaire binôme binomial binominal bio bioacoustique
- bioactif biobibliographique biocalorimétrique biocellulaire biocénotique
- biochimique biocide bioclimatique bioclimatologique bioclinique biocoenotique
- biocompatible biodégradable bio-dégradable biodétritique biodisponible
- biodynamique bioélectrique bioélectronique bioénergétique bioéthique
- biogénétique biogénique biogéochimique biogéographique biographique
- bioinformatique biologique biomécanique biomédical biométrique biomimétique
- biomoléculaire biomorphique bionique biophysique biopsique biorythmique
- biosphérique biostatique biostatistique biostratigraphique biotechnique
- biotechnologique bioterroriste biothérapique biotique biotypologique
- biovulaire biovulé bipale bipare bipariétal biparti bipartite bipède bipenne
- bipenné biphase biphasé biphasique biphotonique biplace biplan bipolaire
- bipolarisé bipotentiel bipoutre bipper bipulmonaire biquadratique biquotidien
- biréactif biréfringent birman birmaniser birotor bis bisannuel bisazoïque
- biscaïen biscayen biscornu biscuité biseauter biséculaire bisémique biser
- bisérial biset bisexué bisexuel bisiallitiser bismarckien bismurée bismuthique
- bisoc bisodique bisontin bisquer bissecteur bisser bissextile bissexué
- bissexuel bistable bistatique bistourner bistre bistré bitable bitemporal
- biter biterrois bitonal bittable bitter bitumer bitumeux bituminer bitumineux
- bituminiser biturbine biturbopropulseur biunivoque bivalent bivalve
- biventriculaire bivoie bizarde bizarre bizarroïde bizertin bizone bizuter
- bizygomatique black blackbouler blafard blaguer blagueur blairer blairiste
- blaisois blâmable blâmer blanc blanchâtre blanchissant blanquiste blasé
- blasonner blasphémateur blasphématoire blasphémer blaster blastique
- blastocoelien blastodermique blastogénétique blastogénique blastomycétien
- blastomycétique blastoporal blatérer blèche blême blêmissant blennorragique
- bléser blésois blessable blessant blessé blet bleu bleuâtre bleuté blindé
- blister blocageux blocailleux blond blondasse blondi blondin blondinet
- blondissant bloquant bloquer bloqueur blousant blouser bluetooth bluffer
- bluffeur bluter bobiner bocager bocageux bocarder boche bochiman bodo boer
- boeuf bof bogomilien bogotanais bohème bohémien boisé boiteux boitillant
+ biaural biauriculaire biaxe biaxial bibasique biberonner biberonneur
+ bibliographique bibliologique bibliomane bibliomaniaque bibliométrique
+ bibliophage bibliophilique bibliothécaire bibliothéconomique biblique bicâble
+ bicalcique bicaméral bicarbone bicarré bicentenaire bicéphale bichonner
+ bichromatique bichrome bichromique bicipital bicirculaire biclonal
+ bicollatéral bicolore biconcave biconditionnel bicondylien biconfessionnel
+ biconique biconvexe bicorne bicourant bicristal biculturel bicuspide
+ bicyclique bidentate bidimensionnel bidirectionnel bidisciplinaire bidon
+ bidonnant bidouiller biélorusse bien bien-aimé bienfaisant bienfaiteur
+ bien-fondé bienheureux biennal bien-pensant bienséant bienveillant bienvenant
+ bienvenu biethnique biface bifacial bifactoriel biffer bifide bifilaire
+ biflèche bifocal bifoliolé bifonctionnel bifurque bifurqué big bigame bigarré
+ bigénique bigle bigler bigleux bigorner bigot bigouden bigourdan bigrille
+ bihari bihebdomadaire bijectif bilabial bilabié bilantiel bilatéral bileux
+ bilharzien biliaire bilié bilieux bilinéaire bilingue bilinguiser
+ bilio-digestif biliopancréatique bilioseptique bilirubinémique billeté bilobé
+ bilocal biloculaire bimane bimanuel bimensuel bimestriel bimétallique
+ bimétalliste bimillénaire bimodal bimoléculaire bimoteur binaire binasal
+ binational binaural binauriculaire biner binoclard binoculaire binôme binomial
+ binominal bio bioacoustique bioactif biobibliographique biocalorimétrique
+ biocellulaire biocénotique biochimique biocide bioclimatique bioclimatologique
+ bioclinique biocoenotique biocompatible biodégradable bio-dégradable
+ biodétritique biodisponible biodynamique bioélectrique bioélectronique
+ bioénergétique bioéthique biogénétique biogénique biogéochimique
+ biogéographique biographique bioinformatique biologique biomécanique
+ biomédical biométrique biomimétique biomoléculaire biomorphique bionique
+ biophysique biopsique biorythmique biosphérique biostatique biostatistique
+ biostratigraphique biotechnique biotechnologique bioterroriste biothérapique
+ biotique biotypologique biovulaire biovulé bipale bipare bipariétal biparti
+ bipartite bipède bipenne bipenné biphase biphasé biphasique biphotonique
+ biplace biplan bipolaire bipolarisé bipotentiel bipoutre bipper bipulmonaire
+ biquadratique biquotidien biréactif biréfringent birman birmaniser birotor bis
+ bisannuel bisazoïque biscaïen biscayen biscornu biscuité biseauter biséculaire
+ bisémique biser bisérial biset bisexué bisexuel bisiallitiser bismarckien
+ bismurée bismuthique bisoc bisodique bisontin bisquer bissecteur bisser
+ bissextile bissexué bissexuel bistable bistatique bistourner bistre bistré
+ bitable bitemporal biter biterrois bitonal bittable bitter bitumer bitumeux
+ bituminer bitumineux bituminiser biturbine biturbopropulseur biunivoque
+ bivalent bivalve biventriculaire bivoie bizarde bizarre bizarroïde bizertin
+ bizone bizuter bizygomatique black blackbouler blafard blaguer blagueur
+ blairer blairiste blaisois blâmable blâmer blanc blanchâtre blanchissant
+ blanquiste blasé blasonner blasphémateur blasphématoire blasphémer blaster
+ blastique blastocoelien blastodermique blastogénétique blastogénique
+ blastomycétien blastomycétique blastoporal blatérer blèche blême blêmissant
+ blennorragique bléser blésois blessable blessant blessé blet bleu bleuâtre
+ bleuté blindé blister blocageux blocailleux blond blondasse blondi blondin
+ blondinet blondissant bloquant bloquer bloqueur blousant blouser bluetooth
+ bluffer bluffeur bluter bobiner bocager bocageux bocarder boche bochiman bodo
+ boer boeuf bof bogomilien bogotanais bohème bohémien boisé boiteux boitillant
  boitiller bolchevik bolchevique bolcheviser bolchéviser bolcheviste bolivarien
  bolivien bolométrique bolonais bombarder bombé bon bonapartiste bonasse bondé
  bondériser bondissant bonhomme bonifié bonimenter bonnetier booléen boolien
  boosté borain boraté bordant bordelais bordéleux bordelière bordélique
  bordéliser border bordier boré boréal borélien borgésien borgne borin borique
  boriqué borné bornoyer borofluorhydrique boscot bosniaque bosnien bosselé
- bosser bosseur bossu bossuer bostonien bostonner bot botanique botteler
- botteleur botter botticellien botulinique botulique boubouler boucaner
- boucharder bouché boucher bouchonné bouclant bouclé bouddhique bouddhiste
- bouder boudeur boudiné boueux bouffant bouffe bouffer bouffeur bouffi bouffon
- bouger bougnoule bougon bougonner bougonneur bouillant bouilli bouillonnant
- bouillotter boulanger boulangiste boulant bouler bouleté bouleux boulevardier
- bouleversant bouleverser boulimique boulinier bouliste boulonnais boulonner
- boulot boulotter boumer bouquiner bourbeux bourbonien bourbonnais bourdonnant
- bourdonné bourdonneur bourgeois bourgeoisial bourgeonnant bourguignon
- bourlingueur bourrable bourrant bourratif bourré bourrelé bourru boursicoteur
- boursicotier boursier boursouflé bousculer bousiller boutant boute-en-train
- bouter boutiquier boutiste boutonné boutonneux bouturer bouvier bovin
- bowaliser bowénoïde boxer boyauter boycotter boycotteur brabançon brachial
- brachiocéphalique brachyanticlinal brachycatalectique brachycéphale
- brachycéphaliser brachycère brachydactyle brachysynclinal braconner braconnier
- bractéal brader brahmanique brahmaniste brahoui braillard brailler brailleur
- braiser bramer branché branchial branchu brandebourgeois branlant branler
- branque branquignol braque braquer braser brasser brassicole brassidique
- bravache brave braver bréchiforme bréchique brechtien bredouillant bredouille
- bredouiller bredouilleur bref bregmatique bréhaigne brejnévien bréler brêmois
- bréphoplastique brésilien brésiller bressan brestois bretessé breton
- bretonnant bretteler bretter breughélien brevetable breveté bréviligne
- briançonnais briard bricoler bridé bridgé briffer brightique briguer brillant
- brillanter brillanteur brillantiner brillantissime brimbaler brimer
- brindezingue bringuebalant bringuebaler brinquebaler brioché briochin briqué
- briqueter brisant brisé britannique britanniser british brittonique brivadois
- brocanter brocarder brochant broché brocheur broder brogneux bromacétique
- bromatologique bromé bromhydrique bromique bromopotassique bronchial
- bronchiolaire bronchique bronchiteux bronchitique bronchoconstricteur
- bronchodilatateur bronchogénique bronchographique bronchopulmonaire broncho-
- pulmonaire bronchoscopique bronzant bronzé brosser brouetter brouillé
- brouilleur brouillon brouillonner broussailleur broussailleux broutant brouter
- brownien broyer broyeur brugeois bruineux bruissant bruiter brûlant brûlé
- brumeux brumiser brun brunâtre brunet bruni brunissant brusque brusquer brut
- brutal brutaliser brutaliste bruxellois bruyant bryologique bubonique buccal
- buccinateur bucco-dentaire bucco-génital bucco-nasal bucco-pharyngien bûcher
- bûcheur bucolique budgétaire budgéter budgétiser budgétivore buggé buiatrique
- buissonneux buissonnier bulbaire bulbeux bulbifère bulboprotubérantiel
- bulbospinal bulgare bulgariser bullaire bullé bulleux bunodonte buraliste
- bureaucratique bureaucratiser bureautique burelé buriné burkinabé burlesque
- bursal burundais busqué buté butière butiner butineur butter butylique
- butyreux butyrique buvable buvard buveur buvoter byronien byzantin
- byzantiniser byzantiniste cabaliste cabalistique cabaner câblé câblier
- câblodistributeur cabochard cabosser cabot cabotin cabotiner cabré cacaber
- cacaoté cacaoyer cacarder cachectique cachemire cacher cacheter cachottier
- cachou cachoutannique caciqual cacochyme cacodylique cacophage cacophonique
- cacuminal cadastral cadastrer cadavéreux cadavérique cadavériser cadenasser
- cadencé cadet cadmié caduc cadurcien caecal caenais caennais cafard cafarder
- cafardeur cafardeux café caféier caféique cafouiller cafouilleur cafouilleux
- cafre cagneux cagot cahotant cahoter cahoteux cahotique caillé caillebotter
- cailleter caillouté caillouteux cairote cajoler cajoleur cajun calabrais
- calaisien calaminaire calaminer calamistré calamiteux calancher calandrer
- calcaire calcédonieux calcicole calciférolique calcifié calciforme calcifuge
- calcimagnésique calciner calciorégulateur calciphile calciphobe calciprive
- calcique calcosodique calculable calculateur calculer calculeux caldoche calé
- calédonien calembouresque calendaire caleter calfater calfeutrer calibrer
- caliciel caliciforme califal californien californiser câlin câliner calippique
- calleux calligraphier calligraphique callippique callipyge callovien calmant
- calme calmer calomniateur calomnier calomnieux caloporteur calorifère
- calorifier calorifique calorifuge calorifuger calorimétrique caloriporteur
- calorique caloriser calotin calotter calquer calter calviniste camard
- camarguais camargue cambiaire cambial cambique cambiste cambodgien cambré
- cambrésien cambrien cambrioler camé camel caméléonesque camelin cameline
- caméral caméralistique camerounais camérulaire camionner camisard camoufler
- campagnard campanaire campanien campaniforme campanule campanulé campé
- camphorique camphosulfonique camphré campignien campimétrique campomélique
- camus camusien canadianiser canadien canaille canaliculaire canaliculé
- canalisable canaliser cananéen canaque canarder canari canarien cancaner
- cancanier cancéreux cancérigène cancériser cancérogène cancérologique
+ bosser bosseur bossu bossuer bostonien bostonner bot botanique botswanais
+ botteler botteleur botter botticellien botulinique botulique boubouler
+ boucaner boucharder bouché boucher bouchonné bouclant bouclé bouddhique
+ bouddhiste bouder boudeur boudiné boueux bouffant bouffe bouffer bouffeur
+ bouffi bouffon bouger bougnoule bougon bougonner bougonneur bouillant bouilli
+ bouillonnant bouillotter boulanger boulangiste boulant bouler bouleté bouleux
+ boulevardier bouleversant bouleverser boulimique boulinier bouliste boulonnais
+ boulonner boulot boulotter boumer bouquiner bourbeux bourbonien bourbonnais
+ bourdonnant bourdonné bourdonneur bourgeois bourgeoisial bourgeonnant
+ bourguignon bourlingueur bourrable bourrant bourratif bourré bourrelé bourru
+ boursicoteur boursicotier boursier boursouflé bousculer bousiller boutant
+ boute-en-train bouter boutiquier boutiste boutonné boutonneux bouturer bouvier
+ bouvillois bovin bowaliser bowénoïde boxer boyauter boycotter boycotteur
+ brabançon brachial brachiocéphalique brachyanticlinal brachycatalectique
+ brachycéphale brachycéphaliser brachycère brachydactyle brachysynclinal
+ braconner braconnier bractéal brader brahmanique brahmaniste brahoui braillard
+ brailler brailleur braiser braisillant bramer branché branchial branchu
+ brandebourgeois branlant branler branque branquignol braque braquer braser
+ brasser brassicole brassidique bravache brave braver bréchiforme bréchique
+ brechtien bredouillant bredouille bredouiller bredouilleur bref bregmatique
+ bréhaigne brejnévien bréler brêmois bréphoplastique brésilien brésiller
+ bressan brestois bretessé breton bretonnant bretteler bretter breughélien
+ brevetable breveté bréviligne briançonnais briard bricoler bridé bridgé
+ briffer brightique briguer brillant brillanter brillanteur brillantiner
+ brillantissime brilliant brilliant brimbaler brimer brindezingue bringuebalant
+ bringuebaler brinquebaler brioché briochin briqué briqueter brisant brisé
+ britannique britanniser british brittonique brivadois brocanter brocarder
+ brochant broché brocheur broder brogneux bromacétique bromatologique bromé
+ bromhydrique bromique bromopotassique bronchial bronchiolaire bronchique
+ bronchiteux bronchitique bronchoconstricteur bronchodilatateur bronchogénique
+ bronchographique bronchopulmonaire broncho-pulmonaire bronchoscopique bronzant
+ bronzé brosser brouetter brouillé brouilleur brouillon brouillonner
+ broussailleur broussailleux broutant brouter brouteur brownien broyer broyeur
+ brugeois bruineux bruissant bruiter brûlant brûlé brumeux brumiser brun
+ brunâtre brunet bruni brunissant brusque brusquer brut brutal brutaliser
+ brutaliste bruxellois bruyant bryologique bubonique buccal buccinateur
+ bucco-dentaire bucco-génital bucco-nasal bucco-pharyngien bucéphale bûcher
+ bûcheur bucoliaste bucolique budgétaire budgéter budgétiser budgétivore buggé
+ buiatrique buissonneux buissonnier bulbaire bulbeux bulbifère
+ bulboprotubérantiel bulbospinal bulgare bulgariser bullaire bullé bulleux
+ bunodonte buraliste bureaucratique bureaucratiser bureautique burelé buriné
+ burkinabé burlesque bursal burundais busqué buté butière butiner butineur
+ butter butylique butyreux butyrique buvable buvard buveur buvoter byronien
+ byzantin byzantiniser byzantiniste cabaliste cabalistique cabaner câblé
+ câblier câblodistributeur cabochard cabosser cabot cabotin cabotiner cabré
+ cacaber cacaoté cacaoyer cacarder cachectique cachemire cacher cacheter
+ cachottier cachou cachoutannique caciqual cacochyme cacodylique cacophage
+ cacophonique cacuminal cadastral cadastrer cadavéreux cadavérique cadavériser
+ cadenasser cadencé cadet cadmié caduc cadurcien caecal caenais caennais cafard
+ cafarder cafardeur cafardeux café caféier caféique cafouiller cafouilleur
+ cafouilleux cafre cagneux cagot cahotant cahoter cahoteux cahotique caillé
+ caillebotter cailleter caillouté caillouteux cairote cajoler cajoleur cajun
+ calabrais calaisien calaminaire calaminer calamistré calamiteux calancher
+ calandrer calcaire calcédonieux calcicole calciférolique calcifié calciforme
+ calcifuge calcimagnésique calciner calciorégulateur calciphile calciphobe
+ calciprive calcique calcosodique calculable calculateur calculer calculeux
+ caldoche calé calédonien calembouresque calendaire caleter calfater calfeutrer
+ calibrer caliciel caliciforme califal californien californiser câlin câliner
+ calippique calleux calligraphier calligraphique callippique callipyge
+ callovien calmant calme calmer calomniateur calomnier calomnieux caloporteur
+ calorifère calorifier calorifique calorifuge calorifuger calorimétrique
+ caloriporteur calorique caloriser calotin calotter calquer calter calviniste
+ camard camarguais camargue cambiaire cambial cambique cambiste cambodgien
+ cambré cambrésien cambrien cambrioler camé camel caméléonesque camelin
+ cameline caméral caméralistique camerounais camérulaire camionner camisard
+ camoufler campagnard campanaire campanien campaniforme campanule campanulé
+ campé camphorique camphosulfonique camphré campignien campimétrique
+ campomélique camus camusien canadianiser canadien canaille canaliculaire
+ canaliculé canalisable canaliser cananéen canaque canarder canari canarien
+ cancaner cancanier cancéreux cancérigène cancériser cancérogène cancérologique
  cancroïde candi candidacide candidat candide candiote candiser caner
  caniculaire canin cannabique canné cannelé cannibale cannibalesque
  cannibalique cannibaliser cannois canoéiste canon canonial canonique
@@ -657,17 +665,18 @@ ADJECTIVES = set(
  centigrade centimétrique centinormal centrafricain central centralisateur
  centraliser centraliste centraméricain centré centre-européen
  centrencéphalique centrifuge centrifuger centripète centriste centroacinaire
- centrolobulaire centromédullaire centronucléaire centuple centupler
- céphalalgique céphalique céphaliser céphalogyre céphalométrique
- céphalorachidien céphalo-rachidien cérame céramique céramiser céramiste
- céramométallique céramoplastique cercal cerclé cerdagnol cerdan céréalier
- cérébelleux cérébral cérébroïde cérébrospinal cérébro-spinal cérébrovasculaire
- cérémonial cérémoniel cérémonieux céreux cérifère cérifier cérigène cérique
- cernable cerné cérotique certain certificateur certificatif certifier céruléen
- cérumineux cerve cervical cervicobrachial cervier cérylique césarien césariser
- césaropapiste cespiteux cessant cesser cessible cétacé cétogène cétoglutarique
- cétoliser cétolytique cétonique cévenol ceylanais cézannien chabler chafouin
- chagrin chagrinant chagriné chahuter chahuteur chaîné chair chalcographique
+ centroaméricain centroaméricain centrolobulaire centromédullaire
+ centronucléaire cent-unième centuple centupler céphalalgique céphalique
+ céphaliser céphalogyre céphalométrique céphalorachidien céphalo-rachidien
+ cérame céramique céramiser céramiste céramométallique céramoplastique cercal
+ cerclé cerdagnol cerdan céréalier cérébelleux cérébral cérébroïde
+ cérébrospinal cérébro-spinal cérébrovasculaire cérémonial cérémoniel
+ cérémonieux céreux cérifère cérifier cérigène cérique cernable cerné cérotique
+ certain certificateur certificatif certifier céruléen cérumineux cerve
+ cervical cervicobrachial cervier cérylique césarien césariser césaropapiste
+ cespiteux cessant cesser cessible cétacé cétogène cétoglutarique cétoliser
+ cétolytique cétonique cévenol ceylanais cézannien chabler chafouin chagrin
+ chagrinant chagriné chahuter chahuteur chaîné chair chalcographique
  chalcolithique chaldéen chaleureux challenger chalonnais châlonnais chaloupé
  cham chamailleur chamanique chamaniste chamanistique chamarrer chambarder
  chambouler chambrer chambriste chameau chamelier chamitique chamoisé
@@ -714,56 +723,60 @@ ADJECTIVES = set(
  chondrosternal choper choquable choquant choquer choragique choral chorégique
  chorégraphier chorégraphique choréiforme choréique choréo-athétosique chorial
  chorïambique chorionique chorioptique choriorétinien chorographique choroïde
- choroïdien chorologique chose choséifier chosifier chosiste chou chouchou
- chouchouter choucrouter chouette chourer chouriner choyer chrématistique
- chrétien chrétien-démocrate chrismal christianiser christique christologique
- chromaffine chromagogue chromaluminiser chromammonique chromatable
- chromatinien chromatique chromatiser chromatographique chromer chromeux
- chromique chromiser chromogène chromolithographier chromophile chromophobe
- chromosomique chromosphérique chromotropique chronaxique chroniciser chronique
- chronogénétique chronographique chronologique chronométrer chronométrique
- chronophage chronophotographique chronotrope chrysanthémique chryséléphantin
- chrysophanique chthonien chtimi chtonien chuchoter chuchoteur chuintant
- chuinter chunky churchillien churrigueresque chuter chylaire chyleux chylifère
- chylifier chyliforme chymifier chypriote cibiste ciblé cicatriciel
- cicatrisable cicatrisant cicatriser cicéronien cidricole ci-inclus ci-joint
- ciliaire cilicien cilié ciliolé ciller cimentaire cimenter cinchoméronique
- cinchoninique cinchonique cinémaniaque cinématique cinématiser
+ choroïdien chorologique chose choséifier chosifier chosiste chou choucard
+ choucard chouchou chouchouter choucrouter chouette chouraveur chourer
+ chouriner choyer chrématistique chrétien chrétien-démocrate chrismal
+ christianiser christique christologique chromaffine chromagogue
+ chromaluminiser chromammonique chromatable chromatinien chromatique
+ chromatiser chromatographique chromer chromeux chromique chromiser chromogène
+ chromolithographier chromophile chromophobe chromosomique chromosphérique
+ chromotropique chronaxique chroniciser chronique chronogénétique
+ chronographique chronologique chronométrer chronométrique chronophage
+ chronophotographique chronotrope chrysanthémique chryséléphantin
+ chrysophanique chtarbé chthonien chtimi chtonien chuchoter chuchoteur
+ chuintant chuinter chunky churchillien churrigueresque chuter chylaire chyleux
+ chylifère chylifier chyliforme chymifier chypriote ci-annexé ci-annexé cibiste
+ ciblé cicatriciel cicatrisable cicatrisant cicatriser cicéronien cidricole
+ ci-inclus ci-joint ciliaire cilicien cilié ciliolé ciller cimentaire cimenter
+ cinchoméronique cinchoninique cinchonique cinémaniaque cinématique cinématiser
  cinématographier cinématographique cinéolique cinéphage cinéphile cinéphilique
  cinéraire cinéritique cinésiologique cinesthésique cinétique cinétiste
  cingalais cinghalais cinglant cinglé cingulaire cinnamique cinoque
- cinquantenaire cinquantième cinquième cintré circadien circalittoral
- circalunaire circannien circannuel circaseptidien circassien circatidal
- circatrigintidien circavigintidien circompolaire circonférentiel circonflexe
- circonscriptible circonscriptionnaire circonspect circonstancié circonstanciel
- circonvolutif circuiter circulaire circulant circulariser circulatoire
- circumantarctique circumlunaire circumpilaire circumpolaire circumstellaire
- circumterrestre circumzénithal ciré cireux cirier cirreux cirrhogène
- cirrhotique cirsoïde cisailler cisalpin ciseler ciselier cisjordanien
- cissoïdal cistercien cisternal cistoïde citable citadin citateur citer
- citérieur citoyen citraconique citrin citrique citron citronné çivaïte civil
- civilisable civilisateur civilisationnel civilisé civique clabauder claboter
- clactonien cladistique clair clairet claironnant claironner clairsemé
- clairvoyant clamer clampser clandestin clangoreux clanique claniste clapotant
- clapoter clapoteux clapper claquant claquemurer claquer claqueter
- clarificateur clarifier clasmocytaire classable classé classificateur
- classificatoire classifier classique clastique clastogène claudélien
- claudicant claudien claustral claustrer claustrophobe claustrophobique
- clavarder clavelé claveleux claveliser claver claveter claviculaire clayonner
- clé clément clémentin cleptomane clérical cléricaliser clermontois clicher
- clicheur client clientélaire clientéliste cligner clignotant climatérique
- climatique climatisé climatiseur climatologique climatothérapique clinal
- clinicien clinique clinographique clinoïde clinorhombique clino-rhombique
- clinostatique clinquant clinquer cliquable cliquetant clissé clitique
- clitoridien clitreux clivable cliver cloacal clochardiser cloche cloché
- clodoaldien cloisonné cloisonniste cloîtré clonal cloner clonique clonogénique
- clopinant cloqué clôturer clouable clouer clouté clownesque clunisien coacher
- coadjuteur coagulable coagulant coagulateur coaguler coagulolytique coalescent
- coalisé coaltariser coanimer coassocié coatomique coaxial cobalteux cobaltique
- cobelligérant cobelligérer cocaïnique cocaïniser cocaïnomane cocarcinogène
- cocardier cocasse coccygien coccypubien cocher côcher cochinchinois cochléaire
- cochon cochonner cockney coco coconiser cocu cocufiable cocufier cocyclique
- codable codant codé codemandeur codétenu codéterminer codicillaire codifiable
+ cinquante-cinquième cinquante-deuxième cinquante-et-unième cinquante-huitième
+ cinquantenaire cinquante-neuvième cinquante-quatrième cinquante-septième
+ cinquante-sixième cinquante-troisième cinquantième cinquième cintré circadien
+ circaète circalittoral circalunaire circannien circannuel circaseptidien
+ circassien circatidal circatrigintidien circavigintidien circompolaire
+ circonférentiel circonflexe circonscriptible circonscriptionnaire circonspect
+ circonstancié circonstanciel circonvolutif circuiter circulaire circulant
+ circulariser circulatoire circumantarctique circumlunaire circumpilaire
+ circumpolaire circumstellaire circumterrestre circumzénithal ciré cireux
+ cirier cirreux cirrhogène cirrhotique cirsoïde cisailler cisalpin ciseler
+ ciselier cisjordanien cissoïdal cistercien cisternal cistoïde citable citadin
+ citateur citer citérieur citoyen citraconique citrin citrique citron citronné
+ çivaïte civil civilisable civilisateur civilisationnel civilisé civique
+ clabauder claboter clactonien cladistique clair clairet claironnant claironner
+ clairsemé clairvoyant clamer clampser clandestin clangoreux clanique claniste
+ clapotant clapoter clapoteux clapper claquant claquemurer claquer claqueter
+ clarificateur clarifier clarissime clasmocytaire classable classé classifiable
+ classificateur classificatoire classifier classique clastique clastogène
+ claudélien claudicant claudien clausewitzien claustral claustrer claustrophobe
+ claustrophobique clavarder clavelé claveleux claveliser claver claveter
+ claviculaire clayonner clé clément clémentin cleptomane clérical cléricaliser
+ clermontois clicher clicheur client clientélaire clientéliste cligner
+ clignotant climatérique climatique climatisé climatiseur climatologique
+ climatothérapique clinal clinicien clinique clinographique clinoïde
+ clinorhombique clino-rhombique clinostatique clinquant clinquer cliquable
+ cliquetant clissé clitique clitoridien clitreux clivable cliver cloacal
+ clochardiser cloche cloché clodoaldien cloisonné cloisonniste cloîtré clonal
+ cloner clonique clonogénique clopinant cloqué clôturer clouable clouer clouté
+ clownesque clunisien coacher coactionnaire coadjuteur coagulable coagulant
+ coagulateur coaguler coagulolytique coalescent coalisé coaltariser coanimer
+ coassocié coatomique coaxial cobalteux cobaltique cobelligérant cobelligérer
+ cocaïnique cocaïniser cocaïnomane cocarcinogène cocardier cocasse coccygien
+ coccypubien cocher côcher cochinchinois cochléaire cochon cochonner cockney
+ coco coconiser cocu cocufiable cocufier cocyclique codable codant codé
+ codemandeur co-dépendant codétenu codéterminer codicillaire codifiable
  codificateur codifier codifieur codirecteur codiriger codonataire codonateur
  coéchangiste coéditer coéditeur coeliaque coelioscopique coelomique
  coelosomien coercible coercitif coéternel coévolutif coexécuteur coexistant
@@ -806,32 +819,32 @@ ADJECTIVES = set(
  comprimable comprimé compromettant compromissoire comptabilisable
  comptabiliser comptable comptant compter compteur compulser compulsif
  compulsionnel computationnel computer computériser comtal comtois con conatif
- concasser concasseur concave concédant concéder concélébrer concentrationnaire
- concentré concentrique conceptualiser conceptualiste conceptuel concerner
- concertant concerté concessible concessif concessionnaire concessionnel
- concevable conchoïdal conchoïde conchylicole conchylien conchyliologique
- conciliable conciliaire conciliant conciliateur conciliatoire concilier concis
- concluant conclusif concocter concolore concomitant concomiter concordant
- concordataire concordiste concourant concret concréter concrétisable
- concrétiser concubin concupiscent concupiscible concurrencer concurrent
- concurrentiel concussionnaire condamnable condamnatoire condamner condensable
- condensé condescendant condimentaire conditionnel conditionner conducteur
- conductible conductif conductimétrique conduplicatif condylien confectionner
- confédéral confédéraliser confédérateur confédératif confédéré conférer
- confesser confessionnaliser confessionnel confessionnnel confessoire confiant
- confident confidentiel confier configurable configurer confiner confirmatif
- confirmer confiscable confiscatoire confisquer confit confiturier conflictuel
- confluent confocal confondant conformationnel conforme conformer conformiste
- confortable conforter confraternel confronter confucéen confucianiste confus
- confusionnel confusionniste congéable congédiable congédier congelable
- congeler congénère congénique congénital congestif congestionner conglobata
- congloméral conglomérer conglutinant conglutinatif conglutiner congolais
- congoliser congophile congratulatoire congratuler congréganiste
- congrégationaliste congru congruiste conifère coniférylique conique conirostre
- coniser conjectural conjecturer conjoint conjonctif conjonctionnel
- conjonctival conjoncturel conjugable conjugal conjuger conjugué conjurateur
- conjuratoire conjurer connaissable connaisseur connard connaturel conné
- conneau connectable connecter connectif connexe connexionniste connivent
+ concasser concasseur concave concédant concéder concélébrer concentratif
+ concentrationnaire concentré concentrique conceptualiser conceptualiste
+ conceptuel concerner concertant concerté concessible concessif concessionnaire
+ concessionnel concevable conchoïdal conchoïde conchylicole conchylien
+ conchyliologique conciliable conciliaire conciliant conciliateur conciliatoire
+ concilier concis concluant conclusif concocter concolore concomitant
+ concomiter concordant concordataire concordiste concourant concret concréter
+ concrétisable concrétiser concubin concupiscent concupiscible concurrencer
+ concurrent concurrentiel concussionnaire condamnable condamnatoire condamner
+ condensable condensé condescendant condimentaire conditionnel conditionner
+ condoléant conducteur conductible conductif conductimétrique conduplicatif
+ condylien confectionner confédéral confédéraliser confédérateur confédératif
+ confédéré conférer confesser confessionnaliser confessionnel confessionnnel
+ confessoire confiant confident confidentiel confier configurable configurer
+ confiner confirmatif confirmer confiscable confiscatoire confisquer confit
+ confiturier conflictuel confluent confocal confondant conformationnel conforme
+ conformer conformiste confortable conforter confraternel confronter confucéen
+ confucianiste confus confusionnel confusionniste congéable congédiable
+ congédier congelable congeler congénère congénique congénital congestif
+ congestionner conglobata congloméral conglomérer conglutinant conglutinatif
+ conglutiner congolais congoliser congophile congratulatoire congratuler
+ congréganiste congrégationaliste congru congruiste conifère coniférylique
+ conique conirostre coniser conjectural conjecturer conjoint conjonctif
+ conjonctionnel conjonctival conjoncturel conjugable conjugal conjuger conjugué
+ conjurateur conjuratoire conjurer connaissable connaisseur connard connaturel
+ conné conneau connectable connecter connectif connexe connexionniste connivent
  connotatif connoter connu conoïde conorénal conquérant consacrant consacrer
  consanguin consciencieux conscient conscientiser conscrit consécrateur
  consécutif conseillable conseiller conseilliste consensualiste consensuel
@@ -861,95 +874,96 @@ ADJECTIVES = set(
  contrastif contraventionnel contraversif contre-attaquer contrebalancer
  contrebandier contrebouter contrebuter contrecarrer contrecollé contredisant
  contre-expertiser contrefait contrefiche contre-indiqué contremander
- contremarquer contreplaquer contreproductif contre-productif contrer contre-
- révolutionnaire contresignataire contresigner contre-terroriste contretyper
- contreventer contribuable contributeur contributif contributoire contrictif
- contrister contrit contrôlable controlatéral contrôler contrôleur controuvé
- controversable controversé contumace contumax contus contusif contusiforme
- contusionner convaincant convalescent convectif convenable conventionnaliste
- conventionné conventionnel conventuel convenu convergent conversationnel
- conversible convertible convertissable convertisseur convexe convier convivial
- convocable convoitable convoiter convoiteur convolable convoquer convoyer
- convoyeur convulsé convulsif convulsionner cool coopérant coopérateur
- coopératif coopératiser coopter coordinateur coordonnable coordonnant
- coordonnateur coordonné coorganisateur coorganiser coparrainer copartageant
- copartager copernicien copiable copier copieux coplanaire copolymériser
- coprésenter coprésider coprologique coprophage coprophile coprophilique copte
- copulateur copulatif copuler coquelicot coquelucheux coqueluchoïde coquet
- coquilleux coquillier coquin coracoïde coracoïdien corail corailleur corallien
- corallifère coralliforme coralligène corallivore coralloïde coranique corbin
- cordé cordeler cordial cordiforme cordonal cordonner cordouan coréaliser
- coréaniser coréen coréférentiel coresponsabiliser coresponsable corfiote
- coriace coricide corinthien corné cornéen cornélien corneur corneux corniaud
- cornichon cornier corniforme corniot cornique cornouaillais cornu corolliforme
- coronaire coronal coronarien coroniser coronoïde corporatif corporatiste
- corporéal corporel corporifier corporiser corpulent corpusculaire corpusculeux
- correct correcteur correctif correctionaliser correctionnaliser correctionnel
- corrélable corrélatif corrélationnel corréler correspondant corrézien
- corrigeable corriger corrigible corroborant corroborer corrodant corroder
- corrompu corrosif corroyer corroyeur corrupteur corruptible corsaire corse
- corsé corseter corsetier cortical corticaliser corticoïde cortico-limbique
- corticomimétique corticominéralotrope corticoprive corticostéroïde
- corticosurrénal corticosurrénalien corticotrope cortinique cortiqueux
- cortisolique cortisonique corvéable corymbiforme cosaque cosignataire cosigner
- cosismal cosmétique cosmétiquer cosmétologique cosmique cosmogonique
- cosmographique cosmologique cosmophysique cosmopolite cosmopolitique
- cosphérique cossard cossu costal costaricain costaricien costaud costumé
- costumier cotable coté côtelé cotidal côtier cotisant cotiser coton cotonner
- cotonneux cotonnier côtoyer cotyloïde cotyloïdien couard couchailler couchant
- couché coucheur couchitique coudé coudoyer couenneux coufique couillon
- couillonner coulable coulant couler coulissant coulissé coumarinique
- coumarique country coupable coupailler coupant coupé couperosé coupeur coupler
- courable courageux courailler courant courantologique courbatu courbaturé
- courbe courbé courcailler coureur couronné courrieler courroucer courser court
- courtaud courtauder court-circuiter courtisan courtiser courtois court-
- termiste couru cousiner cousu coûtant coûter coûteux coutumier couturé
- couturier couver couvert couvi couvrant coxal coxalgique coxarthrosique coxo-
- fémoral crabier craché cracheur crachoter crachouiller crack cracra crade
- cradingue crado crailler craintif cramer cramoisi crampon cramponnant
- cramponner crâne craner crâneur crânien craniofacial craniologique
- craniométrique cranté crapaüter crapule crapuleux craquelé craquer craqueter
- crasse crasseux cratériforme cratériser cratonique cratoniser cravacher
- cravater crawler crayeux crayonner créancier créateur créatif créationniste
- créatique crédibiliser crédible crédirentier créditer créditeur crédule créé
- crématiser crématiste crématoire crémer crémeux crénelé créner crénobiologique
- crénothérapique créole créoliser créosoter crêper crêpeur crépi crépitant
- crépu crépusculaire cressonnier crétacé crétin crétinisant crétiniser
- crétinoïde crétique crétois creuser creusois creux crevant crevasser crevé
- criailleur criant criard criblant criblé cricoïde crier criméen criminalisable
- criminalisant criminaliser criminaliste criminalistique criminel criminogène
- crispant crisper crisser cristallifère cristallin cristallinien cristallisable
- cristallisant cristallisé cristalloblastique cristallochimique
- cristallographique cristalloïdal cristalloïde cristallophyllien criticable
- criticailler criticiste critiquable critique critiquer critiqueur croate
- crocéique crocher crochetable crocheter crochu croisé croiseur croissant
- croquant croquer croqueur croquignolet crossé crotonique crotoniser crotté
- crotteux crotylique croulant croupal croupeux croupi croupissant croustillant
- croûter croûteux croyable croyant cru cruche crucial crucifère crucifié
- cruciforme cruel crural crustacé crustal cryocautériser cryoconducteur
- cryoélectronique cryoélectrotechnique cryogène cryogénique cryogéniser
- cryomagnétique cryométrique cryophile cryophysique cryoprécipitable
- cryoprotecteur cryoscopique cryostatique cryotechnique crypter cryptique
- cryptocalviniste cryptocommuniste cryptogame cryptogamique cryptogénétique
- cryptogénique cryptographier cryptographique cryptologique cryptoniscien
- cryptopsychique cryptorchide cubain cube cuber cubique cubiste cubital cuboïde
- cucu cucul cucullé cueilleur cuirassé cuisant cuisiné cuistre cuit cuiter
- cuivré cuivreux cuivrique cul culard culbutable culbuter culer culinaire
- culminant culminatif culotté culpabilisant culpabilisateur culpabiliser culte
- cultéraniste cultivable cultivé cultuel cultural culturaliser culturaliste
- culturel culturiste cuminique cumulable cumulatif cumuler cunéé cunéiforme
- cunicole cuniculicole cupide cuprifère cuprique cuproammoniacal cuprolithique
- curable curarimimétique curarisant curariser curatélaire curatif curer cureter
- curial curiate curieux cursif curule curvatif curviligne cushingoïde
- customiser cutané cutanéomuqueux cuticulaire cutiniser cuveler cuver cyan
- cyanacétique cyanhydrique cyanique cyaniser cyanosé cyanotique cyanurer
- cyanurique cybernéticien cybernétique cybernétiser cyberterroriste cyclable
- cycladique cyclanique cyclique cycliser cycliste cyclogénétique cyclohexanique
- cycloïdal cycloïde cyclonal cyclonique cyclopéen cyclopien cycloplégique
- cyclostrophique cyclothymique cyclotomique cyclotouriste cylindrer cylindrique
- cylindroïde cylindromateux cylindro-ogival cymrique cynégétique cynique
- cynogénétique cynologique cynophile cyphotique cypriaque cypriote cyprique
- cyrénaïque cyrillique cystineux cystinurique cystique cystoïde cystoscopique
+ contremarquer contreplaquer contreproductif contre-productif contrer
+ contre-révolutionnaire contresignataire contresigner contre-terroriste
+ contretyper contreventer contribuable contributeur contributif contributoire
+ contrictif contrister contrit contrôlable controlatéral contrôler contrôleur
+ controuvé controversable controversé contumace contumax contus contusif
+ contusiforme contusionner convaincant convalescent convectif convenable
+ conventionnaliste conventionné conventionnel conventuel convenu convergent
+ conversationnel conversible convertible convertissable convertisseur convexe
+ convier convivial convocable convoitable convoiter convoiteur convolable
+ convoquer convoyer convoyeur convulsé convulsif convulsionner cool coopérant
+ coopérateur coopératif coopératiser coopter coordinateur coordonnable
+ coordonnant coordonnateur coordonné coorganisateur coorganiser coparrainer
+ copartageant copartager copernicien copiable copier copieux coplanaire
+ copolymériser coprésenter coprésider coprologique coprophage coprophile
+ coprophilique copte copulateur copulatif copuler coquelicot coquelucheux
+ coqueluchoïde coquet coquilleux coquillier coquin coracoïde coracoïdien corail
+ corailleur corallien corallifère coralliforme coralligène corallivore
+ coralloïde coranique corbin cordé cordeler cordial cordiforme cordonal
+ cordonner cordouan coréaliser coréaniser coréen coréférentiel
+ coresponsabiliser coresponsable corfiote coriace coricide corinthien corné
+ cornéen cornélien corneur corneux corniaud cornichon cornier corniforme
+ corniot cornique cornouaillais cornu corolliforme coronaire coronal coronarien
+ coroniser coronoïde corporatif corporatiste corporéal corporel corporifier
+ corporiser corpulent corpusculaire corpusculeux correct correcteur correctif
+ correctionaliser correctionnaliser correctionnel corrélable corrélatif
+ corrélationnel corréler correspondant corrézien corrigeable corriger
+ corrigible corroborant corroborer corrodant corroder corrompu corrosif
+ corroyer corroyeur corrupteur corruptible corsaire corse corsé corseter
+ corsetier cortical corticaliser corticoïde cortico-limbique corticomimétique
+ corticominéralotrope corticoprive corticostéroïde corticosurrénal
+ corticosurrénalien corticotrope cortinique cortiqueux cortisolique
+ cortisonique corvéable corymbiforme cosaque cosignataire cosigner cosismal
+ cosmétique cosmétiquer cosmétologique cosmique cosmogonique cosmographique
+ cosmologique cosmophysique cosmopolite cosmopolitique cosphérique cossard
+ cossu costal costaricain costaricien costaud costumé costumier cotable coté
+ côtelé cotidal côtier cotisant cotiser coton cotonner cotonneux cotonnier
+ côtoyer cotyloïde cotyloïdien couard couchailler couchant couché coucheur
+ couchitique coudé coudoyer couenneux coufique couillon couillonner coulable
+ coulant couler coulissant coulissé coumarinique coumarique country coupable
+ coupailler coupant coupé couperosé coupeur coupler courable courageux
+ courailler courant courantologique courbatu courbaturé courbe courbé
+ courcailler coureur couronné courrieler courroucer courser court courtaud
+ courtauder court-circuiter courtisan courtiser courtois court-termiste couru
+ cousiner cousu coûtant coûter coûteux coutumier couturé couturier couver
+ couvert couvi couvrant coxal coxalgique coxarthrosique coxo-fémoral crabier
+ craché cracheur crachoter crachouiller crack cracra crade cradingue crado
+ crailler craintif cramer cramoisi crampon cramponnant cramponner crâne craner
+ crâneur crânien craniofacial craniologique craniométrique cranté crapaüter
+ crapule crapuleux craquelé craquer craqueter crasse crasseux cratériforme
+ cratériser cratonique cratoniser cravacher cravater crawler crayeux crayonner
+ créancier créateur créatif créationniste créatique crédibiliser crédible
+ crédirentier créditer créditeur crédule créé crématiser crématiste crématoire
+ crémer crémeux crénelé créner crénobiologique crénothérapique créole créoliser
+ créosoter crêper crêpeur crépi crépitant crépu crépusculaire cressonnier
+ crétacé crétin crétinisant crétiniser crétinoïde crétique crétois creuser
+ creusois creux crevant crevasser crevé criailleur criant criard criblant
+ criblé cricoïde crier criméen criminalisable criminalisant criminaliser
+ criminaliste criminalistique criminel criminogène crispant crisper crisser
+ cristallifère cristallin cristallinien cristallisable cristallisant
+ cristallisé cristalloblastique cristallochimique cristallographique
+ cristalloïdal cristalloïde cristallophyllien criticable criticailler
+ criticiste critiquable critique critiquer critiqueur croate crocéique crocher
+ crochetable crocheter crochu croisé croiseur croissant croquant croquer
+ croqueur croquignolet crossé crotonique crotoniser crotté crotteux crotylique
+ croulant croupal croupeux croupi croupissant croustillant croûter croûteux
+ croyable croyant cru cruche crucial crucifère crucifié cruciforme cruel crural
+ crustacé crustal cryocautériser cryoconducteur cryoélectronique
+ cryoélectrotechnique cryogène cryogénique cryogéniser cryomagnétique
+ cryométrique cryophile cryophysique cryoprécipitable cryoprotecteur
+ cryoscopique cryostatique cryotechnique crypter cryptique cryptocalviniste
+ cryptocommuniste cryptogame cryptogamique cryptogénétique cryptogénique
+ cryptographier cryptographique cryptologique cryptoniscien cryptopsychique
+ cryptorchide cubain cube cuber cubique cubiste cubital cuboïde cucu cucul
+ cucullé cueilleur cuirassé cuisant cuisiné cuistre cuit cuiter cuivré cuivreux
+ cuivrique cul culard culbutable culbuter culer culinaire culminant culminatif
+ culotté culpabilisant culpabilisateur culpabiliser culte cultéraniste
+ cultivable cultivé cultuel cultural culturaliser culturaliste culturel
+ culturiste cuminique cumulable cumulatif cumuler cunéé cunéiforme cunicole
+ cuniculicole cupide cuprifère cuprique cuproammoniacal cuprolithique curable
+ curarimimétique curarisant curariser curatélaire curatif curer cureter curial
+ curiate curieux cursif curule curvatif curviligne cushingoïde customiser
+ cutané cutanéomuqueux cuticulaire cutiniser cuveler cuver cyan cyanacétique
+ cyanhydrique cyanique cyaniser cyanosé cyanotique cyanurer cyanurique
+ cybernéticien cybernétique cybernétiser cyberterroriste cyclable cycladique
+ cyclanique cyclique cycliser cycliste cyclogénétique cyclohexanique cycloïdal
+ cycloïde cyclonal cyclonique cyclopéen cyclopien cycloplégique cyclostrophique
+ cyclothymique cyclotomique cyclotouriste cylindrer cylindrique cylindroïde
+ cylindromateux cylindro-ogival cymrique cynégétique cynique cynogénétique
+ cynologique cynophile cyphotique cypriaque cypriote cyprique cyrénaïque
+ cyrillique cystineux cystinurique cystique cystoïde cystoscopique
  cytoarchitectonique cytochimique cytocide cytogénétique cyto-hormonal
  cytologique cytolytique cytomégalique cytopathique cytopathogène cytopexique
  cytophysique cytoplasique cytoplasmique cytoprotecteur cytoréducteur
@@ -965,9 +979,9 @@ ADJECTIVES = set(
  débarasser débarbariser débarbouiller débarder débarqué débarrasser débarrer
  débâter débauché débecter débelgiciser débenzoler débile débiliser débilitant
  débiliter débillarder débiner débineur débitable débiter débiteur débitif
- déblatérer déblayer débloquant débloquer débobiner déboiser déboîté débonder
- débonnaire débordant débordé débosseler débotter débouchant déboucher débouclé
- débouler déboulonner déboumediéniser débouquer débourber débourbeur
+ déblatérer déblayer déblayeur débloquant débloquer débobiner déboiser déboîté
+ débonder débonnaire débordant débordé débosseler débotter débouchant déboucher
+ débouclé débouler déboulonner déboumediéniser débouquer débourber débourbeur
  débourgeoisé débourrer débourser déboussolé debout débouter déboutonner
  débraillé débrancher débrayable débrayer débridé débriefer débriser débrocher
  débrouillard débrouiller débroussaillant débroussailler débrutaliser
@@ -997,29 +1011,30 @@ ADJECTIVES = set(
  décomplexer décomplexifier décomposable décomposé décompresser décompresseur
  décomprimer décompter déconcentrer déconceptualiser déconcertant déconcerter
  déconfessionnaliser déconfit décongeler décongestif décongestionner
- déconnecter déconseiller déconsidéré déconsigner déconstitutionaliser
- déconstitutionnaliser décontaminant décontaminer décontenancer
- décontextualiser décontractant décontracté décorable décorateur décoratif
- décorder décorer décorner décorréler décortiqué découpé découplé décourageant
- décourager découronner décousu découvrable décrasser décrédibiliser décréditer
- décréer décrémentiel décréoliser décrêper décrépi décrépit décrépiter décréter
- décrétiniser décreuser décrier décriminaliser décrispant décrisper
- décristalliser décrochable décrocher décroiser décroissant décrotter
- décrucifier décruer décruser décryptable décrypter déçu déculotter
- déculpabiliser déculturer décuple décupler décurariser décurional décurrent
- décussé décuver décycliser décylique dédaignable dédaigner dédaigneux dédaléen
- dédalien dédensifier dédicacer dédicatoire dédier dédifférencier dédiviniser
- dédolomitiser dédommageable dédommager dédoré dédotaliser dédouaner
- dédoublable dédoubler dédramatiser dédroitiser déductible déductif défaillant
- défaisable défait défaitiste défalquer défanatiser défasciser défatiguer
- défaufiler défausser défavorable défavorisé défectif défectologique défectueux
- défédéraliser déféminiser défendable défendu défenestrer défensable défensif
- déféquer déférent déférentiel déférer déferlant déferlé déferrer déferriser
- défertiliser défeuiller défiant défibrer défibreur défibrillateur déficeler
- déficient déficitaire défidéliser défier défigurer défilable défiler
- défilialiser défini définissable définitif définitionnel définitoire
- défiscaliser déflagrant déflagrer déflater déflationniste défléchi déflecteur
- défleuri déflorer défocaliser défoliant défolier défoncé défonctionnaliser
+ déconnecter déconophone déconseiller déconsidéré déconsigner
+ déconstitutionaliser déconstitutionnaliser décontaminant décontaminer
+ décontenancer décontextualiser décontractant décontracté décorable décorateur
+ décoratif décorder décorer décorner décorréler décortiqué découpé découplé
+ décourageant décourager découronner décousu découvrable décrasser
+ décrédibiliser décréditer décréer décrémentiel décréoliser décrêper décrépi
+ décrépit décrépiter décréter décrétiniser décreuser décrier décriminaliser
+ décrispant décrisper décristalliser décrochable décrocher décroiser
+ décroissant décrotter décrucifier décruer décruser décryptable décrypter déçu
+ déculotter déculpabiliser déculturer décuple décupler décurariser décurional
+ décurrent décussé décuver décycliser décylique dédaignable dédaigner
+ dédaigneux dédaléen dédalien dédensifier dédicacer dédicatoire dédier
+ dédifférencier dédiviniser dédolomitiser dédommageable dédommager dédoré
+ dédotaliser dédouaner dédoublable dédoubler dédramatiser dédroitiser
+ déductible déductif défaillant défaisable défait défaitiste défalquer
+ défanatiser défasciser défatiguer défaufiler défausser défavorable défavorisé
+ défectif défectionnaire défectologique défectueux défédéraliser déféminiser
+ défendable défendu défenestrer défensable défensif déféquer déférent
+ déférentiel déférer déferlant déferlé déferrer déferriser défertiliser
+ défeuiller défiant défibrer défibreur défibrillateur déficeler déficient
+ déficitaire défidéliser défier défigurer défilable défiler défilialiser défini
+ définissable definitif définitif définitionnel définitoire défiscaliser
+ déflagrant déflagrer déflater déflationniste défléchi déflecteur défleuri
+ déflorer défocaliser défoliant défolier défoncé défonctionnaliser
  défonctionnariser déforester déformable déformaliser déformant déformateur
  déformer défortifier défouler défourner défraîchi défranchi défranchiser
  défranciser défranquiser défrayer défrichable défricher défriper défrisant
@@ -1050,11 +1065,12 @@ ADJECTIVES = set(
  démarrer démarxiser démascler démasculiniser démasquer démassifier démater
  démâter dématérialiser démathématiser démécaniser démédicaliser démêlant
  démêler démembré déménager démensualiser dément démentiel démerdard démerdeur
- démersal démesuré démétalliser déméthaniser démeublé demeuré demi demi-
- circulaire démieller demi-fin démilitariser demi-mort déminer déminéraliser
- démineur demi-sel démissionnaire démissionner démiurgique démobilisable
- démobilisateur démobilisé démochrétien démochristianiser démocrate démocrate-
- chrétien démocratique démocratiser démodé démodécique démoduler démographe
+ démersal démesuré démétalliser déméthaniser démeublé demeuré demi
+ demi-circulaire demi-dévêtu démieller demi-fin demi-fou démilitariser
+ demi-mondain demi-mort déminer déminéraliser démineur demi-ouvert demi-sel
+ démissionnaire démissionner démiurgique démobilisable démobilisateur
+ démobilisé démochrétien démochristianiser démocrate démocrate-chrétien
+ démocratique démocratiser démodé démodécique démoduler démographe
  démographique démonétiser démoniaque démonique démoniser démoniste
  démonologique démonstratif démontable démontant démonté démontrable démontrer
  démoralisant démoralisateur démoralisé démorphiniser démotique démotivant
@@ -1244,31 +1260,31 @@ ADJECTIVES = set(
  dolichotypique dollariser dolomitique dolomitiser doloriste dolosif domanial
  domanialiser dombiste doméen domesticable domestique domestiquer domical
  domiciliaire domicilié domifier dominant dominateur dominer dominicain
- dominical domitien dommageable domotiser domptable dompter donateur donatiste
- donjuanesque donjuaniser donnant donnant-donnant donné donneur dopaminergique
- dopaminomimétique dopant doper doré doreur dorien dorique dorloter dormant
- dormeur dormitif dorsal dorsaliser dorsiventral dorsolombaire dorso-palatal
- dosable doser doseur dosimétrique dostoïevskien dotal doter douanier double
- doublé doubleau doublonner douceâtre doucereux doucet doucher douci doué
- douillet douloureux douteur douteux doux doux-amer douzième doxologique
- draconien draconitique dragéifié drageonnant drageonner draguer dragueur
- drainer draîner draineur dramatique dramatisant dramatiser dramaturgique
- drapant drapé drapier drastique dravidien drépanocytaire dresdeniser dresser
- dreyfusard dribbler dribler driographique drogué droit droit-fil droitier
- droitiser droitiste drolatique drôlatique drôle drôlet dromochronique drômois
- dromotrope droper dropper drosser dru druidique drupacé druse drusillaire
- druze dry dual dualiser dualiste dubitatif ducal ductile duel duhamélien
- dulçaquicole dulcicole dulcifier dunaire dunkerquois dunois duodécennal
- duodécimal duodénal duolocal dupe duper duplex duplicatif duplice dupliquer
- dur durable duraille dural duraminiser duratif durcissable durcissant
- durcisseur durham duumviral duvaliériste duveter duveteux dyadique dynamique
- dynamisant dynamiser dynamiste dynamité dynamoélectrique dynamogène
- dynamogénique dynamométrique dynastique dyscalculique dyscéphalique
- dyschromatopsique dyscrasique dysembryoplasique dysendocrinien dysentériforme
- dysentérique dysérythropoïétique dysgénésique dysgénique dysgraphique
- dysgravidique dysharmonieux dysharmonique dysidrosique dysimmunitaire
- dyskératosique dyskinétique dysleptique dyslexique dyslipémique dysmature
- dysmélique dysménorrhéique dysmétabolique dysmétrique dysmorphique
+ dominical domitien dommageable domoticien domotiser domptable dompter donateur
+ donatiste donjuanesque donjuaniser donnant donnant-donnant donné donneur
+ donquichottesque dopaminergique dopaminomimétique dopant doper doré doreur
+ dorien dorique dorloter dormant dormeur dormitif dorsal dorsaliser
+ dorsiventral dorsolombaire dorso-palatal dosable doser doseur dosimétrique
+ dostoïevskien dotal doter douanier double doublé doubleau doublonner douceâtre
+ doucereux doucet doucher douci doué douillet douloureux douteur douteux doux
+ doux-amer douzième doxologique draconien draconitique dragéifié drageonnant
+ drageonner draguer dragueur drainer draîner draineur dramatique dramatisant
+ dramatiser dramaturgique drapant drapé drapier drastique dravidien
+ drépanocytaire dresdeniser dresser dreyfusard dribbler dribler driographique
+ drogué droit droit-fil droitier droitiser droitiste drolatique drôlatique
+ drôle drôlet dromochronique drômois dromotrope droper dropper drosser dru
+ druidique drupacé druse drusillaire druze dry dual dualiser dualiste dubitatif
+ ducal ductile duel duhamélien dulçaquicole dulcicole dulcifier dunaire
+ dunkerquois dunois duodécennal duodécimal duodénal duolocal dupe duper duplex
+ duplicatif duplice dupliquer dur durable duraille dural duraminiser duratif
+ durcissable durcissant durcisseur durham duumviral duvaliériste duveter
+ duveteux dyadique dynamique dynamisant dynamiser dynamiste dynamité
+ dynamoélectrique dynamogène dynamogénique dynamométrique dynastique
+ dyscalculique dyscéphalique dyschromatopsique dyscrasique dysembryoplasique
+ dysendocrinien dysentériforme dysentérique dysérythropoïétique dysgénésique
+ dysgénique dysgraphique dysgravidique dysharmonieux dysharmonique dysidrosique
+ dysimmunitaire dyskératosique dyskinétique dysleptique dyslexique dyslipémique
+ dysmature dysmélique dysménorrhéique dysmétabolique dysmétrique dysmorphique
  dysontogénétique dysorique dysorthographique dyspepsique dyspeptique
  dysphorique dysplasique dysplastique dyspnéique dysprosodique dyssocial
  dysthymique dystocique dystrophique dysurique ébahi ébarber ébaubi ébaucher
@@ -1313,8 +1329,8 @@ ADJECTIVES = set(
  éjaculer éjectable éjecter éjecteur éjectif ekphonétique élaborateur élaboré
  élaguer élaïdique élaïdiser élamite élancé élastique élastoplastique élatif
  élavé elbois éléate éléatique électif électoral électoraliste électrifier
- électrique électrisable électrisant électriser électroacoustique électro-
- acoustique électrobiologique électrocapillaire électrocardiographique
+ électrique électrisable électrisant électriser électroacoustique
+ électro-acoustique électrobiologique électrocapillaire électrocardiographique
  électrochimique électrocinétique électrocortical électrocuter électrocuteur
  électrodermal électrodomestique électrodynamique électroencéphalographique
  électrofaible électrogalvanique électrogène électrographitique
@@ -1415,27 +1431,27 @@ ADJECTIVES = set(
  entreciter entrecoupé entrecroiser entregloser entrelacé entrelardé entremêler
  entreposable entreposer entrepositaire entreprenant entrepreneurial
  entrepreunarial entrer entretailler entretenu entretoiser entriste entropique
- entrouvert entruster entuber enturbanné énucléer énumérable énumérateur
- énumératif énumérer énurétique envahissant envahisseur envaser enveloppant
- enveloppé envenimé enverguer enviable envider envié envieux enviné environnant
- environnemental environner envisageable envisager envoiler envoûtant envoûter
- envoyé enzootique enzymatique enzymologique enzymoprive éocambrien éocène
- éolien éolique éoliser éolithique éosinophile éosinophilique épactal
- épagogique épagomène épaississant épaississeur épamprer épancher épanneler
- épanoui épanouissant épargnant épargner éparpiller épars épatant épaté épateur
- épauler épeirogénique épéiste épeler épendymaire épenthétique épépiner éperdu
- éperonner épeuré épexégétique épharmonique éphébique éphectique éphelcystique
- éphémère éphémérophyte éphésien éphestien épiblastique épibranchial
- épicanthique épicardique épicé épicellulaire épicène épicentral épicentrique
- épichérématique épichorial épicondylien épicontinental épicrânien épicritique
- épicurien épicycloïdal épidéictique épidémiologique épidémique épidermique
- épidermoïde épidiascopique épididymaire épidural épier épierrer épigame
- épigamique épigastrique épigé épigénésique épigénétique épigénique épigéniser
- épiglottique épignathe épigrammatique épigraphique épigyne épilatoire
- épileptiforme épileptique épileptogène épileptoïde épiler épileur épiloguer
- épimastigote épimère épimériser épinceler épincer épinceter épiner épineurien
- épineux épinglé épinière épipaléolithique épipélagique épiphane
- épiphénoméniste épiphrénique épiphylle épiphysaire epiphyte épiphyte
+ entrouvert entr'ouvert entr'ouvert entruster entuber enturbanné énucléer
+ énumérable énumérateur énumératif énumérer énurétique envahissant envahisseur
+ envaser enveloppant enveloppé envenimé enverguer enviable envider envié
+ envieux enviné environnant environnemental environner envisageable envisager
+ envoiler envoûtant envoûter envoyé enzootique enzymatique enzymologique
+ enzymoprive éocambrien éocène éolien éolique éoliser éolithique éosinophile
+ éosinophilique épactal épagogique épagomène épaississant épaississeur épamprer
+ épancher épanneler épanoui épanouissant épargnant épargner éparpiller épars
+ épatant épaté épateur épauler épeirogénique épéiste épeler épendymaire
+ épenthétique épépiner éperdu éperonner épeuré épexégétique épharmonique
+ éphébique éphectique éphelcystique éphémère éphémérophyte éphésien éphestien
+ épiblastique épibranchial épicanthique épicardique épicé épicellulaire épicène
+ épicentral épicentrique épichérématique épichorial épicondylien épicontinental
+ épicrânien épicritique épicurien épicycloïdal épidéictique épidémiologique
+ épidémique épidermique épidermoïde épidiascopique épididymaire épidural épier
+ épierrer épigame épigamique épigastrique épigé épigénésique épigénétique
+ épigénique épigéniser épiglottique épignathe épigrammatique épigraphique
+ épigyne épilatoire épileptiforme épileptique épileptogène épileptoïde épiler
+ épileur épiloguer épimastigote épimère épimériser épinceler épincer épinceter
+ épiner épineurien épineux épinglé épinière épipaléolithique épipélagique
+ épiphane épiphénoméniste épiphrénique épiphylle épiphysaire epiphyte épiphyte
  épiphytique épiploïque épique épirogénique épirote épiscléral épiscopal
  épiscopalien épiscopaliste épisodique épispastique épisser épistatique
  épistémique épistémologique épistolaire épitaxial épithélial épithélialiser
@@ -1468,9 +1484,9 @@ ADJECTIVES = set(
  espérer espiègle espion espionnable espionner espressivo esquicher esquilleux
  esquimau esquintant esquinté esquisser esquiver essaimer essanger essarter
  essayer essénien esséniste essentialiser essentialiste essentiel esseulé
- essorant essorer essoriller essoucher essoucheur essouffler essuyer est est-
- africain est-allemand estamper estampeur estampiller este estérifier est-
- européen esthésiogène esthésiométrique esthète esthétique esthétisant
+ essorant essorer essoriller essoucher essoucheur essouffler essuyer est
+ est-africain est-allemand estamper estampeur estampiller este estérifier
+ est-européen esthésiogène esthésiométrique esthète esthétique esthétisant
  esthétiser estimable estimatif estimatoire estimer estival estiver estomaqué
  estompable estompé estonien estoquer estrapader estrapasser estrogène
  estrogénique estropié estroprogestatif estuarien estudiantin établer établi
@@ -1517,40 +1533,41 @@ ADJECTIVES = set(
  exhalter exhausser exhaustif exhéréder exhiber exhibitionniste exhorter
  exhumer exigé exigeant exigentiel exigible exigu exilé exilien exilique
  exinique exinscrit existant existential existentialiser existentialiste
- existentiel exobiologique exocardiaque exocarpe exocentrique exocervical
- exocrânien exocrine exoérythrocytaire exogame exogamique exogène exonératoire
- exonérer exophtalmique exoplasmique exorable exorbitant exorbité exorciser
- exoréique exosmotique exosphérique exostosique exotérique exothermique
- exotique exotiser expansé expansible expansif expansionniste expatrié
- expectatif expectorant expectorer expédient expédier expéditeur expéditif
- expéditionnaire expérimentable expérimental expérimenté expert expertiser
- expiable expiateur expiatoire expier expirant expirateur expiratoire expirer
- explétif explicable explicatif explicitable explicite expliciter expliquer
- exploitable exploitant exploité exploiteur explorable explorateur exploratoire
- explorer exploser explosible explosif explosophore exponentiel exportable
- exportateur exporter exposé expressif expressionniste exprimable exprimer
- expropriant expropriateur exproprié expugnable expulsé expulsif expulteur
- expurgatoire expurger exquis exsangue exsudatif exsuder extasié extatique
- extemporané extenseur extensible extensif extensionnel extensométrique
- exténuant exténuer extérieur extériorisable extérioriser exterminateur
- exterminer externaliser externe extérocepteur extéroceptif extérorécepteur
- extincteur extinctif extinguible extirpable extirper extorquer extra
- extrabudgétaire extracapsulaire extracardiaque extracellulaire extracérébral
- extracommunautaire extraconjugal extraconstitutionnel extracontractuel
- extracorporel extracrânien extracteur extractible extractif extra-curriculaire
- extradable extrader extraditionnel extradural extraeuropéen extra-fin extra-
- fort extrafusorial extragalactique extragénétique extragénital extrahépatique
- extrahospitalier extrajudiciaire extralégal extra-légal extralemniscal
- extralinguistique extralucide extra-lucide extramédullaire extramélique
- extramembraneux extraménager extramuqueux extraneurologique extranucléaire
- extraordinaire extraorganique extrapalléal extraparlementaire extra-
- parlementaire extrapatrimonial extrapéritonéal extrapéritoniser extra-plat
- extrapleural extrapolable extrapolatif extrapoler extraposable
+ existentiel exlusif exobiologique exocardiaque exocarpe exocentrique
+ exocervical exocrânien exocrine exoérythrocytaire exogame exogamique exogène
+ exonératoire exonérer exophtalmique exoplasmique exorable exorbitant exorbité
+ exorciser exoréique exosmotique exosphérique exostosique exotérique
+ exothermique exotique exotiser expansé expansible expansif expansionniste
+ expatrié expectatif expectorant expectorer expédient expédier expéditeur
+ expéditif expéditionnaire expérimentable expérimental expérimenté expert
+ expertiser expiable expiateur expiatoire expier expirant expirateur
+ expiratoire expirer explétif explicable explicatif explicitable explicite
+ expliciter expliquer exploitable exploitant exploité exploiteur explorable
+ explorateur exploratoire explorer exploser explosible explosif explosophore
+ exponentiel exportable exportateur exporter exposé expressif expressionniste
+ exprimable exprimer expropriant expropriateur exproprié expugnable expulsé
+ expulsif expulteur expurgatoire expurger exquis exsangue exsudatif exsuder
+ extasié extatique extemporané extenseur extensible extensif extensionnel
+ extensométrique exténuant exténuer extérieur extériorisable extérioriser
+ exterminateur exterminer externaliser externe extérocepteur extéroceptif
+ extérorécepteur extincteur extinctif extinguible extirpable extirper extorquer
+ extra extrabudgétaire extracapsulaire extracardiaque extracellulaire
+ extracérébral extracommunautaire extraconjugal extraconstitutionnel
+ extracontractuel extracorporel extracrânien extracteur extractible extractif
+ extra-curriculaire extradable extrader extraditionnel extradural extraeuropéen
+ extra-fin extra-fort extrafusorial extragalactique extragénétique extragénital
+ extrahépatique extrahospitalier extrajudiciaire extralégal extra-légal
+ extralemniscal extralinguistique extralucide extra-lucide extramédullaire
+ extramélique extramembraneux extraménager extramuqueux extraneurologique
+ extranucléaire extraordinaire extraorganique extrapalléal extraparlementaire
+ extra-parlementaire extrapatrimonial extrapéritonéal extrapéritoniser
+ extra-plat extrapleural extrapolable extrapolatif extrapoler extraposable
  extraprofessionnel extrapyramidal extrarénal extrascolaire extrasensible
- extra-sensible extrasensoriel extra-sensoriel extrastatutaire extraterrestre
- extra-terrestre extraterritorial extraterritorialiser extratropical
- extravagant extravaguer extravasculaire extravaser extraversif extraverti
- extrémal extrême extrême-oriental extrémiser extrémiste extrinsèque extrorse
+ extra-sensible extrasensoriel extra-sensoriel extra-souple extrastatutaire
+ extraterrestre extra-terrestre extraterritorial extraterritorialiser
+ extratropical extra-utérin extra-utérin extravagant extravaguer
+ extravasculaire extravaser extraversif extraverti extrémal extrême
+ extrême-gauche extrême-oriental extrémiser extrémiste extrinsèque extrorse
  extroverti extrusif exubérant exulcérer exultant exuvial faber fabien
  fabricant fabriquer fabriste fabulateur fabuleux façadiser facétieux facetter
  fâché fâcheux facho facial facile facilitant facilitateur faciliter façonner
@@ -1619,184 +1636,187 @@ ADJECTIVES = set(
  fluidal fluide fluidifiant fluidifié fluidique fluidiser fluidissime fluo
  fluoborique fluogermanique fluophosphorique fluor fluoracétique fluoré
  fluorescéinique fluorescent fluorhydrique fluorique fluoriser fluoritique
- fluosilicique fluosulfonique flûté fluvial fluviatile fluvio-deltaïque fluvio-
- marin fluviométrique fluxionnaire fob focal focalisable focaliser foccardiser
- focométrique foetal foetaliser foeticide foirer foireux foisonnant fol folasse
- folâtrant folâtre foldingue foliacé foliaire foliariser folichon folichonner
- folié folioter folique folk folklo folklorique folkloriser follet folliculaire
- folliculostimulant folliculo-stimulant fomenter foncé fonceur foncier
- fonctionnaliser fonctionnaliste fonctionnariser fonctionnel fondamental
- fondamentaliste fondant fondateur fondationnel fondé fondu fongible fongicide
- fongicole fongiforme fongique fongistatique fongoïde fongueux fontinal
- footballistique forable forain foraminé forcené forcer forclos fordiser forer
- forestier forézien forfait forfaitaire forfaitariser forfaitiser forgé
- forgeable forjeter forlancer forligner formalisable formalisateur formalisé
- formaliste formantique formaté formateur formatif formé formel formicant
- formidable formiminoglutamique formique formogène formoler formophénolique
- formosan formulable formulaire formuler formylacétique fort fortiche
- fortifiable fortifiant fortifier fortrait fortuit fortuné forwarder fossile
- fossilifère fossilisé fossoyer fou fouailler foudroyant foudroyer fouettard
- fouetté foufou fouger fougueux fouillé fouinard fouineur fouisseur foulant
- fouler fourbe fourber fourbu fourcher fourcheté fourchu fourgonner fourguer
- fouriériste fourmillant fourni fourrager fourré fourvoyer foutral foutraque
- foutu fovéal fovéolaire foxé foyer fracassant fracasser fractal fractionnable
- fractionnaire fractionné fractionnel fractionniste fracturable fracturaire
- fracturer fragile fragilisant fragiliser fragmentable fragmentaire fragmenter
- fraiser fraisier framboisé franc français franc-comtois francfortois franchisé
- franchiseur franchissable franchouillard francien francilien francique
- francisant franciscain franciser franc-maçon franc-maçonnique franco franco-
- allemand franco-américain franco-belge franco-britannique franco-canadien
- franco-flamand franco-italien franconien francophile francophobe francophone
- franco-provençal frangeant franger franglais frankliniser franquiste frappant
- frappé frappeur fraternel fratricide fraudatoire frauder fraudeur frauduleux
- frayer fredonner frégater freiner frelaté frêle frémissant frénateur
- frénétique fréquent fréquentable fréquentatif fréquenté fréquentiel frère
- fréter frétillant fretté freudien friable friand fribronoïde fricasser
+ fluosilicique fluosulfonique flûté fluvial fluviatile fluvio-deltaïque
+ fluvio-marin fluviométrique fluxionnaire fob focal focalisable focaliser
+ foccardiser focométrique foetal foetaliser foeticide foirer foireux foisonnant
+ fol folasse folâtrant folâtre foldingue foliacé foliaire foliariser folichon
+ folichonner folié folioter folique folk folklo folklorique folkloriser follet
+ folliculaire folliculostimulant folliculo-stimulant fomenter foncé fonceur
+ foncier fonctionnaliser fonctionnaliste fonctionnariser fonctionnel
+ fondamental fondamentaliste fondant fondateur fondationnel fondé fondu
+ fongible fongicide fongicole fongiforme fongique fongistatique fongoïde
+ fongueux fontinal footballistique forable forain foraminé forcené forcer
+ forclos fordiser forer forestier forézien forfait forfaitaire forfaitariser
+ forfaitiser forgé forgeable forjeter forlancer forligner formalisable
+ formalisateur formalisé formaliste formantique formaté formateur formatif
+ formé formel formicant formidable formiminoglutamique formique formogène
+ formoler formophénolique formosan formulable formulaire formuler
+ formylacétique fort fortiche fortifiable fortifiant fortifier fortrait fortuit
+ fortuné forwarder fossile fossilifère fossilisé fossoyer fou fouailler
+ foudroyant foudroyer fouettard fouetté foufou fouger fougueux fouillé fouinard
+ fouineur fouisseur foulant fouler fourbe fourber fourbu fourcher fourcheté
+ fourchu fourgonner fourguer fouriériste fourmillant fourni fourrager fourré
+ fourvoyer foutral foutraque foutu fovéal fovéolaire foxé foyer fracassant
+ fracasser fractal fractionnable fractionnaire fractionné fractionnel
+ fractionniste fracturable fracturaire fracturer fragile fragilisant fragiliser
+ fragmentable fragmentaire fragmenter fraiser fraisier framboisé franc français
+ franc-comtois francfortois franchisé franchiseur franchissable franchouillard
+ francien francilien francique francisant franciscain franciser franc-maçon
+ franc-maçonnique franco franco-allemand franco-américain franco-anglais
+ franco-belge franco-britannique franco-canadien franco-flamand franco-italien
+ franco-japonais franco-mongol franconien francophile francophobe francophone
+ franco-polonais franco-provençal franco-russe frangeant franger franglais
+ frankliniser franquiste frapadingue frappadingue frappant frappé frappeur
+ fraternel fratricide fraudatoire frauder fraudeur frauduleux frayer fredonner
+ frégater freiner frelaté frêle frémissant frénateur frénétique fréquent
+ fréquentable fréquentatif fréquenté fréquentiel frère fréter frétillant
+ frétillard fretté freudien friable friand fribourgeois fribronoïde fricasser
  fricatif fricoter fricoteur frictionnel frictionner frictionneur frigéliser
  frigide frigoporteur frigorifié frigorifique frigorigène frigoriste frileux
- frimer frimeur fringant fringué frioulien friper fripon friqué frisant frisé
- frison frisoter frisottant frisotté frisquet frissonnant frit fritter frivole
- fröbélien froid froissable froissant froisser frôler frôleur fromager froment
- fromental fromentée froncé fronceur fronder frondeur frondicole frontal
- frontalier frontiste frontogénétique frontologique fronto-temporal frottant
- frotter froudroyant froufroutant froufrouter froussard fructidoriser
- fructifère fructifier fructueux frugal frugivore fruité fruitier frumentacé
- frumentaire fruste frustrant frustratoire frustré frutescent fruticuleux
- fuchsia fuchsien fuégien fuériste fugace fugitif fugué fugueur fulgural
- fulgurant fulgurer fuligineux fulminant fulminatoire fulminer fulminique
- fulvique fumable fumant fumarique fumasse fumé fumeronner fumeur fumeux
- fumigatoire fumigène fumiger fumiste fumivore fun funambulesque fundique
- fundoscopique funèbre funéraire funeste funiculaire funk funkifier funky
- furannique furax fureter fureteur furfuracé furfurylique furibard furibond
- furieux furioso furoïque furonculeux furonculoïde furtif fusant fuselé fusible
- fusidique fusiforme fusiller fusionnel fusionner fusocellulaire fusorial
- fustiger futé futile futiliser futur futurible futuriste futurologique
- fuvélien fuyant fuyard gabaminergique gabbroïque gabonais gâcher gâcheur
- gadgétiser gaélique gaffer gaffeur gaga gagé gagesque gagiste gagnable gagnant
- gagner gagneur gai gaillard gainer galactagogue galactarique galactique
- galactobolique galactocentrique galactogène galactonique galactophore
- galactopoïétique galactosique galacturonique galant galate galbé galéjer
- galénique galéniste galer galetteux galeux galicien galiléen galleux gallican
- gallicole galligène gallinacé gallique gallo gallois gallo-romain gallo-roman
- galoisien galonné galonnier galopant galoper galopeur galtonien galvanique
- galvaniser galvanocautériser galvanomagnétique galvanométrique galvanoplaste
- galvanoplastique galvanotonique galvauder gambardière gamberger gambien
- gambiller gaméticide gamétique gamétocytaire gamétophytique gamin gamma
- gammagraphique gammé gamocarpique gamopétale gamosépale ganache gangétique
- ganglionnaire ganglionné ganglioplégique gangrené gangréner gangreneux
- gangréneux gangstériser ganoïde ganser gantelé ganter gantier gantois
- gapançais garancer garant garanti garçon garçonnier gardable gardé gardien
- gardiste gardois garer gargantuesque gargariser gargasien garibaldien garni
- garnissant garonnais garrotté gascon gaspésien gaspiller gaspilleur
- gassendiste gastralgique gastrectomiser gastrique gastroduodénal gastro-
- entéritique gastro-hépatique gastro-intestinal gastronomique gastroprive
- gastrotomiser gâté gâteau gâteux gâtifier gauche gaucher gauchisant gauchiser
- gauchiste gaufrer gauler gaullien gaulliste gaulois gausser gavache gaver
- gavot gavroche gay gazé gazéifiable gazéifier gazeux gazier gaziste
- gazométrique gazonnant gazonné gazonneux gazouillant gazouilleur géant
- geignard gélatiné gélatineux gélatiniforme gélatiniser gelé géléophysique
- gélif gélifiant gélifié gélogène gélosique gemarique gémeau gémellaire
- gémellipare géminé gémissant gemme gemmé gemmeur gemmifère gemmipare
- gemmologique gemmologiste génal gênant gendarmiser gêné généalogique général
- généralisable généralisant généralisateur généraliser généraliste générateur
- génératif générationnel générativiste générer généreux générique génésiaque
- génésique généthliaque génétique genevois géni génial génien génique génital
- génitif génito-crural génito-spinal génitosurrénal génito-urinaire génocidaire
- génois génomique génotoxique génotypique gent gentil gentilice gentillet
- gentisique géoacoustique géobotanique géocentrique géocentriste géochimique
- géochronologique géocoronal géodésique géodique géodynamique géographique
- géoïdique géolinguistique géologique géomagnétique géomatique géomécanique
- géométral géométrique géométriser géomorphogénique géomorphologique géophage
- géophysique géopolitique géopotentiel géorgien géorgique géosismique
- géostationnaire géostatique géostatistique géostratégique géostrophique
- géosynchrone géotactique géotechnique géotectonique géothermal géothermique
- géotrope géotropique gérable géranique gerbable gerber gerbeur gercer gérer
- gériatrique germain germaneux germanifluorhydrique germanique germanisant
- germaniser germaniste germano-britannique germanophile germanophobe
- germanophone germé germicide germinal germinateur germinatif gérontocratique
- gérontologique gérontophile gersois gestagène gestaltiste gestatif
- gestationnel gestatoire gesticulant gestionnaire gestuel ghanéen ghettoïser
- gibbérellique gibbeux gibelin gibouler giboyeux gifler gigantesque
- gigantocellulaire gigantofolliculaire gigantopyramidal gigogne gigotant gigoté
- gigotté gingival ginguet giottesque giralducien giratoire girond girondin
- gironné gisant giscardien gitan gîter gîtologique givrant givré givreux glabre
- glaçant glacé glaceur glaceux glaciaire glacial glaciel glacielliser glacifier
- glaciologique glagolitique glairer glaireux glaise glaiser glaiseux glamour
- glandé glandouiller glandulaire glanduleux glaner glapissant glaucomateux
- glauconieux glauque glénoïdal glénoïde glénoïdien gleyifier glial glischroïde
- glissant glissé glisseur global globalisant globalisateur globaliser
- globaliste globalitaire globicéphale globique globocellulaire globulaire
- globuleux globuliser glomérulaire glomique glorieux glorificateur glorifier
- gloser glossolabié glossopharyngien glosso-staphylin glottal glottaliser
- glottique glougloutant glouglouter gloussant glouton gluant glucarique
- glucidique glucido-protidique glucocorticoïde glucoformateur gluconique
- glucosidasique glucuronique glutamatergique glutamique glutarique glutéal
- glutineux glycémique glycériner glycérique glycérophosphorique
- glycérophtalique glycidique glycocholique glycogénique glycogénolytique
- glycolique glycolurique glycolytique glyconien glycopénique glycoprotéique
- glycorégulateur glycosidique glycostatique glycosurique glycotrope
- glycuronique glycyrrhétinique glycyrrhizique glyoxylique gnangnan gneisseux
- gneissique gniangnian gnian-gnian gnomique gnomonique gnoséologique gnosique
- gnostique gnotobiotique gnotoxénique gober gobichonner godailler gödeliser
- godiche godichon godiller godronné goémonier goétique goguenard goï goinfre
- goitreux goitrigène gold golden golfique golfiste goliardique gomariste
- goménolé gommé gommeux gommifère gomorrhéen gonadique gonadophorique
- gonadothérapique gonadotrope gonalgique gondolant gonflable gonflant gonflé
- gongoriste goniaque gonidial goniométrique gonochorique gonococcique
- gonocytaire gonosomique goodie gorbatchévien gordien gorge-de-pigeon gorger
- gosse gothique gotique gouacher gouailler gouailleur gouape goudronner
- goudronneux goujonner goujonnier goulafre gouleyant goulu goupiller gourd
- gourer gourmand gourmander gourmé goussaut goûté goûteux gouttereau goutteux
- gouvernable gouvernant gouverné gouvernemental goy grabataire grabatiser
- graciable gracier grâcier gracieux gracile graciliser gradé gradualiste gradué
- graduel grailler graillonner grainer grainetier graisser graisseur graisseux
- graminé grammatical grammaticaliser gram-négatif gramscien granaire grand
- grand-angle grand-angulaire grand-ducal grandelet grandet grand-guignolesque
- grandiloquent grandiose grandissant grandissime grangrener granité graniteux
- granitique granitiser granitoïde granivore granoblastique granodioritique
- granophyrique granulaire granulé granuleux granulique granulitique
- granulocytaire granulocytotoxique granulomateux granulométrique granulopexique
- graphique graphiter graphiteux graphitique graphitiser graphocinétique
- graphologique graphométrique graphomoteur grappiller grappilleur grasseyant
- grasseyé grassouillet graticuler gratifiant gratifier gratiné gratter gratteur
- gratuit gravant gravatif grave gravelé graveleux graver gravettien graveur
- gravide gravidique gravidocardiaque gravidotoxique gravifique gravillonner
- gravimétrique gravissime gravitaire gravitant gravitationnel grec gréciser
- gréco-latin gréco-romain gréco-turc grecquer gréer greffable greffant greffer
- grégaire grégarigène grégariser grège grégeois grégorien grêle grêlé grêleux
- grelottant grenadin grenailler grenat grené grenelé grenoblois grenu gréser
- gréseux grésifier grésillant grever gribiche gribouiller gribouilleur grièche
- griffé griffeur griffonner griffu grigner grignoter grignoteur grillager
- grillé grimaçant grimacer grimacier grimer grimpant grimper grimpeur grinçant
- grincher grincheux gringalet gringe grippal grippé gris grisailler grisant
- grisâtre griser grisoller grison grisonnant grisouteux grivelé grivois
- groenlandais groggy grogner grogneur grognon grognonner grommeler grondable
- grondant gronder grondeur grossier grossissant grossoyer grotesque grouillant
- groupal groupé groupusculaire groupusculariser gruger grumeleux grumifère
- gruyer guadeloupéen guai guais guanidique guarani guatémalien guatemaltèque
- guatémaltèque guéable guèbre guéer guègue guelfe guenilleux guéri guérissable
- guérisseur guernesiais guerrier guesdiste guêtrer guetter gueulard gueuler
- gueuletonner gueuser gueux guévariste guèze guider guignard guigner
- guignolesque guillemeter guilleret guilloché guillotiné guincher guindé
- guinéen guiper guivré gulaire gummifère gurunsi gustatif guttural gutturaliser
- guyanais gymnastique gymnique gymnocarpe gymnopile gymnosperme gynandre
- gynandroïde gynécologique gynobasique gynocardique gynogénétique gynoïde
- gypseux gypsifère gypsitique gyromagnétique gyroscopique gyrostatique
- gyrovague habile habilitant habilitateur habilité habillable habillé habitable
- habité habitué habituel hâbleur haboku habsbourgeois haché hachémite hachuré
- hadal hadronique hafside hagard hagiographe hagiographique hagiologique
- hagiorite haguais haillonneux haineux hainuyer haïssable haïsseur haïtien
- halal halbrené hâlé haler haletant halieutique halistérique halitueux
- hallstattien hallucinant hallucinatoire halluciné hallucinogène
- hallucinolytique halogène halogéné halogéniser haloïde halomorphe halophile
- halophyte haltérophile hambourgeois hambourgien hameçonner hamiltonien
- hamitique hamlétien hanafite hanbalite hanché handicapé handisport hanifite
- hannemannien hannetonner hanovrien hanséate hanséatique hansénien hanté
- haoussa haphémétrique haplobiontique haplodiplobiontique haploïde happer
- happeur hapténique haptique haptophore haranguer harappéen harassant harassé
- harcelant harcelé harceleur hard hardé hardi haret hargneux harmonieux
- harmonique harmonisateur harmoniser harnacher harper harponner hasardé
- hasardeux hassidique hasté hâter hathorique hâtif haubaner haugianiste
+ frimer frimeur fringant fringué frioulien friper fripon fripouillard
+ fripouillard friqué frisant frisé frison frisoter frisottant frisotté frisquet
+ frissonnant frit fritter frivole fröbélien froid froissable froissant froisser
+ frôler frôleur fromager froment fromental fromentée froncé fronceur fronder
+ frondeur frondicole frontal frontalier frontiste frontogénétique frontologique
+ fronto-temporal frottant frotter froudroyant froufroutant froufrouter
+ froussard fructidoriser fructifère fructifier fructueux frugal frugivore
+ fruité fruitier frumentacé frumentaire fruste frustrant frustratoire frustré
+ frutescent fruticuleux fuchsia fuchsien fuégien fuériste fugace fugitif fugué
+ fugueur fulgural fulgurant fulgurer fuligineux fulminant fulminatoire fulminer
+ fulminique fulvique fumable fumant fumarique fumasse fumé fumeronner fumeur
+ fumeux fumigatoire fumigène fumiger fumiste fumivore fun funambulesque
+ fundique fundoscopique funèbre funéraire funeste funiculaire funk funkifier
+ funky furannique furax fureter fureteur furfuracé furfurylique furibard
+ furibond furieux furioso furoïque furonculeux furonculoïde furtif fusant
+ fuselé fusible fusidique fusiforme fusiller fusionnel fusionner fusocellulaire
+ fusorial fustiger futé futile futiliser futur futurible futuriste
+ futurologique fuvélien fuyant fuyard gabaminergique gabbroïque gabonais gâcher
+ gâcheur gadgétiser gaélique gaffer gaffeur gaga gagé gagesque gagiste gagnable
+ gagnant gagner gagneur gai gaillard gainer galactagogue galactarique
+ galactique galactobolique galactocentrique galactogène galactonique
+ galactophore galactopoïétique galactosique galacturonique galant galate galbé
+ galéjer galénique galéniste galer galetteux galeux galicien galiléen galleux
+ gallican gallicole galligène gallinacé gallique gallo gallois gallo-romain
+ gallo-roman galoisien galonné galonnier galopant galoper galopeur galtonien
+ galvanique galvaniser galvanocautériser galvanomagnétique galvanométrique
+ galvanoplaste galvanoplastique galvanotonique galvauder gambardière gamberger
+ gambien gambiller gaméticide gamétique gamétocytaire gamétophytique gamin
+ gamma gammagraphique gammé gamocarpique gamopétale gamosépale ganache
+ gangétique ganglionnaire ganglionné ganglioplégique gangrené gangréner
+ gangreneux gangréneux gangstériser ganoïde ganser gantelé ganter gantier
+ gantois gapançais garancer garant garanti garçon garçonnier gardable gardé
+ gardien gardiste gardois garer gargantuesque gargariser gargasien garibaldien
+ garni garnissant garonnais garrotté gascon gaspésien gaspiller gaspilleur
+ gassendiste gastralgique gastrectomiser gastrique gastroduodénal
+ gastro-entéritique gastro-hépatique gastro-intestinal gastronomique
+ gastroprive gastrotomiser gâté gâteau gâteux gâtifier gauche gaucher
+ gauchisant gauchiser gauchiste gaufrer gauler gaullien gaulliste gaulois
+ gausser gavache gaver gavot gavroche gay gazé gazéifiable gazéifier gazeux
+ gazier gaziste gazométrique gazonnant gazonné gazonneux gazouillant
+ gazouilleur géant geignard gélatiné gélatineux gélatiniforme gélatiniser gelé
+ géléophysique gélif gélifiant gélifié gélogène gélosique gemarique gémeau
+ gémellaire gémellipare géminé gémissant gemme gemmé gemmeur gemmifère
+ gemmipare gemmologique gemmologiste génal gênant gendarmiser gêné généalogique
+ général généralisable généralisant généralisateur généraliser généraliste
+ générateur génératif générationnel générativiste générer généreux générique
+ génésiaque génésique généthliaque génétique genevois géni génial génien
+ génique génital génitif génito-crural génito-spinal génitosurrénal
+ génito-urinaire génocidaire génois génomique génotoxique génotypique gent
+ gentil gentilice gentillet gentisique géoacoustique géobotanique géocentrique
+ géocentriste géochimique géochronologique géocoronal géodésique géodique
+ géodynamique géographique géoïdique géolinguistique géologique géomagnétique
+ géomatique géomécanique géométral géométrique géométriser géomorphogénique
+ géomorphologique géophage géophysique géopolitique géopotentiel géorgien
+ géorgique géosismique géostationnaire géostatique géostatistique
+ géostratégique géostrophique géosynchrone géotactique géotechnique
+ géotectonique géothermal géothermique géotrope géotropique gérable géranique
+ gerbable gerber gerbeur gercer gérer gériatrique germain germaneux
+ germanifluorhydrique germanique germanisant germaniser germaniste
+ germano-britannique germanophile germanophobe germanophone germé germicide
+ germinal germinateur germinatif gérontocratique gérontologique gérontophile
+ gersois gestagène gestaltiste gestatif gestationnel gestatoire gesticulant
+ gestionnaire gestuel ghanéen ghettoïser gibbérellique gibbeux gibelin gibouler
+ giboyeux gifler gigantesque gigantocellulaire gigantofolliculaire
+ gigantopyramidal gigogne gigotant gigoté gigotté gingival ginguet giottesque
+ giralducien giratoire girond girondin gironné gisant giscardien gitan gîter
+ gîtologique givrant givré givreux glabre glaçant glacé glaceur glaceux
+ glaciaire glacial glaciel glacielliser glacifier glaciologique gladiatrice
+ glagolitique glairer glaireux glaise glaiser glaiseux glamour glandé
+ glandilleuse glandouiller glandu glandulaire glanduleux glaner glapissant
+ glapisseur glaucomateux glauconieux glauque glavioteur glénoïdal glénoïde
+ glénoïdien gleyifier glial glischroïde glissant glissé glisseur global
+ globalisant globalisateur globaliser globaliste globalitaire globicéphale
+ globique globocellulaire globulaire globuleux globuliser glomérulaire glomique
+ glorieux glorificateur glorifier gloser glossolabié glossopharyngien
+ glosso-staphylin glottal glottaliser glottique glougloutant glouglouter
+ gloussant glouton gluant glucarique glucidique glucido-protidique
+ glucocorticoïde glucoformateur gluconique glucosidasique glucuronique
+ glutamatergique glutamique glutarique glutéal glutineux glycémique glycériner
+ glycérique glycérophosphorique glycérophtalique glycidique glycocholique
+ glycogénique glycogénolytique glycolique glycolurique glycolytique glyconien
+ glycopénique glycoprotéique glycorégulateur glycosidique glycostatique
+ glycosurique glycotrope glycuronique glycyrrhétinique glycyrrhizique
+ glyoxylique gnangnan gneisseux gneissique gniangnian gnian-gnian gnomique
+ gnomonique gnoséologique gnosique gnostique gnotobiotique gnotoxénique gober
+ gobichonner godailler gödeliser godiche godichon godiller godronné goémonier
+ goétique goguenard goï goinfre goitreux goitrigène gold golden golfique
+ golfiste goliardique gomariste goménolé gommé gommeux gommifère gomorrhéen
+ gonadique gonadophorique gonadothérapique gonadotrope gonalgique gondolant
+ gonflable gonflant gonflé gongoriste goniaque gonidial goniométrique
+ gonochorique gonococcique gonocytaire gonosomique goodie gorbatchévien gordien
+ gorge-de-pigeon gorger gosse gothique gotique gouacher gouailler gouailleur
+ gouape goudronner goudronneux goujonner goujonnier goulafre gouleyant goulu
+ goupiller gourd gourer gourmand gourmander gourmé goussaut goûté goûteux
+ gouttereau goutteux gouvernable gouvernant gouverné gouvernemental goy
+ grabataire grabatiser graciable gracier grâcier gracieux gracile graciliser
+ gradé gradualiste gradué graduel grailler graillonner grainer grainetier
+ graisser graisseur graisseux graminé grammatical grammaticaliser gram-négatif
+ gramscien granaire grand grand-angle grand-angulaire grand-ducal grandelet
+ grandet grand-guignolesque grandiloquent grandiose grandissant grandissime
+ grangrener granité graniteux granitique granitiser granitoïde granivore
+ granoblastique granodioritique granophyrique granulaire granulé granuleux
+ granulique granulitique granulocytaire granulocytotoxique granulomateux
+ granulométrique granulopexique graphique graphiter graphiteux graphitique
+ graphitiser graphocinétique graphologique graphométrique graphomoteur
+ grappiller grappilleur grasseyant grasseyé grassouillet graticuler gratifiant
+ gratifier gratiné gratter gratteur gratuit gravant gravatif grave gravelé
+ graveleux graver gravettien graveur gravide gravidique gravidocardiaque
+ gravidotoxique gravifique gravillonner gravimétrique gravissime gravitaire
+ gravitant gravitationnel grec gréciser gréco-latin gréco-romain gréco-turc
+ grecquer gréer greffable greffant greffer grégaire grégarigène grégariser
+ grège grégeois grégorien grêle grêlé grêleux grelottant grenadin grenailler
+ grenat grené grenelé grenoblois grenu gréser gréseux grésifier grésillant
+ grever gribiche gribouiller gribouilleur grièche griffé griffeur griffonner
+ griffu grigner grignoter grignoteur grillager grillé grimaçant grimacer
+ grimacier grimer grimpant grimper grimpeur grinçant grincher grincheux
+ gringalet gringe grippal grippé gris grisailler grisant grisâtre griser
+ grisoller grison grisonnant grisouteux grivelé grivois groenlandais groggy
+ grogner grogneur grognon grognonner grommeler grondable grondant gronder
+ grondeur grossier grossissant grossoyer grotesque grouillant groupal groupé
+ groupusculaire groupusculariser gruger grumeleux grumifère gruyer guadeloupéen
+ guai guais guanidique guarani guatémalien guatemaltèque guatémaltèque guéable
+ guèbre guéer guègue guelfe guenilleux guéri guérissable guérisseur guernesiais
+ guerrier guesdiste guêtrer guetter gueulard gueuler gueuletonner gueuser gueux
+ guévariste guèze guider guignard guigner guignolesque guillemeter guilleret
+ guilloché guillotiné guincher guindé guinéen guiper guivré gulaire gummifère
+ gurunsi gustatif guttural gutturaliser guyanais gymnastique gymnique
+ gymnocarpe gymnopile gymnosperme gynandre gynandroïde gynécologique
+ gynobasique gynocardique gynogénétique gynoïde gypseux gypsifère gypsitique
+ gyromagnétique gyroscopique gyrostatique gyrovague habile habilitant
+ habilitateur habilité habillable habillé habitable habité habitué habituel
+ hâbleur haboku habsbourgeois haché hachémite hachuré hadal hadronique hafside
+ hagard hagiographe hagiographique hagiologique hagiorite haguais haillonneux
+ haineux hainuyer haïssable haïsseur haïtien halal halbrené hâlé haler haletant
+ halieutique halistérique halitueux hallstattien hallucinant hallucinatoire
+ halluciné hallucinogène hallucinolytique halogène halogéné halogéniser haloïde
+ halomorphe halophile halophyte haltérophile hambourgeois hambourgien
+ hameçonner hamiltonien hamitique hamlétien hanafite hanbalite hanché handicapé
+ handisport hanifite hannemannien hannetonner hanovrien hanséate hanséatique
+ hansénien hanté haoussa haphémétrique haplobiontique haplodiplobiontique
+ haploïde happer happeur hapténique haptique haptophore haranguer harappéen
+ harassant harassé harcelant harcelé harceleur hard hardé hardi haret hargneux
+ harmonieux harmonique harmonisateur harmoniser harnacher harper harponner
+ hasardé hasardeux hassidique hasté hâter hathorique hâtif haubaner haugianiste
  hauranais hausser haussier haustral haut hautain hauterivien hauturier
  havanais hâve haver haveur havrais hawaïen hawaiien hawiyé hazara hebdomadaire
  hébéphrène hébéphrénique héberger hébertiste hébété héboïdophrène hébraïque
@@ -1832,10 +1852,10 @@ ADJECTIVES = set(
  herbivore herborisé herbu hercher herculéen hercynien héréditaire
  héréditariste hérédo hérédosyphilitique hereford herero hérétique hérissé
  hérissonne hérissonner héritable hériter héritier hermaphrodite herméneutique
- hermétique hermétiste hermitien hermitique herniaire hernié hernieux héroï-
- comique héroïnomane héroïque héronnier herpétiforme herpétique herpétologique
- herscher hersé herseur hertzien herzégovinien hésisant hésitant hésiter
- hespérétinique hessois hésychaste hétéradelphe hétéralien hétéro
+ hermétique hermétiste hermitien hermitique herniaire hernié hernieux hernusien
+ héroï-comique héroïnomane héroïque héronnier herpétiforme herpétique
+ herpétologique herscher hersé herseur hertzien herzégovinien hésisant hésitant
+ hésiter hespérétinique hessois hésychaste hétéradelphe hétéralien hétéro
  hétéroatomique hétéroblastique hétérocaryote hétérocentrique hétérocerque
  hétérochromatique hétérochrome hétérochrone hétéroclite hétérocyclique
  hétérocytotrope hétérodonte hétérodoxe hétérodrome hétérodyme hétérodyname
@@ -1880,57 +1900,57 @@ ADJECTIVES = set(
  homogénéisé homogentisique homograde homogramme homographe homographique
  homolatéral homolécithe homolécithique homologable homologatif homologique
  homologue homologué homolytique homomorphe homomorphique homonucléaire
- homonyme homonymique homophasique homophile homophone homophonique homopolaire
- homopolymériser homorganique homorythmique homosexualiser homosexuel homotaxe
- homothalame homotherme homothétique homotope homotype homotypique homousien
- homozygote hondurien hongkongais hongre hongrer hongrois hongroyer honnête
- honorable honoraire honoré honorifique honteux hoquetant hoqueter horaire
- hordéiforme horizontal horizontaliser horloger hormonal hormonodépendant
- hormono-dépendant hormonogène hornier horodaté horodateur horographique
- horokilométrique horométrique horoptérique horoscopique horrible horrifiant
- horrifier horrifique horripilant horripilateur horripiler hors-bord hors-jeu
- horticole horticultural hosannier hospitalier hospitaliser hospitalo-
- universitaire hostile hot hôtelier hottentot hotter houblonner houblonnier
- houer houiller houilleux houillifier houleux houpper hourder hourrite
- houspiller housser houssiner huant huaxtèque hucher huer hugolien huguenot
- huiler huileux huilier huitantième huitard huitième huîtrier hululer humain
- humanisable humaniser humaniste humanistique humanitaire humanitariste
- humanoïde humble humectant humecter humer huméral humicole humide humidifier
- humidifuge humifère humifier humifuse humiliant humilié humique humocalcaire
- humoral humoriste humoristique hunnique huppé hurlant hurler hurlérien hurleur
- huron huronien husserlien hussite hutchinsonien hutu hyalin hyalobiuronique
- hyaloclastique hyaloïde hyaluronique hybride hybrider hydantoïque hydatiforme
- hydatique hydnocarpique hydracrylique hydragogue hydralcoolique hydrargyrique
- hydratable hydratant hydrater hydratropique hydraulicien hydraulique
- hydrencéphalique hydrique hydroactif hydroaérique hydroagricole
- hydroalcoolique hydroaromatique hydrocarboné hydrocéphale hydrochore
- hydrocinnamique hydrocyclique hydrodynamique hydroélectrique hydro-électrique
- hydroélectrolytique hydroénergétique hydroéolien hydrofuge hydrofuger
- hydrogénant hydrogéné hydrogénoïde hydrogéologique hydrographique hydrologique
- hydrolysable hydrolysant hydrolyser hydrolytique hydromagnétique
- hydromécanique hydrométallurgique hydrométrique hydrominéral hydromorphe
- hydronéphrotique hydrophane hydrophile hydrophiliser hydrophobe hydrophore
- hydropigène hydropique hydropneumatique hydropneumatiser hydroponique
- hydrosodique hydrosoluble hydrostatique hydrosulfureux hydrotechnique
- hydrothérapique hydrothermal hydrothermique hydrotimétrique hydroxamique
- hydroxyacétique hydroxyazoïque hydroxybenzoïque hydroxybenzylique
- hydroxybutyrique hydroxycinnamique hydroxylique hydroxymalonique
- hydroxynaphtoïque hydroxypropanoïque hydroxypropionique hydroxysalicylique
- hydroxysuccinique hygiénique hygiéniser hygiénodiététique hygrométrique
- hygrophile hygrophobe hygroscopique hylétique hyménéal hyménial hyménoptère
- hymnique hymnographique hyodésoxycholique hyoglosse hyoïde hyoïdien
- hyostylique hypate hyperactif hyperaigu hyperalgésique hyperalgique
- hyperandroïde hyperaride hyperbare hyperbarique hyperbasophile hyperbolique
- hyperboréen hypercalculateur hypercalorique hypercapitaliser hypercapnique
- hypercellulosique hypercentraliser hyperchrome hyperchromique hyperchylique
- hypercinétique hypercoder hypercomplexe hypercompound hypercorrect
- hypercorrecteur hypercritique hyperdense hyperdialectique hyperdiastématique
- hyperdilater hyperdiploïde hyperéchogène hyperémique hyperémotif
- hyperéosinophilique hyperergique hyperesthésique hypereutectique
- hypereutectoïde hyperfocal hypergéométrique hyperglobulinémique
- hyperglucidique hyperglycémiant hyperglycémique hypergolique
- hypergonadotrophique hypergynoïde hyperhormonal hyperhumaniser
- hyperhydropexique hyperimmunoglobulinémique hyperinsulinémique
+ homonyme homonymique homophasique homophile homophobe homophone homophonique
+ homopolaire homopolymériser homorganique homorozygote homorythmique
+ homosexualiser homosexuel homotaxe homothalame homotherme homothétique
+ homotope homotype homotypique homousien homozygote hondurien hongkongais
+ hongre hongrer hongrois hongroyer honnête honorable honoraire honoré
+ honorifique honteux hoquetant hoqueter horaire hordéiforme horizontal
+ horizontaliser horloger hormonal hormonodépendant hormono-dépendant
+ hormonogène hornier horodaté horodateur horographique horokilométrique
+ horométrique horoptérique horoscopique horrible horrifiant horrifier
+ horrifique horripilant horripilateur horripiler hors-bord hors-jeu horticole
+ horticultural hosannier hospitalier hospitaliser hospitalo-universitaire
+ hostile hot hôtelier hottentot hotter houblonner houblonnier houer houiller
+ houilleux houillifier houleux houpper hourder hourrite houspiller housser
+ houssiner huant huaxtèque hucher huer hugolien huguenot huiler huileux huilier
+ huitantième huitard huitième huîtrier hululer humain humanisable humaniser
+ humaniste humanistique humanitaire humanitariste humanoïde humble humectant
+ humecter humer huméral humicole humide humidifier humidifuge humifère humifier
+ humifuse humiliant humilié humique humocalcaire humoral humoriste humoristique
+ hunnique huppé hurlant hurler hurlérien hurleur huron huronien husserlien
+ hussite hutchinsonien hutu hyalin hyalobiuronique hyaloclastique hyaloïde
+ hyaluronique hybride hybrider hydantoïque hydatiforme hydatique hydnocarpique
+ hydracrylique hydragogue hydralcoolique hydrargyrique hydratable hydratant
+ hydrater hydratropique hydraulicien hydraulique hydrencéphalique hydrique
+ hydroactif hydroaérique hydroagricole hydroalcoolique hydroaromatique
+ hydrocarboné hydrocéphale hydrochore hydrocinnamique hydrocyclique
+ hydrodynamique hydroélectrique hydro-électrique hydroélectrolytique
+ hydroénergétique hydroéolien hydrofuge hydrofuger hydrogénant hydrogéné
+ hydrogénoïde hydrogéologique hydrographique hydrologique hydrolysable
+ hydrolysant hydrolyser hydrolytique hydromagnétique hydromécanique
+ hydrométallurgique hydrométrique hydrominéral hydromorphe hydronéphrotique
+ hydrophane hydrophile hydrophiliser hydrophobe hydrophore hydropigène
+ hydropique hydropneumatique hydropneumatiser hydroponique hydrosodique
+ hydrosoluble hydrostatique hydrosulfureux hydrotechnique hydrothérapique
+ hydrothermal hydrothermique hydrotimétrique hydroxamique hydroxyacétique
+ hydroxyazoïque hydroxybenzoïque hydroxybenzylique hydroxybutyrique
+ hydroxycinnamique hydroxylique hydroxymalonique hydroxynaphtoïque
+ hydroxypropanoïque hydroxypropionique hydroxysalicylique hydroxysuccinique
+ hygiénique hygiéniser hygiénodiététique hygrométrique hygrophile hygrophobe
+ hygroscopique hylétique hyménéal hyménial hyménoptère hymnique hymnographique
+ hyodésoxycholique hyoglosse hyoïde hyoïdien hyostylique hypate hyperactif
+ hyperaigu hyperalgésique hyperalgique hyperandroïde hyperaride hyperbare
+ hyperbarique hyperbasophile hyperbolique hyperboréen hypercalculateur
+ hypercalorique hypercapitaliser hypercapnique hypercellulosique
+ hypercentraliser hyperchrome hyperchromique hyperchylique hypercinétique
+ hypercoder hypercomplexe hypercompound hypercorrect hypercorrecteur
+ hypercritique hyperdense hyperdialectique hyperdiastématique hyperdilater
+ hyperdiploïde hyperéchogène hyperémique hyperémotif hyperéosinophilique
+ hyperergique hyperesthésique hypereutectique hypereutectoïde hyperfocal
+ hypergéométrique hyperglobulinémique hyperglucidique hyperglycémiant
+ hyperglycémique hypergolique hypergonadotrophique hypergynoïde hyperhormonal
+ hyperhumaniser hyperhydropexique hyperimmunoglobulinémique hyperinsulinémique
  hyperinsulinique hyperintense hyperkératosique hyperkinétique hyperlaxe
  hyperlipidémique hyperlipidique hypermédiatiser hypermètre hypermétrique
  hypermétrope hypermilitariser hypermnésique hypermonétariser hypernerveux
@@ -1978,10 +1998,10 @@ ADJECTIVES = set(
  idosaccharique idyllique ième ignacien ignare igné ignifuge ignifugé
  ignifugeant ignigène ignimbritique ignitubulaire ignivome ignoble ignominieux
  ignorant ignorantin ignorantiste ignorer ijaw iléal iléocaecal iléo-caecal
- iléocaecale iliaque îlien ilio-lombaire illégal illégitime illettré illicite
- illimitable illimité illisible illocutionnaire illocutoire illogique
- illuminable illuminateur illuminatif illuminé illuministe illusionnel
- illusionner illusionniste illusoire illustratif illustre illustré
+ iléocaecale iliaque îlien ilio-lombaire illégal illégaliste illégitime
+ illettré illicite illimitable illimité illisible illocutionnaire illocutoire
+ illogique illuminable illuminateur illuminatif illuminé illuministe
+ illusionnel illusionner illusionniste illusoire illustratif illustre illustré
  illustrissime illuvial illyrien illyrique imagé imagier imaginable imaginaire
  imaginal imaginant imaginatif imaginer imagiste imamite imbattable imbécile
  imberbe imbiber imbitable imbittable imbouchable imbriqué imbrisable
@@ -2012,150 +2032,150 @@ ADJECTIVES = set(
  impitoyable implacable implanifiable implantable implanter implémentatoire
  implémenté implexe impliable implicatif implicite impliquer implorable
  implorant implorer implosif imployable impolarisable impoli impolitique
- impolluable impondérable impopulaire importable important importateur importer
- importun importuner imposable imposant imposer impossible impotent
- impraticable imprécatoire imprécis imprécisable impréciser imprédicatif
- imprédictible imprégner imprenable imprescriptible impressible impressif
- impressionnable impressionnant impressionner impressionniste imprévisible
- imprévoyant imprévu imprimable imprimant imprimé imprimeur improbable
- improbateur improductible improductif improlongeable impromptu imprononçable
- improposable impropre improuvable improuvé improviser imprudent impubère
- impubliable impudent impudique impuissant impulser impulsif impulsionnel
- impuni impunissable impur impurifiable imputable imputer imputréfiable
- imputrescible in inabordable inabrité inabrogeable inaccentué inacceptable
- inaccessible inaccommodable inaccompli inaccordable inaccostable inaccoutumé
- inaccusable inaccusatif inachetable inachevé inactif inactinique inactivé
- inactuel inadaptable inadapté inadéquat inadmissible inaffectif inajournable
- inaliénable inalliable inallumable inaltérable inaltéré inamical inamissible
- inamovible inanalysable inanimé inaniser inanitié inapaisable inapaisé
- inaperçu inappareillable inapplicable inappliqué inappréciable inapprécié
- inapprenable inapprivoisable inapprivoisé inapprochable inappropriable inapte
- inarrachable inarrangeable inarrêtable inarticulable inarticulé inassimilable
- inassouvi inassouvissable inattaquable inatteignable inattendu inattentif
- inaudible inaugural inaugurer inauthentique inautoriser inavouable inavoué
- inca incalculable incalmable incandescent incantatoire incapable incapacitant
- incarcérable incarcérer incarnadin incarnat incarné incasable incasique
- incassable incendiaire incendié incernable incertain incertifier incessant
- incessible inceste incestueux inchangé inchangeable inchantable inchauffable
- inchavirable inchiffrable inchoatif inchoquable inchrétien incident incidentel
- incinérateur incinérer incirconcis incis incisé incisif incitable incitant
- incitateur incitatif inciter incitomoteur incivil incivilisable incivique
- inclassable inclément inclinable inclinant incliné inclusif incoagulable
- incodifiable incoercible incohérent incoiffable incollable incolore incombant
- incombustible incomestible incommensurable incommodant incommode incommodé
- incommunicable incommutable incomparable incompatible incompensable
- incompétent incompilable incomplet incompréhensible incompréhensif
- incompressible incompris inconcevable inconciliable incondensable
- inconditionné inconditionnel inconfortable incongédiable incongelable incongru
- inconjugable inconnaissable inconnu inconscient inconséquent inconsidéré
- inconsistant inconsolable inconsolé inconsommable inconstant inconstatable
- inconstitutionnel inconstructible incontentable incontestable incontesté
- incontinent incontournable incontrôlable incontrôlé incontroversable
- inconvenable inconvenant inconversible inconvertible inconvertissable
- incorporable incorporant incorporé incorporel incorrect incorrigible
- incorruptible incouvé incréable incrédule incréé incrémental incrémentiel
- increvable incriminable incriminant incriminateur incriminé incristallisable
- incritiquable incrochetable incroyable incroyant incrustant incrusté incubant
- incubateur incuber incuisable inculpable inculpé inculquer inculte
- incultivable incultivé incunable incurable incurieux incurvé incus
- indanthrénique indatable indéboulonnable indébrouillable indécachetable
- indécelable indécemment indécent indéchiffrable indéchirable indécidable
- indécis indéclinable indécolable indécollable indécomposable indéconcertable
- indécousable indécrassable indécrochable indécrottable indédoublable
- indéfectible indéfendable indéfini indéfiniser indéfinissable indéformable
- indéfrichable indéfrisable indégonflable indégradable indéhiscent indélébile
- indélibéré indélicat indélivrable indélogeable indémaillable indémêlable
- indémerdable indemne indemnisable indemniser indemnitaire indémodable
- indémontable indémontrable indéniable indénombrable indénouable indenté
- indépassable indépendant indépendantiste indépliable indéracinable
- indéraillable indéréglable indescriptible indésirable indestructible
- indétectable indéterminable indéterminé indéterministe indétrônable
- indéveloppable indevinable indévissable indexataire indexatoire indexer
- indianiser indianiste indianophone indicateur indicatif indicer indiciaire
- indicible indiciel indien indifférenciable indifférencié indifférent
- indifférentiste indifférer indiffusible indigène indigéniser indigéniste
- indigent indigeste indigestible indigète indigne indigné indigo indigoïde
- indigotier indique indiqué indirect indirigeable indiscernable indisciplinable
- indiscipliné indiscret indiscriminé indiscutable indiscuté indispensable
- indisponible indisposé indisputable indissociable indissoluble indistinct
- indistinguable individualisable individualisé individualiste individuatif
- individuel indivis indivisible in-dix-huit indo-aryen indochinois indocile
- indo-européen indo-gangétique indolacétique indolaminergique indolent
- indolique indolore indoloriser indomptable indompté indonésianiser indonésien
- indo-persan indoxylique indu indubitable inducteur inductif indulgencier
- indulgent indumenté induplicatif induré indusien industrialisable
- industrialisant industrialiser industrialiste industriel industrieux
- inébranlable inéchangeable inécoutable inécouté inédit inéditable inéducable
- ineffable ineffaçable ineffectif inefficace inégal inégalable inégalé
- inégaliser inégalistariste inégalitaire inélastique inélégant inélevable
- inéligible inéliminable inéluctable inéludable inemployable inemployé
- inénarrable inentamable inentamé inentendable inenvisageable inéprouvé inepte
- inépuisable inépuisé inéquilatéral inéquitable inéquivalve inéraillable inerme
- inerte inertiel inescomptable inespérable inespéré inesquivable inessentiel
- inesthétique inestimable inétanche inétendu inétreignable inétudiable
- inévitable inexact inexcitable inexcusable inexécutable inexécuté inexercé
- inexhaustible inexigible inexistant inexorable inexpédiable inexpérimenté
- inexpert inexpiable inexpié inexplicable inexpliqué inexploitable inexploité
- inexplorable inexploré inexplosible inexposable inexpressible inexpressif
- inexprimable inexprimé inexpugnable inextensible inexterminable inextinguible
- inextirpable inextricable infaillibiliste infaillible infaisable infalsifiable
- infamant infâme infanticide infantile infantilisant infantiliser infarctogène
- infatigable infatué infécond infect infectant infecté infectieux inféodé
- infère inférer inférieur inférioriser infermentescible infernal inférovarié
- infertile infestant infesté infeutrable infidèle infiltrer infime infini
- infiniste infinitésimal infinitif infinitiste infirmable infirmatif infirme
- infirmer infirmier inflammable inflammatoire inflationniste infléchi
- infléchissable inflexible inflexionnel infliger inflorescentiel influençable
- influencer influent influer infographique infondé inforgeable informant
- informatif informationnel informatique informatisable informatiser informe
- informel informer informulable informulé infortifiable infortuné
- infracellulaire infraclinique infraconstitutionnel infradien infradyne
- infragénérique infraliminaire infraliminal infralittoral infranational
- infranchissable infrangible infrarouge infrasonore infraspécifique
- infrastructurel infratidal infréquentable infroissabiliser infroissable
- infructueux infumable infundibulaire infundibuliforme infus infuser infusible
- ingagnable ingambe ingélif ingénieux ingénu ingérable ingérer inglorieux
- ingluvial ingouche ingouvernable ingraissable ingrat ingresque ingressif
- ingrisable ingriste inguérissable inguinal ingurgiter inhabile inhabitable
- inhabité inhabituel inhalateur inhaler inharmonieux inharmonique inhérent
- inhibant inhibé inhibiteur inhibitif inhomogène inhospitalier inhumain inhumer
- inidentifiable inimaginable inimitable inimité inimprimable inimputable
- ininflammable inintelligent inintelligible inintentionnel inintéressant
- ininterprétable ininterrompu iniodyme inique initial initialiser initiateur
- initiatique initier injectable injecté injecteur injectif injoignable
- injonctif injouable injurier injurieux injuste injustifiable injustifié
- inlassable innavigable inné innéiste innerver innettoyable innocent innocenter
- innombrable innomé innominé innommable innommé innovant innovateur innover
- inobservable inobservé inoccupable inoccupé inoculable inoculant inoculer
- inodore inoffensif inofficiel inofficieux inondable inondé inopérable
- inopérant inopiné inopportun inopposable inorganique inorganisable inorganisé
- inorthodoxe inosinique inositohexaphosphorique inotrope inoubliable inouï inox
- inoxydable inqualifiable inquantifiable inquiet inquiétant inquiéter inquilin
- inquisiteur inquisitoire inquisitorial inracontable inramonable inratable
- inrectifiable insaisissable insalifiable insalissable insalubre insane
- insaponifiable insatiable insatisfaisant insatisfait insaturable
- inscolarisable inscripteur inscriptible inscrit inscrutable insculper
- insécable insecouable insecourable insecticide insectifuge insectivore
- insécure insécuriser inséductible inséminateur inséminer insensé
- insensibiliser insensible inséparable insérable insérer insermenté inservable
- inserviable insidieux insigne insignifiant insincère insinuant insinuer
- insipide insistant insociable insolent insoler insolite insolubiliser
- insoluble insolvable insomniaque insomnieux insondable insonore insonoriser
- insouciant insoucieux insoumis insoupçonnable insoupçonné insoutenable
- inspecter inspirant inspirateur inspiratoire inspiré instabiliser instable
- installé instant instantané instantanéiser instaurer instiguer instiller
- instinctif instinctuel instituer institutionnaliser institutionnaliste
- institutionnel instructeur instructif instruit instrumentaire instrumental
- instrumentaliser instrumentaliste instrumenter insubmersible insubordonné
- insuffisant insuffler insulaire insulariser insulinique insulinogène
- insulinoprive insultant insulter insulteur insupportable insupporter
- insupprimable insurgé insurmontable insurpassable insurrectionnel
- insusceptible intachable intact intactile intaillable intailler intangible
- intarissable intégrable intégral intégrant intégrateur intégratif
- intégrationniste intègre intégré intégriste intellectualiser intellectualiste
- intellectuel intelligent intelligible intello intempérant intempestif
- intemporel intenable intense intensif intensifier intensionnel intenter
- intentionnaliser intentionnaliste intentionné intentionnel interactif
+ impolluable impollué impollué impondérable impopulaire importable important
+ importateur importer importun importuner imposable imposant imposer impossible
+ impotent impraticable imprécatoire imprécis imprécisable impréciser
+ imprédicatif imprédictible imprégner imprenable imprescriptible imprésentable
+ impressible impressif impressionnable impressionnant impressionner
+ impressionniste imprévisible imprévoyant imprévu imprimable imprimant imprimé
+ imprimeur improbable improbateur improductible improductif improlongeable
+ impromptu imprononçable improposable impropre improuvable improuvé improviser
+ imprudent impubère impubliable impudent impudique impuissant impulser impulsif
+ impulsionnel impuni impunissable impur impurifiable imputable imputer
+ imputréfiable imputrescible in inabordable inabouti inabrité inabrogeable
+ inaccentué inacceptable inaccessible inaccommodable inaccompli inaccordable
+ inaccostable inaccoutumé inaccusable inaccusatif inachetable inachevé inactif
+ inactinique inactivé inactuel inadaptable inadapté inadéquat inadmissible
+ inaffectif inajournable inaliénable inalliable inallumable inaltérable
+ inaltéré inamical inamissible inamovible inanalysable inanimé inaniser
+ inanitié inapaisable inapaisé inaperçu inappareillable inapparent inapparent
+ inapplicable inappliqué inappréciable inapprécié inapprenable inapprivoisable
+ inapprivoisé inapprochable inappropriable inapte inarrachable inarrangeable
+ inarrêtable inarticulable inarticulé inassimilable inassouvi inassouvissable
+ inattaquable inatteignable inattendu inattentif inaudible inaugural inaugurer
+ inauthentique inautoriser inavouable inavoué inca incalculable incalmable
+ incandescent incantatoire incapable incapacitant incarcérable incarcérer
+ incarnadin incarnat incarné incasable incasique incassable incendiaire
+ incendié incernable incertain incertifier incessant incessible inceste
+ incestueux inchangé inchangeable inchantable inchauffable inchavirable
+ inchiffrable inchoatif inchoquable inchrétien incident incidentel incinérateur
+ incinérer incirconcis incis incisé incisif incitable incitant incitateur
+ incitatif inciter incitomoteur incivil incivilisable incivique inclassable
+ inclément inclinable inclinant incliné inclusif incoagulable incodifiable
+ incoercible incohérent incoiffable incollable incolore incombant incombustible
+ incomestible incommensurable incommodant incommode incommodé incommunicable
+ incommutable incomparable incompatible incompensable incompétent incompilable
+ incomplet incompréhensible incompréhensif incompressible incompris
+ inconcevable inconciliable incondensable inconditionné inconditionnel
+ inconfortable incongédiable incongelable incongru inconjugable inconnaissable
+ inconnu inconscient inconséquent inconsidéré inconsistant inconsolable
+ inconsolé inconsommable inconstant inconstatable inconstitutionnel
+ inconstructible incontentable incontestable incontesté incontinent
+ incontournable incontrôlable incontrôlé incontroversable inconvenable
+ inconvenant inconversible inconvertible inconvertissable incorporable
+ incorporant incorporé incorporel incorrect incorrigible incorruptible incouvé
+ incréable incrédule incréé incrémental incrémentiel increvable incriminable
+ incriminant incriminateur incriminé incristallisable incritiquable
+ incrochetable incroyable incroyant incrustant incrusté incubant incubateur
+ incuber incuisable inculpable inculpé inculquer inculte incultivable incultivé
+ incunable incurable incurieux incurvé incus indanthrénique indatable
+ indéboulonnable indébrouillable indécachetable indécelable indécemment
+ indécent indéchiffrable indéchirable indécidable indécis indéclinable
+ indécolable indécollable indécomposable indéconcertable indécousable
+ indécrassable indécrochable indécrottable indédoublable indéfectible
+ indéfendable indéfini indéfiniser indéfinissable indéformable indéfrichable
+ indéfrisable indégonflable indégradable indéhiscent indélébile indélibéré
+ indélicat indélivrable indélogeable indémaillable indémêlable indémerdable
+ indemne indemnisable indemniser indemnitaire indémodable indémontable
+ indémontrable indéniable indénombrable indénouable indenté indépassable
+ indépendant indépendantiste indépliable indéracinable indéraillable
+ indéréglable indescriptible indésirable indestructible indétectable
+ indéterminable indéterminé indéterministe indétrônable indéveloppable
+ indevinable indévissable indexataire indexatoire indexer indianiser indianiste
+ indianophone indicateur indicatif indicer indiciaire indicible indiciel indien
+ indifférenciable indifférencié indifférent indifférentiste indifférer
+ indiffusible indigène indigéniser indigéniste indigent indigeste indigestible
+ indigète indigne indigné indigo indigoïde indigotier indique indiqué indirect
+ indirigeable indiscernable indisciplinable indiscipliné indiscret indiscriminé
+ indiscutable indiscuté indispensable indisponible indisposé indisputable
+ indissociable indissoluble indistinct indistinguable individualisable
+ individualisé individualiste individuatif individuel indivis indivisible
+ in-dix-huit indo-aryen indochinois indocile indo-européen indo-gangétique
+ indolacétique indolaminergique indolent indolique indolore indoloriser
+ indomptable indompté indonésianiser indonésien indo-persan indoxylique indu
+ indubitable inducteur inductif indulgencier indulgent indumenté induplicatif
+ induré indusien industrialisable industrialisant industrialiser industrialiste
+ industriel industrieux inébranlable inéchangeable inécoutable inécouté inédit
+ inéditable inéducable ineffable ineffaçable ineffectif inefficace inégal
+ inégalable inégalé inégaliser inégalistariste inégalitaire inélastique
+ inélégant inélevable inéligible inéliminable inéluctable inéludable
+ inemployable inemployé inénarrable inentamable inentamé inentendable
+ inenvisageable inéprouvé inepte inépuisable inépuisé inéquilatéral inéquitable
+ inéquivalve inéraillable inerme inerte inertiel inescomptable inespérable
+ inespéré inesquivable inessentiel inesthétique inestimable inétanche inétendu
+ inétreignable inétudiable inévitable inexact inexcitable inexcusable
+ inexécutable inexécuté inexercé inexhaustible inexigible inexistant inexorable
+ inexpédiable inexpérimenté inexpert inexpiable inexpié inexplicable inexpliqué
+ inexploitable inexploité inexplorable inexploré inexplosible inexposable
+ inexpressible inexpressif inexprimable inexprimé inexpugnable inextensible
+ inexterminable inextinguible inextirpable inextricable infaillibiliste
+ infaillible infaisable infalsifiable infamant infâme infanticide infantile
+ infantilisant infantiliser infarctogène infatigable infatué infécond infect
+ infectant infecté infectieux inféodé infère inférer inférieur inférioriser
+ infermentescible infernal inférovarié infertile infestant infesté infeutrable
+ infidèle infiltrer infime infini infiniste infinitésimal infinitif infinitiste
+ infirmable infirmatif infirme infirmer infirmier inflammable inflammatoire
+ inflationniste infléchi infléchissable inflexible inflexionnel infliger
+ inflorescentiel influençable influencer influent influer infographique infondé
+ inforgeable informant informatif informationnel informatique informatisable
+ informatiser informe informel informer informulable informulé infortifiable
+ infortuné infracellulaire infraclinique infraconstitutionnel infradien
+ infradyne infragénérique infraliminaire infraliminal infralittoral
+ infranational infranchissable infrangible infrarouge infrasonore
+ infraspécifique infrastructurel infratidal infréquentable infroissabiliser
+ infroissable infructueux infumable infundibulaire infundibuliforme infus
+ infuser infusible ingagnable ingambe ingélif ingénieux ingénu ingérable
+ ingérer inglorieux ingluvial ingouche ingouvernable ingraissable ingrat
+ ingresque ingressif ingrisable ingriste inguérissable inguinal ingurgiter
+ inhabile inhabitable inhabité inhabituel inhalateur inhaler inharmonieux
+ inharmonique inhérent inhibant inhibé inhibiteur inhibitif inhomogène
+ inhospitalier inhumain inhumer inidentifiable inimaginable inimitable inimité
+ inimprimable inimputable ininflammable inintelligent inintelligible
+ inintentionnel inintéressant ininterprétable ininterrompu iniodyme inique
+ initial initialiser initiateur initiatique initier injectable injecté
+ injecteur injectif injoignable injonctif injouable injurier injurieux injuste
+ injustifiable injustifié inlassable innavigable inné innéiste innerver
+ innettoyable innocent innocenter innombrable innomé innominé innommable
+ innommé innovant innovateur innover inobservable inobservé inoccupable
+ inoccupé inoculable inoculant inoculer inodore inoffensif inofficiel
+ inofficieux inondable inondé inopérable inopérant inopiné inopportun
+ inopposable inorganique inorganisable inorganisé inorthodoxe inosinique
+ inositohexaphosphorique inotrope inoubliable inouï inox inoxydable
+ inqualifiable inquantifiable inquiet inquiétant inquiéter inquilin inquisiteur
+ inquisitoire inquisitorial inracontable inramonable inratable inrectifiable
+ insaisissable insalifiable insalissable insalubre insane insaponifiable
+ insatiable insatisfaisant insatisfait insaturable inscolarisable inscripteur
+ inscriptible inscrit inscrutable insculper insécable insecouable insecourable
+ insecticide insectifuge insectivore insécure insécuriser inséductible
+ inséminateur inséminer insensé insensibiliser insensible inséparable insérable
+ insérer insermenté inservable inserviable insidieux insigne insignifiant
+ insincère insinuant insinuer insipide insistant insociable insolent insoler
+ insolite insolubiliser insoluble insolvable insomniaque insomnieux insondable
+ insonore insonoriser insouciant insoucieux insoumis insoupçonnable insoupçonné
+ insoutenable inspecter inspirant inspirateur inspiratoire inspiré instabiliser
+ instable installé instant instantané instantanéiser instaurer instiguer
+ instiller instinctif instinctuel instituer institutionnaliser
+ institutionnaliste institutionnel instructeur instructif instruit
+ instrumentaire instrumental instrumentaliser instrumentaliste instrumenter
+ insubmersible insubordonné insuffisant insuffler insulaire insulariser
+ insulinique insulinogène insulinoprive insultant insulter insulteur
+ insupportable insupporter insupprimable insurgé insurmontable insurpassable
+ insurrectionnel insusceptible intachable intact intactile intaillable
+ intailler intangible intarissable intégrable intégral intégrant intégrateur
+ intégratif intégrationniste intègre intégré intégriste intellectualiser
+ intellectualiste intellectuel intelligent intelligible intello intempérant
+ intempestif intemporel intenable intense intensif intensifier intensionnel
+ intenter intentionnaliser intentionnaliste intentionné intentionnel interactif
  interactionnel interactionniste interafricain interâge interahamwe interallié
  interambulacraire interaméricain interannuel interarabe interassociatif
  interastral interatomique interauriculaire interbancaire interboliser
@@ -2281,8 +2301,8 @@ ADJECTIVES = set(
  joli joliet jomon joncher jonciforme jonctionnel jongler jordanien jordaniser
  joseph joséphiste jouable jouailler jouasse jouer joueur joufflue jouisseur
  jouissif journalier journaliser journalistique jouxter jovial jovien joycien
- joyeux jubilaire jubilatoire jucher judaïque judaïser judéo-allemand judéo-
- chrétien judéo-espagnol judéo-français judéo-maçonnique judéo-marxiste
+ joyeux jubilaire jubilatoire jucher judaïque judaïser judéo-allemand
+ judéo-chrétien judéo-espagnol judéo-français judéo-maçonnique judéo-marxiste
  judiciaire judiciariser judicieux jugal jugeable juger jugeur jugulaire
  juguler juif julien jumeau jumel jumeler jumenteux jungien junien junior
  junonien jupitérien juponner jurable jurassien jurassique juratoire jurer
@@ -2370,8 +2390,8 @@ ADJECTIVES = set(
  lobaire lobé lobotomiser lobulaire lobuleux local localisable localisateur
  localisationniste localiser locatif locher lochial lockouter locomobile
  locomoteur locomotif locorégional loco-régional loculaire loculeux loculicide
- lofer logaédique logarithmique logeable loger logiciel logiciste logico-
- mathématique logique logistique logographique logomachique logopédique
+ lofer logaédique logarithmique logeable loger logiciel logiciste
+ logico-mathématique logique logistique logographique logomachique logopédique
  logophonique logorrhéique logosémiotique lointain loisible lombaire lombal
  lombalgique lombaliser lombard lombardique lombo-sacré lombrical lombriciforme
  lombricoïde lombricole londonien long longanime longer longibande longicorne
@@ -2394,10 +2414,10 @@ ADJECTIVES = set(
  lymphonodulaire lymphophile lymphoplasmocytaire lymphoprolifératif lymphotrope
  lyncher lyonnais lyophile lyophiliser lyophobe lyotrope lyricomane lyrique
  lyriser lysergique lysigène lysogène lysogénique lysosomal lysosomial lytique
- macabre macadamiser macaronique maccarthyste macdonaldiser macédonien macédo-
- roumain macérateur macérer macérien mâcher machiavélien machiavélique machinal
- machine machiner machinique machiniste machiste macho mâchonner mâchouiller
- mâchurer macler maçon mâconnais maçonner maçonnique macoute macro
+ macabre macadamiser macaronique maccarthyste macdonaldiser macédonien
+ macédo-roumain macérateur macérer macérien mâcher machiavélien machiavélique
+ machinal machine machiner machinique machiniste machiste macho mâchonner
+ mâchouiller mâchurer macler maçon mâconnais maçonner maçonnique macoute macro
  macrobiotique macrocéphale macrocosmique macrocyclique macrocytaire
  macroéconométrique macroéconomique macro-économique macrofinancier macroglosse
  macrographique macromoléculaire macrophage macrophagique macropode
@@ -2648,110 +2668,111 @@ ADJECTIVES = set(
  multitâche multitube multitubulaire multivoie multizone munichois municipal
  municipaliser munificent muonique muqueux mûr mural muraliste murcien murer
  muriatique muriforme mûriforme muriqué murmurant murmurer musagète muscade
- muscarinien muscarinique muscat muscinal muscler musculaire musculeux musculo-
- cartilagineux muséal muséifier museler muséographique muséologique musical
- musicaliste musicien musicographique musicologique musiquer musquer musser
- mussif mussolinien musulman mutable mutagène mutant mutationnel mutationniste
- mutazilite muter mutilant mutilateur mutiler mutique mutualiser mutualiste
- mutuel mutuelliste mutulaire myalgique myasthénique mycélien mycénien
- mycétophage mycétophile mycobactérien mycodermique mycologique mycophage
- mycoplasmique mycorhizateur mycorhizien mycosique mycostatique mycotique
- mydriatique myélencéphalique myélinique myéliniser myéloblastique myélocytaire
- myélodysplasique myélogène myéloïde myélomonocytaire myélopathique
- myélophtisique myéloprolifératif myélotoxique myélotrope myentérique myloniser
- mylonitique mylonitiser myoblastique myocardique myoclonique myodystonique
- myoélectrique myoépithélial myogène myoglobinurique myographique myoïde
- myologique myolytique myopathe myopathique myope myopique myorésolutif
- myotatique myotique myotonique myotubulaire myriamétrique myricique myristique
- myrmécologique myrmécophage myrmécophile myrmékitique myronique myrtiforme
- mystagogique mystérieux mysticiser mystifiable mystificateur mystifier
- mystique mythifier mythique mythographique mythologique mythomane
- mythomaniaque mytilicole myxoedémateux mzabite nabatéen nacarat nacrer nacrier
- nacteur nadiral naeviforme naevique naevocellulaire nagari nager nageur nahua
- naïf nain naissant nalidixique namibianiser namibien namurien nancéien
- nanifier naniser nanocéphale nanocorme nanoélectronique nanomèle nanométrique
- nanosome nantais nanti napalmer napalmiser naphtalènesulfonique naphtalénique
- naphtalique naphténique naphtionique naphtoïque naphtolcarboxylique
- naphtoxyacétique naphtylique napoléonien napper narcissique narcoleptique
- narcomane narcotique narcotiser narguer narquois narratif narrativiser narrer
- nasal nasaliser nase nasillard nasiller nasogastrique nasolabial
- nasopharyngien nassérien natal nataliste natatoire natif natiforme national
- nationalisable nationalisateur nationaliser nationaliste nationalitaire
- national-socialiste nativiste natolocal natrique natriurétique natter nattier
- naturaliser naturaliste naturante naturé naturel naturiste naupathique
- naupliiforme nauséabond nauséeux nautique navajo naval navaliser navarrais
- naviculaire navigable navigateur navigationnel navrant navrer naxalite
- nazaréen nazca naze nazi nazifier néandertalien néandertaloïde néanthropien
- néantiser nébulaire nébuleux nébuliser nécessaire nécessiter nécessiteux
- nécrobiotique nécrologique nécrophage nécrophile nécrophilique nécrophobe
- nécrophobique nécropsique nécroser nécrosique nécrotico-inflammatoire
- nécrotique nectarifère néerlandais néerlandophone néfaste négateur négatif
- négationniste négativer négativiser négativiste négligeable négligent négliger
- négociable négociateur négocier nègre négrier négrifier négro-américain
- négroïde néguentropique neigeux neisserien nématicide nématique
- nématoblastique néméen néoantique néoattique néo-calédonien néocanadien
- néocapitaliste néocatholique néoceltique néoclassique néocolonial
- néocolonialiste néocomien néoconfucianiste néocore néocortical néocubiste
- néodadaïste néodarwinien néodarwiniste néofasciste néofolklorique néogène
- néognathe néogothique néogrammairien néogrec néohégélien néo-impressionniste
- néokantien néokeynésien néolamarckien néolibéral néolithique néolithiser
- néolocal néologique néomalthusien néomanichéen néomaoïste néomercantiliste
- néonatal néonatalogique néonazi néopentylique néophobique néophyte néoplasique
- néoplastique néoplatonicien néopositiviste néoprimitiviste néoprotectionniste
- néo-protectionniste néoptère néoptile néopythagoricien néoréaliste
- néoromantique néorural néostalinien néoténique néotestamentaire néothomiste
- néototalitaire néotropical néovitaliste néozélandais néo-zélandais néozoïque
- népalais népérien néphélinique néphrectomiser néphrétique néphridique
- néphrogène néphrologique néphropathique néphrosclérotique néphrostomiser
- néphrotique néphrotomiser néphrotoxique neptuniste néritique néronien nerval
- nervalien nerveux nervié nervomoteur nervurer nestorien net nettoyable
- nettoyer nettoyeur neuf neumatique neural neuraminique neurasthénique
- neuritique neuroanémique neurobiochimique neurobiologique neurochimique
- neurochirurgical neuro-cognitif neurocytologique neurodégénératif
- neurodépresseur neurodysleptique neurodysraphique neuroectodermique neuro-
- effecteur neuroendocrinien neuroéthologique neurofibrillaire neurofibromateux
- neurogène neurogénique neurohistologique neurohormonal neurohumoral neuro-
- immunologique neuroleptique neuroleptiser neurolinguistique neurologique
- neurolytique neuromimétique neuromusculaire neuronal neuronique neuropathique
- neuropathologique neuropeptidique neuropharmacologique neurophylactique
- neurophysiologique neuroplégique neuropsychatrique neuropsychiatrique
- neuropsychique neuropsychogène neuropsychologique neuropsychométrique
- neuropsychosensoriel neuroradiologique neurorécepteur neurosécréteur
- neurosécrétoire neurosensoriel neurotachycardique neurotendineux neurotiser
- neurotoninergique neurotonique neurotoxique neurotrope neurotrophique
- neurotropique neurovasculaire neurovégétatif neustrien neutralisable
- neutraliser neutraliste neutre neutrinique neutronique neutropénique
- neutrophile neuvième neuvien neuvier névralgique névraxitique névritique
- névrobalistique névroglial névroglique névropathe névropathique névroptère
- névroser névrosthénique névrotique newtonien new-yorkais niable niagaresque
- niais niaiser niaiseux nicaraguais nicaraguayen nicher nicheur nickel nickelé
- nickélifère nickélique nicobarais niçois nicotinique nicotiniser nicotique
- nicotiser nidamentaire nidicole nidificateur nidifuge nidoreux nidorien
- nieller nième n-ième nier nietzschéen niflumique nigaud nigérian nigérien
- nigrique nigritique nihiliste nilotique nimber nîmois niobique niominka
- niortais nipper nippon niquedouille niquer nirvanesque nitrater nitré nitreux
- nitrificateur nitrifier nitrilotriacétique nitrique nitrobenzoïque
- nitrocellulosique nitromolybdique nitronique nitrophile nitrosulfonique
- nitrurer nival nivéal niveler niveleur nivernais nivoglaciaire nivo-glaciaire
- nivométrique nivopluvial nobélisable nobeliser nobéliser nobiliaire noble
- noceur nociceptif nocif noctambule noctiluque nocturne nodal nodo-hissien
- nodulaire noduleux noématique noétique noir noirâtre noliser nomade nomadique
- nomadiser nombrable nombrer nombreux nombriliste nomenclateur nomenklaturiste
- nominable nominal nominalisable nominaliser nominaliste nominatif nommer
- nomographique nomologique nonagénaire nonagésime nonaligné non-aligné non-
- animé nonanoïque nonantième non-belligérant non-combattant non-conformiste
- non-croyant non-dénombrable non-destructif non-directif nonengagé non-
- figuratif non-initié non-inscrit non-logique non-marchand non-officiel
- nonpareil non-polluant non-réaliser non-résident non-rétroactif non-salarié
- non-sédentaire non-spécialiste non-syndiqué nonupler non-utiliser non-violent
- nonylique noo-analeptique noologique nootrope noradrénergique nord nord-
- africain nord-américain nord-coréen nordique nordiste nord-vietnamien normable
- normal normalisateur normaliser normannien normatif normativiste normer
- normobare normoblastique normochrome normocytaire normodrome normokaliémique
- normopondéral normothymique normotope normovolémique norrois norvégien
- nosocomial nosographique nosologique nostalgique notabiliser notable notarial
- notarié notencéphale noter notificateur notificatif notifier notionnel notoire
- nôtre nouer noueux nouménal nourricier nourrissant nouveau novateur novatoire
+ muscarinien muscarinique muscat muscinal muscler musculaire musculeux
+ musculo-cartilagineux muséal muséifier museler muséographique muséologique
+ musical musicaliste musicien musicographique musicologique musiquer musquer
+ musser mussif mussolinien musulman mutable mutagène mutant mutationnel
+ mutationniste mutazilite muter mutilant mutilateur mutiler mutique mutualiser
+ mutualiste mutuel mutuelliste mutulaire myalgique myasthénique mycélien
+ mycénien mycétophage mycétophile mycobactérien mycodermique mycologique
+ mycophage mycoplasmique mycorhizateur mycorhizien mycosique mycostatique
+ mycotique mydriatique myélencéphalique myélinique myéliniser myéloblastique
+ myélocytaire myélodysplasique myélogène myéloïde myélomonocytaire
+ myélopathique myélophtisique myéloprolifératif myélotoxique myélotrope
+ myentérique myloniser mylonitique mylonitiser myoblastique myocardique
+ myoclonique myodystonique myoélectrique myoépithélial myogène myoglobinurique
+ myographique myoïde myologique myolytique myopathe myopathique myope myopique
+ myorésolutif myotatique myotique myotonique myotubulaire myriamétrique
+ myricique myristique myrmécologique myrmécophage myrmécophile myrmékitique
+ myronique myrtiforme mystagogique mystérieux mysticiser mystifiable
+ mystificateur mystifier mystique mythifier mythique mythographique
+ mythologique mythomane mythomaniaque mytilicole myxoedémateux mzabite nabatéen
+ nacarat nacrer nacrier nacteur nadiral naeviforme naevique naevocellulaire
+ nagari nager nageur nahua naïf nain naissant nalidixique namibianiser namibien
+ namurien nancéien nanifier naniser nanocéphale nanocorme nanoélectronique
+ nanomèle nanométrique nanosome nantais nanti napalmer napalmiser
+ naphtalènesulfonique naphtalénique naphtalique naphténique naphtionique
+ naphtoïque naphtolcarboxylique naphtoxyacétique naphtylique napoléonien napper
+ narcissique narcoleptique narcomane narcotique narcotiser narguer narquois
+ narratif narrativiser narrer nasal nasaliser nase nasillard nasiller
+ nasogastrique nasolabial nasopharyngien nassérien natal nataliste natatoire
+ natif natiforme national nationalisable nationalisateur nationaliser
+ nationaliste nationalitaire national-socialiste nativiste natolocal natrique
+ natriurétique natter nattier naturaliser naturaliste naturante naturé naturel
+ naturiste naupathique naupliiforme nauséabond nauséeux nautique navajo naval
+ navaliser navarrais naviculaire navigable navigateur navigationnel navrant
+ navrer naxalite nazaréen nazca naze nazi nazifier néandertalien néandertaloïde
+ néanthropien néantiser nébulaire nébuleux nébuliser nécessaire nécessiter
+ nécessiteux nécrobiotique nécrologique nécrophage nécrophile nécrophilique
+ nécrophobe nécrophobique nécropsique nécroser nécrosique
+ nécrotico-inflammatoire nécrotique nectarifère néerlandais néerlandophone
+ néfaste négateur négatif négationniste négativer négativiser négativiste
+ négligeable négligent négliger négociable négociateur négocier nègre négrier
+ négrifier négro-américain négroïde néguentropique neigeux neisserien
+ nématicide nématique nématoblastique néméen néoantique néoattique
+ néo-calédonien néocanadien néocapitaliste néocatholique néoceltique
+ néoclassique néocolonial néocolonialiste néocomien néoconfucianiste néocore
+ néocortical néocubiste néodadaïste néodarwinien néodarwiniste néofasciste
+ néofolklorique néogène néognathe néogothique néogrammairien néogrec
+ néohégélien néo-impressionniste néokantien néokeynésien néolamarckien
+ néolibéral néolithique néolithiser néolocal néologique néomalthusien
+ néomanichéen néomaoïste néomercantiliste néonatal néonatalogique néonazi
+ néopentylique néophobique néophyte néoplasique néoplastique néoplatonicien
+ néopositiviste néoprimitiviste néoprotectionniste néo-protectionniste néoptère
+ néoptile néopythagoricien néoréaliste néoromantique néorural néostalinien
+ néoténique néotestamentaire néothomiste néototalitaire néotropical
+ néovitaliste néozélandais néo-zélandais néozoïque népalais népérien
+ néphélinique néphrectomiser néphrétique néphridique néphrogène néphrologique
+ néphropathique néphrosclérotique néphrostomiser néphrotique néphrotomiser
+ néphrotoxique neptuniste néritique néronien nerval nervalien nerveux nervié
+ nervomoteur nervurer nestorien net nettoyable nettoyer nettoyeur neuf
+ neumatique neural neuraminique neurasthénique neuritique neuroanémique
+ neurobiochimique neurobiologique neurochimique neurochirurgical neuro-cognitif
+ neurocytologique neurodégénératif neurodépresseur neurodysleptique
+ neurodysraphique neuroectodermique neuro-effecteur neuroendocrinien
+ neuroéthologique neurofibrillaire neurofibromateux neurogène neurogénique
+ neurohistologique neurohormonal neurohumoral neuro-immunologique neuroleptique
+ neuroleptiser neurolinguistique neurologique neurolytique neuromimétique
+ neuromusculaire neuronal neuronique neuropathique neuropathologique
+ neuropeptidique neuropharmacologique neurophylactique neurophysiologique
+ neuroplégique neuropsychatrique neuropsychiatrique neuropsychique
+ neuropsychogène neuropsychologique neuropsychométrique neuropsychosensoriel
+ neuroradiologique neurorécepteur neurosécréteur neurosécrétoire neurosensoriel
+ neurotachycardique neurotendineux neurotiser neurotoninergique neurotonique
+ neurotoxique neurotrope neurotrophique neurotropique neurovasculaire
+ neurovégétatif neustrien neutralisable neutraliser neutraliste neutre
+ neutrinique neutronique neutropénique neutrophile neuvième neuvien neuvier
+ névralgique névraxitique névritique névrobalistique névroglial névroglique
+ névropathe névropathique névroptère névroser névrosthénique névrotique
+ newtonien new-yorkais niable niagaresque niais niaiser niaiseux nicaraguais
+ nicaraguayen nicher nicheur nickel nickelé nickélifère nickélique nicobarais
+ niçois nicotinique nicotiniser nicotique nicotiser nidamentaire nidicole
+ nidificateur nidifuge nidoreux nidorien nieller nième n-ième nier nietzschéen
+ niflumique nigaud nigérian nigérien nigrique nigritique nihiliste nilotique
+ nimber nîmois niobique niominka niortais nipper nippon niquedouille niquer
+ nirvanesque nitrater nitré nitreux nitrificateur nitrifier nitrilotriacétique
+ nitrique nitrobenzoïque nitrocellulosique nitromolybdique nitronique
+ nitrophile nitrosulfonique nitrurer nival nivéal niveler niveleur nivernais
+ nivoglaciaire nivo-glaciaire nivométrique nivopluvial nobélisable nobeliser
+ nobéliser nobiliaire noble noceur nociceptif nocif noctambule noctiluque
+ nocturne nodal nodo-hissien nodulaire noduleux noématique noétique noir
+ noirâtre noliser nomade nomadique nomadiser nombrable nombrer nombreux
+ nombriliste nomenclateur nomenklaturiste nominable nominal nominalisable
+ nominaliser nominaliste nominatif nommer nomographique nomologique nonagénaire
+ nonagésime nonaligné non-aligné non-animé nonanoïque nonantième
+ non-belligérant non-combattant non-conformiste non-croyant non-dénombrable
+ non-destructif non-directif nonengagé non-figuratif non-initié non-inscrit
+ non-logique non-marchand non-officiel nonpareil non-polluant non-réaliser
+ non-résident non-rétroactif non-salarié non-sédentaire non-spécialiste
+ non-syndiqué nonupler non-utiliser non-violent nonylique noo-analeptique
+ noologique nootrope noradrénergique nord nord-africain nord-américain
+ nord-coréen nordique nordiste nord-vietnamien normable normal normalisateur
+ normaliser normannien normatif normativiste normer normobare normoblastique
+ normochrome normocytaire normodrome normokaliémique normopondéral
+ normothymique normotope normovolémique norrois norvégien nosocomial
+ nosographique nosologique nostalgique notabiliser notable notarial notarié
+ notencéphale noter notificateur notificatif notifier notionnel notoire nôtre
+ nouer noueux nouménal nourricier nourrissant nouveau novateur novatoire
  novelliser nover novice noxal noyauter noyer nu nuageux nuancer nubien nubile
  nucal nucellaire nuchal nucifère nuciforme nucléaire nucléariser nucléé
  nucléique nucléocytoplasmique nucléoélectrique nucléonique nucléophile
@@ -2760,13 +2781,13 @@ ADJECTIVES = set(
  numératif numérique numériser numéroter numéroteur numide numidique numineux
  numismatique nummulaire nummulitique nuncupatif nunuche nuptial nuragique
  nutriciel nutricier nutritif nutritionnel nyctalope nyctalophobe nyctalopique
- nycthéméral nymphal nymphomane nymphomaniaque nystagmiforme nystagmographique
- oasien oaxaquénien obconique obcordé obédientiel obéissant obérer obèse
- obituaire objectable objectal objecter objectif objectivable objectiver
- objectivisé objectiviste oblatif obligataire obligatif obligationnel
- obligatoire obligeant obliger oblique oblitérateur oblitérer oblong obnubiler
- obombrer obovale obové obscène obscur obscurantiste obsédant obséder
- obséquieux observable observateur observationnel observer obsessionnel
+ nycthéméral nymphal nympho nymphomane nymphomaniaque nystagmiforme
+ nystagmographique oasien oaxaquénien obconique obcordé obédientiel obéissant
+ obérer obèse obituaire objectable objectal objecter objectif objectivable
+ objectiver objectivisé objectiviste oblatif obligataire obligatif
+ obligationnel obligatoire obligeant obliger oblique oblitérateur oblitérer
+ oblong obnubiler obombrer obovale obové obscène obscur obscurantiste obsédant
+ obséder obséquieux observable observateur observationnel observer obsessionnel
  obsidional obsolescent obsolète obstétrical obstétrique obstiné obstructif
  obstructionnel obstructionniste obstruer obtenable obtenteur obturable
  obturateur obturer obtus obtusangle obvie occamiste occase occasionnaliste
@@ -2811,10 +2832,10 @@ ADJECTIVES = set(
  opisthographe opothérapique opportun opportuniste opposable opposer opposite
  oppositif oppositionnel oppressant oppresser oppresseur oppressif opprimer
  opsoniser optatif optimal optimaliser optimaliste optimisateur optimiser
- optimiste optimum optionnel optique optocinétique optoélectronique opto-
- électronique optométrique optomoteur optostrié opulent oraculaire orageux oral
- oralisant oraliser oranais orange orangé orangiste oratoire oratorien orbe
- orbicole orbiculaire orbitaire orbital orbitalaire orbitèle orchestique
+ optimiste optimum optionnel optique optocinétique optoélectronique
+ opto-électronique optométrique optomoteur optostrié opulent oraculaire orageux
+ oral oralisant oraliser oranais orange orangé orangiste oratoire oratorien
+ orbe orbicole orbiculaire orbitaire orbital orbitalaire orbitèle orchestique
  orchestral orchestrer orchestrique ordinaire ordinal ordonnable ordonnancer
  ordonner ordovicien ordurier orexigène orexique organicien organiciser
  organiciste organifier organique organisable organisateur organisationnel
@@ -2839,8 +2860,8 @@ ADJECTIVES = set(
  osculter oser osidique osiriaque osmiamique osmieux osmique osmométrique
  osmorécepteur osmotique osque ossète osseux ossianique ossiculaire ossifère
  ossifier ossiforme ostéalgique ostéitique ostensible ostensif ostentateur
- ostentatoire ostéoarticulaire ostéoblastique ostéocartilagineux ostéo-
- cartilagineux ostéocope ostéo-dermopathique ostéogène ostéogénique
+ ostentatoire ostéoarticulaire ostéoblastique ostéocartilagineux
+ ostéo-cartilagineux ostéocope ostéo-dermopathique ostéogène ostéogénique
  ostéoglophonique ostéoïde ostéologique ostéolytique ostéomalacique
  ostéomusculaire ostéoplastique ostéoporotique ostéo-tendineux ostéotrope
  ostiak ostique ostraciser ostréen ostréicole ostréiforme ostrogothique ostyak
@@ -2849,12 +2870,12 @@ ADJECTIVES = set(
  oublier oublieux ouest ouest-africain ouest-allemand ouest-européen ougandais
  ougaritique ougrien ouïghour ouïgour ouiller ouolof ouralien ouralitiser
  ourdou ourlé ourlien outiller outrageant outrager outrageux outrancier
- outrecuidant outre-méditerranéen outremer outre-mer outrepasser outre-
- quiévrain outrer outre-rhin outre-Rhin ouvert ouvrable ouvrager ouvrant ouvré
- ouvrier ouvriériser ouvriériste ouzbek ouzbèque ovalaire ovale ovale-lancéolé
- ovaliser ovariectomiser ovarien ovarioprive ovarique ovationner overbooké
- ovicide oviforme ovigène ovigère ovin ovipare ovoïdal ovoïde ovonique
- ovovivipare ovulaire ovulatoire ovulé oxalacétique oxaligène oxalique
+ outrecuidant outre-méditerranéen outremer outre-mer outrepasser
+ outre-quiévrain outrer outre-rhin outre-Rhin ouvert ouvrable ouvrager ouvrant
+ ouvré ouvrier ouvriériser ouvriériste ouzbek ouzbèque ovalaire ovale
+ ovale-lancéolé ovaliser ovariectomiser ovarien ovarioprive ovarique ovationner
+ overbooké ovicide oviforme ovigène ovigère ovin ovipare ovoïdal ovoïde
+ ovonique ovovivipare ovulaire ovulatoire ovulé oxalacétique oxaligène oxalique
  oxalophore oxalosuccinique oxamique oxazinique oxfordien oxhydrique oxo
  oxyacétylénique oxycoupeur oxydable oxydant oxydasique oxydatif oxyder
  oxydoréducteur oxygénable oxygéner oxymétrique oxymorique oxyphile oxyphilique
@@ -2992,13 +3013,13 @@ ADJECTIVES = set(
  périprostatique périprothétique périptère péripubertaire périrénal
  périscolaire périscopique périssable périssoploïde péristaltique
  péristaltogène péristéronique péristyle péritectique péritel péritendineux
- péritonéal péritoniser péritrophique péritumoral périunguéal périurbain péri-
- urbain périurétéral périvasculaire périveineux périventriculaire périviscéral
- perler perleur perlier perlingual perlitique perlocutoire permanent
- permanenter permanganique perméabiliser perméable permettable permictionnel
- permien permissible permissif permsélectif permutable permuter pernicieux
- péronier péroniste peropératoire péroreur pérouaniser peroxydasique peroxyder
- peroxysomal perpendiculaire perpétrer perpétuel perpétuer perplexe
+ péritonéal péritoniser péritrophique péritumoral périunguéal périurbain
+ péri-urbain périurétéral périvasculaire périveineux périventriculaire
+ périviscéral perler perleur perlier perlingual perlitique perlocutoire
+ permanent permanenter permanganique perméabiliser perméable permettable
+ permictionnel permien permissible permissif permsélectif permutable permuter
+ pernicieux péronier péroniste peropératoire péroreur pérouaniser peroxydasique
+ peroxyder peroxysomal perpendiculaire perpétrer perpétuel perpétuer perplexe
  perquisiteur perquisitionner perronnée persan persécuter persécuteur
  persécutif persécutoire persévérant persévératif persévérer persifler
  persifleur persique persistant persistent persister perso personnaliser
@@ -3025,15 +3046,15 @@ ADJECTIVES = set(
  phénylacrylique phényléthylénique phénylhydracrylique phénylique
  phénylpyruvique phéromonal philanthrope philanthropique philatélique
  philharmonique philhellène philippin philocalien philocalique philologique
- philomatique philosémite philosophal philosophe philosopheur philosophico-
- religieux philosophico-social philosophique philotechnique phlébographique
- phlébotomiser phlébotonique phlébotrope phlegmasique phlegmatiser phlegmoneux
- phlegmorragique phloïonique phlorétique phloridzique phlycténoïde
- phlycténulaire phobique phobogène phocéen phocidien phocomèle phonateur
- phonatoire phonématique phonémique phonétique phonétiser phonique phonocapteur
- phonocinétique phonogénique phonographique phonolithique phonolitique
- phonologique phonologiser phonostylistique phonotactique phosphamique
- phosphaté phosphatidique phosphatique phosphaturique phosphinique
+ philomatique philosémite philosophal philosophe philosopheur
+ philosophico-religieux philosophico-social philosophique philotechnique
+ phlébographique phlébotomiser phlébotonique phlébotrope phlegmasique
+ phlegmatiser phlegmoneux phlegmorragique phloïonique phlorétique phloridzique
+ phlycténoïde phlycténulaire phobique phobogène phocéen phocidien phocomèle
+ phonateur phonatoire phonématique phonémique phonétique phonétiser phonique
+ phonocapteur phonocinétique phonogénique phonographique phonolithique
+ phonolitique phonologique phonologiser phonostylistique phonotactique
+ phosphamique phosphaté phosphatidique phosphatique phosphaturique phosphinique
  phosphocalcique phosphofluorhydrique phosphofluorique phosphoglycérique
  phospholipidique phosphomolybdique phosphonique phosphonitrilique phosphorer
  phosphorescent phosphoreux phosphorique phosphoriser phosphoriste
@@ -3573,100 +3594,101 @@ ADJECTIVES = set(
  sacchareux saccharifère saccharifiable saccharifier saccharimétrique
  saccharinique saccharique saccharoïde sacciforme sacculaire sacculiforme
  sacerdotal sacquer sacral sacraliser sacramentaire sacramental sacramentel
- sacrer sacrificatoire sacrificiel sacrifier sacrilège sacrococcygien sacro-
- coccygien sacrosaint sacro-saint sacro-sciatique sadducéen sadique sadiser
- sado sadomasochiste saducéen safran safraner sagace sage sagittal sagitté
- saharien sahélien sahraoui saietter saignant saigner saigneux saillant sain
- saint saint-simonien saisissable saisissant saisonnier saïte salace salarial
- salarier salariser salaud salazariste sale saler salésien salicole salicylique
- salidiurétique salien salifère salifiable salifier salingue salinier saliniser
- salique salissable salissant salivaire salonnier salop saloper salpêtrer
- salpêtreux salpêtriser salpingien salsodique saltatoire salubre saluer
- salurétique salutaire salutiste salvadorien salvateur salzbourgeois samartien
- samnite samoyède sanatorial sanctificateur sanctifier sanctionnable
- sanctionnateur sanctionner sanctuariser sandaracopimarique sandiniste
- sandwicher sanfédiste sanforiser sanglant sangler sanglotant sanguicole
- sanguin sanguinaire sanguinolent sanidinite sanieux sanitaire sanscritique
- sanskrit sanskritique sanskritiser santaféen santoninique saoudien saoudiser
- saoudite saoul saoûl saouler saoûler saper saphène saphique sapide sapiential
- sapientiel saponifiable saponifier saprogène sapropélique saprophage
- saprophyte saprophytique saproxylique saquer sarcastique sarcelliser sarcler
- sarcoïde sarcoïdosique sarcomateux sarcomatogène sarcoplasmique sarcoplastique
- sarcoptique sardanapalesque sarde sardinier sardonique sarmate sarmatique
- sarmenter sarmenteux sarracénique sarrois sarthois sartrien sassable sassanide
- sasser sataner satanique sataniser sataniste satellisable satelliser
- satellitaire satellite satiner satineur satirique satiriser satisfactoire
- satisfaisant satisfait satisfiable satrapique saturable saturer saturnien
- satyrique saucer saucissonner sauf saugrenu saumâtre saumon saumoné saumurer
- saupoudrer saupoudreur saur saurer sauret saurien saurisseur saussuritiser
- sauter sauteur sautillant sauvable sauvage sauvageon sauvegarder sauver
- sauveterrien sauveteur sauveur savant savoisien savonner savonneux savonnier
- savourer savoureux savoyard saxatile saxicole saxon scabieux scabre scabreux
- scalaire scaldien scalène scalper scandaleux scandaliser scander scandinave
- scandinaviser scandinaviste scanner scannerisé scannériser scannographique
- scanographique scaphoïde scapulaire scapulo-humoral scapulo-thoracique
- scarieux scarifier scarlatineux scarlatiniforme scarlatinoïde scatologique
- scatophage scatophile scélérat sceller scénariser scénique scénographique
- sceptique schelem schelinguer schématique schématiser schipperke schismatique
- schisteux schistifier schistoïde schizo schizogonique schizoïde schizomaniaque
- schizonticide schizontocide schizophasique schizophrène schizophrénique
- schizophréniser schizothyme schizothymique schlagueur schlammeux schlass
- schlinguer schlitter schtroumpfer schumpétérien schwannien sciable
- sciagraphique scialytique sciaphile sciasphérique sciatalgique sciatique
- scientifico-technique scientifique scientifiser scientiste scientologique
- scier scillitique scindable scinder scintillant sciographique scissile
- scissionnaire scissionniste scissipare scléral sclérenchymateux scléreux
- sclérifier sclérodermiforme sclérogène sclérophylle scléroser sclérotomial
- scolaire scolarisable scolariser scolastique scoliotique scolopidien
- scoptophilique scorbutique scoriacé scorifier scorpioïde scotcher scotiste
- scotomiser scotopique scratch scratcher scribouiller scripophilique scripter
- scripturaire scriptural scrofuleux scrotal scrupuleux scrutateur scruter
- sculpter sculptural scutellaire scutiforme scutulaire scythe scythique séant
- sébacé sébacique séborrhéique sec sécable sécant sécessionniste sécher sécheur
- second secondaire secondariser seconde seconder secondigeste secondipare
- secouer secourable secourant secoureur secret sécrétagogue secréter sécréter
- sécréteur sécrétoire sectaire sectifier sectile sectionner sectoral sectorial
- sectoriel sectoriser séculaire séculariser séculier sécure sécurisant
- sécuriser sécuritaire sédalonique sédatif sédélocien sédentaire sédentariser
- sédimentaire sédimenter sédimenteux sédimentologique séditieux séducteur
- séductible séduisant sefaraddi séfarade sefardi séfardite segmentaire
- segmental segmenter ségrégable ségrégatif ségrégationniste ségréguer
- seigneurial seineur séismal séismique séismogénique séismographique
- séismologique seizième seiziémiste sélacien seldjoukide select sélect
- sélectable sélecter sélecteur sélectif sélectionnable sélectionnel
- sélectionner sélectionneur sélectionniste sélénhydrique sélénien sélénieux
- sélénique séléniteux sélénocentrique sélénocyanique sélénodonte
- sélénographique séleucide selfique sellaire seller sémantique sémantiser
- sémaphorique sémasiologique semblable sembler séméiographique séméiologique
- séméiotique sémelfactif semencier semer semestriel semi-annuel semi-argenté
- semi-aride semi-automatique semi-autopropulsé semi-balistique semi-chenillé
- semi-circulaire semiconducteur semi-conducteur semi-continu semi-convergent
- semidinique semi-direct semi-distillé semi-double semi-dur semi-durable semi-
- figé semi-harmonique semi-létal semi-léthal sémillant semi-mensuel séminal
- séminarial semi-nasal séminifère semi-nomade semi-officiel sémiographique
- sémiologique semi-oncial sémiotique semi-ouvert semi-peigné semi-pélagique
- semi-permanent semiperméable semi-précieux semi-public sémique semi-
- représentatif semi-rigide sémite sémitique semi-tubulaire semoncer
- sempervirent sempiternel sempronien sénatorial sénatorien sendériste
- sénécioïque sénégalais sénégaliser sénégambien senestre sénestre sénestré
- sénestrogyre senestrorsum senghorien sénile senior senneur sénonais sénousiste
- sensass sensationnaliser sensationnaliste sensationnel sensationniste sensé
- sensibilisable sensibilisateur sensibiliser sensible sensiste sensitif
- sensitivomoteur sensitivo-moteur sensitométrique sensoriel sensorimétrique
- sensorimoteur sensori-moteur sensori-tonique sensualiste sensuel sentencieux
- sentimental sentimentaliser sentimentaliste séoudien séoudite sépalaire
- sépaloïde séparable séparateur séparatif séparatiste séparer sépharade sépia
- septal septane septantième septembral septembriser septénaire septennal
- septentrional septicémique septicide septidien septième septimontial septique
- septuagénaire septuple septupler sépulcral séquellaire séquencer séquentiel
- séquestrer sérancer séraphique serbe serbiser serbo-croate serein sérénissime
- séreux serf sérialiser séricicole séricigène sériciteux sériculture sériel
- sérier sérieux sérigraphique serin seriner seringuer sérique sermonner
- sermonneur sérofibrineux sérologique séronégatif séropositif sérothérapique
- sérotine sérotoninergique serpentiforme serpentineux serpentiniser serpigineux
- serrate serratique serrer sertisseur sertoreux serveur serviable servile
- sésamoïde sésamoïdien sesquialtère sesquilinéaire sesquiterpénique sessile
- sétigère sétois seul seulet sévère sevrer sexagénaire sexagésimal sexangulaire
+ sacrer sacrificatoire sacrificiel sacrifier sacrilège sacrococcygien
+ sacro-coccygien sacrosaint sacro-saint sacro-sciatique sadducéen sadique
+ sadiser sado sadomasochiste saducéen safran safraner sagace sage sagittal
+ sagitté saharien sahélien sahraoui saietter saignant saigner saigneux saillant
+ sain saint saint-simonien saisissable saisissant saisonnier saïte salace
+ salarial salarier salariser salaud salazariste sale saler salésien salicole
+ salicylique salidiurétique salien salifère salifiable salifier salingue
+ salinier saliniser salique salissable salissant salivaire salonnier salop
+ saloper salpêtrer salpêtreux salpêtriser salpingien salsodique saltatoire
+ salubre saluer salurétique salutaire salutiste salvadorien salvateur
+ salzbourgeois samartien samnite samoyède sanatorial sanctificateur sanctifier
+ sanctionnable sanctionnateur sanctionner sanctuariser sandaracopimarique
+ sandiniste sandwicher sanfédiste sanforiser sanglant sangler sanglotant
+ sanguicole sanguin sanguinaire sanguinolent sanidinite sanieux sanitaire
+ sanscritique sanskrit sanskritique sanskritiser santaféen santoninique
+ saoudien saoudiser saoudite saoûl saouler saoûler saper saphène saphique
+ sapide sapiential sapientiel saponifiable saponifier saprogène sapropélique
+ saprophage saprophyte saprophytique saproxylique saquer sarcastique
+ sarcelliser sarcler sarcoïde sarcoïdosique sarcomateux sarcomatogène
+ sarcoplasmique sarcoplastique sarcoptique sardanapalesque sarde sardinier
+ sardonique sarmate sarmatique sarmenter sarmenteux sarracénique sarrois
+ sarthois sartrien sassable sassanide sasser sataner satanique sataniser
+ sataniste satellisable satelliser satellitaire satellite satiner satineur
+ satirique satiriser satisfactoire satisfaisant satisfait satisfiable
+ satrapique saturable saturer saturnien satyrique saucer saucissonner sauf
+ saugrenu saumâtre saumon saumoné saumurer saupoudrer saupoudreur saur saurer
+ sauret saurien saurisseur saussuritiser sauter sauteur sautillant sauvable
+ sauvage sauvageon sauvegarder sauver sauveterrien sauveteur sauveur savant
+ savoisien savonner savonneux savonnier savourer savoureux savoyard saxatile
+ saxicole saxon scabieux scabre scabreux scalaire scaldien scalène scalper
+ scandaleux scandaliser scander scandinave scandinaviser scandinaviste scanner
+ scannerisé scannériser scannographique scanographique scaphoïde scapulaire
+ scapulo-humoral scapulo-thoracique scarieux scarifier scarlatineux
+ scarlatiniforme scarlatinoïde scatologique scatophage scatophile scélérat
+ sceller scénariser scénique scénographique sceptique schelem schelinguer
+ schématique schématiser schipperke schismatique schisteux schistifier
+ schistoïde schizo schizogonique schizoïde schizomaniaque schizonticide
+ schizontocide schizophasique schizophrène schizophrénique schizophréniser
+ schizothyme schizothymique schlagueur schlammeux schlass schlinguer schlitter
+ schtroumpfer schumpétérien schwannien sciable sciagraphique scialytique
+ sciaphile sciasphérique sciatalgique sciatique scientifico-technique
+ scientifique scientifiser scientiste scientologique scier scillitique
+ scindable scinder scintillant sciographique scissile scissionnaire
+ scissionniste scissipare scléral sclérenchymateux scléreux sclérifier
+ sclérodermiforme sclérogène sclérophylle scléroser sclérotomial scolaire
+ scolarisable scolariser scolastique scoliotique scolopidien scoptophilique
+ scorbutique scoriacé scorifier scorpioïde scotcher scotiste scotomiser
+ scotopique scratch scratcher scribouiller scripophilique scripter scripturaire
+ scriptural scrofuleux scrotal scrupuleux scrutateur scruter sculpter
+ sculptural scutellaire scutiforme scutulaire scythe scythique séant sébacé
+ sébacique séborrhéique sec sécable sécant sécessionniste sécher sécheur second
+ secondaire secondariser seconder secondigeste secondipare secouer secourable
+ secourant secoureur secret sécrétagogue secréter sécréter sécréteur sécrétoire
+ sectaire sectifier sectile sectionner sectoral sectorial sectoriel sectoriser
+ séculaire séculariser séculier sécure sécurisant sécuriser sécuritaire
+ sédalonique sédatif sédélocien sédentaire sédentariser sédimentaire sédimenter
+ sédimenteux sédimentologique séditieux séducteur séductible séduisant
+ sefaraddi séfarade sefardi séfardite segmentaire segmental segmenter
+ ségrégable ségrégatif ségrégationniste ségréguer seigneurial seineur séismal
+ séismique séismogénique séismographique séismologique seizième seiziémiste
+ sélacien seldjoukide select sélect sélectable sélecter sélecteur sélectif
+ sélectionnable sélectionnel sélectionner sélectionneur sélectionniste
+ sélénhydrique sélénien sélénieux sélénique séléniteux sélénocentrique
+ sélénocyanique sélénodonte sélénographique séleucide selfique sellaire seller
+ sémantique sémantiser sémaphorique sémasiologique semblable sembler
+ séméiographique séméiologique séméiotique sémelfactif semencier semer
+ semestriel semi-annuel semi-argenté semi-aride semi-automatique
+ semi-autopropulsé semi-balistique semi-chenillé semi-circulaire semiconducteur
+ semi-conducteur semi-continu semi-convergent semidinique semi-direct
+ semi-distillé semi-double semi-dur semi-durable semi-figé semi-harmonique
+ semi-létal semi-léthal sémillant semi-mensuel séminal séminarial semi-nasal
+ séminifère semi-nomade semi-officiel sémiographique sémiologique semi-oncial
+ sémiotique semi-ouvert semi-peigné semi-pélagique semi-permanent semiperméable
+ semi-précieux semi-public sémique semi-représentatif semi-rigide sémite
+ sémitique semi-tubulaire semoncer sempervirent sempiternel sempronien
+ sénatorial sénatorien sendériste sénécioïque sénégalais sénégaliser
+ sénégambien senestre sénestre sénestré sénestrogyre senestrorsum senghorien
+ sénile senior senneur sénonais sénousiste sensass sensationnaliser
+ sensationnaliste sensationnel sensationniste sensé sensibilisable
+ sensibilisateur sensibiliser sensible sensiste sensitif sensitivomoteur
+ sensitivo-moteur sensitométrique sensoriel sensorimétrique sensorimoteur
+ sensori-moteur sensori-tonique sensualiste sensuel sentencieux sentimental
+ sentimentaliser sentimentaliste séoudien séoudite sépalaire sépaloïde
+ séparable séparateur séparatif séparatiste séparer sépharade sépia septal
+ septane septantième septembral septembriser septénaire septennal septentrional
+ septicémique septicide septidien septième septimontial septique septuagénaire
+ septuple septupler sépulcral séquellaire séquencer séquentiel séquestrer
+ sérancer séraphique serbe serbiser serbo-croate serein sérénissime séreux serf
+ sérialiser séricicole séricigène sériciteux sériculture sériel sérier sérieux
+ sérigraphique serin seriner seringuer sérique sermonner sermonneur
+ sérofibrineux sérologique séronégatif séropositif sérothérapique sérotine
+ sérotoninergique serpentiforme serpentineux serpentiniser serpigineux serrate
+ serratique serrer sertisseur sertoreux serveur serviable servile sésamoïde
+ sésamoïdien sesquialtère sesquilinéaire sesquiterpénique sessile sétigère
+ sétois seul seulet sévère sevrer sexagénaire sexagésimal sexangulaire
  sexdigitaire sexdigital sexennal sexiste sexologique sexothérapeutique
  sexothérapique sexpartite sextane sextupler sexualiser sexué sexuel sexy
  seyant seychellois sganarelliser shakespearien shampooiner shampouiner
@@ -3694,8 +3716,8 @@ ADJECTIVES = set(
  skodique slave slaviser slaviste slavistique slavon slavophile slovaque
  slovène smart smasher smectique smiller sniffer snob snober sobre sociabiliser
  sociable social social-démocrate socialiser socialiste socialo sociétaire
- sociétal socioaffectif sociobiologique sociocritique socioculturel socio-
- culturel sociodramatique socioéconomique socio-économique socio-éducatif
+ sociétal socioaffectif sociobiologique sociocritique socioculturel
+ socio-culturel sociodramatique socioéconomique socio-économique socio-éducatif
  sociogénétique sociographique sociohistorique sociolinguistique sociologique
  sociologiste sociométrique sociopathe sociopathique sociopolitique
  socioprofessionnel socioreligieux socio-religieux sociosportif sociotechnique
@@ -3715,53 +3737,54 @@ ADJECTIVES = set(
  sorbonnique sorcier sordide sororal sortable sortant sot sotho soucieux
  soudable soudain soudanais soudanien souder soudeur soudier soudoyer souffler
  souffleter souffleur souffrant souffreteux soufi soufite soufrer souhaitable
- souhaiter souiller soul soûl soulager soûlant soûler soulever souligner
- soumissionner soupçonnable soupçonner soupçonneux soupeser souple souquer
- sourcilier sourcilleux sourd sourdingue sourd-muet souriant souricier sournois
+ souhaiter souiller soulager soûlant soûler soulever souligner soumissionner
+ soupçonnable soupçonner soupçonneux soupeser souple souquer sourcilier
+ sourcilleux sourd sourdingue sourd-muet souriant souricier sournois
  sous-adapté sous-arachnoïdien sous-astragalien sous-calibré sous-capitaliser
- sous-catégoriser sous-chargé sousclavier sous-clavier sous-commissural sous-
- conjonctival sous-coracoïdien sous-cortical sous-cortico-spinal sous-cutané
- sous-développé sous-dirigé sous-dural sous-élytral sousestimer sous-estimer
- sous-filé sous-fréquenté sous-glaciaire sous-industrialiser sous-jacent sous-
- marin sous-médicaliser sous-mésocolique sous-nasal sous-neural sous-ombilical
- sous-orbital sousperformer sous-peuplé sous-productif sous-qualifier sous-
- réparti sous-représenté sous-saturé soussigner sous-tendu sous-titrer
- soustractif sous-unguéal sous-utiliser sous-venté sous-vireur sous-volté
- soutacher soutenable souterrain soutirer souverain souverainiste soviétique
- soviétiser soyeux spacial spacieux spaciophile spaciophobe spagirique
- spagyrique spammer spartakiste spartiate spasmique spasmodique spasmogène
- spasmolytique spasmophile spasmophilique spastique spathifier spathique
- spatial spatialiser spatiodynamique spatio-temporel spécial spécialisé
- spécialiste spécieux spécifiable spécificatif spécifier spécifique spectacle
- spectaculaire spectral spectrique spectrochimique spectrographique
- spectrométrique spectrophotométrique spectroscopique spéculaire spéculatif
- spéculer spéléologique spermaticide spermatique spermatiste spermatophage
- spermatozoïdien spermicide spermotoxique sphénocaverneux sphénoïdal sphénoïde
- sphénomaxillaire sphérique sphéroconique sphéroïdal sphéroïdique sphéroïdiser
- sphérolitique sphinctérien sphrygmique sphygmique sphygmographique spiciforme
- spilitiser spinal spinalien spinescent spinocellulaire spino-cellulaire spino-
- cérébelleux spinoriel spinosiste spinoziste spinuleux spiraculaire spiral
- spiraler spiraliser spirannique spirantiser spirillaire spirite spiritualiser
- spiritualiste spirituel spiritueux spirochétique spirochétogène spiroïdal
- spiroïde spirométrique splanchnique splanchnokystique splanchnopleural
- splanchnotrope spleenétique splendide splénectomiser splénétique splénique
- spléniser splénocardiaque splénoganglionnaire splénogène splénomégalique
- splénométrique spoliateur spolier spondaïque spondyloépiphysaire spongieux
- spongiforme spongiostique spongoïde sponsoriser spontané spontanéiste
- sporadique sporifère sporogonique sporophytique sporotrichosique sporozoïtique
- sport sportif sporuler spot spumeux squameux squamifère squarreux squatériser
- squatter squatteriser squattériser squelettique squirreux squirrheux sri-
- lankais ss stabile stabilisateur stabiliser stable stadimétrique staffer
- stagflationniste stagiaire stagnant stagnatile stagnationniste stakhanoviste
- stalactifère stalagmométrique stalinien staliniser stallonien staminal
- staminifère standard standardiser standoliser stanneux stannifère stannique
- stapédien staphylococcique staphylomateux starifier stariser statif
- stationnaire stationnale stationnel stationner statique statistique
- statocratique statorique statuaire statuer statufier statural staturopondéral
- statutaire stéarique stéatolytique stéatopyge stellaire stellionataire
- stendhalien sténocardique sténographier sténographique sténo-ionique
- sténopéique sténotherme sténotypique stéphanéphore stéphanite stéphanois
- steppique stercoraire stercoral stéréo stéréochimique stéréoélectif
+ sous-catégoriser sous-chargé sousclavier sous-clavier sous-commissural
+ sous-conjonctival sous-coracoïdien sous-cortical sous-cortico-spinal
+ sous-cutané sous-développé sous-dirigé sous-dural sous-élytral sousestimer
+ sous-estimer sous-filé sous-fréquenté sous-glaciaire sous-industrialiser
+ sous-jacent sous-marin sous-médicaliser sous-mésocolique sous-nasal
+ sous-neural sous-ombilical sous-orbital sousperformer sous-peuplé
+ sous-productif sous-qualifier sous-réparti sous-représenté sous-saturé
+ soussigner sous-tendu sous-titrer soustractif sous-unguéal sous-utiliser
+ sous-venté sous-vireur sous-volté soutacher soutenable souterrain soutirer
+ souverain souverainiste soviétique soviétiser soyeux spacial spacieux
+ spaciophile spaciophobe spagirique spagyrique spammer spartakiste spartiate
+ spasmique spasmodique spasmogène spasmolytique spasmophile spasmophilique
+ spastique spathifier spathique spatial spatialiser spatiodynamique
+ spatio-temporel spécial spécialisé spécialiste spécieux spécifiable
+ spécificatif spécifier spécifique spectacle spectaculaire spectral spectrique
+ spectrochimique spectrographique spectrométrique spectrophotométrique
+ spectroscopique spéculaire spéculatif spéculer spéléologique spermaticide
+ spermatique spermatiste spermatophage spermatozoïdien spermicide spermotoxique
+ sphénocaverneux sphénoïdal sphénoïde sphénomaxillaire sphérique sphéroconique
+ sphéroïdal sphéroïdique sphéroïdiser sphérolitique sphinctérien sphrygmique
+ sphygmique sphygmographique spiciforme spilitiser spinal spinalien spinescent
+ spinocellulaire spino-cellulaire spino-cérébelleux spinoriel spinosiste
+ spinoziste spinuleux spiraculaire spiral spiraler spiraliser spirannique
+ spirantiser spirillaire spirite spiritualiser spiritualiste spirituel
+ spiritueux spirochétique spirochétogène spiroïdal spiroïde spirométrique
+ splanchnique splanchnokystique splanchnopleural splanchnotrope spleenétique
+ splendide splénectomiser splénétique splénique spléniser splénocardiaque
+ splénoganglionnaire splénogène splénomégalique splénométrique spoliateur
+ spolier spondaïque spondyloépiphysaire spongieux spongiforme spongiostique
+ spongoïde sponsoriser spontané spontanéiste sporadique sporifère sporogonique
+ sporophytique sporotrichosique sporozoïtique sport sportif sporuler spot
+ spumeux squameux squamifère squarreux squatériser squatter squatteriser
+ squattériser squelettique squirreux squirrheux sri-lankais ss stabile
+ stabilisateur stabiliser stable stadimétrique staffer stagflationniste
+ stagiaire stagnant stagnatile stagnationniste stakhanoviste stalactifère
+ stalagmométrique stalinien staliniser stallonien staminal staminifère standard
+ standardiser standoliser stanneux stannifère stannique stapédien
+ staphylococcique staphylomateux starifier stariser statif stationnaire
+ stationnale stationnel stationner statique statistique statocratique
+ statorique statuaire statuer statufier statural staturopondéral statutaire
+ stéarique stéatolytique stéatopyge stellaire stellionataire stendhalien
+ sténocardique sténographier sténographique sténo-ionique sténopéique
+ sténotherme sténotypique stéphanéphore stéphanite stéphanois steppique
+ stercoraire stercoral stéréo stéréochimique stéréoélectif
  stéréoencéphalographique stéréognostique stéréographique stéréométrique
  stéréophonique stéréorégulier stéréoscopique stéréosélectif stéréospécifique
  stéréotaxique stéréotomique stéréotyper stérer stérile stérilisant stériliser
@@ -3825,17 +3848,17 @@ ADJECTIVES = set(
  supputer suprabranchial suprachiasmatique supraconducteur supracondylien
  supraglottique supralapsaire supraliminaire supralittoral supralocal
  supramoléculaire supranational supra-national supranationaliste
- supranaturaliste supranaturel supranormal supranucléaire supraoccipital supra-
- optique suprarénal suprasegmental suprasellaire suprasensible supratemporal
- supraterrestre supratidal supraventriculaire suprême sur sûr surabondant
- suractiver suradapter suradministrer suraffiner suraigu surajouter sural
- suralcooliser suralimenter suranal suranné surapposer surarmer surassister
- surbaisser surcapitaliser surchaptaliser surcharger surchauffer surclasser
- surcommenter surcompenser surcomprimer surconsommer surcontrer surcostal
- surcouper surdensifier surdéterminer surdévelopper surdimensionner surdoser
- suréduquer surélever surenchérisseur surencombrer surendetter surentraîner
- suréquilibrer suréquiper surérogatoire surestimer suret surévaluer
- surexcitable surexciter surexploiter surexposer surfacer surfacique
+ supranaturaliste supranaturel supranormal supranucléaire supraoccipital
+ supra-optique suprarénal suprasegmental suprasellaire suprasensible
+ supratemporal supraterrestre supratidal supraventriculaire suprême sur sûr
+ surabondant suractiver suradapter suradministrer suraffiner suraigu surajouter
+ sural suralcooliser suralimenter suranal suranné surapposer surarmer
+ surassister surbaisser surcapitaliser surchaptaliser surcharger surchauffer
+ surclasser surcommenter surcompenser surcomprimer surconsommer surcontrer
+ surcostal surcouper surdensifier surdéterminer surdévelopper surdimensionner
+ surdoser suréduquer surélever surenchérisseur surencombrer surendetter
+ surentraîner suréquilibrer suréquiper surérogatoire surestimer suret
+ surévaluer surexcitable surexciter surexploiter surexposer surfacer surfacique
  surfacturable surfacturer surfiler surfusible surgeler surgénérateur
  surgeonner surhausser surhumain surimposer surinamien surindustrialiser
  suriner surinformer surinterpréter surjalée surjectif surjeter surmécaniser
@@ -3849,13 +3872,13 @@ ADJECTIVES = set(
  surrénoprive surreprésenter sursaturer sursignifier sursitaire sursolide
  surstabiliser surtaxer surtitrer sururbaniser surutiliser survaloriser
  surveiller surviable survirer survireur survitaminer survivant survoler
- survolter survolteur sus-arachnoïdien sus-caudal susceptible susciter sus-
- hyoïdien susindiqué susjacent sus-jacent susmentionner susnommé sus-occipital
- sus-optique suspect suspecter suspenseur suspensif suspicieux suspirieux
- suspubien sus-pubien sus-tensoriel sustentateur sustenter susurrer susvisé
- sutural suturer svelte swahili swing sybarite sybaritique sycotique sycotiser
- syénitique syllaber syllabique syllabiser sylleptique syllogistique sylvestre
- sylvicole sylvien sylvo-cynégétique symbiote symbiotique symbiotiser
+ survolter survolteur sus-arachnoïdien sus-caudal susceptible susciter
+ sus-hyoïdien susindiqué susjacent sus-jacent susmentionner susnommé
+ sus-occipital sus-optique suspect suspecter suspenseur suspensif suspicieux
+ suspirieux suspubien sus-pubien sus-tensoriel sustentateur sustenter susurrer
+ susvisé sutural suturer svelte swahili swing sybarite sybaritique sycotique
+ sycotiser syénitique syllaber syllabique syllabiser sylleptique syllogistique
+ sylvestre sylvicole sylvien sylvo-cynégétique symbiote symbiotique symbiotiser
  symbolique symboliser symboliste symèle symétrique symétrisable symétriser
  sympa sympathicogénique sympathicolytique sympathicomimétique
  sympathicoplégique sympathicotonique sympathique sympathoblastique
@@ -3895,53 +3918,53 @@ ADJECTIVES = set(
  tautomériser taveler taxable taxateur taxatif taxer taxidermique taxinomique
  taxique taxonomique taylorien taylorisable tayloriser tchadien tchatcher
  tchécoslovaque tchékiste tchèque tchetchène tchétchène tchouvache
- technétronique techniciser techniciste technico-commercial technico-
- scientifique technique techniser techno technobureaucratique technocratique
- technocratiser technoéconomique technographique techno-industriel
- technologique technophile tecteur tectonique tectoniser tectonométamorphique
- tectrice tegmental tégumentaire teigneux teilhardien teiller teinter tel
- télangiectasique télé téléautographique téléceptif téléchargeable télécharger
- téléchélique télécom télécommandable télécommander télécopier télédiastolique
- télédiffuser télédiriger télédynamique téléfalsifier téléférique télégénique
- télégraphier télégraphique télégraphiste téléguidable téléguider
- téléinformatique télélocaliser télémanipulateur télématique télématiser
- télémécanique télémétrer télémétrique télencéphalique téléologique télépathe
- télépathique téléphérique téléphoner téléphonique téléphotographique
- télépiloter téléportable télescoper téléscoper télescopeur téléscopeur
- télescopique télésignaliser télesthésique télésuggérer télésurveiller
- télésystolique télétoxique télétraiter télétrophique télévangéliste télévisé
- télévisuel télexer tellien tellière tellureux tellurhydrique tellurien
- tellurique télocentrique télodiastolique télogène télolécithe télolécithique
- télomériser télophasique télosystolique telougou telugu téméraire témoigner
- témoin tempéramental tempérant tempérer tempétueux templier temporaire
- temporal temporel temporisateur temporiseur temporo-massétérin temporo-
- mastoïdien temporo-pariétal temporospatial tenable tenace tenailler tenant
- tendanciel tendancieux tendeur tendineux tendre ténébreux ténébriste ténicide
- ténifuge tennistique tenonien tenonner ténoriser tenseur tensif tensioactif
- tensio-actif tensionnel tensionner tensoriel tentaculaire tentant tentateur
- tenter tentoriel ténu tépide ter tératogène tératogénique tératoïde
- tératologique terbique tercer térébique téréphtalique terminal terminatif
- terminer terministe terminologique ternaire terne terné terpénique terramare
- terrasser terrasseux terreauter terre-neuvien terrer terrestre terreux
- terrible terricole terrien terrier terrifiant terrifier terrigène territorial
- territorialiser terroriser terroriseur terroriste terser tertiaire
- tertiairiser tertiariser tertioamylique tertiobutylique testable testamentaire
- tester testiculaire testimonial tétaniforme tétanique tétaniser tétartoèdre
- téter tétonnière tétraborique tétracère tétrachorique tétraconque tétracorde
- tétracosanoïque tétracyclique tétradactyle tétradyname tétraèdre tétraédrique
- tétragonal tétragone tétrahydrofurfurylique tétramère tétraphonique
- tétraplégique tétraploïde tétrapode tétrapolaire tétraptère tétrapyrrolique
- tétrasilicique tétrastique tétrastyle tétrasyllabe tétrasyllabique
- tétrathionique tétratomique tétratonique teuton teutonique texan textile
- textilique textuel textural texturer texturiser thaï thailandais thaïlandais
- thalamique thalamo-cortical thalamo-strié thalassémique thalassothérapique
- thalassotoque thalleux thallique thanatologique thatchérien thaumaturge thé
- théâtral théâtraliser thébaïque thécal thécostomate théier théiste thélytoque
- thématique thénarien thénoïque théocratique théodosien théogonique théologal
- théologien théologique théophanique théophilanthropique théophore
- théorématique théorétique théorique théorisable théoriser théosophique
- thérapeutique thériacal thermal thermaliser thermidorien thermionique
- thermique thermiser thermoactif thermoalgésique thermo-algésique
+ technétronique techniciser techniciste technico-commercial
+ technico-scientifique technique techniser techno technobureaucratique
+ technocratique technocratiser technoéconomique technographique
+ techno-industriel technologique technophile tecteur tectonique tectoniser
+ tectonométamorphique tectrice tegmental tégumentaire teigneux teilhardien
+ teiller teinter tel télangiectasique télé téléautographique téléceptif
+ téléchargeable télécharger téléchélique télécom télécommandable télécommander
+ télécopier télédiastolique télédiffuser télédiriger télédynamique
+ téléfalsifier téléférique télégénique télégraphier télégraphique télégraphiste
+ téléguidable téléguider téléinformatique télélocaliser télémanipulateur
+ télématique télématiser télémécanique télémétrer télémétrique télencéphalique
+ téléologique télépathe télépathique téléphérique téléphoner téléphonique
+ téléphotographique télépiloter téléportable télescoper téléscoper télescopeur
+ téléscopeur télescopique télésignaliser télesthésique télésuggérer
+ télésurveiller télésystolique télétoxique télétraiter télétrophique
+ télévangéliste télévisé télévisuel télexer tellien tellière tellureux
+ tellurhydrique tellurien tellurique télocentrique télodiastolique télogène
+ télolécithe télolécithique télomériser télophasique télosystolique telougou
+ telugu téméraire témoigner témoin tempéramental tempérant tempérer tempétueux
+ templier temporaire temporal temporel temporisateur temporiseur
+ temporo-massétérin temporo-mastoïdien temporo-pariétal temporospatial tenable
+ tenace tenailler tenant tendanciel tendancieux tendeur tendineux tendre
+ ténébreux ténébriste ténicide ténifuge tennistique tenonien tenonner ténoriser
+ tenseur tensif tensioactif tensio-actif tensionnel tensionner tensoriel
+ tentaculaire tentant tentateur tenter tentoriel ténu tépide ter tératogène
+ tératogénique tératoïde tératologique terbique tercer térébique téréphtalique
+ terminal terminatif terminer terministe terminologique ternaire terne terné
+ terpénique terramare terrasser terrasseux terreauter terre-neuvien terrer
+ terrestre terreux terrible terricole terrien terrier terrifiant terrifier
+ terrigène territorial territorialiser terroriser terroriseur terroriste terser
+ tertiaire tertiairiser tertiariser tertioamylique tertiobutylique testable
+ testamentaire tester testiculaire testimonial tétaniforme tétanique tétaniser
+ tétartoèdre téter tétonnière tétraborique tétracère tétrachorique tétraconque
+ tétracorde tétracosanoïque tétracyclique tétradactyle tétradyname tétraèdre
+ tétraédrique tétragonal tétragone tétrahydrofurfurylique tétramère
+ tétraphonique tétraplégique tétraploïde tétrapode tétrapolaire tétraptère
+ tétrapyrrolique tétrasilicique tétrastique tétrastyle tétrasyllabe
+ tétrasyllabique tétrathionique tétratomique tétratonique teuton teutonique
+ texan textile textilique textuel textural texturer texturiser thaï thailandais
+ thaïlandais thalamique thalamo-cortical thalamo-strié thalassémique
+ thalassothérapique thalassotoque thalleux thallique thanatologique thatchérien
+ thaumaturge thé théâtral théâtraliser thébaïque thécal thécostomate théier
+ théiste thélytoque thématique thénarien thénoïque théocratique théodosien
+ théogonique théologal théologien théologique théophanique théophilanthropique
+ théophore théorématique théorétique théorique théorisable théoriser
+ théosophique thérapeutique thériacal thermal thermaliser thermidorien
+ thermionique thermique thermiser thermoactif thermoalgésique thermo-algésique
  thermochimique thermochrome thermocinétique thermoclastique thermoclimatique
  thermocollable thermocondensable thermoconvectif thermodifférentiel
  thermodiffusif thermodurcissable thermodynamique thermoélastique
@@ -4085,8 +4108,8 @@ ADJECTIVES = set(
  ultradien ultra-fin ultraléger ultralibéral ultra-libéral ultra-marin
  ultramétrique ultramicroscopique ultramince ultraminiaturiser ultraminoritaire
  ultramoderne ultranationaliste ultraplat ultra-plat ultrarapide ultra-rapide
- ultra-résistant ultrariche ultraroyaliste ultra-secret ultrasensible ultra-
- sensible ultrasonique ultrasonographique ultrasonore ultrastructural
+ ultra-résistant ultrariche ultraroyaliste ultra-secret ultrasensible
+ ultra-sensible ultrasonique ultrasonographique ultrasonore ultrastructural
  ultraviolet ululer umbonal unaire unanime unanimiste uncial unciforme
  uncovertébral undécanoïque undécennal undécénoïque undécylénique underground
  unguéal unguifère uni uniangulaire uniate uniatiser uniaxe uniaxial unicaméral

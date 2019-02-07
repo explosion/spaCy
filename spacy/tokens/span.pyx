@@ -524,9 +524,9 @@ cdef class Span:
             return len(list(self.rights))
 
     property subtree:
-        """Tokens that descend from tokens in the span, but fall outside it.
+        """Tokens within the span and tokens which descend from them.
 
-        YIELDS (Token): A descendant of a token within the span.
+        YIELDS (Token): A token within the span, or a descendant from it.
         """
         def __get__(self):
             for word in self.lefts:

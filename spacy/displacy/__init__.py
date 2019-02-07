@@ -9,7 +9,6 @@ from ..util import is_in_jupyter
 
 
 _html = {}
-IS_JUPYTER = is_in_jupyter()
 RENDER_WRAPPER = None
 
 
@@ -18,7 +17,7 @@ def render(
     style="dep",
     page=False,
     minify=False,
-    jupyter=IS_JUPYTER,
+    jupyter=False,
     options={},
     manual=False,
 ):
@@ -51,7 +50,7 @@ def render(
     html = _html["parsed"]
     if RENDER_WRAPPER is not None:
         html = RENDER_WRAPPER(html)
-    if jupyter:  # return HTML rendered by IPython display()
+    if jupyter or is_in_jupyter():  # return HTML rendered by IPython display()
         from IPython.core.display import display, HTML
 
         return display(HTML(html))

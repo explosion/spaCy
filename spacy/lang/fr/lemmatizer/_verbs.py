@@ -6,63 +6,64 @@ VERBS = set(
     """
  abaisser abandonner abdiquer abecquer abéliser aberrer abhorrer abîmer abjurer
  ablater abluer ablutionner abominer abonder abonner aborder aborner aboucher
- abouler abouter abraquer abraser abreuver abricoter abriter absenter absinther
- absolutiser absorber abuser académifier académiser acagnarder accabler
- accagner accaparer accastiller accentuer accepter accessoiriser accidenter
- acclamer acclimater accointer accolader accoler accommoder accompagner
- accorder accorer accoster accoter accoucher accouder accouer accoupler
- accoutrer accoutumer accouver accrassiner accréditer accrocher acculer
- acculturer accumuler accuser acenser acétaliser acétyler achalander acharner
- acheminer achopper achromatiser aciduler aciériser acliquer acoquiner acquêter
- acquitter acter actiniser actionner activer actoriser actualiser acupuncturer
- acyler adapter additionner adenter adieuser adirer adjectiver adjectiviser
- adjurer adjuver administrer admirer admonester adoniser adonner adopter adorer
- adorner adosser adouber adresser adsorber aduler adverbialiser aéroporter
- aérosoliser aérosonder aérotransporter affabuler affacturer affairer affaisser
- affaiter affaler affamer affecter affectionner affermer afficher affider
- affiler affiner affirmer affistoler affixer affleurer afflouer affluer affoler
- afforester affouiller affourcher affriander affricher affrioler affriquer
- affriter affronter affruiter affubler affurer affûter afghaniser afistoler
- africaniser agatiser agenouiller agglutiner aggraver agioter agiter agoniser
- agourmander agrafer agrainer agrémenter agresser agriffer agripper
- agroalimentariser agrouper aguetter aguicher ahaner aheurter aicher aider
- aigretter aiguer aiguiller aiguillonner aiguiser ailer ailler ailloliser
- aimanter aimer airer ajointer ajourer ajourner ajouter ajuster ajuter
- alambiquer alarmer albaniser albitiser alcaliniser alcaliser alcooliser
- alcoolyser alcoyler aldoliser alerter aleviner algébriser algérianiser
- algorithmiser aligner alimenter alinéater alinéatiser aliter alkyler allaiter
- allectomiser allégoriser allitiser allivrer allocutionner alloter allouer
- alluder allumer allusionner alluvionner allyler aloter alpaguer alphabétiser
- alterner aluminer aluminiser aluner alvéoler alvéoliser amabiliser amadouer
- amalgamer amariner amarrer amateloter ambitionner ambler ambrer ambuler
- améliorer amender amenuiser américaniser ameulonner ameuter amhariser amiauler
- amicoter amidonner amignarder amignoter amignotter aminer ammoniaquer
- ammoniser ammoxyder amocher amouiller amouracher amourer amphotériser ampouler
- amputer amunitionner amurer amuser anagrammatiser anagrammer analyser
- anamorphoser anaphylactiser anarchiser anastomoser anathématiser anatomiser
- ancher anchoiter ancrer anecdoter anecdotiser angéliser anglaiser angler
- angliciser angoisser anguler animaliser animer aniser ankyloser annexer
- annihiler annoter annualiser annuler anodiser ânonner anser antagoniser
- antéposer antérioriser anthropomorphiser anticiper anticoaguler antidater
- antiparasiter antiquer antiseptiser anuiter aoûter apaiser apériter apetisser
- apeurer apicaliser apiquer aplaner apologiser aponévrotomiser aponter aposter
- apostiller apostoliser apostropher apostumer apothéoser appareiller apparenter
- appeauter appertiser appliquer appointer appoltronner apponter apporter
- apposer appréhender apprêter apprivoiser approcher approuver approvisionner
- approximer apurer aquareller arabiser araméiser aramer araser arbitrer arborer
- arboriser arcbouter arc-bouter archaïser architecturer archiver arçonner
- ardoiser aréniser arer argenter argentiniser argoter argotiser argumenter
- arianiser arimer ariser aristocratiser aristotéliser arithmétiser armaturer
- armer arnaquer aromatiser arpenter arquebuser arquer arracher arraisonner
- arrenter arrêter arrher arrimer arriser arriver arroser arsouiller
- artérialiser articler articuler artificialiser artistiquer aryaniser aryler
- ascensionner ascétiser aseptiser asexuer asianiser asiatiser aspecter
- asphalter aspirer assabler assaisonner assassiner assembler assener asséner
- assermenter asserter assibiler assigner assimiler assister assoiffer assoler
- assommer assoner assoter assumer assurer asticoter astiquer athéiser
- atlantiser atomiser atourner atropiniser attabler attacher attaquer attarder
- attenter attentionner atténuer atterrer attester attifer attirer attiser
- attitrer attraper attremper attribuer attrister attrouper aubiner
+ abouler abouter aboutonner abracadabrer abraquer abraser abreuver abricoter
+ abriter absenter absinther absolutiser absorber abuser académifier académiser
+ acagnarder accabler accagner accaparer accastiller accentuer accepter
+ accessoiriser accidenter acclamer acclimater accointer accolader accoler
+ accommoder accompagner accorder accorer accoster accoter accoucher accouder
+ accouer accoupler accoutrer accoutumer accouver accrassiner accréditer
+ accrocher acculer acculturer accumuler accuser acenser acétaliser acétyler
+ achalander acharner acheminer achopper achromatiser aciduler aciériser
+ acliquer acoquiner acquêter acquitter acter actiniser actionner activer
+ actoriser actualiser acupuncturer acyler adapter additionner adenter adieuser
+ adirer adjectiver adjectiviser adjurer adjuver administrer admirer admonester
+ adoniser adonner adopter adorer adorner adosser adouber adresser adsorber
+ aduler adverbialiser aéroporter aérosoliser aérosonder aérotransporter
+ affabuler affacturer affairer affaisser affaiter affaler affamer affecter
+ affectionner affermer afficher affider affiler affiner affirmer affistoler
+ affixer affleurer afflouer affluer affoler afforester affouiller affourcher
+ affriander affricher affrioler affriquer affriter affronter affruiter affubler
+ affurer affûter afghaniser afistoler africaniser agatiser agenouiller
+ agglutiner aggraver agioter agiter agoniser agourmander agrafer agrainer
+ agrémenter agresser agricher agriffer agripper agroalimentariser agrouper
+ aguetter aguicher aguiller ahaner aheurter aicher aider aigretter aiguer
+ aiguiller aiguillonner aiguiser ailer ailler ailloliser aimanter aimer airer
+ ajointer ajourer ajourner ajouter ajuster ajuter alambiquer alarmer albaniser
+ albitiser alcaliniser alcaliser alcooliser alcoolyser alcoyler aldoliser
+ alerter aleviner algébriser algérianiser algorithmiser aligner alimenter
+ alinéater alinéatiser aliter alkyler allaiter allectomiser allégoriser
+ allitiser allivrer allocutionner alloter allouer alluder allumer allusionner
+ alluvionner allyler aloter alpaguer alphabétiser alterner aluminer aluminiser
+ aluner alvéoler alvéoliser amabiliser amadouer amalgamer amariner amarrer
+ amateloter ambitionner ambler ambrer ambuler améliorer amender amenuiser
+ américaniser ameulonner ameuter amhariser amiauler amicoter amidonner
+ amignarder amignoter amignotter aminer ammoniaquer ammoniser ammoxyder amocher
+ amouiller amouracher amourer amphotériser ampouler amputer amunitionner amurer
+ amuser anagrammatiser anagrammer analyser anamorphoser anaphylactiser
+ anarchiser anastomoser anathématiser anatomiser ancher anchoiter ancrer
+ anecdoter anecdotiser angéliser anglaiser angler angliciser angoisser anguler
+ animaliser animer aniser ankyloser annexer annihiler annoter annualiser
+ annuler anodiser ânonner anser antagoniser antéposer antérioriser
+ anthropomorphiser anticiper anticoaguler antidater antiparasiter antiquer
+ antiseptiser anuiter aoûter apaiser apériter apetisser apeurer apicaliser
+ apiquer aplaner apologiser aponévrotomiser aponter aposter apostiller
+ apostoliser apostropher apostumer apothéoser appareiller apparenter appeauter
+ appertiser appliquer appointer appoltronner apponter apporter apposer
+ appréhender apprêter apprivoiser approcher approuver approvisionner approximer
+ apurer aquareller arabiser araméiser aramer araser arbitrer arborer arboriser
+ arcbouter arc-bouter archaïser architecturer archiver arçonner ardoiser
+ aréniser arer argenter argentiniser argoter argotiser argumenter arianiser
+ arimer ariser aristocratiser aristotéliser arithmétiser armaturer armer
+ arnaquer aromatiser arpenter arquebuser arquer arracher arraisonner arrenter
+ arrêter arrher arrimer arriser arriver arroser arsouiller artérialiser
+ articler articuler artificialiser artistiquer aryaniser aryler ascensionner
+ ascétiser aseptiser asexuer asianiser asiatiser aspecter asphalter aspirer
+ assabler assaisonner assassiner assembler assener asséner assermenter asserter
+ assibiler assigner assimiler assister assoiffer assoler assommer assoner
+ assoter assumer assurer asticoter astiquer athéiser atlantiser atomiser
+ atourner atropiniser attabler attacher attaquer attarder attenter attentionner
+ atténuer atterrer attester attifer attirer attiser attitrer attoucher attraper
+ attremper attribuer attriquer attrister attrouper aubader aubiner
  audiovisualiser auditer auditionner augmenter augurer aulofer auloffer aumôner
  auner auréoler ausculter authentiquer autoaccuser autoadapter autoadministrer
  autoagglutiner autoalimenter autoallumer autoamputer autoanalyser autoancrer
@@ -73,10 +74,10 @@ VERBS = set(
  autodéterminer autodévelopper autodévorer autodicter autodiscipliner
  autodupliquer autoéduquer autoenchâsser autoenseigner autoépurer autoéquiper
  autoévaporiser autoévoluer autoféconder autofertiliser autoflageller
- autofonder autoformer autofretter autogouverner autogreffer autoguider auto-
- immuniser auto-ioniser autolégitimer autolimiter autoliquider autolyser
- automatiser automédiquer automitrailler automutiler autonomiser auto-
- optimaliser auto-optimiser autoorganiser autoperpétuer autopersuader
+ autofonder autoformer autofretter autogouverner autogreffer autoguider
+ auto-immuniser auto-ioniser autolégitimer autolimiter autoliquider autolyser
+ automatiser automédiquer automitrailler automutiler autonomiser
+ auto-optimaliser auto-optimiser autoorganiser autoperpétuer autopersuader
  autopiloter autopolliniser autoporter autopositionner autoproclamer
  autopropulser autoréaliser autorecruter autoréglementer autoréguler
  autorelaxer autoréparer autoriser autosélectionner autosevrer autostabiliser
@@ -84,7 +85,7 @@ VERBS = set(
  autotracter autotransformer autovacciner autoventiler avaler avaliser
  aventurer aveugler avillonner aviner avironner aviser avitailler aviver
  avoiner avoisiner avorter avouer axéniser axer axiomatiser azimuter azoter
- azurer babiller babouiner bâcher bachonner bachoter bâcler badauder
+ azurer babiller babouiner bâcher bachonner bachoter bâcler badauder bader
  badigeonner badiner baffer bafouer bafouiller bâfrer bagarrer bagoter bagouler
  baguenauder baguer baguetter bahuter baigner bailler bâiller baîller
  bâillonner baîllonner baiser baisoter baisouiller baisser bakéliser balader
@@ -135,9 +136,9 @@ VERBS = set(
  brouillonner broussailler brousser brouter bruiner bruisser bruiter brûler
  brumer brumiser bruncher brusquer brutaliser bruter bûcher bucoliser
  budgétiser buer buffériser buffler bugler bugner buiser buissonner bulgariser
- buquer bureaucratiser buriner buser busquer buter butiner butonner butter
- buvoter byzantiner byzantiniser cabaler cabaliser cabaner câbler cabosser
- caboter cabotiner cabrer cabrioler cacaber cacaoter cacarder cacher
+ buller buquer bureaucratiser buriner buser busquer buter butiner butonner
+ butter buvoter byzantiner byzantiniser cabaler cabaliser cabaner câbler
+ cabosser caboter cabotiner cabrer cabrioler cacaber cacaoter cacarder cacher
  cachetonner cachotter cadastrer cadavériser cadeauter cadetter cadoter cadrer
  cafarder cafeter cafouiller cafter cageoler cagnarder cagner caguer cahoter
  caillebotter cailler caillouter cajoler calaminer calamistrer calamiter
@@ -185,65 +186,66 @@ VERBS = set(
  claveliser claver clavetter clayonner cléricaliser clicher cligner clignoter
  climatiser clinquanter clinquer cliper cliquer clisser cliver clochardiser
  clocher clocter cloisonner cloîtrer cloner cloper clopiner cloquer clôturer
- clouer clouter coaccuser coacerver coacher coadapter coagglutiner coaguler
- coaliser coaltarer coaltariser coanimer coarticuler cobelligérer cocaïniser
- cocarder cocheniller cocher côcher cochonner coconiser coconner cocooner
- cocoter coder codéterminer codiller coéditer coéduquer coexister coexploiter
- coexprimer coffiner coffrer cofonder cogiter cogner cogouverner cohabiter
- cohériter cohober coiffer coincher coincider coïncider coïter colchiciner
- collaber collaborer collationner collecter collectionner collectiviser coller
- collisionner colloquer colluvionner colmater colombianiser colombiner
- coloniser colorer coloriser colostomiser colporter colpotomiser coltiner
- columniser combiner combler commander commanditer commémorer commenter
- commercialiser comminer commissionner commotionner commuer communaliser
- communautariser communiquer communiser commuter compacifier compacter comparer
- compartimenter compenser compiler compisser complanter complémenter
- complétiviser complexer complimenter compliquer comploter comporter composer
- composter compoter compounder compresser comprimer comptabiliser compter
- compulser computer computériser concentrer conceptualiser concerner concerter
- concher conciliabuler concocter concomiter concorder concrétionner concrétiser
- concubiner condamner condenser condimenter conditionner confabuler
- confectionner confédéraliser confesser confessionnaliser configurer confiner
- confirmer confisquer confiter confluer conformer conforter confronter
- confusionner congestionner conglober conglutiner congoliser congratuler
- coniser conjecturer conjointer conjuger conjuguer conjurer connecter conniver
- connoter conquêter consacrer conscientiser conseiller conserver consigner
- consister consoler consolider consommariser consommer consonantiser consoner
- conspirer conspuer constater consteller conster consterner constiper
- constituer constitutionnaliser consulter consumer contacter contagionner
- containeriser containériser contaminer contemner contempler conteneuriser
- contenter conter contester contextualiser continentaliser contingenter
- continuer contorsionner contourner contracter contractualiser contracturer
- contraposer contraster contre-attaquer contrebouter contrebuter contrecalquer
- contrecarrer contre-expertiser contreficher contrefraser contre-indiquer
- contremander contremanifester contremarcher contremarquer contreminer
- contremurer contrenquêter contreplaquer contrepointer contrer contresigner
- contrespionner contretyper contreventer contribuer contrister contrôler
- controuver controverser contusionner conventionnaliser conventionner
- conventualiser converser convoiter convoler convoquer convulser convulsionner
- cooccuper coopératiser coopter coordonner coorganiser coparrainer coparticiper
- copermuter copiner copolycondenser copolymériser coprésenter coprésider copser
- copter copuler copyrighter coqueliner coquer coqueriquer coquiller corailler
- corder cordonner coréaliser coréaniser coréguler coresponsabiliser cornaquer
- cornemuser corner coroniser corporiser correctionaliser correctionnaliser
- correler corréler corroborer corroder corser corticaliser cosigner cosmétiquer
- cosser costumer coter cotillonner cotiser cotonner cotransfecter couaquer
- couarder couchailler coucher couchoter couchotter coucouer coucouler couder
- coudrer couillonner couiner couler coulisser coupailler coupeller couper
- couperoser coupler couponner courailler courbaturer courber courbetter
- courcailler couronner courrieler courser courtauder court-circuiter courtiser
- cousiner coussiner coûter couturer couver cracher crachiner crachoter
- crachouiller crailler cramer craminer cramper cramponner crampser cramser
- craner crâner crânoter cranter crapahuter crapaüter crapser crapuler craquer
- crasher cratériser craticuler cratoniser cravacher cravater crawler crayonner
- crédibiliser créditer crématiser créoliser créosoter crêper crépiner crépiter
- crésyler crêter crétiniser creuser criailler cribler criminaliser criquer
- crisper crisser cristalliser criticailler critiquer crocher croiser crôler
- croquer croskiller crosser crotoniser crotter crouler croupionner crouponner
+ clotûrer clouer clouter coaccuser coacerver coacher coadapter coagglutiner
+ coaguler coaliser coaltarer coaltariser coanimer coarticuler cobelligérer
+ cocaïniser cocarder cocheniller cocher côcher cochonner coconiser coconner
+ cocooner cocoter coder codéterminer codiller coéditer coéduquer coexister
+ coexploiter coexprimer coffiner coffrer cofonder cogiter cogner cogouverner
+ cohabiter cohériter cohober coiffer coincher coincider coïncider coïter
+ colchiciner collaber collaborer collationner collecter collectionner
+ collectiviser coller collisionner colloquer colluvionner colmater
+ colombianiser colombiner coloniser colorer coloriser colostomiser colporter
+ colpotomiser coltiner columniser combiner combler commander commanditer
+ commémorer commenter commercialiser comminer commissionner commotionner
+ commuer communaliser communautariser communiquer communiser commuter
+ compacifier compacter comparer compartimenter compenser compiler compisser
+ complanter complémenter complétiviser complexer complimenter compliquer
+ comploter comporter composer composter compoter compounder compresser
+ comprimer comptabiliser compter compulser computer computériser concentrer
+ conceptualiser concerner concerter concher conciliabuler concocter concomiter
+ concorder concrétionner concrétiser concubiner condamner condenser condimenter
+ conditionner confabuler confectionner confédéraliser confesser
+ confessionnaliser configurer confiner confirmer confisquer confiter confluer
+ conformer conforter confronter confusionner congestionner conglober
+ conglutiner congoliser congratuler coniser conjecturer conjointer conjuger
+ conjuguer conjurer connecter conniver connoter conquêter consacrer
+ conscientiser conseiller conserver consigner consister consoler consolider
+ consommariser consommer consonantiser consoner conspirer conspuer constater
+ consteller conster consterner constiper constituer constitutionnaliser
+ consulter consumer contacter contagionner containeriser containériser
+ contaminer contemner contempler conteneuriser contenter conter contester
+ contextualiser continentaliser contingenter continuer contorsionner contourner
+ contracter contractualiser contracturer contraposer contraster contre-attaquer
+ contrebouter contrebuter contrecalquer contrecarrer contre-expertiser
+ contreficher contrefraser contre-indiquer contremander contremanifester
+ contremarcher contremarquer contreminer contremurer contrenquêter
+ contreplaquer contrepointer contrer contresigner contrespionner contretyper
+ contreventer contribuer contrister contrôler controuver controverser
+ contusionner conventionnaliser conventionner conventualiser converser
+ convoiter convoler convoquer convulser convulsionner cooccuper coopératiser
+ coopter coordonner coorganiser coparrainer coparticiper copermuter copiner
+ copolycondenser copolymériser coprésenter coprésider copser copter copuler
+ copyrighter coqueliner coquer coqueriquer coquiller corailler corder cordonner
+ coréaliser coréaniser coréguler coresponsabiliser cornaquer cornemuser corner
+ coroniser corporiser correctionaliser correctionnaliser correler corréler
+ corroborer corroder corser corticaliser cosigner cosmétiquer cosser costumer
+ coter cotillonner cotiser cotonner cotransfecter couaquer couarder couchailler
+ coucher couchoter couchotter coucouer coucouler couder coudrer couillonner
+ couiner couler coulisser coupailler coupeller couper couperoser coupler
+ couponner courailler courbaturer courber courbetter courcailler couronner
+ courrieler courser courtauder court-circuiter courtiser cousiner coussiner
+ coûter couturer couver cracher crachiner crachoter crachouiller crailler
+ cramer craminer cramper cramponner crampser cramser craner crâner crânoter
+ cranter crapahuter crapaüter crapser crapuler craquer crasher cratériser
+ craticuler cratoniser cravacher cravater crawler crayonner crédibiliser
+ créditer crématiser créoliser créosoter crêper crépiner crépiter crésyler
+ crêter crétiniser creuser criailler cribler criminaliser criquer crisper
+ crisser cristalliser criticailler critiquer crocher croiser crôler croquer
+ croskiller crosser crotoniser crotter crouler croupionner crouponner
  croustiller croûter croûtonner cryoappliquer cryocautériser cryocoaguler
  cryoconcentrer cryodécaper cryoébarber cryofixer cryogéniser cryomarquer
- cryosorber crypter cuber cueiller cuider cuisiner cuiter cuivrer culbuter
- culer culminer culotter culpabiliser cultiver culturaliser cumuler curariser
+ cryosorber crypter cuber cueiller cuider cuisiner cuivrer culbuter culer
+ culminer culotter culpabiliser cultiver culturaliser cumuler curariser
  curedenter curer curetter customiser cuter cutiniser cuver cyaniser cyanoser
  cyanurer cybernétiser cycler cycliser cycloner cylindrer dactylocoder daguer
  daguerréotyper daïer daigner dailler daller damasquiner damer damner
@@ -748,8 +750,8 @@ VERBS = set(
  mithridatiser mitonner mitrailler mixer mixter mixtionner mobiliser modaliser
  modéliser modérantiser moderniser moduler moellonner mofler moirer moiser
  moissonner molarder molariser moléculariser molester moletter mollarder
- molletter monarchiser mondaniser monder mondialiser monétariser monétiser
- moniliser monologuer monomériser monophtonguer monopoler monopoliser
+ molletonner molletter monarchiser mondaniser monder mondialiser monétariser
+ monétiser moniliser monologuer monomériser monophtonguer monopoler monopoliser
  monoprogrammer monosiallitiser monotoniser monseigneuriser monter montrer
  monumentaliser moquer moquetter morailler moraliser mordailler mordiller
  mordillonner mordorer mordoriser morfailler morfaler morfiler morfler morganer
@@ -792,63 +794,64 @@ VERBS = set(
  palpiter palucher panacher panader pancarter paner paniquer panneauter panner
  pannetonner panoramiquer panser pantiner pantomimer pantoufler paoner paonner
  papelarder papillonner papilloter papoter papouiller paquer paraboliser
- parachuter parader parafer paraffiner paralléliser paralyser paramétriser
- parangonner parapher paraphraser parasiter parcellariser parceller parcelliser
- parcheminer parcoriser pardonner parementer parenthétiser parer paresser
- parfiler parfumer parisianiser parjurer parkériser parlementer parler parloter
- parlotter parquer parrainer participer particulariser partitionner partouzer
- pasquiner pasquiniser passefiler passementer passepoiler passeriller
- passionnaliser passionner pasteller pasteuriser pasticher pastiller pastoriser
- patafioler pateliner patenter paternaliser paterner pathétiser patienter
- patiner pâtisser patoiser pâtonner patouiller patrimonialiser patrociner
- patronner patrouiller patter pâturer paumer paupériser pauser pavaner paver
- pavoiser peaufiner pébriner pécher pêcher pécloter pectiser pédaler pédanter
- pédantiser pédiculiser pédicurer pédimenter peigner peiner peinturer
- peinturlurer péjorer pelaner pelauder péleriner pèleriner pelletiser
- pelleverser pelliculer peloter pelotonner pelucher pelurer pénaliser pencher
- pendeloquer pendiller pendouiller penduler pénéplaner penser pensionner
- peptiser peptoniser percaliner percher percoler percuter perdurer pérégriner
- pérenniser perfectionner perforer performer perfuser péricliter périmer
- périodiser périphériser périphraser péritoniser perler permanenter permaner
- perméabiliser permuter pérorer pérouaniser peroxyder perpétuer perquisitionner
- perreyer perruquer persécuter persifler persiller persister personnaliser
- persuader perturber pervibrer pester pétarader pétarder pétiller pétitionner
- pétocher pétouiller pétrarquiser pétroliser pétuner peupler pexer
- phacoémulsifier phagocyter phalangiser pharyngaliser phéniquer phénoler
- phényler philosophailler philosopher phlébotomiser phlegmatiser phlogistiquer
- phonétiser phonologiser phosphater phosphorer phosphoriser phosphoryler
- photoactiver photocomposer photograver photo-ioniser photoïoniser photomonter
- photophosphoryler photopolymériser photosensibiliser phraser piaffer piailler
- pianomiser pianoter piauler pickler picocher picoler picorer picoter picouser
- picouzer picrater pictonner picturaliser pidginiser piédestaliser pierrer
- piétiner piétonnifier piétonniser pieuter pifer piffer piffrer pigeonner
- pigmenter pigner pignocher pignoler piler piller pilloter pilonner piloter
- pimenter pinailler pinceauter pinçoter pindariser pinter piocher pionner
- piotter piper piqueniquer pique-niquer piquer piquetonner piquouser piquouzer
- pirater pirouetter piser pisser pissoter pissouiller pistacher pister pistoler
- pistonner pitancher pitcher piter pitonner pituiter pivoter placarder
- placardiser plafonner plaider plainer plaisanter plamer plancher planer
- planétariser planétiser planquer planter plaquer plasmolyser plastiquer
- plastronner platiner platiniser platoniser plâtrer plébisciter pleurailler
- pleuraliser pleurer pleurnicher pleuroter pleuviner pleuvioter pleuvoter
- plisser plissoter plomber ploquer plotiniser plouter ploutrer plucher
- plumarder plumer pluraliser plussoyer pluviner pluvioter pocharder pocher
- pochetronner pochtronner poculer podzoliser poêler poétiser poignarder poigner
- poiler poinçonner pointer pointiller poireauter poirer poiroter poisser
- poitriner poivrer poivroter polariser poldériser polémiquer polissonner
- politicailler politiquer politiser polker polliciser polliniser polluer
- poloniser polychromer polycontaminer polygoner polygoniser polymériser
- polyploïdiser polytransfuser polyviser pommader pommer pomper pomponner
- ponctionner ponctuer ponter pontiller populariser poquer porer porphyriser
- porter porteuser portionner portoricaniser portraicturer portraiturer poser
- positionner positiver possibiliser postdater poster postérioriser posticher
- postillonner postposer postsonoriser postsynchroniser postuler potabiliser
- potentialiser poter poteyer potiner poudrer pouffer pouiller pouliner pouloper
- poulotter pouponner pourpenser pourprer poussailler pousser poutser praliner
- pratiquer préaccentuer préadapter préallouer préassembler préassimiler
- préaviser précariser précautionner prêchailler préchauffer préchauler prêcher
- précipiter préciser préciter précompter préconditionner préconfigurer
- préconiser préconstituer précoter prédater prédécouper prédésigner prédestiner
+ parachuter parader parafer paraffiner paraisonner paralléliser paralyser
+ paramétriser parangonner parapher paraphraser parasiter parcellariser
+ parceller parcelliser parcheminer parcoriser pardonner parementer
+ parenthétiser parer paresser parfiler parfumer parisianiser parjurer
+ parkériser parlementer parler parloter parlotter parquer parrainer participer
+ particulariser partitionner partouzer pasquiner pasquiniser passefiler
+ passementer passepoiler passeriller passionnaliser passionner pasteller
+ pasteuriser pasticher pastiller pastoriser patafioler pateliner patenter
+ paternaliser paterner pathétiser patienter patiner pâtisser patoiser pâtonner
+ patouiller patrimonialiser patrociner patronner patrouiller patter pâturer
+ paumer paupériser pauser pavaner paver pavoiser peaufiner pébriner pécher
+ pêcher pécloter pectiser pédaler pédanter pédantiser pédiculiser pédicurer
+ pédimenter peigner peiner peinturer peinturlurer péjorer pelaner pelauder
+ péleriner pèleriner pelletiser pelleverser pelliculer peloter pelotonner
+ pelucher pelurer pénaliser pencher pendeloquer pendiller pendouiller penduler
+ pénéplaner penser pensionner peptiser peptoniser percaliner percher percoler
+ percuter perdurer pérégriner pérenniser perfectionner perforer performer
+ perfuser péricliter périmer périodiser périphériser périphraser péritoniser
+ perler permanenter permaner perméabiliser permuter pérorer pérouaniser
+ peroxyder perpétuer perquisitionner perreyer perruquer persécuter persifler
+ persiller persister personnaliser persuader perturber pervibrer pester
+ pétarader pétarder pétiller pétitionner pétocher pétouiller pétrarquiser
+ pétroliser pétuner peupler pexer phacoémulsifier phagocyter phalangiser
+ pharyngaliser phéniquer phénoler phényler philosophailler philosopher
+ phlébotomiser phlegmatiser phlogistiquer phonétiser phonologiser phosphater
+ phosphorer phosphoriser phosphoryler photoactiver photocomposer photograver
+ photo-ioniser photoïoniser photomonter photophosphoryler photopolymériser
+ photosensibiliser phraser piaffer piailler pianomiser pianoter piauler pickler
+ picocher picoler picorer picoter picouser picouzer picrater pictonner
+ picturaliser pidginiser piédestaliser pierrer piétiner piétonnifier
+ piétonniser pieuter pifer piffer piffrer pigeonner pigmenter pigner pignocher
+ pignoler piler piller pilloter pilonner piloter pimenter pinailler pinceauter
+ pinçoter pindariser pinter piocher pionner piotter piper piqueniquer
+ pique-niquer piquer piquetonner piquouser piquouzer pirater pirouetter piser
+ pisser pissoter pissouiller pistacher pister pistoler pistonner pitancher
+ pitcher piter pitonner pituiter pivoter placarder placardiser plafonner
+ plaider plainer plaisanter plamer plancher planer planétariser planétiser
+ planquer planter plaquer plasmolyser plastiquer plastronner platiner
+ platiniser platoniser plâtrer plébisciter pleurailler pleuraliser pleurer
+ pleurnicher pleuroter pleuviner pleuvioter pleuvoter plisser plissoter plomber
+ ploquer plotiniser plouter ploutrer plucher plumarder plumer pluraliser
+ plussoyer pluviner pluvioter pocharder pocher pochetronner pochtronner poculer
+ podzoliser poêler poétiser poignarder poigner poiler poinçonner pointer
+ pointiller poireauter poirer poiroter poisser poitriner poivrer poivroter
+ polariser poldériser polémiquer polissonner politicailler politiquer politiser
+ polker polliciser polliniser polluer poloniser polychromer polycontaminer
+ polygoner polygoniser polymériser polyploïdiser polytransfuser polyviser
+ pommader pommer pomper pomponner ponctionner ponctuer ponter pontiller
+ populariser poquer porer porphyriser porter porteuser portionner
+ portoricaniser portraicturer portraiturer poser positionner positiver
+ possibiliser postdater poster postérioriser posticher postillonner postposer
+ postsonoriser postsynchroniser postuler potabiliser potentialiser poter
+ poteyer potiner poudrer pouffer pouiller pouliner pouloper poulotter pouponner
+ pourpenser pourprer poussailler pousser poutser praliner pratiquer
+ préaccentuer préadapter préallouer préassembler préassimiler préaviser
+ précariser précautionner prêchailler préchauffer préchauler prêcher précipiter
+ préciser préciter précompter préconditionner préconfigurer préconiser
+ préconstituer précoter prédater prédécouper prédésigner prédestiner
  prédéterminer prédiffuser prédilectionner prédiquer prédisposer prédominer
  préemballer préempter préencoller préenregistrer préenrober préexaminer
  préexister préfabriquer préfaner préfigurer préfixer préformater préformer
@@ -879,8 +882,8 @@ VERBS = set(
  raccommoder raccompagner raccorder raccoutrer raccoutumer raccrocher racémiser
  rachalander racher raciner racketter racler râcler racoler raconter racoquiner
  radariser rader radicaliser radiner radioactiver radiobaliser radiocommander
- radioconserver radiodétecter radiodiffuser radioexposer radioguider radio-
- immuniser radiolocaliser radiopasteuriser radiosonder radiostériliser
+ radioconserver radiodétecter radiodiffuser radioexposer radioguider
+ radio-immuniser radiolocaliser radiopasteuriser radiosonder radiostériliser
  radiotéléphoner radiotéléviser radoter radouber rafaler raffermer raffiler
  raffiner raffluer raffoler raffûter rafistoler rafler ragoter ragoûter
  ragrafer raguer raguser raiguiser railler rainer rainurer raisonner rajouter
@@ -1123,19 +1126,21 @@ VERBS = set(
  sommer somnambuler somniloquer somnoler sonder sonnailler sonner sonoriser
  sophistiquer sorguer soubresauter souder souffler souffroter soufrer souhaiter
  souiller souillonner soûler souligner soûlotter soumissionner soupailler
- soupçonner souper soupirer souquer sourciller sourdiner sous-capitaliser sous-
- catégoriser sousestimer sous-estimer sous-industrialiser sous-médicaliser
- sousperformer sous-qualifier soussigner sous-titrer sous-utiliser soutacher
- souter soutirer soviétiser spammer spasmer spatialiser spatuler spécialiser
- spéculer sphéroïdiser spilitiser spiraler spiraliser spirantiser spiritualiser
- spitter splénectomiser spléniser sponsoriser sporter sporuler sprinter
- squatériser squatter squatteriser squattériser squeezer stabiliser stabuler
- staffer stagner staliniser standardiser standoliser stanioler stariser
- stationner statistiquer statuer stelliter stenciler stendhaliser sténoser
- sténotyper stepper stéréotyper stériliser stigmatiser stimuler stipuler
- stocker stoloniser stopper stranguler stratégiser stresser strider striduler
- striper stripper striquer stronker strouiller structurer strychniser stuquer
- styler styliser subalterniser subdiviser subdivisionner subériser subjectiver
+ soupçonner souper soupirer souquer sourciller sourdiner sous-alimenter
+ sous-capitaliser sous-catégoriser sous-équiper sousestimer sous-estimer
+ sous-évaluer sous-exploiter sous-exposer sous-industrialiser sous-louer
+ sous-médicaliser sousperformer sous-qualifier soussigner sous-titrer
+ sous-traiter sous-utiliser sous-virer soutacher souter soutirer soviétiser
+ spammer spasmer spatialiser spatuler spécialiser spéculer sphéroïdiser
+ spilitiser spiraler spiraliser spirantiser spiritualiser spitter
+ splénectomiser spléniser sponsoriser sporter sporuler sprinter squatériser
+ squatter squatteriser squattériser squeezer stabiliser stabuler staffer
+ stagner staliniser standardiser standoliser stanioler stariser stationner
+ statistiquer statuer stelliter stenciler stendhaliser sténoser sténotyper
+ stepper stéréotyper stériliser stigmatiser stimuler stipuler stocker
+ stoloniser stopper stranguler stratégiser stresser strider striduler striper
+ stripper striquer stronker strouiller structurer strychniser stuquer styler
+ styliser subalterniser subdiviser subdivisionner subériser subjectiver
  subjectiviser subjuguer sublimer sublimiser subluxer subminiaturiser subodorer
  subordonner suborner subsister substanter substantialiser substantiver
  substituer subsumer subtiliser suburbaniser subventionner succomber suçoter

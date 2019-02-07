@@ -1075,21 +1075,30 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
     cdef int [:,:] lca_matrix
 
     n_tokens= end - start
-    lca_matrix = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
+    lca_mat = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
+    lca_mat.fill(-1)
+    lca_matrix = lca_mat
 
-    for j in range(start, end):
-        token_j = doc[j]
+    for j in range(n_tokens):
+        token_j = doc[start + j]
         # the common ancestor of token and itself is itself:
         lca_matrix[j, j] = j
-        for k in range(j + 1, end):
-            lca = _get_tokens_lca(token_j, doc[k])
+        # we will only iterate through tokens in the same sentence
+        sent = token_j.sent
+        sent_start = sent.start
+        j_idx_in_sent = start + j - sent_start
+        n_missing_tokens_in_sent = len(sent) - j_idx_in_sent
+        # make sure we do not go past `end`, in cases where `end` < sent.end
+        max_range = min(j + n_missing_tokens_in_sent, end)
+        for k in range(j + 1, max_range):
+            lca = _get_tokens_lca(token_j, doc[start + k])
             # if lca is outside of span, we set it to -1
             if not start <= lca < end:
                 lca_matrix[j, k] = -1
                 lca_matrix[k, j] = -1
             else:
-                lca_matrix[j, k] = lca
-                lca_matrix[k, j] = lca
+                lca_matrix[j, k] = lca - start
+                lca_matrix[k, j] = lca - start
 
     return lca_matrix
 

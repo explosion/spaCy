@@ -457,10 +457,11 @@ cdef class Token:
             yield from self.rights
 
     property subtree:
-        """A sequence of all the token's syntactic descendents.
+        """A sequence containing the token and all the token's syntactic
+        descendants.
 
         YIELDS (Token): A descendent token such that
-            `self.is_ancestor(descendent)`.
+            `self.is_ancestor(descendent) or token == self`.
         """
         def __get__(self):
             for word in self.lefts:
