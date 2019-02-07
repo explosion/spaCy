@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from thinc.t2v import Pooling, max_pool, mean_pool
 from thinc.neural._classes.difference import Siamese, CauchySimilarity
 
-from .pipe import Pipe
+from .pipes import Pipe
 from .._ml import link_vectors_to_models
 
 
