@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from ..symbols import ORTH, POS, TAG, LEMMA, SPACE, PUNCT
+from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex

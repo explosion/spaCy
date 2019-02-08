@@ -5,24 +5,24 @@ import re
 from collections import namedtuple
 
 from .tag_map import TAG_MAP
-
 from ...attrs import LANG
 from ...language import Language
 from ...tokens import Doc, Token
 from ...util import DummyTokenizer
 
+
 ShortUnitWord = namedtuple("ShortUnitWord", ["surface", "lemma", "pos"])
+
+# TODO: Is this the right place for this?
+Token.set_extension("mecab_tag", default=None)
 
 
 def try_mecab_import():
     """Mecab is required for Japanese support, so check for it.
-
     It it's not available blow up and explain how to fix it."""
     try:
         import MeCab
 
-        # XXX Is this the right place for this?
-        Token.set_extension("mecab_tag", default=None)
         return MeCab
     except ImportError:
         raise ImportError(
@@ -33,14 +33,13 @@ def try_mecab_import():
 
 def resolve_pos(token):
     """If necessary, add a field to the POS tag for UD mapping.
-
     Under Universal Dependencies, sometimes the same Unidic POS tag can
     be mapped differently depending on the literal token or its context
     in the sentence. This function adds information to the POS tag to
     resolve ambiguous mappings.
     """
 
-    # NOTE: This is a first take. The rules here are crude approximations.
+    # TODO: This is a first take. The rules here are crude approximations.
     # For many of these, full dependencies are needed to properly resolve
     # PoS mappings.
 
@@ -56,7 +55,7 @@ def resolve_pos(token):
 
 def detailed_tokens(tokenizer, text):
     """Format Mecab output into a nice data structure, based on Janome."""
-    tokenizer.parse(text)
+
     node = tokenizer.parseToNode(text)
     node = node.next  # first node is beginning of sentence and empty, skip it
     words = []
@@ -98,62 +97,15 @@ class JapaneseTokenizer(DummyTokenizer):
         return doc
 
 
-class JapaneseCharacterSegmenter(object):
-    def __init__(self, vocab):
-        self.vocab = vocab
-        self._presegmenter = self._make_presegmenter(self.vocab)
-
-    def _make_presegmenter(self, vocab):
-        rules = Japanese.Defaults.tokenizer_exceptions
-        token_match = Japanese.Defaults.token_match
-        prefix_search = (
-            util.compile_prefix_regex(Japanese.Defaults.prefixes).search
-            if Japanese.Defaults.prefixes
-            else None
-        )
-        suffix_search = (
-            util.compile_suffix_regex(Japanese.Defaults.suffixes).search
-            if Japanese.Defaults.suffixes
-            else None
-        )
-        infix_finditer = (
-            util.compile_infix_regex(Japanese.Defaults.infixes).finditer
-            if Japanese.Defaults.infixes
-            else None
-        )
-        return Tokenizer(
-            vocab,
-            rules=rules,
-            prefix_search=prefix_search,
-            suffix_search=suffix_search,
-            infix_finditer=infix_finditer,
-            token_match=token_match,
-        )
-
-    def __call__(self, text):
-        words = []
-        spaces = []
-        doc = self._presegmenter(text)
-        for token in doc:
-            words.extend(list(token.text))
-            spaces.extend([False] * len(token.text))
-            spaces[-1] = bool(token.whitespace_)
-        return Doc(self.vocab, words=words, spaces=spaces)
-
-
 class JapaneseDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda _text: "ja"
 
     tag_map = TAG_MAP
-    use_janome = True
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
-        if cls.use_janome:
-            return JapaneseTokenizer(cls, nlp)
-        else:
-            return JapaneseCharacterSegmenter(nlp.vocab)
+        return JapaneseTokenizer(cls, nlp)
 
 
 class Japanese(Language):

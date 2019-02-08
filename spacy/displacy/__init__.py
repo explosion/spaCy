@@ -13,13 +13,7 @@ RENDER_WRAPPER = None
 
 
 def render(
-    docs,
-    style="dep",
-    page=False,
-    minify=False,
-    jupyter=False,
-    options={},
-    manual=False,
+    docs, style="dep", page=False, minify=False, jupyter=False, options={}, manual=False
 ):
     """Render displaCy visualisation.
 
@@ -80,7 +74,7 @@ def serve(
     """
     from wsgiref import simple_server
 
-    if IS_JUPYTER:
+    if is_in_jupyter():
         user_warning(Warnings.W011)
 
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)

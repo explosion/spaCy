@@ -1,16 +1,16 @@
 # coding: utf-8
 from __future__ import unicode_literals
+
 import json
 from tempfile import NamedTemporaryFile
-import pytest
 
 from ...cli.train import train
 
 
 def test_cli_trained_model_can_be_saved(tmpdir):
-    lang = 'nl'
+    lang = "nl"
     output_dir = str(tmpdir)
-    train_file = NamedTemporaryFile('wb', dir=output_dir, delete=False)
+    train_file = NamedTemporaryFile("wb", dir=output_dir, delete=False)
     train_corpus = [
         {
             "id": "identifier_0",
@@ -26,7 +26,7 @@ def test_cli_trained_model_can_be_saved(tmpdir):
                                     "head": 1,
                                     "tag": "NOUN",
                                     "orth": "Jan",
-                                    "ner": "B-PER"
+                                    "ner": "B-PER",
                                 },
                                 {
                                     "id": 1,
@@ -34,7 +34,7 @@ def test_cli_trained_model_can_be_saved(tmpdir):
                                     "head": 0,
                                     "tag": "VERB",
                                     "orth": "houdt",
-                                    "ner": "O"
+                                    "ner": "O",
                                 },
                                 {
                                     "id": 2,
@@ -42,7 +42,7 @@ def test_cli_trained_model_can_be_saved(tmpdir):
                                     "head": 1,
                                     "tag": "ADP",
                                     "orth": "van",
-                                    "ner": "O"
+                                    "ner": "O",
                                 },
                                 {
                                     "id": 3,
@@ -50,7 +50,7 @@ def test_cli_trained_model_can_be_saved(tmpdir):
                                     "head": -2,
                                     "tag": "NOUN",
                                     "orth": "Marie",
-                                    "ner": "B-PER"
+                                    "ner": "B-PER",
                                 },
                                 {
                                     "id": 4,
@@ -58,7 +58,7 @@ def test_cli_trained_model_can_be_saved(tmpdir):
                                     "head": -3,
                                     "tag": "PUNCT",
                                     "orth": ".",
-                                    "ner": "O"
+                                    "ner": "O",
                                 },
                                 {
                                     "id": 5,
@@ -66,18 +66,18 @@ def test_cli_trained_model_can_be_saved(tmpdir):
                                     "head": -1,
                                     "tag": "SPACE",
                                     "orth": "\n",
-                                    "ner": "O"
-                                }
+                                    "ner": "O",
+                                },
                             ],
-                            "brackets": []
+                            "brackets": [],
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
     ]
 
-    train_file.write(json.dumps(train_corpus).encode('utf-8'))
+    train_file.write(json.dumps(train_corpus).encode("utf-8"))
     train_file.close()
     train_data = train_file.name
     dev_data = train_data

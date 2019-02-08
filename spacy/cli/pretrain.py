@@ -8,15 +8,14 @@ import time
 from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
-from thinc.api import wrap, layerize
 from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu, get_array_module
+from thinc.neural.util import prefer_gpu
 from wasabi import Printer
 import srsly
 
 from ..tokens import Doc
 from ..attrs import ID, HEAD
-from .._ml import Tok2Vec, flatten, chain, zero_init, create_default_optimizer
+from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
 from .._ml import masked_language_model
 from .. import util
 
@@ -136,7 +135,7 @@ def pretrain(
             random.shuffle(texts)
 
 
-def make_update(model, docs, optimizer, drop=0.0, objective='L2'):
+def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
     """Perform an update over a single batch of documents.
 
     docs (iterable): A batch of `Doc` objects.
@@ -171,7 +170,7 @@ def make_docs(nlp, batch, min_length=1, max_length=500):
     return docs
 
 
-def get_vectors_loss(ops, docs, prediction, objective='L2'):
+def get_vectors_loss(ops, docs, prediction, objective="L2"):
     """Compute a mean-squared error loss between the documents' vectors and
     the prediction.
 
@@ -185,9 +184,9 @@ def get_vectors_loss(ops, docs, prediction, objective='L2'):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
-    if objective == 'L2':
+    if objective == "L2":
         d_scores = prediction - target
-        loss = (d_scores**2).sum()
+        loss = (d_scores ** 2).sum()
     else:
         raise NotImplementedError(objective)
     return loss, d_scores
@@ -201,8 +200,7 @@ def create_pretraining_model(nlp, tok2vec):
     """
     output_size = nlp.vocab.vectors.data.shape[1]
     output_layer = chain(
-        LN(Maxout(300, pieces=3)),
-        Affine(output_size, drop_factor=0.0),
+        LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
     )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match

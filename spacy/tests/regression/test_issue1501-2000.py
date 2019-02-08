@@ -155,6 +155,14 @@ def test_issue1758(en_tokenizer):
     assert tokens[1].lemma_ == "have"
 
 
+def test_issue1773(en_tokenizer):
+    """Test that spaces don't receive a POS but no TAG. This is the root cause
+    of the serialization issue reported in #1773."""
+    doc = en_tokenizer("\n")
+    if doc[0].pos_ == "SPACE":
+        assert doc[0].tag_ != ""
+
+
 def test_issue1799():
     """Test sentence boundaries are deserialized correctly, even for
     non-projective sentences."""
@@ -249,8 +257,8 @@ def test_issue1945():
 
 def test_issue1963(en_tokenizer):
     """Test that doc.merge() resizes doc.tensor"""
-    doc = en_tokenizer('a b c d')
-    doc.tensor = numpy.ones((len(doc), 128), dtype='f')
+    doc = en_tokenizer("a b c d")
+    doc.tensor = numpy.ones((len(doc), 128), dtype="f")
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[0:2])
     assert len(doc) == 3

@@ -1,8 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_ICONS
-from ..char_classes import CONCAT_QUOTES, CONCAT_ICONS, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
+from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, CONCAT_QUOTES
+from ..char_classes import CONCAT_ICONS, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
+
 
 # removing ° from the special icons to keep e.g. 99° as one token
 _concat_icons = CONCAT_ICONS.replace("\u00B0", "")
@@ -29,7 +30,9 @@ _suffixes = (
         r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:[{c}])".format(c=_currency),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[{al}{e}{q}(?:{c})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency),
+        r"(?<=[{al}{e}{q}(?:{c})])\.".format(
+            al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency
+        ),
         r"(?<=[{al})])-e".format(al=ALPHA_LOWER),
     ]
 )
@@ -40,7 +43,7 @@ _infixes = (
     + [
         r"(?<=[{al}])\.(?=[{au}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r"(?<=[{a}])[,!?](?=[{a}])".format(a=ALPHA),
-        r'(?<=[{a}])[:<>=](?=[{a}])'.format(a=ALPHA),
+        r"(?<=[{a}])[:<>=](?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}])--(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}])([{q}\)\]\(\[])(?=[\-{a}])".format(a=ALPHA, q=_quotes),

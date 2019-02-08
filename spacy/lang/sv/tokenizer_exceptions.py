@@ -144,7 +144,7 @@ ABBREVIATIONS = [
 
 # Add abbreviation for trailing punctuation too. If the abbreviation already has a trailing punctuation - skip it.
 for abbr in ABBREVIATIONS:
-    if abbr.endswith(".") == False:
+    if not abbr.endswith("."):
         ABBREVIATIONS.append(abbr + ".")
 
 for orth in ABBREVIATIONS:

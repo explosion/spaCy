@@ -119,8 +119,8 @@ def tr_tokenizer():
 
 @pytest.fixture(scope="session")
 def uk_tokenizer():
-    pymorphy = pytest.importorskip("pymorphy2")
-    return util.get_lang_class("uk").Defaults.create_tokenizer()
+    pytest.importorskip("pymorphy2")
+    return get_lang_class("uk").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
@@ -130,7 +130,7 @@ def ca_tokenizer():
 
 @pytest.fixture(scope="session")
 def pl_tokenizer():
-    return util.get_lang_class("pl").Defaults.create_tokenizer()
+    return get_lang_class("pl").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")

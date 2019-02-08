@@ -9,4 +9,3 @@ def test_issue2835(en_tokenizer):
     """
     doc = en_tokenizer(text)
     assert doc
-

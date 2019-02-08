@@ -2,15 +2,8 @@
 from __future__ import unicode_literals
 
 
-# Add stop words
-# Documentation: https://spacy.io/docs/usage/adding-languages#stop-words
-# To improve readability, words should be ordered alphabetically and separated
-# by spaces and newlines. When adding stop words from an online source, always
-# include the link in a comment. Make sure to proofread and double-check the
-# words – lists available online are often known to contain mistakes.
-
-
-STOP_WORDS = set("""а
+STOP_WORDS = set(
+    """а
 або
 адже
 але
@@ -401,4 +394,5 @@ STOP_WORDS = set("""а
 якій
 якого
 якщо
-""".split())
+""".split()
+)

@@ -58,9 +58,10 @@ def test_issue3009(doc, matcher, pattern):
     matches = matcher(doc)
     assert matches
 
+
 def test_issue2464(matcher):
     """Test problem with successive ?. This is the same bug, so putting it here."""
-    doc = Doc(matcher.vocab, words=['a', 'b'])
-    matcher.add('4', None, [{'OP': '?'}, {'OP': '?'}])
+    doc = Doc(matcher.vocab, words=["a", "b"])
+    matcher.add("4", None, [{"OP": "?"}, {"OP": "?"}])
     matches = matcher(doc)
     assert len(matches) == 3

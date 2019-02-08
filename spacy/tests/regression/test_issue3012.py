@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import pytest
-
 from ...attrs import ENT_IOB, ENT_TYPE
 from ...tokens import Doc
 from ..util import get_doc
@@ -30,4 +28,4 @@ def test_issue3012(en_vocab):
     # serializing then deserializing
     doc_bytes = doc.to_bytes()
     doc2 = Doc(en_vocab).from_bytes(doc_bytes)
-    assert (doc[2].text, doc[2].pos_, doc[2].tag_, doc[2].ent_type_) == expected
+    assert (doc2[2].text, doc2[2].pos_, doc2[2].tag_, doc2[2].ent_type_) == expected
