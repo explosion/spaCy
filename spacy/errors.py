@@ -253,6 +253,9 @@ class Errors(object):
     E098 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
             " can only be part of one entity, so make sure the entities you're "
             "setting don't overlap.")
+    E099 = ("The splitted token can only have one root (head = 0).")
+    E100 = ("The splitted token needs to have a root (head = 0)")
+    E101 = ("All subtokens must have associated heads")
 
 @add_codes
 class TempErrors(object):
