@@ -107,7 +107,6 @@ cdef class PhraseMatcher:
             self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
-
         """Find all sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
