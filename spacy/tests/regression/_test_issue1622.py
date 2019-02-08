@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import json
 from tempfile import NamedTemporaryFile
 
-from ...cli.train import train
+from spacy.cli.train import train
 
 
 def test_cli_trained_model_can_be_saved(tmpdir):
