@@ -34,11 +34,22 @@ _num_words = [
     "osiemdziesiąt",
     "dziewięćdziesiąt",
     "sto",
+    "dwieście",
+    "trzysta",
+    "czterysta",
+    "pięćset",
+    "sześćset",
+    "siedemset",
+    "osiemset",
+    "dziewięćset",
     "tysiąc",
     "milion",
     "miliard",
     "bilion",
+    "biliard",
     "trylion",
+    "tryliard",
+    "kwadrylion",
 ]
 
 

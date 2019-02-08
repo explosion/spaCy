@@ -1,7 +1,7 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, POS, ADV, ADJ, NOUN
+from ._tokenizer_exceptions_list import PL_BASE_EXCEPTIONS
 
 
 _exc = {}
@@ -19,5 +19,7 @@ for exc_data in [
 for orth in ["w.", "r."]:
     _exc[orth] = [{ORTH: orth}]
 
+for orth in PL_BASE_EXCEPTIONS:
+    _exc[orth] = [{ORTH: orth}]
 
 TOKENIZER_EXCEPTIONS = _exc

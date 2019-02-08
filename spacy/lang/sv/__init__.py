@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .morph_rules import MORPH_RULES
 from .lemmatizer import LEMMA_RULES, LOOKUP
@@ -22,6 +23,7 @@ class SwedishDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     morph_rules = MORPH_RULES
+    tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
