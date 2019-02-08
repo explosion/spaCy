@@ -286,7 +286,7 @@ class Errors(object):
             "setting don't overlap.")
     E104 = ("Can't find JSON schema for '{name}'.")
     E105 = ("The Doc.print_tree() method is now deprecated. Please use "
-            "Doc.json() instead.")
+            "Doc.to_json() instead or write your own function.")
     E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
             "settings: {opts}")
     E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
