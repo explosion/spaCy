@@ -63,7 +63,6 @@ cdef class Matcher:
     cdef vector[TokenPatternC*] patterns
     cdef readonly Vocab vocab
     cdef public object _patterns
-    cdef public object _entities
     cdef public object _callbacks
     cdef public object _extensions
     cdef public object _extra_predicates

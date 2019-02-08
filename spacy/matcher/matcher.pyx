@@ -588,7 +588,6 @@ cdef class Matcher:
         """
         self._extra_predicates = []
         self._patterns = {}
-        self._entities = {}
         self._callbacks = {}
         self._extensions = {}
         self._extra_predicates = []
