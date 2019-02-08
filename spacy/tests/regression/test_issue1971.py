@@ -5,6 +5,7 @@ from spacy.matcher import Matcher
 from spacy.tokens import Token, Doc
 
 
+@pytest.mark.xfail
 def test_issue1971(en_vocab):
     # Possibly related to #2675 and #2671?
     matcher = Matcher(en_vocab)
