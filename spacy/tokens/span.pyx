@@ -403,8 +403,9 @@ cdef class Span:
             # objects. See Issue #375
             spans = []
             cdef attr_t label
-            for start, end, label in self.doc.noun_chunks_iterator(self):
-                spans.append(Span(self.doc, start, end, label=label))
+            if self.doc.noun_chunks_iterator is not None:
+                for start, end, label in self.doc.noun_chunks_iterator(self):
+                    spans.append(Span(self.doc, start, end, label=label))
             for span in spans:
                 yield span
 
