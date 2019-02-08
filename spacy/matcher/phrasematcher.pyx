@@ -33,6 +33,7 @@ cdef class PhraseMatcher:
     cdef attr_id_t attr
     cdef public object _callbacks
     cdef public object _patterns
+    cdef public object _docs
 
     def __init__(self, Vocab vocab, max_length=0, attr='ORTH'):
         if max_length != 0:
@@ -54,6 +55,7 @@ cdef class PhraseMatcher:
         ]
         self.matcher.add('Candidate', None, *abstract_patterns)
         self._callbacks = {}
+        self._docs = {}
 
     def __len__(self):
         """Get the number of rules added to the matcher. Note that this only
@@ -62,7 +64,7 @@ cdef class PhraseMatcher:
 
         RETURNS (int): The number of rules.
         """
-        return len(self.phrase_ids)
+        return len(self._docs)
 
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
@@ -74,7 +76,8 @@ cdef class PhraseMatcher:
         return ent_id in self._callbacks
 
     def __reduce__(self):
-        return (self.__class__, (self.vocab,), None, None)
+        data = (self.vocab, self._docs, self._callbacks)
+        return (unpickle_matcher, data, None, None)
 
     def add(self, key, on_match, *docs):
         """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
@@ -87,6 +90,7 @@ cdef class PhraseMatcher:
         cdef Doc doc
         cdef hash_t ent_id = self.matcher._normalize_key(key)
         self._callbacks[ent_id] = on_match
+        self._docs[ent_id] = docs
         cdef int length
         cdef int i
         cdef hash_t phrase_hash
@@ -207,3 +211,11 @@ def get_bilou(length):
         return [B3_ENT, I3_ENT, L3_ENT]
     else:
         return [B4_ENT, I4_ENT] + [I4_ENT] * (length-3) + [L4_ENT]
+
+
+def unpickle_matcher(vocab, docs, callbacks):
+    matcher = PhraseMatcher(vocab)
+    for key, specs in docs.items():
+        callback = callbacks.get(key, None)
+        matcher.add(key, callback, *specs)
+    return matcher
