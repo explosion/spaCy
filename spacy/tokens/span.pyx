@@ -167,7 +167,7 @@ cdef class Span:
             array_head.append(SENT_START)
         array = self.doc.to_array(array_head)
         doc.from_array(array_head, array[self.start : self.end])
- 
+
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
