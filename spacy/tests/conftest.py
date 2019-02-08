@@ -189,6 +189,9 @@ def uk_tokenizer():
 def ca_tokenizer():
     return util.get_lang_class('ca').Defaults.create_tokenizer()
 
+@pytest.fixture(scope='session')
+def pl_tokenizer():
+    return util.get_lang_class('pl').Defaults.create_tokenizer()
 
 @pytest.fixture
 def stringstore():
