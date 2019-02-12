@@ -7,12 +7,12 @@ from murmurhash.mrmr cimport hash64
 from preshed.maps cimport PreshMap
 
 from .matcher cimport Matcher
-from ..attrs cimport ORTH, attr_id_t
+from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, attr_id_t
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
 from ..typedefs cimport attr_t, hash_t
 
-from ..errors import Warnings, deprecation_warning
+from ..errors import Warnings, deprecation_warning, user_warning
 from ..attrs import FLAG61 as U_ENT
 from ..attrs import FLAG60 as B2_ENT
 from ..attrs import FLAG59 as B3_ENT
@@ -33,8 +33,9 @@ cdef class PhraseMatcher:
     cdef attr_id_t attr
     cdef public object _callbacks
     cdef public object _patterns
+    cdef public object _validate
 
-    def __init__(self, Vocab vocab, max_length=0, attr='ORTH'):
+    def __init__(self, Vocab vocab, max_length=0, attr='ORTH', validate=False):
         if max_length != 0:
             deprecation_warning(Warnings.W010)
         self.mem = Pool()
@@ -54,6 +55,7 @@ cdef class PhraseMatcher:
         ]
         self.matcher.add('Candidate', None, *abstract_patterns)
         self._callbacks = {}
+        self._validate = validate
 
     def __len__(self):
         """Get the number of rules added to the matcher. Note that this only
@@ -95,6 +97,10 @@ cdef class PhraseMatcher:
             length = doc.length
             if length == 0:
                 continue
+            if self._validate and (doc.is_tagged or doc.is_parsed) \
+              and self.attr not in (DEP, POS, TAG, LEMMA):
+                string_attr = self.vocab.strings[self.attr]
+                user_warning(Warnings.W012.format(key=key, attr=string_attr))
             tags = get_bilou(length)
             phrase_key = <attr_t*>mem.alloc(length, sizeof(attr_t))
             for i, tag in enumerate(tags):

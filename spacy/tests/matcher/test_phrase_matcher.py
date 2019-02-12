@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import pytest
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc
 from ..util import get_doc
@@ -78,3 +79,23 @@ def test_phrase_matcher_bool_attrs(en_vocab):
     assert end1 == 3
     assert start2 == 3
     assert end2 == 6
+
+
+def test_phrase_matcher_validation(en_vocab):
+    doc1 = Doc(en_vocab, words=["Test"])
+    doc1.is_parsed = True
+    doc2 = Doc(en_vocab, words=["Test"])
+    doc2.is_tagged = True
+    doc3 = Doc(en_vocab, words=["Test"])
+    matcher = PhraseMatcher(en_vocab, validate=True)
+    with pytest.warns(UserWarning):
+        matcher.add("TEST1", None, doc1)
+    with pytest.warns(UserWarning):
+        matcher.add("TEST2", None, doc2)
+    with pytest.warns(None) as record:
+        matcher.add("TEST3", None, doc3)
+        assert not record.list
+    matcher = PhraseMatcher(en_vocab, attr="POS", validate=True)
+    with pytest.warns(None) as record:
+        matcher.add("TEST4", None, doc2)
+        assert not record.list
