@@ -303,7 +303,11 @@ class Errors(object):
     E109 = ("Model for component '{name}' not initialized. Did you forget to load "
             "a model, or forget to call begin_training()?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
-
+    E111 = ("Pickling a token is not supported, because tokens are only views "
+            "of the parent Doc and can't exist on their own. A pickled token "
+            "would always have to include its Doc and Vocab, which has "
+            "practically no advantage over pickling the parent Doc directly. "
+            "So instead of pickling the token, pickle the Doc it belongs to.")
 
 @add_codes
 class TempErrors(object):
