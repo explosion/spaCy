@@ -1121,7 +1121,7 @@
                 "nlp = spacy.load('en')",
                 "nlp.add_pipe(LanguageDetector(), name='language_detector', last=True)",
                 "text = 'This is an english text.'",
-                "doc = nlp(text)"
+                "doc = nlp(text)",
                 "# document level language detection. Think of it like average language of the document!",
                 "print(doc._.language)",
                 "# sentence level language detection",
