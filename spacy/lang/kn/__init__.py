@@ -14,8 +14,8 @@ class KannadaDefaults(Language.Defaults):
 
 
 class Kannada(Language):
-    lang = 'kn'
+    lang = "kn"
     Defaults = KannadaDefaults
 
 
-__all__ = ['Kannada']
+__all__ = ["Kannada"]
