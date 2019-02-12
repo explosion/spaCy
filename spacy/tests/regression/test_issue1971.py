@@ -23,3 +23,14 @@ def test_issue1971(en_vocab):
     # the real problem here is that it returns a duplicate match for a match_id
     # that's not actually in the vocab!
     assert all(match_id in en_vocab.strings for match_id, start, end in matcher(doc))
+
+
+@pytest.mark.xfail
+def test_issue_1971_2(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern1 = [{"LOWER": {"IN": ["eur"]}}, {"LIKE_NUM": True}]
+    pattern2 = list(reversed(pattern1))
+    doc = Doc(en_vocab, words=["EUR", "10", "is", "10", "EUR"])
+    matcher.add("TEST", None, pattern1, pattern2)
+    matches = matcher(doc)
+    assert len(matches) == 2
