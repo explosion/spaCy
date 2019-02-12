@@ -41,7 +41,7 @@ cdef class PhraseMatcher:
         self.mem = Pool()
         self.max_length = max_length
         self.vocab = vocab
-        self.matcher = Matcher(self.vocab)
+        self.matcher = Matcher(self.vocab, validate=False)
         if isinstance(attr, long):
             self.attr = attr
         else:

@@ -74,8 +74,8 @@ def debug_data(
 
     # Validate data format using the JSON schema
     # TODO: update once the new format is ready
-    train_data_errors = []  # TODO: validate_json(train_data, schema)
-    dev_data_errors = []  # TODO: validate_json(dev_data, schema)
+    train_data_errors = []  # TODO: validate_json
+    dev_data_errors = []  # TODO: validate_json
     if not train_data_errors:
         msg.good("Training data JSON format is valid")
     if not dev_data_errors:

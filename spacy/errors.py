@@ -325,6 +325,21 @@ class TempErrors(object):
 # fmt: on
 
 
+class MatchPatternError(ValueError):
+    def __init__(self, key, errors):
+        """Custom error for validating match patterns.
+
+        key (unicode): The name of the matcher rule.
+        errors (dict): Validation errors (sequence of strings) mapped to pattern
+            ID, i.e. the index of the added pattern.
+        """
+        msg = "Invalid token patterns for matcher rule '{}'\n".format(key)
+        for pattern_idx, error_msgs in errors.items():
+            pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
+            msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
+        ValueError.__init__(self, msg)
+
+
 class ModelsWarning(UserWarning):
     pass
 

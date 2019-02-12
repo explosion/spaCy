@@ -17,7 +17,9 @@ from ..tokens.doc cimport Doc, get_token_attr
 from ..tokens.token cimport Token
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH
 
-from ..errors import Errors
+from ._schemas import TOKEN_PATTERN_SCHEMA
+from ..util import get_json_validator, validate_json
+from ..errors import Errors, MatchPatternError
 from ..strings import get_string_id
 from ..attrs import IDS
 
@@ -579,7 +581,7 @@ def _get_extensions(spec, string_store, name2index):
 cdef class Matcher:
     """Match sequences of tokens, based on pattern rules."""
 
-    def __init__(self, vocab):
+    def __init__(self, vocab, validate=False):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the
@@ -593,6 +595,7 @@ cdef class Matcher:
         self._extra_predicates = []
         self.vocab = vocab
         self.mem = Pool()
+        self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA) if validate else None
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -643,9 +646,14 @@ cdef class Matcher:
         on_match (callable): Callback executed on match.
         *patterns (list): List of token descriptions.
         """
-        for pattern in patterns:
+        errors = {}
+        for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
+            if self.validator:
+                errors[i] = validate_json(pattern, self.validator)
+        if errors:
+            raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:
             specs = _preprocess_pattern(pattern, self.vocab.strings,
