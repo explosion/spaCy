@@ -60,6 +60,13 @@ class Warnings(object):
             "make displaCy start another one. Instead, you should be able to "
             "replace displacy.serve with displacy.render to show the "
             "visualization.")
+    W012 = ("A Doc object you're adding to the PhraseMatcher for pattern "
+            "'{key}' is parsed and/or tagged, but to match on '{attr}', you "
+            "don't actually need this information. This means that creating "
+            "the patterns is potentially much slower, because all pipeline "
+            "components are applied. To only create tokenized Doc objects, "
+            "try using `nlp.make_doc(text)` or process all texts as a stream "
+            "using `list(nlp.tokenizer.pipe(all_texts))`.")
 
 
 @add_codes
@@ -286,7 +293,7 @@ class Errors(object):
             "setting don't overlap.")
     E104 = ("Can't find JSON schema for '{name}'.")
     E105 = ("The Doc.print_tree() method is now deprecated. Please use "
-            "Doc.json() instead.")
+            "Doc.to_json() instead or write your own function.")
     E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
             "settings: {opts}")
     E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")

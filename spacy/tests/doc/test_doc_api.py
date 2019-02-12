@@ -7,6 +7,7 @@ import numpy
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 from spacy.attrs import LEMMA
+from spacy.errors import ModelsWarning
 
 from ..util import get_doc
 
@@ -344,11 +345,10 @@ def test_doc_api_has_vector():
 
 def test_doc_api_similarity_match():
     doc = Doc(Vocab(), words=["a"])
-    with pytest.warns(None):
-        assert doc.similarity(doc[0]) == 1.0
-        assert doc.similarity(doc.vocab["a"]) == 1.0
+    assert doc.similarity(doc[0]) == 1.0
+    assert doc.similarity(doc.vocab["a"]) == 1.0
     doc2 = Doc(doc.vocab, words=["a", "b", "c"])
-    with pytest.warns(None):
+    with pytest.warns(ModelsWarning):
         assert doc.similarity(doc2[:1]) == 1.0
         assert doc.similarity(doc2) == 0.0
 

@@ -47,7 +47,7 @@ def test_vectors_similarity_TT(vocab, vectors):
 def test_vectors_similarity_TD(vocab, vectors):
     [(word1, vec1), (word2, vec2)] = vectors
     doc = Doc(vocab, words=[word1, word2])
-    with pytest.warns(None):
+    with pytest.warns(UserWarning):
         assert doc.similarity(doc[0]) == doc[0].similarity(doc)
 
 
@@ -60,5 +60,5 @@ def test_vectors_similarity_DS(vocab, vectors):
 def test_vectors_similarity_TS(vocab, vectors):
     [(word1, vec1), (word2, vec2)] = vectors
     doc = Doc(vocab, words=[word1, word2])
-    with pytest.warns(None):
+    with pytest.warns(UserWarning):
         assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])
