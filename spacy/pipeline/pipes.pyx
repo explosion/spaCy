@@ -358,7 +358,7 @@ class Tagger(Pipe):
 
     @property
     def labels(self):
-        return self.vocab.morphology.tag_names
+        return list(self.vocab.morphology.tag_names)
 
     @property
     def tok2vec(self):
@@ -1012,6 +1012,11 @@ cdef class DependencyParser(Parser):
         return (DependencyParser, (self.vocab, self.moves, self.model),
                 None, None)
 
+    @property
+    def labels(self):
+        # Get the labels from the model by looking at the available moves
+        return list(set(move.split("-")[1] for move in self.move_names))
+
 
 cdef class EntityRecognizer(Parser):
     name = "ner"
@@ -1040,8 +1045,8 @@ cdef class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        return [move.split("-")[1] for move in self.move_names
-                if move[0] in ("B", "I", "L", "U")]
+        return list(set(move.split("-")[1] for move in self.move_names
+                if move[0] in ("B", "I", "L", "U")))
 
 
 __all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer', 'TextCategorizer']
