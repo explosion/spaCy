@@ -344,7 +344,8 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
         # Update the character offset of the subtokens
-        token.idx += idx_offset
+        if i != 0:
+            token.idx = doc.c[token_index].idx + idx_offset
         idx_offset += len(orth)
 
         # Set token.spacy to False for all non-last split tokens, and
