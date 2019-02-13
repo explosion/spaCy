@@ -48,7 +48,7 @@ cdef class Retokenizer:
         will be applied to each subtoken.
         """
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-        self.splits.append((token, orths, heads, deps, attrs))
+        self.splits.append((token.i, orths, heads, deps, attrs))
 
     def __enter__(self):
         self.merges = []
@@ -65,8 +65,12 @@ cdef class Retokenizer:
             end = span.end
             _merge(self.doc, start, end, attrs)
 
-        for token, orths, heads, deps, attrs in self.splits:
-             _split(self.doc, token, orths, heads, deps, attrs)
+        offset = 0
+        # Iterate in order, to keep the offset simple.
+        for token_index, orths, heads, deps, attrs in sorted(self.splits):
+             _split(self.doc, token_index + offset, orths, heads, deps, attrs)
+             # Adjust for the previous tokens
+             offset += len(orths)
 
 def _merge(Doc doc, int start, int end, attributes):
     """Retokenize the document, such that the span at
@@ -333,11 +337,15 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         doc.c[token_to_move + nb_subtokens - 1] = doc.c[token_to_move]
 
     # Host the tokens in the newly created space
+    cdef int idx_offset = 0
     for i, orth in enumerate(orths):
 
         token = &doc.c[token_index + i]
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
+        # Update the character offset of the subtokens
+        token.idx += idx_offset
+        idx_offset += len(orth)
 
         # Set token.spacy to False for all non-last split tokens, and
         # to origToken.spacy for the last token
