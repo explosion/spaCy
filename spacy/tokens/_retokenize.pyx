@@ -345,7 +345,7 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         token.lex = lex
         # Update the character offset of the subtokens
         if i != 0:
-            token.idx = doc.c[token_index].idx + idx_offset
+            token.idx = orig_token.idx + idx_offset
         idx_offset += len(orth)
 
         # Set token.spacy to False for all non-last split tokens, and
