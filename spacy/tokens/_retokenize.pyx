@@ -70,7 +70,7 @@ cdef class Retokenizer:
         for token_index, orths, heads, deps, attrs in sorted(self.splits):
              _split(self.doc, token_index + offset, orths, heads, deps, attrs)
              # Adjust for the previous tokens
-             offset += len(orths)
+             offset += len(orths)-1
 
 def _merge(Doc doc, int start, int end, attributes):
     """Retokenize the document, such that the span at
