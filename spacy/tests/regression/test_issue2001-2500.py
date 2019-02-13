@@ -11,7 +11,6 @@ import numpy
 from ..util import add_vecs_to_vocab, get_doc
 
 
-@pytest.mark.xfail
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
