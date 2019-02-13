@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.matcher import PhraseMatcher
 from spacy.lang.en import English
 from spacy.compat import pickle

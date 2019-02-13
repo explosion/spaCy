@@ -315,6 +315,7 @@ class Errors(object):
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
 
+
 @add_codes
 class TempErrors(object):
     T001 = ("Max length currently 10 for phrase matching")
