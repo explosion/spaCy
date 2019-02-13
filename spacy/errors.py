@@ -177,7 +177,7 @@ class Errors(object):
             "you forget to call the `set_extension` method?")
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
-    E048 = ("Can't import language {lang} from spacy.lang.")
+    E048 = ("Can't import language {lang} from spacy.lang: {err}")
     E049 = ("Can't find spaCy data directory: '{path}'. Check your "
             "installation and permissions, or use spacy.util.set_data_path "
             "to customise the location if necessary.")
