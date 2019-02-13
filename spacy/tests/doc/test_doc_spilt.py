@@ -109,6 +109,6 @@ def test_spans_sentence_update_after_merge(en_tokenizer):
     with doc.retokenize() as retokenizer:
         retokenizer.split(doc[0], ["Stewart", "Lee"], [1, 0])
         retokenizer.split(doc[14], ["Joe", "Pasquale"], [1, 0])
-
+    sent1, sent2 = list(doc.sents)
     assert len(sent1) == init_len + 1
     assert len(sent2) == init_len2 + 1
