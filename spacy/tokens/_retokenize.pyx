@@ -43,12 +43,12 @@ cdef class Retokenizer:
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         self.merges.append((span, attrs))
 
-    def split(self, token_index, orths, heads, deps=[], attrs=SimpleFrozenDict()):
+    def split(self, Token token, orths, heads, deps=[], attrs=SimpleFrozenDict()):
         """Mark a Token for splitting, into the specified orths. The attrs
         will be applied to each subtoken.
         """
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-        self.splits.append((token_index, orths, heads, deps, attrs))
+        self.splits.append((token, orths, heads, deps, attrs))
 
     def __enter__(self):
         self.merges = []
@@ -65,8 +65,8 @@ cdef class Retokenizer:
             end = span.end
             _merge(self.doc, start, end, attrs)
 
-        for token_index, orths, heads, deps, attrs in self.splits:
-             _split(self.doc, token_index, orths, heads, deps, attrs)
+        for token, orths, heads, deps, attrs in self.splits:
+             _split(self.doc, token, orths, heads, deps, attrs)
 
 def _merge(Doc doc, int start, int end, attributes):
     """Retokenize the document, such that the span at
@@ -283,7 +283,7 @@ def _bulk_merge(Doc doc, merges):
 
 def _split(Doc doc, int token_index, orths, heads, deps, attrs):
     """Retokenize the document, such that the token at
-    `doc.text[token_index]` is split into tokens with the orth 'orths'
+    `doc[token_index]` is split into tokens with the orth 'orths'
     token_index(int): token index of the token to split.
     orths: IDs of the verbatim text content of the tokens to create
     **attributes: Attributes to assign to each of the newly created tokens. By default,
@@ -339,7 +339,7 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
 
-        # Set token.spacy to False for all non-last splited tokens, and
+        # Set token.spacy to False for all non-last split tokens, and
         # to origToken.spacy for the last token
         if (i < nb_subtokens - 1):
             token.spacy = False
