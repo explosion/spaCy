@@ -115,6 +115,9 @@ cdef class Token:
         else:
             raise ValueError(Errors.E041.format(op=op))
 
+    def __reduce__(self):
+        raise NotImplementedError(Errors.E111)
+
     @property
     def _(self):
         return Underscore(Underscore.token_extensions, self,
