@@ -230,7 +230,6 @@ def setup_package():
                 "thinc==7.0.0.dev6",
                 "blis>=0.2.2,<0.3.0",
                 "plac<1.0.0,>=0.9.6",
-                "regex==2018.01.10",
                 "requests>=2.13.0,<3.0.0",
                 "jsonschema>=2.6.0,<3.0.0",
                 "wasabi>=0.0.12,<1.1.0",
