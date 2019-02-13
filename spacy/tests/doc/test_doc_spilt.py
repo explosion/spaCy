@@ -26,6 +26,8 @@ def test_doc_split(en_tokenizer):
     assert len(doc) == 4
     assert doc[0].text == 'Los'
     assert doc[0].head.text == 'Angeles'
+    assert doc[0].idx == 0
+    assert doc[1].idx == 3
 
     assert doc[1].text == 'Angeles'
     assert doc[1].head.text == 'start'
