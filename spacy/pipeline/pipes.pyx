@@ -358,7 +358,7 @@ class Tagger(Pipe):
 
     @property
     def labels(self):
-        return self.vocab.morphology.tag_names
+        return tuple(self.vocab.morphology.tag_names)
 
     @property
     def tok2vec(self):
@@ -884,11 +884,11 @@ class TextCategorizer(Pipe):
 
     @property
     def labels(self):
-        return self.cfg.setdefault('labels', [])
+        return tuple(self.cfg.setdefault('labels', []))
 
     @labels.setter
     def labels(self, value):
-        self.cfg['labels'] = value
+        self.cfg['labels'] = tuple(value)
 
     def __call__(self, doc):
         scores, tensors = self.predict([doc])
@@ -957,17 +957,13 @@ class TextCategorizer(Pipe):
             # The problem is that we resize the last layer, but the last layer
             # is actually just an ensemble. We're not resizing the child layers
             # -- a huge problem.
-            raise ValueError(
-                "Cannot currently add labels to pre-trained text classifier. "
-                "Add labels before training begins. This functionality was "
-                "available in previous versions, but had significant bugs that "
-                "let to poor performance")
+            raise ValueError(Errors.E116)
             #smaller = self.model._layers[-1]
             #larger = Affine(len(self.labels)+1, smaller.nI)
             #copy_array(larger.W[:smaller.nO], smaller.W)
             #copy_array(larger.b[:smaller.nO], smaller.b)
             #self.model._layers[-1] = larger
-        self.labels.append(label)
+        self.labels = tuple(list(self.labels) + [label])
         return 1
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
@@ -1012,6 +1008,11 @@ cdef class DependencyParser(Parser):
         return (DependencyParser, (self.vocab, self.moves, self.model),
                 None, None)
 
+    @property
+    def labels(self):
+        # Get the labels from the model by looking at the available moves
+        return tuple(set(move.split("-")[1] for move in self.move_names))
+
 
 cdef class EntityRecognizer(Parser):
     name = "ner"
@@ -1040,8 +1041,8 @@ cdef class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        return [move.split("-")[1] for move in self.move_names
-                if move[0] in ("B", "I", "L", "U")]
+        return tuple(set(move.split("-")[1] for move in self.move_names
+                if move[0] in ("B", "I", "L", "U")))
 
 
 __all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer', 'TextCategorizer']

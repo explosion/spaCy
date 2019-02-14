@@ -86,7 +86,7 @@ class EntityRuler(object):
         """
         all_labels = set(self.token_patterns.keys())
         all_labels.update(self.phrase_patterns.keys())
-        return all_labels
+        return tuple(all_labels)
 
     @property
     def patterns(self):

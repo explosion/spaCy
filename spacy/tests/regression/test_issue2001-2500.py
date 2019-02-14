@@ -11,7 +11,6 @@ import numpy
 from ..util import add_vecs_to_vocab, get_doc
 
 
-@pytest.mark.xfail
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
@@ -23,7 +22,7 @@ def test_issue2179():
     nlp2.add_pipe(nlp2.create_pipe("ner"))
     nlp2.from_bytes(nlp.to_bytes())
     assert "extra_labels" not in nlp2.get_pipe("ner").cfg
-    assert nlp2.get_pipe("ner").labels == ["CITIZENSHIP"]
+    assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
 
 
 def test_issue2219(en_vocab):

@@ -112,3 +112,15 @@ def test_add_lots_of_pipes(nlp, n_pipes):
 def test_raise_for_invalid_components(nlp, component):
     with pytest.raises(ValueError):
         nlp.add_pipe(component)
+
+
+@pytest.mark.parametrize("component", ["ner", "tagger", "parser", "textcat"])
+def test_pipe_base_class_add_label(nlp, component):
+    label = "TEST"
+    pipe = nlp.create_pipe(component)
+    pipe.add_label(label)
+    if component == "tagger":
+        # Tagger always has the default coarse-grained label scheme
+        assert label in pipe.labels
+    else:
+        assert pipe.labels == (label,)
