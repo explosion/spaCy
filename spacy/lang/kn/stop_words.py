@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 # Stop words
 
-STOP_WORD = set("""
+STOP_WORDS = set("""
 ಈ
 ಮತ್ತು
 ಹಾಗೂ  
