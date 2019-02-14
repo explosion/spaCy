@@ -1,12 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc
-from ...vocab import Vocab
-from ...tokens import Doc
-from ...tokens import Span
-
 import pytest
+from spacy.vocab import Vocab
+from spacy.tokens import Doc
+
+from ..util import get_doc
 
 
 def test_doc_split(en_tokenizer):
@@ -17,35 +16,41 @@ def test_doc_split(en_tokenizer):
 
     assert len(doc) == 3
     assert len(str(doc)) == 19
-    assert doc[0].head.text == 'start'
-    assert doc[1].head.text == '.'
+    assert doc[0].head.text == "start"
+    assert doc[1].head.text == "."
 
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["Los", "Angeles"], [1, 0], attrs={'tag':'NNP', 'lemma':'Los Angeles', 'ent_type':'GPE'})
+        retokenizer.split(
+            doc[0],
+            ["Los", "Angeles"],
+            [1, 0],
+            attrs={"tag": "NNP", "lemma": "Los Angeles", "ent_type": "GPE"},
+        )
 
     assert len(doc) == 4
-    assert doc[0].text == 'Los'
-    assert doc[0].head.text == 'Angeles'
+    assert doc[0].text == "Los"
+    assert doc[0].head.text == "Angeles"
     assert doc[0].idx == 0
     assert doc[1].idx == 3
 
-    assert doc[1].text == 'Angeles'
-    assert doc[1].head.text == 'start'
+    assert doc[1].text == "Angeles"
+    assert doc[1].head.text == "start"
 
-    assert doc[2].text == 'start'
-    assert doc[2].head.text == '.'
+    assert doc[2].text == "start"
+    assert doc[2].head.text == "."
 
-    assert doc[3].text == '.'
-    assert doc[3].head.text == '.'
+    assert doc[3].text == "."
+    assert doc[3].head.text == "."
 
     assert len(str(doc)) == 19
+
 
 def test_split_dependencies(en_tokenizer):
     text = "LosAngeles start."
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, [t.text for t in tokens])
-    dep1 = doc.vocab.strings.add('amod')
-    dep2 = doc.vocab.strings.add('subject')
+    dep1 = doc.vocab.strings.add("amod")
+    dep2 = doc.vocab.strings.add("subject")
     with doc.retokenize() as retokenizer:
         retokenizer.split(doc[0], ["Los", "Angeles"], [1, 0], [dep1, dep2])
 
@@ -53,27 +58,26 @@ def test_split_dependencies(en_tokenizer):
     assert doc[1].dep == dep2
 
 
-
 def test_split_heads_error(en_tokenizer):
     text = "LosAngeles start."
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, [t.text for t in tokens])
-    #Not enough heads
+    # Not enough heads
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
             retokenizer.split(doc[0], ["Los", "Angeles"], [0])
 
-    #Too many heads
+    # Too many heads
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
             retokenizer.split(doc[0], ["Los", "Angeles"], [1, 1, 0])
 
-    #No token head
+    # No token head
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
             retokenizer.split(doc[0], ["Los", "Angeles"], [1, 1])
 
-    #Several token heads
+    # Several token heads
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
             retokenizer.split(doc[0], ["Los", "Angeles"], [0, 0])
@@ -83,7 +87,7 @@ def test_spans_entity_merge_iob():
     # Test entity IOB stays consistent after merging
     words = ["abc", "d", "e"]
     doc = Doc(Vocab(), words=words)
-    doc.ents = [(doc.vocab.strings.add('ent-abcd'), 0, 2)]
+    doc.ents = [(doc.vocab.strings.add("ent-abcd"), 0, 2)]
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
 
@@ -94,12 +98,14 @@ def test_spans_entity_merge_iob():
     assert doc[2].ent_iob_ == "I"
     assert doc[3].ent_iob_ == "I"
 
+
 def test_spans_sentence_update_after_merge(en_tokenizer):
+    # fmt: off
     text = "StewartLee is a stand up comedian. He lives in England and loves JoePasquale."
     heads = [1, 0, 1, 2, -1, -4, -5, 1, 0, -1, -1, -3, -4, 1, -2]
-    deps = ['nsubj', 'ROOT', 'det', 'amod', 'prt', 'attr',
-            'punct', 'nsubj', 'ROOT', 'prep', 'pobj', 'cc', 'conj',
-            'compound', 'punct']
+    deps = ["nsubj", "ROOT", "det", "amod", "prt", "attr", "punct", "nsubj",
+            "ROOT", "prep", "pobj", "cc", "conj", "compound", "punct"]
+    # fmt: on
 
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
