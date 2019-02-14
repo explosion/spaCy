@@ -7,7 +7,7 @@ from .char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
 
 
 _prefixes = (
-    ["§", "%", "=", r"\+(?![0-9])"]
+    ["§", "%", "=", "—", "–", r"\+(?![0-9])"]
     + LIST_PUNCT
     + LIST_ELLIPSES
     + LIST_QUOTES
@@ -21,7 +21,7 @@ _suffixes = (
     + LIST_ELLIPSES
     + LIST_QUOTES
     + LIST_ICONS
-    + ["'s", "'S", "’s", "’S"]
+    + ["'s", "'S", "’s", "’S", "—", "–"]
     + [
         r"(?<=[0-9])\+",
         r"(?<=°[FfCcKk])\.",
