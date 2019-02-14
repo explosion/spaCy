@@ -123,4 +123,4 @@ def test_pipe_base_class_add_label(nlp, component):
         # Tagger always has the default coarse-grained label scheme
         assert label in pipe.labels
     else:
-        assert pipe.labels == [label]
+        assert pipe.labels == (label,)
