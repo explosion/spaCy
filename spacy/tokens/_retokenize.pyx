@@ -21,6 +21,7 @@ from ..attrs import intify_attrs
 from ..util import SimpleFrozenDict
 from ..errors import Errors
 
+
 cdef class Retokenizer:
     """Helper class for doc.retokenize() context manager."""
     cdef Doc doc
@@ -174,25 +175,21 @@ def _bulk_merge(Doc doc, merges):
 
     def _get_start(merge):
         return merge[0].start
-    merges.sort(key=_get_start)
 
+    merges.sort(key=_get_start)
     for merge_index, (span, attributes) in enumerate(merges):
         start = span.start
         end = span.end
         spans.append(span)
-
         # House the new merged token where it starts
         token = &doc.c[start]
-
         tokens[merge_index] = token
-
         # Assign attributes
         for attr_name, attr_value in attributes.items():
             if attr_name == TAG:
                 doc.vocab.morphology.assign_tag(token, attr_value)
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
-
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
     # for the merged region. To do this, we create a boolean array indicating
     # whether the row is to be deleted, then use numpy.delete
@@ -205,7 +202,6 @@ def _bulk_merge(Doc doc, merges):
     for i, span in enumerate(spans):
         span_roots.append(span.root.i)
         tokens[i].dep = span.root.dep
-
     # We update token.lex after keeping span root and dep, since
     # setting token.lex will change span.start and span.end properties
     # as it modifies the character offsets in the doc
@@ -217,7 +213,6 @@ def _bulk_merge(Doc doc, merges):
         tokens[token_index].lex = lex
         # We set trailing space here too
         tokens[token_index].spacy = doc.c[spans[token_index].end-1].spacy
-
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -225,11 +220,9 @@ def _bulk_merge(Doc doc, merges):
     # tokens changes.
     for i in range(doc.length):
         doc.c[i].head += i
-
     # Set the head of the merged token from the Span
     for i in range(len(merges)):
         tokens[i].head = doc.c[span_roots[i]].head
-
     # Adjust deps before shrinking tokens
     # Tokens which point into the merged token should now point to it
     # Subtract the offset from all tokens which point to >= end
@@ -241,16 +234,13 @@ def _bulk_merge(Doc doc, merges):
             #last token was the last of the span
             current_offset += (spans[current_span_index].end - spans[current_span_index].start) -1
             current_span_index += 1
-
         if current_span_index < len(spans) and \
                 spans[current_span_index].start <= i < spans[current_span_index].end:
             offsets.append(spans[current_span_index].start - current_offset)
         else:
             offsets.append(i - current_offset)
-
     for i in range(doc.length):
         doc.c[i].head = offsets[doc.c[i].head]
-
     # Now compress the token array
     offset = 0
     in_span = False
@@ -272,14 +262,11 @@ def _bulk_merge(Doc doc, merges):
         memset(&doc.c[i], 0, sizeof(TokenC))
         doc.c[i].lex = &EMPTY_LEXEME
     doc.length -= offset
-
     # ...And, set heads back to a relative position
     for i in range(doc.length):
         doc.c[i].head -= i
-
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
-
     # Make sure ent_iob remains consistent
     for (span, _) in merges:
         if(span.end < len(offsets)):
@@ -329,13 +316,10 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
             token_head_index = index
     if token_head_index == -1:
         raise ValueError(Errors.E113)
-
     # First, make the dependencies absolutes, and adjust all possible dependencies before
     # creating the tokens
-
     for i in range(doc.length):
         doc.c[i].head += i
-
     # Adjust dependencies
     offset = nb_subtokens - 1
     for i in range(doc.length):
@@ -344,22 +328,17 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
             doc.c[i].head = token_head_index
         elif head_idx > token_index:
             doc.c[i].head += offset
-
     new_token_head = doc.c[token_index].head
-
     # Double doc.c max_length if necessary (until big enough for all new tokens)
     while doc.length + nb_subtokens - 1 >= doc.max_length:
         doc._realloc(doc.length * 2)
-
     # Move tokens after the split to create space for the new tokens
     doc.length = len(doc) + nb_subtokens -1
     for token_to_move in range(doc.length - 1, token_index, -1):
         doc.c[token_to_move + nb_subtokens - 1] = doc.c[token_to_move]
-
     # Host the tokens in the newly created space
     cdef int idx_offset = 0
     for i, orth in enumerate(orths):
-
         token = &doc.c[token_index + i]
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
@@ -367,21 +346,18 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         if i != 0:
             token.idx = orig_token.idx + idx_offset
         idx_offset += len(orth)
-
         # Set token.spacy to False for all non-last split tokens, and
         # to origToken.spacy for the last token
         if (i < nb_subtokens - 1):
             token.spacy = False
         else:
             token.spacy = orig_token.spacy
-
         # Apply attrs to each subtoken
         for attr_name, attr_value in attrs.items():
             if attr_name == TAG:
                 doc.vocab.morphology.assign_tag(token, attr_value)
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
-
         # Make IOB consistent
         if (orig_token.ent_iob == 3):
             if i == 0:
@@ -391,22 +367,17 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         else:
             # In all other cases subtokens inherit iob from origToken
             token.ent_iob = orig_token.ent_iob
-
          # Use the head of the new token everywhere. This will be partially overwritten later on.
         token.head = new_token_head
-
     # Transform the dependencies into relative ones again
     for i in range(doc.length):
         doc.c[i].head -= i
-
     # Assign correct dependencies to the inner token
     for i, head in enumerate(heads):
         if head != 0:
             # the token's head's head is already correct
             doc.c[token_index + i].head = head
-
     for i, dep in enumerate(deps):
         doc[token_index + i].dep = dep
-
     # set children from head
     set_children_from_heads(doc.c, doc.length)
