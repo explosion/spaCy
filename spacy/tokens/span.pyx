@@ -18,6 +18,7 @@ from ..attrs cimport *
 from ..lexeme cimport Lexeme
 from ..compat import is_config, basestring_
 from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
+from ..errors import deprecation_warning
 from .underscore import Underscore, get_ext_args
 
 
@@ -193,6 +194,7 @@ cdef class Span:
             attributes are inherited from the syntactic root token of the span.
         RETURNS (Token): The newly merged token.
         """
+        deprecation_warning(Warnings.W013.format(obj="Span"))
         return self.doc.merge(self.start_char, self.end_char, *args,
                               **attributes)
 
