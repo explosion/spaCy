@@ -86,7 +86,8 @@ def test_issue1547():
     words = ["\n", "worda", ".", "\n", "wordb", "-", "Biosphere", "2", "-", " \n"]
     doc = Doc(Vocab(), words=words)
     doc.ents = [Span(doc, 6, 8, label=doc.vocab.strings["PRODUCT"])]
-    doc[5:7].merge()
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[5:7])
     assert [ent.text for ent in doc.ents]
 
 

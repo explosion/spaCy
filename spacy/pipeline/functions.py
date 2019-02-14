@@ -4,9 +4,6 @@ from __future__ import unicode_literals
 from ..matcher import Matcher
 
 
-# TODO: replace doc.merge with doc.retokenize
-
-
 def merge_noun_chunks(doc):
     """Merge noun chunks into a single token.
 
@@ -15,11 +12,10 @@ def merge_noun_chunks(doc):
     """
     if not doc.is_parsed:
         return doc
-    spans = [
-        (np.start_char, np.end_char, np.root.tag, np.root.dep) for np in doc.noun_chunks
-    ]
-    for start, end, tag, dep in spans:
-        doc.merge(start, end, tag=tag, dep=dep)
+    with doc.retokenize() as retokenizer:
+        for np in doc.noun_chunks:
+            attrs = {"tag": np.root.tag, "dep": np.root.dep}
+            retokenizer.merge(np, attrs=attrs)
     return doc
 
 
@@ -29,11 +25,10 @@ def merge_entities(doc):
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged noun entities.
     """
-    spans = [
-        (e.start_char, e.end_char, e.root.tag, e.root.dep, e.label) for e in doc.ents
-    ]
-    for start, end, tag, dep, ent_type in spans:
-        doc.merge(start, end, tag=tag, dep=dep, ent_type=ent_type)
+    with doc.retokenize() as retokenizer:
+        for ent in doc.ents:
+            attrs = {"tag": ent.root.tag, "dep": ent.root.dep, "ent_type": ent.label}
+            retokenizer.merge(ent, attrs=attrs)
     return doc
 
 
@@ -42,7 +37,7 @@ def merge_subtokens(doc, label="subtok"):
     merger.add("SUBTOK", None, [{"DEP": label, "op": "+"}])
     matches = merger(doc)
     spans = [doc[start : end + 1] for _, start, end in matches]
-    offsets = [(span.start_char, span.end_char) for span in spans]
-    for start_char, end_char in offsets:
-        doc.merge(start_char, end_char)
+    with doc.retokenize() as retokenizer:
+        for span in spans:
+            retokenizer.merge(span)
     return doc

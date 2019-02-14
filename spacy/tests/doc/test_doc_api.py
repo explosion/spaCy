@@ -141,66 +141,13 @@ def test_doc_api_set_ents(en_tokenizer):
 
 def test_doc_api_merge(en_tokenizer):
     text = "WKRO played songs by the beach boys all night"
-
-    # merge 'The Beach Boys'
-    doc = en_tokenizer(text)
-    assert len(doc) == 9
-    doc.merge(
-        doc[4].idx,
-        doc[6].idx + len(doc[6]),
-        tag="NAMED",
-        lemma="LEMMA",
-        ent_type="TYPE",
-    )
-    assert len(doc) == 7
-    assert doc[4].text == "the beach boys"
-    assert doc[4].text_with_ws == "the beach boys "
-    assert doc[4].tag_ == "NAMED"
-
-    # merge 'all night'
-    doc = en_tokenizer(text)
-    assert len(doc) == 9
-    doc.merge(
-        doc[7].idx,
-        doc[8].idx + len(doc[8]),
-        tag="NAMED",
-        lemma="LEMMA",
-        ent_type="TYPE",
-    )
-    assert len(doc) == 8
-    assert doc[7].text == "all night"
-    assert doc[7].text_with_ws == "all night"
-
+    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
     # merge both with bulk merge
     doc = en_tokenizer(text)
     assert len(doc) == 9
     with doc.retokenize() as retokenizer:
-        retokenizer.merge(
-            doc[4:7], attrs={"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
-        )
-        retokenizer.merge(
-            doc[7:9], attrs={"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
-        )
-
-    assert len(doc) == 6
-    assert doc[4].text == "the beach boys"
-    assert doc[4].text_with_ws == "the beach boys "
-    assert doc[4].tag_ == "NAMED"
-    assert doc[5].text == "all night"
-    assert doc[5].text_with_ws == "all night"
-    assert doc[5].tag_ == "NAMED"
-
-    # merge both with bulk merge
-    doc = en_tokenizer(text)
-    assert len(doc) == 9
-    with doc.retokenize() as retokenizer:
-        retokenizer.merge(
-            doc[4:7], attrs={"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
-        )
-        retokenizer.merge(
-            doc[7:9], attrs={"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
-        )
-
+        retokenizer.merge(doc[4:7], attrs=attrs)
+        retokenizer.merge(doc[7:9], attrs=attrs)
     assert len(doc) == 6
     assert doc[4].text == "the beach boys"
     assert doc[4].text_with_ws == "the beach boys "
@@ -213,16 +160,11 @@ def test_doc_api_merge(en_tokenizer):
 def test_doc_api_merge_children(en_tokenizer):
     """Test that attachments work correctly after merging."""
     text = "WKRO played songs by the beach boys all night"
+    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
     doc = en_tokenizer(text)
     assert len(doc) == 9
-    doc.merge(
-        doc[4].idx,
-        doc[6].idx + len(doc[6]),
-        tag="NAMED",
-        lemma="LEMMA",
-        ent_type="TYPE",
-    )
-
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7], attrs=attrs)
     for word in doc:
         if word.i < word.head.i:
             assert word in list(word.head.lefts)
@@ -233,8 +175,9 @@ def test_doc_api_merge_children(en_tokenizer):
 def test_doc_api_merge_hang(en_tokenizer):
     text = "through North and South Carolina"
     doc = en_tokenizer(text)
-    doc.merge(18, 32, tag="", lemma="", ent_type="ORG")
-    doc.merge(8, 32, tag="", lemma="", ent_type="ORG")
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[3:5], attrs={"lemma": "", "ent_type": "ORG"})
+        retokenizer.merge(doc[1:2], attrs={"lemma": "", "ent_type": "ORG"})
 
 
 def test_doc_api_retokenizer(en_tokenizer):
@@ -287,21 +230,22 @@ def test_doc_api_runtime_error(en_tokenizer):
             "pobj", "", "nummod", "prep", "det", "amod", "pobj", "aux", "neg",
             "ROOT", "amod", "dobj"]
     # fmt: on
-
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
-
     nps = []
     for np in doc.noun_chunks:
         while len(np) > 1 and np[0].dep_ not in ("advmod", "amod", "compound"):
             np = np[1:]
         if len(np) > 1:
-            nps.append(
-                (np.start_char, np.end_char, np.root.tag_, np.text, np.root.ent_type_)
-            )
-    for np in nps:
-        start, end, tag, lemma, ent_type = np
-        doc.merge(start, end, tag=tag, lemma=lemma, ent_type=ent_type)
+            nps.append(np)
+    with doc.retokenize() as retokenizer:
+        for np in nps:
+            attrs = {
+                "tag": np.root.tag_,
+                "lemma": np.text,
+                "ent_type": np.root.ent_type_,
+            }
+            retokenizer.merge(np, attrs=attrs)
 
 
 def test_doc_api_right_edge(en_tokenizer):

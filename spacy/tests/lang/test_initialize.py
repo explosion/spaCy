@@ -18,4 +18,4 @@ LANGUAGES = ["af", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es",
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_lang_initialize(lang):
     """Test that languages can be initialized."""
-    lang_cls = get_lang_class(lang)()
+    lang_cls = get_lang_class(lang)()  # noqa: F841

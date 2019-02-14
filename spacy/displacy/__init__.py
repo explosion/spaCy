@@ -107,8 +107,14 @@ def parse_deps(orig_doc, options={}):
     if not doc.is_parsed:
         user_warning(Warnings.W005)
     if options.get("collapse_phrases", False):
-        for np in list(doc.noun_chunks):
-            np.merge(tag=np.root.tag_, lemma=np.root.lemma_, ent_type=np.root.ent_type_)
+        with doc.retokenize() as retokenizer:
+            for np in list(doc.noun_chunks):
+                attrs = {
+                    "tag": np.root.tag_,
+                    "lemma": np.root.lemma_,
+                    "ent_type": np.root.ent_type_,
+                }
+                retokenizer.merge(np, attrs=attrs)
     if options.get("collapse_punct", True):
         spans = []
         for word in doc[:-1]:
@@ -119,11 +125,11 @@ def parse_deps(orig_doc, options={}):
             while end < len(doc) and doc[end].is_punct:
                 end += 1
             span = doc[start:end]
-            spans.append(
-                (span.start_char, span.end_char, word.tag_, word.lemma_, word.ent_type_)
-            )
-        for start, end, tag, lemma, ent_type in spans:
-            doc.merge(start, end, tag=tag, lemma=lemma, ent_type=ent_type)
+            spans.append((span, word.tag_, word.lemma_, word.ent_type_))
+        with doc.retokenize() as retokenizer:
+            for span, tag, lemma, ent_type in spans:
+                attrs = {"tag": tag, "lemma": lemma, "ent_type": ent_type}
+                retokenizer.merge(span, attrs=attrs)
     if options.get("fine_grained"):
         words = [{"text": w.text, "tag": w.tag_} for w in doc]
     else:
