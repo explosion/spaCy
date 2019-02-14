@@ -22,7 +22,7 @@ def test_issue2179():
     nlp2.add_pipe(nlp2.create_pipe("ner"))
     nlp2.from_bytes(nlp.to_bytes())
     assert "extra_labels" not in nlp2.get_pipe("ner").cfg
-    assert nlp2.get_pipe("ner").labels == ["CITIZENSHIP"]
+    assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
 
 
 def test_issue2219(en_vocab):

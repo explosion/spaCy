@@ -884,11 +884,11 @@ class TextCategorizer(Pipe):
 
     @property
     def labels(self):
-        return self.cfg.setdefault('labels', [])
+        return tuple(self.cfg.setdefault('labels', []))
 
     @labels.setter
     def labels(self, value):
-        self.cfg['labels'] = value
+        self.cfg['labels'] = tuple(value)
 
     def __call__(self, doc):
         scores, tensors = self.predict([doc])
@@ -963,7 +963,7 @@ class TextCategorizer(Pipe):
             #copy_array(larger.W[:smaller.nO], smaller.W)
             #copy_array(larger.b[:smaller.nO], smaller.b)
             #self.model._layers[-1] = larger
-        self.labels.append(label)
+        self.labels = tuple(list(self.labels) + [label])
         return 1
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
