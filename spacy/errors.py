@@ -314,6 +314,9 @@ class Errors(object):
             "practically no advantage over pickling the parent Doc directly. "
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
+    E113 = ("The newly split token can only have one root (head = 0).")
+    E114 = ("The newly split token needs to have a root (head = 0)")
+    E115 = ("All subtokens must have associated heads")
 
 
 @add_codes
