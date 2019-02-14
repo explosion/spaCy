@@ -53,8 +53,8 @@ def get_lang_class(lang):
     if lang not in LANGUAGES:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
-        except ImportError:
-            raise ImportError(Errors.E048.format(lang=lang))
+        except ImportError as err:
+            raise ImportError(Errors.E048.format(lang=lang, err=err))
         LANGUAGES[lang] = getattr(module, module.__all__[0])
     return LANGUAGES[lang]
 
