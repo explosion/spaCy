@@ -317,6 +317,10 @@ class Errors(object):
     E113 = ("The newly split token can only have one root (head = 0).")
     E114 = ("The newly split token needs to have a root (head = 0)")
     E115 = ("All subtokens must have associated heads")
+    E116 = ("Cannot currently add labels to pre-trained text classifier. Add "
+            "labels before training begins. This functionality was available "
+            "in previous versions, but had significant bugs that led to poor "
+            "performance")
 
 
 @add_codes
