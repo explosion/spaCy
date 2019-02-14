@@ -358,7 +358,7 @@ class Tagger(Pipe):
 
     @property
     def labels(self):
-        return list(self.vocab.morphology.tag_names)
+        return tuple(self.vocab.morphology.tag_names)
 
     @property
     def tok2vec(self):
