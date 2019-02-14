@@ -43,12 +43,12 @@ cdef class Retokenizer:
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         self.merges.append((span, attrs))
 
-    def split(self, Token token, orths, attrs=SimpleFrozenDict()):
+    def split(self, Token token, orths, heads, deps=[], attrs=SimpleFrozenDict()):
         """Mark a Token for splitting, into the specified orths. The attrs
         will be applied to each subtoken.
         """
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-        self.splits.append((token.start_char, orths, attrs))
+        self.splits.append((token.i, orths, heads, deps, attrs))
 
     def __enter__(self):
         self.merges = []
@@ -65,8 +65,12 @@ cdef class Retokenizer:
             end = span.end
             _merge(self.doc, start, end, attrs)
 
-        for start_char, orths, attrs in self.splits:
-            raise NotImplementedError
+        offset = 0
+        # Iterate in order, to keep the offset simple.
+        for token_index, orths, heads, deps, attrs in sorted(self.splits):
+             _split(self.doc, token_index + offset, orths, heads, deps, attrs)
+             # Adjust for the previous tokens
+             offset += len(orths)-1
 
 def _merge(Doc doc, int start, int end, attributes):
     """Retokenize the document, such that the span at
@@ -279,3 +283,111 @@ def _bulk_merge(Doc doc, merges):
 
     # Return the merged Python object
     return doc[spans[0].start]
+
+
+def _split(Doc doc, int token_index, orths, heads, deps, attrs):
+    """Retokenize the document, such that the token at
+    `doc[token_index]` is split into tokens with the orth 'orths'
+    token_index(int): token index of the token to split.
+    orths: IDs of the verbatim text content of the tokens to create
+    **attributes: Attributes to assign to each of the newly created tokens. By default,
+        attributes are inherited from the original token.
+    RETURNS (Token): The first newly created token.
+    """
+    cdef int nb_subtokens = len(orths)
+    cdef const LexemeC* lex
+    cdef TokenC* token
+    cdef TokenC orig_token = doc.c[token_index]
+
+    if(len(heads) != nb_subtokens):
+        raise ValueError(Errors.E101)
+    token_head_index = -1
+    for index, head in enumerate(heads):
+        if head == 0:
+            if token_head_index != -1:
+                raise ValueError(Errors.E098)
+            token_head_index = index
+    if token_head_index == -1:
+        raise ValueError(Errors.E099)
+
+    # First, make the dependencies absolutes, and adjust all possible dependencies before
+    # creating the tokens
+
+    for i in range(doc.length):
+        doc.c[i].head += i
+
+    # Adjust dependencies
+    offset = nb_subtokens - 1
+    for i in range(doc.length):
+        head_idx = doc.c[i].head
+        if head_idx == token_index:
+            doc.c[i].head = token_head_index
+        elif head_idx > token_index:
+            doc.c[i].head += offset
+
+    new_token_head = doc.c[token_index].head
+
+    # Double doc.c max_length if necessary (until big enough for all new tokens)
+    while doc.length + nb_subtokens - 1 >= doc.max_length:
+        doc._realloc(doc.length * 2)
+
+    # Move tokens after the split to create space for the new tokens
+    doc.length = len(doc) + nb_subtokens -1
+    for token_to_move in range(doc.length - 1, token_index, -1):
+        doc.c[token_to_move + nb_subtokens - 1] = doc.c[token_to_move]
+
+    # Host the tokens in the newly created space
+    cdef int idx_offset = 0
+    for i, orth in enumerate(orths):
+
+        token = &doc.c[token_index + i]
+        lex = doc.vocab.get(doc.mem, orth)
+        token.lex = lex
+        # Update the character offset of the subtokens
+        if i != 0:
+            token.idx = orig_token.idx + idx_offset
+        idx_offset += len(orth)
+
+        # Set token.spacy to False for all non-last split tokens, and
+        # to origToken.spacy for the last token
+        if (i < nb_subtokens - 1):
+            token.spacy = False
+        else:
+            token.spacy = orig_token.spacy
+
+        # Apply attrs to each subtoken
+        for attr_name, attr_value in attrs.items():
+            if attr_name == TAG:
+                doc.vocab.morphology.assign_tag(token, attr_value)
+            else:
+                Token.set_struct_attr(token, attr_name, attr_value)
+
+        # Make IOB consistent
+        if (orig_token.ent_iob == 3):
+            if i == 0:
+                token.ent_iob = 3
+            else:
+                token.ent_iob = 1
+        else:
+            # In all other cases subtokens inherit iob from origToken
+            token.ent_iob = orig_token.ent_iob
+
+         # Use the head of the new token everywhere. This will be partially overwritten later on.
+        token.head = new_token_head
+
+    # Transform the dependencies into relative ones again
+    for i in range(doc.length):
+        doc.c[i].head -= i
+
+    # Assign correct dependencies to the inner token
+    for i, head in enumerate(heads):
+        if head != 0:
+            # the token's head's head is already correct
+            doc.c[token_index + i].head = head
+
+    for i, dep in enumerate(deps):
+        doc[token_index + i].dep = dep
+
+    # set children from head
+    set_children_from_heads(doc.c, doc.length)
+
