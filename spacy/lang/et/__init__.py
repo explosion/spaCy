@@ -6,15 +6,15 @@ from ...language import Language
 from ...attrs import LANG
 
 
-class KannadaDefaults(Language.Defaults):
+class EstonianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "kn"
+    lex_attr_getters[LANG] = lambda text: "et"
     stop_words = STOP_WORDS
 
 
-class Kannada(Language):
-    lang = "kn"
-    Defaults = KannadaDefaults
+class Estonian(Language):
+    lang = "et"
+    Defaults = EstonianDefaults
 
 
-__all__ = ["Kannada"]
+__all__ = ["Estonian"]

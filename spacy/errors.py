@@ -177,7 +177,7 @@ class Errors(object):
             "you forget to call the `set_extension` method?")
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
-    E048 = ("Can't import language {lang} from spacy.lang.")
+    E048 = ("Can't import language {lang} from spacy.lang: {err}")
     E049 = ("Can't find spaCy data directory: '{path}'. Check your "
             "installation and permissions, or use spacy.util.set_data_path "
             "to customise the location if necessary.")
@@ -308,6 +308,16 @@ class Errors(object):
             "would always have to include its Doc and Vocab, which has "
             "practically no advantage over pickling the parent Doc directly. "
             "So instead of pickling the token, pickle the Doc it belongs to.")
+    E112 = ("Pickling a span is not supported, because spans are only views "
+            "of the parent Doc and can't exist on their own. A pickled span "
+            "would always have to include its Doc and Vocab, which has "
+            "practically no advantage over pickling the parent Doc directly. "
+            "So instead of pickling the span, pickle the Doc it belongs to or "
+            "use Span.as_doc to convert the span to a standalone Doc object.")
+    E113 = ("The newly split token can only have one root (head = 0).")
+    E114 = ("The newly split token needs to have a root (head = 0)")
+    E115 = ("All subtokens must have associated heads")
+
 
 @add_codes
 class TempErrors(object):

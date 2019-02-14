@@ -141,6 +141,9 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self.doc[i]
 
+    def __reduce__(self):
+        raise NotImplementedError(Errors.E112)
+
     @property
     def _(self):
         """User space for adding custom attribute extensions."""
