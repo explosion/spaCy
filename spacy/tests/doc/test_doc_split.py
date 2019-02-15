@@ -47,7 +47,7 @@ def test_split_dependencies(en_vocab):
     dep2 = doc.vocab.strings.add("subject")
     with doc.retokenize() as retokenizer:
         retokenizer.split(doc[0], ["Los", "Angeles"],
-            [(doc[0], 1), doc[1]], [dep1, dep2])
+                [(doc[0], 1), doc[1]], attrs={'dep': [dep1, dep2]})
     assert doc[0].dep == dep1
     assert doc[1].dep == dep2
 
@@ -111,4 +111,4 @@ def test_split_orths_mismatch(en_vocab):
     doc = Doc(en_vocab, words=["LosAngeles", "start", "."])
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["L", "A"], [0, -1])
+            retokenizer.split(doc[0], ["L", "A"], [(doc[0], 0), (doc[0], 0)])
