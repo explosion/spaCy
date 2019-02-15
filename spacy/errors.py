@@ -324,6 +324,8 @@ class Errors(object):
             "labels before training begins. This functionality was available "
             "in previous versions, but had significant bugs that led to poor "
             "performance")
+    E117 = ("The newly split tokens must match the text of the original token. "
+            "New orths: {new}. Old text: {old}.") 
 
 
 @add_codes
