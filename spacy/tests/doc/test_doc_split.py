@@ -89,7 +89,7 @@ def test_spans_sentence_update_after_merge(en_vocab):
     deps = ["nsubj", "ROOT", "det", "amod", "prt", "attr", "punct", "nsubj",
             "ROOT", "prep", "pobj", "cc", "conj", "compound", "punct"]
     # fmt: on
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = get_doc(en_vocab, words=words, heads=heads, attrs={"dep": deps})
     sent1, sent2 = list(doc.sents)
     init_len = len(sent1)
     init_len2 = len(sent2)

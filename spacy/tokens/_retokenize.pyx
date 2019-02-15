@@ -47,7 +47,7 @@ cdef class Retokenizer:
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         self.merges.append((span, attrs))
 
-    def split(self, Token token, orths, heads, deps=[], attrs=SimpleFrozenDict()):
+    def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
         """Mark a Token for splitting, into the specified orths. The attrs
         will be applied to each subtoken.
         """
@@ -60,7 +60,7 @@ cdef class Retokenizer:
                 head_offsets.append((head.idx, 0))
             else:
                 head_offsets.append((head[0].idx, head[1]))
-        self.splits.append((token.idx, orths, head_offsets, deps, attrs))
+        self.splits.append((token.idx, orths, head_offsets, attrs))
 
     def __enter__(self):
         self.merges = []
