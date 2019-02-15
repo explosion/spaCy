@@ -65,19 +65,6 @@ def test_split_heads_error(en_vocab):
             retokenizer.split(doc[0], ["Los", "Angeles"], [doc[1], doc[1], doc[1]])
 
 
-@pytest.mark.xfail
-def test_split_heads_out_of_bounds(en_vocab):
-    """Test that the retokenizer raises an error for out-of-bounds heads. The
-    indices are relative, so head 1 for "Angeles" would be the token following
-    it, which is out-of-bounds. Previously, the retokenizer would accept this
-    and spaCy would then fail later.
-    """
-    doc = Doc(en_vocab, words=["Start", "LosAngeles"])
-    with pytest.raises(ValueError):
-        with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[1], ["Los", "Angeles"], [0, 1])
-
-
 def test_spans_entity_merge_iob():
     # Test entity IOB stays consistent after merging
     words = ["abc", "d", "e"]
@@ -114,7 +101,6 @@ def test_spans_sentence_update_after_merge(en_vocab):
     assert len(sent2) == init_len2 + 1
 
 
-@pytest.mark.xfail
 def test_split_orths_mismatch(en_vocab):
     """Test that the regular retokenizer.split raises an error if the orths
     don't match the original token text. There might still be a method that
