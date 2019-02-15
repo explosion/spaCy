@@ -67,6 +67,9 @@ class Warnings(object):
             "components are applied. To only create tokenized Doc objects, "
             "try using `nlp.make_doc(text)` or process all texts as a stream "
             "using `list(nlp.tokenizer.pipe(all_texts))`.")
+    W013 = ("As of v2.1.0, {obj}.merge is deprecated. Please use the more "
+            "efficient and less error-prone Doc.retokenize context manager "
+            "instead.")
 
 
 @add_codes

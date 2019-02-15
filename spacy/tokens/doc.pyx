@@ -898,6 +898,7 @@ cdef class Doc:
             indices did not fall at token boundaries.
         """
         cdef unicode tag, lemma, ent_type
+        deprecation_warning(Warnings.W013.format(obj="Doc"))
         if len(args) == 3:
             deprecation_warning(Warnings.W003)
             tag, lemma, ent_type = args
