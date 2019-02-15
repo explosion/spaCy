@@ -89,13 +89,15 @@ def test_spans_sentence_update_after_merge(en_vocab):
     deps = ["nsubj", "ROOT", "det", "amod", "prt", "attr", "punct", "nsubj",
             "ROOT", "prep", "pobj", "cc", "conj", "compound", "punct"]
     # fmt: on
-    doc = get_doc(en_vocab, words=words, heads=heads, attrs={"dep": deps})
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
     sent1, sent2 = list(doc.sents)
     init_len = len(sent1)
     init_len2 = len(sent2)
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["Stewart", "Lee"], [(doc[0], 1), doc[1]])
-        retokenizer.split(doc[14], ["Joe", "Pasquale"], [(doc[14], 1), doc[13]])
+        retokenizer.split(doc[0], ["Stewart", "Lee"], [(doc[0], 1), doc[1]],
+            attrs={"dep": ["compound", "nsubj"]})
+        retokenizer.split(doc[13], ["Joe", "Pasquale"], [(doc[13], 1), doc[12]],
+            attrs={"dep": ["compound", "dobj"]})
     sent1, sent2 = list(doc.sents)
     assert len(sent1) == init_len + 1
     assert len(sent2) == init_len2 + 1

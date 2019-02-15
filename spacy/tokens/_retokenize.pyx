@@ -77,7 +77,7 @@ cdef class Retokenizer:
             end = span.end
             _merge(self.doc, start, end, attrs)
         # Iterate in order, to keep things simple.
-        for start_char, orths, heads, deps, attrs in sorted(self.splits):
+        for start_char, orths, heads, attrs in sorted(self.splits):
             # Resolve token index
             token_index = token_by_start(self.doc.c, self.doc.length, start_char)
             # Check we're still able to find tokens starting at the character offsets
@@ -99,7 +99,7 @@ cdef class Retokenizer:
                 if head_index > token_index:
                     head_index += len(orths)-1
                 head_indices.append(head_index+subtoken)
-            _split(self.doc, start_char, orths, head_indices, deps, attrs)
+            _split(self.doc, token_index, orths, head_indices, attrs)
 
 
 def _merge(Doc doc, int start, int end, attributes):
@@ -319,7 +319,7 @@ def _resize_tensor(tensor, ranges):
     return xp.delete(tensor, delete, axis=0)
 
 
-def _split(Doc doc, int token_index, orths, heads, deps, attrs):
+def _split(Doc doc, int token_index, orths, heads, attrs):
     """Retokenize the document, such that the token at
     `doc[token_index]` is split into tokens with the orth 'orths'
     token_index(int): token index of the token to split.
@@ -343,7 +343,6 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
     for i in range(doc.length):
         if doc.c[i].head > token_index:
             doc.c[i].head += offset
-    new_token_head = doc.c[token_index].head
     # Double doc.c max_length if necessary (until big enough for all new tokens)
     while doc.length + nb_subtokens - 1 >= doc.max_length:
         doc._realloc(doc.length * 2)
@@ -390,8 +389,5 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
     # Transform the dependencies into relative ones again
     for i in range(doc.length):
         doc.c[i].head -= i
-    # Assign dep labels
-    for i, dep in enumerate(deps):
-        doc[token_index + i].dep = dep
     # set children from head
     set_children_from_heads(doc.c, doc.length)
