@@ -24,7 +24,11 @@ def test_doc_split(en_tokenizer):
             doc[0],
             ["Los", "Angeles"],
             [(doc[0], 1), doc[1]],
-            attrs={"tag": "NNP", "lemma": "Los Angeles", "ent_type": "GPE"},
+            attrs={
+                "tag": ["NNP"]*2,
+                "lemma": ["Los", "Angeles"],
+                "ent_type": ["GPE"]*2
+            },
         )
 
     assert len(doc) == 4

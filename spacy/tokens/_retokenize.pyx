@@ -20,6 +20,7 @@ from ..attrs cimport TAG
 from ..attrs import intify_attrs
 from ..util import SimpleFrozenDict
 from ..errors import Errors
+from ..strings import get_string_id
 
 
 cdef class Retokenizer:
@@ -364,12 +365,6 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
             token.spacy = False
         else:
             token.spacy = orig_token.spacy
-        # Apply attrs to each subtoken
-        for attr_name, attr_value in attrs.items():
-            if attr_name == TAG:
-                doc.vocab.morphology.assign_tag(token, attr_value)
-            else:
-                Token.set_struct_attr(token, attr_name, attr_value)
         # Make IOB consistent
         if (orig_token.ent_iob == 3):
             if i == 0:
@@ -379,6 +374,14 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         else:
             # In all other cases subtokens inherit iob from origToken
             token.ent_iob = orig_token.ent_iob
+    # Apply attrs to each subtoken
+    for attr_name, attr_values in attrs.items():
+        for i, attr_value in enumerate(attr_values):
+            token = &doc.c[token_index + i]
+            if attr_name == TAG:
+                doc.vocab.morphology.assign_tag(token, get_string_id(attr_value))
+            else:
+                Token.set_struct_attr(token, attr_name, get_string_id(attr_value))
     # Assign correct dependencies to the inner token
     for i, head in enumerate(heads):
         doc.c[token_index + i].head = head
