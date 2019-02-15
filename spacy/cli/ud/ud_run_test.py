@@ -112,10 +112,10 @@ def write_conllu(docs, file_):
     for i, doc in enumerate(docs):
         matches = merger(doc)
         spans = [doc[start : end + 1] for _, start, end in matches]
-        offsets = [(span.start_char, span.end_char) for span in spans]
-        for start_char, end_char in offsets:
-            doc.merge(start_char, end_char)
-        # TODO: This shuldn't be necessary? Should be handled in merge
+        with doc.retokenize() as retokenizer:
+            for span in spans:
+                retokenizer.merge(span)
+        # TODO: This shouldn't be necessary? Should be handled in merge
         for word in doc:
             if word.i == word.head.i:
                 word.dep_ = "ROOT"

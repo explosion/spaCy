@@ -66,9 +66,9 @@ def test_parser_merge_pp(en_tokenizer):
     doc = get_doc(
         tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, tags=tags
     )
-    nps = [(np[0].idx, np[-1].idx + len(np[-1]), np.lemma_) for np in doc.noun_chunks]
-    for start, end, lemma in nps:
-        doc.merge(start, end, label="NP", lemma=lemma)
+    with doc.retokenize() as retokenizer:
+        for np in doc.noun_chunks:
+            retokenizer.merge(np, attrs={"lemma": np.lemma_})
     assert doc[0].text == "A phrase"
     assert doc[1].text == "with"
     assert doc[2].text == "another phrase"

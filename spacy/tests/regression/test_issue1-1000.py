@@ -9,7 +9,7 @@ from spacy.symbols import POS, VERB, VerbForm_inf
 from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.lemmatizer import Lemmatizer
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 
 from ..util import get_doc, make_tempdir
 
@@ -204,12 +204,13 @@ def test_issue615(en_tokenizer):
         on the last match."""
         if i != len(matches) - 1:
             return None
-        spans = [(ent_id, ent_id, doc[start:end]) for ent_id, start, end in matches]
-        for ent_id, label, span in spans:
-            span.merge(
-                tag="NNP" if label else span.root.tag_, lemma=span.text, label=label
-            )
-            doc.ents = doc.ents + ((label, span.start, span.end),)
+        spans = [Span(doc, start, end, label=label) for label, start, end in matches]
+        with doc.retokenize() as retokenizer:
+            for span in spans:
+                tag = "NNP" if span.label_ else span.root.tag_
+                attrs = {"tag": tag, "lemma": span.text}
+                retokenizer.merge(span, attrs=attrs)
+                doc.ents = doc.ents + (span,)
 
     text = "The golf club is broken"
     pattern = [{"ORTH": "golf"}, {"ORTH": "club"}]
@@ -410,7 +411,7 @@ def test_issue957(en_tokenizer):
     """
     # Skip test if pytest-timeout is not installed
     pytest.importorskip("pytest_timeout")
-    for punct in ['.', ',', '\'', '\"', ':', '?', '!', ';', '-']:
+    for punct in [".", ",", "'", '"', ":", "?", "!", ";", "-"]:
         string = "0"
         for i in range(1, 100):
             string += punct + str(i)

@@ -46,7 +46,9 @@ def test_matcher_from_usage_docs(en_vocab):
         if doc.vocab.strings[match_id] == "HAPPY":
             doc.sentiment += 0.1
         span = doc[start:end]
-        token = span.merge()
+        with doc.retokenize() as retokenizer:
+            retokenizer.merge(span)
+        token = doc[start]
         token.vocab[token.text].norm_ = "happy emoji"
 
     matcher = Matcher(en_vocab)
