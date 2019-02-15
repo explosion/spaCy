@@ -23,7 +23,7 @@ def test_doc_split(en_tokenizer):
         retokenizer.split(
             doc[0],
             ["Los", "Angeles"],
-            [1, 0],
+            [(doc[0], 1), doc[1]],
             attrs={"tag": "NNP", "lemma": "Los Angeles", "ent_type": "GPE"},
         )
 
@@ -52,7 +52,8 @@ def test_split_dependencies(en_tokenizer):
     dep1 = doc.vocab.strings.add("amod")
     dep2 = doc.vocab.strings.add("subject")
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["Los", "Angeles"], [1, 0], [dep1, dep2])
+        retokenizer.split(doc[0], ["Los", "Angeles"],
+            [(doc[0], 1), doc[1]], [dep1, dep2])
 
     assert doc[0].dep == dep1
     assert doc[1].dep == dep2
@@ -65,22 +66,12 @@ def test_split_heads_error(en_tokenizer):
     # Not enough heads
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [0])
+            retokenizer.split(doc[0], ["Los", "Angeles"], [doc[1]])
 
     # Too many heads
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [1, 1, 0])
-
-    # No token head
-    with pytest.raises(ValueError):
-        with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [1, 1])
-
-    # Several token heads
-    with pytest.raises(ValueError):
-        with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [0, 0])
+            retokenizer.split(doc[0], ["Los", "Angeles"], [doc[1], doc[1], doc[1]])
 
 
 def test_spans_entity_merge_iob():
@@ -92,7 +83,8 @@ def test_spans_entity_merge_iob():
     assert doc[1].ent_iob_ == "I"
 
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["a", "b", "c"], [1, 1, 0])
+        retokenizer.split(doc[0], ["a", "b", "c"],
+            [(doc[0], 1), (doc[0], 2), doc[1]])
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
     assert doc[2].ent_iob_ == "I"
@@ -113,8 +105,8 @@ def test_spans_sentence_update_after_merge(en_tokenizer):
     init_len = len(sent1)
     init_len2 = len(sent2)
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["Stewart", "Lee"], [1, 0])
-        retokenizer.split(doc[14], ["Joe", "Pasquale"], [1, 0])
+        retokenizer.split(doc[0], ["Stewart", "Lee"], [(doc[0], 1), doc[1]])
+        retokenizer.split(doc[14], ["Joe", "Pasquale"], [(doc[14], 1), doc[13]])
     sent1, sent2 = list(doc.sents)
     assert len(sent1) == init_len + 1
     assert len(sent2) == init_len2 + 1

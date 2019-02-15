@@ -51,7 +51,13 @@ cdef class Retokenizer:
         will be applied to each subtoken.
         """
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-        self.splits.append((token.i, orths, heads, deps, attrs))
+        head_offsets = []
+        for head in heads:
+            if isinstance(head, Token):
+                head_offsets.append((head.idx, 0))
+            else:
+                head_offsets.append((head[0].idx, head[1]))
+        self.splits.append((token.idx, orths, head_offsets, deps, attrs))
 
     def __enter__(self):
         self.merges = []
@@ -67,13 +73,31 @@ cdef class Retokenizer:
             start = span.start
             end = span.end
             _merge(self.doc, start, end, attrs)
+        # Iterate in order, to keep things simple.
+        for start_char, orths, heads, deps, attrs in sorted(self.splits):
+            # Resolve token index
+            token_index = token_by_start(self.doc.c, self.doc.length, start_char)
+            # Check we're still able to find tokens starting at the character offsets
+            # referred to in the splits. If we merged these tokens previously, we
+            # have to raise an error
+            if token_index == -1:
+                raise IndexError(
+                    "Cannot find token to be split. Did it get merged?")
+            head_indices = []
+            for head_char, subtoken in heads:
+                head_index = token_by_start(self.doc.c, self.doc.length, head_char)
+                if head_index == -1:
+                    raise IndexError(
+                        "Cannot find head of token to be split. Did it get merged?")
+                # We want to refer to the token index of the head *after* the
+                # mergery. We need to account for the extra tokens introduced.
+                # e.g., let's say we have [ab, c] and we want a and b to depend
+                # on c. The correct index for c will be 2, not 1.
+                if head_index > token_index:
+                    head_index += len(orths)-1
+                head_indices.append(head_index+subtoken)
+            _split(self.doc, start_char, orths, head_indices, deps, attrs)
 
-        offset = 0
-        # Iterate in order, to keep the offset simple.
-        for token_index, orths, heads, deps, attrs in sorted(self.splits):
-             _split(self.doc, token_index + offset, orths, heads, deps, attrs)
-             # Adjust for the previous tokens
-             offset += len(orths)-1
 
 def _merge(Doc doc, int start, int end, attributes):
     """Retokenize the document, such that the span at
@@ -308,25 +332,13 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
 
     if(len(heads) != nb_subtokens):
         raise ValueError(Errors.E115)
-    token_head_index = -1
-    for index, head in enumerate(heads):
-        if head == 0:
-            if token_head_index != -1:
-                raise ValueError(Errors.E114)
-            token_head_index = index
-    if token_head_index == -1:
-        raise ValueError(Errors.E113)
-    # First, make the dependencies absolutes, and adjust all possible dependencies before
-    # creating the tokens
+    # First, make the dependencies absolutes
     for i in range(doc.length):
         doc.c[i].head += i
-    # Adjust dependencies
+    # Adjust dependencies, so they refer to post-split indexing
     offset = nb_subtokens - 1
     for i in range(doc.length):
-        head_idx = doc.c[i].head
-        if head_idx == token_index:
-            doc.c[i].head = token_head_index
-        elif head_idx > token_index:
+        if doc.c[i].head > token_index:
             doc.c[i].head += offset
     new_token_head = doc.c[token_index].head
     # Double doc.c max_length if necessary (until big enough for all new tokens)
@@ -367,16 +379,13 @@ def _split(Doc doc, int token_index, orths, heads, deps, attrs):
         else:
             # In all other cases subtokens inherit iob from origToken
             token.ent_iob = orig_token.ent_iob
-         # Use the head of the new token everywhere. This will be partially overwritten later on.
-        token.head = new_token_head
+    # Assign correct dependencies to the inner token
+    for i, head in enumerate(heads):
+        doc.c[token_index + i].head = head
     # Transform the dependencies into relative ones again
     for i in range(doc.length):
         doc.c[i].head -= i
-    # Assign correct dependencies to the inner token
-    for i, head in enumerate(heads):
-        if head != 0:
-            # the token's head's head is already correct
-            doc.c[token_index + i].head = head
+    # Assign dep labels
     for i, dep in enumerate(deps):
         doc[token_index + i].dep = dep
     # set children from head
