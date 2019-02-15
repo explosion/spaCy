@@ -17,8 +17,16 @@ def test_doc_split(en_vocab):
     assert doc[0].head.text == "start"
     assert doc[1].head.text == "."
     with doc.retokenize() as retokenizer:
-        attrs = {"tag": "NNP", "lemma": "Los Angeles", "ent_type": "GPE"}
-        retokenizer.split(doc[0], ["Los", "Angeles"], [1, 0], attrs=attrs)
+        retokenizer.split(
+            doc[0],
+            ["Los", "Angeles"],
+            [(doc[0], 1), doc[1]],
+            attrs={
+                "tag": ["NNP"]*2,
+                "lemma": ["Los", "Angeles"],
+                "ent_type": ["GPE"]*2
+            },
+        )
     assert len(doc) == 4
     assert doc[0].text == "Los"
     assert doc[0].head.text == "Angeles"
@@ -38,7 +46,8 @@ def test_split_dependencies(en_vocab):
     dep1 = doc.vocab.strings.add("amod")
     dep2 = doc.vocab.strings.add("subject")
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["Los", "Angeles"], [1, 0], [dep1, dep2])
+        retokenizer.split(doc[0], ["Los", "Angeles"],
+                [(doc[0], 1), doc[1]], attrs={'dep': [dep1, dep2]})
     assert doc[0].dep == dep1
     assert doc[1].dep == dep2
 
@@ -48,35 +57,12 @@ def test_split_heads_error(en_vocab):
     # Not enough heads
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [0])
+            retokenizer.split(doc[0], ["Los", "Angeles"], [doc[1]])
 
     # Too many heads
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [1, 1, 0])
-
-    # No token head
-    with pytest.raises(ValueError):
-        with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [1, 1])
-
-    # Several token heads
-    with pytest.raises(ValueError):
-        with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["Los", "Angeles"], [0, 0])
-
-
-@pytest.mark.xfail
-def test_split_heads_out_of_bounds(en_vocab):
-    """Test that the retokenizer raises an error for out-of-bounds heads. The
-    indices are relative, so head 1 for "Angeles" would be the token following
-    it, which is out-of-bounds. Previously, the retokenizer would accept this
-    and spaCy would then fail later.
-    """
-    doc = Doc(en_vocab, words=["Start", "LosAngeles"])
-    with pytest.raises(ValueError):
-        with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[1], ["Los", "Angeles"], [0, 1])
+            retokenizer.split(doc[0], ["Los", "Angeles"], [doc[1], doc[1], doc[1]])
 
 
 def test_spans_entity_merge_iob():
@@ -87,7 +73,8 @@ def test_spans_entity_merge_iob():
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["a", "b", "c"], [1, 1, 0])
+        retokenizer.split(doc[0], ["a", "b", "c"],
+            [(doc[0], 1), (doc[0], 2), doc[1]])
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
     assert doc[2].ent_iob_ == "I"
@@ -107,14 +94,15 @@ def test_spans_sentence_update_after_merge(en_vocab):
     init_len = len(sent1)
     init_len2 = len(sent2)
     with doc.retokenize() as retokenizer:
-        retokenizer.split(doc[0], ["Stewart", "Lee"], [1, 0])
-        retokenizer.split(doc[14], ["Joe", "Pasquale"], [1, 0])
+        retokenizer.split(doc[0], ["Stewart", "Lee"], [(doc[0], 1), doc[1]],
+            attrs={"dep": ["compound", "nsubj"]})
+        retokenizer.split(doc[13], ["Joe", "Pasquale"], [(doc[13], 1), doc[12]],
+            attrs={"dep": ["compound", "dobj"]})
     sent1, sent2 = list(doc.sents)
     assert len(sent1) == init_len + 1
     assert len(sent2) == init_len2 + 1
 
 
-@pytest.mark.xfail
 def test_split_orths_mismatch(en_vocab):
     """Test that the regular retokenizer.split raises an error if the orths
     don't match the original token text. There might still be a method that
@@ -125,4 +113,4 @@ def test_split_orths_mismatch(en_vocab):
     doc = Doc(en_vocab, words=["LosAngeles", "start", "."])
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
-            retokenizer.split(doc[0], ["L", "A"], [0, -1])
+            retokenizer.split(doc[0], ["L", "A"], [(doc[0], 0), (doc[0], 0)])
