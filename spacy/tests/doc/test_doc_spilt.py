@@ -112,3 +112,17 @@ def test_spans_sentence_update_after_merge(en_vocab):
     sent1, sent2 = list(doc.sents)
     assert len(sent1) == init_len + 1
     assert len(sent2) == init_len2 + 1
+
+
+@pytest.mark.xfail
+def test_split_orths_mismatch(en_vocab):
+    """Test that the regular retokenizer.split raises an error if the orths
+    don't match the original token text. There might still be a method that
+    allows this, but for the default use cases, merging and splitting should
+    always conform with spaCy's non-destructive tokenization policy. Otherwise,
+    it can lead to very confusing and unexpected results.
+    """
+    doc = Doc(en_vocab, words=["LosAngeles", "start", "."])
+    with pytest.raises(ValueError):
+        with doc.retokenize() as retokenizer:
+            retokenizer.split(doc[0], ["L", "A"], [0, -1])
