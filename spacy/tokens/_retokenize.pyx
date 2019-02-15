@@ -51,6 +51,8 @@ cdef class Retokenizer:
         """Mark a Token for splitting, into the specified orths. The attrs
         will be applied to each subtoken.
         """
+        if ''.join(orths) != token.text:
+            raise ValueError(errors.E117.format(new=''.join(orths), old=token.text))
         attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         head_offsets = []
         for head in heads:
