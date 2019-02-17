@@ -17,6 +17,6 @@ sentences = [
     "Londres és una gran ciutat del Regne Unit",
     "El gat menja peix",
     "Veig a l'home amb el telescopi",
-    "L'Aranya menja mosques",
+    "L'aranya menja mosques",
     "El pingüí incuba en el seu niu",
 ]
