@@ -78,16 +78,15 @@ Match a stream of documents, yielding them in turn.
 > ```python
 >   from spacy.matcher import PhraseMatcher
 >   matcher = PhraseMatcher(nlp.vocab)
->   for doc in matcher.pipe(texts, batch_size=50, n_threads=4):
+>   for doc in matcher.pipe(texts, batch_size=50):
 >       pass
 > ```
 
-| Name         | Type     | Description                                                                                                                         |
-| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`       | iterable | A stream of documents.                                                                                                              |
-| `batch_size` | int      | The number of documents to accumulate into a working set.                                                                           |
-| `n_threads`  | int      | The number of threads with which to work on the buffer in parallel, if the `PhraseMatcher` implementation supports multi-threading. |
-| **YIELDS**   | `Doc`    | Documents, in order.                                                                                                                |
+| Name         | Type     | Description                                               |
+| ------------ | -------- | --------------------------------------------------------- |
+| `docs`       | iterable | A stream of documents.                                    |
+| `batch_size` | int      | The number of documents to accumulate into a working set. |
+| **YIELDS**   | `Doc`    | Documents, in order.                                      |
 
 ## PhraseMatcher.\_\_len\_\_ {#len tag="method"}
 

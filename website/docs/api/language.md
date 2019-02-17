@@ -95,7 +95,6 @@ multiprocessing.
 | ------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `texts`      | -     | A sequence of unicode objects.                                                                                                                             |
 | `as_tuples`  | bool  | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
-| `n_threads`  | int   | The number of worker threads to use. If `-1`, OpenMP will decide how many to use at run time. Default is `2`.                                              |
 | `batch_size` | int   | The number of texts to buffer.                                                                                                                             |
 | `disable`    | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
 | **YIELDS**   | `Doc` | Documents in the order of the original text.                                                                                                               |

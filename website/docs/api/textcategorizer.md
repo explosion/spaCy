@@ -82,12 +82,11 @@ delegate to the [`predict`](/api/textcategorizer#predict) and
 >     pass
 > ```
 
-| Name         | Type     | Description                                                                                                    |
-| ------------ | -------- | -------------------------------------------------------------------------------------------------------------- |
-| `stream`     | iterable | A stream of documents.                                                                                         |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.                                                              |
-| `n_threads`  | int      | The number of worker threads to use. If `-1`, OpenMP will decide how many to use at run time. Default is `-1`. |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text.                                                         |
+| Name         | Type     | Description                                            |
+| ------------ | -------- | ------------------------------------------------------ |
+| `stream`     | iterable | A stream of documents.                                 |
+| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
 
 ## TextCategorizer.predict {#predict tag="method"}
 

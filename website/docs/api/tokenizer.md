@@ -61,12 +61,11 @@ Tokenize a stream of texts.
 >     pass
 > ```
 
-| Name         | Type  | Description                                                                                                             |
-| ------------ | ----- | ----------------------------------------------------------------------------------------------------------------------- |
-| `texts`      | -     | A sequence of unicode texts.                                                                                            |
-| `batch_size` | int   | The number of texts to accumulate in an internal buffer.                                                                |
-| `n_threads`  | int   | The number of threads to use, if the implementation supports multi-threading. The default tokenizer is single-threaded. |
-| **YIELDS**   | `Doc` | A sequence of Doc objects, in order.                                                                                    |
+| Name         | Type  | Description                                              |
+| ------------ | ----- | -------------------------------------------------------- |
+| `texts`      | -     | A sequence of unicode texts.                             |
+| `batch_size` | int   | The number of texts to accumulate in an internal buffer. |
+| **YIELDS**   | `Doc` | A sequence of Doc objects, in order.                     |
 
 ## Tokenizer.find_infix {#find_infix tag="method"}
 

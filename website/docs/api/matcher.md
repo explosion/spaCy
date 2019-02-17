@@ -68,7 +68,7 @@ matched phrases with entity types. Instead, actions need to be specified when
 custom actions per pattern within the same matcher. For example, you might only
 want to merge some entity types, and set custom flags for other matched
 patterns. For more details and examples, see the usage guide on
-[rule-based matching](/usage/linguistic-features#rule-based-matching).
+[rule-based matching](/usage/rule-based-matching).
 
 </Infobox>
 
@@ -81,7 +81,7 @@ Match a stream of documents, yielding them in turn.
 > ```python
 > from spacy.matcher import Matcher
 > matcher = Matcher(nlp.vocab)
-> for doc in matcher.pipe(docs, batch_size=50, n_threads=4):
+> for doc in matcher.pipe(docs, batch_size=50):
 >     pass
 > ```
 
@@ -89,7 +89,6 @@ Match a stream of documents, yielding them in turn.
 | --------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`                                        | iterable | A stream of documents.                                                                                                                                                                                                     |
 | `batch_size`                                  | int      | The number of documents to accumulate into a working set.                                                                                                                                                                  |
-| `n_threads`                                   | int      | The number of threads with which to work on the buffer in parallel, if the `Matcher` implementation supports multi-threading.                                                                                              |
 | `return_matches` <Tag variant="new">2.1</Tag> | bool     | Yield the match lists along with the docs, making results `(doc, matches)` tuples.                                                                                                                                         |
 | `as_tuples`                                   | bool     | Interpret the input stream as `(doc, context)` tuples, and yield `(result, context)` tuples out. If both `return_matches` and `as_tuples` are `True`, the output will be a sequence of `((doc, matches), context)` tuples. |
 | **YIELDS**                                    | `Doc`    | Documents, in order.                                                                                                                                                                                                       |
