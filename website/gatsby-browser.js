@@ -29,7 +29,6 @@ export const onInitialClientRender = () => {
 export const onRouteUpdate = ({ location }) => {
     window.dispatchEvent(new Event('resize')) // for progress
     window.dispatchEvent(new Event('scroll')) // for progress
-    console.log(location)
     if (location.hash) {
         // Client-side rewrites
         const rewrite = clientSideRewrites[location.pathname + location.hash]
