@@ -1,0 +1,21 @@
+.root
+    display: flex
+    justify-content: flex-end
+    align-items: center
+    text-align: right
+    font: var(--font-size-sm)/var(--line-height-md) var(--font-primary)
+
+.icon
+    $icon-size: 35px
+    width: $icon-size
+    height: $icon-size
+    background: var(--color-subtle-light)
+    color: var(--color-subtle-dark)
+    border-radius: 50%
+    padding: 0.5rem
+    transition: color 0.2s ease
+    float: right
+    margin-left: 3rem
+
+    &:hover
+        color: var(--color-theme)

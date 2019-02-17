@@ -1,0 +1,70 @@
+@import base
+
+.root
+    position: fixed
+    top: 0
+    left: 0
+    width: 100%
+    height: var(--height-nav)
+    background: var(--color-back)
+    color: var(--color-front)
+    align-items: center
+    display: flex
+    justify-content: space-between
+    flex-flow: row nowrap
+    padding: 0 0 0 1rem
+    z-index: 30
+    width: 100%
+    box-shadow: var(--box-shadow)
+
+.logo
+    width: 95px
+    height: 30px
+    color: var(--color-theme) !important
+    vertical-align: middle
+
+.title
+    display: none
+
+.menu
+    display: flex
+    height: 100%
+    flex-flow: row nowrap
+    border-color: inherit
+    overflow-x: auto
+    overflow-y: hidden
+    -webkit-overflow-scrolling: touch
+
+@include breakpoint(max, sm)
+    .menu
+        @include scroll-shadow-base(var(--color-shadow))
+        margin-left: 1rem
+
+@include breakpoint(min, md)
+    .menu
+        justify-content: flex-end
+
+.item
+    display: inline-flex
+    align-items: center
+    height: 100%
+    text-transform: uppercase
+    font-family: var(--font-secondary)
+    font-size: 1.6rem
+    font-weight: bold
+    color: var(--color-theme)
+
+    &:not(:first-child)
+        margin-left: 2em
+
+    &:last-child
+        @include scroll-shadow-cover(right, var(--color-back))
+        padding-right: 2rem
+
+    &:first-child
+        @include scroll-shadow-cover(left, var(--color-back))
+        padding-left: 2rem
+
+.is-active
+    color: var(--color-dark)
+    pointer-events: none

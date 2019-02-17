@@ -1,0 +1,126 @@
+.pre
+    position: relative
+    background: var(--color-front)
+    color: var(--color-subtle)
+    border-radius: var(--border-radius)
+    overflow: auto
+    width: 100%
+    max-width: 100%
+    white-space: pre
+    direction: ltr
+    margin-bottom: var(--spacing-md)
+
+.max-height
+    height: 450px
+
+.code,
+.juniper-input pre,
+.juniper-output
+    font: var(--font-size-xs)/var(--line-height-lg) var(--font-code) !important
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
+
+.code,
+.juniper-input pre
+    display: block
+    padding: 1.75em 2em
+
+.code
+    &[data-prompt]:before,
+        content: attr(data-prompt)
+        margin-right: 0.65em
+        display: inline-block
+        vertical-align: middle
+        opacity: 0.5
+
+.inline-code
+    color: var(--color-inline-code-text)
+    font-size: 90%
+    background-color: var(--color-inline-code-bg)
+    padding: 0.2rem 0.4rem
+    border-radius: 0.25rem
+    font-family: var(--font-code)
+    margin: 0
+    box-decoration-break: clone
+    white-space: nowrap
+    text-shadow: none
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
+
+    a &
+        color: inherit
+
+.inline-code-dark
+    --color-inline-code-text: var(--color-back)
+    --color-inline-code-bg: var(--color-dark-secondary)
+
+.wrap
+    white-space: pre-wrap
+
+.title,
+.juniper-button
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+    display: inline-block
+    border-radius: 1em
+    padding: 0 1rem 0.15rem
+    color: var(--color-back)
+
+.title
+    box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.25)
+    background: var(--color-dark)
+    margin: 1.5rem 0 0 2rem
+
+.header
+    width: 100%
+    background: var(--color-front)
+    position: sticky
+    top: -0.75rem
+    margin-top: -0.75rem
+    border-top-left-radius: var(--border-radius)
+    border-top-right-radius: var(--border-radius)
+    padding: 1.25rem 1rem 1rem
+    font-size: var(--font-size-sm)
+
+.juniper-wrapper
+    background: var(--color-dark-secondary)
+    padding: 5px
+
+.juniper-title
+    font: bold var(--font-size-sm)/var(--line-height-sm) var(--font-primary)
+    text-align: center
+    padding: 0.25rem 1rem 0.5rem
+    display: flex
+    justify-content: space-between
+
+.juniper-cell
+    border: 0
+    background: var(--color-front)
+    padding: 1rem 0
+
+.juniper-input
+    padding-top: 1rem
+    padding-bottom: 2rem
+    padding-left: 2rem
+    background: var(--color-front)
+
+    & > div
+        padding: 0
+        height: auto
+
+.juniper-output
+    font: var(--font-size-xs) var(--font-code)
+
+.juniper-button
+    transition: background-color 0.15s ease
+    background: var(--color-theme)
+    margin: 0.5rem 0 1rem 2rem
+
+    &:hover
+        background: var(--color-theme-dark)
+
+.juniper-meta
+    font-size: var(--font-size-xs)
+    font-weight: normal
+    padding-top: 0.1rem
+    color: var(--color-subtle-dark)

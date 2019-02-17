@@ -1,29 +1,75 @@
 {
-  "name": "spacy.io",
-  "private": true,
-  "version": "2.0.0",
-  "description": "spacy.io website",
-  "author": "Explosion AI",
-  "license": "MIT",
-  "devDependencies": {
-    "babel-cli": "^6.14.0",
-    "harp": "^0.24.0",
-    "rollup": "^0.50.0",
-    "uglify-js": "^2.7.3",
-    "broken-link-checker": "^0.7.6",
-    "valid-json-cli": "^1.3.0"
-  },
-  "dependencies": {},
-  "scripts": {
-    "check_links": "blc https://spacy.io -ro",
-
-    "rollup": "rollup www/assets/js/main.js --output.format iife --output.file www/assets/js/main.js",
-    "babel": "babel www/assets/js/main.js --out-file www/assets/js/main.js --presets=es2015",
-    "uglify": "uglifyjs www/assets/js/main.js --output www/assets/js/main.js",
-
-    "validate": "validjson universe/universe.json",
-    "compile": "NODE_ENV=deploy harp compile",
-    "bundle": "npm run rollup && npm run babel && npm run uglify",
-    "deploy": "rsync -P --compress --recursive --checksum --delete --exclude=\".*\" --exclude=\"*.vue.js\" --exclude=\"README.html\" --exclude \"package.json\" --exclude \"www\" www/ $1"
-  }
+    "name": "spacy-io",
+    "private": true,
+    "description": "spaCy website",
+    "version": "3.0.0",
+    "author": "Explosion AI <contact@explosion.ai>",
+    "license": "MIT",
+    "dependencies": {
+        "@jupyterlab/outputarea": "^0.19.1",
+        "@jupyterlab/rendermime": "^0.19.1",
+        "@mdx-js/mdx": "^0.17.5",
+        "@mdx-js/tag": "^0.17.5",
+        "@phosphor/widgets": "^1.6.0",
+        "@rehooks/online-status": "^1.0.0",
+        "@sindresorhus/slugify": "^0.8.0",
+        "@svgr/webpack": "^4.1.0",
+        "autoprefixer": "^9.4.7",
+        "classnames": "^2.2.6",
+        "codemirror": "^5.43.0",
+        "gatsby": "^2.1.4",
+        "gatsby-image": "^2.0.29",
+        "gatsby-mdx": "^0.3.6",
+        "gatsby-plugin-catch-links": "^2.0.11",
+        "gatsby-plugin-google-analytics": "^2.0.14",
+        "gatsby-plugin-manifest": "^2.0.17",
+        "gatsby-plugin-offline": "^2.0.23",
+        "gatsby-plugin-react-helmet": "^3.0.6",
+        "gatsby-plugin-react-svg": "^2.0.0",
+        "gatsby-plugin-sass": "^2.0.10",
+        "gatsby-plugin-sharp": "^2.0.20",
+        "gatsby-plugin-sitemap": "^2.0.5",
+        "gatsby-plugin-svgr": "^2.0.1",
+        "gatsby-remark-copy-linked-files": "^2.0.9",
+        "gatsby-remark-images": "^3.0.4",
+        "gatsby-remark-prismjs": "^3.2.4",
+        "gatsby-remark-smartypants": "^2.0.8",
+        "gatsby-remark-unwrap-images": "^1.0.1",
+        "gatsby-source-filesystem": "^2.0.20",
+        "gatsby-transformer-remark": "^2.2.5",
+        "gatsby-transformer-sharp": "^2.1.13",
+        "html-to-react": "^1.3.4",
+        "node-sass": "^4.11.0",
+        "npm": "^6.8.0",
+        "parse-numeric-range": "0.0.2",
+        "prismjs": "^1.15.0",
+        "prop-types": "^15.7.2",
+        "react": "^16.8.2",
+        "react-dom": "^16.8.2",
+        "react-helmet": "^5.2.0",
+        "react-intersection-observer": "^8.0.1",
+        "remark-react": "^5.0.1"
+    },
+    "scripts": {
+        "build": "gatsby build",
+        "dev": "gatsby develop",
+        "lint": "eslint **",
+        "clear": "rm -rf .cache",
+        "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""
+    },
+    "devDependencies": {
+        "browser-monads": "^1.0.0",
+        "gatsby-plugin-remove-trailing-slashes": "^2.0.7",
+        "md-attr-parser": "^1.2.1",
+        "prettier": "^1.16.4",
+        "raw-loader": "^1.0.0",
+        "unist-util-visit": "^1.4.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/explosion/spaCy"
+    },
+    "bugs": {
+        "url": "https://github.com/explosion/spaCy/issues"
+    }
 }
