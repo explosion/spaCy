@@ -379,7 +379,7 @@ import Serialization101 from 'usage/101/\_serialization.md'
 <Infobox title="📖 Saving and loading">
 
 To learn more about how to **save and load your own models**, see the usage
-guide on [saving and loading](/usage/training#saving-loading).
+guide on [saving and loading](/usage/saving-loading#models).
 
 </Infobox>
 
@@ -655,7 +655,7 @@ new_doc = Doc(Vocab()).from_disk("/tmp/customer_feedback_627.bin")
 <Infobox>
 
 **API:** [`Language`](/api/language), [`Doc`](/api/doc) **Usage:**
-[Saving and loading models](/usage/models#saving-loading)
+[Saving and loading models](/usage/saving-loading#models)
 
 </Infobox>
 
@@ -690,7 +690,7 @@ print("Sentiment", doc.sentiment)
 <Infobox>
 
 **API:** [`Matcher`](/api/matcher) **Usage:**
-[Rule-based matching](/usage/linguistic-features#rule-based-matching)
+[Rule-based matching](/usage/rule-based-matching)
 
 </Infobox>
 

@@ -7,12 +7,11 @@ menu:
   - ['Tagger & Parser', 'tagger-parser']
   - ['Text Classification', 'textcat']
   - ['Tips and Advice', 'tips']
-  - ['Saving & Loading', 'saving-loading']
 ---
 
 This guide describes how to train new statistical models for spaCy's
 part-of-speech tagger, named entity recognizer and dependency parser. Once the
-model is trained, you can then [save and load](/usage/models#saving-loading) it.
+model is trained, you can then [save and load](/usage/saving-loading#models) it.
 
 ## Training basics {#basics}
 
@@ -97,8 +96,7 @@ may end up with the following entities, some correct, some incorrect.
 | Spotify steps up Asia expansion    | Spotify | `0`   | `8`  | `ORG`    | ✅  |
 | Spotify steps up Asia expansion    | Asia    | `17`  | `21` | `NORP`   | ❌  |
 
-Alternatively, the
-[rule-based matcher](/usage/linguistic-features#rule-based-matching) can be a
+Alternatively, the [rule-based matcher](/usage/rule-based-matching) can be a
 useful tool to extract tokens or combinations of tokens, as well as their start
 and end index in a document. In this case, we'll extract mentions of Google and
 assume they're an `ORG`.
@@ -473,9 +471,9 @@ for hotels with high ratings for their wifi offerings.
 > To achieve even better accuracy, try merging multi-word tokens and entities
 > specific to your domain into one token before parsing your text. You can do
 > this by running the entity recognizer or
-> [rule-based matcher](/usage/linguistic-features#rule-based-matching) to find
-> relevant spans, and merging them using
-> [`Doc.retokenize`](/api/doc#retokenize). You could even add your own custom
+> [rule-based matcher](/usage/rule-based-matching) to find relevant spans, and
+> merging them using [`Doc.retokenize`](/api/doc#retokenize). You could even add
+> your own custom
 > [pipeline component](/usage/processing-pipelines#custom-components) to do this
 > automatically – just make sure to add it `before='parser'`.
 

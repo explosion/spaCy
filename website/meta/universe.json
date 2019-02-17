@@ -384,7 +384,7 @@
             "id": "matcher-explorer",
             "title": "Rule-based Matcher Explorer",
             "slogan": "Test spaCy's rule-based Matcher by creating token patterns interactively",
-            "description": "Test spaCy's rule-based `Matcher` by creating token patterns interactively and running them over your text. Each token can set multiple attributes like text value, part-of-speech tag or boolean flags. The token-based view lets you explore how spaCy processes your text – and why your pattern matches, or why it doesn't. For more details on rule-based matching, see the [documentation](https://spacy.io/usage/linguistic-features#rule-based-matching).",
+            "description": "Test spaCy's rule-based `Matcher` by creating token patterns interactively and running them over your text. Each token can set multiple attributes like text value, part-of-speech tag or boolean flags. The token-based view lets you explore how spaCy processes your text – and why your pattern matches, or why it doesn't. For more details on rule-based matching, see the [documentation](https://spacy.io/usage/rule-based-matching).",
             "image": "https://explosion.ai/assets/img/demos/matcher.png",
             "thumb": "https://i.imgur.com/rPK4AGt.jpg",
             "url": "https://explosion.ai/demos/matcher",

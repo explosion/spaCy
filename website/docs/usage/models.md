@@ -295,7 +295,7 @@ If you've trained your own model, for example for
 convenient to deploy, we recommend wrapping it as a Python package.
 
 For more information and a detailed guide on how to package your model, see the
-documentation on [saving and loading models](/usage/training#saving-loading).
+documentation on [saving and loading models](/usage/saving-loading#models).
 
 ## Using models in production {#production}
 

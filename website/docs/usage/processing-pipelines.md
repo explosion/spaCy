@@ -18,10 +18,10 @@ spaCy makes it very easy to create your own pipelines consisting of reusable
 components – this includes spaCy's default tagger, parser and entity recognizer,
 but also your own custom processing functions. A pipeline component can be added
 to an already existing `nlp` object, specified when initializing a `Language`
-class, or defined within a [model package](/usage/training#saving-loading).
+class, or defined within a [model package](/usage/saving-loading#models).
 
 When you load a model, spaCy first consults the model's
-[`meta.json`](/usage/training#saving-loading). The meta typically includes the
+[`meta.json`](/usage/saving-loading#models). The meta typically includes the
 model details, the ID of a language class, and an optional list of pipeline
 components. spaCy then does the following:
 
