@@ -605,72 +605,31 @@ def test_en_tokenizer_handles_punct_abbrev(en_tokenizer, text, length):
 
 ## Training a language model {#training}
 
-<!-- TODO: improve -->
-<!-- idea: list of steps, link to GitHub thread for new models -->
+Much of spaCy's functionality requires models to be trained from labeled data.
+For instance, in order to use the named entity recognizer, you need to first
+train a model on text annotated with examples of the entities you want to
+recognize. The parser, part-of-speech tagger and text categorizer all also
+require models to be trained from labeled examples. The word vectors, word
+probabilities and word clusters also require training, although these can be
+trained from unlabeled text, which tends to be much easier to collect.
+
+### Creating a vocabulary file
 
 spaCy expects that common words will be cached in a [`Vocab`](/api/vocab)
-instance. The vocabulary caches lexical features, and makes it easy to use
-information from unlabelled text samples in your models. Specifically, you'll
-usually want to collect word frequencies, and train word vectors. To generate
-the word frequencies from a large, raw corpus, you can use the
-[`word_freqs.py`]() script from the spaCy developer resources.
-
-```python
-https://github.com/explosion/spacy-dev-resources/tree/master/training/word_freqs.py
-```
-
-Note that your corpus should not be preprocessed (i.e. you need punctuation for
-example). The word frequencies should be generated as a tab-separated file with
-three columns:
-
-1. The number of times the word occurred in your language sample.
-2. The number of distinct documents the word occurred in.
-3. The word itself.
-
-```
-### es_word_freqs.txt
-6361109	111	Aunque
-23598543	111	aunque
-10097056	111	claro
-193454	111	aro
-7711123	111	viene
-12812323	111	mal
-23414636	111	momento
-2014580	111	felicidad
-233865	111	repleto
-15527	111	eto
-235565	111	deliciosos
-17259079	111	buena
-71155	111	Anímate
-37705	111	anímate
-33155	111	cuéntanos
-2389171	111	cuál
-961576	111	típico
-```
-
-> #### Brown Clusters
->
-> Additionally, you can use distributional similarity features provided by the
-> [Brown clustering algorithm](https://github.com/percyliang/brown-cluster). You
-> should train a model with between 500 and 1000 clusters. A minimum frequency
-> threshold of 10 usually works well.
-
-You should make sure you use the spaCy tokenizer for your language to segment
-the text for your word frequencies. This will ensure that the frequencies refer
-to the same segmentation standards you'll be using at run-time. For instance,
-spaCy's English tokenizer segments "can't" into two tokens. If we segmented the
-text by whitespace to produce the frequency counts, we'll have incorrect
-frequency counts for the tokens "ca" and "n't".
+instance. The vocabulary caches lexical features. spaCy loads the vocabulary
+from binary data, in order to keep loading efficient. The easiest way to save
+out a new binary vocabulary file is to use the `spacy init-model` command, which
+expects a JSONL file with words and their lexical attributes. See the docs on
+the [vocab JSONL format](/api/annotation#vocab-jsonl) for details.
 
 #### Training the word vectors {#word-vectors}
 
 [Word2vec](https://en.wikipedia.org/wiki/Word2vec) and related algorithms let
-you train useful word similarity models from unlabelled text. This is a key part
-of using [deep learning](/usage/deep-learning) for NLP with limited labelled
-data. The vectors are also useful by themselves – they power the `.similarity()`
-methods in spaCy. For best results, you should pre-process the text with spaCy
-before training the Word2vec model. This ensures your tokenization will match.
-You can use our
+you train useful word similarity models from unlabeled text. This is a key part
+of using deep learning for NLP with limited labeled data. The vectors are also
+useful by themselves – they power the `.similarity` methods in spaCy. For best
+results, you should pre-process the text with spaCy before training the Word2vec
+model. This ensures your tokenization will match. You can use our
 [word vectors training script](https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py),
 which pre-processes the text with your language-specific tokenizer and trains
 the model using [Gensim](https://radimrehurek.com/gensim/). The `vectors.bin`
@@ -680,20 +639,37 @@ file should consist of one word and vector per line.
 https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py
 ```
 
+If you don't have a large sample of text available, you can also convert word
+vectors produced by a variety of other tools into spaCy's format. See the docs
+on [converting word vectors](/usage/vectors-similarity#converting) for details.
+
+### Creating or converting a training corpus
+
+The easiest way to train spaCy's tagger, parser, entity recognizer or text
+categorizer is to use the [`spacy train`](/api/cli#train) command-line utility.
+In order to use this, you'll need training and evaluation data in the
+[JSON format](/api/annotation#json-input) spaCy expects for training.
+
+You can now train the model using a corpus for your language annotated with If
+your data is in one of the supported formats, the easiest solution might be to
+use the [`spacy convert`](/api/cli#convert) command-line utility. This supports
+several popular formats, including the IOB format for named entity recognition,
+the JSONL format produced by our annotation tool [Prodigy](https://prodi.gy),
+and the [CoNLL-U](http://universaldependencies.org/docs/format.html) format used
+by the [Universal Dependencies](http://universaldependencies.org/) corpus.
+
+One thing to keep in mind is that spaCy expects to train its models from **whole
+documents**, not just single sentences. If your corpus only contains single
+sentences, spaCy's models will never learn to expect multi-sentence documents,
+leading to low performance on real text. To mitigate this problem, you can use
+the `-N` argument to the `spacy convert` command, to merge some of the sentences
+into longer pseudo-documents.
+
 ### Training the tagger and parser {#train-tagger-parser}
 
-You can now train the model using a corpus for your language annotated with
-[Universal Dependencies](http://universaldependencies.org/). If your corpus uses
-the [CoNLL-U](http://universaldependencies.org/docs/format.html) format, i.e.
-files with the extension `.conllu`, you can use the
-[`convert`](/api/cli#convert) command to convert it to spaCy's
-[JSON format](/api/annotation#json-input) for training. Once you have your UD
-corpus transformed into JSON, you can train your model use the using spaCy's
-[`train`](/api/cli#train) command.
-
-<Infobox title="📖 Training the pipeline components">
-
-For more details and examples of how to **train the tagger and dependency
-parser**, see the [usage guide on training](/usage/training#tagger-parser).
-
-</Infobox>
+Once you have your training and evaluation data in the format spaCy expects, you
+can train your model use the using spaCy's [`train`](/api/cli#train) command.
+Note that training statistical models still involves a degree of
+trial-and-error. You may need to tune one or more settings, also called
+"hyper-parameters", to achieve optimal performance. See the
+[usage guide on training](/usage/training#tagger-parser) for more details.
