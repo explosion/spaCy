@@ -7,6 +7,7 @@ from ...symbols import LEMMA, PRON_LEMMA
 MORPH_RULES = {
     "PRP": {
         "ঐ": {LEMMA: PRON_LEMMA, "PronType": "Dem"},
+        "ওই": {LEMMA: PRON_LEMMA, "PronType": "Dem"},
         "আমাকে": {
             LEMMA: PRON_LEMMA,
             "Number": "Sing",
