@@ -34,3 +34,16 @@ def test_issue_1971_2(en_vocab):
     matcher.add("TEST", None, pattern1, pattern2)
     matches = matcher(doc)
     assert len(matches) == 2
+
+
+@pytest.mark.xfail
+def test_issue_1971_3(en_vocab):
+    Token.set_extension("a", default=1)
+    Token.set_extension("b", default=2)
+    doc = Doc(en_vocab, words=["hello", "world"])
+    matcher = Matcher(en_vocab)
+    matcher.add("A", None, [{"_": {"a": 1}}])
+    matcher.add("B", None, [{"_": {"b": 2}}])
+    matches = sorted((en_vocab.strings[m_id], s, e) for m_id, s, e in matcher(doc))
+    assert len(matches) == 4
+    assert matches == sorted([("A", 0, 1), ("A", 1, 2), ("B", 0, 1), ("B", 1, 2)])
