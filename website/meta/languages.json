@@ -102,7 +102,7 @@
         { "code": "te", "name": "Telugu", "example": "ఇది ఒక వాక్యం.", "has_examples": true },
         { "code": "si", "name": "Sinhala", "example": "මෙය වාක්‍යයකි.", "has_examples": true },
         { "code": "ga", "name": "Irish" },
-        { "code": "bn", "name": "Bengali" },
+        { "code": "bn", "name": "Bengali", "has_examples": true },
         { "code": "hi", "name": "Hindi", "example": "यह एक वाक्य है।", "has_examples": true },
         { "code": "kn", "name": "Kannada" },
         { "code": "ta", "name": "Tamil", "has_examples": true },
