@@ -306,27 +306,28 @@ match on the uppercase versions, in case someone has written it as "Google i/o".
 ### {executable="true"}
 import spacy
 from spacy.matcher import Matcher
+from spacy.tokens import Span
 
 nlp = spacy.load("en_core_web_sm")
 matcher = Matcher(nlp.vocab)
-
-# Get the ID of the 'EVENT' entity type. This is required to set an entity.
-EVENT = nlp.vocab.strings["EVENT"]
 
 def add_event_ent(matcher, doc, i, matches):
     # Get the current match and create tuple of entity label, start and end.
     # Append entity to the doc's entity. (Don't overwrite doc.ents!)
     match_id, start, end = matches[i]
-    entity = (EVENT, start, end)
+    entity = Span(doc, start, end, label="EVENT")
     doc.ents += (entity,)
-    print(doc[start:end].text, entity)
+    print(entity.text)
 
-matcher.add("GoogleIO", add_event_ent,
-            [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}],
-            [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}, {"IS_DIGIT": True}],)
-doc = nlp(u"This is a text about Google I/O 2015.")
+pattern = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
+matcher.add("GoogleIO", add_event_ent, pattern)
+doc = nlp(u"This is a text about Google I/O.")
 matches = matcher(doc)
 ```
+
+A very similar logic has been implemented in the built-in
+[`EntityRuler`](/api/entityruler) by the way. It also takes care of handling
+overlapping matches, which you would otherwise have to take care of yourself.
 
 > #### Tip: Visualizing matches
 >
