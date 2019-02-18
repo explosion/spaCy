@@ -292,7 +292,7 @@ that they are listed as "User name: {username}". The name itself may contain any
 character, but no whitespace – so you'll know it will be handled as one token.
 
 ```python
-[{'ORTH': 'User'}, {'ORTH': 'name'}, {'ORTH': ':'}, {}]
+[{"ORTH": "User"}, {"ORTH": "name"}, {"ORTH": ":"}, {}]
 ```
 
 ### Adding on_match rules {#on_match}
@@ -301,9 +301,6 @@ To move on to a more realistic example, let's say you're working with a large
 corpus of blog articles, and you want to match all mentions of "Google I/O"
 (which spaCy tokenizes as `['Google', 'I', '/', 'O'`]). To be safe, you only
 match on the uppercase versions, in case someone has written it as "Google i/o".
-You also add a second pattern with an added `{IS_DIGIT: True}` token – this will
-make sure you also match on "Google I/O 2017". If your pattern matches, spaCy
-should execute your custom callback function `add_event_ent`.
 
 ```python
 ### {executable="true"}
