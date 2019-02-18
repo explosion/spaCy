@@ -38,6 +38,7 @@ def test_issue_1971_2(en_vocab):
 
 @pytest.mark.xfail
 def test_issue_1971_3(en_vocab):
+    """Test that pattern matches correctly for multiple extension attributes."""
     Token.set_extension("a", default=1)
     Token.set_extension("b", default=2)
     doc = Doc(en_vocab, words=["hello", "world"])
