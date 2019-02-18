@@ -51,6 +51,8 @@ MORPH_RULES = {
                     'Case': 'Nom'},
         'তার':     {LEMMA:  PRON_LEMMA, 'Number': 'Sing', 'Person': 'Three', 'PronType': 'Prs', 'Poss': 'Yes',
                     'Case': 'Nom'},
+        'তাহাার':     {LEMMA:  PRON_LEMMA, 'Number': 'Sing', 'Person': 'Three', 'PronType': 'Prs', 'Poss': 'Yes',
+                    'Case': 'Nom'},
         'তোমাদের': {LEMMA:  PRON_LEMMA, 'Number': 'Plur', 'Person': 'Two', 'PronType': 'Prs', 'Poss': 'Yes',
                     'Case': 'Nom'},
         'আমাদের':  {LEMMA:  PRON_LEMMA, 'Number': 'Plur', 'Person': 'One', 'PronType': 'Prs', 'Poss': 'Yes',
