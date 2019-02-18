@@ -194,6 +194,14 @@ MORPH_RULES = {
             "Poss": "Yes",
             "Case": "Nom",
         },
+        "তাহাার": {
+            LEMMA: PRON_LEMMA,
+            "Number": "Sing",
+            "Person": "Three",
+            "PronType": "Prs",
+            "Poss": "Yes",
+            "Case": "Nom",
+        },
         "তোমাদের": {
             LEMMA: PRON_LEMMA,
             "Number": "Plur",
