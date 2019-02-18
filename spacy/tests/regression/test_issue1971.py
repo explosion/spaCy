@@ -38,6 +38,7 @@ def test_issue_1971_2(en_vocab):
 
 @pytest.mark.xfail
 def test_issue_1971_3(en_vocab):
+    """Test that pattern matches correctly for multiple extension attributes."""
     Token.set_extension("a", default=1)
     Token.set_extension("b", default=2)
     doc = Doc(en_vocab, words=["hello", "world"])
@@ -47,3 +48,20 @@ def test_issue_1971_3(en_vocab):
     matches = sorted((en_vocab.strings[m_id], s, e) for m_id, s, e in matcher(doc))
     assert len(matches) == 4
     assert matches == sorted([("A", 0, 1), ("A", 1, 2), ("B", 0, 1), ("B", 1, 2)])
+
+
+# @pytest.mark.xfail
+def test_issue_1971_4(en_vocab):
+    """Test that pattern matches correctly with multiple extension attribute
+    values on a single token.
+    """
+    Token.set_extension("ext_a", default="str_a")
+    Token.set_extension("ext_b", default="str_b")
+    matcher = Matcher(en_vocab)
+    doc = Doc(en_vocab, words=["this", "is", "text"])
+    pattern = [{"_": {"ext_a": "str_a", "ext_b": "str_b"}}] * 3
+    matcher.add("TEST", None, pattern)
+    matches = matcher(doc)
+    # Interesting: uncommenting this causes a segmentation fault, so there's
+    # definitely something going on here
+    # assert len(matches) == 1
