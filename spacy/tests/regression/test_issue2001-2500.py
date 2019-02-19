@@ -23,17 +23,6 @@ def test_issue2070():
     assert len(doc) == 11
 
 
-@pytest.mark.xfail(
-    reason="The dot is now properly split off, but the prefix/suffix rules are not applied again afterwards."
-           "This means that the quote will still be attached to the remaining token."
-)
-def test_issue2070():
-    """Test that checks that a dot followed by a quote is handled appropriately."""
-    nlp = English()
-    doc = nlp('First sentence."A quoted sentence" he said ...')
-    assert len(doc) == 11
-
-
 @pytest.mark.xfail
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
