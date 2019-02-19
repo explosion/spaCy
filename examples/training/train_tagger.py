@@ -35,7 +35,7 @@ TAG_MAP = {
 # strings are unicode and that the number of tags assigned matches spaCy's
 # tokenization. If not, you can always add a 'words' key to the annotations
 # that specifies the gold-standard tokenization, e.g.:
-# ("Eatblueham", {'words': ['Eat', 'blue', 'ham'] 'tags': ['V', 'J', 'N']})
+# ("Eatblueham", {'words': ['Eat', 'blue', 'ham'], 'tags': ['V', 'J', 'N']})
 TRAIN_DATA = [
     ("I like green eggs", {'tags': ['N', 'V', 'J', 'N']}),
     ("Eat blue ham", {'tags': ['V', 'J', 'N']})
