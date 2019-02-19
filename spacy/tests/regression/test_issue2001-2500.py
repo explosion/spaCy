@@ -23,7 +23,6 @@ def test_issue2070():
     assert len(doc) == 11
 
 
-@pytest.mark.xfail
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
