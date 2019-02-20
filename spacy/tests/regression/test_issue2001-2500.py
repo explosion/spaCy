@@ -7,8 +7,20 @@ from spacy.displacy import render
 from spacy.gold import iob_to_biluo
 from spacy.lang.it import Italian
 import numpy
+from spacy.lang.en import English
 
 from ..util import add_vecs_to_vocab, get_doc
+
+
+@pytest.mark.xfail(
+    reason="The dot is now properly split off, but the prefix/suffix rules are not applied again afterwards."
+           "This means that the quote will still be attached to the remaining token."
+)
+def test_issue2070():
+    """Test that checks that a dot followed by a quote is handled appropriately."""
+    nlp = English()
+    doc = nlp('First sentence."A quoted sentence" he said ...')
+    assert len(doc) == 11
 
 
 def test_issue2179():

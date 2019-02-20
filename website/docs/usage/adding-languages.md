@@ -102,11 +102,12 @@ language and training a language model.
 
 In order for the tokenizer to split suffixes, prefixes and infixes, spaCy needs
 to know the language's character set. If the language you're adding uses
-non-latin characters, you might need to add the required character classes to
+non-latin characters, you might need to define the required character classes in
 the global
 [`char_classes.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/char_classes.py).
-spaCy uses the [`regex` library](https://pypi.python.org/pypi/regex/) to keep
-this simple and readable. If the language requires very specific punctuation
+For efficiency, spaCy uses hard-coded unicode ranges to define character classes,
+the definitions of which can be found on [Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). 
+If the language requires very specific punctuation
 rules, you should consider overwriting the default regular expressions with your
 own in the language's `Defaults`.
 

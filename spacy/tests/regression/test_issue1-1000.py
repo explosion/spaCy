@@ -358,6 +358,7 @@ def test_issue850_basic():
     assert end == 4
 
 
+@pytest.mark.skip(reason="French exception list is not enabled in the default tokenizer anymore")
 @pytest.mark.parametrize(
     "text", ["au-delàs", "pair-programmâmes", "terra-formées", "σ-compacts"]
 )
