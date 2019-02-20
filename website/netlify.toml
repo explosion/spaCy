@@ -1,4 +1,7 @@
 redirects = [
+    # Netlify
+    # TODO: uncomment once the site is switched over
+    # {from = "https://spacy.netlify.com/*", to="https://spacy.io/:splat" },
     # Old demos
     {from = "/demos/*", to = "https://explosion.ai/demos/:splat"},
     # Old blog
