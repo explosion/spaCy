@@ -6,7 +6,6 @@ from spacy.matcher import Matcher
 from spacy.tokens import Token, Doc
 
 
-@pytest.mark.xfail
 def test_issue1971(en_vocab):
     # Possibly related to #2675 and #2671?
     matcher = Matcher(en_vocab)
@@ -22,21 +21,20 @@ def test_issue1971(en_vocab):
     # We could also assert length 1 here, but this is more conclusive, because
     # the real problem here is that it returns a duplicate match for a match_id
     # that's not actually in the vocab!
-    assert all(match_id in en_vocab.strings for match_id, start, end in matcher(doc))
+    matches = matcher(doc)
+    assert all([match_id in en_vocab.strings for match_id, start, end in matches])
 
 
-@pytest.mark.xfail
 def test_issue_1971_2(en_vocab):
     matcher = Matcher(en_vocab)
-    pattern1 = [{"LOWER": {"IN": ["eur"]}}, {"LIKE_NUM": True}]
-    pattern2 = list(reversed(pattern1))
+    pattern1 = [{"ORTH": "EUR", "LOWER": {"IN": ["eur"]}}, {"LIKE_NUM": True}]
+    pattern2 = [{"LIKE_NUM": True}, {"ORTH": "EUR"}] #{"IN": ["EUR"]}}]
     doc = Doc(en_vocab, words=["EUR", "10", "is", "10", "EUR"])
-    matcher.add("TEST", None, pattern1, pattern2)
+    matcher.add("TEST1", None, pattern1, pattern2)
     matches = matcher(doc)
     assert len(matches) == 2
 
 
-@pytest.mark.xfail
 def test_issue_1971_3(en_vocab):
     """Test that pattern matches correctly for multiple extension attributes."""
     Token.set_extension("a", default=1)
@@ -50,7 +48,6 @@ def test_issue_1971_3(en_vocab):
     assert matches == sorted([("A", 0, 1), ("A", 1, 2), ("B", 0, 1), ("B", 1, 2)])
 
 
-# @pytest.mark.xfail
 def test_issue_1971_4(en_vocab):
     """Test that pattern matches correctly with multiple extension attribute
     values on a single token.
