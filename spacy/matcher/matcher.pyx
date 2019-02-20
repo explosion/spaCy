@@ -436,7 +436,7 @@ class _RegexPredicate(object):
         self.value = re.compile(value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (attr, self.predicate, srsly.json_dumps(list(self.value), sort_keys=True))
+        self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
         assert self.predicate == 'REGEX'
 
     def __call__(self, Token token):
