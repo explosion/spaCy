@@ -71,11 +71,11 @@ const SEO = ({ description, lang, title, section, sectionTitle, bodyClass }) => 
                 },
                 {
                     name: 'twitter:creator',
-                    content: `@${data.site.siteMetadata.social.twitter}`,
+                    content: `@${siteMetadata.social.twitter}`,
                 },
                 {
                     name: 'twitter:site',
-                    content: `@${data.site.siteMetadata.social.twitter}`,
+                    content: `@${siteMetadata.social.twitter}`,
                 },
                 {
                     name: 'twitter:title',
@@ -126,8 +126,6 @@ const query = graphql`
                 title
                 description
                 slogan
-                siteUrl
-                email
                 social {
                     twitter
                 }
