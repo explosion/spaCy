@@ -253,10 +253,10 @@ class EntityRenderer(object):
             label = span["label"]
             start = span["start"]
             end = span["end"]
-            entity = text[start:end]
+            entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
             for i, fragment in enumerate(fragments):
-                markup += fragment
+                markup += escape_html(fragment)
                 if len(fragments) > 1 and i != len(fragments) - 1:
                     markup += "</br>"
             if self.ents is None or label.upper() in self.ents:
@@ -265,7 +265,7 @@ class EntityRenderer(object):
             else:
                 markup += entity
             offset = end
-        markup += text[offset:]
+        markup += escape_html(text[offset:])
         markup = TPL_ENTS.format(content=markup, colors=self.colors)
         if title:
             markup = TPL_TITLE.format(title=title) + markup
