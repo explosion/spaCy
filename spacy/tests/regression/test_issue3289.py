@@ -5,7 +5,6 @@ import pytest
 from spacy.lang.en import English
 
 
-@pytest.mark.xfail
 def test_issue3289():
     """Test that Language.to_bytes handles serializing a pipeline component
     with an uninitialized model."""
