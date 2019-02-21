@@ -222,7 +222,7 @@ def _bulk_merge(Doc doc, merges):
     # whether the row is to be deleted, then use numpy.delete
     if doc.tensor is not None and doc.tensor.size != 0:
         doc.tensor = _resize_tensor(doc.tensor,
-            [(m[1][0].start, m[1][0].end) for m in merges])
+            [(m[0].start, m[0].end) for m in merges])
     # Memorize span roots and sets dependencies of the newly merged
     # tokens to the dependencies of their roots.
     span_roots = []
