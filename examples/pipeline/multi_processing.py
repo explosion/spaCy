@@ -10,12 +10,13 @@ Compatible with: spaCy v2.0.0+
 """
 from __future__ import print_function, unicode_literals
 
-from toolz import partition_all
 from pathlib import Path
 from joblib import Parallel, delayed
+from functools import partial
 import thinc.extra.datasets
 import plac
 import spacy
+from spacy.util import minibatch
 
 
 @plac.annotations(
@@ -35,10 +36,10 @@ def main(output_dir, model="en_core_web_sm", n_jobs=4, batch_size=1000, limit=10
     data, _ = thinc.extra.datasets.imdb()
     texts, _ = zip(*data[-limit:])
     print("Processing texts...")
-    partitions = partition_all(batch_size, texts)
-    executor = Parallel(n_jobs=n_jobs)
-    do = delayed(transform_texts)
-    tasks = (do(nlp, i, batch, output_dir) for i, batch in enumerate(partitions))
+    partitions = minibatch(texts, size=batch_size)
+    executor = Parallel(n_jobs=n_jobs, backend="multiprocessing", prefer="processes")
+    do = delayed(partial(transform_texts, nlp))
+    tasks = (do(i, batch, output_dir) for i, batch in enumerate(partitions))
     executor(tasks)
 
 
