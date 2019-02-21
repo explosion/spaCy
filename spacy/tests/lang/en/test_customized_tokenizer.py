@@ -13,10 +13,10 @@ def custom_en_tokenizer(en_vocab):
     prefix_re = compile_prefix_regex(English.Defaults.prefixes)
     suffix_re = compile_suffix_regex(English.Defaults.suffixes)
     custom_infixes = [
-        "\.\.\.+",
-        "(?<=[0-9])-(?=[0-9])",
-        "[0-9]+(,[0-9]+)+",
-        "[\[\]!&:,()\*—–\/-]",
+        r"\.\.\.+",
+        r"(?<=[0-9])-(?=[0-9])",
+        r"[0-9]+(,[0-9]+)+",
+        r"[\[\]!&:,()\*—–\/-]",
     ]
     infix_re = compile_infix_regex(custom_infixes)
     return Tokenizer(

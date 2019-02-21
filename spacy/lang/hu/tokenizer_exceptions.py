@@ -636,17 +636,17 @@ for orth in [
     _exc[orth] = [{ORTH: orth}]
 
 
-_ord_num_or_date = "([A-Z0-9]+[./-])*(\d+\.?)"
-_num = "[+\-]?\d+([,.]\d+)*"
-_ops = "[=<>+\-\*/^()÷%²]"
-_suffixes = "-[{al}]+".format(al=ALPHA_LOWER)
-_numeric_exp = "({n})(({o})({n}))*[%]?".format(n=_num, o=_ops)
-_time_exp = "\d+(:\d+)*(\.\d+)?"
+_ord_num_or_date = r"([A-Z0-9]+[./-])*(\d+\.?)"
+_num = r"[+\-]?\d+([,.]\d+)*"
+_ops = r"[=<>+\-\*/^()÷%²]"
+_suffixes = r"-[{al}]+".format(al=ALPHA_LOWER)
+_numeric_exp = r"({n})(({o})({n}))*[%]?".format(n=_num, o=_ops)
+_time_exp = r"\d+(:\d+)*(\.\d+)?"
 
-_nums = "(({ne})|({t})|({on})|({c}))({s})?".format(
+_nums = r"(({ne})|({t})|({on})|({c}))({s})?".format(
     ne=_numeric_exp, t=_time_exp, on=_ord_num_or_date, c=CURRENCY, s=_suffixes
 )
 
 
 TOKENIZER_EXCEPTIONS = _exc
-TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=URL_PATTERN, n=_nums)).match
+TOKEN_MATCH = re.compile(r"^({u})|({n})$".format(u=URL_PATTERN, n=_nums)).match
