@@ -8,7 +8,6 @@ from spacy import displacy
 from ..util import get_doc
 
 
-@pytest.mark.xfail
 def test_issue3288(en_vocab):
     """Test that retokenization works correctly via displaCy when punctuation
     is merged onto the preceeding token and tensor is resized."""
