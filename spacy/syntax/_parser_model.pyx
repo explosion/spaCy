@@ -261,13 +261,14 @@ class ParserStepModel(Model):
         # lowest score.
         # numpy's nan_to_num function doesn't take a value, and nan is replaced
         # by 0...-inf is replaced by minimum, so we go via that. Ugly to the max.
-        scores[self.ops.xp.isnan(scores)] = -self.ops.xp.inf
-        self.ops.xp.nan_to_num(scores, copy=False)
+        # Note that scores is always a numpy array! Should fix #3112
+        scores[numpy.isnan(scores)] = -numpy.inf
+        numpy.nan_to_num(scores, copy=False)
 
         def backprop_parser_step(d_scores, sgd=None):
             # If we have a non-zero gradient for a previously unseen class,
             # replace the weight with 0.
-            new_classes = self.ops.xp.logical_and(
+            new_classes = self.vec2scores.ops.xp.logical_and(
                 self.vec2scores.ops.xp.isnan(self.vec2scores.b),
                 d_scores.any(axis=0)
             )

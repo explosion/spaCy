@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 
 import re
 
-from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS
 from ..tokenizer_exceptions import URL_PATTERN
 from ..char_classes import ALPHA_LOWER, ALPHA
 from ...symbols import ORTH, LEMMA, TAG
+
+# not using the large _tokenizer_exceptions_list by default as it slows down the tokenizer
+# from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
+FR_BASE_EXCEPTIONS = ["aujourd'hui", "Aujourd'hui"]
 
 
 def upper_first_letter(text):
@@ -128,6 +131,7 @@ _hyphen_prefix = [
     "arcs?",
     "archi",
     "arrières?",
+    "audio",
     "avant",
     "avion",
     "auto",

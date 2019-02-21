@@ -145,9 +145,7 @@ class Pipe(object):
         """Serialize the pipe to a bytestring."""
         serialize = OrderedDict()
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        if self.model in (True, False, None):
-            serialize["model"] = lambda: self.model
-        else:
+        if self.model not in (True, False, None):
             serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         return util.to_bytes(serialize, exclude)
@@ -538,9 +536,7 @@ class Tagger(Pipe):
 
     def to_bytes(self, **exclude):
         serialize = OrderedDict()
-        if self.model in (None, True, False):
-            serialize['model'] = lambda: self.model
-        else:
+        if self.model not in (None, True, False):
             serialize['model'] = self.model.to_bytes
         serialize['vocab'] = self.vocab.to_bytes
         serialize['cfg'] = lambda: srsly.json_dumps(self.cfg)

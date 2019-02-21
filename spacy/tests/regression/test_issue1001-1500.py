@@ -13,6 +13,22 @@ from spacy.lemmatizer import Lemmatizer
 from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
 
 
+@pytest.mark.xfail(
+    reason="g is split of as a unit, as the suffix regular expression can not look back further (variable-width)"
+)
+def test_issue1235():
+    """Test that g is not split of if preceded by a number and a letter"""
+    nlp = English()
+    testwords = u'e2g 2g 52g'
+    doc = nlp(testwords)
+    assert len(doc) == 5
+    assert doc[0].text == "e2g"
+    assert doc[1].text == "2"
+    assert doc[2].text == "g"
+    assert doc[3].text == "52"
+    assert doc[4].text == "g"
+
+
 def test_issue1242():
     nlp = English()
     doc = nlp("")
