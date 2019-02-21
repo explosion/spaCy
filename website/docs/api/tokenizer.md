@@ -107,8 +107,8 @@ details and examples.
 >
 > ```python
 > from spacy.attrs import ORTH, LEMMA
-> case = [{"don't": [{ORTH: "do"}, {ORTH: "n't", LEMMA: "not"}]}]
-> tokenizer.add_special_case(case)
+> case = [{ORTH: "do"}, {ORTH: "n't", LEMMA: "not"}]
+> tokenizer.add_special_case("don't", case)
 > ```
 
 | Name          | Type     | Description                                                                                                                                                              |
