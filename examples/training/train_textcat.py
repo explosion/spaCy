@@ -140,7 +140,10 @@ def evaluate(tokenizer, textcat, texts, cats):
                 fn += 1
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
-    f_score = 2 * (precision * recall) / (precision + recall)
+    if (precision+recall) == 0:
+        f_score = 0.0
+    else:
+        f_score = 2 * (precision * recall) / (precision + recall)
     return {"textcat_p": precision, "textcat_r": recall, "textcat_f": f_score}
 
 
