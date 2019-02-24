@@ -264,11 +264,11 @@ def _bulk_merge(Doc doc, merges):
         token.lex = lex
         # We set trailing space here too
         token.spacy = doc.c[spans[token_index].end-1].spacy
+        py_token = span[0]
         # Assign attributes
         for attr_name, attr_value in attributes.items():
             if attr_name == "_":  # Set extension attributes
                 for ext_attr_key, ext_attr_value in attr_value.items():
-                    py_token = span[0]
                     py_token._.set(ext_attr_key, ext_attr_value)
             elif attr_name == TAG:
                 doc.vocab.morphology.assign_tag(token, attr_value)
