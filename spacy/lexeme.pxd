@@ -89,7 +89,7 @@ cdef class Lexeme:
             return lex.lang
         else:
             return 0
-    
+
     @staticmethod
     cdef inline bint c_check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
         cdef flags_t one = 1

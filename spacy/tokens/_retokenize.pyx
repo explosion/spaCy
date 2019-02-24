@@ -281,7 +281,7 @@ def _bulk_merge(Doc doc, merges):
     current_offset = 0
     for i in range(doc.length):
         if current_span_index < len(spans) and i == spans[current_span_index].end:
-            #last token was the last of the span
+            # Last token was the last of the span
             current_offset += (spans[current_span_index].end - spans[current_span_index].start) -1
             current_span_index += 1
         if current_span_index < len(spans) and \
