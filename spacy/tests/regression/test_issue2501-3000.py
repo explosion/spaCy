@@ -13,6 +13,7 @@ from spacy.vocab import Vocab
 from spacy.compat import pickle
 from spacy._ml import link_vectors_to_models
 import numpy
+import random
 
 from ..util import get_doc
 
@@ -136,6 +137,26 @@ def test_issue2782(text, lang_cls):
     doc = nlp(text)
     assert len(doc) == 1
     assert doc[0].like_num
+
+
+def test_issue2800():
+    """Test issue that arises when too many labels are added to NER model.
+    Used to cause segfault.
+    """
+    train_data = []
+    train_data.extend([("One sentence", {"entities": []})])
+    entity_types = [str(i) for i in range(1000)]
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    nlp.add_pipe(ner)
+    for entity_type in list(entity_types):
+        ner.add_label(entity_type)
+    optimizer = nlp.begin_training()
+    for i in range(20):
+        losses = {}
+        random.shuffle(train_data)
+        for statement, entities in train_data:
+            nlp.update([statement], [entities], sgd=optimizer, losses=losses, drop=0.5)
 
 
 def test_issue2822(it_tokenizer):
