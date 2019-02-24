@@ -196,6 +196,7 @@ def _merge(Doc doc, int start, int end, attributes):
     # Return the merged Python object
     return doc[start]
 
+
 def _bulk_merge(Doc doc, merges):
     """Retokenize the document, such that the spans described in 'merges'
      are merged into a single token. This method assumes that the merges
