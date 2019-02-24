@@ -47,8 +47,6 @@ cdef class Retokenizer:
             self.tokens_to_merge.add(token.i)
         if "_" in attrs:  # Extension attributes
             extensions = attrs["_"]
-            if not isinstance(extensions, dict):
-                raise ValueError(Errors.E120.format(value=repr(extensions)))
             _validate_extensions(extensions)
             attrs = {key: value for key, value in attrs.items() if key != "_"}
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
@@ -66,8 +64,6 @@ cdef class Retokenizer:
         if "_" in attrs:  # Extension attributes
             extensions = attrs["_"]
             for extension in extensions:
-                if not isinstance(extension, dict):
-                    raise ValueError(Errors.E120.format(value=repr(extension)))
                 _validate_extensions(extension)
             attrs = {key: value for key, value in attrs.items() if key != "_"}
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
@@ -424,6 +420,8 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
 
 
 def _validate_extensions(extensions):
+    if not isinstance(extensions, dict):
+        raise ValueError(Errors.E120.format(value=repr(extensions)))
     for key, value in extensions.items():
         # Get the extension and make sure it's available and writable
         extension = Token.get_extension(key)
