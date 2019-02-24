@@ -262,26 +262,33 @@ def test_doc_retokenize_spans_subtree_size_check(en_tokenizer):
 
 
 def test_doc_retokenize_merge_extension_attrs(en_vocab):
-    Token.set_extension("test1", default=False)
-    Token.set_extension("test2", default="nothing")
+    Token.set_extension("a", default=False, force=True)
+    Token.set_extension("b", default="nothing", force=True)
     doc = Doc(en_vocab, words=["hello", "world", "!"])
+    # Test regular merging
     with doc.retokenize() as retokenizer:
-        attrs = {"lemma": "hello world", "_": {"test1": True, "test2": "value"}}
-        retokenizer.merge(doc[0:1], attrs=attrs)
+        attrs = {"lemma": "hello world", "_": {"a": True, "b": "1"}}
+        retokenizer.merge(doc[0:2], attrs=attrs)
     assert doc[0].lemma_ == "hello world"
-    assert doc[0]._.test1 == True
-    assert doc[0]._.test2 == "value"
+    assert doc[0]._.a == True
+    assert doc[0]._.b == "1"
+    # Test bulk merging
+    doc = Doc(en_vocab, words=["hello", "world", "!", "!"])
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2], attrs={"_": {"a": True, "b": "1"}})
+        retokenizer.merge(doc[2:4], attrs={"_": {"a": None, "b": "2"}})
+    assert doc[0]._.a == True
+    assert doc[0]._.b == "1"
+    assert doc[1]._.a == None
+    assert doc[1]._.b == "2"
 
 
-@pytest.mark.parametrize(
-    "underscore_attrs",
-    [{"test1": "value"}, {"test2": "value"}, {"test3": "value"}, [1]],
-)
+@pytest.mark.parametrize("underscore_attrs", [{"a": "x"}, {"b": "x"}, {"c": "x"}, [1]])
 def test_doc_retokenize_merge_extension_attrs_invalid(en_vocab, underscore_attrs):
-    Token.set_extension("test1", getter=lambda x: x, force=True)
-    Token.set_extension("test2", method=lambda x: x, force=True)
+    Token.set_extension("a", getter=lambda x: x, force=True)
+    Token.set_extension("b", method=lambda x: x, force=True)
     doc = Doc(en_vocab, words=["hello", "world", "!"])
     attrs = {"_": underscore_attrs}
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
-            retokenizer.merge(doc[0:1], attrs=attrs)
+            retokenizer.merge(doc[0:2], attrs=attrs)
