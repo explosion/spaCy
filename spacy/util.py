@@ -315,7 +315,7 @@ def read_regex(path):
 
 
 def compile_prefix_regex(entries):
-    """Compile a list of prefix rules into a regex object.
+    """Compile a sequence of prefix rules into a regex object.
 
     entries (tuple): The prefix rules, e.g. spacy.lang.punctuation.TOKENIZER_PREFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.prefix_search.
@@ -332,7 +332,7 @@ def compile_prefix_regex(entries):
 
 
 def compile_suffix_regex(entries):
-    """Compile a list of suffix rules into a regex object.
+    """Compile a sequence of suffix rules into a regex object.
 
     entries (tuple): The suffix rules, e.g. spacy.lang.punctuation.TOKENIZER_SUFFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.suffix_search.
@@ -342,7 +342,7 @@ def compile_suffix_regex(entries):
 
 
 def compile_infix_regex(entries):
-    """Compile a list of infix rules into a regex object.
+    """Compile a sequence of infix rules into a regex object.
 
     entries (tuple): The infix rules, e.g. spacy.lang.punctuation.TOKENIZER_INFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.infix_finditer.

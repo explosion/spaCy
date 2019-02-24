@@ -29,10 +29,10 @@ components. spaCy then does the following:
 >
 > ```json
 > {
->   "name": "example_model",
 >   "lang": "en",
+>   "name": "core_web_sm",
 >   "description": "Example model for spaCy",
->   "pipeline": ["tagger", "parser"]
+>   "pipeline": ["tagger", "parser", "ner"]
 > }
 > ```
 
@@ -51,11 +51,11 @@ components. spaCy then does the following:
 So when you call this...
 
 ```python
-nlp = spacy.load("en")
+nlp = spacy.load("en_core_web_sm")
 ```
 
-... the model tells spaCy to use the language `"en"` and the pipeline
-`["tagger", "parser", "ner"]`. spaCy will then initialize
+... the model's `meta.json` tells spaCy to use the language `"en"` and the
+pipeline `["tagger", "parser", "ner"]`. spaCy will then initialize
 `spacy.lang.en.English`, and create each pipeline component and add it to the
 processing pipeline. It'll then load in the model's data from its data directory
 and return the modified `Language` class for you to use as the `nlp` object.
