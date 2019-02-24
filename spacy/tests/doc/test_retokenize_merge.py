@@ -214,9 +214,6 @@ def test_doc_retokenize_spans_entity_merge_iob():
         retokenizer.merge(doc[2:4])
         retokenizer.merge(doc[4:6])
         retokenizer.merge(doc[7:9])
-    for token in doc:
-        print(token)
-        print(token.ent_iob)
     assert len(doc) == 6
     assert doc[3].ent_iob_ == "B"
     assert doc[4].ent_iob_ == "I"
