@@ -72,10 +72,10 @@ def _flatten_add_lengths(seqs, pad=0, drop=0.0):
 
 
 def _zero_init(model):
-    def _zero_init_impl(self, X, y):
+    def _zero_init_impl(self, *args, **kwargs):
         self.W.fill(0)
 
-    model.on_data_hooks.append(_zero_init_impl)
+    model.on_init_hooks.append(_zero_init_impl)
     if model.W is not None:
         model.W.fill(0.0)
     return model
@@ -564,18 +564,26 @@ def build_text_classifier(nr_class, width=64, **cfg):
         )
 
         linear_model = _preprocess_doc >> LinearModel(nr_class)
+        if cfg.get('exclusive_classes'):
+            output_layer = Softmax(nr_class, nr_class * 2)
+        else:
+            output_layer = (
+                zero_init(Affine(nr_class, nr_class * 2, drop_factor=0.0))
+                >> logistic
+            )
+
+
         model = (
             (linear_model | cnn_model)
-            >> zero_init(Affine(nr_class, nr_class * 2, drop_factor=0.0))
-            >> logistic
+            >> output_layer
         )
-        model.tok2vec = tok2vec
+        model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
     model.lsuv = False
     return model
 
 
-def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=True, **cfg):
+def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False, **cfg):
     """
     Build a simple CNN text classifier, given a token-to-vector model as inputs.
     If exclusive_classes=True, a softmax non-linearity is applied, so that the
@@ -586,7 +594,7 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=True, 
         if exclusive_classes:
             output_layer = Softmax(nr_class, tok2vec.nO)
         else:
-            output_layer = zero_init(Affine(nr_class, tok2vec.nO)) >> logistic
+            output_layer = zero_init(Affine(nr_class, tok2vec.nO, drop_factor=0.0)) >> logistic
         model = tok2vec >> flatten_add_lengths >> Pooling(mean_pool) >> output_layer
     model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class

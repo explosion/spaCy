@@ -24,7 +24,8 @@ from ..vocab cimport Vocab
 from ..syntax import nonproj
 from ..attrs import POS, ID
 from ..parts_of_speech import X
-from .._ml import Tok2Vec, build_tagger_model, build_simple_cnn_text_classifier
+from .._ml import Tok2Vec, build_tagger_model
+from .._ml import build_text_classifier, build_simple_cnn_text_classifier
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer
 from ..errors import Errors, TempErrors
@@ -862,8 +863,11 @@ class TextCategorizer(Pipe):
             token_vector_width = cfg["token_vector_width"]
         else:
             token_vector_width = util.env_opt("token_vector_width", 96)
-        tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
-        return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
+        if cfg.get('architecture') == 'simple_cnn':
+            tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
+            return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
+        else:
+            return build_text_classifier(nr_class, **cfg)
 
     @property
     def tok2vec(self):
@@ -942,7 +946,7 @@ class TextCategorizer(Pipe):
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores-truths) / scores.shape[0]
         d_scores *= not_missing
-        mean_square_error = ((scores-truths)**2).sum(axis=1).mean()
+        mean_square_error = (d_scores**2).sum(axis=1).mean()
         return float(mean_square_error), d_scores
 
     def add_label(self, label):
@@ -964,11 +968,6 @@ class TextCategorizer(Pipe):
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
                        **kwargs):
-        if pipeline and getattr(pipeline[0], 'name', None) == 'tensorizer':
-            token_vector_width = pipeline[0].model.nO
-        else:
-            token_vector_width = 64
-
         if self.model is True:
             self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
             self.model = self.Model(len(self.labels), **self.cfg)

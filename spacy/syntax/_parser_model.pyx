@@ -204,7 +204,9 @@ class ParserModel(Model):
         if new_output == self.upper.nO:
             return
         smaller = self.upper
-        larger = Affine(new_output, smaller.nI)
+
+        with Model.use_device('cpu'):
+            larger = Affine(new_output, smaller.nI)
         # Set nan as value for unseen classes, to prevent prediction.
         larger.W.fill(self.ops.xp.nan)
         larger.b.fill(self.ops.xp.nan)
