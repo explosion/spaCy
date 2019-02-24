@@ -31,6 +31,7 @@ shortcut for this and instantiate the component using its string name and
 > ```python
 > # Construction via create_pipe
 > textcat = nlp.create_pipe("textcat")
+> textcat = nlp.create_pipe("textcat", config={"exclusive_classes": True})
 >
 > # Construction from class
 > from spacy.pipeline import TextCategorizer
@@ -38,12 +39,27 @@ shortcut for this and instantiate the component using its string name and
 > textcat.from_disk("/path/to/model")
 > ```
 
-| Name        | Type                           | Description                                                                                                                                           |
-| ----------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`                        | The shared vocabulary.                                                                                                                                |
-| `model`     | `thinc.neural.Model` or `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `**cfg`     | -                              | Configuration parameters.                                                                                                                             |
-| **RETURNS** | `TextCategorizer`              | The newly constructed object.                                                                                                                         |
+| Name                | Type                          | Description                                                                                                                                           |
+| ------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`             | `Vocab`                       | The shared vocabulary.                                                                                                                                |
+| `model`             | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
+| `exclusive_classes` | bool                          | Make categories mutually exclusive. Defaults to `False`.                                                                                              |
+| `architecture`      | unicode                       | Model architecture to use, see [architectures](#architectures) for details. Defaults to `"ensemble"`.                                                 |
+| **RETURNS**         | `TextCategorizer`             | The newly constructed object.                                                                                                                         |
+
+### Architectures {#architectures new="2.1"}
+
+Text classification models can be used to solve a wide variety of problems.
+Differences in text length, number of labels, difficulty, and runtime
+performance constraints mean that no single algorithm performs well on all types
+of problems. To handle a wider variety of problems, the `TextCategorizer` object
+allows configuration of its model architecture, using the `architecture` keyword
+argument.
+
+| Name           | Description                                                                                                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"ensemble"`   | **Default:** Stacked ensemble of a unigram bag-of-words model and a neural network model. The neural network uses a CNN with mean pooling and attention. |
+| `"simple_cnn"` | A neural network model where token vectors are calculated using a CNN. The vectors are mean pooled and used as features in a feed-forward network.       |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
