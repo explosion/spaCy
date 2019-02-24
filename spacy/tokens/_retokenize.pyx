@@ -63,7 +63,17 @@ cdef class Retokenizer:
         """
         if ''.join(orths) != token.text:
             raise ValueError(Errors.E117.format(new=''.join(orths), old=token.text))
-        attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+        if "_" in attrs:  # Extension attributes
+            extensions = attrs["_"]
+            for extension in extensions:
+                if not isinstance(extension, dict):
+                    raise ValueError(Errors.E120.format(value=repr(extension)))
+                _validate_extensions(extension)
+            attrs = {key: value for key, value in attrs.items() if key != "_"}
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            attrs["_"] = extensions
+        else:
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):
@@ -396,7 +406,10 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     for attr_name, attr_values in attrs.items():
         for i, attr_value in enumerate(attr_values):
             token = &doc.c[token_index + i]
-            if attr_name == TAG:
+            if attr_name == "_":
+                for ext_attr_key, ext_attr_value in attr_value.items():
+                    doc[token_index + i]._.set(ext_attr_key, ext_attr_value)
+            elif attr_name == TAG:
                 doc.vocab.morphology.assign_tag(token, get_string_id(attr_value))
             else:
                 Token.set_struct_attr(token, attr_name, get_string_id(attr_value))
