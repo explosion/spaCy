@@ -44,8 +44,10 @@ cdef WeightsC get_c_weights(model) except *:
     output.feat_bias = <const float*>state2vec.bias.data
     cdef np.ndarray vec2scores_W = model.vec2scores.W
     cdef np.ndarray vec2scores_b = model.vec2scores.b
+    cdef np.ndarray class_mask = model._class_mask
     output.hidden_weights = <const float*>vec2scores_W.data
     output.hidden_bias = <const float*>vec2scores_b.data
+    output.seen_classes = <const float*>class_mask.data
     return output
 
 
@@ -115,6 +117,16 @@ cdef void predict_states(ActivationsC* A, StateC** states,
     for i in range(n.states):
         VecVec.add_i(&A.scores[i*n.classes],
             W.hidden_bias, 1., n.classes)
+    # Set unseen classes to minimum value
+    i = 0
+    min_ = A.scores[0]
+    for i in range(1, n.states * n.classes):
+        if A.scores[i] < min_:
+            min_ = A.scores[i]
+    for i in range(n.states):
+        for j in range(n.classes):
+            if not W.seen_classes[j]:
+                A.scores[i*n.classes+j] = min_
 
 
 cdef void sum_state_features(float* output,
@@ -189,12 +201,17 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 
 
 class ParserModel(Model):
-    def __init__(self, tok2vec, lower_model, upper_model):
+    def __init__(self, tok2vec, lower_model, upper_model, unseen_classes=None):
         Model.__init__(self)
         self._layers = [tok2vec, lower_model, upper_model]
+        self.unseen_classes = set()
+        if unseen_classes:
+            for class_ in unseen_classes:
+                self.unseen_classes.add(class_)
 
     def begin_update(self, docs, drop=0.):
-        step_model = ParserStepModel(docs, self._layers, drop=drop)
+        step_model = ParserStepModel(docs, self._layers, drop=drop,
+                        unseen_classes=self.unseen_classes)
         def finish_parser_update(golds, sgd=None):
             step_model.make_updates(sgd)
             return None
@@ -207,9 +224,8 @@ class ParserModel(Model):
 
         with Model.use_device('cpu'):
             larger = Affine(new_output, smaller.nI)
-        # Set nan as value for unseen classes, to prevent prediction.
-        larger.W.fill(self.ops.xp.nan)
-        larger.b.fill(self.ops.xp.nan)
+        larger.W.fill(0.0)
+        larger.b.fill(0.0)
         # It seems very unhappy if I pass these as smaller.W?
         # Seems to segfault. Maybe it's a descriptor protocol thing?
         smaller_W = smaller.W
@@ -221,6 +237,8 @@ class ParserModel(Model):
         larger_W[:smaller.nO] = smaller_W
         larger_b[:smaller.nO] = smaller_b
         self._layers[-1] = larger
+        for i in range(smaller.nO, new_output):
+            self.unseen_classes.add(i)
 
     def begin_training(self, X, y=None):
         self.lower.begin_training(X, y=y)
@@ -239,17 +257,31 @@ class ParserModel(Model):
 
 
 class ParserStepModel(Model):
-    def __init__(self, docs, layers, drop=0.):
+    def __init__(self, docs, layers, unseen_classes=None, drop=0.):
         self.tokvecs, self.bp_tokvecs = layers[0].begin_update(docs, drop=drop)
         self.state2vec = precompute_hiddens(len(docs), self.tokvecs, layers[1],
                                             drop=drop)
         self.vec2scores = layers[-1]
         self.cuda_stream = util.get_cuda_stream()
         self.backprops = []
+        self._class_mask = numpy.zeros((self.vec2scores.nO,), dtype='f')
+        self._class_mask.fill(1)
+        if unseen_classes is not None:
+            for class_ in unseen_classes:
+                self._class_mask[class_] = 0.
 
     @property
     def nO(self):
         return self.state2vec.nO
+
+    def class_is_unseen(self, class_):
+        return self._class_mask[class_]
+
+    def mark_class_unseen(self, class_):
+        self._class_mask[class_] = 0
+
+    def mark_class_seen(self, class_):
+        self._class_mask[class_] = 1
 
     def begin_update(self, states, drop=0.):
         token_ids = self.get_token_ids(states)
@@ -258,24 +290,12 @@ class ParserStepModel(Model):
         if mask is not None:
             vector *= mask
         scores, get_d_vector = self.vec2scores.begin_update(vector, drop=drop)
-        # We can have nans from unseen classes.
-        # For backprop purposes, we want to treat unseen classes as having the
-        # lowest score.
-        # numpy's nan_to_num function doesn't take a value, and nan is replaced
-        # by 0...-inf is replaced by minimum, so we go via that. Ugly to the max.
-        # Note that scores is always a numpy array! Should fix #3112
-        scores[numpy.isnan(scores)] = -numpy.inf
-        numpy.nan_to_num(scores, copy=False)
+        # If the class is unseen, make sure its score is minimum
+        scores[:, self._class_mask == 0] = numpy.nanmin(scores)
 
         def backprop_parser_step(d_scores, sgd=None):
-            # If we have a non-zero gradient for a previously unseen class,
-            # replace the weight with 0.
-            new_classes = self.vec2scores.ops.xp.logical_and(
-                self.vec2scores.ops.xp.isnan(self.vec2scores.b),
-                d_scores.any(axis=0)
-            )
-            self.vec2scores.b[new_classes] = 0.
-            self.vec2scores.W[new_classes] = 0.
+            # Zero vectors for unseen classes
+            d_scores *= self._class_mask
             d_vector = get_d_vector(d_scores, sgd=sgd)
             if mask is not None:
                 d_vector *= mask
