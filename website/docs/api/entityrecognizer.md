@@ -47,8 +47,8 @@ shortcut for this and instantiate the component using its string name and
 ## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
-This usually happens under the hood when you call the `nlp` object on a text and
-all pipeline components are applied to the `Doc` in order. Both
+This usually happens under the hood when the `nlp` object is called on a text
+and all pipeline components are applied to the `Doc` in order. Both
 [`__call__`](/api/entityrecognizer#call) and
 [`pipe`](/api/entityrecognizer#pipe) delegate to the
 [`predict`](/api/entityrecognizer#predict) and
@@ -70,8 +70,9 @@ all pipeline components are applied to the `Doc` in order. Both
 
 ## EntityRecognizer.pipe {#pipe tag="method"}
 
-Apply the pipe to a stream of documents. Both
-[`__call__`](/api/entityrecognizer#call) and
+Apply the pipe to a stream of documents. This usually happens under the hood
+when the `nlp` object is called on a text and all pipeline components are
+applied to the `Doc` in order. Both [`__call__`](/api/entityrecognizer#call) and
 [`pipe`](/api/entityrecognizer#pipe) delegate to the
 [`predict`](/api/entityrecognizer#predict) and
 [`set_annotations`](/api/entityrecognizer#set_annotations) methods.
@@ -79,9 +80,8 @@ Apply the pipe to a stream of documents. Both
 > #### Example
 >
 > ```python
-> texts = [u"One doc", u"...", u"Lots of docs"]
 > ner = EntityRecognizer(nlp.vocab)
-> for doc in ner.pipe(texts, batch_size=50):
+> for doc in ner.pipe(docs, batch_size=50):
 >     pass
 > ```
 
@@ -102,10 +102,10 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > scores = ner.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description               |
-| ----------- | -------- | ------------------------- |
-| `docs`      | iterable | The documents to predict. |
-| **RETURNS** | -        | Scores from the model.    |
+| Name        | Type     | Description                                                                                                                                                                                                                        |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
+| **RETURNS** | tuple    | A `(scores, tensors)` tuple where `scores` is the model's prediction for each document and `tensors` is the token representations used to predict the scores. Each tensor is an array with one row for each token in the document. |
 
 ## EntityRecognizer.set_annotations {#set_annotations tag="method"}
 
