@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 import numpy
 from spacy import displacy
 
