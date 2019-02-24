@@ -147,6 +147,8 @@ cdef class TransitionSystem:
     def initialize_actions(self, labels_by_action, min_freq=None):
         self.labels = {}
         self.n_moves = 0
+        added_labels = []
+        added_actions = {}
         for action, label_freqs in sorted(labels_by_action.items()):
             action = int(action)
             # Make sure we take a copy here, and that we get a Counter
@@ -157,6 +159,15 @@ cdef class TransitionSystem:
             sorted_labels.sort()
             sorted_labels.reverse()
             for freq, label_str in sorted_labels:
+                if freq < 0:
+                    added_labels.append((freq, label_str))
+                    added_actions.setdefault(label_str, []).append(action)
+                else:
+                    self.add_action(int(action), label_str)
+                    self.labels[action][label_str] = freq
+        added_labels.sort(reverse=True)
+        for freq, label_str in added_labels:
+            for action in added_actions[label_str]:
                 self.add_action(int(action), label_str)
                 self.labels[action][label_str] = freq
 
