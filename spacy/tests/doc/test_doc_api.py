@@ -6,7 +6,6 @@ import pytest
 import numpy
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
-from spacy.attrs import LEMMA
 from spacy.errors import ModelsWarning
 
 from ..util import get_doc
@@ -137,81 +136,6 @@ def test_doc_api_set_ents(en_tokenizer):
     assert tokens.ents[0].label_ == "PRODUCT"
     assert tokens.ents[0].start == 2
     assert tokens.ents[0].end == 4
-
-
-def test_doc_api_merge(en_tokenizer):
-    text = "WKRO played songs by the beach boys all night"
-    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
-    # merge both with bulk merge
-    doc = en_tokenizer(text)
-    assert len(doc) == 9
-    with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[4:7], attrs=attrs)
-        retokenizer.merge(doc[7:9], attrs=attrs)
-    assert len(doc) == 6
-    assert doc[4].text == "the beach boys"
-    assert doc[4].text_with_ws == "the beach boys "
-    assert doc[4].tag_ == "NAMED"
-    assert doc[5].text == "all night"
-    assert doc[5].text_with_ws == "all night"
-    assert doc[5].tag_ == "NAMED"
-
-
-def test_doc_api_merge_children(en_tokenizer):
-    """Test that attachments work correctly after merging."""
-    text = "WKRO played songs by the beach boys all night"
-    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
-    doc = en_tokenizer(text)
-    assert len(doc) == 9
-    with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[4:7], attrs=attrs)
-    for word in doc:
-        if word.i < word.head.i:
-            assert word in list(word.head.lefts)
-        elif word.i > word.head.i:
-            assert word in list(word.head.rights)
-
-
-def test_doc_api_merge_hang(en_tokenizer):
-    text = "through North and South Carolina"
-    doc = en_tokenizer(text)
-    with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[3:5], attrs={"lemma": "", "ent_type": "ORG"})
-        retokenizer.merge(doc[1:2], attrs={"lemma": "", "ent_type": "ORG"})
-
-
-def test_doc_api_retokenizer(en_tokenizer):
-    doc = en_tokenizer("WKRO played songs by the beach boys all night")
-    with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[4:7])
-    assert len(doc) == 7
-    assert doc[4].text == "the beach boys"
-
-
-def test_doc_api_retokenizer_attrs(en_tokenizer):
-    doc = en_tokenizer("WKRO played songs by the beach boys all night")
-    # test both string and integer attributes and values
-    attrs = {LEMMA: "boys", "ENT_TYPE": doc.vocab.strings["ORG"]}
-    with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[4:7], attrs=attrs)
-    assert len(doc) == 7
-    assert doc[4].text == "the beach boys"
-    assert doc[4].lemma_ == "boys"
-    assert doc[4].ent_type_ == "ORG"
-
-
-@pytest.mark.xfail
-def test_doc_api_retokenizer_lex_attrs(en_tokenizer):
-    """Test that lexical attributes can be changed (see #2390)."""
-    doc = en_tokenizer("WKRO played beach boys songs")
-    assert not any(token.is_stop for token in doc)
-    with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[2:4], attrs={"LEMMA": "boys", "IS_STOP": True})
-    assert doc[2].text == "beach boys"
-    assert doc[2].lemma_ == "boys"
-    assert doc[2].is_stop
-    new_doc = Doc(doc.vocab, words=["beach boys"])
-    assert new_doc[0].is_stop
 
 
 def test_doc_api_sents_empty_string(en_tokenizer):

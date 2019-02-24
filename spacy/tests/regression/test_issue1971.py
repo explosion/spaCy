@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.matcher import Matcher
 from spacy.tokens import Token, Doc
 
@@ -28,7 +27,7 @@ def test_issue1971(en_vocab):
 def test_issue_1971_2(en_vocab):
     matcher = Matcher(en_vocab)
     pattern1 = [{"ORTH": "EUR", "LOWER": {"IN": ["eur"]}}, {"LIKE_NUM": True}]
-    pattern2 = [{"LIKE_NUM": True}, {"ORTH": "EUR"}] #{"IN": ["EUR"]}}]
+    pattern2 = [{"LIKE_NUM": True}, {"ORTH": "EUR"}]  # {"IN": ["EUR"]}}]
     doc = Doc(en_vocab, words=["EUR", "10", "is", "10", "EUR"])
     matcher.add("TEST1", None, pattern1, pattern2)
     matches = matcher(doc)
@@ -59,6 +58,5 @@ def test_issue_1971_4(en_vocab):
     pattern = [{"_": {"ext_a": "str_a", "ext_b": "str_b"}}] * 3
     matcher.add("TEST", None, pattern)
     matches = matcher(doc)
-    # Interesting: uncommenting this causes a segmentation fault, so there's
-    # definitely something going on here
-    # assert len(matches) == 1
+    # Uncommenting this caused a segmentation fault
+    assert len(matches) == 1

@@ -1,14 +1,89 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import pytest
+from spacy.attrs import LEMMA
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
-import pytest
 
 from ..util import get_doc
 
 
-def test_spans_merge_tokens(en_tokenizer):
+def test_doc_retokenize_merge(en_tokenizer):
+    text = "WKRO played songs by the beach boys all night"
+    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
+    doc = en_tokenizer(text)
+    assert len(doc) == 9
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7], attrs=attrs)
+        retokenizer.merge(doc[7:9], attrs=attrs)
+    assert len(doc) == 6
+    assert doc[4].text == "the beach boys"
+    assert doc[4].text_with_ws == "the beach boys "
+    assert doc[4].tag_ == "NAMED"
+    assert doc[5].text == "all night"
+    assert doc[5].text_with_ws == "all night"
+    assert doc[5].tag_ == "NAMED"
+
+
+def test_doc_retokenize_merge_children(en_tokenizer):
+    """Test that attachments work correctly after merging."""
+    text = "WKRO played songs by the beach boys all night"
+    attrs = {"tag": "NAMED", "lemma": "LEMMA", "ent_type": "TYPE"}
+    doc = en_tokenizer(text)
+    assert len(doc) == 9
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7], attrs=attrs)
+    for word in doc:
+        if word.i < word.head.i:
+            assert word in list(word.head.lefts)
+        elif word.i > word.head.i:
+            assert word in list(word.head.rights)
+
+
+def test_doc_retokenize_merge_hang(en_tokenizer):
+    text = "through North and South Carolina"
+    doc = en_tokenizer(text)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[3:5], attrs={"lemma": "", "ent_type": "ORG"})
+        retokenizer.merge(doc[1:2], attrs={"lemma": "", "ent_type": "ORG"})
+
+
+def test_doc_retokenize_retokenizer(en_tokenizer):
+    doc = en_tokenizer("WKRO played songs by the beach boys all night")
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7])
+    assert len(doc) == 7
+    assert doc[4].text == "the beach boys"
+
+
+def test_doc_retokenize_retokenizer_attrs(en_tokenizer):
+    doc = en_tokenizer("WKRO played songs by the beach boys all night")
+    # test both string and integer attributes and values
+    attrs = {LEMMA: "boys", "ENT_TYPE": doc.vocab.strings["ORG"]}
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[4:7], attrs=attrs)
+    assert len(doc) == 7
+    assert doc[4].text == "the beach boys"
+    assert doc[4].lemma_ == "boys"
+    assert doc[4].ent_type_ == "ORG"
+
+
+@pytest.mark.xfail
+def test_doc_retokenize_lex_attrs(en_tokenizer):
+    """Test that lexical attributes can be changed (see #2390)."""
+    doc = en_tokenizer("WKRO played beach boys songs")
+    assert not any(token.is_stop for token in doc)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[2:4], attrs={"LEMMA": "boys", "IS_STOP": True})
+    assert doc[2].text == "beach boys"
+    assert doc[2].lemma_ == "boys"
+    assert doc[2].is_stop
+    new_doc = Doc(doc.vocab, words=["beach boys"])
+    assert new_doc[0].is_stop
+
+
+def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
     text = "Los Angeles start."
     heads = [1, 1, 0, -1]
     tokens = en_tokenizer(text)
@@ -25,7 +100,7 @@ def test_spans_merge_tokens(en_tokenizer):
     assert doc[0].ent_type_ == "GPE"
 
 
-def test_spans_merge_heads(en_tokenizer):
+def test_doc_retokenize_spans_merge_heads(en_tokenizer):
     text = "I found a pilates class near work."
     heads = [1, 0, 2, 1, -3, -1, -1, -6]
     tokens = en_tokenizer(text)
@@ -43,7 +118,7 @@ def test_spans_merge_heads(en_tokenizer):
     assert doc[5].head.i == 4
 
 
-def test_spans_merge_non_disjoint(en_tokenizer):
+def test_doc_retokenize_spans_merge_non_disjoint(en_tokenizer):
     text = "Los Angeles start."
     doc = en_tokenizer(text)
     with pytest.raises(ValueError):
@@ -58,7 +133,7 @@ def test_spans_merge_non_disjoint(en_tokenizer):
             )
 
 
-def test_span_np_merges(en_tokenizer):
+def test_doc_retokenize_span_np_merges(en_tokenizer):
     text = "displaCy is a parse tool built with Javascript"
     heads = [1, 0, 2, 1, -3, -1, -1, -1]
     tokens = en_tokenizer(text)
@@ -87,7 +162,7 @@ def test_span_np_merges(en_tokenizer):
             retokenizer.merge(ent)
 
 
-def test_spans_entity_merge(en_tokenizer):
+def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     # fmt: off
     text = "Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale.\n"
     heads = [1, 1, 0, 1, 2, -1, -4, 1, -2, -1, -1, -3, -10, 1, -2, -13, -1]
@@ -108,7 +183,7 @@ def test_spans_entity_merge(en_tokenizer):
     assert len(doc) == 15
 
 
-def test_spans_entity_merge_iob():
+def test_doc_retokenize_spans_entity_merge_iob():
     # Test entity IOB stays consistent after merging
     words = ["a", "b", "c", "d", "e"]
     doc = Doc(Vocab(), words=words)
@@ -147,7 +222,7 @@ def test_spans_entity_merge_iob():
     assert doc[4].ent_iob_ == "I"
 
 
-def test_spans_sentence_update_after_merge(en_tokenizer):
+def test_doc_retokenize_spans_sentence_update_after_merge(en_tokenizer):
     # fmt: off
     text = "Stewart Lee is a stand up comedian. He lives in England and loves Joe Pasquale."
     heads = [1, 1, 0, 1, 2, -1, -4, -5, 1, 0, -1, -1, -3, -4, 1, -2, -7]
@@ -155,7 +230,6 @@ def test_spans_sentence_update_after_merge(en_tokenizer):
             'punct', 'nsubj', 'ROOT', 'prep', 'pobj', 'cc', 'conj',
             'compound', 'dobj', 'punct']
     # fmt: on
-
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     sent1, sent2 = list(doc.sents)
@@ -169,7 +243,7 @@ def test_spans_sentence_update_after_merge(en_tokenizer):
     assert len(sent2) == init_len2 - 1
 
 
-def test_spans_subtree_size_check(en_tokenizer):
+def test_doc_retokenize_spans_subtree_size_check(en_tokenizer):
     # fmt: off
     text = "Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale"
     heads = [1, 1, 0, 1, 2, -1, -4, 1, -2, -1, -1, -3, -10, 1, -2]
@@ -177,7 +251,6 @@ def test_spans_subtree_size_check(en_tokenizer):
             "nsubj", "relcl", "prep", "pobj", "cc", "conj", "compound",
             "dobj"]
     # fmt: on
-
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     sent1 = list(doc.sents)[0]

@@ -290,7 +290,8 @@ class Errors(object):
             "NBOR_RELOP.")
     E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
             "have been declared in previous edges.")
-    E102 = ("Can't merge non-disjoint spans. '{token}' is already part of tokens to merge")
+    E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
+            "tokens to merge.")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
             " can only be part of one entity, so make sure the entities you're "
             "setting don't overlap.")
@@ -318,12 +319,12 @@ class Errors(object):
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
     E113 = ("The newly split token can only have one root (head = 0).")
-    E114 = ("The newly split token needs to have a root (head = 0)")
-    E115 = ("All subtokens must have associated heads")
+    E114 = ("The newly split token needs to have a root (head = 0).")
+    E115 = ("All subtokens must have associated heads.")
     E116 = ("Cannot currently add labels to pre-trained text classifier. Add "
             "labels before training begins. This functionality was available "
             "in previous versions, but had significant bugs that led to poor "
-            "performance")
+            "performance.")
     E117 = ("The newly split tokens must match the text of the original token. "
             "New orths: {new}. Old text: {old}.")
 
