@@ -66,9 +66,13 @@ cdef class Retokenizer:
             for extension in extensions:
                 _validate_extensions(extension)
             attrs = {key: value for key, value in attrs.items() if key != "_"}
+            # NB: Since we support {"KEY": [value, value]} syntax here, this
+            # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
             attrs["_"] = extensions
         else:
+            # NB: Since we support {"KEY": [value, value]} syntax here, this
+            # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         head_offsets = []
         for head in heads:
@@ -153,7 +157,11 @@ def _merge(Doc doc, int start, int end, attributes):
         elif attr_name == TAG:
             doc.vocab.morphology.assign_tag(token, attr_value)
         else:
+            # Set attributes on both token and lexeme to take care of token
+            # attribute vs. lexical attribute without having to enumerate them.
+            # If an attribute name is not valid, set_struct_attr will ignore it.
             Token.set_struct_attr(token, attr_name, attr_value)
+            Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
     # Make sure ent_iob remains consistent
     if doc.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
         if token.ent_type == doc.c[end].ent_type:
@@ -216,6 +224,7 @@ def _bulk_merge(Doc doc, merges):
     """
     cdef Span span
     cdef const LexemeC* lex
+    cdef TokenC* token
     cdef Pool mem = Pool()
     tokens = <TokenC**>mem.alloc(len(merges), sizeof(TokenC))
     spans = []
@@ -231,15 +240,6 @@ def _bulk_merge(Doc doc, merges):
         # House the new merged token where it starts
         token = &doc.c[start]
         tokens[merge_index] = token
-        # Assign attributes
-        for attr_name, attr_value in attributes.items():
-            if attr_name == "_":  # Set extension attributes
-                for ext_attr_key, ext_attr_value in attr_value.items():
-                    doc[start]._.set(ext_attr_key, ext_attr_value)
-            elif attr_name == TAG:
-                doc.vocab.morphology.assign_tag(token, attr_value)
-            else:
-                Token.set_struct_attr(token, attr_name, attr_value)
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
     # for the merged region. To do this, we create a boolean array indicating
     # whether the row is to be deleted, then use numpy.delete
@@ -255,14 +255,30 @@ def _bulk_merge(Doc doc, merges):
     # We update token.lex after keeping span root and dep, since
     # setting token.lex will change span.start and span.end properties
     # as it modifies the character offsets in the doc
-    for token_index in range(len(merges)):
+    for token_index, (span, attributes) in enumerate(merges):
         new_orth = ''.join([t.text_with_ws for t in spans[token_index]])
         if spans[token_index][-1].whitespace_:
             new_orth = new_orth[:-len(spans[token_index][-1].whitespace_)]
+        token = tokens[token_index]
         lex = doc.vocab.get(doc.mem, new_orth)
-        tokens[token_index].lex = lex
+        token.lex = lex
         # We set trailing space here too
-        tokens[token_index].spacy = doc.c[spans[token_index].end-1].spacy
+        token.spacy = doc.c[spans[token_index].end-1].spacy
+        py_token = span[0]
+        # Assign attributes
+        for attr_name, attr_value in attributes.items():
+            if attr_name == "_":  # Set extension attributes
+                for ext_attr_key, ext_attr_value in attr_value.items():
+                    py_token._.set(ext_attr_key, ext_attr_value)
+            elif attr_name == TAG:
+                doc.vocab.morphology.assign_tag(token, attr_value)
+            else:
+                # Set attributes on both token and lexeme to take care of token
+                # attribute vs. lexical attribute without having to enumerate
+                # them. If an attribute name is not valid, set_struct_attr will
+                # ignore it.
+                Token.set_struct_attr(token, attr_name, attr_value)
+                Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -281,7 +297,7 @@ def _bulk_merge(Doc doc, merges):
     current_offset = 0
     for i in range(doc.length):
         if current_span_index < len(spans) and i == spans[current_span_index].end:
-            #last token was the last of the span
+            # Last token was the last of the span
             current_offset += (spans[current_span_index].end - spans[current_span_index].start) -1
             current_span_index += 1
         if current_span_index < len(spans) and \
@@ -405,10 +421,17 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
             if attr_name == "_":
                 for ext_attr_key, ext_attr_value in attr_value.items():
                     doc[token_index + i]._.set(ext_attr_key, ext_attr_value)
+            # NB: We need to call get_string_id here because only the keys are
+            # "intified" (since we support "KEY": [value, value] syntax here).
             elif attr_name == TAG:
                 doc.vocab.morphology.assign_tag(token, get_string_id(attr_value))
             else:
+                # Set attributes on both token and lexeme to take care of token
+                # attribute vs. lexical attribute without having to enumerate
+                # them. If an attribute name is not valid, set_struct_attr will
+                # ignore it.
                 Token.set_struct_attr(token, attr_name, get_string_id(attr_value))
+                Lexeme.set_struct_attr(<LexemeC*>token.lex, attr_name, get_string_id(attr_value))
     # Assign correct dependencies to the inner token
     for i, head in enumerate(heads):
         doc.c[token_index + i].head = head
