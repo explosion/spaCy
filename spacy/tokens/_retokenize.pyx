@@ -17,6 +17,8 @@ from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
 from ..attrs cimport TAG
+
+from .underscore import is_writable_attr
 from ..attrs import intify_attrs
 from ..util import SimpleFrozenDict
 from ..errors import Errors
@@ -43,8 +45,13 @@ cdef class Retokenizer:
             if token.i in self.tokens_to_merge:
                 raise ValueError(Errors.E102.format(token=repr(token)))
             self.tokens_to_merge.add(token.i)
-
-        attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+        if "_" in attrs:  # extension attributes
+            extensions = attrs["_"]
+            attrs = {key: value for key, value in attrs.items() if key != "_"}
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            attrs["_"] = extensions
+        else:
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -131,7 +138,18 @@ def _merge(Doc doc, int start, int end, attributes):
     cdef TokenC* token = &doc.c[start]
     token.spacy = doc.c[end-1].spacy
     for attr_name, attr_value in attributes.items():
-        if attr_name == TAG:
+        if attr_name == "_":  # Set extension attributes
+            if not isinstance(attr_value, dict):
+                raise ValueError(Errors.E120.format(value=repr(attr_value)))
+            for ext_attr_key, ext_attr_value in attr_value.items():
+                # Get the extension and make sure it's available and writable
+                extension = doc[start].get_extension(ext_attr_key)
+                if not extension:  # Extension attribute doesn't exist
+                    raise ValueError(Errors.E118.format(attr=ext_attr_key))
+                if not is_writable_attr(extension):
+                    raise ValueError(Errors.E119.format(attr=ext_attr_key))
+                doc[start]._.set(ext_attr_key, ext_attr_value)
+        elif attr_name == TAG:
             doc.vocab.morphology.assign_tag(token, attr_value)
         else:
             Token.set_struct_attr(token, attr_name, attr_value)

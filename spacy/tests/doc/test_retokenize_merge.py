@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 from spacy.attrs import LEMMA
 from spacy.vocab import Vocab
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 
 from ..util import get_doc
 
@@ -259,3 +259,29 @@ def test_doc_retokenize_spans_subtree_size_check(en_tokenizer):
         attrs = {"lemma": "none", "ent_type": "none"}
         retokenizer.merge(doc[0:2], attrs=attrs)
     assert len(list(sent1.root.subtree)) == init_len - 1
+
+
+def test_doc_retokenize_merge_extension_attrs(en_vocab):
+    Token.set_extension("test1", default=False)
+    Token.set_extension("test2", default="nothing")
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    with doc.retokenize() as retokenizer:
+        attrs = {"lemma": "hello world", "_": {"test1": True, "test2": "value"}}
+        retokenizer.merge(doc[0:1], attrs=attrs)
+    assert doc[0].lemma_ == "hello world"
+    assert doc[0]._.test1 == True
+    assert doc[0]._.test2 == "value"
+
+
+@pytest.mark.parametrize(
+    "underscore_attrs",
+    [{"test1": "value"}, {"test2": "value"}, {"test3": "value"}, [1]],
+)
+def test_doc_retokenize_merge_extension_attrs_invalid(en_vocab, underscore_attrs):
+    Token.set_extension("test1", getter=lambda x: x, force=True)
+    Token.set_extension("test2", method=lambda x: x, force=True)
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    attrs = {"_": underscore_attrs}
+    with pytest.raises(ValueError):
+        with doc.retokenize() as retokenizer:
+            retokenizer.merge(doc[0:1], attrs=attrs)
