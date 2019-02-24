@@ -45,6 +45,10 @@ artifacts:
   # bdist_wheel puts your built wheel in the dist directory
   - path: dist\*
 
+branches:
+  except:
+    - spacy.io
+
 #on_success:
 #  You can use this step to upload your artifacts to a public website.
 #  See Appveyor's documentation for more details. Or you can simply
