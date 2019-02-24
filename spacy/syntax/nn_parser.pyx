@@ -163,7 +163,7 @@ cdef class Parser:
             added = self.moves.add_action(action, label)
             if added:
                 resized = True
-        if resized:
+        if resized and "nr_class" in self.cfg:
             self.cfg["nr_class"] = self.moves.n_moves
         if self.model not in (True, False, None) and resized:
             self.model.resize_output(self.moves.n_moves)
