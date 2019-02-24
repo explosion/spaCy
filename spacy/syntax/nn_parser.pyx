@@ -163,6 +163,8 @@ cdef class Parser:
             added = self.moves.add_action(action, label)
             if added:
                 resized = True
+        if resized:
+            self.cfg["nr_class"] = self.moves.n_moves
         if self.model not in (True, False, None) and resized:
             self.model.resize_output(self.moves.n_moves)
 
@@ -435,22 +437,22 @@ cdef class Parser:
         if self._rehearsal_model is None:
             return None
         losses.setdefault(self.name, 0.)
+ 
         states = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self.model.resize_output(self.moves.n_moves)
+        self._rehearsal_model.resize_output(self.moves.n_moves)
         # Prepare the stepwise model, and get the callback for finishing the batch
-        tutor = self._rehearsal_model(docs)
+        tutor, _ = self._rehearsal_model.begin_update(docs, drop=0.0)
         model, finish_update = self.model.begin_update(docs, drop=0.0)
         n_scores = 0.
         loss = 0.
-        non_zeroed_classes = self._rehearsal_model.upper.W.any(axis=1)
         while states:
-            targets, _ = tutor.begin_update(states)
-            guesses, backprop = model.begin_update(states)
-            d_scores = (targets - guesses) / targets.shape[0]
-            d_scores *= non_zeroed_classes
+            targets, _ = tutor.begin_update(states, drop=0.)
+            guesses, backprop = model.begin_update(states, drop=0.)
+            d_scores = (guesses - targets) / targets.shape[0]
             # If all weights for an output are 0 in the original model, don't
             # supervise that output. This allows us to add classes.
             loss += (d_scores**2).sum()
@@ -543,6 +545,9 @@ cdef class Parser:
             memset(is_valid, 0, self.moves.n_moves * sizeof(int))
             memset(costs, 0, self.moves.n_moves * sizeof(float))
             self.moves.set_costs(is_valid, costs, state, gold)
+            for j in range(self.moves.n_moves):
+                if costs[j] <= 0.0 and j in self.model.unseen_classes:
+                    self.model.unseen_classes.remove(j)
             cpu_log_loss(c_d_scores,
                 costs, is_valid, &scores[i, 0], d_scores.shape[1])
             c_d_scores += d_scores.shape[1]
