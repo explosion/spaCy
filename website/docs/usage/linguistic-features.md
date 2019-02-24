@@ -995,6 +995,14 @@ with doc.retokenize() as retokenizer:
 print("After:", [token.text for token in doc])
 ```
 
+If an attribute in the `attrs` is a context-dependent token attribute, it will
+be applied to the underlying [`Token`](/api/token). For example `LEMMA`, `POS`
+or `DEP` only apply to a word in context, so they're token attributes. If an
+attribute is a context-independent lexical attribute, it will be applied to the
+underlying [`Lexeme`](/api/lexeme), the entry in the vocabulary. For example,
+`LOWER` or `IS_STOP` apply to all words of the same spelling, regardless of the
+context.
+
 <Infobox title="Tip: merging entities and noun phrases">
 
 If you need to merge named entities or noun chunks, check out the built-in

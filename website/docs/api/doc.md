@@ -402,9 +402,11 @@ invalidated, although they may accidentally continue to work.
 
 ### Retokenizer.merge {#retokenizer.merge tag="method"}
 
-Mark a span for merging. The `attrs` will be applied to the resulting token.
-Writable custom extension attributes can be provided as a dictionary mapping
-attribute names to values as the `"_"` key.
+Mark a span for merging. The `attrs` will be applied to the resulting token (if
+they're context-dependent token attributes like `LEMMA` or `DEP`) or to the
+underlying lexeme (if they're context-independent lexical attributes like
+`LOWER` or `IS_STOP`). Writable custom extension attributes can be provided as a
+dictionary mapping attribute names to values as the `"_"` key.
 
 > #### Example
 >
@@ -431,7 +433,10 @@ second subtoken of `doc[3]`. This mechanism allows attaching subtokens to other
 newly created subtokens, without having to keep track of the changing token
 indices. If the specified head token will be split within the retokenizer block
 and no subtoken index is specified, it will default to `0`. Attributes to set on
-subtokens can be provided as a list of values.
+subtokens can be provided as a list of values. They'll be applied to the
+resulting token (if they're context-dependent token attributes like `LEMMA` or
+`DEP`) or to the underlying lexeme (if they're context-independent lexical
+attributes like `LOWER` or `IS_STOP`).
 
 > #### Example
 >
