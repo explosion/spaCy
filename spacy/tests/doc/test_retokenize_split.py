@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 from spacy.vocab import Vocab
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 
 from ..util import get_doc
 
@@ -125,3 +125,43 @@ def test_doc_retokenize_split_orths_mismatch(en_vocab):
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
             retokenizer.split(doc[0], ["L", "A"], [(doc[0], 0), (doc[0], 0)])
+
+
+def test_doc_retokenize_split_extension_attrs(en_vocab):
+    Token.set_extension("a", default=False, force=True)
+    Token.set_extension("b", default="nothing", force=True)
+    doc = Doc(en_vocab, words=["LosAngeles", "start"])
+    with doc.retokenize() as retokenizer:
+        heads = [(doc[0], 1), doc[1]]
+        underscore = [{"a": True, "b": "1"}, {"b": "2"}]
+        attrs = {"lemma": ["los", "angeles"], "_": underscore}
+        retokenizer.split(doc[0], ["Los", "Angeles"], heads, attrs=attrs)
+    assert doc[0].lemma_ == "los"
+    assert doc[0]._.a == True
+    assert doc[0]._.b == "1"
+    assert doc[1].lemma_ == "angeles"
+    assert doc[1]._.a == False
+    assert doc[1]._.b == "2"
+
+
+@pytest.mark.parametrize(
+    "underscore_attrs",
+    [
+        [{"a": "x"}, {}],  # Overwriting getter without setter
+        [{"b": "x"}, {}],  # Overwriting method
+        [{"c": "x"}, {}],  # Overwriting nonexistent attribute
+        [{"a": "x"}, {"x": "x"}],  # Combination
+        [{"a": "x", "x": "x"}, {"x": "x"}],  # Combination
+        {"x": "x"},  # Not a list of dicts
+    ],
+)
+def test_doc_retokenize_split_extension_attrs_invalid(en_vocab, underscore_attrs):
+    Token.set_extension("x", default=False, force=True)
+    Token.set_extension("a", getter=lambda x: x, force=True)
+    Token.set_extension("b", method=lambda x: x, force=True)
+    doc = Doc(en_vocab, words=["LosAngeles", "start"])
+    attrs = {"_": underscore_attrs}
+    with pytest.raises(ValueError):
+        with doc.retokenize() as retokenizer:
+            heads = [(doc[0], 1), doc[1]]
+            retokenizer.split(doc[0], ["Los", "Angeles"], heads, attrs=attrs)

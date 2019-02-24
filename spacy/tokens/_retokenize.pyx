@@ -17,6 +17,8 @@ from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
 from ..attrs cimport TAG
+
+from .underscore import is_writable_attr
 from ..attrs import intify_attrs
 from ..util import SimpleFrozenDict
 from ..errors import Errors
@@ -43,8 +45,14 @@ cdef class Retokenizer:
             if token.i in self.tokens_to_merge:
                 raise ValueError(Errors.E102.format(token=repr(token)))
             self.tokens_to_merge.add(token.i)
-
-        attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+        if "_" in attrs:  # Extension attributes
+            extensions = attrs["_"]
+            _validate_extensions(extensions)
+            attrs = {key: value for key, value in attrs.items() if key != "_"}
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            attrs["_"] = extensions
+        else:
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -53,7 +61,15 @@ cdef class Retokenizer:
         """
         if ''.join(orths) != token.text:
             raise ValueError(Errors.E117.format(new=''.join(orths), old=token.text))
-        attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+        if "_" in attrs:  # Extension attributes
+            extensions = attrs["_"]
+            for extension in extensions:
+                _validate_extensions(extension)
+            attrs = {key: value for key, value in attrs.items() if key != "_"}
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+            attrs["_"] = extensions
+        else:
+            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):
@@ -131,7 +147,10 @@ def _merge(Doc doc, int start, int end, attributes):
     cdef TokenC* token = &doc.c[start]
     token.spacy = doc.c[end-1].spacy
     for attr_name, attr_value in attributes.items():
-        if attr_name == TAG:
+        if attr_name == "_":  # Set extension attributes
+            for ext_attr_key, ext_attr_value in attr_value.items():
+                doc[start]._.set(ext_attr_key, ext_attr_value)
+        elif attr_name == TAG:
             doc.vocab.morphology.assign_tag(token, attr_value)
         else:
             Token.set_struct_attr(token, attr_name, attr_value)
@@ -183,6 +202,7 @@ def _merge(Doc doc, int start, int end, attributes):
     # Return the merged Python object
     return doc[start]
 
+
 def _bulk_merge(Doc doc, merges):
     """Retokenize the document, such that the spans described in 'merges'
      are merged into a single token. This method assumes that the merges
@@ -213,7 +233,10 @@ def _bulk_merge(Doc doc, merges):
         tokens[merge_index] = token
         # Assign attributes
         for attr_name, attr_value in attributes.items():
-            if attr_name == TAG:
+            if attr_name == "_":  # Set extension attributes
+                for ext_attr_key, ext_attr_value in attr_value.items():
+                    doc[start]._.set(ext_attr_key, ext_attr_value)
+            elif attr_name == TAG:
                 doc.vocab.morphology.assign_tag(token, attr_value)
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
@@ -379,7 +402,10 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     for attr_name, attr_values in attrs.items():
         for i, attr_value in enumerate(attr_values):
             token = &doc.c[token_index + i]
-            if attr_name == TAG:
+            if attr_name == "_":
+                for ext_attr_key, ext_attr_value in attr_value.items():
+                    doc[token_index + i]._.set(ext_attr_key, ext_attr_value)
+            elif attr_name == TAG:
                 doc.vocab.morphology.assign_tag(token, get_string_id(attr_value))
             else:
                 Token.set_struct_attr(token, attr_name, get_string_id(attr_value))
@@ -391,3 +417,15 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         doc.c[i].head -= i
     # set children from head
     set_children_from_heads(doc.c, doc.length)
+
+
+def _validate_extensions(extensions):
+    if not isinstance(extensions, dict):
+        raise ValueError(Errors.E120.format(value=repr(extensions)))
+    for key, value in extensions.items():
+        # Get the extension and make sure it's available and writable
+        extension = Token.get_extension(key)
+        if not extension:  # Extension attribute doesn't exist
+            raise ValueError(Errors.E118.format(attr=key))
+        if not is_writable_attr(extension):
+            raise ValueError(Errors.E119.format(attr=key))
