@@ -37,18 +37,20 @@ shortcut for this and instantiate the component using its string name and
 > tagger.from_disk("/path/to/model")
 > ```
 
-| Name        | Type                           | Description                                                                                                                                           |
-| ----------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`                        | The shared vocabulary.                                                                                                                                |
-| `model`     | `thinc.neural.Model` or `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `**cfg`     | -                              | Configuration parameters.                                                                                                                             |
-| **RETURNS** | `Tagger`                       | The newly constructed object.                                                                                                                         |
+| Name        | Type                          | Description                                                                                                                                           |
+| ----------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`     | `Vocab`                       | The shared vocabulary.                                                                                                                                |
+| `model`     | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
+| `**cfg`     | -                             | Configuration parameters.                                                                                                                             |
+| **RETURNS** | `Tagger`                      | The newly constructed object.                                                                                                                         |
 
 ## Tagger.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
-Both [`__call__`](/api/tagger#call) and [`pipe`](/api/tagger#pipe) delegate to
-the [`predict`](/api/tagger#predict) and
+This usually happens under the hood when you call the `nlp` object on a text and
+all pipeline components are applied to the `Doc` in order. Both
+[`__call__`](/api/tagger#call) and [`pipe`](/api/tagger#pipe) delegate to the
+[`predict`](/api/tagger#predict) and
 [`set_annotations`](/api/tagger#set_annotations) methods.
 
 > #### Example
@@ -56,6 +58,7 @@ the [`predict`](/api/tagger#predict) and
 > ```python
 > tagger = Tagger(nlp.vocab)
 > doc = nlp(u"This is a sentence.")
+> # This usually happens under the hood
 > processed = tagger(doc)
 > ```
 
@@ -79,11 +82,11 @@ Apply the pipe to a stream of documents. Both [`__call__`](/api/tagger#call) and
 >     pass
 > ```
 
-| Name         | Type     | Description                                                                                                    |
-| ------------ | -------- | -------------------------------------------------------------------------------------------------------------- |
-| `stream`     | iterable | A stream of documents.                                                                                         |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.                                                              |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text.                                                         |
+| Name         | Type     | Description                                            |
+| ------------ | -------- | ------------------------------------------------------ |
+| `stream`     | iterable | A stream of documents.                                 |
+| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
+| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
 
 ## Tagger.predict {#predict tag="method"}
 

@@ -48,9 +48,10 @@ shortcut for this and instantiate the component using its string name and
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
-Both [`__call__`](/api/textcategorizer#call) and
-[`pipe`](/api/textcategorizer#pipe) delegate to the
-[`predict`](/api/textcategorizer#predict) and
+This usually happens under the hood when you call the `nlp` object on a text and
+all pipeline components are applied to the `Doc` in order. Both
+[`__call__`](/api/textcategorizer#call) and [`pipe`](/api/textcategorizer#pipe)
+delegate to the [`predict`](/api/textcategorizer#predict) and
 [`set_annotations`](/api/textcategorizer#set_annotations) methods.
 
 > #### Example
@@ -58,6 +59,7 @@ Both [`__call__`](/api/textcategorizer#call) and
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
 > doc = nlp(u"This is a sentence.")
+> # This usually happens under the hood
 > processed = textcat(doc)
 > ```
 
