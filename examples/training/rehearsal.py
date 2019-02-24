@@ -4,7 +4,7 @@ import random
 import srsly
 import spacy
 from spacy.gold import GoldParse
-from spacy.util import minibatch
+from spacy.util import minibatch, compounding
 
 
 LABEL = "ANIMAL"
@@ -54,9 +54,17 @@ def main(model_name, unlabelled_loc):
     nlp.get_pipe("ner").add_label(LABEL)
     raw_docs = list(read_raw_data(nlp, unlabelled_loc))
     optimizer = nlp.resume_training()
+    # Avoid use of Adam when resuming training. I don't understand this well
+    # yet, but I'm getting weird results from Adam. Try commenting out the
+    # nlp.update(), and using Adam -- you'll find the models drift apart.
+    # I guess Adam is losing precision, introducing gradient noise?
+    optimizer.alpha = 0.1
+    optimizer.b1 = 0.0
+    optimizer.b2 = 0.0
 
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
+    sizes = compounding(1.0, 4.0, 1.001)
     with nlp.disable_pipes(*other_pipes):
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
@@ -64,13 +72,22 @@ def main(model_name, unlabelled_loc):
             losses = {}
             r_losses = {}
             # batch up the examples using spaCy's minibatch
-            raw_batches = minibatch(raw_docs, size=batch_size)
-            for doc, gold in TRAIN_DATA:
-                nlp.update([doc], [gold], sgd=optimizer, drop=dropout, losses=losses)
+            raw_batches = minibatch(raw_docs, size=4)
+            for batch in minibatch(TRAIN_DATA, size=sizes):
+                docs, golds = zip(*batch)
+                nlp.update(docs, golds, sgd=optimizer, drop=dropout, losses=losses)
                 raw_batch = list(next(raw_batches))
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)
             print("Losses", losses)
             print("R. Losses", r_losses)
+    print(nlp.get_pipe('ner').model.unseen_classes)
+    test_text = "Do you like horses?"
+    doc = nlp(test_text)
+    print("Entities in '%s'" % test_text)
+    for ent in doc.ents:
+        print(ent.label_, ent.text)
+
+
 
 
 if __name__ == "__main__":
