@@ -54,9 +54,9 @@ valuable if it's shared publicly, so that more people can benefit from it.
 
 | Type                     | Platforms                                              |
 | ------------------------ | ------------------------------------------------------ |
-| 🚨**Bug Reports**        | [GitHub Issue Tracker]                                 |
+| 🚨 **Bug Reports**       | [GitHub Issue Tracker]                                 |
 | 🎁 **Feature Requests**  | [GitHub Issue Tracker]                                 |
-| 👩‍💻**Usage Questions**    | [Stack Overflow] · [Gitter Chat] · [Reddit User Group] |
+| 👩‍💻 **Usage Questions**   | [Stack Overflow] · [Gitter Chat] · [Reddit User Group] |
 | 🗯 **General Discussion** | [Gitter Chat] · [Reddit User Group]                    |
 
 [github issue tracker]: https://github.com/explosion/spaCy/issues

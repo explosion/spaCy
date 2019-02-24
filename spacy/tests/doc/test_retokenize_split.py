@@ -8,7 +8,7 @@ from spacy.tokens import Doc
 from ..util import get_doc
 
 
-def test_doc_split(en_vocab):
+def test_doc_retokenize_split(en_vocab):
     words = ["LosAngeles", "start", "."]
     heads = [1, 1, 0]
     doc = get_doc(en_vocab, words=words, heads=heads)
@@ -41,7 +41,7 @@ def test_doc_split(en_vocab):
     assert len(str(doc)) == 19
 
 
-def test_split_dependencies(en_vocab):
+def test_doc_retokenize_split_dependencies(en_vocab):
     doc = Doc(en_vocab, words=["LosAngeles", "start", "."])
     dep1 = doc.vocab.strings.add("amod")
     dep2 = doc.vocab.strings.add("subject")
@@ -56,7 +56,7 @@ def test_split_dependencies(en_vocab):
     assert doc[1].dep == dep2
 
 
-def test_split_heads_error(en_vocab):
+def test_doc_retokenize_split_heads_error(en_vocab):
     doc = Doc(en_vocab, words=["LosAngeles", "start", "."])
     # Not enough heads
     with pytest.raises(ValueError):
@@ -69,7 +69,7 @@ def test_split_heads_error(en_vocab):
             retokenizer.split(doc[0], ["Los", "Angeles"], [doc[1], doc[1], doc[1]])
 
 
-def test_spans_entity_merge_iob():
+def test_doc_retokenize_spans_entity_split_iob():
     # Test entity IOB stays consistent after merging
     words = ["abc", "d", "e"]
     doc = Doc(Vocab(), words=words)
@@ -84,7 +84,7 @@ def test_spans_entity_merge_iob():
     assert doc[3].ent_iob_ == "I"
 
 
-def test_spans_sentence_update_after_merge(en_vocab):
+def test_doc_retokenize_spans_sentence_update_after_split(en_vocab):
     # fmt: off
     words = ["StewartLee", "is", "a", "stand", "up", "comedian", ".", "He",
              "lives", "in", "England", "and", "loves", "JoePasquale", "."]
@@ -114,7 +114,7 @@ def test_spans_sentence_update_after_merge(en_vocab):
     assert len(sent2) == init_len2 + 1
 
 
-def test_split_orths_mismatch(en_vocab):
+def test_doc_retokenize_split_orths_mismatch(en_vocab):
     """Test that the regular retokenizer.split raises an error if the orths
     don't match the original token text. There might still be a method that
     allows this, but for the default use cases, merging and splitting should

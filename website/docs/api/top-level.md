@@ -504,6 +504,57 @@ an error if key doesn't match `ORTH` values.
 | `*addition_dicts` | dicts | Exception dictionaries to add to the base exceptions, in order. |
 | **RETURNS**       | dict  | Combined tokenizer exceptions.                                  |
 
+### util.compile_prefix_regex {#util.compile_prefix_regex tag="function"}
+
+Compile a sequence of prefix rules into a regex object.
+
+> #### Example
+>
+> ```python
+> prefixes = ("§", "%", "=", r"\+")
+> prefix_regex = util.compile_prefix_regex(prefixes)
+> nlp.tokenizer.prefix_search = prefix_regex.search
+> ```
+
+| Name        | Type                                                          | Description                                                                                                                               |
+| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | tuple                                                         | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). |
+| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes).                                                  |
+
+### util.compile_suffix_regex {#util.compile_suffix_regex tag="function"}
+
+Compile a sequence of suffix rules into a regex object.
+
+> #### Example
+>
+> ```python
+> suffixes = ("'s", "'S", r"(?<=[0-9])\+")
+> suffix_regex = util.compile_suffix_regex(suffixes)
+> nlp.tokenizer.suffix_search = suffix_regex.search
+> ```
+
+| Name        | Type                                                          | Description                                                                                                                               |
+| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | tuple                                                         | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). |
+| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes).                                                  |
+
+### util.compile_infix_regex {#util.compile_infix_regex tag="function"}
+
+Compile a sequence of infix rules into a regex object.
+
+> #### Example
+>
+> ```python
+> infixes = ("…", "-", "—", r"(?<=[0-9])[+\-\*^](?=[0-9-])")
+> infix_regex = util.compile_infix_regex(infixes)
+> nlp.tokenizer.infix_finditer = infix_regex.finditer
+> ```
+
+| Name        | Type                                                          | Description                                                                                                                             |
+| ----------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | tuple                                                         | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). |
+| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes).                                               |
+
 ### util.minibatch {#util.minibatch tag="function" new="2"}
 
 Iterate over batches of items. `size` may be an iterator, so that batch-size can

@@ -812,6 +812,40 @@ only be applied at the **end of a token**, so your expression should end with a
 
 </Infobox>
 
+#### Adding to existing rule sets {#native-tokenizer-additions}
+
+In many situations, you don't necessarily need entirely custom rules. Sometimes
+you just want to add another character to the prefixes, suffixes or infixes. The
+default prefix, suffix and infix rules are available via the `nlp` object's
+`Defaults` and the [`Tokenizer.suffix_search`](/api/tokenizer#attributes)
+attribute is writable, so you can overwrite it with a compiled regular
+expression object using of the modified default rules. spaCy ships with utility
+functions to help you compile the regular expressions – for example,
+[`compile_suffix_regex`](/api/top-level#util.compile_suffix_regex):
+
+```python
+suffixes = nlp.Defaults.suffixes + (r'''-+$''',)
+suffix_regex = spacy.util.compile_suffix_regex(suffixes)
+nlp.tokenizer.suffix_search = suffix_regex.search
+```
+
+For an overview of the default regular expressions, see
+[`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py).
+The `Tokenizer.suffix_search` attribute should be a function which takes a
+unicode string and returns a **regex match object** or `None`. Usually we use
+the `.search` attribute of a compiled regex object, but you can use some other
+function that behaves the same way.
+
+<Infobox title="Important note" variant="warning">
+
+If you're using a statistical model, writing to the `nlp.Defaults` or
+`English.Defaults` directly won't work, since the regular expressions are read
+from the model and will be compiled when you load it. You'll only see the effect
+if you call [`spacy.blank`](/api/top-level#spacy.blank) or
+`Defaults.create_tokenizer()`.
+
+</Infobox>
+
 ### Hooking an arbitrary tokenizer into the pipeline {#custom-tokenizer}
 
 The tokenizer is the first component of the processing pipeline and the only one
