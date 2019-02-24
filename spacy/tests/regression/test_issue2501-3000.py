@@ -2,15 +2,18 @@
 from __future__ import unicode_literals
 
 import pytest
+from spacy import displacy
 from spacy.lang.en import English
 from spacy.lang.ja import Japanese
 from spacy.lang.xx import MultiLanguage
 from spacy.language import Language
 from spacy.matcher import Matcher
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from spacy.compat import pickle
 from spacy._ml import link_vectors_to_models
 import numpy
+import random
 
 from ..util import get_doc
 
@@ -54,6 +57,25 @@ def test_issue2626_2835(en_tokenizer, text):
     assert doc
 
 
+def test_issue2656(en_tokenizer):
+    """Test that tokenizer correctly splits of punctuation after numbers with
+    decimal points.
+    """
+    doc = en_tokenizer("I went for 40.3, and got home by 10.0.")
+    assert len(doc) == 11
+    assert doc[0].text == "I"
+    assert doc[1].text == "went"
+    assert doc[2].text == "for"
+    assert doc[3].text == "40.3"
+    assert doc[4].text == ","
+    assert doc[5].text == "and"
+    assert doc[6].text == "got"
+    assert doc[7].text == "home"
+    assert doc[8].text == "by"
+    assert doc[9].text == "10.0"
+    assert doc[10].text == "."
+
+
 def test_issue2671():
     """Ensure the correct entity ID is returned for matches with quantifiers.
     See also #2675
@@ -75,6 +97,17 @@ def test_issue2671():
     matches2 = matcher(doc2)
     for match_id, start, end in matches2:
         assert nlp.vocab.strings[match_id] == pattern_id
+
+
+def test_issue2728(en_vocab):
+    """Test that displaCy ENT visualizer escapes HTML correctly."""
+    doc = Doc(en_vocab, words=["test", "<RELEASE>", "test"])
+    doc.ents = [Span(doc, 0, 1, label="TEST")]
+    html = displacy.render(doc, style="ent")
+    assert "&lt;RELEASE&gt;" in html
+    doc.ents = [Span(doc, 1, 2, label="TEST")]
+    html = displacy.render(doc, style="ent")
+    assert "&lt;RELEASE&gt;" in html
 
 
 def test_issue2754(en_tokenizer):
@@ -106,6 +139,48 @@ def test_issue2782(text, lang_cls):
     assert doc[0].like_num
 
 
+def test_issue2800():
+    """Test issue that arises when too many labels are added to NER model.
+    Used to cause segfault.
+    """
+    train_data = []
+    train_data.extend([("One sentence", {"entities": []})])
+    entity_types = [str(i) for i in range(1000)]
+    nlp = English()
+    ner = nlp.create_pipe("ner")
+    nlp.add_pipe(ner)
+    for entity_type in list(entity_types):
+        ner.add_label(entity_type)
+    optimizer = nlp.begin_training()
+    for i in range(20):
+        losses = {}
+        random.shuffle(train_data)
+        for statement, entities in train_data:
+            nlp.update([statement], [entities], sgd=optimizer, losses=losses, drop=0.5)
+
+
+def test_issue2822(it_tokenizer):
+    """Test that the abbreviation of poco is kept as one word."""
+    doc = it_tokenizer("Vuoi un po' di zucchero?")
+    assert len(doc) == 6
+    assert doc[0].text == "Vuoi"
+    assert doc[1].text == "un"
+    assert doc[2].text == "po'"
+    assert doc[2].lemma_ == "poco"
+    assert doc[3].text == "di"
+    assert doc[4].text == "zucchero"
+    assert doc[5].text == "?"
+
+
+def test_issue2833(en_vocab):
+    """Test that a custom error is raised if a token or span is pickled."""
+    doc = Doc(en_vocab, words=["Hello", "world"])
+    with pytest.raises(NotImplementedError):
+        pickle.dumps(doc[0])
+    with pytest.raises(NotImplementedError):
+        pickle.dumps(doc[0:2])
+
+
 def test_issue2871():
     """Test that vectors recover the correct key for spaCy reserved words."""
     words = ["dog", "cat", "SUFFIX"]
@@ -134,3 +209,19 @@ def test_issue2901():
 
     doc = nlp("pythonが大好きです")
     assert doc
+
+
+def test_issue2926(fr_tokenizer):
+    """Test that the tokenizer correctly splits tokens separated by a slash (/)
+    ending in a digit.
+    """
+    doc = fr_tokenizer("Learn html5/css3/javascript/jquery")
+    assert len(doc) == 8
+    assert doc[0].text == "Learn"
+    assert doc[1].text == "html5"
+    assert doc[2].text == "/"
+    assert doc[3].text == "css3"
+    assert doc[4].text == "/"
+    assert doc[5].text == "javascript"
+    assert doc[6].text == "/"
+    assert doc[7].text == "jquery"

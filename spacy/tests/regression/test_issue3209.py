@@ -2,10 +2,8 @@
 from __future__ import unicode_literals
 
 from spacy.lang.en import English
-import pytest
 
 
-@pytest.mark.xfail
 def test_issue3209():
     """Test issue that occurred in spaCy nightly where NER labels were being
     mapped to classes incorrectly after loading the model, when the labels

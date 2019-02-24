@@ -214,9 +214,6 @@ def test_doc_retokenize_spans_entity_merge_iob():
         retokenizer.merge(doc[2:4])
         retokenizer.merge(doc[4:6])
         retokenizer.merge(doc[7:9])
-    for token in doc:
-        print(token)
-        print(token.ent_iob)
     assert len(doc) == 6
     assert doc[3].ent_iob_ == "B"
     assert doc[4].ent_iob_ == "I"
@@ -270,16 +267,16 @@ def test_doc_retokenize_merge_extension_attrs(en_vocab):
         attrs = {"lemma": "hello world", "_": {"a": True, "b": "1"}}
         retokenizer.merge(doc[0:2], attrs=attrs)
     assert doc[0].lemma_ == "hello world"
-    assert doc[0]._.a == True
+    assert doc[0]._.a is True
     assert doc[0]._.b == "1"
     # Test bulk merging
     doc = Doc(en_vocab, words=["hello", "world", "!", "!"])
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[0:2], attrs={"_": {"a": True, "b": "1"}})
         retokenizer.merge(doc[2:4], attrs={"_": {"a": None, "b": "2"}})
-    assert doc[0]._.a == True
+    assert doc[0]._.a is True
     assert doc[0]._.b == "1"
-    assert doc[1]._.a == None
+    assert doc[1]._.a is None
     assert doc[1]._.b == "2"
 
 
@@ -292,3 +289,29 @@ def test_doc_retokenize_merge_extension_attrs_invalid(en_vocab, underscore_attrs
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
             retokenizer.merge(doc[0:2], attrs=attrs)
+
+
+def test_doc_retokenizer_merge_lex_attrs(en_vocab):
+    """Test that retokenization also sets attributes on the lexeme if they're
+    lexical attributes. For example, if a user sets IS_STOP, it should mean that
+    "all tokens with that lexeme" are marked as a stop word, so the ambiguity
+    here is acceptable. Also see #2390.
+    """
+    # Test regular merging
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    assert not any(t.is_stop for t in doc)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2], attrs={"lemma": "hello world", "is_stop": True})
+    assert doc[0].lemma_ == "hello world"
+    assert doc[0].is_stop
+    # Test bulk merging
+    doc = Doc(en_vocab, words=["eins", "zwei", "!", "!"])
+    assert not any(t.like_num for t in doc)
+    assert not any(t.is_stop for t in doc)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2], attrs={"like_num": True})
+        retokenizer.merge(doc[2:4], attrs={"is_stop": True})
+    assert doc[0].like_num
+    assert doc[1].is_stop
+    assert not doc[0].is_stop
+    assert not doc[1].like_num
