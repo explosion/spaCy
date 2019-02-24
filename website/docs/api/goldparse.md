@@ -7,17 +7,23 @@ source: spacy/gold.pyx
 
 ## GoldParse.\_\_init\_\_ {#init tag="method"}
 
-Create a `GoldParse`.
+Create a `GoldParse`. Unlike annotations in `entities`, label annotations in
+`cats` can overlap, i.e. a single word can be covered by multiple labelled
+spans. The [`TextCategorizer`](/api/textcategorizer) component expects true
+examples of a label to have the value `1.0`, and negative examples of a label to
+have the value `0.0`. Labels not in the dictionary are treated as missing – the
+gradient for those labels will be zero.
 
-| Name        | Type        | Description                                                                                                                                           |
-| ----------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`       | The document the annotations refer to.                                                                                                                |
-| `words`     | iterable    | A sequence of unicode word strings.                                                                                                                   |
-| `tags`      | iterable    | A sequence of strings, representing tag annotations.                                                                                                  |
-| `heads`     | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                          |
-| `deps`      | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                     |
-| `entities`  | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions. |
-| **RETURNS** | `GoldParse` | The newly constructed object.                                                                                                                         |
+| Name        | Type        | Description                                                                                                                                                                                                               |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`       | The document the annotations refer to.                                                                                                                                                                                    |
+| `words`     | iterable    | A sequence of unicode word strings.                                                                                                                                                                                       |
+| `tags`      | iterable    | A sequence of strings, representing tag annotations.                                                                                                                                                                      |
+| `heads`     | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                                                                                              |
+| `deps`      | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                                                                                         |
+| `entities`  | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions.                                                                     |
+| `cats`      | dict        | Labels for text classification. Each key in the dictionary may be a string or an int, or a `(start_char, end_char, label)` tuple, indicating that the label is applied to only part of the document (usually a sentence). |
+| **RETURNS** | `GoldParse` | The newly constructed object.                                                                                                                                                                                             |
 
 ## GoldParse.\_\_len\_\_ {#len tag="method"}
 
@@ -52,11 +58,10 @@ Whether the provided syntactic annotations form a projective dependency tree.
 ### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
 Encode labelled spans into per-token tags, using the
-[BILUO scheme](/api/annotation#biluo) (Begin/In/Last/Unit/Out).
-
-Returns a list of unicode strings, describing the tags. Each tag string will be
-of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one
-of `"B"`, `"I"`, `"L"`, `"U"`. The string `"-"` is used where the entity offsets
+[BILUO scheme](/api/annotation#biluo) (Begin, In, Last, Unit, Out). Returns a
+list of unicode strings, describing the tags. Each tag string will be of the
+form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of
+`"B"`, `"I"`, `"L"`, `"U"`. The string `"-"` is used where the entity offsets
 don't align with the tokenization in the `Doc` object. The training algorithm
 will view these as missing values. `O` denotes a non-entity token. `B` denotes
 the beginning of a multi-token entity, `I` the inside of an entity of three or
