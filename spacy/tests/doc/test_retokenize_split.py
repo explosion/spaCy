@@ -137,10 +137,10 @@ def test_doc_retokenize_split_extension_attrs(en_vocab):
         attrs = {"lemma": ["los", "angeles"], "_": underscore}
         retokenizer.split(doc[0], ["Los", "Angeles"], heads, attrs=attrs)
     assert doc[0].lemma_ == "los"
-    assert doc[0]._.a == True
+    assert doc[0]._.a is True
     assert doc[0]._.b == "1"
     assert doc[1].lemma_ == "angeles"
-    assert doc[1]._.a == False
+    assert doc[1]._.a is False
     assert doc[1]._.b == "2"
 
 
