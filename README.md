@@ -6,7 +6,7 @@ spaCy is a library for advanced Natural Language Processing in Python and
 Cython. It's built on the very latest research, and was designed from day one
 to be used in real products. spaCy comes with
 [pre-trained statistical models](https://spacy.io/models) and word vectors, and
-currently supports tokenization for **30+ languages**. It features the
+currently supports tokenization for **45+ languages**. It features the
 **fastest syntactic parser** in the world, convolutional
 **neural network models** for tagging, parsing and **named entity recognition**
 and easy **deep learning** integration. It's commercial open-source software,
@@ -20,29 +20,30 @@ released under the MIT license.
 [![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square)](https://pypi.python.org/pypi/spacy)
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square)](https://anaconda.org/conda-forge/spacy)
 [![Python wheels](https://img.shields.io/badge/wheels-%E2%9C%93-4c1.svg?longCache=true&style=flat-square&logo=python&logoColor=white)](https://github.com/explosion/wheelwright/releases)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 [![spaCy on Twitter](https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow)](https://twitter.com/spacy_io)
 
 ## 📖 Documentation
 
-| Documentation |  |
-| --- | --- |
-| [spaCy 101] | New to spaCy? Here's everything you need to know!
-| [Usage Guides] | How to use spaCy and its features. |
-| [New in v2.0] | New features, backwards incompatibilities and migration guide. |
-| [API Reference] | The detailed reference for spaCy's API. |
-| [Models] | Download statistical language models for spaCy. |
-| [Universe] | Libraries, extensions, demos, books and courses. |
-| [Changelog] | Changes and version history. |
-| [Contribute] | How to contribute to the spaCy project and code base. |
+| Documentation   |                                                                |
+| --------------- | -------------------------------------------------------------- |
+| [spaCy 101]     | New to spaCy? Here's everything you need to know!              |
+| [Usage Guides]  | How to use spaCy and its features.                             |
+| [New in v2.1]   | New features, backwards incompatibilities and migration guide. |
+| [API Reference] | The detailed reference for spaCy's API.                        |
+| [Models]        | Download statistical language models for spaCy.                |
+| [Universe]      | Libraries, extensions, demos, books and courses.               |
+| [Changelog]     | Changes and version history.                                   |
+| [Contribute]    | How to contribute to the spaCy project and code base.          |
 
-[spaCy 101]: https://spacy.io/usage/spacy-101
-[New in v2.0]: https://spacy.io/usage/v2#migrating
-[Usage Guides]: https://spacy.io/usage/
-[API Reference]: https://spacy.io/api/
-[Models]: https://spacy.io/models
-[Universe]: https://spacy.io/universe
-[Changelog]: https://spacy.io/usage/#changelog
-[Contribute]: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
+[spacy 101]: https://spacy.io/usage/spacy-101
+[new in v2.1]: https://spacy.io/usage/v2-1
+[usage guides]: https://spacy.io/usage/
+[api reference]: https://spacy.io/api/
+[models]: https://spacy.io/models
+[universe]: https://spacy.io/universe
+[changelog]: https://spacy.io/usage/#changelog
+[contribute]: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
 ## 💬 Where to ask questions
 
@@ -51,35 +52,38 @@ and [@ines](https://github.com/ines). Please understand that we won't be able
 to provide individual support via email. We also believe that help is much more
 valuable if it's shared publicly, so that more people can benefit from it.
 
-* **Bug Reports**: [GitHub Issue Tracker]
-* **Usage Questions**: [Stack Overflow] · [Gitter Chat] · [Reddit User Group]
-* **General Discussion**: [Gitter Chat] · [Reddit User Group]
+| Type                     | Platforms                                              |
+| ------------------------ | ------------------------------------------------------ |
+| 🚨**Bug Reports**        | [GitHub Issue Tracker]                                 |
+| 🎁 **Feature Requests**  | [GitHub Issue Tracker]                                 |
+| 👩‍💻**Usage Questions**    | [Stack Overflow] · [Gitter Chat] · [Reddit User Group] |
+| 🗯 **General Discussion** | [Gitter Chat] · [Reddit User Group]                    |
 
-[GitHub Issue Tracker]: https://github.com/explosion/spaCy/issues
-[Stack Overflow]: http://stackoverflow.com/questions/tagged/spacy
-[Gitter Chat]: https://gitter.im/explosion/spaCy
-[Reddit User Group]: https://www.reddit.com/r/spacynlp
+[github issue tracker]: https://github.com/explosion/spaCy/issues
+[stack overflow]: http://stackoverflow.com/questions/tagged/spacy
+[gitter chat]: https://gitter.im/explosion/spaCy
+[reddit user group]: https://www.reddit.com/r/spacynlp
 
 ## Features
 
-* **Fastest syntactic parser** in the world
-* **Named entity** recognition
-* Non-destructive **tokenization**
-* Support for **30+ languages**
-* Pre-trained [statistical models](https://spacy.io/models) and word vectors
-* Easy **deep learning** integration
-* Part-of-speech tagging
-* Labelled dependency parsing
-* Syntax-driven sentence segmentation
-* Built in **visualizers** for syntax and NER
-* Convenient string-to-hash mapping
-* Export to numpy data arrays
-* Efficient binary serialization
-* Easy **model packaging** and deployment
-* State-of-the-art speed
-* Robust, rigorously evaluated accuracy
+-   **Fastest syntactic parser** in the world
+-   **Named entity** recognition
+-   Non-destructive **tokenization**
+-   Support for **45+ languages**
+-   Pre-trained [statistical models](https://spacy.io/models) and word vectors
+-   Easy **deep learning** integration
+-   Part-of-speech tagging
+-   Labelled dependency parsing
+-   Syntax-driven sentence segmentation
+-   Built in **visualizers** for syntax and NER
+-   Convenient string-to-hash mapping
+-   Export to numpy data arrays
+-   Efficient binary serialization
+-   Easy **model packaging** and deployment
+-   State-of-the-art speed
+-   Robust, rigorously evaluated accuracy
 
-📖  **For more details, see the
+📖 **For more details, see the
 [facts, figures and benchmarks](https://spacy.io/usage/facts-figures).**
 
 ## Install spaCy
@@ -87,9 +91,9 @@ valuable if it's shared publicly, so that more people can benefit from it.
 For detailed installation instructions, see the
 [documentation](https://spacy.io/usage).
 
-* **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual Studio)
-* **Python version**: Python 2.7, 3.4+ (only 64 bit)
-* **Package managers**: [pip] · [conda] (via `conda-forge`)
+-   **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual Studio)
+-   **Python version**: Python 2.7, 3.4+ (only 64 bit)
+-   **Package managers**: [pip] · [conda] (via `conda-forge`)
 
 [pip]: https://pypi.python.org/pypi/spacy
 [conda]: https://anaconda.org/conda-forge/spacy
@@ -142,7 +146,7 @@ If you've trained your own models, keep in mind that your training and runtime
 inputs must match. After updating spaCy, we recommend **retraining your models**
 with the new version.
 
-📖  **For details on upgrading from spaCy 1.x to spaCy 2.x, see the
+📖 **For details on upgrading from spaCy 1.x to spaCy 2.x, see the
 [migration guide](https://spacy.io/usage/v2#migrating).**
 
 ## Download models
@@ -152,13 +156,13 @@ This means that they're a component of your application, just like any
 other module. Models can be installed using spaCy's `download` command,
 or manually by pointing pip to a path or URL.
 
-| Documentation |  |
-| --- | --- |
-| [Available Models] | Detailed model descriptions, accuracy figures and benchmarks. |
-| [Models Documentation] | Detailed usage instructions. |
+| Documentation          |                                                               |
+| ---------------------- | ------------------------------------------------------------- |
+| [Available Models]     | Detailed model descriptions, accuracy figures and benchmarks. |
+| [Models Documentation] | Detailed usage instructions.                                  |
 
-[Available Models]: https://spacy.io/models
-[Models Documentation]: https://spacy.io/docs/usage/models
+[available models]: https://spacy.io/models
+[models documentation]: https://spacy.io/docs/usage/models
 
 ```bash
 # out-of-the-box: download best-matching default model
@@ -261,7 +265,7 @@ VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 
 ## Run tests
 
-spaCy comes with an [extensive test suite](spacy/tests).  In order to run the
+spaCy comes with an [extensive test suite](spacy/tests). In order to run the
 tests, you'll usually want to clone the repository and build spaCy from source.
 This will also install the required development dependencies and test utilities
 defined in the `requirements.txt`.
