@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 from spacy.attrs import LEMMA
 from spacy.vocab import Vocab
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 
 from ..util import get_doc
 
@@ -259,3 +259,36 @@ def test_doc_retokenize_spans_subtree_size_check(en_tokenizer):
         attrs = {"lemma": "none", "ent_type": "none"}
         retokenizer.merge(doc[0:2], attrs=attrs)
     assert len(list(sent1.root.subtree)) == init_len - 1
+
+
+def test_doc_retokenize_merge_extension_attrs(en_vocab):
+    Token.set_extension("a", default=False, force=True)
+    Token.set_extension("b", default="nothing", force=True)
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    # Test regular merging
+    with doc.retokenize() as retokenizer:
+        attrs = {"lemma": "hello world", "_": {"a": True, "b": "1"}}
+        retokenizer.merge(doc[0:2], attrs=attrs)
+    assert doc[0].lemma_ == "hello world"
+    assert doc[0]._.a == True
+    assert doc[0]._.b == "1"
+    # Test bulk merging
+    doc = Doc(en_vocab, words=["hello", "world", "!", "!"])
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2], attrs={"_": {"a": True, "b": "1"}})
+        retokenizer.merge(doc[2:4], attrs={"_": {"a": None, "b": "2"}})
+    assert doc[0]._.a == True
+    assert doc[0]._.b == "1"
+    assert doc[1]._.a == None
+    assert doc[1]._.b == "2"
+
+
+@pytest.mark.parametrize("underscore_attrs", [{"a": "x"}, {"b": "x"}, {"c": "x"}, [1]])
+def test_doc_retokenize_merge_extension_attrs_invalid(en_vocab, underscore_attrs):
+    Token.set_extension("a", getter=lambda x: x, force=True)
+    Token.set_extension("b", method=lambda x: x, force=True)
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    attrs = {"_": underscore_attrs}
+    with pytest.raises(ValueError):
+        with doc.retokenize() as retokenizer:
+            retokenizer.merge(doc[0:2], attrs=attrs)

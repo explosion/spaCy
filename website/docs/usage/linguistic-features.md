@@ -1083,6 +1083,55 @@ with doc.retokenize() as retokenizer:
 
 </Infobox>
 
+### Overwriting custom extension attributes {#retokenization-extensions}
+
+If you've registered custom
+[extension attributes](/usage/processing-pipelines##custom-components-attributes),
+you can overwrite them during tokenization by providing a dictionary of
+attribute names mapped to new values as the `"_"` key in the `attrs`. For
+merging, you need to provide one dictionary of attributes for the resulting
+merged token. For splitting, you need to provide a list of dictionaries with
+custom attributes, one per split subtoken.
+
+<Infobox title="Important note" variant="warning">
+
+To set extension attributes during retokenization, the attributes need to be
+**registered** using the [`Token.set_extension`](/api/token#set_extension)
+method and they need to be **writable**. This means that they should either have
+a default value that can be overwritten, or a getter _and_ setter. Method
+extensions or extensions with only a getter are computed dynamically, so their
+values can't be overwritten. For more details, see the
+[extension attribute docs](/usage/processing-pipelines/#custom-components-attributes).
+
+</Infobox>
+
+> #### ✏️ Things to try
+>
+> 1. Add another custom extension – maybe `"music_style"`? – and overwrite it.
+> 2. Change the extension attribute to use only a `getter` function. You should
+>    see that spaCy raises an error, because the attribute is not writable
+>    anymore.
+> 3. Rewrite the code to split a token with `retokenizer.split`. Remember that
+>    you need to provide a list of extension attribute values as the `"_"`
+>    property, one for each split subtoken.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.tokens import Token
+
+# Register a custom token attribute, token._.is_musician
+Token.set_extension("is_musician", default=False)
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("I like David Bowie")
+print("Before:", [(token.text, token._.is_musician) for token in doc])
+
+with doc.retokenize() as retokenizer:
+    retokenizer.merge(doc[2:4], attrs={"_": {"is_musician": True}})
+print("After:", [(token.text, token._.is_musician) for token in doc])
+```
+
 ## Sentence Segmentation {#sbd}
 
 A [`Doc`](/api/doc) object's sentences are available via the `Doc.sents`

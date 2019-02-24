@@ -36,8 +36,8 @@ def test_issue_1971_2(en_vocab):
 
 def test_issue_1971_3(en_vocab):
     """Test that pattern matches correctly for multiple extension attributes."""
-    Token.set_extension("a", default=1)
-    Token.set_extension("b", default=2)
+    Token.set_extension("a", default=1, force=True)
+    Token.set_extension("b", default=2, force=True)
     doc = Doc(en_vocab, words=["hello", "world"])
     matcher = Matcher(en_vocab)
     matcher.add("A", None, [{"_": {"a": 1}}])
@@ -51,8 +51,8 @@ def test_issue_1971_4(en_vocab):
     """Test that pattern matches correctly with multiple extension attribute
     values on a single token.
     """
-    Token.set_extension("ext_a", default="str_a")
-    Token.set_extension("ext_b", default="str_b")
+    Token.set_extension("ext_a", default="str_a", force=True)
+    Token.set_extension("ext_b", default="str_b", force=True)
     matcher = Matcher(en_vocab)
     doc = Doc(en_vocab, words=["this", "is", "text"])
     pattern = [{"_": {"ext_a": "str_a", "ext_b": "str_b"}}] * 3
