@@ -39,6 +39,33 @@ mkdir models
 python -m spacy train es models ancora-json/es_ancora-ud-train.json ancora-json/es_ancora-ud-dev.json
 ```
 
+#### Understanding the training output
+
+When you train a model using the [`spacy train`](/api/cli#train) command, you'll
+see a table showing metrics after each pass over the data. Here's what those
+metrics means:
+
+> #### Tokenization metrics
+>
+> Note that if the development data has raw text, some of the gold-standard
+> entities might not align to the predicted tokenization. These tokenization
+> errors are **excluded from the NER evaluation**. If your tokenization makes it
+> impossible for the model to predict 50% of your entities, your NER F-score
+> might still look good.
+
+| Name       | Description                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| `Dep Loss` | Training loss for dependency parser. Should decrease, but usually not to 0.                       |
+| `NER Loss` | Training loss for named entity recognizer. Should decrease, but usually not to 0.                 |
+| `UAS`      | Unlabeled attachment score for parser. The percentage of unlabeled correct arcs. Should increase. |
+| `NER P.`   | NER precision on development data. Should increase.                                               |
+| `NER R.`   | NER recall on development data. Should increase.                                                  |
+| `NER F.`   | NER F-score on development data. Should increase.                                                 |
+| `Tag %`    | Fine-grained part-of-speech tag accuracy on development data. Should increase.                    |
+| `Token %`  | Tokenization accuracy on development data.                                                        |
+| `CPU WPS`  | Prediction speed on CPU in words per second, if available. Should stay stable.                    |
+| `GPU WPS`  | Prediction speed on GPU in words per second, if available. Should stay stable.                    |
+
 ### Improving accuracy with transfer learning {#transfer-learning new="2.1"}
 
 In most projects, you'll usually have a small amount of labelled data, and

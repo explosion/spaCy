@@ -342,13 +342,8 @@ class Errors(object):
 
 @add_codes
 class TempErrors(object):
-    T001 = ("Max length currently 10 for phrase matching")
-    T002 = ("Pattern length ({doc_len}) >= phrase_matcher.max_length "
-            "({max_len}). Length can be set on initialization, up to 10.")
     T003 = ("Resizing pre-trained Tagger models is not currently supported.")
     T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
-    T005 = ("Currently history size is hard-coded to 0. Received: {value}.")
-    T006 = ("Currently history width is hard-coded to 0. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
     T008 = ("Bad configuration of Tagger. This is probably a bug within "
