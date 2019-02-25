@@ -52,6 +52,7 @@ def RU(request):
 @pytest.fixture()
 def UK(request):
     pymorphy = pytest.importorskip('pymorphy2')
+    pymorphy_lang = pytest.importorskip('pymorphy2.lang')
     return util.get_lang_class('uk')()
 
 @pytest.fixture()
@@ -183,6 +184,7 @@ def ru_tokenizer():
 @pytest.fixture(scope='session')
 def uk_tokenizer():
     pymorphy = pytest.importorskip('pymorphy2')
+    pymorphy_lang = pytest.importorskip('pymorphy2.lang')
     return util.get_lang_class('uk').Defaults.create_tokenizer()
 
 @pytest.fixture(scope='session')
