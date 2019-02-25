@@ -42,7 +42,6 @@ export const onRouteUpdate = ({ location }) => {
                 // Navigate to targeted element
                 el.scrollIntoView()
                 // Force recomputing :target pseudo class with pushState/popState
-                window.location.hash = ''
                 window.location.hash = location.hash
             }
         }, 0)
