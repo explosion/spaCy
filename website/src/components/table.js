@@ -46,8 +46,10 @@ export const Table = props => <table className={classes.root} {...props} />
 export const Th = props => <th className={classes.th} {...props} />
 
 export const Tr = ({ children, ...props }) => {
+    const foot = isFootRow(children)
     const trClasssNames = classNames(classes.tr, {
-        [classes.footer]: isFootRow(children),
+        [classes.footer]: foot,
+        'table-footer': foot,
     })
 
     return (

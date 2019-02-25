@@ -26,10 +26,10 @@ const Sidebar = ({ items, pageMenu, slug }) => {
     }, [])
 
     return (
-        <menu className={classes.root}>
+        <menu className={classNames('sidebar', classes.root)}>
             {items.map((section, i) => (
                 <ul className={classes.section} key={i}>
-                    <li className={classes.label}>{section.label}</li>
+                    <li className={classNames('h0', classes.label)}>{section.label}</li>
                     {section.items.map(({ text, url, onClick, menu, isActive }, j) => {
                         const currentMenu = menu || pageMenu || []
                         const active = isActive || slug === url
@@ -43,7 +43,7 @@ const Sidebar = ({ items, pageMenu, slug }) => {
                                     to={url}
                                     onClick={onClick}
                                     className={itemClassNames}
-                                    activeClassName={classes.isActive}
+                                    activeClassName={classNames('is-active', classes.isActive)}
                                     hideIcon
                                 >
                                     {text}

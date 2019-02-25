@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import classNames from 'classnames'
 
 import Button from './button'
 import Tag from './tag'
@@ -34,7 +35,7 @@ const Title = ({ title, tag, version, teaser, source, image, children, ...props 
             </Tag>
         )}
 
-        {teaser && <div className={classes.teaser}>{teaser}</div>}
+        {teaser && <div className={classNames('heading-teaser', classes.teaser)}>{teaser}</div>}
 
         {children}
     </header>
