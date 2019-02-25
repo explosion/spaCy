@@ -30,6 +30,7 @@ import Tag from '../components/tag'
 import Grid from '../components/grid'
 import { YouTube, SoundCloud, Iframe, Image } from '../components/embed'
 import Alert from '../components/alert'
+import Search from '../components/search'
 
 const mdxComponents = {
     a: Link,
@@ -119,7 +120,12 @@ class Layout extends React.Component {
                     bodyClass={bodyClass}
                 />
                 <AlertSpace />
-                <Navigation title={meta.title} items={meta.navigation} section={section}>
+                <Navigation
+                    title={meta.title}
+                    items={meta.navigation}
+                    section={section}
+                    search={<Search settings={meta.docSearch} />}
+                >
                     <Progress key={location.href} />
                 </Navigation>
                 {isDocs ? (
@@ -183,6 +189,10 @@ export const pageQuery = graphql`
                 navigation {
                     text
                     url
+                }
+                docSearch {
+                    apiKey
+                    indexName
                 }
             }
         }
