@@ -1000,8 +1000,8 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
         tokens[i].r_edge = i
-    # Twice, for non-projectivity
-    for loop_count in range(2):
+    # Three times, for non-projectivity
+    for loop_count in range(3):
         # Set left edges
         for i in range(length):
             child = &tokens[i]
