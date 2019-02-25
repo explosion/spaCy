@@ -38,6 +38,7 @@ const Search = ({ id, placeholder, settings }) => {
 Search.defaultProps = {
     id: 'docsearch',
     placeholder: 'Search docs',
+    settings: {},
 }
 
 Search.propTypes = {
