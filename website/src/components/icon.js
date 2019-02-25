@@ -18,6 +18,7 @@ import { ReactComponent as YesIcon } from '../images/icons/yes.svg'
 import { ReactComponent as NoIcon } from '../images/icons/no.svg'
 import { ReactComponent as NeutralIcon } from '../images/icons/neutral.svg'
 import { ReactComponent as OfflineIcon } from '../images/icons/offline.svg'
+import { ReactComponent as SearchIcon } from '../images/icons/search.svg'
 
 import classes from '../styles/icon.module.sass'
 
@@ -39,6 +40,7 @@ const icons = {
     no: NoIcon,
     neutral: NeutralIcon,
     offline: OfflineIcon,
+    search: SearchIcon,
 }
 
 const Icon = ({ name, width, height, inline, variant, className }) => {

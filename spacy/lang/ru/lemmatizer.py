@@ -9,18 +9,19 @@ from ...compat import unicode_
 class RussianLemmatizer(Lemmatizer):
     _morph = None
 
-    def __init__(self, pymorphy2_lang='ru'):
+    def __init__(self):
         super(RussianLemmatizer, self).__init__()
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:
             raise ImportError(
                 "The Russian lemmatizer requires the pymorphy2 library: "
-                'try to fix it with "pip install pymorphy2==0.8"'
+                'try to fix it with "pip install pymorphy2==0.8" '
+                'or "pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
+                "if you need Ukrainian too"
             )
-
         if RussianLemmatizer._morph is None:
-            RussianLemmatizer._morph = MorphAnalyzer(lang=pymorphy2_lang)
+            RussianLemmatizer._morph = MorphAnalyzer()
 
     def __call__(self, string, univ_pos, morphology=None):
         univ_pos = self.normalize_univ_pos(univ_pos)
