@@ -573,7 +573,7 @@ class Language(object):
                 proc._rehearsal_model = deepcopy(proc.model)
         return self._optimizer
 
-    def evaluate(self, docs_golds, verbose=False):
+    def evaluate(self, docs_golds, verbose=False, batch_size=256):
         scorer = Scorer()
         docs, golds = zip(*docs_golds)
         docs = list(docs)
@@ -582,7 +582,7 @@ class Language(object):
             if not hasattr(pipe, "pipe"):
                 docs = (pipe(doc) for doc in docs)
             else:
-                docs = pipe.pipe(docs, batch_size=256)
+                docs = pipe.pipe(docs, batch_size=batch_size)
         for doc, gold in zip(docs, golds):
             if verbose:
                 print(doc)
