@@ -18,6 +18,7 @@
     box-shadow: var(--box-shadow)
 
 .logo
+    min-width: 95px
     width: 95px
     height: 30px
     color: var(--color-theme) !important
@@ -26,23 +27,12 @@
 .title
     display: none
 
-.menu
+.list
     display: flex
-    height: 100%
     flex-flow: row nowrap
     border-color: inherit
-    overflow-x: auto
-    overflow-y: hidden
-    -webkit-overflow-scrolling: touch
-
-@include breakpoint(max, sm)
-    .menu
-        @include scroll-shadow-base(var(--color-shadow))
-        margin-left: 1rem
-
-@include breakpoint(min, md)
-    .menu
-        justify-content: flex-end
+    justify-content: flex-end
+    margin-bottom: 0.25rem
 
 .item
     display: inline-flex
@@ -58,13 +48,40 @@
         margin-left: 2em
 
     &:last-child
-        @include scroll-shadow-cover(right, var(--color-back))
         padding-right: 2rem
 
     &:first-child
-        @include scroll-shadow-cover(left, var(--color-back))
         padding-left: 2rem
+
+.menu
+    display: flex
+    flex-flow: row nowrap
+    margin-left: 0.5rem
+
+.dropdown
+    font-family: var(--font-secondary)
+    font-size: 1.6rem
+    font-weight: bold
+    color: var(--color-theme)
+    text-transform: uppercase
+    background: transparent
+    border: 0
+    margin-right: 0.5rem
 
 .is-active
     color: var(--color-dark)
     pointer-events: none
+
+.search
+    display: inline-flex
+    align-items: center
+    height: 100%
+    padding-right: 2rem
+
+@include breakpoint(max, xs)
+    .list
+        display: none
+
+@include breakpoint(min, sm)
+    .dropdown
+        display: none
