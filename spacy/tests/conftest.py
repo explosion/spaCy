@@ -180,7 +180,7 @@ def tt_tokenizer():
 def uk_tokenizer():
     pytest.importorskip("pymorphy2")
     pytest.importorskip("pymorphy2.lang")
-    return util.get_lang_class("uk").Defaults.create_tokenizer()
+    return get_lang_class("uk").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
