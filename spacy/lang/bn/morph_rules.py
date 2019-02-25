@@ -7,6 +7,7 @@ from ...symbols import LEMMA, PRON_LEMMA
 MORPH_RULES = {
     "PRP":  {
         'ঐ':         {LEMMA: PRON_LEMMA, 'PronType': 'Dem'},
+        'ওই':        {LEMMA: PRON_LEMMA, 'PronType': 'Dem'},
         'আমাকে':     {LEMMA: PRON_LEMMA, 'Number': 'Sing', 'Person': 'One', 'PronType': 'Prs', 'Case': 'Acc'},
         'কি':        {LEMMA: PRON_LEMMA, 'Number': 'Sing', 'Gender': 'Neut', 'PronType': 'Int', 'Case': 'Acc'},
         'সে':        {LEMMA: PRON_LEMMA, 'Number': 'Sing', 'Person': 'Three', 'PronType': 'Prs', 'Case': 'Nom'},
@@ -49,6 +50,8 @@ MORPH_RULES = {
         'মোদের':   {LEMMA:  PRON_LEMMA, 'Number': 'Plur', 'Person': 'One', 'PronType': 'Prs', 'Poss': 'Yes',
                     'Case': 'Nom'},
         'তার':     {LEMMA:  PRON_LEMMA, 'Number': 'Sing', 'Person': 'Three', 'PronType': 'Prs', 'Poss': 'Yes',
+                    'Case': 'Nom'},
+        'তাহাার':     {LEMMA:  PRON_LEMMA, 'Number': 'Sing', 'Person': 'Three', 'PronType': 'Prs', 'Poss': 'Yes',
                     'Case': 'Nom'},
         'তোমাদের': {LEMMA:  PRON_LEMMA, 'Number': 'Plur', 'Person': 'Two', 'PronType': 'Prs', 'Poss': 'Yes',
                     'Case': 'Nom'},
