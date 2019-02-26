@@ -26,6 +26,7 @@
         "gatsby-plugin-offline": "^2.0.24",
         "gatsby-plugin-react-helmet": "^3.0.6",
         "gatsby-plugin-react-svg": "^2.0.0",
+        "gatsby-plugin-remove-serviceworker": "^1.0.0",
         "gatsby-plugin-sass": "^2.0.10",
         "gatsby-plugin-sharp": "^2.0.20",
         "gatsby-plugin-sitemap": "^2.0.5",
