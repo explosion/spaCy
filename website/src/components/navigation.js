@@ -1,23 +1,19 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import { navigate } from 'gatsby'
 
 import Link from './link'
 import Icon from './icon'
+import Dropdown from './dropdown'
 import { github } from './util'
 import { ReactComponent as Logo } from '../images/logo.svg'
 import classes from '../styles/navigation.module.sass'
 
-const Dropdown = ({ items, section }) => {
+const NavigationDropdown = ({ items, section }) => {
     const active = items.find(({ text }) => text.toLowerCase() === section)
     const defaultValue = active ? active.url : 'title'
     return (
-        <select
-            defaultValue={defaultValue}
-            className={classes.dropdown}
-            onChange={({ target }) => navigate(target.value)}
-        >
+        <Dropdown defaultValue={defaultValue} className={classes.dropdown}>
             <option value="title" disabled>
                 Menu
             </option>
@@ -26,7 +22,7 @@ const Dropdown = ({ items, section }) => {
                     {text}
                 </option>
             ))}
-        </select>
+        </Dropdown>
     )
 }
 
@@ -39,7 +35,7 @@ const Navigation = ({ title, items, section, search, children }) => {
             </Link>
 
             <div className={classes.menu}>
-                <Dropdown items={items} section={section} />
+                <NavigationDropdown items={items} section={section} />
 
                 <ul className={classes.list}>
                     {items.map(({ text, url }, i) => {
