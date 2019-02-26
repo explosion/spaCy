@@ -22,7 +22,7 @@ const Search = ({ id, placeholder, settings }) => {
     return (
         <form className={classes.root}>
             <label htmlFor={id} className={classes.icon}>
-                <Icon name="search" width={24} />
+                <Icon name="search" width={20} />
             </label>
             <input
                 id={id}
