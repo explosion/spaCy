@@ -11,11 +11,11 @@ export default function HTML(props) {
                     name="viewport"
                     content="width=device-width, initial-scale=1, shrink-to-fit=no"
                 />
+                {props.headComponents}
                 <link
                     rel="stylesheet"
                     href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css"
                 />
-                {props.headComponents}
             </head>
             <body {...props.bodyAttributes}>
                 {props.preBodyComponents}
