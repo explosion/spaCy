@@ -4,7 +4,25 @@ import classNames from 'classnames'
 import { window } from 'browser-monads'
 
 import Link from './link'
+import Dropdown from './dropdown'
 import classes from '../styles/sidebar.module.sass'
+
+const DropdownNavigation = ({ items, defaultValue }) => {
+    return (
+        <div className={classes.dropdown}>
+            <Dropdown className={classes.dropdownSelect} defaultValue={defaultValue}>
+                <option disabled>Select page...</option>
+                {items.map((section, i) =>
+                    section.items.map(({ text, url }, j) => (
+                        <option value={url} key={j}>
+                            {section.label} &rsaquo; {text}
+                        </option>
+                    ))
+                )}
+            </Dropdown>
+        </div>
+    )
+}
 
 const Sidebar = ({ items, pageMenu, slug }) => {
     const [initialized, setInitialized] = useState(false)
@@ -27,6 +45,7 @@ const Sidebar = ({ items, pageMenu, slug }) => {
 
     return (
         <menu className={classNames('sidebar', classes.root)}>
+            <DropdownNavigation items={items} defaultValue={slug} />
             {items.map((section, i) => (
                 <ul className={classes.section} key={i}>
                     <li className={classNames('h0', classes.label)}>{section.label}</li>

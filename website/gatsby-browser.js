@@ -2,6 +2,7 @@ import { navigate } from 'gatsby'
 
 import './src/styles/layout.sass'
 import Juniper from './src/components/juniper'
+import 'intersection-observer'
 
 // Workaround to rewrite anchor links
 const clientSideRewrites = {

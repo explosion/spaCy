@@ -58,16 +58,6 @@
     flex-flow: row nowrap
     margin-left: 0.5rem
 
-.dropdown
-    font-family: var(--font-secondary)
-    font-size: 1.6rem
-    font-weight: bold
-    color: var(--color-theme)
-    text-transform: uppercase
-    background: transparent
-    border: 0
-    margin-right: 0.5rem
-
 .is-active
     color: var(--color-dark)
     pointer-events: none
@@ -77,6 +67,21 @@
     align-items: center
     height: 100%
     padding-right: 2rem
+
+.dropdown
+    --dropdown-text-color: var(--color-theme)
+    font-family: var(--font-secondary)
+    font-size: 1.6rem
+    font-weight: bold
+    color: var(--color-theme)
+    text-transform: uppercase
+    margin-right: 0.5rem
+    border: 2px solid var(--color-back)
+    border-radius: 2em
+
+    &:focus
+        border: 2px dotted var(--color-theme)
+        outline: none
 
 @include breakpoint(max, xs)
     .list
