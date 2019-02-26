@@ -140,7 +140,6 @@ module.exports = {
                 respectDNT: true,
             },
         },
-        //`gatsby-plugin-offline`,
-        `gatsby-plugin-remove-serviceworker`,
+        `gatsby-plugin-offline`,
     ],
 }
