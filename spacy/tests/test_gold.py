@@ -63,8 +63,8 @@ def test_biluo_spans(en_tokenizer):
     assert spans[1].text == "London"
     assert spans[1].label_ == "GPE"
 
+
 def test_gold_ner_missing_tags(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = [None, "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
-    gold = GoldParse(doc, entities=biluo_tags)
- 
+    gold = GoldParse(doc, entities=biluo_tags)  # noqa: F841
