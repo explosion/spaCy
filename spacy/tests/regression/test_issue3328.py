@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.matcher import Matcher
 from spacy.tokens import Doc
 
