@@ -456,12 +456,16 @@ cdef class GoldParse:
         if deps is None:
             deps = [None for _ in doc]
         if entities is None:
-            entities = [None for _ in doc]
+            entities = ['-' for _ in doc]
         elif len(entities) == 0:
             entities = ['O' for _ in doc]
-        elif not isinstance(entities[0], basestring):
-            # Assume we have entities specified by character offset.
-            entities = biluo_tags_from_offsets(doc, entities)
+        else:
+            # Translate the None values to '-', to make processing easier.
+            # See Issue #2603
+            entities = [(ent if ent is not None else '-') for ent in entities]
+            if not isinstance(entities[0], basestring):
+                # Assume we have entities specified by character offset.
+                entities = biluo_tags_from_offsets(doc, entities)
 
         self.mem = Pool()
         self.loss = 0
