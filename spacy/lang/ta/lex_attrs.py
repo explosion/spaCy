@@ -74,7 +74,6 @@ def like_num(text):
         num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
-    print(suffix_filter(text))
     if text.lower() in _num_words:
         return True
     elif suffix_filter(text) in _num_words:
