@@ -192,3 +192,9 @@ def test_tokens_sent(doc):
     assert doc[7].sent.text == "This is another sentence ."
     assert doc[1].sent.root.left_edge.text == "This"
     assert doc[7].sent.root.left_edge.text == "This"
+
+def test_token0_has_sent_start_true():
+    doc = Doc(Vocab(), words=["hello", "world"])
+    assert doc[0].is_sent_start is True
+    assert doc[1].is_sent_start is None
+    assert not doc.is_sentenced
