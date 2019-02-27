@@ -29,7 +29,7 @@
     "spacyVersion": "2.1",
     "binderUrl": "ines/spacy-io-binder",
     "binderBranch": "nightly",
-    "binderVersion": "2.1.0a8",
+    "binderVersion": "2.1.0a9",
     "sections": [
         { "id": "usage", "title": "Usage Documentation", "theme": "blue" },
         { "id": "models", "title": "Models Documentation", "theme": "blue" },
