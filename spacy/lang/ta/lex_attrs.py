@@ -79,7 +79,6 @@ def like_num(text):
         return True
     elif suffix_filter(text) in _num_words:
         return True
-
     return False
 
 
