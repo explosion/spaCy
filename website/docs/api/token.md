@@ -324,7 +324,7 @@ A sequence containing the token and all the token's syntactic descendants.
 ## Token.is_sent_start {#is_sent_start tag="property" new="2"}
 
 A boolean value indicating whether the token starts a sentence. `None` if
-unknown.
+unknown. Defaults to `True` for the first token in the `doc`.
 
 > #### Example
 >
