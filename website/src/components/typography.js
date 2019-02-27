@@ -94,9 +94,13 @@ const Headline = ({
 }) => {
     // This can be set via hidden="true" and as a prop, so we need to accept both
     if (hidden === true || hidden === 'true') return null
+    const hasAction = !!source || !!action
+    const headingClassNames = classNames(classes.heading, className, {
+        [classes.clear]: hasAction,
+    })
     const tags = tag ? tag.split(',').map(t => t.trim()) : []
     return (
-        <Component id={id} className={classNames(classes.heading, className)}>
+        <Component id={id} className={headingClassNames}>
             <Permalink id={id}>{children} </Permalink>
             {tags.map((tag, i) => (
                 <Tag spaced key={i}>
@@ -114,7 +118,7 @@ const Headline = ({
                 </Tag>
             )}
 
-            {(source || action) && (
+            {hasAction && (
                 <div className={classes.action}>
                     {source && (
                         <Button icon="code" to={github(source)}>

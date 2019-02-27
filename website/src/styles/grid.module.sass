@@ -17,7 +17,6 @@ $flex-gap: 2rem
     flex-wrap: wrap
     justify-content: space-between
     grid-column-gap: $grid-gap-wide
-    grid-template-columns: 1fr
 
     & > *
         min-width: 0
@@ -27,6 +26,9 @@ $flex-gap: 2rem
         display: grid
 
 @include breakpoint(min, lg)
+    .root
+        grid-template-columns: 1fr
+
     @each $name, $cols in (half: 2, third: 3, quarter: 4)
         .#{$name}
             @include flex-fallback($cols, $flex-gap)
