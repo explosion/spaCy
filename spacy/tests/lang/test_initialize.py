@@ -16,6 +16,10 @@ LANGUAGES = ["af", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es",
 
 
 @pytest.mark.parametrize("lang", LANGUAGES)
-def test_lang_initialize(lang):
+def test_lang_initialize(lang, capfd):
     """Test that languages can be initialized."""
-    lang_cls = get_lang_class(lang)()  # noqa: F841
+    nlp = get_lang_class(lang)()  # noqa: F841
+    # Check for stray print statements (see #3342)
+    doc = nlp("test")
+    captured = capfd.readouterr()
+    assert not captured.out

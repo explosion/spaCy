@@ -141,7 +141,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
-        if name == '-' or name is None:
+        if name == '-' or name == '' or name is None:
             return Transition(clas=0, move=MISSING, label=0, score=0)
         elif name == '!O':
             return Transition(clas=0, move=ISNT, label=0, score=0)

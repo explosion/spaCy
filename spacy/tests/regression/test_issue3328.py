@@ -1,12 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
 from spacy.matcher import Matcher
 from spacy.tokens import Doc
 
 
-@pytest.mark.xfail
 def test_issue3328(en_vocab):
     doc = Doc(en_vocab, words=["Hello", ",", "how", "are", "you", "doing", "?"])
     matcher = Matcher(en_vocab)

@@ -188,13 +188,18 @@ cdef class Doc:
 
     @property
     def is_sentenced(self):
-        # Check if the document has sentence boundaries,
-        # i.e at least one tok has the sent_start in (-1, 1)
+        """Check if the document has sentence boundaries assigned. This is
+        defined as having at least one of the following:
+
+        a) An entry "sents" in doc.user_hooks";
+        b) sent.is_parsed is set to True;
+        c) At least one token other than the first where sent_start is not None.
+        """
         if 'sents' in self.user_hooks:
             return True
         if self.is_parsed:
             return True
-        for i in range(self.length):
+        for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
                 return True
         else:
@@ -569,6 +574,9 @@ cdef class Doc:
             raise ValueError(Errors.E031.format(i=self.length))
         t.spacy = has_space
         self.length += 1
+        if self.length == 1:
+            # Set token.sent_start to 1 for first token. See issue #2869
+            self.c[0].sent_start = 1
         return t.idx + t.lex.length + t.spacy
 
     @cython.boundscheck(False)
@@ -1000,8 +1008,10 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
         tokens[i].r_edge = i
-    # Twice, for non-projectivity
-    for loop_count in range(2):
+    # Three times, for non-projectivity
+    # See issue #3170. This isn't a very satisfying fix, but I think it's
+    # sufficient.
+    for loop_count in range(3):
         # Set left edges
         for i in range(length):
             child = &tokens[i]

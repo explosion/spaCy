@@ -15,7 +15,7 @@ class UkrainianLemmatizer(Lemmatizer):
                 UkrainianLemmatizer._morph = MorphAnalyzer(lang="uk")
         except (ImportError, TypeError):
             raise ImportError(
-                "The Ukrainian lemmatizer requires the pymorphy2 library and
+                "The Ukrainian lemmatizer requires the pymorphy2 library and "
                 'dictionaries: try to fix it with "pip uninstall pymorphy2" and'
                 '"pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
             )

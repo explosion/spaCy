@@ -262,19 +262,49 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 [--depth] [--embed-rows] [--dropout] [--seed] [--n-iter] [--use-vectors]
 ```
 
-| Argument               | Type       | Description                                                           |
-| ---------------------- | ---------- | --------------------------------------------------------------------- |
-| `texts_loc`            | positional | Path to JSONL file with raw texts to learn from.                      |
-| `vectors_model`        | positional | Name or path to spaCy model with vectors to learn from.               |
-| `output_dir`           | positional | Directory to write models to on each epoch.                           |
-| `--width`, `-cw`       | option     | Width of CNN layers.                                                  |
-| `--depth`, `-cd`       | option     | Depth of CNN layers.                                                  |
-| `--embed-rows`, `-er`  | option     | Number of embedding rows.                                             |
-| `--dropout`, `-d`      | option     | Dropout rate.                                                         |
-| `--seed`, `-s`         | option     | Seed for random number generators.                                    |
-| `--n-iter`, `-i`       | option     | Number of iterations to pretrain.                                     |
-| `--use-vectors`, `-uv` | flag       | Whether to use the static vectors as input features.                  |
-| **CREATES**            | weights    | The pre-trained weights that can be used to initialize `spacy train`. |
+| Argument               | Type       | Description                                                                                                                       |
+| ---------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `texts_loc`            | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"`. [See here](#pretrain-jsonl) for details. |
+| `vectors_model`        | positional | Name or path to spaCy model with vectors to learn from.                                                                           |
+| `output_dir`           | positional | Directory to write models to on each epoch.                                                                                       |
+| `--width`, `-cw`       | option     | Width of CNN layers.                                                                                                              |
+| `--depth`, `-cd`       | option     | Depth of CNN layers.                                                                                                              |
+| `--embed-rows`, `-er`  | option     | Number of embedding rows.                                                                                                         |
+| `--dropout`, `-d`      | option     | Dropout rate.                                                                                                                     |
+| `--seed`, `-s`         | option     | Seed for random number generators.                                                                                                |
+| `--n-iter`, `-i`       | option     | Number of iterations to pretrain.                                                                                                 |
+| `--use-vectors`, `-uv` | flag       | Whether to use the static vectors as input features.                                                                              |
+| **CREATES**            | weights    | The pre-trained weights that can be used to initialize `spacy train`.                                                             |
+
+### JSONL format for raw text {#pretrain-jsonl}
+
+Raw text can be provided as a `.jsonl` (newline-delimited JSON) file containing
+one input text per line (roughly paragraph length is good). Optionally, custom
+tokenization can be provided.
+
+> #### Tip: Writing JSONL
+>
+> Our utility library [`srsly`](https://github.com/explosion/srsly) provides a
+> handy `write_jsonl` helper that takes a file path and list of dictionaries and
+> writes out JSONL-formatted data.
+>
+> ```python
+> import srsly
+> data = [{"text": "Some text"}, {"text": "More..."}]
+> srsly.write_jsonl("/path/to/text.jsonl", data)
+> ```
+
+| Key      | Type    | Description                                  |
+| -------- | ------- | -------------------------------------------- |
+| `text`   | unicode | The raw input text.                          |
+| `tokens` | list    | Optional tokenization, one string per token. |
+
+```json
+### Example
+{"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
+{"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
+{"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
+```
 
 ## Init Model {#init-model new="2"}
 

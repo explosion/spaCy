@@ -60,9 +60,10 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
     for i in range(doc.length):
         for j in range(n):
             states.push_back(PatternStateC(patterns[j], i, 0))
-        transition_states(states, matches, &predicate_cache[i],
+        transition_states(states, matches, predicate_cache,
             doc[i], extra_attr_values, predicates)
         extra_attr_values += nr_extra_attr
+        predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
     finish_states(matches, states)
     output = []
@@ -105,7 +106,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         if states[i].pattern.nr_py >= 1:
             update_predicate_cache(cached_py_predicates,
                 states[i].pattern, token, py_predicates)
-    for i in range(states.size()):
         action = get_action(states[i], token.c, extra_attrs,
                             cached_py_predicates)
         if action == REJECT:
@@ -127,6 +127,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                     PatternStateC(pattern=state.pattern+1, start=state.start,
                                   length=state.length+1))
             states[q].pattern += 1
+
             if states[q].pattern.nr_py != 0:
                 update_predicate_cache(cached_py_predicates,
                     states[q].pattern, token, py_predicates)

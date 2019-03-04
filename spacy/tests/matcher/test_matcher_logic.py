@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 import re
 from spacy.matcher import Matcher
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 
 
 pattern1 = [{"ORTH": "A", "OP": "1"}, {"ORTH": "A", "OP": "*"}]
@@ -129,3 +129,17 @@ def test_matcher_end_zero_plus(en_vocab):
     assert len(matcher(nlp("a b c"))) == 2
     assert len(matcher(nlp("a b b c"))) == 3
     assert len(matcher(nlp("a b b"))) == 3
+
+
+def test_matcher_sets_return_correct_tokens(en_vocab):
+    matcher = Matcher(en_vocab)
+    patterns = [
+        [{'LOWER': {'IN': ["zero"]}}],
+        [{'LOWER': {'IN': ["one"]}}],
+        [{'LOWER': {'IN': ["two"]}}],
+    ]
+    matcher.add('TEST', None, *patterns)
+    doc = Doc(en_vocab, words="zero one two three".split())
+    matches = matcher(doc)
+    texts = [Span(doc, s, e, label=L).text for L, s, e in matches]
+    assert texts == ['zero', 'one', 'two']
