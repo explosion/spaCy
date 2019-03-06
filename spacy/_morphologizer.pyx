@@ -1,12 +1,8 @@
 from __future__ import unicode_literals
 from collections import OrderedDict, defaultdict
-import cytoolz
-import ujson
 
 import numpy
 cimport numpy as np
-from .util import msgpack
-from .util import msgpack_numpy
 
 from thinc.api import chain
 from thinc.neural.util import to_categorical, copy_array, get_array_module
@@ -16,7 +12,7 @@ from ._ml import Tok2Vec, build_morphologizer_model
 from ._ml import link_vectors_to_models, zero_init, flatten
 from ._ml import create_default_optimizer
 from .errors import Errors, TempErrors
-from .compat import json_dumps, basestring_
+from .compat import basestring_
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 from .morphology cimport Morphology
@@ -58,7 +54,7 @@ class Morphologizer(Pipe):
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        for docs in cytoolz.partition_all(batch_size, stream):
+        for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
             features, tokvecs = self.predict(docs)
             self.set_annotations(docs, features, tensors=tokvecs)
