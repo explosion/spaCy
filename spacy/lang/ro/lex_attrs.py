@@ -4,14 +4,17 @@ from __future__ import unicode_literals
 from ...attrs import LIKE_NUM
 
 
-_num_words = set("""
+_num_words = set(
+    """
 zero unu doi două trei patru cinci șase șapte opt nouă zece
 unsprezece doisprezece douăsprezece treisprezece patrusprezece cincisprezece șaisprezece șaptesprezece optsprezece nouăsprezece
 douăzeci treizeci patruzeci cincizeci șaizeci șaptezeci optzeci nouăzeci
 sută mie milion miliard bilion trilion cvadrilion catralion cvintilion sextilion septilion enșpemii
-""".split())
+""".split()
+)
 
-_ordinal_words = set("""
+_ordinal_words = set(
+    """
 primul doilea treilea patrulea cincilea șaselea șaptelea optulea nouălea zecelea
 prima doua treia patra cincia șasea șaptea opta noua zecea
 unsprezecelea doisprezecelea treisprezecelea patrusprezecelea cincisprezecelea șaisprezecelea șaptesprezecelea optsprezecelea nouăsprezecelea
@@ -19,15 +22,18 @@ unsprezecea douăsprezecea treisprezecea patrusprezecea cincisprezecea șaisprez
 douăzecilea treizecilea patruzecilea cincizecilea șaizecilea șaptezecilea optzecilea nouăzecilea sutălea
 douăzecea treizecea patruzecea cincizecea șaizecea șaptezecea optzecea nouăzecea suta
 miilea mielea mia milionulea milioana miliardulea miliardelea miliarda enșpemia
-""".split())
+""".split()
+)
 
 
 def like_num(text):
-    text = text.replace(',', '').replace('.', '')
+    if text.startswith(("+", "-", "±", "~")):
+        text = text[1:]
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if text.count('/') == 1:
-        num, denom = text.split('/')
+    if text.count("/") == 1:
+        num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
     if text.lower() in _num_words:
@@ -37,6 +43,4 @@ def like_num(text):
     return False
 
 
-LEX_ATTRS = {
-    LIKE_NUM: like_num
-}
+LEX_ATTRS = {LIKE_NUM: like_num}

@@ -10,6 +10,8 @@ from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
 from ..gold cimport GoldParseC, GoldParse
+from ..lexeme cimport Lexeme
+from ..attrs cimport IS_SPACE
 from ..errors import Errors
 
 
@@ -139,7 +141,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
-        if name == '-' or name is None:
+        if name == '-' or name == '' or name is None:
             return Transition(clas=0, move=MISSING, label=0, score=0)
         elif name == '!O':
             return Transition(clas=0, move=ISNT, label=0, score=0)
@@ -205,15 +207,16 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             label_id = label_name
         if action == OUT and label_id != 0:
-            return
+            return None
         if action == MISSING or action == ISNT:
-            return
+            return None
         # Check we're not creating a move we already have, so that this is
         # idempotent
         for trans in self.c[:self.n_moves]:
             if trans.move == action and trans.label == label_id:
                 return 0
         if self.n_moves >= self._size:
+            self._size = self.n_moves
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
@@ -273,6 +276,9 @@ cdef class Begin:
         # Don't allow entities to extend across sentence boundaries
         elif st.B_(1).sent_start == 1:
             return False
+        # Don't allow entities to start on whitespace
+        elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
+            return False
         else:
             return label != 0 and not st.entity_is_open()
 
@@ -314,10 +320,10 @@ cdef class In:
             return False
         # TODO: Is this quite right? I think it's supposed to be ensuring the
         # gazetteer matches are maintained
-        elif st.B_(1).ent_iob != preset_ent_iob:
+        elif st.B(1) != -1 and st.B_(1).ent_iob != preset_ent_iob:
             return False
         # Don't allow entities to extend across sentence boundaries
-        elif st.B_(1).sent_start == 1:
+        elif st.B(1) != -1 and st.B_(1).sent_start == 1:
             return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
@@ -330,7 +336,7 @@ cdef class In:
     @staticmethod
     cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         move = IN
-        cdef int next_act = gold.ner[s.B(1)].move if s.B(0) < s.c.length else OUT
+        cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
         cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
@@ -417,6 +423,8 @@ cdef class Unit:
         elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
             return False
         elif st.B_(1).ent_iob == 1:
+            return False
+        elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
         return label != 0 and not st.entity_is_open()
 

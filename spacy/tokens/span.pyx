@@ -7,16 +7,18 @@ import numpy
 import numpy.linalg
 from libc.math cimport sqrt
 
-from .doc cimport token_by_start, token_by_end, get_token_attr
+from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
+from .token cimport TokenC
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t, hash_t
 from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 from ..util import normalize_slice
-from ..attrs cimport IS_PUNCT, IS_SPACE
+from ..attrs cimport *
 from ..lexeme cimport Lexeme
-from ..compat import is_config
+from ..compat import is_config, basestring_
 from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
+from ..errors import deprecation_warning
 from .underscore import Underscore, get_ext_args
 
 
@@ -42,7 +44,7 @@ cdef class Span:
             raise ValueError(Errors.E046.format(name=name))
         return Underscore.span_extensions.pop(name)
 
-    def __cinit__(self, Doc doc, int start, int end, attr_t label=0,
+    def __cinit__(self, Doc doc, int start, int end, label=0,
                   vector=None, vector_norm=None):
         """Create a `Span` object from the slice `doc[start : end]`.
 
@@ -64,6 +66,8 @@ cdef class Span:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
             self.end_char = 0
+        if isinstance(label, basestring_):
+            label = doc.vocab.strings.add(label)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
         self.label = label
@@ -138,6 +142,9 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self.doc[i]
 
+    def __reduce__(self):
+        raise NotImplementedError(Errors.E112)
+
     @property
     def _(self):
         """User space for adding custom attribute extensions."""
@@ -146,23 +153,32 @@ cdef class Span:
 
     def as_doc(self):
         # TODO: fix
-        """Create a `Doc` object view of the Span's data. This is mostly
-        useful for C-typed interfaces.
+        """Create a `Doc` object with a copy of the Span's data.
 
-        RETURNS (Doc): The `Doc` view of the span.
+        RETURNS (Doc): The `Doc` copy of the span.
         """
-        cdef Doc doc = Doc(self.doc.vocab)
-        doc.length = self.end-self.start
-        doc.c = &self.doc.c[self.start]
-        doc.mem = self.doc.mem
-        doc.is_parsed = self.doc.is_parsed
-        doc.is_tagged = self.doc.is_tagged
+        cdef Doc doc = Doc(self.doc.vocab,
+            words=[t.text for t in self],
+            spaces=[bool(t.whitespace_) for t in self])
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+        if self.doc.is_tagged:
+            array_head.append(TAG)
+        # if doc parsed add head and dep attribute
+        if self.doc.is_parsed:
+            array_head.extend([HEAD, DEP])
+        # otherwise add sent_start
+        else:
+            array_head.append(SENT_START)
+        array = self.doc.to_array(array_head)
+        doc.from_array(array_head, array[self.start : self.end])
+
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
         doc.user_token_hooks = self.doc.user_token_hooks
         doc.vector = self.vector
         doc.vector_norm = self.vector_norm
+        doc.tensor = self.doc.tensor[self.start : self.end]
         for key, value in self.doc.cats.items():
             if hasattr(key, '__len__') and len(key) == 3:
                 cat_start, cat_end, cat_label = key
@@ -178,8 +194,20 @@ cdef class Span:
             attributes are inherited from the syntactic root token of the span.
         RETURNS (Token): The newly merged token.
         """
+        deprecation_warning(Warnings.W013.format(obj="Span"))
         return self.doc.merge(self.start_char, self.end_char, *args,
                               **attributes)
+
+    def get_lca_matrix(self):
+        """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
+        `Span`, where LCA[i, j] is the index of the lowest common ancestor among
+        the tokens span[i] and span[j]. If they have no common ancestor within
+        the span, LCA[i, j] will be -1.
+
+        RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
+            (n, n), where n = len(self).
+        """
+        return numpy.asarray(_get_lca_matrix(self.doc, self.start, self.end))
 
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
@@ -206,47 +234,6 @@ cdef class Span:
             user_warning(Warnings.W008.format(obj='Span'))
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
-
-    def get_lca_matrix(self):
-        """Calculates the lowest common ancestor matrix for a given `Span`.
-        Returns LCA matrix containing the integer index of the ancestor, or -1
-        if no common ancestor is found (ex if span excludes a necessary
-        ancestor). Apologies about the recursion, but the impact on
-        performance is negligible given the natural limitations on the depth
-        of a typical human sentence.
-        """
-        def __pairwise_lca(token_j, token_k, lca_matrix, margins):
-            offset = margins[0]
-            token_k_head = token_k.head if token_k.head.i in range(*margins) else token_k
-            token_j_head = token_j.head if token_j.head.i in range(*margins) else token_j
-            token_j_i = token_j.i - offset
-            token_k_i = token_k.i - offset
-            if lca_matrix[token_j_i][token_k_i] != -2:
-                return lca_matrix[token_j_i][token_k_i]
-            elif token_j == token_k:
-                lca_index = token_j_i
-            elif token_k_head == token_j:
-                lca_index = token_j_i
-            elif token_j_head == token_k:
-                lca_index = token_k_i
-            elif (token_j_head == token_j) and (token_k_head == token_k):
-                lca_index = -1
-            else:
-                lca_index = __pairwise_lca(token_j_head, token_k_head, lca_matrix, margins)
-            lca_matrix[token_j_i][token_k_i] = lca_index
-            lca_matrix[token_k_i][token_j_i] = lca_index
-            return lca_index
-
-        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
-        lca_matrix.fill(-2)
-        margins = [self.start, self.end]
-        for j in range(len(self)):
-            token_j = self[j]
-            for k in range(len(self)):
-                token_k = self[k]
-                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix, margins)
-                lca_matrix[k][j] = lca_matrix[j][k]
-        return lca_matrix
 
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy
@@ -421,8 +408,9 @@ cdef class Span:
             # objects. See Issue #375
             spans = []
             cdef attr_t label
-            for start, end, label in self.doc.noun_chunks_iterator(self):
-                spans.append(Span(self.doc, start, end, label=label))
+            if self.doc.noun_chunks_iterator is not None:
+                for start, end, label in self.doc.noun_chunks_iterator(self):
+                    spans.append(Span(self.doc, start, end, label=label))
             for span in spans:
                 yield span
 
@@ -542,9 +530,9 @@ cdef class Span:
             return len(list(self.rights))
 
     property subtree:
-        """Tokens that descend from tokens in the span, but fall outside it.
+        """Tokens within the span and tokens which descend from them.
 
-        YIELDS (Token): A descendant of a token within the span.
+        YIELDS (Token): A token within the span, or a descendant from it.
         """
         def __get__(self):
             for word in self.lefts:
@@ -601,6 +589,8 @@ cdef class Span:
         """RETURNS (unicode): The span's label."""
         def __get__(self):
             return self.doc.vocab.strings[self.label]
+        def __set__(self, unicode label_):
+            self.label = self.doc.vocab.strings.add(label_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:

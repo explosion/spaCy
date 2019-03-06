@@ -8,12 +8,16 @@ import inspect
 
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
+
     class ErrorsWithCodes(object):
         def __getattribute__(self, code):
             msg = getattr(err_cls, code)
-            return '[{code}] {msg}'.format(code=code, msg=msg)
+            return "[{code}] {msg}".format(code=code, msg=msg)
+
     return ErrorsWithCodes()
 
+
+# fmt: off
 
 @add_codes
 class Warnings(object):
@@ -48,6 +52,24 @@ class Warnings(object):
     W008 = ("Evaluating {obj}.similarity based on empty vectors.")
     W009 = ("Custom factory '{name}' provided by entry points of another "
             "package overwrites built-in factory.")
+    W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
+            "limit anymore, so the max_length argument is now deprecated.")
+    W011 = ("It looks like you're calling displacy.serve from within a "
+            "Jupyter notebook or a similar environment. This likely means "
+            "you're already running a local web server, so there's no need to "
+            "make displaCy start another one. Instead, you should be able to "
+            "replace displacy.serve with displacy.render to show the "
+            "visualization.")
+    W012 = ("A Doc object you're adding to the PhraseMatcher for pattern "
+            "'{key}' is parsed and/or tagged, but to match on '{attr}', you "
+            "don't actually need this information. This means that creating "
+            "the patterns is potentially much slower, because all pipeline "
+            "components are applied. To only create tokenized Doc objects, "
+            "try using `nlp.make_doc(text)` or process all texts as a stream "
+            "using `list(nlp.tokenizer.pipe(all_texts))`.")
+    W013 = ("As of v2.1.0, {obj}.merge is deprecated. Please use the more "
+            "efficient and less error-prone Doc.retokenize context manager "
+            "instead.")
 
 
 @add_codes
@@ -158,7 +180,7 @@ class Errors(object):
             "you forget to call the `set_extension` method?")
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
-    E048 = ("Can't import language {lang} from spacy.lang.")
+    E048 = ("Can't import language {lang} from spacy.lang: {err}")
     E049 = ("Can't find spaCy data directory: '{path}'. Check your "
             "installation and permissions, or use spacy.util.set_data_path "
             "to customise the location if necessary.")
@@ -258,20 +280,70 @@ class Errors(object):
     E095 = ("Can't write to frozen dictionary. This is likely an internal "
             "error. Are you writing to a default function argument?")
     E096 = ("Invalid object passed to displaCy: Can only visualize Doc or "
-             "Span objects, or dicts if set to manual=True.")
+            "Span objects, or dicts if set to manual=True.")
     E097 = ("Invalid pattern: expected token pattern (list of dicts) or "
             "phrase pattern (string) but got:\n{pattern}")
+    E098 = ("Invalid pattern specified: expected both SPEC and PATTERN.")
+    E099 = ("First node of pattern should be a root node. The root should "
+            "only contain NODE_NAME.")
+    E100 = ("Nodes apart from the root should contain NODE_NAME, NBOR_NAME and "
+            "NBOR_RELOP.")
+    E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
+            "have been declared in previous edges.")
+    E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
+            "tokens to merge.")
+    E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
+            " can only be part of one entity, so make sure the entities you're "
+            "setting don't overlap.")
+    E104 = ("Can't find JSON schema for '{name}'.")
+    E105 = ("The Doc.print_tree() method is now deprecated. Please use "
+            "Doc.to_json() instead or write your own function.")
+    E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
+            "settings: {opts}")
+    E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
+    E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
+            "in favor of the pipe name `sentencizer`, which does the same "
+            "thing. For example, use `nlp.create_pipeline('sentencizer')`")
+    E109 = ("Model for component '{name}' not initialized. Did you forget to load "
+            "a model, or forget to call begin_training()?")
+    E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
+    E111 = ("Pickling a token is not supported, because tokens are only views "
+            "of the parent Doc and can't exist on their own. A pickled token "
+            "would always have to include its Doc and Vocab, which has "
+            "practically no advantage over pickling the parent Doc directly. "
+            "So instead of pickling the token, pickle the Doc it belongs to.")
+    E112 = ("Pickling a span is not supported, because spans are only views "
+            "of the parent Doc and can't exist on their own. A pickled span "
+            "would always have to include its Doc and Vocab, which has "
+            "practically no advantage over pickling the parent Doc directly. "
+            "So instead of pickling the span, pickle the Doc it belongs to or "
+            "use Span.as_doc to convert the span to a standalone Doc object.")
+    E113 = ("The newly split token can only have one root (head = 0).")
+    E114 = ("The newly split token needs to have a root (head = 0).")
+    E115 = ("All subtokens must have associated heads.")
+    E116 = ("Cannot currently add labels to pre-trained text classifier. Add "
+            "labels before training begins. This functionality was available "
+            "in previous versions, but had significant bugs that led to poor "
+            "performance.")
+    E117 = ("The newly split tokens must match the text of the original token. "
+            "New orths: {new}. Old text: {old}.")
+    E118 = ("The custom extension attribute '{attr}' is not registered on the "
+            "Token object so it can't be set during retokenization. To "
+            "register an attribute, use the Token.set_extension classmethod.")
+    E119 = ("Can't set custom extension attribute '{attr}' during retokenization "
+            "because it's not writable. This usually means it was registered "
+            "with a getter function (and no setter) or as a method extension, "
+            "so the value is computed dynamically. To overwrite a custom "
+            "attribute manually, it should be registered with a default value "
+            "or with a getter AND setter.")
+    E120 = ("Can't set custom extension attributes during retokenization. "
+            "Expected dict mapping attribute names to values, but got: {value}")
 
 
 @add_codes
 class TempErrors(object):
-    T001 = ("Max length currently 10 for phrase matching")
-    T002 = ("Pattern length ({doc_len}) >= phrase_matcher.max_length "
-            "({max_len}). Length can be set on initialization, up to 10.")
     T003 = ("Resizing pre-trained Tagger models is not currently supported.")
     T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
-    T005 = ("Currently history size is hard-coded to 0. Received: {value}.")
-    T006 = ("Currently history width is hard-coded to 0. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
     T008 = ("Bad configuration of Tagger. This is probably a bug within "
@@ -280,56 +352,77 @@ class TempErrors(object):
             "(pretrained_dims) but not the new name (pretrained_vectors).")
 
 
+# fmt: on
+
+
+class MatchPatternError(ValueError):
+    def __init__(self, key, errors):
+        """Custom error for validating match patterns.
+
+        key (unicode): The name of the matcher rule.
+        errors (dict): Validation errors (sequence of strings) mapped to pattern
+            ID, i.e. the index of the added pattern.
+        """
+        msg = "Invalid token patterns for matcher rule '{}'\n".format(key)
+        for pattern_idx, error_msgs in errors.items():
+            pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
+            msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
+        ValueError.__init__(self, msg)
+
+
 class ModelsWarning(UserWarning):
     pass
 
 
 WARNINGS = {
-    'user': UserWarning,
-    'deprecation': DeprecationWarning,
-    'models': ModelsWarning,
+    "user": UserWarning,
+    "deprecation": DeprecationWarning,
+    "models": ModelsWarning,
 }
 
 
 def _get_warn_types(arg):
-    if arg == '':  # don't show any warnings
+    if arg == "":  # don't show any warnings
         return []
-    if not arg or arg == 'all':  # show all available warnings
+    if not arg or arg == "all":  # show all available warnings
         return WARNINGS.keys()
-    return [w_type.strip() for w_type in arg.split(',')
-            if w_type.strip() in WARNINGS]
+    return [w_type.strip() for w_type in arg.split(",") if w_type.strip() in WARNINGS]
 
 
 def _get_warn_excl(arg):
     if not arg:
         return []
-    return [w_id.strip() for w_id in arg.split(',')]
+    return [w_id.strip() for w_id in arg.split(",")]
 
 
-SPACY_WARNING_FILTER = os.environ.get('SPACY_WARNING_FILTER')
-SPACY_WARNING_TYPES = _get_warn_types(os.environ.get('SPACY_WARNING_TYPES'))
-SPACY_WARNING_IGNORE = _get_warn_excl(os.environ.get('SPACY_WARNING_IGNORE'))
+SPACY_WARNING_FILTER = os.environ.get("SPACY_WARNING_FILTER")
+SPACY_WARNING_TYPES = _get_warn_types(os.environ.get("SPACY_WARNING_TYPES"))
+SPACY_WARNING_IGNORE = _get_warn_excl(os.environ.get("SPACY_WARNING_IGNORE"))
 
 
 def user_warning(message):
-    _warn(message, 'user')
+    _warn(message, "user")
 
 
 def deprecation_warning(message):
-    _warn(message, 'deprecation')
+    _warn(message, "deprecation")
 
 
 def models_warning(message):
-    _warn(message, 'models')
+    _warn(message, "models")
 
 
-def _warn(message, warn_type='user'):
+def _warn(message, warn_type="user"):
     """
     message (unicode): The message to display.
     category (Warning): The Warning to show.
     """
-    w_id = message.split('[', 1)[1].split(']', 1)[0]  # get ID from string
-    if warn_type in SPACY_WARNING_TYPES and w_id not in SPACY_WARNING_IGNORE:
+    if message.startswith("["):
+        w_id = message.split("[", 1)[1].split("]", 1)[0]  # get ID from string
+    else:
+        w_id = None
+    ignore_warning = w_id and w_id in SPACY_WARNING_IGNORE
+    if warn_type in SPACY_WARNING_TYPES and not ignore_warning:
         category = WARNINGS[warn_type]
         stack = inspect.stack()[-1]
         with warnings.catch_warnings():

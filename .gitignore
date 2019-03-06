@@ -5,9 +5,15 @@ corpora/
 keys/
 
 # Website
+website/.cache/
+website/public/
+website/node_modules
+website/.npm
+website/logs
+*.log
+npm-debug.log*
 website/www/
 website/_deploy.sh
-website/.gitignore
 
 # Cython / C extensions
 cythonize.json

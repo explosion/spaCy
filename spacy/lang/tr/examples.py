@@ -18,5 +18,5 @@ sentences = [
     "Londra İngiltere'nin başkentidir.",
     "Türkiye'nin başkenti neresi?",
     "Bakanlar Kurulu 180 günlük eylem planını açıkladı.",
-    "Merkez Bankası, beklentiler doğrultusunda faizlerde değişikliğe gitmedi."
+    "Merkez Bankası, beklentiler doğrultusunda faizlerde değişikliğe gitmedi.",
 ]

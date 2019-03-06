@@ -4,26 +4,21 @@ from __future__ import unicode_literals, print_function
 
 import re
 import random
-import cytoolz
-import itertools
 import numpy
 import tempfile
 import shutil
 from pathlib import Path
-import msgpack
-import json
+import srsly
 
-import ujson
-
-from . import _align 
+from . import _align
 from .syntax import nonproj
-from .tokens import Doc
+from .tokens import Doc, Span
 from .errors import Errors
 from . import util
 from .util import minibatch, itershuffle
-from .compat import json_dumps
 
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
+
 
 def tags_to_entities(tags):
     entities = []
@@ -110,20 +105,23 @@ class GoldCorpus(object):
         # Write temp directory with one doc per file, so we can shuffle
         # and stream
         self.tmp_dir = Path(tempfile.mkdtemp())
-        self.write_msgpack(self.tmp_dir / 'train', train)
-        self.write_msgpack(self.tmp_dir / 'dev', dev)
+        self.write_msgpack(self.tmp_dir / 'train', train, limit=self.limit)
+        self.write_msgpack(self.tmp_dir / 'dev', dev, limit=self.limit)
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
 
     @staticmethod
-    def write_msgpack(directory, doc_tuples):
+    def write_msgpack(directory, doc_tuples, limit=0):
         if not directory.exists():
             directory.mkdir()
+        n = 0
         for i, doc_tuple in enumerate(doc_tuples):
-            with open(directory / '{}.msg'.format(i), 'wb') as file_:
-                msgpack.dump([doc_tuple], file_, use_bin_type=True, encoding='utf8')
-    
+            srsly.write_msgpack(directory / '{}.msg'.format(i), [doc_tuple])
+            n += len(doc_tuple[1])
+            if limit and n >= limit:
+                break
+
     @staticmethod
     def walk_corpus(path):
         path = util.ensure_path(path)
@@ -152,8 +150,7 @@ class GoldCorpus(object):
             if loc.parts[-1].endswith('json'):
                 gold_tuples = read_json_file(loc)
             elif loc.parts[-1].endswith('msg'):
-                with loc.open('rb') as file_:
-                    gold_tuples = msgpack.load(file_, encoding='utf8')
+                gold_tuples = srsly.read_msgpack(loc)
             else:
                 msg = "Cannot read from file: %s. Supported formats: .json, .msg"
                 raise ValueError(msg % loc)
@@ -167,7 +164,7 @@ class GoldCorpus(object):
     def dev_tuples(self):
         locs = (self.tmp_dir / 'dev').iterdir()
         yield from self.read_tuples(locs, limit=self.limit)
-   
+
     @property
     def train_tuples(self):
         locs = (self.tmp_dir / 'train').iterdir()
@@ -260,10 +257,57 @@ def _corrupt(c, noise_level):
         return '\n'
     elif c == '\n':
         return ' '
-    elif c in ['.', "'", "!", "?"]:
+    elif c in ['.', "'", "!", "?", ',']:
         return ''
     else:
         return c.lower()
+
+
+def read_json_object(json_corpus_section):
+    """Take a list of JSON-formatted documents (e.g. from an already loaded
+    training data file) and yield tuples in the GoldParse format.
+
+    json_corpus_section (list): The data.
+    YIELDS (tuple): The reformatted data.
+    """
+    for json_doc in json_corpus_section:
+        tuple_doc = json_to_tuple(json_doc)
+        for tuple_paragraph in tuple_doc:
+            yield tuple_paragraph
+
+
+def json_to_tuple(doc):
+    """Convert an item in the JSON-formatted training data to the tuple format
+    used by GoldParse.
+
+    doc (dict): One entry in the training data.
+    YIELDS (tuple): The reformatted data.
+    """
+    paragraphs = []
+    for paragraph in doc['paragraphs']:
+        sents = []
+        for sent in paragraph['sentences']:
+            words = []
+            ids = []
+            tags = []
+            heads = []
+            labels = []
+            ner = []
+            for i, token in enumerate(sent['tokens']):
+                words.append(token['orth'])
+                ids.append(i)
+                tags.append(token.get('tag', '-'))
+                heads.append(token.get('head', 0) + i)
+                labels.append(token.get('dep', ''))
+                # Ensure ROOT label is case-insensitive
+                if labels[-1].lower() == 'root':
+                    labels[-1] = 'ROOT'
+                ner.append(token.get('ner', '-'))
+            sents.append([
+                [ids, words, tags, heads, labels, ner],
+                sent.get('brackets', [])])
+        if sents:
+            yield [paragraph.get('raw', None), sents]
 
 
 def read_json_file(loc, docs_filter=None, limit=None):
@@ -275,31 +319,8 @@ def read_json_file(loc, docs_filter=None, limit=None):
         for doc in _json_iterate(loc):
             if docs_filter is not None and not docs_filter(doc):
                 continue
-            paragraphs = []
-            for paragraph in doc['paragraphs']:
-                sents = []
-                for sent in paragraph['sentences']:
-                    words = []
-                    ids = []
-                    tags = []
-                    heads = []
-                    labels = []
-                    ner = []
-                    for i, token in enumerate(sent['tokens']):
-                        words.append(token['orth'])
-                        ids.append(i)
-                        tags.append(token.get('tag', '-'))
-                        heads.append(token.get('head', 0) + i)
-                        labels.append(token.get('dep', ''))
-                        # Ensure ROOT label is case-insensitive
-                        if labels[-1].lower() == 'root':
-                            labels[-1] = 'ROOT'
-                        ner.append(token.get('ner', '-'))
-                    sents.append([
-                        [ids, words, tags, heads, labels, ner],
-                        sent.get('brackets', [])])
-                if sents:
-                    yield [paragraph.get('raw', None), sents]
+            for json_tuple in json_to_tuple(doc):
+                yield json_tuple
 
 
 def _json_iterate(loc):
@@ -325,11 +346,11 @@ def _json_iterate(loc):
     cdef char close_curly = ord('}')
     for i in range(len(py_raw)):
         c = raw[i]
-        if c == backslash:
-            escape = True
-            continue
         if escape:
             escape = False
+            continue
+        if c == backslash:
+            escape = True
             continue
         if c == quote:
             inside_string = not inside_string
@@ -349,8 +370,8 @@ def _json_iterate(loc):
             if square_depth == 1 and curly_depth == 0:
                 py_str = py_raw[start : i+1].decode('utf8')
                 try:
-                    yield json.loads(py_str)
-                except:
+                    yield srsly.json_loads(py_str)
+                except Exception:
                     print(py_str)
                     raise
                 start = -1
@@ -437,12 +458,16 @@ cdef class GoldParse:
         if morphology is None:
             morphology = [None for _ in words]
         if entities is None:
-            entities = [None for _ in words]
+            entities = ['-' for _ in doc]
         elif len(entities) == 0:
-            entities = ['O' for _ in words]
-        elif not isinstance(entities[0], basestring):
-            # Assume we have entities specified by character offset.
-            entities = biluo_tags_from_offsets(doc, entities)
+            entities = ['O' for _ in doc]
+        else:
+            # Translate the None values to '-', to make processing easier.
+            # See Issue #2603
+            entities = [(ent if ent is not None else '-') for ent in entities]
+            if not isinstance(entities[0], basestring):
+                # Assume we have entities specified by character offset.
+                entities = biluo_tags_from_offsets(doc, entities)
         self.mem = Pool()
         self.loss = 0
         self.length = len(doc)
@@ -573,32 +598,19 @@ cdef class GoldParse:
                         self.c.sent_start[i] = 0
 
 
-def docs_to_json(id, docs):
-    '''Convert a list of Doc objects into the JSON-serializable format used by
-    the spacy train command. Each Doc in the list will be interpreted as a
-    paragraph.
-    '''
+def docs_to_json(docs, underscore=None):
+    """Convert a list of Doc objects into the JSON-serializable format used by
+    the spacy train command.
+
+    docs (iterable / Doc): The Doc object(s) to convert.
+    underscore (list): Optional list of string names of custom doc._.
+        attributes. Attribute values need to be JSON-serializable. Values will
+        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+    RETURNS (list): The data in spaCy's JSON format.
+    """
     if isinstance(docs, Doc):
         docs = [docs]
-    json_doc = {'id': id, 'paragraphs': []}
-    for i, doc in enumerate(docs):
-        json_para = {'raw': doc.text, 'sentences': []}
-        ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
-        for j, sent in enumerate(doc.sents):
-            json_sent = {'tokens': [], 'brackets': []}
-            for token in sent:
-                json_token = {"id": token.i, "orth": token.text}
-                if doc.is_tagged:
-                    json_token['tag'] = token.tag_
-                if doc.is_parsed:
-                    json_token['head'] = token.head.i-token.i
-                    json_token['dep'] = token.dep_
-                json_token['ner'] = biluo_tags[token.i]
-                json_sent['tokens'].append(json_token)
-            json_para['sentences'].append(json_sent)
-        json_doc['paragraphs'].append(json_para)
-    return json_doc
+    return [doc.to_json(underscore=underscore) for doc in docs]
 
 
 def biluo_tags_from_offsets(doc, entities, missing='O'):
@@ -656,6 +668,24 @@ def biluo_tags_from_offsets(doc, entities, missing='O'):
     return biluo
 
 
+def spans_from_biluo_tags(doc, tags):
+    """Encode per-token tags following the BILUO scheme into Span object, e.g.
+    to overwrite the doc.ents.
+
+    doc (Doc): The document that the BILUO tags refer to.
+    entities (iterable): A sequence of BILUO tags with each tag describing one
+        token. Each tags string will be of the form of either "", "O" or
+        "{action}-{label}", where action is one of "B", "I", "L", "U".
+    RETURNS (list): A sequence of Span objects.
+    """
+    token_offsets = tags_to_entities(tags)
+    spans = []
+    for label, start_idx, end_idx in token_offsets:
+        span = Span(doc, start_idx, end_idx + 1, label=label)
+        spans.append(span)
+    return spans
+
+
 def offsets_from_biluo_tags(doc, tags):
     """Encode per-token tags following the BILUO scheme into entity offsets.
 
@@ -667,12 +697,8 @@ def offsets_from_biluo_tags(doc, tags):
         `end` will be character-offset integers denoting the slice into the
         original string.
     """
-    token_offsets = tags_to_entities(tags)
-    offsets = []
-    for label, start_idx, end_idx in token_offsets:
-        span = doc[start_idx : end_idx + 1]
-        offsets.append((span.start_char, span.end_char, label))
-    return offsets
+    spans = spans_from_biluo_tags(doc, tags)
+    return [(span.start_char, span.end_char, span.label_) for span in spans]
 
 
 def is_punct_label(label):

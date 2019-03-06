@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-VERBS = set("""
+VERBS = set(
+    """
 aah abacinate abandon abase abash abate abbreviate abdicate abduce abduct
 aberrate abet abhor abide abjure ablactate ablate abnegate abolish abominate
 abort abound about-face abrade abrase abreact abridge abrogate abscise abscond
@@ -912,4 +913,5 @@ wreck wrench wrest wrestle wrick wriggle wring wrinkle write writhe wrong x-ray
 xerox yacht yack yak yammer yank yap yarn yarn-dye yaup yaw yawl yawn yawp yearn
 yell yellow yelp yen yield yip yodel yoke yowl zap zero zest zigzag zinc zip
 zipper zone zoom
-""".split())
+""".split()
+)

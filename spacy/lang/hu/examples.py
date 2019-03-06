@@ -13,5 +13,5 @@ Example sentences to test spaCy and its language models.
 sentences = [
     "Az Apple egy brit startup vásárlását tervezi 1 milliárd dollár értékben.",
     "San Francisco vezetése mérlegeli a járdát használó szállító robotok betiltását.",
-    "London az Egyesült Királyság egy nagy városa."
+    "London az Egyesült Királyság egy nagy városa.",
 ]

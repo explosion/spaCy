@@ -115,6 +115,9 @@ cdef class Token:
         else:
             raise ValueError(Errors.E041.format(op=op))
 
+    def __reduce__(self):
+        raise NotImplementedError(Errors.E111)
+
     @property
     def _(self):
         return Underscore(Underscore.token_extensions, self,
@@ -253,7 +256,10 @@ cdef class Token:
             or norm exceptions.
         """
         def __get__(self):
-            return self.c.lex.norm
+            if self.c.norm == 0:
+                return self.c.lex.norm
+            else:
+                return self.c.norm
 
     property shape:
         """RETURNS (uint64): ID of the token's shape, a transform of the
@@ -458,10 +464,11 @@ cdef class Token:
             yield from self.rights
 
     property subtree:
-        """A sequence of all the token's syntactic descendents.
+        """A sequence containing the token and all the token's syntactic
+        descendants.
 
         YIELDS (Token): A descendent token such that
-            `self.is_ancestor(descendent)`.
+            `self.is_ancestor(descendent) or token == self`.
         """
         def __get__(self):
             for word in self.lefts:
@@ -696,7 +703,7 @@ cdef class Token:
 
     property orth_:
         """RETURNS (unicode): Verbatim text content (identical to
-            `Token.text`). Existst mostly for consistency with the other
+            `Token.text`). Exists mostly for consistency with the other
             attributes.
         """
         def __get__(self):
@@ -715,7 +722,10 @@ cdef class Token:
             norm exceptions.
         """
         def __get__(self):
-            return self.vocab.strings[self.c.lex.norm]
+            return self.vocab.strings[self.norm]
+
+        def __set__(self, unicode norm_):
+            self.c.norm = self.vocab.strings.add(norm_)
 
     property shape_:
         """RETURNS (unicode): Transform of the tokens's string, to show
@@ -863,7 +873,7 @@ cdef class Token:
             return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
 
     property is_right_punct:
-        """RETURNS (bool): Whether the token is a left punctuation mark."""
+        """RETURNS (bool): Whether the token is a right punctuation mark."""
         def __get__(self):
             return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
 

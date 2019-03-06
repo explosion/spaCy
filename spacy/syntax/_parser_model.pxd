@@ -19,6 +19,7 @@ cdef struct WeightsC:
     const float* feat_bias
     const float* hidden_bias
     const float* hidden_weights
+    const float* seen_classes
 
 
 cdef struct ActivationsC:

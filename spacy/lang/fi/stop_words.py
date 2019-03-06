@@ -4,9 +4,8 @@ from __future__ import unicode_literals
 
 # Source https://github.com/stopwords-iso/stopwords-fi/blob/master/stopwords-fi.txt
 # Reformatted with some minor corrections
-
-STOP_WORDS = set("""
-
+STOP_WORDS = set(
+    """
 aiemmin aika aikaa aikaan aikaisemmin aikaisin aikana aikoina aikoo aikovat
 aina ainakaan ainakin ainoa ainoat aiomme aion aiotte aivan ajan alas alemmas
 alkuisin alkuun alla alle aloitamme aloitan aloitat aloitatte aloitattivat
@@ -111,5 +110,5 @@ yhtäällä yhtäältä yhtään yhä yksi yksin yksittäin yleensä ylemmäs yl
 ympäri
 
 älköön älä
-
-""".split())
+""".split()
+)

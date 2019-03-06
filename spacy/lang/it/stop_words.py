@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a abbastanza abbia abbiamo abbiano abbiate accidenti ad adesso affinche agl
 agli ahime ahimè ai al alcuna alcuni alcuno all alla alle allo allora altri
 altrimenti altro altrove altrui anche ancora anni anno ansa anticipo assai
@@ -82,4 +83,5 @@ uguali ulteriore ultimo un una uno uomo
 
 va vale vari varia varie vario verso vi via vicino visto vita voi volta volte
 vostra vostre vostri vostro
-""".split())
+""".split()
+)

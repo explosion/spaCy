@@ -20,23 +20,24 @@ from spacy.tokens import Doc, Span, Token
 
 @plac.annotations(
     text=("Text to process", "positional", None, str),
-    companies=("Names of technology companies", "positional", None, str))
+    companies=("Names of technology companies", "positional", None, str),
+)
 def main(text="Alphabet Inc. is the company behind Google.", *companies):
     # For simplicity, we start off with only the blank English Language class
     # and no model or pre-defined pipeline loaded.
     nlp = English()
     if not companies:  # set default companies if none are set via args
-        companies = ['Alphabet Inc.', 'Google', 'Netflix', 'Apple']  # etc.
+        companies = ["Alphabet Inc.", "Google", "Netflix", "Apple"]  # etc.
     component = TechCompanyRecognizer(nlp, companies)  # initialise component
     nlp.add_pipe(component, last=True)  # add last to the pipeline
 
     doc = nlp(text)
-    print('Pipeline', nlp.pipe_names)  # pipeline contains component name
-    print('Tokens', [t.text for t in doc])  # company names from the list are merged
-    print('Doc has_tech_org', doc._.has_tech_org)  # Doc contains tech orgs
-    print('Token 0 is_tech_org', doc[0]._.is_tech_org)  # "Alphabet Inc." is a tech org
-    print('Token 1 is_tech_org', doc[1]._.is_tech_org)  # "is" is not
-    print('Entities', [(e.text, e.label_) for e in doc.ents])  # all orgs are entities
+    print("Pipeline", nlp.pipe_names)  # pipeline contains component name
+    print("Tokens", [t.text for t in doc])  # company names from the list are merged
+    print("Doc has_tech_org", doc._.has_tech_org)  # Doc contains tech orgs
+    print("Token 0 is_tech_org", doc[0]._.is_tech_org)  # "Alphabet Inc." is a tech org
+    print("Token 1 is_tech_org", doc[1]._.is_tech_org)  # "is" is not
+    print("Entities", [(e.text, e.label_) for e in doc.ents])  # all orgs are entities
 
 
 class TechCompanyRecognizer(object):
@@ -45,9 +46,10 @@ class TechCompanyRecognizer(object):
     labelled as ORG and their spans are merged into one token. Additionally,
     ._.has_tech_org and ._.is_tech_org is set on the Doc/Span and Token
     respectively."""
-    name = 'tech_companies'  # component name, will show up in the pipeline
 
-    def __init__(self, nlp, companies=tuple(), label='ORG'):
+    name = "tech_companies"  # component name, will show up in the pipeline
+
+    def __init__(self, nlp, companies=tuple(), label="ORG"):
         """Initialise the pipeline component. The shared nlp instance is used
         to initialise the matcher with the shared vocab, get the label ID and
         generate Doc objects as phrase match patterns.
@@ -58,16 +60,16 @@ class TechCompanyRecognizer(object):
         # so even if the list of companies is long, it's very efficient
         patterns = [nlp(org) for org in companies]
         self.matcher = PhraseMatcher(nlp.vocab)
-        self.matcher.add('TECH_ORGS', None, *patterns)
+        self.matcher.add("TECH_ORGS", None, *patterns)
 
         # Register attribute on the Token. We'll be overwriting this based on
         # the matches, so we're only setting a default value, not a getter.
-        Token.set_extension('is_tech_org', default=False)
+        Token.set_extension("is_tech_org", default=False)
 
         # Register attributes on Doc and Span via a getter that checks if one of
         # the contained tokens is set to is_tech_org == True.
-        Doc.set_extension('has_tech_org', getter=self.has_tech_org)
-        Span.set_extension('has_tech_org', getter=self.has_tech_org)
+        Doc.set_extension("has_tech_org", getter=self.has_tech_org)
+        Span.set_extension("has_tech_org", getter=self.has_tech_org)
 
     def __call__(self, doc):
         """Apply the pipeline component on a Doc object and modify it if matches
@@ -82,7 +84,7 @@ class TechCompanyRecognizer(object):
             spans.append(entity)
             # Set custom attribute on each token of the entity
             for token in entity:
-                token._.set('is_tech_org', True)
+                token._.set("is_tech_org", True)
             # Overwrite doc.ents and add entity – be careful not to replace!
             doc.ents = list(doc.ents) + [entity]
         for span in spans:
@@ -97,10 +99,10 @@ class TechCompanyRecognizer(object):
         is a tech org. Since the getter is only called when we access the
         attribute, we can refer to the Token's 'is_tech_org' attribute here,
         which is already set in the processing step."""
-        return any([t._.get('is_tech_org') for t in tokens])
+        return any([t._.get("is_tech_org") for t in tokens])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     plac.call(main)
 
     # Expected output:

@@ -7,14 +7,13 @@ from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
 from collections import OrderedDict, Counter
-import ujson
+import srsly
 
 from . cimport _beam_utils
 from ..tokens.doc cimport Doc
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..typedefs cimport attr_t
-from ..compat import json_dumps
 from ..errors import Errors
 from .. import util
 
@@ -148,18 +147,29 @@ cdef class TransitionSystem:
     def initialize_actions(self, labels_by_action, min_freq=None):
         self.labels = {}
         self.n_moves = 0
+        added_labels = []
+        added_actions = {}
         for action, label_freqs in sorted(labels_by_action.items()):
             action = int(action)
             # Make sure we take a copy here, and that we get a Counter
             self.labels[action] = Counter()
             # Have to be careful here: Sorting must be stable, or our model
-            # won't be read back in correctly. 
+            # won't be read back in correctly.
             sorted_labels = [(f, L) for L, f in label_freqs.items()]
             sorted_labels.sort()
             sorted_labels.reverse()
             for freq, label_str in sorted_labels:
+                if freq < 0:
+                    added_labels.append((freq, label_str))
+                    added_actions.setdefault(label_str, []).append(action)
+                else:
+                    self.add_action(int(action), label_str)
+                    self.labels[action][label_str] = freq
+        added_labels.sort(reverse=True)
+        for freq, label_str in added_labels:
+            for action in added_actions[label_str]:
                 self.add_action(int(action), label_str)
-                self.labels[action][label_str] = freq 
+                self.labels[action][label_str] = freq
 
     def add_action(self, int action, label_name):
         cdef attr_t label_id
@@ -204,7 +214,7 @@ cdef class TransitionSystem:
     def to_bytes(self, **exclude):
         transitions = []
         serializers = {
-            'moves': lambda: json_dumps(self.labels),
+            'moves': lambda: srsly.json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes()
         }
         return util.to_bytes(serializers, exclude)
@@ -212,7 +222,7 @@ cdef class TransitionSystem:
     def from_bytes(self, bytes_data, **exclude):
         labels = {}
         deserializers = {
-            'moves': lambda b: labels.update(ujson.loads(b)),
+            'moves': lambda b: labels.update(srsly.json_loads(b)),
             'strings': lambda b: self.strings.from_bytes(b)
         }
         msg = util.from_bytes(bytes_data, deserializers, exclude)

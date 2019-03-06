@@ -8,7 +8,7 @@ from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-import regex as re
+import re
 cimport cython
 
 from .tokens.doc cimport Doc
@@ -407,7 +407,7 @@ cdef class Tokenizer:
         if data.get('infix_finditer'):
             self.infix_finditer = re.compile(data['infix_finditer']).finditer
         if data.get('token_match'):
-            self.token_match = re.compile(data['token_match']).search
+            self.token_match = re.compile(data['token_match']).match
         for string, substrings in data.get('rules', {}).items():
             self.add_special_case(string, substrings)
         return self

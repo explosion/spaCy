@@ -1,3 +1,4 @@
+
 # coding: utf8
 # cython: infer_types=True
 # cython: bounds_check=False
@@ -9,9 +10,9 @@ cimport numpy as np
 import numpy
 import numpy.linalg
 import struct
-import dill
-import msgpack
+import srsly
 from thinc.neural.util import get_array_module, copy_array
+import srsly
 
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
@@ -20,7 +21,6 @@ from .span cimport Span
 from .token cimport Token
 from .span cimport Span
 from .token cimport Token
-from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs import intify_attrs, IDS
@@ -188,13 +188,18 @@ cdef class Doc:
 
     @property
     def is_sentenced(self):
-        # Check if the document has sentence boundaries,
-        # i.e at least one tok has the sent_start in (-1, 1)
+        """Check if the document has sentence boundaries assigned. This is
+        defined as having at least one of the following:
+
+        a) An entry "sents" in doc.user_hooks";
+        b) sent.is_parsed is set to True;
+        c) At least one token other than the first where sent_start is not None.
+        """
         if 'sents' in self.user_hooks:
             return True
         if self.is_parsed:
             return True
-        for i in range(self.length):
+        for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
                 return True
         else:
@@ -461,6 +466,21 @@ cdef class Doc:
             #    prediction
             # 3. Test basic data-driven ORTH gazetteer
             # 4. Test more nuanced date and currency regex
+
+            tokens_in_ents = {}
+            cdef attr_t entity_type
+            cdef int ent_start, ent_end
+            for ent_info in ents:
+                entity_type, ent_start, ent_end = get_entity_info(ent_info)
+                for token_index in range(ent_start, ent_end):
+                    if token_index in tokens_in_ents.keys():
+                        raise ValueError(Errors.E103.format(
+                            span1=(tokens_in_ents[token_index][0],
+                                   tokens_in_ents[token_index][1],
+                                   self.vocab.strings[tokens_in_ents[token_index][2]]),
+                            span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
+                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type)
+
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
@@ -468,15 +488,7 @@ cdef class Doc:
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
-                if isinstance(ent_info, Span):
-                    ent_id = ent_info.ent_id
-                    ent_type = ent_info.label
-                    start = ent_info.start
-                    end = ent_info.end
-                elif len(ent_info) == 3:
-                    ent_type, start, end = ent_info
-                else:
-                    ent_id, ent_type, start, end = ent_info
+                ent_type, start, end = get_entity_info(ent_info)
                 if ent_type is None or ent_type < 0:
                     # Mark as O
                     for i in range(start, end):
@@ -562,6 +574,9 @@ cdef class Doc:
             raise ValueError(Errors.E031.format(i=self.length))
         t.spacy = has_space
         self.length += 1
+        if self.length == 1:
+            # Set token.sent_start to 1 for first token. See issue #2869
+            self.c[0].sent_start = 1
         return t.idx + t.lex.length + t.spacy
 
     @cython.boundscheck(False)
@@ -588,10 +603,13 @@ cdef class Doc:
         cdef attr_id_t feature
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
-        if not hasattr(py_attr_ids, '__iter__') \
-        and not isinstance(py_attr_ids, basestring_):
+        # See also #3064
+        if isinstance(py_attr_ids, basestring_):
+            # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
-
+        elif not hasattr(py_attr_ids, '__iter__'):
+            # Handle inputs like doc.to_array(ORTH)
+            py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
                        for id_ in py_attr_ids]
@@ -698,56 +716,22 @@ cdef class Doc:
                     if array[i, col] != 0:
                         self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
         # set flags
-        self.is_parsed = bool(HEAD in attrs or DEP in attrs)
-        self.is_tagged = bool(TAG in attrs or POS in attrs)
+        self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
+        self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # if document is parsed, set children
         if self.is_parsed:
             set_children_from_heads(self.c, self.length)
         return self
 
     def get_lca_matrix(self):
-        """Calculates the lowest common ancestor matrix for a given `Doc`.
-        Returns LCA matrix containing the integer index of the ancestor, or -1
-        if no common ancestor is found (ex if span excludes a necessary
-        ancestor). Apologies about the recursion, but the impact on
-        performance is negligible given the natural limitations on the depth
-        of a typical human sentence.
+        """Calculates a matrix of Lowest Common Ancestors (LCA) for a given
+        `Doc`, where LCA[i, j] is the index of the lowest common ancestor among
+        token i and j.
+
+        RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
+            (n, n), where n = len(self).
         """
-        # Efficiency notes:
-        # We can easily improve the performance here by iterating in Cython.
-        # To loop over the tokens in Cython, the easiest way is:
-        # for token in doc.c[:doc.c.length]:
-        #     head = token + token.head
-        # Both token and head will be TokenC* here. The token.head attribute
-        # is an integer offset.
-        def __pairwise_lca(token_j, token_k, lca_matrix):
-            if lca_matrix[token_j.i][token_k.i] != -2:
-                return lca_matrix[token_j.i][token_k.i]
-            elif token_j == token_k:
-                lca_index = token_j.i
-            elif token_k.head == token_j:
-                lca_index = token_j.i
-            elif token_j.head == token_k:
-                lca_index = token_k.i
-            elif (token_j.head == token_j) and (token_k.head == token_k):
-                lca_index = -1
-            else:
-                lca_index = __pairwise_lca(token_j.head, token_k.head,
-                                           lca_matrix)
-            lca_matrix[token_j.i][token_k.i] = lca_index
-            lca_matrix[token_k.i][token_j.i] = lca_index
-
-            return lca_index
-
-        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
-        lca_matrix.fill(-2)
-        for j in range(len(self)):
-            token_j = self[j]
-            for k in range(j, len(self)):
-                token_k = self[k]
-                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix)
-                lca_matrix[k][j] = lca_matrix[j][k]
-        return lca_matrix
+        return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
@@ -801,8 +785,8 @@ cdef class Doc:
         }
         if 'user_data' not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
-            serializers['user_data_keys'] = lambda: msgpack.dumps(user_data_keys)
-            serializers['user_data_values'] = lambda: msgpack.dumps(user_data_values)
+            serializers['user_data_keys'] = lambda: srsly.msgpack_dumps(user_data_keys)
+            serializers['user_data_values'] = lambda: srsly.msgpack_dumps(user_data_values)
 
         return util.to_bytes(serializers, exclude)
 
@@ -830,9 +814,8 @@ cdef class Doc:
         # keys, we must have tuples. In values we just have to hope
         # users don't mind getting a list instead of a tuple.
         if 'user_data' not in exclude and 'user_data_keys' in msg:
-            user_data_keys = msgpack.loads(msg['user_data_keys'],
-                                           use_list=False, raw=False)
-            user_data_values = msgpack.loads(msg['user_data_values'], raw=False)
+            user_data_keys = srsly.msgpack_loads(msg['user_data_keys'], use_list=False)
+            user_data_values = srsly.msgpack_loads(msg['user_data_values'])
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
 
@@ -870,7 +853,7 @@ cdef class Doc:
         '''
         xp = get_array_module(self.tensor)
         if self.tensor.size == 0:
-            self.tensor.resize(tensor.shape)
+            self.tensor.resize(tensor.shape, refcheck=False)
             copy_array(self.tensor, tensor)
         else:
             self.tensor = xp.hstack((self.tensor, tensor))
@@ -887,6 +870,28 @@ cdef class Doc:
         '''
         return Retokenizer(self)
 
+    def _bulk_merge(self, spans, attributes):
+        """Retokenize the document, such that the spans given as arguments
+         are merged into single tokens. The spans need to be in document
+         order, and no span intersection is allowed.
+
+        spans (Span[]): Spans to merge, in document order, with all span
+            intersections empty. Cannot be emty.
+        attributes (Dictionary[]): Attributes to assign to the merged tokens. By default,
+            must be the same lenghth as spans, emty dictionaries are allowed.
+            attributes are inherited from the syntactic root of the span.
+        RETURNS (Token): The first newly merged token.
+        """
+        cdef unicode tag, lemma, ent_type
+
+        assert len(attributes) == len(spans), "attribute length should be equal to span length" + str(len(attributes)) +\
+                                              str(len(spans))
+        with self.retokenize() as retokenizer:
+            for i, span in enumerate(spans):
+                fix_attributes(self, attributes[i])
+                remove_label_if_necessary(attributes[i])
+                retokenizer.merge(span, attributes[i])
+
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Retokenize the document, such that the span at
         `doc.text[start_idx : end_idx]` is merged into a single token. If
@@ -901,6 +906,7 @@ cdef class Doc:
             indices did not fall at token boundaries.
         """
         cdef unicode tag, lemma, ent_type
+        deprecation_warning(Warnings.W013.format(obj="Doc"))
         if len(args) == 3:
             deprecation_warning(Warnings.W003)
             tag, lemma, ent_type = args
@@ -908,20 +914,12 @@ cdef class Doc:
             attributes[LEMMA] = lemma
             attributes[ENT_TYPE] = ent_type
         elif not args:
-            if 'label' in attributes and 'ent_type' not in attributes:
-                if isinstance(attributes['label'], int):
-                    attributes[ENT_TYPE] = attributes['label']
-                else:
-                    attributes[ENT_TYPE] = self.vocab.strings[attributes['label']]
-            if 'ent_type' in attributes:
-                attributes[ENT_TYPE] = attributes['ent_type']
+            fix_attributes(self, attributes)
         elif args:
             raise ValueError(Errors.E034.format(n_args=len(args),
                                                 args=repr(args),
                                                 kwargs=repr(attributes)))
-        # More deprecated attribute handling =/
-        if 'label' in attributes:
-            attributes['ent_type'] = attributes.pop('label')
+        remove_label_if_necessary(attributes)
 
         attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
 
@@ -938,31 +936,48 @@ cdef class Doc:
         return self[start]
 
     def print_tree(self, light=False, flat=False):
-        """Returns the parse trees in JSON (dict) format.
+        raise ValueError(Errors.E105)
 
-        light (bool): Don't include lemmas or entities.
-        flat (bool): Don't include arcs or modifiers.
-        RETURNS (dict): Parse tree as dict.
+    def to_json(self, underscore=None):
+        """Convert a Doc to JSON. Produces the same format used by the spacy
+        train command.
 
-        EXAMPLE:
-            >>> doc = nlp('Bob brought Alice the pizza. Alice ate the pizza.')
-            >>> trees = doc.print_tree()
-            >>> trees[1]
-            {'modifiers': [
-                {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice',
-                'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP',
-                'lemma': 'Alice'},
-                {'modifiers': [
-                    {'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det',
-                    'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}],
-                'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN',
-                'POS_fine': 'NN', 'lemma': 'pizza'},
-                {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct',
-                'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}],
-                'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB',
-                'POS_fine': 'VBD', 'lemma': 'eat'}
+        underscore (list): Optional list of string names of custom doc._.
+        attributes. Attribute values need to be JSON-serializable. Values will
+        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+        RETURNS (dict): The data in spaCy's JSON format.
         """
-        return parse_tree(self, light=light, flat=flat)
+        data = {'text': self.text}
+        data['ents'] = [{'start': ent.start_char, 'end': ent.end_char,
+                         'label': ent.label_} for ent in self.ents]
+        sents = list(self.sents)
+        if sents:
+            data['sents'] = [{'start': sent.start_char, 'end': sent.end_char}
+                             for sent in sents]
+        if self.cats:
+            data['cats'] = self.cats
+        data['tokens'] = []
+        for token in self:
+            token_data = {'id': token.i, 'start': token.idx, 'end': token.idx + len(token)}
+            if token.pos_:
+                token_data['pos'] = token.pos_
+            if token.tag_:
+                token_data['tag'] = token.tag_
+            if token.dep_:
+                token_data['dep'] = token.dep_
+            if token.head:
+                token_data['head'] = token.head.i
+            data['tokens'].append(token_data)
+        if underscore:
+            data['_'] = {}
+            for attr in underscore:
+                if not self.has_extension(attr):
+                    raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
+                value = self._.get(attr)
+                if not srsly.is_json_serializable(value):
+                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                data['_'][attr] = value
+        return data
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
@@ -993,8 +1008,10 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
         tokens[i].r_edge = i
-    # Twice, for non-projectivity
-    for loop_count in range(2):
+    # Three times, for non-projectivity
+    # See issue #3170. This isn't a very satisfying fix, but I think it's
+    # sufficient.
+    for loop_count in range(3):
         # Set left edges
         for i in range(length):
             child = &tokens[i]
@@ -1021,15 +1038,91 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
             tokens[tokens[i].l_edge].sent_start = True
 
 
+cdef int _get_tokens_lca(Token token_j, Token token_k):
+    """Given two tokens, returns the index of the lowest common ancestor
+    (LCA) among the two. If they have no common ancestor, -1 is returned.
+
+    token_j (Token): a token.
+    token_k (Token): another token.
+    RETURNS (int): index of lowest common ancestor, or -1 if the tokens
+        have no common ancestor.
+    """
+    if token_j == token_k:
+        return token_j.i
+    elif token_j.head == token_k:
+        return token_k.i
+    elif token_k.head == token_j:
+        return token_j.i
+
+    token_j_ancestors = set(token_j.ancestors)
+
+    if token_k in token_j_ancestors:
+        return token_k.i
+
+    for token_k_ancestor in token_k.ancestors:
+
+        if token_k_ancestor == token_j:
+            return token_j.i
+
+        if token_k_ancestor in token_j_ancestors:
+            return token_k_ancestor.i
+
+    return -1
+
+
+cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
+    """Given a doc and a start and end position defining a set of contiguous
+    tokens within it, returns a matrix of Lowest Common Ancestors (LCA), where
+    LCA[i, j] is the index of the lowest common ancestor among token i and j.
+    If the tokens have no common ancestor within the specified span,
+    LCA[i, j] will be -1.
+
+    doc (Doc): The index of the token, or the slice of the document
+    start (int): First token to be included in the LCA matrix.
+    end (int): Position of next to last token included in the LCA matrix.
+    RETURNS (int [:, :]): memoryview of numpy.array[ndim=2, dtype=numpy.int32],
+        with shape (n, n), where n = len(doc).
+    """
+    cdef int [:,:] lca_matrix
+
+    n_tokens= end - start
+    lca_mat = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
+    lca_mat.fill(-1)
+    lca_matrix = lca_mat
+
+    for j in range(n_tokens):
+        token_j = doc[start + j]
+        # the common ancestor of token and itself is itself:
+        lca_matrix[j, j] = j
+        # we will only iterate through tokens in the same sentence
+        sent = token_j.sent
+        sent_start = sent.start
+        j_idx_in_sent = start + j - sent_start
+        n_missing_tokens_in_sent = len(sent) - j_idx_in_sent
+        # make sure we do not go past `end`, in cases where `end` < sent.end
+        max_range = min(j + n_missing_tokens_in_sent, end)
+        for k in range(j + 1, max_range):
+            lca = _get_tokens_lca(token_j, doc[start + k])
+            # if lca is outside of span, we set it to -1
+            if not start <= lca < end:
+                lca_matrix[j, k] = -1
+                lca_matrix[k, j] = -1
+            else:
+                lca_matrix[j, k] = lca - start
+                lca_matrix[k, j] = lca - start
+
+    return lca_matrix
+
+
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(vocab=False, user_data=False)
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
                       doc.user_token_hooks)
-    return (unpickle_doc, (doc.vocab, dill.dumps(hooks_and_data), bytes_data))
+    return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
 
 
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
-    user_data, doc_hooks, span_hooks, token_hooks = dill.loads(hooks_and_data)
+    user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
 
     doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data,
                                                      exclude='user_data')
@@ -1040,3 +1133,28 @@ def unpickle_doc(vocab, hooks_and_data, bytes_data):
 
 
 copy_reg.pickle(Doc, pickle_doc, unpickle_doc)
+
+def remove_label_if_necessary(attributes):
+    # More deprecated attribute handling =/
+    if 'label' in attributes:
+        attributes['ent_type'] = attributes.pop('label')
+
+def fix_attributes(doc, attributes):
+    if 'label' in attributes and 'ent_type' not in attributes:
+        if isinstance(attributes['label'], int):
+            attributes[ENT_TYPE] = attributes['label']
+        else:
+            attributes[ENT_TYPE] = doc.vocab.strings[attributes['label']]
+    if 'ent_type' in attributes:
+        attributes[ENT_TYPE] = attributes['ent_type']
+
+def get_entity_info(ent_info):
+    if isinstance(ent_info, Span):
+        ent_type = ent_info.label
+        start = ent_info.start
+        end = ent_info.end
+    elif len(ent_info) == 3:
+        ent_type, start, end = ent_info
+    else:
+        ent_id, ent_type, start, end = ent_info
+    return ent_type, start, end

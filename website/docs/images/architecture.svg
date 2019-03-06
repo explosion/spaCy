@@ -1,0 +1,132 @@
+<svg class="o-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 907 737" width="906" height="746">
+    <style>
+        .svg__architecture__text-large, .svg__architecture__text-medium, .svg__architecture__text-small {
+            font-family: Arial, sans-serif;
+            fill: #1a1e23
+        }
+        .svg__architecture__text-large { font-size: 18px; font-weight: bold }
+        .svg__architecture__text-medium { font-size: 15px }
+        .svg__architecture__text-small { font-size: 14px; font-weight: bold }
+        .svg__architecture__text-code {  font: 600 12px Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace }
+    </style>
+    <ellipse cx="404" cy="203" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="74.8" ry="49.8"/>
+    <text class="svg__architecture__text-large" transform="translate(362.5 206.5)" width="81" height="40">Language</text>
+    <path fill="none" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M345 432v242.8" stroke-dasharray="2 2"/>
+    <path fill="#82b366" stroke="#82b366" stroke-width="2" stroke-miterlimit="10" d="M345 680.8l-4-8 4 2 4-2z"/>
+    <rect fill="#fff" transform="translate(324 535.5)" width="37" height="18"/>
+    <text class="svg__architecture__text-small" dy="1em" style="fill: #82b366" transform="translate(324 535.5)" width="37" height="18">MAKES</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M457 434l100.5 80"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M562.3 517.6l-8.8-1.8 4-2 1-4.3z"/>
+    <rect fill="#f6f6f6" transform="translate(424.5 462.5)" width="158" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(424.5 462.5)" width="158" height="18">nlp.vocab.morphology</text>
+    <ellipse cx="404" cy="399" fill="#d5e8d4" stroke="#82b366" stroke-width="2" rx="74.8" ry="49.8"/>
+    <text class="svg__architecture__text-large" dy="1em" transform="translate(377.5 386.5)" width="51" height="22">Vocab</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M404 253v87.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M404 346.8l-4-8 4 2 4-2z"/>
+    <rect fill="#f6f6f6" transform="translate(364.5 285.5)" width="79" height="18" />
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(364.5 285.5)" width="79" height="18">nlp.vocab</text>
+    <ellipse cx="743" cy="399" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="74.8" ry="49.8"/>
+    <text class="svg__architecture__text-large" transform="translate(694.5 386.5)" dy="1em" width="95" height="22">StringStore</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M478 399h181.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M665.8 399l-8 4 2-4-2-4z"/>
+    <rect fill="#f6f6f6" transform="translate(498.5 388.5)" width="137" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(498.5 388.5)" width="137" height="18">nlp.vocab.strings</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M108 244l235.6 115.4"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M349 362h-9l3.6-2.6V355z"/>
+    <rect fill="#f6f6f6" transform="translate(141.5 284.5)" width="151" height="18" />
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(141.5 284.5)" width="151" height="18">nlp.tokenizer.vocab</text>
+    <path fill="#f8cecc" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M38.7 159.3H104l33 43.6-32.8 43.5H38.7L6 203z"/>
+    <text class="svg__architecture__text-large" transform="translate(30.5 190.5)" dy="1em" width="80" height="22">Tokenizer</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M329 203v-1H145.2"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M139.2 202l8-4-2 4 2 4z"/>
+    <rect fill="#f6f6f6" transform="translate(188.5 191.5)" width="115" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(188.5 191.5)" width="115" height="18">nlp.make_doc()</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M478 203h83v-4h105.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M672.8 199l-8 4 2-4-2-4z"/>
+    <rect fill="#f6f6f6" transform="translate(512.5 191.5)" width="101" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(512.5 191.5)" width="101" height="18">nlp.pipeline</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M709 242.8L464.4 359.4"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M459 362l5.5-7v4.4l3.5 2.8z"/>
+    <rect fill="#f6f6f6" transform="translate(505.5 297.5)" width="166" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(505.5 297.5)" width="166" height="18">nlp.pipeline[i].vocab</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M275.3 34.6L288.6 1h54L329 34.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(301.5 9.5)" width="12" height="14">pt</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M60.8 34.6L74.3 1h54l-13.6 33.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(86.5 9.5)" width="14" height="14">en</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M114.4 34.6L128 1h53.8l-13.5 33.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(140.5 9.5)" width="14" height="14">de</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M168 34.6L181.5 1h54l-13.6 33.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(196.5 9.5)" width="8" height="14">fr</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M221.6 34.6L235 1h54l-13.5 33.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(248.5 9.5)" width="12" height="14">es</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M47 68.3l13.6-33.6h53.8L101 68.3z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(75.5 43.5)" width="8" height="14">it</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M100.7 68.3l13.5-33.6H168l-13.4 33.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(127.5 43.5)" width="12" height="14">nl</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M154.3 68.3l13.5-33.6h53.8l-13.4 33.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(180.5 43.5)" width="12" height="14">sv</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M208 68.3l13.4-33.6h53.8L262 68.3z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(236.5 43.5)" width="8" height="14">fi</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M261.5 68.3L275 34.7h54l-13.6 33.6z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(286.5 43.5)" width="16" height="14">nb</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M33.4 102L47 68.2h53.7L87.3 102z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(58.5 77.5)" width="16" height="14">hu</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M87 102l13.5-33.7h53.8L141 102z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(112.5 77.5)" width="14" height="14">he</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M140.6 102L154 68.2h54L194.4 102z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(165.5 77.5)" width="16" height="14">bn</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M194.2 102l13.5-33.7h53.8L248 102z"/>
+    <text transform="translate(221.5 77.5)" class="svg__architecture__text-small" dy="0.85em" width="10" height="14">ja</text>
+    <path fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" stroke-miterlimit="10" d="M247.8 102l13.5-33.7H315L301.8 102z"/>
+    <text class="svg__architecture__text-small" dy="0.85em" transform="translate(273.5 77.5)" width="14" height="14">...</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M329 51h75v93.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M404 150.8l-4-8 4 2 4-2z"/>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M213 480l109.3-76.3"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M327.2 400.3L323 408l-.8-4.3-4-2z"/>
+    <rect fill="#f6f6f6" transform="translate(226.5 431.5)" width="79" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(226.5 431.5)" width="79" height="18">doc.vocab</text>
+    <path fill="none" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M39.6 555.5l.4 121.3" stroke-dasharray="2 2"/>
+    <path fill="#9673a6" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M40 682.8l-4-8 4 2 4-2z"/>
+    <rect fill="#fff" transform="translate(23.5 604.5)" width="37" height="18"/>
+    <text class="svg__architecture__text-small" style="fill: #9673a6" dy="1em" dx="-0.5em" transform="translate(23.5 604.5)" width="37" height="18">MAKES</text>
+    <path fill="#e1d5e7" stroke="#9673a6" stroke-width="2" d="M1 479.5h283v74.8H1z"/>
+    <text class="svg__architecture__text-large" dy="1em" transform="translate(125.5 504.5)" width="32" height="22">Doc</text>
+    <path fill="none" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M71 246v117h1v108.8" stroke-dasharray="2 2"/>
+    <path fill="#c00" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M72 477.8l-4-8 4 2 4-2z"/>
+    <rect fill="#fff" transform="translate(54.5 355.5)" width="37" height="18"/>
+    <text class="svg__architecture__text-small" style="fill: #cc0000" dy="1em" dx="-0.5em" transform="translate(54.5 355.5)" width="37" height="18">MAKES</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M104 685l.4-121.2"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M104.5 557.8l4 8-4-2-4 2z"/>
+    <rect fill="#f6f6f6" transform="translate(62.5 632.5)" width="79" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(62.5 632.5)" width="79" height="18">token.doc</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M7.2 685h129.6v50H7.2z"/>
+    <text class="svg__architecture__text-medium" dy="1em" transform="translate(49.5 700.5)" width="43" height="18">Token</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M148 685h129.7v50H148z"/>
+    <text class="svg__architecture__text-medium" dy="1em" transform="translate(193.5 700.5)" width="37" height="18">Span</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M405 686V456.6"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M405 450.6l4 8-4-2-4 2z"/>
+    <rect fill="#f6f6f6" transform="translate(356.5 584.5)" width="101" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(356.5 584.5)" width="101" height="18">lexeme.vocab</text>
+    <path fill="#f5f5f5" stroke="#666" stroke-width="2" d="M296.7 685h155.8v50H296.7z"/>
+    <text class="svg__architecture__text-medium" dy="1em" transform="translate(346.5 700.5)" width="55" height="18">Lexeme</text>
+    <path fill="none" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M180.5 559.3l.5 117.5" stroke-dasharray="2 2"/>
+    <path fill="#9673a6" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M181 682.8l-4-8 4 2 4-2z"/>
+    <rect fill="#fff" transform="translate(164.5 606.5)" width="37" height="18" />
+    <text class="svg__architecture__text-small" style="fill: #9673a6" dy="1em" dx="-0.5em" transform="translate(164.5 606.5)" width="37" height="18">MAKES</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M245.3 685V564"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M245.3 557.8l4 8-4-2-4 2z"/>
+    <rect fill="#f6f6f6" transform="translate(211.5 633.5)" width="72" height="18"/>
+    <text class="svg__architecture__text-code" dy="1em" dx="0.4em" transform="translate(211.5 633.5)" width="72" height="18">span.doc</text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M806.6 112H872l32.8 43.5L872 199h-65.4L774 155.6z"/>
+    <text class="svg__architecture__text-medium" dy="1em" transform="translate(794.5 135.5)" width="88" height="38">Dependency <tspan dy="1.25em" dx="-4.1em">Parser</tspan></text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M806.6 199H872l32.8 43.8-32.8 43.6h-65.4L774 242.8z"/>
+    <text class="svg__architecture__text-medium" dy="1em" dx="1.1em" transform="translate(799.5 222.5)" width="78" height="38">Entity <tspan dy="1.25em" dx="-3.75em">Recognizer</tspan></text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M708 155.5h65.6l32.7 43.6-32.7 43.8H708L675.5 199z"/>
+    <text class="svg__architecture__text-medium" dy="1em" transform="translate(715.5 189.5)" width="48" height="18">Tagger</text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M806.8 24.5h65.5L905 68 872.3 112h-65.5L774 68z"/>
+    <text class="svg__architecture__text-medium" dy="1em" transform="translate(815 50)" width="58" height="18">Custom <tspan dy="1.25em" dx="-4.8em">Components</tspan></text>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M708.6 68H774l32.8 43.5L774 155h-65.4L676 111.6z"/>
+    <text class="svg__architecture__text-medium" dy="1em" transform="translate(690 101.5)" width="84" height="18">TextCategorizer</text>
+    <ellipse cx="617" cy="555" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="74.8" ry="49.8"/>
+    <text class="svg__architecture__text-large" dy="1em" transform="translate(565.5 542.5)" width="101" height="22">Morphology</text>
+</svg>

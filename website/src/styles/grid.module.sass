@@ -1,0 +1,41 @@
+@import base
+
+$grid-gap-wide: 5rem
+$grid-gap-narrow: 2rem
+$flex-gap: 2rem
+
+@mixin flex-fallback($cols, $gap: 0)
+    & > *
+        @if $gap == 0
+            flex: 0 0 100% / $cols
+        @else
+            flex: 0 0 calc(#{100% / $cols} - #{$gap * ($cols - 1)})
+
+.root
+    display: flex
+    flex-direction: row
+    flex-wrap: wrap
+    justify-content: space-between
+    grid-column-gap: $grid-gap-wide
+
+    & > *
+        min-width: 0
+
+@supports(display: grid)
+    .root
+        display: grid
+
+@include breakpoint(min, lg)
+    .root
+        grid-template-columns: 1fr
+
+    @each $name, $cols in (half: 2, third: 3, quarter: 4)
+        .#{$name}
+            @include flex-fallback($cols, $flex-gap)
+            grid-template-columns: repeat($cols, 1fr)
+
+.narrow
+    grid-column-gap: $grid-gap-narrow
+
+.spacing
+    margin-bottom: var(--spacing-md)

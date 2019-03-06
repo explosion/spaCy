@@ -4,11 +4,15 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.parametrize('text,lemma', [
-    ("aprox.", "aproximadamente"),
-    ("esq.", "esquina"),
-    ("pág.", "página"),
-    ("p.ej.", "por ejemplo")])
+@pytest.mark.parametrize(
+    "text,lemma",
+    [
+        ("aprox.", "aproximadamente"),
+        ("esq.", "esquina"),
+        ("pág.", "página"),
+        ("p.ej.", "por ejemplo"),
+    ],
+)
 def test_es_tokenizer_handles_abbr(es_tokenizer, text, lemma):
     tokens = es_tokenizer(text)
     assert len(tokens) == 1

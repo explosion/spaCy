@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 
+# fmt: off
 TOKENIZER_TESTS = [
     ("日本語だよ", ['日本', '語', 'だ', 'よ']),
     ("東京タワーの近くに住んでいます。", ['東京', 'タワー', 'の', '近く', 'に', '住ん', 'で', 'い', 'ます', '。']),
@@ -27,21 +28,22 @@ POS_TESTS = [
     ('月に代わって、お仕置きよ!', ['NOUN', 'ADP', 'VERB', 'SCONJ', 'PUNCT', 'NOUN', 'NOUN', 'PART', 'PUNCT']),
     ('すもももももももものうち', ['NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'])
 ]
+# fmt: on
 
 
-@pytest.mark.parametrize('text,expected_tokens', TOKENIZER_TESTS)
+@pytest.mark.parametrize("text,expected_tokens", TOKENIZER_TESTS)
 def test_ja_tokenizer(ja_tokenizer, text, expected_tokens):
     tokens = [token.text for token in ja_tokenizer(text)]
     assert tokens == expected_tokens
 
 
-@pytest.mark.parametrize('text,expected_tags', TAG_TESTS)
-def test_ja_tokenizer(ja_tokenizer, text, expected_tags):
+@pytest.mark.parametrize("text,expected_tags", TAG_TESTS)
+def test_ja_tokenizer_tags(ja_tokenizer, text, expected_tags):
     tags = [token.tag_ for token in ja_tokenizer(text)]
     assert tags == expected_tags
 
 
-@pytest.mark.parametrize('text,expected_pos', POS_TESTS)
-def test_ja_tokenizer(ja_tokenizer, text, expected_pos):
+@pytest.mark.parametrize("text,expected_pos", POS_TESTS)
+def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
     assert pos == expected_pos

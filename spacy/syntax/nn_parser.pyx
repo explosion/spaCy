@@ -5,13 +5,11 @@
 from __future__ import unicode_literals, print_function
 
 from collections import OrderedDict
-import ujson
-import json
 import numpy
 cimport cython.parallel
-import cytoolz
 import numpy.random
 cimport numpy as np
+from itertools import islice
 from cpython.ref cimport PyObject, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from libc.math cimport exp
@@ -27,7 +25,7 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
-from thinc cimport openblas
+import srsly
 
 from ._parser_model cimport resize_activations, predict_states, arg_max_if_valid
 from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
@@ -35,7 +33,7 @@ from ._parser_model cimport get_c_weights, get_c_sizes
 from ._parser_model import ParserModel
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
-from ..compat import json_dumps, copy_array
+from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
 from ..errors import Errors, TempErrors
@@ -64,9 +62,9 @@ cdef class Parser:
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces',
                                             cfg.get('maxout_pieces', 2))
         token_vector_width = util.env_opt('token_vector_width',
-                                           cfg.get('token_vector_width', 128))
-        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 128))
-        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 5000))
+                                           cfg.get('token_vector_width', 96))
+        hidden_width = util.env_opt('hidden_width', cfg.get('hidden_width', 64))
+        embed_size = util.env_opt('embed_size', cfg.get('embed_size', 2000))
         pretrained_vectors = cfg.get('pretrained_vectors', None)
         tok2vec = Tok2Vec(token_vector_width, embed_size,
                           conv_depth=conv_depth,
@@ -74,13 +72,15 @@ cdef class Parser:
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
         tok2vec = chain(tok2vec, flatten)
+        tok2vec.nO = token_vector_width
         lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature, nI=token_vector_width,
                     nP=parser_maxout_pieces)
         lower.nP = parser_maxout_pieces
 
         with Model.use_device('cpu'):
-            upper = zero_init(Affine(nr_class, hidden_width, drop_factor=0.0))
+            upper = Affine(nr_class, hidden_width, drop_factor=0.0)
+        upper.W *= 0
 
         cfg = {
             'nr_class': nr_class,
@@ -123,9 +123,14 @@ cdef class Parser:
         self.cfg = cfg
         self.model = model
         self._multitasks = []
+        self._rehearsal_model = None
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
+
+    @property
+    def tok2vec(self):
+        return self.model.tok2vec
 
     @property
     def move_names(self):
@@ -136,7 +141,7 @@ cdef class Parser:
         return names
 
     nr_feature = 8
-   
+
     @property
     def labels(self):
         class_names = [self.moves.get_class_name(i) for i in range(self.moves.n_moves)]
@@ -151,20 +156,22 @@ cdef class Parser:
     def postprocesses(self):
         # Available for subclasses, e.g. to deprojectivize
         return []
-    
+
     def add_label(self, label):
         resized = False
         for action in self.moves.action_types:
             added = self.moves.add_action(action, label)
             if added:
                 resized = True
+        if resized and "nr_class" in self.cfg:
+            self.cfg["nr_class"] = self.moves.n_moves
         if self.model not in (True, False, None) and resized:
             self.model.resize_output(self.moves.n_moves)
-    
+
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
-    
+
     def init_multitask_objectives(self, get_gold_tuples, pipeline, **cfg):
         '''Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
@@ -211,18 +218,24 @@ cdef class Parser:
             beam_width = self.cfg.get('beam_width', 1)
         beam_density = self.cfg.get('beam_density', 0.)
         cdef Doc doc
-        for batch in cytoolz.partition_all(batch_size, docs):
+        for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
             by_length = sorted(batch_in_order, key=lambda doc: len(doc))
-            for subbatch in cytoolz.partition_all(8, by_length):
+            for subbatch in util.minibatch(by_length, size=batch_size//4):
                 subbatch = list(subbatch)
                 parse_states = self.predict(subbatch, beam_width=beam_width,
                                             beam_density=beam_density)
                 self.set_annotations(subbatch, parse_states, tensors=None)
             for doc in batch_in_order:
                 yield doc
+                
+    def require_model(self):
+        """Raise an error if the component's model is not initialized."""
+        if getattr(self, 'model', None) in (None, True, False):
+            raise ValueError(Errors.E109.format(name=self.name))
 
     def predict(self, docs, beam_width=1, beam_density=0.0, drop=0.):
+        self.require_model()
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
@@ -236,8 +249,12 @@ cdef class Parser:
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
-        model = self.model(docs)
         batch = self.moves.init_batch(docs)
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output.
+        self.model.resize_output(self.moves.n_moves)
+        model = self.model(docs)
         weights = get_c_weights(model)
         for state in batch:
             if not state.is_final():
@@ -247,13 +264,17 @@ cdef class Parser:
             self._parseC(&states[0],
                 weights, sizes)
         return batch
-    
+
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
         cdef np.ndarray token_ids
-        model = self.model(docs)
         beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output. 
+        self.model.resize_output(self.moves.n_moves)
+        model = self.model(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
@@ -280,7 +301,7 @@ cdef class Parser:
             scores = model.vec2scores(vectors)
             todo = self.transition_beams(todo, scores)
         return beams
- 
+
     cdef void _parseC(self, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
@@ -300,7 +321,7 @@ cdef class Parser:
                 states[i] = unfinished[i]
             sizes.states = unfinished.size()
             unfinished.clear()
-    
+
     def set_annotations(self, docs, states_or_beams, tensors=None):
         cdef StateClass state
         cdef Beam beam
@@ -324,19 +345,19 @@ cdef class Parser:
                 hook(doc)
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
-     
+
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
         cdef float* c_scores = &scores[0, 0]
         cdef vector[StateC*] c_states
         for state in states:
             c_states.push_back(state.c)
-        self.c_transition_batch(&c_states[0], c_scores, scores.shape[1], scores.shape[0]) 
+        self.c_transition_batch(&c_states[0], c_scores, scores.shape[1], scores.shape[0])
         return [state for state in states if not state.c.is_final()]
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
             int nr_class, int batch_size) nogil:
-        cdef int[500] is_valid # TODO: Unhack
+        is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
         cdef int i, guess
         cdef Transition action
         for i in range(batch_size):
@@ -345,6 +366,7 @@ cdef class Parser:
             action = self.moves.c[guess]
             action.do(states[i], action.label)
             states[i].push_hist(guess)
+        free(is_valid)
 
     def transition_beams(self, beams, float[:, ::1] scores):
         cdef Beam beam
@@ -359,8 +381,9 @@ cdef class Parser:
             beam.advance(_beam_utils.transition_state, NULL, <void*>self.moves.c)
             beam.check_done(_beam_utils.check_final_state, NULL)
         return [b for b in beams if not b.is_done]
- 
+
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
+        self.require_model()
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
@@ -370,6 +393,8 @@ cdef class Parser:
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
+        for multitask in self._multitasks:
+            multitask.update(docs, golds, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
         beam_update_prob = self.cfg.get('beam_update_prob', 1.0)
@@ -400,6 +425,47 @@ cdef class Parser:
         finish_update(golds, sgd=sgd)
         return losses
 
+    def rehearse(self, docs, sgd=None, losses=None, **cfg):
+        """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
+        if isinstance(docs, Doc):
+            docs = [docs]
+        if losses is None:
+            losses = {}
+        for multitask in self._multitasks:
+            if hasattr(multitask, 'rehearse'):
+                multitask.rehearse(docs, losses=losses, sgd=sgd)
+        if self._rehearsal_model is None:
+            return None
+        losses.setdefault(self.name, 0.)
+ 
+        states = self.moves.init_batch(docs)
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output.
+        self.model.resize_output(self.moves.n_moves)
+        self._rehearsal_model.resize_output(self.moves.n_moves)
+        # Prepare the stepwise model, and get the callback for finishing the batch
+        tutor, _ = self._rehearsal_model.begin_update(docs, drop=0.0)
+        model, finish_update = self.model.begin_update(docs, drop=0.0)
+        n_scores = 0.
+        loss = 0.
+        while states:
+            targets, _ = tutor.begin_update(states, drop=0.)
+            guesses, backprop = model.begin_update(states, drop=0.)
+            d_scores = (guesses - targets) / targets.shape[0]
+            # If all weights for an output are 0 in the original model, don't
+            # supervise that output. This allows us to add classes.
+            loss += (d_scores**2).sum()
+            backprop(d_scores, sgd=sgd)
+            # Follow the predicted action
+            self.transition_states(states, guesses)
+            states = [state for state in states if not state.is_final()]
+            n_scores += d_scores.size
+        # Do the backprop
+        finish_update(docs, sgd=sgd)
+        losses[self.name] += loss / n_scores
+        return losses
+
     def update_beam(self, docs, golds, width, drop=0., sgd=None, losses=None,
                     beam_density=0.0):
         lengths = [len(d) for d in docs]
@@ -412,7 +478,7 @@ cdef class Parser:
             model.vec2scores, width, drop=drop, losses=losses,
             beam_density=beam_density)
         for i, d_scores in enumerate(states_d_scores):
-            losses[self.name] += (d_scores**2).sum()
+            losses[self.name] += (d_scores**2).mean()
             ids, bp_vectors, bp_scores = backprops[i]
             d_vector = bp_scores(d_scores, sgd=sgd)
             if isinstance(model.ops, CupyOps) \
@@ -427,7 +493,7 @@ cdef class Parser:
         cdef Beam beam
         for beam in beams:
             _beam_utils.cleanup_beam(beam)
-    
+
     def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
@@ -479,6 +545,9 @@ cdef class Parser:
             memset(is_valid, 0, self.moves.n_moves * sizeof(int))
             memset(costs, 0, self.moves.n_moves * sizeof(float))
             self.moves.set_costs(is_valid, costs, state, gold)
+            for j in range(self.moves.n_moves):
+                if costs[j] <= 0.0 and j in self.model.unseen_classes:
+                    self.model.unseen_classes.remove(j)
             cpu_log_loss(c_d_scores,
                 costs, is_valid, &scores[i, 0], d_scores.shape[1])
             c_d_scores += d_scores.shape[1]
@@ -486,11 +555,11 @@ cdef class Parser:
             losses.setdefault(self.name, 0.)
             losses[self.name] += (d_scores**2).sum()
         return d_scores
-     
+
     def create_optimizer(self):
         return create_default_optimizer(self.model.ops,
                                         **self.cfg.get('optimizer', {}))
-   
+
     def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
@@ -505,14 +574,14 @@ cdef class Parser:
         for action, label_freqs in previous_labels.items():
             for label in label_freqs:
                 self.moves.add_action(action, label)
-        cfg.setdefault('token_vector_width', 128)
+        cfg.setdefault('token_vector_width', 96)
         if self.model is True:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
             if sgd is None:
                 sgd = self.create_optimizer()
             doc_sample = []
             gold_sample = []
-            for raw_text, annots_brackets in cytoolz.take(1000, get_gold_tuples()):
+            for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
                     doc_sample.append(Doc(self.vocab, words=words))
@@ -528,13 +597,13 @@ cdef class Parser:
             self.model.begin_training([])
         self.cfg.update(cfg)
         return sgd
-    
+
     def to_disk(self, path, **exclude):
         serializers = {
-            'model': lambda p: self.model.to_disk(p),
+            'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
-            'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
+            'cfg': lambda p: srsly.write_json(p, self.cfg)
         }
         util.to_disk(path, serializers, exclude)
 
@@ -542,7 +611,7 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, strings=False),
-            'cfg': lambda p: self.cfg.update(util.read_json(p)),
+            'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
             'model': lambda p: None
         }
         util.from_disk(path, deserializers, exclude)
@@ -560,10 +629,10 @@ cdef class Parser:
 
     def to_bytes(self, **exclude):
         serializers = OrderedDict((
-            ('model', lambda: self.model.to_bytes()),
+            ('model', lambda: (self.model.to_bytes() if self.model is not True else True)),
             ('vocab', lambda: self.vocab.to_bytes()),
             ('moves', lambda: self.moves.to_bytes(strings=False)),
-            ('cfg', lambda: json.dumps(self.cfg, indent=2, sort_keys=True))
+            ('cfg', lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True))
         ))
         return util.to_bytes(serializers, exclude)
 
@@ -571,7 +640,7 @@ cdef class Parser:
         deserializers = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
-            ('cfg', lambda b: self.cfg.update(json.loads(b))),
+            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
             ('model', lambda b: None)
         ))
         msg = util.from_bytes(bytes_data, deserializers, exclude)

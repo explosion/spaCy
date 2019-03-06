@@ -38,7 +38,7 @@ def test_doc_scalar_attr_of_token(en_tokenizer, en_vocab):
 
 def test_doc_array_tag(en_tokenizer):
     text = "A nice sentence."
-    pos = ['DET', 'ADJ', 'NOUN', 'PUNCT']
+    pos = ["DET", "ADJ", "NOUN", "PUNCT"]
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], pos=pos)
     assert doc[0].pos != doc[1].pos != doc[2].pos != doc[3].pos
@@ -51,7 +51,7 @@ def test_doc_array_tag(en_tokenizer):
 
 def test_doc_array_dep(en_tokenizer):
     text = "A nice sentence."
-    deps = ['det', 'amod', 'ROOT', 'punct']
+    deps = ["det", "amod", "ROOT", "punct"]
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
     feats_array = doc.to_array((ORTH, DEP))

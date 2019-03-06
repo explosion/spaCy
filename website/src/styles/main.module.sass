@@ -1,0 +1,40 @@
+@import base
+
+.root
+    max-width: 100%
+    min-height: 100vh
+
+@include breakpoint(min, md)
+    .root
+        padding: var(--height-nav) 0 0 0
+
+    .with-sidebar
+        margin-left: var(--width-sidebar)
+
+    .with-asides
+        margin-right: var(--width-aside)
+        position: relative
+
+    .asides
+        position: absolute
+        top: 0
+        left: 100%
+        width: var(--width-aside)
+        height: 100%
+        content: ""
+        display: block
+        background-color: var(--color-theme)
+        background-repeat: repeat
+        background-position: center top
+        z-index: -1
+        min-height: 100vh
+
+.content
+    padding: 3rem 7.5rem
+    margin: 0 auto
+    width: var(--width-content)
+    max-width: 100%
+
+@include breakpoint(max, sm)
+    .content
+        padding: 3rem

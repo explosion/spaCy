@@ -5,11 +5,8 @@
 from __future__ import unicode_literals, print_function
 
 from collections import OrderedDict
-import ujson
-import json
 import numpy
 cimport cython.parallel
-import cytoolz
 import numpy.random
 cimport numpy as np
 from libc.math cimport exp
@@ -25,12 +22,11 @@ from thinc.misc import LayerNorm
 from thinc.neural.ops import CupyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
-from thinc cimport openblas
-
+cimport blis.cy
 
 from .._ml import zero_init, PrecomputableAffine, Tok2Vec, flatten
 from .._ml import link_vectors_to_models, create_default_optimizer
-from ..compat import json_dumps, copy_array
+from ..compat import copy_array
 from ..tokens.doc cimport Doc
 from ..gold cimport GoldParse
 from ..errors import Errors, TempErrors
@@ -48,8 +44,10 @@ cdef WeightsC get_c_weights(model) except *:
     output.feat_bias = <const float*>state2vec.bias.data
     cdef np.ndarray vec2scores_W = model.vec2scores.W
     cdef np.ndarray vec2scores_b = model.vec2scores.b
+    cdef np.ndarray class_mask = model._class_mask
     output.hidden_weights = <const float*>vec2scores_W.data
     output.hidden_bias = <const float*>vec2scores_b.data
+    output.seen_classes = <const float*>class_mask.data
     return output
 
 
@@ -107,16 +105,30 @@ cdef void predict_states(ActivationsC* A, StateC** states,
             which = Vec.arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     memset(A.scores, 0, n.states * n.classes * sizeof(float))
+    cdef double one = 1.0
     # Compute hidden-to-output
-    openblas.simple_gemm(A.scores, n.states, n.classes,
-        A.hiddens, n.states, n.hiddens,
-        W.hidden_weights, n.classes, n.hiddens, 0, 1)
+    blis.cy.gemm(blis.cy.NO_TRANSPOSE, blis.cy.TRANSPOSE,
+        n.states, n.classes, n.hiddens, one,
+        <float*>A.hiddens, n.hiddens, 1,
+        <float*>W.hidden_weights, n.hiddens, 1,
+        one,
+        <float*>A.scores, n.classes, 1)
     # Add bias
     for i in range(n.states):
         VecVec.add_i(&A.scores[i*n.classes],
             W.hidden_bias, 1., n.classes)
+    # Set unseen classes to minimum value
+    i = 0
+    min_ = A.scores[0]
+    for i in range(1, n.states * n.classes):
+        if A.scores[i] < min_:
+            min_ = A.scores[i]
+    for i in range(n.states):
+        for j in range(n.classes):
+            if not W.seen_classes[j]:
+                A.scores[i*n.classes+j] = min_
 
-            
+
 cdef void sum_state_features(float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
     cdef int idx, b, f, i
@@ -132,8 +144,9 @@ cdef void sum_state_features(float* output,
             else:
                 idx = token_ids[f] * id_stride + f*O
                 feature = &cached[idx]
-            openblas.simple_axpy(&output[b*O], O,
-                feature, one)
+            blis.cy.axpyv(blis.cy.NO_CONJUGATE, O, one,
+                <float*>feature, 1,
+                &output[b*O], 1)
         token_ids += F
 
 
@@ -161,7 +174,7 @@ cdef void cpu_log_loss(float* d_scores,
         else:
             d_scores[i] = exp(scores[i]-max_) / Z
 
- 
+
 cdef int arg_max_if_gold(const weight_t* scores, const weight_t* costs,
         const int* is_valid, int n) nogil:
     # Find minimum cost
@@ -188,58 +201,87 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 
 
 class ParserModel(Model):
-    def __init__(self, tok2vec, lower_model, upper_model):
+    def __init__(self, tok2vec, lower_model, upper_model, unseen_classes=None):
         Model.__init__(self)
         self._layers = [tok2vec, lower_model, upper_model]
-
-    @property
-    def tok2vec(self):
-        return self._layers[0]
+        self.unseen_classes = set()
+        if unseen_classes:
+            for class_ in unseen_classes:
+                self.unseen_classes.add(class_)
 
     def begin_update(self, docs, drop=0.):
-        step_model = ParserStepModel(docs, self._layers, drop=drop)
+        step_model = ParserStepModel(docs, self._layers, drop=drop,
+                        unseen_classes=self.unseen_classes)
         def finish_parser_update(golds, sgd=None):
             step_model.make_updates(sgd)
             return None
         return step_model, finish_parser_update
 
     def resize_output(self, new_output):
+        if new_output == self.upper.nO:
+            return
+        smaller = self.upper
+
+        with Model.use_device('cpu'):
+            larger = Affine(new_output, smaller.nI)
+        larger.W.fill(0.0)
+        larger.b.fill(0.0)
+        # It seems very unhappy if I pass these as smaller.W?
+        # Seems to segfault. Maybe it's a descriptor protocol thing?
+        smaller_W = smaller.W
+        larger_W = larger.W
+        smaller_b = smaller.b
+        larger_b = larger.b
         # Weights are stored in (nr_out, nr_in) format, so we're basically
         # just adding rows here.
-        smaller = self._layers[-1]._layers[-1]
-        larger = Affine(self.moves.n_moves, smaller.nI)
-        copy_array(larger.W[:smaller.nO], smaller.W)
-        copy_array(larger.b[:smaller.nO], smaller.b)
-        self._layers[-1]._layers[-1] = larger
+        larger_W[:smaller.nO] = smaller_W
+        larger_b[:smaller.nO] = smaller_b
+        self._layers[-1] = larger
+        for i in range(smaller.nO, new_output):
+            self.unseen_classes.add(i)
 
     def begin_training(self, X, y=None):
         self.lower.begin_training(X, y=y)
-   
+
     @property
     def tok2vec(self):
         return self._layers[0]
-    
+
     @property
     def lower(self):
         return self._layers[1]
-    
+
     @property
     def upper(self):
         return self._layers[2]
 
 
 class ParserStepModel(Model):
-    def __init__(self, docs, layers, drop=0.):
+    def __init__(self, docs, layers, unseen_classes=None, drop=0.):
         self.tokvecs, self.bp_tokvecs = layers[0].begin_update(docs, drop=drop)
         self.state2vec = precompute_hiddens(len(docs), self.tokvecs, layers[1],
                                             drop=drop)
         self.vec2scores = layers[-1]
         self.cuda_stream = util.get_cuda_stream()
         self.backprops = []
+        self._class_mask = numpy.zeros((self.vec2scores.nO,), dtype='f')
+        self._class_mask.fill(1)
+        if unseen_classes is not None:
+            for class_ in unseen_classes:
+                self._class_mask[class_] = 0.
 
     @property
     def nO(self):
         return self.state2vec.nO
+
+    def class_is_unseen(self, class_):
+        return self._class_mask[class_]
+
+    def mark_class_unseen(self, class_):
+        self._class_mask[class_] = 0
+
+    def mark_class_seen(self, class_):
+        self._class_mask[class_] = 1
 
     def begin_update(self, states, drop=0.):
         token_ids = self.get_token_ids(states)
@@ -248,8 +290,12 @@ class ParserStepModel(Model):
         if mask is not None:
             vector *= mask
         scores, get_d_vector = self.vec2scores.begin_update(vector, drop=drop)
+        # If the class is unseen, make sure its score is minimum
+        scores[:, self._class_mask == 0] = numpy.nanmin(scores)
 
         def backprop_parser_step(d_scores, sgd=None):
+            # Zero vectors for unseen classes
+            d_scores *= self._class_mask
             d_vector = get_d_vector(d_scores, sgd=sgd)
             if mask is not None:
                 d_vector *= mask
@@ -394,6 +440,8 @@ cdef class precompute_hiddens:
             state_vector, mask = self.ops.maxout(state_vector)
 
         def backprop_nonlinearity(d_best, sgd=None):
+            # Fix nans (which can occur from unseen classes.)
+            d_best[self.ops.xp.isnan(d_best)] = 0.
             if self.nP == 1:
                 d_best *= mask
                 d_best = d_best.reshape((d_best.shape + (1,)))
@@ -401,4 +449,3 @@ cdef class precompute_hiddens:
             else:
                 return self.ops.backprop_maxout(d_best, mask, self.nP)
         return state_vector, backprop_nonlinearity
-

@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 
 # Stop words are retrieved from http://www.damienvanholten.com/downloads/dutch-stop-words.txt
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 aan af al alles als altijd andere
 
 ben bij
@@ -40,4 +41,5 @@ van veel voor
 want waren was wat we wel werd wezen wie wij wil worden
 
 zal ze zei zelf zich zij zijn zo zonder zou
-""".split())
+""".split()
+)
