@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="o-svg" viewBox="270 35 125 240" width="400" height="150" style="max-width: none; color: #fff; background: #1a1e23; font-family: Arial; font-size: 20px">
     <text fill="currentColor" text-anchor="middle" y="222.0">
         <tspan style="font-weight: bold" fill="currentColor" x="50">This</tspan>
-        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="50">DT</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="50">DET</tspan>
     </text>
     <text fill="currentColor" text-anchor="middle" y="222.0">
         <tspan style="font-weight: bold" fill="currentColor" x="225">is</tspan>
-        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="225">VBZ</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="225">VERB</tspan>
     </text>
     <text fill="currentColor" text-anchor="middle" y="222.0">
         <tspan style="font-weight: bold" fill="currentColor" x="400">a</tspan>
-        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="400">DT</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="400">DET</tspan>
     </text>
     <text fill="currentColor" text-anchor="middle" y="222.0">
         <tspan style="font-weight: bold" fill="currentColor" x="575">sentence.</tspan>
-        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="575">NN</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="575">NOUN</tspan>
     </text>
     <path id="arrow-0-0" stroke-width="2px" d="M70,177.0 C70,89.5 220.0,89.5 220.0,177.0" fill="none" stroke="currentColor"/>
     <text dy="1.25em" style="font-size: 0.9em; letter-spacing: 2px">
