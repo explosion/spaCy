@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 import re
 from collections import namedtuple
 
+from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
@@ -90,6 +91,7 @@ class JapaneseTokenizer(DummyTokenizer):
 class JapaneseDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda _text: "ja"
+    stop_words = STOP_WORDS
     tag_map = TAG_MAP
 
     @classmethod
