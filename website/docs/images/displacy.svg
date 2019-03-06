@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="0" class="displacy" width="750" height="312.0" style="max-width: none; height: 312.0px; color: #000000; background: #ffffff; font-family: Arial">
 <text class="displacy-token" fill="currentColor" text-anchor="middle" y="222.0">
     <tspan class="displacy-word" fill="currentColor" x="50">This</tspan>
-    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="50">DT</tspan>
+    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="50">DET</tspan>
 </text>
 
 <text class="displacy-token" fill="currentColor" text-anchor="middle" y="222.0">
     <tspan class="displacy-word" fill="currentColor" x="225">is</tspan>
-    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="225">VBZ</tspan>
+    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="225">VERB</tspan>
 </text>
 
 <text class="displacy-token" fill="currentColor" text-anchor="middle" y="222.0">
     <tspan class="displacy-word" fill="currentColor" x="400">a</tspan>
-    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="400">DT</tspan>
+    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="400">DET</tspan>
 </text>
 
 <text class="displacy-token" fill="currentColor" text-anchor="middle" y="222.0">
     <tspan class="displacy-word" fill="currentColor" x="575">sentence.</tspan>
-    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="575">NN</tspan>
+    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="575">NOUN</tspan>
 </text>
 
 <g class="displacy-arrow">

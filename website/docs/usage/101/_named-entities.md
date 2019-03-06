@@ -32,7 +32,7 @@ for ent in doc.ents:
 Using spaCy's built-in [displaCy visualizer](/usage/visualizers), here's what
 our example sentence and its named entities look like:
 
-import DisplaCyLongHtml from 'images/displacy-long.html'; import { Iframe } from
+import DisplaCyEntHtml from 'images/displacy-ent.html'; import { Iframe } from
 'components/embed'
 
-<Iframe title="displaCy visualization of dependencies and entities" html={DisplaCyLongHtml} height={450} />
+<Iframe title="displaCy visualization of entities" html={DisplaCyEntHtml} height={450} />
