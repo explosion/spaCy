@@ -14,7 +14,7 @@ import srsly
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
-from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
+from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer, EntityLinker
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
@@ -114,6 +114,7 @@ class Language(object):
         "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
+        "el": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
         "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
         "sentencizer": lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),

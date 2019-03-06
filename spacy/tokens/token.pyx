@@ -307,6 +307,14 @@ cdef class Token:
         def __set__(self, attr_t tag):
             self.vocab.morphology.assign_tag(self.c, tag)
 
+    property kb_id:
+        """RETURNS (uint64): ID of entity (after Entity Linking)."""
+        def __get__(self):
+            return self.c.kb_id
+
+        def __set__(self, attr_t kb_id):
+            self.vocab.morphology.assign_kb_id(self.c, kb_id)
+
     property dep:
         """RETURNS (uint64): ID of syntactic dependency label."""
         def __get__(self):

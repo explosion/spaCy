@@ -43,6 +43,8 @@ cdef class Morphology:
 
     cdef int assign_feature(self, uint64_t* morph, univ_morph_t feat_id, bint value) except -1
 
+    cdef int assign_kb_id(self, TokenC* token, kb_id) except -1
+
 
 cdef enum univ_morph_t:
     NIL = 0
