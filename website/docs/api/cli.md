@@ -208,21 +208,24 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 
 ### Environment variables for hyperparameters {#train-hyperparams new="2"}
 
-spaCy lets you set hyperparameters for training via environment variables. This
-is useful, because it keeps the command simple and allows you to
-[create an alias](https://askubuntu.com/questions/17536/how-do-i-create-a-permanent-bash-alias/17537#17537)
-for your custom `train` command while still being able to easily tweak the
-hyperparameters. For example:
+spaCy lets you set hyperparameters for training via environment variables. For
+example:
 
 ```bash
-$ parser_hidden_depth=2 parser_maxout_pieces=1 spacy train [...]
+$ token_vector_width=256 learn_rate=0.0001 spacy train [...]
 ```
 
-```bash
-### Usage with alias
-alias train-parser="spacy train en /output /data /train /dev -n 1000"
-parser_maxout_pieces=1 train-parser
-```
+> #### Usage with alias
+>
+> Environment variables keep the command simple and allow you to to
+> [create an alias](https://askubuntu.com/questions/17536/how-do-i-create-a-permanent-bash-alias/17537#17537)
+> for your custom `train` command while still being able to easily tweak the
+> hyperparameters.
+>
+> ```bash
+> alias train-parser="python -m spacy train en /output /data /train /dev -n 1000"
+> token_vector_width=256 train-parser
+> ```
 
 | Name                 | Description                                         | Default |
 | -------------------- | --------------------------------------------------- | ------- |
