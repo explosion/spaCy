@@ -8,6 +8,7 @@ cimport numpy as np
 np.import_array()
 from libc.string cimport memset
 import numpy
+from thinc.neural.util import get_array_module
 
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
@@ -123,7 +124,10 @@ cdef class Lexeme:
                 return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
-        return (numpy.dot(self.vector, other.vector) /
+
+        vector = self.vector
+        xp = get_array_module(vector)
+        return (xp.dot(self.vector, other.vector) /
                 (self.vector_norm * other.vector_norm))
 
     def to_bytes(self):
