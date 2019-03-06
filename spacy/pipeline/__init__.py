@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .pipes import Tagger, DependencyParser, EntityRecognizer
+from .pipes import Tagger, DependencyParser, EntityRecognizer, EntityLinker
 from .pipes import TextCategorizer, Tensorizer, Pipe
 from .entityruler import EntityRuler
 from .hooks import SentenceSegmenter, SimilarityHook
@@ -11,6 +11,7 @@ __all__ = [
     "Tagger",
     "DependencyParser",
     "EntityRecognizer",
+    "EntityLinker",
     "TextCategorizer",
     "Tensorizer",
     "Pipe",
