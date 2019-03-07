@@ -18,7 +18,7 @@ from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
 from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
-from ._morphologizer import Morphologizer
+from .pipeline import Morphologizer
 from .compat import izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
