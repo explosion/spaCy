@@ -141,7 +141,16 @@ cdef class Morphology:
             return self.strings.add(py_string.lower())
         cdef list lemma_strings
         cdef unicode lemma_string
-        lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
+        # Normalize features into a dict keyed by the field, to make life easier
+        # for the lemmatizer. Handles string-to-int conversion too.
+        string_feats = {}
+        for key, value in morphology.items():
+            if value is True:
+                name, value = self.strings.as_string(key).split('_', 1)
+                string_feats[name] = value
+            else:
+                string_feats[self.strings.as_string(key)] = self.strings.as_string(value)
+        lemma_strings = self.lemmatizer(py_string, univ_pos, string_feats)
         lemma_string = lemma_strings[0]
         lemma = self.strings.add(lemma_string)
         return lemma
