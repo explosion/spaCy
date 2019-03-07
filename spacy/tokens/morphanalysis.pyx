@@ -2,7 +2,7 @@ from libc.string cimport memset
 
 from ..vocab cimport Vocab
 from ..typedefs cimport hash_t, attr_t
-from ..morphology cimport check_feature, tag_to_json
+from ..morphology cimport list_features, check_feature, tag_to_json
 
 from ..strings import get_string_id
 
@@ -21,6 +21,7 @@ cdef class MorphAnalysis:
     @classmethod
     def from_id(cls, Vocab vocab, hash_t key):
         cdef MorphAnalysis morph = MorphAnalysis.__new__(MorphAnalysis, vocab)
+        morph.vocab = vocab
         morph.key = key
         analysis = <const MorphAnalysisC*>vocab.morphology.tags.get(key)
         if analysis is not NULL:
@@ -34,25 +35,27 @@ cdef class MorphAnalysis:
         return check_feature(&self.c, feat_id)
 
     def __iter__(self):
-        raise NotImplementedError
+        cdef attr_t feature
+        for feature in list_features(&self.c):
+            yield self.vocab.strings[feature]
 
     def __len__(self):
-        raise NotImplementedError
+        return self.c.length
 
     def __str__(self):
-        raise NotImplementedError
+        return self.to_json()
 
     def __repr__(self):
-        raise NotImplementedError
+        return self.to_json()
 
     def __hash__(self):
-        raise NotImplementedError
+        return self.key
 
     def get(self, field):
         raise NotImplementedError
 
     def to_json(self):
-        return tag_to_json(self.c)
+        return tag_to_json(&self.c)
 
     @property
     def is_base_form(self):
