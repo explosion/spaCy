@@ -26,7 +26,12 @@ def download(model, direct=False, *pip_args):
     with version.
     """
     if direct:
-        dl = download_model('{m}/{m}.tar.gz#egg={m}'.format(m=model), pip_args)
+        components = model.split("-")
+        model_name = "".join(components[:-1])
+        version = components[-1]
+        dl = download_model(
+            '{m}-{v}/{m}-{v}.tar.gz#egg={m}=={v}'.format(
+                m=model_name, v=version), pip_args)
     else:
         shortcuts = get_json(about.__shortcuts__, "available shortcuts")
         model_name = shortcuts.get(model, model)
