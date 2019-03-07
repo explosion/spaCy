@@ -143,8 +143,12 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
     for name, value in stringy_attrs.items():
         if isinstance(name, int):
             int_key = name
-        else:
+        elif name in IDS:
+            int_key = IDS[name]
+        elif name.upper() in IDS:
             int_key = IDS[name.upper()]
+        else:
+            continue
         if strings_map is not None and isinstance(value, basestring):
             if hasattr(strings_map, 'add'):
                 value = strings_map.add(value)
