@@ -16,7 +16,7 @@ from ..compat import basestring_
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
-from ..morphology import parse_feature, IDS, FIELDS, FIELD_SIZES, NAMES
+from ..morphology import get_field_size, get_field_offset, parse_feature, FIELDS
 
 
 class Morphologizer(Pipe):
@@ -27,7 +27,7 @@ class Morphologizer(Pipe):
         if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
             raise ValueError(TempErrors.T008)
         if attr_nums is None:
-            attr_nums = list(FIELD_SIZES)
+            attr_nums = [get_field_size(name) for name in FIELDS]
         return build_morphologizer_model(attr_nums, **cfg)
 
     def __init__(self, vocab, model=True, **cfg):
@@ -76,7 +76,7 @@ class Morphologizer(Pipe):
         cdef Doc doc
         cdef Vocab vocab = self.vocab
         field_names = list(FIELDS)
-        offsets = [IDS['begin_%s' % field] for field in field_names]
+        offsets = [get_field_offset(field) for field in field_names]
         for i, doc in enumerate(docs):
             doc_scores = batch_scores[i]
             doc_guesses = scores_to_guesses(doc_scores, self.model.softmax.out_sizes)

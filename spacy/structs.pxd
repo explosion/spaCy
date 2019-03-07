@@ -2,7 +2,6 @@ from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
 
 from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
-from .morphology cimport univ_morph_t
 
 
 cdef struct LexemeC:

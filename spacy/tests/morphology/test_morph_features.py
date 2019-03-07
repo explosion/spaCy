@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import pytest
 
 from ...morphology import Morphology
-from ...strings import StringStore
+from ...strings import StringStore, get_string_id
 from ...lemmatizer import Lemmatizer
 from ...morphology import *
 
@@ -17,14 +17,14 @@ def test_add_morphology_with_string_names(morphology):
     morphology.add({"Case_gen", "Number_sing"})
 
 def test_add_morphology_with_int_ids(morphology):
-    morphology.add({Case_gen, Number_sing})
+    morphology.add({get_string_id("Case_gen"), get_string_id("Number_sing")})
 
 def test_add_morphology_with_mix_strings_and_ints(morphology):
-    morphology.add({PunctSide_ini, 'VerbType_aux'})
+    morphology.add({get_string_id("PunctSide_ini"), 'VerbType_aux'})
 
 
 def test_morphology_tags_hash_distinctly(morphology):
-    tag1 = morphology.add({PunctSide_ini, 'VerbType_aux'})
+    tag1 = morphology.add({"PunctSide_ini", 'VerbType_aux'})
     tag2 = morphology.add({"Case_gen", 'Number_sing'})
     assert tag1 != tag2
 

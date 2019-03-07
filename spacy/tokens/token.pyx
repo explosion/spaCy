@@ -22,6 +22,7 @@ from ..compat import is_config
 from ..errors import Errors, Warnings, user_warning, models_warning
 from .. import util
 from .underscore import Underscore, get_ext_args
+from .morphanalysis cimport MorphAnalysis
 
 
 cdef class Token:
@@ -175,6 +176,10 @@ cdef class Token:
     property morph_key:
         def __get__(self):
             return self.c.morph
+
+    property morph:
+        def __get__(self):
+            return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
     property lex_id:
         """RETURNS (int): Sequential ID of the token's lexical type."""
