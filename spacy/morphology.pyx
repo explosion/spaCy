@@ -15,6 +15,7 @@ from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
 from .errors import Errors
 
+
 cdef enum univ_field_t:
     Field_Abbr
     Field_AdpType
@@ -138,6 +139,7 @@ cdef class Morphology:
         self.exc = {}
         if exc is not None:
             for (tag, orth), attrs in exc.items():
+                attrs = _normalize_props(attrs)
                 self.add_special_case(
                     self.strings.as_string(tag), self.strings.as_string(orth), attrs)
 
@@ -149,11 +151,13 @@ cdef class Morphology:
         """Insert a morphological analysis in the morphology table, if not already
         present. Returns the hash of the new analysis.
         """
+        for f in features:
+            self.strings.add(f)
         features = intify_features(features)
         cdef attr_t feature
         for feature in features:
             if feature != 0 and feature not in FEATURE_NAMES:
-                raise KeyError("Unknown feature: %d" % feature)
+                raise KeyError("Unknown feature: %s" % self.strings[feature])
         cdef MorphAnalysisC tag
         tag = create_rich_tag(features)
         cdef hash_t key = self.insert(tag)
@@ -263,8 +267,7 @@ cdef class Morphology:
         token.lemma = lemma
         token.pos = <univ_pos_t>pos
         token.tag = self.strings[tag_str]
-        #token.morph = self.add(features)
-        token.morph = 0
+        token.morph = self.add(features)
         if (self.tag_names[tag_id], token.lex.orth) in self.exc:
             self._assign_tag_from_exceptions(token, tag_id)
 
@@ -412,9 +415,101 @@ cdef tag_to_json(MorphAnalysisC tag):
         features.append(FEATURE_NAMES[tag.verb_type])
     return features
 
+
 cdef MorphAnalysisC tag_from_json(json_tag):
     cdef MorphAnalysisC tag
     return tag
+
+
+cdef int check_feature(const MorphAnalysisC* tag, attr_t feature) nogil:
+    if tag.abbr == feature:
+        return 1
+    elif tag.adp_type == feature:
+        return 1
+    elif tag.adv_type == feature:
+        return 1
+    elif tag.animacy == feature:
+        return 1
+    elif tag.aspect == feature:
+        return 1
+    elif tag.case == feature:
+        return 1
+    elif tag.conj_type == feature:
+        return 1
+    elif tag.connegative == feature:
+        return 1
+    elif tag.definite == feature:
+        return 1
+    elif tag.degree == feature:
+        return 1
+    elif tag.derivation == feature:
+        return 1
+    elif tag.echo == feature:
+        return 1
+    elif tag.foreign == feature:
+        return 1
+    elif tag.gender == feature:
+        return 1
+    elif tag.hyph == feature:
+        return 1
+    elif tag.inf_form == feature:
+        return 1
+    elif tag.mood == feature:
+        return 1
+    elif tag.negative == feature:
+        return 1
+    elif tag.number == feature:
+        return 1
+    elif tag.name_type == feature:
+        return 1
+    elif tag.noun_type == feature:
+        return 1
+    elif tag.num_form == feature:
+        return 1
+    elif tag.num_type == feature:
+        return 1
+    elif tag.num_value == feature:
+        return 1
+    elif tag.part_form == feature:
+        return 1
+    elif tag.part_type == feature:
+        return 1
+    elif tag.person == feature:
+        return 1
+    elif tag.polite == feature:
+        return 1
+    elif tag.polarity == feature:
+        return 1
+    elif tag.poss == feature:
+        return 1
+    elif tag.prefix == feature:
+        return 1
+    elif tag.prep_case == feature:
+        return 1
+    elif tag.pron_type == feature:
+        return 1
+    elif tag.punct_side == feature:
+        return 1
+    elif tag.punct_type == feature:
+        return 1
+    elif tag.reflex == feature:
+        return 1
+    elif tag.style == feature:
+        return 1
+    elif tag.style_variant == feature:
+        return 1
+    elif tag.tense == feature:
+        return 1
+    elif tag.typo == feature:
+        return 1
+    elif tag.verb_form == feature:
+        return 1
+    elif tag.voice == feature:
+        return 1
+    elif tag.verb_type == feature:
+        return 1
+    else:
+        return 0
  
 cdef int set_feature(MorphAnalysisC* tag,
         univ_field_t field, attr_t feature, int value) except -1:
