@@ -2,7 +2,7 @@ from ..vocab cimport Vocab
 from ..typedefs cimport hash_t
 
 
-cdef class Morphanalysis:
+cdef class MorphAnalysis:
     """Control access to morphological features for a token."""
     def __init__(self, Vocab vocab, features=tuple()):
         self.vocab = vocab
@@ -118,14 +118,6 @@ cdef class Morphanalysis:
         def __get__(self):
             pass
 
-    property name_type:
-        def __get__(self):
-            pass
-
-    property negative:
-        def __get__(self):
-            pass
-
     property mood:
         def __get__(self):
             pass
@@ -135,6 +127,10 @@ cdef class Morphanalysis:
             pass
 
     property negative:
+        def __get__(self):
+            pass
+
+    property noun_type:
         def __get__(self):
             pass
 
@@ -306,14 +302,6 @@ cdef class Morphanalysis:
         def __get__(self):
             pass
     
-    property name_type_:
-        def __get__(self):
-            pass
-
-    property negative_:
-        def __get__(self):
-            pass
-
     property number_:
         def __get__(self):
             pass

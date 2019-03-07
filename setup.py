@@ -56,6 +56,7 @@ MOD_NAMES = [
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",
+    "spacy.tokens.morphanalysis",
     "spacy.tokens._retokenize",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
