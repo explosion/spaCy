@@ -6,6 +6,7 @@ import numpy
 import dill
 import boto3
 from cStringIO import StringIO
+from os.path import isfile
 
 from collections import OrderedDict
 from thinc.neural.util import get_array_module
@@ -60,14 +61,14 @@ cdef class Vocab:
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors()
+        self.s3_config = {}
 
+        if isfile('s3_configuration'):
+            with open('s3_configuration','rt') as conf_file:
+                for line in conf_file:
+                    (key, val) = line.split()
+                    self.s3_config[key] = val
 
-    def s3_lexemes_getter(self):
-        return boto3.client('s3').get_object(Bucket='sparkbeyond-infrastructure',Key='qa/spacy/en_core_web_md-2.0.0/vocab/lexemes.bin')['Body']
-
-
-    def s3_lexemes_setter(self, lexemes_to_bytes):
-        boto3.client('s3').put_object(Bucket='sparkbeyond-infrastructure',Key='qa/spacy/en_core_web_md-2.0.0/vocab/lexemes.bin',Body=StringIO(lexemes_to_bytes).read())
 
     property lang:
         def __get__(self):
@@ -370,9 +371,14 @@ cdef class Vocab:
             path.mkdir()
         self.strings.to_disk(path / 'strings.json')
 
-        # with (path / 'lexemes.bin').open('wb') as file_:
-        #     file_.write(self.lexemes_to_bytes())
-        self.s3_lexemes_setter(self.lexemes_to_bytes())
+        if self.s3_config:
+            boto3.client('s3').put_object(Bucket=self.s3_config['Bucket_lexemes'],
+                                          Key=self.s3_config['Key_lexemes'],
+                                          Body=StringIO(self.lexemes_to_bytes()).read()
+                                        )
+        else:
+            with (path / 'lexemes.bin').open('wb') as file_:
+                file_.write(self.lexemes_to_bytes())
         if self.vectors is not None:
             self.vectors.to_disk(path)
 
@@ -387,9 +393,15 @@ cdef class Vocab:
         path = util.ensure_path(path)
         self.strings.from_disk(path / 'strings.json')
 
-        # with (path / 'lexemes.bin').open('rb') as file_:
-        #     self.lexemes_from_bytes(file_.read())
-        self.lexemes_from_bytes(self.s3_lexemes_getter().read()) #No need for context manager
+        if self.s3_config:
+            self.lexemes_from_bytes(boto3.client('s3').get_object(
+                Bucket=self.s3_config['Bucket_lexemes'],
+                Key=self.s3_config['Key_lexemes'])['Body'].read()
+            )
+        else:
+            with (path / 'lexemes.bin').open('rb') as file_:
+                self.lexemes_from_bytes(file_.read())
+
         if self.vectors is not None:
             self.vectors.from_disk(path, exclude='strings.json')
         if self.vectors.name is not None:
