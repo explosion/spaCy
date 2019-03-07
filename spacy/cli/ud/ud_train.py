@@ -156,13 +156,8 @@ def _make_gold(nlp, text, sent_annots, drop_deps=0.0):
     flat = defaultdict(list)
     sent_starts = []
     for sent in sent_annots:
-<<<<<<< HEAD:spacy/cli/ud_train.py
-        flat['heads'].extend(len(flat['words'])+head for head in sent['heads'])
-        for field in ['words', 'tags', 'deps', 'morphology', 'entities', 'spaces']:
-=======
-        flat["heads"].extend(len(flat["words"]) + head for head in sent["heads"])
-        for field in ["words", "tags", "deps", "entities", "spaces"]:
->>>>>>> develop:spacy/cli/ud/ud_train.py
+        flat["heads"].extend(len(flat["words"])+head for head in sent["heads"])
+        for field in ["words", "tags", "deps", "morphology", "entities", "spaces"]:
             flat[field].extend(sent[field])
         sent_starts.append(True)
         sent_starts.extend([False] * (len(sent["words"]) - 1))
@@ -260,55 +255,30 @@ def write_conllu(docs, file_):
 
 def print_progress(itn, losses, ud_scores):
     fields = {
-<<<<<<< HEAD:spacy/cli/ud_train.py
-        'dep_loss': losses.get('parser', 0.0),
-        'morph_loss': losses.get('morphologizer', 0.0),
-        'tag_loss': losses.get('tagger', 0.0),
-        'words': ud_scores['Words'].f1 * 100,
-        'sents': ud_scores['Sentences'].f1 * 100,
-        'tags': ud_scores['XPOS'].f1 * 100,
-        'uas': ud_scores['UAS'].f1 * 100,
-        'las': ud_scores['LAS'].f1 * 100,
-        'morph': ud_scores['Feats'].f1 * 100,
-    }
-    header = ['Epoch', 'P.Loss', 'M.Loss', 'LAS', 'UAS', 'TAG', 'MORPH', 'SENT', 'WORD']
-    if itn == 0:
-        print('\t'.join(header))
-    tpl = '\t'.join((
-        '{:d}',
-        '{dep_loss:.1f}',
-        '{morph_loss:.1f}',
-        '{las:.1f}',
-        '{uas:.1f}',
-        '{tags:.1f}',
-        '{morph:.1f}',
-        '{sents:.1f}',
-        '{words:.1f}',
-    ))
-=======
         "dep_loss": losses.get("parser", 0.0),
+        "morph_loss": losses.get("morphologizer", 0.0),
         "tag_loss": losses.get("tagger", 0.0),
         "words": ud_scores["Words"].f1 * 100,
         "sents": ud_scores["Sentences"].f1 * 100,
         "tags": ud_scores["XPOS"].f1 * 100,
         "uas": ud_scores["UAS"].f1 * 100,
         "las": ud_scores["LAS"].f1 * 100,
+        "morph": ud_scores["Feats"].f1 * 100,
     }
-    header = ["Epoch", "Loss", "LAS", "UAS", "TAG", "SENT", "WORD"]
+    header = ["Epoch", "P.Loss", "M.Loss", "LAS", "UAS", "TAG", "MORPH", "SENT", "WORD"]
     if itn == 0:
         print("\t".join(header))
-    tpl = "\t".join(
-        (
-            "{:d}",
-            "{dep_loss:.1f}",
-            "{las:.1f}",
-            "{uas:.1f}",
-            "{tags:.1f}",
-            "{sents:.1f}",
-            "{words:.1f}",
-        )
-    )
->>>>>>> develop:spacy/cli/ud/ud_train.py
+    tpl = "\t".join((
+        "{:d}",
+        "{dep_loss:.1f}",
+        "{morph_loss:.1f}",
+        "{las:.1f}",
+        "{uas:.1f}",
+        "{tags:.1f}",
+        "{morph:.1f}",
+        "{sents:.1f}",
+        "{words:.1f}",
+    ))
     print(tpl.format(itn, **fields))
 
 
@@ -329,48 +299,26 @@ def get_token_conllu(token, i):
         head = 0
     else:
         head = i + (token.head.i - token.i) + 1
-<<<<<<< HEAD:spacy/cli/ud_train.py
     features = token.vocab.morphology.get(token.morph_key)
     feat_str = []
-    replacements = {'one': '1', 'two': '2', 'three': '3'}
+    replacements = {"one": "1", "two": "2", "three": "3"}
     for feat in features:
-        if not feat.startswith('begin') and not feat.startswith('end'):
-            key, value = feat.split('_')
+        if not feat.startswith("begin") and not feat.startswith("end"):
+            key, value = feat.split("_")
             value = replacements.get(value, value)
-            feat_str.append('%s=%s' % (key, value.title()))
+            feat_str.append("%s=%s" % (key, value.title()))
     if not feat_str:
-        feat_str = '_'
+        feat_str = "_"
     else:
-        feat_str = '|'.join(feat_str)
+        feat_str = "|".join(feat_str)
     fields = [str(i+1), token.text, token.lemma_, token.pos_, token.tag_, feat_str,
-              str(head), token.dep_.lower(), '_', '_']
-    lines.append('\t'.join(fields))
-    return '\n'.join(lines)
-
-Token.set_extension('get_conllu_lines', method=get_token_conllu)
-Token.set_extension('begins_fused', default=False)
-Token.set_extension('inside_fused', default=False)
-=======
-    fields = [
-        str(i + 1),
-        token.text,
-        token.lemma_,
-        token.pos_,
-        token.tag_,
-        "_",
-        str(head),
-        token.dep_.lower(),
-        "_",
-        "_",
-    ]
+              str(head), token.dep_.lower(), "_", "_"]
     lines.append("\t".join(fields))
     return "\n".join(lines)
-
 
 Token.set_extension("get_conllu_lines", method=get_token_conllu)
 Token.set_extension("begins_fused", default=False)
 Token.set_extension("inside_fused", default=False)
->>>>>>> develop:spacy/cli/ud/ud_train.py
 
 
 ##################
@@ -394,14 +342,9 @@ def load_nlp(corpus, config, vectors=None):
 
 
 def initialize_pipeline(nlp, docs, golds, config, device):
-<<<<<<< HEAD:spacy/cli/ud_train.py
-    nlp.add_pipe(nlp.create_pipe('tagger'))
-    nlp.add_pipe(nlp.create_pipe('morphologizer'))
-    nlp.add_pipe(nlp.create_pipe('parser'))
-=======
     nlp.add_pipe(nlp.create_pipe("tagger"))
+    nlp.add_pipe(nlp.create_pipe("morphologizer"))
     nlp.add_pipe(nlp.create_pipe("parser"))
->>>>>>> develop:spacy/cli/ud/ud_train.py
     if config.multitask_tag:
         nlp.parser.add_multitask_objective("tag")
     if config.multitask_sent:
@@ -597,23 +540,12 @@ def main(
         out_path = parses_dir / corpus / "epoch-{i}.conllu".format(i=i)
         with nlp.use_params(optimizer.averages):
             if use_oracle_segments:
-<<<<<<< HEAD:spacy/cli/ud_train.py
                 parsed_docs, scores = evaluate(nlp, paths.dev.conllu,
                                                 paths.dev.conllu, out_path)
             else:
                 parsed_docs, scores = evaluate(nlp, paths.dev.text,
                                                 paths.dev.conllu, out_path)
         print_progress(i, losses, scores)
-=======
-                parsed_docs, scores = evaluate(
-                    nlp, paths.dev.conllu, paths.dev.conllu, out_path
-                )
-            else:
-                parsed_docs, scores = evaluate(
-                    nlp, paths.dev.text, paths.dev.conllu, out_path
-                )
-            print_progress(i, losses, scores)
->>>>>>> develop:spacy/cli/ud/ud_train.py
 
 
 def _render_parses(i, to_render):
