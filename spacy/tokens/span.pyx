@@ -234,10 +234,9 @@ cdef class Span:
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             user_warning(Warnings.W008.format(obj='Span'))
             return 0.0
-
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy

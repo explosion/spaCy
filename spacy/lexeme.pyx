@@ -125,11 +125,9 @@ cdef class Lexeme:
         if self.vector_norm == 0 or other.vector_norm == 0:
             user_warning(Warnings.W008.format(obj='Lexeme'))
             return 0.0
-
         vector = self.vector
         xp = get_array_module(vector)
-        return (xp.dot(self.vector, other.vector) /
-                (self.vector_norm * other.vector_norm))
+        return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
     def to_bytes(self):
         lex_data = Lexeme.c_to_bytes(self.c)

@@ -172,8 +172,7 @@ cdef class Token:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return (xp.dot(vector, other.vector) /
-                (self.vector_norm * other.vector_norm))
+        return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
     property lex_id:
         """RETURNS (int): Sequential ID of the token's lexical type."""

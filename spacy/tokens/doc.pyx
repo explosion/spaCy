@@ -329,10 +329,9 @@ cdef class Doc:
         if self.vector_norm == 0 or other.vector_norm == 0:
             user_warning(Warnings.W008.format(obj='Doc'))
             return 0.0
-
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
         """A boolean value indicating whether a word vector is associated with
