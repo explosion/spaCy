@@ -173,10 +173,6 @@ cdef class Token:
         return (numpy.dot(self.vector, other.vector) /
                 (self.vector_norm * other.vector_norm))
 
-    property morph_key:
-        def __get__(self):
-            return self.c.morph
-
     property morph:
         def __get__(self):
             return MorphAnalysis.from_id(self.vocab, self.c.morph)
