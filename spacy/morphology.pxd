@@ -34,5 +34,7 @@ cdef class Morphology:
 
 
 cdef int check_feature(const MorphAnalysisC* tag, attr_t feature) nogil
+cdef attr_t get_field(const MorphAnalysisC* tag, int field) nogil
+cdef list list_features(const MorphAnalysisC* tag)
 
-cdef tag_to_json(MorphAnalysisC tag)
+cdef tag_to_json(const MorphAnalysisC* tag)

@@ -174,7 +174,7 @@ cdef class Morphology:
         if tag == NULL:
             return []
         else:
-            return tag_to_json(tag[0])
+            return tag_to_json(tag)
     
     cpdef update(self, hash_t morph, features):
         """Update a morphological analysis with new feature values."""
@@ -296,7 +296,7 @@ cdef class Morphology:
         for key in self.tags:
             tag_ptr = <MorphAnalysisC*>self.tags.get(key)
             if tag_ptr != NULL:
-                json_tags.append(tag_to_json(tag_ptr[0]))
+                json_tags.append(tag_to_json(tag_ptr))
         return srsly.json_dumps(json_tags)
 
     def from_bytes(self, byte_string):
@@ -334,98 +334,186 @@ cdef MorphAnalysisC create_rich_tag(features) except *:
     return tag
 
 
-cdef tag_to_json(MorphAnalysisC tag):
-    features = []
-    if tag.abbr != 0:
-        features.append(FEATURE_NAMES[tag.abbr])
-    if tag.adp_type != 0:
-        features.append(FEATURE_NAMES[tag.adp_type])
-    if tag.adv_type != 0:
-        features.append(FEATURE_NAMES[tag.adv_type])
-    if tag.animacy != 0:
-        features.append(FEATURE_NAMES[tag.animacy])
-    if tag.aspect != 0:
-        features.append(FEATURE_NAMES[tag.aspect])
-    if tag.case != 0:
-        features.append(FEATURE_NAMES[tag.case])
-    if tag.conj_type != 0:
-        features.append(FEATURE_NAMES[tag.conj_type])
-    if tag.connegative != 0:
-        features.append(FEATURE_NAMES[tag.connegative])
-    if tag.definite != 0:
-        features.append(FEATURE_NAMES[tag.definite])
-    if tag.degree != 0:
-        features.append(FEATURE_NAMES[tag.degree])
-    if tag.derivation != 0:
-        features.append(FEATURE_NAMES[tag.derivation])
-    if tag.echo != 0:
-        features.append(FEATURE_NAMES[tag.echo])
-    if tag.foreign != 0:
-        features.append(FEATURE_NAMES[tag.foreign])
-    if tag.gender != 0:
-        features.append(FEATURE_NAMES[tag.gender])
-    if tag.hyph != 0:
-        features.append(FEATURE_NAMES[tag.hyph])
-    if tag.inf_form != 0:
-        features.append(FEATURE_NAMES[tag.inf_form])
-    if tag.mood != 0:
-        features.append(FEATURE_NAMES[tag.mood])
-    if tag.negative != 0:
-        features.append(FEATURE_NAMES[tag.negative])
-    if tag.number != 0:
-        features.append(FEATURE_NAMES[tag.number])
-    if tag.name_type != 0:
-        features.append(FEATURE_NAMES[tag.name_type])
-    if tag.noun_type != 0:
-        features.append(FEATURE_NAMES[tag.noun_type])
-    if tag.num_form != 0:
-        features.append(FEATURE_NAMES[tag.num_form])
-    if tag.num_type != 0:
-        features.append(FEATURE_NAMES[tag.num_type])
-    if tag.num_value != 0:
-        features.append(FEATURE_NAMES[tag.num_value])
-    if tag.part_form != 0:
-        features.append(FEATURE_NAMES[tag.part_form])
-    if tag.part_type != 0:
-        features.append(FEATURE_NAMES[tag.part_type])
-    if tag.person != 0:
-        features.append(FEATURE_NAMES[tag.person])
-    if tag.polite != 0:
-        features.append(FEATURE_NAMES[tag.polite])
-    if tag.polarity != 0:
-        features.append(FEATURE_NAMES[tag.polarity])
-    if tag.poss != 0:
-        features.append(FEATURE_NAMES[tag.poss])
-    if tag.prefix != 0:
-        features.append(FEATURE_NAMES[tag.prefix])
-    if tag.prep_case != 0:
-        features.append(FEATURE_NAMES[tag.prep_case])
-    if tag.pron_type != 0:
-        features.append(FEATURE_NAMES[tag.pron_type])
-    if tag.punct_side != 0:
-        features.append(FEATURE_NAMES[tag.punct_side])
-    if tag.punct_type != 0:
-        features.append(FEATURE_NAMES[tag.punct_type])
-    if tag.reflex != 0:
-        features.append(FEATURE_NAMES[tag.reflex])
-    if tag.style != 0:
-        features.append(FEATURE_NAMES[tag.style])
-    if tag.style_variant != 0:
-        features.append(FEATURE_NAMES[tag.style_variant])
-    if tag.tense != 0:
-        features.append(FEATURE_NAMES[tag.tense])
-    if tag.verb_form != 0:
-        features.append(FEATURE_NAMES[tag.verb_form])
-    if tag.voice != 0:
-        features.append(FEATURE_NAMES[tag.voice])
-    if tag.verb_type != 0:
-        features.append(FEATURE_NAMES[tag.verb_type])
-    return features
+cdef tag_to_json(const MorphAnalysisC* tag):
+    return [FEATURE_NAMES[f] for f in list_features(tag)]
 
 
 cdef MorphAnalysisC tag_from_json(json_tag):
-    cdef MorphAnalysisC tag
-    return tag
+    raise NotImplementedError
+
+
+cdef list list_features(const MorphAnalysisC* tag):
+    output = []
+    if tag.abbr != 0:
+        output.append(tag.abbr)
+    if tag.adp_type != 0:
+        output.append(tag.adp_type)
+    if tag.adv_type != 0:
+        output.append(tag.adv_type)
+    if tag.animacy != 0:
+        output.append(tag.animacy)
+    if tag.aspect != 0:
+        output.append(tag.aspect)
+    if tag.case != 0:
+        output.append(tag.case)
+    if tag.conj_type != 0:
+        output.append(tag.conj_type)
+    if tag.connegative != 0:
+        output.append(tag.connegative)
+    if tag.definite != 0:
+        output.append(tag.definite)
+    if tag.degree != 0:
+        output.append(tag.degree)
+    if tag.derivation != 0:
+        output.append(tag.derivation)
+    if tag.echo != 0:
+        output.append(tag.echo)
+    if tag.foreign != 0:
+        output.append(tag.foreign)
+    if tag.gender != 0:
+        output.append(tag.gender)
+    if tag.hyph != 0:
+        output.append(tag.hyph)
+    if tag.inf_form != 0:
+        output.append(tag.inf_form)
+    if tag.mood != 0:
+        output.append(tag.mood)
+    if tag.negative != 0:
+        output.append(tag.negative)
+    if tag.number != 0:
+        output.append(tag.number)
+    if tag.name_type != 0:
+        output.append(tag.name_type)
+    if tag.noun_type != 0:
+        output.append(tag.noun_type)
+    if tag.part_form != 0:
+        output.append(tag.part_form)
+    if tag.part_type != 0:
+        output.append(tag.part_type)
+    if tag.person != 0:
+        output.append(tag.person)
+    if tag.polite != 0:
+        output.append(tag.polite)
+    if tag.polarity != 0:
+        output.append(tag.polarity)
+    if tag.poss != 0:
+        output.append(tag.poss)
+    if tag.prefix != 0:
+        output.append(tag.prefix)
+    if tag.prep_case != 0:
+        output.append(tag.prep_case)
+    if tag.pron_type != 0:
+        output.append(tag.pron_type)
+    if tag.punct_type != 0:
+        output.append(tag.punct_type)
+    if tag.reflex != 0:
+        output.append(tag.reflex)
+    if tag.style != 0:
+        output.append(tag.style)
+    if tag.style_variant != 0:
+        output.append(tag.style_variant)
+    if tag.typo != 0:
+        output.append(tag.typo)
+    if tag.verb_form != 0:
+        output.append(tag.verb_form)
+    if tag.voice != 0:
+        output.append(tag.voice)
+    if tag.verb_type != 0:
+        output.append(tag.verb_type)
+    return output
+
+
+cdef attr_t get_field(const MorphAnalysisC* tag, int field_id) nogil:
+    field = <univ_field_t>field_id
+    if field == Field_Abbr:
+        return tag.abbr
+    elif field == Field_AdpType:
+        return tag.adp_type
+    elif field == Field_AdvType:
+        return tag.adv_type
+    elif field == Field_Animacy:
+        return tag.animacy
+    elif field == Field_Aspect:
+        return tag.aspect
+    elif field == Field_Case:
+        return tag.case
+    elif field == Field_ConjType:
+        return tag.conj_type
+    elif field == Field_Connegative:
+        return tag.connegative
+    elif field == Field_Definite:
+        return tag.definite
+    elif field == Field_Degree:
+        return tag.degree
+    elif field == Field_Derivation:
+        return tag.derivation
+    elif field == Field_Echo:
+        return tag.echo
+    elif field == Field_Foreign:
+        return tag.foreign
+    elif field == Field_Gender:
+        return tag.gender
+    elif field == Field_Hyph:
+        return tag.hyph
+    elif field == Field_InfForm:
+        return tag.inf_form
+    elif field == Field_Mood:
+        return tag.mood
+    elif field == Field_Negative:
+        return tag.negative
+    elif field == Field_Number:
+        return tag.number
+    elif field == Field_NameType:
+        return tag.name_type
+    elif field == Field_NounType:
+        return tag.noun_type
+    elif field == Field_NumForm:
+        return tag.num_form
+    elif field == Field_NumType:
+        return tag.num_type
+    elif field == Field_NumValue:
+        return tag.num_value
+    elif field == Field_PartForm:
+        return tag.part_form
+    elif field == Field_PartType:
+        return tag.part_type
+    elif field == Field_Person:
+        return tag.person
+    elif field == Field_Polite:
+        return tag.polite
+    elif field == Field_Polarity:
+        return tag.polarity
+    elif field == Field_Poss:
+        return tag.poss
+    elif field == Field_Prefix:
+        return tag.prefix
+    elif field == Field_PrepCase:
+        return tag.prep_case
+    elif field == Field_PronType:
+        return tag.pron_type
+    elif field == Field_PunctSide:
+        return tag.punct_side
+    elif field == Field_PunctType:
+        return tag.punct_type
+    elif field == Field_Reflex:
+        return tag.reflex
+    elif field == Field_Style:
+        return tag.style
+    elif field == Field_StyleVariant:
+        return tag.style_variant
+    elif field == Field_Tense:
+        return tag.tense
+    elif field == Field_Typo:
+        return tag.typo
+    elif field == Field_VerbForm:
+        return tag.verb_form
+    elif field == Field_Voice:
+        return tag.voice
+    elif field == Field_VerbType:
+        return tag.verb_type
+    else:
+        raise ValueError("Unknown feature: %s (%d)" % (FEATURE_NAMES.get(feature), feature))
+
 
 
 cdef int check_feature(const MorphAnalysisC* tag, attr_t feature) nogil:
@@ -524,6 +612,11 @@ cdef int set_feature(MorphAnalysisC* tag,
         value_ = feature
     else:
         value_ = 0
+    prev_value = get_field(tag, field)
+    if prev_value != 0 and value_ == 0:
+        tag.length -= 1
+    elif prev_value == 0 and value_ != 0:
+        tag.length += 1
     if feature == 0:
         pass
     elif field == Field_Abbr:
@@ -614,6 +707,7 @@ cdef int set_feature(MorphAnalysisC* tag,
         tag.verb_type = value_
     else:
         raise ValueError("Unknown feature: %s (%d)" % (FEATURE_NAMES.get(feature), feature))
+
 
 
 FIELDS = {
