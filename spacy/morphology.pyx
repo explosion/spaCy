@@ -111,13 +111,13 @@ cdef class Morphology:
                 print(list(NAMES.keys())[:10])
                 print(NAMES.get(feature-1), NAMES.get(feature+1))
                 raise KeyError("Unknown feature: %d" % feature)
-        cdef RichTagC tag
+        cdef MorphAnalysisC tag
         tag = create_rich_tag(features)
         cdef hash_t key = self.insert(tag)
         return key
 
     def get(self, hash_t morph):
-        tag = <RichTagC*>self.tags.get(morph)
+        tag = <MorphAnalysisC*>self.tags.get(morph)
         if tag == NULL:
             return []
         else:
@@ -125,7 +125,7 @@ cdef class Morphology:
     
     cpdef update(self, hash_t morph, features):
         """Update a morphological analysis with new feature values."""
-        tag = (<RichTagC*>self.tags.get(morph))[0]
+        tag = (<MorphAnalysisC*>self.tags.get(morph))[0]
         features = intify_features(features)
         cdef univ_morph_t feature
         for feature in features:
@@ -168,10 +168,10 @@ cdef class Morphology:
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
         self.exc[(tag_str, self.strings.add(orth_str))] = attrs
  
-    cdef hash_t insert(self, RichTagC tag) except 0:
+    cdef hash_t insert(self, MorphAnalysisC tag) except 0:
         cdef hash_t key = hash_tag(tag)
         if self.tags.get(key) == NULL:
-            tag_ptr = <RichTagC*>self.mem.alloc(1, sizeof(RichTagC))
+            tag_ptr = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
             tag_ptr[0] = tag
             self.tags.set(key, <void*>tag_ptr)
         return key
@@ -240,7 +240,7 @@ cdef class Morphology:
     def to_bytes(self):
         json_tags = []
         for key in self.tags:
-            tag_ptr = <RichTagC*>self.tags.get(key)
+            tag_ptr = <MorphAnalysisC*>self.tags.get(key)
             if tag_ptr != NULL:
                 json_tags.append(tag_to_json(tag_ptr[0]))
         return srsly.json_dumps(json_tags)
@@ -261,18 +261,18 @@ cpdef univ_pos_t get_int_tag(pos_):
 cpdef intify_features(features):
     return {IDS.get(feature, feature) for feature in features}
 
-cdef hash_t hash_tag(RichTagC tag) nogil:
+cdef hash_t hash_tag(MorphAnalysisC tag) nogil:
     return mrmr.hash64(&tag, sizeof(tag), 0)
 
-cdef RichTagC create_rich_tag(features) except *:
-    cdef RichTagC tag
+cdef MorphAnalysisC create_rich_tag(features) except *:
+    cdef MorphAnalysisC tag
     cdef univ_morph_t feature
     memset(&tag, 0, sizeof(tag))
     for feature in features:
         set_feature(&tag, feature, 1)
     return tag
 
-cdef tag_to_json(RichTagC tag):
+cdef tag_to_json(MorphAnalysisC tag):
     features = []
     if tag.abbr != 0:
         features.append(NAMES[tag.abbr])
@@ -360,11 +360,11 @@ cdef tag_to_json(RichTagC tag):
         features.append(NAMES[tag.verb_type])
     return features
 
-cdef RichTagC tag_from_json(json_tag):
-    cdef RichTagC tag
+cdef MorphAnalysisC tag_from_json(json_tag):
+    cdef MorphAnalysisC tag
     return tag
  
-cdef int set_feature(RichTagC* tag, univ_morph_t feature, int value) except -1:
+cdef int set_feature(MorphAnalysisC* tag, univ_morph_t feature, int value) except -1:
     if value == True:
         value_ = feature
     else:

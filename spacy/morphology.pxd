@@ -3,7 +3,7 @@ from preshed.maps cimport PreshMap, PreshMapArray
 from libc.stdint cimport uint64_t
 from murmurhash cimport mrmr
 
-from .structs cimport TokenC
+from .structs cimport TokenC, MorphAnalysisC
 from .strings cimport StringStore
 from .typedefs cimport hash_t, attr_t, flags_t
 from .parts_of_speech cimport univ_pos_t
@@ -24,7 +24,7 @@ cdef class Morphology:
     cdef readonly int n_tags
 
     cpdef update(self, hash_t morph, features)
-    cdef hash_t insert(self, RichTagC tag) except 0
+    cdef hash_t insert(self, MorphAnalysisC tag) except 0
     
     cdef int assign_untagged(self, TokenC* token) except -1
     cdef int assign_tag(self, TokenC* token, tag) except -1
@@ -416,50 +416,3 @@ cdef enum univ_morph_t:
     Voice_int # hb
     end_Voice
 
-
-cdef struct RichTagC:
-    univ_pos_t pos
-    
-    univ_morph_t abbr
-    univ_morph_t adp_type
-    univ_morph_t adv_type
-    univ_morph_t animacy
-    univ_morph_t aspect
-    univ_morph_t case
-    univ_morph_t conj_type
-    univ_morph_t connegative
-    univ_morph_t definite
-    univ_morph_t degree
-    univ_morph_t derivation
-    univ_morph_t echo
-    univ_morph_t foreign
-    univ_morph_t gender
-    univ_morph_t hyph
-    univ_morph_t inf_form
-    univ_morph_t mood
-    univ_morph_t negative
-    univ_morph_t number
-    univ_morph_t name_type
-    univ_morph_t noun_type
-    univ_morph_t num_form
-    univ_morph_t num_type
-    univ_morph_t num_value
-    univ_morph_t part_form
-    univ_morph_t part_type
-    univ_morph_t person
-    univ_morph_t polite
-    univ_morph_t polarity
-    univ_morph_t poss
-    univ_morph_t prefix
-    univ_morph_t prep_case
-    univ_morph_t pron_type
-    univ_morph_t punct_side
-    univ_morph_t punct_type
-    univ_morph_t reflex
-    univ_morph_t style
-    univ_morph_t style_variant
-    univ_morph_t tense
-    univ_morph_t typo
-    univ_morph_t verb_form
-    univ_morph_t voice
-    univ_morph_t verb_type
