@@ -9,6 +9,7 @@ from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
 import numpy
+from thinc.neural.util import get_array_module
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
@@ -169,8 +170,9 @@ cdef class Token:
         if self.vector_norm == 0 or other.vector_norm == 0:
             user_warning(Warnings.W008.format(obj='Token'))
             return 0.0
-        return (numpy.dot(self.vector, other.vector) /
-                (self.vector_norm * other.vector_norm))
+        vector = self.vector
+        xp = get_array_module(vector)
+        return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
     property lex_id:
         """RETURNS (int): Sequential ID of the token's lexical type."""

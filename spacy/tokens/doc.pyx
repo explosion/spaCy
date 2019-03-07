@@ -329,7 +329,9 @@ cdef class Doc:
         if self.vector_norm == 0 or other.vector_norm == 0:
             user_warning(Warnings.W008.format(obj='Doc'))
             return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        vector = self.vector
+        xp = get_array_module(vector)
+        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
         """A boolean value indicating whether a word vector is associated with
@@ -364,10 +366,7 @@ cdef class Doc:
                                            dtype='f')
                 return self._vector
             elif self.vocab.vectors.data.size > 0:
-                vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
-                for token in self.c[:self.length]:
-                    vector += self.vocab.get_vector(token.lex.orth)
-                self._vector = vector / len(self)
+                self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
             elif self.tensor.size > 0:
                 self._vector = self.tensor.mean(axis=0)
