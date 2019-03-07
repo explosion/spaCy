@@ -127,6 +127,7 @@ details, see the documentation on
 | `method`  | callable | Set a custom method on the object, for example `doc._.compare(other_doc)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.          |
 | `setter`  | callable | Setter function that takes the `Doc` and a value, and modifies the object. Is called when the user writes to the `Doc._` attribute. |
+| `force`   | bool     | Force overwriting existing attribute.                                                                                               |
 
 ## Doc.get_extension {#get_extension tag="classmethod" new="2"}
 
@@ -263,6 +264,46 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 | ----------- | -------------------------------------- | ----------------------------------------------- |
 | **RETURNS** | `numpy.ndarray[ndim=2, dtype='int32']` | The lowest common ancestor matrix of the `Doc`. |
 
+## Doc.to_json {#to_json, tag="method" new="2.1"}
+
+Convert a Doc to JSON. The format it produces will be the new format for the
+[`spacy train`](/api/cli#train) command (not implemented yet). If custom
+underscore attributes are specified, their values need to be JSON-serializable.
+They'll be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`.
+
+> #### Example
+>
+> ```python
+> doc = nlp(u"Hello")
+> json_doc = doc.to_json()
+> ```
+>
+> #### Result
+>
+> ```python
+> {
+>   "text": "Hello",
+>   "ents": [],
+>   "sents": [{"start": 0, "end": 5}],
+>   "tokens": [{"id": 0, "start": 0, "end": 5, "pos": "INTJ", "tag": "UH", "dep": "ROOT", "head": 0}
+>   ]
+> }
+> ```
+
+| Name         | Type | Description                                                                    |
+| ------------ | ---- | ------------------------------------------------------------------------------ |
+| `underscore` | list | Optional list of string names of custom JSON-serializable `doc._.` attributes. |
+| **RETURNS**  | dict | The JSON-formatted data.                                                       |
+
+<Infobox title="Deprecation note" variant="warning">
+
+spaCy previously implemented a `Doc.print_tree` method that returned a similar
+JSON-formatted representation of a `Doc`. As of v2.1, this method is deprecated
+in favor of `Doc.to_json`. If you need more complex nested representations, you
+might want to write your own function to extract the data.
+
+</Infobox>
+
 ## Doc.to_array {#to_array tag="method"}
 
 Export given token attributes to a numpy `ndarray`. If `attr_ids` is a sequence
@@ -310,7 +351,7 @@ array of attributes.
 
 | Name        | Type                                   | Description                   |
 | ----------- | -------------------------------------- | ----------------------------- |
-| `attrs`     | ints                                   | A list of attribute ID ints.  |
+| `attrs`     | list                                   | A list of attribute ID ints.  |
 | `array`     | `numpy.ndarray[ndim=2, dtype='int32']` | The attribute values to load. |
 | **RETURNS** | `Doc`                                  | Itself.                       |
 
@@ -429,14 +470,16 @@ to specify how the new subtokens should be integrated into the dependency tree.
 The list of per-token heads can either be a token in the original document, e.g.
 `doc[2]`, or a tuple consisting of the token in the original document and its
 subtoken index. For example, `(doc[3], 1)` will attach the subtoken to the
-second subtoken of `doc[3]`. This mechanism allows attaching subtokens to other
-newly created subtokens, without having to keep track of the changing token
-indices. If the specified head token will be split within the retokenizer block
-and no subtoken index is specified, it will default to `0`. Attributes to set on
-subtokens can be provided as a list of values. They'll be applied to the
-resulting token (if they're context-dependent token attributes like `LEMMA` or
-`DEP`) or to the underlying lexeme (if they're context-independent lexical
-attributes like `LOWER` or `IS_STOP`).
+second subtoken of `doc[3]`.
+
+This mechanism allows attaching subtokens to other newly created subtokens,
+without having to keep track of the changing token indices. If the specified
+head token will be split within the retokenizer block and no subtoken index is
+specified, it will default to `0`. Attributes to set on subtokens can be
+provided as a list of values. They'll be applied to the resulting token (if
+they're context-dependent token attributes like `LEMMA` or `DEP`) or to the
+underlying lexeme (if they're context-independent lexical attributes like
+`LOWER` or `IS_STOP`).
 
 > #### Example
 >
@@ -487,8 +530,8 @@ and end token boundaries, the document remains unchanged.
 
 ## Doc.ents {#ents tag="property" model="NER"}
 
-Iterate over the entities in the document. Yields named-entity `Span` objects,
-if the entity recognizer has been applied to the document.
+The named entities in the document. Returns a tuple of named entity `Span`
+objects, if the entity recognizer has been applied.
 
 > #### Example
 >
@@ -500,9 +543,9 @@ if the entity recognizer has been applied to the document.
 > assert ents[0].text == u"Mr. Best"
 > ```
 
-| Name       | Type   | Description               |
-| ---------- | ------ | ------------------------- |
-| **YIELDS** | `Span` | Entities in the document. |
+| Name        | Type  | Description                                      |
+| ----------- | ----- | ------------------------------------------------ |
+| **RETURNS** | tuple | Entities in the document, one `Span` per entity. |
 
 ## Doc.noun_chunks {#noun_chunks tag="property" model="parser"}
 
@@ -541,9 +584,9 @@ will be unavailable.
 > assert [s.root.text for s in sents] == [u"is", u"'s"]
 > ```
 
-| Name       | Type                               | Description |
-| ---------- | ---------------------------------- | ----------- |
-| **YIELDS** | `Span | Sentences in the document. |
+| Name       | Type   | Description                |
+| ---------- | ------ | -------------------------- |
+| **YIELDS** | `Span` | Sentences in the document. |
 
 ## Doc.has_vector {#has_vector tag="property" model="vectors"}
 

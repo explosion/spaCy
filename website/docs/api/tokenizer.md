@@ -116,6 +116,72 @@ details and examples.
 | `string`      | unicode  | The string to specially tokenize.                                                                                                                                        |
 | `token_attrs` | iterable | A sequence of dicts, where each dict describes a token and its attributes. The `ORTH` fields of the attributes must exactly match the string when they are concatenated. |
 
+## Tokenizer.to_disk {#to_disk tag="method"}
+
+Serialize the tokenizer to disk.
+
+> #### Example
+>
+> ```python
+> tokenizer = Tokenizer(nlp.vocab)
+> tokenizer.to_disk("/path/to/tokenizer")
+> ```
+
+| Name   | Type             | Description                                                                                                           |
+| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+
+## Tokenizer.from_disk {#from_disk tag="method"}
+
+Load the tokenizer from disk. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> tokenizer = Tokenizer(nlp.vocab)
+> tokenizer.from_disk("/path/to/tokenizer")
+> ```
+
+| Name        | Type             | Description                                                                |
+| ----------- | ---------------- | -------------------------------------------------------------------------- |
+| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `Tokenizer`      | The modified `Tokenizer` object.                                           |
+
+## Tokenizer.to_bytes {#to_bytes tag="method"}
+
+> #### Example
+>
+> ```python
+> tokenizer = tokenizer(nlp.vocab)
+> tokenizer_bytes = tokenizer.to_bytes()
+> ```
+
+Serialize the tokenizer to a bytestring.
+
+| Name        | Type  | Description                                        |
+| ----------- | ----- | -------------------------------------------------- |
+| `**exclude` | -     | Named attributes to prevent from being serialized. |
+| **RETURNS** | bytes | The serialized form of the `Tokenizer` object.     |
+
+## Tokenizer.from_bytes {#from_bytes tag="method"}
+
+Load the tokenizer from a bytestring. Modifies the object in place and returns
+it.
+
+> #### Example
+>
+> ```python
+> tokenizer_bytes = tokenizer.to_bytes()
+> tokenizer = Tokenizer(nlp.vocab)
+> tokenizer.from_bytes(tokenizer_bytes)
+> ```
+
+| Name         | Type        | Description                                    |
+| ------------ | ----------- | ---------------------------------------------- |
+| `bytes_data` | bytes       | The data to load from.                         |
+| `**exclude`  | -           | Named attributes to prevent from being loaded. |
+| **RETURNS**  | `Tokenizer` | The `Tokenizer` object.                        |
+
 ## Attributes {#attributes}
 
 | Name             | Type    | Description                                                                                                                |

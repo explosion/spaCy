@@ -1,7 +1,7 @@
 ---
 title: DependencyParser
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/pipes.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
@@ -211,7 +211,7 @@ Modify the pipe's model, to use the given parameter values.
 > ```python
 > parser = DependencyParser(nlp.vocab)
 > with parser.use_params():
->     parser.to_disk('/best_model')
+>     parser.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
@@ -226,7 +226,7 @@ Add a new label to the pipe.
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> parser.add_label('MY_LABEL')
+> parser.add_label("MY_LABEL")
 > ```
 
 | Name    | Type    | Description       |
@@ -241,7 +241,7 @@ Serialize the pipe to disk.
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> parser.to_disk('/path/to/parser')
+> parser.to_disk("/path/to/parser")
 > ```
 
 | Name   | Type             | Description                                                                                                           |
@@ -256,7 +256,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> parser.from_disk('/path/to/parser')
+> parser.from_disk("/path/to/parser")
 > ```
 
 | Name        | Type               | Description                                                                |
@@ -266,7 +266,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 ## DependencyParser.to_bytes {#to_bytes tag="method"}
 
-> #### example
+> #### Example
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)

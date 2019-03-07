@@ -1,7 +1,7 @@
 ---
 title: SentenceSegmenter
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/hooks.py
 ---
 
 A simple spaCy hook, to allow custom sentence boundary detection logic that
