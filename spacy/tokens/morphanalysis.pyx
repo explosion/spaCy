@@ -244,168 +244,168 @@ cdef class MorphAnalysis:
 
     property abbr_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.abbr_]
 
     property adp_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.adp_type_]
 
     property adv_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.adv_type_]
 
     property animacy_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.animacy_]
 
     property aspect_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.aspect_]
         
     property case_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.case_]
     
     property conj_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.conj_type_]
 
     property connegative_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.connegative_]
 
     property definite_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.definite_]
 
     property degree_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.degree_]
 
     property derivation_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.derivation_]
 
     property echo_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.echo_]
 
     property foreign_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.foreign_]
 
     property gender_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.gender_]
 
     property hyph_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.hyph_]
 
     property inf_form_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.inf_form_]
 
     property name_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.name_type_]
 
     property negative_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.negative_]
 
     property mood_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.mood_]
     
     property number_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.number_]
 
     property num_form_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.num_form_]
 
     property num_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.num_type_]
 
     property num_value_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.num_value_]
 
     property part_form_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.part_form_]
 
     property part_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.part_type_]
 
     property person_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.person_]
     
     property polite_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.polite_]
     
     property polarity_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.polarity_]
 
     property poss_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.poss_]
 
     property prefix_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.prefix_]
 
     property prep_case_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.prep_case_]
 
     property pron_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.pron_type_]
 
     property punct_side_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.punct_side_]
 
     property punct_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.punct_type_]
 
     property reflex_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.reflex_]
 
     property style_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.style_]
     
     property style_variant_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.style_variant_]
  
     property tense_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.tense_]
  
     property typo_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.typo_]
  
     property verb_form_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.verb_form_]
  
     property voice_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.voice_]
  
     property verb_type_:
         def __get__(self):
-            pass
+            return self.vocab.strings[self.c.verb_type_]
