@@ -204,6 +204,7 @@ cdef class Morphology:
             pos = 0
         cdef attr_t lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
         if lemma == 0:
+            # Ugh, self.lemmatize has opposite arg order from self.lemmatizer :(
             lemma = self.lemmatize(pos, token.lex.orth, features)
             self._cache.set(tag_id, token.lex.orth, <void*>lemma)
         token.lemma = lemma
