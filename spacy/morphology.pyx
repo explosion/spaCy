@@ -6,6 +6,7 @@ from libc.string cimport memset
 import srsly
 from collections import Counter
 
+from .compat import basestring_
 from .strings import get_string_id
 from . import symbols
 from .attrs cimport POS, IS_SPACE
@@ -68,7 +69,8 @@ def _normalize_props(props):
     props = dict(props)
     for key in FIELDS:
         if key in props:
-            attr = '%s_%s' % (key, props[key])
+            value = str(props[key]).lower()
+            attr = '%s_%s' % (key, value)
             if attr in FEATURES:
                 props.pop(key)
                 props[attr] = True
@@ -81,9 +83,11 @@ def _normalize_props(props):
             out[key] = value
         elif isinstance(key, int):
             out[key] = value
+        elif value is True:
+            out[key] = value
         elif key.lower() == 'pos':
             out[POS] = POS_IDS[value.upper()]
-        else:
+        elif key.lower() != 'morph':
             out[key] = value
     return out
 
@@ -132,6 +136,7 @@ cdef class Morphology:
         self.reverse_index = {}
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             attrs = _normalize_props(attrs)
+            self.add({FEATURE_NAMES[feat] for feat in attrs if feat in FEATURE_NAMES})
             self.tag_map[tag_str] = dict(attrs)
             self.reverse_index[self.strings.add(tag_str)] = i
 
@@ -152,7 +157,8 @@ cdef class Morphology:
         present. Returns the hash of the new analysis.
         """
         for f in features:
-            self.strings.add(f)
+            if isinstance(f, basestring_):
+                self.strings.add(f)
         features = intify_features(features)
         cdef attr_t feature
         for feature in features:
@@ -213,6 +219,7 @@ cdef class Morphology:
         """
         attrs = dict(attrs)
         attrs = _normalize_props(attrs)
+        self.add({FEATURE_NAMES[feat] for feat in attrs if feat in FEATURE_NAMES})
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
         self.exc[(tag_str, self.strings.add(orth_str))] = attrs
  
@@ -659,7 +666,7 @@ FEATURES = [
    "Abbr_yes",
    "AdpType_circ",
    "AdpType_comprep",
-   "AdpType_prep ",
+   "AdpType_prep",
    "AdpType_post",
    "AdpType_voc",
    "AdvType_adadj,"
