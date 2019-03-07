@@ -338,6 +338,17 @@ class Errors(object):
             "or with a getter AND setter.")
     E120 = ("Can't set custom extension attributes during retokenization. "
             "Expected dict mapping attribute names to values, but got: {value}")
+    E121 = ("Can't bulk merge spans. Attribute length {attr_len} should be "
+            "equal to span length ({span_len}).")
+    E122 = ("Cannot find token to be split. Did it get merged?")
+    E123 = ("Cannot find head of token to be split. Did it get merged?")
+    E124 = ("Cannot read from file: {path}. Supported formats: .json, .msg")
+    E125 = ("Unexpected value: {value}")
+    E126 = ("Unexpected matcher predicate: '{bad}'. Expected one of: {good}. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
+    E127 = ("Cannot create phrase pattern representation for length 0. This "
+            "is likely a bug in spaCy.")
+
 
 
 @add_codes

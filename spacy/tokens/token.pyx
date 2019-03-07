@@ -8,42 +8,82 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
+
 import numpy
 from thinc.neural.util import get_array_module
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
-from .. import parts_of_speech
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
 from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
+from ..symbols cimport conj
+
+from .. import parts_of_speech
+from .. import util
 from ..compat import is_config
 from ..errors import Errors, Warnings, user_warning, models_warning
-from .. import util
 from .underscore import Underscore, get_ext_args
 
 
 cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace,
-    etc."""
+    etc.
+
+    DOCS: https://spacy.io/api/token
+    """
     @classmethod
     def set_extension(cls, name, **kwargs):
-        if cls.has_extension(name) and not kwargs.get('force', False):
-            raise ValueError(Errors.E090.format(name=name, obj='Token'))
+        """Define a custom attribute which becomes available as `Token._`.
+
+        name (unicode): Name of the attribute to set.
+        default: Optional default value of the attribute.
+        getter (callable): Optional getter function.
+        setter (callable): Optional setter function.
+        method (callable): Optional method for method extension.
+        force (bool): Force overwriting existing attribute.
+
+        DOCS: https://spacy.io/api/token#set_extension
+        USAGE: https://spacy.io/usage/processing-pipelines#custom-components-attributes
+        """
+        if cls.has_extension(name) and not kwargs.get("force", False):
+            raise ValueError(Errors.E090.format(name=name, obj="Token"))
         Underscore.token_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):
+        """Look up a previously registered extension by name.
+
+        name (unicode): Name of the extension.
+        RETURNS (tuple): A `(default, method, getter, setter)` tuple.
+
+        DOCS: https://spacy.io/api/token#get_extension
+        """
         return Underscore.token_extensions.get(name)
 
     @classmethod
     def has_extension(cls, name):
+        """Check whether an extension has been registered.
+
+        name (unicode): Name of the extension.
+        RETURNS (bool): Whether the extension has been registered.
+
+        DOCS: https://spacy.io/api/token#has_extension
+        """
         return name in Underscore.token_extensions
 
     @classmethod
     def remove_extension(cls, name):
+        """Remove a previously registered extension.
+
+        name (unicode): Name of the extension.
+        RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
+            removed extension.
+
+        DOCS: https://spacy.io/api/token#remove_extension
+        """
         if not cls.has_extension(name):
             raise ValueError(Errors.E046.format(name=name))
         return Underscore.token_extensions.pop(name)
@@ -54,6 +94,8 @@ cdef class Token:
         vocab (Vocab): A storage container for lexical types.
         doc (Doc): The parent document.
         offset (int): The index of the token within the document.
+
+        DOCS: https://spacy.io/api/token#init
         """
         self.vocab = vocab
         self.doc = doc
@@ -67,6 +109,8 @@ cdef class Token:
         """The number of unicode characters in the token, i.e. `token.text`.
 
         RETURNS (int): The number of unicode characters in the token.
+
+        DOCS: https://spacy.io/api/token#len
         """
         return self.c.lex.length
 
@@ -121,6 +165,7 @@ cdef class Token:
 
     @property
     def _(self):
+        """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.token_extensions, self,
                           start=self.idx, end=None)
 
@@ -130,12 +175,7 @@ cdef class Token:
         flag_id (int): The ID of the flag attribute.
         RETURNS (bool): Whether the flag is set.
 
-        EXAMPLE:
-            >>> from spacy.attrs import IS_TITLE
-            >>> doc = nlp(u'Give it back! He pleaded.')
-            >>> token = doc[0]
-            >>> token.check_flag(IS_TITLE)
-            True
+        DOCS: https://spacy.io/api/token#check_flag
         """
         return Lexeme.c_check_flag(self.c.lex, flag_id)
 
@@ -144,6 +184,8 @@ cdef class Token:
 
         i (int): The relative position of the token to get. Defaults to 1.
         RETURNS (Token): The token at position `self.doc[self.i+i]`.
+
+        DOCS: https://spacy.io/api/token#nbor
         """
         if self.i+i < 0 or (self.i+i >= len(self.doc)):
             raise IndexError(Errors.E042.format(i=self.i, j=i, length=len(self.doc)))
@@ -156,19 +198,21 @@ cdef class Token:
         other (object): The object to compare with. By default, accepts `Doc`,
             `Span`, `Token` and `Lexeme` objects.
         RETURNS (float): A scalar similarity score. Higher is more similar.
+
+        DOCS: https://spacy.io/api/token#similarity
         """
-        if 'similarity' in self.doc.user_token_hooks:
-            return self.doc.user_token_hooks['similarity'](self)
-        if hasattr(other, '__len__') and len(other) == 1 and hasattr(other, "__getitem__"):
-            if self.c.lex.orth == getattr(other[0], 'orth', None):
+        if "similarity" in self.doc.user_token_hooks:
+            return self.doc.user_token_hooks["similarity"](self)
+        if hasattr(other, "__len__") and len(other) == 1 and hasattr(other, "__getitem__"):
+            if self.c.lex.orth == getattr(other[0], "orth", None):
                 return 1.0
-        elif hasattr(other, 'orth'):
+        elif hasattr(other, "orth"):
             if self.c.lex.orth == other.orth:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj='Token'))
+            models_warning(Warnings.W007.format(obj="Token"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj='Token'))
+            user_warning(Warnings.W008.format(obj="Token"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -202,7 +246,7 @@ cdef class Token:
         def __get__(self):
             cdef unicode orth = self.vocab.strings[self.c.lex.orth]
             if self.c.spacy:
-                return orth + u' '
+                return orth + " "
             else:
                 return orth
 
@@ -215,8 +259,8 @@ cdef class Token:
         """RETURNS (float): A scalar value indicating the positivity or
             negativity of the token."""
         def __get__(self):
-            if 'sentiment' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['sentiment'](self)
+            if "sentiment" in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks["sentiment"](self)
             return self.c.lex.sentiment
 
     property lang:
@@ -298,6 +342,7 @@ cdef class Token:
         """RETURNS (uint64): ID of coarse-grained part-of-speech tag."""
         def __get__(self):
             return self.c.pos
+
         def __set__(self, pos):
             self.c.pos = pos
 
@@ -322,10 +367,12 @@ cdef class Token:
         the object.
 
         RETURNS (bool): Whether a word vector is associated with the object.
+
+        DOCS: https://spacy.io/api/token#has_vector
         """
         def __get__(self):
             if 'has_vector' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['has_vector'](self)
+                return self.doc.user_token_hooks["has_vector"](self)
             if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
                 return True
             return self.vocab.has_vector(self.c.lex.orth)
@@ -335,10 +382,12 @@ cdef class Token:
 
         RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
             representing the token's semantics.
+
+        DOCS: https://spacy.io/api/token#vector
         """
         def __get__(self):
             if 'vector' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['vector'](self)
+                return self.doc.user_token_hooks["vector"](self)
             if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
                 return self.doc.tensor[self.i]
             else:
@@ -348,23 +397,35 @@ cdef class Token:
         """The L2 norm of the token's vector representation.
 
         RETURNS (float): The L2 norm of the vector representation.
+
+        DOCS: https://spacy.io/api/token#vector_norm
         """
         def __get__(self):
             if 'vector_norm' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['vector_norm'](self)
+                return self.doc.user_token_hooks["vector_norm"](self)
             vector = self.vector
             return numpy.sqrt((vector ** 2).sum())
 
     property n_lefts:
-        """RETURNS (int): The number of leftward immediate children of the
+        """The number of leftward immediate children of the word, in the
+        syntactic dependency parse.
+
+        RETURNS (int): The number of leftward immediate children of the
             word, in the syntactic dependency parse.
+
+        DOCS: https://spacy.io/api/token#n_lefts
         """
         def __get__(self):
             return self.c.l_kids
 
     property n_rights:
-        """RETURNS (int): The number of rightward immediate children of the
+        """The number of rightward immediate children of the word, in the
+        syntactic dependency parse.
+
+        RETURNS (int): The number of rightward immediate children of the
             word, in the syntactic dependency parse.
+
+        DOCS: https://spacy.io/api/token#n_rights
         """
         def __get__(self):
             return self.c.r_kids
@@ -373,7 +434,7 @@ cdef class Token:
         """RETURNS (Span): The sentence span that the token is a part of."""
         def __get__(self):
             if 'sent' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['sent'](self)
+                return self.doc.user_token_hooks["sent"](self)
             return self.doc[self.i : self.i+1].sent
 
     property sent_start:
@@ -390,8 +451,13 @@ cdef class Token:
             self.is_sent_start = value
 
     property is_sent_start:
-        """RETURNS (bool / None): Whether the token starts a sentence.
+        """A boolean value indicating whether the token starts a sentence.
+        `None` if unknown. Defaults to `True` for the first token in the `Doc`.
+
+        RETURNS (bool / None): Whether the token starts a sentence.
             None if unknown.
+
+        DOCS: https://spacy.io/api/token#is_sent_start
         """
         def __get__(self):
             if self.c.sent_start == 0:
@@ -418,6 +484,8 @@ cdef class Token:
         dependency parse.
 
         YIELDS (Token): A left-child of the token.
+
+        DOCS: https://spacy.io/api/token#lefts
         """
         def __get__(self):
             cdef int nr_iter = 0
@@ -429,13 +497,15 @@ cdef class Token:
                 nr_iter += 1
                 # This is ugly, but it's a way to guard out infinite loops
                 if nr_iter >= 10000000:
-                    raise RuntimeError(Errors.E045.format(attr='token.lefts'))
+                    raise RuntimeError(Errors.E045.format(attr="token.lefts"))
 
     property rights:
         """The rightward immediate children of the word, in the syntactic
         dependency parse.
 
         YIELDS (Token): A right-child of the token.
+
+        DOCS: https://spacy.io/api/token#rights
         """
         def __get__(self):
             cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
@@ -447,7 +517,7 @@ cdef class Token:
                 ptr -= 1
                 nr_iter += 1
                 if nr_iter >= 10000000:
-                    raise RuntimeError(Errors.E045.format(attr='token.rights'))
+                    raise RuntimeError(Errors.E045.format(attr="token.rights"))
             tokens.reverse()
             for t in tokens:
                 yield t
@@ -455,7 +525,9 @@ cdef class Token:
     property children:
         """A sequence of the token's immediate syntactic children.
 
-        YIELDS (Token): A child token such that child.head==self
+        YIELDS (Token): A child token such that `child.head==self`.
+
+        DOCS: https://spacy.io/api/token#children
         """
         def __get__(self):
             yield from self.lefts
@@ -467,6 +539,8 @@ cdef class Token:
 
         YIELDS (Token): A descendent token such that
             `self.is_ancestor(descendent) or token == self`.
+
+        DOCS: https://spacy.io/api/token#subtree
         """
         def __get__(self):
             for word in self.lefts:
@@ -496,11 +570,13 @@ cdef class Token:
 
         YIELDS (Token): A sequence of ancestor tokens such that
             `ancestor.is_ancestor(self)`.
+
+        DOCS: https://spacy.io/api/token#ancestors
         """
         def __get__(self):
             cdef const TokenC* head_ptr = self.c
-            # guard against infinite loop, no token can have
-            # more ancestors than tokens in the tree
+            # Guard against infinite loop, no token can have
+            # more ancestors than tokens in the tree.
             cdef int i = 0
             while head_ptr.head != 0 and i < self.doc.length:
                 head_ptr += head_ptr.head
@@ -513,6 +589,8 @@ cdef class Token:
 
         descendant (Token): Another token.
         RETURNS (bool): Whether this token is the ancestor of the descendant.
+
+        DOCS: https://spacy.io/api/token#is_ancestor
         """
         if self.doc is not descendant.doc:
             return False
@@ -528,34 +606,28 @@ cdef class Token:
             return self.doc[self.i + self.c.head]
 
         def __set__(self, Token new_head):
-            # this function sets the head of self to new_head
-            # and updates the counters for left/right dependents
-            # and left/right corner for the new and the old head
-
-            # do nothing if old head is new head
+            # This function sets the head of self to new_head and updates the
+            # counters for left/right dependents and left/right corner for the
+            # new and the old head
+            # Do nothing if old head is new head
             if self.i + self.c.head == new_head.i:
                 return
-
             cdef Token old_head = self.head
             cdef int rel_newhead_i = new_head.i - self.i
-
-            # is the new head a descendant of the old head
+            # Is the new head a descendant of the old head
             cdef bint is_desc = old_head.is_ancestor(new_head)
-
             cdef int new_edge
             cdef Token anc, child
-
-            # update number of deps of old head
+            # Update number of deps of old head
             if self.c.head > 0:  # left dependent
                 old_head.c.l_kids -= 1
                 if self.c.l_edge == old_head.c.l_edge:
-                    # the token dominates the left edge so the left edge of
-                    # the  head may change when the token is reattached, it may
+                    # The token dominates the left edge so the left edge of
+                    # the head may change when the token is reattached, it may
                     # not change if the new head is a descendant of the current
-                    # head
-
+                    # head.
                     new_edge = self.c.l_edge
-                    # the new l_edge is the left-most l_edge on any of the
+                    # The new l_edge is the left-most l_edge on any of the
                     # other dependents where the l_edge is left of the head,
                     # otherwise it is the head
                     if not is_desc:
@@ -566,21 +638,18 @@ cdef class Token:
                             if child.c.l_edge < new_edge:
                                 new_edge = child.c.l_edge
                         old_head.c.l_edge = new_edge
-
-                    # walk up the tree from old_head and assign new l_edge to
+                    # Walk up the tree from old_head and assign new l_edge to
                     # ancestors until an ancestor already has an l_edge that's
                     # further left
                     for anc in old_head.ancestors:
                         if anc.c.l_edge <= new_edge:
                             break
                         anc.c.l_edge = new_edge
-
             elif self.c.head < 0:  # right dependent
                 old_head.c.r_kids -= 1
-                # do the same thing as for l_edge
+                # Do the same thing as for l_edge
                 if self.c.r_edge == old_head.c.r_edge:
                     new_edge = self.c.r_edge
-
                     if not is_desc:
                         new_edge = old_head.i
                         for child in old_head.children:
@@ -589,16 +658,14 @@ cdef class Token:
                             if child.c.r_edge > new_edge:
                                 new_edge = child.c.r_edge
                         old_head.c.r_edge = new_edge
-
                     for anc in old_head.ancestors:
                         if anc.c.r_edge >= new_edge:
                             break
                         anc.c.r_edge = new_edge
-
-            # update number of deps of new head
+            # Update number of deps of new head
             if rel_newhead_i > 0:  # left dependent
                 new_head.c.l_kids += 1
-                # walk up the tree from new head and set l_edge to self.l_edge
+                # Walk up the tree from new head and set l_edge to self.l_edge
                 # until you hit a token with an l_edge further to the left
                 if self.c.l_edge < new_head.c.l_edge:
                     new_head.c.l_edge = self.c.l_edge
@@ -606,34 +673,33 @@ cdef class Token:
                         if anc.c.l_edge <= self.c.l_edge:
                             break
                         anc.c.l_edge = self.c.l_edge
-
             elif rel_newhead_i < 0:  # right dependent
                 new_head.c.r_kids += 1
-                # do the same as for l_edge
+                # Do the same as for l_edge
                 if self.c.r_edge > new_head.c.r_edge:
                     new_head.c.r_edge = self.c.r_edge
                     for anc in new_head.ancestors:
                         if anc.c.r_edge >= self.c.r_edge:
                             break
                         anc.c.r_edge = self.c.r_edge
-
-            # set new head
+            # Set new head
             self.c.head = rel_newhead_i
 
     property conjuncts:
         """A sequence of coordinated tokens, including the token itself.
 
         YIELDS (Token): A coordinated token.
+
+        DOCS: https://spacy.io/api/token#conjuncts
         """
         def __get__(self):
-            """Get a list of conjoined words."""
             cdef Token word
-            if 'conjuncts' in self.doc.user_token_hooks:
-                yield from self.doc.user_token_hooks['conjuncts'](self)
+            if "conjuncts" in self.doc.user_token_hooks:
+                yield from self.doc.user_token_hooks["conjuncts"](self)
             else:
-                if self.dep_ != 'conj':
+                if self.dep != conj:
                     for word in self.rights:
-                        if word.dep_ == 'conj':
+                        if word.dep == conj:
                             yield word
                             yield from word.conjuncts
 
@@ -670,7 +736,7 @@ cdef class Token:
         RETURNS (unicode): IOB code of named entity tag.
         """
         def __get__(self):
-            iob_strings = ('', 'I', 'O', 'B')
+            iob_strings = ("", "I", "O", "B")
             return iob_strings[self.c.ent_iob]
 
     property ent_id:
@@ -697,7 +763,7 @@ cdef class Token:
         """RETURNS (unicode): The trailing whitespace character, if present.
         """
         def __get__(self):
-            return ' ' if self.c.spacy else ''
+            return " " if self.c.spacy else ""
 
     property orth_:
         """RETURNS (unicode): Verbatim text content (identical to
@@ -770,6 +836,7 @@ cdef class Token:
         """RETURNS (unicode): Coarse-grained part-of-speech tag."""
         def __get__(self):
             return parts_of_speech.NAMES[self.c.pos]
+
         def __set__(self, pos_name):
             self.c.pos = parts_of_speech.IDS[pos_name]
 

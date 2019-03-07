@@ -1,4 +1,10 @@
 # coding: utf8
+"""
+spaCy's built in visualization suite for dependencies and named entities.
+
+DOCS: https://spacy.io/api/top-level#displacy
+USAGE: https://spacy.io/usage/visualizers
+"""
 from __future__ import unicode_literals
 
 from .render import DependencyRenderer, EntityRenderer
@@ -25,6 +31,9 @@ def render(
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     RETURNS (unicode): Rendered HTML markup.
+
+    DOCS: https://spacy.io/api/top-level#displacy.render
+    USAGE: https://spacy.io/usage/visualizers
     """
     factories = {
         "dep": (DependencyRenderer, parse_deps),
@@ -71,6 +80,9 @@ def serve(
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
     host (unicode): Host to serve visualisation.
+
+    DOCS: https://spacy.io/api/top-level#displacy.serve
+    USAGE: https://spacy.io/usage/visualizers
     """
     from wsgiref import simple_server
 
