@@ -1,7 +1,9 @@
+from . cimport symbols
+
 # Reserve 64 values for flag features
 cdef enum attr_id_t:
-    NULL_ATTR
-    IS_ALPHA
+    NULL_ATTR = 0
+    IS_ALPHA = symbols.IS_ALPHA
     IS_ASCII
     IS_DIGIT
     IS_LOWER
@@ -20,7 +22,7 @@ cdef enum attr_id_t:
     IS_RIGHT_PUNCT
     IS_CURRENCY
 
-    FLAG19 = 19
+    FLAG19 = symbols.FLAG19
     FLAG20
     FLAG21
     FLAG22
@@ -66,7 +68,7 @@ cdef enum attr_id_t:
     FLAG62
     FLAG63
 
-    ID
+    ID = symbols.ID
     ORTH
     LOWER
     NORM
@@ -74,7 +76,7 @@ cdef enum attr_id_t:
     PREFIX
     SUFFIX
 
-    LENGTH
+    LENGTH = symbols.LENGTH
     CLUSTER
     LEMMA
     POS
@@ -86,5 +88,4 @@ cdef enum attr_id_t:
     SENT_START
     SPACY
     PROB
-
     LANG

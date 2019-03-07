@@ -19,7 +19,7 @@ cdef enum symbol_t:
     IS_RIGHT_PUNCT
     IS_CURRENCY
 
-    FLAG19 = 19
+    FLAG19 = 1000
     FLAG20
     FLAG21
     FLAG22
@@ -65,7 +65,7 @@ cdef enum symbol_t:
     FLAG62
     FLAG63
 
-    ID
+    ID = 2000
     ORTH
     LOWER
     NORM
@@ -73,7 +73,7 @@ cdef enum symbol_t:
     PREFIX
     SUFFIX
 
-    LENGTH
+    LENGTH = 3000
     CLUSTER
     LEMMA
     POS
@@ -87,7 +87,7 @@ cdef enum symbol_t:
     PROB
     LANG
 
-    ADJ
+    ADJ = 4000
     ADP
     ADV
     AUX
@@ -108,7 +108,7 @@ cdef enum symbol_t:
     EOL
     SPACE
 
-    Animacy_anim
+    Animacy_anim = 5000
     Animacy_inan
     Animacy_hum # U20
     Animacy_nhum
@@ -385,7 +385,7 @@ cdef enum symbol_t:
     VerbType_mod # U
     VerbType_light # U
 
-    PERSON
+    PERSON = 6000
     NORP
     FACILITY
     ORG
@@ -397,7 +397,7 @@ cdef enum symbol_t:
     LANGUAGE
     LAW
 
-    DATE
+    DATE = 7000
     TIME
     PERCENT
     MONEY
@@ -405,7 +405,8 @@ cdef enum symbol_t:
     ORDINAL
     CARDINAL
 
-    acomp
+    acl = 8000
+    acomp 
     advcl
     advmod
     agent
@@ -458,5 +459,3 @@ cdef enum symbol_t:
     rcmod
     root
     xcomp
-
-    acl
