@@ -3,8 +3,9 @@
 from __future__ import unicode_literals
 
 from libc.string cimport memset
-import ujson as json
+import srsly
 
+from .strings import get_string_id
 from . import symbols
 from .attrs cimport POS, IS_SPACE
 from .attrs import LEMMA, intify_attrs
@@ -232,7 +233,7 @@ cdef class Morphology:
             tag_ptr = <RichTagC*>self.tags.get(key)
             if tag_ptr != NULL:
                 json_tags.append(tag_to_json(tag_ptr[0]))
-        return json.dumps(json_tags)
+        return srsly.json_dumps(json_tags)
 
     def from_bytes(self, byte_string):
         raise NotImplementedError
