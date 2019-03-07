@@ -31,3 +31,8 @@ cdef class Morphology:
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
 
     cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1
+
+
+cdef int check_feature(const MorphAnalysisC* tag, attr_t feature) nogil
+
+cdef tag_to_json(MorphAnalysisC tag)
