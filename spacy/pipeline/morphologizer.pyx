@@ -6,18 +6,17 @@ cimport numpy as np
 
 from thinc.api import chain
 from thinc.neural.util import to_categorical, copy_array, get_array_module
-from . import util
-from .pipeline import Pipe
-from ._ml import Tok2Vec, build_morphologizer_model
-from ._ml import link_vectors_to_models, zero_init, flatten
-from ._ml import create_default_optimizer
-from .errors import Errors, TempErrors
-from .compat import basestring_
-from .tokens.doc cimport Doc
-from .vocab cimport Vocab
-from .morphology cimport Morphology
-from .morphology import parse_feature, IDS, FIELDS, FIELD_SIZES, NAMES
-from .pipeline import Pipe
+from .. import util
+from .pipes import Pipe
+from .._ml import Tok2Vec, build_morphologizer_model
+from .._ml import link_vectors_to_models, zero_init, flatten
+from .._ml import create_default_optimizer
+from ..errors import Errors, TempErrors
+from ..compat import basestring_
+from ..tokens.doc cimport Doc
+from ..vocab cimport Vocab
+from ..morphology cimport Morphology
+from ..morphology import parse_feature, IDS, FIELDS, FIELD_SIZES, NAMES
 
 
 class Morphologizer(Pipe):
