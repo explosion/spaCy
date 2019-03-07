@@ -42,7 +42,7 @@ MOD_NAMES = [
     "spacy.attrs",
     "spacy.morphology",
     "spacy.pipeline.pipes",
-    "spacy.pipelines.morphologizer",
+    "spacy.pipeline.morphologizer",
     "spacy.syntax.stateclass",
     "spacy.syntax._state",
     "spacy.tokenizer",
