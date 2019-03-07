@@ -1,3 +1,6 @@
+from ..vocab cimport Vocab
+from ..typedefs cimport hash_t
+
 cdef class Morphanalysis:
     """Control access to morphological features for a token."""
     def __init__(self, Vocab vocab, features=None):
