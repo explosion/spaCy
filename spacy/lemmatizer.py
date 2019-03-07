@@ -48,6 +48,11 @@ class Lemmatizer(object):
         avoid lemmatization entirely.
         """
         morphology = {} if morphology is None else morphology
+        morphology = dict(morphology)
+        for key, value in list(morphology.items()):
+            if value is True:
+                feat, value = key.split('_')
+                morphology[feat] = value
         others = [
             key
             for key in morphology
@@ -68,13 +73,13 @@ class Lemmatizer(object):
             return True
         elif univ_pos == "adj" and morphology.get("Degree") == "pos":
             return True
-        elif VerbForm_inf in morphology or 'VerbForm_inf' in morphology:
+        elif morphology.get('VerbForm') == 'inf':
             return True
-        elif VerbForm_none in morphology or 'VerbForm_none' in morphology:
+        elif morphology.get('VerbForm') == 'none':
             return True
-        elif Number_sing in morphology or 'Number_sing' in morphology:
+        elif morphology.get('VerbForm') == 'inf':
             return True
-        elif Degree_pos in morphology or 'Degree_pos' in morphology:
+        elif morphology.get('Degree') == 'pos':
             return True
         else:
             return False
