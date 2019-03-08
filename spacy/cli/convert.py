@@ -31,7 +31,7 @@ FILE_TYPES = ("json", "jsonl")
     output_dir=("Output directory for converted file", "positional", None, str),
     file_type=("Type of data to produce: 'jsonl' or 'json'", "option", "t", str),
     n_sents=("Number of sentences per doc", "option", "n", int),
-    converter=("Name of converter (auto, iob, conllu or ner)", "option", "c", str),
+    converter=("Converter: {}".format(tuple(CONVERTERS.keys())), "option", "c", str),
     lang=("Language (if tokenizer required)", "option", "l", str),
     morphology=("Enable appending morphology to tags", "flag", "m", bool),
 )
