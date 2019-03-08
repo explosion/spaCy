@@ -358,14 +358,6 @@ class Tagger(Pipe):
         self.cfg.setdefault("cnn_maxout_pieces", 2)
 
     @property
-    def set_morphology(self):
-        return self.cfg.get("set_morphology", True)
-
-    @set_morphology.setter
-    def set_morphology(self, value):
-        self.cfg["set_morphology"] = value
-
-    @property
     def labels(self):
         return tuple(self.vocab.morphology.tag_names)
 
@@ -412,6 +404,7 @@ class Tagger(Pipe):
         cdef Doc doc
         cdef int idx = 0
         cdef Vocab vocab = self.vocab
+        assign_morphology = self.cfg.get("set_morphology", True)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
@@ -419,7 +412,7 @@ class Tagger(Pipe):
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0:
-                    if doc.c[j].pos == 0 and self.set_morphology:
+                    if doc.c[j].pos == 0 and assign_morphology:
                         # Don't clobber preset lemmas
                         lemma = doc.c[j].lemma
                         vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
