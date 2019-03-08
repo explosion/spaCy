@@ -98,6 +98,10 @@ def parse_feature(feature):
     return (field, offset)
 
 
+cdef int attribute_to_field(unicode attribute_name):
+    return LOWER_FIELDS[attribute_name]
+
+
 def get_field_id(feature):
     return FEATURE_FIELDS[feature]
 
@@ -709,7 +713,6 @@ cdef int set_feature(MorphAnalysisC* tag,
         raise ValueError("Unknown feature: %s (%d)" % (FEATURE_NAMES.get(feature), feature))
 
 
-
 FIELDS = {
     'Abbr': Field_Abbr,
     'AdpType': Field_AdpType,
@@ -755,6 +758,53 @@ FIELDS = {
     'Voice': Field_Voice,
     'VerbType': Field_VerbType
 }
+
+LOWER_FIELDS = {
+    'abbr': Field_Abbr,
+    'adp_type': Field_AdpType,
+    'adv_type': Field_AdvType,
+    'animacy': Field_Animacy,
+    'aspect': Field_Aspect,
+    'case': Field_Case,
+    'conj_type': Field_ConjType,
+    'connegative': Field_Connegative,
+    'definite': Field_Definite,
+    'degree': Field_Degree,
+    'derivation': Field_Derivation,
+    'echo': Field_Echo,
+    'foreign': Field_Foreign,
+    'gender': Field_Gender,
+    'hyph': Field_Hyph,
+    'inf_form': Field_InfForm,
+    'mood': Field_Mood,
+    'name_type': Field_NameType,
+    'negative': Field_Negative,
+    'noun_type': Field_NounType,
+    'number': Field_Number,
+    'num_form': Field_NumForm,
+    'num_type': Field_NumType,
+    'num_value': Field_NumValue,
+    'part_form': Field_PartForm,
+    'part_type': Field_PartType,
+    'person': Field_Person,
+    'polite': Field_Polite,
+    'polarity': Field_Polarity,
+    'poss': Field_Poss,
+    'prefix': Field_Prefix,
+    'prep_case': Field_PrepCase,
+    'pron_type': Field_PronType,
+    'punct_side': Field_PunctSide,
+    'punct_type': Field_PunctType,
+    'reflex': Field_Reflex,
+    'style': Field_Style,
+    'style_variant': Field_StyleVariant,
+    'tense': Field_Tense,
+    'typo': Field_Typo,
+    'verb_form': Field_VerbForm,
+    'voice': Field_Voice,
+    'verb_type': Field_VerbType
+}
+
 
 FEATURES = [
    "Abbr_yes",
