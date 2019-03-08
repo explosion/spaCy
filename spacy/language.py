@@ -104,8 +104,9 @@ class Language(object):
     Defaults (class): Settings, data and factory methods for creating the `nlp`
         object and processing pipeline.
     lang (unicode): Two-letter language ID, i.e. ISO code.
-    """
 
+    DOCS: https://spacy.io/api/language
+    """
     Defaults = BaseDefaults
     lang = None
 

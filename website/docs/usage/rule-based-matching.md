@@ -424,7 +424,7 @@ take a path to a JSON file containing the patterns. This lets you reuse the
 component with different patterns, depending on your application:
 
 ```python
-html_merger = BadHTMLMerger(nlp, path='/path/to/patterns.json')
+html_merger = BadHTMLMerger(nlp, path="/path/to/patterns.json")
 ```
 
 <Infobox title="📖 Processing pipelines">

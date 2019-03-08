@@ -7,28 +7,25 @@ from __future__ import unicode_literals
 
 cimport cython
 cimport numpy as np
+from libc.string cimport memcpy, memset
+from libc.math cimport sqrt
+
 import numpy
 import numpy.linalg
 import struct
 import srsly
 from thinc.neural.util import get_array_module, copy_array
-import srsly
 
-from libc.string cimport memcpy, memset
-from libc.math cimport sqrt
-
-from .span cimport Span
-from .token cimport Token
 from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
-from ..attrs import intify_attrs, IDS
-from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, SENT_START
+from ..attrs cimport ENT_TYPE, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
+
+from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
 from ..errors import deprecation_warning, models_warning, user_warning
@@ -36,6 +33,7 @@ from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
+
 
 DEF PADDING = 5
 
@@ -77,7 +75,7 @@ def _get_chunker(lang):
         return None
     except KeyError:
         return None
-    return cls.Defaults.syntax_iterators.get(u'noun_chunks')
+    return cls.Defaults.syntax_iterators.get("noun_chunks")
 
 
 cdef class Doc:
@@ -94,23 +92,60 @@ cdef class Doc:
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
                       spaces=[True, False, False])
+
+    DOCS: https://spacy.io/api/doc
     """
+
     @classmethod
     def set_extension(cls, name, **kwargs):
-        if cls.has_extension(name) and not kwargs.get('force', False):
-            raise ValueError(Errors.E090.format(name=name, obj='Doc'))
+        """Define a custom attribute which becomes available as `Doc._`.
+
+        name (unicode): Name of the attribute to set.
+        default: Optional default value of the attribute.
+        getter (callable): Optional getter function.
+        setter (callable): Optional setter function.
+        method (callable): Optional method for method extension.
+        force (bool): Force overwriting existing attribute.
+
+        DOCS: https://spacy.io/api/doc#set_extension
+        USAGE: https://spacy.io/usage/processing-pipelines#custom-components-attributes
+        """
+        if cls.has_extension(name) and not kwargs.get("force", False):
+            raise ValueError(Errors.E090.format(name=name, obj="Doc"))
         Underscore.doc_extensions[name] = get_ext_args(**kwargs)
 
     @classmethod
     def get_extension(cls, name):
+        """Look up a previously registered extension by name.
+
+        name (unicode): Name of the extension.
+        RETURNS (tuple): A `(default, method, getter, setter)` tuple.
+
+        DOCS: https://spacy.io/api/doc#get_extension
+        """
         return Underscore.doc_extensions.get(name)
 
     @classmethod
     def has_extension(cls, name):
+        """Check whether an extension has been registered.
+
+        name (unicode): Name of the extension.
+        RETURNS (bool): Whether the extension has been registered.
+
+        DOCS: https://spacy.io/api/doc#has_extension
+        """
         return name in Underscore.doc_extensions
 
     @classmethod
     def remove_extension(cls, name):
+        """Remove a previously registered extension.
+
+        name (unicode): Name of the extension.
+        RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
+            removed extension.
+
+        DOCS: https://spacy.io/api/doc#remove_extension
+        """
         if not cls.has_extension(name):
             raise ValueError(Errors.E046.format(name=name))
         return Underscore.doc_extensions.pop(name)
@@ -128,6 +163,8 @@ cdef class Doc:
             it is not. If `None`, defaults to `[True]*len(words)`
         user_data (dict or None): Optional extra data to attach to the Doc.
         RETURNS (Doc): The newly constructed object.
+
+        DOCS: https://spacy.io/api/doc#init
         """
         self.vocab = vocab
         size = 20
@@ -151,7 +188,7 @@ cdef class Doc:
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
-        self.tensor = numpy.zeros((0,), dtype='float32')
+        self.tensor = numpy.zeros((0,), dtype="float32")
         self.user_data = {} if user_data is None else user_data
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
@@ -184,6 +221,7 @@ cdef class Doc:
 
     @property
     def _(self):
+        """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.doc_extensions, self)
 
     @property
@@ -195,7 +233,7 @@ cdef class Doc:
         b) sent.is_parsed is set to True;
         c) At least one token other than the first where sent_start is not None.
         """
-        if 'sents' in self.user_hooks:
+        if "sents" in self.user_hooks:
             return True
         if self.is_parsed:
             return True
@@ -227,11 +265,12 @@ cdef class Doc:
             supported, as `Span` objects must be contiguous (cannot have gaps).
             You can use negative indices and open-ended ranges, which have
             their normal Python semantics.
+
+        DOCS: https://spacy.io/api/doc#getitem
         """
         if isinstance(i, slice):
             start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
             return Span(self, start, stop, label=0)
-
         if i < 0:
             i = self.length + i
         bounds_check(i, self.length, PADDING)
@@ -244,8 +283,7 @@ cdef class Doc:
         than-Python speeds are required, you can instead access the annotations
         as a numpy array, or access the underlying C data directly from Cython.
 
-        EXAMPLE:
-            >>> for token in doc
+        DOCS: https://spacy.io/api/doc#iter
         """
         cdef int i
         for i in range(self.length):
@@ -256,16 +294,15 @@ cdef class Doc:
 
         RETURNS (int): The number of tokens in the document.
 
-        EXAMPLE:
-            >>> len(doc)
+        DOCS: https://spacy.io/api/doc#len
         """
         return self.length
 
     def __unicode__(self):
-        return u''.join([t.text_with_ws for t in self])
+        return "".join([t.text_with_ws for t in self])
 
     def __bytes__(self):
-        return u''.join([t.text_with_ws for t in self]).encode('utf-8')
+        return "".join([t.text_with_ws for t in self]).encode("utf-8")
 
     def __str__(self):
         if is_config(python3=True):
@@ -290,6 +327,8 @@ cdef class Doc:
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
         RETURNS (Span): The newly constructed object.
+
+        DOCS: https://spacy.io/api/doc#char_span
         """
         if not isinstance(label, int):
             label = self.vocab.strings.add(label)
@@ -311,9 +350,11 @@ cdef class Doc:
         other (object): The object to compare with. By default, accepts `Doc`,
             `Span`, `Token` and `Lexeme` objects.
         RETURNS (float): A scalar similarity score. Higher is more similar.
+
+        DOCS: https://spacy.io/api/doc#similarity
         """
-        if 'similarity' in self.user_hooks:
-            return self.user_hooks['similarity'](self, other)
+        if "similarity" in self.user_hooks:
+            return self.user_hooks["similarity"](self, other)
         if isinstance(other, (Lexeme, Token)) and self.length == 1:
             if self.c[0].lex.orth == other.orth:
                 return 1.0
@@ -325,21 +366,25 @@ cdef class Doc:
                 else:
                     return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj='Doc'))
+            models_warning(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj='Doc'))
+            user_warning(Warnings.W008.format(obj="Doc"))
             return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        vector = self.vector
+        xp = get_array_module(vector)
+        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
         """A boolean value indicating whether a word vector is associated with
         the object.
 
         RETURNS (bool): Whether a word vector is associated with the object.
+
+        DOCS: https://spacy.io/api/doc#has_vector
         """
         def __get__(self):
-            if 'has_vector' in self.user_hooks:
-                return self.user_hooks['has_vector'](self)
+            if "has_vector" in self.user_hooks:
+                return self.user_hooks["has_vector"](self)
             elif self.vocab.vectors.data.size:
                 return True
             elif self.tensor.size:
@@ -353,28 +398,25 @@ cdef class Doc:
 
         RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
             representing the document's semantics.
+
+        DOCS: https://spacy.io/api/doc#vector
         """
         def __get__(self):
-            if 'vector' in self.user_hooks:
-                return self.user_hooks['vector'](self)
+            if "vector" in self.user_hooks:
+                return self.user_hooks["vector"](self)
             if self._vector is not None:
                 return self._vector
             elif not len(self):
-                self._vector = numpy.zeros((self.vocab.vectors_length,),
-                                           dtype='f')
+                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype="f")
                 return self._vector
             elif self.vocab.vectors.data.size > 0:
-                vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
-                for token in self.c[:self.length]:
-                    vector += self.vocab.get_vector(token.lex.orth)
-                self._vector = vector / len(self)
+                self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
             elif self.tensor.size > 0:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:
-                return numpy.zeros((self.vocab.vectors_length,),
-                                   dtype='float32')
+                return numpy.zeros((self.vocab.vectors_length,), dtype="float32")
 
         def __set__(self, value):
             self._vector = value
@@ -383,10 +425,12 @@ cdef class Doc:
         """The L2 norm of the document's vector representation.
 
         RETURNS (float): The L2 norm of the vector representation.
+
+        DOCS: https://spacy.io/api/doc#vector_norm
         """
         def __get__(self):
-            if 'vector_norm' in self.user_hooks:
-                return self.user_hooks['vector_norm'](self)
+            if "vector_norm" in self.user_hooks:
+                return self.user_hooks["vector_norm"](self)
             cdef float value
             cdef double norm = 0
             if self._vector_norm is None:
@@ -405,7 +449,7 @@ cdef class Doc:
         RETURNS (unicode): The original verbatim text of the document.
         """
         def __get__(self):
-            return u''.join(t.text_with_ws for t in self)
+            return "".join(t.text_with_ws for t in self)
 
     property text_with_ws:
         """An alias of `Doc.text`, provided for duck-type compatibility with
@@ -417,21 +461,12 @@ cdef class Doc:
             return self.text
 
     property ents:
-        """Iterate over the entities in the document. Yields named-entity
-        `Span` objects, if the entity recognizer has been applied to the
-        document.
+        """The named entities in the document. Returns a tuple of named entity
+        `Span` objects, if the entity recognizer has been applied.
 
-        YIELDS (Span): Entities in the document.
+        RETURNS (tuple): Entities in the document, one `Span` per entity.
 
-        EXAMPLE: Iterate over the span to get individual Token objects,
-            or access the label:
-
-            >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
-            >>> ents = list(tokens.ents)
-            >>> assert ents[0].label == 346
-            >>> assert ents[0].label_ == 'PERSON'
-            >>> assert ents[0].orth_ == 'Best'
-            >>> assert ents[0].text == 'Mr. Best'
+        DOCS: https://spacy.io/api/doc#ents
         """
         def __get__(self):
             cdef int i
@@ -443,8 +478,8 @@ cdef class Doc:
                 token = &self.c[i]
                 if token.ent_iob == 1:
                     if start == -1:
-                        seq = ['%s|%s' % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
-                        raise ValueError(Errors.E093.format(seq=' '.join(seq)))
+                        seq = ["%s|%s" % (t.text, t.ent_iob_) for t in self[i-5:i+5]]
+                        raise ValueError(Errors.E093.format(seq=" ".join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
                         output.append(Span(self, start, i, label=label))
@@ -466,7 +501,6 @@ cdef class Doc:
             #    prediction
             # 3. Test basic data-driven ORTH gazetteer
             # 4. Test more nuanced date and currency regex
-
             tokens_in_ents = {}
             cdef attr_t entity_type
             cdef int ent_start, ent_end
@@ -480,7 +514,6 @@ cdef class Doc:
                                    self.vocab.strings[tokens_in_ents[token_index][2]]),
                             span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
                     tokens_in_ents[token_index] = (ent_start, ent_end, entity_type)
-
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
@@ -511,6 +544,8 @@ cdef class Doc:
         clauses.
 
         YIELDS (Span): Noun chunks in the document.
+
+        DOCS: https://spacy.io/api/doc#noun_chunks
         """
         def __get__(self):
             if not self.is_parsed:
@@ -534,15 +569,15 @@ cdef class Doc:
         dependency parse. If the parser is disabled, the `sents` iterator will
         be unavailable.
 
-        EXAMPLE:
-            >>> doc = nlp("This is a sentence. Here's another...")
-            >>> assert [s.root.text for s in doc.sents] == ["is", "'s"]
+        YIELDS (Span): Sentences in the document.
+
+        DOCS: https://spacy.io/api/doc#sents
         """
         def __get__(self):
             if not self.is_sentenced:
                 raise ValueError(Errors.E030)
-            if 'sents' in self.user_hooks:
-                yield from self.user_hooks['sents'](self)
+            if "sents" in self.user_hooks:
+                yield from self.user_hooks["sents"](self)
             else:
                 start = 0
                 for i in range(1, self.length):
@@ -607,17 +642,16 @@ cdef class Doc:
         if isinstance(py_attr_ids, basestring_):
             # Handle inputs like doc.to_array('ORTH')
             py_attr_ids = [py_attr_ids]
-        elif not hasattr(py_attr_ids, '__iter__'):
+        elif not hasattr(py_attr_ids, "__iter__"):
             # Handle inputs like doc.to_array(ORTH)
             py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
-        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, 'upper') else id_)
+        py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                        for id_ in py_attr_ids]
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
-        cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype='i')
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)),
-                               dtype=numpy.uint64)
+        cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
+        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
         c_output = <attr_t*>output.data
         c_attr_ids = <attr_id_t*>attr_ids.data
         cdef TokenC* token
@@ -629,8 +663,7 @@ cdef class Doc:
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
-    def count_by(self, attr_id_t attr_id, exclude=None,
-                 PreshCounter counts=None):
+    def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
         `{attribute (int): count (ints)}` frequencies, keyed by the values of
         the given attribute ID.
@@ -638,13 +671,7 @@ cdef class Doc:
         attr_id (int): The attribute ID to key the counts.
         RETURNS (dict): A dictionary mapping attributes to integer counts.
 
-        EXAMPLE:
-            >>> from spacy import attrs
-            >>> doc = nlp(u'apple apple orange banana')
-            >>> tokens.count_by(attrs.ORTH)
-            {12800L: 1, 11880L: 2, 7561L: 1}
-            >>> tokens.to_array([attrs.ORTH])
-            array([[11880], [11880], [7561], [12800]])
+        DOCS: https://spacy.io/api/doc#count_by
         """
         cdef int i
         cdef attr_t attr
@@ -685,13 +712,21 @@ cdef class Doc:
     cdef void set_parse(self, const TokenC* parsed) nogil:
         # TODO: This method is fairly misleading atm. It's used by Parser
         # to actually apply the parse calculated. Need to rethink this.
-
         # Probably we should use from_array?
         self.is_parsed = True
         for i in range(self.length):
             self.c[i] = parsed[i]
 
     def from_array(self, attrs, array):
+        """Load attributes from a numpy array. Write to a `Doc` object, from an
+        `(M, N)` array of attributes.
+
+        attrs (list) A list of attribute ID ints.
+        array (numpy.ndarray[ndim=2, dtype='int32']): The attribute values.
+        RETURNS (Doc): Itself.
+
+        DOCS: https://spacy.io/api/doc#from_array
+        """
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
         cdef int i, col
@@ -715,10 +750,10 @@ cdef class Doc:
                 for i in range(length):
                     if array[i, col] != 0:
                         self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
-        # set flags
+        # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
-        # if document is parsed, set children
+        # If document is parsed, set children
         if self.is_parsed:
             set_children_from_heads(self.c, self.length)
         return self
@@ -730,6 +765,8 @@ cdef class Doc:
 
         RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
             (n, n), where n = len(self).
+
+        DOCS: https://spacy.io/api/doc#get_lca_matrix
         """
         return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
 
@@ -738,9 +775,11 @@ cdef class Doc:
 
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
+
+        DOCS: https://spacy.io/api/doc#to_disk
         """
         path = util.ensure_path(path)
-        with path.open('wb') as file_:
+        with path.open("wb") as file_:
             file_.write(self.to_bytes(**exclude))
 
     def from_disk(self, path, **exclude):
@@ -750,9 +789,11 @@ cdef class Doc:
         path (unicode or Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         RETURNS (Doc): The modified `Doc` object.
+
+        DOCS: https://spacy.io/api/doc#from_disk
         """
         path = util.ensure_path(path)
-        with path.open('rb') as file_:
+        with path.open("rb") as file_:
             bytes_data = file_.read()
         return self.from_bytes(bytes_data, **exclude)
 
@@ -761,15 +802,16 @@ cdef class Doc:
 
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
+
+        DOCS: https://spacy.io/api/doc#to_bytes
         """
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
-
         if self.is_tagged:
             array_head.append(TAG)
-        # if doc parsed add head and dep attribute
+        # If doc parsed add head and dep attribute
         if self.is_parsed:
             array_head.extend([HEAD, DEP])
-        # otherwise add sent_start
+        # Otherwise add sent_start
         else:
             array_head.append(SENT_START)
         # Msgpack doesn't distinguish between lists and tuples, which is
@@ -777,17 +819,16 @@ cdef class Doc:
         # keys, we must have tuples. In values we just have to hope
         # users don't mind getting a list instead of a tuple.
         serializers = {
-            'text': lambda: self.text,
-            'array_head': lambda: array_head,
-            'array_body': lambda: self.to_array(array_head),
-            'sentiment': lambda: self.sentiment,
-            'tensor': lambda: self.tensor,
+            "text": lambda: self.text,
+            "array_head": lambda: array_head,
+            "array_body": lambda: self.to_array(array_head),
+            "sentiment": lambda: self.sentiment,
+            "tensor": lambda: self.tensor,
         }
-        if 'user_data' not in exclude and self.user_data:
+        if "user_data" not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
-            serializers['user_data_keys'] = lambda: srsly.msgpack_dumps(user_data_keys)
-            serializers['user_data_values'] = lambda: srsly.msgpack_dumps(user_data_values)
-
+            serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
+            serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -795,42 +836,40 @@ cdef class Doc:
 
         data (bytes): The string to load from.
         RETURNS (Doc): Itself.
+
+        DOCS: https://spacy.io/api/doc#from_bytes
         """
         if self.length != 0:
             raise ValueError(Errors.E033.format(length=self.length))
         deserializers = {
-            'text': lambda b: None,
-            'array_head': lambda b: None,
-            'array_body': lambda b: None,
-            'sentiment': lambda b: None,
-            'tensor': lambda b: None,
-            'user_data_keys': lambda b: None,
-            'user_data_values': lambda b: None,
+            "text": lambda b: None,
+            "array_head": lambda b: None,
+            "array_body": lambda b: None,
+            "sentiment": lambda b: None,
+            "tensor": lambda b: None,
+            "user_data_keys": lambda b: None,
+            "user_data_values": lambda b: None,
         }
-
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
         # users don't mind getting a list instead of a tuple.
-        if 'user_data' not in exclude and 'user_data_keys' in msg:
-            user_data_keys = srsly.msgpack_loads(msg['user_data_keys'], use_list=False)
-            user_data_values = srsly.msgpack_loads(msg['user_data_values'])
+        if "user_data" not in exclude and "user_data_keys" in msg:
+            user_data_keys = srsly.msgpack_loads(msg["user_data_keys"], use_list=False)
+            user_data_values = srsly.msgpack_loads(msg["user_data_values"])
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
-
         cdef int i, start, end, has_space
-
-        if 'sentiment' not in exclude and 'sentiment' in msg:
-            self.sentiment = msg['sentiment']
-        if 'tensor' not in exclude and 'tensor' in msg:
-            self.tensor = msg['tensor']
-
+        if "sentiment" not in exclude and "sentiment" in msg:
+            self.sentiment = msg["sentiment"]
+        if "tensor" not in exclude and "tensor" in msg:
+            self.tensor = msg["tensor"]
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
-        text = msg['text']
-        attrs = msg['array_body']
+        text = msg["text"]
+        attrs = msg["array_body"]
         for i in range(attrs.shape[0]):
             end = start + attrs[i, 0]
             has_space = attrs[i, 1]
@@ -838,11 +877,11 @@ cdef class Doc:
             lex = self.vocab.get(self.mem, orth_)
             self.push_back(lex, has_space)
             start = end + has_space
-        self.from_array(msg['array_head'][2:], attrs[:, 2:])
+        self.from_array(msg["array_head"][2:], attrs[:, 2:])
         return self
 
     def extend_tensor(self, tensor):
-        '''Concatenate a new tensor onto the doc.tensor object.
+        """Concatenate a new tensor onto the doc.tensor object.
 
         The doc.tensor attribute holds dense feature vectors
         computed by the models in the pipeline. Let's say a
@@ -850,7 +889,7 @@ cdef class Doc:
         per word. doc.tensor.shape will be (30, 128). After
         calling doc.extend_tensor with an array of shape (30, 64),
         doc.tensor == (30, 192).
-        '''
+        """
         xp = get_array_module(self.tensor)
         if self.tensor.size == 0:
             self.tensor.resize(tensor.shape, refcheck=False)
@@ -859,7 +898,7 @@ cdef class Doc:
             self.tensor = xp.hstack((self.tensor, tensor))
 
     def retokenize(self):
-        '''Context manager to handle retokenization of the Doc.
+        """Context manager to handle retokenization of the Doc.
         Modifications to the Doc's tokenization are stored, and then
         made all at once when the context manager exits. This is
         much more efficient, and less error-prone.
@@ -867,7 +906,10 @@ cdef class Doc:
         All views of the Doc (Span and Token) created before the
         retokenization are invalidated, although they may accidentally
         continue to work.
-        '''
+
+        DOCS: https://spacy.io/api/doc#retokenize
+        USAGE: https://spacy.io/usage/linguistic-features#retokenization
+        """
         return Retokenizer(self)
 
     def _bulk_merge(self, spans, attributes):
@@ -883,9 +925,10 @@ cdef class Doc:
         RETURNS (Token): The first newly merged token.
         """
         cdef unicode tag, lemma, ent_type
-
-        assert len(attributes) == len(spans), "attribute length should be equal to span length" + str(len(attributes)) +\
-                                              str(len(spans))
+        attr_len = len(attributes)
+        span_len = len(spans)
+        if not attr_len == span_len:
+            raise ValueError(Errors.E121.format(attr_len=attr_len, span_len=span_len))
         with self.retokenize() as retokenizer:
             for i, span in enumerate(spans):
                 fix_attributes(self, attributes[i])
@@ -916,13 +959,10 @@ cdef class Doc:
         elif not args:
             fix_attributes(self, attributes)
         elif args:
-            raise ValueError(Errors.E034.format(n_args=len(args),
-                                                args=repr(args),
+            raise ValueError(Errors.E034.format(n_args=len(args), args=repr(args),
                                                 kwargs=repr(attributes)))
         remove_label_if_necessary(attributes)
-
         attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
-
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -939,44 +979,47 @@ cdef class Doc:
         raise ValueError(Errors.E105)
 
     def to_json(self, underscore=None):
-        """Convert a Doc to JSON. Produces the same format used by the spacy
-        train command.
+        """Convert a Doc to JSON. The format it produces will be the new format
+        for the `spacy train` command (not implemented yet).
 
         underscore (list): Optional list of string names of custom doc._.
         attributes. Attribute values need to be JSON-serializable. Values will
         be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
         RETURNS (dict): The data in spaCy's JSON format.
+
+        DOCS: https://spacy.io/api/doc#to_json
         """
-        data = {'text': self.text}
-        data['ents'] = [{'start': ent.start_char, 'end': ent.end_char,
-                         'label': ent.label_} for ent in self.ents]
+        data = {"text": self.text}
+        if self.ents:
+            data["ents"] = [{"start": ent.start_char, "end": ent.end_char,
+                            "label": ent.label_} for ent in self.ents]
         sents = list(self.sents)
         if sents:
-            data['sents'] = [{'start': sent.start_char, 'end': sent.end_char}
+            data["sents"] = [{"start": sent.start_char, "end": sent.end_char}
                              for sent in sents]
         if self.cats:
-            data['cats'] = self.cats
-        data['tokens'] = []
+            data["cats"] = self.cats
+        data["tokens"] = []
         for token in self:
-            token_data = {'id': token.i, 'start': token.idx, 'end': token.idx + len(token)}
+            token_data = {"id": token.i, "start": token.idx, "end": token.idx + len(token)}
             if token.pos_:
-                token_data['pos'] = token.pos_
+                token_data["pos"] = token.pos_
             if token.tag_:
-                token_data['tag'] = token.tag_
+                token_data["tag"] = token.tag_
             if token.dep_:
-                token_data['dep'] = token.dep_
+                token_data["dep"] = token.dep_
             if token.head:
-                token_data['head'] = token.head.i
-            data['tokens'].append(token_data)
+                token_data["head"] = token.head.i
+            data["tokens"].append(token_data)
         if underscore:
-            data['_'] = {}
+            data["_"] = {}
             for attr in underscore:
                 if not self.has_extension(attr):
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
                 value = self._.get(attr)
                 if not srsly.is_json_serializable(value):
                     raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                data['_'][attr] = value
+                data["_"][attr] = value
         return data
 
 
@@ -1008,9 +1051,8 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
         tokens[i].r_edge = i
-    # Three times, for non-projectivity
-    # See issue #3170. This isn't a very satisfying fix, but I think it's
-    # sufficient.
+    # Three times, for non-projectivity. See issue #3170. This isn't a very
+    # satisfying fix, but I think it's sufficient.
     for loop_count in range(3):
         # Set left edges
         for i in range(length):
@@ -1022,7 +1064,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
                 head.l_edge = child.l_edge
             if child.r_edge > head.r_edge:
                 head.r_edge = child.r_edge
-        # Set right edges --- same as above, but iterate in reverse
+        # Set right edges - same as above, but iterate in reverse
         for i in range(length-1, -1, -1):
             child = &tokens[i]
             head = &tokens[i + child.head]
@@ -1053,20 +1095,14 @@ cdef int _get_tokens_lca(Token token_j, Token token_k):
         return token_k.i
     elif token_k.head == token_j:
         return token_j.i
-
     token_j_ancestors = set(token_j.ancestors)
-
     if token_k in token_j_ancestors:
         return token_k.i
-
     for token_k_ancestor in token_k.ancestors:
-
         if token_k_ancestor == token_j:
             return token_j.i
-
         if token_k_ancestor in token_j_ancestors:
             return token_k_ancestor.i
-
     return -1
 
 
@@ -1084,12 +1120,10 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
         with shape (n, n), where n = len(doc).
     """
     cdef int [:,:] lca_matrix
-
     n_tokens= end - start
     lca_mat = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
     lca_mat.fill(-1)
     lca_matrix = lca_mat
-
     for j in range(n_tokens):
         token_j = doc[start + j]
         # the common ancestor of token and itself is itself:
@@ -1110,7 +1144,6 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
             else:
                 lca_matrix[j, k] = lca - start
                 lca_matrix[k, j] = lca - start
-
     return lca_matrix
 
 
@@ -1124,8 +1157,7 @@ def pickle_doc(doc):
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
     user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
 
-    doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data,
-                                                     exclude='user_data')
+    doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data, exclude="user_data")
     doc.user_hooks.update(doc_hooks)
     doc.user_span_hooks.update(span_hooks)
     doc.user_token_hooks.update(token_hooks)
@@ -1134,19 +1166,22 @@ def unpickle_doc(vocab, hooks_and_data, bytes_data):
 
 copy_reg.pickle(Doc, pickle_doc, unpickle_doc)
 
+
 def remove_label_if_necessary(attributes):
     # More deprecated attribute handling =/
-    if 'label' in attributes:
-        attributes['ent_type'] = attributes.pop('label')
+    if "label" in attributes:
+        attributes["ent_type"] = attributes.pop("label")
+
 
 def fix_attributes(doc, attributes):
-    if 'label' in attributes and 'ent_type' not in attributes:
-        if isinstance(attributes['label'], int):
-            attributes[ENT_TYPE] = attributes['label']
+    if "label" in attributes and "ent_type" not in attributes:
+        if isinstance(attributes["label"], int):
+            attributes[ENT_TYPE] = attributes["label"]
         else:
-            attributes[ENT_TYPE] = doc.vocab.strings[attributes['label']]
-    if 'ent_type' in attributes:
-        attributes[ENT_TYPE] = attributes['ent_type']
+            attributes[ENT_TYPE] = doc.vocab.strings[attributes["label"]]
+    if "ent_type" in attributes:
+        attributes[ENT_TYPE] = attributes["ent_type"]
+
 
 def get_entity_info(ent_info):
     if isinstance(ent_info, Span):

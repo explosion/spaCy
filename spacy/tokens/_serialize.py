@@ -1,3 +1,4 @@
+# coding: utf8
 from __future__ import unicode_literals
 
 import numpy
@@ -16,9 +17,8 @@ class Binder(object):
     def __init__(self, attrs=None):
         """Create a Binder object, to hold serialized annotations.
 
-        attrs (list):
-            List of attributes to serialize. 'orth' and 'spacy' are always
-            serialized, so they're not required. Defaults to None.
+        attrs (list): List of attributes to serialize. 'orth' and 'spacy' are
+            always serialized, so they're not required. Defaults to None.
         """
         attrs = attrs or []
         self.attrs = list(attrs)

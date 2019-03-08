@@ -260,8 +260,8 @@ Retokenize the document, such that the span is merged into a single token.
 
 ## Span.ents {#ents tag="property" new="2.0.12" model="ner"}
 
-Iterate over the entities in the span. Yields named-entity `Span` objects, if
-the entity recognizer has been applied to the parent document.
+The named entities in the span. Returns a tuple of named entity `Span` objects,
+if the entity recognizer has been applied.
 
 > #### Example
 >
@@ -274,9 +274,9 @@ the entity recognizer has been applied to the parent document.
 > assert ents[0].text == u"Mr. Best"
 > ```
 
-| Name       | Type   | Description               |
-| ---------- | ------ | ------------------------- |
-| **YIELDS** | `Span` | Entities in the document. |
+| Name        | Type  | Description                                  |
+| ----------- | ----- | -------------------------------------------- |
+| **RETURNS** | tuple | Entities in the span, one `Span` per entity. |
 
 ## Span.as_doc {#as_doc tag="method"}
 
@@ -297,8 +297,9 @@ Create a new `Doc` object corresponding to the `Span`, with a copy of the data.
 
 ## Span.root {#root tag="property" model="parser"}
 
-The token within the span that's highest in the parse tree. If there's a tie,
-the earliest is preferred.
+The token with the shortest path to the root of the sentence (or the root
+itself). If multiple tokens are equally high in the tree, the first token is
+taken.
 
 > #### Example
 >

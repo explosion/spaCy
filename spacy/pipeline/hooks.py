@@ -15,6 +15,8 @@ class SentenceSegmenter(object):
     initialization, or assign a new strategy to the .strategy attribute.
     Sentence detection strategies should be generators that take `Doc` objects
     and yield `Span` objects for each sentence.
+
+    DOCS: https://spacy.io/api/sentencesegmenter
     """
 
     name = "sentencizer"

@@ -1,7 +1,7 @@
 ---
 title: Tagger
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/pipes.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
@@ -209,7 +209,7 @@ Modify the pipe's model, to use the given parameter values.
 > ```python
 > tagger = Tagger(nlp.vocab)
 > with tagger.use_params():
->     tagger.to_disk('/best_model')
+>     tagger.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
@@ -225,7 +225,7 @@ Add a new label to the pipe.
 > ```python
 > from spacy.symbols import POS
 > tagger = Tagger(nlp.vocab)
-> tagger.add_label('MY_LABEL', {POS: 'NOUN'})
+> tagger.add_label("MY_LABEL", {POS: 'NOUN'})
 > ```
 
 | Name     | Type    | Description                                                     |
@@ -241,7 +241,7 @@ Serialize the pipe to disk.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> tagger.to_disk('/path/to/tagger')
+> tagger.to_disk("/path/to/tagger")
 > ```
 
 | Name   | Type             | Description                                                                                                           |
@@ -256,7 +256,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> tagger.from_disk('/path/to/tagger')
+> tagger.from_disk("/path/to/tagger")
 > ```
 
 | Name        | Type             | Description                                                                |
@@ -266,7 +266,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 ## Tagger.to_bytes {#to_bytes tag="method"}
 
-> #### example
+> #### Example
 >
 > ```python
 > tagger = Tagger(nlp.vocab)

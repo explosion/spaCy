@@ -1,7 +1,7 @@
 ---
 title: EntityRecognizer
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/pipes.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
@@ -211,7 +211,7 @@ Modify the pipe's model, to use the given parameter values.
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
 > with ner.use_params():
->     ner.to_disk('/best_model')
+>     ner.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
@@ -226,7 +226,7 @@ Add a new label to the pipe.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> ner.add_label('MY_LABEL')
+> ner.add_label("MY_LABEL")
 > ```
 
 | Name    | Type    | Description       |
@@ -241,7 +241,7 @@ Serialize the pipe to disk.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> ner.to_disk('/path/to/ner')
+> ner.to_disk("/path/to/ner")
 > ```
 
 | Name   | Type             | Description                                                                                                           |
@@ -256,7 +256,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> ner.from_disk('/path/to/ner')
+> ner.from_disk("/path/to/ner")
 > ```
 
 | Name        | Type               | Description                                                                |
@@ -266,7 +266,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 ## EntityRecognizer.to_bytes {#to_bytes tag="method"}
 
-> #### example
+> #### Example
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)

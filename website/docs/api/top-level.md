@@ -642,7 +642,7 @@ All Python code is written in an **intersection of Python 2 and Python 3**. This
 is easy in Cython, but somewhat ugly in Python. Logic that deals with Python or
 platform compatibility only lives in `spacy.compat`. To distinguish them from
 the builtin functions, replacement functions are suffixed with an underscore,
-e.e `unicode_`.
+e.g. `unicode_`.
 
 > #### Example
 >
@@ -660,7 +660,7 @@ e.e `unicode_`.
 | `compat.input_`      | `raw_input`                        | `input`     |
 | `compat.path2str`    | `str(path)` with `.decode('utf8')` | `str(path)` |
 
-### compat.is_config {#is_config tag="function"}
+### compat.is_config {#compat.is_config tag="function"}
 
 Check if a specific configuration of Python version and operating system matches
 the user's setup. Mostly used to display targeted error messages.

@@ -12,10 +12,20 @@ from ..matcher import Matcher, PhraseMatcher
 
 
 class EntityRuler(object):
+    """The EntityRuler lets you add spans to the `Doc.ents` using token-based
+    rules or exact phrase matches. It can be combined with the statistical
+    `EntityRecognizer` to boost accuracy, or used on its own to implement a
+    purely rule-based entity recognition system. After initialization, the
+    component is typically added to the pipeline using `nlp.add_pipe`.
+
+    DOCS: https://spacy.io/api/entityruler
+    USAGE: https://spacy.io/usage/rule-based-matching#entityruler
+    """
+
     name = "entity_ruler"
 
     def __init__(self, nlp, **cfg):
-        """Initialise the entitiy ruler. If patterns are supplied here, they
+        """Initialize the entitiy ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
         key. A pattern can either be a token pattern (list) or a phrase pattern
         (string). For example: `{'label': 'ORG', 'pattern': 'Apple'}`.
@@ -29,6 +39,8 @@ class EntityRuler(object):
             of a model pipeline, this will include all keyword arguments passed
             to `spacy.load`.
         RETURNS (EntityRuler): The newly constructed object.
+
+        DOCS: https://spacy.io/api/entityruler#init
         """
         self.nlp = nlp
         self.overwrite = cfg.get("overwrite_ents", False)
@@ -55,6 +67,8 @@ class EntityRuler(object):
 
         doc (Doc): The Doc object in the pipeline.
         RETURNS (Doc): The Doc with added entities, if available.
+
+        DOCS: https://spacy.io/api/entityruler#call
         """
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
@@ -83,6 +97,8 @@ class EntityRuler(object):
         """All labels present in the match patterns.
 
         RETURNS (set): The string labels.
+
+        DOCS: https://spacy.io/api/entityruler#labels
         """
         all_labels = set(self.token_patterns.keys())
         all_labels.update(self.phrase_patterns.keys())
@@ -93,6 +109,8 @@ class EntityRuler(object):
         """Get all patterns that were added to the entity ruler.
 
         RETURNS (list): The original patterns, one dictionary per pattern.
+
+        DOCS: https://spacy.io/api/entityruler#patterns
         """
         all_patterns = []
         for label, patterns in self.token_patterns.items():
@@ -110,6 +128,8 @@ class EntityRuler(object):
         {'label': 'GPE', 'pattern': [{'lower': 'san'}, {'lower': 'francisco'}]}
 
         patterns (list): The patterns to add.
+
+        DOCS: https://spacy.io/api/entityruler#add_patterns
         """
         for entry in patterns:
             label = entry["label"]
@@ -131,6 +151,8 @@ class EntityRuler(object):
         patterns_bytes (bytes): The bytestring to load.
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
+
+        DOCS: https://spacy.io/api/entityruler#from_bytes
         """
         patterns = srsly.msgpack_loads(patterns_bytes)
         self.add_patterns(patterns)
@@ -140,6 +162,8 @@ class EntityRuler(object):
         """Serialize the entity ruler patterns to a bytestring.
 
         RETURNS (bytes): The serialized patterns.
+
+        DOCS: https://spacy.io/api/entityruler#to_bytes
         """
         return srsly.msgpack_dumps(self.patterns)
 
@@ -150,6 +174,8 @@ class EntityRuler(object):
         path (unicode / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
+
+        DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
         path = path.with_suffix(".jsonl")
@@ -164,6 +190,8 @@ class EntityRuler(object):
         path (unicode / Path): The JSONL file to load.
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
+
+        DOCS: https://spacy.io/api/entityruler
         """
         path = ensure_path(path)
         path = path.with_suffix(".jsonl")

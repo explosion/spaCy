@@ -1,7 +1,7 @@
 ---
 title: Pipeline Functions
 teaser: Other built-in pipeline components and helpers
-source: spacy/pipeline.pyx
+source: spacy/pipeline/functions.py
 menu:
   - ['merge_noun_chunks', 'merge_noun_chunks']
   - ['merge_entities', 'merge_entities']
@@ -73,10 +73,10 @@ components to the end of the pipeline and after all other components.
 | `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
 | **RETURNS** | `Doc` | The modified `Doc` with merged entities.                     |
 
-## merge_subtokens {#merge_entities tag="function" new="2.1"}
+## merge_subtokens {#merge_subtokens tag="function" new="2.1"}
 
 Merge subtokens into a single token. Also available via the string name
-`"merge_entities"`. After initialization, the component is typically added to
+`"merge_subtokens"`. After initialization, the component is typically added to
 the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 
 As of v2.1, the parser is able to predict "subtokens" that should be merged into
