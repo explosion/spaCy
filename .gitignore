@@ -8,6 +8,8 @@ keys/
 website/www/
 website/_deploy.sh
 website/.gitignore
+website/public
+node_modules
 
 # Cython / C extensions
 cythonize.json
