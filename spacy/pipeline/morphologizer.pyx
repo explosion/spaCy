@@ -81,16 +81,18 @@ class Morphologizer(Pipe):
             doc_scores = batch_scores[i]
             doc_guesses = scores_to_guesses(doc_scores, self.model.softmax.out_sizes)
             # Convert the neuron indices into feature IDs.
-            doc_feat_ids = self.model.ops.allocate((len(doc), len(field_names)), dtype='i')
+            doc_feat_ids = numpy.zeros((len(doc), len(field_names)), dtype='i')
             for j in range(len(doc)):
                 for k, offset in enumerate(offsets):
                     if doc_guesses[j, k] == 0:
                         doc_feat_ids[j, k] = 0
                     else:
                         doc_feat_ids[j, k] = offset + doc_guesses[j, k]
+                # Get the set of feature names.
+                feats = {FEATURES[f] for f in doc_feat_ids[j] if f != 0}
                 # Now add the analysis, and set the hash.
                 try:
-                    doc.c[j].morph = self.vocab.morphology.add(doc_feat_ids[j])
+                    doc.c[j].morph = self.vocab.morphology.add(feats)
                 except:
                     print(offsets)
                     print(doc_guesses[j])
@@ -114,7 +116,12 @@ class Morphologizer(Pipe):
             guesses.append(scores_to_guesses(doc_scores, self.model.softmax.out_sizes))
         guesses = self.model.ops.xp.vstack(guesses)
         scores = self.model.ops.xp.vstack(scores)
+        if not isinstance(scores, numpy.ndarray):
+            scores = scores.get()
+        if not isinstance(guesses, numpy.ndarray):
+            guesses = guesses.get()
         cdef int idx = 0
+        # Do this on CPU, as we can't vectorize easily.
         target = numpy.zeros(scores.shape, dtype='f')
         field_sizes = self.model.softmax.out_sizes
         for gold in golds:
@@ -134,7 +141,8 @@ class Morphologizer(Pipe):
                             target[idx, col_offset] = 1.
                         col_offset += field_size
                 idx += 1
-        target = self.model.ops.xp.array(target, dtype='f')
+        target = self.model.ops.asarray(target, dtype='f')
+        scores = self.model.ops.asarray(scores, dtype='f')
         d_scores = scores - target
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])

@@ -107,11 +107,11 @@ def get_field_id(feature):
 
 
 def get_field_size(field):
-    return FIELD_SIZES[field]
+    return FIELD_SIZES[FIELDS[field]]
 
 
 def get_field_offset(field):
-    return FIELD_OFFSETS[field]
+    return FIELD_OFFSETS[FIELDS[]]]]field]
 
 
 cdef class Morphology:
@@ -831,6 +831,8 @@ FEATURES = [
    "Aspect_mod",
    "Aspect_none",
    "Aspect_perf",
+   "Aspect_prof",
+   "Aspect_prosp",
    "Case_abe",
    "Case_abl",
    "Case_abs",
@@ -1074,6 +1076,6 @@ _seen_fields = Counter()
 for i, feature in enumerate(FEATURES):
     field = FEATURE_FIELDS[feature]
     FEATURE_OFFSETS[feature] = _seen_fields[field]
-    if _seen_fields == 0:
+    if _seen_fields[field] == 0:
         FIELD_OFFSETS[field] = i
     _seen_fields[field] += 1 

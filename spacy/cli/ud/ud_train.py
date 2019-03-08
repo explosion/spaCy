@@ -299,7 +299,7 @@ def get_token_conllu(token, i):
         head = 0
     else:
         head = i + (token.head.i - token.i) + 1
-    features = token.vocab.morphology.get(token.morph_key)
+    features = list(token.morph)
     feat_str = []
     replacements = {"one": "1", "two": "2", "three": "3"}
     for feat in features:
