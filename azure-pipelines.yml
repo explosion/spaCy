@@ -54,13 +54,13 @@ jobs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
 
-  - script: flake8 . --count --exclude=spacy/compat.py,spacy/lang --select=E901,E999,F821,F822,F823 --show-source --statistics
-    displayName: 'flake8'
-
   - script: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt
     displayName: 'Install dependencies'
+
+  - script: flake8 . --count --exclude=spacy/compat.py,spacy/lang --select=E901,E999,F821,F822,F823 --show-source --statistics
+    displayName: 'flake8'
 
   - script:
       python setup.py build_ext --inplace 
