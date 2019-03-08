@@ -1,7 +1,7 @@
 ---
 title: EntityRuler
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/entityruler.py
 new: 2.1
 ---
 
@@ -128,7 +128,7 @@ newline-delimited JSON (JSONL).
 >
 > ```python
 > ruler = EntityRuler(nlp)
-> ruler.to_disk('/path/to/rules.jsonl')
+> ruler.to_disk("/path/to/rules.jsonl")
 > ```
 
 | Name   | Type             | Description                                                                                                      |
@@ -144,7 +144,7 @@ JSON (JSONL) with one entry per line.
 >
 > ```python
 > ruler = EntityRuler(nlp)
-> ruler.from_disk('/path/to/rules.jsonl')
+> ruler.from_disk("/path/to/rules.jsonl")
 > ```
 
 | Name        | Type             | Description                                                                 |

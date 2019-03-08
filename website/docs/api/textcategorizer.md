@@ -1,7 +1,7 @@
 ---
 title: TextCategorizer
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/pipes.pyx
 new: 2
 ---
 
@@ -227,7 +227,7 @@ Modify the pipe's model, to use the given parameter values.
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
 > with textcat.use_params():
->     textcat.to_disk('/best_model')
+>     textcat.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
@@ -242,7 +242,7 @@ Add a new label to the pipe.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> textcat.add_label('MY_LABEL')
+> textcat.add_label("MY_LABEL")
 > ```
 
 | Name    | Type    | Description       |
@@ -257,7 +257,7 @@ Serialize the pipe to disk.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> textcat.to_disk('/path/to/textcat')
+> textcat.to_disk("/path/to/textcat")
 > ```
 
 | Name   | Type             | Description                                                                                                           |
@@ -272,7 +272,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> textcat.from_disk('/path/to/textcat')
+> textcat.from_disk("/path/to/textcat")
 > ```
 
 | Name        | Type              | Description                                                                |
@@ -282,7 +282,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 ## TextCategorizer.to_bytes {#to_bytes tag="method"}
 
-> #### example
+> #### Example
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)

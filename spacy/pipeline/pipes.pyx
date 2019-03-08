@@ -6,9 +6,8 @@ from __future__ import unicode_literals
 cimport numpy as np
 
 import numpy
-from collections import OrderedDict
 import srsly
-
+from collections import OrderedDict
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
@@ -284,9 +283,7 @@ class Tensorizer(Pipe):
         """
         for doc, tensor in zip(docs, tensors):
             if tensor.shape[0] != len(doc):
-                raise ValueError(
-                    Errors.E076.format(rows=tensor.shape[0], words=len(doc))
-                )
+                raise ValueError(Errors.E076.format(rows=tensor.shape[0], words=len(doc)))
             doc.tensor = tensor
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
@@ -346,14 +343,19 @@ class Tensorizer(Pipe):
 
 
 class Tagger(Pipe):
-    name = 'tagger'
+    """Pipeline component for part-of-speech tagging.
+
+    DOCS: https://spacy.io/api/tagger
+    """
+
+    name = "tagger"
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
         self._rehearsal_model = None
         self.cfg = OrderedDict(sorted(cfg.items()))
-        self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault("cnn_maxout_pieces", 2)
 
     @property
     def labels(self):
@@ -404,7 +406,7 @@ class Tagger(Pipe):
         cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
-            if hasattr(doc_tag_ids, 'get'):
+            if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
@@ -453,9 +455,9 @@ class Tagger(Pipe):
         scores = self.model.ops.flatten(scores)
         tag_index = {tag: i for i, tag in enumerate(self.labels)}
         cdef int idx = 0
-        correct = numpy.zeros((scores.shape[0],), dtype='i')
+        correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
-        known_labels = numpy.ones((scores.shape[0], 1), dtype='f')
+        known_labels = numpy.ones((scores.shape[0], 1), dtype="f")
         for gold in golds:
             for tag in gold.tags:
                 if tag is None:
@@ -466,7 +468,7 @@ class Tagger(Pipe):
                     correct[idx] = 0
                     known_labels[idx] = 0.
                 idx += 1
-        correct = self.model.ops.xp.array(correct, dtype='i')
+        correct = self.model.ops.xp.array(correct, dtype="i")
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
         d_scores *= self.model.ops.asarray(known_labels)
         loss = (d_scores**2).sum()
@@ -490,9 +492,9 @@ class Tagger(Pipe):
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                           vocab.morphology.lemmatizer,
                                           exc=vocab.morphology.exc)
-        self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
+        self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
         if self.model is True:
-            for hp in ['token_vector_width', 'conv_depth']:
+            for hp in ["token_vector_width", "conv_depth"]:
                 if hp in kwargs:
                     self.cfg[hp] = kwargs[hp]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
@@ -503,7 +505,7 @@ class Tagger(Pipe):
 
     @classmethod
     def Model(cls, n_tags, **cfg):
-        if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
+        if cfg.get("pretrained_dims") and not cfg.get("pretrained_vectors"):
             raise ValueError(TempErrors.T008)
         return build_tagger_model(n_tags, **cfg)
 
@@ -538,25 +540,23 @@ class Tagger(Pipe):
     def to_bytes(self, **exclude):
         serialize = OrderedDict()
         if self.model not in (None, True, False):
-            serialize['model'] = self.model.to_bytes
-        serialize['vocab'] = self.vocab.to_bytes
-        serialize['cfg'] = lambda: srsly.json_dumps(self.cfg)
+            serialize["model"] = self.model.to_bytes
+        serialize["vocab"] = self.vocab.to_bytes
+        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
-        serialize['tag_map'] = lambda: srsly.msgpack_dumps(tag_map)
+        serialize["tag_map"] = lambda: srsly.msgpack_dumps(tag_map)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
-
+            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
+                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 token_vector_width = util.env_opt(
-                    'token_vector_width',
-                    self.cfg.get('token_vector_width', 96))
-                self.model = self.Model(self.vocab.morphology.n_tags,
-                                        **self.cfg)
+                    "token_vector_width",
+                    self.cfg.get("token_vector_width", 96))
+                self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             self.model.from_bytes(b)
 
         def load_tag_map(b):
@@ -567,10 +567,10 @@ class Tagger(Pipe):
                 exc=self.vocab.morphology.exc)
 
         deserialize = OrderedDict((
-            ('vocab', lambda b: self.vocab.from_bytes(b)),
-            ('tag_map', load_tag_map),
-            ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
-            ('model', lambda b: load_model(b)),
+            ("vocab", lambda b: self.vocab.from_bytes(b)),
+            ("tag_map", load_tag_map),
+            ("cfg", lambda b: self.cfg.update(srsly.json_loads(b))),
+            ("model", lambda b: load_model(b)),
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -580,7 +580,7 @@ class Tagger(Pipe):
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
             ('tag_map', lambda p: srsly.write_msgpack(p, tag_map)),
-            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
+            ('model', lambda p: p.open("wb").write(self.model.to_bytes())),
             ('cfg', lambda p: srsly.write_json(p, self.cfg))
         ))
         util.to_disk(path, serialize, exclude)
@@ -588,11 +588,11 @@ class Tagger(Pipe):
     def from_disk(self, path, **exclude):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
-            if self.cfg.get('pretrained_dims') and 'pretrained_vectors' not in self.cfg:
-                self.cfg['pretrained_vectors'] = self.vocab.vectors.name
+            if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
+                self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
-            with p.open('rb') as file_:
+            with p.open("rb") as file_:
                 self.model.from_bytes(file_.read())
 
         def load_tag_map(p):
@@ -603,10 +603,10 @@ class Tagger(Pipe):
                 exc=self.vocab.morphology.exc)
 
         deserialize = OrderedDict((
-            ('cfg', lambda p: self.cfg.update(_load_cfg(p))),
-            ('vocab', lambda p: self.vocab.from_disk(p)),
-            ('tag_map', load_tag_map),
-            ('model', load_model),
+            ("cfg", lambda p: self.cfg.update(_load_cfg(p))),
+            ("vocab", lambda p: self.vocab.from_disk(p)),
+            ("tag_map", load_tag_map),
+            ("model", load_model),
         ))
         util.from_disk(path, deserialize, exclude)
         return self
@@ -616,37 +616,38 @@ class MultitaskObjective(Tagger):
     """Experimental: Assist training of a parser or tagger, by training a
     side-objective.
     """
-    name = 'nn_labeller'
+
+    name = "nn_labeller"
 
     def __init__(self, vocab, model=True, target='dep_tag_offset', **cfg):
         self.vocab = vocab
         self.model = model
-        if target == 'dep':
+        if target == "dep":
             self.make_label = self.make_dep
-        elif target == 'tag':
+        elif target == "tag":
             self.make_label = self.make_tag
-        elif target == 'ent':
+        elif target == "ent":
             self.make_label = self.make_ent
-        elif target == 'dep_tag_offset':
+        elif target == "dep_tag_offset":
             self.make_label = self.make_dep_tag_offset
-        elif target == 'ent_tag':
+        elif target == "ent_tag":
             self.make_label = self.make_ent_tag
-        elif target == 'sent_start':
+        elif target == "sent_start":
             self.make_label = self.make_sent_start
-        elif hasattr(target, '__call__'):
+        elif hasattr(target, "__call__"):
             self.make_label = target
         else:
             raise ValueError(Errors.E016)
         self.cfg = dict(cfg)
-        self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self.cfg.setdefault("cnn_maxout_pieces", 2)
 
     @property
     def labels(self):
-        return self.cfg.setdefault('labels', {})
+        return self.cfg.setdefault("labels", {})
 
     @labels.setter
     def labels(self, value):
-        self.cfg['labels'] = value
+        self.cfg["labels"] = value
 
     def set_annotations(self, docs, dep_ids, tensors=None):
         pass
@@ -662,7 +663,7 @@ class MultitaskObjective(Tagger):
                     if label is not None and label not in self.labels:
                         self.labels[label] = len(self.labels)
         if self.model is True:
-            token_vector_width = util.env_opt('token_vector_width')
+            token_vector_width = util.env_opt("token_vector_width")
             self.model = self.Model(len(self.labels), tok2vec=tok2vec)
         link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -671,7 +672,7 @@ class MultitaskObjective(Tagger):
 
     @classmethod
     def Model(cls, n_tags, tok2vec=None, **cfg):
-        token_vector_width = util.env_opt('token_vector_width', 96)
+        token_vector_width = util.env_opt("token_vector_width", 96)
         softmax = Softmax(n_tags, token_vector_width*2)
         model = chain(
             tok2vec,
@@ -690,10 +691,10 @@ class MultitaskObjective(Tagger):
 
     def get_loss(self, docs, golds, scores):
         if len(docs) != len(golds):
-            raise ValueError(Errors.E077.format(value='loss', n_docs=len(docs),
+            raise ValueError(Errors.E077.format(value="loss", n_docs=len(docs),
                                                 n_golds=len(golds)))
         cdef int idx = 0
-        correct = numpy.zeros((scores.shape[0],), dtype='i')
+        correct = numpy.zeros((scores.shape[0],), dtype="i")
         guesses = scores.argmax(axis=1)
         for i, gold in enumerate(golds):
             for j in range(len(docs[i])):
@@ -705,7 +706,7 @@ class MultitaskObjective(Tagger):
                 else:
                     correct[idx] = self.labels[label]
                 idx += 1
-        correct = self.model.ops.xp.array(correct, dtype='i')
+        correct = self.model.ops.xp.array(correct, dtype="i")
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
         loss = (d_scores**2).sum()
         return float(loss), d_scores
@@ -733,25 +734,25 @@ class MultitaskObjective(Tagger):
         offset = heads[i] - i
         offset = min(offset, 2)
         offset = max(offset, -2)
-        return '%s-%s:%d' % (deps[i], tags[i], offset)
+        return "%s-%s:%d" % (deps[i], tags[i], offset)
 
     @staticmethod
     def make_ent_tag(i, words, tags, heads, deps, ents):
         if ents is None or ents[i] is None:
             return None
         else:
-            return '%s-%s' % (tags[i], ents[i])
+            return "%s-%s" % (tags[i], ents[i])
 
     @staticmethod
     def make_sent_start(target, words, tags, heads, deps, ents, cache=True, _cache={}):
-        '''A multi-task objective for representing sentence boundaries,
+        """A multi-task objective for representing sentence boundaries,
         using BILU scheme. (O is impossible)
 
         The implementation of this method uses an internal cache that relies
         on the identity of the heads array, to avoid requiring a new piece
         of gold data. You can pass cache=False if you know the cache will
         do the wrong thing.
-        '''
+        """
         assert len(words) == len(heads)
         assert target < len(words), (target, len(words))
         if cache:
@@ -760,10 +761,10 @@ class MultitaskObjective(Tagger):
             else:
                 for key in list(_cache.keys()):
                     _cache.pop(key)
-            sent_tags = ['I-SENT'] * len(words)
+            sent_tags = ["I-SENT"] * len(words)
             _cache[id(heads)] = sent_tags
         else:
-            sent_tags = ['I-SENT'] * len(words)
+            sent_tags = ["I-SENT"] * len(words)
 
         def _find_root(child):
             seen = set([child])
@@ -781,10 +782,10 @@ class MultitaskObjective(Tagger):
                 sentences.setdefault(root, []).append(i)
         for root, span in sorted(sentences.items()):
             if len(span) == 1:
-                sent_tags[span[0]] = 'U-SENT'
+                sent_tags[span[0]] = "U-SENT"
             else:
-                sent_tags[span[0]] = 'B-SENT'
-                sent_tags[span[-1]] = 'L-SENT'
+                sent_tags[span[0]] = "B-SENT"
+                sent_tags[span[-1]] = "L-SENT"
         return sent_tags[target]
 
 
@@ -854,6 +855,10 @@ class ClozeMultitask(Pipe):
 
 
 class TextCategorizer(Pipe):
+    """Pipeline component for text classification.
+
+    DOCS: https://spacy.io/api/textcategorizer
+    """
     name = 'textcat'
 
     @classmethod
@@ -863,7 +868,7 @@ class TextCategorizer(Pipe):
             token_vector_width = cfg["token_vector_width"]
         else:
             token_vector_width = util.env_opt("token_vector_width", 96)
-        if cfg.get('architecture') == 'simple_cnn':
+        if cfg.get("architecture") == "simple_cnn":
             tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
             return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
         else:
@@ -884,11 +889,11 @@ class TextCategorizer(Pipe):
 
     @property
     def labels(self):
-        return tuple(self.cfg.setdefault('labels', []))
+        return tuple(self.cfg.setdefault("labels", []))
 
     @labels.setter
     def labels(self, value):
-        self.cfg['labels'] = tuple(value)
+        self.cfg["labels"] = tuple(value)
 
     def __call__(self, doc):
         scores, tensors = self.predict([doc])
@@ -934,8 +939,8 @@ class TextCategorizer(Pipe):
             losses[self.name] += (gradient**2).sum()
 
     def get_loss(self, docs, golds, scores):
-        truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
-        not_missing = numpy.ones((len(golds), len(self.labels)), dtype='f')
+        truths = numpy.zeros((len(golds), len(self.labels)), dtype="f")
+        not_missing = numpy.ones((len(golds), len(self.labels)), dtype="f")
         for i, gold in enumerate(golds):
             for j, label in enumerate(self.labels):
                 if label in gold.cats:
@@ -956,20 +961,19 @@ class TextCategorizer(Pipe):
             # This functionality was available previously, but was broken.
             # The problem is that we resize the last layer, but the last layer
             # is actually just an ensemble. We're not resizing the child layers
-            # -- a huge problem.
+            # - a huge problem.
             raise ValueError(Errors.E116)
-            #smaller = self.model._layers[-1]
-            #larger = Affine(len(self.labels)+1, smaller.nI)
-            #copy_array(larger.W[:smaller.nO], smaller.W)
-            #copy_array(larger.b[:smaller.nO], smaller.b)
-            #self.model._layers[-1] = larger
+            # smaller = self.model._layers[-1]
+            # larger = Affine(len(self.labels)+1, smaller.nI)
+            # copy_array(larger.W[:smaller.nO], smaller.W)
+            # copy_array(larger.b[:smaller.nO], smaller.b)
+            # self.model._layers[-1] = larger
         self.labels = tuple(list(self.labels) + [label])
         return 1
 
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
-                       **kwargs):
+    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
         if self.model is True:
-            self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
+            self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
             self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -978,7 +982,12 @@ class TextCategorizer(Pipe):
 
 
 cdef class DependencyParser(Parser):
-    name = 'parser'
+    """Pipeline component for dependency parsing.
+
+    DOCS: https://spacy.io/api/dependencyparser
+    """
+
+    name = "parser"
     TransitionSystem = ArcEager
 
     @property
@@ -986,7 +995,7 @@ cdef class DependencyParser(Parser):
         return [nonproj.deprojectivize]
 
     def add_multitask_objective(self, target):
-        if target == 'cloze':
+        if target == "cloze":
             cloze = ClozeMultitask(self.vocab)
             self._multitasks.append(cloze)
         else:
@@ -1000,8 +1009,7 @@ cdef class DependencyParser(Parser):
                                     tok2vec=tok2vec, sgd=sgd)
 
     def __reduce__(self):
-        return (DependencyParser, (self.vocab, self.moves, self.model),
-                None, None)
+        return (DependencyParser, (self.vocab, self.moves, self.model), None, None)
 
     @property
     def labels(self):
@@ -1010,6 +1018,11 @@ cdef class DependencyParser(Parser):
 
 
 cdef class EntityRecognizer(Parser):
+    """Pipeline component for named entity recognition.
+
+    DOCS: https://spacy.io/api/entityrecognizer
+    """
+
     name = "ner"
     TransitionSystem = BiluoPushDown
     nr_feature = 6
@@ -1040,4 +1053,4 @@ cdef class EntityRecognizer(Parser):
                 if move[0] in ("B", "I", "L", "U")))
 
 
-__all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer', 'TextCategorizer']
+__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer"]

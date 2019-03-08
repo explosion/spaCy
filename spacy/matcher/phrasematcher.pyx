@@ -12,7 +12,7 @@ from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
 from ..typedefs cimport attr_t, hash_t
 
-from ..errors import Warnings, deprecation_warning, user_warning
+from ..errors import Errors, Warnings, deprecation_warning, user_warning
 from ..attrs import FLAG61 as U_ENT
 from ..attrs import FLAG60 as B2_ENT
 from ..attrs import FLAG59 as B3_ENT
@@ -25,6 +25,13 @@ from ..attrs import FLAG41 as I4_ENT
 
 
 cdef class PhraseMatcher:
+    """Efficiently match large terminology lists. While the `Matcher` matches
+    sequences based on lists of token descriptions, the `PhraseMatcher` accepts
+    match patterns in the form of `Doc` objects.
+
+    DOCS: https://spacy.io/api/phrasematcher
+    USAGE: https://spacy.io/usage/rule-based-matching#phrasematcher
+    """
     cdef Pool mem
     cdef Vocab vocab
     cdef Matcher matcher
@@ -36,7 +43,16 @@ cdef class PhraseMatcher:
     cdef public object _docs
     cdef public object _validate
 
-    def __init__(self, Vocab vocab, max_length=0, attr='ORTH', validate=False):
+    def __init__(self, Vocab vocab, max_length=0, attr="ORTH", validate=False):
+        """Initialize the PhraseMatcher.
+
+        vocab (Vocab): The shared vocabulary.
+        attr (int / unicode): Token attribute to match on.
+        validate (bool): Perform additional validation when patterns are added.
+        RETURNS (PhraseMatcher): The newly constructed object.
+
+        DOCS: https://spacy.io/api/phrasematcher#init
+        """
         if max_length != 0:
             deprecation_warning(Warnings.W010)
         self.mem = Pool()
@@ -54,7 +70,7 @@ cdef class PhraseMatcher:
             [{B3_ENT: True}, {I3_ENT: True}, {L3_ENT: True}],
             [{B4_ENT: True}, {I4_ENT: True}, {I4_ENT: True, "OP": "+"}, {L4_ENT: True}],
         ]
-        self.matcher.add('Candidate', None, *abstract_patterns)
+        self.matcher.add("Candidate", None, *abstract_patterns)
         self._callbacks = {}
         self._docs = {}
         self._validate = validate
@@ -65,6 +81,8 @@ cdef class PhraseMatcher:
         number of individual patterns.
 
         RETURNS (int): The number of rules.
+
+        DOCS: https://spacy.io/api/phrasematcher#len
         """
         return len(self._docs)
 
@@ -73,6 +91,8 @@ cdef class PhraseMatcher:
 
         key (unicode): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
+
+        DOCS: https://spacy.io/api/phrasematcher#contains
         """
         cdef hash_t ent_id = self.matcher._normalize_key(key)
         return ent_id in self._callbacks
@@ -88,6 +108,8 @@ cdef class PhraseMatcher:
         key (unicode): The match ID.
         on_match (callable): Callback executed on match.
         *docs (Doc): `Doc` objects representing match patterns.
+
+        DOCS: https://spacy.io/api/phrasematcher#add
         """
         cdef Doc doc
         cdef hash_t ent_id = self.matcher._normalize_key(key)
@@ -112,8 +134,7 @@ cdef class PhraseMatcher:
                 lexeme = self.vocab[attr_value]
                 lexeme.set_flag(tag, True)
                 phrase_key[i] = lexeme.orth
-            phrase_hash = hash64(phrase_key,
-                                 length * sizeof(attr_t), 0)
+            phrase_hash = hash64(phrase_key, length * sizeof(attr_t), 0)
             self.phrase_ids.set(phrase_hash, <void*>ent_id)
 
     def __call__(self, Doc doc):
@@ -123,6 +144,8 @@ cdef class PhraseMatcher:
         RETURNS (list): A list of `(key, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
+
+        DOCS: https://spacy.io/api/phrasematcher#call
         """
         matches = []
         if self.attr == ORTH:
@@ -158,6 +181,8 @@ cdef class PhraseMatcher:
             If both return_matches and as_tuples are True, the output will
             be a sequence of ((doc, matches), context) tuples.
         YIELDS (Doc): Documents, in order.
+
+        DOCS: https://spacy.io/api/phrasematcher#pipe
         """
         if as_tuples:
             for doc, context in stream:
@@ -180,8 +205,7 @@ cdef class PhraseMatcher:
         phrase_key = <attr_t*>mem.alloc(end-start, sizeof(attr_t))
         for i, j in enumerate(range(start, end)):
             phrase_key[i] = doc.c[j].lex.orth
-        cdef hash_t key = hash64(phrase_key,
-                                 (end-start) * sizeof(attr_t), 0)
+        cdef hash_t key = hash64(phrase_key, (end-start) * sizeof(attr_t), 0)
         ent_id = <hash_t>self.phrase_ids.get(key)
         if ent_id == 0:
             return None
@@ -203,12 +227,12 @@ cdef class PhraseMatcher:
         # Concatenate the attr name and value to not pollute lexeme space
         # e.g. 'POS-VERB' instead of just 'VERB', which could otherwise
         # create false positive matches
-        return 'matcher:{}-{}'.format(string_attr_name, string_attr_value)
+        return "matcher:{}-{}".format(string_attr_name, string_attr_value)
 
 
 def get_bilou(length):
     if length == 0:
-        raise ValueError("Length must be >= 1")
+        raise ValueError(Errors.E127)
     elif length == 1:
         return [U_ENT]
     elif length == 2:
