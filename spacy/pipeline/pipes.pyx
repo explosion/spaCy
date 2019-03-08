@@ -363,7 +363,7 @@ class Tagger(Pipe):
 
     @property.setter
     def set_morphology(self, value):
-        return self.cfg["set_morphology"] = True
+        self.cfg["set_morphology"] = True
 
     @property
     def labels(self):
