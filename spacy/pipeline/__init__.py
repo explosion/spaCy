@@ -14,6 +14,7 @@ __all__ = [
     "TextCategorizer",
     "Tensorizer",
     "Pipe",
+    "Morphologizer",
     "EntityRuler",
     "SentenceSegmenter",
     "SimilarityHook",

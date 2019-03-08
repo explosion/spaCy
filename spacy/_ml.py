@@ -465,17 +465,16 @@ def getitem(i):
 
 
 @describe.attributes(
-    W=Synapses("Weights matrix",
-        lambda obj: (obj.nO, obj.nI),
-        lambda W, ops: None)
+    W=Synapses("Weights matrix", lambda obj: (obj.nO, obj.nI), lambda W, ops: None)
 )
 class MultiSoftmax(Affine):
-    '''Neural network layer that predicts several multi-class attributes at once.
+    """Neural network layer that predicts several multi-class attributes at once.
     For instance, we might predict one class with 6 variables, and another with 5.
     We predict the 11 neurons required for this, and then softmax them such
     that columns 0-6 make a probability distribution and coumns 6-11 make another.
-    '''
-    name = 'multisoftmax'
+    """
+
+    name = "multisoftmax"
 
     def __init__(self, out_sizes, nI=None, **kwargs):
         Model.__init__(self, **kwargs)
@@ -487,12 +486,13 @@ class MultiSoftmax(Affine):
         output__BO = self.ops.affine(self.W, self.b, input__BI)
         i = 0
         for out_size in self.out_sizes:
-            self.ops.softmax(output__BO[:, i : i+out_size], inplace=True)
+            self.ops.softmax(output__BO[:, i : i + out_size], inplace=True)
             i += out_size
         return output__BO
 
-    def begin_update(self, input__BI, drop=0.):
+    def begin_update(self, input__BI, drop=0.0):
         output__BO = self.predict(input__BI)
+
         def finish_update(grad__BO, sgd=None):
             self.d_W += self.ops.gemm(grad__BO, input__BI, trans1=True)
             self.d_b += grad__BO.sum(axis=0)
@@ -500,6 +500,7 @@ class MultiSoftmax(Affine):
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return grad__BI
+
         return output__BO, finish_update
 
 
@@ -515,41 +516,41 @@ def build_tagger_model(nr_class, **cfg):
         if "tok2vec" in cfg:
             tok2vec = cfg["tok2vec"]
         else:
-            tok2vec = Tok2Vec(token_vector_width, embed_size,
-                              subword_features=subword_features,
-                              pretrained_vectors=pretrained_vectors)
-        softmax = with_flatten(
-            Softmax(nr_class, token_vector_width))
-        model = (
-            tok2vec
-            >> softmax
-        )
+            tok2vec = Tok2Vec(
+                token_vector_width,
+                embed_size,
+                subword_features=subword_features,
+                pretrained_vectors=pretrained_vectors,
+            )
+        softmax = with_flatten(Softmax(nr_class, token_vector_width))
+        model = tok2vec >> softmax
     model.nI = None
     model.tok2vec = tok2vec
     model.softmax = softmax
     return model
 
+
 def build_morphologizer_model(class_nums, **cfg):
-    embed_size = util.env_opt('embed_size', 7000)
-    if 'token_vector_width' in cfg:
-        token_vector_width = cfg['token_vector_width']
+    embed_size = util.env_opt("embed_size", 7000)
+    if "token_vector_width" in cfg:
+        token_vector_width = cfg["token_vector_width"]
     else:
-        token_vector_width = util.env_opt('token_vector_width', 128)
-    pretrained_vectors = cfg.get('pretrained_vectors')
-    subword_features = cfg.get('subword_features', True)
-    with Model.define_operators({'>>': chain, '+': add}):
-        if 'tok2vec' in cfg:
-            tok2vec = cfg['tok2vec']
+        token_vector_width = util.env_opt("token_vector_width", 128)
+    pretrained_vectors = cfg.get("pretrained_vectors")
+    subword_features = cfg.get("subword_features", True)
+    with Model.define_operators({">>": chain, "+": add}):
+        if "tok2vec" in cfg:
+            tok2vec = cfg["tok2vec"]
         else:
-            tok2vec = Tok2Vec(token_vector_width, embed_size,
-                              subword_features=subword_features,
-                              pretrained_vectors=pretrained_vectors)
+            tok2vec = Tok2Vec(
+                token_vector_width,
+                embed_size,
+                subword_features=subword_features,
+                pretrained_vectors=pretrained_vectors,
+            )
         softmax = with_flatten(MultiSoftmax(class_nums, token_vector_width))
         softmax.out_sizes = class_nums
-        model = (
-            tok2vec
-            >> softmax
-        )
+        model = tok2vec >> softmax
     model.nI = None
     model.tok2vec = tok2vec
     model.softmax = softmax
@@ -630,17 +631,13 @@ def build_text_classifier(nr_class, width=64, **cfg):
         )
 
         linear_model = _preprocess_doc >> LinearModel(nr_class)
-        if cfg.get('exclusive_classes'):
+        if cfg.get("exclusive_classes"):
             output_layer = Softmax(nr_class, nr_class * 2)
         else:
             output_layer = (
-                zero_init(Affine(nr_class, nr_class * 2, drop_factor=0.0))
-                >> logistic
+                zero_init(Affine(nr_class, nr_class * 2, drop_factor=0.0)) >> logistic
             )
-        model = (
-            (linear_model | cnn_model)
-            >> output_layer
-        )
+        model = (linear_model | cnn_model) >> output_layer
         model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
     model.lsuv = False
@@ -658,7 +655,9 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
         if exclusive_classes:
             output_layer = Softmax(nr_class, tok2vec.nO)
         else:
-            output_layer = zero_init(Affine(nr_class, tok2vec.nO, drop_factor=0.0)) >> logistic
+            output_layer = (
+                zero_init(Affine(nr_class, tok2vec.nO, drop_factor=0.0)) >> logistic
+            )
         model = tok2vec >> flatten_add_lengths >> Pooling(mean_pool) >> output_layer
     model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class

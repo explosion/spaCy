@@ -350,7 +350,6 @@ class Errors(object):
             "is likely a bug in spaCy.")
 
 
-
 @add_codes
 class TempErrors(object):
     T003 = ("Resizing pre-trained Tagger models is not currently supported.")
