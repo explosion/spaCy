@@ -6,10 +6,10 @@ from __future__ import unicode_literals
 
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
-
-import numpy
 from cymem.cymem cimport Pool
 from thinc.neural.util import get_array_module
+
+import numpy
 
 from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end
 from .span cimport Span
@@ -26,11 +26,16 @@ from ..strings import get_string_id
 
 
 cdef class Retokenizer:
-    """Helper class for doc.retokenize() context manager."""
+    """Helper class for doc.retokenize() context manager.
+
+    DOCS: https://spacy.io/api/doc#retokenize
+    USAGE: https://spacy.io/usage/linguistic-features#retokenization
+    """
     cdef Doc doc
     cdef list merges
     cdef list splits
     cdef set tokens_to_merge
+
     def __init__(self, doc):
         self.doc = doc
         self.merges = []
@@ -40,6 +45,11 @@ cdef class Retokenizer:
     def merge(self, Span span, attrs=SimpleFrozenDict()):
         """Mark a span for merging. The attrs will be applied to the resulting
         token.
+
+        span (Span): The span to merge.
+        attrs (dict): Attributes to set on the merged token.
+
+        DOCS: https://spacy.io/api/doc#retokenizer.merge
         """
         for token in span:
             if token.i in self.tokens_to_merge:
@@ -58,6 +68,16 @@ cdef class Retokenizer:
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
         """Mark a Token for splitting, into the specified orths. The attrs
         will be applied to each subtoken.
+
+        token (Token): The token to split.
+        orths (list): The verbatim text of the split tokens. Needs to match the
+            text of the original token.
+        heads (list): List of token or `(token, subtoken)` tuples specifying the
+            tokens to attach the newly split subtokens to.
+        attrs (dict): Attributes to set on all split tokens. Attribute names
+            mapped to list of per-token attribute values.
+
+        DOCS: https://spacy.io/api/doc#retokenizer.split
         """
         if ''.join(orths) != token.text:
             raise ValueError(Errors.E117.format(new=''.join(orths), old=token.text))
@@ -104,14 +124,12 @@ cdef class Retokenizer:
             # referred to in the splits. If we merged these tokens previously, we
             # have to raise an error
             if token_index == -1:
-                raise IndexError(
-                    "Cannot find token to be split. Did it get merged?")
+                raise IndexError(Errors.E122)
             head_indices = []
             for head_char, subtoken in heads:
                 head_index = token_by_start(self.doc.c, self.doc.length, head_char)
                 if head_index == -1:
-                    raise IndexError(
-                        "Cannot find head of token to be split. Did it get merged?")
+                    raise IndexError(Errors.E123)
                 # We want to refer to the token index of the head *after* the
                 # mergery. We need to account for the extra tokens introduced.
                 # e.g., let's say we have [ab, c] and we want a and b to depend
@@ -206,7 +224,6 @@ def _merge(Doc doc, int start, int end, attributes):
         doc.c[i].head -= i
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
-    # Clear the cached Python objects
     # Return the merged Python object
     return doc[start]
 
@@ -336,7 +353,7 @@ def _bulk_merge(Doc doc, merges):
     # Make sure ent_iob remains consistent
     for (span, _) in merges:
         if(span.end < len(offsets)):
-        #if it's not the last span
+        # If it's not the last span
             token_after_span_position = offsets[span.end]
             if doc.c[token_after_span_position].ent_iob == 1\
                     and doc.c[token_after_span_position - 1].ent_iob in (0, 2):

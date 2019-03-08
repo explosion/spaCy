@@ -4,17 +4,19 @@ from __future__ import unicode_literals, print_function
 
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
+from libc.string cimport memset
 cimport numpy as np
 np.import_array()
-from libc.string cimport memset
+
 import numpy
 from thinc.neural.util import get_array_module
 
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_CURRENCY, IS_OOV
-from .attrs cimport PROB
+from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
+from .attrs cimport IS_CURRENCY, IS_OOV, PROB
+
 from .attrs import intify_attrs
 from .errors import Errors, Warnings, user_warning
 
@@ -27,6 +29,8 @@ cdef class Lexeme:
     word-type, as opposed to a word token.  It therefore has no part-of-speech
     tag, dependency parse, or lemma (lemmatization depends on the
     part-of-speech tag).
+
+    DOCS: https://spacy.io/api/lexeme
     """
     def __init__(self, Vocab vocab, attr_t orth):
         """Create a Lexeme object.
@@ -115,15 +119,15 @@ cdef class Lexeme:
         RETURNS (float): A scalar similarity score. Higher is more similar.
         """
         # Return 1.0 similarity for matches
-        if hasattr(other, 'orth'):
+        if hasattr(other, "orth"):
             if self.c.orth == other.orth:
                 return 1.0
-        elif hasattr(other, '__len__') and len(other) == 1 \
-        and hasattr(other[0], 'orth'):
+        elif hasattr(other, "__len__") and len(other) == 1 \
+        and hasattr(other[0], "orth"):
             if self.c.orth == other[0].orth:
                 return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj='Lexeme'))
+            user_warning(Warnings.W008.format(obj="Lexeme"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -136,7 +140,7 @@ cdef class Lexeme:
         if (end-start) != sizeof(lex_data.data):
             raise ValueError(Errors.E072.format(length=end-start,
                                                 bad_length=sizeof(lex_data.data)))
-        byte_string = b'\0' * sizeof(lex_data.data)
+        byte_string = b"\0" * sizeof(lex_data.data)
         byte_chars = <char*>byte_string
         for i in range(sizeof(lex_data.data)):
             byte_chars[i] = lex_data.data[i]
