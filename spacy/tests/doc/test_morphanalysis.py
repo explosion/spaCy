@@ -2,11 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
-import numpy
-from spacy.attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
-from spacy.symbols import VERB
-from spacy.vocab import Vocab
-from spacy.tokens import Doc
+
 
 @pytest.fixture
 def i_has(en_tokenizer):
@@ -15,10 +11,12 @@ def i_has(en_tokenizer):
     doc[1].tag_ = "VBZ"
     return doc
 
+
 def test_token_morph_id(i_has):
     assert i_has[0].morph.id
     assert i_has[1].morph.id != 0
     assert i_has[0].morph.id != i_has[1].morph.id
+
 
 def test_morph_props(i_has):
     assert i_has[0].morph.pron_type == i_has.vocab.strings["PronType_prs"]
