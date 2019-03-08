@@ -111,7 +111,7 @@ def get_field_size(field):
 
 
 def get_field_offset(field):
-    return FIELD_OFFSETS[FIELDS[]]]]field]
+    return FIELD_OFFSETS[FIELDS[field]]
 
 
 cdef class Morphology:
