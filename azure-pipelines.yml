@@ -55,7 +55,7 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      python -m pip install --upgrade pip wheel
+      python -m pip install --upgrade pip==18.1
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 
