@@ -342,7 +342,7 @@ class Errors(object):
             "equal to span length ({span_len}).")
     E122 = ("Cannot find token to be split. Did it get merged?")
     E123 = ("Cannot find head of token to be split. Did it get merged?")
-    E124 = ("Cannot read from file: {path}. Supported formats: .json, .msg")
+    E124 = ("Cannot read from file: {path}. Supported formats: {formats}")
     E125 = ("Unexpected value: {value}")
     E126 = ("Unexpected matcher predicate: '{bad}'. Expected one of: {good}. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
