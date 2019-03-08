@@ -17,6 +17,7 @@ from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
 from ..morphology import get_field_size, get_field_offset, parse_feature, FIELDS
+from ..morphology import FEATURES
 
 
 class Morphologizer(Pipe):
