@@ -59,11 +59,11 @@ jobs:
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 
-  - script: flake8 . --count --exclude=spacy/compat.py,spacy/lang --select=E901,E999,F821,F822,F823 --show-source --statistics
+  - script: python -m flake8 . --count --exclude=spacy/compat.py,spacy/lang --select=E901,E999,F821,F822,F823 --show-source --statistics
     displayName: 'flake8'
 
   - script:
-      python setup.py build_ext --inplace 
+      python setup.py build_ext --inplace
       pip install -e .
     displayName: 'Build and install'
 
