@@ -18,6 +18,7 @@ from .errors import Errors
 
 
 cdef enum univ_field_t:
+    Field_POS
     Field_Abbr
     Field_AdpType
     Field_AdvType
@@ -429,6 +430,8 @@ cdef list list_features(const MorphAnalysisC* tag):
 
 cdef attr_t get_field(const MorphAnalysisC* tag, int field_id) nogil:
     field = <univ_field_t>field_id
+    if field == Field_POS:
+        return tag.pos
     if field == Field_Abbr:
         return tag.abbr
     elif field == Field_AdpType:
@@ -617,12 +620,14 @@ cdef int set_feature(MorphAnalysisC* tag,
     else:
         value_ = 0
     prev_value = get_field(tag, field)
-    if prev_value != 0 and value_ == 0:
+    if prev_value != 0 and value_ == 0 and field != Field_POS:
         tag.length -= 1
-    elif prev_value == 0 and value_ != 0:
+    elif prev_value == 0 and value_ != 0 and field != Field_POS:
         tag.length += 1
     if feature == 0:
         pass
+    elif field == Field_POS:
+        tag.pos = get_string_id(FEATURE_NAMES[value_].split('_')[1])
     elif field == Field_Abbr:
         tag.abbr = value_
     elif field == Field_AdpType:
@@ -714,6 +719,7 @@ cdef int set_feature(MorphAnalysisC* tag,
 
 
 FIELDS = {
+    'POS': Field_POS,
     'Abbr': Field_Abbr,
     'AdpType': Field_AdpType,
     'AdvType': Field_AdvType,
@@ -760,6 +766,7 @@ FIELDS = {
 }
 
 LOWER_FIELDS = {
+    'pos': Field_POS,
     'abbr': Field_Abbr,
     'adp_type': Field_AdpType,
     'adv_type': Field_AdvType,
@@ -807,6 +814,26 @@ LOWER_FIELDS = {
 
 
 FEATURES = [
+   "POS_ADJ",
+   "POS_ADP",
+   "POS_ADV",
+   "POS_AUX",
+   "POS_CONJ",
+   "POS_CCONJ",
+   "POS_DET",
+   "POS_INTJ",
+   "POS_NOUN",
+   "POS_NUM",
+   "POS_PART",
+   "POS_PRON",
+   "POS_PROPN",
+   "POS_PUNCT",
+   "POS_SCONJ",
+   "POS_SYM",
+   "POS_VERB",
+   "POS_X",
+   "POS_EOL",
+   "POS_SPACE",
    "Abbr_yes",
    "AdpType_circ",
    "AdpType_comprep",
@@ -1064,7 +1091,6 @@ FEATURES = [
 ]
 
 FEATURE_NAMES = {get_string_id(name): name for name in FEATURES}
-
 FEATURE_FIELDS = {feature: FIELDS[feature.split('_', 1)[0]] for feature in FEATURES}
 FIELD_SIZES = Counter(FEATURE_FIELDS.values())
 for field in FIELD_SIZES:
