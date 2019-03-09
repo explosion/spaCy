@@ -7,7 +7,7 @@ from ..char_classes import CONCAT_QUOTES, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
 
 
 ELISION = " ' ’ ".strip().replace(" ", "").replace("\n", "")
-HYPHENS = r"- – — ‐ ‑".strip().replace(" ", "").replace("\n", "")
+HYPHENS = r"\- – — ‐ ‑".strip().replace(" ", "").replace("\n", "")
 
 
 _suffixes = (
