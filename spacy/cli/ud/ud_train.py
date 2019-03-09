@@ -84,6 +84,7 @@ def read_data(
                 sent["words"].append(word)
                 sent["tags"].append(tag)
                 sent["morphology"].append(_parse_morph_string(morph))
+                sent["morphology"][-1].add("POS_%s" % pos)
                 sent["heads"].append(head)
                 sent["deps"].append("ROOT" if dep == "root" else dep)
                 sent["spaces"].append(space_after == "_")
