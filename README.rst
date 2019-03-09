@@ -12,13 +12,9 @@ integration. It's commercial open-source software, released under the MIT licens
 
 💫 **Version 2.0 out now!** `Check out the release notes here. <https://github.com/explosion/spaCy/releases>`_
 
-.. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis
-    :target: https://travis-ci.org/explosion/spaCy
-    :alt: Build Status
-
-.. image:: https://img.shields.io/appveyor/ci/explosion/spaCy/master.svg?style=flat-square&logo=appveyor
-    :target: https://ci.appveyor.com/project/explosion/spaCy
-    :alt: Appveyor Build Status
+.. image:: https://img.shields.io/azure-devops/build/explosion-ai/public/8.svg?logo=azure-devops&style=flat-square
+    :target: https://dev.azure.com/explosion-ai/public/_build?definitionId=8
+    :alt: Azure Pipelines
 
 .. image:: https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square
     :target: https://github.com/explosion/spaCy/releases
