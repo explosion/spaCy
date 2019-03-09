@@ -93,26 +93,34 @@ def _normalize_props(props):
     return out
 
 
-def parse_feature(feature):
-    field = FEATURE_FIELDS[feature]
-    offset = FEATURE_OFFSETS[feature]
-    return (field, offset)
+class MorphologyClassMap(object):
+    def __init__(self, features, fields):
+        self.features = tuple(features)
+        self.fields = tuple(fields)
+        self.id2feat = {get_string_id(name): name for name in features}
+        self.feat2field = {feature: fields[feature.split('_', 1)[0]] for feature in features}
+        self.field2feats = {}
+        self.col2info = []
+        self.attr2field = dict(LOWER_FIELDS.items())
+        for feature in features:
+            field = self.feat2field[feature]
+            if field not in self.field2feats:
+                self.col2info.append((field, 0, 'NIL'))
+            self.field2feats.setdefault(field, []).append(feature)
+            self.col2info.append((field, len(self.field2feats[field]), feature))
 
+    @property
+    def field_sizes(self):
+        return [len(self.field2feats[field]) for field in self.fields]
 
-cdef int attribute_to_field(unicode attribute_name):
-    return LOWER_FIELDS[attribute_name]
-
-
-def get_field_id(feature):
-    return FEATURE_FIELDS[feature]
-
-
-def get_field_size(field):
-    return FIELD_SIZES[FIELDS[field]]
-
-
-def get_field_offset(field):
-    return FIELD_OFFSETS[FIELDS[field]]
+    def get_field_offset(self, field):
+        n = 0
+        for f in self.fields:
+            if f == field:
+                return n
+            n += len(self.field2feats[f])
+        else:
+            return -1
 
 
 cdef class Morphology:
@@ -139,9 +147,11 @@ cdef class Morphology:
         self.lemmatizer = lemmatizer
         self.n_tags = len(tag_map)
         self.reverse_index = {}
+        self._feat_map = MorphologyClassMap(FEATURES, FIELDS)
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             attrs = _normalize_props(attrs)
-            self.add({FEATURE_NAMES[feat] for feat in attrs if feat in FEATURE_NAMES})
+            self.add({self._feat_map.id2feat[feat] for feat in attrs
+                      if feat in self._feat_map.id2feat})
             self.tag_map[tag_str] = dict(attrs)
             self.reverse_index[self.strings.add(tag_str)] = i
 
@@ -167,7 +177,7 @@ cdef class Morphology:
         features = intify_features(features)
         cdef attr_t feature
         for feature in features:
-            if feature != 0 and feature not in FEATURE_NAMES:
+            if feature != 0 and feature not in self._feat_map.id2feat:
                 raise KeyError("Unknown feature: %s" % self.strings[feature])
         cdef MorphAnalysisC tag
         tag = create_rich_tag(features)
@@ -187,7 +197,7 @@ cdef class Morphology:
         features = intify_features(features)
         cdef attr_t feature
         for feature in features:
-            field = get_field_id(feature)
+            field = FEATURE_FIELDS[FEATURE_NAMES[feature]]
             set_feature(&tag, field, feature, 1)
         morph = self.insert(tag)
         return morph
@@ -224,7 +234,8 @@ cdef class Morphology:
         """
         attrs = dict(attrs)
         attrs = _normalize_props(attrs)
-        self.add({FEATURE_NAMES[feat] for feat in attrs if feat in FEATURE_NAMES})
+        self.add({self._feat_map.id2feat[feat] for feat in attrs
+                 if feat in self._feat_map.id2feat})
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
         self.exc[(tag_str, self.strings.add(orth_str))] = attrs
  
@@ -313,6 +324,10 @@ cdef class Morphology:
     def from_disk(self, path):
         raise NotImplementedError
 
+    @classmethod
+    def create_class_map(cls):
+        return MorphologyClassMap(FEATURES, FIELDS)
+
 
 cpdef univ_pos_t get_int_tag(pos_):
     return <univ_pos_t>0
@@ -324,17 +339,12 @@ cdef hash_t hash_tag(MorphAnalysisC tag) nogil:
     return mrmr.hash64(&tag, sizeof(tag), 0)
 
 
-def get_feature_field(feature):
-    cdef attr_t key = get_string_id(feature)
-    return FEATURE_FIELDS[feature]
-
-
 cdef MorphAnalysisC create_rich_tag(features) except *:
     cdef MorphAnalysisC tag
     cdef attr_t feature
     memset(&tag, 0, sizeof(tag))
     for feature in features:
-        field = get_field_id(feature)
+        field = FEATURE_FIELDS[FEATURE_NAMES[feature]]
         set_feature(&tag, field, feature, 1)
     return tag
 
@@ -519,8 +529,7 @@ cdef attr_t get_field(const MorphAnalysisC* tag, int field_id) nogil:
     elif field == Field_VerbType:
         return tag.verb_type
     else:
-        raise ValueError("Unknown feature: %s (%d)" % (FEATURE_NAMES.get(feature), feature))
-
+        raise ValueError("Unknown field: (%d)" % field_id)
 
 
 cdef int check_feature(const MorphAnalysisC* tag, attr_t feature) nogil:
@@ -1090,22 +1099,5 @@ FEATURES = [
    "Voice_int",
 ]
 
-FEATURE_NAMES = {get_string_id(name): name for name in FEATURES}
-FEATURE_FIELDS = {feature: FIELDS[feature.split('_', 1)[0]] for feature in FEATURES}
-FIELD_SIZES = Counter(FEATURE_FIELDS.values())
-for field in FIELD_SIZES:
-    FIELD_SIZES[field] += 1
-for feat_id, name in FEATURE_NAMES.items():
-    FEATURE_FIELDS[feat_id] = FEATURE_FIELDS[name]
-# Mapping of feature names to their position in total vector
-FEATURE_OFFSETS = {}
-# Mapping of field names to their first position in total vector.
-FIELD_OFFSETS = {}
-_seen_fields = Counter()
-for i, feature in enumerate(FEATURES):
-    field = FEATURE_FIELDS[feature]
-    # Add 1 for the NIL class, on each field
-    FEATURE_OFFSETS[feature] = _seen_fields[field] + 1
-    if _seen_fields[field] == 0:
-        FIELD_OFFSETS[field] = i
-    _seen_fields[field] += 1 
+FEATURE_NAMES = {get_string_id(f): f for f in FEATURES}
+FEATURE_FIELDS = {f: FIELDS[f.split('_', 1)[0]] for f in FEATURES}

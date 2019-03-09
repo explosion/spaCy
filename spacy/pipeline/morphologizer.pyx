@@ -16,26 +16,24 @@ from ..compat import basestring_
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
-from ..morphology import get_field_size, get_field_offset, parse_feature, FIELDS
-from ..morphology import FEATURES
 
 
 class Morphologizer(Pipe):
     name = 'morphologizer'
     
     @classmethod
-    def Model(cls, attr_nums=None, **cfg):
+    def Model(cls, **cfg):
         if cfg.get('pretrained_dims') and not cfg.get('pretrained_vectors'):
             raise ValueError(TempErrors.T008)
-        if attr_nums is None:
-            attr_nums = [get_field_size(name) for name in FIELDS]
-        return build_morphologizer_model(attr_nums, **cfg)
+        class_map = Morphology.create_class_map()
+        return build_morphologizer_model(class_map.field_sizes, **cfg)
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.model = model
         self.cfg = OrderedDict(sorted(cfg.items()))
         self.cfg.setdefault('cnn_maxout_pieces', 2)
+        self._class_map = self.vocab.morphology.create_class_map()
 
     @property
     def labels(self):
@@ -76,13 +74,13 @@ class Morphologizer(Pipe):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
-        field_names = list(FIELDS)
-        offsets = [get_field_offset(field) for field in field_names]
+        offsets = [self._class_map.get_field_offset(field)
+                   for field in self._class_map.fields]
         for i, doc in enumerate(docs):
             doc_scores = batch_scores[i]
             doc_guesses = scores_to_guesses(doc_scores, self.model.softmax.out_sizes)
             # Convert the neuron indices into feature IDs.
-            doc_feat_ids = numpy.zeros((len(doc), len(field_names)), dtype='i')
+            doc_feat_ids = numpy.zeros((len(doc), len(self._class_map.fields)), dtype='i')
             for j in range(len(doc)):
                 for k, offset in enumerate(offsets):
                     if doc_guesses[j, k] == 0:
@@ -90,7 +88,8 @@ class Morphologizer(Pipe):
                     else:
                         doc_feat_ids[j, k] = offset + (doc_guesses[j, k]-1)
                 # Get the set of feature names.
-                feats = {FEATURES[f] for f in doc_feat_ids[j] if f != 0}
+                feats = {self._class_map.col2info[f][2] for f in doc_feat_ids[j]
+                         if f != 0}
                 # Now add the analysis, and set the hash.
                 try:
                     doc.c[j].morph = self.vocab.morphology.add(feats)
@@ -132,14 +131,15 @@ class Morphologizer(Pipe):
                 if features is None:
                     target[idx] = scores[idx]
                 else:
-                    by_field = {}
+                    gold_fields = {}
                     for feature in features:
-                        field, column = parse_feature(feature)
-                        by_field[field] = column
+                        field = self.get_field(feature)
+                        column = self.get_column(feature)
+                        gold_fields[field] = column
                     col_offset = 0
                     for field, field_size in enumerate(field_sizes):
-                        if field in by_field:
-                            target[idx, col_offset + by_field[field]] = 1.
+                        if field in gold_fields:
+                            target[idx, col_offset + gold_fields[field]] = 1.
                         else:
                             target[idx, col_offset] = 1.
                         col_offset += field_size

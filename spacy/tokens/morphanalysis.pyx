@@ -3,7 +3,6 @@ from libc.string cimport memset
 from ..vocab cimport Vocab
 from ..typedefs cimport hash_t, attr_t
 from ..morphology cimport list_features, check_feature, get_field, tag_to_json
-from ..morphology cimport attribute_to_field
 
 from ..strings import get_string_id
 
@@ -53,7 +52,7 @@ cdef class MorphAnalysis:
         return self.key
 
     def get(self, unicode field):
-        cdef int field_id = attribute_to_field(field)
+        cdef int field_id = self.vocab.morphology._feat_map.attr2field[field]
         return self.vocab.strings[get_field(&self.c, field_id)]
 
     def to_json(self):
