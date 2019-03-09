@@ -12,13 +12,13 @@ jobs:
   strategy:
     matrix:
       Python27Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         python.version: '2.7'
       Python27Mac:
         imageName: 'macos-10.13'
         python.version: '2.7'
       Python35Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         python.version: '3.5'
       Python35Windows:
         imageName: 'vs2017-win2016'
@@ -27,7 +27,7 @@ jobs:
         imageName: 'macos-10.13'
         python.version: '3.5'
       Python36Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         python.version: '3.6'
       Python36Windows:
         imageName: 'vs2017-win2016'
@@ -36,7 +36,7 @@ jobs:
         imageName: 'macos-10.13'
         python.version: '3.6'
       Python37Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         python.version: '3.7'
       Python37Windows:
         imageName: 'vs2017-win2016'
