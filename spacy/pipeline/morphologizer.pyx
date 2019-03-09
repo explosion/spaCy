@@ -86,20 +86,15 @@ class Morphologizer(Pipe):
                     if doc_guesses[j, k] == 0:
                         doc_feat_ids[j, k] = 0
                     else:
-                        doc_feat_ids[j, k] = offset + (doc_guesses[j, k]-1)
+                        doc_feat_ids[j, k] = offset + doc_guesses[j, k]
                 # Get the set of feature names.
-                feats = {self._class_map.col2info[f][2] for f in doc_feat_ids[j]
-                         if f != 0}
+                feats = {self._class_map.col2info[f][2] for f in doc_feat_ids[j]}
+                if "NIL" in feats:
+                    feats.remove("NIL")
                 # Now add the analysis, and set the hash.
-                try:
-                    doc.c[j].morph = self.vocab.morphology.add(feats)
-                    if doc[j].morph.pos != 0:
-                        doc.c[j].pos = doc[j].morph.pos
-                except:
-                    print(offsets)
-                    print(doc_guesses[j])
-                    print(doc_feat_ids[j])
-                    raise
+                doc.c[j].morph = self.vocab.morphology.add(feats)
+                if doc[j].morph.pos != 0:
+                    doc.c[j].pos = doc[j].morph.pos
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
@@ -126,23 +121,25 @@ class Morphologizer(Pipe):
         # Do this on CPU, as we can't vectorize easily.
         target = numpy.zeros(scores.shape, dtype='f')
         field_sizes = self.model.softmax.out_sizes
-        for gold in golds:
-            for features in gold.morphology:
+        for doc, gold in zip(docs, golds):
+            for t, features in enumerate(gold.morphology):
                 if features is None:
                     target[idx] = scores[idx]
                 else:
                     gold_fields = {}
                     for feature in features:
-                        field = self.get_field(feature)
-                        column = self.get_column(feature)
-                        gold_fields[field] = column
-                    col_offset = 0
-                    for field, field_size in enumerate(field_sizes):
-                        if field in gold_fields:
-                            target[idx, col_offset + gold_fields[field]] = 1.
+                        field = self._class_map.feat2field[feature]
+                        gold_fields[field] = self._class_map.feat2offset[feature]
+                    for field in self._class_map.fields:
+                        field_id = self._class_map.field2id[field]
+                        col_offset = self._class_map.field2col[field]
+                        if field_id in gold_fields:
+                            target[idx, col_offset + gold_fields[field_id]] = 1.
                         else:
                             target[idx, col_offset] = 1.
-                        col_offset += field_size
+                    #print(doc[t])
+                    #for col, info in enumerate(self._class_map.col2info):
+                    #    print(col, info, scores[idx, col], target[idx, col])
                 idx += 1
         target = self.model.ops.asarray(target, dtype='f')
         scores = self.model.ops.asarray(scores, dtype='f')

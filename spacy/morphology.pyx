@@ -46,8 +46,8 @@ cdef enum univ_field_t:
     Field_PartForm
     Field_PartType
     Field_Person
-    Field_Polite
     Field_Polarity
+    Field_Polite
     Field_Poss
     Field_Prefix
     Field_PrepCase
@@ -60,8 +60,8 @@ cdef enum univ_field_t:
     Field_Tense
     Field_Typo
     Field_VerbForm
-    Field_Voice
     Field_VerbType
+    Field_Voice
 
 
 def _normalize_props(props):
@@ -94,20 +94,36 @@ def _normalize_props(props):
 
 
 class MorphologyClassMap(object):
-    def __init__(self, features, fields):
+    def __init__(self, features):
         self.features = tuple(features)
-        self.fields = tuple(fields)
+        self.fields = []
+        self.feat2field = {}
+        seen_fields = set()
+        for feature in features:
+            field = feature.split("_", 1)[0]
+            if field not in seen_fields:
+                self.fields.append(field)
+                seen_fields.add(field)
+            self.feat2field[feature] = FIELDS[field]
         self.id2feat = {get_string_id(name): name for name in features}
-        self.feat2field = {feature: fields[feature.split('_', 1)[0]] for feature in features}
-        self.field2feats = {}
+        self.field2feats = {"POS": []}
         self.col2info = []
         self.attr2field = dict(LOWER_FIELDS.items())
+        self.feat2offset = {}
+        self.field2col = {}
+        self.field2id = dict(FIELDS.items())
+        self.fieldid2field = {field_id: field for field, field_id in FIELDS.items()}
         for feature in features:
-            field = self.feat2field[feature]
-            if field not in self.field2feats:
-                self.col2info.append((field, 0, 'NIL'))
-            self.field2feats.setdefault(field, []).append(feature)
-            self.col2info.append((field, len(self.field2feats[field]), feature))
+            field = self.fields[self.feat2field[feature]]
+            if field not in self.field2col:
+                self.field2col[field] = len(self.col2info)
+            if field != "POS" and field not in self.field2feats:
+                self.col2info.append((field, 0, "NIL"))
+            self.field2feats.setdefault(field, ["NIL"])
+            offset = len(self.field2feats[field])
+            self.field2feats[field].append(feature)
+            self.col2info.append((field, offset, feature))
+            self.feat2offset[feature] = offset
 
     @property
     def field_sizes(self):
@@ -147,7 +163,7 @@ cdef class Morphology:
         self.lemmatizer = lemmatizer
         self.n_tags = len(tag_map)
         self.reverse_index = {}
-        self._feat_map = MorphologyClassMap(FEATURES, FIELDS)
+        self._feat_map = MorphologyClassMap(FEATURES)
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             attrs = _normalize_props(attrs)
             self.add({self._feat_map.id2feat[feat] for feat in attrs
@@ -326,7 +342,7 @@ cdef class Morphology:
 
     @classmethod
     def create_class_map(cls):
-        return MorphologyClassMap(FEATURES, FIELDS)
+        return MorphologyClassMap(FEATURES)
 
 
 cpdef univ_pos_t get_int_tag(pos_):
@@ -770,8 +786,8 @@ FIELDS = {
     'Tense': Field_Tense,
     'Typo': Field_Typo,
     'VerbForm': Field_VerbForm,
+    'VerbType': Field_VerbType,
     'Voice': Field_Voice,
-    'VerbType': Field_VerbType
 }
 
 LOWER_FIELDS = {
@@ -803,8 +819,8 @@ LOWER_FIELDS = {
     'part_form': Field_PartForm,
     'part_type': Field_PartType,
     'person': Field_Person,
-    'polite': Field_Polite,
     'polarity': Field_Polarity,
+    'polite': Field_Polite,
     'poss': Field_Poss,
     'prefix': Field_Prefix,
     'prep_case': Field_PrepCase,
@@ -817,8 +833,8 @@ LOWER_FIELDS = {
     'tense': Field_Tense,
     'typo': Field_Typo,
     'verb_form': Field_VerbForm,
+    'verb_type': Field_VerbType,
     'voice': Field_Voice,
-    'verb_type': Field_VerbType
 }
 
 
@@ -849,7 +865,7 @@ FEATURES = [
    "AdpType_prep",
    "AdpType_post",
    "AdpType_voc",
-   "AdvType_adadj,"
+   "AdvType_adadj",
    "AdvType_cau",
    "AdvType_deg",
    "AdvType_ex",

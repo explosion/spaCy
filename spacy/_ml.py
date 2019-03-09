@@ -561,7 +561,7 @@ def build_morphologizer_model(class_nums, **cfg):
         token_vector_width = util.env_opt("token_vector_width", 128)
     pretrained_vectors = cfg.get("pretrained_vectors")
     char_embed = cfg.get("char_embed", True)
-    with Model.define_operators({">>": chain, "+": add}):
+    with Model.define_operators({">>": chain, "+": add, "**": clone}):
         if "tok2vec" in cfg:
             tok2vec = cfg["tok2vec"]
         else:
@@ -571,7 +571,9 @@ def build_morphologizer_model(class_nums, **cfg):
                 char_embed=char_embed,
                 pretrained_vectors=pretrained_vectors,
             )
-        softmax = with_flatten(MultiSoftmax(class_nums, token_vector_width))
+        softmax = with_flatten(
+            MultiSoftmax(class_nums, token_vector_width)
+        )
         softmax.out_sizes = class_nums
         model = tok2vec >> softmax
     model.nI = None

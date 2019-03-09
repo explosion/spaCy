@@ -418,6 +418,8 @@ class Tagger(Pipe):
                         vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                         if lemma != 0 and lemma != doc.c[j].lex.orth:
                             doc.c[j].lemma = lemma
+                    else:
+                        doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
                 idx += 1
             if tensors is not None and len(tensors):
                 if isinstance(doc.tensor, numpy.ndarray) \
