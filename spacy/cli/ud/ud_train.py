@@ -231,9 +231,14 @@ def write_conllu(docs, file_):
     for i, doc in enumerate(docs):
         matches = merger(doc)
         spans = [doc[start : end + 1] for _, start, end in matches]
+        seen_tokens = set()
         with doc.retokenize() as retokenizer:
             for span in spans:
-                retokenizer.merge(span)
+                span_tokens = set(range(span.start, span.end))
+                if not span_tokens.intersection(seen_tokens):
+                    retokenizer.merge(span)
+                    seen_tokens.update(span_tokens)
+
         file_.write("# newdoc id = {i}\n".format(i=i))
         for j, sent in enumerate(doc.sents):
             file_.write("# sent_id = {i}.{j}\n".format(i=i, j=j))
