@@ -215,7 +215,7 @@ _punct = (
     r"… …… , : ; \! \? ¿ ؟ ¡ \( \) \[ \] \{ \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪"
 )
 _quotes = r'\' " ” “ ` ‘ ´ ’ ‚ , „ » « 「 」 『 』 （ ） 〔 〕 【 】 《 》 〈 〉'
-_hyphens = "- – — -- --- —— ~"
+_hyphens = r"\- – — \-\- \-\-\- —— ~"
 
 # Various symbols like dingbats, but also emoji
 # Details: https://www.compart.com/en/unicode/category/So
