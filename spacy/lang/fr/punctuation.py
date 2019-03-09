@@ -21,7 +21,9 @@ _suffixes = (
         r"(?<=[0-9])%",  # 4% -> ["4", "%"]
         r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[0-9{al}{e}(?:{q})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES),
+        r"(?<=[0-9{al}{e}(?:{q})])\.".format(
+            al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES
+        ),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
     ]
 )
