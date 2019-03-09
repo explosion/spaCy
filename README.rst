@@ -12,7 +12,7 @@ integration. It's commercial open-source software, released under the MIT licens
 
 💫 **Version 2.0 out now!** `Check out the release notes here. <https://github.com/explosion/spaCy/releases>`_
 
-.. image:: https://img.shields.io/azure-devops/build/explosion-ai/public/8.svg?logo=azure-devops&style=flat-square
+.. image:: https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-devops&style=flat-square
     :target: https://dev.azure.com/explosion-ai/public/_build?definitionId=8
     :alt: Azure Pipelines
 
