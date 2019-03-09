@@ -1022,6 +1022,37 @@ cdef class Doc:
                 data["_"][attr] = value
         return data
 
+    def to_utf8_array(self, int nr_char=-1):
+        """Encode word strings to utf8, and export to a fixed-width array
+        of characters. Characters are placed into the array in the order:
+            0, -1, 1, -2, etc
+        For example, if the array is sliced array[:, :8], the array will
+        contain the first 4 characters and last 4 characters of each word ---
+        with the middle characters clipped out. The value 255 is used as a pad
+        value.
+        """
+        byte_strings = [token.orth_.encode('utf8') for token in self]
+        if nr_char == -1:
+            nr_char = max(len(bs) for bs in byte_strings)
+        cdef np.ndarray output = numpy.zeros((len(byte_strings), nr_char), dtype='uint8')
+        output.fill(255)
+        cdef int i, j, start_idx, end_idx
+        cdef bytes byte_string
+        cdef unsigned char utf8_char
+        for i, byte_string in enumerate(byte_strings):
+            j = 0
+            start_idx = 0
+            end_idx = len(byte_string) - 1
+            while j < nr_char and start_idx <= end_idx:
+                output[i, j] = <unsigned char>byte_string[start_idx]
+                start_idx += 1
+                j += 1
+                if j < nr_char and start_idx <= end_idx:
+                    output[i, j] = <unsigned char>byte_string[end_idx]
+                    end_idx -= 1
+                    j += 1
+        return output
+
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
     cdef int i
