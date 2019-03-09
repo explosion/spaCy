@@ -5,6 +5,10 @@ trigger:
     - '*'
     exclude:
     - 'spacy.io'
+  paths:
+    exclude:
+    - 'website/*'
+    - '*.md'
 
 jobs:
 
@@ -72,6 +76,7 @@ jobs:
   # Downgrading pip is necessary to prevent a wheel version incompatiblity.
   # Might be fixed in the future or some other way, so investigate again.
   - script: |
+      python -c "import sys; print('UNICODE:', sys.maxunicode)"
       python -m pip install --upgrade pip==18.1
       pip install -r requirements.txt
     displayName: 'Install dependencies'
