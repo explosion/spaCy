@@ -350,7 +350,6 @@ def initialize_pipeline(nlp, docs, golds, config, device):
     nlp.add_pipe(nlp.create_pipe("tagger", config={"set_morphology": False}))
     nlp.add_pipe(nlp.create_pipe("morphologizer"))
     nlp.add_pipe(nlp.create_pipe("parser"))
-    assert not nlp.get_pipe("tagger").set_morphology
     if config.multitask_tag:
         nlp.parser.add_multitask_objective("tag")
     if config.multitask_sent:
