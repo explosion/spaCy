@@ -88,7 +88,7 @@ class Morphologizer(Pipe):
                     if doc_guesses[j, k] == 0:
                         doc_feat_ids[j, k] = 0
                     else:
-                        doc_feat_ids[j, k] = offset + doc_guesses[j, k]
+                        doc_feat_ids[j, k] = offset + (doc_guesses[j, k]-1)
                 # Get the set of feature names.
                 feats = {FEATURES[f] for f in doc_feat_ids[j] if f != 0}
                 # Now add the analysis, and set the hash.

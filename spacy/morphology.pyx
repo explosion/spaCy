@@ -1066,16 +1066,20 @@ FEATURES = [
 FEATURE_NAMES = {get_string_id(name): name for name in FEATURES}
 
 FEATURE_FIELDS = {feature: FIELDS[feature.split('_', 1)[0]] for feature in FEATURES}
+FIELD_SIZES = Counter(FEATURE_FIELDS.values())
+for field in FIELD_SIZES:
+    FIELD_SIZES[field] += 1
 for feat_id, name in FEATURE_NAMES.items():
     FEATURE_FIELDS[feat_id] = FEATURE_FIELDS[name]
-
-FIELD_SIZES = Counter(FEATURE_FIELDS.values())
+# Mapping of feature names to their position in total vector
 FEATURE_OFFSETS = {}
+# Mapping of field names to their first position in total vector.
 FIELD_OFFSETS = {}
 _seen_fields = Counter()
 for i, feature in enumerate(FEATURES):
     field = FEATURE_FIELDS[feature]
-    FEATURE_OFFSETS[feature] = _seen_fields[field]
+    # Add 1 for the NIL class, on each field
+    FEATURE_OFFSETS[feature] = _seen_fields[field] + 1
     if _seen_fields[field] == 0:
         FIELD_OFFSETS[field] = i
     _seen_fields[field] += 1 
