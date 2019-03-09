@@ -11,7 +11,12 @@ jobs:
 # Perform basic checks for most important errors (syntax etc.) Uses the config
 # defined in .flake8 and overwrites the selected codes.
 - job: 'Validate'
+  pool:
+    vmImage: 'ubuntu-16.04'
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.7'
   - script: |
       pip install flake8
       python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
