@@ -94,6 +94,8 @@ class Morphologizer(Pipe):
                 # Now add the analysis, and set the hash.
                 try:
                     doc.c[j].morph = self.vocab.morphology.add(feats)
+                    if doc[j].morph.pos != 0:
+                        doc.c[j].pos = doc[j].morph.pos
                 except:
                     print(offsets)
                     print(doc_guesses[j])
