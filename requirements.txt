@@ -12,3 +12,4 @@ requests>=2.13.0,<3.0.0
 pytest>=4.0.0,<4.1.0
 mock>=2.0.0,<3.0.0
 pathlib==1.0.1; python_version < "3.4"
+flake8>=3.5.0,<3.6.0
