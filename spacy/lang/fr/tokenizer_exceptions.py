@@ -379,7 +379,7 @@ _regular_exp = [
 _regular_exp += [
     "^{prefix}[{hyphen}][{al}][{hyphen}{al}{elision}]*$".format(
         prefix=p,
-        hyphen=HYPHENS,   # putting the - first in the [] range avoids having to use a backslash
+        hyphen=HYPHENS,  # putting the - first in the [] range avoids having to use a backslash
         elision=ELISION,
         al=ALPHA_LOWER,
     )
