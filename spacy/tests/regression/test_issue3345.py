@@ -1,9 +1,8 @@
-"""Test interaction between preset entities and sentence boundaries in NER."""
 # coding: utf8
 from __future__ import unicode_literals
 
-import spacy
 import pytest
+from spacy.lang.en import English
 from spacy.tokens import Doc
 from spacy.pipeline import EntityRuler, EntityRecognizer
 
@@ -11,7 +10,7 @@ from spacy.pipeline import EntityRuler, EntityRecognizer
 @pytest.mark.xfail
 def test_issue3345():
     """Test case where preset entity crosses sentence boundary."""
-    nlp = spacy.blank("en")
+    nlp = English()
     doc = Doc(nlp.vocab, words=["I", "live", "in", "New", "York"])
     doc[4].is_sent_start = True
 
