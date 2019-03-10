@@ -532,7 +532,7 @@ class Language(object):
 
         get_gold_tuples (function): Function returning gold data
 
-        component_cfg (dict): Config parameters for specific components. 
+        component_cfg (dict): Config parameters for specific components.
         **cfg: Config parameters.
         RETURNS: An optimizer
         """
