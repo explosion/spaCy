@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import pytest
 from spacy.tokens import Doc
 from spacy.attrs import ORTH, SHAPE, POS, DEP
 
@@ -55,3 +56,14 @@ def test_doc_array_dep(en_vocab):
     assert feats_array[1][1] == doc[1].dep
     assert feats_array[2][1] == doc[2].dep
     assert feats_array[3][1] == doc[3].dep
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize("attrs", [["ORTH", "SHAPE"], "IS_ALPHA"])
+def test_doc_array_to_from_string_attrs(en_vocab, attrs):
+    """Test that both Doc.to_array and Doc.from_array accept string attrs,
+    as well as single attrs and sequences of attrs.
+    """
+    words = ["An", "example", "sentence"]
+    doc = Doc(en_vocab, words=words)
+    Doc(en_vocab, words=words).from_array(attrs, doc.to_array(attrs))
