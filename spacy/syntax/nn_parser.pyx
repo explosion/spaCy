@@ -363,9 +363,14 @@ cdef class Parser:
         for i in range(batch_size):
             self.moves.set_valid(is_valid, states[i])
             guess = arg_max_if_valid(&scores[i*nr_class], is_valid, nr_class)
-            action = self.moves.c[guess]
-            action.do(states[i], action.label)
-            states[i].push_hist(guess)
+            if guess == -1:
+                # This shouldn't happen, but it's hard to raise an error here,
+                # and we don't want to infinite loop. So, force to end state.
+                states[i].force_final()
+            else:
+                action = self.moves.c[guess]
+                action.do(states[i], action.label)
+                states[i].push_hist(guess)
         free(is_valid)
 
     def transition_beams(self, beams, float[:, ::1] scores):
