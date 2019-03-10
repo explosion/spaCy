@@ -153,10 +153,13 @@ class GoldCorpus(object):
             loc = util.ensure_path(loc)
             if loc.parts[-1].endswith("json"):
                 gold_tuples = read_json_file(loc)
+            elif loc.parts[-1].endswith("jsonl"):
+                gold_tuples = srsly.read_jsonl(loc)
             elif loc.parts[-1].endswith("msg"):
                 gold_tuples = srsly.read_msgpack(loc)
             else:
-                raise ValueError(Errors.E124.format(path=path2str(loc)))
+                supported = ("json", "jsonl", "msg")
+                raise ValueError(Errors.E124.format(path=path2str(loc), formats=supported))
             for item in gold_tuples:
                 yield item
                 i += len(item[1])

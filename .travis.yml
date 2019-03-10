@@ -5,23 +5,16 @@ dist: trusty
 group: edge
 python:
    - "2.7"
-   - "3.5"
-   - "3.6"
 os:
   - linux
-env:
-  - VIA=compile
-  - VIA=flake8
 install:
-  - "./travis.sh"
-  - pip install flake8
+  - "pip install -r requirements.txt"
+  - "python setup.py build_ext --inplace"
+  - "pip install -e ."
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
   - "pip install pytest pytest-timeout"
-  - if [[ "${VIA}" == "compile" ]]; then python -m pytest --tb=native spacy; fi
-  - if [[ "${VIA}" == "flake8" ]]; then flake8 . --count --exclude=spacy/compat.py,spacy/lang --select=E901,E999,F821,F822,F823 --show-source --statistics; fi
-  - if [[ "${VIA}" == "pypi_nightly" ]]; then python -m pytest --tb=native --models --en `python -c "import os.path; import spacy; print(os.path.abspath(os.path.dirname(spacy.__file__)))"`; fi
-  - if [[ "${VIA}" == "sdist" ]]; then python -m pytest --tb=native `python -c "import os.path; import spacy; print(os.path.abspath(os.path.dirname(spacy.__file__)))"`; fi
+  - "python -m pytest --tb=native spacy"
 branches:
   except:
     - spacy.io

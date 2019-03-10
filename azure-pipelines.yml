@@ -1,0 +1,92 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+    exclude:
+    - 'spacy.io'
+  paths:
+    exclude:
+    - 'website/*'
+    - '*.md'
+
+jobs:
+
+# Perform basic checks for most important errors (syntax etc.) Uses the config
+# defined in .flake8 and overwrites the selected codes.
+- job: 'Validate'
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.7'
+  - script: |
+      pip install flake8
+      python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+    displayName: 'flake8'
+
+- job: 'Test'
+  dependsOn: 'Validate'
+  strategy:
+    matrix:
+      # Python 2.7 currently doesn't work because it seems to be a narrow
+      # unicode build, which causes problems with the regular expressions
+
+      # Python27Linux:
+      #   imageName: 'ubuntu-16.04'
+      #   python.version: '2.7'
+      # Python27Mac:
+      #   imageName: 'macos-10.13'
+      #   python.version: '2.7'
+      Python35Linux:
+        imageName: 'ubuntu-16.04'
+        python.version: '3.5'
+      Python35Windows:
+        imageName: 'vs2017-win2016'
+        python.version: '3.5'
+      Python35Mac:
+        imageName: 'macos-10.13'
+        python.version: '3.5'
+      Python36Linux:
+        imageName: 'ubuntu-16.04'
+        python.version: '3.6'
+      Python36Windows:
+        imageName: 'vs2017-win2016'
+        python.version: '3.6'
+      Python36Mac:
+        imageName: 'macos-10.13'
+        python.version: '3.6'
+      Python37Linux:
+        imageName: 'ubuntu-16.04'
+        python.version: '3.7'
+      Python37Windows:
+        imageName: 'vs2017-win2016'
+        python.version: '3.7'
+      Python37Mac:
+        imageName: 'macos-10.13'
+        python.version: '3.7'
+    maxParallel: 4
+  pool:
+    vmImage: $(imageName)
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+
+  # Downgrading pip is necessary to prevent a wheel version incompatiblity.
+  # Might be fixed in the future or some other way, so investigate again.
+  - script: |
+      python -m pip install --upgrade pip==18.1
+      pip install -r requirements.txt
+    displayName: 'Install dependencies'
+
+  - script: |
+      python setup.py build_ext --inplace
+      pip install -e .
+    displayName: 'Build and install'
+
+  - script: python -m pytest --tb=native spacy
+    displayName: 'Run tests'
