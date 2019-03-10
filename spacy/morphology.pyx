@@ -130,13 +130,7 @@ class MorphologyClassMap(object):
         return [len(self.field2feats[field]) for field in self.fields]
 
     def get_field_offset(self, field):
-        n = 0
-        for f in self.fields:
-            if f == field:
-                return n
-            n += len(self.field2feats[f])
-        else:
-            return -1
+        return self.field2col[field]
 
 
 cdef class Morphology:
