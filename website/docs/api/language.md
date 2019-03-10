@@ -133,7 +133,9 @@ Allocate models, pre-process training data and acquire an optimizer.
 | Name          | Type     | Description                  |
 | ------------- | -------- | ---------------------------- |
 | `gold_tuples` | iterable | Gold-standard training data. |
-| `**cfg`       | -        | Config parameters.           |
+| `component_cfg` | dict   | Config parameters for specific pipeline
+components. |
+| `**cfg`       | -        | Config parameters (sent to all components). |
 | **RETURNS**   | callable | An optimizer.                |
 
 ## Language.use_params {#use_params tag="contextmanager, method"}
