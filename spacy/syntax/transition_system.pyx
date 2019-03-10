@@ -94,6 +94,13 @@ cdef class TransitionSystem:
                 raise ValueError(Errors.E024)
         return history
 
+    def apply_transition(self, StateClass state, name):
+        if not self.is_valid(state, name):
+            raise ValueError(
+                "Cannot apply transition {name}: invalid for the current state.".format(name=name))
+        action = self.lookup_transition(name)
+        action.do(state.c, action.label)
+
     cdef int initialize_state(self, StateC* state) nogil:
         pass
 
@@ -201,30 +208,32 @@ cdef class TransitionSystem:
         self.labels[action][label_name] = new_freq-1
         return 1
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, **kwargs):
         with path.open('wb') as file_:
-            file_.write(self.to_bytes(**exclude))
+            file_.write(self.to_bytes(**kwargs))
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, **kwargs):
         with path.open('rb') as file_:
             byte_data = file_.read()
-        self.from_bytes(byte_data, **exclude)
+        self.from_bytes(byte_data, **kwargs)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, exclude=tuple(), **kwargs):
         transitions = []
         serializers = {
             'moves': lambda: srsly.json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes()
         }
+        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         labels = {}
         deserializers = {
             'moves': lambda b: labels.update(srsly.json_loads(b)),
             'strings': lambda b: self.strings.from_bytes(b)
         }
+        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         self.initialize_actions(labels)
         return self

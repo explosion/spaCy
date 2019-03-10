@@ -28,7 +28,7 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors
+from .errors import Errors, Warnings, deprecation_warning
 from . import util
 from . import about
 
@@ -103,8 +103,9 @@ class Language(object):
     Defaults (class): Settings, data and factory methods for creating the `nlp`
         object and processing pipeline.
     lang (unicode): Two-letter language ID, i.e. ISO code.
-    """
 
+    DOCS: https://spacy.io/api/language
+    """
     Defaults = BaseDefaults
     lang = None
 
@@ -698,124 +699,114 @@ class Language(object):
                         self.tokenizer._reset_cache(keys)
                     nr_seen = 0
 
-    def to_disk(self, path, disable=tuple()):
+    def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
-        path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be strings or `Path`-like objects.
-        disable (list): Names of pipeline components to disable and prevent
-            from being saved.
+        path (unicode or Path): Path to a directory, which will be created if
+            it doesn't exist.
+        exclude (list): Names of components or serialization fields to exclude.
 
-        EXAMPLE:
-            >>> nlp.to_disk('/path/to/models')
+        DOCS: https://spacy.io/api/language#to_disk
         """
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
         path = util.ensure_path(path)
-        serializers = OrderedDict(
-            (
-                ("tokenizer", lambda p: self.tokenizer.to_disk(p, vocab=False)),
-                ("meta.json", lambda p: p.open("w").write(srsly.json_dumps(self.meta))),
-            )
-        )
+        serializers = OrderedDict()
+        serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(p, exclude=["vocab"])
+        serializers["meta.json"] = lambda p: p.open("w").write(srsly.json_dumps(self.meta))
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
                 continue
-            if name in disable:
+            if name in exclude:
                 continue
             if not hasattr(proc, "to_disk"):
                 continue
-            serializers[name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+            serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])
         serializers["vocab"] = lambda p: self.vocab.to_disk(p)
-        util.to_disk(path, serializers, {p: False for p in disable})
+        util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, disable=tuple()):
+    def from_disk(self, path, exclude=tuple(), disable=None):
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
 
-        path (unicode or Path): A path to a directory. Paths may be either
-            strings or `Path`-like objects.
-        disable (list): Names of the pipeline components to disable.
+        path (unicode or Path): A path to a directory.
+        exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The modified `Language` object.
 
-        EXAMPLE:
-            >>> from spacy.language import Language
-            >>> nlp = Language().from_disk('/path/to/models')
+        DOCS: https://spacy.io/api/language#from_disk
         """
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
         path = util.ensure_path(path)
-        deserializers = OrderedDict(
-            (
-                ("meta.json", lambda p: self.meta.update(srsly.read_json(p))),
-                (
-                    "vocab",
-                    lambda p: (
-                        self.vocab.from_disk(p) and _fix_pretrained_vectors_name(self)
-                    ),
-                ),
-                ("tokenizer", lambda p: self.tokenizer.from_disk(p, vocab=False)),
-            )
-        )
+        deserializers = OrderedDict()
+        deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
+        deserializers["vocab"] = lambda p: self.vocab.from_disk(p) and _fix_pretrained_vectors_name(self)
+        deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(p, exclude=["vocab"])
         for name, proc in self.pipeline:
-            if name in disable:
+            if name in exclude:
                 continue
             if not hasattr(proc, "from_disk"):
                 continue
-            deserializers[name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
-        exclude = {p: False for p in disable}
-        if not (path / "vocab").exists():
-            exclude["vocab"] = True
+            deserializers[name] = lambda p, proc=proc: proc.from_disk(p, exclude=["vocab"])
+        if not (path / "vocab").exists() and "vocab" not in exclude:
+            # Convert to list here in case exclude is (default) tuple
+            exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
         self._path = path
         return self
 
-    def to_bytes(self, disable=[], **exclude):
+    def to_bytes(self, exclude=tuple(), disable=None, **kwargs):
         """Serialize the current state to a binary string.
 
-        disable (list): Nameds of pipeline components to disable and prevent
-            from being serialized.
+        exclude (list): Names of components or serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Language` object.
+
+        DOCS: https://spacy.io/api/language#to_bytes
         """
-        serializers = OrderedDict(
-            (
-                ("vocab", lambda: self.vocab.to_bytes()),
-                ("tokenizer", lambda: self.tokenizer.to_bytes(vocab=False)),
-                ("meta", lambda: srsly.json_dumps(self.meta)),
-            )
-        )
-        for i, (name, proc) in enumerate(self.pipeline):
-            if name in disable:
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
+        serializers = OrderedDict()
+        serializers["vocab"] = lambda: self.vocab.to_bytes()
+        serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
+        serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
+        for name, proc in self.pipeline:
+            if name in exclude:
                 continue
             if not hasattr(proc, "to_bytes"):
                 continue
-            serializers[i] = lambda proc=proc: proc.to_bytes(vocab=False)
+            serializers[name] = lambda proc=proc: proc.to_bytes(exclude=["vocab"])
+        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, disable=[]):
+    def from_bytes(self, bytes_data, exclude=tuple(), disable=None, **kwargs):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        disable (list): Names of the pipeline components to disable.
+        exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The `Language` object.
+
+        DOCS: https://spacy.io/api/language#from_bytes
         """
-        deserializers = OrderedDict(
-            (
-                ("meta", lambda b: self.meta.update(srsly.json_loads(b))),
-                (
-                    "vocab",
-                    lambda b: (
-                        self.vocab.from_bytes(b) and _fix_pretrained_vectors_name(self)
-                    ),
-                ),
-                ("tokenizer", lambda b: self.tokenizer.from_bytes(b, vocab=False)),
-            )
-        )
-        for i, (name, proc) in enumerate(self.pipeline):
-            if name in disable:
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
+        deserializers = OrderedDict()
+        deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
+        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b) and _fix_pretrained_vectors_name(self)
+        deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(b, exclude=["vocab"])
+        for name, proc in self.pipeline:
+            if name in exclude:
                 continue
             if not hasattr(proc, "from_bytes"):
                 continue
-            deserializers[i] = lambda b, proc=proc: proc.from_bytes(b, vocab=False)
-        util.from_bytes(bytes_data, deserializers, {})
+            deserializers[name] = lambda b, proc=proc: proc.from_bytes(b, exclude=["vocab"])
+        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
+        util.from_bytes(bytes_data, deserializers, exclude)
         return self
 
 

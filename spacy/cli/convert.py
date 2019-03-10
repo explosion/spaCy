@@ -23,15 +23,16 @@ CONVERTERS = {
 }
 
 # File types
-FILE_TYPES = ("json", "jsonl")
+FILE_TYPES = ("json", "jsonl", "msg")
+FILE_TYPES_STDOUT = ("json", "jsonl")
 
 
 @plac.annotations(
     input_file=("Input file", "positional", None, str),
-    output_dir=("Output directory for converted file", "positional", None, str),
-    file_type=("Type of data to produce: 'jsonl' or 'json'", "option", "t", str),
+    output_dir=("Output directory. '-' for stdout.", "positional", None, str),
+    file_type=("Type of data to produce: {}".format(FILE_TYPES), "option", "t", str),
     n_sents=("Number of sentences per doc", "option", "n", int),
-    converter=("Name of converter (auto, iob, conllu or ner)", "option", "c", str),
+    converter=("Converter: {}".format(tuple(CONVERTERS.keys())), "option", "c", str),
     lang=("Language (if tokenizer required)", "option", "l", str),
     morphology=("Enable appending morphology to tags", "flag", "m", bool),
 )
@@ -58,6 +59,13 @@ def convert(
             "Supported file types: '{}'".format(", ".join(FILE_TYPES)),
             exits=1,
         )
+    if file_type not in FILE_TYPES_STDOUT and output_dir == "-":
+        # TODO: support msgpack via stdout in srsly?
+        msg.fail(
+            "Can't write .{} data to stdout.".format(file_type),
+            "Please specify an output directory.",
+            exits=1,
+        )
     if not input_path.exists():
         msg.fail("Input file not found", input_path, exits=1)
     if output_dir != "-" and not Path(output_dir).exists():
@@ -78,6 +86,8 @@ def convert(
             srsly.write_json(output_file, data)
         elif file_type == "jsonl":
             srsly.write_jsonl(output_file, data)
+        elif file_type == "msg":
+            srsly.write_msgpack(output_file, data)
         msg.good("Generated output file ({} documents)".format(len(data)), output_file)
     else:
         # Print to stdout

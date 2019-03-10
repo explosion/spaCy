@@ -4,9 +4,10 @@ from __future__ import unicode_literals
 
 import pytest
 import numpy
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.errors import ModelsWarning
+from spacy.attrs import ENT_TYPE, ENT_IOB
 
 from ..util import get_doc
 
@@ -112,14 +113,14 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
     new_tokens = Doc(tokens.vocab).from_bytes(
-        tokens.to_bytes(tensor=False), tensor=False
+        tokens.to_bytes(exclude=["tensor"]), exclude=["tensor"]
     )
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
     new_tokens = Doc(tokens.vocab).from_bytes(
-        tokens.to_bytes(sentiment=False), sentiment=False
+        tokens.to_bytes(exclude=["sentiment"]), exclude=["sentiment"]
     )
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
@@ -256,3 +257,18 @@ def test_lowest_common_ancestor(en_tokenizer, sentence, heads, lca_matrix):
     assert lca[1, 1] == 1
     assert lca[0, 1] == 2
     assert lca[1, 2] == 2
+
+
+def test_doc_is_nered(en_vocab):
+    words = ["I", "live", "in", "New", "York"]
+    doc = Doc(en_vocab, words=words)
+    assert not doc.is_nered
+    doc.ents = [Span(doc, 3, 5, label="GPE")]
+    assert doc.is_nered
+    # Test creating doc from array with unknown values
+    arr = numpy.array([[0, 0], [0, 0], [0, 0], [384, 3], [384, 1]], dtype="uint64")
+    doc = Doc(en_vocab, words=words).from_array([ENT_TYPE, ENT_IOB], arr)
+    assert doc.is_nered
+    # Test serialization
+    new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
+    assert new_doc.is_nered

@@ -1,7 +1,7 @@
 ---
 title: EntityRecognizer
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/pipes.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
@@ -211,7 +211,7 @@ Modify the pipe's model, to use the given parameter values.
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
 > with ner.use_params():
->     ner.to_disk('/best_model')
+>     ner.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
@@ -226,7 +226,7 @@ Add a new label to the pipe.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> ner.add_label('MY_LABEL')
+> ner.add_label("MY_LABEL")
 > ```
 
 | Name    | Type    | Description       |
@@ -241,12 +241,13 @@ Serialize the pipe to disk.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> ner.to_disk('/path/to/ner')
+> ner.to_disk("/path/to/ner")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name      | Type             | Description                                                                                                           |
+| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## EntityRecognizer.from_disk {#from_disk tag="method"}
 
@@ -256,17 +257,18 @@ Load the pipe from disk. Modifies the object in place and returns it.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> ner.from_disk('/path/to/ner')
+> ner.from_disk("/path/to/ner")
 > ```
 
 | Name        | Type               | Description                                                                |
 | ----------- | ------------------ | -------------------------------------------------------------------------- |
 | `path`      | unicode / `Path`   | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list               | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `EntityRecognizer` | The modified `EntityRecognizer` object.                                    |
 
 ## EntityRecognizer.to_bytes {#to_bytes tag="method"}
 
-> #### example
+> #### Example
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
@@ -275,10 +277,10 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                           |
-| ----------- | ----- | ----------------------------------------------------- |
-| `**exclude` | -     | Named attributes to prevent from being serialized.    |
-| **RETURNS** | bytes | The serialized form of the `EntityRecognizer` object. |
+| Name        | Type  | Description                                                               |
+| ----------- | ----- | ------------------------------------------------------------------------- |
+| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes | The serialized form of the `EntityRecognizer` object.                     |
 
 ## EntityRecognizer.from_bytes {#from_bytes tag="method"}
 
@@ -292,11 +294,11 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > ner.from_bytes(ner_bytes)
 > ```
 
-| Name         | Type               | Description                                    |
-| ------------ | ------------------ | ---------------------------------------------- |
-| `bytes_data` | bytes              | The data to load from.                         |
-| `**exclude`  | -                  | Named attributes to prevent from being loaded. |
-| **RETURNS**  | `EntityRecognizer` | The `EntityRecognizer` object.                 |
+| Name         | Type               | Description                                                               |
+| ------------ | ------------------ | ------------------------------------------------------------------------- |
+| `bytes_data` | bytes              | The data to load from.                                                    |
+| `exclude`    | list               | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `EntityRecognizer` | The `EntityRecognizer` object.                                            |
 
 ## EntityRecognizer.labels {#labels tag="property"}
 
@@ -312,3 +314,21 @@ The labels currently added to the component.
 | Name        | Type  | Description                        |
 | ----------- | ----- | ---------------------------------- |
 | **RETURNS** | tuple | The labels added to the component. |
+
+## Serialization fields {#serialization-fields}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = ner.to_disk("/path", exclude=["vocab"])
+> ```
+
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |

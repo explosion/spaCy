@@ -327,7 +327,7 @@ the model**.
 | Name      | Type             | Description                                                                                                           |
 | --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `disable` | list             | Names of pipeline components to [disable](/usage/processing-pipelines#disabling) and prevent from being saved.        |
+| `exclude` | list             | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
 
 ## Language.from_disk {#from_disk tag="method" new="2"}
 
@@ -349,22 +349,22 @@ loaded object.
 > nlp = English().from_disk("/path/to/en_model")
 > ```
 
-| Name        | Type             | Description                                                                       |
-| ----------- | ---------------- | --------------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.        |
-| `disable`   | list             | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Language`       | The modified `Language` object.                                                   |
+| Name        | Type             | Description                                                                               |
+| ----------- | ---------------- | ----------------------------------------------------------------------------------------- |
+| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
+| `exclude`   | list             | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | `Language`       | The modified `Language` object.                                                           |
 
 <Infobox title="Changed in v2.0" variant="warning">
 
 As of spaCy v2.0, the `save_to_directory` method has been renamed to `to_disk`,
 to improve consistency across classes. Pipeline components to prevent from being
-loaded can now be added as a list to `disable`, instead of specifying one
-keyword argument per component.
+loaded can now be added as a list to `disable` (v2.0) or `exclude` (v2.1),
+instead of specifying one keyword argument per component.
 
 ```diff
 - nlp = spacy.load("en", tagger=False, entity=False)
-+ nlp = English().from_disk("/model", disable=["tagger', 'ner"])
++ nlp = English().from_disk("/model", exclude=["tagger", "ner"])
 ```
 
 </Infobox>
@@ -379,10 +379,10 @@ Serialize the current state to a binary string.
 > nlp_bytes = nlp.to_bytes()
 > ```
 
-| Name        | Type  | Description                                                                                                         |
-| ----------- | ----- | ------------------------------------------------------------------------------------------------------------------- |
-| `disable`   | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling) and prevent from being serialized. |
-| **RETURNS** | bytes | The serialized form of the `Language` object.                                                                       |
+| Name        | Type  | Description                                                                               |
+| ----------- | ----- | ----------------------------------------------------------------------------------------- |
+| `exclude`   | list  | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes | The serialized form of the `Language` object.                                             |
 
 ## Language.from_bytes {#from_bytes tag="method"}
 
@@ -400,20 +400,21 @@ available to the loaded object.
 > nlp2.from_bytes(nlp_bytes)
 > ```
 
-| Name         | Type       | Description                                                                       |
-| ------------ | ---------- | --------------------------------------------------------------------------------- |
-| `bytes_data` | bytes      | The data to load from.                                                            |
-| `disable`    | list       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS**  | `Language` | The `Language` object.                                                            |
+| Name         | Type       | Description                                                                               |
+| ------------ | ---------- | ----------------------------------------------------------------------------------------- |
+| `bytes_data` | bytes      | The data to load from.                                                                    |
+| `exclude`    | list       | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `Language` | The `Language` object.                                                                    |
 
 <Infobox title="Changed in v2.0" variant="warning">
 
 Pipeline components to prevent from being loaded can now be added as a list to
-`disable`, instead of specifying one keyword argument per component.
+`disable` (v2.0) or `exclude` (v2.1), instead of specifying one keyword argument
+per component.
 
 ```diff
 - nlp = English().from_bytes(bytes, tagger=False, entity=False)
-+ nlp = English().from_bytes(bytes, disable=["tagger", "ner"])
++ nlp = English().from_bytes(bytes, exclude=["tagger", "ner"])
 ```
 
 </Infobox>
@@ -437,3 +438,23 @@ Pipeline components to prevent from being loaded can now be added as a list to
 | `Defaults`                             | class   | Settings, data and factory methods for creating the `nlp` object and processing pipeline.                                           |
 | `lang`                                 | unicode | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).                                     |
 | `factories` <Tag variant="new">2</Tag> | dict    | Factories that create pre-defined pipeline components, e.g. the tagger, parser or entity recognizer, keyed by their component name. |
+
+## Serialization fields {#serialization-fields}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = nlp.to_bytes(exclude=["tokenizer", "vocab"])
+> nlp.from_disk("./model-data", exclude=["ner"])
+> ```
+
+| Name        | Description                                        |
+| ----------- | -------------------------------------------------- |
+| `vocab`     | The shared [`Vocab`](/api/vocab).                  |
+| `tokenizer` | Tokenization rules and exceptions.                 |
+| `meta`      | The meta data, available as `Language.meta`.       |
+| ...         | String names of pipeline components, e.g. `"ner"`. |

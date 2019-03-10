@@ -1,7 +1,7 @@
 ---
 title: Tagger
 tag: class
-source: spacy/pipeline.pyx
+source: spacy/pipeline/pipes.pyx
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
@@ -209,7 +209,7 @@ Modify the pipe's model, to use the given parameter values.
 > ```python
 > tagger = Tagger(nlp.vocab)
 > with tagger.use_params():
->     tagger.to_disk('/best_model')
+>     tagger.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
@@ -225,7 +225,7 @@ Add a new label to the pipe.
 > ```python
 > from spacy.symbols import POS
 > tagger = Tagger(nlp.vocab)
-> tagger.add_label('MY_LABEL', {POS: 'NOUN'})
+> tagger.add_label("MY_LABEL", {POS: 'NOUN'})
 > ```
 
 | Name     | Type    | Description                                                     |
@@ -241,12 +241,13 @@ Serialize the pipe to disk.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> tagger.to_disk('/path/to/tagger')
+> tagger.to_disk("/path/to/tagger")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name      | Type             | Description                                                                                                           |
+| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Tagger.from_disk {#from_disk tag="method"}
 
@@ -256,17 +257,18 @@ Load the pipe from disk. Modifies the object in place and returns it.
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
-> tagger.from_disk('/path/to/tagger')
+> tagger.from_disk("/path/to/tagger")
 > ```
 
 | Name        | Type             | Description                                                                |
 | ----------- | ---------------- | -------------------------------------------------------------------------- |
 | `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `Tagger`         | The modified `Tagger` object.                                              |
 
 ## Tagger.to_bytes {#to_bytes tag="method"}
 
-> #### example
+> #### Example
 >
 > ```python
 > tagger = Tagger(nlp.vocab)
@@ -275,10 +277,10 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                        |
-| ----------- | ----- | -------------------------------------------------- |
-| `**exclude` | -     | Named attributes to prevent from being serialized. |
-| **RETURNS** | bytes | The serialized form of the `Tagger` object.        |
+| Name        | Type  | Description                                                               |
+| ----------- | ----- | ------------------------------------------------------------------------- |
+| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes | The serialized form of the `Tagger` object.                               |
 
 ## Tagger.from_bytes {#from_bytes tag="method"}
 
@@ -292,11 +294,11 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > tagger.from_bytes(tagger_bytes)
 > ```
 
-| Name         | Type     | Description                                    |
-| ------------ | -------- | ---------------------------------------------- |
-| `bytes_data` | bytes    | The data to load from.                         |
-| `**exclude`  | -        | Named attributes to prevent from being loaded. |
-| **RETURNS**  | `Tagger` | The `Tagger` object.                           |
+| Name         | Type     | Description                                                               |
+| ------------ | -------- | ------------------------------------------------------------------------- |
+| `bytes_data` | bytes    | The data to load from.                                                    |
+| `exclude`    | list     | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `Tagger` | The `Tagger` object.                                                      |
 
 ## Tagger.labels {#labels tag="property"}
 
@@ -314,3 +316,22 @@ tags by default, e.g. `VERB`, `NOUN` and so on.
 | Name        | Type  | Description                        |
 | ----------- | ----- | ---------------------------------- |
 | **RETURNS** | tuple | The labels added to the component. |
+
+## Serialization fields {#serialization-fields}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = tagger.to_disk("/path", exclude=["vocab"])
+> ```
+
+| Name      | Description                                                                                |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `vocab`   | The shared [`Vocab`](/api/vocab).                                                          |
+| `cfg`     | The config file. You usually don't want to exclude this.                                   |
+| `model`   | The binary model data. You usually don't want to exclude this.                             |
+| `tag_map` | The [tag map](/usage/adding-languages#tag-map) mapping fine-grained to coarse-grained tag. |

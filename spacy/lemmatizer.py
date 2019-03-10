@@ -6,6 +6,13 @@ from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
 class Lemmatizer(object):
+    """
+    The Lemmatizer supports simple part-of-speech-sensitive suffix rules and
+    lookup tables.
+
+    DOCS: https://spacy.io/api/lemmatizer
+    """
+
     @classmethod
     def load(cls, path, index=None, exc=None, rules=None, lookup=None):
         return cls(index, exc, rules, lookup)

@@ -20,7 +20,7 @@ from . import util
 def get_string_id(key):
     """Get a string ID, handling the reserved symbols correctly. If the key is
     already an ID, return it.
-    
+
     This function optimises for convenience over performance, so shouldn't be
     used in tight loops.
     """
@@ -31,12 +31,12 @@ def get_string_id(key):
     elif not key:
         return 0
     else:
-        chars = key.encode('utf8')
+        chars = key.encode("utf8")
         return hash_utf8(chars, len(chars))
 
 
 cpdef hash_t hash_string(unicode string) except 0:
-    chars = string.encode('utf8')
+    chars = string.encode("utf8")
     return hash_utf8(chars, len(chars))
 
 
@@ -51,9 +51,9 @@ cdef uint32_t hash32_utf8(char* utf8_string, int length) nogil:
 cdef unicode decode_Utf8Str(const Utf8Str* string):
     cdef int i, length
     if string.s[0] < sizeof(string.s) and string.s[0] != 0:
-        return string.s[1:string.s[0]+1].decode('utf8')
+        return string.s[1:string.s[0]+1].decode("utf8")
     elif string.p[0] < 255:
-        return string.p[1:string.p[0]+1].decode('utf8')
+        return string.p[1:string.p[0]+1].decode("utf8")
     else:
         i = 0
         length = 0
@@ -62,7 +62,7 @@ cdef unicode decode_Utf8Str(const Utf8Str* string):
             length += 255
         length += string.p[i]
         i += 1
-        return string.p[i:length + i].decode('utf8')
+        return string.p[i:length + i].decode("utf8")
 
 
 cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) except *:
@@ -91,7 +91,10 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
 
 
 cdef class StringStore:
-    """Look up strings by 64-bit hashes."""
+    """Look up strings by 64-bit hashes.
+
+    DOCS: https://spacy.io/api/stringstore
+    """
     def __init__(self, strings=None, freeze=False):
         """Create the StringStore.
 
@@ -113,7 +116,7 @@ cdef class StringStore:
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
         elif string_or_id == 0:
-            return u''
+            return ""
         elif string_or_id in SYMBOLS_BY_STR:
             return SYMBOLS_BY_STR[string_or_id]
 
@@ -181,7 +184,7 @@ cdef class StringStore:
         elif isinstance(string, unicode):
             key = hash_string(string)
         else:
-            string = string.encode('utf8')
+            string = string.encode("utf8")
             key = hash_utf8(string, len(string))
         if key < len(SYMBOLS_BY_INT):
             return True
@@ -233,19 +236,17 @@ cdef class StringStore:
             self.add(word)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `StringStore` object.
         """
         return srsly.json_dumps(list(self))
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, **kwargs):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
         RETURNS (StringStore): The `StringStore` object.
         """
         strings = srsly.json_loads(bytes_data)
@@ -296,7 +297,7 @@ cdef class StringStore:
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
-        cdef bytes byte_string = py_string.encode('utf8')
+        cdef bytes byte_string = py_string.encode("utf8")
         return self._intern_utf8(byte_string, len(byte_string))
 
     @cython.final

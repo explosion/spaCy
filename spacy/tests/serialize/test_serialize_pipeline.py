@@ -55,7 +55,9 @@ def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
         parser_d = Parser(en_vocab)
         parser_d.model, _ = parser_d.Model(0)
         parser_d = parser_d.from_disk(file_path)
-        assert parser.to_bytes(model=False) == parser_d.to_bytes(model=False)
+        parser_bytes = parser.to_bytes(exclude=["model"])
+        parser_d_bytes = parser_d.to_bytes(exclude=["model"])
+        assert parser_bytes == parser_d_bytes
 
 
 def test_to_from_bytes(parser, blank_parser):
@@ -114,3 +116,25 @@ def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
     textcat = TextCategorizer(en_vocab, labels=["ENTITY", "ACTION", "MODIFIER"])
     textcat.to_bytes()
+
+
+@pytest.mark.parametrize("Parser", test_parsers)
+def test_serialize_pipe_exclude(en_vocab, Parser):
+    def get_new_parser():
+        new_parser = Parser(en_vocab)
+        new_parser.model, _ = new_parser.Model(0)
+        return new_parser
+
+    parser = Parser(en_vocab)
+    parser.model, _ = parser.Model(0)
+    parser.cfg["foo"] = "bar"
+    new_parser = get_new_parser().from_bytes(parser.to_bytes())
+    assert "foo" in new_parser.cfg
+    new_parser = get_new_parser().from_bytes(parser.to_bytes(), exclude=["cfg"])
+    assert "foo" not in new_parser.cfg
+    new_parser = get_new_parser().from_bytes(parser.to_bytes(exclude=["cfg"]))
+    assert "foo" not in new_parser.cfg
+    with pytest.raises(ValueError):
+        parser.to_bytes(cfg=False)
+    with pytest.raises(ValueError):
+        get_new_parser().from_bytes(parser.to_bytes(), cfg=False)
