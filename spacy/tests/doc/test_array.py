@@ -58,7 +58,6 @@ def test_doc_array_dep(en_vocab):
     assert feats_array[3][1] == doc[3].dep
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("attrs", [["ORTH", "SHAPE"], "IS_ALPHA"])
 def test_doc_array_to_from_string_attrs(en_vocab, attrs):
     """Test that both Doc.to_array and Doc.from_array accept string attrs,
