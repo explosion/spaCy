@@ -257,30 +257,42 @@ cdef class Missing:
 cdef class Begin:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        # Ensure we don't clobber preset entities. If no entity preset,
-        # ent_iob is 0
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 1:
+        cdef int preset_ent_label = st.B_(0).ent_type
+        # If we're the last token of the input, we can't B -- must U or O.
+        if st.B(1) == -1:
             return False
-        elif preset_ent_iob == 2:
+        elif st.entity_is_open():
             return False
-        elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
+        elif label == 0:
             return False
-        # If the next word is B or O, we can't B now
+        elif preset_ent_iob == 1 or preset_ent_iob == 2:
+            # Ensure we don't clobber preset entities. If no entity preset,
+            # ent_iob is 0
+            return False
+        elif preset_ent_iob == 3:
+            # Okay, we're in a preset entity.
+            if label != preset_ent_label:
+                # If label isn't right, reject
+                return False
+            elif st.B_(1).ent_iob != 1:
+                # If next token isn't marked I, we need to make U, not B.
+                return False
+            else:
+                # Otherwise, force acceptance, even if we're across a sentence
+                # boundary or the token is whitespace.
+                return True
         elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
+            # If the next word is B or O, we can't B now
             return False
-        # If the current word is B, and the next word isn't I, the current word
-        # is really U
-        elif preset_ent_iob == 3 and st.B_(1).ent_iob != 1:
-            return False
-        # Don't allow entities to extend across sentence boundaries
         elif st.B_(1).sent_start == 1:
+            # Don't allow entities to extend across sentence boundaries
             return False
         # Don't allow entities to start on whitespace
         elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
         else:
-            return label != 0 and not st.entity_is_open()
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -314,18 +326,27 @@ cdef class In:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 2:
+        if label == 0:
+            return False
+        elif st.E_(0).ent_type != label:
+            return False
+        elif not st.entity_is_open():
+            return False
+        elif st.B(1) == -1:
+            # If we're at the end, we can't I.
+            return False
+        elif preset_ent_iob == 2:
             return False
         elif preset_ent_iob == 3:
             return False
-        # TODO: Is this quite right? I think it's supposed to be ensuring the
-        # gazetteer matches are maintained
-        elif st.B(1) != -1 and st.B_(1).ent_iob != preset_ent_iob:
+        elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
+            # If we know the next word is B or O, we can't be I (must be L)
             return False
-        # Don't allow entities to extend across sentence boundaries
         elif st.B(1) != -1 and st.B_(1).sent_start == 1:
+            # Don't allow entities to extend across sentence boundaries
             return False
-        return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -370,9 +391,17 @@ cdef class In:
 cdef class Last:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        if st.B_(1).ent_iob == 1:
+        if label == 0:
             return False
-        return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
+        elif not st.entity_is_open():
+            return False
+        elif st.E_(0).ent_type != label:
+            return False
+        elif st.B_(1).ent_iob == 1:
+            # If a preset entity has I next, we can't L here.
+            return False
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -416,17 +445,29 @@ cdef class Unit:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 2:
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
+        if label == 0:
             return False
-        elif preset_ent_iob == 1:
+        elif st.entity_is_open():
             return False
-        elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
+        elif preset_ent_iob == 2:
+            # Don't clobber preset O
             return False
         elif st.B_(1).ent_iob == 1:
+            # If next token is In, we can't be Unit -- must be Begin
             return False
+        elif preset_ent_iob == 3:
+            # Okay, there's a preset entity here
+            if label != preset_ent_label:
+                # Require labels to match
+                return False
+            else:
+                # Otherwise return True, ignoring the whitespace constraint.
+                return True
         elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
-        return label != 0 and not st.entity_is_open()
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -461,11 +502,14 @@ cdef class Out:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 3:
+        if st.entity_is_open():
+            return False
+        elif preset_ent_iob == 3:
             return False
         elif preset_ent_iob == 1:
             return False
-        return not st.entity_is_open()
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
