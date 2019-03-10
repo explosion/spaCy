@@ -157,6 +157,10 @@ cdef void cpu_log_loss(float* d_scores,
     cdef double max_, gmax, Z, gZ
     best = arg_max_if_gold(scores, costs, is_valid, O)
     guess = arg_max_if_valid(scores, is_valid, O)
+    if best == -1 or guess == -1:
+        # These shouldn't happen, but if they do, we want to make sure we don't
+        # cause an OOB access.
+        return
     Z = 1e-10
     gZ = 1e-10
     max_ = scores[guess]

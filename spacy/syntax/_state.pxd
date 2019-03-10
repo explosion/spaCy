@@ -323,6 +323,12 @@ cdef cppclass StateC:
         if this._s_i >= 1:
             this._s_i -= 1
 
+    void force_final() nogil:
+        # This should only be used in desperate situations, as it may leave
+        # the analysis in an unexpected state.
+        this._s_i = 0
+        this._b_i = this.length
+
     void unshift() nogil:
         this._b_i -= 1
         this._buffer[this._b_i] = this.S(0)
