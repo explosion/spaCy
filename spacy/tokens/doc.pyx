@@ -240,8 +240,7 @@ cdef class Doc:
         for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
                 return True
-        else:
-            return False
+        return False
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
