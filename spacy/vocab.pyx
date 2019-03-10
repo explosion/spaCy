@@ -397,47 +397,57 @@ cdef class Vocab:
             orth = self.strings.add(orth)
         return orth in self.vectors
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, exclude=tuple(), **kwargs):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or Path-like objects.
+            it doesn't exist.
+        exclude (list): String names of serialization fields to exclude.
 
         DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
         if not path.exists():
             path.mkdir()
-        self.strings.to_disk(path / "strings.json")
-        with (path / "lexemes.bin").open('wb') as file_:
-            file_.write(self.lexemes_to_bytes())
-        if self.vectors is not None:
+        setters = ["strings", "lexemes", "vectors"]
+        exclude = util.get_serialization_exclude(setters, exclude, kwargs)
+        if "strings" not in exclude:
+            self.strings.to_disk(path / "strings.json")
+        if "lexemes" not in exclude:
+            with (path / "lexemes.bin").open("wb") as file_:
+                file_.write(self.lexemes_to_bytes())
+        if "vectors" not in "exclude" and self.vectors is not None:
             self.vectors.to_disk(path)
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, exclude=tuple(), **kwargs):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
-            strings or `Path`-like objects.
+        path (unicode or Path): A path to a directory.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 
         DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
-        self.strings.from_disk(path / "strings.json")
-        with (path / "lexemes.bin").open("rb") as file_:
-            self.lexemes_from_bytes(file_.read())
-        if self.vectors is not None:
-            self.vectors.from_disk(path, exclude="strings.json")
-        if self.vectors.name is not None:
-            link_vectors_to_models(self)
+        getters = ["strings", "lexemes", "vectors"]
+        exclude = util.get_serialization_exclude(getters, exclude, kwargs)
+        if "strings" not in exclude:
+            self.strings.from_disk(path / "strings.json")  # TODO: add exclude?
+        if "lexemes" not in exclude:
+            with (path / "lexemes.bin").open("rb") as file_:
+                self.lexemes_from_bytes(file_.read())
+        if "vectors" not in exclude:
+            if self.vectors is not None:
+                self.vectors.from_disk(path, exclude=["strings"])
+            if self.vectors.name is not None:
+                link_vectors_to_models(self)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, exclude=tuple(), **kwargs):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Vocab` object.
 
         DOCS: https://spacy.io/api/vocab#to_bytes
@@ -453,13 +463,14 @@ cdef class Vocab:
             ("lexemes", lambda: self.lexemes_to_bytes()),
             ("vectors", deserialize_vectors)
         ))
+        exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The `Vocab` object.
 
         DOCS: https://spacy.io/api/vocab#from_bytes
@@ -469,11 +480,13 @@ cdef class Vocab:
                 return None
             else:
                 return self.vectors.from_bytes(b)
+
         setters = OrderedDict((
             ("strings", lambda b: self.strings.from_bytes(b)),
             ("lexemes", lambda b: self.lexemes_from_bytes(b)),
             ("vectors", lambda b: serialize_vectors(b))
         ))
+        exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)
         if self.vectors.name is not None:
             link_vectors_to_models(self)

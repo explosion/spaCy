@@ -794,24 +794,26 @@ cdef class Doc:
         """
         return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
+        exclude (list): String names of serialization fields to exclude.
 
         DOCS: https://spacy.io/api/doc#to_disk
         """
         path = util.ensure_path(path)
         with path.open("wb") as file_:
-            file_.write(self.to_bytes(**exclude))
+            file_.write(self.to_bytes(**kwargs))
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, **kwargs):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
         path (unicode or Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.
 
         DOCS: https://spacy.io/api/doc#from_disk
@@ -819,11 +821,12 @@ cdef class Doc:
         path = util.ensure_path(path)
         with path.open("rb") as file_:
             bytes_data = file_.read()
-        return self.from_bytes(bytes_data, **exclude)
+        return self.from_bytes(bytes_data, **kwargs)
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, exclude=tuple(), **kwargs):
         """Serialize, i.e. export the document contents to a binary string.
 
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
 
@@ -849,16 +852,22 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
         }
+        for key in kwargs:
+            if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
+                raise ValueError(Errors.E128.format(arg=key))
         if "user_data" not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
-            serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
-            serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
+            if "user_data_keys" not in exclude:
+                serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
+            if "user_data_values" not in exclude:
+                serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): Itself.
 
         DOCS: https://spacy.io/api/doc#from_bytes
@@ -874,6 +883,9 @@ cdef class Doc:
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
         }
+        for key in kwargs:
+            if key in deserializers or key in ("user_data",):
+                raise ValueError(Errors.E128.format(arg=key))
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
@@ -1170,7 +1182,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 
 
 def pickle_doc(doc):
-    bytes_data = doc.to_bytes(vocab=False, user_data=False)
+    bytes_data = doc.to_bytes(exclude=["vocab", "user_data"])
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
                       doc.user_token_hooks)
     return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
@@ -1179,7 +1191,7 @@ def pickle_doc(doc):
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
     user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
 
-    doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data, exclude="user_data")
+    doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data, exclude=["user_data"])
     doc.user_hooks.update(doc_hooks)
     doc.user_span_hooks.update(span_hooks)
     doc.user_token_hooks.update(token_hooks)

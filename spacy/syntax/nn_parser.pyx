@@ -228,7 +228,7 @@ cdef class Parser:
                 self.set_annotations(subbatch, parse_states, tensors=None)
             for doc in batch_in_order:
                 yield doc
-                
+
     def require_model(self):
         """Raise an error if the component's model is not initialized."""
         if getattr(self, 'model', None) in (None, True, False):
@@ -272,7 +272,7 @@ cdef class Parser:
         beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
-        # expand our model output. 
+        # expand our model output.
         self.model.resize_output(self.moves.n_moves)
         model = self.model(docs)
         token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
@@ -442,7 +442,7 @@ cdef class Parser:
         if self._rehearsal_model is None:
             return None
         losses.setdefault(self.name, 0.)
- 
+
         states = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
@@ -603,22 +603,24 @@ cdef class Parser:
         self.cfg.update(cfg)
         return sgd
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, exclude=tuple(), **kwargs):
         serializers = {
             'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
             'vocab': lambda p: self.vocab.to_disk(p),
-            'moves': lambda p: self.moves.to_disk(p, strings=False),
+            'moves': lambda p: self.moves.to_disk(p, exclude=["strings"]),
             'cfg': lambda p: srsly.write_json(p, self.cfg)
         }
+        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, exclude=tuple(), **kwargs):
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
-            'moves': lambda p: self.moves.from_disk(p, strings=False),
+            'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
             'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
             'model': lambda p: None
         }
+        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_disk(path, deserializers, exclude)
         if 'model' not in exclude:
             path = util.ensure_path(path)
@@ -632,22 +634,24 @@ cdef class Parser:
             self.cfg.update(cfg)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, exclude=tuple(), **kwargs):
         serializers = OrderedDict((
             ('model', lambda: (self.model.to_bytes() if self.model is not True else True)),
             ('vocab', lambda: self.vocab.to_bytes()),
-            ('moves', lambda: self.moves.to_bytes(strings=False)),
+            ('moves', lambda: self.moves.to_bytes(exclude=["strings"])),
             ('cfg', lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True))
         ))
+        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         deserializers = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
-            ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
+            ('moves', lambda b: self.moves.from_bytes(b, exclude=["strings"])),
             ('cfg', lambda b: self.cfg.update(srsly.json_loads(b))),
             ('model', lambda b: None)
         ))
+        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             # TODO: Remove this once we don't have to handle previous models

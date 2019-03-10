@@ -113,14 +113,14 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
     new_tokens = Doc(tokens.vocab).from_bytes(
-        tokens.to_bytes(tensor=False), tensor=False
+        tokens.to_bytes(exclude=["tensor"]), exclude=["tensor"]
     )
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
     new_tokens = Doc(tokens.vocab).from_bytes(
-        tokens.to_bytes(sentiment=False), sentiment=False
+        tokens.to_bytes(exclude=["sentiment"]), exclude=["sentiment"]
     )
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]

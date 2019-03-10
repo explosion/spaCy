@@ -221,9 +221,10 @@ Save the current state to a directory.
 > nlp.vocab.to_disk("/path/to/vocab")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name      | Type             | Description                                                                                                           |
+| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Vocab.from_disk {#from_disk tag="method" new="2"}
 
@@ -239,6 +240,7 @@ Loads state from a directory. Modifies the object in place and returns it.
 | Name        | Type             | Description                                                                |
 | ----------- | ---------------- | -------------------------------------------------------------------------- |
 | `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `Vocab`          | The modified `Vocab` object.                                               |
 
 ## Vocab.to_bytes {#to_bytes tag="method"}
@@ -251,10 +253,10 @@ Serialize the current state to a binary string.
 > vocab_bytes = nlp.vocab.to_bytes()
 > ```
 
-| Name        | Type  | Description                                        |
-| ----------- | ----- | -------------------------------------------------- |
-| `**exclude` | -     | Named attributes to prevent from being serialized. |
-| **RETURNS** | bytes | The serialized form of the `Vocab` object.         |
+| Name        | Type  | Description                                                               |
+| ----------- | ----- | ------------------------------------------------------------------------- |
+| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes | The serialized form of the `Vocab` object.                                |
 
 ## Vocab.from_bytes {#from_bytes tag="method"}
 
@@ -269,11 +271,11 @@ Load state from a binary string.
 > vocab.from_bytes(vocab_bytes)
 > ```
 
-| Name         | Type    | Description                                    |
-| ------------ | ------- | ---------------------------------------------- |
-| `bytes_data` | bytes   | The data to load from.                         |
-| `**exclude`  | -       | Named attributes to prevent from being loaded. |
-| **RETURNS**  | `Vocab` | The `Vocab` object.                            |
+| Name         | Type    | Description                                                               |
+| ------------ | ------- | ------------------------------------------------------------------------- |
+| `bytes_data` | bytes   | The data to load from.                                                    |
+| `exclude`    | list    | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `Vocab` | The `Vocab` object.                                                       |
 
 ## Attributes {#attributes}
 
@@ -291,3 +293,22 @@ Load state from a binary string.
 | `strings`                            | `StringStore` | A table managing the string-to-int mapping.   |
 | `vectors` <Tag variant="new">2</Tag> | `Vectors`     | A table associating word IDs to word vectors. |
 | `vectors_length`                     | int           | Number of dimensions for each word vector.    |
+
+## Serialization fields {#serialization-fields}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = vocab.to_bytes(exclude=["strings", "vectors"])
+> vocab.from_disk("./vocab", exclude=["strings"])
+> ```
+
+| Name      | Description                                           |
+| --------- | ----------------------------------------------------- |
+| `strings` | The strings in the [`StringStore`](/api/stringstore). |
+| `lexemes` | The lexeme data.                                      |
+| `vectors` | The word vectors, if available.                       |
