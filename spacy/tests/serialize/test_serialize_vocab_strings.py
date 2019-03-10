@@ -12,13 +12,12 @@ test_strings = [([], []), (["rats", "are", "cute"], ["i", "like", "rats"])]
 test_strings_attrs = [(["rats", "are", "cute"], "Hello")]
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("text", ["rat"])
 def test_serialize_vocab(en_vocab, text):
     text_hash = en_vocab.strings.add(text)
     vocab_bytes = en_vocab.to_bytes()
     new_vocab = Vocab().from_bytes(vocab_bytes)
-    assert new_vocab.strings(text_hash) == text
+    assert new_vocab.strings[text_hash] == text
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
@@ -67,6 +66,16 @@ def test_serialize_vocab_lex_attrs_bytes(strings, lex_attr):
     assert vocab2[strings[0]].norm_ != lex_attr
     vocab2 = vocab2.from_bytes(vocab1.to_bytes())
     assert vocab2[strings[0]].norm_ == lex_attr
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
+def test_deserialize_vocab_seen_entries(strings, lex_attr):
+    # Reported in #2153
+    vocab = Vocab(strings=strings)
+    length = len(vocab)
+    vocab.from_bytes(vocab.to_bytes())
+    assert len(vocab) == length
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
