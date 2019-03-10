@@ -1,5 +1,9 @@
 """Test interaction between preset entities and sentence boundaries in NER."""
+# coding: utf8
+from __future__ import unicode_literals
+
 import spacy
+import pytest
 from spacy.tokens import Doc
 from spacy.pipeline import EntityRuler, EntityRecognizer
 
