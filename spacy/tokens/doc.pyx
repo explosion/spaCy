@@ -240,8 +240,18 @@ cdef class Doc:
         for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
                 return True
-        else:
-            return False
+        return False
+
+    @property
+    def is_nered(self):
+        """Check if the document has named entities set. Will return True if
+        *any* of the tokens has a named entity tag set (even if the others are
+        uknown values).
+        """
+        for i in range(self.length):
+            if self.c[i].ent_iob != 0:
+                return True
+        return False
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
@@ -990,11 +1000,11 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#to_json
         """
         data = {"text": self.text}
-        if self.ents:
+        if self.is_nered:
             data["ents"] = [{"start": ent.start_char, "end": ent.end_char,
                             "label": ent.label_} for ent in self.ents]
-        sents = list(self.sents)
-        if sents:
+        if self.is_sentenced:
+            sents = list(self.sents)
             data["sents"] = [{"start": sent.start_char, "end": sent.end_char}
                              for sent in sents]
         if self.cats:
@@ -1002,13 +1012,11 @@ cdef class Doc:
         data["tokens"] = []
         for token in self:
             token_data = {"id": token.i, "start": token.idx, "end": token.idx + len(token)}
-            if token.pos_:
+            if self.is_tagged:
                 token_data["pos"] = token.pos_
-            if token.tag_:
                 token_data["tag"] = token.tag_
-            if token.dep_:
+            if self.is_parsed:
                 token_data["dep"] = token.dep_
-            if token.head:
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
         if underscore:
