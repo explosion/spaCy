@@ -345,13 +345,15 @@ class Language(object):
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         return self.pipeline.pop(self.pipe_names.index(name))
 
-    def __call__(self, text, disable=[]):
+    def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
         disable (list): Names of the pipeline components to disable.
+        component_cfg (dict): An optional dictionary with extra keyword arguments
+            for specific components.
         RETURNS (Doc): A container for accessing the annotations.
 
         EXAMPLE:
@@ -364,12 +366,14 @@ class Language(object):
                 Errors.E088.format(length=len(text), max_length=self.max_length)
             )
         doc = self.make_doc(text)
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in self.pipeline:
             if name in disable:
                 continue
             if not hasattr(proc, "__call__"):
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
-            doc = proc(doc)
+            doc = proc(doc, **component_cfg.get(name, {}))
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
@@ -397,7 +401,7 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None):
+    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -444,11 +448,15 @@ class Language(object):
 
         pipes = list(self.pipeline)
         random.shuffle(pipes)
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in pipes:
             if not hasattr(proc, "update"):
                 continue
             grads = {}
-            proc.update(docs, golds, drop=drop, sgd=get_grads, losses=losses)
+            kwargs = component_cfg.get(name, {})
+            kwargs.setdefault("drop", drop)
+            proc.update(docs, golds, sgd=get_grads, losses=losses, **kwargs)
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
 
@@ -582,20 +590,25 @@ class Language(object):
                 proc._rehearsal_model = deepcopy(proc.model)
         return self._optimizer
 
-    def evaluate(self, docs_golds, verbose=False, batch_size=256):
-        scorer = Scorer()
+    def evaluate(self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None):
+        if scorer is None:
+            scorer = Scorer()
         docs, golds = zip(*docs_golds)
         docs = list(docs)
         golds = list(golds)
         for name, pipe in self.pipeline:
+            kwargs = component_cfg.get(name, {})
+            kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                docs = (pipe(doc) for doc in docs)
+                docs = (pipe(doc, **kwargs) for doc in docs)
             else:
-                docs = pipe.pipe(docs, batch_size=batch_size)
+                docs = pipe.pipe(docs, **kwargs)
         for doc, gold in zip(docs, golds):
             if verbose:
                 print(doc)
-            scorer.score(doc, gold, verbose=verbose)
+            kwargs = component_cfg.get("scorer", {})
+            kwargs.setdefault("verbose", verbose)
+            scorer.score(doc, gold, **kwargs)
         return scorer
 
     @contextmanager
@@ -638,6 +651,7 @@ class Language(object):
         batch_size=1000,
         disable=[],
         cleanup=False,
+        component_cfg=None
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -651,6 +665,8 @@ class Language(object):
         disable (list): Names of the pipeline components to disable.
         cleanup (bool): If True, unneeded strings are freed,
             to control memory use. Experimental.
+        component_cfg (dict): An optional dictionary with extra keyword arguments
+            for specific components.
         YIELDS (Doc): Documents in the order of the original text.
 
         EXAMPLE:
@@ -663,20 +679,27 @@ class Language(object):
             texts = (tc[0] for tc in text_context1)
             contexts = (tc[1] for tc in text_context2)
             docs = self.pipe(
-                texts, n_threads=n_threads, batch_size=batch_size, disable=disable
+                texts, n_threads=n_threads, batch_size=batch_size, disable=disable,
+                component_cfg=component_cfg
             )
             for doc, context in izip(docs, contexts):
                 yield (doc, context)
             return
         docs = (self.make_doc(text) for text in texts)
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in self.pipeline:
             if name in disable:
                 continue
+            kwargs = component_cfg.get(name, {})
+            # Allow component_cfg to overwrite the top-level kwargs.
+            kwargs.setdefault("batch_size", batch_size)
+            kwargs.setdefault("n_threads", n_threads)
             if hasattr(proc, "pipe"):
-                docs = proc.pipe(docs, n_threads=n_threads, batch_size=batch_size)
+                docs = proc.pipe(docs, **kwargs)
             else:
                 # Apply the function, but yield the doc
-                docs = _pipe(proc, docs)
+                docs = _pipe(proc, docs, kwargs)
         # Track weakrefs of "recent" documents, so that we can see when they
         # expire from memory. When they do, we know we don't need old strings.
         # This way, we avoid maintaining an unbounded growth in string entries
@@ -879,7 +902,7 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(func, docs):
+def _pipe(func, docs, kwargs):
     for doc in docs:
-        doc = func(doc)
+        doc = func(doc, **kwargs)
         yield doc
