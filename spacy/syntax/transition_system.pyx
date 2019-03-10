@@ -94,6 +94,13 @@ cdef class TransitionSystem:
                 raise ValueError(Errors.E024)
         return history
 
+    def apply_transition(self, StateClass state, name):
+        if not self.is_valid(state, name):
+            raise ValueError(
+                "Cannot apply transition {name}: invalid for the current state.".format(name=name))
+        action = self.lookup_transition(name)
+        action.do(state.c, action.label)
+
     cdef int initialize_state(self, StateC* state) nogil:
         pass
 
