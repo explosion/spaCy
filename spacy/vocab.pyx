@@ -1,6 +1,7 @@
 # coding: utf8
 # cython: profile=True
 from __future__ import unicode_literals
+from libc.string cimport memcpy
 
 import numpy
 import srsly
@@ -518,7 +519,10 @@ cdef class Vocab:
             for j in range(sizeof(lex_data.data)):
                 lex_data.data[j] = bytes_ptr[i+j]
             Lexeme.c_from_bytes(lexeme, lex_data)
-
+            prev_entry = self._by_orth.get(lexeme.orth)
+            if prev_entry != NULL:
+                memcpy(prev_entry, lexeme, sizeof(LexemeC))
+                continue
             ptr = self.strings._map.get(lexeme.orth)
             if ptr == NULL:
                 continue
