@@ -130,13 +130,12 @@ Allocate models, pre-process training data and acquire an optimizer.
 > optimizer = nlp.begin_training(gold_tuples)
 > ```
 
-| Name          | Type     | Description                  |
-| ------------- | -------- | ---------------------------- |
-| `gold_tuples` | iterable | Gold-standard training data. |
-| `component_cfg` | dict   | Config parameters for specific pipeline
-components. |
-| `**cfg`       | -        | Config parameters (sent to all components). |
-| **RETURNS**   | callable | An optimizer.                |
+| Name            | Type     | Description                                                                  |
+| --------------- | -------- | ---------------------------------------------------------------------------- |
+| `gold_tuples`   | iterable | Gold-standard training data.                                                 |
+| `component_cfg` | dict     | Config parameters for specific pipeline components, keyed by component name. |
+| `**cfg`         | -        | Config parameters (sent to all components).                                  |
+| **RETURNS**     | callable | An optimizer.                                                                |
 
 ## Language.use_params {#use_params tag="contextmanager, method"}
 
