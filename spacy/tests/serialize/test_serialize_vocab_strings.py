@@ -68,7 +68,6 @@ def test_serialize_vocab_lex_attrs_bytes(strings, lex_attr):
     assert vocab2[strings[0]].norm_ == lex_attr
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
 def test_deserialize_vocab_seen_entries(strings, lex_attr):
     # Reported in #2153
