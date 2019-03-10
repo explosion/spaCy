@@ -106,6 +106,7 @@ class Language(object):
 
     DOCS: https://spacy.io/api/language
     """
+
     Defaults = BaseDefaults
     lang = None
 
@@ -517,11 +518,13 @@ class Language(object):
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, get_gold_tuples=None, sgd=None, **cfg):
+    def begin_training(self, get_gold_tuples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
         get_gold_tuples (function): Function returning gold data
+
+        component_cfg (dict): Config parameters for specific components. 
         **cfg: Config parameters.
         RETURNS: An optimizer
         """
@@ -545,8 +548,13 @@ class Language(object):
         self._optimizer = sgd
         for name, proc in self.pipeline:
             if hasattr(proc, "begin_training"):
+                kwargs = component_cfg.get(name, {})
+                kwargs.update(cfg)
                 proc.begin_training(
-                    get_gold_tuples, pipeline=self.pipeline, sgd=self._optimizer, **cfg
+                    get_gold_tuples,
+                    pipeline=self.pipeline,
+                    sgd=self._optimizer,
+                    **kwargs
                 )
         return self._optimizer
 
