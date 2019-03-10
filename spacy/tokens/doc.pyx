@@ -737,6 +737,18 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#from_array
         """
+        # Handle scalar/list inputs of strings/ints for py_attr_ids
+        # See also #3064
+        if isinstance(attrs, basestring_):
+            # Handle inputs like doc.to_array('ORTH')
+            attrs = [attrs]
+        elif not hasattr(attrs, "__iter__"):
+            # Handle inputs like doc.to_array(ORTH)
+            attrs = [attrs]
+        # Allow strings, e.g. 'lemma' or 'LEMMA'
+        attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
+                       for id_ in attrs]
+ 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
         cdef int i, col
