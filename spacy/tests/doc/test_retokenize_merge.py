@@ -69,7 +69,6 @@ def test_doc_retokenize_retokenizer_attrs(en_tokenizer):
     assert doc[4].ent_type_ == "ORG"
 
 
-@pytest.mark.xfail
 def test_doc_retokenize_lex_attrs(en_tokenizer):
     """Test that lexical attributes can be changed (see #2390)."""
     doc = en_tokenizer("WKRO played beach boys songs")
