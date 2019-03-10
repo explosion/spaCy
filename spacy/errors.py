@@ -70,6 +70,12 @@ class Warnings(object):
     W013 = ("As of v2.1.0, {obj}.merge is deprecated. Please use the more "
             "efficient and less error-prone Doc.retokenize context manager "
             "instead.")
+    W014 = ("As of v2.1.0, the `disable` keyword argument on the serialization "
+            "methods is and should be replaced with `exclude`. This makes it "
+            "consistent with the other objects serializable.")
+    W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
+            "being serialized or deserialized is deprecated. Please use the "
+            "`exclude` argument instead. For example: exclude=['{arg}'].")
 
 
 @add_codes
@@ -348,7 +354,10 @@ class Errors(object):
             "This is likely a bug in spaCy, so feel free to open an issue.")
     E127 = ("Cannot create phrase pattern representation for length 0. This "
             "is likely a bug in spaCy.")
-
+    E128 = ("Unsupported serialization argument: '{arg}'. The use of keyword "
+            "arguments to exclude fields from being serialized or deserialized "
+            "is now deprecated. Please use the `exclude` argument instead. "
+            "For example: exclude=['{arg}'].")
 
 
 @add_codes

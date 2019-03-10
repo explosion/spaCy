@@ -360,36 +360,37 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
         self._rules[string] = substrings
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be either strings or Path-like objects.
+            it doesn't exist.
+        exclude (list): String names of serialization fields to exclude.
 
         DOCS: https://spacy.io/api/tokenizer#to_disk
         """
         with path.open("wb") as file_:
-            file_.write(self.to_bytes(**exclude))
+            file_.write(self.to_bytes(**kwargs))
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, **kwargs):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
-            strings or `Path`-like objects.
+        path (unicode or Path): A path to a directory.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (Tokenizer): The modified `Tokenizer` object.
 
         DOCS: https://spacy.io/api/tokenizer#from_disk
         """
         with path.open("rb") as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, **exclude)
+        self.from_bytes(bytes_data, **kwargs)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, exclude=tuple(), **kwargs):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Tokenizer` object.
 
         DOCS: https://spacy.io/api/tokenizer#to_bytes
@@ -402,13 +403,14 @@ cdef class Tokenizer:
             ("token_match", lambda: _get_regex_pattern(self.token_match)),
             ("exceptions", lambda: OrderedDict(sorted(self._rules.items())))
         ))
+        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (Tokenizer): The `Tokenizer` object.
 
         DOCS: https://spacy.io/api/tokenizer#from_bytes
@@ -422,6 +424,7 @@ cdef class Tokenizer:
             ("token_match", lambda b: data.setdefault("token_match", b)),
             ("exceptions", lambda b: data.setdefault("rules", b))
         ))
+        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if data.get("prefix_search"):
             self.prefix_search = re.compile(data["prefix_search"]).search

@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import pytest
 from spacy.tokens import Doc
 from spacy.compat import path2str
 
@@ -41,3 +42,18 @@ def test_serialize_doc_roundtrip_disk_str_path(en_vocab):
         doc.to_disk(file_path)
         doc_d = Doc(en_vocab).from_disk(file_path)
         assert doc.to_bytes() == doc_d.to_bytes()
+
+
+def test_serialize_doc_exclude(en_vocab):
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc.user_data["foo"] = "bar"
+    new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
+    assert new_doc.user_data["foo"] == "bar"
+    new_doc = Doc(en_vocab).from_bytes(doc.to_bytes(), exclude=["user_data"])
+    assert not new_doc.user_data
+    new_doc = Doc(en_vocab).from_bytes(doc.to_bytes(exclude=["user_data"]))
+    assert not new_doc.user_data
+    with pytest.raises(ValueError):
+        doc.to_bytes(user_data=False)
+    with pytest.raises(ValueError):
+        Doc(en_vocab).from_bytes(doc.to_bytes(), tensor=False)

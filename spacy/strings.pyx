@@ -236,19 +236,17 @@ cdef class StringStore:
             self.add(word)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `StringStore` object.
         """
         return srsly.json_dumps(list(self))
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, **kwargs):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
         RETURNS (StringStore): The `StringStore` object.
         """
         strings = srsly.json_loads(bytes_data)
