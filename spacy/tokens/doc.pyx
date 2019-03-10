@@ -242,6 +242,17 @@ cdef class Doc:
                 return True
         return False
 
+    @property
+    def is_nered(self):
+        """Check if the document has named entities set. Will return True if
+        *any* of the tokens has a named entity tag set (even if the others are
+        uknown values).
+        """
+        for i in range(self.length):
+            if self.c[i].ent_iob != 0:
+                return True
+        return False
+
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
 
