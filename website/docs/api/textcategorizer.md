@@ -260,9 +260,10 @@ Serialize the pipe to disk.
 > textcat.to_disk("/path/to/textcat")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name      | Type             | Description                                                                                                           |
+| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## TextCategorizer.from_disk {#from_disk tag="method"}
 
@@ -278,6 +279,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | Name        | Type              | Description                                                                |
 | ----------- | ----------------- | -------------------------------------------------------------------------- |
 | `path`      | unicode / `Path`  | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list              | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `TextCategorizer` | The modified `TextCategorizer` object.                                     |
 
 ## TextCategorizer.to_bytes {#to_bytes tag="method"}
@@ -291,10 +293,10 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                          |
-| ----------- | ----- | ---------------------------------------------------- |
-| `**exclude` | -     | Named attributes to prevent from being serialized.   |
-| **RETURNS** | bytes | The serialized form of the `TextCategorizer` object. |
+| Name        | Type  | Description                                                               |
+| ----------- | ----- | ------------------------------------------------------------------------- |
+| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes | The serialized form of the `TextCategorizer` object.                      |
 
 ## TextCategorizer.from_bytes {#from_bytes tag="method"}
 
@@ -308,11 +310,11 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > textcat.from_bytes(textcat_bytes)
 > ```
 
-| Name         | Type              | Description                                    |
-| ------------ | ----------------- | ---------------------------------------------- |
-| `bytes_data` | bytes             | The data to load from.                         |
-| `**exclude`  | -                 | Named attributes to prevent from being loaded. |
-| **RETURNS**  | `TextCategorizer` | The `TextCategorizer` object.                  |
+| Name         | Type              | Description                                                               |
+| ------------ | ----------------- | ------------------------------------------------------------------------- |
+| `bytes_data` | bytes             | The data to load from.                                                    |
+| `exclude`    | list              | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `TextCategorizer` | The `TextCategorizer` object.                                             |
 
 ## TextCategorizer.labels {#labels tag="property"}
 
@@ -328,3 +330,21 @@ The labels currently added to the component.
 | Name        | Type  | Description                        |
 | ----------- | ----- | ---------------------------------- |
 | **RETURNS** | tuple | The labels added to the component. |
+
+## Serialization fields {#serialization-fields}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = textcat.to_disk("/path", exclude=["vocab"])
+> ```
+
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |

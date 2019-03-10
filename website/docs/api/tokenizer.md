@@ -127,9 +127,10 @@ Serialize the tokenizer to disk.
 > tokenizer.to_disk("/path/to/tokenizer")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name      | Type             | Description                                                                                                           |
+| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Tokenizer.from_disk {#from_disk tag="method"}
 
@@ -145,6 +146,7 @@ Load the tokenizer from disk. Modifies the object in place and returns it.
 | Name        | Type             | Description                                                                |
 | ----------- | ---------------- | -------------------------------------------------------------------------- |
 | `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `Tokenizer`      | The modified `Tokenizer` object.                                           |
 
 ## Tokenizer.to_bytes {#to_bytes tag="method"}
@@ -158,10 +160,10 @@ Load the tokenizer from disk. Modifies the object in place and returns it.
 
 Serialize the tokenizer to a bytestring.
 
-| Name        | Type  | Description                                        |
-| ----------- | ----- | -------------------------------------------------- |
-| `**exclude` | -     | Named attributes to prevent from being serialized. |
-| **RETURNS** | bytes | The serialized form of the `Tokenizer` object.     |
+| Name        | Type  | Description                                                               |
+| ----------- | ----- | ------------------------------------------------------------------------- |
+| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes | The serialized form of the `Tokenizer` object.                            |
 
 ## Tokenizer.from_bytes {#from_bytes tag="method"}
 
@@ -176,11 +178,11 @@ it.
 > tokenizer.from_bytes(tokenizer_bytes)
 > ```
 
-| Name         | Type        | Description                                    |
-| ------------ | ----------- | ---------------------------------------------- |
-| `bytes_data` | bytes       | The data to load from.                         |
-| `**exclude`  | -           | Named attributes to prevent from being loaded. |
-| **RETURNS**  | `Tokenizer` | The `Tokenizer` object.                        |
+| Name         | Type        | Description                                                               |
+| ------------ | ----------- | ------------------------------------------------------------------------- |
+| `bytes_data` | bytes       | The data to load from.                                                    |
+| `exclude`    | list        | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**  | `Tokenizer` | The `Tokenizer` object.                                                   |
 
 ## Attributes {#attributes}
 
@@ -190,3 +192,25 @@ it.
 | `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.            |
 | `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.              |
 | `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects. |
+
+## Serialization fields {#serialization-fields}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = tokenizer.to_bytes(exclude=["vocab", "exceptions"])
+> tokenizer.from_disk("./data", exclude=["token_match"])
+> ```
+
+| Name             | Description                       |
+| ---------------- | --------------------------------- |
+| `vocab`          | The shared [`Vocab`](/api/vocab). |
+| `prefix_search`  | The prefix rules.                 |
+| `suffix_search`  | The suffix rules.                 |
+| `infix_finditer` | The infix rules.                  |
+| `token_match`    | The token match expression.       |
+| `exceptions`     | The tokenizer exception rules.    |
