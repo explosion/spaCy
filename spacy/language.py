@@ -590,7 +590,9 @@ class Language(object):
                 proc._rehearsal_model = deepcopy(proc.model)
         return self._optimizer
 
-    def evaluate(self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None):
+    def evaluate(
+        self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None
+    ):
         if scorer is None:
             scorer = Scorer()
         docs, golds = zip(*docs_golds)
@@ -651,7 +653,7 @@ class Language(object):
         batch_size=1000,
         disable=[],
         cleanup=False,
-        component_cfg=None
+        component_cfg=None,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -679,8 +681,11 @@ class Language(object):
             texts = (tc[0] for tc in text_context1)
             contexts = (tc[1] for tc in text_context2)
             docs = self.pipe(
-                texts, n_threads=n_threads, batch_size=batch_size, disable=disable,
-                component_cfg=component_cfg
+                texts,
+                n_threads=n_threads,
+                batch_size=batch_size,
+                disable=disable,
+                component_cfg=component_cfg,
             )
             for doc, context in izip(docs, contexts):
                 yield (doc, context)
