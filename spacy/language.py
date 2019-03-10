@@ -554,6 +554,8 @@ class Language(object):
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in self.pipeline:
             if hasattr(proc, "begin_training"):
                 kwargs = component_cfg.get(name, {})
