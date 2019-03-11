@@ -91,13 +91,14 @@ multiprocessing.
 >     assert doc.is_parsed
 > ```
 
-| Name         | Type  | Description                                                                                                                                                |
-| ------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`      | -     | A sequence of unicode objects.                                                                                                                             |
-| `as_tuples`  | bool  | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
-| `batch_size` | int   | The number of texts to buffer.                                                                                                                             |
-| `disable`    | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
-| **YIELDS**   | `Doc` | Documents in the order of the original text.                                                                                                               |
+| Name                                         | Type  | Description                                                                                                                                                |
+| -------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`                                      | -     | A sequence of unicode objects.                                                                                                                             |
+| `as_tuples`                                  | bool  | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
+| `batch_size`                                 | int   | The number of texts to buffer.                                                                                                                             |
+| `disable`                                    | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict  | Config parameters for specific pipeline components, keyed by component name.                                                                               |
+| **YIELDS**                                   | `Doc` | Documents in the order of the original text.                                                                                                               |
 
 ## Language.update {#update tag="method"}
 
@@ -112,13 +113,14 @@ Update the models in the pipeline.
 >     nlp.update([doc], [gold], drop=0.5, sgd=optimizer)
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                         |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | A batch of `Doc` objects or unicode. If unicode, a `Doc` object will be created from the text.                                                                                                                      |
-| `golds`     | iterable | A batch of `GoldParse` objects or dictionaries. Dictionaries will be used to create [`GoldParse`](/api/goldparse) objects. For the available keys and their usage, see [`GoldParse.__init__`](/api/goldparse#init). |
-| `drop`      | float    | The dropout rate.                                                                                                                                                                                                   |
-| `sgd`       | callable | An optimizer.                                                                                                                                                                                                       |
-| **RETURNS** | dict     | Results from the update.                                                                                                                                                                                            |
+| Name                                         | Type     | Description                                                                                                                                                                                                         |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`                                       | iterable | A batch of `Doc` objects or unicode. If unicode, a `Doc` object will be created from the text.                                                                                                                      |
+| `golds`                                      | iterable | A batch of `GoldParse` objects or dictionaries. Dictionaries will be used to create [`GoldParse`](/api/goldparse) objects. For the available keys and their usage, see [`GoldParse.__init__`](/api/goldparse#init). |
+| `drop`                                       | float    | The dropout rate.                                                                                                                                                                                                   |
+| `sgd`                                        | callable | An optimizer.                                                                                                                                                                                                       |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                        |
+| **RETURNS**                                  | dict     | Results from the update.                                                                                                                                                                                            |
 
 ## Language.begin_training {#begin_training tag="method"}
 
@@ -130,11 +132,12 @@ Allocate models, pre-process training data and acquire an optimizer.
 > optimizer = nlp.begin_training(gold_tuples)
 > ```
 
-| Name          | Type     | Description                  |
-| ------------- | -------- | ---------------------------- |
-| `gold_tuples` | iterable | Gold-standard training data. |
-| `**cfg`       | -        | Config parameters.           |
-| **RETURNS**   | callable | An optimizer.                |
+| Name                                         | Type     | Description                                                                  |
+| -------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| `gold_tuples`                                | iterable | Gold-standard training data.                                                 |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name. |
+| `**cfg`                                      | -        | Config parameters (sent to all components).                                  |
+| **RETURNS**                                  | callable | An optimizer.                                                                |
 
 ## Language.use_params {#use_params tag="contextmanager, method"}
 

@@ -97,6 +97,7 @@ def with_cpu(ops, model):
     """Wrap a model that should run on CPU, transferring inputs and outputs
     as necessary."""
     model.to_cpu()
+
     def with_cpu_forward(inputs, drop=0.):
         cpu_outputs, backprop = model.begin_update(_to_cpu(inputs), drop=drop)
         gpu_outputs = _to_device(ops, cpu_outputs)

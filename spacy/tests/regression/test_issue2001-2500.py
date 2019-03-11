@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
+import numpy
 from spacy.tokens import Doc
 from spacy.displacy import render
 from spacy.gold import iob_to_biluo
@@ -12,12 +13,14 @@ from spacy.lang.en import English
 from ..util import add_vecs_to_vocab, get_doc
 
 
-@pytest.mark.xfail(
-    reason="The dot is now properly split off, but the prefix/suffix rules are not applied again afterwards."
-           "This means that the quote will still be attached to the remaining token."
-)
+@pytest.mark.xfail
 def test_issue2070():
-    """Test that checks that a dot followed by a quote is handled appropriately."""
+    """Test that checks that a dot followed by a quote is handled
+    appropriately.
+    """
+    # Problem: The dot is now properly split off, but the prefix/suffix rules
+    # are not applied again afterwards. This means that the quote will still be
+    # attached to the remaining token.
     nlp = English()
     doc = nlp('First sentence."A quoted sentence" he said ...')
     assert len(doc) == 11
@@ -35,6 +38,26 @@ def test_issue2179():
     nlp2.from_bytes(nlp.to_bytes())
     assert "extra_labels" not in nlp2.get_pipe("ner").cfg
     assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
+
+
+def test_issue2203(en_vocab):
+    """Test that lemmas are set correctly in doc.from_array."""
+    words = ["I", "'ll", "survive"]
+    tags = ["PRP", "MD", "VB"]
+    lemmas = ["-PRON-", "will", "survive"]
+    tag_ids = [en_vocab.strings.add(tag) for tag in tags]
+    lemma_ids = [en_vocab.strings.add(lemma) for lemma in lemmas]
+    doc = Doc(en_vocab, words=words)
+    # Work around lemma corrpution problem and set lemmas after tags
+    doc.from_array("TAG", numpy.array(tag_ids, dtype="uint64"))
+    doc.from_array("LEMMA", numpy.array(lemma_ids, dtype="uint64"))
+    assert [t.tag_ for t in doc] == tags
+    assert [t.lemma_ for t in doc] == lemmas
+    # We need to serialize both tag and lemma, since this is what causes the bug
+    doc_array = doc.to_array(["TAG", "LEMMA"])
+    new_doc = Doc(doc.vocab, words=words).from_array(["TAG", "LEMMA"], doc_array)
+    assert [t.tag_ for t in new_doc] == tags
+    assert [t.lemma_ for t in new_doc] == lemmas
 
 
 def test_issue2219(en_vocab):
