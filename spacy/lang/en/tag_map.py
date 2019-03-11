@@ -36,7 +36,7 @@ TAG_MAP = {
     "NNS": {POS: NOUN, "Number": "plur"},
     "PDT": {POS: DET, "AdjType": "pdt", "PronType": "prn"},
     "POS": {POS: PART, "Poss": "yes"},
-    "PRP": {POS: DET, "PronType": "prs"},
+    "PRP": {POS: PRON, "PronType": "prs"},
     "PRP$": {POS: DET, "PronType": "prs", "Poss": "yes"},
     "RB": {POS: ADV, "Degree": "pos"},
     "RBR": {POS: ADV, "Degree": "comp"},
