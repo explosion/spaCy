@@ -316,6 +316,24 @@ taken.
 | ----------- | ------- | --------------- |
 | **RETURNS** | `Token` | The root token. |
 
+## Span.conjuncts {#conjuncts tag="property" model="parser"}
+
+A tuple of tokens coordinated to `span.root`.
+
+> #### Example
+>
+> ```python
+> doc = nlp(u"I like apples and oranges")
+> apples_conjuncts = doc[2:3].conjuncts
+> assert [t.text for t in apples_conjuncts] == [u"oranges"]
+> ```
+
+| Name       | Type    | Description          |
+| ---------- | ------- | -------------------- |
+| **RETURNS** | `tuple` | The coordinated tokens. |
+
+
+
 ## Span.lefts {#lefts tag="property" model="parser"}
 
 Tokens that are to the left of the span, whose heads are within the span.
