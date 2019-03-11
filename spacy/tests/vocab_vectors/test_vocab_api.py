@@ -49,4 +49,4 @@ def test_vocab_api_contains(en_vocab, text):
 
 def test_vocab_writing_system(en_vocab):
     assert en_vocab.writing_system["direction"] == "ltr"
-    assert en_vocab.writing_system["has_case"] == True
+    assert en_vocab.writing_system["has_case"] is True
