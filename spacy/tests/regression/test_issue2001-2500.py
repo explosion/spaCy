@@ -7,7 +7,6 @@ from spacy.tokens import Doc
 from spacy.displacy import render
 from spacy.gold import iob_to_biluo
 from spacy.lang.it import Italian
-import numpy
 from spacy.lang.en import English
 
 from ..util import add_vecs_to_vocab, get_doc
