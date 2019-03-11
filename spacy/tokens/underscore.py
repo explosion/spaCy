@@ -2,11 +2,13 @@
 from __future__ import unicode_literals
 
 import functools
+import copy
 
 from ..errors import Errors
 
 
 class Underscore(object):
+    mutable_types = (dict, list, set)
     doc_extensions = {}
     span_extensions = {}
     token_extensions = {}
@@ -32,7 +34,15 @@ class Underscore(object):
         elif method is not None:
             return functools.partial(method, self._obj)
         else:
-            return self._doc.user_data.get(self._get_key(name), default)
+            key = self._get_key(name)
+            if key in self._doc.user_data:
+                return self._doc.user_data[key]
+            elif isinstance(default, self.mutable_types):
+                # Handle mutable default arguments (see #2581)
+                new_default = copy.copy(default)
+                self.__setattr__(name, new_default)
+                return new_default
+            return default
 
     def __setattr__(self, name, value):
         if name not in self._extensions:
