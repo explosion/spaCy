@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pytest
 from spacy import displacy
 from spacy.tokens import Span
+from spacy.lang.fa import Persian
 
 from .util import get_doc
 
@@ -66,3 +67,22 @@ def test_displacy_render_wrapper(en_vocab):
 def test_displacy_raises_for_wrong_type(en_vocab):
     with pytest.raises(ValueError):
         displacy.render("hello world")
+
+
+def test_displacy_rtl():
+    # Source: http://www.sobhe.ir/hazm/ – is this correct?
+    words = ["ما", "بسیار", "کتاب", "می\u200cخوانیم"]
+    # These are (likely) wrong, but it's just for testing
+    pos = ["PRO", "ADV", "N_PL", "V_SUB"]  # needs to match lang.fa.tag_map
+    deps = ["foo", "bar", "foo", "baz"]
+    heads = [1, 0, 1, -2]
+    nlp = Persian()
+    doc = get_doc(nlp.vocab, words=words, pos=pos, tags=pos, heads=heads, deps=deps)
+    doc.ents = [Span(doc, 1, 3, label="TEST")]
+    html = displacy.render(doc, page=True, style="dep")
+    assert "direction: rtl" in html
+    assert 'direction="rtl"' in html
+    assert 'lang="{}"'.format(nlp.lang) in html
+    html = displacy.render(doc, page=True, style="ent")
+    assert "direction: rtl" in html
+    assert 'lang="{}"'.format(nlp.lang) in html
