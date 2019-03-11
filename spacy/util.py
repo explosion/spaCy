@@ -38,6 +38,18 @@ def set_env_log(value):
     _PRINT_ENV = value
 
 
+def lang_class_is_loaded(lang):
+    """Check whether a Language class is already loaded. Language classes are
+    loaded lazily, to avoid expensive setup code associated with the language
+    data.
+
+    lang (unicode): Two-letter language code, e.g. 'en'.
+    RETURNS (bool): Whether a Language class has been loaded.
+    """
+    global LANGUAGES
+    return lang in LANGUAGES
+ 
+
 def get_lang_class(lang):
     """Import and load a Language class.
 
