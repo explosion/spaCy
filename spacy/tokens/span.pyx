@@ -527,6 +527,16 @@ cdef class Span:
             else:
                 return self.doc[root]
 
+    property conjuncts:
+        """Tokens that are conjoined to the span's root.
+
+        RETURNS (tuple): A tuple of Token objects.
+
+        DOCS: https://spacy.io/api/span#lefts
+        """
+        def __get__(self):
+            return self.root.conjuncts
+
     property lefts:
         """Tokens that are to the left of the span, whose head is within the
         `Span`.
