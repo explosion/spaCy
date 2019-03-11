@@ -9,6 +9,7 @@ from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
 from ...tokens import Doc, Token
+from ...compat import copy_reg
 from ...util import DummyTokenizer
 
 
@@ -105,6 +106,13 @@ class Japanese(Language):
 
     def make_doc(self, text):
         return self.tokenizer(text)
+
+
+def pickle_japanese(instance):
+    return Japanese, tuple()
+
+
+copy_reg.pickle(Japanese, pickle_japanese)
 
 
 __all__ = ["Japanese"]

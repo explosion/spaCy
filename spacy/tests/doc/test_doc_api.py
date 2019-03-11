@@ -272,3 +272,9 @@ def test_doc_is_nered(en_vocab):
     # Test serialization
     new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
     assert new_doc.is_nered
+
+
+def test_doc_lang(en_vocab):
+    doc = Doc(en_vocab, words=["Hello", "world"])
+    assert doc.lang_ == "en"
+    assert doc.lang == en_vocab.strings["en"]
