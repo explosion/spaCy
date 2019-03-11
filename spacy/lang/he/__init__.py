@@ -14,7 +14,7 @@ class HebrewDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda text: "he"
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
     stop_words = STOP_WORDS
-
+    writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
 
 class Hebrew(Language):
     lang = "he"

@@ -384,7 +384,8 @@ cdef class Doc:
         xp = get_array_module(vector)
         return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
 
-    property has_vector:
+    @property
+    def has_vector(self):
         """A boolean value indicating whether a word vector is associated with
         the object.
 
@@ -392,15 +393,14 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#has_vector
         """
-        def __get__(self):
-            if "has_vector" in self.user_hooks:
-                return self.user_hooks["has_vector"](self)
-            elif self.vocab.vectors.data.size:
-                return True
-            elif self.tensor.size:
-                return True
-            else:
-                return False
+        if "has_vector" in self.user_hooks:
+            return self.user_hooks["has_vector"](self)
+        elif self.vocab.vectors.data.size:
+            return True
+        elif self.tensor.size:
+            return True
+        else:
+            return False
 
     property vector:
         """A real-valued meaning representation. Defaults to an average of the
@@ -453,22 +453,22 @@ cdef class Doc:
         def __set__(self, value):
             self._vector_norm = value
 
-    property text:
+    @property
+    def text(self):
         """A unicode representation of the document text.
 
         RETURNS (unicode): The original verbatim text of the document.
         """
-        def __get__(self):
-            return "".join(t.text_with_ws for t in self)
+        return "".join(t.text_with_ws for t in self)
 
-    property text_with_ws:
+    @property
+    def text_with_ws(self):
         """An alias of `Doc.text`, provided for duck-type compatibility with
         `Span` and `Token`.
 
         RETURNS (unicode): The original verbatim text of the document.
         """
-        def __get__(self):
-            return self.text
+        return self.text
 
     property ents:
         """The named entities in the document. Returns a tuple of named entity
@@ -545,7 +545,8 @@ cdef class Doc:
                     # Set start as B
                     self.c[start].ent_iob = 3
 
-    property noun_chunks:
+    @property
+    def noun_chunks(self):
         """Iterate over the base noun phrases in the document. Yields base
         noun-phrase #[code Span] objects, if the document has been
         syntactically parsed. A base noun phrase, or "NP chunk", is a noun
@@ -557,22 +558,22 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
-        def __get__(self):
-            if not self.is_parsed:
-                raise ValueError(Errors.E029)
-            # Accumulate the result before beginning to iterate over it. This
-            # prevents the tokenisation from being changed out from under us
-            # during the iteration. The tricky thing here is that Span accepts
-            # its tokenisation changing, so it's okay once we have the Span
-            # objects. See Issue #375.
-            spans = []
-            if self.noun_chunks_iterator is not None:
-                for start, end, label in self.noun_chunks_iterator(self):
-                    spans.append(Span(self, start, end, label=label))
-            for span in spans:
-                yield span
+        if not self.is_parsed:
+            raise ValueError(Errors.E029)
+        # Accumulate the result before beginning to iterate over it. This
+        # prevents the tokenisation from being changed out from under us
+        # during the iteration. The tricky thing here is that Span accepts
+        # its tokenisation changing, so it's okay once we have the Span
+        # objects. See Issue #375.
+        spans = []
+        if self.noun_chunks_iterator is not None:
+            for start, end, label in self.noun_chunks_iterator(self):
+                spans.append(Span(self, start, end, label=label))
+        for span in spans:
+            yield span
 
-    property sents:
+    @property
+    def sents(self):
         """Iterate over the sentences in the document. Yields sentence `Span`
         objects. Sentence spans have no label. To improve accuracy on informal
         texts, spaCy calculates sentence boundaries from the syntactic
@@ -583,19 +584,18 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#sents
         """
-        def __get__(self):
-            if not self.is_sentenced:
-                raise ValueError(Errors.E030)
-            if "sents" in self.user_hooks:
-                yield from self.user_hooks["sents"](self)
-            else:
-                start = 0
-                for i in range(1, self.length):
-                    if self.c[i].sent_start == 1:
-                        yield Span(self, start, i)
-                        start = i
-                if start != self.length:
-                    yield Span(self, start, self.length)
+        if not self.is_sentenced:
+            raise ValueError(Errors.E030)
+        if "sents" in self.user_hooks:
+            yield from self.user_hooks["sents"](self)
+        else:
+            start = 0
+            for i in range(1, self.length):
+                if self.c[i].sent_start == 1:
+                    yield Span(self, start, i)
+                    start = i
+            if start != self.length:
+                yield Span(self, start, self.length)
 
     @property
     def lang(self):
