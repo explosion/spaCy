@@ -211,7 +211,7 @@ The rightmost token of this token's syntactic descendants.
 
 ## Token.conjuncts {#conjuncts tag="property" model="parser"}
 
-A sequence of coordinated tokens, including the token itself.
+A tuple of coordinated tokens, not including the token itself.
 
 > #### Example
 >
@@ -223,7 +223,7 @@ A sequence of coordinated tokens, including the token itself.
 
 | Name       | Type    | Description          |
 | ---------- | ------- | -------------------- |
-| **YIELDS** | `Token` | A coordinated token. |
+| **RETURNS** | `tuple` | The coordinated tokens. |
 
 ## Token.children {#children tag="property" model="parser"}
 

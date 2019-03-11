@@ -689,19 +689,27 @@ cdef class Token:
     def conjuncts(self):
         """A sequence of coordinated tokens, including the token itself.
 
-        YIELDS (Token): A coordinated token.
+        RETURNS (tuple): The coordinated tokens.
 
         DOCS: https://spacy.io/api/token#conjuncts
         """
-        cdef Token word
+        cdef Token word, child
         if "conjuncts" in self.doc.user_token_hooks:
-            yield from self.doc.user_token_hooks["conjuncts"](self)
-        else:
-            if self.dep != conj:
-                for word in self.rights:
-                    if word.dep == conj:
-                        yield word
-                        yield from word.conjuncts
+            return tuple(self.doc.user_token_hooks["conjuncts"](self))
+        start = self
+        while start.i != start.head.i:
+            if start.dep == conj:
+                start = start.head
+            else:
+                break
+        queue = [start]
+        output = [start]
+        for word in queue:
+            for child in word.rights:
+                if child.c.dep == conj:
+                    output.append(child)
+                    queue.append(child)
+        return tuple([w for w in output if w.i != self.i])
 
     property ent_type:
         """RETURNS (uint64): Named entity type."""
