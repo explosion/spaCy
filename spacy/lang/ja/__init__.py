@@ -94,6 +94,7 @@ class JapaneseDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda _text: "ja"
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
+    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
