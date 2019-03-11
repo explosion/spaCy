@@ -60,12 +60,12 @@ cdef class Vocab:
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors()
 
-    property lang:
-        def __get__(self):
-            langfunc = None
-            if self.lex_attr_getters:
-                langfunc = self.lex_attr_getters.get(LANG, None)
-            return langfunc("_") if langfunc else ""
+    @property
+    def lang(self):
+        langfunc = None
+        if self.lex_attr_getters:
+            langfunc = self.lex_attr_getters.get(LANG, None)
+        return langfunc("_") if langfunc else ""
 
     property writing_system:
         """A dict with information about the language's writing system. To get
