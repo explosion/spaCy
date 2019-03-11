@@ -291,7 +291,7 @@ class EntityRenderer(object):
                 if self.direction == "rtl":
                     markup += TPL_ENT_RTL.format(**ent_settings)
                 else:
-                    markup += TPL_ENT_RTL.format(**ent_settings)
+                    markup += TPL_ENT.format(**ent_settings)
             else:
                 markup += entity
             offset = end
