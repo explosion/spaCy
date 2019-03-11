@@ -47,7 +47,6 @@ def test_vocab_api_contains(en_vocab, text):
     assert "LKsdjvlsakdvlaksdvlkasjdvljasdlkfvm" not in en_vocab
 
 
-@pytest.mark.xfail
 def test_vocab_writing_system(en_vocab):
     assert en_vocab.writing_system["direction"] == "ltr"
     assert en_vocab.writing_system["has_case"] == True
