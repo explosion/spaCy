@@ -106,3 +106,37 @@ def test_underscore_raises_for_invalid(invalid_kwargs):
 def test_underscore_accepts_valid(valid_kwargs):
     valid_kwargs["force"] = True
     Doc.set_extension("test", **valid_kwargs)
+
+
+def test_underscore_mutable_defaults_list(en_vocab):
+    """Test that mutable default arguments are handled correctly (see #2581)."""
+    Doc.set_extension("mutable", default=[])
+    doc1 = Doc(en_vocab, words=["one"])
+    doc2 = Doc(en_vocab, words=["two"])
+    doc1._.mutable.append("foo")
+    assert len(doc1._.mutable) == 1
+    assert doc1._.mutable[0] == "foo"
+    assert len(doc2._.mutable) == 0
+    doc1._.mutable = ["bar", "baz"]
+    doc1._.mutable.append("foo")
+    assert len(doc1._.mutable) == 3
+    assert len(doc2._.mutable) == 0
+
+
+def test_underscore_mutable_defaults_dict(en_vocab):
+    """Test that mutable default arguments are handled correctly (see #2581)."""
+    Token.set_extension("mutable", default={})
+    token1 = Doc(en_vocab, words=["one"])[0]
+    token2 = Doc(en_vocab, words=["two"])[0]
+    token1._.mutable["foo"] = "bar"
+    assert len(token1._.mutable) == 1
+    assert token1._.mutable["foo"] == "bar"
+    assert len(token2._.mutable) == 0
+    token1._.mutable["foo"] = "baz"
+    assert len(token1._.mutable) == 1
+    assert token1._.mutable["foo"] == "baz"
+    token1._.mutable["x"] = []
+    token1._.mutable["x"].append("y")
+    assert len(token1._.mutable) == 2
+    assert token1._.mutable["x"] == ["y"]
+    assert len(token2._.mutable) == 0

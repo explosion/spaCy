@@ -597,6 +597,16 @@ cdef class Doc:
                 if start != self.length:
                     yield Span(self, start, self.length)
 
+    @property
+    def lang(self):
+        """RETURNS (uint64): ID of the language of the doc's vocabulary."""
+        return self.vocab.strings[self.vocab.lang]
+
+    @property
+    def lang_(self):
+        """RETURNS (unicode): Language of the doc's vocabulary, e.g. 'en'."""
+        return self.vocab.lang
+
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
         if self.length == 0:
             # Flip these to false when we see the first token.
@@ -748,7 +758,7 @@ cdef class Doc:
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
- 
+
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
         cdef int i, col
