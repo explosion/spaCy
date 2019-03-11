@@ -763,17 +763,18 @@ cdef class Doc:
             attr_ids[i] = attr_id
         if len(array.shape) == 1:
             array = array.reshape((array.size, 1))
+        # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
+        if TAG in attrs:
+            col = attrs.index(TAG)
+            for i in range(length):
+                if array[i, col] != 0:
+                    self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
         # Now load the data
         for i in range(self.length):
             token = &self.c[i]
             for j in range(n_attrs):
-                Token.set_struct_attr(token, attr_ids[j], array[i, j])
-        # Auxiliary loading logic
-        for col, attr_id in enumerate(attrs):
-            if attr_id == TAG:
-                for i in range(length):
-                    if array[i, col] != 0:
-                        self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
+                if attr_ids[j] != TAG:
+                    Token.set_struct_attr(token, attr_ids[j], array[i, j])
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
