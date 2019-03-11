@@ -94,6 +94,7 @@ class BaseDefaults(object):
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
+    writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
 
 
 class Language(object):
