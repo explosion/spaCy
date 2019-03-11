@@ -458,9 +458,7 @@ There are three main types of extensions, which can be defined using the
 1. **Attribute extensions.** Set a default value for an attribute, which can be
    overwritten manually at any time. Attribute extensions work like "normal"
    variables and are the quickest way to store arbitrary information on a `Doc`,
-   `Span` or `Token`. Attribute defaults behaves just like argument defaults
-   [in Python functions](http://docs.python-guide.org/en/latest/writing/gotchas/#mutable-default-arguments),
-   and should not be used for mutable values like dictionaries or lists.
+   `Span` or `Token`.
 
    ```python
     Doc.set_extension("hello", default=True)
@@ -526,25 +524,6 @@ Once you've registered your custom attribute, you can also use the built-in
 `set`, `get` and `has` methods to modify and retrieve the attributes. This is
 especially useful it you want to pass in a string instead of calling
 `doc._.my_attr`.
-
-<Infobox title="Using mutable default values" variant="danger">
-
-When using **mutable values** like dictionaries or lists as the `default`
-argument, keep in mind that they behave just like mutable default arguments
-[in Python functions](http://docs.python-guide.org/en/latest/writing/gotchas/#mutable-default-arguments).
-This can easily cause unintended results, like the same value being set on _all_
-objects instead of only one particular instance. In most cases, it's better to
-use **getters and setters**, and only set the `default` for boolean or string
-values.
-
-```diff
-+ Doc.set_extension('fruits', getter=get_fruits, setter=set_fruits)
-
-- Doc.set_extension('fruits', default={})
-- doc._.fruits['apple'] = u'🍎'  # all docs now have {'apple': u'🍎'}
-```
-
-</Infobox>
 
 ### Example: Pipeline component for GPE entities and country meta data via a REST API {#component-example3}
 
