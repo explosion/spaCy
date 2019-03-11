@@ -16,6 +16,7 @@ class ChineseDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
+
 class Chinese(Language):
     lang = "zh"
     Defaults = ChineseDefaults  # override defaults

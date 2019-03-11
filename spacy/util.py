@@ -48,7 +48,7 @@ def lang_class_is_loaded(lang):
     """
     global LANGUAGES
     return lang in LANGUAGES
- 
+
 
 def get_lang_class(lang):
     """Import and load a Language class.

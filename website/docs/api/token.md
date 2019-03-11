@@ -221,8 +221,8 @@ A tuple of coordinated tokens, not including the token itself.
 > assert [t.text for t in apples_conjuncts] == [u"oranges"]
 > ```
 
-| Name       | Type    | Description          |
-| ---------- | ------- | -------------------- |
+| Name        | Type    | Description             |
+| ----------- | ------- | ----------------------- |
 | **RETURNS** | `tuple` | The coordinated tokens. |
 
 ## Token.children {#children tag="property" model="parser"}

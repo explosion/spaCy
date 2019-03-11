@@ -328,11 +328,9 @@ A tuple of tokens coordinated to `span.root`.
 > assert [t.text for t in apples_conjuncts] == [u"oranges"]
 > ```
 
-| Name       | Type    | Description          |
-| ---------- | ------- | -------------------- |
+| Name        | Type    | Description             |
+| ----------- | ------- | ----------------------- |
 | **RETURNS** | `tuple` | The coordinated tokens. |
-
-
 
 ## Span.lefts {#lefts tag="property" model="parser"}
 
