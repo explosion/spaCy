@@ -322,46 +322,47 @@ cdef class Span:
             self.start = start
             self.end = end + 1
 
-    property vocab:
+    @property
+    def vocab(self):
         """RETURNS (Vocab): The Span's Doc's vocab."""
-        def __get__(self):
-            return self.doc.vocab
+        return self.doc.vocab
 
-    property sent:
+    @property
+    def sent(self):
         """RETURNS (Span): The sentence span that the span is a part of."""
-        def __get__(self):
-            if "sent" in self.doc.user_span_hooks:
-                return self.doc.user_span_hooks["sent"](self)
-            # This should raise if not parsed / no custom sentence boundaries
-            self.doc.sents
-            # If doc is parsed we can use the deps to find the sentence
-            # otherwise we use the `sent_start` token attribute
-            cdef int n = 0
-            cdef int i
-            if self.doc.is_parsed:
-                root = &self.doc.c[self.start]
-                while root.head != 0:
-                    root += root.head
-                    n += 1
-                    if n >= self.doc.length:
-                        raise RuntimeError(Errors.E038)
-                return self.doc[root.l_edge:root.r_edge + 1]
-            elif self.doc.is_sentenced:
-                # Find start of the sentence
-                start = self.start
-                while self.doc.c[start].sent_start != 1 and start > 0:
-                    start += -1
-                # Find end of the sentence
-                end = self.end
-                n = 0
-                while end < self.doc.length and self.doc.c[end].sent_start != 1:
-                    end += 1
-                    n += 1
-                    if n >= self.doc.length:
-                        break
-                return self.doc[start:end]
+        if "sent" in self.doc.user_span_hooks:
+            return self.doc.user_span_hooks["sent"](self)
+        # This should raise if not parsed / no custom sentence boundaries
+        self.doc.sents
+        # If doc is parsed we can use the deps to find the sentence
+        # otherwise we use the `sent_start` token attribute
+        cdef int n = 0
+        cdef int i
+        if self.doc.is_parsed:
+            root = &self.doc.c[self.start]
+            while root.head != 0:
+                root += root.head
+                n += 1
+                if n >= self.doc.length:
+                    raise RuntimeError(Errors.E038)
+            return self.doc[root.l_edge:root.r_edge + 1]
+        elif self.doc.is_sentenced:
+            # Find start of the sentence
+            start = self.start
+            while self.doc.c[start].sent_start != 1 and start > 0:
+                start += -1
+            # Find end of the sentence
+            end = self.end
+            n = 0
+            while end < self.doc.length and self.doc.c[end].sent_start != 1:
+                end += 1
+                n += 1
+                if n >= self.doc.length:
+                    break
+            return self.doc[start:end]
 
-    property ents:
+    @property
+    def ents(self):
         """The named entities in the span. Returns a tuple of named entity
         `Span` objects, if the entity recognizer has been applied.
 
@@ -369,14 +370,14 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#ents
         """
-        def __get__(self):
-            ents = []
-            for ent in self.doc.ents:
-                if ent.start >= self.start and ent.end <= self.end:
-                    ents.append(ent)
-            return ents
+        ents = []
+        for ent in self.doc.ents:
+            if ent.start >= self.start and ent.end <= self.end:
+                ents.append(ent)
+        return ents
 
-    property has_vector:
+    @property
+    def has_vector(self):
         """A boolean value indicating whether a word vector is associated with
         the object.
 
@@ -384,17 +385,17 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#has_vector
         """
-        def __get__(self):
-            if "has_vector" in self.doc.user_span_hooks:
-                return self.doc.user_span_hooks["has_vector"](self)
-            elif self.vocab.vectors.data.size > 0:
-                return any(token.has_vector for token in self)
-            elif self.doc.tensor.size > 0:
-                return True
-            else:
-                return False
+        if "has_vector" in self.doc.user_span_hooks:
+            return self.doc.user_span_hooks["has_vector"](self)
+        elif self.vocab.vectors.data.size > 0:
+            return any(token.has_vector for token in self)
+        elif self.doc.tensor.size > 0:
+            return True
+        else:
+            return False
 
-    property vector:
+    @property
+    def vector(self):
         """A real-valued meaning representation. Defaults to an average of the
         token vectors.
 
@@ -403,61 +404,61 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#vector
         """
-        def __get__(self):
-            if "vector" in self.doc.user_span_hooks:
-                return self.doc.user_span_hooks["vector"](self)
-            if self._vector is None:
-                self._vector = sum(t.vector for t in self) / len(self)
-            return self._vector
+        if "vector" in self.doc.user_span_hooks:
+            return self.doc.user_span_hooks["vector"](self)
+        if self._vector is None:
+            self._vector = sum(t.vector for t in self) / len(self)
+        return self._vector
 
-    property vector_norm:
+    @property
+    def vector_norm(self):
         """The L2 norm of the span's vector representation.
 
         RETURNS (float): The L2 norm of the vector representation.
 
         DOCS: https://spacy.io/api/span#vector_norm
         """
-        def __get__(self):
-            if "vector_norm" in self.doc.user_span_hooks:
-                return self.doc.user_span_hooks["vector"](self)
-            cdef float value
-            cdef double norm = 0
-            if self._vector_norm is None:
-                norm = 0
-                for value in self.vector:
-                    norm += value * value
-                self._vector_norm = sqrt(norm) if norm != 0 else 0
-            return self._vector_norm
+        if "vector_norm" in self.doc.user_span_hooks:
+            return self.doc.user_span_hooks["vector"](self)
+        cdef float value
+        cdef double norm = 0
+        if self._vector_norm is None:
+            norm = 0
+            for value in self.vector:
+                norm += value * value
+            self._vector_norm = sqrt(norm) if norm != 0 else 0
+        return self._vector_norm
 
-    property sentiment:
+    @property
+    def sentiment(self):
         """RETURNS (float): A scalar value indicating the positivity or
             negativity of the span.
         """
-        def __get__(self):
-            if "sentiment" in self.doc.user_span_hooks:
-                return self.doc.user_span_hooks["sentiment"](self)
-            else:
-                return sum([token.sentiment for token in self]) / len(self)
+        if "sentiment" in self.doc.user_span_hooks:
+            return self.doc.user_span_hooks["sentiment"](self)
+        else:
+            return sum([token.sentiment for token in self]) / len(self)
 
-    property text:
+    @property
+    def text(self):
         """RETURNS (unicode): The original verbatim text of the span."""
-        def __get__(self):
-            text = self.text_with_ws
-            if self[-1].whitespace_:
-                text = text[:-1]
-            return text
+        text = self.text_with_ws
+        if self[-1].whitespace_:
+            text = text[:-1]
+        return text
 
-    property text_with_ws:
+    @property
+    def text_with_ws(self):
         """The text content of the span with a trailing whitespace character if
         the last token has one.
 
         RETURNS (unicode): The text content of the span (with trailing
             whitespace).
         """
-        def __get__(self):
-            return "".join([t.text_with_ws for t in self])
+        return "".join([t.text_with_ws for t in self])
 
-    property noun_chunks:
+    @property
+    def noun_chunks(self):
         """Yields base noun-phrase `Span` objects, if the document has been
         syntactically parsed. A base noun phrase, or "NP chunk", is a noun
         phrase that does not permit other NPs to be nested within it – so no
@@ -468,23 +469,23 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#noun_chunks
         """
-        def __get__(self):
-            if not self.doc.is_parsed:
-                raise ValueError(Errors.E029)
-            # Accumulate the result before beginning to iterate over it. This
-            # prevents the tokenisation from being changed out from under us
-            # during the iteration. The tricky thing here is that Span accepts
-            # its tokenisation changing, so it's okay once we have the Span
-            # objects. See Issue #375
-            spans = []
-            cdef attr_t label
-            if self.doc.noun_chunks_iterator is not None:
-                for start, end, label in self.doc.noun_chunks_iterator(self):
-                    spans.append(Span(self.doc, start, end, label=label))
-            for span in spans:
-                yield span
+        if not self.doc.is_parsed:
+            raise ValueError(Errors.E029)
+        # Accumulate the result before beginning to iterate over it. This
+        # prevents the tokenisation from being changed out from under us
+        # during the iteration. The tricky thing here is that Span accepts
+        # its tokenisation changing, so it's okay once we have the Span
+        # objects. See Issue #375
+        spans = []
+        cdef attr_t label
+        if self.doc.noun_chunks_iterator is not None:
+            for start, end, label in self.doc.noun_chunks_iterator(self):
+                spans.append(Span(self.doc, start, end, label=label))
+        for span in spans:
+            yield span
 
-    property root:
+    @property
+    def root(self):
         """The token with the shortest path to the root of the
         sentence (or the root itself). If multiple tokens are equally
         high in the tree, the first token is taken.
@@ -493,41 +494,41 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#root
         """
-        def __get__(self):
-            self._recalculate_indices()
-            if "root" in self.doc.user_span_hooks:
-                return self.doc.user_span_hooks["root"](self)
-            # This should probably be called 'head', and the other one called
-            # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
-            cdef int i
-            # First, we scan through the Span, and check whether there's a word
-            # with head==0, i.e. a sentence root. If so, we can return it. The
-            # longer the span, the more likely it contains a sentence root, and
-            # in this case we return in linear time.
-            for i in range(self.start, self.end):
-                if self.doc.c[i].head == 0:
-                    return self.doc[i]
-            # If we don't have a sentence root, we do something that's not so
-            # algorithmically clever, but I think should be quite fast,
-            # especially for short spans.
-            # For each word, we count the path length, and arg min this measure.
-            # We could use better tree logic to save steps here...But I
-            # think this should be okay.
-            cdef int current_best = self.doc.length
-            cdef int root = -1
-            for i in range(self.start, self.end):
-                if self.start <= (i+self.doc.c[i].head) < self.end:
-                    continue
-                words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
-                if words_to_root < current_best:
-                    current_best = words_to_root
-                    root = i
-            if root == -1:
-                return self.doc[self.start]
-            else:
-                return self.doc[root]
+        self._recalculate_indices()
+        if "root" in self.doc.user_span_hooks:
+            return self.doc.user_span_hooks["root"](self)
+        # This should probably be called 'head', and the other one called
+        # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
+        cdef int i
+        # First, we scan through the Span, and check whether there's a word
+        # with head==0, i.e. a sentence root. If so, we can return it. The
+        # longer the span, the more likely it contains a sentence root, and
+        # in this case we return in linear time.
+        for i in range(self.start, self.end):
+            if self.doc.c[i].head == 0:
+                return self.doc[i]
+        # If we don't have a sentence root, we do something that's not so
+        # algorithmically clever, but I think should be quite fast,
+        # especially for short spans.
+        # For each word, we count the path length, and arg min this measure.
+        # We could use better tree logic to save steps here...But I
+        # think this should be okay.
+        cdef int current_best = self.doc.length
+        cdef int root = -1
+        for i in range(self.start, self.end):
+            if self.start <= (i+self.doc.c[i].head) < self.end:
+                continue
+            words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
+            if words_to_root < current_best:
+                current_best = words_to_root
+                root = i
+        if root == -1:
+            return self.doc[self.start]
+        else:
+            return self.doc[root]
 
-    property lefts:
+    @property
+    def lefts(self):
         """Tokens that are to the left of the span, whose head is within the
         `Span`.
 
@@ -535,13 +536,13 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#lefts
         """
-        def __get__(self):
-            for token in reversed(self):  # Reverse, so we get tokens in order
-                for left in token.lefts:
-                    if left.i < self.start:
-                        yield left
+        for token in reversed(self):  # Reverse, so we get tokens in order
+            for left in token.lefts:
+                if left.i < self.start:
+                    yield left
 
-    property rights:
+    @property
+    def rights(self):
         """Tokens that are to the right of the Span, whose head is within the
         `Span`.
 
@@ -549,13 +550,13 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#rights
         """
-        def __get__(self):
-            for token in self:
-                for right in token.rights:
-                    if right.i >= self.end:
-                        yield right
+        for token in self:
+            for right in token.rights:
+                if right.i >= self.end:
+                    yield right
 
-    property n_lefts:
+    @property
+    def n_lefts(self):
         """The number of tokens that are to the left of the span, whose
         heads are within the span.
 
@@ -564,10 +565,10 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#n_lefts
         """
-        def __get__(self):
-            return len(list(self.lefts))
+        return len(list(self.lefts))
 
-    property n_rights:
+    @property
+    def n_rights(self):
         """The number of tokens that are to the right of the span, whose
         heads are within the span.
 
@@ -576,22 +577,21 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#n_rights
         """
-        def __get__(self):
-            return len(list(self.rights))
+        return len(list(self.rights))
 
-    property subtree:
+    @property
+    def subtree(self):
         """Tokens within the span and tokens which descend from them.
 
         YIELDS (Token): A token within the span, or a descendant from it.
 
         DOCS: https://spacy.io/api/span#subtree
         """
-        def __get__(self):
-            for word in self.lefts:
-                yield from word.subtree
-            yield from self
-            for word in self.rights:
-                yield from word.subtree
+        for word in self.lefts:
+            yield from word.subtree
+        yield from self
+        for word in self.rights:
+            yield from word.subtree
 
     property ent_id:
         """RETURNS (uint64): The entity ID."""
@@ -609,33 +609,33 @@ cdef class Span:
         def __set__(self, hash_t key):
             raise NotImplementedError(TempErrors.T007.format(attr="ent_id_"))
 
-    property orth_:
+    @property
+    def orth_(self):
         """Verbatim text content (identical to `Span.text`). Exists mostly for
         consistency with other attributes.
 
         RETURNS (unicode): The span's text."""
-        def __get__(self):
-            return self.text
+        return self.text
 
-    property lemma_:
+    @property
+    def lemma_(self):
         """RETURNS (unicode): The span's lemma."""
-        def __get__(self):
-            return " ".join([t.lemma_ for t in self]).strip()
+        return " ".join([t.lemma_ for t in self]).strip()
 
-    property upper_:
+    @property
+    def upper_(self):
         """Deprecated. Use `Span.text.upper()` instead."""
-        def __get__(self):
-            return "".join([t.text_with_ws.upper() for t in self]).strip()
+        return "".join([t.text_with_ws.upper() for t in self]).strip()
 
-    property lower_:
+    @property
+    def lower_(self):
         """Deprecated. Use `Span.text.lower()` instead."""
-        def __get__(self):
-            return "".join([t.text_with_ws.lower() for t in self]).strip()
+        return "".join([t.text_with_ws.lower() for t in self]).strip()
 
-    property string:
+    @property
+    def string(self):
         """Deprecated: Use `Span.text_with_ws` instead."""
-        def __get__(self):
-            return "".join([t.text_with_ws for t in self])
+        return "".join([t.text_with_ws for t in self])
 
     property label_:
         """RETURNS (unicode): The span's label."""

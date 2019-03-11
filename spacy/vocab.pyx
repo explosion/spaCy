@@ -60,12 +60,23 @@ cdef class Vocab:
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors()
 
-    property lang:
+    @property
+    def lang(self):
+        langfunc = None
+        if self.lex_attr_getters:
+            langfunc = self.lex_attr_getters.get(LANG, None)
+        return langfunc("_") if langfunc else ""
+
+    property writing_system:
+        """A dict with information about the language's writing system. To get
+        the data, we use the vocab.lang property to fetch the Language class.
+        If the Language class is not loaded, an empty dict is returned.
+        """
         def __get__(self):
-            langfunc = None
-            if self.lex_attr_getters:
-                langfunc = self.lex_attr_getters.get(LANG, None)
-            return langfunc("_") if langfunc else ""
+            if not util.lang_class_is_loaded(self.lang):
+                return {}
+            lang_class = util.get_lang_class(self.lang)
+            return dict(lang_class.Defaults.writing_system)
 
     def __len__(self):
         """The current number of lexemes stored.

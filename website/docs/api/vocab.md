@@ -288,11 +288,12 @@ Load state from a binary string.
 > assert type(PERSON) == int
 > ```
 
-| Name                                 | Type          | Description                                   |
-| ------------------------------------ | ------------- | --------------------------------------------- |
-| `strings`                            | `StringStore` | A table managing the string-to-int mapping.   |
-| `vectors` <Tag variant="new">2</Tag> | `Vectors`     | A table associating word IDs to word vectors. |
-| `vectors_length`                     | int           | Number of dimensions for each word vector.    |
+| Name                                          | Type          | Description                                                  |
+| --------------------------------------------- | ------------- | ------------------------------------------------------------ |
+| `strings`                                     | `StringStore` | A table managing the string-to-int mapping.                  |
+| `vectors` <Tag variant="new">2</Tag>          | `Vectors`     | A table associating word IDs to word vectors.                |
+| `vectors_length`                              | int           | Number of dimensions for each word vector.                   |
+| `writing_system` <Tag variant="new">2.1</Tag> | dict          | A dict with information about the language's writing system. |
 
 ## Serialization fields {#serialization-fields}
 

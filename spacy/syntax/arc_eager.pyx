@@ -369,9 +369,9 @@ cdef class ArcEager(TransitionSystem):
         actions[LEFT].setdefault('dep', 0)
         return actions
 
-    property action_types:
-        def __get__(self):
-            return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
+    @property
+    def action_types(self):
+        return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
 
     def get_cost(self, StateClass state, GoldParse gold, action):
         cdef Transition t = self.lookup_transition(action)
@@ -384,7 +384,7 @@ cdef class ArcEager(TransitionSystem):
         cdef Transition t = self.lookup_transition(action)
         t.do(state.c, t.label)
         return state
- 
+
     def is_gold_parse(self, StateClass state, GoldParse gold):
         predicted = set()
         truth = set()
