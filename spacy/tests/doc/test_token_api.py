@@ -201,7 +201,6 @@ def test_token0_has_sent_start_true():
     assert not doc.is_sentenced
 
 
-@pytest.mark.xfail
 def test_token_api_conjuncts_chain(en_vocab):
     words = "The boy and the girl and the man went .".split()
     heads = [1, 7, -1, 1, -3, -1, 1, -3, 0, -1]
@@ -212,7 +211,6 @@ def test_token_api_conjuncts_chain(en_vocab):
     assert [w.text for w in doc[7].conjuncts] == ["boy", "girl"]
 
 
-@pytest.mark.xfail
 def test_token_api_conjuncts_simple(en_vocab):
     words = "They came and went .".split()
     heads = [1, 0, -1, -2, -1]
@@ -222,7 +220,6 @@ def test_token_api_conjuncts_simple(en_vocab):
     assert [w.text for w in doc[3].conjuncts] == ["came"]
 
 
-@pytest.mark.xfail
 def test_token_api_non_conjuncts(en_vocab):
     words = "They came .".split()
     heads = [1, 0, -1]
