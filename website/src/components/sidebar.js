@@ -28,9 +28,9 @@ const Sidebar = ({ items, pageMenu, slug }) => {
     const [initialized, setInitialized] = useState(false)
     const [activeSection, setActiveSection] = useState(null)
     const activeRef = useRef()
-    const handleInView = ({ detail }) => setActiveSection(detail)
 
     useEffect(() => {
+        const handleInView = ({ detail }) => setActiveSection(detail)
         window.addEventListener('inview', handleInView, { passive: true })
         if (!initialized) {
             if (activeRef && activeRef.current) {
@@ -41,7 +41,7 @@ const Sidebar = ({ items, pageMenu, slug }) => {
         return () => {
             window.removeEventListener('inview', handleInView)
         }
-    }, [])
+    }, [initialized])
 
     return (
         <menu className={classNames('sidebar', classes.root)}>

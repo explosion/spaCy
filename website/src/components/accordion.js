@@ -7,7 +7,7 @@ import Link from './link'
 import classes from '../styles/accordion.module.sass'
 
 const Accordion = ({ title, id, expanded, children }) => {
-    const anchorId = id ? id : slugify(title)
+    const anchorId = id || slugify(title)
     const [isExpanded, setIsExpanded] = useState(expanded)
     const contentClassNames = classNames(classes.content, {
         [classes.hidden]: !isExpanded,

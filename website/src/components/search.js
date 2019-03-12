@@ -7,10 +7,10 @@ import classes from '../styles/search.module.sass'
 
 const Search = ({ id, placeholder, settings }) => {
     const { apiKey, indexName } = settings
-    const [isInitialized, setIsInitialized] = useState(false)
+    const [initialized, setInitialized] = useState(false)
     useEffect(() => {
-        if (!isInitialized) {
-            setIsInitialized(true)
+        if (!initialized) {
+            setInitialized(true)
             window.docsearch({
                 apiKey,
                 indexName,
@@ -18,7 +18,7 @@ const Search = ({ id, placeholder, settings }) => {
                 debug: false,
             })
         }
-    }, window.docsearch)
+    }, [initialized, apiKey, indexName, id])
     return (
         <form className={classes.root}>
             <label htmlFor={id} className={classes.icon}>
