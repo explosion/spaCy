@@ -161,17 +161,17 @@ cdef class Lexeme:
         Lexeme.c_from_bytes(self.c, lex_data)
         self.orth = self.c.orth
 
-    property has_vector:
+    @property
+    def has_vector(self):
         """RETURNS (bool): Whether a word vector is associated with the object.
         """
-        def __get__(self):
-            return self.vocab.has_vector(self.c.orth)
+        return self.vocab.has_vector(self.c.orth)
 
-    property vector_norm:
+    @property
+    def vector_norm(self):
         """RETURNS (float): The L2 norm of the vector representation."""
-        def __get__(self):
-            vector = self.vector
-            return numpy.sqrt((vector**2).sum())
+        vector = self.vector
+        return numpy.sqrt((vector**2).sum())
 
     property vector:
         """A real-valued meaning representation.
@@ -209,17 +209,17 @@ cdef class Lexeme:
         def __set__(self, float sentiment):
             self.c.sentiment = sentiment
 
-    property orth_:
+    @property
+    def orth_(self):
         """RETURNS (unicode): The original verbatim text of the lexeme
             (identical to `Lexeme.text`). Exists mostly for consistency with
             the other attributes."""
-        def __get__(self):
-            return self.vocab.strings[self.c.orth]
+        return self.vocab.strings[self.c.orth]
 
-    property text:
+    @property
+    def text(self):
         """RETURNS (unicode): The original verbatim text of the lexeme."""
-        def __get__(self):
-            return self.orth_
+        return self.orth_
 
     property lower:
         """RETURNS (unicode): Lowercase form of the lexeme."""

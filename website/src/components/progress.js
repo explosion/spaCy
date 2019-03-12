@@ -34,22 +34,19 @@ const Progress = () => {
         setOffset(getOffset())
     }
 
-    useEffect(
-        () => {
-            if (!initialized && progressRef.current) {
-                handleResize()
-                setInitialized(true)
-            }
-            window.addEventListener('scroll', handleScroll)
-            window.addEventListener('resize', handleResize)
+    useEffect(() => {
+        if (!initialized && progressRef.current) {
+            handleResize()
+            setInitialized(true)
+        }
+        window.addEventListener('scroll', handleScroll)
+        window.addEventListener('resize', handleResize)
 
-            return () => {
-                window.removeEventListener('scroll', handleScroll)
-                window.removeEventListener('resize', handleResize)
-            }
-        },
-        [progressRef]
-    )
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
+            window.removeEventListener('resize', handleResize)
+        }
+    }, [initialized, progressRef])
 
     const { height, vh } = offset
     const total = 100 - ((height - scrollY - vh) / height) * 100

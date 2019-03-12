@@ -199,3 +199,31 @@ def test_token0_has_sent_start_true():
     assert doc[0].is_sent_start is True
     assert doc[1].is_sent_start is None
     assert not doc.is_sentenced
+
+
+def test_token_api_conjuncts_chain(en_vocab):
+    words = "The boy and the girl and the man went .".split()
+    heads = [1, 7, -1, 1, -3, -1, 1, -3, 0, -1]
+    deps = ["det", "nsubj", "cc", "det", "conj", "cc", "det", "conj", "ROOT", "punct"]
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    assert [w.text for w in doc[1].conjuncts] == ["girl", "man"]
+    assert [w.text for w in doc[4].conjuncts] == ["boy", "man"]
+    assert [w.text for w in doc[7].conjuncts] == ["boy", "girl"]
+
+
+def test_token_api_conjuncts_simple(en_vocab):
+    words = "They came and went .".split()
+    heads = [1, 0, -1, -2, -1]
+    deps = ["nsubj", "ROOT", "cc", "conj"]
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    assert [w.text for w in doc[1].conjuncts] == ["went"]
+    assert [w.text for w in doc[3].conjuncts] == ["came"]
+
+
+def test_token_api_non_conjuncts(en_vocab):
+    words = "They came .".split()
+    heads = [1, 0, -1]
+    deps = ["nsubj", "ROOT", "punct"]
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    assert [w.text for w in doc[0].conjuncts] == []
+    assert [w.text for w in doc[1].conjuncts] == []

@@ -73,10 +73,11 @@ const Changelog = () => {
                 .catch(err => {
                     setIsLoading(false)
                     setIsError(true)
+                    console.error(err)
                 })
             setInitialized(true)
         }
-    }, [])
+    }, [initialized])
 
     const error = (
         <Infobox title="Unable to load changelog from GitHub" variant="danger">

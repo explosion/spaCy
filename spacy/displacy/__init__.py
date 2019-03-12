@@ -161,7 +161,7 @@ def parse_deps(orig_doc, options={}):
                     "dir": "right",
                 }
             )
-    return {"words": words, "arcs": arcs}
+    return {"words": words, "arcs": arcs, "settings": get_doc_settings(orig_doc)}
 
 
 def parse_ents(doc, options={}):
@@ -177,7 +177,8 @@ def parse_ents(doc, options={}):
     if not ents:
         user_warning(Warnings.W006)
     title = doc.user_data.get("title", None) if hasattr(doc, "user_data") else None
-    return {"text": doc.text, "ents": ents, "title": title}
+    settings = get_doc_settings(doc)
+    return {"text": doc.text, "ents": ents, "title": title, "settings": settings}
 
 
 def set_render_wrapper(func):
@@ -195,3 +196,10 @@ def set_render_wrapper(func):
     if not hasattr(func, "__call__"):
         raise ValueError(Errors.E110.format(obj=type(func)))
     RENDER_WRAPPER = func
+
+
+def get_doc_settings(doc):
+    return {
+        "lang": doc.lang_,
+        "direction": doc.vocab.writing_system.get("direction", "ltr"),
+    }

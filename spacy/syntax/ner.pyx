@@ -80,9 +80,9 @@ cdef class BiluoPushDown(TransitionSystem):
                             actions[action][label] += 1
         return actions
 
-    property action_types:
-        def __get__(self):
-            return (BEGIN, IN, LAST, UNIT, OUT)
+    @property
+    def action_types(self):
+        return (BEGIN, IN, LAST, UNIT, OUT)
 
     def move_name(self, int move, attr_t label):
         if move == OUT:

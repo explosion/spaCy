@@ -211,7 +211,7 @@ The rightmost token of this token's syntactic descendants.
 
 ## Token.conjuncts {#conjuncts tag="property" model="parser"}
 
-A sequence of coordinated tokens, including the token itself.
+A tuple of coordinated tokens, not including the token itself.
 
 > #### Example
 >
@@ -221,9 +221,9 @@ A sequence of coordinated tokens, including the token itself.
 > assert [t.text for t in apples_conjuncts] == [u"oranges"]
 > ```
 
-| Name       | Type    | Description          |
-| ---------- | ------- | -------------------- |
-| **YIELDS** | `Token` | A coordinated token. |
+| Name        | Type    | Description             |
+| ----------- | ------- | ----------------------- |
+| **RETURNS** | `tuple` | The coordinated tokens. |
 
 ## Token.children {#children tag="property" model="parser"}
 

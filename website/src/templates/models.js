@@ -120,10 +120,11 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                 })
                 .catch(err => {
                     setIsError(true)
+                    console.error(err)
                 })
             setInitialized(true)
         }
-    })
+    }, [initialized, version, baseUrl, name])
 
     const releaseTag = meta.fullName ? `/tag/${meta.fullName}` : ''
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
@@ -133,6 +134,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
     const license = licenseUrl ? <Link to={licenseUrl}>{meta.license}</Link> : meta.license
+    const hasInteractiveCode = size === 'sm' && hasExamples
 
     const rows = [
         { label: 'Language', tag: langId, content: langName },
@@ -213,7 +215,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={false}>
+            <Grid cols={2} gutterBottom={hasInteractiveCode}>
                 {accuracy &&
                     accuracy.map(({ label, items }, i) =>
                         !items ? null : (
@@ -241,7 +243,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
             </Grid>
             {meta.notes && <p>{meta.notes}</p>}
-            {size === 'sm' && hasExamples && (
+            {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
                     {[
                         `import spacy`,
@@ -275,7 +277,7 @@ const Models = ({ pageContext, repo, children }) => {
                 .catch(err => console.error(err))
             setInitialized(true)
         }
-    })
+    }, [initialized, baseUrl])
 
     return (
         <>

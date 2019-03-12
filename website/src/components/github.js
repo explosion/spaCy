@@ -33,10 +33,11 @@ const GitHubCode = ({ url, lang, errorMsg, className }) => {
                 })
                 .catch(err => {
                     setCode(errorMsg)
+                    console.error(err)
                 })
             setInitialized(true)
         }
-    }, [])
+    }, [initialized, rawUrl, errorMsg])
 
     const highlighted = lang === 'none' || !code ? code : highlightCode(lang, code)
 

@@ -15,7 +15,7 @@ const Section = ({ id, className, ...props }) => {
         if (inView && relId) {
             window.dispatchEvent(new CustomEvent('inview', { detail: relId }))
         }
-    })
+    }, [inView, relId])
     return <section ref={ref} id={id} className={sectionClassNames} {...props} />
 }
 

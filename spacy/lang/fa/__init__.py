@@ -27,6 +27,7 @@ class PersianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     suffixes = TOKENIZER_SUFFIXES
+    writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
 
 
 class Persian(Language):

@@ -351,6 +351,24 @@ the two-letter language code.
 | `name` | unicode    | Two-letter language code, e.g. `'en'`. |
 | `cls`  | `Language` | The language class, e.g. `English`.    |
 
+### util.lang_class_is_loaded (#util.lang_class_is_loaded tag="function" new="2.1")
+
+Check whether a `Language` class is already loaded. `Language` classes are
+loaded lazily, to avoid expensive setup code associated with the language data.
+
+> #### Example
+>
+> ```python
+> lang_cls = util.get_lang_class("en")
+> assert util.lang_class_is_loaded("en") is True
+> assert util.lang_class_is_loaded("de") is False
+> ```
+
+| Name        | Type    | Description                            |
+| ----------- | ------- | -------------------------------------- |
+| `name`      | unicode | Two-letter language code, e.g. `'en'`. |
+| **RETURNS** | bool    | Whether the class has been loaded.     |
+
 ### util.load_model {#util.load_model tag="function" new="2"}
 
 Load a model from a shortcut link, package or data path. If called with a

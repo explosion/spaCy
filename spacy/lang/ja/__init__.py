@@ -8,14 +8,12 @@ from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
-from ...tokens import Doc, Token
+from ...tokens import Doc
+from ...compat import copy_reg
 from ...util import DummyTokenizer
 
 
 ShortUnitWord = namedtuple("ShortUnitWord", ["surface", "lemma", "pos"])
-
-# TODO: Is this the right place for this?
-Token.set_extension("mecab_tag", default=None)
 
 
 def try_mecab_import():
@@ -81,10 +79,12 @@ class JapaneseTokenizer(DummyTokenizer):
         words = [x.surface for x in dtokens]
         spaces = [False] * len(words)
         doc = Doc(self.vocab, words=words, spaces=spaces)
+        mecab_tags = []
         for token, dtoken in zip(doc, dtokens):
-            token._.mecab_tag = dtoken.pos
+            mecab_tags.append(dtoken.pos)
             token.tag_ = resolve_pos(dtoken)
             token.lemma_ = dtoken.lemma
+        doc.user_data["mecab_tags"] = mecab_tags
         return doc
 
 
@@ -93,6 +93,7 @@ class JapaneseDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda _text: "ja"
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
+    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
@@ -105,6 +106,13 @@ class Japanese(Language):
 
     def make_doc(self, text):
         return self.tokenizer(text)
+
+
+def pickle_japanese(instance):
+    return Japanese, tuple()
+
+
+copy_reg.pickle(Japanese, pickle_japanese)
 
 
 __all__ = ["Japanese"]
