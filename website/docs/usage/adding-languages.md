@@ -631,13 +631,13 @@ of using deep learning for NLP with limited labeled data. The vectors are also
 useful by themselves – they power the `.similarity` methods in spaCy. For best
 results, you should pre-process the text with spaCy before training the Word2vec
 model. This ensures your tokenization will match. You can use our
-[word vectors training script](https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py),
+[word vectors training script](https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py),
 which pre-processes the text with your language-specific tokenizer and trains
 the model using [Gensim](https://radimrehurek.com/gensim/). The `vectors.bin`
 file should consist of one word and vector per line.
 
 ```python
-https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py
+https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py
 ```
 
 If you don't have a large sample of text available, you can also convert word
