@@ -426,7 +426,7 @@ spaCy, and implement your own models trained with other machine learning
 libraries. It also lets you take advantage of spaCy's data structures and the
 `Doc` object as the "single source of truth".
 
-<Accordion title="Why ._ and not just a top-level attribute?">
+<Accordion title="Why ._ and not just a top-level attribute?" id="why-dot-underscore">
 
 Writing to a `._` attribute instead of to the `Doc` directly keeps a clearer
 separation and makes it easier to ensure backwards compatibility. For example,
@@ -437,7 +437,7 @@ immediately know what's built-in and what's custom – for example,
 
 </Accordion>
 
-<Accordion title="How is the ._ implemented?">
+<Accordion title="How is the ._ implemented?" id="dot-underscore-implementation">
 
 Extension definitions – the defaults, methods, getters and setters you pass in
 to `set_extension` – are stored in class attributes on the `Underscore` class.

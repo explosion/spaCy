@@ -621,7 +621,7 @@ For more details on the language-specific data, see the usage guide on
 
 </Infobox>
 
-<Accordion title="Should I change the language data or add custom tokenizer rules?">
+<Accordion title="Should I change the language data or add custom tokenizer rules?" id="lang-data-vs-tokenizer">
 
 Tokenization rules that are specific to one language, but can be **generalized
 across that language** should ideally live in the language data in

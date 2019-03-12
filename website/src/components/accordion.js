@@ -1,13 +1,11 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import slugify from '@sindresorhus/slugify'
 
 import Link from './link'
 import classes from '../styles/accordion.module.sass'
 
 const Accordion = ({ title, id, expanded, children }) => {
-    const anchorId = id || slugify(title)
     const [isExpanded, setIsExpanded] = useState(expanded)
     const contentClassNames = classNames(classes.content, {
         [classes.hidden]: !isExpanded,
@@ -16,7 +14,7 @@ const Accordion = ({ title, id, expanded, children }) => {
         [classes.hidden]: isExpanded,
     })
     return (
-        <section id={anchorId}>
+        <section id={id}>
             <div className={classes.root}>
                 <h3>
                     <button
@@ -26,8 +24,8 @@ const Accordion = ({ title, id, expanded, children }) => {
                     >
                         <span>
                             {title}
-                            {isExpanded && (
-                                <Link to={`#${anchorId}`} className={classes.anchor} hidden>
+                            {isExpanded && !!id && (
+                                <Link to={`#${id}`} className={classes.anchor} hidden>
                                     &para;
                                 </Link>
                             )}
