@@ -33,9 +33,22 @@ list containing the component names:
 
 import Accordion from 'components/accordion.js'
 
-<Accordion title="Does the order of pipeline components matter?">
+<Accordion title="Does the order of pipeline components matter?" id="pipeline-components-order">
 
-No
+In spaCy v2.x, the statistical components like the tagger or parser are
+independent and don't share any data between themselves. For example, the named
+entity recognizer doesn't use any features set by the tagger and parser, and so
+on. This means that you can swap them, or remove single components from the
+pipeline without affecting the others.
+
+However, custom components may depend on annotations set by other components.
+For example, a custom lemmatizer may need the part-of-speech tags assigned, so
+it'll only work if it's added after the tagger. The parser will respect
+pre-defined sentence boundaries, so if a previous component in the pipeline sets
+them, its dependency predictions may be different. Similarly, it matters if you
+add the [`EntityRuler`](/api/entityruler) before or after the statistical entity
+recognizer: if it's added before, the entity recognizer will take the existing
+entities into account when making predictions.
 
 </Accordion>
 
