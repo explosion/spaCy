@@ -8,15 +8,12 @@ from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
-from ...tokens import Doc, Token
+from ...tokens import Doc
 from ...compat import copy_reg
 from ...util import DummyTokenizer
 
 
 ShortUnitWord = namedtuple("ShortUnitWord", ["surface", "lemma", "pos"])
-
-# TODO: Is this the right place for this?
-Token.set_extension("mecab_tag", default=None)
 
 
 def try_mecab_import():
@@ -82,10 +79,12 @@ class JapaneseTokenizer(DummyTokenizer):
         words = [x.surface for x in dtokens]
         spaces = [False] * len(words)
         doc = Doc(self.vocab, words=words, spaces=spaces)
+        mecab_tags = []
         for token, dtoken in zip(doc, dtokens):
-            token._.mecab_tag = dtoken.pos
+            mecab_tags.append(dtoken.pos)
             token.tag_ = resolve_pos(dtoken)
             token.lemma_ = dtoken.lemma
+        doc.user_data["mecab_tags"] = mecab_tags
         return doc
 
 
