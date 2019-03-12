@@ -900,6 +900,11 @@ class DisabledPipes(list):
 
 
 def _pipe(func, docs, kwargs):
+    # We added some args for pipe that __call__ doesn't expect.
+    kwargs = dict(kwargs)
+    for arg in ["n_threads", "batch_size"]:
+        if arg in kwargs:
+            kwargs.pop(arg)
     for doc in docs:
         doc = func(doc, **kwargs)
         yield doc
