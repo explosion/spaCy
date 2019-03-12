@@ -232,6 +232,7 @@ Juniper.defaultProps = {
     theme: 'default',
     isolateCells: true,
     useBinder: true,
+    storageKey: 'juniper',
     useStorage: true,
     storageExpire: 60,
     debug: false,

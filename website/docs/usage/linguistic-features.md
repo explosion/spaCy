@@ -298,9 +298,9 @@ different languages, see the
 The best way to understand spaCy's dependency parser is interactively. To make
 this easier, spaCy v2.0+ comes with a visualization module. You can pass a `Doc`
 or a list of `Doc` objects to displaCy and run
-[`displacy.serve`](top-level#displacy.serve) to run the web server, or
-[`displacy.render`](top-level#displacy.render) to generate the raw markup. If
-you want to know how to write rules that hook into some type of syntactic
+[`displacy.serve`](/api/top-level#displacy.serve) to run the web server, or
+[`displacy.render`](/api/top-level#displacy.render) to generate the raw markup.
+If you want to know how to write rules that hook into some type of syntactic
 construction, just plug the sentence into the visualizer and see how spaCy
 annotates it.
 
@@ -621,7 +621,7 @@ For more details on the language-specific data, see the usage guide on
 
 </Infobox>
 
-<Accordion title="Should I change the language data or add custom tokenizer rules?">
+<Accordion title="Should I change the language data or add custom tokenizer rules?" id="lang-data-vs-tokenizer">
 
 Tokenization rules that are specific to one language, but can be **generalized
 across that language** should ideally live in the language data in

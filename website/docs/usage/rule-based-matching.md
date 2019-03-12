@@ -15,7 +15,7 @@ their relationships. This means you can easily access and analyze the
 surrounding tokens, merge spans into single tokens or add entries to the named
 entities in `doc.ents`.
 
-<Accordion title="Should I use rules or train a model?">
+<Accordion title="Should I use rules or train a model?" id="rules-vs-model">
 
 For complex tasks, it's usually better to train a statistical entity recognition
 model. However, statistical models require training data, so for many
@@ -41,7 +41,7 @@ on [rule-based entity recognition](#entityruler).
 
 </Accordion>
 
-<Accordion title="When should I use the token matcher vs. the phrase matcher?">
+<Accordion title="When should I use the token matcher vs. the phrase matcher?" id="matcher-vs-phrase-matcher">
 
 The `PhraseMatcher` is useful if you already have a large terminology list or
 gazetteer consisting of single or multi-token phrases that you want to find

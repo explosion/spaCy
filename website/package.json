@@ -12,7 +12,6 @@
         "@mdx-js/tag": "^0.17.5",
         "@phosphor/widgets": "^1.6.0",
         "@rehooks/online-status": "^1.0.0",
-        "@sindresorhus/slugify": "^0.8.0",
         "@svgr/webpack": "^4.1.0",
         "autoprefixer": "^9.4.7",
         "classnames": "^2.2.6",
@@ -62,7 +61,8 @@
         "md-attr-parser": "^1.2.1",
         "prettier": "^1.16.4",
         "raw-loader": "^1.0.0",
-        "unist-util-visit": "^1.4.0"
+        "unist-util-visit": "^1.4.0",
+        "@sindresorhus/slugify": "^0.8.0"
     },
     "repository": {
         "type": "git",

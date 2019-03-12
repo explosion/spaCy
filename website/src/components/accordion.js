@@ -1,33 +1,38 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import slugify from '@sindresorhus/slugify'
 
 import Link from './link'
 import classes from '../styles/accordion.module.sass'
 
 const Accordion = ({ title, id, expanded, children }) => {
-    const anchorId = id || slugify(title)
-    const [isExpanded, setIsExpanded] = useState(expanded)
+    const [isExpanded, setIsExpanded] = useState(true)
     const contentClassNames = classNames(classes.content, {
         [classes.hidden]: !isExpanded,
     })
     const iconClassNames = classNames({
         [classes.hidden]: isExpanded,
     })
+    // Make sure accordion is expanded if JS is disabled
+    useEffect(() => setIsExpanded(expanded), [])
     return (
-        <section id={anchorId}>
+        <section className="accordion" id={id}>
             <div className={classes.root}>
-                <h3>
+                <h4>
                     <button
                         className={classes.button}
                         aria-expanded={String(isExpanded)}
                         onClick={() => setIsExpanded(!isExpanded)}
                     >
                         <span>
-                            {title}
-                            {isExpanded && (
-                                <Link to={`#${anchorId}`} className={classes.anchor} hidden>
+                            <span className="heading-text">{title}</span>
+                            {isExpanded && !!id && (
+                                <Link
+                                    to={`#${id}`}
+                                    className={classes.anchor}
+                                    hidden
+                                    onClick={event => event.stopPropagation()}
+                                >
                                     &para;
                                 </Link>
                             )}
@@ -44,7 +49,7 @@ const Accordion = ({ title, id, expanded, children }) => {
                             <rect height={2} width={8} x={1} y={4} />
                         </svg>
                     </button>
-                </h3>
+                </h4>
                 <div className={contentClassNames}>{children}</div>
             </div>
         </section>
