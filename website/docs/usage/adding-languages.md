@@ -105,11 +105,11 @@ to know the language's character set. If the language you're adding uses
 non-latin characters, you might need to define the required character classes in
 the global
 [`char_classes.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/char_classes.py).
-For efficiency, spaCy uses hard-coded unicode ranges to define character classes,
-the definitions of which can be found on [Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). 
-If the language requires very specific punctuation
-rules, you should consider overwriting the default regular expressions with your
-own in the language's `Defaults`.
+For efficiency, spaCy uses hard-coded unicode ranges to define character
+classes, the definitions of which can be found on
+[Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). If the language
+requires very specific punctuation rules, you should consider overwriting the
+default regular expressions with your own in the language's `Defaults`.
 
 </Infobox>
 
@@ -121,9 +121,9 @@ spaCy, named according to the language's
 code and resources specific to Spanish are placed into a directory
 `spacy/lang/es`, which can be imported as `spacy.lang.es`.
 
-To get started, you can use our
-[templates](https://github.com/explosion/spacy-dev-resources/templates/new_language)
-for the most important files. Here's what the class template looks like:
+To get started, you can check out the
+[existing languages](https://github.com/explosion/spacy/tree/master/spacy/lang).
+Here's what the class could look like:
 
 ```python
 ### __init__.py (excerpt)
@@ -631,13 +631,13 @@ of using deep learning for NLP with limited labeled data. The vectors are also
 useful by themselves – they power the `.similarity` methods in spaCy. For best
 results, you should pre-process the text with spaCy before training the Word2vec
 model. This ensures your tokenization will match. You can use our
-[word vectors training script](https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py),
+[word vectors training script](https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py),
 which pre-processes the text with your language-specific tokenizer and trains
 the model using [Gensim](https://radimrehurek.com/gensim/). The `vectors.bin`
 file should consist of one word and vector per line.
 
 ```python
-https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py
+https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py
 ```
 
 If you don't have a large sample of text available, you can also convert word
