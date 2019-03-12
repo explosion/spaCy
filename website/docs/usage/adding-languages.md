@@ -105,11 +105,11 @@ to know the language's character set. If the language you're adding uses
 non-latin characters, you might need to define the required character classes in
 the global
 [`char_classes.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/char_classes.py).
-For efficiency, spaCy uses hard-coded unicode ranges to define character classes,
-the definitions of which can be found on [Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). 
-If the language requires very specific punctuation
-rules, you should consider overwriting the default regular expressions with your
-own in the language's `Defaults`.
+For efficiency, spaCy uses hard-coded unicode ranges to define character
+classes, the definitions of which can be found on
+[Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). If the language
+requires very specific punctuation rules, you should consider overwriting the
+default regular expressions with your own in the language's `Defaults`.
 
 </Infobox>
 
