@@ -73,6 +73,7 @@ def test_displacy_rtl():
     assert "direction: rtl" in html
     assert 'lang="{}"'.format(nlp.lang) in html
 
+
 def test_displacy_render_wrapper(en_vocab):
     """Test that displaCy accepts custom rendering wrapper."""
 
@@ -85,5 +86,5 @@ def test_displacy_render_wrapper(en_vocab):
     html = displacy.render(doc, style="ent")
     assert html.startswith("TEST<div")
     assert html.endswith("/div>TEST")
-     # Restore
+    # Restore
     displacy.set_render_wrapper(lambda html: html)
