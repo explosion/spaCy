@@ -121,9 +121,9 @@ spaCy, named according to the language's
 code and resources specific to Spanish are placed into a directory
 `spacy/lang/es`, which can be imported as `spacy.lang.es`.
 
-To get started, you can use our
-[templates](https://github.com/explosion/spacy-dev-resources/templates/new_language)
-for the most important files. Here's what the class template looks like:
+To get started, you can check out the
+[existing languages](https://github.com/explosion/spacy/tree/master/spacy/lang).
+Here's what the class could look like:
 
 ```python
 ### __init__.py (excerpt)
