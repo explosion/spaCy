@@ -75,7 +75,7 @@ arcs.
 | `font`    | unicode | Font name or font family for all text.                      | `"Arial"`   |
 
 For a list of all available options, see the
-[`displacy` API documentation](top-level#displacy_options).
+[`displacy` API documentation](/api/top-level#displacy_options).
 
 > #### Options example
 >

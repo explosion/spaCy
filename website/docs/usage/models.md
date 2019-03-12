@@ -41,7 +41,7 @@ contribute to model development.
 > If a model is available for a language, you can download it using the
 > [`spacy download`](/api/cli#download) command. In order to use languages that
 > don't yet come with a model, you have to import them directly, or use
-> [`spacy.blank`](api/top-level#spacy.blank):
+> [`spacy.blank`](/api/top-level#spacy.blank):
 >
 > ```python
 > from spacy.lang.fi import Finnish

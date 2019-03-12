@@ -39,7 +39,7 @@ and morphological analysis.
 
 </div>
 
-<Infobox title="Table of Contents">
+<Infobox title="Table of Contents" id="toc">
 
 - [Language data 101](#101)
 - [The Language subclass](#language-subclass)

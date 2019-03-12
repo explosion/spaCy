@@ -50,7 +50,7 @@ systems, or to pre-process text for **deep learning**.
 
 </div>
 
-<Infobox title="Table of contents">
+<Infobox title="Table of contents" id="toc">
 
 - [Features](#features)
 - [Linguistic annotations](#annotations)

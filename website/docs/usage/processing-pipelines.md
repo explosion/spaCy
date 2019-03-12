@@ -46,7 +46,8 @@ components. spaCy then does the following:
 3. Add each pipeline component to the pipeline in order, using
    [`add_pipe`](/api/language#add_pipe).
 4. Make the **model data** available to the `Language` class by calling
-   [`from_disk`](language#from_disk) with the path to the model data directory.
+   [`from_disk`](/api/language#from_disk) with the path to the model data
+   directory.
 
 So when you call this...
 
