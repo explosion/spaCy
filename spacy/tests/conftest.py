@@ -195,6 +195,12 @@ def ca_tokenizer():
 def pl_tokenizer():
     return util.get_lang_class('pl').Defaults.create_tokenizer()
 
+
+@pytest.fixture(scope='session')
+def nl_tokenizer():
+    return util.get_lang_class('nl').Defaults.create_tokenizer()
+
+
 @pytest.fixture
 def stringstore():
     return StringStore()
