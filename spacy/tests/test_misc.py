@@ -2,10 +2,36 @@
 from __future__ import unicode_literals
 
 import pytest
+import os
 from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
+from spacy.compat import symlink_to, symlink_remove, path2str
 from spacy._ml import PrecomputableAffine
+
+
+@pytest.fixture
+def symlink_target_local_path():
+    return Path("./foo-target")
+
+
+@pytest.fixture
+def symlink_local_path():
+    return Path("./foo-symlink")
+
+
+@pytest.fixture(scope="function")
+def sylink_setup_target(request, target_local_path, link_local_path):
+    if not target_local_path.exists():
+        os.mkdir(path2str(target_local_path))
+
+    # yield -- need to cleanup even if assertion fails
+    # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
+    def cleanup():
+        symlink_remove(link_local_path)
+        os.rmdir(path2str(target_local_path))
+
+    request.addfinalizer(cleanup)
 
 
 @pytest.mark.parametrize("text", ["hello/world", "hello world"])
@@ -60,3 +86,11 @@ def test_prefer_gpu():
 def test_require_gpu():
     with pytest.raises(ValueError):
         require_gpu()
+
+
+def test_create_symlink_windows(
+    symlink_setup_target, symlink_target_local_path, symlink_local_path
+):
+    assert target_local_path.exists()
+    symlink_to(link_local_path, target_local_path)
+    assert link_local_path.exists()
