@@ -178,11 +178,10 @@ def test_span_string_label(doc):
     assert span.label == doc.vocab.strings["hello"]
 
 
-def test_span_string_set_label(doc):
+def test_span_label_readonly(doc):
     span = Span(doc, 0, 1)
-    span.label_ = "hello"
-    assert span.label_ == "hello"
-    assert span.label == doc.vocab.strings["hello"]
+    with pytest.raises(NotImplementedError):
+        span.label_ = "hello"
 
 
 def test_span_ents_property(doc):
