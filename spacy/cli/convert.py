@@ -44,7 +44,6 @@ def convert(
     morphology=False,
     converter="auto",
     lang=None,
-	include_biluo=False,
 ):
     """
     Convert files into JSON format for use with train command and other
@@ -77,8 +76,6 @@ def convert(
         msg.fail("Can't find converter for {}".format(converter), exits=1)
     # Use converter function to convert data
     func = CONVERTERS[converter]
-    if converter == "conllubio":
-        include_biluo = True
     input_data = input_path.open("r", encoding="utf-8").read()
     data = func(input_data, n_sents=n_sents, use_morphology=morphology, lang=lang,
 				include_biluo=include_biluo)

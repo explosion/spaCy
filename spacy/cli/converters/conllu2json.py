@@ -6,7 +6,7 @@ import re
 from ...gold import iob_to_biluo
 
 
-def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, include_biluo=False):
+def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
@@ -19,18 +19,15 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, include
     # by @katarkor
     docs = []
     sentences = []
-    conll_tuples = read_conllx(input_data, use_morphology=use_morphology, include_biluo=include_biluo)
+    conll_tuples = read_conllx(input_data, use_morphology=use_morphology)
     checked_for_ner = False
     has_ner_tags = False
-    if include_biluo:
-        checked_for_ner = True
-        has_ner_tags = True
     for i, (raw_text, tokens) in enumerate(conll_tuples):
         sentence, brackets = tokens[0]
         if not checked_for_ner:
             has_ner_tags = is_ner(sentence[5][0])
             checked_for_ner = True
-        sentences.append(generate_sentence(sentence, has_ner_tags, include_biluo))
+        sentences.append(generate_sentence(sentence, has_ner_tags))
         # Real-sized documents could be extracted using the comments on the
         # conluu document
         if len(sentences) % n_sents == 0:
@@ -54,7 +51,7 @@ def is_ner(tag):
         return False
 
 
-def read_conllx(input_data, use_morphology=False, n=0, include_biluo=False):
+def read_conllx(input_data, use_morphology=False, n=0):
     i = 0
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
@@ -74,7 +71,7 @@ def read_conllx(input_data, use_morphology=False, n=0, include_biluo=False):
                     dep = "ROOT" if dep == "root" else dep
                     tag = pos if tag == "_" else tag
                     tag = tag + "__" + morph if use_morphology else tag
-                    if include_biluo:
+                    if has_ner_tags:
                         iob = iob if iob else "O"
                     tokens.append((id_, word, tag, head, dep, iob))
                 except:  # noqa: E722
@@ -111,14 +108,12 @@ def simplify_tags(iob):
     return new_iob
 
 
-def generate_sentence(sent, has_ner_tags, include_biluo):
+def generate_sentence(sent, has_ner_tags):
     (id_, word, tag, head, dep, iob) = sent
     sentence = {}
     tokens = []
-    if has_ner_tags and not include_biluo:
+    if has_ner_tags:
         iob = simplify_tags(iob)
-        biluo = iob_to_biluo(iob)
-    elif include_biluo:
         biluo = iob_to_biluo(iob)
     for i, id in enumerate(id_):
         token = {}
