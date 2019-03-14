@@ -1104,8 +1104,10 @@ class EntityLinker(Pipe):
     def set_annotations(self, docs, scores, tensors=None):
         # TODO Sofie: actually implement this class instead of dummy implementation
         for i, doc in enumerate(docs):
-            for token in doc:
-                token.kb_id = 342
+            for ent in doc.ents:
+                if ent.label_ in ["PERSON", "PER"]:
+                    for token in ent:
+                        token.ent_kb_id_ = "Q42"
 
     def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         scores, bp_scores = self.model.begin_update(docs, drop=drop)

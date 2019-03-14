@@ -85,13 +85,14 @@ cdef class Span:
         return Underscore.span_extensions.pop(name)
 
     def __cinit__(self, Doc doc, int start, int end, label=0, vector=None,
-                  vector_norm=None):
+                  vector_norm=None, kb_id=0):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
         label (uint64): A label to attach to the Span, e.g. for named entities.
+        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
         RETURNS (Span): The newly constructed object.
@@ -115,6 +116,7 @@ cdef class Span:
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
+        self.kb_id = kb_id
 
     def __richcmp__(self, Span other, int op):
         if other is None:
@@ -654,6 +656,13 @@ cdef class Span:
             if not label_:
                 label_ = ''
             raise NotImplementedError(Errors.E129.format(start=self.start, end=self.end, label=label_))
+
+    property kb_id_:
+        """RETURNS (unicode): The named entity's KB ID."""
+        def __get__(self):
+            return self.doc.vocab.strings[self.kb_id]
+        def __set__(self, unicode kb_id_):
+            raise NotImplementedError(TempErrors.T007.format(attr='kb_id_'))
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
