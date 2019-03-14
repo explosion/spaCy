@@ -29,7 +29,7 @@ Here's a quick comparison of the functionalities offered by spaCy,
 | Entity linking          |   ❌   |   ❌   |      ❌       |
 | Coreference resolution  |   ❌   |   ❌   |      ✅       |
 
-### When should I use what?
+### When should I use what? {#comparison-usage}
 
 Natural Language Understanding is an active area of research and development, so
 there are many different tools or technologies catering to different use-cases.

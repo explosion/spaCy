@@ -113,7 +113,7 @@ default regular expressions with your own in the language's `Defaults`.
 
 </Infobox>
 
-### Creating a `Language` subclass {#language-subclass}
+### Creating a language subclass {#language-subclass}
 
 Language-specific code and resources should be organized into a sub-package of
 spaCy, named according to the language's
@@ -614,7 +614,7 @@ require models to be trained from labeled examples. The word vectors, word
 probabilities and word clusters also require training, although these can be
 trained from unlabeled text, which tends to be much easier to collect.
 
-### Creating a vocabulary file
+### Creating a vocabulary file {#vocab-file}
 
 spaCy expects that common words will be cached in a [`Vocab`](/api/vocab)
 instance. The vocabulary caches lexical features. spaCy loads the vocabulary
@@ -644,7 +644,7 @@ If you don't have a large sample of text available, you can also convert word
 vectors produced by a variety of other tools into spaCy's format. See the docs
 on [converting word vectors](/usage/vectors-similarity#converting) for details.
 
-### Creating or converting a training corpus
+### Creating or converting a training corpus {#training-corpus}
 
 The easiest way to train spaCy's tagger, parser, entity recognizer or text
 categorizer is to use the [`spacy train`](/api/cli#train) command-line utility.
