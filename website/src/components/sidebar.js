@@ -54,6 +54,7 @@ const Sidebar = ({ items, pageMenu, slug }) => {
                         const active = isActive || slug === url
                         const itemClassNames = classNames(classes.link, {
                             [classes.isActive]: active,
+                            'is-active': classes.isActive,
                         })
 
                         return (
@@ -62,7 +63,6 @@ const Sidebar = ({ items, pageMenu, slug }) => {
                                     to={url}
                                     onClick={onClick}
                                     className={itemClassNames}
-                                    activeClassName={classNames('is-active', classes.isActive)}
                                     hideIcon
                                 >
                                     {text}
