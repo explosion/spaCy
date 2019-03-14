@@ -653,7 +653,7 @@ cdef class Span:
             return self.doc.vocab.strings[self.label]
 
         def __set__(self, unicode label_):
-            raise NotImplementedError(TempErrors.T007.format(attr="label_"))
+            raise NotImplementedError(Errors.E129)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:

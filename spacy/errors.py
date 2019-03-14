@@ -358,6 +358,10 @@ class Errors(object):
             "arguments to exclude fields from being serialized or deserialized "
             "is now deprecated. Please use the `exclude` argument instead. "
             "For example: exclude=['{arg}'].")
+    E129 = ("Can not write the label of an existing Span object. "
+            "Instead, create a new Span object and specify the `label` keyword argument, "
+            "for example:\nfrom spacy.tokens import Span\n"
+            "span = Span(doc, start=3, end=5, label='GPE')")
 
 
 @add_codes
