@@ -122,9 +122,6 @@ cdef class Morphology:
         else:
             flags[0] &= ~(one << flag_id)
 
-    cdef int assign_kb_id(self, TokenC* token, kb_id) except -1:
-        token.kb_id = kb_id
-
     def add_special_case(self, unicode tag_str, unicode orth_str, attrs,
                          force=False):
         """Add a special-case rule to the morphological analyser. Tokens whose

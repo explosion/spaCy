@@ -279,7 +279,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, vector=None):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
         """Create a `Span` object from the slice `doc.text[start : end]`.
 
         doc (Doc): The parent document.
@@ -287,12 +287,15 @@ cdef class Doc:
         end (int): The index of the first character after the span.
         label (uint64 or string): A label to attach to the Span, e.g. for
             named entities.
+        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
         RETURNS (Span): The newly constructed object.
         """
         if not isinstance(label, int):
             label = self.vocab.strings.add(label)
+        if not isinstance(kb_id, int):
+            kb_id = self.vocab.strings.add(kb_id)
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -301,7 +304,7 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = Span(self, start, end, label=label, vector=vector)
+        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, vector=vector)
         return span
 
     def similarity(self, other):
@@ -438,6 +441,7 @@ cdef class Doc:
             cdef const TokenC* token
             cdef int start = -1
             cdef attr_t label = 0
+            cdef attr_t kb_id = 0
             output = []
             for i in range(self.length):
                 token = &self.c[i]
@@ -447,16 +451,18 @@ cdef class Doc:
                         raise ValueError(Errors.E093.format(seq=' '.join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
-                        output.append(Span(self, start, i, label=label))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
                     start = -1
                     label = 0
+                    kb_id = 0
                 elif token.ent_iob == 3:
                     if start != -1:
-                        output.append(Span(self, start, i, label=label))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
                     start = i
                     label = token.ent_type
+                    kb_id = token.ent_kb_id
             if start != -1:
-                output.append(Span(self, start, self.length, label=label))
+                output.append(Span(self, start, self.length, label=label, kb_id=kb_id))
             return tuple(output)
 
         def __set__(self, ents):

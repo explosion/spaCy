@@ -307,14 +307,6 @@ cdef class Token:
         def __set__(self, attr_t tag):
             self.vocab.morphology.assign_tag(self.c, tag)
 
-    property kb_id:
-        """RETURNS (uint64): ID of entity (after Entity Linking)."""
-        def __get__(self):
-            return self.c.kb_id
-
-        def __set__(self, attr_t kb_id):
-            self.vocab.morphology.assign_kb_id(self.c, kb_id)
-
     property dep:
         """RETURNS (uint64): ID of syntactic dependency label."""
         def __get__(self):
@@ -698,6 +690,22 @@ cdef class Token:
 
         def __set__(self, name):
             self.c.ent_id = self.vocab.strings.add(name)
+
+    property ent_kb_id:
+        """RETURNS (uint64): Named entity KB ID."""
+        def __get__(self):
+            return self.c.ent_kb_id
+
+        def __set__(self, attr_t ent_kb_id):
+            self.c.ent_kb_id = ent_kb_id
+
+    property ent_kb_id_:
+        """RETURNS (unicode): Named entity KB ID."""
+        def __get__(self):
+            return self.vocab.strings[self.c.ent_kb_id]
+
+        def __set__(self, ent_kb_id):
+            self.c.ent_kb_id = self.vocab.strings.add(ent_kb_id)
 
     property whitespace_:
         """RETURNS (unicode): The trailing whitespace character, if present.

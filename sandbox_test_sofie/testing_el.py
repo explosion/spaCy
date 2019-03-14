@@ -3,18 +3,23 @@ import spacy
 
 def add_el():
     nlp = spacy.load('en_core_web_sm')
-    print("pipes", nlp.pipe_names)
+    print("pipes before:", nlp.pipe_names)
 
     el_pipe = nlp.create_pipe(name='el')
     nlp.add_pipe(el_pipe, last=True)
 
-    print("pipes", nlp.pipe_names)
+    print("pipes after:", nlp.pipe_names)
     print()
 
-    text = "Australian striker John hits century"
+    text = "The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, reminds us to always bring our towel."
     doc = nlp(text)
+
     for token in doc:
-        print("token", token.text, token.tag_, token.pos_, token.kb_id)
+        print("token", token.text, token.ent_type_, token.ent_kb_id_)
+
+    print()
+    for ent in doc.ents:
+        print("ent", ent.text, ent.label_, ent.kb_id_)
 
 
 if __name__ == "__main__":
