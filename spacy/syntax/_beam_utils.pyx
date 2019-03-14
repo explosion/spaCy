@@ -209,10 +209,6 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         # Track the "maximum violation", to use in the update.
         for i, violn in enumerate(violns):
             violn.check_crf(pbeam[i], gbeam[i])
-            # Use 'early update' if best gold is way out of contention.
-            if pbeam[i].loss > 0 and pbeam[i].min_score > (gbeam[i].score * 5.00):
-                pbeam.dones[i] = True
-                gbeam.dones[i] = True
     histories = []
     losses = []
     for violn in violns:
