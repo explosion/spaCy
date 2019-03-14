@@ -653,6 +653,8 @@ cdef class Span:
             return self.doc.vocab.strings[self.label]
 
         def __set__(self, unicode label_):
+            if not label_:
+                label_ = ''
             raise NotImplementedError(Errors.E129.format(start=self.start, end=self.end, label=label_))
 
 
