@@ -178,7 +178,6 @@ def test_span_string_label(doc):
     assert span.label == doc.vocab.strings["hello"]
 
 
-@pytest.mark.xfail(reason="label is not writable")
 def test_span_string_set_label(doc):
     span = Span(doc, 0, 1)
     span.label_ = "hello"
