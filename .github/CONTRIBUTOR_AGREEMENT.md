@@ -5,7 +5,7 @@ This spaCy Contributor Agreement (**"SCA"**) is based on the
 The SCA applies to any contribution that you make to any product or project
 managed by us (the **"project"**), and sets out the intellectual property rights
 you grant to us in the contributed materials. The term **"us"** shall mean
-[ExplosionAI UG (haftungsbeschränkt)](https://explosion.ai/legal). The term
+[ExplosionAI UG GmbH](https://explosion.ai/legal). The term
 **"you"** shall mean the person or entity identified below.
 
 If you agree to be bound by these terms, fill in the information requested

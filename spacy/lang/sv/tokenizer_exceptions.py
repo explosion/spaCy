@@ -16,13 +16,15 @@ for verb_data in [
     {ORTH: "hajar", LEMMA: "förstår"},
     {ORTH: "lever"},
     {ORTH: "serr", LEMMA: "ser"},
-    {ORTH: "fixar"}]:
+    {ORTH: "fixar"},
+]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
     for data in [verb_data, verb_data_tc]:
         _exc[data[ORTH] + "u"] = [
             dict(data),
-            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"}]
+            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"},
+        ]
 
 # Abbreviations for weekdays "sön." (for "söndag" / "söner")
 # are left out because they are ambiguous. The same is the case
@@ -63,7 +65,8 @@ for exc_data in [
     {ORTH: "Fre.", LEMMA: "Fredag"},
     {ORTH: "Lör.", LEMMA: "Lördag"},
     {ORTH: "sthlm", LEMMA: "Stockholm"},
-    {ORTH: "gbg", LEMMA: "Göteborg"}]:
+    {ORTH: "gbg", LEMMA: "Göteborg"},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 
@@ -73,18 +76,75 @@ for orth in ["AB", "Dr.", "H.M.", "H.K.H.", "m/s", "M/S", "Ph.d.", "S:t", "s:t"]
 
 
 ABBREVIATIONS = [
-    "ang", "anm", "bl.a", "d.v.s", "doc", "dvs", "e.d", "e.kr", "el.",
-    "eng", "etc", "exkl", "ev", "f.", "f.d", "f.kr", "f.n", "f.ö", "fid", "fig",
-    "forts", "fr.o.m", "förf", "inkl", "iofs", "jur.", "kap", "kl", "kor.", "kr",
-    "kungl", "lat", "m.a.o", "m.fl", "m.m", "max", "milj", "min.", "mos",
-    "mt", "mvh", "o.d", "o.s.v", "obs", "osv", "p.g.a", "proc", "prof", "ref",
-    "resp", "s.a.s", "s.k", "s.t", "sid", "t.ex", "t.h", "t.o.m", "t.v",
-    "tel", "ung.", "vol", "v.", "äv", "övers"
+    "ang",
+    "anm",
+    "bl.a",
+    "d.v.s",
+    "doc",
+    "dvs",
+    "e.d",
+    "e.kr",
+    "el.",
+    "eng",
+    "etc",
+    "exkl",
+    "ev",
+    "f.",
+    "f.d",
+    "f.kr",
+    "f.n",
+    "f.ö",
+    "fid",
+    "fig",
+    "forts",
+    "fr.o.m",
+    "förf",
+    "inkl",
+    "iofs",
+    "jur.",
+    "kap",
+    "kl",
+    "kor.",
+    "kr",
+    "kungl",
+    "lat",
+    "m.a.o",
+    "m.fl",
+    "m.m",
+    "max",
+    "milj",
+    "min.",
+    "mos",
+    "mt",
+    "mvh",
+    "o.d",
+    "o.s.v",
+    "obs",
+    "osv",
+    "p.g.a",
+    "proc",
+    "prof",
+    "ref",
+    "resp",
+    "s.a.s",
+    "s.k",
+    "s.t",
+    "sid",
+    "t.ex",
+    "t.h",
+    "t.o.m",
+    "t.v",
+    "tel",
+    "ung.",
+    "vol",
+    "v.",
+    "äv",
+    "övers",
 ]
 
 # Add abbreviation for trailing punctuation too. If the abbreviation already has a trailing punctuation - skip it.
 for abbr in ABBREVIATIONS:
-    if abbr.endswith(".") == False:
+    if not abbr.endswith("."):
         ABBREVIATIONS.append(abbr + ".")
 
 for orth in ABBREVIATIONS:
@@ -95,8 +155,6 @@ for orth in ABBREVIATIONS:
 # Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
 # should be tokenized as two separate tokens.
 for orth in ["i", "m"]:
-    _exc[orth + "."] = [
-        {ORTH: orth, LEMMA: orth, NORM: orth},
-        {ORTH: ".", TAG: PUNCT}]
+    _exc[orth + "."] = [{ORTH: orth, LEMMA: orth, NORM: orth}, {ORTH: ".", TAG: PUNCT}]
 
 TOKENIZER_EXCEPTIONS = _exc

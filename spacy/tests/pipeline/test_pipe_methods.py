@@ -2,8 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
-
-from ...language import Language
+from spacy.language import Language
 
 
 @pytest.fixture
@@ -17,22 +16,22 @@ def new_pipe(doc):
 
 def test_add_pipe_no_name(nlp):
     nlp.add_pipe(new_pipe)
-    assert 'new_pipe' in nlp.pipe_names
+    assert "new_pipe" in nlp.pipe_names
 
 
 def test_add_pipe_duplicate_name(nlp):
-    nlp.add_pipe(new_pipe, name='duplicate_name')
+    nlp.add_pipe(new_pipe, name="duplicate_name")
     with pytest.raises(ValueError):
-        nlp.add_pipe(new_pipe, name='duplicate_name')
+        nlp.add_pipe(new_pipe, name="duplicate_name")
 
 
-@pytest.mark.parametrize('name', ['parser'])
+@pytest.mark.parametrize("name", ["parser"])
 def test_add_pipe_first(nlp, name):
     nlp.add_pipe(new_pipe, name=name, first=True)
     assert nlp.pipeline[0][0] == name
 
 
-@pytest.mark.parametrize('name1,name2', [('parser', 'lambda_pipe')])
+@pytest.mark.parametrize("name1,name2", [("parser", "lambda_pipe")])
 def test_add_pipe_last(nlp, name1, name2):
     nlp.add_pipe(lambda doc: doc, name=name2)
     nlp.add_pipe(new_pipe, name=name1, last=True)
@@ -45,7 +44,7 @@ def test_cant_add_pipe_first_and_last(nlp):
         nlp.add_pipe(new_pipe, first=True, last=True)
 
 
-@pytest.mark.parametrize('name', ['my_component'])
+@pytest.mark.parametrize("name", ["my_component"])
 def test_get_pipe(nlp, name):
     with pytest.raises(KeyError):
         nlp.get_pipe(name)
@@ -53,7 +52,7 @@ def test_get_pipe(nlp, name):
     assert nlp.get_pipe(name) == new_pipe
 
 
-@pytest.mark.parametrize('name,replacement', [('my_component', lambda doc: doc)])
+@pytest.mark.parametrize("name,replacement", [("my_component", lambda doc: doc)])
 def test_replace_pipe(nlp, name, replacement):
     with pytest.raises(ValueError):
         nlp.replace_pipe(name, new_pipe)
@@ -63,7 +62,7 @@ def test_replace_pipe(nlp, name, replacement):
     assert nlp.get_pipe(name) == replacement
 
 
-@pytest.mark.parametrize('old_name,new_name', [('old_pipe', 'new_pipe')])
+@pytest.mark.parametrize("old_name,new_name", [("old_pipe", "new_pipe")])
 def test_rename_pipe(nlp, old_name, new_name):
     with pytest.raises(ValueError):
         nlp.rename_pipe(old_name, new_name)
@@ -72,7 +71,7 @@ def test_rename_pipe(nlp, old_name, new_name):
     assert nlp.pipeline[0][0] == new_name
 
 
-@pytest.mark.parametrize('name', ['my_component'])
+@pytest.mark.parametrize("name", ["my_component"])
 def test_remove_pipe(nlp, name):
     with pytest.raises(ValueError):
         nlp.remove_pipe(name)
@@ -84,7 +83,7 @@ def test_remove_pipe(nlp, name):
     assert removed_component == new_pipe
 
 
-@pytest.mark.parametrize('name', ['my_component'])
+@pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_method(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
@@ -93,7 +92,7 @@ def test_disable_pipes_method(nlp, name):
     disabled.restore()
 
 
-@pytest.mark.parametrize('name', ['my_component'])
+@pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_context(nlp, name):
     nlp.add_pipe(new_pipe, name=name)
     assert nlp.has_pipe(name)
@@ -102,14 +101,26 @@ def test_disable_pipes_context(nlp, name):
     assert nlp.has_pipe(name)
 
 
-@pytest.mark.parametrize('n_pipes', [100])
+@pytest.mark.parametrize("n_pipes", [100])
 def test_add_lots_of_pipes(nlp, n_pipes):
     for i in range(n_pipes):
-        nlp.add_pipe(lambda doc: doc, name='pipe_%d' % i)
+        nlp.add_pipe(lambda doc: doc, name="pipe_%d" % i)
     assert len(nlp.pipe_names) == n_pipes
 
 
-@pytest.mark.parametrize('component', ['ner', {'hello': 'world'}])
+@pytest.mark.parametrize("component", ["ner", {"hello": "world"}])
 def test_raise_for_invalid_components(nlp, component):
     with pytest.raises(ValueError):
         nlp.add_pipe(component)
+
+
+@pytest.mark.parametrize("component", ["ner", "tagger", "parser", "textcat"])
+def test_pipe_base_class_add_label(nlp, component):
+    label = "TEST"
+    pipe = nlp.create_pipe(component)
+    pipe.add_label(label)
+    if component == "tagger":
+        # Tagger always has the default coarse-grained label scheme
+        assert label in pipe.labels
+    else:
+        assert pipe.labels == (label,)

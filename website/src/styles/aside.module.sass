@@ -1,0 +1,90 @@
+@import base
+
+$triangle-size: 2rem
+$border-radius: 6px
+
+.root
+    position: relative
+
+.content
+    --font-size-sm: 1.2rem
+    --color-inline-code-text: var(--color-back)
+    --color-inline-code-bg: var(--color-dark-secondary)
+
+    background: var(--color-front)
+    border-top-left-radius: $border-radius
+    border-bottom-left-radius: $border-radius
+    font-size: var(--font-size-sm)
+    z-index: 10
+
+    pre
+        padding: 0
+        margin: 0 0 var(--spacing-sm) 0
+
+        &:last-child
+            margin: 0
+
+        code
+            padding: 0
+            margin: 0
+
+    p, ul, ol
+        font: inherit
+        margin-bottom: var(--spacing-sm)
+
+    ul li
+        padding: 0
+        margin: 0
+
+        &:before
+            content: initial
+
+@include breakpoint(min, md)
+    .content
+        position: absolute
+        top: -3rem
+        left: calc(100% + 5.5rem)
+        width: calc(var(--width-aside) + 2rem)
+
+        // Banner effect
+        &:after
+            position: absolute
+            bottom: -$triangle-size / 2
+            left: $border-radius / 2
+            width: 0
+            height: 0
+            border-color: transparent
+            border-style: solid
+            border-top-color: var(--color-dark)
+            border-width: $triangle-size / 2 0 0 calc(#{$triangle-size} - #{$border-radius / 2})
+            content: ""
+
+@include breakpoint(max, sm)
+    .content
+        display: block
+        margin: 2rem 0
+
+.text
+    font: var(--font-size-sm)/var(--line-height-sm) var(--font-primary)
+    color: var(--color-back)
+    padding: 1.5rem 2.5rem 2.5rem 2rem
+
+    a, a:hover
+        color: var(--color-subtle)
+
+    & > *:last-child
+        margin-bottom: 0
+
+.title,
+.text h4
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+    display: inline-block
+    border-radius: 1em
+    padding: 0 1rem 0.15rem !important
+    background: var(--color-dark)
+    box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.25)
+    color: var(--color-back)
+    margin-bottom: 1.25rem
+    margin-left: -0.5rem
+    pointer-events: none

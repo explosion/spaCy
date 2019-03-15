@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-ADVERBS = set("""
+ADVERBS = set(
+    """
 'tween a.d. a.k.a. a.m. aback abaft abaxially abeam abed abjectly ably
 abnormally aboard abominably aborad abortively about above aboveboard abreast
 abroad abruptly absently absentmindedly absolutely abstemiously abstractedly
@@ -540,4 +541,5 @@ wordlessly worriedly worryingly worse worst worthily worthlessly wrathfully
 wretchedly wrong wrongfully wrongheadedly wrongly wryly yea yeah yearly
 yearningly yesterday yet yieldingly yon yonder youthfully zealously zestfully
 zestily zigzag
-""".split())
+""".split()
+)

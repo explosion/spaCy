@@ -108,7 +108,7 @@ cdef cppclass StateC:
             ids[1] = this.B(1)
             ids[2] = this.S(0)
             ids[3] = this.S(1)
-            ids[4] = this.H(this.S(0))
+            ids[4] = this.S(2)
             ids[5] = this.L(this.B(0), 1)
             ids[6] = this.L(this.S(0), 1)
             ids[7] = this.R(this.S(0), 1)
@@ -314,14 +314,20 @@ cdef cppclass StateC:
             this._stack[this._s_i] = this.B(0)
         this._s_i += 1
         this._b_i += 1
-        if this.B_(0).sent_start == 1:
-            this.set_break(this.B(0))
+        if this.safe_get(this.B_(0).l_edge).sent_start == 1:
+            this.set_break(this.B_(0).l_edge)
         if this._b_i > this._break:
             this._break = -1
 
     void pop() nogil:
         if this._s_i >= 1:
             this._s_i -= 1
+
+    void force_final() nogil:
+        # This should only be used in desperate situations, as it may leave
+        # the analysis in an unexpected state.
+        this._s_i = 0
+        this._b_i = this.length
 
     void unshift() nogil:
         this._b_i -= 1

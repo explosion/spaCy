@@ -21,9 +21,10 @@ class DutchDefaults(Language.Defaults):
 
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = lambda text: 'nl'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
-                                         BASE_NORMS)
+    lex_attr_getters[LANG] = lambda text: "nl"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
@@ -36,15 +37,14 @@ class DutchDefaults(Language.Defaults):
         lemma_index = LEMMA_INDEX
         lemma_exc = LEMMA_EXC
         lemma_lookup = LOOKUP
-        return DutchLemmatizer(index=lemma_index,
-                               exceptions=lemma_exc,
-                               lookup=lemma_lookup,
-                               rules=rules)
+        return DutchLemmatizer(
+            index=lemma_index, exceptions=lemma_exc, lookup=lemma_lookup, rules=rules
+        )
 
 
 class Dutch(Language):
-    lang = 'nl'
+    lang = "nl"
     Defaults = DutchDefaults
 
 
-__all__ = ['Dutch']
+__all__ = ["Dutch"]

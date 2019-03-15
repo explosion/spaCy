@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 """
 Example sentences to test spaCy and its language models.
 
->>> from spacy.lang.es.examples import sentences
+>>> from spacy.lang.ca.examples import sentences
 >>> docs = nlp.pipe(sentences)
 """
 

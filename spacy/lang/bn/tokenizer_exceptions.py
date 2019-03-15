@@ -19,7 +19,8 @@ for exc_data in [
     {ORTH: "কি.মি", LEMMA: "কিলোমিটার"},
     {ORTH: "সে.মি.", LEMMA: "সেন্টিমিটার"},
     {ORTH: "সে.মি", LEMMA: "সেন্টিমিটার"},
-    {ORTH: "মি.লি.", LEMMA: "মিলিলিটার"}]:
+    {ORTH: "মি.লি.", LEMMA: "মিলিলিটার"},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 

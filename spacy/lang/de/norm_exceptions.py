@@ -6,9 +6,7 @@ from __future__ import unicode_literals
 # old vs. new spelling rules, and all possible cases.
 
 
-_exc = {
-    "daß": "dass"
-}
+_exc = {"daß": "dass"}
 
 
 NORM_EXCEPTIONS = {}

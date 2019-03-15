@@ -1,0 +1,34 @@
+.root
+    margin-bottom: var(--spacing-md)
+
+.responsive
+    position: relative
+    height: 0
+
+@each $ratio1, $ratio2 in (16, 9), (4, 3)
+    &.ratio#{$ratio1}x#{$ratio2}
+        padding-bottom: (100% * $ratio2 / $ratio1)
+
+.iframe
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    border-radius: var(--border-radius)
+
+.standalone
+    max-width: 100%
+    border: 1px solid var(--color-subtle)
+    border-radius: var(--border-radius)
+    padding: var(--spacing-xs)
+    margin-bottom: var(--spacing-md)
+
+.image
+    position: relative
+    display: block
+    max-width: 100%
+    margin: 0 auto
+
+.image-link
+    display: block

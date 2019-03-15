@@ -1,20 +1,20 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-# Stop words
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 ಈ
 ಮತ್ತು
-ಹಾಗೂ  
-ಅವರು  
-ಅವರ  
-ಬಗ್ಗೆ  
+ಹಾಗೂ
+ಅವರು
+ಅವರ
+ಬಗ್ಗೆ
 ಎಂಬ
 ಆದರೆ
 ಅವರನ್ನು
 ಆದರೆ
-ತಮ್ಮ 
+ತಮ್ಮ
 ಒಂದು
 ಎಂದರು
 ಮೇಲೆ
@@ -66,4 +66,5 @@ STOP_WORDS = set("""
 ಇದರ
 ಇನ್ನು
 ನಡೆದಿದೆ
-""".split())
+""".split()
+)

@@ -110,7 +110,8 @@ cdef class Morphology:
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
                                             self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
-        token.lemma = analysis.lemma
+        if token.lemma == 0:
+            token.lemma = analysis.lemma
         token.pos = analysis.tag.pos
         token.tag = analysis.tag.name
         token.morph = analysis.tag.morph
@@ -176,14 +177,16 @@ cdef class Morphology:
         cdef list lemma_strings
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
-        lemma_string = sorted(lemma_strings)[0]
+        lemma_string = lemma_strings[0]
         lemma = self.strings.add(lemma_string)
         return lemma
 
 
 IDS = {
     "Animacy_anim": Animacy_anim,
-    "Animacy_inam": Animacy_inam,
+    "Animacy_inan": Animacy_inan,
+    "Animacy_hum": Animacy_hum, # U20
+    "Animacy_nhum": Animacy_nhum,
     "Aspect_freq": Aspect_freq,
     "Aspect_imp": Aspect_imp,
     "Aspect_mod": Aspect_mod,

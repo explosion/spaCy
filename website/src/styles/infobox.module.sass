@@ -1,0 +1,42 @@
+.root
+    margin-bottom: var(--spacing-md)
+    font: var(--font-size-sm)/var(--line-height-md) var(--font-primary)
+    background: var(--color-subtle-light)
+    padding: 1.5rem 2rem 0.75rem 1.5rem
+    border-radius: var(--border-radius)
+    color: var(--color-dark)
+    border-left: 0.75rem solid var(--color-theme)
+
+    p, pre, ul, ol
+        margin-bottom: var(--spacing-xs)
+
+    p, li
+        font-size: inherit
+        line-height: inherit
+
+.title
+    font-weight: bold
+    color: var(--color-theme)
+    display: block
+    margin-bottom: var(--spacing-xs)
+    font-size: var(--font-size-md)
+
+.icon
+    color: var(--color-theme)
+    vertical-align: baseline
+    position: relative
+    bottom: -2px
+
+.warning
+    --color-theme: var(--color-yellow-dark)
+    --color-theme-dark: var(--color-yellow-dark)
+    --color-inline-code-bg: var(--color-yellow-opaque)
+    border-color: var(--color-yellow-medium)
+    background: var(--color-yellow-light)
+
+.danger
+    --color-theme: var(--color-red-dark)
+    --color-theme-dark: var(--color-red-dark)
+    --color-inline-code-bg: var(--color-red-opaque)
+    border-color: var(--color-red-medium)
+    background: var(--color-red-light)

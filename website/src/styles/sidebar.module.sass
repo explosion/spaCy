@@ -1,0 +1,121 @@
+@import base
+
+$crumb-bullet: 14px
+$crumb-bar: 2px
+
+.root
+    overflow-y: auto
+    font: var(--font-size-md)/var(--line-height-md) var(--font-primary)
+
+.dropdown
+    padding: 1rem 0
+    border-bottom: 1px solid var(--color-subtle)
+    width: 100%
+
+.dropdown-select
+    width: 100%
+    padding-left: 1rem
+
+.section
+    margin-bottom: var(--spacing-sm)
+
+    & > *
+        padding: 0 2rem 0.35rem
+
+.label
+    color: var(--color-dark)
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+
+.item
+    color: var(--color-theme)
+
+    &:hover
+        color: var(--color-theme-dark)
+
+.link
+    border: none
+
+.is-active
+    font-weight: bold
+    color: var(--color-dark)
+    margin-top: 1rem
+    pointer-events: none
+
+    &:hover
+        color: var(--color-dark)
+
+.active-heading
+    display: none
+
+.crumbs
+    display: block
+    padding-top: 1rem
+    padding-left: 1rem
+    position: relative
+
+.crumb
+    margin-bottom: $crumb-bullet / 2
+    position: relative
+    padding-left: 2rem
+    color: var(--color-theme)
+    font-size: 1.2rem
+
+    &:hover
+        color: var(--color-theme-dark)
+
+    &:after
+        width: $crumb-bullet
+        height: $crumb-bullet
+        position: absolute
+        top: $crumb-bullet / 4
+        left: 0
+        content: ""
+        border-radius: 50%
+        background: var(--color-theme)
+        z-index: 10
+
+    &:not(:last-child):before
+        width: $crumb-bar
+        height: 100%
+        position: absolute
+        top: $crumb-bullet
+        left: ($crumb-bullet - $crumb-bar) / 2
+        content: ""
+        background: var(--color-subtle)
+
+    &:first-child:before
+        height: calc(100% + #{$crumb-bullet * 2})
+        top: -$crumb-bullet / 2
+
+.crumb-active
+    color: var(--color-dark)
+
+    &:after
+        background: var(--color-dark)
+
+@include breakpoint(min, md)
+    .root
+        @include scroll-shadow(var(--color-back), var(--color-shadow), var(--height-nav))
+        position: fixed
+        top: 0
+        left: 0
+        width: var(--width-sidebar)
+        height: calc(100vh - 3px)
+        flex: 0 0 var(--width-sidebar)
+        padding-top: calc(var(--height-nav) + 1.5rem)
+        z-index: 10
+        padding-bottom: 5rem
+
+    .dropdown
+        display: none
+
+@include breakpoint(max, sm)
+    .root
+        flex: 100%
+        width: 100%
+        margin-top: var(--height-nav)
+        display: block
+
+    .section
+        display: none

@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a à â abord absolument afin ah ai aie ailleurs ainsi ait allaient allo allons
 allô alors anterieur anterieure anterieures apres après as assez attendu au
 aucun aucune aujourd aujourd'hui aupres auquel aura auraient aurait auront
@@ -85,4 +86,5 @@ va vais vas vers via vif vifs vingt vivat vive vives vlan voici voilà vont vos
 votre vous vous-mêmes vu vé vôtre vôtres
 
 zut
-""".split())
+""".split()
+)

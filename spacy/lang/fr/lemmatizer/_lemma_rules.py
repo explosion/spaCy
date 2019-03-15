@@ -22,10 +22,10 @@ ADJECTIVE_RULES = [
     ["s", ""],
     ["t", "t"],
     ["u", "u"],
-    ["y", "y"]
+    ["y", "y"],
 ]
-    
-    
+
+
 NOUN_RULES = [
     ["a", "a"],
     ["à", "à"],
@@ -63,10 +63,8 @@ NOUN_RULES = [
     ["w", "w"],
     ["y", "y"],
     ["z", "z"],
-
     ["s", ""],
     ["x", ""],
-
     ["nt(e", "nt"],
     ["nt(e)", "nt"],
     ["al(e", "ale"],
@@ -77,11 +75,11 @@ NOUN_RULES = [
     ["eurs(rices", "eur"],
     ["eur(rice", "eur"],
     ["eux(se", "eux"],
-    ["ial(e","ial"],
+    ["ial(e", "ial"],
     ["er(ère", "er"],
     ["eur(se", "eur"],
     ["teur(trice", "teur"],
-    ["teurs(trices", "teur"]
+    ["teurs(trices", "teur"],
 ]
 
 
@@ -127,9 +125,8 @@ VERB_RULES = [
     ["ante", "er"],
     ["ants", "er"],
     ["antes", "er"],
-
     ["u(er", "u"],
     ["és(ées", "er"],
     ["é()e", "er"],
-    ["é()", "er"]
+    ["é()", "er"],
 ]

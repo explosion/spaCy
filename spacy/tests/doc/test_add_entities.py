@@ -14,15 +14,13 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
     ner = EntityRecognizer(en_vocab)
     ner.begin_training([])
     ner(doc)
-
     assert len(list(doc.ents)) == 0
-    assert [w.ent_iob_ for w in doc] == (['O'] * len(doc))
+    assert [w.ent_iob_ for w in doc] == (["O"] * len(doc))
+    doc.ents = [(doc.vocab.strings["ANIMAL"], 3, 4)]
+    assert [w.ent_iob_ for w in doc] == ["", "", "", "B"]
+    doc.ents = [(doc.vocab.strings["WORD"], 0, 2)]
+    assert [w.ent_iob_ for w in doc] == ["B", "I", "", ""]
 
-    doc.ents = [(doc.vocab.strings['ANIMAL'], 3, 4)]
-    assert [w.ent_iob_ for w in doc] == ['', '', '', 'B']
-
-    doc.ents = [(doc.vocab.strings['WORD'], 0, 2)]
-    assert [w.ent_iob_ for w in doc] == ['B', 'I', '', '']
 
 def test_add_overlapping_entities(en_vocab):
     text = ["Louisiana", "Office", "of", "Conservation"]

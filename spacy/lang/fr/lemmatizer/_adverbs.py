@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-ADVERBS = set("""
+ADVERBS = set(
+    """
  abandonnément abjectement abominablement abondamment aboralement abouliquement
  abrégément abréviativement abruptement absconsement absconsément absolument
  abstractivement abstraitement abstrusément absurdement abusivement
@@ -666,4 +667,5 @@ ADVERBS = set("""
  volubilement volumétriquement voluptueusement voracement vrai vraiment
  vraisemblablement vulgairement vulgo xérographiquement xylographiquement
  zoologiquement zootechniquement
-""".split())
+""".split()
+)

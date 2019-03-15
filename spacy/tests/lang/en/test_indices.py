@@ -1,10 +1,5 @@
 # coding: utf-8
-"""Test that token.idx correctly computes index into the original string."""
-
-
 from __future__ import unicode_literals
-
-import pytest
 
 
 def test_en_simple_punct(en_tokenizer):

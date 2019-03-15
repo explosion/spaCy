@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-ADJECTIVES = set("""
+ADJECTIVES = set(
+    """
  aalénien abactérien abaissable abaissant abaisser abaisseur abandonné
  abandonnique abarticulaire abasourdi abasourdissant abattable abattu abaxial
  abaza abbasside abbatial abbevillien abbevillois abcédant abcéder abdicataire
@@ -4228,4 +4229,5 @@ ADJECTIVES = set("""
  zoroastrique zostérien zostériforme zoulou zozoter zozoteur zumique zurichois
  zutique zwinglien zyeuter zygodactile zygomatique zygomorphe zygotique
  zymogène zymonucléique zymotique
-""".split())
+""".split()
+)

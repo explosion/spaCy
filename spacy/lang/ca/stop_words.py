@@ -2,9 +2,8 @@
 from __future__ import unicode_literals
 
 
-# Stop words
-
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a abans ací ah així això al aleshores algun alguna algunes alguns alhora allà allí allò
 als altra altre altres amb ambdues ambdós anar ans apa aquell aquella aquelles aquells
 aquest aquesta aquestes aquests aquí
@@ -53,4 +52,5 @@ un una unes uns us últim ús
 
 va vaig vam van vas veu vosaltres vostra vostre vostres
 
-""".split())
+""".split()
+)

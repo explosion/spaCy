@@ -20,9 +20,10 @@ from ...util import update_exc, add_lookups
 class DanishDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = lambda text: 'da'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
-                                         BASE_NORMS, NORM_EXCEPTIONS)
+    lex_attr_getters[LANG] = lambda text: "da"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     morph_rules = MORPH_RULES
     infixes = TOKENIZER_INFIXES
@@ -33,8 +34,8 @@ class DanishDefaults(Language.Defaults):
 
 
 class Danish(Language):
-    lang = 'da'
+    lang = "da"
     Defaults = DanishDefaults
 
 
-__all__ = ['Danish']
+__all__ = ["Danish"]

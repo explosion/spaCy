@@ -2,40 +2,52 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import ujson
 import pkg_resources
 import importlib
-import regex as re
+import re
 from pathlib import Path
-import sys
-import textwrap
 import random
 from collections import OrderedDict
 from thinc.neural._classes.model import Model
+from thinc.neural.ops import NumpyOps
 import functools
-import cytoolz
 import itertools
 import numpy.random
+import srsly
+from jsonschema import Draft4Validator
+
+
+try:
+    import cupy.random
+except ImportError:
+    cupy = None
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
+from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file
-from .errors import Errors
-
-# Import these directly from Thinc, so that we're sure we always have the
-# same version.
-from thinc.neural._classes.model import msgpack
-from thinc.neural._classes.model import msgpack_numpy
+from .errors import Errors, Warnings, deprecation_warning
 
 
 LANGUAGES = {}
-_data_path = Path(__file__).parent / 'data'
+_data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
 
 
 def set_env_log(value):
     global _PRINT_ENV
     _PRINT_ENV = value
+
+
+def lang_class_is_loaded(lang):
+    """Check whether a Language class is already loaded. Language classes are
+    loaded lazily, to avoid expensive setup code associated with the language
+    data.
+
+    lang (unicode): Two-letter language code, e.g. 'en'.
+    RETURNS (bool): Whether a Language class has been loaded.
+    """
+    global LANGUAGES
+    return lang in LANGUAGES
 
 
 def get_lang_class(lang):
@@ -45,11 +57,16 @@ def get_lang_class(lang):
     RETURNS (Language): Language class.
     """
     global LANGUAGES
+    # Check if an entry point is exposed for the language code
+    entry_point = get_entry_point("spacy_languages", lang)
+    if entry_point is not None:
+        LANGUAGES[lang] = entry_point
+        return entry_point
     if lang not in LANGUAGES:
         try:
-            module = importlib.import_module('.lang.%s' % lang, 'spacy')
-        except ImportError:
-            raise ImportError(Errors.E048.format(lang=lang))
+            module = importlib.import_module(".lang.%s" % lang, "spacy")
+        except ImportError as err:
+            raise ImportError(Errors.E048.format(lang=lang, err=err))
         LANGUAGES[lang] = getattr(module, module.__all__[0])
     return LANGUAGES[lang]
 
@@ -114,14 +131,14 @@ def load_model(name, **overrides):
             return load_model_from_package(name, **overrides)
         if Path(name).exists():  # path to model data directory
             return load_model_from_path(Path(name), **overrides)
-    elif hasattr(name, 'exists'):  # Path or Path-like to model data
+    elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **overrides)
     raise IOError(Errors.E050.format(name=name))
 
 
 def load_model_from_link(name, **overrides):
     """Load a model from a shortcut link, or directory in spaCy data path."""
-    path = get_data_path() / name / '__init__.py'
+    path = get_data_path() / name / "__init__.py"
     try:
         cls = import_file(name, path)
     except AttributeError:
@@ -140,17 +157,17 @@ def load_model_from_path(model_path, meta=False, **overrides):
     pipeline from meta.json and then calls from_disk() with path."""
     if not meta:
         meta = get_model_meta(model_path)
-    cls = get_lang_class(meta['lang'])
+    cls = get_lang_class(meta["lang"])
     nlp = cls(meta=meta, **overrides)
-    pipeline = meta.get('pipeline', [])
-    disable = overrides.get('disable', [])
+    pipeline = meta.get("pipeline", [])
+    disable = overrides.get("disable", [])
     if pipeline is True:
         pipeline = nlp.Defaults.pipe_names
     elif pipeline in (False, None):
         pipeline = []
     for name in pipeline:
         if name not in disable:
-            config = meta.get('pipeline_args', {}).get(name, {})
+            config = meta.get("pipeline_args", {}).get(name, {})
             component = nlp.create_pipe(name, config=config)
             nlp.add_pipe(component, name=name)
     return nlp.from_disk(model_path)
@@ -166,7 +183,7 @@ def load_model_from_init_py(init_file, **overrides):
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
-    data_dir = '%s_%s-%s' % (meta['lang'], meta['name'], meta['version'])
+    data_dir = "%s_%s-%s" % (meta["lang"], meta["name"], meta["version"])
     data_path = model_path / data_dir
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=path2str(data_path)))
@@ -182,11 +199,11 @@ def get_model_meta(path):
     model_path = ensure_path(path)
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=path2str(model_path)))
-    meta_path = model_path / 'meta.json'
+    meta_path = model_path / "meta.json"
     if not meta_path.is_file():
         raise IOError(Errors.E053.format(path=meta_path))
-    meta = read_json(meta_path)
-    for setting in ['lang', 'name', 'version']:
+    meta = srsly.read_json(meta_path)
+    for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
     return meta
@@ -201,7 +218,7 @@ def is_package(name):
     name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
-        if package.lower().replace('-', '_') == name:
+        if package.lower().replace("-", "_") == name:
             return True
     return False
 
@@ -217,6 +234,32 @@ def get_package_path(name):
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
     return Path(pkg.__file__).parent
+
+
+def get_entry_points(key):
+    """Get registered entry points from other packages for a given key, e.g.
+    'spacy_factories' and return them as a dictionary, keyed by name.
+
+    key (unicode): Entry point name.
+    RETURNS (dict): Entry points, keyed by name.
+    """
+    result = {}
+    for entry_point in pkg_resources.iter_entry_points(key):
+        result[entry_point.name] = entry_point.load()
+    return result
+
+
+def get_entry_point(key, value):
+    """Check if registered entry point is available for a given name and
+    load it. Otherwise, return None.
+
+    key (unicode): Entry point name.
+    value (unicode): Name of entry point to load.
+    RETURNS: The loaded entry point or None.
+    """
+    for entry_point in pkg_resources.iter_entry_points(key):
+        if entry_point.name == value:
+            return entry_point.load()
 
 
 def is_in_jupyter():
@@ -235,15 +278,19 @@ def is_in_jupyter():
 
 
 def get_cuda_stream(require=False):
-    return CudaStream() if CudaStream is not None else None
+    if CudaStream is None:
+        return None
+    elif isinstance(Model.ops, NumpyOps):
+        return None
+    else:
+        return CudaStream()
 
 
 def get_async(stream, numpy_array):
     if cupy is None:
         return numpy_array
     else:
-        array = cupy.ndarray(numpy_array.shape, order='C',
-                             dtype=numpy_array.dtype)
+        array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
 
@@ -253,50 +300,66 @@ def env_opt(name, default=None):
         type_convert = float
     else:
         type_convert = int
-    if 'SPACY_' + name.upper() in os.environ:
-        value = type_convert(os.environ['SPACY_' + name.upper()])
+    if "SPACY_" + name.upper() in os.environ:
+        value = type_convert(os.environ["SPACY_" + name.upper()])
         if _PRINT_ENV:
             print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
         return value
     elif name in os.environ:
         value = type_convert(os.environ[name])
         if _PRINT_ENV:
-            print(name, "=", repr(value), "via", '$' + name)
+            print(name, "=", repr(value), "via", "$" + name)
         return value
     else:
         if _PRINT_ENV:
-            print(name, '=', repr(default), "by default")
+            print(name, "=", repr(default), "by default")
         return default
 
 
 def read_regex(path):
     path = ensure_path(path)
     with path.open() as file_:
-        entries = file_.read().split('\n')
-    expression = '|'.join(['^' + re.escape(piece)
-                           for piece in entries if piece.strip()])
+        entries = file_.read().split("\n")
+    expression = "|".join(
+        ["^" + re.escape(piece) for piece in entries if piece.strip()]
+    )
     return re.compile(expression)
 
 
 def compile_prefix_regex(entries):
-    if '(' in entries:
+    """Compile a sequence of prefix rules into a regex object.
+
+    entries (tuple): The prefix rules, e.g. spacy.lang.punctuation.TOKENIZER_PREFIXES.
+    RETURNS (regex object): The regex object. to be used for Tokenizer.prefix_search.
+    """
+    if "(" in entries:
         # Handle deprecated data
-        expression = '|'.join(['^' + re.escape(piece)
-                               for piece in entries if piece.strip()])
+        expression = "|".join(
+            ["^" + re.escape(piece) for piece in entries if piece.strip()]
+        )
         return re.compile(expression)
     else:
-        expression = '|'.join(['^' + piece
-                               for piece in entries if piece.strip()])
+        expression = "|".join(["^" + piece for piece in entries if piece.strip()])
         return re.compile(expression)
 
 
 def compile_suffix_regex(entries):
-    expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
+    """Compile a sequence of suffix rules into a regex object.
+
+    entries (tuple): The suffix rules, e.g. spacy.lang.punctuation.TOKENIZER_SUFFIXES.
+    RETURNS (regex object): The regex object. to be used for Tokenizer.suffix_search.
+    """
+    expression = "|".join([piece + "$" for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
 def compile_infix_regex(entries):
-    expression = '|'.join([piece for piece in entries if piece.strip()])
+    """Compile a sequence of infix rules into a regex object.
+
+    entries (tuple): The infix rules, e.g. spacy.lang.punctuation.TOKENIZER_INFIXES.
+    RETURNS (regex object): The regex object. to be used for Tokenizer.infix_finditer.
+    """
+    expression = "|".join([piece for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
@@ -330,10 +393,9 @@ def update_exc(base_exceptions, *addition_dicts):
     exc = dict(base_exceptions)
     for additions in addition_dicts:
         for orth, token_attrs in additions.items():
-            if not all(isinstance(attr[ORTH], unicode_)
-                       for attr in token_attrs):
+            if not all(isinstance(attr[ORTH], unicode_) for attr in token_attrs):
                 raise ValueError(Errors.E055.format(key=orth, orths=token_attrs))
-            described_orth = ''.join(attr[ORTH] for attr in token_attrs)
+            described_orth = "".join(attr[ORTH] for attr in token_attrs)
             if orth != described_orth:
                 raise ValueError(Errors.E056.format(key=orth, orths=described_orth))
         exc.update(additions)
@@ -350,10 +412,12 @@ def expand_exc(excs, search, replace):
     replace (unicode): Replacement.
     RETURNS (dict): Combined tokenizer exceptions.
     """
+
     def _fix_token(token, search, replace):
         fixed = dict(token)
         fixed[ORTH] = fixed[ORTH].replace(search, replace)
         return fixed
+
     new_excs = dict(excs)
     for token_string, tokens in excs.items():
         if search in token_string:
@@ -390,7 +454,7 @@ def minibatch(items, size=8):
     items = iter(items)
     while True:
         batch_size = next(size_)
-        batch = list(cytoolz.take(int(batch_size), items))
+        batch = list(itertools.islice(items, int(batch_size)))
         if len(batch) == 0:
             break
         yield list(batch)
@@ -407,22 +471,78 @@ def compounding(start, stop, compound):
       >>> assert next(sizes) == 1 * 1.5
       >>> assert next(sizes) == 1.5 * 1.5
     """
+
     def clip(value):
         return max(value, stop) if (start > stop) else min(value, stop)
+
     curr = float(start)
     while True:
         yield clip(curr)
         curr *= compound
 
 
-def decaying(start, stop, decay):
-    """Yield an infinite series of linearly decaying values."""
+def stepping(start, stop, steps):
+    """Yield an infinite series of values that step from a start value to a
+    final value over some number of steps. Each step is (stop-start)/steps.
+
+    After the final value is reached, the generator continues yielding that
+    value.
+
+    EXAMPLE:
+      >>> sizes = stepping(1., 200., 100)
+      >>> assert next(sizes) == 1.
+      >>> assert next(sizes) == 1 * (200.-1.) / 100
+      >>> assert next(sizes) == 1 + (200.-1.) / 100 + (200.-1.) / 100
+    """
+
     def clip(value):
         return max(value, stop) if (start > stop) else min(value, stop)
-    nr_upd = 1.
+
+    curr = float(start)
     while True:
-        yield clip(start * 1./(1. + decay * nr_upd))
+        yield clip(curr)
+        curr += (stop - start) / steps
+
+
+def decaying(start, stop, decay):
+    """Yield an infinite series of linearly decaying values."""
+
+    def clip(value):
+        return max(value, stop) if (start > stop) else min(value, stop)
+
+    nr_upd = 1.0
+    while True:
+        yield clip(start * 1.0 / (1.0 + decay * nr_upd))
         nr_upd += 1
+
+
+def minibatch_by_words(items, size, tuples=True, count_words=len):
+    """Create minibatches of a given number of words."""
+    if isinstance(size, int):
+        size_ = itertools.repeat(size)
+    else:
+        size_ = size
+    items = iter(items)
+    while True:
+        batch_size = next(size_)
+        batch = []
+        while batch_size >= 0:
+            try:
+                if tuples:
+                    doc, gold = next(items)
+                else:
+                    doc = next(items)
+            except StopIteration:
+                if batch:
+                    yield batch
+                return
+            batch_size -= count_words(doc)
+            if tuples:
+                batch.append((doc, gold))
+            else:
+                batch.append(doc)
+        if batch:
+            yield batch
 
 
 def itershuffle(iterable, bufsize=1000):
@@ -439,8 +559,8 @@ def itershuffle(iterable, bufsize=1000):
     buf = []
     try:
         while True:
-            for i in range(random.randint(1, bufsize-len(buf))):
-                buf.append(iterable.next())
+            for i in range(random.randint(1, bufsize - len(buf))):
+                buf.append(next(iterable))
             random.shuffle(buf)
             for i in range(random.randint(1, bufsize)):
                 if buf:
@@ -454,42 +574,20 @@ def itershuffle(iterable, bufsize=1000):
         raise StopIteration
 
 
-def read_json(location):
-    """Open and load JSON from file.
-
-    location (Path): Path to JSON file.
-    RETURNS (dict): Loaded JSON content.
-    """
-    location = ensure_path(location)
-    with location.open('r', encoding='utf8') as f:
-        return ujson.load(f)
-
-
-def get_raw_input(description, default=False):
-    """Get user input from the command line via raw_input / input.
-
-    description (unicode): Text to display before prompt.
-    default (unicode or False/None): Default value to display with prompt.
-    RETURNS (unicode): User input.
-    """
-    additional = ' (default: %s)' % default if default else ''
-    prompt = '    %s%s: ' % (description, additional)
-    user_input = input_(prompt)
-    return user_input
-
-
 def to_bytes(getters, exclude):
     serialized = OrderedDict()
     for key, getter in getters.items():
-        if key not in exclude:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude:
             serialized[key] = getter()
-    return msgpack.dumps(serialized, use_bin_type=True, encoding='utf8')
+    return srsly.msgpack_dumps(serialized)
 
 
 def from_bytes(bytes_data, setters, exclude):
-    msg = msgpack.loads(bytes_data, raw=False)
+    msg = srsly.msgpack_loads(bytes_data)
     for key, setter in setters.items():
-        if key not in exclude and key in msg:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude and key in msg:
             setter(msg[key])
     return msg
 
@@ -499,7 +597,8 @@ def to_disk(path, writers, exclude):
     if not path.exists():
         path.mkdir()
     for key, writer in writers.items():
-        if key not in exclude:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude:
             writer(path / key)
     return path
 
@@ -507,76 +606,10 @@ def to_disk(path, writers, exclude):
 def from_disk(path, readers, exclude):
     path = ensure_path(path)
     for key, reader in readers.items():
-        if key not in exclude:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude:
             reader(path / key)
     return path
-
-
-def print_table(data, title=None):
-    """Print data in table format.
-
-    data (dict or list of tuples): Label/value pairs.
-    title (unicode or None): Title, will be printed above.
-    """
-    if isinstance(data, dict):
-        data = list(data.items())
-    tpl_row = '    {:<15}' * len(data[0])
-    table = '\n'.join([tpl_row.format(l, unicode_(v)) for l, v in data])
-    if title:
-        print('\n    \033[93m{}\033[0m'.format(title))
-    print('\n{}\n'.format(table))
-
-
-def print_markdown(data, title=None):
-    """Print data in GitHub-flavoured Markdown format for issues etc.
-
-    data (dict or list of tuples): Label/value pairs.
-    title (unicode or None): Title, will be rendered as headline 2.
-    """
-    def excl_value(value):
-        # contains path, i.e. personal info
-        return isinstance(value, basestring_) and Path(value).exists()
-
-    if isinstance(data, dict):
-        data = list(data.items())
-    markdown = ["* **{}:** {}".format(l, unicode_(v))
-                for l, v in data if not excl_value(v)]
-    if title:
-        print("\n## {}".format(title))
-    print('\n{}\n'.format('\n'.join(markdown)))
-
-
-def prints(*texts, **kwargs):
-    """Print formatted message (manual ANSI escape sequences to avoid
-    dependency)
-
-    *texts (unicode): Texts to print. Each argument is rendered as paragraph.
-    **kwargs: 'title' becomes coloured headline. exits=True performs sys exit.
-    """
-    exits = kwargs.get('exits', None)
-    title = kwargs.get('title', None)
-    title = '\033[93m{}\033[0m\n'.format(_wrap(title)) if title else ''
-    message = '\n\n'.join([_wrap(text) for text in texts])
-    print('\n{}{}\n'.format(title, message))
-    if exits is not None:
-        sys.exit(exits)
-
-
-def _wrap(text, wrap_max=80, indent=4):
-    """Wrap text at given width using textwrap module.
-
-    text (unicode): Text to wrap. If it's a Path, it's converted to string.
-    wrap_max (int): Maximum line length (indent is deducted).
-    indent (int): Number of spaces for indentation.
-    RETURNS (unicode): Wrapped text.
-    """
-    indent = indent * ' '
-    wrap_width = wrap_max - len(indent)
-    if isinstance(text, Path):
-        text = path2str(text)
-    return textwrap.fill(text, width=wrap_width, initial_indent=indent,
-                         subsequent_indent=indent, break_long_words=False,
-                         break_on_hyphens=False)
 
 
 def minify_html(html):
@@ -587,7 +620,7 @@ def minify_html(html):
     html (unicode): Markup to minify.
     RETURNS (unicode): "Minified" HTML.
     """
-    return html.strip().replace('    ', '').replace('\n', '')
+    return html.strip().replace("    ", "").replace("\n", "")
 
 
 def escape_html(text):
@@ -597,10 +630,10 @@ def escape_html(text):
     text (unicode): The original text.
     RETURNS (unicode): Equivalent text to be safely used within HTML.
     """
-    text = text.replace('&', '&amp;')
-    text = text.replace('<', '&lt;')
-    text = text.replace('>', '&gt;')
-    text = text.replace('"', '&quot;')
+    text = text.replace("&", "&amp;")
+    text = text.replace("<", "&lt;")
+    text = text.replace(">", "&gt;")
+    text = text.replace('"', "&quot;")
     return text
 
 
@@ -610,6 +643,7 @@ def use_gpu(gpu_id):
     except ImportError:
         return None
     from thinc.neural.ops import CupyOps
+
     device = cupy.cuda.device.Device(gpu_id)
     device.use()
     Model.ops = CupyOps()
@@ -620,6 +654,60 @@ def use_gpu(gpu_id):
 def fix_random_seed(seed=0):
     random.seed(seed)
     numpy.random.seed(seed)
+    if cupy is not None:
+        cupy.random.seed(seed)
+
+
+def get_json_validator(schema):
+    # We're using a helper function here to make it easier to change the
+    # validator that's used (e.g. different draft implementation), without
+    # having to change it all across the codebase.
+    # TODO: replace with (stable) Draft6Validator, if available
+    return Draft4Validator(schema)
+
+
+def validate_schema(schema):
+    """Validate a given schema. This just checks if the schema itself is valid."""
+    validator = get_json_validator(schema)
+    validator.check_schema(schema)
+
+
+def validate_json(data, validator):
+    """Validate data against a given JSON schema (see https://json-schema.org).
+
+    data: JSON-serializable data to validate.
+    validator (jsonschema.DraftXValidator): The validator.
+    RETURNS (list): A list of error messages, if available.
+    """
+    errors = []
+    for err in sorted(validator.iter_errors(data), key=lambda e: e.path):
+        if err.path:
+            err_path = "[{}]".format(" -> ".join([str(p) for p in err.path]))
+        else:
+            err_path = ""
+        msg = err.message + " " + err_path
+        if err.context:  # Error has suberrors, e.g. if schema uses anyOf
+            suberrs = ["  - {}".format(suberr.message) for suberr in err.context]
+            msg += ":\n{}".format("".join(suberrs))
+        errors.append(msg)
+    return errors
+
+
+def get_serialization_exclude(serializers, exclude, kwargs):
+    """Helper function to validate serialization args and manage transition from
+    keyword arguments (pre v2.1) to exclude argument.
+    """
+    exclude = list(exclude)
+    # Split to support file names like meta.json
+    options = [name.split(".")[0] for name in serializers]
+    for key, value in kwargs.items():
+        if key in ("vocab",) and value is False:
+            deprecation_warning(Warnings.W015.format(arg=key))
+            exclude.append(key)
+        elif key.split(".")[0] in options:
+            raise ValueError(Errors.E128.format(arg=key))
+        # TODO: user warning?
+    return exclude
 
 
 class SimpleFrozenDict(dict):
@@ -627,6 +715,7 @@ class SimpleFrozenDict(dict):
     function or method argument (for arguments that should default to empty
     dictionary). Will raise an error if user or spaCy attempts to add to dict.
     """
+
     def __setitem__(self, key, value):
         raise NotImplementedError(Errors.E095)
 
@@ -640,14 +729,14 @@ class SimpleFrozenDict(dict):
 class DummyTokenizer(object):
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
-    def to_bytes(self, **exclude):
-        return b''
+    def to_bytes(self, **kwargs):
+        return b""
 
-    def from_bytes(self, _bytes_data, **exclude):
+    def from_bytes(self, _bytes_data, **kwargs):
         return self
 
-    def to_disk(self, _path, **exclude):
+    def to_disk(self, _path, **kwargs):
         return None
 
-    def from_disk(self, _path, **exclude):
+    def from_disk(self, _path, **kwargs):
         return self
