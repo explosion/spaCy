@@ -22,7 +22,9 @@ cdef struct _EntryC:
     # like this to only be 32 bits. We can also set this to -1, for the common
     # case where there are no features.
     int32_t feats_row
-    float prob # log probability of entity, based on corpus frequency
+
+    # log probability of entity, based on corpus frequency
+    float prob
 
 
 cdef class KnowledgeBase:
@@ -61,7 +63,7 @@ cdef class KnowledgeBase:
 
     # This should map mention hashes to (entry_id, prob) tuples. The probability
     # should be P(entity | mention), which is pretty important to know.
-    # We can pack both pieces of information into a 64-bit vale, to keep things
+    # We can pack both pieces of information into a 64-bit value, to keep things
     # efficient.
     cdef object _aliases_table
 
@@ -69,20 +71,25 @@ cdef class KnowledgeBase:
         return self._entries.size()
 
     def add(self, name, float prob, vectors=None, features=None, aliases=None):
+        # TODO: more friendly check for non-unique name
         if name in self:
             return
+
+        # TODO: convert name to hash
         cdef attr_t orth = get_string_name(name)
         self.c_add(orth, prob, self._vectors_table.get_pointer(vectors),
                    self._features_table.get(features))
-        for alias in aliases:
-            self._aliases_table.add(alias, orth)
+
+        # TODO: hash the aliases?
+        for alias, prob_alias in aliases:
+            self._aliases_table.add(alias, orth, prob_alias)
 
     cdef void c_add(self, attr_t orth, float prob, const int32_t* vector_rows,
                     int feats_row) nogil:
         """Add an entry to the knowledge base."""
         # This is what we'll map the orth to. It's where the entry will sit
         # in the vector of entries, so we can get it later.
-        cdef int64_t index = self.c.size()
+        cdef int64_t index = self._entries.size()
         self._entries.push_back(
             _EntryC(
                 vector_rows=vector_rows,
