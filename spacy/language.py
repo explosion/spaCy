@@ -195,6 +195,7 @@ class Language(object):
         self._meta = value
 
     # Conveniences to access pipeline components
+    # Shouldn't be used anymore!
     @property
     def tensorizer(self):
         return self.get_pipe("tensorizer")
@@ -228,6 +229,8 @@ class Language(object):
 
         name (unicode): Name of pipeline component to get.
         RETURNS (callable): The pipeline component.
+
+        DOCS: https://spacy.io/api/language#get_pipe
         """
         for pipe_name, component in self.pipeline:
             if pipe_name == name:
@@ -240,6 +243,8 @@ class Language(object):
         name (unicode): Factory name to look up in `Language.factories`.
         config (dict): Configuration parameters to initialise component.
         RETURNS (callable): Pipeline component.
+
+        DOCS: https://spacy.io/api/language#create_pipe
         """
         if name not in self.factories:
             if name == "sbd":
@@ -266,9 +271,7 @@ class Language(object):
         first (bool): Insert component first / not first in the pipeline.
         last (bool): Insert component last / not last in the pipeline.
 
-        EXAMPLE:
-            >>> nlp.add_pipe(component, before='ner')
-            >>> nlp.add_pipe(component, name='custom_name', last=True)
+        DOCS: https://spacy.io/api/language#add_pipe
         """
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
@@ -310,6 +313,8 @@ class Language(object):
 
         name (unicode): Name of the component.
         RETURNS (bool): Whether a component of the name exists in the pipeline.
+
+        DOCS: https://spacy.io/api/language#has_pipe
         """
         return name in self.pipe_names
 
@@ -318,6 +323,8 @@ class Language(object):
 
         name (unicode): Name of the component to replace.
         component (callable): Pipeline component.
+
+        DOCS: https://spacy.io/api/language#replace_pipe
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
@@ -328,6 +335,8 @@ class Language(object):
 
         old_name (unicode): Name of the component to rename.
         new_name (unicode): New name of the component.
+
+        DOCS: https://spacy.io/api/language#rename_pipe
         """
         if old_name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=old_name, opts=self.pipe_names))
@@ -341,6 +350,8 @@ class Language(object):
 
         name (unicode): Name of the component to remove.
         RETURNS (tuple): A `(name, component)` tuple of the removed component.
+
+        DOCS: https://spacy.io/api/language#remove_pipe
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
@@ -357,10 +368,7 @@ class Language(object):
             for specific components.
         RETURNS (Doc): A container for accessing the annotations.
 
-        EXAMPLE:
-            >>> tokens = nlp('An example sentence. Another example sentence.')
-            >>> tokens[0].text, tokens[0].head.tag_
-            ('An', 'NN')
+        DOCS: https://spacy.io/api/language#call
         """
         if len(text) > self.max_length:
             raise ValueError(
@@ -385,17 +393,7 @@ class Language(object):
         of the block. Otherwise, a DisabledPipes object is returned, that has
         a `.restore()` method you can use to undo your changes.
 
-        EXAMPLE:
-            >>> nlp.add_pipe('parser')
-            >>> nlp.add_pipe('tagger')
-            >>> with nlp.disable_pipes('parser', 'tagger'):
-            >>>     assert not nlp.has_pipe('parser')
-            >>> assert nlp.has_pipe('parser')
-            >>> disabled = nlp.disable_pipes('parser')
-            >>> assert len(disabled) == 1
-            >>> assert not nlp.has_pipe('parser')
-            >>> disabled.restore()
-            >>> assert nlp.has_pipe('parser')
+        DOCS: https://spacy.io/api/language#disable_pipes
         """
         return DisabledPipes(self, *names)
 
@@ -411,11 +409,7 @@ class Language(object):
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 
-        EXAMPLE:
-            >>> with nlp.begin_training(gold) as (trainer, optimizer):
-            >>>    for epoch in trainer.epochs(gold):
-            >>>        for docs, golds in epoch:
-            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        DOCS: https://spacy.io/api/language#update
         """
         if len(docs) != len(golds):
             raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
@@ -425,7 +419,6 @@ class Language(object):
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer(Model.ops)
             sgd = self._optimizer
-
         # Allow dict of args to GoldParse, instead of GoldParse objects.
         gold_objs = []
         doc_objs = []
@@ -446,7 +439,6 @@ class Language(object):
         get_grads.alpha = sgd.alpha
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
-
         pipes = list(self.pipeline)
         random.shuffle(pipes)
         if component_cfg is None:
@@ -481,6 +473,7 @@ class Language(object):
             >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
+        # TODO: document
         if len(docs) == 0:
             return
         if sgd is None:
@@ -503,7 +496,6 @@ class Language(object):
         get_grads.alpha = sgd.alpha
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
-
         for name, proc in pipes:
             if not hasattr(proc, "rehearse"):
                 continue
@@ -511,7 +503,6 @@ class Language(object):
             proc.rehearse(docs, sgd=get_grads, losses=losses, **config.get(name, {}))
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
-
         return losses
 
     def preprocess_gold(self, docs_golds):
@@ -534,7 +525,9 @@ class Language(object):
         get_gold_tuples (function): Function returning gold data
         component_cfg (dict): Config parameters for specific components.
         **cfg: Config parameters.
-        RETURNS: An optimizer
+        RETURNS: An optimizer.
+
+        DOCS: https://spacy.io/api/language#begin_training
         """
         if get_gold_tuples is None:
             get_gold_tuples = lambda: []
@@ -660,23 +653,19 @@ class Language(object):
         """Process texts as a stream, and yield `Doc` objects in order.
 
         texts (iterator): A sequence of texts to process.
-        as_tuples (bool):
-            If set to True, inputs should be a sequence of
+        as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
         n_threads (int): Currently inactive.
         batch_size (int): The number of texts to buffer.
         disable (list): Names of the pipeline components to disable.
-        cleanup (bool): If True, unneeded strings are freed,
-            to control memory use. Experimental.
-        component_cfg (dict): An optional dictionary with extra keyword arguments
-            for specific components.
+        cleanup (bool): If True, unneeded strings are freed to control memory
+            use. Experimental.
+        component_cfg (dict): An optional dictionary with extra keyword
+            arguments for specific components.
         YIELDS (Doc): Documents in the order of the original text.
 
-        EXAMPLE:
-            >>> texts = [u'One document.', u'...', u'Lots of documents']
-            >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
-            >>>         assert doc.is_parsed
+        DOCS: https://spacy.io/api/language#pipe
         """
         if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
