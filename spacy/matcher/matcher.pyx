@@ -19,7 +19,7 @@ from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..util import get_json_validator, validate_json
-from ..errors import Errors, MatchPatternError
+from ..errors import Errors, MatchPatternError, Warnings, deprecation_warning
 from ..strings import get_string_id
 from ..attrs import IDS
 
@@ -160,6 +160,8 @@ cdef class Matcher:
         batch_size (int): Number of documents to accumulate into a working set.
         YIELDS (Doc): Documents, in order.
         """
+        if n_threads != -1:
+            deprecation_warning(Warnings.W016)
         for doc in docs:
             self(doc)
             yield doc

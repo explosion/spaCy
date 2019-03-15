@@ -666,6 +666,8 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#pipe
         """
+        if n_threads != -1:
+            deprecation_warning(Warnings.W016)
         if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)

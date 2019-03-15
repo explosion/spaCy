@@ -76,6 +76,10 @@ class Warnings(object):
     W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
             "being serialized or deserialized is deprecated. Please use the "
             "`exclude` argument instead. For example: exclude=['{arg}'].")
+    W016 = ("The keyword argument `n_threads` on the is now deprecated, as "
+            "the v2.x models cannot release the global interpreter lock. "
+            "Future versions may introduce a `n_process` argument for "
+            "parallel inference via multiprocessing.")
 
 
 @add_codes

@@ -182,6 +182,8 @@ cdef class PhraseMatcher:
 
         DOCS: https://spacy.io/api/phrasematcher#pipe
         """
+        if n_threads != -1:
+            deprecation_warning(Warnings.W016)
         if as_tuples:
             for doc, context in stream:
                 matches = self(doc)

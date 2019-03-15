@@ -134,6 +134,8 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#pipe
         """
+        if n_threads != -1:
+            deprecation_warning(Warnings.W016)
         for text in texts:
             yield self(text)
 
