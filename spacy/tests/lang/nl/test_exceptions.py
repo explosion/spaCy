@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
+# import pytest
 
 
 # @pytest.mark.parametrize('text', ["e.g.", "p.m.", "Jan.", "Dec.", "Inc."])
