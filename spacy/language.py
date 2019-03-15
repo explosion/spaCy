@@ -644,7 +644,7 @@ class Language(object):
         self,
         texts,
         as_tuples=False,
-        n_threads=2,
+        n_threads=-1,
         batch_size=1000,
         disable=[],
         cleanup=False,
@@ -656,7 +656,6 @@ class Language(object):
         as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
-        n_threads (int): Currently inactive.
         batch_size (int): The number of texts to buffer.
         disable (list): Names of the pipeline components to disable.
         cleanup (bool): If True, unneeded strings are freed to control memory
@@ -673,7 +672,6 @@ class Language(object):
             contexts = (tc[1] for tc in text_context2)
             docs = self.pipe(
                 texts,
-                n_threads=n_threads,
                 batch_size=batch_size,
                 disable=disable,
                 component_cfg=component_cfg,
@@ -690,7 +688,6 @@ class Language(object):
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            kwargs.setdefault("n_threads", n_threads)
             if hasattr(proc, "pipe"):
                 docs = proc.pipe(docs, **kwargs)
             else:

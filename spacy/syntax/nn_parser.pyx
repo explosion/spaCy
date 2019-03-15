@@ -205,13 +205,11 @@ cdef class Parser:
         self.set_annotations([doc], states, tensors=None)
         return doc
 
-    def pipe(self, docs, int batch_size=256, int n_threads=2, beam_width=None):
+    def pipe(self, docs, int batch_size=256, int n_threads=-1, beam_width=None):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
         batch_size (int): Number of documents to accumulate into a working set.
-        n_threads (int): The number of threads with which to work on the buffer
-            in parallel.
         YIELDS (Doc): Documents, in order.
         """
         if beam_width is None:

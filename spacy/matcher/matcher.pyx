@@ -153,13 +153,11 @@ cdef class Matcher:
             return default
         return (self._callbacks[key], self._patterns[key])
 
-    def pipe(self, docs, batch_size=1000, n_threads=2):
+    def pipe(self, docs, batch_size=1000, n_threads=-1):
         """Match a stream of documents, yielding them in turn.
 
         docs (iterable): A stream of documents.
         batch_size (int): Number of documents to accumulate into a working set.
-        n_threads (int): The number of threads with which to work on the buffer
-            in parallel, if the implementation supports multi-threading.
         YIELDS (Doc): Documents, in order.
         """
         for doc in docs:

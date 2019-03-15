@@ -257,7 +257,6 @@ class Tensorizer(Pipe):
 
         stream (iterator): A sequence of `Doc` objects to process.
         batch_size (int): Number of `Doc` objects to group.
-        n_threads (int): Number of threads.
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
         for docs in util.minibatch(stream, size=batch_size):
