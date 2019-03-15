@@ -6,6 +6,7 @@ from .punctuation import TOKENIZER_INFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .punctuation import TOKENIZER_INFIXES
 from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC
 from .lemmatizer.lemmatizer import PolishLemmatizer
 

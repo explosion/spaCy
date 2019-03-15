@@ -1,7 +1,7 @@
 #coding: utf-8
 import re
 
-from ....symbols import NOUN, VERB, ADJ, PUNCT
+from ....symbols import NOUN, VERB, ADJ, PUNCT, ADV, PART
 
 
 class PolishLemmatizer(object):
@@ -29,7 +29,6 @@ class PolishLemmatizer(object):
         else:
             return self.lookup(string)
 
-<<<<<<< HEAD
         # TODO check if is base form
 
         exceptions = self.exc.get(univ_pos, {}).copy()
@@ -40,21 +39,7 @@ class PolishLemmatizer(object):
             exceptions,
             self.rules.get(univ_pos, []) + self.rules.get('other', {})
         )
-=======
-        if univ_pos == 'any':
-            index_all = {word for word_list in self.index.values() for word in word_list}
-            exc_all = [exc for exc_list in self.exc.values() for exc in exc_list]
-            rules_all = [rule for rule_list in self.rules.values() for rule in rule_list]
-            lemmas = lemmatize(string, index_all, exc_all, rules_all)
-        else:
-            exceptions = self.exc.get(univ_pos, {}).copy()
-            exceptions.update(self.exc.get('other', {}))
-            lemmas = lemmatize(string,
-                               self.index.get(univ_pos, {}) | self.index.get('other', {}),
-                               exceptions,
-                               self.rules.get(univ_pos, []) + self.rules.get('other', {})
-                               )
->>>>>>> Fixed update bug
+
         return lemmas
 
     def lookup(self, string):
