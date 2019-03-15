@@ -597,6 +597,8 @@ class Language(object):
     ):
         if scorer is None:
             scorer = Scorer()
+        if component_cfg is None:
+            component_cfg = {}
         docs, golds = zip(*docs_golds)
         docs = list(docs)
         golds = list(golds)
