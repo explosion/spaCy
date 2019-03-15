@@ -598,6 +598,8 @@ cdef class Span:
         """RETURNS (unicode): The named entity's KB ID."""
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
+
+        # TODO: custom error msg like for label_
         def __set__(self, unicode kb_id_):
             raise NotImplementedError(TempErrors.T007.format(attr='kb_id_'))
 

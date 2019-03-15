@@ -2,8 +2,9 @@
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
-from libc.stdint cimport int32_t
-from spacy.typedefs cimport attr_t
+from libc.stdint cimport int32_t, int64_t
+from .typedefs cimport attr_t, hash_t
+from .strings cimport hash_string
 
 
 # Internal struct, for storage and disambiguation. This isn't what we return
@@ -70,21 +71,20 @@ cdef class KnowledgeBase:
     def __len__(self):
         return self._entries.size()
 
-    def add(self, name, float prob, vectors=None, features=None, aliases=None):
+    def add_entity(self, name, float prob, vectors=None, features=None, aliases=None):
         # TODO: more friendly check for non-unique name
         if name in self:
             return
 
-        # TODO: convert name to hash
-        cdef attr_t orth = get_string_name(name)
-        self.c_add(orth, prob, self._vectors_table.get_pointer(vectors),
+        cdef hash_t key = hash_string(name)
+        self.c_add_entity(key, prob, self._vectors_table.get_pointer(vectors),
                    self._features_table.get(features))
 
         # TODO: hash the aliases?
         for alias, prob_alias in aliases:
-            self._aliases_table.add(alias, orth, prob_alias)
+            self._aliases_table.add(alias, key, prob_alias)
 
-    cdef void c_add(self, attr_t orth, float prob, const int32_t* vector_rows,
+    cdef void c_add_entity(self, hash_t key, float prob, const int32_t* vector_rows,
                     int feats_row) nogil:
         """Add an entry to the knowledge base."""
         # This is what we'll map the orth to. It's where the entry will sit
@@ -96,5 +96,5 @@ cdef class KnowledgeBase:
                 feats_row=feats_row,
                 prob=prob
             ))
-        self._index[orth] = index
+        self._index[key] = index
         return index
