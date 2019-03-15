@@ -200,9 +200,9 @@ def train(
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
 
     # fmt: off
-    row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
+    row_head = ("Itn", "Beam Width", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
     row_settings = {
-        "widths": (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
+        "widths": (3, 10, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
         "aligns": tuple(["r" for i in row_head]),
         "spacing": 2
     }
@@ -247,51 +247,61 @@ def train(
                 epoch_model_path = output_path / ("model%d" % i)
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = util.load_model_from_path(epoch_model_path)
-                dev_docs = list(corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc))
-                nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
-                start_time = timer()
-                scorer = nlp_loaded.evaluate(dev_docs, debug)
-                end_time = timer()
-                if use_gpu < 0:
-                    gpu_wps = None
-                    cpu_wps = nwords / (end_time - start_time)
-                else:
-                    gpu_wps = nwords / (end_time - start_time)
-                    with Model.use_device("cpu"):
-                        nlp_loaded = util.load_model_from_path(epoch_model_path)
-                        dev_docs = list(
-                            corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
-                        )
-                        start_time = timer()
-                        scorer = nlp_loaded.evaluate(dev_docs)
-                        end_time = timer()
+                for beam_width in [1, 4, 16, 128]:
+                    for name, component in nlp_loaded.pipeline:
+                        if hasattr(component, "cfg"):
+                            component.cfg["beam_width"] = beam_width
+                    dev_docs = list(corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc))
+                    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+                    start_time = timer()
+                    scorer = nlp_loaded.evaluate(dev_docs, debug)
+                    end_time = timer()
+                    if use_gpu < 0:
+                        gpu_wps = None
                         cpu_wps = nwords / (end_time - start_time)
-                acc_loc = output_path / ("model%d" % i) / "accuracy.json"
-                srsly.write_json(acc_loc, scorer.scores)
+                    else:
+                        gpu_wps = nwords / (end_time - start_time)
+                        with Model.use_device("cpu"):
+                            nlp_loaded = util.load_model_from_path(epoch_model_path)
+                            nlp_loaded.parser.cfg["beam_width"]
+                            dev_docs = list(
+                                corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                            )
+                            start_time = timer()
+                            scorer = nlp_loaded.evaluate(dev_docs)
+                            end_time = timer()
+                            cpu_wps = nwords / (end_time - start_time)
+                    acc_loc = output_path / ("model%d" % i) / "accuracy.json"
+                    srsly.write_json(acc_loc, scorer.scores)
 
-                # Update model meta.json
-                meta["lang"] = nlp.lang
-                meta["pipeline"] = nlp.pipe_names
-                meta["spacy_version"] = ">=%s" % about.__version__
-                meta["accuracy"] = scorer.scores
-                meta["speed"] = {"nwords": nwords, "cpu": cpu_wps, "gpu": gpu_wps}
-                meta["vectors"] = {
-                    "width": nlp.vocab.vectors_length,
-                    "vectors": len(nlp.vocab.vectors),
-                    "keys": nlp.vocab.vectors.n_keys,
-                    "name": nlp.vocab.vectors.name
+                    # Update model meta.json
+                    meta["lang"] = nlp.lang
+                    meta["pipeline"] = nlp.pipe_names
+                    meta["spacy_version"] = ">=%s" % about.__version__
+                    if beam_width == 1:
+                        meta["speed"] = {"nwords": nwords, "cpu": cpu_wps, "gpu": gpu_wps}
+                        meta["accuracy"] = scorer.scores
+                    else:
+                        meta.setdefault("beam_accuracy", {})
+                        meta.setdefault("beam_speed", {})
+                        meta["beam_accuracy"][beam_width] = scorer.scores
+                        meta["beam_speed"][beam_width] = {"nwords": nwords, "cpu": cpu_wps, "gpu": gpu_wps}
+                    meta["vectors"] = {
+                        "width": nlp.vocab.vectors_length,
+                        "vectors": len(nlp.vocab.vectors),
+                        "keys": nlp.vocab.vectors.n_keys,
+                        "name": nlp.vocab.vectors.name
                 }
-                meta.setdefault("name", "model%d" % i)
-                meta.setdefault("version", version)
-                meta_loc = output_path / ("model%d" % i) / "meta.json"
-                srsly.write_json(meta_loc, meta)
+                    meta.setdefault("name", "model%d" % i)
+                    meta.setdefault("version", version)
+                    meta_loc = output_path / ("model%d" % i) / "meta.json"
+                    srsly.write_json(meta_loc, meta)
+                    util.set_env_log(verbose)
 
-                util.set_env_log(verbose)
-
-            progress = _get_progress(
-                i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
-            )
-            msg.row(progress, **row_settings)
+                    progress = _get_progress(
+                        i, beam_width, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+                    )
+                    msg.row(progress, **row_settings)
     finally:
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
@@ -377,7 +387,7 @@ def _get_metrics(component):
     return ("token_acc",)
 
 
-def _get_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
+def _get_progress(itn, beam_width, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores = {}
     for col in [
         "dep_loss",
@@ -400,6 +410,7 @@ def _get_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores["gpu_wps"] = gpu_wps or 0.0
     return [
         itn,
+        beam_width,
         "{:.3f}".format(scores["dep_loss"]),
         "{:.3f}".format(scores["ner_loss"]),
         "{:.3f}".format(scores["uas"]),
