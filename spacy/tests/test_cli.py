@@ -1,38 +1,28 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import pytest
-import os
-from pathlib import Path
-from spacy.compat import symlink_to, symlink_remove, path2str
+from spacy.cli.converters import conllu2json
 
 
-@pytest.fixture
-def target_local_path():
-    return Path("./foo-target")
-
-
-@pytest.fixture
-def link_local_path():
-    return Path("./foo-symlink")
-
-
-@pytest.fixture(scope="function")
-def setup_target(request, target_local_path, link_local_path):
-    if not target_local_path.exists():
-        os.mkdir(path2str(target_local_path))
-
-    # yield -- need to cleanup even if assertion fails
-    # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
-    def cleanup():
-        symlink_remove(link_local_path)
-        os.rmdir(path2str(target_local_path))
-
-    request.addfinalizer(cleanup)
-
-
-def test_create_symlink_windows(setup_target, target_local_path, link_local_path):
-    assert target_local_path.exists()
-
-    symlink_to(link_local_path, target_local_path)
-    assert link_local_path.exists()
+def test_cli_converters_conllu2json():
+    # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
+    lines = [
+        "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tO",
+        "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tB-PER",
+        "3\tEilertsen\tEilertsen\tPROPN\t_\t_\t2\tname\t_\tI-PER",
+        "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tO",
+    ]
+    input_data = "\n".join(lines)
+    converted = conllu2json(input_data, n_sents=1)
+    assert len(converted) == 1
+    assert converted[0]["id"] == 0
+    assert len(converted[0]["paragraphs"]) == 1
+    assert len(converted[0]["paragraphs"][0]["sentences"]) == 1
+    sent = converted[0]["paragraphs"][0]["sentences"][0]
+    assert len(sent["tokens"]) == 4
+    tokens = sent["tokens"]
+    assert [t["orth"] for t in tokens] == ["Dommer", "Finn", "Eilertsen", "avstår"]
+    assert [t["tag"] for t in tokens] == ["NOUN", "PROPN", "PROPN", "VERB"]
+    assert [t["head"] for t in tokens] == [1, 2, -1, 0]
+    assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT"]
+    assert [t["ner"] for t in tokens] == ["O", "B-PER", "L-PER", "O"]
