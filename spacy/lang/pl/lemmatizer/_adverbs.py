@@ -3,12596 +3,2001 @@ from __future__ import unicode_literals
 
 
 ADVERBS = set("""
-abakański
-abchaski
-abderycki
-abecadłowy
-abidżański
-abiogenny
-abiologiczny
-abisyński
-abnegacki
-abolicjonistyczny
-abonencki
-aborcyjny
-aborygeński
-abramowski
-absolutny
-absolutystyczny
-absolwencki
-absorbujący
-absorpcyjny
-abstrakcjonistyczny
-abstrakcyjny
-abstynencki
-absurdalny
-abuliczny
-abuzabijski
-abwilski
-achajski
-acykliczny
-adamowski
-adamówecki
-adaptatorski
-adeemowski
-adekwatny
-adeński
-adiabatyczny
-adiacencki
-adiustatorski
-adiutancki
-administracyjny
-administratorski
-admiralski
-adnumeratywny
-adonijski
-adrianopolski
-adriatycki
-adsubstantywny
-adwerbialny
-adwokacki
-adygejski
-adżarski
-aelowski
-aerodynamiczny
-aerosprężysty
-aerostatyczny
-aeroterapeutyczny
-aerotriangulacyjny
-aerotyczny
-aerozolowy
-afektacyjny
-afektoterapeutyczny
-afektowany
-afektywny
-aferalny
-aferogenny
-afganistański
-afgański
-afiksalny
-afirmacyjny
-afirmatywny
-afoniczny
-aforystyczny
-aforyzmowy
-afrochrześcijański
-afrykanerski
-afrykanistyczny
-afrykański
-agański
-agencyjny
-agenturalny
-agenturowy
-agitacyjny
-agitatorski
-aglutynacyjny
-agnacki
-agnostycystyczny
-agnostyczny
-agonalny
-agramatyczny
-agrarystyczny
-agresywny
-agrobiologiczny
-agrotechniczny
-agroturystyczny
-ahistoryczny
-ahumanistyczny
-aideologiczny
-aintelektualny
-ajguński
-ajnoski
-ajurwedyczny
-ajurwedyjski
-akademicki
-akadyjski
-akatolicki
-akcentowy
-akcentuacyjny
-akceptowalny
-akceptujący
-akcydentalny
-akcyjny
-akermański
-akordowy
-akowski
-akrobatyczny
-akronimiczny
-akryjski
-akrylowy
-aksamitny
-aksjologiczny
-aksjomatyczny
-aktorski
-aktualny
-aktywizujący
-aktywny
-akupresurowy
-akuratny
-akustooptyczny
-akustyczny
-akuszerski
-akwamarynowy
-akwitański
-akwizgrański
-akwizytorski
-alabastrowy
-alarmistyczny
-alarmowy
-alarmujący
-alaskański
-alaski
-alaskijski
-albański
-albigeński
-albumowy
-alcejski
-alchemicki
-alchemiczny
-aleatoryczny
-alegoryczny
-aleksandrowski
-aleksandryjski
-alergiczny
-alergizujący
-aleucki
-alfabetyczny
-alfanumeryczny
-algebraiczny
-algierski
-algologiczny
-algoncki
-algonkiński
-algorytmiczny
-aliancki
-alienacyjny
-alinearny
-aliteracki
-alkaliczny
-alkoholowy
-allogamiczny
-almerski
-alofoniczny
-alogamiczny
-alogiczny
-alopatyczny
-aloploidalny
-alowski
-alpejski
-alterglobalistyczny
-alternacyjny
-alternatywny
-alterocentryczny
-altruistyczny
-aluzyjny
-alzacki
-amalekicki
-amarantowy
-amaterialny
-amatorski
-amazoński
-ambarasujący
-ambasadorski
-ambasadzki
-ambicjonalny
-ambicjonerski
-ambicyjny
-ambiofoniczny
-ambitny
-ambiwalentny
-ambrozjański
-ambrozyjski
-ambulatoryjny
-amelioracyjny
-amerykanistyczny
-amerykański
-amerykański
-ametodyczny
-ametystowy
-amfibrachiczny
-amfiteatralny
-amharski
-ammański
-ammonicki
-amoralny
-amorejski
-amorycki
-amoryczny
-amplitudowy
-ampułkowy
-amsterdamski
-amunicyjny
-amurski
-anabaptystyczny
-anabarski
-anabatyczny
-anabiotyczny
-anaboliczny
-anachroniczny
-anadyrski
-anaerobiczny
-anaerobiotyczny
-anafilaktyczny
-anaforyczny
-anagramowy
-anakreontyczny
-analfabetyczny
-analityczny
-analny
-analogiczny
-analogowy
-anamorficzny
-anamorfozowy
-ananimowy
-anarchiczny
-anarchistowski
-anarchistyczny
-anarchosyndykalistyczny
-anatolijski
-anatomiczny
-anatomopatologiczny
-andaluzyjski
-andamański
-andegaweński
-andorski
-andragogiczny
-androginiczny
-androgyniczny
-andrologiczny
-andrusowaty
-andrusowski
-andruszowski
-andrychowski
-andyjski
-andynistyczny
-anegdociarski
-anegdotyczny
-aneksjonistyczny
-anemiczny
-anemometryczny
-anergiczny
-anestezjologiczny
-anestezyjny
-angielski
-angiochirurgiczny
-angiograficzny
-angiologiczny
-anglicki
-anglikański
-anglistyczny
-angloarabski
-anglofilski
-anglosaksoński
-anglosaski
-angolański
-angolijski
-angolski
-angorski
-anielski
-animacyjny
-animalny
-animistyczny
-aniołkowaty
-anizotropowy
-ankarski
-ankietowy
-annalistowski
-anodowy
-anonimowy
-anorektyczny
-anormalny
-anormatywny
-antagonistyczny
-antananarywski
-antenacki
-antiguański
-antiocheński
-antiochijski
-antkowski
-antonimiczny
-antropocentryczny
-antropologiczny
-antropomorficzny
-antroponimiczny
-antroposkopijny
-antropotechniczny
-antropozoficzny
-antwerpijski
-antwerpski
-antyalergiczny
-antyalkoholowy
-antybakteryjny
-antybodźcowy
-antybohaterski
-antyczny
-antydemokratyczny
-antydepresyjny
-antydespotyczny
-antydogmatyczny
-antydumpingowy
-antydynastyczny
-antyegalitarny
-antyekonomiczny
-antyeksportowy
-antyelektrostatyczny
-antyempiryczny
-antyestetyczny
-antyfaszystowski
-antyfeministyczny
-antyfeudalny
-antyfrykcyjny
-antygenowy
-antygrypowy
-antyhałasowy
-antyhigieniczny
-antyhitlerowski
-antyhumanistyczny
-antyhumanitarny
-antyimperialistyczny
-antyimperialny
-antyimplozyjny
-antyimportowy
-antyinflacyjny
-antyintelektualistyczny
-antyintelektualny
-antyinteligencki
-antyizraelski
-antykapitalistyczny
-antyklerykalny
-antykolizyjny
-antykomercyjny
-antykomunistyczny
-antykonstytucyjny
-antykorowski
-antykorozyjny
-antykorupcyjny
-antykościelny
-antykwariacki
-antykwariuszowski
-antykwarski
-antykwaryczny
-antyliberalny
-antylski
-antymigrenowy
-antymilitarystyczny
-antymonarchistyczny
-antymonopolistyczny
-antynarkotyczny
-antynarodowy
-antynatalistyczny
-antynatowski
-antynaturalistyczny
-antyneopozytywistyczny
-antyniemiecki
-antynomiczny
-antynuklearny
-antypapieski
-antypatriotyczny
-antypatyczny
-antypedagogiczny
-antyperspiracyjny
-antypodyczny
-antypokojowy
-antypolski
-antypozytywistyczny
-antyprezydencki
-antypsychologiczny
-antyradziecki
-antyrealistyczny
-antyreformatorski
-antyrobotniczy
-antyrojalistyczny
-antyrosyjski
-antyrynkowy
-antysemicki
-antyseptyczny
-antysocjalistyczny
-antyspamowy
-antyspołeczny
-antysłowacki
-antyterrorystyczny
-antytetyczny
-antytotalitarny
-antytrynitarski
-antyuczuleniowy
-antywibracyjny
-antywirusowy
-antyżydowski
-aparatczykowski
-apaszowski
-apatriotyczny
-apatyczny
-apedagogiczny
-apeniński
-apersonalny
-apetyczny
-apijski
-aplikancki
-apodyktyczny
-apoetycki
-apokaliptyczny
-apolityczny
-apoliński
-apolliński
-apologetyczny
-apoplektyczny
-aposterioryczny
-apostolski
-apostroficzny
-apotropaiczny
-apotropeiczny
-apozycyjny
-appalaski
-aprioryczny
-apriorystyczny
-aprobacyjny
-aprobatywny
-aprobujący
-aprowizacyjny
-apsydalny
-aptekarski
-apulijski
-apulski
-arabeskowy
-arabski
-arachidowy
-arachnologiczny
-aragoński
-arakański
-aralski
-aramejski
-aranżacyjny
-arbitralny
-arbitrażowy
-arbuzowaty
-archaiczny
-archaistyczny
-archaizatorski
-archangielski
-archanielski
-archeograficzny
-archeologiczny
-archetypiczny
-architektoniczny
-architektoński
-archiwalny
-arcybolesny
-arcychrześcijański
-arcydelikatny
-arcydowcipny
-arcydrogi
-arcydziwny
-arcykapłański
-arcykatolicki
-arcykosztowny
-arcylojalny
-arcymistrzowski
-arcypiękny
-arcypoważny
-arcyprawomyślny
-arcyskomplikowany
-arcyskromny
-arcyspektakularny
-arcystaroświecki
-arcysugestywny
-arcyswobodny
-arcyswojski
-arcywyborny
-arcyzabawny
-arcyłobuzerski
-arcyśmieszny
-ardeński
-arealistyczny
-arealny
-areligijny
-aresztancki
-argentyński
-argolidzki
-ariański
-arizoński
-arkadyjski
-arkebuzerski
-arlekiński
-armatorski
-armeński
-arogancki
-aromatyczny
-arsenalski
-artezyjski
-artretyczny
-arturiański
-artyficjalny
-artykulacyjny
-artyleryjski
-artystowski
-artystyczny
-aryjski
-arystokracki
-arystokratyczny
-arystotelesowski
-arytmetyczny
-arytmiczny
-arytmogenny
-arytmograficzny
-ascetyczny
-asekuracyjny
-asekurancki
-asemantyczny
-aseptyczny
-asertywny
-asesorski
-asfalciarski
-asklepiadejski
-asocjacyjny
-asortymentowy
-aspektowy
-aspirancki
-aspołeczny
-astmatyczny
-astrachański
-astralny
-astrobiologiczny
-astrologiczny
-astronomiczny
-asturyjski
-asuański
-asymetryczny
-asymilacyjny
-asymilatorski
-asymptotyczny
-asynchroniczny
-asyndetyczny
-asyryjski
-asystencki
-aszelski
-aszkenazyjski
-atamański
-atanazjański
-atawistyczny
-ateizacyjny
-ateuszowski
-ateński
-atlancki
-atlantycki
-atletyczny
-atoksyczny
-atomistyczny
-atomowy
-atrakcyjny
-atramentowy
-attycki
-atłasowy
-audialny
-audiofilski
-audiometryczny
-audiowizualny
-audytorski
-augsburski
-augustiański
-augustowski
-augustyński
-australijski
-austriacki
-austroazjatycki
-austrofilski
-austronezyjski
-autentyczny
-autobiograficzny
-autochtoniczny
-autochtoński
-autodestrukcyjny
-autogamiczny
-autoironiczny
-autokratyczny
-autokrytyczny
-automatyczny
-autometamorficzny
-automorficzny
-autonomiczny
-autoplastyczny
-autoploidalny
-autopoliploidalny
-autoproteolityczny
-autoregulacyjny
-autoreklamiarski
-autorski
-autorytarny
-autorytatywny
-autosemantyczny
-autoszyderczy
-autotroficzny
-autsajderski
-autystyczny
-awangardowy
-awantażowny
-awanturniczy
-awarski
-awaryjny
-awentyński
-awestyjski
-awinioński
-awizerski
-azerbejdżański
-azerski
-azjatycki
-azjański
-azorski
-azowski
-aztecki
-azylancki
-azylski
-azymutalny
-ałmaacki
-ałtajski
-ałtajski
-ażurowy
-babelski
-babiacki
-babiakowski
-babiarski
-babicki
-babiloński
-babimojski
-babiogórski
-babiński
-baborowski
-baboszewski
-babski
-bachancki
-bachocki
-bachowski
-bachtinowski
-bacowski
-baczny
-badający
-badawczy
-badeński
-badylarski
-badziewiarski
-badziewny
-bagatelizujący
-bagatelny
-bagdadzki
-bagienny
-bahamski
-bahrajński
-bajarski
-bajczarski
-bajeczny
-bajerancki
-bajerny
-bajkalski
-bajkopisarski
-bajkowy
-bajoński
-bajroniczny
-bajronistyczny
-bajronowski
-bajroński
-bakalarski
-bakałarski
-bakałarzewski
-bakijski
-bakoński
-bakteriobójczy
-bakteriolityczny
-bakteriologiczny
-bakteriostatyczny
-bakteryjny
-balangowy
-balatoński
-baletmistrzowski
-baletniczy
-baletowy
-balijski
-balistokardiograficzny
-balladowy
-balladyczny
-baloniarski
-balonowaty
-balowy
-balsamiczny
-baltonowski
-balwierski
-balzakowski
-bamakijski
-banalny
-banderowski
-bandoski
-banduński
-bandycki
-bandziorski
-bandżulski
-bangijski
-bangkocki
-bangladeski
-banglijski
-baniowaty
-bankierski
-bankowy
-bantamski
-barabański
-barabiński
-barani
-baraniogórski
-baranowski
-barbadoski
-barbarski
-barbarzyński
-barceloński
-barciański
-barciński
-barczewski
-barczysty
-bargłowski
-barmański
-barokowy
-baronowski
-barowy
-barski
-bartnicki
-bartokowski
-bartoszycki
-barwiarski
-barwicki
-barwierski
-barwisty
-barwny
-baryłkowaty
-baskijski
-basowy
-bastylski
-baszkirski
-baszowski
-bateryjny
-batikarski
-batorski
-batumski
-bawarski
-bawełniarski
-bawidamski
-bazylejski
-bazyliański
-bałabański
-bałaganiarski
-bałagulski
-bałamutny
-bałkański
-bałtosłowiański
-bałtowski
-bałtycki
-bałtyjski
-bałwański
-bałwochwalczy
-bałwochwalski
-baśniarski
-baśniowy
-baćkowicki
-bański
-beatlesowski
-beatnikowski
-beatowy
-bebechowy
-bebopowy
-bechowski
-beczkowaty
-beczkowy
-beczułkowaty
-bedleński
-bedliszkowaty
-bednarski
-beduiński
-behapowski
-bejowski
-bejrucki
-bejsceński
-bekliwy
-beksiwy
-beletrystyczny
-belferski
-belgijski
-belgradzki
-belizeński
-belmopański
-beludżystański
-belwederski
-bemowski
-benedyktyński
-benefaktorski
-bengalski
-beniński
-benzynożerny
-beocki
-berberski
-berberyjski
-berdyczowski
-bereski
-berestecki
-berezyński
-berliński
-bermudzki
-bernardyński
-berneński
-besarabski
-besemerowski
-beskidzki
-besserwisserski
-bestialski
-betański
-betlejemski
-betoniarski
-bezadresowy
-bezakcentowy
-bezalkoholowy
-bezapelacyjny
-bezawaryjny
-bezbarwny
-bezbiałkowy
-bezbolesny
-bezbożny
-bezbramkowy
-bezbronny
-bezbrzeżny
-bezbłędny
-bezcelowy
-bezceremonialny
-bezchmurny
-bezcielesny
-bezczasowy
-bezczelny
-bezczeszczący
-bezczynny
-bezcłowy
-bezdebitowy
-bezdenny
-bezdeszczowy
-bezdewizowy
-bezdomny
-bezdotykowy
-bezdowodowy
-bezdrganiowy
-bezdrzewny
-bezdurny
-bezduszny
-bezdymny
-bezdyskusyjny
-bezdzietny
-bezdźwięczny
-bezecny
-bezgorączkowy
-bezgotówkowy
-bezgraniczny
-bezgrzeszny
-bezgwiezdny
-bezgwieździsty
-bezgłośny
-bezideowy
-bezimienny
-bezinteresowny
-bezinwazyjny
-beziskrowy
-bezkaloryczny
-bezkarny
-bezkierunkowy
-bezklasowy
-bezkolankowy
-bezkolizyjny
-bezkompromisowy
-bezkonduktorski
-bezkonfliktowy
-bezkonkurencyjny
-bezkontaktowy
-bezkońcówkowy
-bezkrańcowy
-bezkresny
-bezkrwawy
-bezkrytyczny
-bezksiężycowy
-bezkształtny
-bezlitosny
-bezludny
-bezmierny
-bezmiłosierny
-bezmroźny
-bezmyślny
-beznadziejny
-beznakładowy
-beznamiętny
-beznapędowy
-bezobjawowy
-bezodpływowy
-bezokolicznikowy
-bezosobowy
-bezowocny
-bezpardonowy
-bezpartyjny
-bezpaszportowy
-bezpauzowy
-bezpański
-bezpieczniacki
-bezpieczny
-bezplanowy
-bezpodmiotowy
-bezpodstawny
-bezpostaciowy
-bezpotomny
-bezpowrotny
-bezpoślizgowy
-bezpośredni
-bezpożyteczny
-bezprawny
-bezprecedensowy
-bezpretensjonalny
-bezproblemowy
-bezprocentowy
-bezprodukcyjny
-bezproduktywny
-bezpruderyjny
-bezprzedmiotowy
-bezprzeszkodny
-bezprzetargowy
-bezprzewodowy
-bezprzyczynowy
-bezprzykładny
-bezprzytomny
-bezpyłowy
-bezpłatny
-bezpłciowy
-bezpłodny
-bezradny
-bezrefleksyjny
-bezrobotny
-bezrozumny
-bezróżny
-bezsenny
-bezsensowny
-bezsilny
-bezskuteczny
-bezsporny
-bezsprzeczny
-bezspójnikowy
-bezstratny
-bezstresowy
-bezstronny
-bezsufiksalny
-bezszelestny
-bezszkodowy
-bezszmerowy
-bezszumny
-bezszumowy
-bezszwowy
-bezszypułkowy
-bezsłoneczny
-bezsłowny
-bezterminowy
-beztestamentowy
-beztlenowy
-beztreściwy
-beztroski
-beztrwożny
-bezustanny
-bezustawny
-bezusterkowy
-bezużyteczny
-bezwarunkowy
-bezwiedny
-bezwietrzny
-bezwizowy
-bezwiórowy
-bezwolny
-bezwonny
-bezwstydny
-bezwyjątkowy
-bezwyjściowy
-bezwymiarowy
-bezwypadkowy
-bezwyrazowy
-bezwyznaniowy
-bezwzględny
-bezwątpliwy
-bezwładnościowy
-bezwładny
-bezwłasnowolny
-bezzapachowy
-bezzasadny
-bezzawodny
-bezzboczny
-bezzwrotny
-bezzwłoczny
-bezzębny
-bezładny
-bezłuski
-bezśnieżny
-bezżenny
-bełchatowski
-bełdański
-bełkotliwy
-bełski
-bełżecki
-bełżycki
-beżowy
-bhutański
-biafrański
-bialski
-bialskopodlaski
-bialuteńki
-bialutki
-białaczowski
-białawy
-białkowy
-białoborski
-białobrzeski
-białogardzki
-białogwardyjski
-białogłowski
-białomorski
-białopolski
-białoruski
-białoręki
-białostocki
-białowieski
-białołęcki
-białośliwski
-biblijny
-bibliofilski
-bibliograficzny
-bibliotekarski
-bidny
-biebrzański
-biedacki
-biedermeierowski
-biedniacki
-biednieńki
-biedniuchny
-biedniutki
-biedny
-biegowy
-biegunowy
-biegły
-bielarski
-bielawski
-bielański
-bielicki
-bieliźniarski
-bieliński
-bielski
-bieluchny
-bielusieńki
-bieluteńki
-bielutki
-bieluśki
-bierawski
-bierny
-bierutowski
-bieruński
-biesiadny
-biesiekierski
-biesowski
-bieszczadzki
-bieżanowski
-bieżuński
-bieżący
-bigamiczny
-bigbitowy
-biharski
-bihorski
-bikiniarski
-bilansowy
-bilateralny
-bimodalny
-binarny
-biochemiczny
-biodynamiczny
-bioekologiczny
-biograficzny
-biologiczny
-biomedyczny
-biometryczny
-biosoniczny
-biotechnologiczny
-bioterapeutyczny
-biotroniczny
-birbancki
-birczański
-birmański
-birminghamski
-biseksualny
-biskajski
-biskupicki
-biskupiński
-bisurmański
-bitelsowski
-bitlesowski
-bitnikowski
-bitny
-biurokratyczny
-bizancki
-bizantyjski
-bizantyński
-biznesmeński
-biznesowy
-biłgorajski
-blacharski
-blachowniański
-bladawy
-bladoniebieski
-blady
-bladziuchny
-bladziuteńki
-bladziutki
-blagierski
-blankistowski
-bledzewski
-bledziuchny
-bledziuteńki
-bledziutki
-bledziuśki
-bliski
-bliskoziemski
-blizanowski
-bliziuchny
-bliziuteńki
-bliziutki
-bliźniaczy
-bliźnięcy
-bliżyński
-blogowy
-blokowiskowy
-blokowy
-blokujący
-bluesowy
-bluźnierczy
-bobolicki
-bobowski
-bobrowicki
-bobrownicki
-bobrowski
-bocheński
-bociani
-boczny
-boczowski
-bodeński
-bodzanowski
-bodzechowski
-bodzentyński
-bodzęciński
-bodźcowy
-bogaczowicki
-bogaty
-bogatyński
-bogobojny
-bogoburczy
-bogoojczyźniany
-bogoryjski
-bogotański
-boguchwalski
-boguszowski
-bohaterski
-bojadelski
-bojanowski
-bojarski
-bojaźliwy
-bojowniczy
-bojowy
-bojówkarski
-bokserski
-bolejący
-bolesny
-boleszkowicki
-bolesławiecki
-bolesławski
-boleściwy
-bolimowski
-boliwijski
-bolkowski
-bollywoodzki
-boloński
-bolszewicki
-bolący
-bombajski
-bombardierski
-bombastyczny
-bombonierkowy
-bombowy
-bonapartystowski
-bonoński
-bordoski
-bordowy
-borkowicki
-bornaski
-borneański
-bornholmski
-borowiczkowski
-borowski
-borsuczy
-borzechowski
-borzytuchomski
-borzęciński
-bosforski
-boski
-bosmański
-bostoński
-bosy
-botaniczny
-botswański
-botticellowski
-boyowski
-bośniacki
-boćkowski
-boński
-brabancki
-bracki
-bracławski
-brahmsowski
-brajlowski
-brakarski
-bramiński
-bramkarski
-brandenburski
-brandingowy
-braniewski
-branżowy
-brasławski
-braterski
-bratni
-bratobójczy
-bratysławski
-brawurowy
-brazylijski
-brazzawilski
-brański
-brdziański
-brechtowski
-brejowaty
-bremeński
-bretoński
-breughlowski
-bristolski
-brneński
-broadwayowski
-brochowski
-broczański
-brodnicki
-brokerski
-bronowicki
-brudnawy
-brueglowski
-brukarski
-brukselski
-brunatnawy
-brunatny
-brunszwicki
-brutalny
-brwinowski
-brygadierski
-brygadzistowski
-brylantowy
-brytyjski
-bryłowaty
-brzeski
-brzeszczański
-brzezieński
-brzezinecki
-brzeziński
-brzeźnicki
-brzmieniowy
-brzmiący
-brzoskwiniowy
-brzozowski
-brzuchaty
-brzuski
-brzuszny
-brzydki
-brzęczący
-brzękliwy
-brązowawy
-brązowniczy
-brązowy
-bródnowski
-bródzieński
-buchalterski
-buchalteryjny
-bucharski
-buczacki
-buczliwy
-budapeszteński
-budański
-buddyjski
-budowniczowski
-budrski
-budujący
-budziański
-budziszyński
-budzowski
-budzyński
-budżetowy
-bufiasty
-bufoński
-bujny
-bukareszteński
-bukieciarski
-bukmacherski
-bukoliczny
-bukowiański
-bukowieński
-bukowiński
-bukowski
-buldogowaty
-bulimiczny
-bulkowski
-buloński
-bulwarowy
-bulwersujący
-bundowski
-bunsenowski
-buntarski
-buntowniczy
-buracki
-buraczkowy
-burakowaty
-burakowy
-burboński
-burdelowy
-burgaski
-burgrabiowski
-burgrabski
-burgundzki
-buriacki
-burkliwy
-burmistrzowski
-burski
-burszowski
-bursztyniarski
-bursztynowy
-burundyjski
-buruszaski
-bury
-burzeniński
-burzliwy
-burzowy
-burzycielski
-burłacki
-burżuazyjny
-burżujski
-buski
-buszmański
-buszmeński
-butikowy
-butny
-butyrski
-bułgarski
-bułkowaty
-bułowaty
-bużański
-bużumburski
-buńczuczny
-buńdziuczny
-bychawski
-byczy
-byczyński
-bydgoski
-bydlęcy
-byroniczny
-byronowski
-byroński
-bystry
-bystrzycki
-bytnicki
-bytomski
-bytowski
-bytowy
-bzdurny
-bzurski
-bzykliwy
-bądkowski
-bąkowski
-błagalny
-błahy
-błaszkowski
-błazeński
-błażowski
-błogi
-błogosławiący
-błotnisty
-błoński
-błyskawiczny
-błyskotliwy
-błyskowy
-błyszczący
-błędny
-błędowski
-błękitnawy
-błękitnooki
-błękitny
-bębniarski
-będkowski
-będomiński
-będziński
-bękarci
-bękarcki
-bólowy
-cacany
-calusieńki
-caluteńki
-caluśki
-campingowy
-canneński
-carogrodzki
-carski
-całkowity
-całodobowy
-całościowy
-cechsztyński
-cecorski
-cedrski
-cedyński
-ceglarski
-cegłowski
-cejloński
-cekcyński
-ceklarski
-cekowski
-celebrycki
-celestynowski
-celny
-celowy
-celtycki
-celujący
-cenowy
-centralistyczny
-centralizatorski
-centralny
-centroprawicowy
-centrowy
-centryczny
-centryfugalny
-centrypetalny
-centrystowski
-centrystyczny
-centusiowski
-cenzorski
-cenzuralny
-cepeliowski
-ceperski
-ceranowski
-cerberowski
-ceremonialny
-cerkiewnosłowiański
-cerkwicki
-cesarski
-cewiarski
-cewicki
-cezariański
-cezaryjski
-chabarowski
-chabowski
-chachłacki
-chadecki
-chakaski
-chalcedoński
-chaldejski
-chamicki
-chamicki
-chamowaty
-chamski
-chanelowski
-chaotyczny
-charakterologiczny
-charakterystyczny
-charakteryzatorski
-charchotliwy
-charci
-charczący
-chargotliwy
-charkotliwy
-charkowski
-charlestoński
-charsznicki
-chartumski
-charytatywny
-charyzmatyczny
-charzykowski
-charłacki
-chasydzki
-chazarski
-chałaciarski
-chałowaty
-chałowy
-chałupniczy
-chański
-chciwy
-chemiczny
-chemioterapeutyczny
-chemoterapeutyczny
-cherlacki
-cherlawy
-chersoński
-cherubinkowaty
-chełmecki
-chełmiński
-chełmkowski
-chełmski
-chełmżyński
-chełpliwy
-chicagowski
-chichotliwy
-chijski
-chilijski
-chimeryczny
-chirurgiczny
-chiński
-chlewiski
-chlipliwy
-chlubny
-chlupotliwy
-chmielarski
-chmieleński
-chmurnawy
-chmurny
-choceński
-chochołowski
-chocianowski
-chociebuski
-chocimski
-chociwelski
-choczewski
-chodelski
-chodliwy
-chodowski
-chodziarski
-chodzieski
-chodzący
-choinkowy
-chojeński
-chojnicki
-chojnowski
-chojracki
-cholerny
-cholerski
-choleryczny
-cholewkarski
-chomikarski
-chomikowaty
-chopinowski
-choreograficzny
-choreoterapeutyczny
-chorkówecki
-chorobliwy
-chorobotwórczy
-chorobowy
-choroszczański
-chorowity
-chorwacki
-chory
-chorzowski
-choszczeński
-chotczański
-chrapliwy
-chrobotliwy
-chromatograficzny
-chromatyczny
-chromy
-chroniczny
-chronologiczny
-chronometryczny
-chropawy
-chropowaty
-chrupiący
-chrupki
-chrypliwy
-chrystocentryczny
-chrzanowski
-chrześcijański
-chrzypski
-chrząstowicki
-chrząstowski
-chucherkowaty
-chuchrowaty
-chucpiarski
-chudawy
-chuderlawy
-chudopacholski
-chudy
-chudzieńki
-chudziusieńki
-chudziuteńki
-chudziutki
-chujowy
-chuligański
-chusteczkowy
-chutliwy
-chutny
-chwacki
-chwalebny
-chwastobójczy
-chwatki
-chwałowicki
-chwiejny
-chwilowy
-chwytki
-chwytliwy
-chybki
-chybotliwy
-chybski
-chyloński
-chynowski
-chytrawy
-chytreńki
-chytruśki
-chyży
-chąsieński
-chłamowaty
-chłodnawy
-chłodniutki
-chłodzący
-chłonny
-chłopacki
-chłopczykowaty
-chłopczykowy
-chłopczyński
-chłopicki
-chłopięcy
-chłopomański
-chłopski
-chęciński
-chędogi
-chętny
-chóralny
-chórmistrzowski
-ciamajdowaty
-ciapowaty
-ciaseński
-ciasnawy
-ciastkarski
-ciaśniutki
-ciceroniański
-cicheńki
-cichuchny
-cichusi
-cichusieńki
-cichuteczki
-cichuteńki
-cichutki
-cichuśki
-cichy
-ciechanowski
-ciechociński
-ciekawski
-ciekawy
-cielesny
-cielęcy
-ciemięski
-ciemnawy
-ciemniusieńki
-ciemniuteńki
-ciemniutki
-ciemnobrązowy
-ciemnogrodzki
-ciemnoniebieski
-ciemnowiśniowy
-cienisty
-cieniuchny
-cieniusieńki
-cieniuteczki
-cieniuteńki
-cieniutki
-cieniuśki
-cienki
-ciepielowski
-cieplicki
-cieplny
-ciepluchny
-cieplusi
-cieplusieńki
-ciepluteńki
-cieplutki
-ciepluśki
-ciepławy
-ciepłowodzki
-ciernisty
-cierpiący
-cierpiętniczy
-cierpkawy
-cierpki
-cierpliwy
-ciesielski
-cieszanowski
-cieszkowski
-cieszyński
-cietrzewi
-cinkciarski
-ciotowaty
-ciotowski
-cipowaty
-cisalpejski
-cisalpiński
-cisieński
-ciulowaty
-ciulowy
-ciągliwy
-ciągły
-ciśnieniowy
-ciężkawy
-ciężki
-ciężkostrawny
-ciężkowicki
-ckliwy
-clownowski
-cmentarny
-cmolaski
-cnotliwy
-cny
-coachingowy
-cocktailowy
-codzienny
-collagowy
-comiesięczny
-conradowski
-consultingowy
-corazziański
-coroczny
-cotygodniowy
-cowboyski
-cuchnący
-cudacki
-cudaczny
-cudnowski
-cudny
-cudotwórczy
-cudowny
-cudzoziemski
-cudzożywny
-cukierkowaty
-cukierkowy
-cuszimski
-cwaniacki
-cwaniaczy
-cwaniakowaty
-cwany
-cybernetyczny
-cyberpunkowy
-cybinecki
-cycaty
-cyceroniański
-cyceronowski
-cyceroński
-cycowski
-cyfrowy
-cygański
-cyklamenowy
-cykliczny
-cykliniarski
-cyklistowski
-cylicyjski
-cylindryczny
-cymlański
-cynicki
-cyniczny
-cyplowaty
-cypryjski
-cyrenajski
-cyrkowy
-cyrulicki
-cyrylicki
-cysalpejski
-cysalpiński
-cysterski
-cytatologiczny
-cytohormonalny
-cytostatyczny
-cytrynowy
-cywilizacyjny
-cywilizatorski
-cywilnoprawny
-cywilny
-cyzelatorski
-cyzelerski
-czabański
-czadecki
-czaderski
-czadowy
-czadyjski
-czapkarski
-czarci
-czarniawy
-czarniański
-czarniusieńki
-czarniuteńki
-czarniutki
-czarnkowski
-czarnoborski
-czarnobylski
-czarnociński
-czarnogórski
-czarnoksięski
-czarnoleski
-czarnomorski
-czarnorynkowy
-czarnowski
-czarnożylski
-czarodziejski
-czarowniczy
-czarowny
-czarterowy
-czartowski
-czartystowski
-czarujący
-czasownikowy
-czasowy
-czastarski
-czatujący
-czchowski
-czcigodny
-czczy
-czechosłowacki
-czechowicki
-czeczeński
-czekistowski
-czekoladowy
-czeladzki
-czelny
-czeluściowy
-czemiernicki
-czempiński
-czepialski
-czeremeski
-czeremiski
-czereśniacki
-czerkaski
-czerkieski
-czermiński
-czerniakowski
-czerniawy
-czernichowski
-czernicki
-czernickoborowski
-czerniejewski
-czerniewicki
-czernihowski
-czernikowski
-czerski
-czerstwy
-czerwieński
-czerwiogubny
-czerwiński
-czerwonawy
-czerwonecki
-czerwonobrunatny
-czerwonogwardyjski
-czerwonokrzyski
-czerwonomorski
-czeski
-czetnicki
-czikagowski
-czorci
-czorsztyński
-czortowski
-czosnowski
-czołobitny
-czołowy
-czterdziestokrotny
-czternastokrotny
-czterobarwny
-czteroipółkrotny
-czterokrotny
-czteroosobowy
-czterostronny
-czterowymiarowy
-czubaty
-czuciowy
-czujny
-czumacki
-czupurny
-czuwaski
-czułostkowy
-czuły
-czwartakowy
-czworacki
-czworaki
-czworokątny
-czynnościowy
-czynny
-czyszczący
-czytankowy
-czytelniczy
-czytelnikowski
-czytelny
-czyściuchny
-czyściusieńki
-czyściuteńki
-czyściutki
-czyżewski
-cząstkowy
-członkowski
-członowy
-człopski
-człowieczy
-człuchowski
-częstawy
-częstochowski
-częstokrotny
-częstotliwościowy
-częstotliwy
-częściowy
-dachówkowaty
-dadaistyczny
-dagestański
-dakarski
-dakijski
-dakocki
-dakotyjski
-daktyliczny
-daleki
-dalekomorski
-dalekopisowy
-dalekoplanowy
-dalekosiężny
-dalekowzroczny
-daleszycki
-dalikowski
-dalmacki
-dalmatyński
-dalszoplanowy
-daltoński
-damasceński
-damnicki
-damski
-danajski
-dandysowski
-dantejski
-dardanelski
-dardański
-daremny
-darmowy
-darwinowski
-darłowski
-daszkowaty
-daszyński
-dauhański
-dawnochrześcijański
-daytoński
-dbały
-dealerski
-debilny
-debilowaty
-debiutancki
-debreczyński
-debrzeński
-decentralistyczny
-decydencki
-decydujący
-decyzyjny
-dedukcyjny
-defaultowy
-defensywny
-defetystyczny
-deficytowy
-definitywny
-deflacyjny
-defraudancki
-degeneracki
-degradujący
-dekabrystowski
-dekadencki
-dekarski
-deklamatorski
-deklaratywny
-dekoracyjny
-dekoratorski
-delatorski
-delawarski
-delegacki
-delficki
-delhijski
-delicyjny
-delikatniutki
-delikatny
-deliryczny
-dellartowski
-deltowaty
-demagogiczny
-demaskatorski
-demistyfikatorski
-demograficzny
-demokratyczny
-demokratyzacyjny
-demoniczny
-demonstracyjny
-demoralizujący
-demotywujący
-denerwujący
-denny
-denuncjatorski
-deontologiczny
-deprecjatywny
-depresyjny
-deprymujący
-deputacki
-deregulacyjny
-dermatologiczny
-dermatoskopowy
-derwiszowski
-derywacyjny
-deseniowy
-deserowy
-designerski
-deskryptywny
-desperacki
-despotyczny
-destabilizujący
-destrukcyjny
-destruktywny
-deszczeński
-deszczowny
-deszczowy
-detaliczny
-detalowy
-detekcyjny
-deterministyczny
-detoksykacyjny
-detroicki
-deuterokanoniczny
-developerski
-dewastacyjny
-dewastatorski
-deweloperski
-dewizowy
-dewociarski
-dewoński
-dezaktywacyjny
-dezaprobujący
-dezerterski
-dezintegracyjny
-dezintegralny
-dezoksyrybonukleinowy
-dezorganizacyjny
-dezorganizujący
-dezorientujący
-dezynfekcyjny
-dezynfekujący
-dezyntegracyjny
-dezyntegralny
-dhakijski
-diabelny
-diabelski
-diaboliczny
-diachroniczny
-diafoniczny
-diagnostyczny
-diagonalny
-diakoński
-dialektologiczny
-dialektyczny
-dializacyjny
-dialogowy
-diamentowy
-diametralny
-diatermiczny
-diatoniczny
-dickensowski
-didżejski
-dieslowski
-dietetyczny
-digitalny
-dionizyjski
-diploidalny
-dipolowy
-dipyloński
-disnejowski
-disneyowski
-dizajnerski
-dmosiński
-dniepropietrowski
-dnieprowy
-dnieprzański
-dniestrowy
-dniestrzański
-doarteryjny
-dobczycki
-dobiegniewski
-dobitny
-doborowy
-dobowy
-dobrecki
-dobroczynny
-dobroduszny
-dobrodziejski
-dobrodzieński
-dobromiejski
-dobromierski
-dobroszycki
-dobrosąsiedzki
-dobrotliwy
-dobrowolny
-dobroński
-dobrski
-dobryszycki
-dobrzański
-dobrzeliński
-dobrzeński
-dobrzycki
-dobrzyniewski
-dobrzyński
-docelowy
-docencki
-dochodowy
-dochodzący
-dociekliwy
-dociskowy
-doczesny
-dodatkowy
-dodatni
-doglebowy
-dogmatyczny
-dogodny
-dogłębny
-dojarski
-dojmujący
-dojrzały
-dokanałowy
-dokerski
-doksologiczny
-doktoralny
-doktorancki
-doktorski
-doktrynalny
-doktrynerski
-dokuczliwy
-dokumentacyjny
-dokumentalny
-dokumentarny
-dokumentny
-dokładny
-dolegliwy
-dolicki
-doliniarski
-dolistny
-dolnobrzeski
-dolnomszański
-dolnoniemiecki
-dolnosaksoński
-dolnołużycki
-dolnośląski
-dolski
-dolędźwiowy
-domaciczny
-domaniewicki
-domaniowski
-domaszowicki
-domatorski
-dominantowy
-dominikański
-dominowski
-dominujący
-domięśniowy
-domocentryczny
-domowy
-domyślny
-domózgowy
-donicowaty
-doniczkowy
-doniecki
-doniosły
-donkichotowski
-donkiszocki
-donkiszotowski
-donosicielski
-donośny
-donżuanowski
-donżuański
-doodbytniczy
-dookolny
-dootrzewnowy
-dopiewski
-dopingujący
-dopochwowy
-dopplerowski
-dopuszczalny
-doradczy
-doraźny
-dordzeniowy
-dorobkiewiczowski
-doroczny
-dorodny
-dorohuski
-dorosły
-dorozumiany
-dorożkarski
-dortmundzki
-doruchowski
-dorycki
-dorywczy
-dorzeczny
-doręczycielski
-dosadny
-dosiebny
-dosiężny
-doskonały
-doskórny
-dostateczny
-dostatni
-dostawowy
-dostojny
-dostrzegalny
-dostępny
-doszczętny
-dosłowny
-dosłyszalny
-dotchawiczy
-dotkliwy
-dotychczasowy
-dotykalny
-dotykowy
-dotłokowy
-dotętniczy
-doustny
-douszny
-dowcipny
-dowodny
-dowodowy
-dowolny
-dowódczy
-dozgonny
-dołhobyczowski
-dołujący
-dośrodkowy
-doświadczalny
-dożowski
-dożylny
-dożynkowy
-dożywotni
-doński
-draczny
-dragoński
-drahimski
-drakoński
-dramatopisarski
-dramaturgiczny
-dramatyczny
-draparski
-drapieżny
-drastyczny
-drawidyjski
-drawieński
-drawski
-drażliwy
-drażniący
-drański
-drelowski
-drenarski
-dresiarski
-drezdenecki
-drezdeński
-driński
-drobiarski
-drobiazgowy
-drobiński
-drobniuchny
-drobniusieńki
-drobniuteńki
-drobniutki
-drobniuśki
-drobnochłopski
-drobnomieszczański
-drobnostkowy
-drobnoszlachecki
-drobnowidowy
-drobnowymiarowy
-drobnowłościański
-drogi
-drogistowski
-drohicki
-drohiczyński
-drohobycki
-druciarski
-drugoplanowy
-drugorzędny
-drugostronny
-druidzki
-drukarski
-druzgoczący
-druzgocący
-druzyjski
-drużbicki
-drużbowski
-drużynowy
-drwalski
-drwinkowaty
-drwiący
-drwiński
-drwęcki
-dryndziarski
-drzewiarski
-drzewicki
-drzeworytniczy
-drzycimski
-dręczący
-drętwy
-dualistyczny
-dubajski
-dubeltowy
-dubienecki
-dubieński
-dublerski
-dubliński
-dubrownicki
-duchowny
-duchowy
-dudniący
-dudziarski
-duetowy
-dufny
-duisburski
-dukielski
-dumasowski
-dumny
-dumski
-dunajecki
-dunajski
-dungański
-dunkierski
-dupiaty
-dupowaty
-durnieńki
-durny
-dusicielski
-dusznawy
-dusznicki
-duszpasterski
-duszący
-duży
-duński
-dwikoski
-dwiński
-dwoisty
-dwojaki
-dworacki
-dworaczy
-dworny
-dworski
-dworzański
-dwuaspektowy
-dwubarwny
-dwubiegunowy
-dwuboczny
-dwudzielny
-dwudziestokrotny
-dwuetapowy
-dwufazowy
-dwuipółkrotny
-dwujęzyczny
-dwukierunkowy
-dwukolorowy
-dwukrotny
-dwulicowy
-dwumiarowy
-dwunastoipółkrotny
-dwunastokrotny
-dwunastoletni
-dwunożny
-dwuosobowy
-dwupasmowy
-dwupoziomowy
-dwupłaszczyznowy
-dwurundowy
-dwustopniowy
-dwustronny
-dwusylabowy
-dwuszpaltowy
-dwutaktowy
-dwutorowy
-dwuwarstwowy
-dwuwymiarowy
-dwuzgłoskowy
-dwuzmianowy
-dwuznaczny
-dybowski
-dychawiczny
-dychotomiczny
-dydaktyczny
-dydeński
-dydniański
-dyferencjalny
-dyftongiczny
-dygnitarski
-dygowski
-dygresyjny
-dyktatorski
-dyletancki
-dylewski
-dymarski
-dymisyjny
-dynamiczny
-dynarski
-dynastyczny
-dynowski
-dyplomacki
-dyplomatyczny
-dyrektorski
-dyrektywny
-dyrygencki
-dyscyplinarny
-dysfunkcjonalny
-dysfunkcyjny
-dysharmonijny
-dyskantowy
-dyskomfortowy
-dyskotekowy
-dyskretny
-dyskryminujący
-dyskursywny
-dyskusyjny
-dysonansowy
-dyspeczerski
-dyspozycyjny
-dyspozytorski
-dyspozytywny
-dystrybucyjny
-dystrybutorski
-dystyngowany
-dysydencki
-dyszkantowy
-dywaniarski
-dywanowy
-dyzunicki
-dziadkowicki
-dziadkowski
-dziadowski
-dziarski
-działaczowski
-działdowski
-działoszycki
-działoszyński
-dziecinny
-dziecięcy
-dziedziczny
-dziejopisarski
-dziejowy
-dziekański
-dzielnicowy
-dzielny
-dziemiański
-dziennikarski
-dzienny
-dzierzgowski
-dzierzgoński
-dzierzkowicki
-dzierzążeński
-dzierżawczy
-dzierżoniowski
-dziesięcioipółkrotny
-dziesięciokrotny
-dziesięcioraki
-dziewczynkowaty
-dziewczyński
-dziewczęcy
-dziewiarski
-dziewiczy
-dziewięcioipółkrotny
-dziewięciokrotny
-dziewięcioraki
-dziewiętnastokrotny
-dziewięćdziesięciokrotny
-dzieworodny
-dziewuchowaty
-dziki
-dzikowski
-dziurawy
-dziwaczny
-dziwkarski
-dziwnowski
-dziwny
-dziękczynny
-dzwolski
-dzwonny
-dzwonowaty
-dąbrowicki
-dąbrowski
-dąbrówieński
-dąbrówniański
-dąbski
-dąsalski
-dławiący
-długawy
-długaśny
-długi
-długodystansowy
-długofalowy
-długookresowy
-długoplanowy
-długosiedlski
-długoterminowy
-długotrwały
-długowieczny
-długowzroczny
-długołęcki
-długusieńki
-długutki
-dłutkowaty
-dłutowski
-dłuuugi
-dłuuuugi
-dźwigniowy
-dźwięczny
-dźwiękowy
-dźwiński
-dżakarcki
-dżdżysty
-dżentelmeński
-dżezowy
-dżokejski
-dżungarski
-dębicki
-dębliński
-dębniański
-dębnicki
-dębski
-dólski
-düsseldorfski
-echowy
-edamski
-edeński
-edomicki
-edomski
-edukacyjny
-edynburski
-edytorski
-efekciarski
-efektowny
-efektywny
-efemeryczny
-efemerydalny
-efeski
-efraimski
-egalitarny
-egalitarystyczny
-egejski
-egipski
-egocentryczny
-egoistyczny
-egzagerowany
-egzaltowany
-egzaminatorski
-egzoenergetyczny
-egzotermiczny
-egzoteryczny
-egzotyczny
-egzystencjalistyczny
-egzystencjalny
-einsteinowski
-ejdetyczny
-ekfonetyczny
-eklektyczny
-ekologiczny
-ekonomiczny
-ekonomski
-ekscentryczny
-ekscytujący
-eksdywizorski
-ekshibicjonistyczny
-ekskluzywny
-ekspansjonistyczny
-ekspansywny
-ekspercki
-eksperymentalny
-eksperymentatorski
-eksplicytny
-eksplikacyjny
-eksploatatorski
-eksploratorski
-eksplozywny
-eksportowy
-ekspozycyjny
-ekspresjonistyczny
-ekspresowy
-ekspresyjny
-ekspresywny
-ekstatyczny
-ekstensywny
-eksternistyczny
-eksterytorialny
-ekstranowoczesny
-ekstraordynaryjny
-ekstrapilny
-ekstrawagancki
-ekstrawertyczny
-ekstremalny
-ekumeniczny
-ekwadorski
-ekwiwalentny
-elamicki
-elastyczny
-elbląski
-eleacki
-elegancki
-elegiacki
-elegijny
-elektorski
-elektroakustyczny
-elektrofizjologiczny
-elektrokardiograficzny
-elektrolityczny
-elektromagnetyczny
-elektromechaniczny
-elektrometalurgiczny
-elektroniczny
-elektronowy
-elektropajęczarski
-elektrostatyczny
-elektryczny
-elektryzujący
-elementarny
-eleuzyński
-elfi
-elficki
-elijski
-elipsoidalny
-eliptyczny
-elitarny
-elitarystyczny
-elizejski
-elokwentny
-elzetesowski
-elzewirski
-elżbietański
-emalierski
-emblematyczny
-embriologiczny
-ementalski
-emerycki
-emerytalny
-emfatyczny
-emigrancki
-emocjonalny
-emocjonujący
-emocyjny
-emorejski
-emotywny
-empatyczny
-empirejski
-empiryczny
-empirystyczny
-emski
-encyklopedyczny
-endecki
-endemiczny
-endoenergetyczny
-endorfinowy
-endoskopowy
-endotermiczny
-enerdowski
-enerefowski
-energetyczny
-energiczny
-energizujący
-energochłonny
-energooszczędny
-energożerny
-enharmoniczny
-enigmatyczny
-enkawudowski
-enologiczny
-entomologiczny
-entuzjastyczny
-enumeratywny
-enzootyczny
-enzymatyczny
-eoceński
-eolski
-epicki
-epiczny
-epidemiczny
-epigoński
-epigramatyczny
-epikurejski
-epileptyczny
-epilogowy
-episjerski
-epistemologiczny
-epizodyczny
-epokowy
-eposowy
-erazmiański
-erefenowski
-eremicki
-erewański
-ergonomiczny
-erogeniczny
-erogenny
-erotografomański
-erotomański
-erotyczny
-ertebelski
-erudycyjny
-erytrejski
-erywański
-esbecki
-esdecki
-eseistyczny
-eseldowski
-eselowski
-esemesowy
-esencjalny
-esencjonalny
-eserowski
-esesmański
-esesowski
-eskaerowski
-eskimoski
-eskulapski
-esmański
-esowaty
-esperancki
-esseński
-estetyczny
-estoński
-estradowy
-estremadurski
-etapowy
-etatowy
-etatystyczny
-eteryczny
-etezyjski
-etiologiczny
-etiopski
-etniczny
-etnocentryczny
-etnograficzny
-etosowy
-etruski
-etyczny
-etykietalny
-etykietowy
-etymologiczny
-eufemiczny
-eufemistyczny
-eufoniczny
-euforyczny
-eugeniczny
-eurazjatycki
-euroamerykański
-euroatlantycki
-euroazjatycki
-eurocentryczny
-euroentuzjastyczny
-europeistyczny
-europejski
-eurosceptyczny
-ewangelicki
-ewangeliczny
-ewenkijski
-ewentualny
-eweński
-ewidencyjny
-ewidentny
-ewolucyjny
-ewolutywny
-ezopowy
-ezoteryczny
-ełcki
-fabiański
-fabryczny
-fabrykancki
-fabularny
-fachowy
-facjendarski
-fagasowski
-fajansiarski
-fajczarski
-fajkowaty
-fajny
-fajowski
-fajowy
-fajsławicki
-fajtłapowaty
-fajumski
-fakirski
-faktograficzny
-faktorski
-fakturalny
-fakturowy
-faktyczny
-fakultatywny
-falangistowski
-falangowy
-falenicki
-falisty
-falklandzki
-falowaty
-falowy
-familiarny
-familijny
-fanaberyjny
-fanatyczny
-fanowski
-fantasmagoryczny
-fantastyczny
-fantazjotwórczy
-fantazyjny
-fantomatyczny
-faraoński
-faraski
-farbiarski
-farbierski
-farerski
-farmaceutyczny
-farmakologiczny
-farmazoński
-farmerski
-farny
-farsowy
-fartowny
-faryzejski
-faryzeuszowski
-fasadowy
-fascynujący
-fasoniarski
-faszystowski
-fatalistyczny
-fatalny
-fatimski
-fatjanowski
-faustowski
-faustyczny
-fazowy
-fałdzisty
-fałkowski
-fałszerski
-febryczny
-fechmistrzowski
-fechtmistrzowski
-federacyjny
-federatywny
-feeryczny
-feeryjny
-felczerski
-feldmarszałkowski
-felietonowy
-feministyczny
-fenicki
-fenomenalny
-fenomenologiczny
-fenotypowy
-feralny
-fergański
-fermentacyjny
-fermerski
-fertyczny
-festiwalowy
-festyniarski
-fetyszystyczny
-feudalny
-fiakierski
-fiatowski
-fidiaszowski
-fidżyjski
-figlarny
-figlarski
-figuralny
-figuratywny
-figurowy
-fikcjonalny
-fikcyjny
-fikuśny
-filadelfijski
-filarecki
-filcowaty
-filhelleński
-filigranowy
-filipiński
-filipowski
-filisterski
-filistyński
-filmowy
-filobułgarski
-filofrancuski
-filogenetyczny
-filologiczny
-filomacki
-filopolski
-filosemicki
-filozoficzny
-filucki
-filuterny
-finalny
-finansowy
-finałowy
-finezyjny
-finlandzki
-fioletowawy
-fioletowy
-fiołkowy
-fircykowaty
-firmowy
-fiskalny
-fizjograficzny
-fizjologiczny
-fizyczny
-fizykalny
-fizykoterapeutyczny
-fizylierski
-fiński
-flakowaty
-flamandzki
-flamastrowy
-flandryjski
-flankierski
-flaubertowski
-flegmatyczny
-flejowaty
-flejtuchowaty
-fleksyjny
-flirciarski
-flisacki
-flisowski
-florencki
-florentyński
-floriański
-florydzki
-florystyczny
-fluidalny
-fluorescencyjny
-flądrowaty
-foczy
-fogaraski
-fokidyjski
-folarski
-folderowy
-folklorystyczny
-folkowy
-folsomski
-fonetyczny
-foniczny
-fonograficzny
-fonologiczny
-foremny
-formacyjny
-formalistyczny
-formalnoprawny
-formalny
-formierski
-fornalski
-fornirski
-forsowny
-fortunny
-fosforyczny
-fosforyzujący
-fotoamatorski
-fotogeniczny
-fotograficzny
-fotokopiarski
-fotomechaniczny
-fotoreporterski
-fourierowski
-fowistyczny
-fragmentaryczny
-frajerski
-frampolski
-franciszkański
-francowaty
-francuski
-frankfurcki
-frankijski
-frankistowski
-frankofilski
-frankofoński
-frankoński
-frantowski
-frapujący
-frasobliwy
-frazeologiczny
-frażetowski
-freblowski
-fredropolski
-fredrowski
-frekwencyjny
-frenetyczny
-freudowski
-friulski
-fromborski
-frontalny
-frontowy
-froterski
-frunzeński
-frustracyjny
-frustrujący
-fruwający
-fryburski
-fryderycjański
-frygijski
-frymuśny
-fryszerski
-frywolny
-fryzjerski
-fryzyjski
-fukierowski
-fuksjowy
-fulerski
-fundamentalistyczny
-fundamentalny
-fundatorski
-fundlandzki
-funeralny
-funkcjonalny
-funkcyjny
-funkowy
-furfancki
-furiacki
-furmański
-fuszerski
-futbolowy
-futrzarski
-futurystyczny
-gabarytowy
-gaboroński
-gaboński
-gadareński
-gadatliwy
-gadulski
-gadzi
-gadzinowaty
-gadżeciarski
-gaflowy
-gagauski
-galaktyczny
-galanteryjny
-galanty
-galaretowaty
-galicki
-galicyjski
-galijski
-galilejski
-gallikański
-galloromański
-gallurski
-galluryjski
-galopujący
-galowy
-galwaniczny
-galwanizerski
-galwanoplastyczny
-galwanotechniczny
-gambijski
-gamoniowaty
-gandawski
-gandharski
-gandystowski
-gangsterski
-ganiący
-gapiowaty
-gapiowski
-gapowaty
-garbarski
-garbaty
-garbowski
-gardejski
-gardzienicki
-gardłowy
-gargantuiczny
-garncarski
-garoński
-garsoński
-garwoliński
-gaskoński
-gastarbeiterski
-gatunkowy
-gaullistowski
-gawędziarski
-gazdowski
-gazeciarski
-gazowy
-gałganiarski
-gałgański
-gaździński
-gburliwy
-gburowaty
-gburowski
-gdański
-gderalski
-gderliwy
-gdowski
-gdyński
-geelowski
-geesowski
-gejowski
-genderowy
-generacyjny
-generalny
-generalski
-generatywny
-generyczny
-genetyczny
-genewski
-genezyjski
-genialny
-genologiczny
-genotypowy
-gentlemeński
-genueński
-geodetyczny
-geodezyjny
-geoekologiczny
-geograficzny
-geologiczny
-geometryczny
-geopolityczny
-georgiański
-geostrategiczny
-geotermalny
-germanizatorski
-germanofilski
-germanofobski
-germański
-gestapowski
-gestyczny
-geszefciarski
-getyński
-ghański
-giaurski
-gibki
-gibraltarski
-gibski
-gidelski
-gielniowski
-gierałtowicki
-gierkowski
-gietrzwałdowski
-giełdziarski
-gigantomański
-gigantyczny
-gilowicki
-ginekologiczny
-gipsowy
-giscardowski
-giserski
-gitarowy
-gitowski
-giżycki
-giętki
-gladiatorski
-glauberski
-gliwicki
-globalny
-globtroterski
-glutowaty
-gminny
-gminowładny
-gnaszyński
-gniewiński
-gniewkowski
-gniewliwy
-gniewny
-gniewoszowski
-gniewski
-gnieźnieński
-gnojeński
-gnostycki
-gnuśny
-gnębicielski
-gobeliniarski
-gocki
-goczałkowicki
-godkowski
-godnościowy
-godny
-godowski
-godowy
-godzianowski
-godzieski
-godzinowy
-godziszowski
-godziwy
-goethowski
-goghowski
-gogoliński
-gogolowski
-gogusiowaty
-goidelski
-gojowski
-golarski
-golczewski
-goldbergowski
-goleniowski
-goleszowski
-goliński
-golubski
-golusieńki
-goluteńki
-goluśki
-gombrowiczowski
-gomunicki
-gomułkowski
-gondolierski
-gonny
-goplański
-goprowski
-gorajski
-gorbaczowowski
-gorczański
-gordyjski
-gorlicki
-gorliwy
-gorseciarski
-gorszący
-gorzkawy
-gorzki
-gorzkowicki
-gorzkowski
-gorzowski
-gorzupski
-gorący
-gorączkowy
-gospodarczy
-gospodarny
-gospodarski
-gostycyński
-gostyniński
-gostyński
-goszczanowski
-goszczyński
-goszystowski
-gotajski
-gotlandzki
-gotowiuteńki
-gotowiuśki
-gotycki
-gotówkowy
-gowarczowski
-goworowski
-gozdnicki
-gozdowski
-gołdapski
-gołosłowny
-gołuchowski
-goły
-gołymiński
-gołąbkowski
-gołębi
-gołębiarski
-gołębski
-gościeradowski
-gościkowski
-gościnny
-gościński
-grabarski
-grabieżczy
-grabnicki
-grabowiecki
-grabowski
-gracki
-gradacyjny
-gradowy
-graficzny
-grafologiczny
-grafomański
-grafowski
-grahamowski
-grajewski
-gramatyczny
-granatowy
-grandilokwentny
-grandziarski
-graniczny
-granitowy
-granowski
-gratisowy
-grawerski
-grawitacyjny
-grażdański
-grecki
-greckokatolicki
-gregoriański
-grekokatolicki
-gremialny
-grenadierski
-grenadyjski
-grenlandzki
-grobowy
-grochowski
-grodkowski
-grodziczeński
-grodzieński
-grodziski
-grodzki
-gromadecki
-gromadkarski
-gromadny
-gromadzki
-gromki
-gromniczy
-gromowy
-gronowski
-groteskowy
-grottgerowski
-groźny
-grożący
-grubawy
-grubiański
-grubiutki
-grubopłaski
-gruboskórny
-gruby
-gruchający
-gruczołowaty
-gruduski
-grudziądzki
-gruntowny
-grunwaldzki
-grupowy
-gruszkowaty
-gruziński
-gruźliczy
-grybowski
-gryficki
-gryfiński
-gryfowski
-grymaśny
-grynderski
-grynicki
-grypserski
-gryzący
-grzbietobrzuszny
-grzebieniarski
-grzebykowaty
-grzeczniuchny
-grzeczniusi
-grzeczniutki
-grzecznościowy
-grzeczny
-grzegorzewski
-grzeszny
-grzmiącki
-grzmiący
-grzybiarski
-grzybiczy
-grzybieński
-grzybobójczy
-grzybowski
-grząski
-grążawski
-grębkowski
-grębocicki
-gręboszowski
-grębowski
-gręplarski
-gródecki
-grójecki
-guamski
-gubernatorski
-gubiński
-gujański
-gusowski
-gustowny
-gutenbergowski
-guwernerski
-guzdralski
-guzikarski
-guzowaty
-gułagowski
-guślarski
-gwadelupski
-gwarancyjny
-gwarantowany
-gwardiański
-gwardyjski
-gwarecki
-gwarliwy
-gwarny
-gwarowy
-gwatemalski
-gwałcicielski
-gwałtowny
-gwiazdorski
-gwiaździsty
-gwieździsty
-gwinejski
-gzowski
-gąbiński
-gąsawski
-gładki
-gładziuchny
-gładziusieńki
-gładziuteńki
-gładziutki
-głagolicki
-głodnawy
-głodniuteńki
-głodny
-głodowy
-głogowski
-głoskowy
-głosowy
-głowaczowski
-głowieński
-głubczycki
-głuchowski
-głuchołaski
-głuchy
-głupawy
-głupi
-głupiusieńki
-głupiuteńki
-głupiutki
-głupkowaty
-głupowaty
-głuski
-głuszycki
-głębinowy
-głęboki
-głębokomorski
-główczycki
-główkowaty
-główkowy
-główny
-gębicki
-gęsi
-gęsiarski
-gęstawy
-gęściuchny
-gęściutki
-gęślarski
-góralski
-górecki
-górniański
-górniczy
-górnolotny
-górnowoltański
-górnołużycki
-górnośląski
-górny
-górowski
-górski
-górskokalwaryjski
-górzeński
-górzycki
-gówniany
-gówniarski
-göteborski
-habsburski
-hackerski
-haczowski
-haczykowaty
-hadki
-hadziacki
-hafciarski
-hagiograficzny
-haitański
-hajdamacki
-hajducki
-hajfski
-hajnowski
-hakerski
-hakowaty
-halicki
-halinowski
-halonowy
-halsztacki
-halucynogenny
-hamburski
-hamernicki
-hamiltoński
-hamletowski
-hamujący
-handlarski
-handlowy
-haniebny
-hanniński
-hanojski
-hanowerski
-hanzeatycki
-happenerski
-happeningowy
-harcerski
-harceński
-hardcorowy
-hardrockowy
-hardy
-haremowy
-harfiarski
-harmoniczny
-harmonijny
-harmonogramowy
-harpagoński
-hartny
-hartowny
-hartujący
-harvardzki
-harwardzki
-haski
-haszymidzki
-hasłowy
-hawajski
-hawański
-hawiarski
-hazardowy
-hałaśliwy
-hałaśny
-haźlaski
-hażlaski
-hańbiący
-hański
-heavymetalowy
-hebefreniczny
-hebrajski
-hebrydzki
-hecarski
-hecny
-hecowny
-hedonistyczny
-hegemonistyczny
-heglistowski
-heglowski
-heidelberski
-heksadecymalny
-heksagonalny
-hektograficzny
-helikalny
-helikoński
-helladzki
-helleński
-helsiński
-helski
-helwecki
-hemodynamiczny
-hemolityczny
-hemostatyczny
-henrycjański
-henrykowski
-heraklejski
-heraklijski
-heraklitejski
-herbertowski
-herbski
-hercegowiński
-hercyński
-heretycki
-hermafrodytyczny
-hermetyczny
-heroiczny
-heroldowski
-herostratesowy
-heski
-hesperyjski
-heterogeniczny
-heterogenny
-heteromorficzny
-heteroseksualny
-heterotroficzny
-hetmański
-hetycki
-heurystyczny
-hierarchiczny
-hieratyczny
-hieroglificzny
-higieniczny
-higromorficzny
-higroskopijny
-higrotyczny
-himalajski
-hindostański
-hinduski
-hindustański
-hiperboliczny
-hiperborejski
-hiperonimiczny
-hiperpoprawny
-hiperrealistyczny
-hipertroficzny
-hiphopowy
-hipisowski
-hipnotyczny
-hipnotyzerski
-hipnotyzujący
-hipoalergiczny
-hipokrycki
-hipokrytyczny
-hiponimiczny
-hipoteczny
-hipotermiczny
-hipotetyczny
-hippiesowski
-hippisowski
-hipsterski
-hiroszimski
-hispanoamerykański
-histeryczny
-histologiczny
-historiozoficzny
-historycznoliteracki
-historyczny
-hiszpański
-hitlerowski
-hitowy
-hobbistowski
-hobbistyczny
-hobbystowski
-hobbystyczny
-hochsztaplerski
-hojny
-holenderski
-holistyczny
-hollywoodzki
-holoceński
-holograficzny
-holsztyński
-homelski
-homeopatyczny
-homerowski
-homerycki
-homeryczny
-homogeniczny
-homologiczny
-homoseksualny
-honduraski
-hongkoński
-honiarski
-honorny
-honorowy
-horacjański
-horacjuszowski
-hormonalny
-horodelski
-horrendalny
-horrorowy
-horteksowski
-horyzontalny
-hospodarski
-hospodyński
-hotelarski
-hotentocki
-hołdowniczy
-hoży
-hrabiowski
-hrabski
-hradczański
-hreczkosiejski
-hrubieszowski
-hucpiarski
-huculski
-huczny
-huczwiański
-hudsoński
-hugenocki
-hugonocki
-hukowy
-hukslejowski
-hulaszczy
-hultajski
-humanistyczny
-humanitarny
-humański
-humoralny
-humorystyczny
-humowski
-huraganowy
-huraoptymistyczny
-hurapatriotyczny
-huroński
-hurraoptymistyczny
-hurrapatriotyczny
-hurtowny
-hurtowy
-husarski
-husycki
-huszlewski
-hutnicki
-huński
-hvarski
-hwarski
-hyclowski
-hydrauliczny
-hydroakustyczny
-hydrograficzny
-hyżeński
-iberoamerykański
-iberyjski
-iblowski
-ibsenowski
-idealistyczny
-idealny
-identyczny
-identytarystyczny
-ideologiczny
-ideowopolityczny
-ideowy
-idiomatyczny
-idiotyczny
-idylliczny
-ignorancki
-igołomski
-ikariański
-ikonoklastyczny
-iksowaty
-ilekrotny
-iliryjski
-illinojski
-iloczasowy
-ilokrotny
-ilościowy
-ilustracyjny
-ilustratorski
-ilustratywny
-iluzjonistyczny
-iluzoryczny
-iluzyjny
-imaginacyjny
-imbecylny
-imieleński
-imieliński
-imieninowy
-imienny
-imigrancki
-imitatorski
-immanentny
-immunogenny
-immunologiczny
-imperatorski
-imperatywny
-imperialistyczny
-imperialny
-impersonalny
-impertynencki
-impetyczny
-implicytny
-imponujący
-importerski
-importochłonny
-impotencki
-impresjonistyczny
-impresyjny
-impresywny
-imprezowy
-improwizacyjny
-improwizatorski
-impulsowy
-impulsywny
-incydentalny
-indeterministyczny
-indiański
-indoaryjski
-indochiński
-indoeuropejski
-indogermański
-indoirański
-indoktrynacyjny
-indonezyjski
-indukcyjny
-industrialny
-indyczy
-indyferentny
-indyjski
-indywidualistyczny
-indywidualny
-inercyjny
-infanteryjny
-infantylny
-inferencyjny
-infernalny
-inflacjogenny
-inflacyjny
-inflancki
-informacyjny
-informatorski
-informatyczny
-infrastrukturalny
-infułacki
-inicjatorski
-inicjatywny
-inkantacyjny
-inkasencki
-inkaski
-inkwizytorski
-innosłowiański
-innowacyjny
-innowatorski
-innsbrucki
-inowrocławski
-inowłodzki
-insbrucki
-inscenizacyjny
-inscenizatorski
-inspektorski
-inspicjencki
-inspiratorski
-inspirujący
-instalatorski
-instancyjny
-instruktażowy
-instruktorski
-instruktywny
-instrumentacyjny
-instrumentalny
-instrumentologiczny
-instygatorski
-instynktowny
-instynktowy
-instytucjonalny
-instytucki
-insynuatorski
-integralny
-integrujący
-intelektualny
-inteligencki
-inteligentny
-intelowski
-intencjonalny
-intendencki
-intensjonalny
-intensywny
-interaktywny
-interesowny
-interesujący
-interferometryczny
-interimalny
-interkontynentalny
-internacki
-internetowy
-internistyczny
-interpersonalny
-interpretacyjny
-interpretatorski
-intersubiektywny
-interwencyjny
-interymalny
-intonacyjny
-intratny
-introligatorski
-introspekcyjny
-introwertyczny
-intrygancki
-intrygujący
-intuicyjny
-intuitywny
-intymny
-inwalidzki
-inwazyjny
-inwentarski
-inwentaryzatorski
-inwentyczny
-inwestorski
-inwestycyjny
-inżynierski
-inżynieryjny
-ipeenowski
-iracki
-irakijski
-irański
-irkucki
-irlandzki
-irokeski
-ironiczny
-irracjonalistyczny
-irracjonalny
-irytujący
-iskrzący
-islamistyczny
-islamski
-islandzki
-ismailijski
-istebniański
-istmijski
-istnieniowy
-istny
-istotny
-istotowy
-istryjski
-iszymski
-itacki
-italiański
-italski
-iwaniski
-iwanowicki
-iwierzycki
-iwkowski
-iwonicki
-izbicki
-izerski
-izolacyjny
-izotermiczny
-izraelicki
-izraelski
-iławecki
-iławski
-iłowski
-iłżecki
-iński
-jabłonecki
-jabłoneński
-jabłonkowski
-jabłonowski
-jabłoński
-jadowity
-jadowski
-jafetycki
-jafski
-jagielloński
-jagnięcy
-jajcarski
-jajczarski
-jajorodny
-jajowaty
-jakobicki
-jakobiński
-jakościowy
-jaktorowski
-jakubowski
-jakucki
-jamajski
-jamalski
-jamieński
-jamnikowaty
-janczarski
-janikowski
-janisławicki
-jankeski
-janosikowy
-janowicki
-janowski
-japonistyczny
-japoński
-jaraczewski
-jarczowski
-jarmarczny
-jarociński
-jarosławski
-jarski
-jary
-jarzyniarski
-jarzący
-jasełkowy
-jasielski
-jasienicki
-jasieński
-jasionówecki
-jaski
-jaskrawy
-jasnogórski
-jasnoniebieski
-jasnowidzący
-jasnożółty
-jastarniański
-jastkowski
-jastrowski
-jastrzębi
-jastrzębiogórski
-jastrzębski
-jaszczurczy
-jaundejski
-jawajski
-jawiszowicki
-jawny
-jaworowski
-jaworzański
-jaworzniański
-jaworzyński
-jazgotliwy
-jazzowy
-jazzrockowy
-jałowy
-jałtański
-jaśliski
-jaśniepański
-jaśnisty
-jaśniuteńki
-jaśniutki
-jaćwieski
-jedenastoipółkrotny
-jedenastokrotny
-jedleński
-jedliński
-jednaki
-jednakowiusieńki
-jednakowiuteńki
-jednakowiutki
-jednakowiuśki
-jednakowy
-jedniuteńki
-jednobrzmiący
-jednocyfrowy
-jednoczesny
-jednoczący
-jednodniowy
-jednoetapowy
-jednofazowy
-jednogłosowy
-jednogłośny
-jednoimienny
-jednokadłubowy
-jednokierunkowy
-jednokolorowy
-jednokrotny
-jednolity
-jednomiarowy
-jednomierny
-jednomyślny
-jednooczny
-jednoosobowy
-jednopłciowy
-jednoraki
-jednorazowy
-jednorodny
-jednoskośny
-jednostajny
-jednostkowy
-jednostronny
-jednosylabowy
-jednoszeregowy
-jednotorowy
-jednowarstwowy
-jednowymiarowy
-jednozgłoskowy
-jednoznaczny
-jedwabieński
-jedwabisty
-jedwabiński
-jedwabny
-jedynowładczy
-jedynowładny
-jedyny
-jegierowski
-jegierski
-jehowicki
-jelcynowski
-jelczański
-jeleniewski
-jeleniogórski
-jeleśniański
-jeliciarski
-jelitowy
-jelonkowski
-jemeński
-jemieleński
-jemielnicki
-jenajski
-jeneralski
-jeniecki
-jenisejski
-jerozolimski
-jerseyski
-jerychoński
-jerzmanowicki
-jerzmanowski
-jesienny
-jezierski
-jeziorański
-jeziorzański
-jezuicki
-jełki
-jełopowaty
-jeździecki
-jeżewski
-jeżowski
-jeżycki
-jodłowski
-jogurtowy
-johannesburski
-jokohamski
-jonkowski
-jordanowski
-jordański
-jorubijski
-jowialny
-jowiszowy
-joński
-jubilerski
-jubileuszowy
-judaistyczny
-judaszowski
-judaszowy
-judejski
-judeochrześcijański
-judeoromański
-judofilski
-judzki
-jugosłowiański
-juhaski
-jukagirski
-jukatański
-jukoński
-juliański
-julijski
-junacki
-juniorski
-junkierski
-juracki
-jurajski
-jurgowski
-jurny
-jurorski
-jurydyczny
-jurysdykcyjny
-justyniański
-jutlandzki
-jutrosiński
-juwenaliowy
-jądrowy
-jąkający
-jąkliwy
-jęczący
-jędrny
-jędrzejewiczowski
-jędrzejowski
-jędzowaty
-jękliwy
-językowy
-językoznawczy
-józefiński
-józefowski
-kabacki
-kabalistyczny
-kabardyjski
-kabardyński
-kabaretowy
-kabotyński
-kabulski
-kabylski
-kabłąkowaty
-kacapski
-kacerski
-kachetyjski
-kacykowski
-kaczawski
-kaczkowaty
-kaczy
-kadecki
-kadencjonalny
-kadenowski
-kadrowy
-kaduczny
-kadzidlański
-kafkowski
-kaflarski
-kafuański
-kairski
-kajakarski
-kajdaniarski
-kajeński
-kajmański
-kajzerowski
-kakofoniczny
-kalabryjski
-kalafiorowaty
-kalderonowski
-kaleciański
-kaledoński
-kalejdoskopowy
-kaleki
-kalendarzowy
-kaletański
-kalidoński
-kalifornijski
-kaligraficzny
-kaliningradzki
-kaliski
-kalkucki
-kalkulatorski
-kalmarski
-kaloryczny
-kalumniatorski
-kalwaryjski
-kalwinistyczny
-kalwiński
-kambajski
-kambodżański
-kambryjski
-kamczacki
-kamczadalski
-kamedulski
-kameliowaty
-kameralny
-kamerdynerski
-kameruński
-kamieniarski
-kamienicki
-kamienicznikowski
-kamieniecki
-kamienisty
-kamiennogórski
-kamienny
-kamieński
-kamionecki
-kamionkowski
-kampalski
-kampanijny
-kampański
-kampinoski
-kampiński
-kampuczański
-kamracki
-kamski
-kanaanejski
-kanaański
-kanadyjkarski
-kanadyjski
-kananejski
-kanaryjski
-kancerogenny
-kanclerski
-kandelabrowy
-kandydacki
-kanejski
-kanibalski
-kaniowski
-kanneński
-kanonicki
-kanoniczny
-kanonierski
-kanopski
-kantabryjski
-kantorski
-kantowski
-kantoński
-kapcański
-kapelański
-kapelmistrzowski
-kapepowski
-kaperski
-kapilarny
-kapistowski
-kapitalistyczny
-kapitalny
-kapitałowy
-kapitański
-kapitoliński
-kapitulancki
-kapralski
-kapryśny
-kapski
-kapsztadzki
-kapuański
-kapucyński
-kapłański
-karabachski
-karabinierski
-karaceński
-karagandzki
-karaibski
-karaimski
-karakaski
-karakałpacki
-karakumski
-kararyjski
-karawaniarski
-karawaningowy
-karbonarski
-karboński
-karciarski
-karcinogenny
-karcynogenny
-karczemny
-karczewski
-karczmarski
-karczowski
-karczysty
-karcący
-kardynalny
-kardynalski
-karelski
-karetarski
-kargowski
-karierowiczowski
-karierowy
-karkonoski
-karkołomny
-karlistowski
-karliński
-karlowarski
-karlsbadzki
-karmazynowy
-karmelarski
-karmelicki
-karmelitański
-karminowy
-karnawałowy
-karnicki
-karniewski
-karny
-karoliński
-karpacki
-karsiński
-karski
-karszyński
-kartageński
-kartagiński
-kartezjański
-kartograficzny
-kartuski
-kartuzjański
-karygodny
-karykaturalny
-karyncki
-karzący
-kasandryczny
-kasjerski
-kaskaderski
-kaskadowy
-kasowy
-kaspijski
-kastalijski
-kastalski
-kastowy
-kastylijski
-kastylski
-kaszgarski
-kaszmirski
-kasztanowy
-kasztelański
-kaszubski
-katalityczny
-katalogowy
-kataloński
-katangijski
-katarktyczny
-katarski
-katastrofalny
-katastroficzny
-katański
-katechetyczny
-katechizmowy
-kategorialny
-kategoryczny
-katmanduański
-katolicki
-katorżniczy
-katowicki
-katowski
-katoński
-katyński
-kaudyński
-kaukaski
-kaustyczny
-kauzalny
-kawalarski
-kawalerski
-kawaleryjski
-kawęczyński
-kazachski
-kazachstański
-kazalniczy
-kazanowski
-kazaski
-kazański
-kazimierski
-kazimierzowski
-kazionny
-kazirodczy
-kaznodziejski
-kazualny
-kazuistyczny
-kałakucki
-kałmucki
-kałuski
-kałuszyński
-kaźmierski
-każdoczesny
-każdodzienny
-każdomiesięczny
-każdorazowy
-każdoroczny
-każdotygodniowy
-kańczuski
-kcyński
-kelnerski
-kempingowy
-kenelski
-kenijski
-keplerowski
-keratolityczny
-kerczeński
-keynesowski
-khmerski
-kibicowski
-kibolski
-kickbokserski
-kiczowaty
-kiczuański
-kidnaperski
-kiejdański
-kielarski
-kielecki
-kielichowaty
-kielniański
-kiepskawy
-kiepski
-kiepściuchny
-kiepściutki
-kiernoski
-kierowniczy
-kierunkowy
-kietrzański
-kiezmarski
-kiełczygłowski
-kieżmarski
-kigalijski
-kijewski
-kijowski
-kijowy
-kijski
-kikolski
-kilimiarski
-kilimkarski
-kilkakrotny
-kilkokrotny
-kilkoosobowy
-kilkudziesięciokrotny
-kilkukrotny
-kilkunastokrotny
-kilkuosobowy
-kilkusetosobowy
-kiloński
-kimeryjski
-kinematograficzny
-kingstoński
-kinszaski
-kipczacki
-kiperski
-kirasjerski
-kircholmski
-kirgiski
-kisielicki
-kiszkowski
-kiszyniowski
-kitajski
-kitesurfingowy
-klakierski
-klakomański
-klanowy
-klapowaty
-klarowny
-klasistowski
-klasowy
-klasycystyczny
-klasyczny
-klasyfikatorski
-klasztorny
-klaunowski
-klaustrofobiczny
-klawy
-kleczewski
-kleinowski
-kleisty
-klejarski
-klejowy
-klembowski
-kleparski
-klerkowski
-klerycki
-klerykalny
-klerykowski
-kleszczelski
-kleszczewski
-kleszczowski
-kleszczowy
-klezmerski
-kliencki
-klientowski
-klientystyczny
-klikuszowski
-klimatyczny
-klimontowski
-kliniczny
-klinowaty
-klinowy
-kliszowski
-kloaczny
-klonowski
-kloszardowski
-kloszardzki
-kloszowy
-klownowski
-klubowy
-kluczański
-kluczborski
-kluczewski
-klukowski
-klwowski
-klęskowy
-kmotrowski
-knajacki
-knajpiarski
-kneippowski
-kneziowski
-kniaziowski
-knurowski
-knyszyński
-koalicyjny
-kobiecy
-kobielski
-kobierzycki
-kobierzyński
-koblencki
-koburski
-kobylański
-kobyliński
-kobylnicki
-kobylogórski
-kobyłecki
-kocborowski
-kochający
-kochaniutki
-kochanowicki
-kochinchiński
-kochliwy
-koci
-kocierzewski
-kociewski
-kocki
-kocmyrzowski
-koczalski
-koczowniczy
-kodeksowy
-kodeński
-kodrąbski
-kodyfikatorski
-kognitywistyczny
-koguci
-koherentny
-kojący
-kokieteryjny
-kokietliwy
-kokocki
-koktajlowy
-kolaborancki
-kolankowaty
-kolanowy
-kolarski
-kolatorski
-kolażowy
-kolbuszowski
-kolchidzki
-kolebkowy
-kolegiacki
-kolegialny
-kolejarski
-kolekcjonerski
-kolektorski
-kolektywny
-koleżeński
-kolisty
-kolizyjny
-kolneński
-koloidalny
-kolokatorski
-kolokwialny
-kolombijski
-kolonialny
-kolonijny
-kolonizatorski
-kolonowski
-kolorowy
-kolorystyczny
-kolosalny
-koloński
-kolporterski
-kolski
-kolumbijski
-koluszkowski
-kolący
-komandorski
-komandoski
-komaniecki
-komarowski
-komańczowski
-kombatancki
-kombinacki
-kombinacyjny
-kombinatorski
-kombinatoryczny
-komediancki
-komediopisarski
-komediowy
-komendancki
-komentatorski
-komercyjny
-komfortowy
-komiczny
-komiksowy
-kominiarski
-kominternowski
-komisarski
-komisaryczny
-komisowy
-komisyjny
-komitacki
-komiwojażerski
-komornicki
-komorniczy
-komoryjski
-kompaktowy
-komparatystyczny
-kompatybilny
-kompensacyjny
-kompetencyjny
-kompetentny
-kompilatorski
-kompleksowy
-komplemenciarski
-komplementarny
-kompletny
-kompozycyjny
-kompozytorski
-komprachcicki
-kompradorski
-kompromisowy
-kompromitujący
-kompulsywny
-komputerowy
-komsomolski
-komuchowaty
-komunijny
-komunikacyjny
-komunikatorowy
-komunikatywny
-komunistyczny
-konający
-konakryjski
-konarzyński
-koncentryczny
-koncepcyjny
-konceptualizacyjny
-konceptualny
-koncernowy
-koncertowy
-konchowy
-kondotierski
-konduktorski
-kondycyjny
-konecki
-koneserski
-konfederacki
-konferansjerski
-konfidencjonalny
-konfidencki
-konfliktowy
-konformistyczny
-konfraterski
-konfrontacyjny
-konfrontatywny
-konfucjański
-kongenialny
-kongijski
-kongresowy
-koniakowski
-koniakowy
-koniarski
-koniczny
-koniecpolski
-koniecznościowy
-konieczny
-konikarski
-koniunkturalny
-koniński
-konkretny
-konkurencki
-konkurencyjny
-konkursowy
-konkwistadorski
-konopiski
-konopnicki
-konowalski
-konradowski
-konsekutywny
-konsekwentny
-konserwatorski
-konserwatywny
-konserwujący
-konsolacyjny
-konspiracyjny
-konspiratorski
-konstanciński
-konstancjański
-konstantynopolitański
-konstantynowski
-konstantyński
-konstrukcyjny
-konstruktorski
-konstruktywny
-konstytucyjny
-konsulowski
-konsultingowy
-konsumencki
-konsumerski
-konsumistyczny
-konsumpcyjny
-konsyliarski
-konsystorski
-kontaktowy
-kontekstowy
-kontemplacyjny
-kontestatorski
-kontragitacyjny
-kontrahencki
-kontraktowy
-kontrapunktyczny
-kontrastowy
-kontrastywny
-kontrkulturowy
-kontrolerski
-kontrolny
-kontrowersyjny
-kontrwywiadowczy
-konturowy
-kontynuatorski
-konwekcyjny
-konwencjonalny
-konwencyjny
-konwersacyjny
-konwiktorski
-konwisarski
-konwojencki
-konwulsyjny
-kooperacyjny
-kooperancki
-koordynacyjny
-koordynatorski
-kopenhaski
-koperkowy
-kopernikański
-kopernikowski
-kopertowy
-kopiaty
-kopieniacki
-koprzywnicki
-koptyjski
-kopułkowaty
-kopułowaty
-kopułowy
-korabiewicki
-koralowy
-korczewski
-korczyński
-kordialny
-kordobański
-kordowański
-koreanistyczny
-koreański
-koreferentny
-korektorski
-korepetytorski
-korespondencki
-korespondencyjny
-korfantowski
-kornijski
-kornwalijski
-korny
-koromandelski
-koronerski
-koroniarski
-koronkarski
-koronkowy
-koronowski
-korowodowy
-korporacyjny
-korporancki
-korporatystyczny
-korporatywny
-korpulentny
-korsarski
-korsykański
-korszeński
-kortowski
-korupcyjny
-koryciński
-korygujący
-koryncki
-koryntyjski
-korytnicki
-korzenieński
-korzenny
-korzystny
-kosakowski
-kosiarski
-kosmaty
-kosmetologiczny
-kosmetyczny
-kosmiczny
-kosmochemiczny
-kosmogoniczny
-kosmograficzny
-kosmologiczny
-kosmonautyczny
-kosmopolityczny
-kosmowizyjny
-kosooki
-kosowski
-kostarykański
-kosterski
-kostiumerski
-kostiumologiczny
-kostiumowy
-kostnołuski
-kostołuski
-kostromski
-kostropaty
-kostrzyński
-kostyczny
-kosy
-kosynierski
-koszaliński
-koszarawski
-koszarowy
-koszerny
-koszmarny
-kosztowny
-kosztowy
-koszycki
-koszykarski
-koszęciński
-kotelski
-kotlarski
-kotliński
-koturnowy
-kotuński
-kowalewski
-kowalski
-kowarski
-kowbojski
-kowelski
-kowieski
-kowieński
-kozacki
-kozi
-koziegłowski
-kozielicki
-kozielski
-kozienicki
-kozieński
-kozłowicki
-kozłowski
-kołaczkowski
-kołbaskowski
-kołbielski
-kołczygłowski
-kołdrzarski
-kołnierzowaty
-kołobrzeski
-kołodziejski
-kołomyjski
-kołowaty
-kołowy
-kołtryniarski
-kołtuński
-kołudzki
-kołychliwy
-kołymski
-kołyszący
-kołłątajowski
-kościański
-kościeliski
-kościelny
-kościerski
-kościerzyński
-kościotrupi
-kościuszkowski
-koślawy
-koźmiński
-kożuchowski
-końcowy
-koński
-końskowolski
-kpiarski
-kpinkowaty
-kpiący
-krajenecki
-krajeński
-krajiński
-krajobrazowy
-krajograficzny
-krajowski
-krajoznawczy
-krakauerski
-krakowski
-kramarski
-kraniologiczny
-kraniometryczny
-krapkowicki
-krasiczyński
-krasieński
-krasnodarski
-krasnojarski
-krasnoludzi
-krasnoludzki
-krasnopolski
-krasnostawski
-krasny
-krasociński
-krasomówczy
-krawiecki
-kraśnicki
-kraśniczyński
-krańcowy
-kreacyjny
-kreatorski
-kreatywny
-kreci
-kredensowy
-kredowy
-kredytowy
-kremlowski
-kremowy
-krempiński
-kreolski
-kreskówkowy
-kresowiacki
-kreteński
-kretyński
-krewki
-krewniacki
-krewniaczy
-krewski
-krezusowy
-kreślarski
-krioniczny
-krnąbrny
-krobski
-kroczycki
-kroczący
-krogulczy
-krokowski
-krokowy
-kromanioński
-kronikarski
-kronselski
-kroplisty
-kroplowy
-krosowy
-krotny
-krotochwilny
-krotoszycki
-krotoszyński
-krowi
-krościeński
-krośnicki
-krośniewicki
-krośnieński
-krtaniowy
-kruchusieńki
-kruchuteńki
-kruchutki
-kruchy
-kruczy
-krupierski
-krupski
-kruszwicki
-kruszyński
-krwawy
-krwiotwórczy
-krwiożerczy
-krwisty
-kryjomy
-kryminalistyczny
-kryminalny
-kryminogenny
-kryminologiczny
-krymski
-krynicki
-kryniczny
-krypniański
-kryptograficzny
-kryptonimowy
-krystaliczny
-krysznaicki
-kryształowy
-krytycznoliteracki
-krytyczny
-krytykancki
-krywański
-kryzysowy
-krzaczkowaty
-krzanowicki
-krzczonowski
-krzemieniecki
-krzemieniewski
-krzepicki
-krzepiący
-krzepki
-krzeszowicki
-krzeszowski
-krzeszycki
-krzniański
-krztuśliwy
-krzyczący
-krzykliwy
-krzykoski
-krzymowski
-krzynowłoski
-krzyski
-krzystkowicki
-krzywdziański
-krzywdzący
-krzywiński
-krzywoliniowy
-krzywoprzysięski
-krzywy
-krzyżacki
-krzyżanowicki
-krzyżanowski
-krzyżowy
-krzęciński
-krążeniowy
-kręcicki
-kręgarski
-kręglarski
-krępawy
-krępujący
-krępy
-krętacki
-króciuchny
-króciusieńki
-króciuteńki
-króciutki
-króciuśki
-królewiacki
-królewiczowski
-królewiecki
-królewski
-króliczy
-krótki
-krótkodystansowy
-krótkofalarski
-krótkofalowy
-krótkookresowy
-krótkoplanowy
-krótkoterminowy
-krótkotrwały
-krótkowzroczny
-ksenofilski
-ksenofobiczny
-kserograficzny
-ksiąski
-książkowy
-książęcy
-księdzowski
-księgarski
-księgowy
-księżacki
-księżowski
-księżpolski
-księży
-księżycowy
-ksobny
-kształcący
-kształtny
-kształtujący
-kubaniarski
-kubaturowy
-kubański
-kubistyczny
-kubkowaty
-kubofuturystyczny
-kucharski
-kuchenny
-kuchmistrzowski
-kuczborski
-kudowski
-kuficki
-kuglarski
-kujawski
-kujbyszewski
-kukułczy
-kulawy
-kuleski
-kulinarny
-kulisty
-kulombowski
-kulometryczny
-kulowski
-kultowy
-kulturalny
-kulturologiczny
-kulturotwórczy
-kulturowy
-kulturtregerski
-kuluarowy
-kumański
-kumbryjski
-kumoterski
-kumpelski
-kumplowski
-kumulatywny
-kundajski
-kunicki
-kunktatorski
-kunowicki
-kunowski
-kunsztowny
-kupiecki
-kupkowy
-kuplerski
-kuracyjny
-kuratorski
-kurański
-kurczliwy
-kurczowy
-kurdyjski
-kurdystański
-kurewski
-kurierski
-kuriozalny
-kurlandzki
-kurowski
-kuroński
-kurpiowski
-kurski
-kurtuazyjny
-kurwi
-kurylski
-kuryłowecki
-kurzy
-kusicielski
-kusiutki
-kusy
-kuszący
-kutnowski
-kutwiarski
-kuwaski
-kuwejcki
-kuzynowski
-kułacki
-kuśliński
-kuśnierski
-kuźniański
-kuźniczy
-kwadratowy
-kwadrofoniczny
-kwakierski
-kwakrowski
-kwalifikacyjny
-kwalitatywny
-kwantowy
-kwantytatywny
-kwartalny
-kwaskawy
-kwaskowaty
-kwasotwórczy
-kwatermistrzowski
-kwaśnawy
-kwestarski
-kwestionariuszowy
-kwestorski
-kwiaciarski
-kwidzyński
-kwieciarski
-kwiecisty
-kwietny
-kwitnący
-kwotowy
-kyreński
-kątowaty
-kątowy
-kąśliwy
-kłajpedzki
-kłajski
-kłamliwy
-kłobucki
-kłoczewski
-kłodawski
-kłodnicki
-kłodzki
-kłomnicki
-kłopotliwy
-kłosisty
-kłusacki
-kłusowniczy
-kłótliwy
-kłótnicki
-kędzierzawy
-kędzierzyński
-kępieński
-kępiński
-kęsowski
-kętrzyński
-kórnicki
-kózecki
-labilny
-labiodentalny
-labiowelarny
-laborancki
-laboratoryjny
-labourzystowski
-labradorski
-laburzystowski
-lacedemoński
-lachowski
-lacki
-ladyński
-lagoski
-laicki
-lajtowy
-lakierniczy
-lakoniczny
-lakoński
-laktoowowegetariański
-laktowegetariański
-lalkarski
-lalkowaty
-lalusiowaty
-lamaicki
-lamajski
-lamerski
-lamparci
-lampiarski
-lampionowy
-lanckoroński
-landrynkowy
-landsberski
-langwedocki
-lankijski
-lanserski
-lansjerski
-laodycejski
-laotański
-lapidarny
-lapoński
-laserowy
-laserunkowy
-laski
-laskowicki
-lasowski
-lastrykarski
-lateralny
-laterański
-lateński
-latopisarski
-latynistyczny
-latynoamerykański
-latynoski
-latyński
-laurkowy
-laurowy
-lawendowy
-lawinowy
-lazaroński
-leasingowy
-lechicki
-leciuchny
-leciusi
-leciusieńki
-leciuteńki
-leciutki
-leciuśki
-leciwy
-leczniczy
-leczący
-lednicki
-legalistyczny
-legalny
-legendarny
-legionowski
-legislacyjny
-legitymistyczny
-legnicki
-leguński
-lejdejski
-lejkowaty
-lejowaty
-lekarski
-lekceważący
-lekki
-lekkomyślny
-lekkostrawny
-lekkuchny
-lekkusi
-lekkusieńki
-lekkuśki
-lekomański
-leksykalny
-leksykograficzny
-leksykologiczny
-leksykonowy
-lektorski
-lekuchny
-lekusi
-lekusieńki
-lekutki
-lekuśki
-leliski
-lelkowski
-lelowski
-lemurowaty
-lendzielski
-leningradzki
-leninowski
-leniwy
-lenniczy
-lenny
-leonardowski
-leonciński
-leoniński
-lepki
-lesbijski
-leski
-leszczyński
-lesznowolski
-letalny
-letargiczny
-letejski
-letni
-lewacki
-lewaluaski
-lewantyński
-lewicki
-lewicowy
-lewiński
-leworęczny
-lewoskrętny
-lewostronny
-lezgiński
-leśnicki
-leśnieński
-leśniowicki
-leżajski
-libański
-liberalistyczny
-liberalny
-libertariański
-libertyński
-liberyjski
-libidalny
-libijski
-libiąski
-librewilski
-licejski
-licencjacki
-licheński
-lichnowski
-lichutki
-lichwiarski
-lichy
-licyjski
-liczbowy
-liczebnikowy
-liczebny
-liczny
-lidyjski
-lidzbarski
-lidzki
-liftingowy
-liftingujący
-ligowy
-liguryjski
-likaoński
-liktorski
-likwidatorski
-liliowaty
-liliowoniebieski
-lilioworóżowy
-liliowy
-lilipuci
-limanowski
-limburski
-limonkowy
-limski
-linearny
-lingwistyczny
-linierski
-liniowy
-lioński
-lipawski
-lipecki
-lipiański
-lipieński
-lipnicki
-lipnowski
-lipny
-lipowski
-lipski
-liptowski
-lirowaty
-liryczny
-lisi
-liskowski
-listowny
-listwowaty
-literacki
-literalny
-literaturoznawczy
-literowy
-litewski
-litograficzny
-litosny
-litościwy
-liturgiczny
-litwacki
-lityczny
-liverpoolski
-liwski
-lizboński
-lizusowski
-liściowaty
-liński
-lniarski
-lniański
-lodowaty
-lodowy
-lodziarski
-logarytmiczny
-logiczny
-logistyczny
-lojalistyczny
-lojalny
-lokajski
-lokalny
-lokarneński
-lokatorski
-lokowski
-lombardzki
-lombrozjański
-lombrozowski
-lomejski
-londyński
-longobardzki
-lordowski
-loretański
-losowy
-lotaryński
-lotniarski
-lotniczy
-lotowski
-lowański
-lowelasowski
-lozański
-luandzki
-lubaczowski
-lubartowski
-lubaski
-lubawecki
-lubawski
-lubański
-lubecki
-lubelski
-luberski
-lubeński
-lubichowski
-lubiewski
-lubieżny
-lubieński
-lubiszyński
-lubiąski
-lubiński
-lublański
-lubliniecki
-lubniewicki
-lubocheński
-lubomierski
-lubomiński
-lubomski
-lubotyński
-luboński
-lubrzański
-lubski
-lubszański
-lubuski
-luby
-lubyczański
-lucyferyczny
-ludnościowy
-ludny
-ludobójczy
-ludomański
-ludowy
-ludowładczy
-ludożerczy
-ludwikowski
-ludwisarski
-ludwiński
-ludyczny
-ludzki
-ludźmierski
-lukratywny
-luksemburski
-luksusowy
-lumierowski
-luminarski
-lumpenproletariacki
-lumpiarski
-lumpowski
-lunatyczny
-lunchowy
-lusacki
-lusakijski
-lustracyjny
-lustratorski
-lustrzany
-luterański
-luterski
-lutociński
-lutomierski
-lutowiski
-lututowski
-luty
-luzacki
-luziński
-luźniutki
-luźny
-lwi
-lwowski
-lwówecki
-lyoński
-lądecki
-lśniący
-lęborski
-lędziński
-lękliwy
-lękowy
-macedoński
-machabejski
-machiaweliczny
-machiawelski
-machinalny
-maciejowicki
-macierzyński
-maciupeńki
-maciupki
-maczugowaty
-madagaskarski
-madianicki
-madraski
-madrycki
-madziarski
-mafijny
-magadański
-magdaleński
-magdeburski
-magentowy
-maghrebski
-magiczny
-magisterski
-magistracki
-magistrancki
-maglarski
-magnacki
-magnetofonowy
-magnetyczny
-magnetyzerski
-magnetyzujący
-magnuszewski
-mahlerowski
-mahometański
-mahoniowy
-mailowy
-mailowy
-mainstreamowy
-majestatyczny
-majoracki
-majorkański
-majorski
-majowy
-majsterski
-majstrowski
-majątkowy
-majętny
-makabryczny
-makaroniarski
-makartowski
-makiaweliczny
-makiawelski
-maklerski
-makowski
-makroskopijny
-makroskopowy
-makrosocjologiczny
-maksymalistyczny
-maksymalny
-malabarski
-malabijski
-malachitowy
-malajski
-malakologiczny
-malakozoologiczny
-malanowski
-malarski
-malawijski
-malborski
-malczycki
-malechowski
-malediwski
-malejski
-malezyjski
-maleńki
-malgaski
-malijski
-malinowy
-malkontencki
-malowniczy
-maltański
-maluchny
-maluczki
-malusieńki
-maluteczki
-malutenieczki
-maluteńki
-malutki
-maluśki
-malwiński
-mamelucki
-mamiący
-mammograficzny
-mamuci
-managuański
-manamski
-manchesterski
-mandaryński
-mandatariuszowski
-mandżurski
-manhattański
-maniacki
-maniaczny
-maniakalny
-manicheistyczny
-manichejski
-manieryczny
-manierystyczny
-manifestacyjny
-manilski
-manipulacyjny
-manipulatorski
-mannheimski
-mannowski
-manowski
-mansardowy
-mantuański
-manualny
-manueliński
-maoistowski
-maoistyczny
-maoryski
-maputański
-maratoński
-marburski
-marchewkowy
-marcinowicki
-marciszowski
-marecki
-marginalny
-marginesowy
-margoniński
-margrabiowski
-mariacki
-marianowski
-mariawicki
-mariański
-mariensztacki
-mariocentryczny
-marionetkowy
-marketingowy
-markierski
-markietański
-markizowski
-markotny
-markowski
-marksistowski
-marksowski
-markuski
-marmurowy
-marniutki
-marnotrawczy
-marnotrawny
-marny
-marokański
-maronicki
-marsjański
-marski
-marsowaty
-marsowy
-marsylski
-marszałkowski
-martenowski
-martwiczy
-martwy
-martynikański
-martyrologiczny
-maruderski
-marudny
-maruszewski
-maryjski
-marymoncki
-marynarski
-marzycielski
-marzący
-masajski
-masakryczny
-masarski
-maseruański
-maskaradowy
-maskujący
-masochistyczny
-masowy
-masoński
-masywny
-maszewski
-maszopski
-masztalerski
-maszynowy
-masłowicki
-masłowski
-matacki
-matejkowski
-matematyczny
-materialistyczny
-materialny
-materiałochłonny
-materiałowy
-matowy
-matołkowaty
-matriarchalny
-mauretański
-maurytyjski
-mazdajski
-mazdejski
-mazowiecki
-mazowieckogrodziski
-mazowszański
-mazurski
-małkiński
-małmazyjski
-małoduszny
-małogabarytowy
-małogoski
-małokaloryczny
-małoletni
-małomiasteczkowy
-małomicki
-małomiejski
-małomieszczański
-małopolski
-małorealistyczny
-małoruski
-małostkowy
-małowiejski
-małowymiarowy
-małpi
-małpiarski
-małżeński
-maślany
-maślarski
-mański
-mceński
-mdlejący
-mdlący
-mdławy
-meblarski
-mecenasowski
-mechaniczny
-mechanistyczny
-mechanizatorski
-medalierski
-medialny
-mediatorski
-mediolański
-mediumistyczny
-medycki
-medyczny
-medyjski
-medytacyjny
-medyński
-mefistofelesowski
-mefistofeliczny
-megalomański
-megaryjski
-mejlowy
-mekkański
-meklemburski
-meksykański
-melancholiczny
-melancholijny
-melanezyjski
-meliczny
-meliniarski
-melioratywny
-melodramatyczny
-melodyczny
-melodyjny
-melomański
-menadżerski
-menażerski
-menedżerski
-menelski
-menippejski
-mentalnościowy
-mentalny
-mentorski
-mereżkarski
-merkantylny
-merowiński
-merowski
-merytokratyczny
-merytoryczny
-meseński
-mesjaniczny
-mesjanistyczny
-mesjański
-messyński
-mesyński
-metaboliczny
-metafilozoficzny
-metafizyczny
-metaforyczny
-metajęzykowy
-metaliczny
-metalowy
-metameryczny
-metamorfogeniczny
-metodologiczny
-metodyczny
-metonimiczny
-metrażowy
-metryczny
-metrykalny
-metternichowski
-metyski
-mezopotamski
-mełgiewski
-mgielny
-mglisty
-mgliwy
-mgnieniowy
-mgławicowy
-mgławy
-miareczkowy
-miarodajny
-miarowy
-miastkowski
-miastotwórczy
-miastowy
-miałki
-miażdżący
-miceński
-michałowicki
-michałowski
-michowski
-mickiewiczowski
-miczmański
-miczurinowski
-miechowicki
-miechowski
-miecznikowski
-miedzeszyński
-miedzeński
-miedzianogórski
-miedzichowski
-miedzieński
-miejscowy
-miejski
-miejskopiastowski
-mielecki
-mieleszyński
-mieleński
-mielnicki
-mienszewicki
-miernicki
-mierniczy
-mierny
-mieroszowski
-mierzalny
-mierzęcicki
-miesięczny
-mieszczański
-mieszkaniowy
-mieszkowicki
-mieściski
-mieńszewicki
-migawkowy
-migdałowy
-migotliwy
-migracyjny
-mikorzyński
-mikołajczykowski
-mikołajski
-mikołowski
-mikrokomputerowy
-mikronezyjski
-mikroskopiczny
-mikroskopijny
-mikroskopowy
-mikrotektoniczny
-mikry
-mikserski
-milanowski
-milczkowaty
-milczący
-milejczycki
-milejewski
-milejowski
-milenijny
-mileńki
-milicki
-milionerski
-milionkrotny
-milionowy
-militarny
-militarystyczny
-milkliwy
-millenijny
-miloński
-miluchny
-milusi
-milusieńki
-milusiński
-milutki
-miluśki
-milówecki
-mimetyczny
-mimiczny
-mimochętny
-mimowiedny
-mimowolny
-mimozowaty
-mimośrodkowy
-mimośrodowy
-minarecki
-mincarski
-minerski
-miniatorski
-miniaturowy
-minierski
-minikomputerowy
-minimalistyczny
-minimalny
-ministerialny
-ministerski
-ministrancki
-ministrowski
-minoderyjny
-minojski
-minorowy
-minusowy
-mioceński
-miodny
-miodopłynny
-miodowy
-mirmidoński
-mirowski
-mirski
-misiowaty
-misjonarski
-misterny
-mistrzowski
-mistyczny
-mistyfikatorski
-mitologiczny
-mitomański
-mitotwórczy
-mityczny
-mitygujący
-mizeracki
-mizerniuteńki
-mizerniutki
-mizerny
-mizeruchny
-miączyński
-miłakowski
-miłkowicki
-miłomłyński
-miłosierny
-miłosny
-miłosławski
-miłościwy
-miły
-miśnieński
-mięciuchny
-mięciusieńki
-mięciuteńki
-mięciutki
-międzyborski
-międzychodzki
-międzygromadzki
-międzykomorowy
-międzykontynentalny
-międzyleski
-międzyludzki
-międzymiejski
-międzymorski
-międzynarodowy
-międzyosobniczy
-międzyrzecki
-międzysłowiański
-międzywojewódzki
-międzyzdrojski
-mięguszowiecki
-miękiński
-miękki
-miętowy
-miński
-mleczarski
-mlecznoniebieski
-mleczny
-mnemoniczny
-mnemotechniczny
-mnichowski
-mniowski
-mnisi
-mniszkowski
-mnogi
-moabicki
-moabski
-mobilizujący
-mobilny
-mocarny
-mocarstwowy
-mochowski
-moczarowski
-moczopędny
-moczowy
-modelarski
-modelatorski
-modelowy
-modemowy
-modernistyczny
-modernizacyjny
-modernizatorski
-moderujący
-modeński
-modliborzycki
-modlitewny
-modliński
-modniarski
-modny
-modowy
-modrooki
-modyfikujący
-mogadiszuański
-mogielnicki
-mogilański
-mogileński
-mogilski
-mogolski
-moguncki
-mohylewski
-mohylowski
-mojżeszowy
-mokotowski
-mokrawy
-mokrski
-mokruteńki
-mokrutki
-mokruśki
-mokry
-mokrzuteńki
-mokrzutki
-molekularny
-molierowski
-momentalny
-monachijski
-monakijski
-monarchiczny
-monarszy
-monasterski
-monastyrski
-monetarny
-mongolski
-moniecki
-monistyczny
-moniuszkowski
-monochromatyczny
-monofizycki
-monofoniczny
-monoftongiczny
-monograficzny
-monolityczny
-monopolistyczny
-monopolowy
-monostroficzny
-monosylabowy
-monotematyczny
-monotonny
-monowski
-monrowijski
-monstrualny
-monterski
-monteskiuszowski
-montrealski
-monumentalny
-moralitetowy
-moralizatorski
-moralny
-morawski
-morderczy
-mordwiński
-morfologiczny
-morfosemantyczny
-morganatyczny
-mormoński
-moronijski
-morowy
-morski
-moryński
-morzeszczyński
-morąski
-mosiężny
-mosiński
-moskarzewski
-moskiewski
-mosulski
-moszczenicki
-motoryczny
-motywacyjny
-mozaikowaty
-mozaikowy
-mozaistyczny
-mozambicki
-mozambijski
-mozarabski
-mozartowski
-mozolny
-mołdawski
-mołojecki
-możebny
-możliwy
-mońkowski
-mrocznawy
-mroczny
-mroziański
-mroźny
-mrożkowski
-mrożący
-mrukliwy
-mrągowski
-mrówczy
-mstowski
-mszański
-mszczonowski
-mucharski
-mudżahediński
-mulacki
-mularski
-mulisty
-multański
-multikulturowy
-multimedialny
-mumijny
-mundajski
-muranowski
-murarski
-murmański
-murowanogośliński
-murowany
-murowski
-murzyński
-muskularny
-musowy
-mustierski
-muszelkowaty
-muszkieterski
-muszlowaty
-muszyński
-mutagenny
-muzealny
-muzułmański
-muzyczny
-muzykalny
-muzykancki
-muślinowy
-mycieliński
-mycielski
-mydlarski
-mykanowski
-mykeński
-mykologiczny
-mylny
-mylący
-mysi
-myszkowski
-myszyniecki
-mysłakowicki
-mysłowicki
-myzyjski
-myślenicki
-myśliborski
-myślicielski
-myśliwski
-myślowy
-myślący
-mącicielski
-mączny
-mądraliński
-mądry
-mątewski
-mławski
-młockarski
-młodociany
-młodopolski
-młodoturecki
-młody
-młodzieszyński
-młodzieżowy
-młodzieńczy
-młodziuchny
-młodziusieńki
-młodziuteńki
-młodziutki
-młodziuśki
-młynarski
-młyński
-mścicielski
-mściwojowski
-mściwy
-mżysty
-męcinecki
-męczeński
-męczący
-męski
-męskoosobowy
-mętnawy
-mętniacki
-mętny
-mężatkowski
-mężny
-mężowski
-mówiący
-mózgowy
-münsterski
-nabatejski
-nabożny
-nabuzowany
-nabłonkowy
-nachalny
-nachiczewański
-nacjonalistyczny
-nacystowski
-naczelnikowski
-naczelny
-nadamurski
-nadaremny
-nadarzyński
-nadawczy
-nadbałtycki
-nadbużański
-nadcisański
-nadczarnomorski
-naddnieprzański
-naddniestrzański
-naddunajski
-nadelbiański
-nadetatowy
-nadgoplański
-nadgorliwy
-nadhuczwiański
-nadkaspijski
-nadległy
-nadliczbowy
-nadludzki
-nadmiarowy
-nadmierny
-nadmorski
-nadmotławski
-nadnarwiański
-nadnaturalny
-nadnidziański
-nadniemeński
-nadnotecki
-nadobny
-nadobowiązkowy
-nadodrzański
-nadopiekuńczy
-nadpilicki
-nadplanowy
-nadpobudliwy
-nadprogramowy
-nadrabski
-nadrealistyczny
-nadreński
-nadrzędny
-nadsański
-nadsekwański
-nadskakujący
-nadskrwiański
-nadspodziewany
-nadstandartowy
-nadterminowy
-nadwarciański
-nadwełtawski
-nadwigrzański
-nadwiślański
-nadwołżański
-nadziemski
-nadzorczy
-nadzwyczajny
-nadłabski
-nadśródziemnomorski
-nadświdrzański
-nafciarski
-naganny
-nagi
-naglący
-nagminny
-nagradzający
-nagraniowy
-nagusieńki
-naguteńki
-nagutki
-nagłowicki
-nagły
-nairobijski
-naiwny
-najazdowy
-najemny
-najezdniczy
-nakazowy
-nakielski
-nakładowy
-nalegający
-należny
-namacalny
-namiarowy
-namibijski
-namiestnikowski
-namiętny
-namolny
-namysłowski
-namyślny
-nankiński
-nansenowski
-nantejski
-naoczny
-napadowy
-napastliwy
-napastniczy
-napoleoński
-napominający
-napotny
-naprzeciwległy
-naprzemianległy
-naprzemianstronny
-naprzemienny
-napuszony
-napędowy
-narastający
-narciarski
-narcystowski
-narcystyczny
-narewski
-narkomański
-narkotyczny
-narodnicki
-narodotwórczy
-narodowodemokratyczny
-narodowosocjalistyczny
-narodowościowy
-narodowy
-narolski
-narowisty
-narożny
-narracyjny
-narratorski
-naruszewski
-narwiański
-narzeczeński
-narzutny
-narzędziowy
-nasenny
-nasielski
-naskórkowy
-nassauski
-nastoletni
-nastrojowy
-następczy
-następny
-następujący
-natowski
-natryskowy
-natrętny
-natufski
-naturalistyczny
-naturalny
-naturszczykowski
-natychmiastowy
-natywny
-nauczycielski
-naukowy
-naukoznawczy
-naumyślny
-naurański
-nawarski
-nawiasowy
-nawierzchniowy
-nawigacyjny
-nawilżający
-nawojowski
-nawykowy
-nazaretański
-nazareński
-nazewniczy
-naziemny
-nazistowski
-nałogowy
-nałęczowski
-naśladowczy
-naśladowniczy
-ndżameński
-neandertalski
-neapolitański
-nefrytowy
-negatywny
-negocjacyjny
-negocjatorski
-nekielski
-nekrofilski
-nelsoński
-nemejski
-neofaszystowski
-neoficki
-neogotycki
-neoheglistowski
-neoheglowski
-neohitlerowski
-neokantowski
-neokomski
-neonacystowski
-neonazistowski
-neoplatoński
-neosłowiański
-nepalski
-nerkowaty
-nerkozastępczy
-nerwicowy
-nerwowy
-nestoriański
-netowy
-neurasteniczny
-neurochirurgiczny
-neurologiczny
-neurotoksyczny
-neurotyczny
-neutralny
-newralgiczny
-newski
-newtonowski
-ngwanejski
-niamejski
-nicejski
-niczegowaty
-niderlandzki
-nidziański
-nidzicki
-nidzki
-niebaczny
-niebiański
-niebieskawy
-niebieski
-niebieściuchny
-niebieściutki
-nieborowski
-niebotyczny
-niebywały
-niechanowski
-niechlowski
-niechlujny
-niechybny
-nieckowaty
-niecny
-niedobczycki
-niedostateczny
-niedowierzający
-niedołężny
-niedościgły
-niedrzwicki
-niedzicki
-niedzielny
-niedźwiedzi
-niedźwiedziowaty
-niegociński
-niegodny
-niegosławicki
-niegowski
-nieliski
-niemcewiczowski
-niemczański
-niemeński
-niemiecki
-niemodliński
-niemożebny
-niemożliwy
-niemrawy
-niemy
-nienawistny
-nieniecki
-nieobliczalny
-nieodparty
-nieodrodny
-nieodstępny
-nieodwołalny
-nieodzowny
-nieodłączny
-nieograniczony
-nieokreślony
-nieokrzesany
-nieopanowany
-nieopatrzny
-nieopisany
-niepohamowany
-niepojęty
-niepokojący
-niepomierny
-nieporadny
-nieporuszony
-nieporównany
-nieposzlakowany
-niepowrotny
-niepowstrzymany
-niepozorny
-niepołomicki
-nieprawdopodobny
-nieprzejednany
-nieprzeparty
-nieprzerwany
-nieprzezwyciężony
-nierozerwalny
-nieruchawy
-nierówny
-niesamowity
-niesforny
-nieskalany
-nieskazitelny
-nieskończony
-niespodziany
-niespodziewany
-niespotykany
-niespłacalny
-niestrudzony
-nieszawski
-niesłychany
-nietzscheański
-nieubłagany
-nieuchronny
-nieuczony
-nieudolny
-nieugięty
-nieulękły
-nieumiarkowany
-nieunikniony
-nieustający
-nieustanny
-nieustraszony
-niewiadowski
-niewierny
-niewieści
-niewinny
-niewolniczy
-niewypowiedziany
-niewyrażalny
-niewysłowiony
-niewzruszony
-niezachwiany
-niezamierzony
-niezaprzeczalny
-niezaprzeczony
-niezasłużony
-niezatarty
-niezawisły
-niezbity
-niezbędny
-niezdarny
-niezdecydowany
-nieziemski
-niezmierny
-niezmordowany
-niezmącony
-nieznużony
-niezrównany
-niezwalczony
-niezwłoczny
-niezłomny
-nieświeski
-nigerski
-nigeryjski
-nigrycki
-nihilistyczny
-nijaki
-nikaraguański
-nikczemny
-niklowy
-nikobarski
-nikozyjski
-nikły
-nippoński
-niski
-niskoemisyjny
-niskooktanowy
-niszański
-niszczycielski
-niszczący
-niszowy
-niterski
-nitkowaty
-niwiski
-niziuchny
-niziusieńki
-niziuteńki
-niziutki
-niziuśki
-niżański
-nobliwy
-noblowski
-nogajski
-nomadzki
-nomenklaturowy
-nominalny
-nonkonformistyczny
-nonsensowny
-nonszalancki
-norbertański
-nordycki
-nordyjski
-norfolski
-normalizujący
-normalny
-normandzki
-normatywny
-normański
-normowy
-norweski
-norwidowski
-norymberski
-nosowy
-nostalgiczny
-notarialny
-notariuszowski
-notecki
-notoryczny
-notoryjny
-notowski
-novellowski
-nowatorski
-nowelistyczny
-nowicjuszowski
-nowinecki
-nowinkarski
-nowiuchny
-nowiusieńki
-nowiuteńki
-nowiutki
-nowiuśki
-nowobogacki
-nowobrzeski
-nowobytomski
-nowoczesny
-nowodworski
-nowodębski
-nowofundlandzki
-nowogardzki
-nowogrecki
-nowogrodzki
-nowogródzki
-nowogwinejski
-nowogórski
-nowohebrajski
-nowohucki
-nowojorski
-nowokaledoński
-nowokarczemski
-nowokawęczyński
-nowokorczyński
-nowomiejski
-nowomodny
-nowoorleański
-nowoostrowski
-nowoplatoński
-nowopolski
-noworoczny
-nowosarzyński
-nowosolniański
-nowosolski
-nowostawski
-nowosuski
-nowosybirski
-nowoszkocki
-nowosądecki
-nowosłupski
-nowotarski
-nowotomyski
-nowotworowy
-nowotyski
-nowowarpieński
-nowowiejski
-nowozelandzki
-nowołaciński
-nowski
-nowy
-nożny
-nożycowaty
-nożycowy
-nubijski
-nudnawy
-nudny
-nudziarski
-nuklearny
-numeański
-numeratywny
-numerowy
-numeryczny
-numidyjski
-nuncjatorski
-nurski
-nuworyszowski
-nużący
-nygusowski
-nyski
-nęcący
-nędzarny
-nędzarski
-nędzański
-nędzny
-oazowy
-obcesowy
-obciachowy
-obcisły
-obciążający
-obcy
-obecny
-obezwładniający
-obfity
-obiecujący
-obiegowy
-obiektywny
-objawowy
-objazdowy
-objaśniający
-objętościowy
-obleśny
-obliczalny
-obliczeniowy
-obligatoryjny
-oblęgorski
-obmierzły
-obmyślany
-obnażający
-obniżający
-oboczny
-obojnacki
-obojnaczy
-obojętny
-obopólny
-obornicki
-obosieczny
-obowiązkowy
-obowiązujący
-obrazoburczy
-obrazowski
-obrazowy
-obraźliwy
-obrażający
-obrażalski
-obronny
-obrotny
-obrotowy
-obrowski
-obrończy
-obrzański
-obrzeżny
-obrzydliwy
-obrzydły
-obrzędowy
-obsceniczny
-obserwacyjny
-obserwatorski
-obsesjonalny
-obsesyjny
-obski
-obskurancki
-obskurny
-obsydianowy
-obszarowy
-obszerny
-obukierunkowy
-obuoczny
-oburzający
-oburęczny
-obustronny
-obwodowy
-obyczajny
-obyczajowy
-obywatelski
-obłożny
-obłudny
-obły
-obłąkańczy
-obłędny
-oceanograficzny
-oceanologiczny
-oceniający
-ochmistrzowski
-ochocki
-ochoczy
-ochotnicki
-ochotniczy
-ochotny
-ochroniarski
-ochronny
-ochrowy
-ochrydzki
-ochrypły
-ochładzający
-ochędożny
-ocieplający
-ociągający
-ociągliwy
-ociężały
-oczekiwany
-oczywisty
-odautorski
-odbiorczy
-odbytniczy
-odcinkowy
-odciążający
-odczuwalny
-oddolny
-oddzielny
-odeski
-odgórny
-odjazdowy
-odkażający
-odkrywczy
-odkrywkowy
-odkształcalny
-odkupicielski
-odległy
-odlotowy
-odludny
-odmianowy
-odmienny
-odmowny
-odmładzający
-odmężowski
-odnawialny
-odnowicielski
-odnośny
-odojcowski
-odolanowski
-odorowy
-odosobowy
-odporny
-odpowiedni
-odpowiedzialny
-odprzodowy
-odprężający
-odpustowy
-odpychający
-odpłatny
-odrażający
-odreżyserski
-odrodny
-odrodzicielski
-odroślowy
-odruchowy
-odrzański
-odrzeczny
-odrzywolski
-odrębny
-odręczny
-odrętwiający
-odsetkowy
-odstający
-odstraszający
-odstresowujący
-odstępczy
-odszczepieńczy
-odszkodowawczy
-odtleniający
-odtruwający
-odtwórczy
-odurzający
-odwadniający
-odważny
-odwetowy
-odwieczny
-odwilżowy
-odwracalny
-odwrotny
-odwykowy
-odziemski
-odśrodkowy
-odświeżający
-odświętny
-odżywczy
-oenerowski
-oenzetowski
-ofensywny
-ofermowaty
-ofertowy
-offenbachowski
-ofiarny
-oficerski
-oficjalny
-oględny
-ognioszczelny
-ogniowy
-ognisty
-ograniczający
-ogrodniczy
-ogromny
-ogrzewczy
-ogrzewniczy
-ogłupiający
-ogłuszający
-ogólnikowy
-ogólnodostępny
-ogólnoeuropejski
-ogólnokrajowy
-ogólnokształcący
-ogólnoliteracki
-ogólnoludzki
-ogólnopolski
-ogólnorozwojowy
-ogólnosłowiański
-ogólny
-ogórkowy
-ohydny
-ojcowski
-ojczymowski
-ojczysty
-ojrzeński
-okazały
-okazjonalny
-okazowy
-okazyjny
-okocimski
-okolicznościowy
-okołomarsjański
-okołoporodowy
-okołoziemski
-okresowy
-okropny
-okruteczny
-okrutny
-okrągluchny
-okrąglusieńki
-okrągluteńki
-okrąglutki
-okrągluśki
-okrężny
-oksfordzki
-oksywski
-okupancki
-okęcki
-okólny
-okółkowaty
-okółkowy
-olbrzymi
-oldschoolowy
-oldskulowy
-olecki
-oleisty
-olejarski
-olejkarski
-oleski
-oleszycki
-oleśniański
-oleśnicki
-oligarchiczny
-oligoceński
-olimpijski
-oliwkowy
-oliwny
-oliwski
-olkuski
-olszanecki
-olszewski
-olsztyński
-olszyński
-olszówecki
-olziański
-olśniewający
-omański
-omdlewający
-omowny
-omski
-omulewski
-omylny
-omyłkowy
-ondulacyjny
-oneski
-onieśmielający
-oniryczny
-onkogenny
-onkologiczny
-onomatopeiczny
-ontologiczny
-ontyczny
-opacki
-opaczny
-opalenicki
-opaleński
-opalizujący
-opalowy
-opartowski
-opatowski
-opatrznościowy
-opatrzny
-opawski
-opcjonalny
-operacyjny
-operatorski
-operatywny
-operetkowy
-operowy
-opiekuńczy
-opieszały
-opiniodawczy
-opiniotwórczy
-opinogórski
-opisowy
-opoczyński
-opolski
-oponiarski
-oporny
-oporowski
-oportunistyczny
-opozycyjny
-opresyjny
-opryskliwy
-optometryczny
-optyczny
-optymacki
-optymalny
-optymistyczny
-opukowy
-opłacalny
-opłakany
-opływowy
-opętańczy
-opóźniający
-oralny
-oranżowy
-oratorski
-orawski
-orański
-orbisowski
-orchideowy
-orchowski
-ordowicki
-ordynacki
-ordynarny
-ordynaryjny
-ordynatorski
-ordyński
-oregoński
-orenburski
-orficki
-orficzny
-organicznikowski
-organiczny
-organistowski
-organizacyjny
-organizatorski
-organoleptyczny
-orgastyczny
-orienburski
-orientacyjny
-orientalny
-orlański
-orleański
-orlenowski
-ormiański
-ormowski
-ornitologiczny
-orny
-oroński
-orszański
-ortodoksyjny
-ortodontyczny
-ortograficzny
-ortopedyczny
-orwellowski
-oryginalny
-oryniacki
-orzechowy
-orzeczeniowy
-orzelski
-orzeski
-orzeźwiający
-orzyski
-orłowski
-orężny
-osadniczy
-oscarowy
-oschły
-osetyjski
-osetyński
-osi
-osiecki
-osieczeński
-osiecznicki
-osiedleńczy
-osielski
-osiemdziesięciokrotny
-osiemnastokrotny
-osieński
-osiowy
-osiągalny
-osięciński
-osiński
-osjakowski
-oskarżający
-oskarżycielski
-osmański
-osmotyczny
-osobisty
-osobliwy
-osobniczy
-osobowościowy
-osobowy
-osowiały
-ospały
-ostaszewski
-ostateczny
-ostendzki
-ostentacyjny
-osteologiczny
-ostiacki
-ostrawski
-ostrobramski
-ostrogocki
-ostrojęzyczny
-ostrokątny
-ostroroski
-ostrowiecki
-ostrowski
-ostrołukowy
-ostrołęcki
-ostrożniutki
-ostrożnościowy
-ostrożny
-ostry
-ostrzegawczy
-ostrzeszowski
-ostródzki
-oszałamiający
-oszczerczy
-oszczędnościowy
-oszczędny
-oszmiański
-oszołamiający
-oszołomski
-oszukańczy
-osłaniający
-osłonowy
-osłuchowy
-osłupiający
-otmuchowski
-otomański
-otrzeźwiający
-ottawski
-ottoński
-otwarty
-otwocki
-otyły
-otyński
-otępiały
-otępienny
-outsiderski
-owacyjny
-owadobójczy
-owadzi
-owaki
-owalny
-owczarski
-owczy
-owocarski
-owocny
-owocowy
-owoczesny
-owowegetariański
-owski
-oxfordzki
-ozdobny
-ozdrowieńczy
-oznajmujący
-ozorkowski
-oławski
-ołomuniecki
-oślepiający
-oślizły
-ośmielający
-ośmioipółkrotny
-ośmiokrotny
-ośmioraki
-ośrodkowy
-oświatowy
-oświetleniowy
-oświęcimski
-ożarowicki
-ożarowski
-ożywczy
-pabianicki
-pacanowski
-pachciarski
-pachnący
-pacholęcy
-pacyfikatorski
-pacyfistyczny
-pacyński
-paczkowski
-padański
-padewski
-pagartowski
-pagórkowaty
-pajdocentryczny
-pajęczański
-pajęczy
-pakistański
-pakoski
-pakosławicki
-pakowny
-paksowski
-palacki
-palatalny
-palatyński
-paleoamerykański
-paleoaustralijski
-paleoazjatycki
-paleomongolski
-paleosyberyjski
-palestrancki
-palestyński
-paliatywny
-palijski
-paliwożerny
-palladiański
-pallotyński
-palmireński
-palmirski
-palmyreński
-palotyński
-palpacyjny
-palący
-pamfletowy
-pamirski
-pamiątkarski
-pamięciowy
-pamiętliwy
-pamiętnikarski
-pamiętny
-panafrykański
-panalbański
-panamerykański
-panamski
-panarabski
-panatenajski
-pancerniacki
-panelowy
-paneuropejski
-pangermański
-panhelleński
-paniczny
-paniczowski
-paniczykowski
-panieński
-panikarski
-panoramiczny
-panowski
-panoński
-panpoetycki
-panseksualny
-pansłowiański
-pantagrueliczny
-panteistyczny
-panteutoński
-pantoflarski
-pantomimiczny
-papierkowy
-papierochłonny
-papierowy
-papieski
-papowski
-paprocieński
-paprocki
-papuaski
-papuański
-papuzi
-papuśny
-paraboliczny
-paradny
-paradoksalny
-paradokumentalny
-paradygmatyczny
-paradyski
-parafiański
-paragwajski
-paralelny
-paraliteracki
-paralotniarski
-paramaribski
-paramedyczny
-parametryczny
-paramilitarny
-paranaukowy
-paranoiczny
-paranoidalny
-paranormalny
-paraolimpijski
-parapsychiczny
-parapsychologiczny
-parasolkowy
-parasolowaty
-parasolowy
-parasympatyczny
-parataktyczny
-parateatralny
-parazytologiczny
-parański
-parcelancki
-parchaty
-parchowski
-parczewski
-pardubicki
-parenteralny
-parentetyczny
-parlamentarny
-parlamentarski
-parmezański
-parmeński
-parnasistowski
-parnaski
-parobczański
-parodiowy
-parodystyczny
-parokrotny
-paroksytoniczny
-parowski
-parowy
-partacki
-partenogenetyczny
-partnerski
-partyjniacki
-partyjny
-partyjski
-partykularny
-partyzancki
-parweniuszowski
-paryjski
-paryski
-parysowski
-parzysty
-parzęczewski
-pasamoński
-pasażerski
-paseistyczny
-paserski
-pasjonacki
-pasjonujący
-paskarski
-paskudny
-pasmowy
-pasowy
-pasożytniczy
-pastelowy
-pasterowski
-pasterski
-pastewny
-pastiszowy
-pastorski
-pasymski
-pasywistyczny
-pasywny
-paszkwilancki
-paszochłonny
-paszowicki
-paszowski
-pasztuński
-pasłęcki
-patagoński
-paternalistyczny
-patetyczny
-patofizjologiczny
-patogenetyczny
-patogenny
-patologiczny
-patowy
-patriarchalny
-patriotyczny
-patronacki
-patrycjuszowski
-patykowaty
-pauliański
-pauliński
-pawi
-pawiacki
-pawijski
-pawonkowski
-pawłosiowski
-pawłowicki
-pawłowski
-pazerny
-paziowski
-pałacowy
-pałkarski
-pałucki
-pałąkowaty
-pański
-państwotwórczy
-państwowoprawny
-państwowotwórczy
-państwowy
-pcimski
-pecekowski
-pechowy
-peczorski
-pedagogiczny
-pedalski
-pedantyczny
-pedofilski
-pedogenetyczny
-pedrylowaty
-peerelowski
-peeselowski
-pegeerowski
-pejoratywny
-pekaesowski
-pekaowski
-pekiński
-peloponeski
-pelpliński
-pendżabski
-peniński
-pensjonarski
-pensylwański
-pentagoński
-peowiacki
-pepeerowski
-pepeesowski
-peperowski
-pepesowski
-percepcyjny
-perejasławski
-peremptoryczny
-perfekcyjny
-perfidny
-pergameński
-pergaminowy
-pergamoński
-periodyczny
-perkusyjny
-perlejewski
-perlisty
-permanentny
-permisywistyczny
-permisywny
-permski
-perorny
-perpendykularny
-perseweracyjny
-perski
-personalistyczny
-personalny
-perspektywiczny
-perswadujący
-perswazyjny
-perukarski
-peruwiański
-perwersyjny
-peryferyczny
-peryferyjny
-peryfrastyczny
-peryklejski
-peryklinalny
-perymetryczny
-perypatetycki
-perypatetyczny
-perzowski
-perłowy
-pesymistyczny
-peszteński
-petersburski
-petetekowski
-petrograficzny
-petrologiczny
-petyhorski
-peweksowski
-pewniuteńki
-pewny
-pewuenowski
-pezetpeerowski
-pełczycki
-pełniusieńki
-pełniuteńki
-pełniutki
-pełniuśki
-pełnokaloryczny
-pełnomorski
-pełnoprawny
-pełnosprawny
-pełnowymiarowy
-pheniański
-phnompeński
-piarowy
-piaseczyński
-piaskarski
-piaskowy
-piastowski
-piatigorski
-piaśnicki
-picassowski
-picerski
-piechociarski
-piechowicki
-piechurski
-pieckowski
-piecowy
-pieczarkarski
-pieczeniarski
-pieczołowity
-pieczętarski
-piekarski
-piekielny
-piekoszowski
-piekący
-pielgrzymecki
-pielgrzymi
-pielęgniarski
-piemoncki
-pieniacki
-pieniężeński
-pieniężny
-pieniński
-pieprzny
-piernikarski
-pieroński
-piersiowy
-pieruński
-pierworodny
-pierwotny
-pierwszoosobowy
-pierwszoplanowy
-pierwszorzędny
-pierzarski
-pierzchliwy
-pierzchnicki
-pierścieniowy
-pieski
-pieszczotliwy
-pieszy
-pieszycki
-pietrowicki
-pietrozawodski
-pietystyczny
-pieściwy
-pieśniarski
-pieński
-pigmejski
-pijacki
-pijaniusieńki
-pijarski
-pikantny
-pikardyjski
-piknikowy
-pilawski
-pilchowicki
-pilicki
-pilny
-pilotażowy
-pilski
-pilzneński
-pilźnieński
-pionierski
-pionowy
-piorunujący
-pioruński
-piosenkarski
-piotrkowski
-piotrogrodzki
-piotrowski
-piołunowy
-piracki
-piramidalny
-pirenejski
-piroelektryczny
-pisarski
-pisemny
-piskliwy
-pisklęcy
-pisowski
-piszczański
-pitagorejski
-pittsburski
-pityjski
-piwniczański
-piwowarski
-piwowski
-pizański
-pizdowaty
-piątnicki
-piławski
-piłkarski
-piłsudczykowski
-piśmienniczy
-piśmienny
-pięciobarwny
-pięciogwiazdkowy
-pięcioipółkrotny
-pięciokrotny
-pięcioosobowy
-pięcioraki
-piękniutki
-pięknoduchowski
-piękny
-piętnastokrotny
-piętrowy
-pięściarski
-pięćdziesięciokrotny
-pińczowski
-piński
-plagiatorski
-plagiotropowy
-plakatowy
-planowy
-plantatorski
-plastyczny
-platerowski
-platerówecki
-platformerski
-platoniczny
-platoński
-plebański
-plebejski
-plebejuszowski
-plecionkarski
-plejstoceński
-plemienny
-plemnikobójczy
-plenerowy
-plenny
-plesieński
-pleszewski
-pleśniobójczy
-plioceński
-plociuchowski
-plotkarski
-plugawy
-pluralistyczny
-plutokratyczny
-pneumatyczny
-pniewski
-poatomowy
-pobazyliański
-pobernardyński
-pobiedziski
-pobieżny
-pobliski
-poboczny
-pobożny
-pobratymczy
-pobudliwy
-pobudzający
-pobłażający
-pobłażliwy
-pochlebczy
-pochlebny
-pochmurny
-pochmurowaty
-pochopny
-pochwalny
-pochwiejny
-pocieszający
-pocieszny
-pocieszycielski
-pociągający
-pociągły
-pocysterski
-poczciwy
-poczdamski
-poczesny
-pocześniański
-pocztowy
-pocztylioński
-pocztówkowy
-poczwarny
-poczwórny
-poczytalny
-poczytny
-początkowy
-podalpejski
-podaniowy
-podatkowy
-podatny
-podbałtycki
-podbeskidzki
-podchorążacki
-podchwytliwy
-poddany
-poddańczy
-poddębicki
-podedworski
-podejrzany
-podejrzliwy
-podgórski
-podgórzyński
-podhalański
-podjazdowy
-podkanclerski
-podkarpacki
-podkaukaski
-podkomorski
-podkorowy
-podkrakowski
-podlaski
-podmiejski
-podmiotowy
-podmokły
-podmorski
-podmoskiewski
-podniebny
-podniecający
-podnieprzański
-podniosły
-podobniusieńki
-podobny
-podoficerski
-podolski
-podominikański
-podostry
-podparyski
-podporucznikowski
-podprogowy
-podrażniający
-podrzeszowski
-podrzędny
-podręcznikowy
-podróżniczy
-podskarbiński
-podskórny
-podstarościński
-podstawowy
-podstępny
-podsumowujący
-podszczeciński
-podtarnowski
-podtatrzański
-poduralski
-podwarszawski
-podwawelski
-podważalny
-podwileński
-podwodny
-podwrocławski
-podwójny
-podyplomowy
-podzielny
-podziemny
-podławy
-podługowaty
-podłużny
-podły
-poetycki
-poetyczny
-pofestiwalowy
-pofranciszkański
-pogardliwy
-pogański
-poglądowy
-pogodny
-pogorzelski
-pogrzebowy
-pogłówny
-pohitlerowski
-poirytowany
-pojagielloński
-pojałtański
-pojednawczy
-pojednokrotny
-pojedynczy
-pojemnościowy
-pojemny
-pojezuicki
-pojęciowy
-pojętny
-pokamedulski
-pokarmowy
-pokazowy
-pokaźny
-pokerowy
-poklatkowy
-pokojowy
-pokojski
-pokoleniowy
-pokomunistyczny
-pokorniuchny
-pokorniutki
-pokorny
-pokraczny
-pokrewny
-pokrzepiający
-pokrzywnicki
-pokrzyżacki
-pokrętny
-pokutniczy
-pokutny
-pokułacki
-pokątny
-polakożerczy
-polanicki
-polanowski
-polarnomorski
-polański
-polemiczny
-polerski
-poleski
-poleszucki
-policentryczny
-polichromiczny
-policki
-policyjny
-policzalny
-policzeński
-polifoniczny
-polimodalny
-polinezyjski
-politologiczny
-polityczny
-politykierski
-polkowicki
-polonistyczny
-polonizatorski
-polonocentryczny
-polonofilski
-polsatowski
-polski
-polskocerkiewski
-polskokatolicki
-polubowny
-pomagisterski
-pomarańczowy
-pomierny
-pomijalny
-pomnikowy
-pomny
-pomocniczy
-pomocny
-pomorski
-pomowski
-pompatyczny
-pompejański
-pompierski
-pomysłowy
-pomyłkowy
-pomyślny
-ponadczasowy
-ponaddialektalny
-ponaddziesięciomilionowy
-ponaddźwiękowy
-ponadetatowy
-ponadhistoryczny
-ponadindywidualny
-ponadjednostkowy
-ponadklasowy
-ponadlokalny
-ponadludzki
-ponadmetrażowy
-ponadnarodowy
-ponadnormatywny
-ponadobowiązkowy
-ponadpartyjny
-ponadpaństwowy
-ponadplanowy
-ponadprzeciętny
-ponadstanowy
-ponadwymiarowy
-ponadziemski
-ponadzmysłowy
-ponaglający
-ponapoleoński
-ponarkotyczny
-poncki
-poniatowski
-poniemiecki
-poniewieski
-poniszowicki
-poniterski
-poniżający
-ponowny
-pontonierski
-pontyfikalny
-pontyjski
-ponuracki
-ponurawy
-ponury
-ponętny
-poojcowski
-poolimpijski
-popartowski
-popasowy
-popegeerowski
-popielatoszary
-popielaty
-popielewski
-popielowski
-popijarski
-popisowy
-poplebański
-popowski
-popowy
-popradzki
-poprawny
-poprockowy
-poprodukcyjny
-poprzeczny
-poprzedni
-popularny
-popularyzatorski
-populistyczny
-popłatny
-popędliwy
-poradziecki
-porajski
-poranny
-porażający
-porcelanowy
-porcjowy
-pornograficzny
-poroniński
-porosyjski
-porozumiewawczy
-portfelowy
-portierski
-portlandzki
-portorykański
-portretowy
-portugalski
-porucznikowski
-poruszający
-porywający
-porywczy
-porywisty
-porządny
-porąbecki
-porębski
-poręczny
-poręczycielski
-porównawczy
-porównywalny
-posadzkarski
-posażny
-poselski
-poseminaryjny
-posesorski
-posilny
-posiłkowy
-posmoleński
-posobny
-posowiecki
-pospieszny
-pospolitacki
-pospolity
-posprzedażowy
-pospólny
-postaciowy
-postanisławowski
-postawny
-postindustrialny
-postkomunistyczny
-postmodernistyczny
-postomiński
-postpozycyjny
-postrealistyczny
-postronny
-postrzegalny
-postulatywny
-postępowy
-posuwisty
-posypowy
-poszczególny
-poszczegółowy
-poszlachecki
-poszlakowy
-poszukujący
-poszóstny
-posągowy
-posłanniczy
-posłuszny
-posępny
-potajemny
-potencjalny
-potencjometryczny
-potencjonalny
-potiomkinowski
-potoczny
-potoczysty
-potokowy
-potrydencki
-potrzebny
-potrójny
-potulicki
-potulny
-potwarczy
-potwarliwy
-potwierdzający
-potwierdzalny
-potworny
-potworowski
-potęgowski
-potępieńczy
-potężny
-pouczający
-poufały
-poufny
-pourazowy
-powabny
-powalający
-poważny
-powersalski
-powielaczowy
-powielokrotny
-powierniczy
-powierzchniowy
-powierzchowny
-powiewny
-powieściopisarski
-powieściowy
-powikłany
-powitalny
-powiślacki
-powiślański
-powodziowy
-powojenny
-powolny
-powołżański
-powrześniowy
-powstrzymujący
-powszedni
-powtarzalny
-powtórkowy
-powtórny
-powtórzeniowy
-powyborczy
-powątpiewający
-powązkowski
-powłokowy
-powłóczysty
-powściągliwy
-pozaakademicki
-pozaczasowy
-pozadyskusyjny
-pozaeuropejski
-pozagatunkowy
-pozagospodarczy
-pozainstytucjonalny
-pozajelitowy
-pozakomórkowy
-pozakonkursowy
-pozakonstytucyjny
-pozakostny
-pozaksięgowy
-pozaliteracki
-pozaludzki
-pozamaterialny
-pozamałżeński
-pozamedyczny
-pozamerytoryczny
-pozanaukowy
-pozaoficjalny
-pozapoetycki
-pozapolityczny
-pozaprodukcyjny
-pozaprotokolarny
-pozaracjonalny
-pozaregulaminowy
-pozarolniczy
-pozarozumowy
-pozarządowy
-pozasezonowy
-pozastatutowy
-pozasłużbowy
-pozauniwersytecki
-pozawiejski
-pozaziemski
-pozazmysłowy
-pozerski
-pozezdrski
-poziomy
-poznawalny
-poznawczy
-poznański
-pozorny
-pozrębowy
-pozycyjny
-pozytronowy
-pozytywistyczny
-pozytywny
-połabski
-połajewski
-połaniecki
-połczyński
-połocki
-połowiczny
-połowiecki
-położniczy
-połtawski
-południkowy
-południowoamerykański
-południowoeuropejski
-południowy
-połyskliwy
-połyskujący
-połąski
-pośladkowy
-pośledni
-pośmiertny
-pośpieszny
-pośredni
-poświąteczny
-poświęcieński
-pożarski
-pożegnalny
-pożołnierski
-pożydowski
-pożyteczny
-pożywny
-pożądliwy
-prabałtosłowiański
-pracochłonny
-pracodawczy
-pracowity
-pracowniczy
-pradawny
-pradziadowski
-pragmatyczny
-pragnący
-prahistoryczny
-praindoeuropejski
-prajański
-prakseologiczny
-praksytelesowski
-praktyczny
-praktykancki
-pralechicki
-praludzki
-prandociński
-praojcowski
-prapolski
-prasemicki
-praski
-prasowy
-prasłowiański
-praugrofiński
-prawdomówny
-prawdopodobny
-prawdziwy
-prawicowonacjonalistyczny
-prawicowy
-prawidłowy
-prawniczy
-prawnokarny
-prawnoustrojowy
-prawny
-prawodawczy
-prawomocny
-prawomyślny
-praworządny
-praworęczny
-prawoskrętny
-prawostronny
-prawowierny
-prawowity
-prałacki
-preceptorski
-precyzyjny
-predykatywny
-predyspozycyjny
-prefaszystowski
-prefektowski
-preferencyjny
-prefiksowy
-prekambryjski
-prekolumbijski
-prekursorski
-prelegencki
-premierowski
-premierowy
-prenatalny
-prepozycyjny
-preproletariacki
-prerafaelicki
-presemicki
-preserski
-preskryptywny
-prestidigitatorski
-prestiżowy
-presłowiański
-pretekstowy
-pretendencki
-pretensjonalny
-pretoriański
-pretorski
-pretoryjski
-prewencyjny
-prewentywny
-prezbiteriański
-prezentacyjny
-prezenterski
-prezesowski
-prezydencki
-priorytetowy
-proaliancki
-proamerykański
-probabilistyczny
-problematyczny
-problemowy
-proboszczowski
-probrytyjski
-procarski
-proceduralny
-procentowy
-procesjonalny
-procesowy
-procesyjny
-prochowicki
-prodemokratyczny
-producencki
-produkcyjny
-produktywny
-proekonomiczny
-proeksportowy
-proeuropejski
-profaszystowski
-profesjonalny
-profesorski
-profetycki
-profetyczny
-profilaktyczny
-profrancuski
-prognostyczny
-progowy
-programistyczny
-programowalny
-programowy
-progresywny
-prohitlerowski
-proimportowy
-proinflacyjny
-projektancki
-projektowy
-prokocimski
-prokonsumencki
-prokreacyjny
-prokuratorski
-proletariacki
-prometejski
-promieniotwórczy
-promieniowy
-promienisty
-promienny
-promieński
-promilowy
-prominencki
-promocyjny
-promotorski
-pronatalistyczny
-pronazistowski
-proniemiecki
-propagandowy
-propagatorski
-propedeutyczny
-propolski
-proporcjonalny
-propriocepcyjny
-proradziecki
-proreformatorski
-prorocki
-proroczy
-prorynkowy
-prorządowy
-prosiaczkowaty
-prosięcy
-prosocjalistyczny
-prospektywny
-prospołeczny
-prostacki
-prostaczy
-prostoduszny
-prostokątny
-prostolinijny
-prostoliniowy
-prostopadły
-prostujący
-proszalny
-proszkowy
-proszowicki
-proszowski
-proszący
-protekcjonalny
-protekcyjny
-protektorski
-protestacyjny
-protestancki
-proteuszowy
-protobałtycki
-protobułgarski
-protokolarny
-protokólarny
-protosemicki
-proustowski
-prowansalski
-prowincjonalny
-prowizoryczny
-prowokacyjny
-prowokatorski
-prowokujący
-prozachodni
-prozaiczny
-prozatorski
-prozelicki
-prozodyczny
-prozodyjny
-prościuchny
-prościusieńki
-prościuteńki
-prościutki
-prościuśki
-pruderyjny
-prudnicki
-prusacki
-prusicki
-pruski
-prusofilski
-prusowski
-pruszczański
-pruszczowski
-pruszkowski
-prymarny
-prymasowski
-prymitywny
-pryncypialny
-prypecki
-prywaciarski
-prywatny
-pryzmatyczny
-przasnyski
-przaśny
-przebiegły
-przebieżny
-przebitkowy
-przebogaty
-przebojowy
-przebrzydły
-przebłagalny
-przechlewski
-przechodni
-przeciszowski
-przeciwalergiczny
-przeciwartyleryjski
-przeciwbakteryjny
-przeciwbieżny
-przeciwbodźcowy
-przeciwbólowy
-przeciwcukrzycowy
-przeciwdeszczowy
-przeciwgorączkowy
-przeciwgośćcowy
-przeciwgrzybiczny
-przeciwgrzybiczy
-przeciwinflacyjny
-przeciwkamieniowy
-przeciwkołtuński
-przeciwległy
-przeciwlękowy
-przeciwmiażdżycowy
-przeciwny
-przeciwobrzękowy
-przeciwpożarowy
-przeciwprądowy
-przeciwrakowy
-przeciwskurczowy
-przeciwsobny
-przeciwstawny
-przeciwstresowy
-przeciwuczuleniowy
-przeciwutleniający
-przeciwwymiotny
-przeciwzakrzepowy
-przeciwzapalny
-przeciwzmarszczkowy
-przeciągły
-przeciętniacki
-przeciętniutki
-przeciętny
-przecudny
-przecudowny
-przeczyszczający
-przeczący
-przecławski
-przedborski
-przedchrześcijański
-przeddrukarski
-przedgotycki
-przedgórski
-przedlekarski
-przedludzki
-przedmałżeński
-przedmiejski
-przedmiotowy
-przedni
-przednioazjatycki
-przedolimpijski
-przedostatni
-przedpiastowski
-przedpolski
-przedpotopowy
-przedromański
-przedrzeźniający
-przedsenny
-przedsiewny
-przedsiębiorczy
-przedstawicielski
-przedszkolacki
-przedsłowiański
-przedterminowy
-przedwczesny
-przedwieczny
-przedwieczorny
-przedwiosenny
-przedwstępny
-przedwyborczy
-przedziwny
-przedłużycki
-przedśmiertny
-przegrodowy
-przegubowy
-przejmujący
-przejrzysty
-przejściowy
-przekazywalny
-przekomiczny
-przekonujący
-przekonywający
-przekorny
-przekrojowy
-przekładkowy
-przekładoznawczy
-przelewicki
-przeliczalny
-przelotny
-przelotowy
-przemienny
-przemierzły
-przemijający
-przemkowski
-przemocny
-przemożny
-przemyski
-przemysłowy
-przemytniczy
-przemyślidzki
-przemyślny
-przemądry
-przemądrzały
-przeniewierczy
-przenikający
-przenikliwy
-przenośny
-przeobfity
-przeogromny
-przeokropny
-przeolbrzymi
-przepastny
-przepisowy
-przepiękny
-przepraszający
-przepyszny
-przeraźliwy
-przerażający
-przerosielski
-przerozmaity
-przerywany
-przerywnikowy
-przerzutowy
-przerębowy
-przeróżny
-przesadny
-przesiecki
-przestarzały
-przestronny
-przestrzenny
-przestępczy
-przesuwny
-przesympatyczny
-przeszlachetny
-przeszywający
-przesądny
-przesądzający
-przesłodki
-przeucieszny
-przeuroczy
-przeważający
-przewidujący
-przewidywalny
-przewielebny
-przewiewny
-przewlekły
-przewodnicki
-przewodowy
-przeworski
-przewoski
-przewrotny
-przewspaniały
-przewyborny
-przezabawny
-przezacny
-przezorny
-przezroczysty
-przełomowy
-prześladowczy
-prześliczny
-prześmieszny
-prześmiewczy
-przeświecający
-prześwietny
-prześwitowy
-przeźroczysty
-przeżytkowy
-przodkowski
-przodownicki
-przychylny
-przyciasny
-przyciągający
-przyciężkawy
-przyciężki
-przyczynkarski
-przyczynowy
-przydatkowy
-przydatny
-przydenny
-przyduży
-przydziałowy
-przydługawy
-przydługi
-przygniatający
-przygnębiający
-przygodny
-przygodowy
-przygodzicki
-przygorzki
-przygotowawczy
-przygłupi
-przyimkowy
-przyjacielski
-przyjemnościowy
-przyjemny
-przyjezdny
-przykoński
-przykry
-przykrótki
-przykusy
-przykładny
-przykładowy
-przylegający
-przyległy
-przyleniwy
-przymilny
-przymiotnikowy
-przymorski
-przymroźny
-przymusowy
-przymuszony
-przyobiektowy
-przyostry
-przypadkowy
-przypkowski
-przypochlebny
-przypuszczający
-przypuszczalny
-przyrodniczy
-przyrodoznawczy
-przyrowski
-przystawalny
-przystański
-przystojny
-przystosowawczy
-przystępny
-przysuski
-przyszłościowy
-przysłowiowy
-przysłówkowy
-przytoczeński
-przytomny
-przytulny
-przytwierdzający
-przytłaczający
-przywoławczy
-przywołujący
-przywąski
-przywłaszczycielski
-przywódczy
-przyziemny
-przyzwalający
-przyzwoity
-prądnicki
-prędki
-prędziuchny
-prędziutki
-prężny
-próbkowy
-próbny
-próchniczy
-prószkowski
-próżniacki
-próżniaczy
-próżniowy
-próżniusieńki
-próżniuteńki
-próżniutki
-psarski
-pseudogotycki
-pseudoludowy
-pseudonaukowy
-pseudonowatorski
-psi
-psiarski
-psioniczny
-pskowski
-psotny
-pstrokaty
-pstry
-psychiatryczny
-psychiczny
-psychoanalityczny
-psychodeliczny
-psychogenny
-psychologiczny
-psychoseksualny
-psychospołeczny
-psychoterapeutyczny
-pszczelarski
-pszczewski
-pszczyński
-pszowski
-ptasi
-ptaszęcy
-ptolemejski
-ptolemeuszowski
-publicystyczny
-publiczny
-puchaczowski
-puchaty
-puchowy
-pucki
-pucołowaty
-pudlarski
-pudrowy
-puertorykański
-pulchniuteńki
-pulchniutki
-pulmanowski
-pulsacyjny
-pulsowy
-punicki
-punkcyjny
-punkowy
-punkrockowy
-punktowy
-punktualny
-purowski
-purpurowy
-puryfikatorski
-purytański
-pustawy
-pustelniczy
-pustynny
-puszczalski
-puszczański
-puszczykowski
-puszkarski
-puszkinowski
-pusztuński
-puszysty
-putinowski
-puławski
-pułkownikowski
-pułtuski
-puściusieńki
-puściuteńki
-puściutki
-puściuśki
-puński
-pylisty
-pyrzycki
-pyskowicki
-pyszałkowaty
-pysznicki
-pyszniutki
-pyszny
-pytający
-pytyjski
-pyzdrski
-pąsowy
-pątniczy
-pątnowski
-płacowy
-płaczliwy
-płaczący
-płaksiwy
-płaski
-płaszczyznowy
-płaszowski
-płatnerski
-płatniczy
-płatny
-płciowy
-płochliwy
-płochy
-płocki
-płodny
-płomieniowy
-płomienisty
-płomienny
-płonący
-płoskiński
-płotkarski
-płowdiwski
-płowiecki
-płowy
-płośnicki
-płoński
-płudowski
-płużnicki
-płyciuchny
-płyciusieńki
-płyciuteńki
-płyciutki
-płynny
-płytki
-płytkomorski
-płytowy
-pływacki
-pływający
-pęczniewski
-pęcławski
-pędzelkowaty
-pędzlarski
-pękaty
-pępowski
-pętacki
-półamatorski
-półautomatyczny
-półbarbarzyński
-półboski
-półcichy
-półcierpki
-półcywilny
-półdarmowy
-półdemokratyczny
-półdrwiący
-półdziki
-półdługi
-półdżezowy
-półepicki
-półfiluterny
-półfrancuski
-półhurtowy
-półinteligencki
-półinteligentny
-półjawny
-półjazzowy
-półkolisty
-półkrótki
-półksiężycowaty
-półkulisty
-półlegalny
-półlegendarny
-półmiesięczny
-półmiękki
-półmęski
-półnagi
-północnoamerykański
-północnoeuropejski
-północny
-półoficjalny
-półowalny
-półpankowski
-półplastyczny
-półpogański
-półpornograficzny
-półprawdziwy
-półprofesjonalny
-półproletariacki
-półprywatny
-półprzejrzysty
-półprzemysłowy
-półprzenikliwy
-półprzepuszczalny
-półprzezroczysty
-półprzeźroczysty
-półprzytomny
-półpytający
-półpłynny
-półrealistyczny
-półroczny
-półrzadki
-półsenny
-półsmętny
-półsuchy
-półsurowy
-półsyntetyczny
-półsypki
-półszyderczy
-półsłodki
-półtajemny
-półtajny
-półtonowy
-półtorakrotny
-półtoramiesięczny
-półtropikalny
-półtwardy
-półurzędowy
-półwiejski
-półwyścigowy
-półzawodowy
-półzwierzęcy
-półślepy
-półżartobliwy
-półżywy
-późnawy
-późnogotycki
-późnojurajski
-późnoromantyczny
-późnoromański
-quebecki
-qumrański
-rabacki
-rabczański
-rabelaisowski
-rabinacki
-rabski
-rabsztyński
-rabunkowy
-rabusiowski
-rachański
-rachityczny
-rachmistrzowski
-rachunkowy
-raciborski
-raciechowicki
-raciąski
-racjonalistyczny
-racjonalizatorski
-racjonalny
-racławicki
-radarowy
-radcowski
-radecznicki
-radgoski
-radiacyjny
-radialny
-radiestezyjny
-radioaktywny
-radioakustyczny
-radioamatorski
-radiofoniczny
-radiograficzny
-radiologiczny
-radioteleskopowy
-radiowy
-radkowski
-radliński
-radogoski
-radomiński
-radomski
-radomszczański
-radomyski
-radosny
-radoszycki
-radowski
-raduński
-radwanicki
-radykalny
-radymniański
-radzanowski
-radziechowski
-radziecki
-radziejowicki
-radziejowski
-radziemicki
-radziwiłłowski
-radziłowski
-radzymiński
-radzyński
-radłowski
-radżasthański
-rafaelowski
-raggowy
-rajczański
-rajdowy
-rajski
-rajtarski
-rakietowy
-rakoniewicki
-rakotwórczy
-rakowicki
-rakowiecki
-rakowski
-rakuski
-ramiarski
-ramowy
-ranczerski
-randomowy
-ranguński
-raniutki
-raniżowski
-rankingowy
-raperski
-rapowy
-rapsodyczny
-raptowny
-raptusowy
-rasistowski
-rasowy
-rastafariański
-raszkowski
-raszyński
-ratajski
-ratalny
-ratowniczy
-ratyzboński
-raweński
-rawicki
-rawski
-raźny
-rażący
-rdzawobrązowy
-rdzawy
-rdzeniarski
-rdzenny
-reakcyjny
-realistyczny
-realizacyjny
-realizatorski
-realny
-rebeliancki
-recenzencki
-receptorowy
-recesyjny
-rechotliwy
-recki
-recyclingowy
-recyklingowy
-recytatorski
-redakcyjny
-redaktorski
-redecki
-redukcjonistyczny
-redukcyjny
-redystrybucyjny
-redzki
-redłowski
-refektarski
-referencjalny
-referendarski
-refleksyjny
-reformacki
-reformatorski
-reformowalny
-reformujący
-refrenowy
-regencki
-regeneracyjny
-regenerujący
-regensburski
-reggaeowy
-regimentarski
-regimiński
-regionalny
-regresywny
-regulaminowy
-regularny
-rehabilitacyjny
-rejentalny
-rejestratorski
-rejonowy
-reklamiarski
-reklamowy
-rekonwalescencki
-rekordowy
-rekreacyjny
-rekrucki
-rektorski
-rekurencyjny
-rekursywny
-relacyjny
-relaksacyjny
-relaksowy
-relaksujący
-relatywistyczny
-relatywny
-reliefowy
-religiancki
-religijny
-religiologiczny
-rembertowski
-rembrandtowski
-remisowy
-renegacki
-renesansowy
-rentgenologiczny
-rentgenowski
-rentierski
-rentowny
-reorganizatorski
-repatriancki
-repertuarowy
-reportażowy
-reporterski
-represyjny
-represywny
-reprezentacyjny
-reprezentatywny
-reprintowy
-reprograficzny
-republikański
-reski
-resortowy
-responsoryjny
-restauratorski
-restrukturyzacyjny
-restrykcyjny
-restryktywny
-reszelski
-retmański
-retoromański
-retoryczny
-retrospektywny
-retuszerski
-retycki
-reunioński
-rewalski
-rewanżowy
-rewanżystowski
-rewelacyjny
-rewelatorski
-rewelski
-rewindykacyjny
-rewizjonistyczny
-rewolucyjny
-rewolwingowy
-reymontowski
-rezerwowy
-rezolutny
-rezonerski
-rezultatywny
-rezydencki
-rezydentny
-reżyserski
-reński
-riazański
-robakowaty
-robociarski
-roboczy
-robolski
-robotniczy
-robotny
-rockowy
-rockowy
-rocznicowy
-rocznikarski
-roczny
-rodezyjski
-rodniański
-rodopski
-rodowodowy
-rodyjski
-rodzajowy
-rodzicielski
-rodzinny
-rogaliński
-rogaty
-rogowski
-rogozieński
-rojewski
-rojny
-rokicieński
-rokiciński
-rokicki
-rokietnicki
-rokokowy
-rokoszański
-rokowniczy
-rokroczny
-rolniczy
-romansopisarski
-romansowy
-romantyczny
-romański
-romboidalny
-rombowy
-romski
-ropczycki
-rorancki
-rosenthalowski
-rosochaty
-rostowski
-rosyjski
-roszczeniowy
-rotacyjny
-rotariański
-rotmistrzowski
-rotterdamski
-rozbieżny
-rozbijacki
-rozbrajający
-rozbójniczy
-rozczarowujący
-rozczulający
-rozdrażewski
-rozdzielczy
-rozdzielnopłciowy
-rozdzielny
-rozdzierający
-rozewski
-rozgrzeszający
-rozgrzewający
-rozgłośny
-rozjemczy
-rozkazodawczy
-rozkazujący
-rozkoszny
-rozkurczający
-rozkurczowy
-rozkładowy
-rozległy
-rozleniwiający
-rozlewny
-rozliczny
-rozluźniający
-rozmaity
-rozmiarowy
-rozmowny
-rozmyślny
-rozoski
-rozpaczający
-rozpaczliwy
-rozpoznawalny
-rozpoznawczy
-rozpraszający
-rozprzański
-rozpustny
-rozrabiacki
-rozrachunkowy
-rozrodczy
-rozrywkowy
-rozrzedzający
-rozrzewniający
-rozrzutny
-rozstrajający
-rozstrzygający
-rozsądny
-roztoczański
-roztoczowy
-roztropny
-roztrzepany
-rozumiejący
-rozumny
-rozumowy
-rozwadowski
-rozważny
-rozwiązywalny
-rozwiązły
-rozwlekły
-rozwojowy
-rozwrzaskliwy
-rozwścieczający
-rozłożysty
-rozłączalny
-rozłączny
-rościszewski
-roślinny
-roślinobójczy
-rośny
-roźwienicki
-rożnowski
-rożny
-rtęciowy
-ruandyjski
-rubaszny
-rubensowski
-rubinowy
-ruchliwy
-ruchomy
-ruchowy
-ruciański
-rudawski
-rudawy
-rudecki
-rudy
-rudymentarny
-rudzieński
-rudzki
-rugijski
-rujski
-rumelijski
-rumfordzki
-rumski
-rumuński
-runiczny
-ruralistyczny
-rurkowaty
-rusinowski
-rusiński
-ruski
-rusofilski
-rustykalny
-rusyfikatorski
-rusznikarski
-ruteński
-rutyniarski
-rutyniczny
-rutynowy
-rwandyjski
-rwący
-rybacki
-rybałtowski
-rybczewicki
-rybi
-rybieński
-rybnicki
-rycerski
-rychlicki
-rychliwy
-rychtalski
-rychwalski
-rycki
-ryczałtowy
-ryczywolski
-rydułtowski
-rydzyński
-ryglicki
-rygorystyczny
-ryjewski
-ryjkowaty
-ryjowaty
-rylski
-rymanowski
-rymarski
-rymański
-rymotwórczy
-rynkowy
-rynsztokowy
-rypiński
-rysi
-ryski
-rysunkowy
-rytmiczny
-rytualny
-rytwiański
-rywalizacyjny
-ryzykancki
-ryzykowny
-ryży
-ryński
-rzadki
-rzadziutki
-rzeczenicki
-rzecznikowski
-rzeczniowski
-rzeczownikowy
-rzeczowy
-rzeczycki
-rzeczywisty
-rzekomy
-rzekuński
-rzemieślniczy
-rzepiński
-rzeszowski
-rzetelny
-rzewliwy
-rzewniański
-rzewny
-rzezawski
-rześki
-rzeźbiarski
-rzeźnicki
-rzeźniczy
-rzeźwiący
-rzeźwy
-rzgowski
-rzodkiewkowy
-rzutki
-rzutowy
-rzymski
-rzymskokatolicki
-rządcowski
-rządny
-rządowy
-rząsieński
-rzędowy
-rzęsisty
-rzężący
-rąbiński
-rączy
-ręczeński
-ręczny
-rędziński
-rękodzielniczy
-rękopiśmienny
-rówieński
-równikowy
-równiusieńki
-równiuteńki
-równiutki
-równiuśki
-równoczesny
-równokierunkowy
-równokształtny
-równoległoboczny
-równoległy
-równoleżnikowy
-równomiarowy
-równomierny
-równoprawny
-równorzędny
-równoważny
-równowąski
-równościowy
-równy
-różański
-różniasty
-różnicujący
-różnisty
-różnobarwny
-różnoimienny
-różnokierunkowy
-różnokolorowy
-różnolity
-różnoraki
-różnorodny
-różnostronny
-różny
-różowawy
-różowiuchny
-różowiuteńki
-różowiutki
-różowosrebrny
-różowy
-sabaudzki
-sabejski
-sabniański
-sabotażowy
-sachaliński
-sadkowicki
-sadomasochistyczny
-sadoweński
-sadowniczy
-sadowski
-sadystyczny
-sadzarski
-safandułowaty
-saficki
-saharyjski
-sajański
-sajgoński
-sakralny
-sakramencki
-sakramentalny
-saksoński
-salaficki
-salcerski
-salezjański
-salonicki
-salonowy
-salwadorski
-salzburski
-samarkandzki
-samarski
-samarytański
-sambijski
-samborski
-samczy
-samiuteńki
-samiutki
-samiuśki
-samoański
-samobójczy
-samochodny
-samochwalczy
-samochwalny
-samoczynny
-samodzielny
-samoistny
-samojedzki
-samokrytyczny
-samolikwidujący
-samolubny
-samoobronny
-samoobsługowy
-samoprzylepny
-samopylny
-samorodny
-samorzutny
-samorządny
-samosterujący
-samotniczy
-samotny
-samowiedny
-samowolny
-samowystarczalny
-samowładczy
-samowładny
-samozachowawczy
-samozapłonowy
-samozwańczy
-samożywny
-samurajski
-sanatorski
-sanatoryjny
-sandomierski
-saneczkarski
-sanijski
-sanitarny
-sanmaryński
-sannicki
-sanocki
-sansalwadorski
-sanskrycki
-saperski
-sapieżyński
-saprofityczny
-saraceński
-saragoski
-sarajewski
-sardoniczny
-sardyński
-sarepski
-sarkastyczny
-sarmacki
-sarni
-sarpowski
-saski
-satanistyczny
-satelicki
-satelitarny
-satyryczny
-satysfakcjonujący
-saudyjski
-saudyjskoarabski
-sawiński
-scenariopisarski
-scenariuszowy
-sceniczny
-scenograficzny
-scenopisarski
-sceptyczny
-schematyczny
-schengeński
-schillerowski
-schizmatycki
-schizofreniczny
-schludny
-schodkowaty
-schodkowy
-schodowaty
-schodowy
-scholarski
-scholastyczny
-schopenhauerowski
-schulzowski
-scjentyficzny
-scjentystyczny
-scytyjski
-secemiński
-secesyjny
-sechloński
-sederowy
-sefardyjski
-segmentacyjny
-sejneński
-sejsmiczny
-sekciarski
-sekcyjny
-sekretariacki
-sekretarski
-sekretny
-seksagonalny
-seksistowski
-seksistyczny
-seksowny
-seksualny
-seksuologiczny
-sektorowy
-sekwański
-sekwencyjny
-selcerski
-seldżucki
-seledynowy
-selekcjonerski
-selekcyjny
-selektywny
-semantyczny
-semestralny
-semicki
-semilogarytmiczny
-semipałatyński
-senacki
-senatorski
-senegalski
-senekański
-seniorski
-senny
-senoński
-sensacki
-sensacyjny
-sensorowy
-sensoryczny
-sensowny
-sensowy
-sensualistyczny
-sentencjonalny
-sentymentalny
-sepleniący
-seraficki
-seraficzny
-serbochorwacki
-serbołużycki
-serbski
-sercowaty
-sercowy
-serdeczny
-serialowy
-sernicki
-serokomelski
-serologiczny
-seropozytywny
-serowarski
-serwilistyczny
-serwitorski
-seryjny
-seszelski
-setny
-seulski
-sewastopolski
-sewilski
-sewrski
-sezamkowy
-sezonowy
-sferyczny
-sforny
-sfosowski
-sianowski
-siarczysty
-siateczkowaty
-siatkarski
-siatkowaty
-sicieński
-siderski
-sieciarski
-sieciechowski
-sieciowy
-siedemdziesięciokrotny
-siedemnastokrotny
-siedlecki
-siedliski
-siedliszczański
-siedmiogrodzki
-siedmioipółkrotny
-siedmiokrotny
-siedmioraki
-siedzący
-siekierczyński
-siekierkowski
-sielankowy
-sielecki
-sielski
-siemianowicki
-siemiatycki
-siemieński
-siemiątkowski
-siemkowicki
-siemyski
-sieneński
-sieniawski
-sienkiewiczowski
-siennicki
-sieprawski
-sieradzki
-sierakowicki
-sierakowski
-sierdzisty
-siermiężny
-sierocy
-sieroszewicki
-sieroszewski
-sierpecki
-sierpniowy
-sierpowaty
-sierraleoński
-sierżancki
-siewierski
-sikhijski
-sikkimski
-silikonowy
-silnikowy
-silnowski
-silny
-simentalerski
-simentalski
-simploński
-sinawy
-singapurski
-singularny
-sinoniebieski
-sinusoidalny
-siodlarski
-sitarski
-sitkówecki
-siwiuteńki
-siwiuśki
-siłowy
-skajski
-skalbmierski
-skalisty
-skalmierski
-skalski
-skamandrycki
-skandaliczny
-skandalizujący
-skandynawski
-skansenowski
-skarbnikowski
-skarszewski
-skaryszewski
-skarżyski
-skarżący
-skautowski
-skautowy
-skawiński
-skierbieszowski
-skierniewicki
-skinheadzki
-skinowski
-skitourowy
-skiturowy
-sklepikarski
-sklerotyczny
-skoczny
-skoczowski
-skojarzeniowy
-skokowski
-skokowy
-skomliński
-skomplikowany
-skopiański
-skopijski
-skorogoski
-skoroszycki
-skorowidzowy
-skory
-skołyszyński
-skośny
-skończony
-skrajny
-skromniuchny
-skromniusieńki
-skromniuteńki
-skromniutki
-skromniuśki
-skromny
-skrupulatny
-skrwiański
-skrwileński
-skrytobójczy
-skrytonasienny
-skrzeczący
-skrzekliwy
-skrzeszewski
-skrzynkarski
-skrzypiący
-skrzyszowski
-skrzętny
-skrętoległy
-skrótowy
-skulski
-skurwysyński
-skuteczny
-skwapliwy
-skwarny
-skwierzyński
-skąpy
-składkowy
-składniowy
-składny
-skępski
-skórny
-slangowy
-slawoński
-sloganowy
-smaczny
-smagły
-smakoszowski
-smakowity
-smakowy
-smardzewicki
-smarkaczowaty
-smarkaczowski
-smarny
-smerfny
-smerfowy
-smolarski
-smoleński
-smolisty
-smorgoński
-smołdziński
-smrodliwy
-smurfny
-smutnawy
-smutny
-smyrneński
-smętnawy
-smętny
-smętowski
-snadny
-snajperski
-snobistyczny
-snookerowy
-snowacki
-snycerski
-sobiepański
-sobieszowski
-sobieszyński
-sobieński
-sobkowski
-sobocki
-sobolewski
-sobotecki
-sobotni
-sobótkowski
-sochaczewski
-sochociński
-socjaldemokratyczny
-socjalistyczny
-socjalny
-socjologiczny
-socjometryczny
-socjoterapeutyczny
-socrealistyczny
-socyniański
-soczewkowaty
-socziński
-soczysty
-sodomicki
-sofijski
-sofistyczny
-sojuszniczy
-sokijski
-sokolnicki
-sokolniczy
-sokolski
-sokołowski
-sokołowszczański
-sokratejski
-sokólski
-solarski
-solecki
-solecznicki
-solenny
-solidarny
-solidny
-soliński
-solowy
-solski
-solutrejski
-solutreński
-somalijski
-somatyczny
-somianecki
-somnambuliczny
-somoniński
-sompoleński
-sondażowy
-sondujący
-soplicowski
-sopocki
-sorboński
-sortymentowy
-sosieński
-sosnowicki
-sosnowiecki
-sosnowy
-sosnówecki
-sotyjski
-soulowy
-sowi
-sowiecki
-sowity
-sowizdrzalski
-sozopolski
-sołdacki
-sołecki
-sołowiecki
-sołtysowski
-sośniański
-sośnicowicki
-soński
-spacerowy
-spadochroniarski
-spadzisty
-spalinowy
-spalski
-spamerski
-sparingowy
-spartański
-spazmatyczny
-specjalistyczny
-specjalny
-specyficzny
-spedytorski
-spektakularny
-spektatorski
-spektrofotograficzny
-spektrofotometryczny
-spektrograficzny
-spektrometryczny
-spektroskopowy
-spekulacyjny
-spekulancki
-spekulatywny
-spencerowski
-spiczyński
-spieszny
-spikerowski
-spikerski
-spinowy
-spiralny
-spiski
-spiskowy
-spiżowy
-spoisty
-spokojniuteńki
-spokojniutki
-spokojny
-spolegliwy
-sponsorski
-spontaniczny
-sporadyczny
-sporny
-sportowy
-sportsmeński
-spory
-spostrzegawczy
-spowiedniczy
-społecznikowski
-społeczny
-społemowski
-spożywczy
-sprawczy
-sprawiedliwy
-sprawnościowy
-sprawny
-sprawozdawczy
-sprinterski
-sprośny
-spryciarski
-sprytniutki
-sprytny
-sprzeczny
-sprzedajny
-sprzyjający
-sprzymierzeńczy
-sprzętowy
-sprężysty
-spytkowicki
-spłacalny
-spłowiały
-spójnikowy
-spójny
-spółdzielczy
-spółgłoskowy
-spółkowy
-sraczkowaty
-srebrnawy
-srebrnołuski
-srebrny
-srebrzystoszary
-srebrzysty
-srogi
-srokowski
-sromotny
-ssący
-stabilny
-stachanowski
-stacjonarny
-stadialny
-stadny
-staffowski
-stajenny
-stalingradzki
-stalinowski
-stalowoniebieski
-stalowowolski
-stalowy
-stambulski
-standardowy
-stangrecki
-stanisławowski
-staniński
-stanlejski
-stanowczy
-stanowy
-starachowicki
-staranny
-starawy
-starczy
-stareńki
-stargardzki
-starobielski
-starobruski
-starobułgarski
-starochrześcijański
-staroczarnowski
-staroczeski
-starodawny
-starodzierzgoński
-starodzikowski
-staroegipski
-starofrancuski
-starogardzki
-starogrecki
-starohelleński
-starohinduski
-staroirański
-starojuski
-starokatolicki
-starokawalerski
-starokiszewski
-starokurowski
-starolitewski
-starolubotyński
-staromiejski
-staromodny
-staroniemiecki
-staropanieński
-staroperski
-staropiastowski
-staropolski
-staropruski
-staroruski
-starorzymski
-staroszlachecki
-starosłowiański
-starotarski
-starowiejski
-starowny
-starozagorski
-starołęcki
-starościński
-staroświecki
-staroźrebski
-starożytny
-startowy
-stary
-staszowski
-stateczny
-statutowy
-statyczny
-statystyczny
-stawigudzki
-stawiski
-stawiszyński
-stawowy
-stawropolski
-stały
-stańczykowski
-steampunkowy
-stegieński
-stelmaski
-stendhalowski
-stenograficzny
-stentorowy
-stepnicki
-sterdyński
-stereofoniczny
-stereometryczny
-stereoskopowy
-stereotypowy
-sterowniczy
-sterujący
-sterylny
-stochastyczny
-stoicki
-stojący
-stokrotny
-stolarski
-stoleński
-stonkobójczy
-stopnicki
-stopniowy
-stosowny
-stosunkowy
-stołeczny
-stołypinowski
-stożkowaty
-stożkowy
-straceńczy
-strachliwy
-strachówecki
-stradomski
-straganiarski
-strajkowy
-strasburski
-straszliwy
-straszny
-straszyński
-strategiczny
-stratyfikacyjny
-strawczyński
-strawny
-strażacki
-strefowy
-stresogenny
-stresujący
-stroficzny
-strofujący
-strojny
-stromotorowy
-stromy
-stronniczy
-stroński
-strugarski
-strukturalistyczny
-strukturalny
-strumieniowy
-strumieński
-strusi
-stryjowski
-strykowski
-stryszawski
-stryszowski
-strzałkowaty
-strzałkowski
-strzałowy
-strzegomski
-strzegowski
-strzelecki
-strzeleński
-strzelisty
-strzeliński
-strzyżewicki
-strzyżowski
-strążyski
-stręczycielski
-stróżowski
-stuartowski
-stubieński
-studencki
-studniarski
-studzianecki
-studzienicki
-studzący
-stukrotny
-stuprocentowy
-stupski
-stuttgarcki
-stwórczy
-styczny
-stykowy
-stylistyczny
-stylizatorski
-stylowy
-stymulujący
-styryjski
-stąporkowski
-stęchły
-stęszewski
-stężycki
-suahilijski
-suazyjski
-subiektywny
-subkowski
-subkulturowy
-sublokatorski
-subsaharyjski
-substancjalny
-substantywny
-substytucyjny
-subsydiarny
-subtelniutki
-subtelny
-suchański
-suchedniowski
-sucholaski
-suchotniczy
-suchowolski
-suchożeberski
-suchumski
-suchusieńki
-suchuteńki
-suchutki
-suchy
-suczawski
-suczy
-sudański
-sudecki
-sueski
-suficki
-suflerski
-sugestywny
-sukcesorski
-sukcesywny
-sulechowski
-sulejowski
-sulikowski
-sulmierzycki
-sulęciński
-sulęczyński
-sumaryczny
-sumatrzański
-sumerski
-sumeryjski
-sumienny
-sundajski
-sunnicki
-superancki
-superaśny
-superekspresowy
-superkomfortowy
-supermodny
-supernowoczesny
-superowski
-superowy
-superszybki
-supraski
-suraski
-surfingowy
-surinamski
-surowy
-surrealistyczny
-surrealny
-suski
-sutenerski
-suty
-suwalski
-suwerenny
-suwijski
-sułkowicki
-sułoszowski
-sułowski
-sułtański
-swarliwy
-swarzewski
-swarzędzki
-swatowski
-swawolny
-swierdłowski
-swingowy
-swobodny
-swoisty
-swojski
-sybarycki
-syberyjski
-sybiliński
-sybilliński
-sybiracki
-sybirski
-sycowski
-sycylijski
-syczuański
-syczący
-sycący
-sydoński
-syfiasty
-syficzny
-syjamski
-syjoński
-sykofancki
-sykstyński
-sylabiczny
-sylikonowy
-sylurski
-syluryjski
-sylwestrowy
-sylwetkowy
-sylwetowy
-symbiotyczny
-symboliczny
-symbolistyczny
-symetryczny
-symferopolski
-symfoniczny
-sympatyczny
-symptomatyczny
-symulacyjny
-symultaniczny
-synajski
-synantropijny
-synchroniczny
-syndykowski
-synergetyczny
-synergiczny
-synergistyczny
-syngaleski
-synkretyczny
-synonimiczny
-synoptyczny
-synowski
-syntaktyczny
-syntetyczny
-sypki
-sypniewski
-syrakuzański
-syreni
-syropowaty
-syryjski
-systematyczny
-systemowy
-sytuacyjny
-szablonowy
-szachowy
-szachrajski
-szacowny
-szacujący
-szacunkowy
-szafirowy
-szafranowy
-szalbierczy
-szalbierski
-szaleńczy
-szalony
-szamański
-szambelański
-szamociński
-szamotulski
-szampański
-szanghajski
-szanowny
-szantuński
-szaradziarski
-szarawy
-szarlatański
-szarmancki
-szarobrązowy
-szaroniebieski
-szarooki
-szarpiący
-szary
-szaserski
-szatański
-szawelski
-szałaputny
-szałowy
-szański
-szczakowski
-szczawieński
-szczawiński
-szczawnicki
-szczebiotliwy
-szczebrzeszyński
-szczecinecki
-szczeciński
-szczególny
-szczegółowy
-szczekliwy
-szczelny
-szczeniacki
-szczeniaczy
-szczeniakowaty
-szczenięcy
-szczercowski
-szczeropolski
-szczodrobliwy
-szczodry
-szczotkarski
-szczuciński
-szczuczyński
-szczudłowaty
-szczupaczy
-szczuplusieńki
-szczupluteńki
-szczuplutki
-szczurowaty
-szczurowski
-szczurzy
-szczutowski
-szczwany
-szczycieński
-szczytnicki
-szczytnowski
-szczytny
-szczytowy
-szczątkowy
-szczęśliwicki
-szczęśliwy
-szefowski
-szekspirowski
-szelestliwy
-szeleszczący
-szelkowski
-szelmowski
-szelski
-szepczący
-szepietowski
-szeregowy
-szermierczy
-szermierski
-szeroki
-szerzyński
-szesnastokrotny
-szetlandzki
-szewski
-sześciobarwny
-sześcioipółkrotny
-sześciokonny
-sześciokrotny
-sześciomiarowy
-sześcioraki
-sześćdziesięciokrotny
-szkaradny
-szkarłatny
-szkicowy
-szkieletowaty
-szklarski
-szklarskoporębski
-szklisty
-szkocki
-szkodliwy
-szkolarski
-szkoleniowy
-szkopski
-szkółkarski
-szlachecki
-szlachetny
-szlagierowy
-szlagoński
-szlezwicki
-szlichtyngowski
-szlifierski
-szmaciarski
-szmaragdowy
-szmirowaty
-szmuglerski
-szmuklerski
-sznurowaty
-szoferski
-szokowy
-szokujący
-szopenowski
-szorstki
-szowinistyczny
-szołochowowski
-szpanerski
-szparki
-szperacki
-szpetalski
-szpetny
-szpicbergeński
-szpicberski
-szpiclowski
-szpicowaty
-szpiegowski
-szpitalny
-szprotawski
-szreński
-sztabiński
-sztabsoficerski
-sztampowy
-sztandarowy
-sztauerski
-sztokholmski
-sztrasburski
-sztubacki
-sztuczny
-sztukatorski
-sztukmistrzowski
-sztumski
-szturmański
-sztutowski
-sztycharski
-sztygarski
-sztywniacki
-sztywny
-szubiński
-szubrawski
-szudziałowski
-szulerski
-szumny
-szumowski
-szwabski
-szwagierski
-szwagrowski
-szwajcarski
-szwarcwaldzki
-szwedzki
-szwejkowski
-szwoleżerski
-szybciuteńki
-szybciutki
-szybki
-szybkościowy
-szyderczy
-szydłowaty
-szydłowiecki
-szydłowski
-szyicki
-szykowny
-szyldziarski
-szylerowski
-szymbarski
-szympansi
-szynkarski
-szyperski
-szypułkowy
-sądecki
-sądowny
-sądowy
-sąsiadujący
-sąsiedzki
-sążnisty
-słabawy
-słabeńki
-słabiusieńki
-słabiuteńki
-słabiutki
-słabiuśki
-słabosilny
-słaboszowski
-słabowity
-słaby
-sławieński
-sławkowski
-sławny
-sławoborski
-sławski
-sławucki
-sławęcicki
-słodkawy
-słodki
-słodzieńki
-słodziuchny
-słodziusieńki
-słodziuteńki
-słodziutki
-słodziuśki
-słomnicki
-słonawy
-słoneczny
-słonimski
-słoniowaty
-słonogorzki
-słotny
-słowacki
-słoweński
-słowianofilski
-słowiański
-słowiański
-słowiczy
-słowiński
-słownikarski
-słownikowy
-słowny
-słowotwórczy
-słoński
-słubicki
-słuchowy
-słucki
-sługusowski
-słupecki
-słupski
-słuszny
-służalczy
-służbisty
-służbowy
-służebniczy
-służebny
-służewiecki
-służewski
-słynny
-słyszalny
-sędziejowicki
-sędziowski
-sędziszowski
-sędziwy
-sękowski
-sępoleński
-sępopolski
-tabelaryczny
-tabetyczny
-tabloidowy
-taborycki
-tabuistyczny
-tabularny
-tacierzyński
-tadżycki
-tafelkowaty
-tagalski
-taganroski
-tahitański
-tajemniczy
-tajemny
-tajlandzki
-tajmyrski
-tajniacki
-tajny
-tajski
-tajwański
-taksatorski
-taksatywny
-taksologiczny
-taksonomiczny
-taksówkarski
-taktowny
-taktyczny
-takusieńki
-takuteńki
-takuśki
-talibański
-talibski
-talliński
-talmudyczny
-tambormajorski
-tambowski
-tamilski
-tanagryjski
-tanatologiczny
-tandeciarski
-tandetny
-taneczny
-tanganicki
-tangerski
-tani
-taniusi
-taniutki
-tannenberski
-tanzański
-tapicerski
-tarasowaty
-tarasowy
-tarchomiński
-tarczyński
-targetowy
-targowicki
-tarnawatecki
-tarnobrzeski
-tarnogórski
-tarnopolski
-tarnowski
-tarnówecki
-tarpejski
-tarłowski
-tasiemcowaty
-tasmański
-taszkencki
-taszkiencki
-taszystowski
-tatarski
-taternicki
-tatrzański
-tatusiowaty
-taurydzki
-tautologiczny
-tałtański
-taśmowy
-tańcujący
-tańczący
-tbiliski
-tchórzliwy
-tchórzowaty
-tchórzowski
-tczewski
-tczowski
-teatralny
-teatrologiczny
-teatyński
-tebański
-techniczny
-technologiczny
-technomorficzny
-teherański
-tekakaefowski
-teksaski
-teksański
-tekstologiczny
-tekstowy
-tekstualny
-tektoniczny
-tekściarski
-telatyński
-telawiwski
-teledetekcyjny
-telefaksowy
-telefoniczny
-telegraficzny
-teleinformatyczny
-telemarketingowy
-telenowelowy
-teleologiczny
-telepatyczny
-teleradiotechniczny
-teleskopowy
-telewizyjny
-tematologiczny
-tematowy
-tematyczny
-temperamentny
-tendencyjny
-tentatywny
-teocentryczny
-teologiczny
-teoretycznoliteracki
-teoretyczny
-teorioinformacyjny
-teoriomnogościowy
-teoriopoznawczy
-tepedowski
-terapeutyczny
-tercjarski
-terenowy
-teresiński
-terespolski
-tereszpolski
-terkotliwy
-termiczny
-terminalny
-terminalowy
-terminatorski
-terminologiczny
-terminowy
-termochemiczny
-termodynamiczny
-termomechaniczny
-termopilski
-terrański
-terrorystyczny
-terytorialny
-tesalski
-testamentowy
-testerski
-testowy
-teutoński
-timorski
-tirański
-tkacki
-tkliwy
-tlenowy
-tobagijski
-tobolski
-tocharski
-toggenburski
-togijski
-tokajski
-tokarski
-tokijski
-toksyczny
-toksykologiczny
-toledański
-tolerancyjny
-tolkienowski
-tolkmicki
-tolutański
-tomasowski
-tomaszowski
-tomicki
-tomograficzny
-tomski
-tonalny
-tonażowy
-tongijski
-toniczny
-tonkiński
-tonowy
-tonujący
-tonący
-topograficzny
-topologiczny
-toporny
-topólecki
-torebkarski
-toruński
-torysowski
-torzymski
-toskański
-totalistyczny
-totalitarny
-totalitarystyczny
-totalniacki
-totalny
-towarny
-towarowy
-towarzyski
-tołstojowski
-tożsamościowy
-tożsamy
-trachonicki
-tracki
-tradycjonalistyczny
-tradycjonalny
-tradycyjny
-trafny
-tragarski
-tragiczny
-tragigroteskowy
-tragikomiczny
-traktatowy
-trampingowy
-trampowski
-tramwajarski
-transalpejski
-transatlantycki
-transcendentalny
-transcendentny
-transeuropejski
-transformacyjny
-transgraniczny
-translacyjny
-translatorski
-transowy
-transparentny
-transparentowy
-transpozycyjny
-transsatelitarny
-transsyberyjski
-transwestycki
-transwestyczny
-transylwański
-tranzystorowy
-traperski
-trapezoidalny
-traserski
-traumatyczny
-trawnicki
-trazymeński
-trefny
-trelleborski
-trembowelski
-trenczyński
-trendowy
-trenerski
-treningowy
-treserski
-treściowy
-treściwy
-triadyczny
-triesteński
-trietiakowski
-triphopowy
-triumfalistyczny
-triumfalny
-triumfatorski
-triumfujący
-trobriandzki
-trocki
-trockistowski
-troglodycki
-troisty
-trojaki
-trojanowski
-trojański
-tromtadracki
-tropicielski
-tropikalny
-troskliwy
-troszyński
-trubadurski
-trucicielski
-trudnawy
-trujący
-trumniarski
-trupi
-truwerski
-trwały
-trwożliwy
-trwożny
-trybunalski
-trydencki
-trykotarski
-trynidadzki
-trynitariański
-trynitarski
-trypolitański
-tryumfalistyczny
-tryumfalny
-tryumfatorski
-tryumfujący
-trywialny
-trzcianecki
-trzcianieński
-trzcielski
-trzciniarski
-trzcinicki
-trzciński
-trzebiatowski
-trzebiechowski
-trzebieliński
-trzebielski
-trzebieski
-trzebieszowski
-trzebiński
-trzebnicki
-trzebowniski
-trzechkrotny
-trzemeszeński
-trzepotliwy
-trzeszczański
-trzeszczący
-trzeźwiusieńki
-trzeźwiuteńki
-trzeźwiutki
-trzeźwiący
-trzeźwy
-trzpiotowaty
-trzyciąski
-trzydziestokrotny
-trzyipółkrotny
-trzykrotny
-trzynastokrotny
-trzyosobowy
-trzyzmianowy
-trębacki
-trójbarwny
-trójboczny
-trójczłonowy
-trójkątny
-trójmiarowy
-trójmiejski
-trójwymiarowy
-trójzmianowy
-tuareski
-tubalny
-tubylczy
-tucholski
-tuchomski
-tuchowski
-tuczarski
-tuczeński
-tuczępski
-tuliszkowski
-tuloński
-tulski
-tuluski
-tumanowaty
-tumski
-tunetański
-tunezyjski
-tunguski
-tuniski
-tupeciarski
-tuplicki
-turawski
-turański
-turecki
-turgieniewowski
-turkiestański
-turkmeński
-turkusowoniebieski
-turkusowy
-turobiński
-turosieński
-turoski
-turoszowski
-turowy
-turpistyczny
-turyngeński
-turystyczny
-turyński
-tuskulański
-tuszowski
-tuszyński
-tutorski
-tuzinkowy
-tułacki
-tułaczy
-tułowicki
-twardogórski
-twardy
-twarożkarski
-twarzowy
-twerski
-twierdzący
-tworkowski
-tworoski
-tworzycielski
-twórczy
-tyberiadzki
-tybetański
-tybrzański
-tychowski
-tyci
-tyciusieńki
-tyciuteńki
-tyciutki
-tyciuśki
-tycjanowski
-tycjanowy
-tyczkarski
-tyczyński
-tyfliski
-tygodniowy
-tygrysi
-tykociński
-tykowaty
-tylekrotny
-tyleżkrotny
-tylokrotny
-tylżycki
-tymbarski
-tymczasowy
-tyniecki
-tynkarski
-typograficzny
-typolitograficzny
-typologiczny
-typowy
-tyralierski
-tyrawski
-tyrański
-tyrnowski
-tyrolski
-tyrreński
-tyrtejski
-tyryjski
-tysiąckrotny
-tysiącraki
-tyski
-tyszowiecki
-tytaniczny
-tytularny
-tłoczny
-tłoczący
-tłuchowski
-tłumny
-tłustawy
-tłuszczański
-tłuściuteńki
-tłuściutki
-tęczowy
-tęczówkowy
-tęgawy
-tęgi
-tępacki
-tępawy
-tępy
-tęskny
-ubecki
-ubezdźwięczniający
-ubliżający
-uboczny
-ubogi
-ubolewający
-ubożuchny
-ubożutki
-uchański
-uchwytny
-uchylny
-ucieczkowy
-ucieszny
-uciskowy
-uciążliwy
-uczciwy
-uczniacki
-uczniowski
-uczony
-uczuciowy
-uczulający
-uczuleniowy
-uczynny
-udaniński
-udany
-udarowy
-udatny
-uderzający
-uderzeniowy
-udmurcki
-udolny
-udzielny
-ufijski
-ufny
-ufologiczny
-ugandyjski
-ugodny
-ugodowy
-ugrofiński
-ugryjski
-ujazdowski
-ujemny
-ujgurski
-ujmujący
-ujsolski
-ujścieński
-ujędrniający
-ukojny
-ukośny
-ukradkowy
-ukraiński
-układny
-ulanowski
-uleczalny
-uległy
-ulewny
-ulgowy
-ulicznikowski
-ulotkowy
-ulotny
-ulsterski
-ultrakatolicki
-ultralekki
-ultramontański
-ultranowoczesny
-ultrarentgenowski
-ultrasonograficzny
-ultrasowski
-ultymatywny
-umbryjski
-umbryjski
-umiarkowany
-umiejętny
-umierający
-umoralniający
-umowny
-umysłowy
-umyślny
-undergroundowy
-unicki
-uniejowski
-unijny
-unikalny
-unikatowy
-unilateralny
-unistyczny
-unisławski
-unitariański
-uniwersalny
-uniwersytecki
-uniżony
-unrowski
-uodparniający
-upajający
-upalny
-uparty
-upierdliwy
-upiorny
-upodobniający
-upojny
-upokarzający
-upowski
-upośledzający
-uppsalski
-upraszczający
-uprzedni
-uprzedzający
-uprzejmościowy
-uprzejmy
-uralski
-uranowy
-urartyjski
-urazowy
-urbanistyczny
-uriański
-urlopowy
-uroczy
-uroczysty
-urodny
-urodzajny
-urodziwy
-urojeniowy
-urokliwy
-urologiczny
-ursuski
-ursusowski
-ursynowski
-urszuliński
-urugwajski
-urwany
-urwisowaty
-urwisowski
-urywany
-urywkowy
-urzekający
-urzędniczy
-urzędowny
-urzędowski
-urzędowy
-urągający
-urągliwy
-usarski
-usilny
-uskokowy
-uskrzydlający
-uspakajający
-uspokajający
-ustaszowski
-ustawiczny
-ustawodawczy
-ustawowy
-ustny
-ustrojotwórczy
-ustrojowy
-ustronny
-ustroński
-ustrzycki
-ustępliwy
-usuwalny
-usypiający
-uszczypliwy
-uszkadzający
-uszlachetniający
-usługowy
-usłużny
-utopijny
-utracjuszowski
-utrechcki
-utylitarny
-utylitarystyczny
-uważny
-uwerturowy
-uwodzicielski
-uwłaczający
-uzbecki
-uzdrawiający
-uzdrowicielski
-uzdrowieńczy
-uznaniowy
-uzurpatorski
-ułamkowy
-ułanbatorski
-ułański
-ułomny
-ułudny
-ułęski
-uściański
-uścimowski
-uśmierzający
-użyteczny
-użytkowy
-vatowski
-vipowski
-wabiący
-wachlarzowaty
-wachlarzowy
-wachlarzykowaty
-wadliwy
-wadowicki
-wadowski
-wagabundzki
-wagaduguański
-wagancki
-waginalny
-wagnerowski
-wagonowy
-wagowy
-wahabicki
-wahadłowy
-wahański
-wahhabicki
-wahliwy
-wakacyjny
-walcowaty
-walczący
-waleczny
-walencki
-walentynkowy
-walezyjski
-walijski
-walimski
-walny
-walonkarski
-walorowy
-waloński
-walterowski
-walterskotowski
-waluciarski
-wampiryczny
-wampirzy
-wandalski
-wandejski
-waniliowy
-wapieński
-warcholski
-warciański
-warcki
-warczący
-warecki
-wareski
-wargowy
-wariacki
-wariantowy
-wariantywny
-warkliwy
-warkotliwy
-warlubski
-warmijski
-warmiński
-warneński
-warnicki
-warstwowy
-warszawowski
-warszawski
-warsztatowy
-wartki
-wartkowicki
-wartościowy
-wartościujący
-warunkowy
-wasalski
-wasilkowski
-waszyngtoński
-watowski
-watykański
-wawelowski
-wawelski
-wawerski
-wazeliniarski
-wazowski
-wałbrzyski
-wałecki
-wałeczkowaty
-wałowaty
-wałęsowski
-waśniowski
-ważki
-ważniacki
-ważny
-waćpański
-wciskowy
-wczasowy
-wczesnochrześcijański
-wczesnoludzki
-wczesnopiastowski
-wczesnopolski
-wczesnosłowiański
-wczesny
-wcześniutki
-wdechowy
-wdowi
-wdzięczny
-wdzydzki
-wedlowski
-wedyjski
-weekendowy
-wegański
-wegetariański
-wegetatywny
-wehrmachtowski
-weimarski
-wejherowski
-wekslowy
-wellingtoński
-welski
-wenecki
-wenerologiczny
-weneryczny
-wenetyjski
-wenezuelski
-wenusjański
-werbalny
-werbkowicki
-wermachtowski
-weroński
-wersalski
-wersologiczny
-wersyfikacyjny
-wersyfikatorski
-werterowski
-wertykalny
-weryfikowalny
-werystyczny
-weselny
-wesolski
-wesoluteńki
-wesolutki
-wesołkowaty
-wesołomiasteczkowy
-wesoły
-westalski
-westernowy
-westfalski
-westminsterski
-weterański
-wewnątrzkomórkowy
-wewnątrzwspólnotowy
-wewnątrzwydzielniczy
-wewnętrzny
-wełeński
-wełniarski
-wełnisty
-wgłębny
-wiarogodny
-wiarołomny
-wiarygodny
-wiatropędny
-wiaziemski
-wicemistrzowski
-wichrowaty
-wichrzycielski
-widawski
-widełkowaty
-widełkowy
-widlasty
-widmowy
-widnawy
-widniutki
-widoczny
-widokowy
-widowiskowy
-widuchowski
-widzewski
-widzialny
-widzowski
-wieczfniański
-wieczny
-wieczorny
-wieczorowy
-wieczysty
-wiedeński
-wiedźmiński
-wiejski
-wiekowy
-wiekuisty
-wielbarski
-wielbłądzi
-wieleński
-wielgomłyński
-wielichowski
-wielicki
-wielkoduszny
-wielkogabarytowy
-wielkomiejski
-wielkomorawski
-wielkonieszawski
-wielkopański
-wielkopolski
-wielkorosyjski
-wielkoruski
-wielkoserbski
-wielkoseryjny
-wielkowiejski
-wielkowymiarowy
-wielkościowy
-wielmożny
-wieloaspektowy
-wielobarwny
-wieloboczny
-wieloetapowy
-wielofazowy
-wielogłosowy
-wielokierunkowy
-wielokrotny
-wielokulturowy
-wielokątny
-wieloosobowy
-wieloplanowy
-wielopłaszczyznowy
-wieloraki
-wielorazowy
-wielordzeniowy
-wielordzenny
-wielorybi
-wielostopniowy
-wielostronny
-wielosłowny
-wielotorowy
-wielowarstwowy
-wielowymiarowy
-wielowątkowy
-wieloznaczny
-wielościeżkowy
-wielski
-wieluński
-wieniawski
-wientiański
-wierchojański
-wiercipięcki
-wiernopoddańczy
-wierny
-wierszoklecki
-wiertarski
-wieruszowski
-wierutny
-wierzbicki
-wierzbieński
-wierzbnicki
-wierzchlaski
-wierzchosławicki
-wierzchołkowy
-wierzycielski
-wieszczbiarski
-wietnamski
-wietrzny
-wietrzychowicki
-wiewiórczy
-wieśniacki
-wieśniaczy
-wigierski
-wigrowski
-wikiński
-wikliniarski
-wiktoriański
-wilamowicki
-wilanowski
-wilczy
-wilczyński
-wileński
-wilgotnawy
-wilhelmiński
-wilkowski
-wilkołacki
-wilkołaczy
-wilkołaski
-wilski
-wimbledoński
-windawski
-windsurfingowy
-windziarski
-winiarski
-winnicki
-winoznawczy
-wiosenny
-wiosłowaty
-wiotki
-wioślarski
-wirgiński
-wirowaty
-wirowy
-wirtemberski
-wirtualny
-wirtuozerski
-wirtuozowski
-wirtuozyjny
-wirusobójczy
-wisielczy
-wiski
-wismarski
-wisusowski
-wiszeński
-wisznicki
-wiszący
-witalny
-witaminowy
-witebski
-witimski
-witkiewiczowski
-witkowski
-witnicki
-witomiński
-witoński
-wittenberski
-wizerunkowy
-wizeński
-wizjonerski
-wizualny
-wizygocki
-wizyjny
-wizytatorski
-wizytowy
-wiązowieński
-wiązownicki
-wiązowski
-wiążący
-wiślacki
-wiślański
-wiślicki
-wiśnicki
-wiśniewski
-wiśniowski
-wiśniowy
-wiżajeński
-więcborski
-więzienny
-więźniarski
-wiński
-wklęsły
-wkrzański
-wkurzający
-wleński
-wnikliwy
-wnukowski
-wnętrzarski
-wodniacki
-wodnisty
-wodoodporny
-wodoszczelny
-wodyński
-wodzisławski
-wodzowski
-wogulski
-wohyński
-wojacki
-wojażerski
-wojciechowicki
-wojciechowski
-wojcieszkowski
-wojcieszowski
-wojenny
-wojewódzki
-wojowniczy
-wojskowy
-wojsławicki
-wojujący
-wokaliczny
-wokalny
-wokołomarsjański
-wokołoziemski
-wokółmarsjański
-wokółziemski
-wolanowski
-wolarski
-wolborski
-wolbromski
-wolitywny
-woliński
-wolniuchny
-wolniusieńki
-wolniuteńki
-wolniutki
-wolniuśki
-wolnoamerykański
-wolnomularski
-wolnomyślicielski
-wolnomyślny
-wolnorynkowy
-wolnościowy
-wolontariacki
-wolski
-wolsztyński
-woltański
-wolteriański
-wolterowski
-woltyżerski
-woluntarystyczny
-wonny
-workowaty
-workucki
-wormacki
-woroneski
-woskowy
-wołczyński
-wołgogradzki
-wołkowyjski
-wołkowyski
-wołomiński
-wołoski
-wołowski
-wołyński
-wołżański
-woźnicki
-wprawny
-wpółfiluterny
-wpółnagi
-wpółprzytomny
-wpółtajemniczy
-wpółwesoły
-wpółświadomy
-wrażliwy
-wredny
-wrocławski
-wrogi
-wronecki
-wroni
-wronkowski
-wrotkarski
-wrzaskliwy
-wrzecionowaty
-wrzelowiecki
-wrzelowski
-wrzesiński
-wrzeszczański
-wrześniowy
-wrzodotwórczy
-wrzosowy
-wręczycki
-wróblewski
-wróżbiarski
-wróżebny
-wschodni
-wschodnioeuropejski
-wschowski
-wsiowy
-wskazujący
-wskaźnikowy
-wski
-wsobny
-wspaniałomyślny
-wspaniały
-wspominkarski
-wspólnotowy
-wspólny
-współbieżny
-współczesny
-współczujący
-współistnieniowy
-współlokatorski
-współmierny
-współosiowy
-współplemienny
-współrzędny
-współśrodkowy
-wstawienniczy
-wsteczny
-wstrzemięźliwy
-wstrząsający
-wstrętny
-wstydliwy
-wstęgowaty
-wstępny
-wszawy
-wszechludzki
-wszechmiłujący
-wszechmocny
-wszechobejmujący
-wszechogarniający
-wszechpolski
-wszechrosyjski
-wszechstronny
-wszechsłowiański
-wszechwiedzący
-wszechwładny
-wszeteczny
-wszystkowiedzący
-wszystkożerny
-wszyściuchny
-wszyściusieńki
-wszyściuteńki
-wszyściutki
-wszyściuśki
-wszędobylski
-wtórny
-wuesemowski
-wujowski
-wulgarny
-wulgaryzatorski
-wulkaniczny
-wulpiński
-wybaczający
-wybaczalny
-wybielający
-wybiorczy
-wybitny
-wybiórczy
-wyborczy
-wyborny
-wyborowy
-wyborski
-wybraniecki
-wybredny
-wybuchowy
-wychowawczy
-wycinankarski
-wycinkowy
-wyczepisty
-wyczerpujący
-wyczerpywalny
-wyczuwalny
-wyczynowy
-wydajnościowy
-wydajny
-wydarzeniowy
-wydatny
-wydawniczy
-wydmiński
-wydolnościowy
-wydolny
-wydrowaty
-wydzielniczy
-wygodnicki
-wygodny
-wygłodniały
-wygórowany
-wyimkowy
-wyjaśniający
-wyjebisty
-wyjątkowy
-wyjściowy
-wykonawczy
-wykreślny
-wykrywalny
-wykrztuśny
-wykrzyknikowy
-wykrętny
-wykwintny
-wykładniczy
-wylewny
-wymagający
-wymawianiowy
-wymiarowy
-wymienny
-wymierny
-wymijający
-wymiotny
-wymoczkowaty
-wymowny
-wymuszony
-wymyślny
-wynalazczy
-wynikowy
-wyniosły
-wyniszczający
-wyobrażalny
-wypadkowy
-wypoczynkowy
-wypukły
-wyrachowany
-wyrafinowany
-wyrazisty
-wyraźny
-wyrodny
-wyrozumiały
-wyrywkowy
-wyrzyski
-wyrąbisty
-wyrównawczy
-wyróżniający
-wyskokowy
-wysmuklający
-wysocki
-wysoki
-wysokoemisyjny
-wysokogórski
-wysokomazowiecki
-wysokoniemiecki
-wysokopienny
-wyspiarski
-wyspowy
-wystarczający
-wystarczalny
-wystawienniczy
-wystawny
-wystrzałowy
-występny
-wysublimowany
-wysyłkowy
-wyszczuplający
-wyszehradzki
-wyszkowski
-wyszogrodzki
-wyszukany
-wytrawny
-wytrwały
-wytrzymały
-wytworny
-wytwórczy
-wytłumaczalny
-wyuzdany
-wywiadowczy
-wywoławczy
-wywrotowy
-wyznaniowy
-wyznawczy
-wyzwalający
-wyzwoleńczy
-wyzwolicielski
-wyzywający
-wyłączny
-wyśmienity
-wyśmierzycki
-wyżniański
-wyżowy
-wzajemny
-wzdłużny
-wzgardliwy
-względny
-wzmacniający
-wzniosły
-wzorcarski
-wzorcowy
-wzorniczy
-wzorowy
-wzorzysty
-wzrokowy
-wzruszający
-wąbrzeski
-wąchocki
-wądroski
-wągrowiecki
-wąpielski
-wąsewski
-wąski
-wąsoski
-wątlutki
-wątpiący
-wątpliwy
-wątły
-wąwolnicki
-wąziuchny
-wąziusieńki
-wąziuteńki
-wąziutki
-władczy
-władny
-władycki
-władysławowski
-własnooczny
-własnoręczny
-własnoustny
-własnowolny
-właścicielski
-właściwy
-włochaty
-włochowski
-włocławski
-włodawski
-włodowicki
-włodycki
-włodzimierski
-włoski
-włoszakowicki
-włoszczowski
-włościański
-włóczęgowski
-włókniarski
-wścibski
-wściekły
-węchowy
-wędkarski
-wędliniarski
-wędzarski
-węgierski
-węgierski
-węgierskogórski
-węglarski
-węgorzewski
-węgorzyński
-węgrowski
-węzłowaty
-wężowaty
-wężowy
-wężykowaty
-wójtowski
-wólczański
-würzburski
-zaaferowany
-zaalpejski
-zaatlantycki
-zabajkalski
-zabawczarski
-zabawkarski
-zabawny
-zabawowy
-zabezpieczający
-zabiegowy
-zabierzowski
-zabijający
-zabijski
-zabobonny
-zaborczy
-zaborowski
-zaborski
-zabrski
-zabrzański
-zaburzający
-zabużański
-zabytkowy
-zabłudowski
-zabójczy
-zachodni
-zachodnioberliński
-zachodnioeuropejski
-zachodnioniemiecki
-zachodniopomorski
-zachowawczy
-zachrypły
-zachwycający
-zachłanny
-zachęcający
-zaciekły
-zaciszny
-zacięty
-zacny
-zaczepisty
-zaczepny
-zaczepowy
-zaczątkowy
-zadaniowy
-zadarski
-zadnieprzański
-zadniestrzański
-zadowalający
-zadunajski
-zadymiarski
-zadzierzysty
-zadzierżysty
-zadzimski
-zadziorny
-zadziwiający
-zagadkowy
-zagmatwany
-zagorski
-zagorzały
-zagraniczny
-zagrodzieński
-zagrzebski
-zagłębiowski
-zagórowski
-zagórski
-zagórzański
-zaiksowski
-zairski
-zajadły
-zajawkowy
-zajebiaszczy
-zajebisty
-zajmujący
-zająkliwy
-zajęczy
-zakamarkowy
-zakapiorski
-zakarpacki
-zakaspijski
-zakaukaski
-zakaźny
-zakliczyński
-zaklikowski
-zakopiański
-zakresowy
-zakroczymski
-zakrzewski
-zakrzowski
-zakulisowy
-zakłócający
-zaleski
-zaleszański
-zalewski
-zależny
-zaliczkowy
-zalotny
-zalążkowy
-zamaskowany
-zamaszysty
-zambijski
-zambrowski
-zamiejski
-zamienny
-zamierzchły
-zamojski
-zamordystyczny
-zamorski
-zamożny
-zanarwiański
-zaniedbany
-zaniemeński
-zaniemyski
-zanzibarski
-zaoczny
-zaodrzański
-zaolziański
-zapachowy
-zapalny
-zapamiętały
-zapamiętliwy
-zapewniający
-zapobiegawczy
-zapobiegliwy
-zapolicki
-zapominalski
-zaporoski
-zaporowy
-zapowiedziany
-zapoznawczy
-zapraszający
-zaprzeczający
-zapustny
-zapustowy
-zaradny
-zaraźliwy
-zarobkowy
-zarozumialczy
-zarozumiały
-zarszyński
-zarwański
-zarysowy
-zarębski
-zasadniczy
-zasadny
-zasadotwórczy
-zasadowy
-zasiedziały
-zaskakujący
-zasmucający
-zasobny
-zastanawiający
-zastraszający
-zastępczy
-zaszczytny
-zasławski
-zasłużony
-zatatrzański
-zatokowy
-zatorski
-zatrważający
-zatwardziały
-zauralski
-zauszny
-zauważalny
-zawadiacki
-zawalisty
-zawiasowy
-zawichojski
-zawidowski
-zawierciański
-zawiesisty
-zawikłany
-zawistny
-zawiły
-zawiślański
-zawodniczy
-zawodny
-zawodowy
-zawodzący
-zawojski
-zawołżański
-zawrotny
-zawstydzający
-zawzięty
-zawężający
-zazdrosny
-zaziemski
-założycielski
-załuski
-zaściankowy
-zażarty
-zażywny
-zażyły
-zbaraski
-zbawczy
-zbawienny
-zbereźny
-zbiczeński
-zbieracki
-zbieżny
-zbiorczy
-zbiorowy
-zblewski
-zbliżeniowy
-zborny
-zbowidowski
-zbożny
-zbrodniczy
-zbrojarski
-zbrojny
-zbrosławicki
-zbuczyński
-zbyteczny
-zbytkowny
-zbytni
-zbywający
-zbywalny
-zbąszyński
-zbędny
-zbójecki
-zbójeński
-zbójnicki
-zdalny
-zdaniotwórczy
-zdarny
-zdatny
-zdawkowy
-zdecydowany
-zderzeniowy
-zdjęciowy
-zdobniczy
-zdobny
-zdobywczy
-zdradliwy
-zdradziecki
-zdrobniały
-zdrowiusieńki
-zdrowiuteńki
-zdrowiutki
-zdroworozsądkowy
-zdrowotny
-zdrowy
-zdrożny
-zdumiewający
-zduński
-zduńskowolski
-zdziarski
-zdziecinniały
-zdzieszowicki
-zdzirowaty
-zebrzydowicki
-zebrzydowski
-zecerski
-zegarmistrzowski
-zegarowy
-zegrzyński
-zelandzki
-zelowski
-zembrzycki
-zempleński
-zerawszański
-zespołowy
-zetemesowski
-zetempowski
-zetemwuowski
-zeteselowski
-zetesempowski
-zetwuemowski
-zewnętrzny
-zezowaty
-zezwalający
-zgierski
-zgiełkliwy
-zgnuśniały
-zgodliwy
-zgodny
-zgorzelecki
-zgorzkniały
-zgrabniusi
-zgrabniutki
-zgrabny
-zgredowski
-zgrubiały
-zgrubny
-zgrywny
-zgryźliwy
-zgrzeblarski
-zgrzebny
-zgrzybiały
-zgrzytliwy
-zgubny
-zgłoskotwórczy
-zielarski
-zieleniarski
-zieleniuchny
-zieleniutki
-zielonawoniebieski
-zielonawy
-zieloniuchny
-zieloniutki
-zielonkawoniebieski
-zielonkawy
-zielonogórski
-zielononiebieski
-zielonooki
-ziemiański
-ziemisty
-ziemski
-zimbabweński
-zimnawy
-zimniusieńki
-zimniuteńki
-zimniutki
-zimowy
-ziomkowski
-ziszczalny
-ziębicki
-zięciowski
-zjadliwy
-zjawiskowy
-zmienny
-zmierzły
-zmysłowy
-zmyłkowy
-zmyślny
-znachorski
-znaczeniowy
-znaczny
-znaczący
-znajomy
-znakarski
-znakomity
-znamienny
-zniechęcający
-znieczulający
-zniewalający
-zniewieściały
-znikomy
-zniżkowy
-znojny
-znośny
-zobojętniały
-zobowiązujący
-zomowski
-zoofilski
-zrozumiały
-zrzędliwy
-zrzędny
-zrzędzący
-zrębowy
-zręczny
-zróżnicowany
-zuberski
-zuchowaty
-zuchwały
-zuluski
-zupełny
-zurychski
-zuryski
-zwalisty
-zwardoński
-zwariowany
-zwarty
-zwiadowczy
-zwierciadlany
-zwierzyniecki
-zwierzyński
-zwierzęcy
-zwiewny
-zwinny
-związkowy
-zwięzły
-zwodniczy
-zwoleński
-zwrotny
-zwycięski
-zwyczajny
-zwyczajowy
-zwykły
-zwyrodniały
-zwężający
-zygmuntowski
-zygzakowaty
-zyskowny
-ząbkowicki
-ząbkowski
-złocistobrązowy
-złocisty
-złociusieńki
-złociuteńki
-złociutki
-złociuśki
-złoczewski
-złoczowski
-złodziejski
-złomiarski
-złotawy
-złotnicki
-złotoryjski
-złotowski
-złotołuski
-złoty
-złotówkowy
-złowieszczy
-złowrogi
-złowróżbny
-złośliwy
-złudny
-zębaty
-zębowicki
-zębowy
-łabiszyński
-łabowski
-łabski
-łabuński
-łabędzi
-łachmaniarski
-łachudrowaty
-łaciński
-łacniuchny
-ładniusi
-ładniusieńki
-ładniutki
-ładniuśki
-ładny
-ładowny
-ładzicki
-łagiewnicki
-łagodniusi
-łagodniutki
-łagodny
-łagowski
-łajdacki
-łambinowicki
-łamistrajkowski
-łapanowski
-łapserdacki
-łapski
-łapszański
-łapówkarski
-łasiński
-łaskarzewski
-łaskotliwy
-łaszczowski
-łatwiuteńki
-łatwiutki
-łatwiuśki
-łatwostrawny
-łatwowierny
-łatwy
-ławicowy
-ławnicki
-łazarzowski
-łazienkowski
-łazikowski
-łaziski
-łazowski
-łazęgowaty
-łańcuchowy
-łańcucki
-łańcuszkowy
-łebski
-łekieński
-łemkowski
-łepski
-łgarski
-łobeski
-łobuzerski
-łobuzowaty
-łobuzowski
-łobzowski
-łobżenicki
-łochowski
-łodygowicki
-łomaski
-łomnicki
-łomżyński
-łopatkowaty
-łopatologiczny
-łopatowaty
-łopotliwy
-łopuszański
-łopuszeński
-łosicki
-łososiński
-łotewski
-łotrowski
-łotrzykowski
-łowicki
-łowiecki
-łoński
-łubiański
-łubnicki
-łubowski
-łucki
-łukciański
-łukowaty
-łukowicki
-łukowski
-łukowy
-łupieski
-łupkowski
-łuskowaty
-łuszczarski
-łużeński
-łużycki
-łużyński
-łyczakowski
-łykowaty
-łysogórski
-łysomicki
-łysy
-łyszkowicki
-łyżkowaty
-łyżwiarski
-łzawy
-łączny
-łąkarski
-łęczniański
-łęczycki
-łęczyński
-łęgowski
-łęknicki
-łódzki
-ścierny
-ścieśniający
-ścinawski
-ścisły
-ściągający
-śladowy
-ślamazarny
-śledczy
-ślepy
-ślesiński
-śliczniutki
-śliczny
-ślimaczy
-ślimakowaty
-śliski
-śliwicki
-śliwkowy
-ślizgarski
-ślubny
-ślusarski
-śląski
-śmieciarski
-śmiercionośny
-śmierdzący
-śmiertelny
-śmieszny
-śmigielski
-śmigły
-śniadowski
-śniady
-śnieżny
-śnieżysty
-śpieszny
-śpiewacki
-śpiewny
-śpiący
-średni
-średniacki
-średnioniemiecki
-średniopolski
-średnioroczny
-średnioszlachecki
-średnioterminowy
-średniowieczny
-średzki
-śremski
-środkowoeuropejski
-środkowy
-środowiskowy
-śrubowaty
-śrubowy
-śródborowski
-śródgłosowy
-śródgórski
-śródmiejski
-śródmięśniowy
-śródmorski
-śródskórny
-śródwagowy
-śródziemnomorski
-śródżylny
-śwarny
-świadomościowy
-światoburczy
-światopoglądowy
-światotwórczy
-światowy
-światowładny
-światłochronny
-światłoczuły
-światłoszczelny
-światłowodowy
-światły
-świderkowaty
-świderski
-świdnicki
-świdrowaty
-świdrujący
-świdrzański
-świdwiński
-świebodzicki
-świebodziński
-świecki
-świecący
-świedziebniański
-świedziebski
-świegotliwy
-świeradowski
-świerczowski
-świergotliwy
-świerklański
-świerzawski
-świerzeński
-świeszyński
-świetlisty
-świetlny
-świetny
-świeżuchny
-świeżusieńki
-świeżuteńki
-świeżutki
-świeżuśki
-świeży
-świnicki
-świnieński
-świniowaty
-świnoujski
-świszczący
-świąteczny
-świątnicki
-świątobliwy
-święciechowski
-świętajeński
-świętobliwy
-świętochłowicki
-świętojański
-świętokatarzyński
-świętokradczy
-świętokradzki
-świętokrzyski
-świętoszkowaty
-świętoszkowy
-święty
-świński
-ździarski
-ździrowaty
-źródłowy
-żabi
-żabieński
-żabikowski
-żabiowolski
-żabiński
-żabojadzki
-żagański
-żakowski
-żandarmski
-żargonowy
-żarliwy
-żarnowiecki
-żarnowski
-żarowski
-żarski
-żartki
-żartobliwy
-żarłoczny
-żałobny
-żałosny
-żałościwy
-żałośliwy
-żałujący
-żebracki
-żebraczy
-żebrowy
-żebrzący
-żegiestowski
-żeglarski
-żeglugowy
-żegociński
-żelazkowski
-żelechowski
-żenujący
-żerański
-żerkowski
-żeński
-żmijowaty
-żmudny
-żmudzki
-żniwiarski
-żniński
-żoliborski
-żonglerski
-żorski
-żołdacki
-żołnierski
-żołyński
-żrący
-żukowicki
-żukowski
-żupański
-żurawicki
-żurnalowy
-żuromiński
-żuławski
-żwawy
-żychliński
-życiowy
-życzeniowy
-życzliwy
-żydowski
-żyrafi
-żyrakowski
-żyrardowski
-żyrzyński
-żytniański
-żytomierski
-żywicielski
-żywiczarski
-żywiczny
-żywiecki
-żywieniowy
-żywiołowy
-żywiutki
-żywnościowy
-żywny
-żywociarski
-żyworodny
-żywotny
-żywy
-żyłowy
-żądaniowy
-żądny
-żórawiński
-żółciopędny
-żółciotwórczy
-żółciowy
-żółciuchny
-żółciutki
-żółkiewecki
-żółkiewski
-żółtawy
-żółtozielonkawy
-żółty
-żółty
-żółwi
-żółwiowy
-ćmielowski
-ćpuński
-ćwiczebny
-ćwierkliwy
-ćwierćautomatyczny
-ówczesny
+abakański abchaski abderycki abecadłowy abidżański abiogenny abiologiczny 
+abisyński abnegacki abolicjonistyczny abonencki aborcyjny aborygeński 
+abramowski absolutny absolutystyczny absolwencki absorbujący absorpcyjny 
+abstrakcjonistyczny abstrakcyjny abstynencki absurdalny abuliczny 
+abuzabijski abwilski achajski acykliczny adamowski adamówecki adaptatorski 
+adeemowski adekwatny adeński adiabatyczny adiacencki adiustatorski 
+adiutancki administracyjny administratorski admiralski adnumeratywny 
+adonijski adrianopolski adriatycki adsubstantywny adwerbialny adwokacki 
+adygejski adżarski aelowski aerodynamiczny aerosprężysty aerostatyczny 
+aeroterapeutyczny aerotriangulacyjny aerotyczny aerozolowy afektacyjny 
+afektoterapeutyczny afektowany afektywny aferalny aferogenny afganistański 
+afgański afiksalny afirmacyjny afirmatywny afoniczny aforystyczny aforyzmowy 
+afrochrześcijański afrykanerski afrykanistyczny afrykański agański agencyjny 
+agenturalny agenturowy agitacyjny agitatorski aglutynacyjny agnacki 
+agnostycystyczny agnostyczny agonalny agramatyczny agrarystyczny agresywny 
+agrobiologiczny agrotechniczny agroturystyczny ahistoryczny ahumanistyczny 
+aideologiczny aintelektualny ajguński ajnoski ajurwedyczny ajurwedyjski 
+akademicki akadyjski akatolicki akcentowy akcentuacyjny akceptowalny 
+akceptujący akcydentalny akcyjny akermański akordowy akowski akrobatyczny 
+akronimiczny akryjski akrylowy aksamitny aksjologiczny aksjomatyczny 
+aktorski aktualny aktywizujący aktywny akupresurowy akuratny akustooptyczny 
+akustyczny akuszerski akwamarynowy akwitański akwizgrański akwizytorski 
+alabastrowy alarmistyczny alarmowy alarmujący alaskański alaski alaskijski 
+albański albigeński albumowy alcejski alchemicki alchemiczny aleatoryczny 
+alegoryczny aleksandrowski aleksandryjski alergiczny alergizujący aleucki 
+alfabetyczny alfanumeryczny algebraiczny algierski algologiczny algoncki 
+algonkiński algorytmiczny aliancki alienacyjny alinearny aliteracki 
+alkaliczny alkoholowy allogamiczny almerski alofoniczny alogamiczny 
+alogiczny alopatyczny aloploidalny alowski alpejski alterglobalistyczny 
+alternacyjny alternatywny alterocentryczny altruistyczny aluzyjny alzacki 
+amalekicki amarantowy amaterialny amatorski amazoński ambarasujący 
+ambasadorski ambasadzki ambicjonalny ambicjonerski ambicyjny ambiofoniczny 
+ambitny ambiwalentny ambrozjański ambrozyjski ambulatoryjny amelioracyjny 
+amerykanistyczny amerykański amerykański ametodyczny ametystowy 
+amfibrachiczny amfiteatralny amharski ammański ammonicki amoralny amorejski 
+amorycki amoryczny amplitudowy ampułkowy amsterdamski amunicyjny amurski 
+anabaptystyczny anabarski anabatyczny anabiotyczny anaboliczny anachroniczny 
+anadyrski anaerobiczny anaerobiotyczny anafilaktyczny anaforyczny anagramowy 
+anakreontyczny analfabetyczny analityczny analny analogiczny analogowy 
+anamorficzny anamorfozowy ananimowy anarchiczny anarchistowski 
+anarchistyczny anarchosyndykalistyczny anatolijski anatomiczny 
+anatomopatologiczny andaluzyjski andamański andegaweński andorski 
+andragogiczny androginiczny androgyniczny andrologiczny andrusowaty 
+andrusowski andruszowski andrychowski andyjski andynistyczny anegdociarski 
+anegdotyczny aneksjonistyczny anemiczny anemometryczny anergiczny 
+anestezjologiczny anestezyjny angielski angiochirurgiczny angiograficzny 
+angiologiczny anglicki anglikański anglistyczny angloarabski anglofilski 
+anglosaksoński anglosaski angolański angolijski angolski angorski anielski 
+animacyjny animalny animistyczny aniołkowaty anizotropowy ankarski ankietowy 
+annalistowski anodowy anonimowy anorektyczny anormalny anormatywny 
+antagonistyczny antananarywski antenacki antiguański antiocheński 
+antiochijski antkowski antonimiczny antropocentryczny antropologiczny 
+antropomorficzny antroponimiczny antroposkopijny antropotechniczny 
+antropozoficzny antwerpijski antwerpski antyalergiczny antyalkoholowy 
+antybakteryjny antybodźcowy antybohaterski antyczny antydemokratyczny 
+antydepresyjny antydespotyczny antydogmatyczny antydumpingowy 
+antydynastyczny antyegalitarny antyekonomiczny antyeksportowy 
+antyelektrostatyczny antyempiryczny antyestetyczny antyeuropejski 
+antyfaszystowski antyfeministyczny antyfeudalny antyfrykcyjny antygenowy 
+antygrypowy antyhałasowy antyhigieniczny antyhitlerowski antyhumanistyczny 
+antyhumanitarny antyimperialistyczny antyimperialny antyimplozyjny 
+antyimportowy antyinflacyjny antyintelektualistyczny antyintelektualny 
+antyinteligencki antyizraelski antykapitalistyczny antyklerykalny 
+antykolizyjny antykomercyjny antykomunistyczny antykonstytucyjny 
+antykorowski antykorozyjny antykorupcyjny antykościelny antykwariacki 
+antykwariuszowski antykwarski antykwaryczny antyliberalny antylski 
+antymigrenowy antymilitarystyczny antymonarchistyczny antymonopolistyczny 
+antynarkotyczny antynarodowy antynatalistyczny antynatowski 
+antynaturalistyczny antyneopozytywistyczny antyniemiecki antynomiczny 
+antynuklearny antypapieski antypatriotyczny antypatyczny antypedagogiczny 
+antyperspiracyjny antypodyczny antypokojowy antypolski antypozytywistyczny 
+antyprezydencki antypsychologiczny antyradziecki antyrealistyczny 
+antyreformatorski antyrobotniczy antyrojalistyczny antyrosyjski antyrynkowy 
+antysemicki antyseptyczny antysmogowy antysocjalistyczny antyspamowy 
+antyspołeczny antysłowacki antyterrorystyczny antytetyczny antytotalitarny 
+antytrynitarski antyuczuleniowy antywibracyjny antywirusowy antyżydowski 
+aparatczykowski apaszowski apatriotyczny apatyczny apedagogiczny apeniński 
+apersonalny apetyczny apijski aplikancki apodyktyczny apoetycki 
+apokaliptyczny apolityczny apoliński apolliński apologetyczny apoplektyczny 
+aposterioryczny apostolski apostroficzny apotropaiczny apotropeiczny 
+apozycyjny appalaski aprioryczny apriorystyczny aprobacyjny aprobatywny 
+aprobujący aprowizacyjny apsydalny aptekarski apulijski apulski arabeskowy 
+arabski arachidowy arachnologiczny aragoński arakański aralski aramejski 
+aranżacyjny arbitralny arbitrażowy arbuzowaty archaiczny archaistyczny 
+archaizatorski archangielski archanielski archeograficzny archeologiczny 
+archetypiczny architektoniczny architektoński archiwalny arcybolesny 
+arcychrześcijański arcydelikatny arcydowcipny arcydrogi arcydziwny 
+arcykapłański arcykatolicki arcykosztowny arcylojalny arcymistrzowski 
+arcypiękny arcypoważny arcyprawomyślny arcyskomplikowany arcyskromny 
+arcyspektakularny arcystaroświecki arcysugestywny arcyswobodny arcyswojski 
+arcywyborny arcyzabawny arcyłobuzerski arcyśmieszny ardeński arealistyczny 
+arealny areligijny aresztancki argentyński argolidzki ariański arizoński 
+arkadyjski arkebuzerski arlekiński armatorski armeński arogancki aromatyczny 
+arsenalski artezyjski artretyczny arturiański artyficjalny artykulacyjny 
+artyleryjski artystowski artystyczny aryjski arystokracki arystokratyczny 
+arystotelesowski arytmetyczny arytmiczny arytmogenny arytmograficzny 
+ascetyczny asekuracyjny asekurancki asemantyczny aseptyczny asertywny 
+asesorski asfalciarski asklepiadejski asocjacyjny asortymentowy aspektowy 
+aspirancki aspołeczny astmatyczny astrachański astralny astrobiologiczny 
+astrologiczny astronomiczny asturyjski asuański asymetryczny asymilacyjny 
+asymilatorski asymptotyczny asynchroniczny asyndetyczny asyryjski asystencki 
+aszelski aszkenazyjski atamański atanazjański atawistyczny ateizacyjny 
+ateuszowski ateński atlancki atlantycki atletyczny atoksyczny atomistyczny 
+atomowy atrakcyjny atramentowy attycki atłasowy audialny audiofilski 
+audiometryczny audiowizualny audytorski augsburski augustiański augustowski 
+augustyński australijski austriacki austroazjatycki austrofilski 
+austronezyjski autentyczny autobiograficzny autochtoniczny autochtoński 
+autodestrukcyjny autogamiczny autoironiczny autokratyczny autokrytyczny 
+automatyczny autometamorficzny automorficzny autonomiczny autoplastyczny 
+autoploidalny autopoliploidalny autoproteolityczny autoregulacyjny 
+autoreklamiarski autorski autorytarny autorytatywny autosemantyczny 
+autoszyderczy autotroficzny autsajderski autystyczny awangardowy awantażowny 
+awanturniczy awarski awaryjny awentyński awestyjski awinioński awizerski 
+azerbejdżański azerski azjatycki azjański azorski azowski aztecki azylancki 
+azylski azymutalny ałmaacki ałtajski ałtajski ażurowy babelski babiacki 
+babiakowski babiarski babicki babiloński babimojski babiogórski babiński 
+baborowski baboszewski babski bachancki bachocki bachowski bachtinowski 
+bacowski baczny badający badawczy badeński badylarski badziewiarski 
+badziewny bagatelizujący bagatelny bagdadzki bagienny bahamski bahrajński 
+bajarski bajczarski bajeczny bajerancki bajerny bajkalski bajkopisarski 
+bajkowy bajoński bajroniczny bajronistyczny bajronowski bajroński bakalarski 
+bakałarski bakałarzewski bakijski bakoński bakteriobójczy bakteriolityczny 
+bakteriologiczny bakteriostatyczny bakteryjny balangowy balatoński 
+baletmistrzowski baletniczy baletowy balijski balistokardiograficzny 
+balladowy balladyczny baloniarski balonowaty balowy balsamiczny baltonowski 
+balwierski balzakowski bamakijski banalny banderowski bandoski banduński 
+bandycki bandziorski bandżulski bangijski bangkocki bangladeski banglijski 
+baniowaty bankierski bankowy bantamski barabański barabiński barani 
+baraniogórski baranowski barbadoski barbarski barbarzyński barceloński 
+barciański barciński barczewski barczysty bargłowski barmański barokowy 
+baronowski barowy barski bartnicki bartokowski bartoszycki barwiarski 
+barwicki barwierski barwisty barwny baryłkowaty baskijski basowy bastylski 
+baszkirski baszowski bateryjny batikarski batorski batumski bawarski 
+bawełniarski bawidamski bazylejski bazyliański bałabański bałaganiarski 
+bałagulski bałamutny bałkański bałtosłowiański bałtowski bałtycki bałtyjski 
+bałwański bałwochwalczy bałwochwalski baśniarski baśniowy baćkowicki bański 
+beatlesowski beatnikowski beatowy bebechowy bebopowy bechowski beczkowaty 
+beczkowy beczułkowaty bedleński bedliszkowaty bednarski beduiński behapowski 
+bejowski bejrucki bejsceński bekliwy beksiwy beletrystyczny belferski 
+belgijski belgradzki belizeński belmopański beludżystański belwederski 
+bemowski benedyktyński benefaktorski bengalski beniński benzynożerny beocki 
+berberski berberyjski berdyczowski bereski berestecki berezyński berliński 
+bermudzki bernardyński berneński besarabski besemerowski beskidzki 
+besserwisserski bestialski betański betlejemski betoniarski bezadresowy 
+bezakcentowy bezalkoholowy bezapelacyjny bezawaryjny bezbarwny bezbiałkowy 
+bezbolesny bezbożny bezbramkowy bezbronny bezbrzeżny bezbłędny bezcelowy 
+bezceremonialny bezchmurny bezcielesny bezczasowy bezczelny bezczeszczący 
+bezczynny bezcłowy bezdebitowy bezdenny bezdeszczowy bezdewizowy bezdomny 
+bezdotykowy bezdowodowy bezdrganiowy bezdrzewny bezdurny bezduszny bezdymny 
+bezdyskusyjny bezdzietny bezdźwięczny bezecny bezgorączkowy bezgotówkowy 
+bezgraniczny bezgrzeszny bezgwiezdny bezgwieździsty bezgłośny bezideowy 
+bezimienny bezinteresowny bezinwazyjny beziskrowy bezkaloryczny bezkarny 
+bezkierunkowy bezklasowy bezkolankowy bezkolizyjny bezkompromisowy 
+bezkonduktorski bezkonfliktowy bezkonkurencyjny bezkontaktowy bezkońcówkowy 
+bezkrańcowy bezkresny bezkrwawy bezkrytyczny bezksiężycowy bezkształtny 
+bezlitosny bezludny bezmierny bezmiłosierny bezmroźny bezmyślny beznadziejny 
+beznakładowy beznamiętny beznapędowy bezobjawowy bezodpływowy 
+bezokolicznikowy bezosobowy bezowocny bezpardonowy bezpartyjny 
+bezpaszportowy bezpauzowy bezpański bezpieczniacki bezpieczny bezplanowy 
+bezpodmiotowy bezpodstawny bezpostaciowy bezpotomny bezpowrotny 
+bezpoślizgowy bezpośredni bezpożyteczny bezprawny bezprecedensowy 
+bezpretensjonalny bezproblemowy bezprocentowy bezprodukcyjny bezproduktywny 
+bezpruderyjny bezprzedmiotowy bezprzeszkodny bezprzetargowy bezprzewodowy 
+bezprzyczynowy bezprzykładny bezprzytomny bezpyłowy bezpłatny bezpłciowy 
+bezpłodny bezradny bezrefleksyjny bezrobotny bezrozumny bezróżny bezsenny 
+bezsensowny bezsilny bezskuteczny bezsporny bezsprzeczny bezspójnikowy 
+bezstratny bezstresowy bezstronny bezsufiksalny bezszelestny bezszkodowy 
+bezszmerowy bezszumny bezszumowy bezszwowy bezszypułkowy bezsłoneczny 
+bezsłowny bezterminowy beztestamentowy beztlenowy beztreściwy beztroski 
+beztrwożny bezustanny bezustawny bezusterkowy bezużyteczny bezwarunkowy 
+bezwiedny bezwietrzny bezwizowy bezwiórowy bezwolny bezwonny bezwstydny 
+bezwyjątkowy bezwyjściowy bezwymiarowy bezwypadkowy bezwyrazowy 
+bezwyznaniowy bezwzględny bezwątpliwy bezwładnościowy bezwładny 
+bezwłasnowolny bezzapachowy bezzasadny bezzawodny bezzałogowy bezzboczny 
+bezzwrotny bezzwłoczny bezzębny bezładny bezłuski bezśnieżny bezżenny 
+bełchatowski bełdański bełkotliwy bełski bełżecki bełżycki beżowy bhutański 
+biafrański bialski bialskopodlaski bialuteńki bialutki białaczowski białawy 
+białkowy białoborski białobrzeski białogardzki białogwardyjski białogłowski 
+białomorski białopolski białoruski białoręki białostocki białowieski 
+białołęcki białośliwski biblijny bibliofilski bibliograficzny bibliotekarski 
+bidny biebrzański biedacki biedermeierowski biedniacki biednieńki 
+biedniuchny biedniutki biedny biegowy biegunowy biegły bielarski bielawski 
+bielański bielicki bieliźniarski bieliński bielski bieluchny bielusieńki 
+bieluteńki bielutki bieluśki bierawski bierny bierutowski bieruński 
+biesiadny biesiekierski biesowski bieszczadzki bieżanowski bieżuński bieżący 
+bigamiczny bigbitowy biharski bihorski bikiniarski bilansowy bilateralny 
+bimodalny binarny biochemiczny biodynamiczny bioekologiczny biograficzny 
+biologiczny biomedyczny biometryczny biosoniczny biotechnologiczny 
+bioterapeutyczny biotroniczny birbancki birczański birmański birminghamski 
+biseksualny biskajski biskupicki biskupiński bisurmański bitelsowski 
+bitlesowski bitnikowski bitny biurokratyczny bizancki bizantyjski 
+bizantyński biznesmeński biznesowy biłgorajski blacharski blachowniański 
+bladawy bladoniebieski blady bladziuchny bladziuteńki bladziutki blagierski 
+blankistowski bledzewski bledziuchny bledziuteńki bledziutki bledziuśki 
+bliski bliskoziemski blizanowski bliziuchny bliziuteńki bliziutki bliźniaczy 
+bliźnięcy bliżyński blogowy blokowiskowy blokowy blokujący bluesowy 
+bluźnierczy bobolicki bobowski bobrowicki bobrownicki bobrowski bocheński 
+bociani boczny boczowski bodeński bodzanowski bodzechowski bodzentyński 
+bodzęciński bodźcowy bogaczowicki bogaty bogatyński bogobojny bogoburczy 
+bogoojczyźniany bogoryjski bogotański boguchwalski boguszowski bohaterski 
+bojadelski bojanowski bojarski bojaźliwy bojowniczy bojowy bojówkarski 
+bokserski bolejący bolesny boleszkowicki bolesławiecki bolesławski boleściwy 
+bolimowski boliwijski bolkowski bollywoodzki boloński bolszewicki bolący 
+bombajski bombardierski bombastyczny bombonierkowy bombowy bonapartystowski 
+bonoński bordoski bordowy borkowicki bornaski borneański bornholmski 
+borowiczkowski borowski borsuczy borzechowski borzytuchomski borzęciński 
+bosforski boski bosmański bostoński bosy botaniczny botswański 
+botticellowski boyowski bośniacki boćkowski boński brabancki bracki 
+bracławski brahmsowski brajlowski brakarski bramiński bramkarski 
+brandenburski brandingowy braniewski branżowy brasławski braterski bratni 
+bratobójczy bratysławski brawurowy brazylijski brazzawilski brański 
+brdziański brechtowski brejowaty bremeński bretoński breughlowski bristolski 
+brneński broadwayowski brochowski broczański brodnicki brokerski bronowicki 
+brudnawy brueglowski brukarski brukselski brunatnawy brunatny brunszwicki 
+brutalny brwinowski brygadierski brygadzistowski brylantowy brytyjski 
+bryłowaty brzeski brzeszczański brzezieński brzezinecki brzeziński 
+brzeźnicki brzmieniowy brzmiący brzoskwiniowy brzozowski brzuchaty brzuski 
+brzuszny brzydki brzęczący brzękliwy brązowawy brązowniczy brązowy 
+bródnowski bródzieński buchalterski buchalteryjny bucharski buczacki 
+buczliwy budapeszteński budański buddyjski budowniczowski budrski budujący 
+budziański budziszyński budzowski budzyński budżetowy bufiasty bufonowaty 
+bufoński bujny bukareszteński bukieciarski bukmacherski bukoliczny 
+bukowiański bukowieński bukowiński bukowski buldogowaty bulimiczny bulkowski 
+buloński bulwarowy bulwersujący bundowski bunsenowski buntarski buntowniczy 
+buracki buraczkowy burakowaty burakowy burboński burdelowy burgaski 
+burgrabiowski burgrabski burgundzki buriacki burkliwy burmistrzowski burski 
+burszowski bursztyniarski bursztynowy burundyjski buruszaski bury 
+burzeniński burzliwy burzowy burzycielski burłacki burżuazyjny burżujski 
+buski buszmański buszmeński butikowy butny butyrski bułgarski bułkowaty 
+bułowaty bużański bużumburski buńczuczny buńdziuczny bychawski byczy 
+byczyński bydgoski bydlęcy byroniczny byronowski byroński bystry bystrzycki 
+bytnicki bytomski bytowski bytowy bzdurny bzurski bzykliwy bądkowski 
+bąkowski błagalny błahy błaszkowski błazeński błażowski błogi błogosławiący 
+błotnisty błoński błyskawiczny błyskotliwy błyskowy błyszczący błędny 
+błędowski błękitnawy błękitnooki błękitny bębniarski będkowski będomiński 
+będziński bękarci bękarcki bólowy cacany calusieńki caluteńki caluśki 
+campingowy canneński carogrodzki carski całkowity całodobowy całościowy 
+cechsztyński cecorski cedrski cedyński ceglarski cegłowski cejloński 
+cekcyński ceklarski cekowski celebrycki celestynowski celny celowy celtycki 
+celujący cenowy centralistyczny centralizatorski centralny centroprawicowy 
+centrowy centryczny centryfugalny centrypetalny centrystowski centrystyczny 
+centusiowski cenzorski cenzuralny cepeliowski ceperski ceranowski 
+cerberowski ceremonialny cerkiewnosłowiański cerkwicki cesarski cewiarski 
+cewicki cezariański cezaryjski chabarowski chabowski chachłacki chadecki 
+chakaski chalcedoński chaldejski chamicki chamicki chamowaty chamski 
+chanelowski chaotyczny charakterologiczny charakterystyczny 
+charakteryzatorski charchotliwy charci charczący chargotliwy charkotliwy 
+charkowski charlestoński charsznicki chartumski charytatywny charyzmatyczny 
+charzykowski charłacki chasydzki chazarski chałaciarski chałowaty chałowy 
+chałupniczy chański chciwy chemiczny chemioterapeutyczny chemoterapeutyczny 
+cherlacki cherlawy chersoński cherubinkowaty chełmecki chełmiński 
+chełmkowski chełmski chełmżyński chełpliwy chicagowski chichotliwy chijski 
+chilijski chimeryczny chirurgiczny chiński chlewiski chlipliwy chlubny 
+chlupotliwy chmielarski chmieleński chmurnawy chmurny choceński chochołowski 
+chocianowski chociebuski chocimski chociwelski choczewski chodelski chodliwy 
+chodowski chodziarski chodzieski chodzący choinkowy chojeński chojnicki 
+chojnowski chojracki cholerny cholerski choleryczny cholewkarski chomikarski 
+chomikowaty chopinowski choreograficzny choreoterapeutyczny chorkówecki 
+chorobliwy chorobotwórczy chorobowy choroszczański chorowity chorwacki chory 
+chorzowski choszczeński chotczański chrapliwy chrobotliwy chromatograficzny 
+chromatyczny chromy chroniczny chronologiczny chronometryczny chropawy 
+chropowaty chrupiący chrupki chrypliwy chrystocentryczny chrzanowski 
+chrześcijański chrzypski chrząstowicki chrząstowski chucherkowaty 
+chuchrowaty chucpiarski chudawy chuderlawy chudopacholski chudy chudzieńki 
+chudziusieńki chudziuteńki chudziutki chujowy chuligański chusteczkowy 
+chutliwy chutny chwacki chwalebny chwastobójczy chwatki chwałowicki chwiejny 
+chwilowy chwytki chwytliwy chybki chybotliwy chybski chyloński chynowski 
+chytrawy chytreńki chytruśki chyży chąsieński chłamowaty chłodnawy 
+chłodniutki chłodzący chłonny chłopacki chłopczykowaty chłopczykowy 
+chłopczyński chłopicki chłopięcy chłopomański chłopski chęciński chędogi 
+chętny chóralny chórmistrzowski ciamajdowaty ciapowaty ciaseński ciasnawy 
+ciastkarski ciaśniutki ciceroniański cicheńki cichuchny cichusi cichusieńki 
+cichuteczki cichuteńki cichutki cichuśki cichy ciechanowski ciechociński 
+ciekawski ciekawy cielesny cielęcy ciemięski ciemnawy ciemniusieńki 
+ciemniuteńki ciemniutki ciemnobrązowy ciemnogrodzki ciemnoniebieski 
+ciemnowiśniowy cienisty cieniuchny cieniusieńki cieniuteczki cieniuteńki 
+cieniutki cieniuśki cienki ciepielowski cieplicki cieplny ciepluchny 
+cieplusi cieplusieńki ciepluteńki cieplutki ciepluśki ciepławy ciepłowodzki 
+ciernisty cierpiący cierpiętniczy cierpkawy cierpki cierpliwy ciesielski 
+cieszanowski cieszkowski cieszyński cietrzewi cinkciarski ciotowaty 
+ciotowski cipowaty cisalpejski cisalpiński cisieński ciulowaty ciulowy 
+ciągliwy ciągły ciśnieniowy ciężkawy ciężki ciężkostrawny ciężkowicki ckliwy 
+clownowski cmentarny cmolaski cnotliwy cny coachingowy cocktailowy codzienny 
+collagowy comiesięczny conradowski consultingowy corazziański coroczny 
+cotygodniowy cowboyski cuchnący cudacki cudaczny cudnowski cudny cudotwórczy 
+cudowny cudzoziemski cudzożywny cukierkowaty cukierkowy cuszimski cwaniacki 
+cwaniaczy cwaniakowaty cwany cybernetyczny cyberpunkowy cybinecki cycaty 
+cyceroniański cyceronowski cyceroński cycowski cyfrowy cygański cyklamenowy 
+cykliczny cykliniarski cyklistowski cylicyjski cylindryczny cymlański 
+cynicki cyniczny cyplowaty cypryjski cyrenajski cyrkowy cyrulicki cyrylicki 
+cysalpejski cysalpiński cysterski cytatologiczny cytohormonalny 
+cytostatyczny cytrynowy cywilizacyjny cywilizatorski cywilnoprawny cywilny 
+cyzelatorski cyzelerski czabański czadecki czaderski czadowy czadyjski 
+czapkarski czarci czarniawy czarniański czarniusieńki czarniuteńki 
+czarniutki czarnkowski czarnoborski czarnobylski czarnociński czarnogórski 
+czarnoksięski czarnoleski czarnomorski czarnorynkowy czarnowski czarnożylski 
+czarodziejski czarowniczy czarowny czarterowy czartowski czartystowski 
+czarujący czasownikowy czasowy czastarski czatujący czchowski czcigodny 
+czczy czechosłowacki czechowicki czeczeński czekistowski czekoladowy 
+czeladzki czelny czeluściowy czemiernicki czempiński czepialski czeremeski 
+czeremiski czereśniacki czerkaski czerkieski czermiński czerniakowski 
+czerniawy czernichowski czernicki czernickoborowski czerniejewski 
+czerniewicki czernihowski czernikowski czerski czerstwy czerwieński 
+czerwiogubny czerwiński czerwonawy czerwonecki czerwonobrunatny 
+czerwonogwardyjski czerwonokrzyski czerwonomorski czeski czetnicki 
+czikagowski czorci czorsztyński czortowski czosnowski czołobitny czołowy 
+czterdziestokrotny czternastokrotny czterobarwny czteroipółkrotny 
+czterokrotny czteroosobowy czterostronny czterowymiarowy czubaty czuciowy 
+czujny czumacki czupurny czuwaski czułostkowy czuły czwartakowy czworacki 
+czworaki czworokątny czynnościowy czynny czyszczący czytankowy czytelniczy 
+czytelnikowski czytelny czyściuchny czyściusieńki czyściuteńki czyściutki 
+czyżewski cząstkowy członkowski członowy człopski człowieczy człuchowski 
+częstawy częstochowski częstokrotny częstotliwościowy częstotliwy częściowy 
+dachówkowaty dadaistyczny dagestański dakarski dakijski dakocki dakotyjski 
+daktyliczny daleki dalekomorski dalekopisowy dalekoplanowy dalekosiężny 
+dalekowzroczny daleszycki dalikowski dalmacki dalmatyński dalszoplanowy 
+daltoński damasceński damnicki damski danajski dandysowski dantejski 
+dardanelski dardański daremny darmowy darwinowski darłowski daszkowaty 
+daszyński dauhański dawnochrześcijański daytoński dbały dealerski debilny 
+debilowaty debiutancki debreczyński debrzeński decentralistyczny decydencki 
+decydujący decyzyjny dedukcyjny defaultowy defensywny defetystyczny 
+deficytowy definitywny deflacyjny defraudancki degeneracki degradujący 
+dekabrystowski dekadencki dekarski deklamatorski deklaratywny dekoracyjny 
+dekoratorski delatorski delawarski delegacki delficki delhijski delicyjny 
+delikatniutki delikatny deliryczny dellartowski deltowaty demagogiczny 
+demaskatorski demistyfikatorski demograficzny demokratyczny demokratyzacyjny 
+demoniczny demonstracyjny demoralizujący demotywujący denerwujący denny 
+denuncjatorski deontologiczny deprecjatywny depresyjny deprymujący deputacki 
+deregulacyjny dermatologiczny dermatoskopowy derwiszowski derywacyjny 
+deseniowy deserowy designerski deskryptywny desperacki despotyczny 
+destabilizujący destrukcyjny destruktywny deszczeński deszczowny deszczowy 
+detaliczny detalowy detekcyjny deterministyczny detoksykacyjny detroicki 
+deuterokanoniczny developerski dewastacyjny dewastatorski deweloperski 
+dewizowy dewociarski dewoński dezaktywacyjny dezaprobujący dezerterski 
+dezintegracyjny dezintegralny dezoksyrybonukleinowy dezorganizacyjny 
+dezorganizujący dezorientujący dezynfekcyjny dezynfekujący dezyntegracyjny 
+dezyntegralny dhakijski diabelny diabelski diaboliczny diachroniczny 
+diafoniczny diagnostyczny diagonalny diakoński dialektologiczny dialektyczny 
+dializacyjny dialogowy diamentowy diametralny diatermiczny diatoniczny 
+dickensowski didżejski dieslowski dietetyczny digitalny dionizyjski 
+diploidalny dipolowy dipyloński disnejowski disneyowski dizajnerski 
+dmosiński dniepropietrowski dnieprowy dnieprzański dniestrowy dniestrzański 
+doarteryjny dobczycki dobiegniewski dobitny doborowy dobowy dobrecki 
+dobroczynny dobroduszny dobrodziejski dobrodzieński dobromiejski 
+dobromierski dobroszycki dobrosąsiedzki dobrotliwy dobrowolny dobroński 
+dobrski dobryszycki dobrzański dobrzeliński dobrzeński dobrzycki 
+dobrzyniewski dobrzyński docelowy docencki dochodowy dochodzący dociekliwy 
+dociskowy doczesny dodatkowy dodatni doglebowy dogmatyczny dogodny dogłębny 
+dojarski dojmujący dojrzały dokanałowy dokerski doksologiczny doktoralny 
+doktorancki doktorski doktrynalny doktrynerski dokuczliwy dokumentacyjny 
+dokumentalny dokumentarny dokumentny dokładny dolegliwy dolicki doliniarski 
+dolistny dolnobrzeski dolnomszański dolnoniemiecki dolnosaksoński 
+dolnołużycki dolnośląski dolski dolędźwiowy domaciczny domaniewicki 
+domaniowski domaszowicki domatorski dominantowy dominikański dominowski 
+dominujący domięśniowy domocentryczny domowy domyślny domózgowy donicowaty 
+doniczkowy doniecki doniosły donkichotowski donkiszocki donkiszotowski 
+donosicielski donośny donżuanowski donżuański doodbytniczy dookolny 
+dootrzewnowy dopiewski dopingujący dopochwowy dopplerowski dopuszczalny 
+doradczy doraźny dordzeniowy dorobkiewiczowski doroczny dorodny dorohuski 
+dorosły dorozumiany dorożkarski dortmundzki doruchowski dorycki dorywczy 
+dorzeczny doręczycielski dosadny dosiebny dosiężny doskonały doskórny 
+dostateczny dostatni dostawowy dostojny dostrzegalny dostępny doszczętny 
+dosłowny dosłyszalny dotchawiczy dotkliwy dotychczasowy dotykalny dotykowy 
+dotłokowy dotętniczy doustny douszny dowcipny dowodny dowodowy dowolny 
+dowódczy dozgonny dołhobyczowski dołujący dośrodkowy doświadczalny dożowski 
+dożylny dożynkowy dożywotni doński draczny dragoński drahimski drakoński 
+dramatopisarski dramaturgiczny dramatyczny draparski drapieżny drastyczny 
+drawidyjski drawieński drawski drażliwy drażniący drański drelowski 
+drenarski dresiarski drezdenecki drezdeński driński drobiarski drobiazgowy 
+drobiński drobniuchny drobniusieńki drobniuteńki drobniutki drobniuśki 
+drobnochłopski drobnomieszczański drobnostkowy drobnoszlachecki drobnowidowy 
+drobnowymiarowy drobnowłościański drogi drogistowski drohicki drohiczyński 
+drohobycki druciarski drugoplanowy drugorzędny drugostronny druidzki 
+drukarski druzgoczący druzgocący druzyjski drużbicki drużbowski drużynowy 
+drwalski drwinkowaty drwiący drwiński drwęcki dryndziarski drzewiarski 
+drzewicki drzeworytniczy drzycimski dręczący drętwy dualistyczny dubajski 
+dubeltowy dubienecki dubieński dublerski dubliński dubrownicki duchowny 
+duchowy dudniący dudziarski duetowy dufny duisburski dukielski dumasowski 
+dumny dumski dunajecki dunajski dungański dunkierski dupiaty dupowaty 
+durnieńki durny dusicielski dusznawy dusznicki duszpasterski duszący duży 
+duński dwikoski dwiński dwoisty dwojaki dworacki dworaczy dworny dworski 
+dworzański dwuaspektowy dwubarwny dwubiegunowy dwuboczny dwudzielny 
+dwudziestokrotny dwuetapowy dwufazowy dwuipółkrotny dwujęzyczny 
+dwukierunkowy dwukolorowy dwukrotny dwulicowy dwumiarowy dwunastoipółkrotny 
+dwunastokrotny dwunastoletni dwunożny dwuosobowy dwupasmowy dwupoziomowy 
+dwupłaszczyznowy dwurundowy dwustopniowy dwustronny dwusylabowy dwuszpaltowy 
+dwutaktowy dwutorowy dwuwarstwowy dwuwymiarowy dwuzgłoskowy dwuzmianowy 
+dwuznaczny dybowski dychawiczny dychotomiczny dydaktyczny dydeński 
+dydniański dyferencjalny dyftongiczny dygnitarski dygowski dygresyjny 
+dyktatorski dyletancki dylewski dymarski dymisyjny dynamiczny dynarski 
+dynastyczny dynowski dyplomacki dyplomatyczny dyrektorski dyrektywny 
+dyrygencki dyscyplinarny dysfunkcjonalny dysfunkcyjny dysharmonijny 
+dyskantowy dyskomfortowy dyskotekowy dyskretny dyskryminujący dyskursywny 
+dyskusyjny dysonansowy dyspeczerski dyspozycyjny dyspozytorski dyspozytywny 
+dystrybucyjny dystrybutorski dystyngowany dysydencki dyszkantowy dywaniarski 
+dywanowy dyzunicki dziadkowicki dziadkowski dziadowski dziarski 
+działaczowski działdowski działoszycki działoszyński dziecinny dziecięcy 
+dziedziczny dziejopisarski dziejowy dziekański dzielnicowy dzielny 
+dziemiański dziennikarski dzienny dzierzgowski dzierzgoński dzierzkowicki 
+dzierzążeński dzierżawczy dzierżoniowski dziesięcioipółkrotny 
+dziesięciokrotny dziesięcioraki dziewczynkowaty dziewczyński dziewczęcy 
+dziewiarski dziewiczy dziewięcioipółkrotny dziewięciokrotny dziewięcioraki 
+dziewiętnastokrotny dziewięćdziesięciokrotny dzieworodny dziewuchowaty dziki 
+dzikowski dziurawy dziwaczny dziwkarski dziwnowski dziwny dziękczynny 
+dzwolski dzwonny dzwonowaty dąbrowicki dąbrowski dąbrówieński dąbrówniański 
+dąbski dąsalski dławiący długawy długaśny długi długodystansowy długofalowy 
+długookresowy długoplanowy długosiedlski długoterminowy długotrwały 
+długowieczny długowzroczny długołęcki długusieńki długutki dłutkowaty 
+dłutowski dłuuugi dłuuuugi dźwigniowy dźwięczny dźwiękowy dźwiński dżakarcki 
+dżdżysty dżentelmeński dżezowy dżokejski dżungarski dębicki dębliński 
+dębniański dębnicki dębski dólski düsseldorfski echowy edamski edeński 
+edomicki edomski edukacyjny edynburski edytorski efekciarski efektowny 
+efektywny efemeryczny efemerydalny efeski efraimski egalitarny 
+egalitarystyczny egejski egipski egocentryczny egoistyczny egzagerowany 
+egzaltowany egzaminatorski egzoenergetyczny egzotermiczny egzoteryczny 
+egzotyczny egzystencjalistyczny egzystencjalny einsteinowski ejdetyczny 
+ekfonetyczny eklektyczny ekologiczny ekonomiczny ekonomski ekscentryczny 
+ekscytujący eksdywizorski ekshibicjonistyczny ekskluzywny ekspansjonistyczny 
+ekspansywny ekspercki eksperymentalny eksperymentatorski eksplicytny 
+eksplikacyjny eksploatatorski eksploratorski eksplozywny eksportowy 
+ekspozycyjny ekspresjonistyczny ekspresowy ekspresyjny ekspresywny 
+ekstatyczny ekstensywny eksternistyczny eksterytorialny ekstranowoczesny 
+ekstraordynaryjny ekstrapilny ekstrawagancki ekstrawertyczny ekstremalny 
+ekumeniczny ekwadorski ekwiwalentny elamicki elastyczny elbląski eleacki 
+elegancki elegiacki elegijny elektorski elektroakustyczny 
+elektrofizjologiczny elektrokardiograficzny elektrolityczny 
+elektromagnetyczny elektromechaniczny elektrometalurgiczny elektroniczny 
+elektronowy elektropajęczarski elektrostatyczny elektryczny elektryzujący 
+elementarny eleuzyński elfi elficki elijski elipsoidalny eliptyczny elitarny 
+elitarystyczny elizejski elokwentny elzetesowski elzewirski elżbietański 
+emalierski emblematyczny embriologiczny ementalski emerycki emerytalny 
+emfatyczny emigrancki emisyjny emocjonalny emocjonujący emocyjny emorejski 
+emotywny empatyczny empirejski empiryczny empirystyczny emski 
+encyklopedyczny endecki endemiczny endoenergetyczny endorfinowy endoskopowy 
+endotermiczny enerdowski enerefowski energetyczny energiczny energizujący 
+energochłonny energooszczędny energożerny enharmoniczny enigmatyczny 
+enkawudowski enologiczny entomologiczny entuzjastyczny enumeratywny 
+enzootyczny enzymatyczny eoceński eolski epicki epiczny epidemiczny 
+epigoński epigramatyczny epikurejski epileptyczny epilogowy episjerski 
+epistemologiczny epizodyczny epokowy eposowy erazmiański erefenowski 
+eremicki erewański ergonomiczny erogeniczny erogenny erotografomański 
+erotomański erotyczny ertebelski erudycyjny erytrejski erywański esbecki 
+esdecki eseistyczny eseldowski eselowski esemesowy esencjalny esencjonalny 
+eserowski esesmański esesowski eskaerowski eskimoski eskulapski esmański 
+esowaty esperancki esseński estetyczny estoński estradowy estremadurski 
+etapowy etatowy etatystyczny eteryczny etezyjski etiologiczny etiopski 
+etniczny etnocentryczny etnograficzny etosowy etruski etyczny etykietalny 
+etykietowy etymologiczny eufemiczny eufemistyczny eufoniczny euforyczny 
+eugeniczny eurazjatycki euroamerykański euroatlantycki euroazjatycki 
+eurocentryczny euroentuzjastyczny europeistyczny europejski eurosceptyczny 
+ewangelicki ewangeliczny ewenkijski ewentualny eweński ewidencyjny ewidentny 
+ewolucyjny ewolutywny ezopowy ezoteryczny ełcki fabiański fabryczny 
+fabrykancki fabularny fachowy facjendarski fagasowski fajansiarski 
+fajczarski fajkowaty fajny fajowski fajowy fajsławicki fajtłapowaty fajumski 
+fakirski faktograficzny faktorski fakturalny fakturowy faktyczny 
+fakultatywny falangistowski falangowy falenicki falisty falklandzki falowaty 
+falowy familiarny familijny fanaberyjny fanatyczny fanowski fantasmagoryczny 
+fantastyczny fantazjotwórczy fantazyjny fantomatyczny faraoński faraski 
+farbiarski farbierski farerski farmaceutyczny farmakologiczny farmazoński 
+farmerski farny farsowy fartowny faryzejski faryzeuszowski fasadowy 
+fascynujący fasoniarski faszystowski fatalistyczny fatalny fatimski 
+fatjanowski faustowski faustyczny fazowy fałdzisty fałkowski fałszerski 
+febryczny fechmistrzowski fechtmistrzowski federacyjny federatywny feeryczny 
+feeryjny felczerski feldmarszałkowski felietonowy feministyczny fenicki 
+fenomenalny fenomenologiczny fenotypowy feralny fergański fermentacyjny 
+fermerski fertyczny festiwalowy festyniarski fetyszystyczny feudalny 
+fiakierski fiatowski fidiaszowski fidżyjski figlarny figlarski figuralny 
+figuratywny figurowy fikcjonalny fikcyjny fikuśny filadelfijski filarecki 
+filcowaty filhelleński filigranowy filipiński filipowski filisterski 
+filistyński filmowy filobułgarski filofrancuski filogenetyczny filologiczny 
+filomacki filopolski filosemicki filozoficzny filucki filuterny finalny 
+finansowy finałowy finezyjny finlandzki fioletowawy fioletowy fiołkowy 
+fircykowaty firmowy fiskalny fizjograficzny fizjologiczny fizyczny fizykalny 
+fizykoterapeutyczny fizylierski fiński flakowaty flamandzki flamastrowy 
+flandryjski flankierski flaubertowski flegmatyczny flejowaty flejtuchowaty 
+fleksyjny flirciarski flisacki flisowski florencki florentyński floriański 
+florydzki florystyczny fluidalny fluorescencyjny flądrowaty foczy fogaraski 
+fokidyjski folarski folderowy folklorystyczny folkowy folsomski fonetyczny 
+foniczny fonograficzny fonologiczny foremny formacyjny formalistyczny 
+formalnoprawny formalny formierski fornalski fornirski forsowny fortunny 
+fosforyczny fosforyzujący fotoamatorski fotogeniczny fotograficzny 
+fotokopiarski fotomechaniczny fotoreporterski fourierowski fowistyczny 
+fragmentaryczny frajerski frampolski franciszkański francowaty francuski 
+frankfurcki frankijski frankistowski frankofilski frankofoński frankoński 
+frantowski frapujący frasobliwy frazeologiczny frażetowski freblowski 
+fredropolski fredrowski frekwencyjny frenetyczny freudowski friulski 
+fromborski frontalny frontowy froterski frunzeński frustracyjny frustrujący 
+fruwający fryburski fryderycjański frygijski frymuśny fryszerski frywolny 
+fryzjerski fryzyjski fukierowski fuksjowy fulerski fundamentalistyczny 
+fundamentalny fundatorski fundlandzki funeralny funkcjonalny funkcyjny 
+funkowy furfancki furiacki furmański fuszerski futbolowy futrzarski 
+futurystyczny gabarytowy gaboroński gaboński gadareński gadatliwy gadulski 
+gadzi gadzinowaty gadżeciarski gaflowy gagauski galaktyczny galanteryjny 
+galanty galaretowaty galicki galicyjski galijski galilejski gallikański 
+galloromański gallurski galluryjski galopujący galowy galwaniczny 
+galwanizerski galwanoplastyczny galwanotechniczny gambijski gamoniowaty 
+gandawski gandharski gandystowski gangsterski ganiący gapiowaty gapiowski 
+gapowaty garbarski garbaty garbowski gardejski gardzienicki gardłowy 
+gargantuiczny garncarski garoński garsoński garwoliński gaskoński 
+gastarbeiterski gatunkowy gaullistowski gawędziarski gazdowski gazeciarski 
+gazetowy gazowy gałganiarski gałgański gaździński gburliwy gburowaty 
+gburowski gdański gderalski gderliwy gdowski gdyński geelowski geesowski 
+gejowski genderowy generacyjny generalny generalski generatywny generyczny 
+genetyczny genewski genezyjski genialny genologiczny genotypowy gentlemeński 
+genueński geodetyczny geodezyjny geoekologiczny geograficzny geologiczny 
+geometryczny geopolityczny georgiański geostrategiczny geotermalny 
+germanizatorski germanofilski germanofobski germański gestapowski gestyczny 
+geszefciarski getyński ghański giaurski gibki gibraltarski gibski gidelski 
+gielniowski gierałtowicki gierkowski gietrzwałdowski giełdziarski 
+gigantomański gigantyczny gilowicki ginekologiczny gipsowy giscardowski 
+giserski gitarowy gitowski giżycki giętki gladiatorski glauberski gliwicki 
+globalny globtroterski glutowaty gminny gminowładny gnaszyński gniewiński 
+gniewkowski gniewliwy gniewny gniewoszowski gniewski gnieźnieński gnojeński 
+gnostycki gnuśny gnębicielski gobeliniarski gocki goczałkowicki godkowski 
+godnościowy godny godowski godowy godzianowski godzieski godzinowy 
+godziszowski godziwy goethowski goghowski gogoliński gogolowski gogusiowaty 
+goidelski gojowski golarski golczewski goldbergowski goleniowski goleszowski 
+goliński golubski golusieńki goluteńki goluśki gombrowiczowski gomunicki 
+gomułkowski gondolierski gonny goplański goprowski gorajski gorbaczowowski 
+gorczański gordyjski gorlicki gorliwy gorseciarski gorszący gorzkawy gorzki 
+gorzkowicki gorzkowski gorzowski gorzupski gorący gorączkowy gospodarczy 
+gospodarny gospodarski gostycyński gostyniński gostyński goszczanowski 
+goszczyński goszystowski gotajski gotlandzki gotowiuteńki gotowiuśki gotycki 
+gotówkowy gowarczowski goworowski gozdnicki gozdowski gołdapski gołosłowny 
+gołuchowski goły gołymiński gołąbkowski gołębi gołębiarski gołębski 
+gościeradowski gościkowski gościnny gościński grabarski grabieżczy grabnicki 
+grabowiecki grabowski gracki gradacyjny gradowy gradualistyczny graficzny 
+grafologiczny grafomański grafowski grahamowski grajewski gramatyczny 
+granatowy grandilokwentny grandziarski graniczny granitowy granowski 
+gratisowy grawerski grawitacyjny grażdański grecki greckokatolicki 
+gregoriański grekokatolicki gremialny grenadierski grenadyjski grenlandzki 
+grobowy grochowski grodkowski grodziczeński grodzieński grodziski grodzki 
+gromadecki gromadkarski gromadny gromadzki gromki gromniczy gromowy 
+gronowski groteskowy grottgerowski groźny grożący grubawy grubiański 
+grubiutki grubopłaski gruboskórny gruby gruchający gruczołowaty gruduski 
+grudziądzki gruntowny grunwaldzki grupowy gruszkowaty gruziński gruźliczy 
+grybowski gryficki gryfiński gryfowski grymaśny grynderski grynicki 
+grypserski gryzący grzbietobrzuszny grzebieniarski grzebykowaty 
+grzeczniuchny grzeczniusi grzeczniutki grzecznościowy grzeczny grzegorzewski 
+grzeszny grzmiącki grzmiący grzybiarski grzybiczy grzybieński grzybobójczy 
+grzybowski grząski grążawski grębkowski grębocicki gręboszowski grębowski 
+gręplarski gródecki grójecki guamski gubernatorski gubiński gujański 
+gusowski gustowny gutenbergowski guwernerski guzdralski guzikarski guzowaty 
+gułagowski guślarski gwadelupski gwarancyjny gwarantowany gwardiański 
+gwardyjski gwarecki gwarliwy gwarny gwarowy gwatemalski gwałcicielski 
+gwałtowny gwiazdorski gwiaździsty gwieździsty gwinejski gzowski gąbiński 
+gąsawski gładki gładziuchny gładziusieńki gładziuteńki gładziutki głagolicki 
+głodnawy głodniuteńki głodny głodowy głogowski głoskowy głosowy głowaczowski 
+głowieński głubczycki głuchowski głuchołaski głuchy głupawy głupi 
+głupiusieńki głupiuteńki głupiutki głupkowaty głupowaty głuski głuszycki 
+głębinowy głęboki głębokomorski główczycki główkowaty główkowy główny 
+gębicki gęsi gęsiarski gęstawy gęściuchny gęściutki gęślarski góralski 
+górecki górniański górniczy górnolotny górnowoltański górnołużycki 
+górnośląski górny górowski górski górskokalwaryjski górzeński górzycki 
+górzysty gówniany gówniarski göteborski habsburski hackerski haczowski 
+haczykowaty hadki hadziacki hafciarski hagiograficzny haitański hajdamacki 
+hajducki hajfski hajnowski hakerski hakowaty halicki halinowski halonowy 
+halsztacki halucynogenny hamburski hamernicki hamiltoński hamletowski 
+hamujący handlarski handlowy haniebny hanniński hanojski hanowerski 
+hanzeatycki happenerski happeningowy harcerski harceński hardcorowy 
+hardrockowy hardy haremowy harfiarski harmoniczny harmonijny harmonogramowy 
+harpagoński hartny hartowny hartujący harvardzki harwardzki haski 
+haszymidzki hasłowy hawajski hawański hawiarski hazardowy hałaśliwy hałaśny 
+haźlaski hażlaski hańbiący hański heavymetalowy hebefreniczny hebrajski 
+hebrydzki hecarski hecny hecowny hedonistyczny hegemonistyczny heglistowski 
+heglowski heidelberski heksadecymalny heksagonalny hektograficzny helikalny 
+helikoński helladzki helleński helsiński helski helwecki hemodynamiczny 
+hemolityczny hemostatyczny henrycjański henrykowski heraklejski heraklijski 
+heraklitejski herbertowski herbski hercegowiński hercyński heretycki 
+hermafrodytyczny hermetyczny heroiczny heroldowski herostratesowy heski 
+hesperyjski heterogeniczny heterogenny heteromorficzny heteroseksualny 
+heterotroficzny hetmański hetycki heurystyczny hierarchiczny hieratyczny 
+hieroglificzny higieniczny higromorficzny higroskopijny higrotyczny 
+himalajski hindostański hinduski hindustański hiperboliczny hiperborejski 
+hiperkrytyczny hiperonimiczny hiperpoprawny hiperrealistyczny hipertroficzny 
+hiphopowy hipisowski hipnotyczny hipnotyzerski hipnotyzujący hipoalergiczny 
+hipokrycki hipokrytyczny hiponimiczny hipoteczny hipotermiczny hipotetyczny 
+hippiesowski hippisowski hipsterski hiroszimski hispanoamerykański 
+histeryczny histologiczny historiozoficzny historycznoliteracki historyczny 
+hiszpański hitlerowski hitowy hobbistowski hobbistyczny hobbystowski 
+hobbystyczny hochsztaplerski hojny holenderski holistyczny hollywoodzki 
+holoceński holograficzny holsztyński homelski homeopatyczny homerowski 
+homerycki homeryczny homofobiczny homogeniczny homologiczny homoseksualny 
+honduraski hongkoński honiarski honorny honorowy horacjański horacjuszowski 
+hormonalny horodelski horrendalny horrorowy horteksowski horyzontalny 
+hospodarski hospodyński hotelarski hotentocki hołdowniczy hoży hrabiowski 
+hrabski hradczański hreczkosiejski hrubieszowski hucpiarski huculski huczny 
+huczwiański hudsoński hugenocki hugonocki hukowy hukslejowski hulaszczy 
+hultajski humanistyczny humanitarny humański humoralny humorystyczny 
+humowski huraganowy huraoptymistyczny hurapatriotyczny huroński 
+hurraoptymistyczny hurrapatriotyczny hurtowny hurtowy husarski husycki 
+huszlewski hutnicki huński hvarski hwarski hyclowski hydrauliczny 
+hydroakustyczny hydrograficzny hyżeński iberoamerykański iberyjski iblowski 
+ibsenowski idealistyczny idealny identyczny identytarystyczny ideologiczny 
+ideowopolityczny ideowy idiomatyczny idiotyczny idylliczny ignorancki 
+igołomski ikariański ikonoklastyczny iksowaty ilekrotny iliryjski illinojski 
+iloczasowy ilokrotny ilościowy ilustracyjny ilustratorski ilustratywny 
+iluzjonistyczny iluzoryczny iluzyjny imaginacyjny imbecylny imieleński 
+imieliński imieninowy imienny imigrancki imitatorski immanentny immunogenny 
+immunologiczny imperatorski imperatywny imperialistyczny imperialny 
+impersonalny impertynencki impetyczny implicytny imponujący importerski 
+importochłonny impotencki impresjonistyczny impresyjny impresywny imprezowy 
+improwizacyjny improwizatorski impulsowy impulsywny incydentalny 
+indeterministyczny indiański indoaryjski indochiński indoeuropejski 
+indogermański indoirański indoktrynacyjny indonezyjski indukcyjny 
+industrialny indyczy indyferentny indyjski indywidualistyczny indywidualny 
+inercyjny infanteryjny infantylny inferencyjny infernalny inflacjogenny 
+inflacyjny inflancki informacyjny informatorski informatyczny 
+infrastrukturalny infułacki inicjatorski inicjatywny inkantacyjny inkasencki 
+inkaski inkwizytorski innosłowiański innowacyjny innowatorski innsbrucki 
+inowrocławski inowłodzki insbrucki inscenizacyjny inscenizatorski 
+inspektorski inspicjencki inspiratorski inspirujący instalatorski 
+instancyjny instruktażowy instruktorski instruktywny instrumentacyjny 
+instrumentalny instrumentologiczny instygatorski instynktowny instynktowy 
+instytucjonalny instytucki insynuatorski integralny integrujący 
+intelektualny inteligencki inteligentny intelowski intencjonalny intendencki 
+intensjonalny intensywny interaktywny interesowny interesujący 
+interferometryczny interimalny interkontynentalny internacki internetowy 
+internistyczny interpersonalny interpretacyjny interpretatorski 
+intersubiektywny interwencyjny interymalny intonacyjny intratny 
+introligatorski introspekcyjny introwertyczny intrygancki intrygujący 
+intuicyjny intuitywny intymny inwalidzki inwazyjny inwentarski 
+inwentaryzatorski inwentyczny inwestorski inwestycyjny inżynierski 
+inżynieryjny ipeenowski iracki irakijski irański irkucki irlandzki irokeski 
+ironiczny irracjonalistyczny irracjonalny irytujący iskrzący islamistyczny 
+islamski islandzki ismailijski istebniański istmijski istnieniowy istny 
+istotny istotowy istryjski iszymski itacki italiański italski iwaniski 
+iwanowicki iwierzycki iwkowski iwonicki izbicki izerski izolacyjny 
+izotermiczny izraelicki izraelski iławecki iławski iłowski iłżecki iński 
+jabłonecki jabłoneński jabłonkowski jabłonowski jabłoński jadowity jadowski 
+jafetycki jafski jagielloński jagnięcy jajcarski jajczarski jajorodny 
+jajowaty jakobicki jakobiński jakościowy jaktorowski jakubowski jakucki 
+jamajski jamalski jamieński jamnikowaty janczarski janikowski janisławicki 
+jankeski janosikowy janowicki janowski japonistyczny japoński jaraczewski 
+jarczowski jarmarczny jarociński jarosławski jarski jary jarzyniarski 
+jarzący jasełkowy jasielski jasienicki jasieński jasionówecki jaski jaskrawy 
+jasnogórski jasnoniebieski jasnowidzący jasnożółty jastarniański jastkowski 
+jastrowski jastrzębi jastrzębiogórski jastrzębski jaszczurczy jaundejski 
+jawajski jawiszowicki jawny jaworowski jaworzański jaworzniański jaworzyński 
+jazgotliwy jazzowy jazzrockowy jałowy jałtański jaśliski jaśniepański 
+jaśnisty jaśniuteńki jaśniutki jaćwieski jedenastoipółkrotny jedenastokrotny 
+jedleński jedliński jednaki jednakowiusieńki jednakowiuteńki jednakowiutki 
+jednakowiuśki jednakowy jedniuteńki jednobrzmiący jednocyfrowy jednoczesny 
+jednoczący jednodniowy jednoetapowy jednofazowy jednogłosowy jednogłośny 
+jednoimienny jednokadłubowy jednokierunkowy jednokolorowy jednokrotny 
+jednolity jednomiarowy jednomierny jednomyślny jednooczny jednoosobowy 
+jednopłciowy jednoraki jednorazowy jednoroczny jednorodny jednoskośny 
+jednostajny jednostkowy jednostronny jednosylabowy jednoszeregowy 
+jednotorowy jednowarstwowy jednowymiarowy jednozgłoskowy jednoznaczny 
+jedwabieński jedwabisty jedwabiński jedwabny jedynowładczy jedynowładny 
+jedyny jegierowski jegierski jehowicki jelcynowski jelczański jeleniewski 
+jeleniogórski jeleśniański jeliciarski jelitowy jelonkowski jemeński 
+jemieleński jemielnicki jenajski jeneralski jeniecki jenisejski jerozolimski 
+jerseyski jerychoński jerzmanowicki jerzmanowski jesienny jezierski 
+jeziorański jeziorzański jezuicki jełki jełopowaty jeździecki jeżewski 
+jeżowski jeżycki jodłowski jogurtowy johannesburski jokohamski jonkowski 
+jordanowski jordański jorubijski jowialny jowiszowy joński jubilerski 
+jubileuszowy judaistyczny judaszowski judaszowy judejski judeochrześcijański 
+judeoromański judofilski judzki jugosłowiański juhaski jukagirski jukatański 
+jukoński juliański julijski junacki juniorski junkierski juracki jurajski 
+jurgowski jurny jurorski jurydyczny jurysdykcyjny justyniański jutlandzki 
+jutrosiński juwenaliowy jądrowy jąkający jąkliwy jęczący jędrny 
+jędrzejewiczowski jędrzejowski jędzowaty jękliwy językowy językoznawczy 
+józefiński józefowski kabacki kabalistyczny kabardyjski kabardyński 
+kabaretowy kabotyński kabulski kabylski kabłąkowaty kacapski kacerski 
+kachetyjski kacykowski kaczawski kaczkowaty kaczy kadecki kadencjonalny 
+kadenowski kadrowy kaduczny kadzidlański kafkowski kaflarski kafuański 
+kairski kajakarski kajdaniarski kajeński kajmański kajzerowski kakofoniczny 
+kalabryjski kalafiorowaty kalderonowski kaleciański kaledoński 
+kalejdoskopowy kaleki kalendarzowy kaletański kalidoński kalifornijski 
+kaligraficzny kaliningradzki kaliski kalkucki kalkulatorski kalmarski 
+kaloryczny kalumniatorski kalwaryjski kalwinistyczny kalwiński kambajski 
+kambodżański kambryjski kamczacki kamczadalski kamedulski kameliowaty 
+kameralny kamerdynerski kameruński kamieniarski kamienicki kamienicznikowski 
+kamieniecki kamienisty kamiennogórski kamienny kamieński kamionecki 
+kamionkowski kampalski kampanijny kampański kampinoski kampiński 
+kampuczański kamracki kamski kanaanejski kanaański kanadyjkarski kanadyjski 
+kananejski kanaryjski kancerogenny kanclerski kandelabrowy kandydacki 
+kanejski kanibalski kaniowski kanneński kanonicki kanoniczny kanonierski 
+kanopski kantabryjski kantorski kantowski kantoński kapcański kapelański 
+kapelmistrzowski kapepowski kaperski kapilarny kapistowski kapitalistyczny 
+kapitalny kapitałowy kapitański kapitoliński kapitulancki kapralski kapryśny 
+kapski kapsztadzki kapuański kapucyński kapłański karabachski karabinierski 
+karaceński karagandzki karaibski karaimski karakaski karakałpacki karakumski 
+kararyjski karawaniarski karawaningowy karbonarski karboński karciarski 
+karcinogenny karcynogenny karczemny karczewski karczmarski karczowski 
+karczysty karcący kardynalny kardynalski karelski karetarski kargowski 
+karierowiczowski karierowy karkonoski karkołomny karlistowski karliński 
+karlowarski karlsbadzki karmazynowy karmelarski karmelicki karmelitański 
+karminowy karnawałowy karnicki karniewski karny karoliński karpacki 
+karsiński karski karszyński kartageński kartagiński kartezjański 
+kartograficzny kartuski kartuzjański karygodny karykaturalny karyncki 
+karzący kasandryczny kasjerski kaskaderski kaskadowy kasowy kaspijski 
+kastalijski kastalski kastowy kastylijski kastylski kaszgarski kaszmirski 
+kasztanowy kasztelański kaszubski katalityczny katalogowy kataloński 
+katangijski katarktyczny katarski katastrofalny katastroficzny katański 
+katechetyczny katechizmowy kategorialny kategoryczny katmanduański katolicki 
+katorżniczy katowicki katowski katoński katyński kaudyński kaukaski 
+kaustyczny kauzalny kawalarski kawalerski kawaleryjski kawęczyński kazachski 
+kazachstański kazalniczy kazanowski kazaski kazański kazimierski 
+kazimierzowski kazionny kazirodczy kaznodziejski kazualny kazuistyczny 
+kałakucki kałmucki kałuski kałuszyński kaźmierski każdoczesny każdodzienny 
+każdomiesięczny każdorazowy każdoroczny każdotygodniowy kańczuski kcyński 
+kelnerski kempingowy kenelski kenijski keplerowski keratolityczny kerczeński 
+keynesowski khmerski kibicowski kibolski kickbokserski kiczowaty kiczuański 
+kidnaperski kiejdański kielarski kielecki kielichowaty kielniański kiepskawy 
+kiepski kiepściuchny kiepściutki kiernoski kierowniczy kierunkowy 
+kietrzański kiezmarski kiełczygłowski kieżmarski kigalijski kijewski 
+kijowski kijowy kijski kikolski kilimiarski kilimkarski kilkakrotny 
+kilkokrotny kilkoosobowy kilkudziesięciokrotny kilkukrotny kilkunastokrotny 
+kilkuosobowy kilkusetosobowy kiloński kimeryjski kinematograficzny 
+kingstoński kinszaski kipczacki kiperski kirasjerski kircholmski kirgiski 
+kisielicki kiszkowski kiszyniowski kitajski kitesurfingowy klakierski 
+klakomański klanowy klapowaty klarowny klasistowski klasowy klasycystyczny 
+klasyczny klasyfikatorski klasztorny klaunowski klaustrofobiczny klawy 
+kleczewski kleinowski kleisty klejarski klejowy klembowski kleparski 
+klerkowski klerycki klerykalny klerykowski kleszczelski kleszczewski 
+kleszczowski kleszczowy klezmerski kliencki klientowski klientystyczny 
+klikuszowski klimatyczny klimontowski kliniczny klinowaty klinowy kliszowski 
+kloaczny klonowski kloszardowski kloszardzki kloszowy klownowski klubowy 
+kluczański kluczborski kluczewski klukowski klwowski klęskowy kmotrowski 
+knajacki knajpiarski kneippowski kneziowski kniaziowski knurowski knyszyński 
+koalicyjny kobiecy kobielski kobierzycki kobierzyński koblencki koburski 
+kobylański kobyliński kobylnicki kobylogórski kobyłecki kocborowski 
+kochający kochaniutki kochanowicki kochinchiński kochliwy koci kocierzewski 
+kociewski kocki kocmyrzowski koczalski koczowniczy kodeksowy kodeński 
+kodrąbski kodyfikatorski kognitywistyczny koguci koherentny kojący 
+kokieteryjny kokietliwy kokocki koktajlowy kolaborancki kolankowaty kolanowy 
+kolarski kolatorski kolażowy kolbuszowski kolchidzki kolebkowy kolegiacki 
+kolegialny kolejarski kolekcjonerski kolektorski kolektywny koleżeński 
+kolisty kolizyjny kolneński koloidalny kolokatorski kolokwialny kolombijski 
+kolonialny kolonijny kolonizatorski kolonowski kolorowy kolorystyczny 
+kolosalny koloński kolporterski kolski kolumbijski koluszkowski kolący 
+komandorski komandoski komaniecki komarowski komańczowski kombatancki 
+kombinacki kombinacyjny kombinatorski kombinatoryczny komediancki 
+komediopisarski komediowy komendancki komentatorski komercyjny komfortowy 
+komiczny komiksowy kominiarski kominternowski komisarski komisaryczny 
+komisowy komisyjny komitacki komiwojażerski komornicki komorniczy komoryjski 
+kompaktowy komparatystyczny kompatybilny kompensacyjny kompetencyjny 
+kompetentny kompilatorski kompleksowy komplemenciarski komplementarny 
+kompletny kompozycyjny kompozytorski komprachcicki kompradorski kompromisowy 
+kompromitujący kompulsywny komputerowy komsomolski komuchowaty komunijny 
+komunikacyjny komunikatorowy komunikatywny komunistyczny konający 
+konakryjski konarzyński koncentryczny koncepcyjny konceptualizacyjny 
+konceptualny koncernowy koncertowy konchowy kondotierski konduktorski 
+kondycyjny konecki koneserski konfederacki konferansjerski konfidencjonalny 
+konfidencki konfliktowy konformistyczny konfraterski konfrontacyjny 
+konfrontatywny konfucjański kongenialny kongijski kongresowy koniakowski 
+koniarski koniczny koniecpolski koniecznościowy konieczny konikarski 
+koniunkturalny koniński konkretny konkurencki konkurencyjny konkursowy 
+konkwistadorski konopiski konopnicki konowalski konradowski konsekutywny 
+konsekwentny konserwatorski konserwatywny konserwujący konsolacyjny 
+konspiracyjny konspiratorski konstanciński konstancjański 
+konstantynopolitański konstantynowski konstantyński konstrukcyjny 
+konstruktorski konstruktywny konstytucyjny konsulowski konsultingowy 
+konsumencki konsumerski konsumistyczny konsumpcyjny konsyliarski 
+konsystorski kontaktowy kontekstowy kontemplacyjny kontestatorski 
+kontragitacyjny kontrahencki kontraktowy kontrapunktyczny kontrastowy 
+kontrastywny kontrkulturowy kontrolerski kontrolny kontrowersyjny 
+kontrwywiadowczy konturowy kontynuatorski konwekcyjny konwencjonalny 
+konwencyjny konwersacyjny konwiktorski konwisarski konwojencki konwulsyjny 
+kooperacyjny kooperancki koordynacyjny koordynatorski kopenhaski koperkowy 
+kopernikański kopernikowski kopertowy kopiaty kopieniacki koprzywnicki 
+koptyjski kopułkowaty kopułowaty kopułowy korabiewicki koralowy korczewski 
+korczyński kordialny kordobański kordowański koreanistyczny koreański 
+koreferentny korektorski korepetytorski korespondencki korespondencyjny 
+korfantowski kornijski kornwalijski korny koromandelski koronerski 
+koroniarski koronkarski koronkowy koronowski korowodowy korporacyjny 
+korporancki korporatystyczny korporatywny korpulentny korsarski korsykański 
+korszeński kortowski korupcyjny koryciński korygujący koryncki koryntyjski 
+korytnicki korzenieński korzenny korzystny kosakowski kosiarski kosmaty 
+kosmetologiczny kosmetyczny kosmiczny kosmochemiczny kosmogoniczny 
+kosmograficzny kosmologiczny kosmonautyczny kosmopolityczny kosmowizyjny 
+kosooki kosowski kostarykański kosterski kostiumerski kostiumologiczny 
+kostiumowy kostnołuski kostołuski kostromski kostropaty kostrzyński 
+kostyczny kosy kosynierski koszaliński koszarawski koszarowy koszerny 
+koszmarny kosztowny kosztowy koszycki koszykarski koszęciński kotelski 
+kotlarski kotliński koturnowy kotuński kowalewski kowalski kowarski 
+kowbojski kowelski kowieski kowieński kozacki kozi koziegłowski kozielicki 
+kozielski kozienicki kozieński kozłowicki kozłowski kołaczkowski 
+kołbaskowski kołbielski kołczygłowski kołdrzarski kołnierzowaty kołobrzeski 
+kołodziejski kołomyjski kołowaty kołowy kołtryniarski kołtuński kołudzki 
+kołychliwy kołymski kołyszący kołłątajowski kościański kościeliski kościelny 
+kościerski kościerzyński kościotrupi kościuszkowski koślawy koźmiński 
+kożuchowski końcowy koński końskowolski kpiarski kpinkowaty kpiący 
+krajenecki krajeński krajiński krajobrazowy krajograficzny krajowski 
+krajoznawczy krakauerski krakowski kramarski kraniologiczny kraniometryczny 
+krapkowicki krasiczyński krasieński krasnodarski krasnojarski krasnoludzi 
+krasnoludzki krasnopolski krasnostawski krasny krasociński krasomówczy 
+krawiecki kraśnicki kraśniczyński krańcowy kreacyjny kreatorski kreatywny 
+kreci kredensowy kredowy kredytowy kremlowski kremowy krempiński kreolski 
+kreskówkowy kresowiacki kreteński kretyński krewki krewniacki krewniaczy 
+krewski krezusowy kreślarski krioniczny krnąbrny krobski kroczycki kroczący 
+krogulczy krokowski krokowy kromanioński kronikarski kronselski kroplisty 
+kroplowy krosowy krotny krotochwilny krotoszycki krotoszyński krowi 
+krościeński krośnicki krośniewicki krośnieński krtaniowy kruchusieńki 
+kruchuteńki kruchutki kruchy kruczy krupierski krupski kruszwicki kruszyński 
+krwawy krwiotwórczy krwiożerczy krwisty kryjomy kryminalistyczny kryminalny 
+kryminogenny kryminologiczny krymski krynicki kryniczny krypniański 
+kryptograficzny kryptonimowy krystaliczny krysznaicki kryształowy 
+krytycznoliteracki krytyczny krytykancki krywański kryzysowy krzaczkowaty 
+krzanowicki krzczonowski krzemieniecki krzemieniewski krzepicki krzepiący 
+krzepki krzeszowicki krzeszowski krzeszycki krzniański krztuśliwy krzyczący 
+krzykliwy krzykoski krzymowski krzynowłoski krzyski krzystkowicki 
+krzywdziański krzywdzący krzywiński krzywoliniowy krzywoprzysięski krzywy 
+krzyżacki krzyżanowicki krzyżanowski krzyżowy krzęciński krążeniowy kręcicki 
+kręgarski kręglarski krępawy krępujący krępy krętacki króciuchny 
+króciusieńki króciuteńki króciutki króciuśki królewiacki królewiczowski 
+królewiecki królewski króliczy krótki krótkodystansowy krótkofalarski 
+krótkofalowy krótkookresowy krótkoplanowy krótkoterminowy krótkotrwały 
+krótkowzroczny ksenofilski ksenofobiczny kserograficzny ksiąski książkowy 
+książęcy księdzowski księgarski księgowy księżacki księżowski księżpolski 
+księży księżycowy ksobny kształcący kształtny kształtujący kubaniarski 
+kubaturowy kubański kubistyczny kubkowaty kubofuturystyczny kucharski 
+kuchenny kuchmistrzowski kuczborski kudowski kuficki kuglarski kujawski 
+kujbyszewski kukułczy kulawy kuleski kulinarny kulisty kulombowski 
+kulometryczny kulowski kultowy kulturalny kulturologiczny kulturotwórczy 
+kulturowy kulturoznawczy kulturtregerski kuluarowy kumański kumbryjski 
+kumoterski kumpelski kumplowski kumulatywny kundajski kunicki kunktatorski 
+kunowicki kunowski kunsztowny kupiecki kupkowy kuplerski kuracyjny 
+kuratorski kurański kurczliwy kurczowy kurdyjski kurdystański kurewski 
+kurierski kuriozalny kurlandzki kurowski kuroński kurpiowski kurski 
+kurtuazyjny kurwi kurylski kuryłowecki kurzy kusicielski kusiutki kusy 
+kuszący kutnowski kutwiarski kuwaski kuwejcki kuzynowski kułacki kuśliński 
+kuśnierski kuźniański kuźniczy kwadratowy kwadrofoniczny kwakierski 
+kwakrowski kwalifikacyjny kwalitatywny kwantowy kwantytatywny kwarcowy 
+kwartalny kwaskawy kwaskowaty kwasotwórczy kwatermistrzowski kwaśnawy 
+kwestarski kwestionariuszowy kwestorski kwiaciarski kwiatowy kwidzyński 
+kwieciarski kwiecisty kwietny kwitnący kwotowy kyreński kątowaty kątowy 
+kąśliwy kłajpedzki kłajski kłamliwy kłobucki kłoczewski kłodawski kłodnicki 
+kłodzki kłomnicki kłopotliwy kłosisty kłusacki kłusowniczy kłótliwy 
+kłótnicki kędzierzawy kędzierzyński kępieński kępiński kęsowski kętrzyński 
+kórnicki kózecki labilny labiodentalny labiowelarny laborancki laboratoryjny 
+labourzystowski labradorski laburzystowski lacedemoński lachowski lacki 
+ladyński lagoski laicki lajtowy lakierniczy lakoniczny lakoński 
+laktoowowegetariański laktowegetariański lalkarski lalkowaty lalusiowaty 
+lamaicki lamajski lamerski lamparci lampiarski lampionowy lanckoroński 
+landrynkowy landsberski langwedocki lankijski lanserski lansjerski 
+laodycejski laotański lapidarny lapoński laserowy laserunkowy laski 
+laskowicki lasowski lastrykarski lateralny laterański lateński latopisarski 
+latynistyczny latynoamerykański latynoski latyński laurkowy laurowy 
+lawendowy lawinowy lazaroński lazurowy leasingowy lechicki leciuchny leciusi 
+leciusieńki leciuteńki leciutki leciuśki leciwy leczniczy leczący lednicki 
+legalistyczny legalny legendarny legionowski legislacyjny legitymistyczny 
+legnicki leguński lejdejski lejkowaty lejowaty lekarski lekceważący lekki 
+lekkomyślny lekkostrawny lekkuchny lekkusi lekkusieńki lekkuśki lekomański 
+leksykalny leksykograficzny leksykologiczny leksykonowy lektorski lekuchny 
+lekusi lekusieńki lekutki lekuśki leliski lelkowski lelowski lemurowaty 
+lendzielski leningradzki leninowski leniwy lenniczy lenny leonardowski 
+leonciński leoniński lepki lesbijski leski leszczyński lesznowolski letalny 
+letargiczny letejski letni lewacki lewaluaski lewantyński lewicki lewicowy 
+lewiński leworęczny lewoskrętny lewostronny lezgiński leśnicki leśnieński 
+leśniowicki leżajski libański liberalistyczny liberalny libertariański 
+libertyński liberyjski libidalny libijski libiąski librewilski licejski 
+licencjacki licheński lichnowski lichutki lichwiarski lichy licyjski 
+liczbowy liczebnikowy liczebny liczny lidyjski lidzbarski lidzki liftingowy 
+liftingujący ligowy liguryjski likaoński liktorski likwidacyjny 
+likwidatorski liliowaty liliowoniebieski lilioworóżowy liliowy lilipuci 
+limanowski limburski limonkowy limski linearny lingwistyczny linierski 
+liniowy lioński lipawski lipecki lipiański lipieński lipnicki lipnowski 
+lipny lipowski lipski liptowski lirowaty liryczny lisi liskowski listowny 
+listwowaty literacki literalny literaturoznawczy literowy litewski 
+litograficzny litosny litościwy liturgiczny litwacki lityczny liverpoolski 
+liwski lizboński lizusowski liściowaty liński lniarski lniański lodowaty 
+lodowy lodziarski logarytmiczny logiczny logistyczny lojalistyczny lojalny 
+lokajski lokalny lokarneński lokatorski lokowski lombardzki lombrozjański 
+lombrozowski lomejski londyński longobardzki lordowski loretański losowy 
+lotaryński lotniarski lotniczy lotowski lowański lowelasowski lozański 
+luandzki lubaczowski lubartowski lubaski lubawecki lubawski lubański lubecki 
+lubelski luberski lubeński lubichowski lubiewski lubieżny lubieński 
+lubiszyński lubiąski lubiński lublański lubliniecki lubniewicki lubocheński 
+lubomierski lubomiński lubomski lubotyński luboński lubrzański lubski 
+lubszański lubuski luby lubyczański lucyferyczny ludnościowy ludny 
+ludobójczy ludomański ludowy ludowładczy ludożerczy ludwikowski ludwisarski 
+ludwiński ludyczny ludzki ludźmierski lukratywny luksemburski luksusowy 
+lumierowski luminarski lumpenproletariacki lumpiarski lumpowski lunatyczny 
+lunchowy lusacki lusakijski lustracyjny lustratorski lustrzany luterański 
+luterski lutociński lutomierski lutowiski lututowski luty luzacki luziński 
+luźniutki luźny lwi lwowski lwówecki lyoński lądecki lśniący lęborski 
+lędziński lękliwy lękowy macedoński machabejski machiaweliczny machiawelski 
+machinalny maciejowicki macierzyński maciupeńki maciupki maczugowaty 
+madagaskarski madianicki madraski madrycki madziarski mafijny magadański 
+magdaleński magdeburski magentowy maghrebski magiczny magisterski 
+magistracki magistrancki maglarski magnacki magnetofonowy magnetyczny 
+magnetyzerski magnetyzujący magnuszewski mahlerowski mahometański mahoniowy 
+mailowy mailowy mainstreamowy majestatyczny majoracki majorkański majorski 
+majowy majsterski majstrowski majątkowy majętny makabryczny makaroniarski 
+makartowski makiaweliczny makiawelski maklerski makowski makroskopijny 
+makroskopowy makrosocjologiczny maksymalistyczny maksymalny malabarski 
+malabijski malachitowy malajski malakologiczny malakozoologiczny malanowski 
+malarski malawijski malborski malczycki malechowski malediwski malejski 
+malezyjski maleńki malgaski malijski malinowy malkontencki malowniczy 
+maltański maluchny maluczki malusieńki maluteczki malutenieczki maluteńki 
+malutki maluśki malwiński mamelucki mamiący mammograficzny mamuci 
+managuański manamski manchesterski mandaryński mandatariuszowski mandżurski 
+manhattański maniacki maniaczny maniakalny manicheistyczny manichejski 
+manieryczny manierystyczny manifestacyjny manilski manipulacyjny 
+manipulatorski mannheimski mannowski manowski mansardowy mantuański manualny 
+manueliński maoistowski maoistyczny maoryski maputański maratoński marburski 
+marchewkowy marcinowicki marciszowski marecki marginalny marginesowy 
+margoniński margrabiowski mariacki marianowski mariawicki mariański 
+mariensztacki mariocentryczny marionetkowy marketingowy markierski 
+markietański markizowski markotny markowski marksistowski marksowski 
+markuski marmurowy marniutki marnotrawczy marnotrawny marny marokański 
+maronicki marsjański marski marsowaty marsowy marsylski marszałkowski 
+martenowski martwiczy martwy martynikański martyrologiczny maruderski 
+marudny maruszewski maryjski marymoncki marynarski marzycielski marzący 
+masajski masakryczny masarski maseruański maskaradowy maskujący 
+masochistyczny masowy masoński masywny maszewski maszopski masztalerski 
+maszynowy masłowicki masłowski matacki matejkowski matematyczny 
+materialistyczny materialny materiałochłonny materiałowy matowy matołkowaty 
+matriarchalny mauretański maurytyjski mazdajski mazdejski mazowiecki 
+mazowieckogrodziski mazowszański mazurski małkiński małmazyjski małoduszny 
+małogabarytowy małogoski małokaloryczny małoletni małomiasteczkowy małomicki 
+małomiejski małomieszczański małopolski małorealistyczny małoruski 
+małostkowy małowiejski małowymiarowy małpi małpiarski małżeński maślany 
+maślarski mański mceński mdlejący mdlący mdławy meblarski mecenasowski 
+mechaniczny mechanistyczny mechanizatorski medalierski medialny mediatorski 
+mediolański mediumistyczny medycki medyczny medyjski medytacyjny medyński 
+mefistofelesowski mefistofeliczny megalomański megaryjski mejlowy mekkański 
+meklemburski meksykański melancholiczny melancholijny melanezyjski meliczny 
+meliniarski melioratywny melodramatyczny melodyczny melodyjny melomański 
+menadżerski menażerski menedżerski menelski menippejski mentalnościowy 
+mentalny mentorski mereżkarski merkantylny merowiński merowski 
+merytokratyczny merytoryczny meseński mesjaniczny mesjanistyczny mesjański 
+messyński mesyński metaboliczny metafilozoficzny metafizyczny metaforyczny 
+metajęzykowy metaliczny metalowy metameryczny metamorfogeniczny 
+metodologiczny metodyczny metonimiczny metrażowy metryczny metrykalny 
+metternichowski metyski mezopotamski mełgiewski mgielny mglisty mgliwy 
+mgnieniowy mgławicowy mgławy miareczkowy miarodajny miarowy miastkowski 
+miastotwórczy miastowy miałki miażdżący miceński michałowicki michałowski 
+michowski mickiewiczowski miczmański miczurinowski miechowicki miechowski 
+miecznikowski miedzeszyński miedzeński miedzianogórski miedzichowski 
+miedzieński miejscowy miejski miejskopiastowski mielecki mieleszyński 
+mieleński mielnicki mienszewicki miernicki mierniczy mierny mieroszowski 
+mierzalny mierzęcicki miesięczny mieszczański mieszkaniowy mieszkowicki 
+mieściski mieńszewicki migawkowy migdałowy migotliwy migracyjny mikorzyński 
+mikołajczykowski mikołajski mikołowski mikrokomputerowy mikronezyjski 
+mikroskopiczny mikroskopijny mikroskopowy mikrotektoniczny mikry mikserski 
+milanowski milczkowaty milczący milejczycki milejewski milejowski milenijny 
+mileńki milicki milionerski milionkrotny milionowy militarny militarystyczny 
+milkliwy millenijny miloński miluchny milusi milusieńki milusiński milutki 
+miluśki milówecki mimetyczny mimiczny mimochętny mimowiedny mimowolny 
+mimozowaty mimośrodkowy mimośrodowy minarecki mincarski minerski miniatorski 
+miniaturowy minierski minikomputerowy minimalistyczny minimalny 
+ministerialny ministerski ministrancki ministrowski minoderyjny minojski 
+minorowy minusowy mioceński miodny miodopłynny miodowy mirmidoński mirowski 
+mirski misiowaty misjonarski misterny mistrzowski mistyczny mistyfikatorski 
+mitologiczny mitomański mitotwórczy mityczny mitygujący mizeracki 
+mizerniuteńki mizerniutki mizerny mizeruchny miączyński miłakowski 
+miłkowicki miłomłyński miłosierny miłosny miłosławski miłościwy miły 
+miśnieński mięciuchny mięciusieńki mięciuteńki mięciutki międzyborski 
+międzychodzki międzygromadzki międzykomorowy międzykontynentalny międzyleski 
+międzyludzki międzymiejski międzymorski międzynarodowy międzyosobniczy 
+międzyrzecki międzysłowiański międzywojewódzki międzyzdrojski mięguszowiecki 
+miękiński miękkawy miękki miętowy miński mleczarski mlecznoniebieski mleczny 
+mnemoniczny mnemotechniczny mnichowski mniowski mnisi mniszkowski mnogi 
+moabicki moabski mobilizujący mobilny mocarny mocarstwowy mochowski 
+moczarowski moczopędny moczowy modelarski modelatorski modelowy modemowy 
+modernistyczny modernizacyjny modernizatorski moderujący modeński 
+modliborzycki modlitewny modliński modniarski modny modowy modrooki 
+modyfikujący mogadiszuański mogielnicki mogilański mogileński mogilski 
+mogolski moguncki mohylewski mohylowski mojżeszowy mokotowski mokrawy 
+mokrski mokruteńki mokrutki mokruśki mokry mokrzuteńki mokrzutki molekularny 
+molierowski momentalny monachijski monakijski monarchiczny monarszy 
+monasterski monastyrski monetarny mongolski moniecki monistyczny 
+moniuszkowski monochromatyczny monofizycki monofoniczny monoftongiczny 
+monograficzny monolityczny monopolistyczny monopolowy monostroficzny 
+monosylabowy monotematyczny monotonny monowski monrowijski monstrualny 
+monterski monteskiuszowski montrealski monumentalny moralitetowy 
+moralizatorski moralny morawski morderczy mordwiński morfologiczny 
+morfosemantyczny morganatyczny mormoński moronijski morowy morski moryński 
+morzeszczyński morąski mosiężny mosiński moskarzewski moskiewski mosulski 
+moszczenicki motoryczny motywacyjny mozaikowaty mozaikowy mozaistyczny 
+mozambicki mozambijski mozarabski mozartowski mozolny mołdawski mołojecki 
+możebny możliwy mońkowski mrocznawy mroczny mroziański mroźny mrożkowski 
+mrożący mrukliwy mrągowski mrówczy mstowski mszański mszczonowski mucharski 
+mudżahediński mulacki mularski mulisty multański multikulturowy 
+multimedialny mumijny mundajski muranowski murarski murmański 
+murowanogośliński murowany murowski murzyński muskularny musowy mustierski 
+muszelkowaty muszkieterski muszlowaty muszyński mutagenny muzealny 
+muzułmański muzyczny muzykalny muzykancki muślinowy mycieliński mycielski 
+mydlarski mykanowski mykeński mykologiczny mylny mylący mysi myszkowski 
+myszyniecki mysłakowicki mysłowicki myzyjski myślenicki myśliborski 
+myślicielski myśliwski myślowy myślący mącicielski mączny mądraliński mądry 
+mątewski mławski młockarski młodociany młodopolski młodoturecki młody 
+młodzieszyński młodzieżowy młodzieńczy młodziuchny młodziusieńki 
+młodziuteńki młodziutki młodziuśki młynarski młyński mścicielski 
+mściwojowski mściwy mżysty męcinecki męczeński męczący męski męskoosobowy 
+mętnawy mętniacki mętny mężatkowski mężny mężowski mówiący mózgowy 
+münsterski nabatejski nabożny nabuzowany nabłonkowy nachalny nachiczewański 
+nacjonalistyczny nacystowski naczelnikowski naczelny nadamurski nadaremny 
+nadarzyński nadawczy nadbałtycki nadbużański nadcisański nadczarnomorski 
+naddnieprzański naddniestrzański naddunajski nadelbiański nadetatowy 
+nadgoplański nadgorliwy nadhuczwiański nadkaspijski nadległy nadliczbowy 
+nadludzki nadmiarowy nadmierny nadmorski nadmotławski nadnarwiański 
+nadnaturalny nadnidziański nadniemeński nadnotecki nadobny nadobowiązkowy 
+nadodrzański nadopiekuńczy nadpilicki nadplanowy nadpobudliwy nadprogramowy 
+nadrabski nadrealistyczny nadreński nadrzędny nadsański nadsekwański 
+nadskakujący nadskrwiański nadspodziewany nadstandartowy nadterminowy 
+nadwarciański nadwełtawski nadwigrzański nadwiślański nadwołżański 
+nadwyżkowy nadziemny nadziemski nadzorczy nadzwyczajny nadłabski 
+nadśródziemnomorski nadświdrzański nafciarski naganny nagi naglący nagminny 
+nagradzający nagraniowy nagusieńki naguteńki nagutki nagłowicki nagły 
+nairobijski naiwny najazdowy najemny najezdniczy nakazowy nakielski 
+nakładowy nalegający należny namacalny namiarowy namibijski namiestnikowski 
+namiętny namolny namysłowski namyślny nankiński nansenowski nantejski 
+naoczny napadowy napastliwy napastniczy napoleoński napominający napotny 
+naprzeciwległy naprzemianległy naprzemianstronny naprzemienny napuszony 
+napędowy narastający narciarski narcystowski narcystyczny narewski 
+narkomański narkotyczny narodnicki narodotwórczy narodowodemokratyczny 
+narodowosocjalistyczny narodowościowy narodowy narolski narowisty narożny 
+narracyjny narratorski naruszewski narwiański narzeczeński narzutny 
+narzędziowy nasenny nasielski naskórkowy nassauski nastoletni nastrojowy 
+następczy następny następujący natowski natryskowy natrętny natufski 
+naturalistyczny naturalny naturszczykowski natychmiastowy nauczycielski 
+naukowy naukoznawczy naumyślny naurański nawarski nawiasowy nawierzchniowy 
+nawigacyjny nawilżający nawojowski nawykowy nazaretański nazareński 
+nazewniczy naziemny nazistowski nałogowy nałęczowski naśladowczy 
+naśladowniczy ndżameński neandertalski neapolitański nefrytowy negatywny 
+negocjacyjny negocjatorski nekielski nekrofilski nelsoński nemejski 
+neofaszystowski neoficki neogotycki neoheglistowski neoheglowski 
+neohitlerowski neokantowski neokomski neonacystowski neonazistowski 
+neoplatoński neosłowiański nepalski nerkowaty nerkozastępczy nerwicowy 
+nerwowy nestoriański netowy neurasteniczny neurochirurgiczny neurologiczny 
+neurotoksyczny neurotyczny neutralny newralgiczny newski newtonowski 
+ngwanejski niamejski nicejski niczegowaty niderlandzki nidziański nidzicki 
+nidzki niebaczny niebiański niebieskawy niebieski niebieściuchny 
+niebieściutki nieborowski niebotyczny niebywały niechanowski niechlowski 
+niechlujny niechybny nieckowaty niecny niedobczycki niedostateczny 
+niedowierzający niedołężny niedościgły niedrzwicki niedzicki niedzielny 
+niedźwiedzi niedźwiedziowaty niegociński niegodny niegosławicki niegowski 
+nieliski niemcewiczowski niemczański niemeński niemiecki niemodliński 
+niemożebny niemożliwy niemrawy niemy nienawistny nieniecki nieobliczalny 
+nieodparty nieodrodny nieodstępny nieodwołalny nieodzowny nieodłączny 
+nieograniczony nieokreślony nieokrzesany nieopanowany nieopatrzny nieopisany 
+niepohamowany niepojęty niepokojący niepomierny nieporadny nieporuszony 
+nieporównany nieposzlakowany niepowrotny niepowstrzymany niepozorny 
+niepołomicki nieprawdopodobny nieprzejednany nieprzeparty nieprzerwany 
+nieprzezwyciężony nierozerwalny nieruchawy nierówny niesamowity niesforny 
+nieskalany nieskazitelny nieskończony niespodziany niespodziewany 
+niespotykany niespłacalny niestrudzony nieszawski niesłychany nietzscheański 
+nieubłagany nieuchronny nieuczony nieudolny nieugięty nieulękły 
+nieumiarkowany nieunikniony nieustający nieustanny nieustraszony 
+niewiadowski niewierny niewieści niewinny niewolniczy niewypowiedziany 
+niewyrażalny niewysłowiony niewzruszony niezachwiany niezamierzony 
+niezaprzeczalny niezaprzeczony niezasłużony niezatarty niezawisły niezbity 
+niezbędny niezdarny niezdecydowany nieziemski niezmierny niezmordowany 
+niezmącony nieznużony niezrównany niezwalczony niezwłoczny niezłomny 
+nieświeski nigerski nigeryjski nigrycki nihilistyczny nijaki nikaraguański 
+nikczemny niklowy nikobarski nikozyjski nikły nippoński niski niskoemisyjny 
+niskooktanowy niszański niszczycielski niszczący niszowy niterski nitkowaty 
+niwiski niziuchny niziusieńki niziuteńki niziutki niziuśki niżański nobliwy 
+noblowski nogajski nomadzki nomenklaturowy nominalny nonkonformistyczny 
+nonsensowny nonszalancki norbertański nordycki nordyjski norfolski 
+normalizujący normalny normandzki normatywny normański normowy norweski 
+norwidowski norymberski nosowy nostalgiczny notarialny notariuszowski 
+notecki notoryczny notoryjny notowski novellowski nowatorski nowelistyczny 
+nowicjuszowski nowinecki nowinkarski nowiuchny nowiusieńki nowiuteńki 
+nowiutki nowiuśki nowobogacki nowobrzeski nowobytomski nowoczesny 
+nowodworski nowodębski nowofundlandzki nowogardzki nowogrecki nowogrodzki 
+nowogródzki nowogwinejski nowogórski nowohebrajski nowohucki nowojorski 
+nowokaledoński nowokarczemski nowokawęczyński nowokorczyński nowomiejski 
+nowomodny nowoorleański nowoostrowski nowoplatoński nowopolski noworoczny 
+nowosarzyński nowosolniański nowosolski nowostawski nowosuski nowosybirski 
+nowoszkocki nowosądecki nowosłupski nowotarski nowotomyski nowotworowy 
+nowotyski nowowarpieński nowowiejski nowozelandzki nowołaciński nowski nowy 
+nożny nożycowaty nożycowy nubijski nudnawy nudny nudziarski nuklearny 
+numeański numeratywny numerologiczny numerowy numeryczny numidyjski 
+nuncjatorski nurski nuworyszowski nużący nygusowski nyski nęcący nędzarny 
+nędzarski nędzański nędzny oazowy obcesowy obciachowy obcisły obciążający 
+obcy obecny obezwładniający obfity obiecujący obiegowy obiektywny objawowy 
+objazdowy objaśniający objętościowy obleśny obliczalny obliczeniowy 
+obligatoryjny oblęgorski obmierzły obmyślany obnażający obniżający oboczny 
+obojnacki obojnaczy obojętny obopólny obornicki obosieczny obowiązkowy 
+obowiązujący obrazoburczy obrazowski obrazowy obraźliwy obrażający 
+obrażalski obronny obrotny obrotowy obrowski obrończy obrzański obrzeżny 
+obrzydliwy obrzydły obrzędowy obsceniczny obserwacyjny obserwatorski 
+obsesjonalny obsesyjny obski obskurancki obskurny obsydianowy obszarowy 
+obszerny obukierunkowy obuoczny oburzający oburęczny obustronny obwodowy 
+obyczajny obyczajowy obywatelski obłożny obłudny obły obłąkańczy obłędny 
+oceanograficzny oceanologiczny oceniający ochmistrzowski ochocki ochoczy 
+ochotnicki ochotniczy ochotny ochroniarski ochronny ochrowy ochrydzki 
+ochrypły ochładzający ochędożny ocieplający ociągający ociągliwy ociężały 
+oczekiwany oczywisty odautorski odbiorczy odbytniczy odcinkowy odciążający 
+odczuwalny oddolny oddzielny odeski odgórny odjazdowy odkażający odkrywczy 
+odkrywkowy odkształcalny odkupicielski odległy odlotowy odludny odmianowy 
+odmienny odmowny odmładzający odmężowski odnawialny odnowicielski odnośny 
+odojcowski odolanowski odorowy odosobowy odporny odpowiedni odpowiedzialny 
+odprzodowy odprężający odpustowy odpychający odpłatny odrażający 
+odreżyserski odrodny odrodzicielski odroślowy odruchowy odrzański odrzeczny 
+odrzywolski odrębny odręczny odrętwiający odsetkowy odstający odstraszający 
+odstresowujący odstępczy odszczepieńczy odszkodowawczy odtleniający 
+odtruwający odtwórczy odurzający odwadniający odważny odwetowy odwieczny 
+odwilżowy odwracalny odwrotny odwykowy odziemski odśrodkowy odświeżający 
+odświętny odżywczy oenerowski oenzetowski ofensywny ofermowaty ofertowy 
+offenbachowski offlinowy ofiarny oficerski oficjalny oględny ognioszczelny 
+ogniowy ognisty ograniczający ogrodniczy ogromny ogrzewczy ogrzewniczy 
+ogłupiający ogłuszający ogólnikowy ogólnodostępny ogólnoeuropejski 
+ogólnokrajowy ogólnokształcący ogólnoliteracki ogólnoludzki ogólnopolski 
+ogólnorozwojowy ogólnosłowiański ogólny ogórkowy ohydny ojcowski ojczymowski 
+ojczysty ojrzeński okazały okazjonalny okazowy okazyjny okocimski 
+okolicznościowy okołomarsjański okołoporodowy okołoziemski okresowy okropny 
+okruteczny okrutny okrągluchny okrąglusieńki okrągluteńki okrąglutki 
+okrągluśki okrężny oksfordzki oksywski okupancki okęcki okólny okółkowaty 
+okółkowy olbrzymi oldschoolowy oldskulowy olecki oleisty olejarski 
+olejkarski oleski oleszycki oleśniański oleśnicki oligarchiczny oligoceński 
+olimpijski oliwkowy oliwny oliwski olkuski olszanecki olszewski olsztyński 
+olszyński olszówecki olziański olśniewający omański omdlewający omowny omski 
+omulewski omylny omyłkowy ondulacyjny oneski onieśmielający oniryczny 
+onkogenny onkologiczny onlinowy onomatopeiczny ontologiczny ontyczny opacki 
+opaczny opalenicki opaleński opalizujący opalowy opartowski opatowski 
+opatrznościowy opatrzny opawski opcjonalny operacyjny operatorski operatywny 
+operetkowy operowy opiekuńczy opieszały opiniodawczy opiniotwórczy 
+opinogórski opisowy opoczyński opolski oponiarski oporny oporowski 
+oportunistyczny opozycyjny opresyjny opryskliwy optometryczny optyczny 
+optymacki optymalny optymistyczny opukowy opłacalny opłakany opływowy 
+opętańczy opóźniający oralny oranżowy oratorski orawski orański orbisowski 
+orchideowy orchowski ordowicki ordynacki ordynarny ordynaryjny ordynatorski 
+ordyński oregoński orenburski orficki orficzny organicznikowski organiczny 
+organistowski organizacyjny organizatorski organoleptyczny orgastyczny 
+orienburski orientacyjny orientalny orlański orleański orlenowski ormiański 
+ormowski ornitologiczny orny oroński orszański ortodoksyjny ortodontyczny 
+ortograficzny ortopedyczny orwellowski oryginalny oryniacki orzechowy 
+orzeczeniowy orzelski orzeski orzeźwiający orzyski orłowski orężny osadniczy 
+oscarowy oschły osetyjski osetyński osi osiecki osieczeński osiecznicki 
+osiedleńczy osielski osiemdziesięciokrotny osiemnastokrotny osieński osiowy 
+osiągalny osięciński osiński osjakowski oskarżający oskarżycielski osmański 
+osmotyczny osobisty osobliwy osobniczy osobowościowy osobowy osowiały ospały 
+ostaszewski ostateczny ostendzki ostentacyjny osteologiczny ostiacki 
+ostrawski ostrobramski ostrogocki ostrojęzyczny ostrokątny ostroroski 
+ostrowiecki ostrowski ostrołukowy ostrołęcki ostrożniutki ostrożnościowy 
+ostrożny ostry ostrzegawczy ostrzeszowski ostródzki oszałamiający oszczerczy 
+oszczędnościowy oszczędny oszmiański oszołamiający oszołomski oszukańczy 
+osłaniający osłonowy osłuchowy osłupiający otmuchowski otomański 
+otrzeźwiający ottawski ottoński otwarty otwocki otyły otyński otępiały 
+otępienny outsiderski owacyjny owadobójczy owadzi owaki owalny owczarski 
+owczy owocarski owocny owocowy owoczesny owowegetariański owski oxfordzki 
+ozdobny ozdrowieńczy oznajmujący ozorkowski oławski ołomuniecki oślepiający 
+oślizły ośmielający ośmioipółkrotny ośmiokrotny ośmioraki ośrodkowy 
+oświatowy oświetleniowy oświęcimski ożarowicki ożarowski ożywczy pabianicki 
+pacanowski pachciarski pachnący pacholęcy pacyfikatorski pacyfistyczny 
+pacyński paczkowski padański padewski pagartowski pagórkowaty 
+pajdocentryczny pajęczański pajęczy pakistański pakoski pakosławicki pakowny 
+paksowski palacki palatalny palatyński paleoamerykański paleoaustralijski 
+paleoazjatycki paleomongolski paleosyberyjski palestrancki palestyński 
+paliatywny palijski paliwożerny palladiański pallotyński palmireński 
+palmirski palmyreński palotyński palpacyjny palący pamfletowy pamirski 
+pamiątkarski pamięciowy pamiętliwy pamiętnikarski pamiętny panafrykański 
+panalbański panamerykański panamski panarabski panatenajski pancerniacki 
+panelowy paneuropejski pangermański panhelleński paniczny paniczowski 
+paniczykowski panieński panikarski panoramiczny panowski panoński 
+panpoetycki panseksualny pansłowiański pantagrueliczny panteistyczny 
+panteutoński pantoflarski pantomimiczny papierkowy papierochłonny papierowy 
+papieski papowski paprocieński paprocki papuaski papuański papuzi papuśny 
+paraboliczny paradny paradoksalny paradokumentalny paradygmatyczny paradyski 
+parafiański paragwajski paralelny paraliteracki paralotniarski paramaribski 
+paramedyczny parametryczny paramilitarny paranaukowy paranoiczny 
+paranoidalny paranormalny paraolimpijski parapsychiczny parapsychologiczny 
+parasolkowy parasolowaty parasolowy parasympatyczny parataktyczny 
+parateatralny parazytologiczny parański parcelancki parchaty parchowski 
+parczewski pardubicki parenteralny parentetyczny parlamentarny 
+parlamentarski parmezański parmeński parnasistowski parnaski parobczański 
+parodiowy parodystyczny parokrotny paroksytoniczny parowski parowy partacki 
+partenogenetyczny partnerski partyjniacki partyjny partyjski partykularny 
+partyzancki parweniuszowski paryjski paryski parysowski parzysty 
+parzęczewski pasamoński pasażerski paseistyczny paserski pasjonacki 
+pasjonujący paskarski paskudny pasmowy pasowy pasożytniczy pastelowy 
+pasterowski pasterski pastewny pastiszowy pastorski pasymski pasywistyczny 
+pasywny paszkwilancki paszochłonny paszowicki paszowski pasztuński pasłęcki 
+patagoński paternalistyczny patetyczny patofizjologiczny patogenetyczny 
+patogenny patologiczny patowy patriarchalny patriotyczny patronacki 
+patrycjuszowski patykowaty pauliański pauliński pawi pawiacki pawijski 
+pawonkowski pawłosiowski pawłowicki pawłowski pazerny paziowski pałacowy 
+pałkarski pałucki pałąkowaty pański państwotwórczy państwowoprawny 
+państwowotwórczy państwowy pcimski pecekowski pechowy peczorski pedagogiczny 
+pedalski pedantyczny pediatryczny pedofilski pedogenetyczny pedrylowaty 
+peerelowski peeselowski pegeerowski pejoratywny pekaesowski pekaowski 
+pekiński peloponeski pelpliński pendżabski peniński pensjonarski 
+pensylwański pentagoński peowiacki pepeerowski pepeesowski peperowski 
+pepesowski percepcyjny perejasławski peremptoryczny perfekcyjny perfidny 
+pergameński pergaminowy pergamoński periodyczny perkusyjny perlejewski 
+perlisty permanentny permisywistyczny permisywny permski perorny 
+perpendykularny perseweracyjny perski personalistyczny personalny 
+perspektywiczny perswadujący perswazyjny perukarski peruwiański perwersyjny 
+peryferyczny peryferyjny peryfrastyczny peryklejski peryklinalny 
+perymetryczny perypatetycki perypatetyczny perzowski perłowy pesymistyczny 
+peszteński petersburski petetekowski petrograficzny petrologiczny petyhorski 
+peweksowski pewniuteńki pewny pewuenowski pezetpeerowski pełczycki 
+pełniusieńki pełniuteńki pełniutki pełniuśki pełnokaloryczny pełnomorski 
+pełnoprawny pełnosprawny pełnowymiarowy pheniański phnompeński piarowy 
+piaseczyński piaskarski piaskowy piastowski piatigorski piaśnicki 
+picassowski picerski piechociarski piechowicki piechurski pieckowski piecowy 
+pieczarkarski pieczeniarski pieczołowity pieczętarski piekarski piekielny 
+piekoszowski piekący pielgrzymecki pielgrzymi pielęgniarski piemoncki 
+pieniacki pieniężeński pieniężny pieniński pieprzny piernikarski pieroński 
+piersiowy pieruński pierworodny pierwotny pierwszoosobowy pierwszoplanowy 
+pierwszorzędny pierzarski pierzchliwy pierzchnicki pierścieniowy pieski 
+pieszczotliwy pieszy pieszycki pietrowicki pietrozawodski pietystyczny 
+pieściwy pieśniarski pieński pigmejski pijacki pijaniusieńki pijarski 
+pikantny pikardyjski piknikowy pilawski pilchowicki pilicki pilny pilotażowy 
+pilski pilzneński pilźnieński pionierski pionowy piorunujący pioruński 
+piosenkarski piotrkowski piotrogrodzki piotrowski piołunowy piracki 
+piramidalny pirenejski piroelektryczny pirotechniczny pisarski pisemny 
+piskliwy pisklęcy pisowski piszczański pitagorejski pittsburski pityjski 
+piwniczański piwowarski piwowski pizański pizdowaty piątnicki piławski 
+piłkarski piłsudczykowski piśmienniczy piśmienny pięciobarwny 
+pięciogwiazdkowy pięcioipółkrotny pięciokrotny pięcioosobowy pięcioraki 
+piękniutki pięknoduchowski piękny piętnastokrotny piętrowy pięściarski 
+pięćdziesięciokrotny pińczowski piński plagiatorski plagiotropowy plakatowy 
+planowy plantatorski plastyczny platerowski platerówecki platformerski 
+platoniczny platoński plebański plebejski plebejuszowski plecionkarski 
+plejstoceński plemienny plemnikobójczy plenerowy plenny plesieński 
+pleszewski pleśniobójczy plioceński plociuchowski plotkarski plugawy 
+pluralistyczny plutokratyczny pneumatyczny pniewski poatomowy pobazyliański 
+pobernardyński pobiedziski pobieżny pobliski poboczny pobożny pobratymczy 
+pobudliwy pobudzający pobłażający pobłażliwy pochlebczy pochlebny pochmurny 
+pochmurowaty pochopny pochwalny pochwiejny pocieszający pocieszny 
+pocieszycielski pociągający pociągowy pociągły pocysterski poczciwy 
+poczdamski poczesny pocześniański pocztowy pocztylioński pocztówkowy 
+poczwarny poczwórny poczytalny poczytny początkowy podalpejski podaniowy 
+podatkowy podatny podbałtycki podbeskidzki podchorążacki podchwytliwy 
+poddany poddańczy poddębicki podedworski podejrzany podejrzliwy podgórski 
+podgórzyński podhalański podjazdowy podkanclerski podkarpacki podkaukaski 
+podkomorski podkorowy podkrakowski podlaski podmiejski podmiotowy podmokły 
+podmorski podmoskiewski podniebny podniecający podnieprzański podniosły 
+podobniusieńki podobny podoficerski podolski podominikański podostry 
+podparyski podporucznikowski podprogowy podrażniający podrzeszowski 
+podrzędny podręcznikowy podróżniczy podskarbiński podskórny podstarościński 
+podstawowy podstępny podsumowujący podszczeciński podtarnowski podtatrzański 
+poduralski podwarszawski podwawelski podważalny podwileński podwodny 
+podwrocławski podwójny podyplomowy podzielny podziemny podławy podługowaty 
+podłużny podły poetycki poetyczny pofestiwalowy pofranciszkański pogardliwy 
+pogański poglądowy pogodny pogorzelski pogrzebowy pogłówny pohitlerowski 
+poirytowany pojagielloński pojałtański pojednawczy pojednokrotny pojedynczy 
+pojemnościowy pojemny pojezuicki pojęciowy pojętny pokamedulski pokarmowy 
+pokazowy pokaźny pokerowy poklatkowy pokojowy pokojski pokoleniowy 
+pokomunistyczny pokorniuchny pokorniutki pokorny pokraczny pokrewny 
+pokrzepiający pokrzywnicki pokrzyżacki pokrętny pokutniczy pokutny pokułacki 
+pokątny polakożerczy polanicki polanowski polarnomorski polański polemiczny 
+polerski poleski poleszucki policentryczny polichromiczny policki policyjny 
+policzalny policzeński polifoniczny polimodalny polinezyjski politologiczny 
+polityczny politykierski polkowicki polonistyczny polonizatorski 
+polonocentryczny polonofilski polsatowski polski polskocerkiewski 
+polskokatolicki polubowny pomagisterski pomarańczowy pomierny pomijalny 
+pomnikowy pomny pomocniczy pomocny pomorski pomowski pompatyczny pompejański 
+pompierski pomysłowy pomyłkowy pomyślny ponadczasowy ponaddialektalny 
+ponaddziesięciomilionowy ponaddźwiękowy ponadetatowy ponadhistoryczny 
+ponadindywidualny ponadjednostkowy ponadklasowy ponadlokalny ponadludzki 
+ponadmetrażowy ponadnarodowy ponadnormatywny ponadobowiązkowy ponadpartyjny 
+ponadpaństwowy ponadplanowy ponadprzeciętny ponadstanowy ponadwymiarowy 
+ponadziemski ponadzmysłowy ponaglający ponapoleoński ponarkotyczny poncki 
+poniatowski poniemiecki poniewieski poniszowicki poniterski poniżający 
+ponowny pontonierski pontyfikalny pontyjski ponuracki ponurawy ponury 
+ponętny poojcowski poolimpijski popartowski popasowy popegeerowski 
+popielatoszary popielaty popielewski popielowski popijarski popisowy 
+poplebański popowski popowy popradzki poprawny poprockowy poprodukcyjny 
+poprzeczny poprzedni popularny popularyzacyjny popularyzatorski 
+populistyczny popłatny popędliwy poradziecki porajski poranny porażający 
+porcelanowy porcjowy pornograficzny poroniński porosyjski porozumiewawczy 
+portfelowy portierski portlandzki portorykański portretowy portugalski 
+porucznikowski poruszający porywający porywczy porywisty porządkowy porządny 
+porąbecki porębski poręczny poręczycielski porównawczy porównywalny 
+posadzkarski posażny poselski poseminaryjny posesorski posilny posiłkowy 
+posmoleński posobny posowiecki pospieszny pospolitacki pospolity 
+posprzedażowy pospólny postaciowy postanisławowski postawny postindustrialny 
+postkomunistyczny postmodernistyczny postomiński postpozycyjny 
+postrealistyczny postronny postrzegalny postulatywny postępowy posuwisty 
+posypowy poszczególny poszczegółowy poszlachecki poszlakowy poszukujący 
+poszóstny posągowy posłanniczy posłuszny posępny potajemny potencjalny 
+potencjometryczny potencjonalny potiomkinowski potoczny potoczysty potokowy 
+potrydencki potrzebny potrójny potulicki potulny potwarczy potwarliwy 
+potwierdzający potwierdzalny potworny potworowski potęgowski potępieńczy 
+potężny pouczający poufały poufny pourazowy powabny powalający poważny 
+powersalski powielaczowy powielokrotny powierniczy powierzchniowy 
+powierzchowny powiewny powieściopisarski powieściowy powikłany powitalny 
+powiślacki powiślański powodziowy powojenny powolny powołżański powrześniowy 
+powstrzymujący powszedni powtarzalny powtórkowy powtórny powtórzeniowy 
+powyborczy powątpiewający powązkowski powłokowy powłóczysty powściągliwy 
+pozaakademicki pozaczasowy pozadyskusyjny pozaeuropejski pozagatunkowy 
+pozagospodarczy pozainstytucjonalny pozajelitowy pozakomórkowy 
+pozakonkursowy pozakonstytucyjny pozakostny pozaksięgowy pozaliteracki 
+pozaludzki pozamaterialny pozamałżeński pozamedyczny pozamerytoryczny 
+pozanaukowy pozaoficjalny pozapoetycki pozapolityczny pozaprodukcyjny 
+pozaprotokolarny pozaracjonalny pozaregulaminowy pozarolniczy pozarozumowy 
+pozarządowy pozasezonowy pozastatutowy pozasłużbowy pozauniwersytecki 
+pozawiejski pozaziemski pozazmysłowy pozerski pozezdrski poziomy poznawalny 
+poznawczy poznański pozorny pozrębowy pozycyjny pozytronowy pozytywistyczny 
+pozytywny połabski połajewski połaniecki połczyński połocki połowiczny 
+połowiecki położniczy połtawski południkowy południowoamerykański 
+południowoeuropejski południowy połyskliwy połyskujący połąski pośladkowy 
+pośledni pośmiertny pośpieszny pośredni poświąteczny poświęcieński pożarski 
+pożegnalny pożołnierski pożydowski pożyteczny pożywny pożądliwy 
+prabałtosłowiański pracochłonny pracodawczy pracowity pracowniczy pradawny 
+pradziadowski pragmatyczny pragnący prahistoryczny praindoeuropejski 
+prajański prakseologiczny praksytelesowski praktyczny praktykancki 
+pralechicki praludzki prandociński praojcowski prapolski prasemicki praski 
+prasowy prasłowiański praugrofiński prawdomówny prawdopodobny prawdziwy 
+prawicowonacjonalistyczny prawicowy prawidłowy prawniczy prawnokarny 
+prawnoustrojowy prawny prawodawczy prawomocny prawomyślny praworządny 
+praworęczny prawoskrętny prawostronny prawowierny prawowity prałacki 
+preceptorski precyzyjny predykatywny predyspozycyjny prefaszystowski 
+prefektowski preferencyjny prefiksowy prekambryjski prekolumbijski 
+prekursorski prelegencki premierowski premierowy prenatalny prepozycyjny 
+preproletariacki prerafaelicki presemicki preserski preskryptywny 
+prestidigitatorski prestiżowy presłowiański pretekstowy pretendencki 
+pretensjonalny pretoriański pretorski pretoryjski prewencyjny prewentywny 
+prezbiteriański prezentacyjny prezenterski prezesowski prezydencki 
+priorytetowy proaliancki proamerykański probabilistyczny problematyczny 
+problemowy proboszczowski probrytyjski procarski proceduralny procentowy 
+procesjonalny procesowy procesyjny prochowicki prodemokratyczny producencki 
+produkcyjny produktywny proekonomiczny proeksportowy proeuropejski 
+profaszystowski profesjonalny profesorski profetycki profetyczny 
+profilaktyczny profrancuski prognostyczny progowy programistyczny 
+programowalny programowy progresywny prohitlerowski proimportowy 
+proinflacyjny projektancki projektowy prokocimski prokonsumencki 
+prokreacyjny prokuratorski proletariacki prometejski promieniotwórczy 
+promieniowy promienisty promienny promieński promilowy prominencki 
+promocyjny promotorski pronatalistyczny pronazistowski proniemiecki 
+propagandowy propagatorski propedeutyczny propolski proporcjonalny 
+propriocepcyjny proradziecki proreformatorski prorocki proroczy prorynkowy 
+prorządowy prosiaczkowaty prosięcy prosocjalistyczny prospektywny 
+prospołeczny prostacki prostaczy prostoduszny prostokątny prostolinijny 
+prostoliniowy prostopadły prostujący proszalny proszkowy proszowicki 
+proszowski proszący protekcjonalny protekcyjny protektorski protestacyjny 
+protestancki proteuszowy protobałtycki protobułgarski protokolarny 
+protokólarny protosemicki proustowski prowansalski prowincjonalny 
+prowizoryczny prowokacyjny prowokatorski prowokujący prowschodni prozachodni 
+prozaiczny prozatorski prozelicki prozodyczny prozodyjny prościuchny 
+prościusieńki prościuteńki prościutki prościuśki pruderyjny prudnicki 
+prusacki prusicki pruski prusofilski prusowski pruszczański pruszczowski 
+pruszkowski prymarny prymasowski prymitywny pryncypialny prypecki 
+prywaciarski prywatny pryzmatyczny przasnyski przaśny przebiegły przebieżny 
+przebitkowy przebogaty przebojowy przebrzydły przebłagalny przechlewski 
+przechodni przeciszowski przeciwalergiczny przeciwartyleryjski 
+przeciwbakteryjny przeciwbieżny przeciwbodźcowy przeciwbólowy 
+przeciwcukrzycowy przeciwdeszczowy przeciwgorączkowy przeciwgośćcowy 
+przeciwgrzybiczny przeciwgrzybiczy przeciwinflacyjny przeciwkamieniowy 
+przeciwkołtuński przeciwległy przeciwlękowy przeciwmiażdżycowy przeciwny 
+przeciwobrzękowy przeciwpożarowy przeciwprądowy przeciwrakowy 
+przeciwskurczowy przeciwsobny przeciwstawny przeciwstresowy 
+przeciwuczuleniowy przeciwutleniający przeciwwymiotny przeciwzakrzepowy 
+przeciwzapalny przeciwzmarszczkowy przeciągły przeciętniacki przeciętniutki 
+przeciętny przecudny przecudowny przeczyszczający przeczący przecławski 
+przedborski przedchrześcijański przeddrukarski przedgotycki przedgórski 
+przedlekarski przedludzki przedmałżeński przedmiejski przedmiotowy przedni 
+przednioazjatycki przedolimpijski przedostatni przedpiastowski przedpolski 
+przedpotopowy przedromański przedrzeźniający przedsenny przedsiewny 
+przedsiębiorczy przedstawicielski przedszkolacki przedsłowiański 
+przedterminowy przedwczesny przedwieczny przedwieczorny przedwiosenny 
+przedwstępny przedwyborczy przedziwny przedłużycki przedśmiertny przegrodowy 
+przegubowy przejmujący przejrzysty przejściowy przekazywalny przekomiczny 
+przekonujący przekonywający przekorny przekrojowy przekładkowy 
+przekładoznawczy przelewicki przeliczalny przelotny przelotowy przemienny 
+przemierzły przemijający przemkowski przemocny przemożny przemyski 
+przemysłowy przemytniczy przemyślidzki przemyślny przemądry przemądrzały 
+przeniewierczy przenikający przenikliwy przenośny przeobfity przeogromny 
+przeokropny przeolbrzymi przepastny przepisowy przepiękny przepraszający 
+przepyszny przeraźliwy przerażający przerosielski przerozmaity przerywany 
+przerywnikowy przerzutowy przerębowy przeróżny przesadny przesiecki 
+przestarzały przestronny przestrzenny przestępczy przesuwny przesympatyczny 
+przeszlachetny przeszywający przesądny przesądzający przesłodki przeucieszny 
+przeuroczy przeważający przewidujący przewidywalny przewielebny przewiewny 
+przewlekły przewodnicki przewodowy przeworski przewoski przewrotny 
+przewspaniały przewyborny przezabawny przezacny przezorny przezroczysty 
+przełomowy prześladowczy prześliczny prześmieszny prześmiewczy 
+przeświecający prześwietny prześwitowy przeźroczysty przeżytkowy przodkowski 
+przodownicki przychylny przyciasny przyciągający przyciężkawy przyciężki 
+przyczynkarski przyczynowy przydatkowy przydatny przydenny przyduży 
+przydziałowy przydługawy przydługi przygniatający przygnębiający przygodny 
+przygodowy przygodzicki przygorzki przygotowawczy przygłupi przyimkowy 
+przyjacielski przyjemnościowy przyjemny przyjezdny przykoński przykry 
+przykrótki przykusy przykładny przykładowy przylegający przyległy przyleniwy 
+przymilny przymiotnikowy przymorski przymroźny przymusowy przymuszony 
+przyobiektowy przyostry przypadkowy przypkowski przypochlebny 
+przypuszczający przypuszczalny przyrodniczy przyrodoznawczy przyrowski 
+przystawalny przystański przystojny przystosowawczy przystępny przysuski 
+przyszłościowy przysłowiowy przysłówkowy przytoczeński przytomny przytulny 
+przytwierdzający przytłaczający przywoławczy przywołujący przywąski 
+przywłaszczycielski przywódczy przyziemny przyzwalający przyzwoity prądnicki 
+prędki prędziuchny prędziutki prężny próbkowy próbny próchniczy prószkowski 
+próżniacki próżniaczy próżniowy próżniusieńki próżniuteńki próżniutki 
+psarski pseudogotycki pseudoludowy pseudonaukowy pseudonowatorski psi 
+psiarski psioniczny pskowski psotny pstrokaty pstry psychiatryczny 
+psychiczny psychoanalityczny psychodeliczny psychogenny psychologiczny 
+psychoseksualny psychospołeczny psychoterapeutyczny pszczelarski pszczewski 
+pszczyński pszowski ptasi ptaszęcy ptolemejski ptolemeuszowski 
+publicystyczny publiczny puchaczowski puchaty puchowy pucki pucołowaty 
+pudlarski pudrowy puertorykański pulchniuteńki pulchniutki pulmanowski 
+pulsacyjny pulsowy punicki punkcyjny punkowy punkrockowy punktowy 
+punktualistyczny punktualny purowski purpurowy puryfikatorski purytański 
+pustawy pustelniczy pustynny puszczalski puszczański puszczykowski 
+puszkarski puszkinowski pusztuński puszysty putinowski puławski 
+pułkownikowski pułtuski puściusieńki puściuteńki puściutki puściuśki puński 
+pylisty pyrzycki pyskowicki pyszałkowaty pysznicki pyszniutki pyszny 
+pytający pytyjski pyzdrski pąsowy pątniczy pątnowski płacowy płaczliwy 
+płaczący płaksiwy płaski płaszczyznowy płaszowski płatnerski płatniczy 
+płatny płciowy płochliwy płochy płocki płodny płomieniowy płomienisty 
+płomienny płonący płoskiński płotkarski płowdiwski płowiecki płowy płośnicki 
+płoński płudowski płużnicki płyciuchny płyciusieńki płyciuteńki płyciutki 
+płynny płytki płytkomorski płytowy pływacki pływający pęczniewski pęcławski 
+pędzelkowaty pędzlarski pękaty pępowski pętacki półamatorski półautomatyczny 
+półbarbarzyński półboski półcichy półcierpki półcywilny półdarmowy 
+półdemokratyczny półdrwiący półdziki półdługi półdżezowy półepicki 
+półfiluterny półfrancuski półhurtowy półinteligencki półinteligentny 
+półjawny półjazzowy półkolisty półkrótki półksiężycowaty półkulisty 
+półlegalny półlegendarny półmiesięczny półmiękki półmęski półnagi 
+północnoamerykański północnoeuropejski północny półoficjalny półowalny 
+półpankowski półplastyczny półpogański półpornograficzny półprawdziwy 
+półprofesjonalny półproletariacki półprywatny półprzejrzysty półprzemysłowy 
+półprzenikliwy półprzepuszczalny półprzezroczysty półprzeźroczysty 
+półprzytomny półpytający półpłynny półrealistyczny półroczny półrzadki 
+półsenny półsmętny półsuchy półsurowy półsyntetyczny półsypki półszyderczy 
+półsłodki półtajemny półtajny półtonowy półtorakrotny półtoramiesięczny 
+półtropikalny półtwardy półurzędowy półwiejski półwyścigowy półzawodowy 
+półzwierzęcy półślepy półżartobliwy półżywy późnawy późnogotycki 
+późnojurajski późnoromantyczny późnoromański quebecki qumrański rabacki 
+rabczański rabelaisowski rabinacki rabski rabsztyński rabunkowy rabusiowski 
+rachański rachityczny rachmistrzowski rachunkowy raciborski raciechowicki 
+raciąski racjonalistyczny racjonalizatorski racjonalny racławicki radarowy 
+radcowski radecznicki radgoski radiacyjny radialny radiestezyjny 
+radioaktywny radioakustyczny radioamatorski radiofoniczny radiograficzny 
+radiologiczny radioteleskopowy radiowy radkowski radliński radogoski 
+radomiński radomski radomszczański radomyski radosny radoszycki radowski 
+raduński radwanicki radykalny radymniański radzanowski radziechowski 
+radziecki radziejowicki radziejowski radziemicki radziwiłłowski radziłowski 
+radzymiński radzyński radłowski radżasthański rafaelowski raggowy rajczański 
+rajdowy rajski rajtarski rakietowy rakoniewicki rakotwórczy rakowicki 
+rakowiecki rakowski rakuski ramiarski ramowy ranczerski randomowy ranguński 
+raniutki raniżowski rankingowy raperski rapowy rapsodyczny raptowny 
+raptusowy rasistowski rasowy rastafariański raszkowski raszyński ratajski 
+ratalny ratowniczy ratyzboński raweński rawicki rawski raźny rażący 
+rdzawobrązowy rdzawy rdzeniarski rdzenny reakcyjny realistyczny realizacyjny 
+realizatorski realny rebeliancki recenzencki receptorowy recesyjny 
+rechotliwy recki recyclingowy recyklingowy recytatorski redakcyjny 
+redaktorski redecki redukcjonistyczny redukcyjny redystrybucyjny redzki 
+redłowski refektarski referencjalny referendarski refleksyjny reformacki 
+reformatorski reformowalny reformujący refrenowy regencki regeneracyjny 
+regenerujący regensburski reggaeowy regimentarski regimiński regionalny 
+regresywny regulacyjny regulaminowy regularny regulatywny rehabilitacyjny 
+rejentalny rejestratorski rejonowy reklamiarski reklamowy rekonwalescencki 
+rekordowy rekreacyjny rekrucki rektorski rekurencyjny rekursywny relacyjny 
+relaksacyjny relaksowy relaksujący relatywistyczny relatywny reliefowy 
+religiancki religijny religiologiczny religioznawczy rembertowski 
+rembrandtowski remisowy renegacki renesansowy rentgenologiczny rentgenowski 
+rentierski rentowny reorganizatorski repatriancki repertuarowy reportażowy 
+reporterski represyjny represywny reprezentacyjny reprezentatywny reprintowy 
+reprograficzny republikański reski resortowy responsoryjny restauratorski 
+restrukturyzacyjny restrykcyjny restryktywny reszelski retmański 
+retoromański retoryczny retrospektywny retuszerski retycki reunioński 
+rewalski rewanżowy rewanżystowski rewelacyjny rewelatorski rewelski 
+rewindykacyjny rewizjonistyczny rewolucyjny rewolwingowy reymontowski 
+rezerwowy rezolutny rezonerski rezultatywny rezydencki rezydentny reżyserski 
+reński riazański robakowaty robociarski roboczy robolski robotniczy robotny 
+rockowy rockowy rocznicowy rocznikarski roczny rodezyjski rodniański 
+rodopski rodowodowy rodyjski rodzajowy rodzicielski rodzinny rogaliński 
+rogaty rogowski rogozieński rojewski rojny rokicieński rokiciński rokicki 
+rokietnicki rokokowy rokoszański rokowniczy rokroczny rolniczy 
+romansopisarski romansowy romantyczny romański romboidalny rombowy romski 
+ropczycki rorancki rosenthalowski rosochaty rostowski rosyjski roszczeniowy 
+rotacyjny rotariański rotmistrzowski rotterdamski rozbieżny rozbijacki 
+rozbrajający rozbójniczy rozczarowujący rozczulający rozdrażewski 
+rozdzielczy rozdzielnopłciowy rozdzielny rozdzierający rozewski 
+rozgrzeszający rozgrzewający rozgłośny rozjemczy rozkazodawczy rozkazujący 
+rozkoszny rozkurczający rozkurczowy rozkładowy rozległy rozleniwiający 
+rozlewny rozliczny rozluźniający rozmaity rozmiarowy rozmowny rozmyślny 
+rozoski rozpaczający rozpaczliwy rozpoznawalny rozpoznawczy rozpraszający 
+rozprzański rozpustny rozrabiacki rozrachunkowy rozrodczy rozrywkowy 
+rozrzedzający rozrzewniający rozrzutny rozstrajający rozstrzygający rozsądny 
+roztoczański roztoczowy roztropny roztrzepany rozumiejący rozumny rozumowy 
+rozwadowski rozważny rozwiązywalny rozwiązły rozwlekły rozwojowy 
+rozwrzaskliwy rozwścieczający rozłożysty rozłączalny rozłączny rościszewski 
+roślinny roślinobójczy rośny roźwienicki rożnowski rożny rtęciowy ruandyjski 
+rubaszny rubensowski rubinowy ruchliwy ruchomy ruchowy ruciański rudawski 
+rudawy rudecki rudobrązowy rudy rudymentarny rudzieński rudzki rugijski 
+rujski rumelijski rumfordzki rumski rumuński runiczny ruralistyczny 
+rurkowaty rusinowski rusiński ruski rusofilski rustykalny rusyfikatorski 
+rusznikarski ruteński rutyniarski rutyniczny rutynowy rwandyjski rwący 
+rybacki rybałtowski rybczewicki rybi rybieński rybnicki rycerski rychlicki 
+rychliwy rychtalski rychwalski rycki ryczałtowy ryczywolski rydułtowski 
+rydzyński ryglicki rygorystyczny ryjewski ryjkowaty ryjowaty rylski 
+rymanowski rymarski rymański rymotwórczy rynkowy rynsztokowy rypiński rysi 
+ryski rysunkowy rytmiczny rytualny rytwiański rywalizacyjny ryzykancki 
+ryzykowny ryży ryński rzadki rzadziutki rzeczenicki rzecznikowski 
+rzeczniowski rzeczownikowy rzeczowy rzeczycki rzeczywisty rzekomy rzekuński 
+rzemieślniczy rzepiński rzeszowski rzetelny rzewliwy rzewniański rzewny 
+rzezawski rześki rzeźbiarski rzeźnicki rzeźniczy rzeźwiący rzeźwy rzgowski 
+rzodkiewkowy rzutki rzutowy rzymski rzymskokatolicki rządcowski rządny 
+rządowy rząsieński rzędowy rzęsisty rzężący rąbiński rączy ręczeński ręczny 
+rędziński rękodzielniczy rękopiśmienny rówieński równikowy równinny 
+równiusieńki równiuteńki równiutki równiuśki równoczesny równokierunkowy 
+równokształtny równoległoboczny równoległy równoleżnikowy równomiarowy 
+równomierny równoprawny równorzędny równoważny równowąski równościowy równy 
+różański różniasty różnicujący różnisty różnobarwny różnoimienny 
+różnokierunkowy różnokolorowy różnolity różnoraki różnorodny różnostronny 
+różny różowawy różowiuchny różowiuteńki różowiutki różowosrebrny różowy 
+sabaudzki sabejski sabniański sabotażowy sachaliński sadkowicki 
+sadomasochistyczny sadoweński sadowniczy sadowski sadystyczny sadzarski 
+safandułowaty saficki saharyjski sajański sajgoński sakralny sakramencki 
+sakramentalny saksoński salaficki salcerski salezjański salonicki salonowy 
+salwadorski salzburski samarkandzki samarski samarytański sambijski 
+samborski samczy samiuteńki samiutki samiuśki samoański samobójczy 
+samochodny samochwalczy samochwalny samoczynny samodzielny samoistny 
+samojedzki samokrytyczny samolikwidujący samolubny samoobronny samoobsługowy 
+samoprzylepny samopylny samorodny samorzutny samorządny samosterujący 
+samotniczy samotny samowiedny samowolny samowystarczalny samowładczy 
+samowładny samozachowawczy samozapłonowy samozwańczy samożywny samurajski 
+sanatorski sanatoryjny sandomierski saneczkarski sanijski sanitarny 
+sanmaryński sannicki sanocki sansalwadorski sanskrycki saperski sapieżyński 
+saprofityczny saraceński saragoski sarajewski sardoniczny sardyński sarepski 
+sarkastyczny sarmacki sarni sarpowski saski satanistyczny satelicki 
+satelitarny satyryczny satysfakcjonujący saudyjski saudyjskoarabski sawiński 
+scenariopisarski scenariuszowy sceniczny scenograficzny scenopisarski 
+sceptyczny schematyczny schengeński schillerowski schizmatycki 
+schizofreniczny schludny schodkowaty schodkowy schodowaty schodowy 
+scholarski scholastyczny schopenhauerowski schulzowski scjentyficzny 
+scjentystyczny scytyjski secemiński secesyjny sechloński sederowy 
+sefardyjski segmentacyjny sejneński sejsmiczny sekciarski sekcyjny 
+sekretariacki sekretarski sekretny seksagonalny seksistowski seksistyczny 
+seksowny seksualny seksuologiczny sektorowy sekwański sekwencyjny selcerski 
+seldżucki seledynowy selekcjonerski selekcyjny selektywny semantyczny 
+semestralny semicki semilogarytmiczny semipałatyński senacki senatorski 
+senegalski senekański seniorski senny senoński sensacki sensacyjny sensorowy 
+sensoryczny sensowny sensowy sensualistyczny sentencjonalny sentymentalny 
+sepleniący seraficki seraficzny serbochorwacki serbołużycki serbski 
+sercowaty sercowy serdeczny serialowy sernicki serokomelski serologiczny 
+seropozytywny serowarski serwilistyczny serwitorski seryjny seszelski setny 
+seulski sewastopolski sewilski sewrski sezamkowy sezonowy sferyczny sforny 
+sfosowski sianowski siarczysty siateczkowaty siatkarski siatkowaty sicieński 
+siderski sieciarski sieciechowski sieciowy siedemdziesięciokrotny 
+siedemnastokrotny siedlecki siedliski siedliszczański siedmiogrodzki 
+siedmioipółkrotny siedmiokrotny siedmioraki siedzący siekierczyński 
+siekierkowski sielankowy sielecki sielski siemianowicki siemiatycki 
+siemieński siemiątkowski siemkowicki siemyski sieneński sieniawski 
+sienkiewiczowski siennicki sieprawski sieradzki sierakowicki sierakowski 
+sierdzisty siermiężny sierocy sieroszewicki sieroszewski sierpecki 
+sierpniowy sierpowaty sierraleoński sierżancki siewierski sikhijski 
+sikkimski silikonowy silnikowy silnowski silny simentalerski simentalski 
+simploński sinawy singapurski singularny sinoniebieski sinusoidalny 
+siodlarski sitarski sitkówecki siwiuteńki siwiuśki siłowy skajski 
+skalbmierski skalisty skalmierski skalski skamandrycki skandaliczny 
+skandalizujący skandynawski skansenowski skarbnikowski skarszewski 
+skaryszewski skarżyski skarżący skautowski skautowy skawiński 
+skierbieszowski skierniewicki skinheadzki skinolski skinowski skitourowy 
+skiturowy sklepikarski sklerotyczny skoczny skoczowski skojarzeniowy 
+skokowski skokowy skomliński skomplikowany skopiański skopijski skorogoski 
+skoroszycki skorowidzowy skory skołyszyński skośny skończony skrajny 
+skromniuchny skromniusieńki skromniuteńki skromniutki skromniuśki skromny 
+skrupulatny skrwiański skrwileński skrytobójczy skrytonasienny skrzeczący 
+skrzekliwy skrzeszewski skrzynkarski skrzypiący skrzyszowski skrzętny 
+skrętoległy skrótowy skulski skurwysyński skuteczny skwapliwy skwarny 
+skwierzyński skąpy składkowy składniowy składny skępski skórny slangowy 
+slawoński sloganowy smaczny smagły smakoszowski smakowity smakowy 
+smardzewicki smarkaczowaty smarkaczowski smarny smerfny smerfowy smolarski 
+smoleński smolisty smorgoński smołdziński smrodliwy smurfny smutnawy smutny 
+smyrneński smętnawy smętny smętowski snadny snajperski snobistyczny 
+snookerowy snowacki snycerski sobiepański sobieszowski sobieszyński 
+sobieński sobkowski sobocki sobolewski sobotecki sobotni sobótkowski 
+sochaczewski sochociński socjaldemokratyczny socjalistyczny socjalny 
+socjologiczny socjometryczny socjoterapeutyczny socrealistyczny socyniański 
+soczewkowaty socziński soczysty sodomicki sofijski sofistyczny sojuszniczy 
+sokijski sokolnicki sokolniczy sokolski sokołowski sokołowszczański 
+sokratejski sokólski solarski solecki solecznicki solenny solidarny solidny 
+soliński solowy solski solutrejski solutreński somalijski somatyczny 
+somianecki somnambuliczny somoniński sompoleński sondażowy sondujący 
+soplicowski sopocki sorboński sortymentowy sosieński sosnowicki sosnowiecki 
+sosnowy sosnówecki sotyjski soulowy sowi sowiecki sowity sowizdrzalski 
+sozopolski sołdacki sołecki sołowiecki sołtysowski sośniański sośnicowicki 
+soński spacerowy spadochroniarski spadzisty spalinowy spalski spamerski 
+sparingowy spartański spazmatyczny specjalistyczny specjalny specyficzny 
+spedytorski spektakularny spektatorski spektrofotograficzny 
+spektrofotometryczny spektrograficzny spektrometryczny spektroskopowy 
+spekulacyjny spekulancki spekulatywny spencerowski spiczyński spieszny 
+spikerowski spikerski spinowy spiralny spiski spiskowy spiżowy spoisty 
+spokojniuteńki spokojniutki spokojny spolegliwy sponsorski spontaniczny 
+sporadyczny sporny sportowy sportsmeński spory spostrzegawczy spowiedniczy 
+społecznikowski społeczny społemowski spożywczy sprawczy sprawiedliwy 
+sprawnościowy sprawny sprawozdawczy sprinterski sprośny spryciarski 
+sprytniutki sprytny sprzeczny sprzedajny sprzyjający sprzymierzeńczy 
+sprzętowy sprężysty spytkowicki spłacalny spłowiały spójnikowy spójny 
+spółdzielczy spółgłoskowy spółkowy sraczkowaty srebrnawy srebrnołuski 
+srebrny srebrzystoszary srebrzysty srogi srokowski sromotny ssący stabilny 
+stachanowski stacjonarny stadialny stadny staffowski stajenny stalingradzki 
+stalinowski stalowoniebieski stalowowolski stalowy stambulski standardowy 
+stangrecki stanisławowski staniński stanlejski stanowczy stanowy 
+starachowicki staranny starawy starczy stareńki stargardzki starobielski 
+starobruski starobułgarski starochrześcijański staroczarnowski staroczeski 
+starodawny starodzierzgoński starodzikowski staroegipski starofrancuski 
+starogardzki starogrecki starohelleński starohinduski staroirański 
+starojuski starokatolicki starokawalerski starokiszewski starokurowski 
+starolitewski starolubotyński staromiejski staromodny staroniemiecki 
+staropanieński staroperski staropiastowski staropolski staropruski 
+staroruski starorzymski staroszlachecki starosłowiański starotarski 
+starowiejski starowny starozagorski starołęcki starościński staroświecki 
+staroźrebski starożytny startowy stary staszowski stateczny statutowy 
+statyczny statystyczny stawigudzki stawiski stawiszyński stawowy 
+stawropolski stały stańczykowski steampunkowy stegieński stelmaski 
+stendhalowski stenograficzny stentorowy stepnicki sterdyński stereofoniczny 
+stereometryczny stereoskopowy stereotypowy sterowniczy sterujący sterylny 
+stochastyczny stoicki stojący stokrotny stolarski stoleński stomatologiczny 
+stonkobójczy stopnicki stopniowy stosowny stosunkowy stołeczny stołypinowski 
+stożkowaty stożkowy straceńczy strachliwy strachówecki stradomski 
+straganiarski strajkowy strasburski straszliwy straszny straszyński 
+strategiczny stratyfikacyjny strawczyński strawny strażacki strefowy 
+stresogenny stresujący stroficzny strofujący strojny stromotorowy stromy 
+stronniczy stroński strugarski strukturalistyczny strukturalny strumieniowy 
+strumieński strusi stryjowski strykowski stryszawski stryszowski 
+strzałkowaty strzałkowski strzałowy strzegomski strzegowski strzelecki 
+strzeleński strzelisty strzeliński strzyżewicki strzyżowski strążyski 
+stręczycielski stróżowski stuartowski stubieński studencki studniarski 
+studzianecki studzienicki studzący stukrotny stuprocentowy stupski 
+stuttgarcki stwórczy styczny stykowy stylistyczny stylizatorski stylowy 
+stymulujący styryjski stąporkowski stęchły stęszewski stężycki suahilijski 
+suazyjski subiektywny subkowski subkulturowy sublokatorski subsaharyjski 
+substancjalny substantywny substytucyjny subsydiarny subtelniutki subtelny 
+suchański suchedniowski sucholaski suchotniczy suchowolski suchożeberski 
+suchumski suchusieńki suchuteńki suchutki suchy suczawski suczy sudański 
+sudecki sueski suficki suflerski sugestywny sukcesorski sukcesywny 
+sulechowski sulejowski sulikowski sulmierzycki sulęciński sulęczyński 
+sumaryczny sumatrzański sumerski sumeryjski sumienny sundajski sunnicki 
+superancki superaśny superekspresowy superkomfortowy supermodny 
+supernowoczesny superowski superowy superszybki supraski suraski surfingowy 
+surinamski surowy surrealistyczny surrealny suski sutenerski suty suwalski 
+suwerenny suwijski sułkowicki sułoszowski sułowski sułtański swarliwy 
+swarzewski swarzędzki swatowski swawolny swierdłowski swingowy swobodny 
+swoisty swojski sybarycki syberyjski sybiliński sybilliński sybiracki 
+sybirski sycowski sycylijski syczuański syczący sycący sydoński syfiasty 
+syficzny syjamski syjoński sykofancki sykstyński sylabiczny sylikonowy 
+sylurski syluryjski sylwestrowy sylwetkowy sylwetowy symbiotyczny 
+symboliczny symbolistyczny symetryczny symferopolski symfoniczny sympatyczny 
+symptomatyczny symulacyjny symultaniczny synajski synantropijny 
+synchroniczny syndykowski synergetyczny synergiczny synergistyczny 
+syngaleski synkretyczny synonimiczny synoptyczny synowski syntaktyczny 
+syntetyczny syntezatorowy sypki sypniewski syrakuzański syreni syropowaty 
+syryjski systematyczny systemowy sytuacyjny szablonowy szachowy szachrajski 
+szacowny szacujący szacunkowy szafirowy szafranowy szalbierczy szalbierski 
+szaleńczy szalony szamański szambelański szamociński szamotulski szampański 
+szanghajski szanowny szantuński szaradziarski szarawy szarlatański 
+szarmancki szarobrązowy szaroniebieski szarooki szarpiący szary szaserski 
+szatański szawelski szałaputny szałowy szański szczakowski szczawieński 
+szczawiński szczawnicki szczebiotliwy szczebrzeszyński szczecinecki 
+szczeciński szczególny szczegółowy szczekliwy szczelny szczeniacki 
+szczeniaczy szczeniakowaty szczenięcy szczercowski szczeropolski 
+szczodrobliwy szczodry szczotkarski szczuciński szczuczyński szczudłowaty 
+szczupaczy szczuplusieńki szczupluteńki szczuplutki szczurowaty szczurowski 
+szczurzy szczutowski szczwany szczycieński szczytnicki szczytnowski szczytny 
+szczytowy szczątkowy szczęśliwicki szczęśliwy szefowski szekspirowski 
+szelestliwy szeleszczący szelkowski szelmowski szelski szepczący 
+szepietowski szeregowy szermierczy szermierski szeroki szerzyński 
+szesnastokrotny szetlandzki szewski sześciobarwny sześcioipółkrotny 
+sześciokonny sześciokrotny sześciomiarowy sześcioraki sześćdziesięciokrotny 
+szkaradny szkarłatny szkicowy szkieletowaty szklarski szklarskoporębski 
+szklisty szkocki szkodliwy szkolarski szkoleniowy szkopski szkółkarski 
+szlachecki szlachetny szlagierowy szlagoński szlezwicki szlichtyngowski 
+szlifierski szmaciarski szmaragdowy szmirowaty szmuglerski szmuklerski 
+sznurowaty szoferski szokowy szokujący szopenowski szorstki szowinistyczny 
+szołochowowski szpanerski szparki szperacki szpetalski szpetny 
+szpicbergeński szpicberski szpiclowski szpicowaty szpiegowski szpitalny 
+szprotawski szreński sztabiński sztabsoficerski sztampowy sztandarowy 
+sztauerski sztokholmski sztormowy sztrasburski sztubacki sztuczny 
+sztukatorski sztukmistrzowski sztumski szturmański szturmowy sztutowski 
+sztycharski sztygarski sztywniacki sztywny szubiński szubrawski 
+szudziałowski szulerski szumny szumowski szwabski szwagierski szwagrowski 
+szwajcarski szwarcwaldzki szwedzki szwejkowski szwoleżerski szybciuteńki 
+szybciutki szybki szybkościowy szyderczy szydłowaty szydłowiecki szydłowski 
+szyicki szykowny szyldziarski szylerowski szymbarski szympansi szynkarski 
+szyperski szypułkowy sądecki sądowny sądowy sąsiadujący sąsiedzki sążnisty 
+słabawy słabeńki słabiusieńki słabiuteńki słabiutki słabiuśki słabosilny 
+słaboszowski słabowity słaby sławieński sławkowski sławny sławoborski 
+sławski sławucki sławęcicki słodkawy słodki słodzieńki słodziuchny 
+słodziusieńki słodziuteńki słodziutki słodziuśki słomnicki słonawy słoneczny 
+słonimski słoniowaty słonogorzki słotny słowacki słoweński słowianofilski 
+słowiański słowiański słowiczy słowiński słownikarski słownikowy słowny 
+słowotwórczy słoński słubicki słuchowy słucki sługusowski słupecki słupski 
+słuszny służalczy służbisty służbowy służebniczy służebny służewiecki 
+służewski słynny słyszalny sędziejowicki sędziowski sędziszowski sędziwy 
+sękowski sępoleński sępopolski tabelaryczny tabetyczny tabloidowy taborycki 
+tabuistyczny tabularny tacierzyński tadżycki tafelkowaty tagalski taganroski 
+tahitański tajemniczy tajemny tajlandzki tajmyrski tajniacki tajny tajski 
+tajwański taksatorski taksatywny taksologiczny taksonomiczny taksówkarski 
+taktowny taktyczny takusieńki takuteńki takuśki talibański talibski 
+talliński talmudyczny tambormajorski tambowski tamilski tanagryjski 
+tanatologiczny tandeciarski tandetny taneczny tanganicki tangerski tani 
+taniuchny taniusi taniutki taniuśki tannenberski tanzański tapicerski 
+tarasowaty tarasowy tarchomiński tarczyński targetowy targowicki 
+tarnawatecki tarnobrzeski tarnogórski tarnopolski tarnowski tarnówecki 
+tarpejski tarłowski tasiemcowaty tasmański taszkencki taszkiencki 
+taszystowski tatarski taternicki tatrzański tatusiowaty taurydzki 
+tautologiczny tałtański taśmowy tańcujący tańczący tbiliski tchórzliwy 
+tchórzowaty tchórzowski tczewski tczowski teatralny teatrologiczny teatyński 
+tebański techniczny technologiczny technomorficzny teherański tekakaefowski 
+teksaski teksański tekstologiczny tekstowy tekstualny tektoniczny 
+tekściarski telatyński telawiwski teledetekcyjny telefaksowy telefoniczny 
+telegraficzny teleinformatyczny telemarketingowy telenowelowy teleologiczny 
+telepatyczny teleradiotechniczny teleskopowy telewizyjny tematologiczny 
+tematowy tematyczny temperamentny tendencyjny tentatywny teocentryczny 
+teologiczny teoretycznoliteracki teoretyczny teorioinformacyjny 
+teoriomnogościowy teoriopoznawczy tepedowski terapeutyczny tercjarski 
+terenowy teresiński terespolski tereszpolski terkotliwy termiczny terminalny 
+terminalowy terminatorski terminologiczny terminowy termochemiczny 
+termodynamiczny termomechaniczny termopilski terrański terrorystyczny 
+terytorialny tesalski testamentowy testerski testowy teutoński timorski 
+tirański tkacki tkliwy tlenowy tobagijski tobolski tocharski toggenburski 
+togijski tokajski tokarski tokijski toksyczny toksykologiczny toledański 
+tolerancyjny tolkienowski tolkmicki tolutański tomasowski tomaszowski 
+tomicki tomograficzny tomski tonalny tonażowy tongijski toniczny tonkiński 
+tonowy tonujący tonący topograficzny topologiczny toporny topólecki 
+torebkarski toruński torysowski torzymski toskański totalistyczny 
+totalitarny totalitarystyczny totalniacki totalny towarny towarowy 
+towarzyski tołstojowski tożsamościowy tożsamy trachonicki tracki 
+tradycjonalistyczny tradycjonalny tradycyjny trafny tragarski tragiczny 
+tragigroteskowy tragikomiczny traktatowy trampingowy trampowski tramwajarski 
+transalpejski transatlantycki transcendentalny transcendentny 
+transeuropejski transformacyjny transgraniczny translacyjny translatorski 
+transowy transparentny transparentowy transpozycyjny transsatelitarny 
+transsyberyjski transwestycki transwestyczny transylwański tranzystorowy 
+traperski trapezoidalny traserski traumatyczny trawnicki trazymeński trefny 
+trelleborski trembowelski trenczyński trendowy trenerski treningowy 
+treserski treściowy treściwy triadyczny triesteński trietiakowski triphopowy 
+triumfalistyczny triumfalny triumfatorski triumfujący trobriandzki trocki 
+trockistowski troglodycki troisty trojaki trojanowski trojański tromtadracki 
+tropicielski tropikalny troskliwy troszyński trubadurski trucicielski 
+trudnawy trujący trumniarski trupi truwerski trwały trwożliwy trwożny 
+trybunalski trydencki trykotarski trynidadzki trynitariański trynitarski 
+trypolitański tryumfalistyczny tryumfalny tryumfatorski tryumfujący 
+trywialny trzcianecki trzcianieński trzcielski trzciniarski trzcinicki 
+trzciński trzebiatowski trzebiechowski trzebieliński trzebielski trzebieski 
+trzebieszowski trzebiński trzebnicki trzebowniski trzechkrotny trzemeszeński 
+trzepotliwy trzeszczański trzeszczący trzeźwiusieńki trzeźwiuteńki 
+trzeźwiutki trzeźwiący trzeźwy trzpiotowaty trzyciąski trzydziestokrotny 
+trzyipółkrotny trzykrotny trzynastokrotny trzyosobowy trzyzmianowy trębacki 
+trójbarwny trójboczny trójczłonowy trójkątny trójmiarowy trójmiejski 
+trójwymiarowy trójzmianowy tuareski tubalny tubylczy tucholski tuchomski 
+tuchowski tuczarski tuczeński tuczępski tuliszkowski tuloński tulski tuluski 
+tumanowaty tumski tunetański tunezyjski tunguski tuniski tupeciarski 
+tuplicki turawski turański turecki turgieniewowski turkiestański turkmeński 
+turkusowoniebieski turkusowy turobiński turosieński turoski turoszowski 
+turowy turpistyczny turyngeński turystyczny turyński tuskulański tuszowski 
+tuszyński tutorski tuzinkowy tułacki tułaczy tułowicki twardawy twardogórski 
+twardy twarożkarski twarzowy twerski twierdzący tworkowski tworoski 
+tworzycielski twórczy tyberiadzki tybetański tybrzański tychowski tyci 
+tyciusieńki tyciuteńki tyciutki tyciuśki tycjanowski tycjanowy tyczkarski 
+tyczyński tyfliski tygodniowy tygrysi tykociński tykowaty tylekrotny 
+tyleżkrotny tylokrotny tylżycki tymbarski tymczasowy tyniecki tynkarski 
+typograficzny typolitograficzny typologiczny typowy tyralierski tyrawski 
+tyrański tyrnowski tyrolski tyrreński tyrtejski tyryjski tysiąckrotny 
+tysiącraki tyski tyszowiecki tytaniczny tytularny tłoczny tłoczący 
+tłuchowski tłumny tłustawy tłuszczański tłuściuteńki tłuściutki tęczowy 
+tęczówkowy tęgawy tęgi tępacki tępawy tępy tęskny ubecki ubezdźwięczniający 
+ubliżający uboczny ubogi ubolewający ubożuchny ubożutki uchański uchwytny 
+uchylny ucieczkowy ucieszny uciskowy uciążliwy uczciwy uczniacki uczniowski 
+uczony uczuciowy uczulający uczuleniowy uczynny udaniński udany udarowy 
+udatny uderzający uderzeniowy udmurcki udolny udzielny ufijski ufny 
+ufologiczny ugandyjski ugodny ugodowy ugrofiński ugryjski ujazdowski ujemny 
+ujgurski ujmujący ujsolski ujścieński ujędrniający ukojny ukośny ukradkowy 
+ukraiński układny ulanowski uleczalny uległy ulewny ulgowy ulicznikowski 
+ulotkowy ulotny ulsterski ultrakatolicki ultralekki ultramontański 
+ultranowoczesny ultrarentgenowski ultrasonograficzny ultrasowski ultymatywny 
+umbryjski umbryjski umiarkowany umiejętny umierający umoralniający umowny 
+umysłowy umyślny undergroundowy unicki uniejowski unijny unikalny unikatowy 
+unilateralny unistyczny unisławski unitariański uniwersalny uniwersytecki 
+uniżony unrowski uodparniający upajający upalny uparty upierdliwy upiorny 
+upodobniający upojny upokarzający upowski upośledzający uppsalski 
+upraszczający uprzedni uprzedzający uprzejmościowy uprzejmy uralski uranowy 
+urartyjski urazowy urbanistyczny uriański urlopowy uroczy uroczysty urodny 
+urodzajny urodziwy urojeniowy urokliwy urologiczny ursuski ursusowski 
+ursynowski urszuliński urugwajski urwany urwisowaty urwisowski urywany 
+urywkowy urzekający urzędniczy urzędowny urzędowski urzędowy urągający 
+urągliwy usarski usilny uskokowy uskrzydlający uspakajający uspokajający 
+ustaszowski ustawiczny ustawodawczy ustawowy ustny ustrojotwórczy ustrojowy 
+ustronny ustroński ustrzycki ustępliwy usuwalny usypiający uszczypliwy 
+uszkadzający uszlachetniający usługowy usłużny utopijny utracjuszowski 
+utrechcki utylitarny utylitarystyczny uważny uwerturowy uwodzicielski 
+uwłaczający uzbecki uzdrawiający uzdrowicielski uzdrowieńczy uznaniowy 
+uzurpatorski ułamkowy ułanbatorski ułański ułomny ułudny ułęski uściański 
+uścimowski uśmierzający użyteczny użytkowy vatowski vipowski wabiący 
+wachlarzowaty wachlarzowy wachlarzykowaty wadliwy wadowicki wadowski 
+wagabundzki wagaduguański wagancki waginalny wagnerowski wagonowy wagowy 
+wahabicki wahadłowy wahański wahhabicki wahliwy wakacyjny walcowaty walczący 
+waleczny walencki walentynkowy walezyjski walijski walimski walny 
+walonkarski walorowy waloński walterowski walterskotowski waluciarski 
+wampiryczny wampirzy wandalski wandejski waniliowy wapieński wapniacki 
+wapniaczy wapniarski warcholski warciański warcki warczący warecki wareski 
+wargowy wariacki wariantowy wariantywny warkliwy warkotliwy warlubski 
+warmijski warmiński warneński warnicki warstwowy warszawowski warszawski 
+warsztatowy wartki wartkowicki wartościowy wartościujący warunkowy wasalski 
+wasilkowski waszyngtoński watowski watykański wawelowski wawelski wawerski 
+wazeliniarski wazowski wałbrzyski wałecki wałeczkowaty wałowaty wałęsowski 
+waśniowski ważki ważniacki ważny waćpański wciskowy wczasowy 
+wczesnochrześcijański wczesnoludzki wczesnopiastowski wczesnopolski 
+wczesnosłowiański wczesny wcześniutki wdechowy wdowi wdzięczny wdzydzki 
+wedlowski wedyjski weekendowy wegański wegetariański wegetatywny 
+wehrmachtowski weimarski wejherowski wekslowy wellingtoński welski wenecki 
+wenerologiczny weneryczny wenetyjski wenezuelski wenusjański werbalny 
+werbkowicki wermachtowski weroński wersalski wersologiczny wersyfikacyjny 
+wersyfikatorski werterowski wertykalny weryfikowalny werystyczny weselny 
+wesolski wesoluteńki wesolutki wesołkowaty wesołomiasteczkowy wesoły 
+westalski westernowy westfalski westminsterski weterański wewnątrzkomórkowy 
+wewnątrztekstowy wewnątrzwspólnotowy wewnątrzwydzielniczy wewnętrzny 
+wełeński wełniarski wełnisty wgłębny wiarogodny wiarołomny wiarygodny 
+wiatropędny wiaziemski wicemistrzowski wichrowaty wichrzycielski widawski 
+widełkowaty widełkowy widlasty widmowy widnawy widniutki widoczny widokowy 
+widowiskowy widuchowski widzewski widzialny widzowski wieczfniański wieczny 
+wieczorny wieczorowy wieczysty wiedeński wiedźmiński wiejski wiekowy 
+wiekuisty wielbarski wielbłądzi wieleński wielgomłyński wielichowski 
+wielicki wielkoduszny wielkogabarytowy wielkomiejski wielkomorawski 
+wielkonieszawski wielkopański wielkopolski wielkorosyjski wielkoruski 
+wielkoserbski wielkoseryjny wielkowiejski wielkowymiarowy wielkościowy 
+wielmożny wieloaspektowy wielobarwny wieloboczny wieloetapowy wielofazowy 
+wielofunkcyjny wielogłosowy wielokierunkowy wielokrotny wielokulturowy 
+wielokątny wieloosobowy wieloplanowy wielopłaszczyznowy wieloraki 
+wielorazowy wielordzeniowy wielordzenny wielorybi wielostopniowy 
+wielostronny wielosłowny wielotorowy wielowarstwowy wielowymiarowy 
+wielowątkowy wieloznaczny wielościeżkowy wielski wieluński wieniawski 
+wientiański wierchojański wiercipięcki wiernopoddańczy wierny wierszoklecki 
+wiertarski wieruszowski wierutny wierzbicki wierzbieński wierzbnicki 
+wierzchlaski wierzchosławicki wierzchołkowy wierzycielski wieszczbiarski 
+wietnamski wietrzny wietrzychowicki wiewiórczy wieśniacki wieśniaczy 
+wigierski wigrowski wikiński wikliniarski wiktoriański wilamowicki 
+wilanowski wilczy wilczyński wileński wilgotnawy wilhelmiński wilkowski 
+wilkołacki wilkołaczy wilkołaski wilski wimbledoński windawski 
+windsurfingowy windziarski winiarski winnicki winoznawczy wiosenny 
+wiosłowaty wiotki wioślarski wirgiński wirowaty wirowy wirtemberski 
+wirtualny wirtuozerski wirtuozowski wirtuozyjny wirusobójczy wisielczy wiski 
+wismarski wisusowski wiszeński wisznicki wiszący witalny witaminowy witebski 
+witimski witkiewiczowski witkowski witnicki witomiński witoński wittenberski 
+wizerunkowy wizeński wizjonerski wizualny wizygocki wizyjny wizytatorski 
+wizytowy wiązowieński wiązownicki wiązowski wiążący wiślacki wiślański 
+wiślicki wiśnicki wiśniewski wiśniowski wiśniowy wiżajeński więcborski 
+więzienny więźniarski wiński wklęsły wkrzański wkurzający wleński wnikliwy 
+wnukowski wnętrzarski wodniacki wodnisty wodoodporny wodoszczelny wodyński 
+wodzisławski wodzowski wogulski wohyński wojacki wojażerski wojciechowicki 
+wojciechowski wojcieszkowski wojcieszowski wojenny wojewódzki wojowniczy 
+wojskowy wojsławicki wojujący wokaliczny wokalny wokołomarsjański 
+wokołoziemski wokółmarsjański wokółziemski wolanowski wolarski wolborski 
+wolbromski wolitywny woliński wolniuchny wolniusieńki wolniuteńki wolniutki 
+wolniuśki wolnoamerykański wolnomularski wolnomyślicielski wolnomyślny 
+wolnorynkowy wolnościowy wolontariacki wolski wolsztyński woltański 
+wolteriański wolterowski woltyżerski woluntarystyczny wonny workowaty 
+workucki wormacki woroneski woskowy wołczyński wołgogradzki wołkowyjski 
+wołkowyski wołomiński wołoski wołowski wołyński wołżański woźnicki wprawny 
+wpółfiluterny wpółnagi wpółprzytomny wpółtajemniczy wpółwesoły wpółświadomy 
+wrażliwy wredny wrocławski wrogi wronecki wroni wronkowski wrotkarski 
+wrzaskliwy wrzecionowaty wrzelowiecki wrzelowski wrzesiński wrzeszczański 
+wrześniowy wrzodotwórczy wrzosowy wręczycki wróblewski wróżbiarski wróżebny 
+wschodni wschodnioeuropejski wschowski wsiowy wskazujący wskaźnikowy wski 
+wsobny wspaniałomyślny wspaniały wspominkarski wspólnotowy wspólny 
+współbieżny współczesny współczujący współistnieniowy współlokatorski 
+współmierny współosiowy współplemienny współrzędny współśrodkowy 
+wstawienniczy wsteczny wstrzemięźliwy wstrząsający wstrętny wstydliwy 
+wstęgowaty wstępny wszawy wszechludzki wszechmiłujący wszechmocny 
+wszechobejmujący wszechogarniający wszechpolski wszechrosyjski wszechstronny 
+wszechsłowiański wszechwiedzący wszechwładny wszeteczny wszystkowiedzący 
+wszystkożerny wszyściuchny wszyściusieńki wszyściuteńki wszyściutki 
+wszyściuśki wszędobylski wtórny wuesemowski wujowski wulgarny 
+wulgaryzatorski wulkaniczny wulpiński wybaczający wybaczalny wybielający 
+wybiorczy wybitny wybiórczy wyborczy wyborny wyborowy wyborski wybraniecki 
+wybredny wybuchowy wychowawczy wycinankarski wycinkowy wyczepisty 
+wyczerpujący wyczerpywalny wyczuwalny wyczynowy wydajnościowy wydajny 
+wydarzeniowy wydatny wydawniczy wydmiński wydolnościowy wydolny wydrowaty 
+wydzielniczy wygodnicki wygodny wygłodniały wygórowany wyimkowy wyjaśniający 
+wyjebisty wyjątkowy wyjściowy wykonawczy wykreślny wykrywalny wykrztuśny 
+wykrzyknikowy wykrętny wykwintny wykładniczy wylewny wymagający wymawianiowy 
+wymiarowy wymienny wymierny wymijający wymiotny wymoczkowaty wymowny 
+wymuszony wymyślny wynalazczy wynikowy wyniosły wyniszczający wyobrażalny 
+wypadkowy wypoczynkowy wypukły wypłacalny wyrachowany wyrafinowany wyrazisty 
+wyraźny wyrodny wyrozumiały wyrywkowy wyrzyski wyrąbisty wyrównawczy 
+wyróżniający wyskokowy wysmuklający wysocki wysoki wysokoemisyjny 
+wysokogórski wysokomazowiecki wysokoniemiecki wysokopienny wyspiarski 
+wyspowy wystarczający wystarczalny wystawienniczy wystawny wystrzałowy 
+występny wysublimowany wysyłkowy wyszczuplający wyszehradzki wyszkowski 
+wyszogrodzki wyszukany wytrawny wytrwały wytrzymały wytworny wytwórczy 
+wytłumaczalny wyuzdany wywiadowczy wywoławczy wywrotowy wyznaniowy wyznawczy 
+wyzwalający wyzwoleńczy wyzwolicielski wyzywający wyłączny wyśmienity 
+wyśmierzycki wyżniański wyżowy wzajemny wzdłużny wzgardliwy względny 
+wzmacniający wzniosły wzorcarski wzorcowy wzorniczy wzorowy wzorzysty 
+wzrokowy wzruszający wąbrzeski wąchocki wądroski wągrowiecki wąpielski 
+wąsewski wąski wąsoski wątlutki wątpiący wątpliwy wątły wąwolnicki wąziuchny 
+wąziusieńki wąziuteńki wąziutki władczy władny władycki władysławowski 
+własnooczny własnoręczny własnoustny własnowolny właścicielski właściwy 
+włochaty włochowski włocławski włodawski włodowicki włodycki włodzimierski 
+włoski włoszakowicki włoszczowski włościański włóczęgowski włókniarski 
+wścibski wściekły węchowy wędkarski wędliniarski wędzarski węgierski 
+węgierski węgierskogórski węglarski węgorzewski węgorzyński węgrowski 
+węzłowaty wężowaty wężowy wężykowaty wójtowski wólczański würzburski 
+zaaferowany zaalpejski zaatlantycki zabajkalski zabawczarski zabawkarski 
+zabawny zabawowy zabezpieczający zabiegowy zabierzowski zabijający zabijski 
+zabobonny zaborczy zaborowski zaborski zabrski zabrzański zaburzający 
+zabużański zabytkowy zabłudowski zabójczy zachodni zachodnioberliński 
+zachodnioeuropejski zachodnioniemiecki zachodniopomorski zachowawczy 
+zachrypły zachwycający zachłanny zachęcający zaciekły zaciszny zacięty zacny 
+zaczepisty zaczepny zaczepowy zaczątkowy zadaniowy zadarski zadnieprzański 
+zadniestrzański zadowalający zadunajski zadymiarski zadzierzysty 
+zadzierżysty zadzimski zadziorny zadziwiający zagadkowy zagmatwany zagorski 
+zagorzały zagraniczny zagrodzieński zagrzebski zagłębiowski zagórowski 
+zagórski zagórzański zaiksowski zairski zajadły zajawkowy zajebiaszczy 
+zajebisty zajmujący zająkliwy zajęczy zakamarkowy zakapiorski zakarpacki 
+zakaspijski zakaukaski zakaźny zakliczyński zaklikowski zakopiański 
+zakresowy zakroczymski zakrzewski zakrzowski zakulisowy zakłócający zaleski 
+zaleszański zalewski zależny zaliczkowy zalotny zalążkowy zamaskowany 
+zamaszysty zambijski zambrowski zamiejski zamienny zamierzchły zamojski 
+zamordystyczny zamorski zamożny zanarwiański zaniedbany zaniemeński 
+zaniemyski zanzibarski zaoczny zaodrzański zaolziański zapachowy zapalny 
+zapamiętały zapamiętliwy zapewniający zapobiegawczy zapobiegliwy zapolicki 
+zapominalski zaporoski zaporowy zapowiedziany zapoznawczy zapraszający 
+zaprzeczający zapustny zapustowy zaradny zaraźliwy zarobkowy zarozumialczy 
+zarozumiały zarszyński zarwański zarysowy zarębski zasadniczy zasadny 
+zasadotwórczy zasadowy zasiedziały zaskakujący zasmucający zasobny 
+zastanawiający zastraszający zastępczy zaszczytny zasławski zasłużony 
+zatatrzański zatokowy zatorski zatrważający zatwardziały zauralski zauszny 
+zauważalny zawadiacki zawalisty zawiasowy zawichojski zawidowski 
+zawierciański zawiesisty zawikłany zawistny zawiły zawiślański zawodniczy 
+zawodny zawodowy zawodzący zawojski zawołżański zawrotny zawstydzający 
+zawzięty zawężający zazdrosny zaziemski założycielski załuski zaściankowy 
+zażarty zażywny zażyły zbaraski zbawczy zbawienny zbereźny zbiczeński 
+zbieracki zbieżny zbiorczy zbiorowy zblewski zbliżeniowy zborny zbowidowski 
+zbożny zbrodniczy zbrojarski zbrojny zbrosławicki zbuczyński zbyteczny 
+zbytkowny zbytni zbywający zbywalny zbąszyński zbędny zbójecki zbójeński 
+zbójnicki zdalny zdaniotwórczy zdarny zdatny zdawkowy zdecydowany 
+zderzeniowy zdjęciowy zdobniczy zdobny zdobywczy zdradliwy zdradziecki 
+zdrobniały zdrowiusieńki zdrowiuteńki zdrowiutki zdroworozsądkowy zdrowotny 
+zdrowy zdrożny zdumiewający zduński zduńskowolski zdziarski zdziecinniały 
+zdzieszowicki zdzirowaty zebrzydowicki zebrzydowski zecerski 
+zegarmistrzowski zegarowy zegrzyński zelandzki zelowski zembrzycki 
+zempleński zerawszański zespołowy zetemesowski zetempowski zetemwuowski 
+zeteselowski zetesempowski zetwuemowski zewnętrzny zezowaty zezwalający 
+zgierski zgiełkliwy zgnuśniały zgodliwy zgodny zgorzelecki zgorzkniały 
+zgrabniusi zgrabniutki zgrabny zgredowski zgrubiały zgrubny zgrywny 
+zgryźliwy zgrzeblarski zgrzebny zgrzybiały zgrzytliwy zgubny zgłoskotwórczy 
+zielarski zieleniarski zieleniuchny zieleniutki zielonawoniebieski zielonawy 
+zieloniuchny zieloniutki zielonkawoniebieski zielonkawy zielonogórski 
+zielononiebieski zielonooki ziemiański ziemisty ziemski zimbabweński zimnawy 
+zimniusieńki zimniuteńki zimniutki zimowy ziomkowski ziszczalny ziębicki 
+zięciowski zjadliwy zjawiskowy zmienny zmierzły zmysłowy zmyłkowy zmyślny 
+znachorski znaczeniowy znaczny znaczący znajomy znakarski znakomity 
+znamienny zniechęcający znieczulający zniewalający zniewieściały znikomy 
+zniżkowy znojny znośny zobojętniały zobowiązujący zomowski zoofilski 
+zrozumiały zrzędliwy zrzędny zrzędzący zrębowy zręcznościowy zręczny 
+zróżnicowany zuberski zuchowaty zuchwały zuluski zupełny zurychski zuryski 
+zwalisty zwardoński zwariowany zwarty zwiadowczy zwierciadlany zwierzchni 
+zwierzyniecki zwierzyński zwierzęcy zwiewny zwinny związkowy zwięzły 
+zwodniczy zwoleński zwrotny zwycięski zwyczajny zwyczajowy zwykły 
+zwyrodniały zwężający zygmuntowski zygzakowaty zyskowny ząbkowicki ząbkowski 
+złocistobrązowy złocisty złociusieńki złociuteńki złociutki złociuśki 
+złoczewski złoczowski złodziejski złomiarski złotawy złotnicki złotoryjski 
+złotowski złotołuski złoty złotówkowy złowieszczy złowrogi złowróżbny 
+złośliwy złudny zębaty zębowicki zębowy łabiszyński łabowski łabski łabuński 
+łabędzi łachmaniarski łachudrowaty łaciński łacniuchny ładniusi ładniusieńki 
+ładniutki ładniuśki ładny ładowny ładzicki łagiewnicki łagodniusi 
+łagodniutki łagodny łagowski łajdacki łambinowicki łamistrajkowski 
+łapanowski łapserdacki łapski łapszański łapówkarski łasiński łaskarzewski 
+łaskotliwy łaszczowski łatwiuteńki łatwiutki łatwiuśki łatwostrawny 
+łatwowierny łatwy ławicowy ławnicki łazarzowski łazienkowski łazikowski 
+łaziski łazowski łazęgowaty łańcuchowy łańcucki łańcuszkowy łebski łekieński 
+łemkowski łepski łgarski łobeski łobuzerski łobuzowaty łobuzowski łobzowski 
+łobżenicki łochowski łodygowicki łomaski łomnicki łomżyński łopatkowaty 
+łopatologiczny łopatowaty łopotliwy łopuszański łopuszeński łosicki 
+łososiński łotewski łotrowski łotrzykowski łowicki łowiecki łoński łubiański 
+łubnicki łubowski łucki łukciański łukowaty łukowicki łukowski łukowy 
+łupieski łupkowski łuskowaty łuszczarski łużeński łużycki łużyński 
+łyczakowski łykowaty łysogórski łysomicki łysy łyszkowicki łyżkowaty 
+łyżwiarski łzawy łączny łąkarski łęczniański łęczycki łęczyński łęgowski 
+łęknicki łódzki ścierny ścieśniający ścinawski ścisły ściągający śladowy 
+ślamazarny śledczy ślepy ślesiński śliczniutki śliczny ślimaczy ślimakowaty 
+śliski śliwicki śliwkowy ślizgarski ślubny ślusarski śląski śmieciarski 
+śmiercionośny śmierdzący śmiertelny śmieszny śmigielski śmigły śniadowski 
+śniady śnieżny śnieżysty śpieszny śpiewacki śpiewaczy śpiewny śpiący średni 
+średniacki średniawy średnioniemiecki średniopolski średnioroczny 
+średnioszlachecki średnioterminowy średniowieczny średzki śremski 
+środkowoeuropejski środkowy środowiskowy śrubowaty śrubowy śródborowski 
+śródgłosowy śródgórski śródmiejski śródmięśniowy śródmorski śródskórny 
+śródwagowy śródziemnomorski śródżylny śwarny świadomościowy światoburczy 
+światopoglądowy światotwórczy światowy światowładny światłochronny 
+światłoczuły światłoszczelny światłowodowy światły świderkowaty świderski 
+świdnicki świdrowaty świdrujący świdrzański świdwiński świebodzicki 
+świebodziński świecki świecący świedziebniański świedziebski świegotliwy 
+świeradowski świerczowski świergotliwy świerklański świerzawski świerzeński 
+świeszyński świetlisty świetlny świetny świeżuchny świeżusieńki świeżuteńki 
+świeżutki świeżuśki świeży świnicki świnieński świniowaty świnoujski 
+świszczący świąteczny świątnicki świątobliwy święciechowski świętajeński 
+świętobliwy świętochłowicki świętojański świętokatarzyński świętokradczy 
+świętokradzki świętokrzyski świętoszkowaty świętoszkowy święty świński 
+ździarski ździrowaty źródłowy żabi żabieński żabikowski żabiowolski żabiński 
+żabojadzki żagański żakowski żandarmski żargonowy żarliwy żarnowiecki 
+żarnowski żarowski żarski żartki żartobliwy żarłoczny żałobny żałosny 
+żałościwy żałośliwy żałujący żebracki żebraczy żebrowy żebrzący żegiestowski 
+żeglarski żeglugowy żegociński żelazkowski żelechowski żenujący żerański 
+żerkowski żeński żmijowaty żmudny żmudzki żniwiarski żniński żoliborski 
+żonglerski żorski żołdacki żołnierski żołyński żrący żukowicki żukowski 
+żupański żurawicki żurnalowy żuromiński żuławski żwawy żychliński życiowy 
+życzeniowy życzliwy żydowski żyrafi żyrakowski żyrardowski żyrzyński 
+żytniański żytomierski żywicielski żywiczarski żywiczny żywiecki żywieniowy 
+żywiołowy żywiutki żywnościowy żywny żywociarski żyworodny żywotny żywy 
+żyłowy żądaniowy żądny żórawiński żółciopędny żółciotwórczy żółciowy 
+żółciuchny żółciutki żółkiewecki żółkiewski żółtawy żółtozielonkawy żółty 
+żółty żółwi żółwiowy ćmielowski ćpuński ćwiczebny ćwierkliwy 
+ćwierćautomatyczny ówczesny
 """.split())
