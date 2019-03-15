@@ -3,8 +3,7 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
-from .typedefs cimport attr_t, hash_t
-from .strings cimport hash_string
+from .typedefs cimport hash_t
 
 
 # Internal struct, for storage and disambiguation. This isn't what we return
@@ -68,26 +67,10 @@ cdef class KnowledgeBase:
     # efficient.
     cdef object _aliases_table
 
-    def __len__(self):
-        return self._entries.size()
-
-    def add_entity(self, name, float prob, vectors=None, features=None, aliases=None):
-        # TODO: more friendly check for non-unique name
-        if name in self:
-            return
-
-        cdef hash_t key = hash_string(name)
-        self.c_add_entity(key, prob, self._vectors_table.get_pointer(vectors),
-                   self._features_table.get(features))
-
-        # TODO: hash the aliases?
-        for alias, prob_alias in aliases:
-            self._aliases_table.add(alias, key, prob_alias)
-
     cdef void c_add_entity(self, hash_t key, float prob, const int32_t* vector_rows,
                     int feats_row) nogil:
         """Add an entry to the knowledge base."""
-        # This is what we'll map the orth to. It's where the entry will sit
+        # This is what we'll map the hash key to. It's where the entry will sit
         # in the vector of entries, so we can get it later.
         cdef int64_t index = self._entries.size()
         self._entries.push_back(
