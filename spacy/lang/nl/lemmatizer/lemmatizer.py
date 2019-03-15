@@ -6,6 +6,7 @@ from ....symbols import POS, NOUN, VERB, ADJ, NUM, DET, PRON, ADP, AUX, ADV
 
 class DutchLemmatizer(object):
     # Note: CGN does not distinguish AUX verbs, so we treat AUX as VERB.
+    # fmt: off
     univ_pos_name_variants = {
         NOUN: "noun", "NOUN": "noun", "noun": "noun",
         VERB: "verb", "VERB": "verb", "verb": "verb",
@@ -17,6 +18,7 @@ class DutchLemmatizer(object):
         ADP: "adp", "ADP": "adp", "adp": "adp",
         NUM: "num", "NUM": "num", "num": "num"
     }
+    # fmt: on
 
     @classmethod
     def load(cls, path, index=None, exc=None, rules=None, lookup=None):
@@ -62,10 +64,8 @@ class DutchLemmatizer(object):
             return [looked_up_lemma]
 
         forms, is_known = lemmatize(
-            string,
-            lemma_index,
-            exceptions,
-            self.rules.get(univ_pos, []))
+            string, lemma_index, exceptions, self.rules.get(univ_pos, [])
+        )
 
         # Back-off through remaining return value candidates.
         if forms:
@@ -90,25 +90,25 @@ class DutchLemmatizer(object):
         return self.lookup_table.get(string, string)
 
     def noun(self, string, morphology=None):
-        return self(string, 'noun', morphology)
+        return self(string, "noun", morphology)
 
     def verb(self, string, morphology=None):
-        return self(string, 'verb', morphology)
+        return self(string, "verb", morphology)
 
     def adj(self, string, morphology=None):
-        return self(string, 'adj', morphology)
+        return self(string, "adj", morphology)
 
     def det(self, string, morphology=None):
-        return self(string, 'det', morphology)
+        return self(string, "det", morphology)
 
     def pron(self, string, morphology=None):
-        return self(string, 'pron', morphology)
+        return self(string, "pron", morphology)
 
     def adp(self, string, morphology=None):
-        return self(string, 'adp', morphology)
+        return self(string, "adp", morphology)
 
     def punct(self, string, morphology=None):
-        return self(string, 'punct', morphology)
+        return self(string, "punct", morphology)
 
 
 # Reimplemented to focus more on application of suffix rules and to return
@@ -118,7 +118,7 @@ def lemmatize(string, index, exceptions, rules):
     oov_forms = []
     for old, new in rules:
         if string.endswith(old):
-            form = string[:len(string) - len(old)] + new
+            form = string[: len(string) - len(old)] + new
             if not form:
                 pass
             elif form in index:
