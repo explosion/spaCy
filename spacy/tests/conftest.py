@@ -150,16 +150,6 @@ def ro_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def nl_tokenizer():
-    return util.get_lang_class("nl").Defaults.create_tokenizer()
-
-
-@pytest.fixture
-def stringstore():
-    return StringStore()
-
-
-@pytest.fixture(scope="session")
 def ru_tokenizer():
     pytest.importorskip("pymorphy2")
     return get_lang_class("ru").Defaults.create_tokenizer()
