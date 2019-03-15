@@ -8,7 +8,7 @@ import { H1 } from './typography'
 
 import classes from '../styles/title.module.sass'
 
-const Title = ({ title, tag, version, teaser, source, image, children, ...props }) => (
+const Title = ({ id, title, tag, version, teaser, source, image, children, ...props }) => (
     <header className={classes.root}>
         {(image || source) && (
             <div className={classes.corner}>
@@ -25,7 +25,7 @@ const Title = ({ title, tag, version, teaser, source, image, children, ...props 
                 )}
             </div>
         )}
-        <H1 className={classes.h1} {...props}>
+        <H1 className={classes.h1} id={id} {...props}>
             {title}
         </H1>
         {tag && <Tag spaced>{tag}</Tag>}
