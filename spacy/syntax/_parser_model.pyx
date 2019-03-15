@@ -156,7 +156,7 @@ cdef void cpu_log_loss(float* d_scores,
     """Do multi-label log loss"""
     cdef double max_, gmax, Z, gZ
     best = arg_max_if_gold(scores, costs, is_valid, O)
-    guess = arg_max_if_valid(scores, is_valid, O)
+    guess = Vec.arg_max(scores, O)
     if best == -1 or guess == -1:
         # These shouldn't happen, but if they do, we want to make sure we don't
         # cause an OOB access.
@@ -166,14 +166,11 @@ cdef void cpu_log_loss(float* d_scores,
     max_ = scores[guess]
     gmax = scores[best]
     for i in range(O):
-        if is_valid[i]:
-            Z += exp(scores[i] - max_)
-            if costs[i] <= costs[best]:
-                gZ += exp(scores[i] - gmax)
+        Z += exp(scores[i] - max_)
+        if costs[i] <= costs[best]:
+            gZ += exp(scores[i] - gmax)
     for i in range(O):
-        if not is_valid[i]:
-            d_scores[i] = 0.
-        elif costs[i] <= costs[best]:
+        if costs[i] <= costs[best]:
             d_scores[i] = (exp(scores[i]-max_) / Z) - (exp(scores[i]-gmax)/gZ)
         else:
             d_scores[i] = exp(scores[i]-max_) / Z
