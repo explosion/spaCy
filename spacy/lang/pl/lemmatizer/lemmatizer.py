@@ -27,10 +27,10 @@ class PolishLemmatizer(object):
         elif univ_pos in (PART, 'PART', 'part'):
             univ_pos = 'part'
         else:
-            return self.lookup(string)
+            return [self.lookup(string)]
 
         # TODO check if is base form
-
+        
         exceptions = self.exc.get(univ_pos, {}).copy()
         exceptions.update(self.exc.get('other', {}))
         lemmas = lemmatize(
@@ -39,7 +39,6 @@ class PolishLemmatizer(object):
             exceptions,
             self.rules.get(univ_pos, []) + self.rules.get('other', {})
         )
-
         return lemmas
 
     def lookup(self, string):
@@ -53,7 +52,6 @@ def lemmatize(string, index, exceptions, rules):
         forms.append(string)
 
     oov_forms = []
-
     for word_suf, lemma_suf in rules:
         if re.search(word_suf, string):
             form = re.sub(word_suf, lemma_suf, string)
