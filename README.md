@@ -12,7 +12,7 @@ currently supports tokenization for **45+ languages**. It features the
 and easy **deep learning** integration. It's commercial open-source software,
 released under the MIT license.
 
-💫 **Version 2.1 out now!** [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
+💫 **Version 2.0 out now!** [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-devops&style=flat-square)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
 [![Travis Build Status](https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis)](https://travis-ci.org/explosion/spaCy)
