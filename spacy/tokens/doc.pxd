@@ -19,6 +19,9 @@ ctypedef fused LexemeOrToken:
     const_TokenC_ptr
 
 
+cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+
+
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2
 
 

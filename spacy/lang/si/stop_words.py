@@ -2,9 +2,8 @@
 from __future__ import unicode_literals
 
 
-# Stop words
-
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 අතර
 එච්චර
 එපමණ
@@ -47,5 +46,6 @@ STOP_WORDS = set("""
 සහ
 හා
 හෙවත්
-හෝ  
-""".split())
+හෝ
+""".split()
+)

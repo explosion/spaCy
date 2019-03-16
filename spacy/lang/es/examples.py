@@ -18,5 +18,5 @@ sentences = [
     "El gato come pescado",
     "Veo al hombre con el telescopio",
     "La araña come moscas",
-    "El pingüino incuba en su nido"
+    "El pingüino incuba en su nido",
 ]

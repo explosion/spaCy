@@ -1,5 +1,5 @@
 recursive-include include *.h
 include LICENSE
-include README.rst
+include README.md
 include pyproject.toml
 include bin/spacy

@@ -1,14 +1,11 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-
 """
 Example sentences to test spaCy and its language models.
-
 >>> from spacy.lang.fi.examples import sentences
 >>> docs = nlp.pipe(sentences)
 """
-
 
 sentences = [
     "Itseajavat autot siirtävät vakuutusvastuun autojen valmistajille",
@@ -17,5 +14,5 @@ sentences = [
     "Missä sinä olet?",
     "Mikä on Yhdysvaltojen pääkaupunki?",
     "Kuka on Suomen presidentti?",
-    "Milloin Sauli Niinistö on syntynyt?"
+    "Milloin Sauli Niinistö on syntynyt?",
 ]

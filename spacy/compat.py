@@ -1,11 +1,16 @@
 # coding: utf8
+"""
+Helpers for Python and platform compatibility. To distinguish them from
+the builtin functions, replacement functions are suffixed with an underscore,
+e.g. `unicode_`.
+
+DOCS: https://spacy.io/api/top-level#compat
+"""
 from __future__ import unicode_literals
 
 import os
 import sys
-import ujson
 import itertools
-import locale
 
 from thinc.neural.util import copy_array
 
@@ -30,9 +35,9 @@ except ImportError:
     cupy = None
 
 try:
-    from thinc.neural.optimizers import Optimizer
+    from thinc.neural.optimizers import Optimizer  # noqa: F401
 except ImportError:
-    from thinc.neural.optimizers import Adam as Optimizer
+    from thinc.neural.optimizers import Adam as Optimizer  # noqa: F401
 
 pickle = pickle
 copy_reg = copy_reg
@@ -55,9 +60,6 @@ if is_python2:
     unicode_ = unicode  # noqa: F821
     basestring_ = basestring  # noqa: F821
     input_ = raw_input  # noqa: F821
-    json_dumps = lambda data: ujson.dumps(
-        data, indent=2, escape_forward_slashes=False
-    ).decode("utf8")
     path2str = lambda path: str(path).decode("utf8")
 
 elif is_python3:
@@ -65,24 +67,27 @@ elif is_python3:
     unicode_ = str
     basestring_ = str
     input_ = input
-    json_dumps = lambda data: ujson.dumps(data, indent=2, escape_forward_slashes=False)
     path2str = lambda path: str(path)
 
 
 def b_to_str(b_str):
+    """Convert a bytes object to a string.
+
+    b_str (bytes): The object to convert.
+    RETURNS (unicode): The converted string.
+    """
     if is_python2:
         return b_str
-    # important: if no encoding is set, string becomes "b'...'"
+    # Important: if no encoding is set, string becomes "b'...'"
     return str(b_str, encoding="utf8")
 
 
-def getattr_(obj, name, *default):
-    if is_python3 and isinstance(name, bytes):
-        name = name.decode("utf8")
-    return getattr(obj, name, *default)
-
-
 def symlink_to(orig, dest):
+    """Create a symlink. Used for model shortcut links.
+
+    orig (unicode / Path): The origin path.
+    dest (unicode / Path): The destination path of the symlink.
+    """
     if is_windows:
         import subprocess
 
@@ -92,6 +97,10 @@ def symlink_to(orig, dest):
 
 
 def symlink_remove(link):
+    """Remove a symlink. Used for model shortcut links.
+
+    link (unicode / Path): The path to the symlink.
+    """
     # https://stackoverflow.com/q/26554135/6400719
     if os.path.isdir(path2str(link)) and is_windows:
         # this should only be on Py2.7 and windows
@@ -101,6 +110,18 @@ def symlink_remove(link):
 
 
 def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
+    """Check if a specific configuration of Python version and operating system
+    matches the user's setup. Mostly used to display targeted error messages.
+
+    python2 (bool): spaCy is executed with Python 2.x.
+    python3 (bool): spaCy is executed with Python 3.x.
+    windows (bool): spaCy is executed on Windows.
+    linux (bool): spaCy is executed on Linux.
+    osx (bool): spaCy is executed on OS X or macOS.
+    RETURNS (bool): Whether the configuration matches the user's platform.
+
+    DOCS: https://spacy.io/api/top-level#compat.is_config
+    """
     return (
         python2 in (None, is_python2)
         and python3 in (None, is_python3)
@@ -110,19 +131,14 @@ def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
     )
 
 
-def normalize_string_keys(old):
-    """Given a dictionary, make sure keys are unicode strings, not bytes."""
-    new = {}
-    for key, value in old.items():
-        if isinstance(key, bytes_):
-            new[key.decode("utf8")] = value
-        else:
-            new[key] = value
-    return new
-
-
 def import_file(name, loc):
-    loc = str(loc)
+    """Import module from a file. Used to load models from a directory.
+
+    name (unicode): Name of module to load.
+    loc (unicode / Path): Path to the file.
+    RETURNS: The loaded module.
+    """
+    loc = path2str(loc)
     if is_python_pre_3_5:
         import imp
 
@@ -134,12 +150,3 @@ def import_file(name, loc):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
-
-
-def locale_escape(string, errors="replace"):
-    """
-    Mangle non-supported characters, for savages with ascii terminals.
-    """
-    encoding = locale.getpreferredencoding()
-    string = string.encode(encoding, errors).decode("utf8")
-    return string

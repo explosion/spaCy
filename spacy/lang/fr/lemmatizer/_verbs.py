@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-VERBS = set("""
+VERBS = set(
+    """
  abaisser abandonner abdiquer abecquer abéliser aberrer abhorrer abîmer abjurer
  ablater abluer ablutionner abominer abonder abonner aborder aborner aboucher
  abouler abouter aboutonner abracadabrer abraquer abraser abreuver abricoter
@@ -1246,4 +1247,5 @@ VERBS = set("""
  youyouter yoyotter zader zaïrianiser zapper zéolitiser zéroter zester zieuter
  zigouiller zigzaguer zinguer zinzinuler zipper zombifier zoner zonzonner
  zoomer zozoter zyeuter
-""".split())
+""".split()
+)

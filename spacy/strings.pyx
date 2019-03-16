@@ -7,18 +7,36 @@ from libc.string cimport memcpy
 from libcpp.set cimport set
 from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64, hash32
-import ujson
+import srsly
 
+from .compat import basestring_
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
 from .typedefs cimport hash_t
-from .compat import json_dumps
 from .errors import Errors
 from . import util
 
 
+def get_string_id(key):
+    """Get a string ID, handling the reserved symbols correctly. If the key is
+    already an ID, return it.
+
+    This function optimises for convenience over performance, so shouldn't be
+    used in tight loops.
+    """
+    if not isinstance(key, basestring_):
+        return key
+    elif key in SYMBOLS_BY_STR:
+        return SYMBOLS_BY_STR[key]
+    elif not key:
+        return 0
+    else:
+        chars = key.encode("utf8")
+        return hash_utf8(chars, len(chars))
+
+
 cpdef hash_t hash_string(unicode string) except 0:
-    chars = string.encode('utf8')
+    chars = string.encode("utf8")
     return hash_utf8(chars, len(chars))
 
 
@@ -33,9 +51,9 @@ cdef uint32_t hash32_utf8(char* utf8_string, int length) nogil:
 cdef unicode decode_Utf8Str(const Utf8Str* string):
     cdef int i, length
     if string.s[0] < sizeof(string.s) and string.s[0] != 0:
-        return string.s[1:string.s[0]+1].decode('utf8')
+        return string.s[1:string.s[0]+1].decode("utf8")
     elif string.p[0] < 255:
-        return string.p[1:string.p[0]+1].decode('utf8')
+        return string.p[1:string.p[0]+1].decode("utf8")
     else:
         i = 0
         length = 0
@@ -44,7 +62,7 @@ cdef unicode decode_Utf8Str(const Utf8Str* string):
             length += 255
         length += string.p[i]
         i += 1
-        return string.p[i:length + i].decode('utf8')
+        return string.p[i:length + i].decode("utf8")
 
 
 cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) except *:
@@ -73,7 +91,10 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
 
 
 cdef class StringStore:
-    """Look up strings by 64-bit hashes."""
+    """Look up strings by 64-bit hashes.
+
+    DOCS: https://spacy.io/api/stringstore
+    """
     def __init__(self, strings=None, freeze=False):
         """Create the StringStore.
 
@@ -95,7 +116,7 @@ cdef class StringStore:
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
         elif string_or_id == 0:
-            return u''
+            return ""
         elif string_or_id in SYMBOLS_BY_STR:
             return SYMBOLS_BY_STR[string_or_id]
 
@@ -163,7 +184,7 @@ cdef class StringStore:
         elif isinstance(string, unicode):
             key = hash_string(string)
         else:
-            string = string.encode('utf8')
+            string = string.encode("utf8")
             key = hash_utf8(string, len(string))
         if key < len(SYMBOLS_BY_INT):
             return True
@@ -197,8 +218,7 @@ cdef class StringStore:
         """
         path = util.ensure_path(path)
         strings = list(self)
-        with path.open('w') as file_:
-            file_.write(json_dumps(strings))
+        srsly.write_json(path, strings)
 
     def from_disk(self, path):
         """Loads state from a directory. Modifies the object in place and
@@ -209,30 +229,27 @@ cdef class StringStore:
         RETURNS (StringStore): The modified `StringStore` object.
         """
         path = util.ensure_path(path)
-        with path.open('r') as file_:
-            strings = ujson.load(file_)
+        strings = srsly.read_json(path)
         prev = list(self)
         self._reset_and_load(strings)
         for word in prev:
             self.add(word)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `StringStore` object.
         """
-        return json_dumps(list(self))
+        return srsly.json_dumps(list(self))
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, **kwargs):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
         RETURNS (StringStore): The `StringStore` object.
         """
-        strings = ujson.loads(bytes_data)
+        strings = srsly.json_loads(bytes_data)
         prev = list(self)
         self._reset_and_load(strings)
         for word in prev:
@@ -280,7 +297,7 @@ cdef class StringStore:
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
-        cdef bytes byte_string = py_string.encode('utf8')
+        cdef bytes byte_string = py_string.encode("utf8")
         return self._intern_utf8(byte_string, len(byte_string))
 
     @cython.final

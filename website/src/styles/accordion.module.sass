@@ -1,0 +1,48 @@
+.root
+    --color-inline-code-bg: var(--color-theme-opaque)
+    background: var(--color-theme-light)
+    margin-bottom: var(--spacing-xs)
+    border-radius: var(--border-radius)
+
+.button
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-primary)
+    color: var(--color-theme-dark)
+    display: flex
+    align-items: center
+    justify-content: space-between
+    width: 100%
+    padding: 1rem 1.5rem
+    border-radius: var(--border-radius)
+
+    &:focus
+        background: var(--color-theme-opaque)
+
+    &[aria-expanded="true"]:focus
+        border-bottom-left-radius: 0
+        border-bottom-right-radius: 0
+
+.icon
+    width: 2rem
+    height: 2rem
+    background: var(--color-theme)
+    color: var(--color-back)
+    border-radius: 50%
+    padding: 0.35rem
+    pointer-events: none
+
+.content
+    padding: 2rem 1.5rem 3rem
+
+    & > *:last-child
+        margin-bottom: 0
+
+    p
+        margin-bottom: var(--spacing-sm)
+
+.hidden
+    display: none
+
+.anchor
+    color: var(--color-subtle-dark)
+    padding-left: 0.5em
+    opacity: 0.75

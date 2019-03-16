@@ -11,13 +11,13 @@ from ...attrs import LANG
 class SinhalaDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = lambda text: 'si'
+    lex_attr_getters[LANG] = lambda text: "si"
     stop_words = STOP_WORDS
 
 
 class Sinhala(Language):
-    lang = 'si'
+    lang = "si"
     Defaults = SinhalaDefaults
 
 
-__all__ = ['Sinhala']
+__all__ = ["Sinhala"]

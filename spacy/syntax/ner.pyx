@@ -3,13 +3,15 @@ from __future__ import unicode_literals
 
 from thinc.typedefs cimport weight_t
 from thinc.extra.search cimport Beam
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
 from ..gold cimport GoldParseC, GoldParse
+from ..lexeme cimport Lexeme
+from ..attrs cimport IS_SPACE
 from ..errors import Errors
 
 
@@ -54,47 +56,33 @@ cdef class BiluoPushDown(TransitionSystem):
     def __init__(self, *args, **kwargs):
         TransitionSystem.__init__(self, *args, **kwargs)
 
-    def __reduce__(self):
-        labels_by_action = OrderedDict()
-        cdef Transition t
-        for trans in self.c[:self.n_moves]:
-            label_str = self.strings[trans.label]
-            labels_by_action.setdefault(trans.move, []).append(label_str)
-        return (BiluoPushDown, (self.strings, labels_by_action),
-                None, None)
-
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions', OrderedDict((
-            (MISSING, ['']),
-            (BEGIN, []),
-            (IN, []),
-            (LAST, []),
-            (UNIT, []),
-            (OUT, [''])
-        )))
-        seen_entities = set()
+        actions = {
+            MISSING: Counter(),
+            BEGIN: Counter(),
+            IN: Counter(),
+            LAST: Counter(),
+            UNIT: Counter(),
+            OUT: Counter()
+        }
+        actions[OUT][''] = 1
         for entity_type in kwargs.get('entity_types', []):
-            if entity_type in seen_entities:
-                continue
-            seen_entities.add(entity_type)
             for action in (BEGIN, IN, LAST, UNIT):
-                actions[action].append(entity_type)
+                actions[action][entity_type] = 1
         moves = ('M', 'B', 'I', 'L', 'U')
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, biluo), _ in sents:
                 for i, ner_tag in enumerate(biluo):
                     if ner_tag != 'O' and ner_tag != '-':
                         _, label = ner_tag.split('-', 1)
-                        if label not in seen_entities:
-                            seen_entities.add(label)
-                            for move_str in ('B', 'I', 'L', 'U'):
-                                actions[moves.index(move_str)].append(label)
+                        for action in (BEGIN, IN, LAST, UNIT):
+                            actions[action][label] += 1
         return actions
 
-    property action_types:
-        def __get__(self):
-            return (BEGIN, IN, LAST, UNIT, OUT)
+    @property
+    def action_types(self):
+        return (BEGIN, IN, LAST, UNIT, OUT)
 
     def move_name(self, int move, attr_t label):
         if move == OUT:
@@ -153,7 +141,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
-        if name == '-' or name is None:
+        if name == '-' or name == '' or name is None:
             return Transition(clas=0, move=MISSING, label=0, score=0)
         elif name == '!O':
             return Transition(clas=0, move=ISNT, label=0, score=0)
@@ -212,26 +200,33 @@ cdef class BiluoPushDown(TransitionSystem):
             raise ValueError(Errors.E019.format(action=move, src='ner'))
         return t
 
-    def add_action(self, int action, label_name):
+    def add_action(self, int action, label_name, freq=None):
         cdef attr_t label_id
         if not isinstance(label_name, (int, long)):
             label_id = self.strings.add(label_name)
         else:
             label_id = label_name
         if action == OUT and label_id != 0:
-            return
+            return None
         if action == MISSING or action == ISNT:
-            return
+            return None
         # Check we're not creating a move we already have, so that this is
         # idempotent
         for trans in self.c[:self.n_moves]:
             if trans.move == action and trans.label == label_id:
                 return 0
         if self.n_moves >= self._size:
+            self._size = self.n_moves
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
         self.n_moves += 1
+        if self.labels.get(action, []):
+            freq = min(0, min(self.labels[action].values()))
+            self.labels[action][label_name] = freq-1
+        else:
+            self.labels[action] = Counter()
+            self.labels[action][label_name] = -1
         return 1
 
     cdef int initialize_state(self, StateC* st) nogil:
@@ -262,27 +257,42 @@ cdef class Missing:
 cdef class Begin:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        # Ensure we don't clobber preset entities. If no entity preset,
-        # ent_iob is 0
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 1:
+        cdef int preset_ent_label = st.B_(0).ent_type
+        # If we're the last token of the input, we can't B -- must U or O.
+        if st.B(1) == -1:
             return False
-        elif preset_ent_iob == 2:
+        elif st.entity_is_open():
             return False
-        elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
+        elif label == 0:
             return False
-        # If the next word is B or O, we can't B now
+        elif preset_ent_iob == 1 or preset_ent_iob == 2:
+            # Ensure we don't clobber preset entities. If no entity preset,
+            # ent_iob is 0
+            return False
+        elif preset_ent_iob == 3:
+            # Okay, we're in a preset entity.
+            if label != preset_ent_label:
+                # If label isn't right, reject
+                return False
+            elif st.B_(1).ent_iob != 1:
+                # If next token isn't marked I, we need to make U, not B.
+                return False
+            else:
+                # Otherwise, force acceptance, even if we're across a sentence
+                # boundary or the token is whitespace.
+                return True
         elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
+            # If the next word is B or O, we can't B now
             return False
-        # If the current word is B, and the next word isn't I, the current word
-        # is really U
-        elif preset_ent_iob == 3 and st.B_(1).ent_iob != 1:
-            return False
-        # Don't allow entities to extend across sentence boundaries
         elif st.B_(1).sent_start == 1:
+            # Don't allow entities to extend across sentence boundaries
+            return False
+        # Don't allow entities to start on whitespace
+        elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
         else:
-            return label != 0 and not st.entity_is_open()
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -316,18 +326,27 @@ cdef class In:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 2:
+        if label == 0:
+            return False
+        elif st.E_(0).ent_type != label:
+            return False
+        elif not st.entity_is_open():
+            return False
+        elif st.B(1) == -1:
+            # If we're at the end, we can't I.
+            return False
+        elif preset_ent_iob == 2:
             return False
         elif preset_ent_iob == 3:
             return False
-        # TODO: Is this quite right? I think it's supposed to be ensuring the
-        # gazetteer matches are maintained
-        elif st.B_(1).ent_iob != preset_ent_iob:
+        elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
+            # If we know the next word is B or O, we can't be I (must be L)
             return False
-        # Don't allow entities to extend across sentence boundaries
-        elif st.B_(1).sent_start == 1:
+        elif st.B(1) != -1 and st.B_(1).sent_start == 1:
+            # Don't allow entities to extend across sentence boundaries
             return False
-        return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -372,9 +391,17 @@ cdef class In:
 cdef class Last:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        if st.B_(1).ent_iob == 1:
+        if label == 0:
             return False
-        return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
+        elif not st.entity_is_open():
+            return False
+        elif st.E_(0).ent_type != label:
+            return False
+        elif st.B_(1).ent_iob == 1:
+            # If a preset entity has I next, we can't L here.
+            return False
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -418,15 +445,29 @@ cdef class Unit:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 2:
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
+        if label == 0:
             return False
-        elif preset_ent_iob == 1:
+        elif st.entity_is_open():
             return False
-        elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
+        elif preset_ent_iob == 2:
+            # Don't clobber preset O
             return False
         elif st.B_(1).ent_iob == 1:
+            # If next token is In, we can't be Unit -- must be Begin
             return False
-        return label != 0 and not st.entity_is_open()
+        elif preset_ent_iob == 3:
+            # Okay, there's a preset entity here
+            if label != preset_ent_label:
+                # Require labels to match
+                return False
+            else:
+                # Otherwise return True, ignoring the whitespace constraint.
+                return True
+        elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
+            return False
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -461,11 +502,14 @@ cdef class Out:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 3:
+        if st.entity_is_open():
+            return False
+        elif preset_ent_iob == 3:
             return False
         elif preset_ent_iob == 1:
             return False
-        return not st.entity_is_open()
+        else:
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:

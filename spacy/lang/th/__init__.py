@@ -18,7 +18,8 @@ class ThaiTokenizer(DummyTokenizer):
         except ImportError:
             raise ImportError(
                 "The Thai tokenizer requires the PyThaiNLP library: "
-                "https://github.com/PyThaiNLP/pythainlp")
+                "https://github.com/PyThaiNLP/pythainlp"
+            )
 
         self.word_tokenize = word_tokenize
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
@@ -31,7 +32,7 @@ class ThaiTokenizer(DummyTokenizer):
 
 class ThaiDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda _text: 'th'
+    lex_attr_getters[LANG] = lambda _text: "th"
 
     tokenizer_exceptions = dict(TOKENIZER_EXCEPTIONS)
     tag_map = TAG_MAP
@@ -43,11 +44,11 @@ class ThaiDefaults(Language.Defaults):
 
 
 class Thai(Language):
-    lang = 'th'
+    lang = "th"
     Defaults = ThaiDefaults
 
     def make_doc(self, text):
         return self.tokenizer(text)
 
 
-__all__ = ['Thai']
+__all__ = ["Thai"]

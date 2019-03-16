@@ -2,10 +2,11 @@
 
 from __future__ import unicode_literals
 
-#sources: https://github.com/bieli/stopwords/blob/master/polish.stopwords.txt and https://github.com/stopwords-iso/stopwords-pl
+# sources: https://github.com/bieli/stopwords/blob/master/polish.stopwords.txt and https://github.com/stopwords-iso/stopwords-pl
 
-STOP_WORDS = set("""
- a aby ach acz aczkolwiek aj albo ale alez
+STOP_WORDS = set(
+    """
+a aby ach acz aczkolwiek aj albo ale alez
 ależ ani az aż
 
 bardziej bardzo beda bede bedzie bez bo bowiem by
@@ -44,7 +45,7 @@ my mój
 
 na nad nam nami nas nasi nasz nasza nasze
 naszego naszych natomiast natychmiast nawet nia nic nich nie niech
-niego niej niemu nigdy nim nimi niz nią niż no 
+niego niej niemu nigdy nim nimi niz nią niż no
 
 o obok od ok około on ona one
 oni ono oraz oto owszem
@@ -77,4 +78,5 @@ xi xii xiii xiv xv
 z za zaden zadna zadne zadnych zapewne zawsze zaś
 ze zeby znow znowu znów zostal został
 
-żaden żadna żadne żadnych że żeby""".split())
+żaden żadna żadne żadnych że żeby""".split()
+)

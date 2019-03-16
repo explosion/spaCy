@@ -8,7 +8,6 @@ _exc = {}
 
 
 # Source https://www.cs.tut.fi/~jkorpela/kielenopas/5.5.html
-
 for exc_data in [
     {ORTH: "aik.", LEMMA: "aikaisempi"},
     {ORTH: "alk.", LEMMA: "alkaen"},
@@ -72,7 +71,8 @@ for exc_data in [
     {ORTH: "so.", LEMMA: "se on"},
     {ORTH: "ts.", LEMMA: "toisin sanoen"},
     {ORTH: "vm.", LEMMA: "viimeksi mainittu"},
-    {ORTH: "srk.", LEMMA: "seurakunta"}]:
+    {ORTH: "srk.", LEMMA: "seurakunta"},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 

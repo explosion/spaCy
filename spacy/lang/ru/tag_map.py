@@ -1,10 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import (
-    POS, PUNCT, SYM, ADJ, NUM, DET, ADV, ADP, X, VERB, NOUN, PROPN, PART, INTJ, SPACE, PRON, SCONJ, AUX, CONJ, CCONJ
-)
+from ...symbols import POS, PUNCT, SYM, ADJ, NUM, DET, ADV, ADP, X, VERB, NOUN
+from ...symbols import PROPN, PART, INTJ, PRON, SCONJ, AUX, CCONJ
 
+# fmt: off
 TAG_MAP = {
     'ADJ__Animacy=Anim|Case=Acc|Degree=Pos|Gender=Masc|Number=Sing': {POS: ADJ, 'Animacy': 'Anim', 'Case': 'Acc', 'Degree': 'Pos', 'Gender': 'Masc', 'Number': 'Sing'},
     'ADJ__Animacy=Anim|Case=Acc|Degree=Pos|Number=Plur': {POS: ADJ, 'Animacy': 'Anim', 'Case': 'Acc', 'Degree': 'Pos', 'Number': 'Plur'},
@@ -743,3 +743,4 @@ TAG_MAP = {
     'X___': {POS: X},
     'X': {POS: X},
 }
+# fmt: on

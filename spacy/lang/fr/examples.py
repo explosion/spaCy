@@ -22,5 +22,5 @@ sentences = [
     "Où es-tu ?",
     "Qui est le président de la France ?",
     "Où est la capitale des Etats-Unis ?",
-    "Quand est né Barack Obama ?"
+    "Quand est né Barack Obama ?",
 ]
