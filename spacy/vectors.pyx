@@ -247,7 +247,7 @@ cdef class Vectors:
             Returns int, -1 if missing.
         keys (iterable): Find rows that the keys point to.
             Returns ndarray.
-        row (int): Find the first key that point to the row.
+        row (int): Find the first key that points to the row.
             Returns int.
         rows (iterable): Find the keys that point to the rows.
             Returns ndarray.

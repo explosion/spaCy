@@ -211,6 +211,27 @@ Iterate over `(key, vector)` pairs, in order.
 | ---------- | ----- | -------------------------------- |
 | **YIELDS** | tuple | `(key, vector)` pairs, in order. |
 
+## Vectors.find (#find tag="method")
+
+Look up one or more keys by row, or vice versa.
+
+> #### Example
+>
+> ```python
+> row = nlp.vocab.vectors.find(key=u"cat")
+> rows = nlp.vocab.vectors.find(keys=[u"cat", u"dog"])
+> key = nlp.vocab.vectors.find(row=256)
+> keys = nlp.vocab.vectors.find(rows=[18, 256, 985])
+> ```
+
+| Name        | Type                                  | Description                                                              |
+| ----------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| `key`       | unicode / int                         | Find the row that the given key points to. Returns int, `-1` if missing. |
+| `keys`      | iterable                              | Find rows that the keys point to. Returns `ndarray`.                     |
+| `row`       | int                                   | Find the first key that points to the row. Returns int.                  |
+| `rows`      | iterable                              | Find the keys that point to the rows. Returns ndarray.                   |
+| **RETURNS** | The requested key, keys, row or rows. |
+
 ## Vectors.shape {#shape tag="property"}
 
 Get `(rows, dims)` tuples of number of rows and number of dimensions in the
