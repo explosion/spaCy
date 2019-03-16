@@ -24,6 +24,7 @@ For more details, see the documentation:
 * NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
 """
 from __future__ import unicode_literals, print_function
 
@@ -87,7 +88,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
 
     ner.add_label(LABEL)  # add new entity label to entity recognizer
     # Adding extraneous labels shouldn't mess anything up
-    ner.add_label('VEGETABLE')
+    ner.add_label("VEGETABLE")
     if model is None:
         optimizer = nlp.begin_training()
     else:
@@ -127,7 +128,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         print("Loading from", output_dir)
         nlp2 = spacy.load(output_dir)
         # Check the classes have loaded back consistently
-        assert nlp2.get_pipe('ner').move_names == move_names
+        assert nlp2.get_pipe("ner").move_names == move_names
         doc2 = nlp2(test_text)
         for ent in doc2.ents:
             print(ent.label_, ent.text)

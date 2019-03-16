@@ -17,6 +17,7 @@ show you how computers understand [language]
 I'm assuming that we can use the token.head to build these groups."
 
 Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
 """
 from __future__ import unicode_literals, print_function
 

@@ -1,7 +1,14 @@
+#!/usr/bin/env python
+# coding: utf8
 """Demonstrate adding a rule-based component that forces some tokens to not
 be entities, before the NER tagger is applied. This is used to hotfix the issue
-in https://github.com/explosion/spaCy/issues/2870 , present as of spaCy v2.0.16.
+in https://github.com/explosion/spaCy/issues/2870, present as of spaCy v2.0.16.
+
+Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
 """
+from __future__ import unicode_literals
+
 import spacy
 from spacy.attrs import ENT_IOB
 
@@ -18,7 +25,7 @@ def fix_space_tags(doc):
 
 def main():
     nlp = spacy.load("en_core_web_sm")
-    text = u"""This is some crazy test where I dont need an Apple                Watch to make things bug"""
+    text = "This is some crazy test where I dont need an Apple                Watch to make things bug"
     doc = nlp(text)
     print("Before", doc.ents)
     nlp.add_pipe(fix_space_tags, name="fix-ner", before="ner")

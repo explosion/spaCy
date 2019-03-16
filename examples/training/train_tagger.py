@@ -9,6 +9,7 @@ the documentation:
 * POS Tagging: https://spacy.io/usage/linguistic-features#pos-tagging
 
 Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
 """
 from __future__ import unicode_literals, print_function
 

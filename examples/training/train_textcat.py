@@ -41,9 +41,9 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     # add the text classifier to the pipeline if it doesn't exist
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if "textcat" not in nlp.pipe_names:
-        textcat = nlp.create_pipe("textcat", config={
-            "architecture": "simple_cnn",
-            "exclusive_classes": True})
+        textcat = nlp.create_pipe(
+            "textcat", config={"architecture": "simple_cnn", "exclusive_classes": True}
+        )
         nlp.add_pipe(textcat, last=True)
     # otherwise, get it, so we can add labels to it
     else:
@@ -140,7 +140,7 @@ def evaluate(tokenizer, textcat, texts, cats):
                 fn += 1
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
-    if (precision+recall) == 0:
+    if (precision + recall) == 0:
         f_score = 0.0
     else:
         f_score = 2 * (precision * recall) / (precision + recall)
