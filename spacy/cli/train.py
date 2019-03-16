@@ -211,8 +211,8 @@ def train(
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
 
     # fmt: off
-    row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
-    row_widths = (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7)
+    row_head = ["Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS"]
+    row_widths = [3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7]
     if has_beam_widths:
         row_head.insert(1, "Beam W.")
         row_widths.insert(1, 7)
