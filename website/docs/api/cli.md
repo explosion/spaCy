@@ -296,6 +296,9 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 | `--depth`, `-cd`       | option     | Depth of CNN layers.                                                                                                              |
 | `--embed-rows`, `-er`  | option     | Number of embedding rows.                                                                                                         |
 | `--dropout`, `-d`      | option     | Dropout rate.                                                                                                                     |
+| `--batch-size`, `-bs`  | option     | Number of words per training batch.                                                                                               |
+| `--max-length`, `-xw`  | option     | Maximum words per example. Longer examples are discarded.                                                                         |
+| `--min-length`, `-nw`  | option     | Minimum words per example. Shorter examples are discarded.                                                                        |
 | `--seed`, `-s`         | option     | Seed for random number generators.                                                                                                |
 | `--n-iter`, `-i`       | option     | Number of iterations to pretrain.                                                                                                 |
 | `--use-vectors`, `-uv` | flag       | Whether to use the static vectors as input features.                                                                              |
