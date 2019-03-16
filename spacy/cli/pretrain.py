@@ -241,11 +241,23 @@ class ProgressTracker(object):
             status = (
                 epoch,
                 self.nr_word,
-                "%.8f" % self.loss,
-                "%.8f" % loss_per_word,
+                _smart_round(self.loss, width=10),
+                _smart_round(loss_per_word, width=6),
                 int(wps),
             )
             self.prev_loss = float(self.loss)
             return status
         else:
             return None
+
+
+def _smart_round(figure, width=10, max_decimal=4):
+    """Round large numbers as integers, smaller numbers as decimals."""
+    n_digits = len(str(int(figure)))
+    n_decimal = width - (n_digits + 1)
+    if n_decimal <= 1:
+        return str(int(figure))
+    else:
+        n_decimal = min(n_decimal, max_decimal)
+        format_str = "%." + str(n_decimal) + "f"
+        return format_str % figure
