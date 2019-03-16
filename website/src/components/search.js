@@ -6,19 +6,20 @@ import Icon from './icon'
 import classes from '../styles/search.module.sass'
 
 const Search = ({ id, placeholder, settings }) => {
-    const { apiKey, indexName } = settings
-    const [isInitialized, setIsInitialized] = useState(false)
+    const { apiKey, indexName, appId } = settings
+    const [initialized, setInitialized] = useState(false)
     useEffect(() => {
-        if (!isInitialized) {
-            setIsInitialized(true)
+        if (!initialized) {
+            setInitialized(true)
             window.docsearch({
+                appId,
                 apiKey,
                 indexName,
                 inputSelector: `#${id}`,
                 debug: false,
             })
         }
-    }, window.docsearch)
+    }, [initialized, apiKey, indexName, id])
     return (
         <form className={classes.root}>
             <label htmlFor={id} className={classes.icon}>

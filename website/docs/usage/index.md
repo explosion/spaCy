@@ -28,7 +28,7 @@ import QuickstartInstall from 'widgets/quickstart-install.js'
 
 ## Installation instructions {#installation}
 
-### pip
+### pip {#pip}
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
 of v2.0.13).
@@ -58,7 +58,7 @@ source .env/bin/activate
 pip install spacy
 ```
 
-### conda
+### conda {#conda}
 
 Thanks to our great community, we've been able to re-add conda support. You can
 also install spaCy via `conda-forge`:
@@ -194,7 +194,7 @@ official distributions these are:
 | Python 3.4   | Visual Studio 2010 |
 | Python 3.5+  | Visual Studio 2015 |
 
-### Run tests
+### Run tests {#run-tests}
 
 spaCy comes with an
 [extensive test suite](https://github.com/explosion/spaCy/tree/master/spacy/tests).
@@ -418,7 +418,7 @@ either of these, clone your repository again.
 
 </Accordion>
 
-## Changelog
+## Changelog {#changelog}
 
 import Changelog from 'widgets/changelog.js'
 

@@ -8,6 +8,12 @@ import Icon from './icon'
 import { H2 } from './typography'
 import classes from '../styles/quickstart.module.sass'
 
+function getNewChecked(optionId, checkedForId, multiple) {
+    if (!multiple) return [optionId]
+    if (checkedForId.includes(optionId)) return checkedForId.filter(opt => opt !== optionId)
+    return [...checkedForId, optionId]
+}
+
 const Quickstart = ({ data, title, description, id, children }) => {
     const [styles, setStyles] = useState({})
     const [checked, setChecked] = useState({})
@@ -38,13 +44,13 @@ const Quickstart = ({ data, title, description, id, children }) => {
             setStyles(initialStyles)
             setInitialized(true)
         }
-    })
+    }, [data, initialized])
 
     return !data.length ? null : (
         <Section id={id}>
             <div className={classes.root}>
                 {title && (
-                    <H2 className={classes.title}>
+                    <H2 className={classes.title} name={id}>
                         <a href={`#${id}`}>{title}</a>
                     </H2>
                 )}
@@ -76,13 +82,11 @@ const Quickstart = ({ data, title, description, id, children }) => {
                                             onChange={() => {
                                                 const newChecked = {
                                                     ...checked,
-                                                    [id]: !multiple
-                                                        ? [option.id]
-                                                        : checkedForId.includes(option.id)
-                                                        ? checkedForId.filter(
-                                                              opt => opt !== option.id
-                                                          )
-                                                        : [...checkedForId, option.id],
+                                                    [id]: getNewChecked(
+                                                        option.id,
+                                                        checkedForId,
+                                                        multiple
+                                                    ),
                                                 }
                                                 setChecked(newChecked)
                                                 setStyles({

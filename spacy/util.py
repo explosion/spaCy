@@ -25,7 +25,7 @@ except ImportError:
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file
-from .errors import Errors
+from .errors import Errors, Warnings, deprecation_warning
 
 
 LANGUAGES = {}
@@ -36,6 +36,18 @@ _PRINT_ENV = False
 def set_env_log(value):
     global _PRINT_ENV
     _PRINT_ENV = value
+
+
+def lang_class_is_loaded(lang):
+    """Check whether a Language class is already loaded. Language classes are
+    loaded lazily, to avoid expensive setup code associated with the language
+    data.
+
+    lang (unicode): Two-letter language code, e.g. 'en'.
+    RETURNS (bool): Whether a Language class has been loaded.
+    """
+    global LANGUAGES
+    return lang in LANGUAGES
 
 
 def get_lang_class(lang):
@@ -565,7 +577,8 @@ def itershuffle(iterable, bufsize=1000):
 def to_bytes(getters, exclude):
     serialized = OrderedDict()
     for key, getter in getters.items():
-        if key not in exclude:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude:
             serialized[key] = getter()
     return srsly.msgpack_dumps(serialized)
 
@@ -573,7 +586,8 @@ def to_bytes(getters, exclude):
 def from_bytes(bytes_data, setters, exclude):
     msg = srsly.msgpack_loads(bytes_data)
     for key, setter in setters.items():
-        if key not in exclude and key in msg:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude and key in msg:
             setter(msg[key])
     return msg
 
@@ -583,7 +597,8 @@ def to_disk(path, writers, exclude):
     if not path.exists():
         path.mkdir()
     for key, writer in writers.items():
-        if key not in exclude:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude:
             writer(path / key)
     return path
 
@@ -591,7 +606,8 @@ def to_disk(path, writers, exclude):
 def from_disk(path, readers, exclude):
     path = ensure_path(path)
     for key, reader in readers.items():
-        if key not in exclude:
+        # Split to support file names like meta.json
+        if key.split(".")[0] not in exclude:
             reader(path / key)
     return path
 
@@ -677,6 +693,23 @@ def validate_json(data, validator):
     return errors
 
 
+def get_serialization_exclude(serializers, exclude, kwargs):
+    """Helper function to validate serialization args and manage transition from
+    keyword arguments (pre v2.1) to exclude argument.
+    """
+    exclude = list(exclude)
+    # Split to support file names like meta.json
+    options = [name.split(".")[0] for name in serializers]
+    for key, value in kwargs.items():
+        if key in ("vocab",) and value is False:
+            deprecation_warning(Warnings.W015.format(arg=key))
+            exclude.append(key)
+        elif key.split(".")[0] in options:
+            raise ValueError(Errors.E128.format(arg=key))
+        # TODO: user warning?
+    return exclude
+
+
 class SimpleFrozenDict(dict):
     """Simplified implementation of a frozen dict, mainly used as default
     function or method argument (for arguments that should default to empty
@@ -696,14 +729,14 @@ class SimpleFrozenDict(dict):
 class DummyTokenizer(object):
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
-    def to_bytes(self, **exclude):
+    def to_bytes(self, **kwargs):
         return b""
 
-    def from_bytes(self, _bytes_data, **exclude):
+    def from_bytes(self, _bytes_data, **kwargs):
         return self
 
-    def to_disk(self, _path, **exclude):
+    def to_disk(self, _path, **kwargs):
         return None
 
-    def from_disk(self, _path, **exclude):
+    def from_disk(self, _path, **kwargs):
         return self

@@ -136,7 +136,7 @@ class MorphologyClassMap(object):
 cdef class Morphology:
     '''Store the possible morphological analyses for a language, and index them
     by hash.
-    
+
     To save space on each token, tokens only know the hash of their morphological
     analysis, so queries of morphological attributes are delegated
     to this class.
@@ -200,7 +200,7 @@ cdef class Morphology:
             return []
         else:
             return tag_to_json(tag)
-    
+
     cpdef update(self, hash_t morph, features):
         """Update a morphological analysis with new feature values."""
         tag = (<MorphAnalysisC*>self.tags.get(morph))[0]
@@ -248,7 +248,7 @@ cdef class Morphology:
                  if feat in self._feat_map.id2feat})
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
         self.exc[(tag_str, self.strings.add(orth_str))] = attrs
- 
+
     cdef hash_t insert(self, MorphAnalysisC tag) except 0:
         cdef hash_t key = hash_tag(tag)
         if self.tags.get(key) == NULL:
@@ -256,7 +256,7 @@ cdef class Morphology:
             tag_ptr[0] = tag
             self.tags.set(key, <void*>tag_ptr)
         return key
-    
+
     cdef int assign_untagged(self, TokenC* token) except -1:
         """Set morphological attributes on a token without a POS tag. Uses
         the lemmatizer's lookup() method, which looks up the string in the
@@ -631,7 +631,7 @@ cdef int check_feature(const MorphAnalysisC* tag, attr_t feature) nogil:
         return 1
     else:
         return 0
- 
+
 cdef int set_feature(MorphAnalysisC* tag,
         univ_field_t field, attr_t feature, int value) except -1:
     if value == True:

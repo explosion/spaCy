@@ -83,6 +83,7 @@ const Permalink = ({ id, children }) =>
 const Headline = ({
     Component,
     id,
+    name,
     new: version,
     model,
     tag,
@@ -100,7 +101,7 @@ const Headline = ({
     })
     const tags = tag ? tag.split(',').map(t => t.trim()) : []
     return (
-        <Component id={id} className={headingClassNames}>
+        <Component id={id} name={name} className={headingClassNames}>
             <Permalink id={id}>{children} </Permalink>
             {tags.map((tag, i) => (
                 <Tag spaced key={i}>

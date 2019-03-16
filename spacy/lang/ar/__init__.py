@@ -23,6 +23,7 @@ class ArabicDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     suffixes = TOKENIZER_SUFFIXES
+    writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
 
 
 class Arabic(Language):

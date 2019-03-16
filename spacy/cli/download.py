@@ -41,24 +41,32 @@ def download(model, direct=False, *pip_args):
         dl = download_model(dl_tpl.format(m=model_name, v=version), pip_args)
         if dl != 0:  # if download subprocess doesn't return 0, exit
             sys.exit(dl)
-        try:
-            # Get package path here because link uses
-            # pip.get_installed_distributions() to check if model is a
-            # package, which fails if model was just installed via
-            # subprocess
-            package_path = get_package_path(model_name)
-            link(model_name, model, force=True, model_path=package_path)
-        except:  # noqa: E722
-            # Dirty, but since spacy.download and the auto-linking is
-            # mostly a convenience wrapper, it's best to show a success
-            # message and loading instructions, even if linking fails.
-            msg.warn(
-                "Download successful but linking failed",
-                "Creating a shortcut link for 'en' didn't work (maybe you "
-                "don't have admin permissions?), but you can still load the "
-                "model via its full package name: "
-                "nlp = spacy.load('{}')".format(model_name),
-            )
+        msg.good(
+            "Download and installation successful",
+            "You can now load the model via spacy.load('{}')".format(model_name),
+        )
+        # Only create symlink if the model is installed via a shortcut like 'en'.
+        # There's no real advantage over an additional symlink for en_core_web_sm
+        # and if anything, it's more error prone and causes more confusion.
+        if model in shortcuts:
+            try:
+                # Get package path here because link uses
+                # pip.get_installed_distributions() to check if model is a
+                # package, which fails if model was just installed via
+                # subprocess
+                package_path = get_package_path(model_name)
+                link(model_name, model, force=True, model_path=package_path)
+            except:  # noqa: E722
+                # Dirty, but since spacy.download and the auto-linking is
+                # mostly a convenience wrapper, it's best to show a success
+                # message and loading instructions, even if linking fails.
+                msg.warn(
+                    "Download successful but linking failed",
+                    "Creating a shortcut link for '{}' didn't work (maybe you "
+                    "don't have admin permissions?), but you can still load "
+                    "the model via its full package name: "
+                    "nlp = spacy.load('{}')".format(model, model_name),
+                )
 
 
 def get_json(url, desc):

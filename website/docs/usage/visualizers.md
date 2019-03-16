@@ -75,7 +75,7 @@ arcs.
 | `font`    | unicode | Font name or font family for all text.                      | `"Arial"`   |
 
 For a list of all available options, see the
-[`displacy` API documentation](top-level#displacy_options).
+[`displacy` API documentation](/api/top-level#displacy_options).
 
 > #### Options example
 >
@@ -283,7 +283,7 @@ from pathlib import Path
 nlp = spacy.load("en_core_web_sm")
 sentences = [u"This is an example.", u"This is another one."]
 for sent in sentences:
-    doc = nlp(sentence)
+    doc = nlp(sent)
     svg = displacy.render(doc, style="dep")
     file_name = '-'.join([w.text for w in doc if not w.is_punct]) + ".svg"
     output_path = Path("/images/" + file_name)

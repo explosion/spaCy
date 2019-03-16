@@ -151,10 +151,9 @@ Serialize the current state to a binary string.
 > store_bytes = stringstore.to_bytes()
 > ```
 
-| Name        | Type  | Description                                        |
-| ----------- | ----- | -------------------------------------------------- |
-| `**exclude` | -     | Named attributes to prevent from being serialized. |
-| **RETURNS** | bytes | The serialized form of the `StringStore` object.   |
+| Name        | Type  | Description                                      |
+| ----------- | ----- | ------------------------------------------------ |
+| **RETURNS** | bytes | The serialized form of the `StringStore` object. |
 
 ## StringStore.from_bytes {#from_bytes tag="method"}
 
@@ -168,11 +167,10 @@ Load state from a binary string.
 > new_store = StringStore().from_bytes(store_bytes)
 > ```
 
-| Name         | Type          | Description                                    |
-| ------------ | ------------- | ---------------------------------------------- |
-| `bytes_data` | bytes         | The data to load from.                         |
-| `**exclude`  | -             | Named attributes to prevent from being loaded. |
-| **RETURNS**  | `StringStore` | The `StringStore` object.                      |
+| Name         | Type          | Description               |
+| ------------ | ------------- | ------------------------- |
+| `bytes_data` | bytes         | The data to load from.    |
+| **RETURNS**  | `StringStore` | The `StringStore` object. |
 
 ## Utilities {#util}
 

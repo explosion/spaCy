@@ -525,6 +525,22 @@
             "category": ["standalone", "research"]
         },
         {
+            "id": "scispacy",
+            "title": "scispaCy",
+            "slogan": "A full spaCy pipeline and models for scientific/biomedical documents",
+            "github": "allenai/scispacy",
+            "pip": "scispacy",
+            "thumb": "https://i.imgur.com/dJQSclW.png",
+            "url": "https://allenai.github.io/scispacy/",
+            "author": " Allen Institute for Artificial Intelligence",
+            "author_links": {
+                "github": "allenai",
+                "twitter": "allenai_org",
+                "website": "http://allenai.org"
+            },
+            "category": ["models", "research"]
+        },
+        {
             "id": "textacy",
             "slogan": "NLP, before and after spaCy",
             "description": "`textacy` is a Python library for performing a variety of natural language processing (NLP) tasks, built on the high-performance `spacy` library. With the fundamentals – tokenization, part-of-speech tagging, dependency parsing, etc. – delegated to another library, `textacy` focuses on the tasks that come before and follow after.",
@@ -853,6 +869,22 @@
         },
         {
             "type": "education",
+            "id": "datacamp-advanced-nlp",
+            "title": "Advanced Natural Language Processing with spaCy",
+            "slogan": "Datacamp, 2019",
+            "description": "If you're working with a lot of text, you'll eventually want to know more about it. For example, what's it about? What do the words mean in context? Who is doing what to whom? What companies and products are mentioned? Which texts are similar to each other? In this course, you'll learn how to use spaCy, a fast-growing industry standard library for NLP in Python, to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
+            "url": "https://www.datacamp.com/courses/advanced-nlp-with-spacy",
+            "thumb": "https://i.imgur.com/0Zks7c0.jpg",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            },
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
             "id": "learning-path-spacy",
             "title": "Learning Path: Mastering spaCy for Natural Language Processing",
             "slogan": "O'Reilly, 2017",
@@ -910,6 +942,7 @@
             "description": "Most NLP projects rely crucially on the quality of annotations used for training and evaluating models. In this episode, Matt and Ines of Explosion AI tell us how Prodigy can improve data annotation and model development workflows. Prodigy is an annotation tool implemented as a python library, and it comes with a web application and a command line interface. A developer can define input data streams and design simple annotation interfaces. Prodigy can help break down complex annotation decisions into a series of binary decisions, and it provides easy integration with spaCy models. Developers can specify how models should be modified as new annotations come in in an active learning framework.",
             "soundcloud": "559200912",
             "thumb": "https://i.imgur.com/hOBQEzc.jpg",
+            "url": "https://soundcloud.com/nlp-highlights/78-where-do-corpora-come-from-with-matt-honnibal-and-ines-montani",
             "author": "Matt Gardner, Waleed Ammar (Allen AI)",
             "author_links": {
                 "website": "https://soundcloud.com/nlp-highlights"
@@ -925,9 +958,25 @@
             "iframe": "https://www.pythonpodcast.com/wp-content/plugins/podlove-podcasting-plugin-for-wordpress/lib/modules/podlove_web_player/player_v4/dist/share.html?episode=https://www.pythonpodcast.com/?podlove_player4=176",
             "iframe_height": 200,
             "thumb": "https://i.imgur.com/rpo6BuY.png",
+            "url": "https://www.podcastinit.com/episode-87-spacy-with-matthew-honnibal/",
             "author": "Tobias Macey",
             "author_links": {
                 "website": "https://www.podcastinit.com"
+            },
+            "category": ["podcasts"]
+        },
+        {
+            "type": "education",
+            "id": "talk-python-podcast",
+            "title": "Talk Python 202: Building a software business",
+            "slogan": "March 2019",
+            "description": "One core question around open source is how do you fund it? Well, there is always that PayPal donate button. But that's been a tremendous failure for many projects. Often the go-to answer is consulting. But what if you don't want to trade time for money? You could take things up a notch and change the equation, exchanging value for money. That's what Ines Montani and her co-founder did when they started Explosion AI with spaCy as the foundation.",
+            "thumb": "https://i.imgur.com/q1twuK8.png",
+            "url": "https://talkpython.fm/episodes/show/202/building-a-software-business",
+            "soundcloud": "588364857",
+            "author": "Michael Kennedy",
+            "author_links": {
+                "website": "https://talkpython.fm/"
             },
             "category": ["podcasts"]
         },

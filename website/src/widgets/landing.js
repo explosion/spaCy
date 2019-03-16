@@ -2,9 +2,18 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { StaticQuery, graphql } from 'gatsby'
 
-import { LandingHeader, LandingTitle, LandingSubtitle, LandingGrid } from '../components/landing'
-import { LandingCard, LandingButton, LandingDemo } from '../components/landing'
-import { LandingBannerGrid, LandingBanner, LandingLogos } from '../components/landing'
+import {
+    LandingHeader,
+    LandingTitle,
+    LandingSubtitle,
+    LandingGrid,
+    LandingCard,
+    LandingButton,
+    LandingDemo,
+    LandingBannerGrid,
+    LandingBanner,
+    LandingLogos,
+} from '../components/landing'
 import { H2 } from '../components/typography'
 import { Ul, Li } from '../components/list'
 import Button from '../components/button'

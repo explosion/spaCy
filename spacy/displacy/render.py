@@ -3,9 +3,12 @@ from __future__ import unicode_literals
 
 import uuid
 
-from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS
-from .templates import TPL_ENT, TPL_ENTS, TPL_FIGURE, TPL_TITLE, TPL_PAGE
+from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS
+from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
 from ..util import minify_html, escape_html
+
+DEFAULT_LANG = "en"
+DEFAULT_DIR = "ltr"
 
 
 class DependencyRenderer(object):
@@ -30,6 +33,8 @@ class DependencyRenderer(object):
         self.color = options.get("color", "#000000")
         self.bg = options.get("bg", "#ffffff")
         self.font = options.get("font", "Arial")
+        self.direction = DEFAULT_DIR
+        self.lang = DEFAULT_LANG
 
     def render(self, parsed, page=False, minify=False):
         """Render complete markup.
@@ -42,13 +47,19 @@ class DependencyRenderer(object):
         # Create a random ID prefix to make sure parses don't receive the
         # same ID, even if they're identical
         id_prefix = uuid.uuid4().hex
-        rendered = [
-            self.render_svg("{}-{}".format(id_prefix, i), p["words"], p["arcs"])
-            for i, p in enumerate(parsed)
-        ]
+        rendered = []
+        for i, p in enumerate(parsed):
+            if i == 0:
+                self.direction = p["settings"].get("direction", DEFAULT_DIR)
+                self.lang = p["settings"].get("lang", DEFAULT_LANG)
+            render_id = "{}-{}".format(id_prefix, i)
+            svg = self.render_svg(render_id, p["words"], p["arcs"])
+            rendered.append(svg)
         if page:
             content = "".join([TPL_FIGURE.format(content=svg) for svg in rendered])
-            markup = TPL_PAGE.format(content=content)
+            markup = TPL_PAGE.format(
+                content=content, lang=self.lang, dir=self.direction
+            )
         else:
             markup = "".join(rendered)
         if minify:
@@ -83,6 +94,8 @@ class DependencyRenderer(object):
             bg=self.bg,
             font=self.font,
             content=content,
+            dir=self.direction,
+            lang=self.lang,
         )
 
     def render_word(self, text, tag, i):
@@ -95,11 +108,13 @@ class DependencyRenderer(object):
         """
         y = self.offset_y + self.word_spacing
         x = self.offset_x + i * self.distance
+        if self.direction == "rtl":
+            x = self.width - x
         html_text = escape_html(text)
         return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
 
     def render_arrow(self, label, start, end, direction, i):
-        """Render indivicual arrow.
+        """Render individual arrow.
 
         label (unicode): Dependency label.
         start (int): Index of start word.
@@ -110,6 +125,8 @@ class DependencyRenderer(object):
         """
         level = self.levels.index(end - start) + 1
         x_start = self.offset_x + start * self.distance + self.arrow_spacing
+        if self.direction == "rtl":
+            x_start = self.width - x_start
         y = self.offset_y
         x_end = (
             self.offset_x
@@ -117,6 +134,8 @@ class DependencyRenderer(object):
             + start * self.distance
             - self.arrow_spacing * (self.highest_level - level) / 4
         )
+        if self.direction == "rtl":
+            x_end = self.width - x_end
         y_curve = self.offset_y - level * self.distance / 2
         if self.compact:
             y_curve = self.offset_y - level * self.distance / 6
@@ -124,12 +143,14 @@ class DependencyRenderer(object):
             y_curve = -self.distance
         arrowhead = self.get_arrowhead(direction, x_start, y, x_end)
         arc = self.get_arc(x_start, y, y_curve, x_end)
+        label_side = "right" if self.direction == "rtl" else "left"
         return TPL_DEP_ARCS.format(
             id=self.id,
             i=i,
             stroke=self.arrow_stroke,
             head=arrowhead,
             label=label,
+            label_side=label_side,
             arc=arc,
         )
 
@@ -219,6 +240,8 @@ class EntityRenderer(object):
         self.default_color = "#ddd"
         self.colors = colors
         self.ents = options.get("ents", None)
+        self.direction = DEFAULT_DIR
+        self.lang = DEFAULT_LANG
 
     def render(self, parsed, page=False, minify=False):
         """Render complete markup.
@@ -228,12 +251,15 @@ class EntityRenderer(object):
         minify (bool): Minify HTML markup.
         RETURNS (unicode): Rendered HTML markup.
         """
-        rendered = [
-            self.render_ents(p["text"], p["ents"], p.get("title", None)) for p in parsed
-        ]
+        rendered = []
+        for i, p in enumerate(parsed):
+            if i == 0:
+                self.direction = p["settings"].get("direction", DEFAULT_DIR)
+                self.lang = p["settings"].get("lang", DEFAULT_LANG)
+            rendered.append(self.render_ents(p["text"], p["ents"], p["title"]))
         if page:
             docs = "".join([TPL_FIGURE.format(content=doc) for doc in rendered])
-            markup = TPL_PAGE.format(content=docs)
+            markup = TPL_PAGE.format(content=docs, lang=self.lang, dir=self.direction)
         else:
             markup = "".join(rendered)
         if minify:
@@ -261,12 +287,16 @@ class EntityRenderer(object):
                     markup += "</br>"
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
-                markup += TPL_ENT.format(label=label, text=entity, bg=color)
+                ent_settings = {"label": label, "text": entity, "bg": color}
+                if self.direction == "rtl":
+                    markup += TPL_ENT_RTL.format(**ent_settings)
+                else:
+                    markup += TPL_ENT.format(**ent_settings)
             else:
                 markup += entity
             offset = end
         markup += escape_html(text[offset:])
-        markup = TPL_ENTS.format(content=markup, colors=self.colors)
+        markup = TPL_ENTS.format(content=markup, dir=self.direction)
         if title:
             markup = TPL_TITLE.format(title=title) + markup
         return markup

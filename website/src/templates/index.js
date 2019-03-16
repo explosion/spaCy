@@ -88,6 +88,34 @@ const AlertSpace = () => {
 }
 
 class Layout extends React.Component {
+    static defaultProps = {
+        scope: {},
+    }
+
+    static propTypes = {
+        data: PropTypes.shape({
+            mdx: PropTypes.shape({
+                code: PropTypes.shape({
+                    body: PropTypes.string.isRequired,
+                }).isRequired,
+            }),
+        }).isRequired,
+        scope: PropTypes.object.isRequired,
+        pageContext: PropTypes.shape({
+            title: PropTypes.string,
+            section: PropTypes.string,
+            teaser: PropTypes.string,
+            source: PropTypes.string,
+            isIndex: PropTypes.bool.isRequired,
+            theme: PropTypes.string,
+            next: PropTypes.shape({
+                title: PropTypes.string.isRequired,
+                slug: PropTypes.string.isRequired,
+            }),
+        }),
+        children: PropTypes.node,
+    }
+
     constructor(props) {
         super(props)
         // NB: Compiling the scope here instead of in render() is super
@@ -148,37 +176,7 @@ class Layout extends React.Component {
     }
 }
 
-Layout.defaultProps = {
-    scope: {},
-}
-
-Layout.propTypes = {
-    data: PropTypes.shape({
-        mdx: PropTypes.shape({
-            code: PropTypes.shape({
-                body: PropTypes.string.isRequired,
-            }).isRequired,
-        }),
-    }).isRequired,
-    scope: PropTypes.object.isRequired,
-    pageContext: PropTypes.shape({
-        title: PropTypes.string,
-        section: PropTypes.string,
-        teaser: PropTypes.string,
-        source: PropTypes.string,
-        isIndex: PropTypes.bool.isRequired,
-        theme: PropTypes.string,
-        next: PropTypes.shape({
-            title: PropTypes.string.isRequired,
-            slug: PropTypes.string.isRequired,
-        }),
-    }),
-    children: PropTypes.node,
-}
-
-Layout = withMDXScope(Layout)
-
-export default Layout
+export default withMDXScope(Layout)
 
 export const pageQuery = graphql`
     query($slug: String!) {
@@ -193,6 +191,7 @@ export const pageQuery = graphql`
                 docSearch {
                     apiKey
                     indexName
+                    appId
                 }
             }
         }

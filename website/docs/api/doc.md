@@ -237,7 +237,7 @@ attribute ID.
 > from spacy.attrs import ORTH
 > doc = nlp(u"apple apple orange banana")
 > assert doc.count_by(ORTH) == {7024L: 1, 119552L: 1, 2087L: 2}
-> doc.to_array([attrs.ORTH])
+> doc.to_array([ORTH])
 > # array([[11880], [11880], [7561], [12800]])
 > ```
 
@@ -349,11 +349,12 @@ array of attributes.
 > assert doc[0].pos_ == doc2[0].pos_
 > ```
 
-| Name        | Type                                   | Description                   |
-| ----------- | -------------------------------------- | ----------------------------- |
-| `attrs`     | list                                   | A list of attribute ID ints.  |
-| `array`     | `numpy.ndarray[ndim=2, dtype='int32']` | The attribute values to load. |
-| **RETURNS** | `Doc`                                  | Itself.                       |
+| Name        | Type                                   | Description                                                               |
+| ----------- | -------------------------------------- | ------------------------------------------------------------------------- |
+| `attrs`     | list                                   | A list of attribute ID ints.                                              |
+| `array`     | `numpy.ndarray[ndim=2, dtype='int32']` | The attribute values to load.                                             |
+| `exclude`   | list                                   | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | `Doc`                                  | Itself.                                                                   |
 
 ## Doc.to_disk {#to_disk tag="method" new="2"}
 
@@ -365,9 +366,10 @@ Save the current state to a directory.
 > doc.to_disk("/path/to/doc")
 > ```
 
-| Name   | Type             | Description                                                                                                           |
-| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name      | Type             | Description                                                                                                           |
+| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Doc.from_disk {#from_disk tag="method" new="2"}
 
@@ -384,6 +386,7 @@ Loads state from a directory. Modifies the object in place and returns it.
 | Name        | Type             | Description                                                                |
 | ----------- | ---------------- | -------------------------------------------------------------------------- |
 | `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
 | **RETURNS** | `Doc`            | The modified `Doc` object.                                                 |
 
 ## Doc.to_bytes {#to_bytes tag="method"}
@@ -397,9 +400,10 @@ Serialize, i.e. export the document contents to a binary string.
 > doc_bytes = doc.to_bytes()
 > ```
 
-| Name        | Type  | Description                                                           |
-| ----------- | ----- | --------------------------------------------------------------------- |
-| **RETURNS** | bytes | A losslessly serialized copy of the `Doc`, including all annotations. |
+| Name        | Type  | Description                                                               |
+| ----------- | ----- | ------------------------------------------------------------------------- |
+| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | bytes | A losslessly serialized copy of the `Doc`, including all annotations.     |
 
 ## Doc.from_bytes {#from_bytes tag="method"}
 
@@ -416,10 +420,11 @@ Deserialize, i.e. import the document contents from a binary string.
 > assert doc.text == doc2.text
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| `data`      | bytes | The string to load from. |
-| **RETURNS** | `Doc` | The `Doc` object.        |
+| Name        | Type  | Description                                                               |
+| ----------- | ----- | ------------------------------------------------------------------------- |
+| `data`      | bytes | The string to load from.                                                  |
+| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS** | `Doc` | The `Doc` object.                                                         |
 
 ## Doc.retokenize {#retokenize tag="contextmanager" new="2.1"}
 
@@ -640,20 +645,45 @@ The L2 norm of the document's vector representation.
 
 ## Attributes {#attributes}
 
-| Name                                | Type         | Description                                                                                                                                                                                                                                                                                |
-| ----------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `text`                              | unicode      | A unicode representation of the document text.                                                                                                                                                                                                                                             |
-| `text_with_ws`                      | unicode      | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                                                                                                                                      |
-| `mem`                               | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                                                                                                                                  |
-| `vocab`                             | `Vocab`      | The store of lexical types.                                                                                                                                                                                                                                                                |
-| `tensor` <Tag variant="new">2</Tag> | object       | Container for dense vector representations.                                                                                                                                                                                                                                                |
-| `cats` <Tag variant="new">2</Tag>   | dictionary   | Maps either a label to a score for categories applied to whole document, or `(start_char, end_char, label)` to score for categories applied to spans. `start_char` and `end_char` should be character offsets, label can be either a string or an integer ID, and score should be a float. |
-| `user_data`                         | -            | A generic storage area, for user custom data.                                                                                                                                                                                                                                              |
-| `is_tagged`                         | bool         | A flag indicating that the document has been part-of-speech tagged.                                                                                                                                                                                                                        |
-| `is_parsed`                         | bool         | A flag indicating that the document has been syntactically parsed.                                                                                                                                                                                                                         |
-| `is_sentenced`                      | bool         | A flag indicating that sentence boundaries have been applied to the document.                                                                                                                                                                                                              |
-| `sentiment`                         | float        | The document's positivity/negativity score, if available.                                                                                                                                                                                                                                  |
-| `user_hooks`                        | dict         | A dictionary that allows customization of the `Doc`'s properties.                                                                                                                                                                                                                          |
-| `user_token_hooks`                  | dict         | A dictionary that allows customization of properties of `Token` children.                                                                                                                                                                                                                  |
-| `user_span_hooks`                   | dict         | A dictionary that allows customization of properties of `Span` children.                                                                                                                                                                                                                   |
-| `_`                                 | `Underscore` | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes).                                                                                                                                                                             |
+| Name                                    | Type         | Description                                                                                                                                                                                                                                                                                |
+| --------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `text`                                  | unicode      | A unicode representation of the document text.                                                                                                                                                                                                                                             |
+| `text_with_ws`                          | unicode      | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                                                                                                                                      |
+| `mem`                                   | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                                                                                                                                  |
+| `vocab`                                 | `Vocab`      | The store of lexical types.                                                                                                                                                                                                                                                                |
+| `tensor` <Tag variant="new">2</Tag>     | object       | Container for dense vector representations.                                                                                                                                                                                                                                                |
+| `cats` <Tag variant="new">2</Tag>       | dictionary   | Maps either a label to a score for categories applied to whole document, or `(start_char, end_char, label)` to score for categories applied to spans. `start_char` and `end_char` should be character offsets, label can be either a string or an integer ID, and score should be a float. |
+| `user_data`                             | -            | A generic storage area, for user custom data.                                                                                                                                                                                                                                              |
+| `lang` <Tag variant="new">2.1</Tag>     | int          | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
+| `lang_` <Tag variant="new">2.1</Tag>    | unicode      | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |
+| `is_tagged`                             | bool         | A flag indicating that the document has been part-of-speech tagged.                                                                                                                                                                                                                        |
+| `is_parsed`                             | bool         | A flag indicating that the document has been syntactically parsed.                                                                                                                                                                                                                         |
+| `is_sentenced`                          | bool         | A flag indicating that sentence boundaries have been applied to the document.                                                                                                                                                                                                              |
+| `is_nered` <Tag variant="new">2.1</Tag> | bool         | A flag indicating that named entities have been set. Will return `True` if _any_ of the tokens has an entity tag set, even if the others are unknown.                                                                                                                                      |
+| `sentiment`                             | float        | The document's positivity/negativity score, if available.                                                                                                                                                                                                                                  |
+| `user_hooks`                            | dict         | A dictionary that allows customization of the `Doc`'s properties.                                                                                                                                                                                                                          |
+| `user_token_hooks`                      | dict         | A dictionary that allows customization of properties of `Token` children.                                                                                                                                                                                                                  |
+| `user_span_hooks`                       | dict         | A dictionary that allows customization of properties of `Span` children.                                                                                                                                                                                                                   |
+| `_`                                     | `Underscore` | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes).                                                                                                                                                                             |
+
+## Serialization fields {#serialization-fields}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = doc.to_bytes(exclude=["text", "tensor"])
+> doc.from_disk("./doc.bin", exclude=["user_data"])
+> ```
+
+| Name               | Description                                   |
+| ------------------ | --------------------------------------------- |
+| `text`             | The value of the `Doc.text` attribute.        |
+| `sentiment`        | The value of the `Doc.sentiment` attribute.   |
+| `tensor`           | The value of the `Doc.tensor` attribute.      |
+| `user_data`        | The value of the `Doc.user_data` dictionary.  |
+| `user_data_keys`   | The keys of the `Doc.user_data` dictionary.   |
+| `user_data_values` | The values of the `Doc.user_data` dictionary. |

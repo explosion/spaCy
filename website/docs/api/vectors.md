@@ -311,10 +311,9 @@ Save the current state to a directory.
 >
 > ```
 
-| Name        | Type             | Description                                                                                                           |
-| ----------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `**exclude` | -                | Named attributes to prevent from being saved.                                                                         |
+| Name   | Type             | Description                                                                                                           |
+| ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path` | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## Vectors.from_disk {#from_disk tag="method"}
 
@@ -342,10 +341,9 @@ Serialize the current state to a binary string.
 > vectors_bytes = vectors.to_bytes()
 > ```
 
-| Name        | Type  | Description                                        |
-| ----------- | ----- | -------------------------------------------------- |
-| `**exclude` | -     | Named attributes to prevent from being serialized. |
-| **RETURNS** | bytes | The serialized form of the `Vectors` object.       |
+| Name        | Type  | Description                                  |
+| ----------- | ----- | -------------------------------------------- |
+| **RETURNS** | bytes | The serialized form of the `Vectors` object. |
 
 ## Vectors.from_bytes {#from_bytes tag="method"}
 
@@ -360,11 +358,10 @@ Load state from a binary string.
 > new_vectors.from_bytes(vectors_bytes)
 > ```
 
-| Name        | Type      | Description                                    |
-| ----------- | --------- | ---------------------------------------------- |
-| `data`      | bytes     | The data to load from.                         |
-| `**exclude` | -         | Named attributes to prevent from being loaded. |
-| **RETURNS** | `Vectors` | The `Vectors` object.                          |
+| Name        | Type      | Description            |
+| ----------- | --------- | ---------------------- |
+| `data`      | bytes     | The data to load from. |
+| **RETURNS** | `Vectors` | The `Vectors` object.  |
 
 ## Attributes {#attributes}
 

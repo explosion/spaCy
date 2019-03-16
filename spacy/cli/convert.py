@@ -6,7 +6,7 @@ from pathlib import Path
 from wasabi import Printer
 import srsly
 
-from .converters import conllu2json, conllubio2json, iob2json, conll_ner2json
+from .converters import conllu2json, iob2json, conll_ner2json
 from .converters import ner_jsonl2json
 
 
@@ -14,7 +14,7 @@ from .converters import ner_jsonl2json
 # entry to this dict with the file extension mapped to the converter function
 # imported from /converters.
 CONVERTERS = {
-    "conllubio": conllubio2json,
+    "conllubio": conllu2json,
     "conllu": conllu2json,
     "conll": conllu2json,
     "ner": conll_ner2json,

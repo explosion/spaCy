@@ -2,14 +2,35 @@
 from __future__ import unicode_literals
 
 import pytest
+import os
 from pathlib import Path
 from spacy import util
-from spacy import displacy
 from spacy import prefer_gpu, require_gpu
-from spacy.tokens import Span
+from spacy.compat import symlink_to, symlink_remove, path2str
 from spacy._ml import PrecomputableAffine
 
-from .util import get_doc
+
+@pytest.fixture
+def symlink_target():
+    return Path("./foo-target")
+
+
+@pytest.fixture
+def symlink():
+    return Path("./foo-symlink")
+
+
+@pytest.fixture(scope="function")
+def symlink_setup_target(request, symlink_target, symlink):
+    if not symlink_target.exists():
+        os.mkdir(path2str(symlink_target))
+    # yield -- need to cleanup even if assertion fails
+    # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
+    def cleanup():
+        symlink_remove(symlink)
+        os.rmdir(path2str(symlink_target))
+
+    request.addfinalizer(cleanup)
 
 
 @pytest.mark.parametrize("text", ["hello/world", "hello world"])
@@ -29,66 +50,6 @@ def test_util_get_package_path(package):
     """Test that a Path object is returned for a package name."""
     path = util.get_package_path(package)
     assert isinstance(path, Path)
-
-
-def test_displacy_parse_ents(en_vocab):
-    """Test that named entities on a Doc are converted into displaCy's format."""
-    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
-    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"])]
-    ents = displacy.parse_ents(doc)
-    assert isinstance(ents, dict)
-    assert ents["text"] == "But Google is starting from behind "
-    assert ents["ents"] == [{"start": 4, "end": 10, "label": "ORG"}]
-
-
-def test_displacy_parse_deps(en_vocab):
-    """Test that deps and tags on a Doc are converted into displaCy's format."""
-    words = ["This", "is", "a", "sentence"]
-    heads = [1, 0, 1, -2]
-    pos = ["DET", "VERB", "DET", "NOUN"]
-    tags = ["DT", "VBZ", "DT", "NN"]
-    deps = ["nsubj", "ROOT", "det", "attr"]
-    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags, deps=deps)
-    deps = displacy.parse_deps(doc)
-    assert isinstance(deps, dict)
-    assert deps["words"] == [
-        {"text": "This", "tag": "DET"},
-        {"text": "is", "tag": "VERB"},
-        {"text": "a", "tag": "DET"},
-        {"text": "sentence", "tag": "NOUN"},
-    ]
-    assert deps["arcs"] == [
-        {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
-        {"start": 2, "end": 3, "label": "det", "dir": "left"},
-        {"start": 1, "end": 3, "label": "attr", "dir": "right"},
-    ]
-
-
-def test_displacy_spans(en_vocab):
-    """Test that displaCy can render Spans."""
-    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
-    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"])]
-    html = displacy.render(doc[1:4], style="ent")
-    assert html.startswith("<div")
-
-
-def test_displacy_render_wrapper(en_vocab):
-    """Test that displaCy accepts custom rendering wrapper."""
-
-    def wrapper(html):
-        return "TEST" + html + "TEST"
-
-    displacy.set_render_wrapper(wrapper)
-    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
-    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"])]
-    html = displacy.render(doc, style="ent")
-    assert html.startswith("TEST<div")
-    assert html.endswith("/div>TEST")
-
-
-def test_displacy_raises_for_wrong_type(en_vocab):
-    with pytest.raises(ValueError):
-        displacy.render("hello world")
 
 
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
@@ -124,3 +85,9 @@ def test_prefer_gpu():
 def test_require_gpu():
     with pytest.raises(ValueError):
         require_gpu()
+
+
+def test_create_symlink_windows(symlink_setup_target, symlink_target, symlink):
+    assert symlink_target.exists()
+    symlink_to(symlink, symlink_target)
+    assert symlink.exists()

@@ -1,0 +1,27 @@
+{
+    "extends": ["standard", "prettier"],
+    "plugins": ["standard", "react", "react-hooks"],
+    "rules": {
+        "no-var": "error",
+        "no-unused-vars": 1,
+        "arrow-spacing": ["error", { "before": true, "after": true }],
+        "indent": ["error", 4],
+        "semi": ["error", "never"],
+        "arrow-parens": ["error", "as-needed"],
+        "standard/object-curly-even-spacing": ["error", "either"],
+        "standard/array-bracket-even-spacing": ["error", "either"],
+        "standard/computed-property-even-spacing": ["error", "even"],
+        "standard/no-callback-literal": ["error", ["cb", "callback"]],
+        "react/jsx-uses-react": "error",
+        "react/jsx-uses-vars": "error",
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn"
+    },
+    "parser": "babel-eslint",
+    "parserOptions": {
+        "ecmaVersion": 8
+    },
+    "env": {
+        "browser": true
+    }
+}

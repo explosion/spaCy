@@ -39,7 +39,7 @@ and morphological analysis.
 
 </div>
 
-<Infobox title="Table of Contents">
+<Infobox title="Table of Contents" id="toc">
 
 - [Language data 101](#101)
 - [The Language subclass](#language-subclass)
@@ -105,15 +105,15 @@ to know the language's character set. If the language you're adding uses
 non-latin characters, you might need to define the required character classes in
 the global
 [`char_classes.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/char_classes.py).
-For efficiency, spaCy uses hard-coded unicode ranges to define character classes,
-the definitions of which can be found on [Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). 
-If the language requires very specific punctuation
-rules, you should consider overwriting the default regular expressions with your
-own in the language's `Defaults`.
+For efficiency, spaCy uses hard-coded unicode ranges to define character
+classes, the definitions of which can be found on
+[Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). If the language
+requires very specific punctuation rules, you should consider overwriting the
+default regular expressions with your own in the language's `Defaults`.
 
 </Infobox>
 
-### Creating a `Language` subclass {#language-subclass}
+### Creating a language subclass {#language-subclass}
 
 Language-specific code and resources should be organized into a sub-package of
 spaCy, named according to the language's
@@ -121,9 +121,9 @@ spaCy, named according to the language's
 code and resources specific to Spanish are placed into a directory
 `spacy/lang/es`, which can be imported as `spacy.lang.es`.
 
-To get started, you can use our
-[templates](https://github.com/explosion/spacy-dev-resources/templates/new_language)
-for the most important files. Here's what the class template looks like:
+To get started, you can check out the
+[existing languages](https://github.com/explosion/spacy/tree/master/spacy/lang).
+Here's what the class could look like:
 
 ```python
 ### __init__.py (excerpt)
@@ -614,7 +614,7 @@ require models to be trained from labeled examples. The word vectors, word
 probabilities and word clusters also require training, although these can be
 trained from unlabeled text, which tends to be much easier to collect.
 
-### Creating a vocabulary file
+### Creating a vocabulary file {#vocab-file}
 
 spaCy expects that common words will be cached in a [`Vocab`](/api/vocab)
 instance. The vocabulary caches lexical features. spaCy loads the vocabulary
@@ -631,20 +631,20 @@ of using deep learning for NLP with limited labeled data. The vectors are also
 useful by themselves – they power the `.similarity` methods in spaCy. For best
 results, you should pre-process the text with spaCy before training the Word2vec
 model. This ensures your tokenization will match. You can use our
-[word vectors training script](https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py),
+[word vectors training script](https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py),
 which pre-processes the text with your language-specific tokenizer and trains
 the model using [Gensim](https://radimrehurek.com/gensim/). The `vectors.bin`
 file should consist of one word and vector per line.
 
 ```python
-https://github.com/explosion/spacy-dev-resources/tree/master/training/word_vectors.py
+https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py
 ```
 
 If you don't have a large sample of text available, you can also convert word
 vectors produced by a variety of other tools into spaCy's format. See the docs
 on [converting word vectors](/usage/vectors-similarity#converting) for details.
 
-### Creating or converting a training corpus
+### Creating or converting a training corpus {#training-corpus}
 
 The easiest way to train spaCy's tagger, parser, entity recognizer or text
 categorizer is to use the [`spacy train`](/api/cli#train) command-line utility.

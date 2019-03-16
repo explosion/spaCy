@@ -78,7 +78,7 @@ assigned by spaCy's [models](/models). The individual mapping is specific to the
 training corpus and can be defined in the respective language data's
 [`tag_map.py`](/usage/adding-languages#tag-map).
 
-<Accordion title="Universal Part-of-speech Tags">
+<Accordion title="Universal Part-of-speech Tags" id="pos-universal">
 
 spaCy also maps all language-specific part-of-speech tags to a small, fixed set
 of word type tags following the
@@ -269,7 +269,7 @@ This section lists the syntactic dependency labels assigned by spaCy's
 [models](/models). The individual labels are language-specific and depend on the
 training corpus.
 
-<Accordion title="Universal Dependency Labels">
+<Accordion title="Universal Dependency Labels" id="dependency-parsing-universal">
 
 The [Universal Dependencies scheme](http://universaldependencies.org/u/dep/) is
 used in all languages trained on Universal Dependency Corpora.

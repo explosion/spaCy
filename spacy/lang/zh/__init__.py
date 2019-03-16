@@ -14,6 +14,7 @@ class ChineseDefaults(Language.Defaults):
     use_jieba = True
     tokenizer_exceptions = BASE_EXCEPTIONS
     stop_words = STOP_WORDS
+    writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
 
 class Chinese(Language):

@@ -39,9 +39,9 @@ together all components and creating the `Language` subclass – for example,
 | **Morph rules**<br />[`morph_rules.py`][morph_rules.py]                            | Exception rules for morphological analysis of irregular words like personal pronouns.                                                                    |
 
 [stop_words.py]:
-  https://github.com/explosion/spacy-dev-resources/tree/master/templates/new_language/stop_words.py
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/stop_words.py
 [tokenizer_exceptions.py]:
-  https://github.com/explosion/spacy-dev-resources/tree/master/templates/new_language/tokenizer_exceptions.py
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/de/tokenizer_exceptions.py
 [norm_exceptions.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/norm_exceptions.py
 [punctuation.py]:
@@ -49,12 +49,12 @@ together all components and creating the `Language` subclass – for example,
 [char_classes.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/char_classes.py
 [lex_attrs.py]:
-  https://github.com/explosion/spacy-dev-resources/tree/master/templates/new_language/lex_attrs.py
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py
 [syntax_iterators.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py
 [lemmatizer.py]:
-  https://github.com/explosion/spacy-dev-resources/tree/master/templates/new_language/lemmatizer.py
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/de/lemmatizer.py
 [tag_map.py]:
-  https://github.com/explosion/spacy-dev-resources/tree/master/templates/new_language/tag_map.py
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/tag_map.py
 [morph_rules.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/morph_rules.py

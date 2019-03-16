@@ -377,11 +377,11 @@ cdef class Vectors:
                 self.add(key, row=i)
         return strings
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
         path (unicode / Path): A path to a directory, which will be created if
-            it doesn't exists. Either a string or a Path-like object.
+            it doesn't exists.
 
         DOCS: https://spacy.io/api/vectors#to_disk
         """
@@ -394,9 +394,9 @@ cdef class Vectors:
             ("vectors", lambda p: save_array(self.data, p.open("wb"))),
             ("key2row", lambda p: srsly.write_msgpack(p, self.key2row))
         ))
-        return util.to_disk(path, serializers, exclude)
+        return util.to_disk(path, serializers, [])
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, **kwargs):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -428,13 +428,13 @@ cdef class Vectors:
             ("keys", load_keys),
             ("vectors", load_vectors),
         ))
-        util.from_disk(path, serializers, exclude)
+        util.from_disk(path, serializers, [])
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Vectors` object.
 
         DOCS: https://spacy.io/api/vectors#to_bytes
@@ -444,17 +444,18 @@ cdef class Vectors:
                 return self.data.to_bytes()
             else:
                 return srsly.msgpack_dumps(self.data)
+
         serializers = OrderedDict((
             ("key2row", lambda: srsly.msgpack_dumps(self.key2row)),
             ("vectors", serialize_weights)
         ))
-        return util.to_bytes(serializers, exclude)
+        return util.to_bytes(serializers, [])
 
-    def from_bytes(self, data, **exclude):
+    def from_bytes(self, data, **kwargs):
         """Load state from a binary string.
 
         data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
+        exclude (list): String names of serialization fields to exclude.
         RETURNS (Vectors): The `Vectors` object.
 
         DOCS: https://spacy.io/api/vectors#from_bytes
@@ -469,5 +470,5 @@ cdef class Vectors:
             ("key2row", lambda b: self.key2row.update(srsly.msgpack_loads(b))),
             ("vectors", deserialize_weights)
         ))
-        util.from_bytes(data, deserializers, exclude)
+        util.from_bytes(data, deserializers, [])
         return self

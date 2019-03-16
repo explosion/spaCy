@@ -49,7 +49,7 @@ class SentimentAnalyser(object):
         y = self._model.predict(X)
         self.set_sentiment(doc, y)
 
-    def pipe(self, docs, batch_size=1000, n_threads=2):
+    def pipe(self, docs, batch_size=1000):
         for minibatch in cytoolz.partition_all(batch_size, docs):
             minibatch = list(minibatch)
             sentences = []
@@ -176,7 +176,7 @@ def evaluate(model_dir, texts, labels, max_length=100):
 
     correct = 0
     i = 0
-    for doc in nlp.pipe(texts, batch_size=1000, n_threads=4):
+    for doc in nlp.pipe(texts, batch_size=1000):
         correct += bool(doc.sentiment >= 0.5) == bool(labels[i])
         i += 1
     return float(correct) / i

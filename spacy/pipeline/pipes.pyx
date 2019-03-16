@@ -141,16 +141,21 @@ class Pipe(object):
         with self.model.use_params(params):
             yield
 
-    def to_bytes(self, **exclude):
-        """Serialize the pipe to a bytestring."""
+    def to_bytes(self, exclude=tuple(), **kwargs):
+        """Serialize the pipe to a bytestring.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized object.
+        """
         serialize = OrderedDict()
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         if self.model not in (True, False, None):
             serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         """Load the pipe from a bytestring."""
 
         def load_model(b):
@@ -161,26 +166,25 @@ class Pipe(object):
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(b)
 
-        deserialize = OrderedDict(
-            (
-                ("cfg", lambda b: self.cfg.update(srsly.json_loads(b))),
-                ("vocab", lambda b: self.vocab.from_bytes(b)),
-                ("model", load_model),
-            )
-        )
+        deserialize = OrderedDict()
+        deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
+        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        deserialize["model"] = load_model
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, exclude=tuple(), **kwargs):
         """Serialize the pipe to disk."""
         serialize = OrderedDict()
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         if self.model not in (None, True, False):
             serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, exclude=tuple(), **kwargs):
         """Load the pipe from disk."""
 
         def load_model(p):
@@ -191,13 +195,11 @@ class Pipe(object):
                 self.model = self.Model(**self.cfg)
             self.model.from_bytes(p.open("rb").read())
 
-        deserialize = OrderedDict(
-            (
-                ("cfg", lambda p: self.cfg.update(_load_cfg(p))),
-                ("vocab", lambda p: self.vocab.from_disk(p)),
-                ("model", load_model),
-            )
-        )
+        deserialize = OrderedDict()
+        deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
+        deserialize["model"] = load_model
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
 
@@ -255,7 +257,6 @@ class Tensorizer(Pipe):
 
         stream (iterator): A sequence of `Doc` objects to process.
         batch_size (int): Number of `Doc` objects to group.
-        n_threads (int): Number of threads.
         YIELDS (iterator): A sequence of `Doc` objects, in order of input.
         """
         for docs in util.minibatch(stream, size=batch_size):
@@ -541,7 +542,7 @@ class Tagger(Pipe):
         with self.model.use_params(params):
             yield
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, exclude=tuple(), **kwargs):
         serialize = OrderedDict()
         if self.model not in (None, True, False):
             serialize["model"] = self.model.to_bytes
@@ -549,9 +550,10 @@ class Tagger(Pipe):
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize["tag_map"] = lambda: srsly.msgpack_dumps(tag_map)
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         def load_model(b):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
@@ -576,20 +578,22 @@ class Tagger(Pipe):
             ("cfg", lambda b: self.cfg.update(srsly.json_loads(b))),
             ("model", lambda b: load_model(b)),
         ))
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, **exclude):
+    def to_disk(self, path, exclude=tuple(), **kwargs):
         tag_map = OrderedDict(sorted(self.vocab.morphology.tag_map.items()))
         serialize = OrderedDict((
-            ('vocab', lambda p: self.vocab.to_disk(p)),
-            ('tag_map', lambda p: srsly.write_msgpack(p, tag_map)),
-            ('model', lambda p: p.open("wb").write(self.model.to_bytes())),
-            ('cfg', lambda p: srsly.write_json(p, self.cfg))
+            ("vocab", lambda p: self.vocab.to_disk(p)),
+            ("tag_map", lambda p: srsly.write_msgpack(p, tag_map)),
+            ("model", lambda p: p.open("wb").write(self.model.to_bytes())),
+            ("cfg", lambda p: srsly.write_json(p, self.cfg))
         ))
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
             # TODO: Remove this once we don't have to handle previous models
             if self.cfg.get("pretrained_dims") and "pretrained_vectors" not in self.cfg:
@@ -612,6 +616,7 @@ class Tagger(Pipe):
             ("tag_map", load_tag_map),
             ("model", load_model),
         ))
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self
 

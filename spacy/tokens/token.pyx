@@ -219,115 +219,115 @@ cdef class Token:
         xp = get_array_module(vector)
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
-    property morph:
-        def __get__(self):
-            return MorphAnalysis.from_id(self.vocab, self.c.morph)
+    @property
+    def morph(self):
+        return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
-    property lex_id:
+    @property
+    def lex_id(self):
         """RETURNS (int): Sequential ID of the token's lexical type."""
-        def __get__(self):
-            return self.c.lex.id
+        return self.c.lex.id
 
-    property rank:
+    @property
+    def rank(self):
         """RETURNS (int): Sequential ID of the token's lexical type, used to
         index into tables, e.g. for word vectors."""
-        def __get__(self):
-            return self.c.lex.id
+        return self.c.lex.id
 
-    property string:
+    @property
+    def string(self):
         """Deprecated: Use Token.text_with_ws instead."""
-        def __get__(self):
-            return self.text_with_ws
+        return self.text_with_ws
 
-    property text:
+    @property
+    def text(self):
         """RETURNS (unicode): The original verbatim text of the token."""
-        def __get__(self):
-            return self.orth_
+        return self.orth_
 
-    property text_with_ws:
+    @property
+    def text_with_ws(self):
         """RETURNS (unicode): The text content of the span (with trailing
             whitespace).
         """
-        def __get__(self):
-            cdef unicode orth = self.vocab.strings[self.c.lex.orth]
-            if self.c.spacy:
-                return orth + " "
-            else:
-                return orth
+        cdef unicode orth = self.vocab.strings[self.c.lex.orth]
+        if self.c.spacy:
+            return orth + " "
+        else:
+            return orth
 
-    property prob:
+    @property
+    def prob(self):
         """RETURNS (float): Smoothed log probability estimate of token type."""
-        def __get__(self):
-            return self.c.lex.prob
+        return self.c.lex.prob
 
-    property sentiment:
+    @property
+    def sentiment(self):
         """RETURNS (float): A scalar value indicating the positivity or
             negativity of the token."""
-        def __get__(self):
-            if "sentiment" in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks["sentiment"](self)
-            return self.c.lex.sentiment
+        if "sentiment" in self.doc.user_token_hooks:
+            return self.doc.user_token_hooks["sentiment"](self)
+        return self.c.lex.sentiment
 
-    property lang:
+    @property
+    def lang(self):
         """RETURNS (uint64): ID of the language of the parent document's
             vocabulary.
         """
-        def __get__(self):
-            return self.c.lex.lang
+        return self.c.lex.lang
 
-    property idx:
+    @property
+    def idx(self):
         """RETURNS (int): The character offset of the token within the parent
             document.
         """
-        def __get__(self):
-            return self.c.idx
+        return self.c.idx
 
-    property cluster:
+    @property
+    def cluster(self):
         """RETURNS (int): Brown cluster ID."""
-        def __get__(self):
-            return self.c.lex.cluster
+        return self.c.lex.cluster
 
-    property orth:
+    @property
+    def orth(self):
         """RETURNS (uint64): ID of the verbatim text content."""
-        def __get__(self):
-            return self.c.lex.orth
+        return self.c.lex.orth
 
-    property lower:
+    @property
+    def lower(self):
         """RETURNS (uint64): ID of the lowercase token text."""
-        def __get__(self):
-            return self.c.lex.lower
+        return self.c.lex.lower
 
-    property norm:
+    @property
+    def norm(self):
         """RETURNS (uint64): ID of the token's norm, i.e. a normalised form of
             the token text. Usually set in the language's tokenizer exceptions
             or norm exceptions.
         """
-        def __get__(self):
-            if self.c.norm == 0:
-                return self.c.lex.norm
-            else:
-                return self.c.norm
+        if self.c.norm == 0:
+            return self.c.lex.norm
+        else:
+            return self.c.norm
 
-    property shape:
+    @property
+    def shape(self):
         """RETURNS (uint64): ID of the token's shape, a transform of the
             tokens's string, to show orthographic features (e.g. "Xxxx", "dd").
         """
-        def __get__(self):
-            return self.c.lex.shape
+        return self.c.lex.shape
 
-    property prefix:
+    @property
+    def prefix(self):
         """RETURNS (uint64): ID of a length-N substring from the start of the
             token. Defaults to `N=1`.
         """
-        def __get__(self):
-            return self.c.lex.prefix
+        return self.c.lex.prefix
 
-    property suffix:
+    @property
+    def suffix(self):
         """RETURNS (uint64): ID of a length-N substring from the end of the
             token. Defaults to `N=3`.
         """
-        def __get__(self):
-            return self.c.lex.suffix
+        return self.c.lex.suffix
 
     property lemma:
         """RETURNS (uint64): ID of the base form of the word, with no
@@ -367,7 +367,8 @@ cdef class Token:
         def __set__(self, attr_t label):
             self.c.dep = label
 
-    property has_vector:
+    @property
+    def has_vector(self):
         """A boolean value indicating whether a word vector is associated with
         the object.
 
@@ -375,14 +376,14 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#has_vector
         """
-        def __get__(self):
-            if 'has_vector' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks["has_vector"](self)
-            if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
-                return True
-            return self.vocab.has_vector(self.c.lex.orth)
+        if "has_vector" in self.doc.user_token_hooks:
+            return self.doc.user_token_hooks["has_vector"](self)
+        if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
+            return True
+        return self.vocab.has_vector(self.c.lex.orth)
 
-    property vector:
+    @property
+    def vector(self):
         """A real-valued meaning representation.
 
         RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
@@ -390,28 +391,28 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#vector
         """
-        def __get__(self):
-            if 'vector' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks["vector"](self)
-            if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
-                return self.doc.tensor[self.i]
-            else:
-                return self.vocab.get_vector(self.c.lex.orth)
+        if "vector" in self.doc.user_token_hooks:
+            return self.doc.user_token_hooks["vector"](self)
+        if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
+            return self.doc.tensor[self.i]
+        else:
+            return self.vocab.get_vector(self.c.lex.orth)
 
-    property vector_norm:
+    @property
+    def vector_norm(self):
         """The L2 norm of the token's vector representation.
 
         RETURNS (float): The L2 norm of the vector representation.
 
         DOCS: https://spacy.io/api/token#vector_norm
         """
-        def __get__(self):
-            if 'vector_norm' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks["vector_norm"](self)
-            vector = self.vector
-            return numpy.sqrt((vector ** 2).sum())
+        if "vector_norm" in self.doc.user_token_hooks:
+            return self.doc.user_token_hooks["vector_norm"](self)
+        vector = self.vector
+        return numpy.sqrt((vector ** 2).sum())
 
-    property n_lefts:
+    @property
+    def n_lefts(self):
         """The number of leftward immediate children of the word, in the
         syntactic dependency parse.
 
@@ -420,10 +421,10 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#n_lefts
         """
-        def __get__(self):
-            return self.c.l_kids
+        return self.c.l_kids
 
-    property n_rights:
+    @property
+    def n_rights(self):
         """The number of rightward immediate children of the word, in the
         syntactic dependency parse.
 
@@ -432,15 +433,14 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#n_rights
         """
-        def __get__(self):
-            return self.c.r_kids
+        return self.c.r_kids
 
-    property sent:
+    @property
+    def sent(self):
         """RETURNS (Span): The sentence span that the token is a part of."""
-        def __get__(self):
-            if 'sent' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks["sent"](self)
-            return self.doc[self.i : self.i+1].sent
+        if 'sent' in self.doc.user_token_hooks:
+            return self.doc.user_token_hooks["sent"](self)
+        return self.doc[self.i : self.i+1].sent
 
     property sent_start:
         def __get__(self):
@@ -484,7 +484,8 @@ cdef class Token:
             else:
                 raise ValueError(Errors.E044.format(value=value))
 
-    property lefts:
+    @property
+    def lefts(self):
         """The leftward immediate children of the word, in the syntactic
         dependency parse.
 
@@ -492,19 +493,19 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#lefts
         """
-        def __get__(self):
-            cdef int nr_iter = 0
-            cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
-            while ptr < self.c:
-                if ptr + ptr.head == self.c:
-                    yield self.doc[ptr - (self.c - self.i)]
-                ptr += 1
-                nr_iter += 1
-                # This is ugly, but it's a way to guard out infinite loops
-                if nr_iter >= 10000000:
-                    raise RuntimeError(Errors.E045.format(attr="token.lefts"))
+        cdef int nr_iter = 0
+        cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
+        while ptr < self.c:
+            if ptr + ptr.head == self.c:
+                yield self.doc[ptr - (self.c - self.i)]
+            ptr += 1
+            nr_iter += 1
+            # This is ugly, but it's a way to guard out infinite loops
+            if nr_iter >= 10000000:
+                raise RuntimeError(Errors.E045.format(attr="token.lefts"))
 
-    property rights:
+    @property
+    def rights(self):
         """The rightward immediate children of the word, in the syntactic
         dependency parse.
 
@@ -512,33 +513,33 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#rights
         """
-        def __get__(self):
-            cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
-            tokens = []
-            cdef int nr_iter = 0
-            while ptr > self.c:
-                if ptr + ptr.head == self.c:
-                    tokens.append(self.doc[ptr - (self.c - self.i)])
-                ptr -= 1
-                nr_iter += 1
-                if nr_iter >= 10000000:
-                    raise RuntimeError(Errors.E045.format(attr="token.rights"))
-            tokens.reverse()
-            for t in tokens:
-                yield t
+        cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
+        tokens = []
+        cdef int nr_iter = 0
+        while ptr > self.c:
+            if ptr + ptr.head == self.c:
+                tokens.append(self.doc[ptr - (self.c - self.i)])
+            ptr -= 1
+            nr_iter += 1
+            if nr_iter >= 10000000:
+                raise RuntimeError(Errors.E045.format(attr="token.rights"))
+        tokens.reverse()
+        for t in tokens:
+            yield t
 
-    property children:
+    @property
+    def children(self):
         """A sequence of the token's immediate syntactic children.
 
         YIELDS (Token): A child token such that `child.head==self`.
 
         DOCS: https://spacy.io/api/token#children
         """
-        def __get__(self):
-            yield from self.lefts
-            yield from self.rights
+        yield from self.lefts
+        yield from self.rights
 
-    property subtree:
+    @property
+    def subtree(self):
         """A sequence containing the token and all the token's syntactic
         descendants.
 
@@ -547,30 +548,30 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#subtree
         """
-        def __get__(self):
-            for word in self.lefts:
-                yield from word.subtree
-            yield self
-            for word in self.rights:
-                yield from word.subtree
+        for word in self.lefts:
+            yield from word.subtree
+        yield self
+        for word in self.rights:
+            yield from word.subtree
 
-    property left_edge:
+    @property
+    def left_edge(self):
         """The leftmost token of this token's syntactic descendents.
 
         RETURNS (Token): The first token such that `self.is_ancestor(token)`.
         """
-        def __get__(self):
-            return self.doc[self.c.l_edge]
+        return self.doc[self.c.l_edge]
 
-    property right_edge:
+    @property
+    def right_edge(self):
         """The rightmost token of this token's syntactic descendents.
 
         RETURNS (Token): The last token such that `self.is_ancestor(token)`.
         """
-        def __get__(self):
-            return self.doc[self.c.r_edge]
+        return self.doc[self.c.r_edge]
 
-    property ancestors:
+    @property
+    def ancestors(self):
         """A sequence of this token's syntactic ancestors.
 
         YIELDS (Token): A sequence of ancestor tokens such that
@@ -578,15 +579,14 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#ancestors
         """
-        def __get__(self):
-            cdef const TokenC* head_ptr = self.c
-            # Guard against infinite loop, no token can have
-            # more ancestors than tokens in the tree.
-            cdef int i = 0
-            while head_ptr.head != 0 and i < self.doc.length:
-                head_ptr += head_ptr.head
-                yield self.doc[head_ptr - (self.c - self.i)]
-                i += 1
+        cdef const TokenC* head_ptr = self.c
+        # Guard against infinite loop, no token can have
+        # more ancestors than tokens in the tree.
+        cdef int i = 0
+        while head_ptr.head != 0 and i < self.doc.length:
+            head_ptr += head_ptr.head
+            yield self.doc[head_ptr - (self.c - self.i)]
+            i += 1
 
     def is_ancestor(self, descendant):
         """Check whether this token is a parent, grandparent, etc. of another
@@ -690,23 +690,31 @@ cdef class Token:
             # Set new head
             self.c.head = rel_newhead_i
 
-    property conjuncts:
+    @property
+    def conjuncts(self):
         """A sequence of coordinated tokens, including the token itself.
 
-        YIELDS (Token): A coordinated token.
+        RETURNS (tuple): The coordinated tokens.
 
         DOCS: https://spacy.io/api/token#conjuncts
         """
-        def __get__(self):
-            cdef Token word
-            if "conjuncts" in self.doc.user_token_hooks:
-                yield from self.doc.user_token_hooks["conjuncts"](self)
+        cdef Token word, child
+        if "conjuncts" in self.doc.user_token_hooks:
+            return tuple(self.doc.user_token_hooks["conjuncts"](self))
+        start = self
+        while start.i != start.head.i:
+            if start.dep == conj:
+                start = start.head
             else:
-                if self.dep != conj:
-                    for word in self.rights:
-                        if word.dep == conj:
-                            yield word
-                            yield from word.conjuncts
+                break
+        queue = [start]
+        output = [start]
+        for word in queue:
+            for child in word.rights:
+                if child.c.dep == conj:
+                    output.append(child)
+                    queue.append(child)
+        return tuple([w for w in output if w.i != self.i])
 
     property ent_type:
         """RETURNS (uint64): Named entity type."""
@@ -716,15 +724,6 @@ cdef class Token:
         def __set__(self, ent_type):
             self.c.ent_type = ent_type
 
-    property ent_iob:
-        """IOB code of named entity tag. `1="I", 2="O", 3="B"`. 0 means no tag
-        is assigned.
-
-        RETURNS (uint64): IOB code of named entity tag.
-        """
-        def __get__(self):
-            return self.c.ent_iob
-
     property ent_type_:
         """RETURNS (unicode): Named entity type."""
         def __get__(self):
@@ -733,16 +732,25 @@ cdef class Token:
         def __set__(self, ent_type):
             self.c.ent_type = self.vocab.strings.add(ent_type)
 
-    property ent_iob_:
+    @property
+    def ent_iob(self):
+        """IOB code of named entity tag. `1="I", 2="O", 3="B"`. 0 means no tag
+        is assigned.
+
+        RETURNS (uint64): IOB code of named entity tag.
+        """
+        return self.c.ent_iob
+
+    @property
+    def ent_iob_(self):
         """IOB code of named entity tag. "B" means the token begins an entity,
         "I" means it is inside an entity, "O" means it is outside an entity,
         and "" means no entity tag is set.
 
         RETURNS (unicode): IOB code of named entity tag.
         """
-        def __get__(self):
-            iob_strings = ("", "I", "O", "B")
-            return iob_strings[self.c.ent_iob]
+        iob_strings = ("", "I", "O", "B")
+        return iob_strings[self.c.ent_iob]
 
     property ent_id:
         """RETURNS (uint64): ID of the entity the token is an instance of,
@@ -764,26 +772,25 @@ cdef class Token:
         def __set__(self, name):
             self.c.ent_id = self.vocab.strings.add(name)
 
-    property whitespace_:
-        """RETURNS (unicode): The trailing whitespace character, if present.
-        """
-        def __get__(self):
-            return " " if self.c.spacy else ""
+    @property
+    def whitespace_(self):
+        """RETURNS (unicode): The trailing whitespace character, if present."""
+        return " " if self.c.spacy else ""
 
-    property orth_:
+    @property
+    def orth_(self):
         """RETURNS (unicode): Verbatim text content (identical to
             `Token.text`). Exists mostly for consistency with the other
             attributes.
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.lex.orth]
+        return self.vocab.strings[self.c.lex.orth]
 
-    property lower_:
+    @property
+    def lower_(self):
         """RETURNS (unicode): The lowercase token text. Equivalent to
             `Token.text.lower()`.
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.lex.lower]
+        return self.vocab.strings[self.c.lex.lower]
 
     property norm_:
         """RETURNS (unicode): The token's norm, i.e. a normalised form of the
@@ -796,33 +803,33 @@ cdef class Token:
         def __set__(self, unicode norm_):
             self.c.norm = self.vocab.strings.add(norm_)
 
-    property shape_:
+    @property
+    def shape_(self):
         """RETURNS (unicode): Transform of the tokens's string, to show
             orthographic features. For example, "Xxxx" or "dd".
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.lex.shape]
+        return self.vocab.strings[self.c.lex.shape]
 
-    property prefix_:
+    @property
+    def prefix_(self):
         """RETURNS (unicode): A length-N substring from the start of the token.
             Defaults to `N=1`.
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.lex.prefix]
+        return self.vocab.strings[self.c.lex.prefix]
 
-    property suffix_:
+    @property
+    def suffix_(self):
         """RETURNS (unicode): A length-N substring from the end of the token.
             Defaults to `N=3`.
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.lex.suffix]
+        return self.vocab.strings[self.c.lex.suffix]
 
-    property lang_:
+    @property
+    def lang_(self):
         """RETURNS (unicode): Language of the parent document's vocabulary,
             e.g. 'en'.
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.lex.lang]
+        return self.vocab.strings[self.c.lex.lang]
 
     property lemma_:
         """RETURNS (unicode): The token lemma, i.e. the base form of the word,
@@ -861,110 +868,110 @@ cdef class Token:
         def __set__(self, unicode label):
             self.c.dep = self.vocab.strings.add(label)
 
-    property is_oov:
+    @property
+    def is_oov(self):
         """RETURNS (bool): Whether the token is out-of-vocabulary."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_OOV)
+        return Lexeme.c_check_flag(self.c.lex, IS_OOV)
 
-    property is_stop:
+    @property
+    def is_stop(self):
         """RETURNS (bool): Whether the token is a stop word, i.e. part of a
             "stop list" defined by the language data.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_STOP)
+        return Lexeme.c_check_flag(self.c.lex, IS_STOP)
 
-    property is_alpha:
+    @property
+    def is_alpha(self):
         """RETURNS (bool): Whether the token consists of alpha characters.
             Equivalent to `token.text.isalpha()`.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_ALPHA)
+        return Lexeme.c_check_flag(self.c.lex, IS_ALPHA)
 
-    property is_ascii:
+    @property
+    def is_ascii(self):
         """RETURNS (bool): Whether the token consists of ASCII characters.
             Equivalent to `[any(ord(c) >= 128 for c in token.text)]`.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_ASCII)
+        return Lexeme.c_check_flag(self.c.lex, IS_ASCII)
 
-    property is_digit:
+    @property
+    def is_digit(self):
         """RETURNS (bool): Whether the token consists of digits. Equivalent to
             `token.text.isdigit()`.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_DIGIT)
+        return Lexeme.c_check_flag(self.c.lex, IS_DIGIT)
 
-    property is_lower:
+    @property
+    def is_lower(self):
         """RETURNS (bool): Whether the token is in lowercase. Equivalent to
             `token.text.islower()`.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_LOWER)
+        return Lexeme.c_check_flag(self.c.lex, IS_LOWER)
 
-    property is_upper:
+    @property
+    def is_upper(self):
         """RETURNS (bool): Whether the token is in uppercase. Equivalent to
             `token.text.isupper()`
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_UPPER)
+        return Lexeme.c_check_flag(self.c.lex, IS_UPPER)
 
-    property is_title:
+    @property
+    def is_title(self):
         """RETURNS (bool): Whether the token is in titlecase. Equivalent to
             `token.text.istitle()`.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_TITLE)
+        return Lexeme.c_check_flag(self.c.lex, IS_TITLE)
 
-    property is_punct:
+    @property
+    def is_punct(self):
         """RETURNS (bool): Whether the token is punctuation."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_PUNCT)
+        return Lexeme.c_check_flag(self.c.lex, IS_PUNCT)
 
-    property is_space:
+    @property
+    def is_space(self):
         """RETURNS (bool): Whether the token consists of whitespace characters.
             Equivalent to `token.text.isspace()`.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_SPACE)
+        return Lexeme.c_check_flag(self.c.lex, IS_SPACE)
 
-    property is_bracket:
+    @property
+    def is_bracket(self):
         """RETURNS (bool): Whether the token is a bracket."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_BRACKET)
+        return Lexeme.c_check_flag(self.c.lex, IS_BRACKET)
 
-    property is_quote:
+    @property
+    def is_quote(self):
         """RETURNS (bool): Whether the token is a quotation mark."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_QUOTE)
+        return Lexeme.c_check_flag(self.c.lex, IS_QUOTE)
 
-    property is_left_punct:
+    @property
+    def is_left_punct(self):
         """RETURNS (bool): Whether the token is a left punctuation mark."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
+        return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
 
-    property is_right_punct:
+    @property
+    def is_right_punct(self):
         """RETURNS (bool): Whether the token is a right punctuation mark."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
+        return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
 
-    property is_currency:
+    @property
+    def is_currency(self):
         """RETURNS (bool): Whether the token is a currency symbol."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, IS_CURRENCY)
+        return Lexeme.c_check_flag(self.c.lex, IS_CURRENCY)
 
-    property like_url:
+    @property
+    def like_url(self):
         """RETURNS (bool): Whether the token resembles a URL."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, LIKE_URL)
+        return Lexeme.c_check_flag(self.c.lex, LIKE_URL)
 
-    property like_num:
+    @property
+    def like_num(self):
         """RETURNS (bool): Whether the token resembles a number, e.g. "10.9",
             "10", "ten", etc.
         """
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, LIKE_NUM)
+        return Lexeme.c_check_flag(self.c.lex, LIKE_NUM)
 
-    property like_email:
+    @property
+    def like_email(self):
         """RETURNS (bool): Whether the token resembles an email address."""
-        def __get__(self):
-            return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)
+        return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)

@@ -22,7 +22,7 @@ the changes, see [this table](/usage/v2#incompat) and the notes on
 
 </Infobox>
 
-### Serializing the pipeline
+### Serializing the pipeline {#pipeline}
 
 When serializing the pipeline, keep in mind that this will only save out the
 **binary data for the individual components** to allow spaCy to restore them –
@@ -361,7 +361,7 @@ In theory, the entry point mechanism also lets you overwrite built-in factories
 – including the tokenizer. By default, spaCy will output a warning in these
 cases, to prevent accidental overwrites and unintended results.
 
-#### Advanced components with settings
+#### Advanced components with settings {#advanced-cfg}
 
 The `**cfg` keyword arguments that the factory receives are passed down all the
 way from `spacy.load`. This means that the factory can respond to custom

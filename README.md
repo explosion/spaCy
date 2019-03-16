@@ -12,7 +12,7 @@ currently supports tokenization for **45+ languages**. It features the
 and easy **deep learning** integration. It's commercial open-source software,
 released under the MIT license.
 
-💫 **Version 2.1 out now!** [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
+💫 **Version 2.0 out now!** [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-devops&style=flat-square)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
 [![Travis Build Status](https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis)](https://travis-ci.org/explosion/spaCy)
@@ -25,19 +25,17 @@ released under the MIT license.
 
 ## 📖 Documentation
 
-| Documentation   |                                                                |
-| --------------- | -------------------------------------------------------------- |
-| [spaCy 101]     | New to spaCy? Here's everything you need to know!              |
-| [Usage Guides]  | How to use spaCy and its features.                             |
-| [New in v2.1]   | New features, backwards incompatibilities and migration guide. |
-| [API Reference] | The detailed reference for spaCy's API.                        |
-| [Models]        | Download statistical language models for spaCy.                |
-| [Universe]      | Libraries, extensions, demos, books and courses.               |
-| [Changelog]     | Changes and version history.                                   |
-| [Contribute]    | How to contribute to the spaCy project and code base.          |
+| Documentation   |                                                       |
+| --------------- | ----------------------------------------------------- |
+| [spaCy 101]     | New to spaCy? Here's everything you need to know!     |
+| [Usage Guides]  | How to use spaCy and its features.                    |
+| [API Reference] | The detailed reference for spaCy's API.               |
+| [Models]        | Download statistical language models for spaCy.       |
+| [Universe]      | Libraries, extensions, demos, books and courses.      |
+| [Changelog]     | Changes and version history.                          |
+| [Contribute]    | How to contribute to the spaCy project and code base. |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
-[new in v2.1]: https://spacy.io/usage/v2-1
 [usage guides]: https://spacy.io/usage/
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models

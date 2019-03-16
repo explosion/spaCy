@@ -29,7 +29,7 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS, is_stop
-from .errors import Errors
+from .errors import Errors, Warnings, deprecation_warning
 from . import util
 from . import about
 
@@ -95,6 +95,7 @@ class BaseDefaults(object):
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
+    writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
 
 
 class Language(object):
@@ -107,6 +108,7 @@ class Language(object):
 
     DOCS: https://spacy.io/api/language
     """
+
     Defaults = BaseDefaults
     lang = None
 
@@ -195,6 +197,7 @@ class Language(object):
         self._meta = value
 
     # Conveniences to access pipeline components
+    # Shouldn't be used anymore!
     @property
     def tensorizer(self):
         return self.get_pipe("tensorizer")
@@ -228,6 +231,8 @@ class Language(object):
 
         name (unicode): Name of pipeline component to get.
         RETURNS (callable): The pipeline component.
+
+        DOCS: https://spacy.io/api/language#get_pipe
         """
         for pipe_name, component in self.pipeline:
             if pipe_name == name:
@@ -240,6 +245,8 @@ class Language(object):
         name (unicode): Factory name to look up in `Language.factories`.
         config (dict): Configuration parameters to initialise component.
         RETURNS (callable): Pipeline component.
+
+        DOCS: https://spacy.io/api/language#create_pipe
         """
         if name not in self.factories:
             if name == "sbd":
@@ -266,9 +273,7 @@ class Language(object):
         first (bool): Insert component first / not first in the pipeline.
         last (bool): Insert component last / not last in the pipeline.
 
-        EXAMPLE:
-            >>> nlp.add_pipe(component, before='ner')
-            >>> nlp.add_pipe(component, name='custom_name', last=True)
+        DOCS: https://spacy.io/api/language#add_pipe
         """
         if not hasattr(component, "__call__"):
             msg = Errors.E003.format(component=repr(component), name=name)
@@ -310,6 +315,8 @@ class Language(object):
 
         name (unicode): Name of the component.
         RETURNS (bool): Whether a component of the name exists in the pipeline.
+
+        DOCS: https://spacy.io/api/language#has_pipe
         """
         return name in self.pipe_names
 
@@ -318,6 +325,8 @@ class Language(object):
 
         name (unicode): Name of the component to replace.
         component (callable): Pipeline component.
+
+        DOCS: https://spacy.io/api/language#replace_pipe
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
@@ -328,6 +337,8 @@ class Language(object):
 
         old_name (unicode): Name of the component to rename.
         new_name (unicode): New name of the component.
+
+        DOCS: https://spacy.io/api/language#rename_pipe
         """
         if old_name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=old_name, opts=self.pipe_names))
@@ -341,36 +352,39 @@ class Language(object):
 
         name (unicode): Name of the component to remove.
         RETURNS (tuple): A `(name, component)` tuple of the removed component.
+
+        DOCS: https://spacy.io/api/language#remove_pipe
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         return self.pipeline.pop(self.pipe_names.index(name))
 
-    def __call__(self, text, disable=[]):
+    def __call__(self, text, disable=[], component_cfg=None):
         """Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
         disable (list): Names of the pipeline components to disable.
+        component_cfg (dict): An optional dictionary with extra keyword arguments
+            for specific components.
         RETURNS (Doc): A container for accessing the annotations.
 
-        EXAMPLE:
-            >>> tokens = nlp('An example sentence. Another example sentence.')
-            >>> tokens[0].text, tokens[0].head.tag_
-            ('An', 'NN')
+        DOCS: https://spacy.io/api/language#call
         """
         if len(text) > self.max_length:
             raise ValueError(
                 Errors.E088.format(length=len(text), max_length=self.max_length)
             )
         doc = self.make_doc(text)
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in self.pipeline:
             if name in disable:
                 continue
             if not hasattr(proc, "__call__"):
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
-            doc = proc(doc)
+            doc = proc(doc, **component_cfg.get(name, {}))
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
@@ -381,24 +395,14 @@ class Language(object):
         of the block. Otherwise, a DisabledPipes object is returned, that has
         a `.restore()` method you can use to undo your changes.
 
-        EXAMPLE:
-            >>> nlp.add_pipe('parser')
-            >>> nlp.add_pipe('tagger')
-            >>> with nlp.disable_pipes('parser', 'tagger'):
-            >>>     assert not nlp.has_pipe('parser')
-            >>> assert nlp.has_pipe('parser')
-            >>> disabled = nlp.disable_pipes('parser')
-            >>> assert len(disabled) == 1
-            >>> assert not nlp.has_pipe('parser')
-            >>> disabled.restore()
-            >>> assert nlp.has_pipe('parser')
+        DOCS: https://spacy.io/api/language#disable_pipes
         """
         return DisabledPipes(self, *names)
 
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0.0, sgd=None, losses=None):
+    def update(self, docs, golds, drop=0.0, sgd=None, losses=None, component_cfg=None):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -407,11 +411,7 @@ class Language(object):
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 
-        EXAMPLE:
-            >>> with nlp.begin_training(gold) as (trainer, optimizer):
-            >>>    for epoch in trainer.epochs(gold):
-            >>>        for docs, golds in epoch:
-            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        DOCS: https://spacy.io/api/language#update
         """
         if len(docs) != len(golds):
             raise IndexError(Errors.E009.format(n_docs=len(docs), n_golds=len(golds)))
@@ -421,7 +421,6 @@ class Language(object):
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer(Model.ops)
             sgd = self._optimizer
-
         # Allow dict of args to GoldParse, instead of GoldParse objects.
         gold_objs = []
         doc_objs = []
@@ -442,14 +441,17 @@ class Language(object):
         get_grads.alpha = sgd.alpha
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
-
         pipes = list(self.pipeline)
         random.shuffle(pipes)
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in pipes:
             if not hasattr(proc, "update"):
                 continue
             grads = {}
-            proc.update(docs, golds, drop=drop, sgd=get_grads, losses=losses)
+            kwargs = component_cfg.get(name, {})
+            kwargs.setdefault("drop", drop)
+            proc.update(docs, golds, sgd=get_grads, losses=losses, **kwargs)
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
 
@@ -473,6 +475,7 @@ class Language(object):
             >>>     raw_batch = [nlp.make_doc(text) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
         """
+        # TODO: document
         if len(docs) == 0:
             return
         if sgd is None:
@@ -495,7 +498,6 @@ class Language(object):
         get_grads.alpha = sgd.alpha
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
-
         for name, proc in pipes:
             if not hasattr(proc, "rehearse"):
                 continue
@@ -503,7 +505,6 @@ class Language(object):
             proc.rehearse(docs, sgd=get_grads, losses=losses, **config.get(name, {}))
             for key, (W, dW) in grads.items():
                 sgd(W, dW, key=key)
-
         return losses
 
     def preprocess_gold(self, docs_golds):
@@ -519,13 +520,16 @@ class Language(object):
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, get_gold_tuples=None, sgd=None, **cfg):
+    def begin_training(self, get_gold_tuples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
         get_gold_tuples (function): Function returning gold data
+        component_cfg (dict): Config parameters for specific components.
         **cfg: Config parameters.
-        RETURNS: An optimizer
+        RETURNS: An optimizer.
+
+        DOCS: https://spacy.io/api/language#begin_training
         """
         if get_gold_tuples is None:
             get_gold_tuples = lambda: []
@@ -545,10 +549,17 @@ class Language(object):
         if sgd is None:
             sgd = create_default_optimizer(Model.ops)
         self._optimizer = sgd
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in self.pipeline:
             if hasattr(proc, "begin_training"):
+                kwargs = component_cfg.get(name, {})
+                kwargs.update(cfg)
                 proc.begin_training(
-                    get_gold_tuples, pipeline=self.pipeline, sgd=self._optimizer, **cfg
+                    get_gold_tuples,
+                    pipeline=self.pipeline,
+                    sgd=self._optimizer,
+                    **kwargs
                 )
         return self._optimizer
 
@@ -576,20 +587,27 @@ class Language(object):
                 proc._rehearsal_model = deepcopy(proc.model)
         return self._optimizer
 
-    def evaluate(self, docs_golds, verbose=False, batch_size=256):
-        scorer = Scorer()
+    def evaluate(
+        self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None
+    ):
+        if scorer is None:
+            scorer = Scorer()
         docs, golds = zip(*docs_golds)
         docs = list(docs)
         golds = list(golds)
         for name, pipe in self.pipeline:
+            kwargs = component_cfg.get(name, {})
+            kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                docs = (pipe(doc) for doc in docs)
+                docs = (pipe(doc, **kwargs) for doc in docs)
             else:
-                docs = pipe.pipe(docs, batch_size=batch_size)
+                docs = pipe.pipe(docs, **kwargs)
         for doc, gold in zip(docs, golds):
             if verbose:
                 print(doc)
-            scorer.score(doc, gold, verbose=verbose)
+            kwargs = component_cfg.get("scorer", {})
+            kwargs.setdefault("verbose", verbose)
+            scorer.score(doc, gold, **kwargs)
         return scorer
 
     @contextmanager
@@ -628,49 +646,57 @@ class Language(object):
         self,
         texts,
         as_tuples=False,
-        n_threads=2,
+        n_threads=-1,
         batch_size=1000,
         disable=[],
         cleanup=False,
+        component_cfg=None,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
         texts (iterator): A sequence of texts to process.
-        as_tuples (bool):
-            If set to True, inputs should be a sequence of
+        as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
-        n_threads (int): Currently inactive.
         batch_size (int): The number of texts to buffer.
         disable (list): Names of the pipeline components to disable.
-        cleanup (bool): If True, unneeded strings are freed,
-            to control memory use. Experimental.
+        cleanup (bool): If True, unneeded strings are freed to control memory
+            use. Experimental.
+        component_cfg (dict): An optional dictionary with extra keyword
+            arguments for specific components.
         YIELDS (Doc): Documents in the order of the original text.
 
-        EXAMPLE:
-            >>> texts = [u'One document.', u'...', u'Lots of documents']
-            >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
-            >>>         assert doc.is_parsed
+        DOCS: https://spacy.io/api/language#pipe
         """
+        if n_threads != -1:
+            deprecation_warning(Warnings.W016)
         if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
             contexts = (tc[1] for tc in text_context2)
             docs = self.pipe(
-                texts, n_threads=n_threads, batch_size=batch_size, disable=disable
+                texts,
+                batch_size=batch_size,
+                disable=disable,
+                component_cfg=component_cfg,
             )
             for doc, context in izip(docs, contexts):
                 yield (doc, context)
             return
         docs = (self.make_doc(text) for text in texts)
+        if component_cfg is None:
+            component_cfg = {}
         for name, proc in self.pipeline:
             if name in disable:
                 continue
+            kwargs = component_cfg.get(name, {})
+            # Allow component_cfg to overwrite the top-level kwargs.
+            kwargs.setdefault("batch_size", batch_size)
             if hasattr(proc, "pipe"):
-                docs = proc.pipe(docs, n_threads=n_threads, batch_size=batch_size)
+                docs = proc.pipe(docs, **kwargs)
             else:
                 # Apply the function, but yield the doc
-                docs = _pipe(proc, docs)
+                docs = _pipe(proc, docs, kwargs)
         # Track weakrefs of "recent" documents, so that we can see when they
         # expire from memory. When they do, we know we don't need old strings.
         # This way, we avoid maintaining an unbounded growth in string entries
@@ -701,124 +727,114 @@ class Language(object):
                         self.tokenizer._reset_cache(keys)
                     nr_seen = 0
 
-    def to_disk(self, path, disable=tuple()):
+    def to_disk(self, path, exclude=tuple(), disable=None):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
-        path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist. Paths may be strings or `Path`-like objects.
-        disable (list): Names of pipeline components to disable and prevent
-            from being saved.
+        path (unicode or Path): Path to a directory, which will be created if
+            it doesn't exist.
+        exclude (list): Names of components or serialization fields to exclude.
 
-        EXAMPLE:
-            >>> nlp.to_disk('/path/to/models')
+        DOCS: https://spacy.io/api/language#to_disk
         """
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
         path = util.ensure_path(path)
-        serializers = OrderedDict(
-            (
-                ("tokenizer", lambda p: self.tokenizer.to_disk(p, vocab=False)),
-                ("meta.json", lambda p: p.open("w").write(srsly.json_dumps(self.meta))),
-            )
-        )
+        serializers = OrderedDict()
+        serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(p, exclude=["vocab"])
+        serializers["meta.json"] = lambda p: p.open("w").write(srsly.json_dumps(self.meta))
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
                 continue
-            if name in disable:
+            if name in exclude:
                 continue
             if not hasattr(proc, "to_disk"):
                 continue
-            serializers[name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+            serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])
         serializers["vocab"] = lambda p: self.vocab.to_disk(p)
-        util.to_disk(path, serializers, {p: False for p in disable})
+        util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, disable=tuple()):
+    def from_disk(self, path, exclude=tuple(), disable=None):
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
 
-        path (unicode or Path): A path to a directory. Paths may be either
-            strings or `Path`-like objects.
-        disable (list): Names of the pipeline components to disable.
+        path (unicode or Path): A path to a directory.
+        exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The modified `Language` object.
 
-        EXAMPLE:
-            >>> from spacy.language import Language
-            >>> nlp = Language().from_disk('/path/to/models')
+        DOCS: https://spacy.io/api/language#from_disk
         """
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
         path = util.ensure_path(path)
-        deserializers = OrderedDict(
-            (
-                ("meta.json", lambda p: self.meta.update(srsly.read_json(p))),
-                (
-                    "vocab",
-                    lambda p: (
-                        self.vocab.from_disk(p) and _fix_pretrained_vectors_name(self)
-                    ),
-                ),
-                ("tokenizer", lambda p: self.tokenizer.from_disk(p, vocab=False)),
-            )
-        )
+        deserializers = OrderedDict()
+        deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
+        deserializers["vocab"] = lambda p: self.vocab.from_disk(p) and _fix_pretrained_vectors_name(self)
+        deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(p, exclude=["vocab"])
         for name, proc in self.pipeline:
-            if name in disable:
+            if name in exclude:
                 continue
             if not hasattr(proc, "from_disk"):
                 continue
-            deserializers[name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
-        exclude = {p: False for p in disable}
-        if not (path / "vocab").exists():
-            exclude["vocab"] = True
+            deserializers[name] = lambda p, proc=proc: proc.from_disk(p, exclude=["vocab"])
+        if not (path / "vocab").exists() and "vocab" not in exclude:
+            # Convert to list here in case exclude is (default) tuple
+            exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
         self._path = path
         return self
 
-    def to_bytes(self, disable=[], **exclude):
+    def to_bytes(self, exclude=tuple(), disable=None, **kwargs):
         """Serialize the current state to a binary string.
 
-        disable (list): Nameds of pipeline components to disable and prevent
-            from being serialized.
+        exclude (list): Names of components or serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Language` object.
+
+        DOCS: https://spacy.io/api/language#to_bytes
         """
-        serializers = OrderedDict(
-            (
-                ("vocab", lambda: self.vocab.to_bytes()),
-                ("tokenizer", lambda: self.tokenizer.to_bytes(vocab=False)),
-                ("meta", lambda: srsly.json_dumps(self.meta)),
-            )
-        )
-        for i, (name, proc) in enumerate(self.pipeline):
-            if name in disable:
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
+        serializers = OrderedDict()
+        serializers["vocab"] = lambda: self.vocab.to_bytes()
+        serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
+        serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
+        for name, proc in self.pipeline:
+            if name in exclude:
                 continue
             if not hasattr(proc, "to_bytes"):
                 continue
-            serializers[i] = lambda proc=proc: proc.to_bytes(vocab=False)
+            serializers[name] = lambda proc=proc: proc.to_bytes(exclude=["vocab"])
+        exclude = util.get_serialization_exclude(serializers, exclude, kwargs)
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, disable=[]):
+    def from_bytes(self, bytes_data, exclude=tuple(), disable=None, **kwargs):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        disable (list): Names of the pipeline components to disable.
+        exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The `Language` object.
+
+        DOCS: https://spacy.io/api/language#from_bytes
         """
-        deserializers = OrderedDict(
-            (
-                ("meta", lambda b: self.meta.update(srsly.json_loads(b))),
-                (
-                    "vocab",
-                    lambda b: (
-                        self.vocab.from_bytes(b) and _fix_pretrained_vectors_name(self)
-                    ),
-                ),
-                ("tokenizer", lambda b: self.tokenizer.from_bytes(b, vocab=False)),
-            )
-        )
-        for i, (name, proc) in enumerate(self.pipeline):
-            if name in disable:
+        if disable is not None:
+            deprecation_warning(Warnings.W014)
+            exclude = disable
+        deserializers = OrderedDict()
+        deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
+        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b) and _fix_pretrained_vectors_name(self)
+        deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(b, exclude=["vocab"])
+        for name, proc in self.pipeline:
+            if name in exclude:
                 continue
             if not hasattr(proc, "from_bytes"):
                 continue
-            deserializers[i] = lambda b, proc=proc: proc.from_bytes(b, vocab=False)
-        util.from_bytes(bytes_data, deserializers, {})
+            deserializers[name] = lambda b, proc=proc: proc.from_bytes(b, exclude=["vocab"])
+        exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
+        util.from_bytes(bytes_data, deserializers, exclude)
         return self
 
 
@@ -873,7 +889,12 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _pipe(func, docs):
+def _pipe(func, docs, kwargs):
+    # We added some args for pipe that __call__ doesn't expect.
+    kwargs = dict(kwargs)
+    for arg in ["n_threads", "batch_size"]:
+        if arg in kwargs:
+            kwargs.pop(arg)
     for doc in docs:
-        doc = func(doc)
+        doc = func(doc, **kwargs)
         yield doc
