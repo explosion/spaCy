@@ -261,7 +261,9 @@ def train(
                     for name, component in nlp_loaded.pipeline:
                         if hasattr(component, "cfg"):
                             component.cfg["beam_width"] = beam_width
-                    dev_docs = list(corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc))
+                    dev_docs = list(
+                        corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                    )
                     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                     start_time = timer()
                     scorer = nlp_loaded.evaluate(dev_docs, debug)
@@ -289,19 +291,27 @@ def train(
                     meta["pipeline"] = nlp.pipe_names
                     meta["spacy_version"] = ">=%s" % about.__version__
                     if beam_width == 1:
-                        meta["speed"] = {"nwords": nwords, "cpu": cpu_wps, "gpu": gpu_wps}
+                        meta["speed"] = {
+                            "nwords": nwords,
+                            "cpu": cpu_wps,
+                            "gpu": gpu_wps,
+                        }
                         meta["accuracy"] = scorer.scores
                     else:
                         meta.setdefault("beam_accuracy", {})
                         meta.setdefault("beam_speed", {})
                         meta["beam_accuracy"][beam_width] = scorer.scores
-                        meta["beam_speed"][beam_width] = {"nwords": nwords, "cpu": cpu_wps, "gpu": gpu_wps}
+                        meta["beam_speed"][beam_width] = {
+                            "nwords": nwords,
+                            "cpu": cpu_wps,
+                            "gpu": gpu_wps,
+                        }
                     meta["vectors"] = {
                         "width": nlp.vocab.vectors_length,
                         "vectors": len(nlp.vocab.vectors),
                         "keys": nlp.vocab.vectors.n_keys,
-                        "name": nlp.vocab.vectors.name
-                }
+                        "name": nlp.vocab.vectors.name,
+                    }
                     meta.setdefault("name", "model%d" % i)
                     meta.setdefault("version", version)
                     meta_loc = output_path / ("model%d" % i) / "meta.json"
