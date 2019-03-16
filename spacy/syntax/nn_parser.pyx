@@ -119,6 +119,8 @@ cdef class Parser:
             cfg['beam_width'] = util.env_opt('beam_width', 1)
         if 'beam_density' not in cfg:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
+        if 'beam_update_prob' not in cfg:
+            cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
         cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
         self.model = model
@@ -381,7 +383,7 @@ cdef class Parser:
                     self.moves.set_valid(beam.is_valid[i], state)
                     memcpy(beam.scores[i], c_scores, scores.shape[1] * sizeof(float))
                     c_scores += scores.shape[1]
-            beam.advance(_beam_utils.transition_state, NULL, <void*>self.moves.c)
+            beam.advance(_beam_utils.transition_state, _beam_utils.hash_state, <void*>self.moves.c)
             beam.check_done(_beam_utils.check_final_state, NULL)
         return [b for b in beams if not b.is_done]
 
