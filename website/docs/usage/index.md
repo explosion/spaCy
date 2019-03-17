@@ -348,8 +348,8 @@ spaCy does not currently add an entry to your `PATH` environment variable, as
 this can lead to unexpected results, especially when using a virtual
 environment. Instead, spaCy adds an auto-alias that maps `spacy` to
 `python -m spacy]`. If this is not working as expected, run the command with
-`python -m`, yourself – for example `python -m spacy download en`. For more info
-on this, see the [`download`](/api/cli#download) command.
+`python -m`, yourself – for example `python -m spacy download en_core_web_sm`.
+For more info on this, see the [`download`](/api/cli#download) command.
 
 </Accordion>
 

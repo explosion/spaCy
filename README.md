@@ -163,35 +163,37 @@ or manually by pointing pip to a path or URL.
 [models documentation]: https://spacy.io/docs/usage/models
 
 ```bash
+# download best-matching version of specific model for your spaCy installation
+python -m spacy download en_core_web_sm
+
 # out-of-the-box: download best-matching default model
 python -m spacy download en
 
-# download best-matching version of specific model for your spaCy installation
-python -m spacy download en_core_web_lg
-
 # pip install .tar.gz archive from path or URL
-pip install /Users/you/en_core_web_sm-2.0.0.tar.gz
+pip install /Users/you/en_core_web_sm-2.1.0.tar.gz
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.1.0/en_core_web_sm-2.1.0.tar.gz
 ```
 
 ### Loading and using models
 
-To load a model, use `spacy.load()` with the model's shortcut link:
+To load a model, use `spacy.load()` with the model name, a shortcut link or a
+path to the model data directory.
 
 ```python
 import spacy
-nlp = spacy.load('en')
-doc = nlp(u'This is a sentence.')
+nlp = spacy.load("en_core_web_sm")
+doc = nlp(u"This is a sentence.")
 ```
 
-If you've installed a model via pip, you can also `import` it directly and
-then call its `load()` method:
+You can also `import` a model directly via its full name and then call its
+`load()` method with no arguments.
 
 ```python
 import spacy
 import en_core_web_sm
 
 nlp = en_core_web_sm.load()
-doc = nlp(u'This is a sentence.')
+doc = nlp(u"This is a sentence.")
 ```
 
 📖 **For more info and examples, check out the
