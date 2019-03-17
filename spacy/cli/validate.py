@@ -29,10 +29,12 @@ def validate():
             )
     msg.good("Loaded compatibility table")
     compat = r.json()["spacy"]
-    current_compat = compat.get(about.__version__)
+    version = about.__version__
+    version = version.rsplit(".dev", 1)[0]
+    current_compat = compat.get(version)
     if not current_compat:
         msg.fail(
-            "Can't find spaCy v{} in compatibility table".format(about.__version__),
+            "Can't find spaCy v{} in compatibility table".format(version),
             about.__compatibility__,
             exits=1,
         )
