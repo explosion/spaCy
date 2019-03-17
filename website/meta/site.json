@@ -23,11 +23,6 @@
         "list": "89ad33e698"
     },
     "docSearch": {
-        "apiKey": "f7dbcd148fae73db20b6ad33d03cc9e8",
-        "indexName": "dev_spacy_netlify",
-        "appId": "Y7BGGRAPHC"
-    },
-    "_docSearch": {
         "apiKey": "371e26ed49d29a27bd36273dfdaf89af",
         "indexName": "spacy"
     },
