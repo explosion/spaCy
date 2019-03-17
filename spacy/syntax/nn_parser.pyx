@@ -402,11 +402,11 @@ cdef class Parser:
             multitask.update(docs, golds, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
-        beam_update_prob = self.cfg.get('beam_update_prob', 1.0)
+        beam_update_prob = self.cfg.get('beam_update_prob', 0.5)
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
             return self.update_beam(docs, golds, self.cfg.get('beam_width', 1),
                     drop=drop, sgd=sgd, losses=losses,
-                    beam_density=self.cfg.get('beam_density', 0.0))
+                    beam_density=self.cfg.get('beam_density', 0.001))
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
         cut_gold = numpy.random.choice(range(20, 100))
