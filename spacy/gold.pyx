@@ -598,19 +598,35 @@ cdef class GoldParse:
                         self.c.sent_start[i] = 0
 
 
-def docs_to_json(docs, underscore=None):
+def docs_to_json(docs, id=0):
     """Convert a list of Doc objects into the JSON-serializable format used by
     the spacy train command.
 
     docs (iterable / Doc): The Doc object(s) to convert.
-    underscore (list): Optional list of string names of custom doc._.
-        attributes. Attribute values need to be JSON-serializable. Values will
-        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+    id (int): Id for the JSON.
     RETURNS (list): The data in spaCy's JSON format.
     """
     if isinstance(docs, Doc):
         docs = [docs]
-    return [doc.to_json(underscore=underscore) for doc in docs]
+    json_doc = {"id": id, "paragraphs": []}
+    for i, doc in enumerate(docs):
+        json_para = {'raw': doc.text, "sentences": []}
+        ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
+        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
+        for j, sent in enumerate(doc.sents):
+            json_sent = {"tokens": [], "brackets": []}
+            for token in sent:
+                json_token = {"id": token.i, "orth": token.text}
+                if doc.is_tagged:
+                    json_token["tag"] = token.tag_
+                if doc.is_parsed:
+                    json_token["head"] = token.head.i-token.i
+                    json_token["dep"] = token.dep_
+                json_token["ner"] = biluo_tags[token.i]
+                json_sent["tokens"].append(json_token)
+            json_para["sentences"].append(json_sent)
+        json_doc["paragraphs"].append(json_para)
+    return json_doc 
 
 
 def biluo_tags_from_offsets(doc, entities, missing="O"):
