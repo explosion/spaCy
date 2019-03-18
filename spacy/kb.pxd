@@ -67,8 +67,8 @@ cdef class KnowledgeBase:
     # efficient.
     cdef object _aliases_table
 
-    cdef void c_add_entity(self, hash_t key, float prob, const int32_t* vector_rows,
-                    int feats_row) nogil:
+    cdef inline int64_t c_add_entity(self, hash_t key, float prob, const int32_t* vector_rows,
+                    int feats_row):
         """Add an entry to the knowledge base."""
         # This is what we'll map the hash key to. It's where the entry will sit
         # in the vector of entries, so we can get it later.
