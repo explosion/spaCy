@@ -6,11 +6,25 @@ def create_kb():
     mykb = KnowledgeBase()
     print("kb size", len(mykb))
 
-    entity_id = "Q42"
-    mykb.add_entity(entity_id=entity_id, prob=0.5)
-    print("adding entity", entity_id)
+    # adding entities
+    entity_42 = "Q42"   # douglas adams
+    mykb.add_entity(entity_id=entity_42, prob=0.5)
+    print("adding entity", entity_42)
+
+    entity_5301561 = "Q5301561"
+    mykb.add_entity(entity_id=entity_5301561, prob=0.5)
+    print("adding entity", entity_5301561)
 
     print("kb size", len(mykb))
+
+    # adding aliases
+    alias = "douglas"
+    print("adding alias", alias)
+    mykb.add_alias(alias=alias, entities=["Q42", "Q5301561"], probabilities=[0.8, 0.2])
+    print("kb size", len(mykb))
+
+    print("aliases for", alias)
+    mykb.get_candidates(alias)
 
 
 def add_el():
