@@ -177,7 +177,7 @@ exports.createPages = ({ graphql, actions }) => {
                             id: page.id,
                             slug: slug,
                             isIndex: false,
-                            title: page.title,
+                            title: page.title || page.id,
                             data: { ...page, isProject: true },
                             ...universeContext,
                         },
