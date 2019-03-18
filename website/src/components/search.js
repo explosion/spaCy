@@ -6,13 +6,12 @@ import Icon from './icon'
 import classes from '../styles/search.module.sass'
 
 const Search = ({ id, placeholder, settings }) => {
-    const { apiKey, indexName, appId } = settings
+    const { apiKey, indexName } = settings
     const [initialized, setInitialized] = useState(false)
     useEffect(() => {
         if (!initialized) {
             setInitialized(true)
             window.docsearch({
-                appId,
                 apiKey,
                 indexName,
                 inputSelector: `#${id}`,

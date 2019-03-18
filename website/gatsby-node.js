@@ -71,6 +71,7 @@ exports.createPages = ({ graphql, actions }) => {
                                             tag
                                             new
                                             next
+                                            search_exclude
                                             menu
                                             sidebar {
                                                 label
@@ -133,6 +134,7 @@ exports.createPages = ({ graphql, actions }) => {
                                 tag: frontmatter.tag,
                                 version: frontmatter.new,
                                 theme: sectionMeta.theme,
+                                searchExclude: frontmatter.search_exclude,
                                 relativePath: page.node.relativePath,
                                 next: next
                                     ? {
