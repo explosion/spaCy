@@ -44,6 +44,8 @@ export const LandingGrid = ({ cols = 3, blocks = false, children }) => (
     </Content>
 )
 
+export const LandingCol = ({ children }) => <div className={classes.col}>{children}</div>
+
 export const LandingCard = ({ title, children }) => (
     <div className={classes.card}>
         {title && <H3>{title}</H3>}

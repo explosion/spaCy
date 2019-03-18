@@ -8,6 +8,7 @@ import {
     LandingSubtitle,
     LandingGrid,
     LandingCard,
+    LandingCol,
     LandingButton,
     LandingDemo,
     LandingBannerGrid,
@@ -111,7 +112,7 @@ const Landing = ({ data }) => {
             <LandingGrid>
                 <LandingDemo title="Edit the code & try spaCy">{CODE_EXAMPLE}</LandingDemo>
 
-                <div>
+                <LandingCol>
                     <H2>Features</H2>
                     <Ul>
                         <Li>
@@ -148,7 +149,7 @@ const Landing = ({ data }) => {
                         <Li>State-of-the-art speed</Li>
                         <Li>Robust, rigorously evaluated accuracy</Li>
                     </Ul>
-                </div>
+                </LandingCol>
             </LandingGrid>
 
             <LandingBannerGrid>
@@ -213,7 +214,7 @@ const Landing = ({ data }) => {
             </LandingBanner>
 
             <LandingGrid cols={2}>
-                <div>
+                <LandingCol>
                     <H2>Benchmarks</H2>
                     <p>
                         In 2015, independent researchers from Emory University and Yahoo! Labs
@@ -231,11 +232,11 @@ const Landing = ({ data }) => {
                             See details
                         </Button>
                     </p>
-                </div>
+                </LandingCol>
 
-                <div>
+                <LandingCol>
                     <BenchmarksChoi />
-                </div>
+                </LandingCol>
             </LandingGrid>
         </>
     )
