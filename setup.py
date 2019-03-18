@@ -40,6 +40,7 @@ MOD_NAMES = [
     "spacy.lexeme",
     "spacy.vocab",
     "spacy.attrs",
+    "spacy.kb",
     "spacy.morphology",
     "spacy.pipeline.pipes",
     "spacy.syntax.stateclass",
