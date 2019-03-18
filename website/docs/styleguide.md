@@ -1,6 +1,7 @@
 ---
 title: Styleguide
 section: styleguide
+search_exclude: true
 menu:
   - ['Logo', 'logo']
   - ['Colors', 'colors']
