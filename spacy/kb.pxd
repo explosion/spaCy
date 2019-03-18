@@ -4,6 +4,7 @@ from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 from .typedefs cimport hash_t
+from .strings cimport hash_string
 
 
 # Internal struct, for storage and disambiguation. This isn't what we return
@@ -32,10 +33,10 @@ cdef struct _EntryC:
 cdef struct _AliasC:
 
     # All entry candidates for this alias
-    const vector[int64_t] entry_indices
+    vector[int64_t] entry_indices
 
     # Prior probability P(entity|alias) - should sum up to (at most) 1.
-    const vector[float] probs
+    vector[float] probs
 
 
 cdef class KnowledgeBase:
@@ -94,12 +95,20 @@ cdef class KnowledgeBase:
                 feats_row=feats_row,
                 prob=prob
             ))
-        self._index[entity_key] = entity_index
+        self._entry_index[entity_key] = entity_index
         return entity_index
 
-    cdef inline int64_t c_add_aliases(self, hash_t alias_key, vector[int64_t] entry_indices, vector[float] probs):
+    cdef inline int64_t c_add_aliases(self, hash_t alias_key, entities, probabilities):
         """Connect a mention to a list of potential entities with their prior probabilities ."""
         cdef int64_t alias_index = self._aliases_table.size()
+
+        cdef vector[int64_t] entry_indices
+        cdef vector[float] probs
+
+        for entity, prob in zip(entities, probs):
+            entry_index = self._entry_index[hash_string(entity)]
+            entry_indices.push_back(entry_index)
+            probs.push_back(prob)
 
         self._aliases_table.push_back(
             _AliasC(

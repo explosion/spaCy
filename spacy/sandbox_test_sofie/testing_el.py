@@ -1,4 +1,16 @@
 import spacy
+from spacy.kb import KnowledgeBase
+
+
+def create_kb():
+    mykb = KnowledgeBase()
+    print("kb size", len(mykb))
+
+    entity_id = "Q42"
+    mykb.add_entity(entity_id=entity_id, prob=0.5)
+    print("adding entity", entity_id)
+
+    print("kb size", len(mykb))
 
 
 def add_el():
@@ -23,4 +35,5 @@ def add_el():
 
 
 if __name__ == "__main__":
-    add_el()
+    # add_el()
+    create_kb()
