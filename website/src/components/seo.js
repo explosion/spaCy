@@ -8,7 +8,7 @@ import socialImageApi from '../images/social_api.jpg'
 import socialImageUniverse from '../images/social_universe.jpg'
 
 function getPageTitle(title, sitename, slogan, sectionTitle) {
-    if (sectionTitle) {
+    if (sectionTitle && title) {
         return `${title} · ${sitename} ${sectionTitle}`
     }
     if (title) {
