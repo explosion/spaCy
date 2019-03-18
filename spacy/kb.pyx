@@ -38,5 +38,8 @@ cdef class KnowledgeBase:
 
         self.c_add_aliases(alias_key=alias_hash, entities=entities, probabilities=probabilities)
 
-
+    def get_candidates(self, unicode alias):
+        cdef hash_t alias_hash = hash_string(alias)
+        cdef _AliasC candidates = self.c_get_candidates(alias_key=alias_hash)
+        return candidates
 
