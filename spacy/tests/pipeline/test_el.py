@@ -49,3 +49,17 @@ def test_kb_invalid_probabilities():
     with pytest.raises(ValueError):
         mykb.add_alias(alias="douglassss", entities=["Q2", "Q3"], probabilities=[0.8, 0.4])
 
+
+def test_kb_invalid_combination():
+    """Test the invalid construction of a KB with non-matching entity and probability lists"""
+    mykb = KnowledgeBase()
+
+    # adding entities
+    mykb.add_entity(entity_id="Q1", prob=0.9)
+    mykb.add_entity(entity_id="Q2", prob=0.2)
+    mykb.add_entity(entity_id="Q3", prob=0.5)
+
+    # adding aliases - should fail because the entities and probabilities vectors are not of equal length
+    with pytest.raises(ValueError):
+        mykb.add_alias(alias="douglassss", entities=["Q2", "Q3"], probabilities=[0.3, 0.4, 0.1])
+
