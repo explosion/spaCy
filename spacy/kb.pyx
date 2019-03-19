@@ -15,10 +15,10 @@ cdef class KnowledgeBase:
         return self.get_size_entities()
 
     def get_size_entities(self):
-        return self._entries.size()
+        return self._entries.size() - 1  # not counting dummy element on index 0
 
     def get_size_aliases(self):
-        return self._aliases_table.size()
+        return self._aliases_table.size() - 1 # not counting dummy element on index 0
 
     def add_entity(self, unicode entity_id, float prob, vectors=None, features=None):
         cdef hash_t id_hash = self.strings.add(entity_id)

@@ -21,35 +21,29 @@ def create_kb():
     print(" adding entity", entity_5301561)
     mykb.add_entity(entity_id=entity_5301561, prob=0.5)
 
-    print(" adding entity", entity_5301561)
-    mykb.add_entity(entity_id=entity_5301561, prob=0.5)
-
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
     # adding aliases
-    alias = "douglassss"
-    print(" adding alias", alias)
-    mykb.add_alias(alias=alias, entities=["Q42", "Q5301561"], probabilities=[0.8, 0.2])
-
-    print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
-
-    print("candidates for", alias)
-    candidates = mykb.get_candidates(alias)
-    print(" ", candidates)
-
-    print(" adding alias", alias)
-    mykb.add_alias(alias=alias, entities=["Q42"], probabilities=[0.9])
-
-    print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
+    alias1 = "douglassss"
+    print(" adding alias", alias1)
+    mykb.add_alias(alias=alias1, entities=["Q42", "Q5301561"], probabilities=[0.8, 0.2])
 
     alias2 = "johny"
-    print(" adding alias2", alias2)
-    mykb.add_alias(alias=alias2, entities=["Q0", "Q42"], probabilities=[0.3, 1.1])
+    print(" adding alias", alias2)
+    mykb.add_alias(alias=alias2, entities=["Q0", "Q42", "Q5301561"], probabilities=[0.3, 0.1, 0.4])
+
+    alias3 = "adam"
+    print(" adding alias", alias3)
+    mykb.add_alias(alias=alias3, entities=["Q42"], probabilities=[1.0])
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
-    print("candidates for", alias)
-    candidates = mykb.get_candidates(alias)
+    print("candidates for", alias1)
+    candidates = mykb.get_candidates(alias1)
+    print(" ", candidates)
+
+    print("candidates for", alias3)
+    candidates = mykb.get_candidates(alias3)
     print(" ", candidates)
 
 
