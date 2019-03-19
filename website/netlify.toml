@@ -45,6 +45,6 @@ redirects = [
     {from = "/models/comparison", to = "/models"},
     {from = "/api/#section-cython", to = "/api/cython"},
     {from = "/api/#cython", to = "/api/cython"},
-    {from = "/universe", to = "/universe/project/:id", query = {id = ":id"}},
-    {from = "/universe", to = "/universe/category/:category", query = {category = ":category"}},
+    {from = "/universe", to = "/universe/project/:id", query = {id = ":id"}, force = true},
+    {from = "/universe", to = "/universe/category/:category", query = {category = ":category"}, force = true},
 ]
