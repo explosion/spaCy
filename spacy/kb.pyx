@@ -10,9 +10,14 @@ cdef class KnowledgeBase:
         self._alias_index = PreshMap()
         self.mem = Pool()
 
-
     def __len__(self):
+        return self.get_size_entities()
+
+    def get_size_entities(self):
         return self._entries.size()
+
+    def get_size_aliases(self):
+        return self._aliases_table.size()
 
     def add_entity(self, unicode entity_id, float prob, vectors=None, features=None):
         cdef hash_t id_hash = hash_string(entity_id)
@@ -40,6 +45,6 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, unicode alias):
         cdef hash_t alias_hash = hash_string(alias)
-        cdef _AliasC candidates = self.c_get_candidates(alias_key=alias_hash)
-        return candidates
+        alias_index = <int64_t>self._alias_index.get(alias_hash)
+        return self._aliases_table[alias_index]
 

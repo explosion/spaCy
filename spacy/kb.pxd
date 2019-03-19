@@ -118,8 +118,4 @@ cdef class KnowledgeBase:
         self._alias_index[alias_key] = alias_index
         return alias_index
 
-    cdef inline c_get_candidates(self, hash_t alias_key):
-        cdef int64_t alias_index = self._alias_index[alias_key]
-        cdef _AliasC candidates = self._aliases_table[alias_index]
-        print("candidates", candidates)
 
