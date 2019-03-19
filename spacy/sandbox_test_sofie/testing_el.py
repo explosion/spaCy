@@ -1,23 +1,28 @@
+# coding: utf-8
 import spacy
 from spacy.kb import KnowledgeBase
 
 
 def create_kb():
     mykb = KnowledgeBase()
+
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
     # adding entities
     entity_0 = "Q0"  # douglas adams
-    mykb.add_entity(entity_id=entity_0, prob=0.5)
     print(" adding entity", entity_0)
+    mykb.add_entity(entity_id=entity_0, prob=0.5)
 
     entity_42 = "Q42"   # douglas adams
-    mykb.add_entity(entity_id=entity_42, prob=0.5)
     print(" adding entity", entity_42)
+    mykb.add_entity(entity_id=entity_42, prob=0.5)
 
     entity_5301561 = "Q5301561"
-    mykb.add_entity(entity_id=entity_5301561, prob=0.5)
     print(" adding entity", entity_5301561)
+    mykb.add_entity(entity_id=entity_5301561, prob=0.5)
+
+    print(" adding entity", entity_5301561)
+    mykb.add_entity(entity_id=entity_5301561, prob=0.5)
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
@@ -25,6 +30,15 @@ def create_kb():
     alias = "douglassss"
     print(" adding alias", alias)
     mykb.add_alias(alias=alias, entities=["Q42", "Q5301561"], probabilities=[0.8, 0.2])
+
+    print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
+
+    print("candidates for", alias)
+    candidates = mykb.get_candidates(alias)
+    print(" ", candidates)
+
+    print(" adding alias", alias)
+    mykb.add_alias(alias=alias, entities=["Q42"], probabilities=[0.9])
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
