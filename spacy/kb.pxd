@@ -98,17 +98,9 @@ cdef class KnowledgeBase:
         self._entry_index[entity_key] = entity_index
         return entity_index
 
-    cdef inline int64_t c_add_aliases(self, hash_t alias_key, entities, probabilities):
+    cdef inline int64_t c_add_aliases(self, hash_t alias_key, vector[int64_t] entry_indices, vector[float] probs):
         """Connect a mention to a list of potential entities with their prior probabilities ."""
         cdef int64_t alias_index = self._aliases_table.size()
-
-        cdef vector[int64_t] entry_indices
-        cdef vector[float] probs
-
-        for entity, prob in zip(entities, probs):
-            entry_index = self._entry_index[hash_string(entity)]
-            entry_indices.push_back(entry_index)
-            probs.push_back(prob)
 
         self._aliases_table.push_back(
             _AliasC(

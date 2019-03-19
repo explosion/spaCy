@@ -35,13 +35,23 @@ cdef class KnowledgeBase:
     def add_alias(self, unicode alias, entities, probabilities):
         """For a given alias, add its potential entities and prior probabilies to the KB."""
         cdef hash_t alias_hash = hash_string(alias)
+        cdef hash_t entity_hash
+
+        cdef vector[int64_t] entry_indices
+        cdef vector[float] probs
+
+        for entity, prob in zip(entities, probabilities):
+            entity_hash = hash_string(entity)
+            entry_index = <int64_t>self._entry_index.get(entity_hash)
+            entry_indices.push_back(int(entry_index))
+            probs.push_back(float(prob))
 
         # TODO: check that alias hadn't been defined before
         # TODO: check that entity is already in this KB (entity_index is OK)
         # TODO: check sum(probabilities) <= 1
         # TODO: check len(entities) == len(probabilities)
 
-        self.c_add_aliases(alias_key=alias_hash, entities=entities, probabilities=probabilities)
+        self.c_add_aliases(alias_key=alias_hash, entry_indices=entry_indices, probs=probs)
 
     def get_candidates(self, unicode alias):
         cdef hash_t alias_hash = hash_string(alias)
