@@ -286,6 +286,29 @@ version of pip. To see which version you have installed, run `pip --version`.
 
 </Accordion>
 
+<Accordion title="sre_constants.error: bad character range" id="narrow-unicode">
+
+```
+sre_constants.error: bad character range
+```
+
+In [v2.1](/usage/v2-1), spaCy changed its implementation of regular expressions
+for tokenization to make it up to 2-3 times faster. But this also means that
+it's very important now that you run spaCy with a wide unicode build of Python.
+This means that the build has 1114111 unicode characters available, instead of
+only 65535 in a narrow unicode build. You can check this by running the
+following command:
+
+```bash
+python -c "import sys; print(sys.maxunicode)"
+```
+
+If you're running a narrow unicode build, reinstall Python and use a wide
+unicode build instead. You can also rebuild Python and set the
+`--enable-unicode=ucs4` flag.
+
+</Accordion>
+
 <Accordion title="Unknown locale: UTF-8" id="unknown-locale">
 
 ```
