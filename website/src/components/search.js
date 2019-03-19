@@ -7,6 +7,7 @@ import classes from '../styles/search.module.sass'
 
 const Search = ({ id, placeholder, settings }) => {
     const { apiKey, indexName } = settings
+    if (!apiKey && !indexName) return null
     const [initialized, setInitialized] = useState(false)
     useEffect(() => {
         if (!initialized) {
