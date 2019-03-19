@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 import warnings
+import sys
 
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -13,6 +14,12 @@ from .glossary import explain
 from .about import __version__
 from .errors import Warnings, deprecation_warning
 from . import util
+
+if __version__ >= '2.1.0' and sys.maxunicode <= 65535:
+    raise ValueError('''You are running a narrow unicode build,
+    which is incompatible with spacy >= 2.1.0, reinstall Python and use a
+    wide unicode build instead. You can also rebuild Python and
+    set the --enable-unicode=ucs4 flag.''')
 
 
 def load(name, **overrides):
