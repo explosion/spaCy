@@ -14,7 +14,12 @@ def test_kb_valid_entities():
     mykb.add_entity(entity_id="Q3", prob=0.5)
 
     # adding aliases
-    mykb.add_alias(alias="douglassss", entities=["Q2", "Q3"], probabilities=[0.8, 0.2])
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.2])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    # test the size of the corresponding KB
+    assert(mykb.get_size_entities() == 3)
+    assert(mykb.get_size_aliases() == 2)
 
 
 def test_kb_invalid_entities():
@@ -28,7 +33,7 @@ def test_kb_invalid_entities():
 
     # adding aliases - should fail because one of the given IDs is not valid
     with pytest.raises(ValueError):
-        mykb.add_alias(alias="douglassss", entities=["Q2", "Q342"], probabilities=[0.8, 0.2])
+        mykb.add_alias(alias="douglas", entities=["Q2", "Q342"], probabilities=[0.8, 0.2])
 
 
 def test_kb_invalid_probabilities():
