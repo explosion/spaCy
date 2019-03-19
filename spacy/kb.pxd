@@ -112,4 +112,23 @@ cdef class KnowledgeBase:
         self._alias_index[alias_key] = alias_index
         return alias_index
 
+    cdef inline create_empty_vectors(self):
+        """ 
+        Making sure the first element of each vector is a dummy,
+        because the PreshMap maps pointing to indices in these vectors can not contain 0 as value
+        cf. https://github.com/explosion/preshed/issues/17
+        """
+        cdef int32_t dummy_value = 0
+        self._entries.push_back(
+            _EntryC(
+                vector_rows=&dummy_value,
+                feats_row=dummy_value,
+                prob=dummy_value
+            ))
+        self._aliases_table.push_back(
+            _AliasC(
+                entry_indices=[dummy_value],
+                probs=[dummy_value]
+            ))
+
 
