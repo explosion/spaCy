@@ -35,6 +35,13 @@ cdef class KnowledgeBase:
 
     def add_alias(self, unicode alias, entities, probabilities):
         """For a given alias, add its potential entities and prior probabilies to the KB."""
+
+        # Throw an error if the probabilities sum up to more than 1
+        prob_sum = sum(probabilities)
+        if prob_sum > 1:
+            raise ValueError("The sum of prior probabilities for alias '" + alias + "' should not exceed 1, "
+                                                                                    "but found " + str(prob_sum))
+
         cdef hash_t alias_hash = self.strings.add(alias)
 
         # Return if this alias was added before

@@ -42,6 +42,12 @@ def create_kb():
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
+    alias2 = "johny"
+    print(" adding alias2", alias2)
+    mykb.add_alias(alias=alias2, entities=["Q0", "Q42"], probabilities=[0.3, 1.1])
+
+    print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
+
     print("candidates for", alias)
     candidates = mykb.get_candidates(alias)
     print(" ", candidates)
