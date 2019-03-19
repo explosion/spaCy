@@ -36,11 +36,18 @@ cdef class KnowledgeBase:
     def add_alias(self, unicode alias, entities, probabilities):
         """For a given alias, add its potential entities and prior probabilies to the KB."""
 
+        # Throw an error if the length of entities and probabilities are not the same
+        if not len(entities) == len(probabilities):
+            raise ValueError("The vectors for entities and probabilities for alias '" + alias
+                             + "' should have equal length, but found "
+                             + str(len(entities)) + " and " + str(len(probabilities)) + "respectively.")
+
+
         # Throw an error if the probabilities sum up to more than 1
         prob_sum = sum(probabilities)
         if prob_sum > 1:
             raise ValueError("The sum of prior probabilities for alias '" + alias + "' should not exceed 1, "
-                                                                                    "but found " + str(prob_sum))
+                             + "but found " + str(prob_sum))
 
         cdef hash_t alias_hash = self.strings.add(alias)
 
@@ -62,9 +69,6 @@ cdef class KnowledgeBase:
             entry_index = <int64_t>self._entry_index.get(entity_hash)
             entry_indices.push_back(int(entry_index))
             probs.push_back(float(prob))
-
-        # TODO: check sum(probabilities) <= 1
-        # TODO: check len(entities) == len(probabilities)
 
         self.c_add_aliases(alias_key=alias_hash, entry_indices=entry_indices, probs=probs)
 
