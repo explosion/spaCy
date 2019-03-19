@@ -3,8 +3,9 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
+
+from spacy.strings cimport StringStore
 from .typedefs cimport hash_t
-from .strings cimport hash_string
 
 
 # Internal struct, for storage and disambiguation. This isn't what we return
@@ -41,6 +42,7 @@ cdef struct _AliasC:
 
 cdef class KnowledgeBase:
     cdef Pool mem
+    cpdef readonly StringStore strings
 
     # This maps 64bit keys (hash of unique entity string)
     # to 64bit values (position of the _EntryC struct in the _entries vector).
