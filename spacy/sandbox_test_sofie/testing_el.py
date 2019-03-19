@@ -7,6 +7,10 @@ def create_kb():
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
     # adding entities
+    entity_0 = "Q0"  # douglas adams
+    mykb.add_entity(entity_id=entity_0, prob=0.5)
+    print(" adding entity", entity_0)
+
     entity_42 = "Q42"   # douglas adams
     mykb.add_entity(entity_id=entity_42, prob=0.5)
     print(" adding entity", entity_42)
@@ -18,7 +22,7 @@ def create_kb():
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
     # adding aliases
-    alias = "douglas"
+    alias = "douglassss"
     print(" adding alias", alias)
     mykb.add_alias(alias=alias, entities=["Q42", "Q5301561"], probabilities=[0.8, 0.2])
 

@@ -39,13 +39,15 @@ cdef class KnowledgeBase:
         cdef vector[float] probs
 
         for entity, prob in zip(entities, probabilities):
-            entity_hash = self.strings.add(entity)
+            entity_hash = self.strings[entity]
+            if not entity_hash in self._entry_index:
+                raise ValueError("Alias '" + alias + "' defined for unknown entity '" + entity + "'")
+
             entry_index = <int64_t>self._entry_index.get(entity_hash)
             entry_indices.push_back(int(entry_index))
             probs.push_back(float(prob))
 
         # TODO: check that alias hadn't been defined before
-        # TODO: check that entity is already in this KB (entity_index is OK)
         # TODO: check sum(probabilities) <= 1
         # TODO: check len(entities) == len(probabilities)
 
