@@ -1,6 +1,6 @@
 redirects = [
     # Netlify
-    {from = "https://spacy.netlify.com/*", to="https://spacy.io/:splat" },
+    {from = "https://spacy.netlify.com/*", to="https://spacy.io/:splat", force = true },
     # Old subdomains
     {from = "https://survey.spacy.io/*", to = "https://spacy.io", force = true},
     {from = "http://survey.spacy.io/*", to = "https://spacy.io", force = true},
