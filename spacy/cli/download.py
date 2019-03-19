@@ -19,9 +19,10 @@ msg = Printer()
 @plac.annotations(
     model=("Model to download (shortcut or name)", "positional", None, str),
     direct=("Force direct download of name + version", "flag", "d", bool),
-    pip_args=("additional arguments to be passed to `pip install` on model install"),
+    always_link=("Always create symlinks, even if not shortcut", "flag", "l", bool),
+    pip_args=("Additional arguments to be passed to `pip install` on model install"),
 )
-def download(model, direct=False, *pip_args):
+def download(model, direct=False, always_link=False, *pip_args):
     """
     Download compatible model from default download path using pip. Model
     can be shortcut, model name or, if --direct flag is set, full model name
@@ -48,7 +49,7 @@ def download(model, direct=False, *pip_args):
         # Only create symlink if the model is installed via a shortcut like 'en'.
         # There's no real advantage over an additional symlink for en_core_web_sm
         # and if anything, it's more error prone and causes more confusion.
-        if model in shortcuts:
+        if model in shortcuts or always_link:
             try:
                 # Get package path here because link uses
                 # pip.get_installed_distributions() to check if model is a
