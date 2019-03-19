@@ -238,12 +238,12 @@ def setup_package():
             ],
             setup_requires=["wheel"],
             extras_require={
-                "cuda": ["cupy>=4.0"],
-                "cuda80": ["cupy-cuda80>=4.0"],
-                "cuda90": ["cupy-cuda90>=4.0"],
-                "cuda91": ["cupy-cuda91>=4.0"],
-                "cuda92": ["cupy-cuda92>=4.0"],
-                "cuda100": ["cupy-cuda100>=4.0"],
+                "cuda": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy>=5.0.0b4"],
+                "cuda80": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda80>=5.0.0b4"],
+                "cuda90": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda90>=5.0.0b4"],
+                "cuda91": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda91>=5.0.0b4"],
+                "cuda92": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda92>=5.0.0b4"],
+                "cuda100": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda100>=5.0.0b4"],
                 # Language tokenizers with external dependencies
                 "ja": ["mecab-python3==0.7"],
             },
