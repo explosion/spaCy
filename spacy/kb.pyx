@@ -2,6 +2,35 @@
 # coding: utf8
 from spacy.errors import user_warning
 
+
+cdef class Candidate:
+
+
+    # def inline __cinit__(self, _EntryC entity, hash_t alias_hash, float prior_prob):
+    #     self.alias_hash = alias_hash
+    #     self.entity = entity
+    #     self.prior_prob = prior_prob
+
+    @staticmethod
+    cdef Candidate from_entry(_EntryC* entity, hash_t alias_hash, float prior_prob):
+        """Factory function to create Candidate objects from entity entries."""
+        # Call to __new__ bypasses __init__ constructor
+        cdef Candidate candidate = Candidate.__new__(Candidate)
+        candidate.entity = entity
+        candidate.alias_hash = alias_hash
+        candidate.prior_prob = prior_prob
+        return candidate
+
+    def __str__(self):
+        return "alias=" + self.strings[self.alias_hash] + \
+               " prior_prob=" + str(self.prior_prob)
+
+    #" entry=" + self.strings[self.entity_hash] + \
+
+    def __repr__(self):
+        return self.__str__()
+
+
 cdef class KnowledgeBase:
 
     def __init__(self):
@@ -74,7 +103,19 @@ cdef class KnowledgeBase:
 
 
     def get_candidates(self, unicode alias):
-        cdef hash_t alias_hash = self.strings.add(alias)
+        cdef hash_t alias_hash = self.strings[alias]
         alias_index = <int64_t>self._alias_index.get(alias_hash)
-        return self._aliases_table[alias_index]
+        alias_entry = self._aliases_table[alias_index]
+
+        for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs):
+            entity = <_EntryC>self._entries[entry_index]
+            # candidate = Candidate(entity=entity, alias_hash=alias_hash, prior_prob=prob)
+            candidate = Candidate.from_entry(entity=&entity, alias_hash=alias_hash, prior_prob=prob)
+            print(candidate)
+
+        # return [Candidate(entity=<_EntryC>self._entries[<int64_t>self._entry_index[entry_index]],
+        #                  alias_hash=alias_hash,
+        #                  prior_prob=prob)
+        #        for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)]
+
 
