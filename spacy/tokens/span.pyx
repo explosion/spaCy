@@ -420,13 +420,11 @@ cdef class Span:
         """
         if "vector_norm" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["vector"](self)
-        cdef float value
-        cdef double norm = 0
+        vector = self.vector
+        xp = get_array_module(vector)
         if self._vector_norm is None:
-            norm = 0
-            for value in self.vector:
-                norm += value * value
-            self._vector_norm = sqrt(norm) if norm != 0 else 0
+            total = (vector*vector).sum()
+            self._vector_norm = xp.sqrt(total) if total != 0. else 0.
         return self._vector_norm
 
     @property

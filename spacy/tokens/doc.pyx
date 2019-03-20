@@ -416,8 +416,9 @@ cdef class Doc:
                 return self.user_hooks["vector"](self)
             if self._vector is not None:
                 return self._vector
-            elif not len(self):
-                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype="f")
+            xp = get_array_module(self.vocab.vectors.data)
+            if not len(self):
+                self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
                 return self._vector
             elif self.vocab.vectors.data.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
@@ -426,7 +427,7 @@ cdef class Doc:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:
-                return numpy.zeros((self.vocab.vectors_length,), dtype="float32")
+                return xp.zeros((self.vocab.vectors_length,), dtype="float32")
 
         def __set__(self, value):
             self._vector = value
