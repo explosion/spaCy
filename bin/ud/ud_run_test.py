@@ -13,14 +13,14 @@ import srsly
 
 import spacy
 import spacy.util
-from ...tokens import Token, Doc
-from ...gold import GoldParse
-from ...util import compounding, minibatch_by_words
-from ...syntax.nonproj import projectivize
-from ...matcher import Matcher
+from spacy.tokens import Token, Doc
+from spacy.gold import GoldParse
+from spacy.util import compounding, minibatch_by_words
+from spacy.syntax.nonproj import projectivize
+from spacy.matcher import Matcher
 
-# from ...morphology import Fused_begin, Fused_inside
-from ... import displacy
+# from spacy.morphology import Fused_begin, Fused_inside
+from spacy import displacy
 from collections import defaultdict, Counter
 from timeit import default_timer as timer
 
@@ -33,10 +33,10 @@ import numpy.random
 
 from . import conll17_ud_eval
 
-from ... import lang
-from ...lang import zh
-from ...lang import ja
-from ...lang import ru
+from spacy import lang
+from spacy.lang import zh
+from spacy.lang import ja
+from spacy.lang import ru
 
 
 ################
