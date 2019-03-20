@@ -9,7 +9,7 @@ from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
 from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu
+from thinc.neural.util import prefer_gpu, get_array_module
 from wasabi import Printer
 import srsly
 
@@ -27,6 +27,7 @@ from .. import util
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
     embed_rows=("Embedding rows", "option", "er", int),
+    loss_func=("Loss to use for the objective. L2 or cosine", "option", "L", str),
     use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
     dropout=("Dropout", "option", "d", float),
     batch_size=("Number of words per training batch", "option", "bs", int),
@@ -42,6 +43,7 @@ def pretrain(
     width=96,
     depth=4,
     embed_rows=2000,
+    loss_func="cosine",
     use_vectors=False,
     dropout=0.2,
     nr_iter=1000,
@@ -123,7 +125,7 @@ def pretrain(
                 max_length=max_length,
                 min_length=min_length,
             )
-            loss = make_update(model, docs, optimizer, drop=dropout)
+            loss = make_update(model, docs, optimizer, objective=loss_func, drop=dropout)
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
@@ -196,11 +198,26 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
     if objective == "L2":
-        d_scores = prediction - target
-        loss = (d_scores ** 2).sum()
-    else:
-        raise NotImplementedError(objective)
-    return loss, d_scores
+        d_target = prediction - target
+        loss = (d_target ** 2).sum()
+    elif objective == "cosine":
+        loss, d_target = get_cossim_loss(prediction, target)
+    return loss, d_target
+
+
+def get_cossim_loss(yh, y):
+    # Add a small constant to avoid 0 vectors
+    yh = yh + 1e-8
+    y = y + 1e-8
+    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+    xp = get_array_module(yh)
+    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+    mul_norms = norm_yh * norm_y
+    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh**2))
+    loss = xp.abs(cosine-1).sum()
+    return loss, -d_yh
 
 
 def create_pretraining_model(nlp, tok2vec):
