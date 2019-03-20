@@ -367,6 +367,10 @@ class Errors(object):
             "Instead, create a new Span object and specify the `label` keyword argument, "
             "for example:\nfrom spacy.tokens import Span\n"
             "span = Span(doc, start={start}, end={end}, label='{label}')")
+    E130 = ("You are running a narrow unicode build, "
+            "which is incompatible with spacy >= 2.1.0, reinstall Python and "
+            "use a wide unicode build instead. You can also rebuild Python "
+            "and set the --enable-unicode=ucs4 flag.")
 
 
 @add_codes

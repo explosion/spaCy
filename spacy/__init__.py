@@ -12,14 +12,11 @@ from thinc.neural.util import prefer_gpu, require_gpu
 from .cli.info import info as cli_info
 from .glossary import explain
 from .about import __version__
-from .errors import Warnings, deprecation_warning
+from .errors import Errors, Warnings, deprecation_warning
 from . import util
 
-if __version__ >= '2.1.0' and sys.maxunicode <= 65535:
-    raise ValueError('''You are running a narrow unicode build,
-    which is incompatible with spacy >= 2.1.0, reinstall Python and use a
-    wide unicode build instead. You can also rebuild Python and
-    set the --enable-unicode=ucs4 flag.''')
+if sys.maxunicode == 65535:
+    raise SystemError(Errors.E130)
 
 
 def load(name, **overrides):
