@@ -404,7 +404,9 @@ cdef class Token:
         if "vector_norm" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector_norm"](self)
         vector = self.vector
-        return numpy.sqrt((vector ** 2).sum())
+        xp = get_array_module(vector)
+        total = (vector ** 2).sum()
+        return xp.sqrt(total) if total != 0. else 0.
 
     @property
     def n_lefts(self):
