@@ -9,8 +9,7 @@ if __name__ == "__main__":
     import sys
     from wasabi import Printer
     from spacy.cli import download, link, info, package, train, pretrain, convert
-    from spacy.cli import init_model, profile, evaluate, validate
-    from spacy.cli import ud_train, ud_evaluate, debug_data
+    from spacy.cli import init_model, profile, evaluate, validate, debug_data
 
     msg = Printer()
 
@@ -21,9 +20,7 @@ if __name__ == "__main__":
         "train": train,
         "pretrain": pretrain,
         "debug-data": debug_data,
-        "ud-train": ud_train,
         "evaluate": evaluate,
-        "ud-evaluate": ud_evaluate,
         "convert": convert,
         "package": package,
         "init-model": init_model,
