@@ -18,14 +18,14 @@ Create a Span object from the `slice doc[start : end]`.
 > assert [t.text for t in span] ==  [u"it", u"back", u"!"]
 > ```
 
-| Name        | Type                                     | Description                                             |
-| ----------- | ---------------------------------------- | ------------------------------------------------------- |
-| `doc`       | `Doc`                                    | The parent document.                                    |
-| `start`     | int                                      | The index of the first token of the span.               |
-| `end`       | int                                      | The index of the first token after the span.            |
-| `label`     | int                                      | A label to attach to the span, e.g. for named entities. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                   |
-| **RETURNS** | `Span`                                   | The newly constructed object.                           |
+| Name        | Type                                     | Description                                                                                                 |
+| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`                                    | The parent document.                                                                                        |
+| `start`     | int                                      | The index of the first token of the span.                                                                   |
+| `end`       | int                                      | The index of the first token after the span.                                                                |
+| `label`     | int / unicode                            | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a unicode string. |
+| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                       |
+| **RETURNS** | `Span`                                   | The newly constructed object.                                                                               |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
