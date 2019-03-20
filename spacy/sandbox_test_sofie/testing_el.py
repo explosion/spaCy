@@ -25,16 +25,16 @@ def create_kb():
 
     # adding aliases
     alias1 = "douglassss"
-    print(" adding alias", alias1)
+    print(" adding alias", alias1, "to Q42 and Q5301561")
     mykb.add_alias(alias=alias1, entities=["Q42", "Q5301561"], probabilities=[0.8, 0.2])
 
     alias2 = "johny"
-    print(" adding alias", alias2)
+    print(" adding alias", alias2, "to Q0, Q42 and Q5301561")
     mykb.add_alias(alias=alias2, entities=["Q0", "Q42", "Q5301561"], probabilities=[0.3, 0.1, 0.4])
 
     alias3 = "adam"
-    print(" adding alias", alias3)
-    mykb.add_alias(alias=alias3, entities=["Q42"], probabilities=[1.0])
+    print(" adding alias", alias3, "to Q42")
+    mykb.add_alias(alias=alias3, entities=["Q42"], probabilities=[0.9])
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 

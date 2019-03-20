@@ -13,11 +13,14 @@ from .typedefs cimport hash_t
 # of bits we need to keep track of the answers.
 cdef struct _EntryC:
 
+    # The hash of this entry's unique ID
+    hash_t entity_key
+
     # Allows retrieval of one or more vectors.
     # Each element of vector_rows should be an index into a vectors table.
     # Every entry should have the same number of vectors, so we can avoid storing
     # the number of vectors in each knowledge-base struct
-    const int32_t* vector_rows
+    int32_t* vector_rows
 
     # Allows retrieval of a struct of non-vector features. We could make this a
     # pointer, but we have 32 bits left over in the struct after prob, so we'd
@@ -38,6 +41,17 @@ cdef struct _AliasC:
 
     # Prior probability P(entity|alias) - should sum up to (at most) 1.
     vector[float] probs
+
+
+# TODO: document
+cdef class Candidate:
+
+    cdef _EntryC* entity
+    cdef hash_t alias_hash
+    cdef float prior_prob
+
+    @staticmethod
+    cdef Candidate from_entry(_EntryC* entity, hash_t alias_hash, float prior_prob)
 
 
 cdef class KnowledgeBase:
@@ -85,7 +99,7 @@ cdef class KnowledgeBase:
     cdef object _features_table
 
 
-    cdef inline int64_t c_add_entity(self, hash_t entity_key, float prob, const int32_t* vector_rows,
+    cdef inline int64_t c_add_entity(self, hash_t entity_key, float prob, int32_t* vector_rows,
                     int feats_row):
         """Add an entry to the knowledge base."""
         # This is what we'll map the hash key to. It's where the entry will sit
@@ -93,6 +107,7 @@ cdef class KnowledgeBase:
         cdef int64_t entity_index = self._entries.size()
         self._entries.push_back(
             _EntryC(
+                entity_key=entity_key,
                 vector_rows=vector_rows,
                 feats_row=feats_row,
                 prob=prob
@@ -121,6 +136,7 @@ cdef class KnowledgeBase:
         cdef int32_t dummy_value = 0
         self._entries.push_back(
             _EntryC(
+                entity_key=self.strings.add(""),
                 vector_rows=&dummy_value,
                 feats_row=dummy_value,
                 prob=dummy_value
