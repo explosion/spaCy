@@ -15,6 +15,7 @@ from .about import __version__
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
 
+
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
 
