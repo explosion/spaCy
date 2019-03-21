@@ -3,6 +3,28 @@
 from spacy.errors import user_warning
 
 
+cdef class Entity:
+
+    def __init__(self, KnowledgeBase kb, entity_hash, confidence):
+        self.kb = kb
+        self.entity_hash = entity_hash
+        self.confidence = confidence
+
+    property kb_id_:
+        """RETURNS (unicode): ID of this entity in the KB"""
+        def __get__(self):
+            return self.kb.strings[self.entity_hash]
+
+    property kb_id:
+        """RETURNS (uint64): hash of the entity's KB ID"""
+        def __get__(self):
+            return self.entity_hash
+
+    property confidence:
+        def __get__(self):
+            return self.confidence
+
+
 cdef class Candidate:
 
     def __init__(self, KnowledgeBase kb, entity_hash, alias_hash, prior_prob):
