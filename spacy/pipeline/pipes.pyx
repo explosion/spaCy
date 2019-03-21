@@ -1068,12 +1068,17 @@ class EntityLinker(Pipe):
             yield from docs
 
     def set_annotations(self, docs, scores, tensors=None):
-        # TODO Sofie: actually implement this class instead of dummy implementation
+        """
+        Currently implemented as taking the KB entry with highest prior probability for each named entity
+        TODO: actually use context etc
+        """
         for i, doc in enumerate(docs):
             for ent in doc.ents:
-                if ent.label_ in ["PERSON", "PER"]:
+                candidates = self.kb.get_candidates(ent.text)
+                if candidates:
+                    best_candidate = max(candidates, key=lambda c: c.prior_prob)
                     for token in ent:
-                        token.ent_kb_id_ = "Q42"
+                        token.ent_kb_id_ = best_candidate.entity_id_
 
     def get_loss(self, docs, golds, scores):
         # TODO
