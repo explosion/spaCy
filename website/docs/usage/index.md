@@ -8,7 +8,7 @@ menu:
   - ['Changelog', 'changelog']
 ---
 
-spaCy is compatible with **64-bit CPython 2.7+/3.5+** and runs on
+spaCy is compatible with **64-bit CPython 2.7 / 3.5+** and runs on
 **Unix/Linux**, **macOS/OS X** and **Windows**. The latest spaCy releases are
 available over [pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
