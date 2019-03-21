@@ -109,7 +109,7 @@ cdef class KnowledgeBase:
         """Add an entry to the knowledge base."""
         # This is what we'll map the hash key to. It's where the entry will sit
         # in the vector of entries, so we can get it later.
-        cdef int64_t entity_index = self._entries.size()
+        cdef int64_t new_index = self._entries.size()
         self._entries.push_back(
             _EntryC(
                 entity_hash=entity_hash,
@@ -117,22 +117,22 @@ cdef class KnowledgeBase:
                 feats_row=feats_row,
                 prob=prob
             ))
-        self._entry_index[entity_hash] = entity_index
-        return entity_index
+        self._entry_index[entity_hash] = new_index
+        return new_index
 
     cdef inline int64_t c_add_aliases(self, hash_t alias_hash, vector[int64_t] entry_indices, vector[float] probs):
         """Connect a mention to a list of potential entities with their prior probabilities ."""
-        cdef int64_t alias_index = self._aliases_table.size()
+        cdef int64_t new_index = self._aliases_table.size()
 
         self._aliases_table.push_back(
             _AliasC(
                 entry_indices=entry_indices,
                 probs=probs
             ))
-        self._alias_index[alias_hash] = alias_index
-        return alias_index
+        self._alias_index[alias_hash] = new_index
+        return new_index
 
-    cdef inline create_empty_vectors(self):
+    cdef inline _create_empty_vectors(self):
         """ 
         Making sure the first element of each vector is a dummy,
         because the PreshMap maps pointing to indices in these vectors can not contain 0 as value

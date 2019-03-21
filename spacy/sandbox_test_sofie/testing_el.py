@@ -37,16 +37,14 @@ def create_kb():
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
     print()
 
-    for alias in [alias1, "rubbish", alias3]:
-        candidates = mykb.get_candidates(alias)
-        print(len(candidates), "candidates for", alias)
+    return mykb
 
 
-def add_el():
+def add_el(kb):
     nlp = spacy.load('en_core_web_sm')
     print("pipes before:", nlp.pipe_names)
 
-    el_pipe = nlp.create_pipe(name='el')
+    el_pipe = nlp.create_pipe(name='el', config={"kb": kb})
     nlp.add_pipe(el_pipe, last=True)
 
     print("pipes after:", nlp.pipe_names)
@@ -62,7 +60,12 @@ def add_el():
     for ent in doc.ents:
         print("ent", ent.text, ent.label_, ent.kb_id_)
 
+    print()
+    for alias in ["douglassss", "rubbish", "adam"]:
+        candidates = nlp.linker.kb.get_candidates(alias)
+        print(len(candidates), "candidates for", alias)
+
 
 if __name__ == "__main__":
-    # add_el()
-    create_kb()
+    mykb = create_kb()
+    add_el(mykb)
