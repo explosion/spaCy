@@ -2,11 +2,17 @@
 import pytest
 
 from spacy.kb import KnowledgeBase
+from spacy.lang.en import English
 
 
-def test_kb_valid_entities():
-    """Test the valid construction of a KB with 3 entities and one alias"""
-    mykb = KnowledgeBase()
+@pytest.fixture
+def nlp():
+    return English()
+
+
+def test_kb_valid_entities(nlp):
+    """Test the valid construction of a KB with 3 entities and two aliases"""
+    mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity_id="Q1", prob=0.9)
@@ -22,9 +28,9 @@ def test_kb_valid_entities():
     assert(mykb.get_size_aliases() == 2)
 
 
-def test_kb_invalid_entities():
+def test_kb_invalid_entities(nlp):
     """Test the invalid construction of a KB with an alias linked to a non-existing entity"""
-    mykb = KnowledgeBase()
+    mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity_id="Q1", prob=0.9)
@@ -36,9 +42,9 @@ def test_kb_invalid_entities():
         mykb.add_alias(alias="douglas", entities=["Q2", "Q342"], probabilities=[0.8, 0.2])
 
 
-def test_kb_invalid_probabilities():
+def test_kb_invalid_probabilities(nlp):
     """Test the invalid construction of a KB with wrong prior probabilities"""
-    mykb = KnowledgeBase()
+    mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity_id="Q1", prob=0.9)
@@ -50,9 +56,9 @@ def test_kb_invalid_probabilities():
         mykb.add_alias(alias="douglassss", entities=["Q2", "Q3"], probabilities=[0.8, 0.4])
 
 
-def test_kb_invalid_combination():
+def test_kb_invalid_combination(nlp):
     """Test the invalid construction of a KB with non-matching entity and probability lists"""
-    mykb = KnowledgeBase()
+    mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity_id="Q1", prob=0.9)
@@ -64,9 +70,9 @@ def test_kb_invalid_combination():
         mykb.add_alias(alias="douglassss", entities=["Q2", "Q3"], probabilities=[0.3, 0.4, 0.1])
 
 
-def test_candidate_generation():
+def test_candidate_generation(nlp):
     """Test correct candidate generation"""
-    mykb = KnowledgeBase()
+    mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity_id="Q1", prob=0.9)

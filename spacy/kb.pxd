@@ -4,7 +4,7 @@ from preshed.maps cimport PreshMap
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 
-from spacy.strings cimport StringStore
+from spacy.vocab cimport Vocab
 from .typedefs cimport hash_t
 
 
@@ -55,7 +55,7 @@ cdef class Candidate:
 
 cdef class KnowledgeBase:
     cdef Pool mem
-    cpdef readonly StringStore strings
+    cpdef readonly Vocab vocab
 
     # This maps 64bit keys (hash of unique entity string)
     # to 64bit values (position of the _EntryC struct in the _entries vector).
@@ -133,11 +133,11 @@ cdef class KnowledgeBase:
         cf. https://github.com/explosion/preshed/issues/17
         """
         cdef int32_t dummy_value = 0
-        self.strings.add("")
+        self.vocab.strings.add("")
         self._entries.push_back(
             _EntryC(
-                entity_id_hash=self.strings[""],
-                entity_name_hash=self.strings[""],
+                entity_id_hash=self.vocab.strings[""],
+                entity_name_hash=self.vocab.strings[""],
                 vector_rows=&dummy_value,
                 feats_row=dummy_value,
                 prob=dummy_value

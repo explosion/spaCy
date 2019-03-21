@@ -19,7 +19,7 @@ cdef class Candidate:
     property entity_id_:
         """RETURNS (unicode): ID of this entity in the KB"""
         def __get__(self):
-            return self.kb.strings[self.entity_id]
+            return self.kb.vocab.strings[self.entity_id]
 
     property entity_name:
         """RETURNS (uint64): hash of the entity's KB name"""
@@ -30,7 +30,7 @@ cdef class Candidate:
     property entity_name_:
         """RETURNS (unicode): name of this entity in the KB"""
         def __get__(self):
-            return self.kb.strings[self.entity_name]
+            return self.kb.vocab.strings[self.entity_name]
 
     property alias:
         """RETURNS (uint64): hash of the alias"""
@@ -40,7 +40,7 @@ cdef class Candidate:
     property alias_:
         """RETURNS (unicode): ID of the original alias"""
         def __get__(self):
-            return self.kb.strings[self.alias]
+            return self.kb.vocab.strings[self.alias]
 
     property prior_prob:
         def __get__(self):
@@ -49,11 +49,11 @@ cdef class Candidate:
 
 cdef class KnowledgeBase:
 
-    def __init__(self):
+    def __init__(self, Vocab vocab):
+        self.vocab = vocab
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
         self.mem = Pool()
-        self.strings = StringStore()
         self._create_empty_vectors()
 
     def __len__(self):
@@ -72,8 +72,8 @@ cdef class KnowledgeBase:
         """
         if not entity_name:
             entity_name = entity_id
-        cdef hash_t id_hash = self.strings.add(entity_id)
-        cdef hash_t name_hash = self.strings.add(entity_name)
+        cdef hash_t id_hash = self.vocab.strings.add(entity_id)
+        cdef hash_t name_hash = self.vocab.strings.add(entity_name)
 
         # Return if this entity was added before
         if id_hash in self._entry_index:
@@ -107,7 +107,7 @@ cdef class KnowledgeBase:
             raise ValueError("The sum of prior probabilities for alias '" + alias + "' should not exceed 1, "
                              + "but found " + str(prob_sum))
 
-        cdef hash_t alias_hash = self.strings.add(alias)
+        cdef hash_t alias_hash = self.vocab.strings.add(alias)
 
         # Return if this alias was added before
         if alias_hash in self._alias_index:
@@ -120,7 +120,7 @@ cdef class KnowledgeBase:
         cdef vector[float] probs
 
         for entity, prob in zip(entities, probabilities):
-            entity_id_hash = self.strings[entity]
+            entity_id_hash = self.vocab.strings[entity]
             if not entity_id_hash in self._entry_index:
                 raise ValueError("Alias '" + alias + "' defined for unknown entity '" + entity + "'")
 
@@ -135,7 +135,7 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, unicode alias):
         """ TODO: where to put this functionality ?"""
-        cdef hash_t alias_hash = self.strings[alias]
+        cdef hash_t alias_hash = self.vocab.strings[alias]
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 

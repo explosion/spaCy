@@ -6,8 +6,8 @@ import spacy
 from spacy.kb import KnowledgeBase
 
 
-def create_kb():
-    kb = KnowledgeBase()
+def create_kb(vocab):
+    kb = KnowledgeBase(vocab=vocab)
 
     # adding entities
     entity_0 = "Q1004791"
@@ -25,11 +25,11 @@ def create_kb():
     # adding aliases
     print()
     alias_0 = "Douglas"
-    print("adding alias", alias_0, "to all three entities")
+    print("adding alias", alias_0)
     kb.add_alias(alias=alias_0, entities=["Q1004791", "Q42", "Q5301561"], probabilities=[0.1, 0.6, 0.2])
 
     alias_1 = "Douglas Adams"
-    print("adding alias", alias_1, "to just the one entity")
+    print("adding alias", alias_1)
     kb.add_alias(alias=alias_1, entities=["Q42"], probabilities=[0.9])
 
     print()
@@ -38,9 +38,7 @@ def create_kb():
     return kb
 
 
-def add_el(kb):
-    nlp = spacy.load('en_core_web_sm')
-
+def add_el(kb, nlp):
     el_pipe = nlp.create_pipe(name='el', config={"kb": kb})
     nlp.add_pipe(el_pipe, last=True)
 
@@ -49,10 +47,11 @@ def add_el(kb):
         print()
         print(len(candidates), "candidate(s) for", alias, ":")
         for c in candidates:
-            print(" ", c.entity_id_, c.entity_name_, c.alias_, c.prior_prob)
+            print(" ", c.entity_id_, c.entity_name_, c.prior_prob)
 
     text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
-           "Douglas reminds us to always bring our towel."
+           "Douglas reminds us to always bring our towel. " \
+           "The main character in Doug's novel is called Arthur Dent."
     doc = nlp(text)
 
     print()
@@ -65,5 +64,6 @@ def add_el(kb):
 
 
 if __name__ == "__main__":
-    mykb = create_kb()
-    add_el(mykb)
+    nlp = spacy.load('en_core_web_sm')
+    my_kb = create_kb(nlp.vocab)
+    add_el(my_kb, nlp)
