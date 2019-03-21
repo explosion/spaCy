@@ -7,6 +7,7 @@ def create_kb():
     mykb = KnowledgeBase()
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
+    print()
 
     # adding entities
     entity_0 = "Q0"  # douglas adams
@@ -22,33 +23,23 @@ def create_kb():
     mykb.add_entity(entity_id=entity_5301561, prob=0.5)
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
+    print()
 
     # adding aliases
     alias1 = "douglassss"
     print(" adding alias", alias1, "to Q42 and Q5301561")
     mykb.add_alias(alias=alias1, entities=["Q42", "Q5301561"], probabilities=[0.8, 0.2])
 
-    alias2 = "johny"
-    print(" adding alias", alias2, "to Q0, Q42 and Q5301561")
-    mykb.add_alias(alias=alias2, entities=["Q0", "Q42", "Q5301561"], probabilities=[0.3, 0.1, 0.4])
-
     alias3 = "adam"
     print(" adding alias", alias3, "to Q42")
     mykb.add_alias(alias=alias3, entities=["Q42"], probabilities=[0.9])
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
+    print()
 
-    for alias in [alias1, alias2, alias3]:
-        print()
-        print("candidates for", alias)
+    for alias in [alias1, "rubbish", alias3]:
         candidates = mykb.get_candidates(alias)
-        for candidate in candidates:
-            print(" candidate")
-            print("  kb_id", candidate.kb_id)
-            print("  kb_id_", candidate.kb_id_)
-            print("  alias", candidate.alias)
-            print("  alias_", candidate.alias_)
-            print("  prior_prob", candidate.prior_prob)
+        print(len(candidates), "candidates for", alias)
 
 
 def add_el():

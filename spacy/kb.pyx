@@ -149,5 +149,6 @@ cdef class KnowledgeBase:
                           entity_hash=self._entries[entry_index].entity_hash,
                           alias_hash=alias_hash,
                           prior_prob=prob)
-                      for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)]
+                for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
+                if entry_index != 0]
 
