@@ -14,7 +14,7 @@ from .typedefs cimport hash_t
 cdef struct _EntryC:
 
     # The hash of this entry's unique ID
-    hash_t entity_key
+    hash_t entity_hash
 
     # Allows retrieval of one or more vectors.
     # Each element of vector_rows should be an index into a vectors table.
@@ -46,12 +46,9 @@ cdef struct _AliasC:
 # TODO: document
 cdef class Candidate:
 
-    cdef _EntryC* entity
+    cdef hash_t entity_hash
     cdef hash_t alias_hash
     cdef float prior_prob
-
-    @staticmethod
-    cdef Candidate from_entry(_EntryC* entity, hash_t alias_hash, float prior_prob)
 
 
 cdef class KnowledgeBase:
@@ -98,8 +95,7 @@ cdef class KnowledgeBase:
     # optional data, we can let users configure a DB as the backend for this.
     cdef object _features_table
 
-
-    cdef inline int64_t c_add_entity(self, hash_t entity_key, float prob, int32_t* vector_rows,
+    cdef inline int64_t c_add_entity(self, hash_t entity_hash, float prob, int32_t* vector_rows,
                     int feats_row):
         """Add an entry to the knowledge base."""
         # This is what we'll map the hash key to. It's where the entry will sit
@@ -107,15 +103,15 @@ cdef class KnowledgeBase:
         cdef int64_t entity_index = self._entries.size()
         self._entries.push_back(
             _EntryC(
-                entity_key=entity_key,
+                entity_hash=entity_hash,
                 vector_rows=vector_rows,
                 feats_row=feats_row,
                 prob=prob
             ))
-        self._entry_index[entity_key] = entity_index
+        self._entry_index[entity_hash] = entity_index
         return entity_index
 
-    cdef inline int64_t c_add_aliases(self, hash_t alias_key, vector[int64_t] entry_indices, vector[float] probs):
+    cdef inline int64_t c_add_aliases(self, hash_t alias_hash, vector[int64_t] entry_indices, vector[float] probs):
         """Connect a mention to a list of potential entities with their prior probabilities ."""
         cdef int64_t alias_index = self._aliases_table.size()
 
@@ -124,7 +120,7 @@ cdef class KnowledgeBase:
                 entry_indices=entry_indices,
                 probs=probs
             ))
-        self._alias_index[alias_key] = alias_index
+        self._alias_index[alias_hash] = alias_index
         return alias_index
 
     cdef inline create_empty_vectors(self):
@@ -134,9 +130,10 @@ cdef class KnowledgeBase:
         cf. https://github.com/explosion/preshed/issues/17
         """
         cdef int32_t dummy_value = 0
+        self.strings.add("")
         self._entries.push_back(
             _EntryC(
-                entity_key=self.strings.add(""),
+                entity_hash=self.strings.add(""),
                 vector_rows=&dummy_value,
                 feats_row=dummy_value,
                 prob=dummy_value

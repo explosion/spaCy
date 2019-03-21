@@ -5,30 +5,20 @@ from spacy.errors import user_warning
 
 cdef class Candidate:
 
+    def __init__(self, entity_hash, alias_hash, prior_prob):
+        self.entity_hash = entity_hash
+        self.alias_hash = alias_hash
+        self.prior_prob = prior_prob
 
-    # def inline __cinit__(self, _EntryC entity, hash_t alias_hash, float prior_prob):
-    #     self.alias_hash = alias_hash
-    #     self.entity = entity
-    #     self.prior_prob = prior_prob
+    def get_entity_name(self, KnowledgeBase kb):
+        return kb.strings[self.entity_hash]
 
-    @staticmethod
-    cdef Candidate from_entry(_EntryC* entity, hash_t alias_hash, float prior_prob):
-        """Factory function to create Candidate objects from entity entries."""
-        # Call to __new__ bypasses __init__ constructor
-        cdef Candidate candidate = Candidate.__new__(Candidate)
-        candidate.entity = entity
-        candidate.alias_hash = alias_hash
-        candidate.prior_prob = prior_prob
-        return candidate
+    def get_alias_name(self, KnowledgeBase kb):
+        return kb.strings[self.alias_hash]
 
-    def __str__(self):
-        return "alias=" + self.strings[self.alias_hash] + \
-               " prior_prob=" + str(self.prior_prob)
-
-    #" entry=" + self.strings[self.entity_hash] + \
-
-    def __repr__(self):
-        return self.__str__()
+    property prior_prob:
+        def __get__(self):
+            return self.prior_prob
 
 
 cdef class KnowledgeBase:
@@ -58,7 +48,7 @@ cdef class KnowledgeBase:
             return
 
         cdef int32_t dummy_value = 342
-        self.c_add_entity(entity_key=id_hash, prob=prob, vector_rows=&dummy_value, feats_row=dummy_value)
+        self.c_add_entity(entity_hash=id_hash, prob=prob, vector_rows=&dummy_value, feats_row=dummy_value)
         # TODO self._vectors_table.get_pointer(vectors),
         # self._features_table.get(features))
 
@@ -99,7 +89,7 @@ cdef class KnowledgeBase:
             entry_indices.push_back(int(entry_index))
             probs.push_back(float(prob))
 
-        self.c_add_aliases(alias_key=alias_hash, entry_indices=entry_indices, probs=probs)
+        self.c_add_aliases(alias_hash=alias_hash, entry_indices=entry_indices, probs=probs)
 
 
     def get_candidates(self, unicode alias):
@@ -107,15 +97,8 @@ cdef class KnowledgeBase:
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 
-        for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs):
-            entity = <_EntryC>self._entries[entry_index]
-            # candidate = Candidate(entity=entity, alias_hash=alias_hash, prior_prob=prob)
-            candidate = Candidate.from_entry(entity=&entity, alias_hash=alias_hash, prior_prob=prob)
-            print(candidate)
-
-        # return [Candidate(entity=<_EntryC>self._entries[<int64_t>self._entry_index[entry_index]],
-        #                  alias_hash=alias_hash,
-        #                  prior_prob=prob)
-        #        for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)]
-
+        return [Candidate(entity_hash=self._entries[entry_index].entity_hash,
+                          alias_hash=alias_hash,
+                          prior_prob=prob)
+                      for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)]
 
