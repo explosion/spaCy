@@ -92,7 +92,7 @@ For detailed installation instructions, see the
 [documentation](https://spacy.io/usage).
 
 -   **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual Studio)
--   **Python version**: Python 2.7, 3.4+ (only 64 bit)
+-   **Python version**: Python 2.7, 3.5+ (only 64 bit)
 -   **Package managers**: [pip] · [conda] (via `conda-forge`)
 
 [pip]: https://pypi.python.org/pypi/spacy
