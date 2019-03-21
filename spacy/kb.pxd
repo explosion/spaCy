@@ -44,15 +44,7 @@ cdef struct _AliasC:
     vector[float] probs
 
 
-# TODO: document
-cdef class Entity:
-
-    cdef readonly KnowledgeBase kb
-    cdef hash_t entity_id_hash
-    cdef float confidence
-
-
-# TODO: document
+# Object used by the Entity Linker that summarizes one entity-alias candidate combination.
 cdef class Candidate:
 
     cdef readonly KnowledgeBase kb

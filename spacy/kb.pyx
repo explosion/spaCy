@@ -3,28 +3,6 @@
 from spacy.errors import user_warning
 
 
-cdef class Entity:
-
-    def __init__(self, KnowledgeBase kb, entity_id_hash, confidence):
-        self.kb = kb
-        self.entity_id_hash = entity_id_hash
-        self.confidence = confidence
-
-    property kb_id_:
-        """RETURNS (unicode): ID of this entity in the KB"""
-        def __get__(self):
-            return self.kb.strings[self.entity_id_hash]
-
-    property kb_id:
-        """RETURNS (uint64): hash of the entity's KB ID"""
-        def __get__(self):
-            return self.entity_id_hash
-
-    property confidence:
-        def __get__(self):
-            return self.confidence
-
-
 cdef class Candidate:
 
     def __init__(self, KnowledgeBase kb, entity_id_hash, alias_hash, prior_prob):
@@ -103,7 +81,8 @@ cdef class KnowledgeBase:
             return
 
         cdef int32_t dummy_value = 342
-        self.c_add_entity(entity_id_hash=id_hash, entity_name_hash=name_hash, prob=prob, vector_rows=&dummy_value, feats_row=dummy_value)
+        self.c_add_entity(entity_id_hash=id_hash, entity_name_hash=name_hash, prob=prob,
+                          vector_rows=&dummy_value, feats_row=dummy_value)
         # TODO self._vectors_table.get_pointer(vectors),
         # self._features_table.get(features))
 
@@ -155,6 +134,7 @@ cdef class KnowledgeBase:
 
 
     def get_candidates(self, unicode alias):
+        """ TODO: where to put this functionality ?"""
         cdef hash_t alias_hash = self.strings[alias]
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
