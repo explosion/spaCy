@@ -5,16 +5,31 @@ from spacy.errors import user_warning
 
 cdef class Candidate:
 
-    def __init__(self, entity_hash, alias_hash, prior_prob):
+    def __init__(self, KnowledgeBase kb, entity_hash, alias_hash, prior_prob):
+        self.kb = kb
         self.entity_hash = entity_hash
         self.alias_hash = alias_hash
         self.prior_prob = prior_prob
 
-    def get_entity_name(self, KnowledgeBase kb):
-        return kb.strings[self.entity_hash]
+    property kb_id_:
+        """RETURNS (unicode): ID of this entity in the KB"""
+        def __get__(self):
+            return self.kb.strings[self.entity_hash]
 
-    def get_alias_name(self, KnowledgeBase kb):
-        return kb.strings[self.alias_hash]
+    property kb_id:
+        """RETURNS (uint64): hash of the entity's KB ID"""
+        def __get__(self):
+            return self.entity_hash
+
+    property alias_:
+        """RETURNS (unicode): ID of the original alias"""
+        def __get__(self):
+            return self.kb.strings[self.alias_hash]
+
+    property alias:
+        """RETURNS (uint64): hash of the alias"""
+        def __get__(self):
+            return self.alias_hash
 
     property prior_prob:
         def __get__(self):
@@ -40,6 +55,10 @@ cdef class KnowledgeBase:
         return self._aliases_table.size() - 1 # not counting dummy element on index 0
 
     def add_entity(self, unicode entity_id, float prob, vectors=None, features=None):
+        """
+        Add an entity to the KB.
+        Return the hash of the entity ID at the end
+        """
         cdef hash_t id_hash = self.strings.add(entity_id)
 
         # Return if this entity was added before
@@ -52,8 +71,13 @@ cdef class KnowledgeBase:
         # TODO self._vectors_table.get_pointer(vectors),
         # self._features_table.get(features))
 
+        return id_hash
+
     def add_alias(self, unicode alias, entities, probabilities):
-        """For a given alias, add its potential entities and prior probabilies to the KB."""
+        """
+        For a given alias, add its potential entities and prior probabilies to the KB.
+        Return the alias_hash at the end
+        """
 
         # Throw an error if the length of entities and probabilities are not the same
         if not len(entities) == len(probabilities):
@@ -91,13 +115,16 @@ cdef class KnowledgeBase:
 
         self.c_add_aliases(alias_hash=alias_hash, entry_indices=entry_indices, probs=probs)
 
+        return alias_hash
+
 
     def get_candidates(self, unicode alias):
         cdef hash_t alias_hash = self.strings[alias]
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 
-        return [Candidate(entity_hash=self._entries[entry_index].entity_hash,
+        return [Candidate(kb=self,
+                          entity_hash=self._entries[entry_index].entity_hash,
                           alias_hash=alias_hash,
                           prior_prob=prob)
                       for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)]
