@@ -44,6 +44,14 @@ cdef struct _AliasC:
 
 
 # TODO: document
+cdef class Entity:
+
+    cdef readonly KnowledgeBase kb
+    cdef hash_t entity_hash
+    cdef float confidence
+
+
+# TODO: document
 cdef class Candidate:
 
     cdef readonly KnowledgeBase kb
