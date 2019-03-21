@@ -210,6 +210,10 @@ class Language(object):
         return self.get_pipe("ner")
 
     @property
+    def linker(self):
+        return self.get_pipe("el")
+
+    @property
     def matcher(self):
         return self.get_pipe("matcher")
 

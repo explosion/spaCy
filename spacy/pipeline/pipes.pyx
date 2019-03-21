@@ -1045,43 +1045,27 @@ class EntityLinker(Pipe):
 
     @classmethod
     def Model(cls, nr_class=1, **cfg):
-        embed_size = util.env_opt("embed_size", 2000)
-        if "token_vector_width" in cfg:
-            token_vector_width = cfg["token_vector_width"]
-        else:
-            token_vector_width = util.env_opt("token_vector_width", 96)
-        if cfg.get('architecture') == 'simple_cnn':
-            tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
-            return None # build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
-        else:
-            return None # build_text_classifier(nr_class, **cfg)
+        # TODO: non-dummy EL implementation
+        return None
 
-
-    def __init__(self, vocab, model=True, **cfg):
-        self.vocab = vocab
-        self.model = model
-        self._rehearsal_model = None
+    def __init__(self, model=True, **cfg):
+        self.model = False
         self.cfg = dict(cfg)
+        self.kb = self.cfg["kb"]
 
     def __call__(self, doc):
-        # scores, tensors = self.predict([doc])
-        scores, tensors = None, None
-        self.set_annotations([doc], scores, tensors=tensors)
+        self.set_annotations([doc], scores=None, tensors=None)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
+        """Apply the pipe to a stream of documents.
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        """
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
-            scores, tensors = self.predict(docs)
-            self.set_annotations(docs, scores, tensors=tensors)
+            self.set_annotations(docs, scores=None, tensors=None)
             yield from docs
-
-    def predict(self, docs):
-        # self.require_model()
-        scores = self.model(docs)
-        scores = self.model.ops.asarray(scores)
-        tensors = [doc.tensor for doc in docs]
-        return scores, tensors
 
     def set_annotations(self, docs, scores, tensors=None):
         # TODO Sofie: actually implement this class instead of dummy implementation
@@ -1091,67 +1075,13 @@ class EntityLinker(Pipe):
                     for token in ent:
                         token.ent_kb_id_ = "Q42"
 
-    def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
-        scores, bp_scores = self.model.begin_update(docs, drop=drop)
-        loss, d_scores = self.get_loss(docs, golds, scores)
-        bp_scores(d_scores, sgd=sgd)
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += loss
-
-    def rehearse(self, docs, drop=0., sgd=None, losses=None):
-        if self._rehearsal_model is None:
-            return
-        scores, bp_scores = self.model.begin_update(docs, drop=drop)
-        target = self._rehearsal_model(docs)
-        gradient = scores - target
-        bp_scores(gradient, sgd=sgd)
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += (gradient**2).sum()
-
     def get_loss(self, docs, golds, scores):
-        truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
-        not_missing = numpy.ones((len(golds), len(self.labels)), dtype='f')
-        for i, gold in enumerate(golds):
-            for j, label in enumerate(self.labels):
-                if label in gold.cats:
-                    truths[i, j] = gold.cats[label]
-                else:
-                    not_missing[i, j] = 0.
-        truths = self.model.ops.asarray(truths)
-        not_missing = self.model.ops.asarray(not_missing)
-        d_scores = (scores-truths) / scores.shape[0]
-        d_scores *= not_missing
-        mean_square_error = (d_scores**2).sum(axis=1).mean()
-        return float(mean_square_error), d_scores
+        # TODO
+        pass
 
     def add_label(self, label):
-        if label in self.labels:
-            return 0
-        if self.model not in (None, True, False):
-            # This functionality was available previously, but was broken.
-            # The problem is that we resize the last layer, but the last layer
-            # is actually just an ensemble. We're not resizing the child layers
-            # -- a huge problem.
-            raise ValueError(Errors.E116)
-            #smaller = self.model._layers[-1]
-            #larger = Affine(len(self.labels)+1, smaller.nI)
-            #copy_array(larger.W[:smaller.nO], smaller.W)
-            #copy_array(larger.b[:smaller.nO], smaller.b)
-            #self.model._layers[-1] = larger
-        self.labels = tuple(list(self.labels) + [label])
-        return 1
-
-    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None,
-                       **kwargs):
-        if self.model is True:
-            self.cfg['pretrained_vectors'] = kwargs.get('pretrained_vectors')
-            self.model = self.Model(len(self.labels), **self.cfg)
-            link_vectors_to_models(self.vocab)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
+        # TODO
+        pass
 
 
 __all__ = ['Tagger', 'DependencyParser', 'EntityRecognizer', 'Tensorizer', 'TextCategorizer', 'EntityLinker']

@@ -65,7 +65,7 @@ cdef class KnowledgeBase:
         self._alias_index = PreshMap()
         self.mem = Pool()
         self.strings = StringStore()
-        self.create_empty_vectors()
+        self._create_empty_vectors()
 
     def __len__(self):
         return self.get_size_entities()
@@ -151,4 +151,3 @@ cdef class KnowledgeBase:
                           prior_prob=prob)
                 for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
                 if entry_index != 0]
-
