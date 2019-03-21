@@ -80,3 +80,4 @@ def test_candidate_generation():
     # test the size of the relevant candidates
     assert(len(mykb.get_candidates("douglas")) == 2)
     assert(len(mykb.get_candidates("adam")) == 1)
+    assert(len(mykb.get_candidates("shrubbery")) == 0)
