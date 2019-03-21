@@ -12,15 +12,15 @@ def create_kb():
     # adding entities
     entity_0 = "Q0"  # douglas adams
     print(" adding entity", entity_0)
-    mykb.add_entity(entity_id=entity_0, prob=0.5)
+    mykb.add_entity(entity_id=entity_0, entity_name="queZero", prob=0.5)
 
     entity_42 = "Q42"   # douglas adams
     print(" adding entity", entity_42)
-    mykb.add_entity(entity_id=entity_42, prob=0.5)
+    mykb.add_entity(entity_id=entity_42, entity_name="que42", prob=0.5)
 
     entity_5301561 = "Q5301561"
     print(" adding entity", entity_5301561)
-    mykb.add_entity(entity_id=entity_5301561, prob=0.5)
+    mykb.add_entity(entity_id=entity_5301561, entity_name="queMore", prob=0.5)
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
     print()
@@ -63,7 +63,9 @@ def add_el(kb):
     print()
     for alias in ["douglassss", "rubbish", "adam"]:
         candidates = nlp.linker.kb.get_candidates(alias)
-        print(len(candidates), "candidates for", alias)
+        print(len(candidates), "candidates for", alias, ":")
+        for c in candidates:
+            print(" ", c.entity_id_, c.entity_name_, c.alias_)
 
 
 if __name__ == "__main__":

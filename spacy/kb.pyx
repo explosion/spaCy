@@ -5,20 +5,20 @@ from spacy.errors import user_warning
 
 cdef class Entity:
 
-    def __init__(self, KnowledgeBase kb, entity_hash, confidence):
+    def __init__(self, KnowledgeBase kb, entity_id_hash, confidence):
         self.kb = kb
-        self.entity_hash = entity_hash
+        self.entity_id_hash = entity_id_hash
         self.confidence = confidence
 
     property kb_id_:
         """RETURNS (unicode): ID of this entity in the KB"""
         def __get__(self):
-            return self.kb.strings[self.entity_hash]
+            return self.kb.strings[self.entity_id_hash]
 
     property kb_id:
         """RETURNS (uint64): hash of the entity's KB ID"""
         def __get__(self):
-            return self.entity_hash
+            return self.entity_id_hash
 
     property confidence:
         def __get__(self):
@@ -27,31 +27,42 @@ cdef class Entity:
 
 cdef class Candidate:
 
-    def __init__(self, KnowledgeBase kb, entity_hash, alias_hash, prior_prob):
+    def __init__(self, KnowledgeBase kb, entity_id_hash, alias_hash, prior_prob):
         self.kb = kb
-        self.entity_hash = entity_hash
+        self.entity_id_hash = entity_id_hash
         self.alias_hash = alias_hash
         self.prior_prob = prior_prob
 
-    property kb_id_:
-        """RETURNS (unicode): ID of this entity in the KB"""
-        def __get__(self):
-            return self.kb.strings[self.entity_hash]
-
-    property kb_id:
+    property entity_id:
         """RETURNS (uint64): hash of the entity's KB ID"""
         def __get__(self):
-            return self.entity_hash
+            return self.entity_id_hash
 
-    property alias_:
-        """RETURNS (unicode): ID of the original alias"""
+    property entity_id_:
+        """RETURNS (unicode): ID of this entity in the KB"""
         def __get__(self):
-            return self.kb.strings[self.alias_hash]
+            return self.kb.strings[self.entity_id]
+
+    property entity_name:
+        """RETURNS (uint64): hash of the entity's KB name"""
+        def __get__(self):
+            entry_index = <int64_t>self.kb._entry_index.get(self.entity_id)
+            return self.kb._entries[entry_index].entity_name_hash
+
+    property entity_name_:
+        """RETURNS (unicode): name of this entity in the KB"""
+        def __get__(self):
+            return self.kb.strings[self.entity_name]
 
     property alias:
         """RETURNS (uint64): hash of the alias"""
         def __get__(self):
             return self.alias_hash
+
+    property alias_:
+        """RETURNS (unicode): ID of the original alias"""
+        def __get__(self):
+            return self.kb.strings[self.alias]
 
     property prior_prob:
         def __get__(self):
@@ -76,12 +87,15 @@ cdef class KnowledgeBase:
     def get_size_aliases(self):
         return self._aliases_table.size() - 1 # not counting dummy element on index 0
 
-    def add_entity(self, unicode entity_id, float prob, vectors=None, features=None):
+    def add_entity(self, unicode entity_id, unicode entity_name=None, float prob=0.5, vectors=None, features=None):
         """
         Add an entity to the KB.
         Return the hash of the entity ID at the end
         """
+        if not entity_name:
+            entity_name = entity_id
         cdef hash_t id_hash = self.strings.add(entity_id)
+        cdef hash_t name_hash = self.strings.add(entity_name)
 
         # Return if this entity was added before
         if id_hash in self._entry_index:
@@ -89,7 +103,7 @@ cdef class KnowledgeBase:
             return
 
         cdef int32_t dummy_value = 342
-        self.c_add_entity(entity_hash=id_hash, prob=prob, vector_rows=&dummy_value, feats_row=dummy_value)
+        self.c_add_entity(entity_id_hash=id_hash, entity_name_hash=name_hash, prob=prob, vector_rows=&dummy_value, feats_row=dummy_value)
         # TODO self._vectors_table.get_pointer(vectors),
         # self._features_table.get(features))
 
@@ -127,11 +141,11 @@ cdef class KnowledgeBase:
         cdef vector[float] probs
 
         for entity, prob in zip(entities, probabilities):
-            entity_hash = self.strings[entity]
-            if not entity_hash in self._entry_index:
+            entity_id_hash = self.strings[entity]
+            if not entity_id_hash in self._entry_index:
                 raise ValueError("Alias '" + alias + "' defined for unknown entity '" + entity + "'")
 
-            entry_index = <int64_t>self._entry_index.get(entity_hash)
+            entry_index = <int64_t>self._entry_index.get(entity_id_hash)
             entry_indices.push_back(int(entry_index))
             probs.push_back(float(prob))
 
@@ -146,7 +160,7 @@ cdef class KnowledgeBase:
         alias_entry = self._aliases_table[alias_index]
 
         return [Candidate(kb=self,
-                          entity_hash=self._entries[entry_index].entity_hash,
+                          entity_id_hash=self._entries[entry_index].entity_id_hash,
                           alias_hash=alias_hash,
                           prior_prob=prob)
                 for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
