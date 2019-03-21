@@ -95,10 +95,10 @@ const Changelog = () => {
         error
     ) : isLoading ? null : (
         <>
-            <H3>Stable Releases</H3>
+            <H3 id="changelog-stable">Stable Releases</H3>
             <ChangelogTable data={releases} />
 
-            <H3>Pre-Releases</H3>
+            <H3 id="changelog-pre">Pre-Releases</H3>
 
             <p>
                 Pre-releases include alpha and beta versions, as well as release candidates. They

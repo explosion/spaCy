@@ -111,7 +111,7 @@ print(nlp.pipe_names)
 # ['tagger', 'parser', 'ner']
 ```
 
-### Built-in pipeline components
+### Built-in pipeline components {#built-in}
 
 spaCy ships with several built-in pipeline components that are also available in
 the `Language.factories`. This means that you can initialize them by calling

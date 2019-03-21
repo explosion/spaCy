@@ -7,6 +7,18 @@ import Link from './link'
 import Dropdown from './dropdown'
 import classes from '../styles/sidebar.module.sass'
 
+function getActiveHeading(items, slug) {
+    if (/^\/?universe/.test(slug)) return 'Universe'
+    for (let section of items) {
+        for (let { isActive, url } of section.items) {
+            if (isActive || slug === url) {
+                return section.label
+            }
+        }
+    }
+    return 'Documentation'
+}
+
 const DropdownNavigation = ({ items, defaultValue }) => {
     return (
         <div className={classes.dropdown}>
@@ -28,6 +40,7 @@ const Sidebar = ({ items, pageMenu, slug }) => {
     const [initialized, setInitialized] = useState(false)
     const [activeSection, setActiveSection] = useState(null)
     const activeRef = useRef()
+    const activeHeading = getActiveHeading(items, slug)
 
     useEffect(() => {
         const handleInView = ({ detail }) => setActiveSection(detail)
@@ -45,10 +58,13 @@ const Sidebar = ({ items, pageMenu, slug }) => {
 
     return (
         <menu className={classNames('sidebar', classes.root)}>
+            <h1 hidden aria-hidden="true" className={classNames('h0', classes.activeHeading)}>
+                {activeHeading}
+            </h1>
             <DropdownNavigation items={items} defaultValue={slug} />
             {items.map((section, i) => (
                 <ul className={classes.section} key={i}>
-                    <li className={classNames('h0', classes.label)}>{section.label}</li>
+                    <li className={classes.label}>{section.label}</li>
                     {section.items.map(({ text, url, onClick, menu, isActive }, j) => {
                         const currentMenu = menu || pageMenu || []
                         const active = isActive || slug === url

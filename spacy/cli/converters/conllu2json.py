@@ -71,6 +71,7 @@ def read_conllx(input_data, use_morphology=False, n=0):
                     dep = "ROOT" if dep == "root" else dep
                     tag = pos if tag == "_" else tag
                     tag = tag + "__" + morph if use_morphology else tag
+                    iob = iob if iob else "O"
                     tokens.append((id_, word, tag, head, dep, iob))
                 except:  # noqa: E722
                     print(line)

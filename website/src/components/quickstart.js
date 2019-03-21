@@ -50,7 +50,7 @@ const Quickstart = ({ data, title, description, id, children }) => {
         <Section id={id}>
             <div className={classes.root}>
                 {title && (
-                    <H2 className={classes.title}>
+                    <H2 className={classes.title} name={id}>
                         <a href={`#${id}`}>{title}</a>
                     </H2>
                 )}

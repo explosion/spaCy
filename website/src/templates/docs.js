@@ -90,6 +90,7 @@ const Docs = ({ pageContext, children }) => (
                                     source={sourcePath}
                                     tag={tag}
                                     version={version}
+                                    id="_title"
                                 />
                                 {children}
                                 {subFooter}

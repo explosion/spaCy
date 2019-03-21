@@ -72,7 +72,10 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                                 tag={String(filteredResources.length)}
                             />
                         )}
-                        <Grid cols={data && data.isCategory && data.id === 'books' ? 3 : 2}>
+                        <Grid
+                            cols={data && data.isCategory && data.id === 'books' ? 3 : 2}
+                            className="search-exclude"
+                        >
                             {filteredResources.map(
                                 ({ id, type, title, slogan, thumb, cover, youtube }) => {
                                     if (isHome && type === 'education') {
@@ -107,7 +110,7 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                         </Grid>
                     </Section>
                 )}
-                <section>
+                <section className="search-exclude">
                     <H3>Submit your project</H3>
                     <p>
                         If you have a project that you want the spaCy community to make use of, you

@@ -191,6 +191,7 @@ export const pageQuery = graphql`
                 docSearch {
                     apiKey
                     indexName
+                    appId
                 }
             }
         }
