@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON
+from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX
 
 
 TAG_MAP = {
@@ -20,15 +20,15 @@ TAG_MAP = {
     "CC": {POS: CCONJ, "ConjType": "coor"},
     "CD": {POS: NUM, "NumType": "card"},
     "DT": {POS: DET},
-    "EX": {POS: ADV, "AdvType": "ex"},
+    "EX": {POS: PRON, "AdvType": "ex"},
     "FW": {POS: X, "Foreign": "yes"},
     "HYPH": {POS: PUNCT, "PunctType": "dash"},
     "IN": {POS: ADP},
     "JJ": {POS: ADJ, "Degree": "pos"},
     "JJR": {POS: ADJ, "Degree": "comp"},
     "JJS": {POS: ADJ, "Degree": "sup"},
-    "LS": {POS: PUNCT, "NumType": "ord"},
-    "MD": {POS: VERB, "VerbType": "mod"},
+    "LS": {POS: X, "NumType": "ord"},
+    "MD": {POS: AUX, "VerbType": "mod"},
     "NIL": {POS: ""},
     "NN": {POS: NOUN, "Number": "sing"},
     "NNP": {POS: PROPN, "NounType": "prop", "Number": "sing"},
@@ -37,11 +37,11 @@ TAG_MAP = {
     "PDT": {POS: DET, "AdjType": "pdt", "PronType": "prn"},
     "POS": {POS: PART, "Poss": "yes"},
     "PRP": {POS: PRON, "PronType": "prs"},
-    "PRP$": {POS: DET, "PronType": "prs", "Poss": "yes"},
+    "PRP$": {POS: PRON, "PronType": "prs", "Poss": "yes"},
     "RB": {POS: ADV, "Degree": "pos"},
     "RBR": {POS: ADV, "Degree": "comp"},
     "RBS": {POS: ADV, "Degree": "sup"},
-    "RP": {POS: PART},
+    "RP": {POS: ADP},
     "SP": {POS: SPACE},
     "SYM": {POS: SYM},
     "TO": {POS: PART, "PartType": "inf", "VerbForm": "inf"},
@@ -58,9 +58,9 @@ TAG_MAP = {
         "Number": "sing",
         "Person": 3,
     },
-    "WDT": {POS: DET, "PronType": "int|rel"},
+    "WDT": {POS: PRON, "PronType": "int|rel"},
     "WP": {POS: PRON, "PronType": "int|rel"},
-    "WP$": {POS: DET, "Poss": "yes", "PronType": "int|rel"},
+    "WP$": {POS: PRON, "Poss": "yes", "PronType": "int|rel"},
     "WRB": {POS: ADV, "PronType": "int|rel"},
     "ADD": {POS: X},
     "NFP": {POS: PUNCT},
