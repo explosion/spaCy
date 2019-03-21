@@ -46,6 +46,7 @@ cdef struct _AliasC:
 # TODO: document
 cdef class Candidate:
 
+    cdef readonly KnowledgeBase kb
     cdef hash_t entity_hash
     cdef hash_t alias_hash
     cdef float prior_prob

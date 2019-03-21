@@ -38,29 +38,17 @@ def create_kb():
 
     print("kb size", len(mykb), mykb.get_size_entities(), mykb.get_size_aliases())
 
-    print("candidates for", alias1)
-    candidates1 = mykb.get_candidates(alias1)
-    for candidate in candidates1:
-        print(" candidate")
-        print("  name", candidate.get_entity_name(mykb))
-        print("  alias", candidate.get_alias_name(mykb))
-        print("  prior_prob", candidate.prior_prob)
-
-    print("candidates for", alias2)
-    candidates2 = mykb.get_candidates(alias2)
-    for candidate in candidates2:
-        print(" candidate")
-        print("  name", candidate.get_entity_name(mykb))
-        print("  alias", candidate.get_alias_name(mykb))
-        print("  prior_prob", candidate.prior_prob)
-
-    print("candidates for", alias3)
-    candidates3 = mykb.get_candidates(alias3)
-    for candidate in candidates3:
-        print(" candidate")
-        print("  name", candidate.get_entity_name(mykb))
-        print("  alias", candidate.get_alias_name(mykb))
-        print("  prior_prob", candidate.prior_prob)
+    for alias in [alias1, alias2, alias3]:
+        print()
+        print("candidates for", alias)
+        candidates = mykb.get_candidates(alias)
+        for candidate in candidates:
+            print(" candidate")
+            print("  kb_id", candidate.kb_id)
+            print("  kb_id_", candidate.kb_id_)
+            print("  alias", candidate.alias)
+            print("  alias_", candidate.alias_)
+            print("  prior_prob", candidate.prior_prob)
 
 
 def add_el():
