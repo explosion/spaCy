@@ -427,8 +427,8 @@ MORPH_RULES = {
             "Tense": "Pres",
             "Mood": "Ind",
         },
-        "has": {"POS": "AUX"},
-        "does": {"POS": "AUX"},
+        "has": {LEMMA: "have", "POS": "AUX"},
+        "does": {LEMMA: "do", "POS": "AUX"},
     },
     "VBP": {
         "are": {
@@ -477,9 +477,9 @@ MORPH_RULES = {
             "Tense": "Past",
             "Number": "Plur",
         },
-        "did": {"POS": "AUX"},
-        "had": {"POS": "AUX"},
-        "'d": {"POS": "AUX"},
+        "did": {LEMMA: "do", "POS": "AUX"},
+        "had": {LEMMA: "have", "POS": "AUX"},
+        "'d": {LEMMA: "have", "POS": "AUX"},
     },
 }
 
