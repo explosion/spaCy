@@ -1059,7 +1059,7 @@ cdef class EntityRecognizer(Parser):
 
 
 class EntityLinker(Pipe):
-    name = 'el'
+    name = 'entity_linker'
 
     @classmethod
     def Model(cls, nr_class=1, **cfg):

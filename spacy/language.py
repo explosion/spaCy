@@ -117,7 +117,7 @@ class Language(object):
         "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
-        "el": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
+        "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
         "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
         "sentencizer": lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
@@ -215,7 +215,7 @@ class Language(object):
 
     @property
     def linker(self):
-        return self.get_pipe("el")
+        return self.get_pipe("entity_linker")
 
     @property
     def matcher(self):

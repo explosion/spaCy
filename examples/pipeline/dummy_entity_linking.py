@@ -39,7 +39,7 @@ def create_kb(vocab):
 
 
 def add_el(kb, nlp):
-    el_pipe = nlp.create_pipe(name='el', config={"kb": kb})
+    el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": kb})
     nlp.add_pipe(el_pipe, last=True)
 
     for alias in ["Douglas Adams", "Douglas"]:
