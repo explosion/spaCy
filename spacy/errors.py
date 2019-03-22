@@ -371,6 +371,11 @@ class Errors(object):
             "with spacy >= 2.1.0. To fix this, reinstall Python and use a wide "
             "unicode build instead. You can also rebuild Python and set the "
             "--enable-unicode=ucs4 flag.")
+    E131 = ("Cannot write the kb_id of an existing Span object because a Span "
+            "is a read-only view of the underlying Token objects stored in the Doc. "
+            "Instead, create a new Span object and specify the `kb_id` keyword argument, "
+            "for example:\nfrom spacy.tokens import Span\n"
+            "span = Span(doc, start={start}, end={end}, label='{label}', kb_id='{kb_id}')")
 
 
 @add_codes

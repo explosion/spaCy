@@ -111,6 +111,8 @@ cdef class Span:
             self.end_char = 0
         if isinstance(label, basestring_):
             label = doc.vocab.strings.add(label)
+        if isinstance(kb_id, basestring_):
+            kb_id = doc.vocab.strings.add(kb_id)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
         self.label = label
@@ -662,9 +664,14 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 
-        # TODO: custom error msg like for label_
         def __set__(self, unicode kb_id_):
-            raise NotImplementedError(TempErrors.T007.format(attr='kb_id_'))
+            if not kb_id_:
+                kb_id_ = ''
+            current_label = self.label_
+            if not current_label:
+                current_label = ''
+            raise NotImplementedError(Errors.E131.format(start=self.start, end=self.end,
+                                                         label=current_label, kb_id=kb_id_))
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
