@@ -11,40 +11,40 @@ cdef class Candidate:
         self.alias_hash = alias_hash
         self.prior_prob = prior_prob
 
-    property entity_id:
+    @property
+    def entity_id(self):
         """RETURNS (uint64): hash of the entity's KB ID"""
-        def __get__(self):
-            return self.entity_id_hash
+        return self.entity_id_hash
 
-    property entity_id_:
+    @property
+    def entity_id_(self):
         """RETURNS (unicode): ID of this entity in the KB"""
-        def __get__(self):
-            return self.kb.vocab.strings[self.entity_id]
+        return self.kb.vocab.strings[self.entity_id]
 
-    property entity_name:
+    @property
+    def entity_name(self):
         """RETURNS (uint64): hash of the entity's KB name"""
-        def __get__(self):
-            entry_index = <int64_t>self.kb._entry_index.get(self.entity_id)
-            return self.kb._entries[entry_index].entity_name_hash
+        entry_index = <int64_t>self.kb._entry_index.get(self.entity_id)
+        return self.kb._entries[entry_index].entity_name_hash
 
-    property entity_name_:
+    @property
+    def entity_name_(self):
         """RETURNS (unicode): name of this entity in the KB"""
-        def __get__(self):
-            return self.kb.vocab.strings[self.entity_name]
+        return self.kb.vocab.strings[self.entity_name]
 
-    property alias:
+    @property
+    def alias(self):
         """RETURNS (uint64): hash of the alias"""
-        def __get__(self):
-            return self.alias_hash
+        return self.alias_hash
 
-    property alias_:
+    @property
+    def alias_(self):
         """RETURNS (unicode): ID of the original alias"""
-        def __get__(self):
-            return self.kb.vocab.strings[self.alias]
+        return self.kb.vocab.strings[self.alias]
 
-    property prior_prob:
-        def __get__(self):
-            return self.prior_prob
+    @property
+    def prior_prob(self):
+        return self.prior_prob
 
 
 cdef class KnowledgeBase:
