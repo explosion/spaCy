@@ -199,7 +199,7 @@ cdef class DependencyTreeMatcher:
         return (self._callbacks[key], self._patterns[key])
 
     def __call__(self, Doc doc):
-        matched_trees = []
+        matched_key_trees = []
         matches = self.token_matcher(doc)
         for key in list(self._patterns.keys()):
             _patterns_list = self._patterns[key]
@@ -227,51 +227,35 @@ cdef class DependencyTreeMatcher:
                     _nodes,_root
                 )
                 length = len(_nodes)
-                if _root in id_to_position:
-                    candidates = id_to_position[_root]
-                    for candidate in candidates:
-                        isVisited = {}
-                        self.dfs(
-                            candidate,
-                            _root,_tree,
-                            id_to_position,
-                            doc,
-                            isVisited,
-                            _node_operator_map
-                        )
-                        # To check if the subtree pattern is completely
-                        # identified. This is a heuristic. This is done to
-                        # reduce the complexity of exponential unordered subtree
-                        # matching. Will give approximate matches in some cases.
-                        if(len(isVisited) == length):
-                            matched_trees.append((key,list(isVisited)))
-            for i, (ent_id, nodes) in enumerate(matched_trees):
+
+                matched_trees = []
+                self.recurse(_tree,id_to_position,_node_operator_map,0,[],matched_trees)
+                matched_key_trees.append((key,matched_trees))
+
+            for i, (ent_id, nodes) in enumerate(matched_key_trees):
                 on_match = self._callbacks.get(ent_id)
                 if on_match is not None:
                     on_match(self, doc, i, matches)
-        return matched_trees
+        return matched_key_trees
 
-    def dfs(self,candidate,root,tree,id_to_position,doc,isVisited,_node_operator_map):
-        if (root in id_to_position and candidate in id_to_position[root]):
-            # Color the node since it is valid
-            isVisited[candidate] = True
-            if root in tree:
-                for root_child in tree[root]:
-                    if (
-                        candidate in _node_operator_map
-                        and root_child[INDEX_RELOP] in _node_operator_map[candidate]
-                    ):
-                        candidate_children = _node_operator_map[candidate][root_child[INDEX_RELOP]]
-                        for candidate_child in candidate_children:
-                            result = self.dfs(
-                                candidate_child.i,
-                                root_child[INDEX_HEAD],
-                                tree,
-                                id_to_position,
-                                doc,
-                                isVisited,
-                                _node_operator_map
-                            )
+    def recurse(self,tree,id_to_position,_node_operator_map,patternLength,visitedNodes,matched_trees):
+        if(patternLength == len(id_to_position.keys())):
+            isValid = True
+            for node in range(patternLength):
+                if(node in tree):
+                    for relop,nbor in tree[node]:
+                        computed_nbors = _node_operator_map[visitedNodes[node]][relop]
+                        isNbor = False
+                        for computed_nbor in computed_nbors:
+                            if(computed_nbor.i == visitedNodes[nbor]):
+                                isNbor = True
+                        isValid = isValid & isNbor
+            if(isValid):
+                matched_trees.append(visitedNodes)
+            return
+        allPatternNodes = id_to_position[patternLength]
+        for patternNode in allPatternNodes:
+            self.recurse(tree,id_to_position,_node_operator_map,patternLength+1,visitedNodes+[patternNode],matched_trees)
 
     # Given a node and an edge operator, to return the list of nodes
     # from the doc that belong to node+operator. This is used to store
@@ -299,8 +283,8 @@ cdef class DependencyTreeMatcher:
         switcher = {
             "<": self.dep,
             ">": self.gov,
-            ">>": self.dep_chain,
-            "<<": self.gov_chain,
+            "<<": self.dep_chain,
+            ">>": self.gov_chain,
             ".": self.imm_precede,
             "$+": self.imm_right_sib,
             "$-": self.imm_left_sib,
@@ -313,7 +297,7 @@ cdef class DependencyTreeMatcher:
         return _node_operator_map
 
     def dep(self, doc, node):
-        return list(doc[node].head)
+        return [doc[node].head]
 
     def gov(self,doc,node):
         return list(doc[node].children)
@@ -330,29 +314,29 @@ cdef class DependencyTreeMatcher:
         return []
 
     def imm_right_sib(self, doc, node):
-        for idx in range(list(doc[node].head.children)):
-            if idx == node - 1:
-                return [doc[idx]]
+        for child in list(doc[node].head.children):
+            if child.i == node - 1:
+                return [doc[child.i]]
         return []
 
     def imm_left_sib(self, doc, node):
-        for idx in range(list(doc[node].head.children)):
-            if idx == node + 1:
-                return [doc[idx]]
+        for child in list(doc[node].head.children):
+            if child.i == node + 1:
+                return [doc[child.i]]
         return []
 
     def right_sib(self, doc, node):
         candidate_children = []
-        for idx in range(list(doc[node].head.children)):
-            if idx < node:
-                candidate_children.append(doc[idx])
+        for child in list(doc[node].head.children):
+            if child.i < node:
+                candidate_children.append(doc[child.i])
         return candidate_children
 
     def left_sib(self, doc, node):
         candidate_children = []
-        for idx in range(list(doc[node].head.children)):
-            if idx > node:
-                candidate_children.append(doc[idx])
+        for child in list(doc[node].head.children):
+            if child.i > node:
+                candidate_children.append(doc[child.i])
         return candidate_children
 
     def _normalize_key(self, key):
