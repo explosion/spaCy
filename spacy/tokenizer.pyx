@@ -14,6 +14,7 @@ import re
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
+from .compat import unescape_unicode
 
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
@@ -428,6 +429,9 @@ cdef class Tokenizer:
         ))
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
+        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
+            if key in data:
+                data[key] = unescape_unicode(data[key])
         if data.get("prefix_search"):
             self.prefix_search = re.compile(data["prefix_search"]).search
         if data.get("suffix_search"):
