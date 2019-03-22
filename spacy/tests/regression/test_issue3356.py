@@ -65,7 +65,6 @@ prefix_search = (
 if compat.is_python2:
     # If we have this test in Python 3, pytest chokes, as it can't print the
     # string above in the xpass message.
-    @pytest.mark.xfail
     def test_issue3356():
-        pattern = re.compile(prefix_search.decode("utf8"))
+        pattern = re.compile(compat.unescape_unicode(prefix_search.decode("utf8")))
         assert not pattern.search(u"hello")
