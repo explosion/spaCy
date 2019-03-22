@@ -23,12 +23,12 @@ import Link from '../components/link'
 import BenchmarksChoi from 'usage/_benchmarks-choi.md'
 
 const CODE_EXAMPLE = `# pip install spacy
-# python -m spacy download en_core_web_sm
+# python -m spacy download en_core_web_md
 
 import spacy
 
 # Load English tokenizer, tagger, parser, NER and word vectors
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_md")
 
 # Process whole documents
 text = (u"When Sebastian Thrun started working on self-driving cars at "
