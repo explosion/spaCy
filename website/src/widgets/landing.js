@@ -218,7 +218,7 @@ const Landing = ({ data }) => {
                     <H2>Benchmarks</H2>
                     <p>
                         In 2015, independent researchers from Emory University and Yahoo! Labs
-                        showed that spaCy offered the
+                        showed that spaCy offered the{' '}
                         <strong>fastest syntactic parser in the world</strong> and that its accuracy
                         was <strong>within 1% of the best</strong> available (
                         <Link to="https://aclweb.org/anthology/P/P15/P15-1038.pdf">
