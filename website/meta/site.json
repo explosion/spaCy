@@ -28,8 +28,8 @@
     },
     "spacyVersion": "2.1",
     "binderUrl": "ines/spacy-io-binder",
-    "binderBranch": "nightly",
-    "binderVersion": "2.1.0a9",
+    "binderBranch": "live",
+    "binderVersion": "2.1.2",
     "sections": [
         { "id": "usage", "title": "Usage Documentation", "theme": "blue" },
         { "id": "models", "title": "Models Documentation", "theme": "blue" },
