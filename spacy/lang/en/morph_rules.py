@@ -1,13 +1,97 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import LEMMA, PRON_LEMMA
+from ...symbols import LEMMA, PRON_LEMMA, AUX
 
+_subordinating_conjunctions = [
+    "that",
+    "if",
+    "as",
+    "because",
+    "of",
+    "for",
+    "before",
+    "in",
+    "while",
+    "after",
+    "since",
+    "like",
+    "with",
+    "so",
+    "to",
+    "by",
+    "on",
+    "about",
+    "than",
+    "whether",
+    "although",
+    "from",
+    "though",
+    "until",
+    "unless",
+    "once",
+    "without",
+    "at",
+    "into",
+    "cause",
+    "over",
+    "upon",
+    "till",
+    "whereas",
+    "beyond",
+    "whilst",
+    "except",
+    "despite",
+    "wether",
+    "then",
+    "but",
+    "becuse",
+    "whie",
+    "below",
+    "against",
+    "it",
+    "w/out",
+    "toward",
+    "albeit",
+    "save",
+    "besides",
+    "becouse",
+    "coz",
+    "til",
+    "ask",
+    "i'd",
+    "out",
+    "near",
+    "seince",
+    "towards",
+    "tho",
+    "sice",
+    "will",
+]
+
+_relative_pronouns = ["this", "that", "those", "these"]
 
 MORPH_RULES = {
+    "DT": {word: {"POS": "PRON"} for word in _relative_pronouns},
+    "IN": {word: {"POS": "SCONJ"} for word in _subordinating_conjunctions},
+    "NN": {
+        "something": {"POS": "PRON"},
+        "anyone": {"POS": "PRON"},
+        "anything": {"POS": "PRON"},
+        "nothing": {"POS": "PRON"},
+        "someone": {"POS": "PRON"},
+        "everything": {"POS": "PRON"},
+        "everyone": {"POS": "PRON"},
+        "everybody": {"POS": "PRON"},
+        "nobody": {"POS": "PRON"},
+        "somebody": {"POS": "PRON"},
+        "anybody": {"POS": "PRON"},
+        "any1": {"POS": "PRON"},
+    },
     "PRP": {
         "I": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Sing",
@@ -15,14 +99,16 @@ MORPH_RULES = {
         },
         "me": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Sing",
             "Case": "Acc",
         },
-        "you": {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Two"},
+        "you": {LEMMA: PRON_LEMMA, "POS": "PRON", "PronType": "Prs", "Person": "Two"},
         "he": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -31,6 +117,7 @@ MORPH_RULES = {
         },
         "him": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -39,6 +126,7 @@ MORPH_RULES = {
         },
         "she": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -47,6 +135,7 @@ MORPH_RULES = {
         },
         "her": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -55,6 +144,7 @@ MORPH_RULES = {
         },
         "it": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -62,6 +152,7 @@ MORPH_RULES = {
         },
         "we": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Plur",
@@ -69,6 +160,7 @@ MORPH_RULES = {
         },
         "us": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Plur",
@@ -76,6 +168,7 @@ MORPH_RULES = {
         },
         "they": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Plur",
@@ -83,6 +176,7 @@ MORPH_RULES = {
         },
         "them": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Plur",
@@ -90,6 +184,7 @@ MORPH_RULES = {
         },
         "mine": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Sing",
@@ -98,6 +193,7 @@ MORPH_RULES = {
         },
         "his": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -107,6 +203,7 @@ MORPH_RULES = {
         },
         "hers": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -116,6 +213,7 @@ MORPH_RULES = {
         },
         "its": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -125,6 +223,7 @@ MORPH_RULES = {
         },
         "ours": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Plur",
@@ -133,6 +232,7 @@ MORPH_RULES = {
         },
         "yours": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Two",
             "Number": "Plur",
@@ -141,6 +241,7 @@ MORPH_RULES = {
         },
         "theirs": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Plur",
@@ -149,6 +250,7 @@ MORPH_RULES = {
         },
         "myself": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Sing",
@@ -157,6 +259,7 @@ MORPH_RULES = {
         },
         "yourself": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Two",
             "Case": "Acc",
@@ -164,6 +267,7 @@ MORPH_RULES = {
         },
         "himself": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -173,6 +277,7 @@ MORPH_RULES = {
         },
         "herself": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -182,6 +287,7 @@ MORPH_RULES = {
         },
         "itself": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -191,6 +297,7 @@ MORPH_RULES = {
         },
         "themself": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Sing",
@@ -199,6 +306,7 @@ MORPH_RULES = {
         },
         "ourselves": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "One",
             "Number": "Plur",
@@ -207,6 +315,7 @@ MORPH_RULES = {
         },
         "yourselves": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Two",
             "Case": "Acc",
@@ -214,6 +323,7 @@ MORPH_RULES = {
         },
         "themselves": {
             LEMMA: PRON_LEMMA,
+            "POS": "PRON",
             "PronType": "Prs",
             "Person": "Three",
             "Number": "Plur",
@@ -269,9 +379,17 @@ MORPH_RULES = {
             "Poss": "Yes",
         },
     },
+    "RB": {word: {"POS": "PART"} for word in ["not", "n't", "nt", "n’t"]},
+    "VB": {
+        word: {"POS": "AUX"}
+        for word in ["be", "have", "do", "get", "of", "am", "are", "'ve"]
+    },
+    "VBN": {"been": {LEMMA: "be", "POS": "AUX"}},
+    "VBG": {"being": {LEMMA: "be", "POS": "AUX"}},
     "VBZ": {
         "am": {
             LEMMA: "be",
+            "POS": "AUX",
             "VerbForm": "Fin",
             "Person": "One",
             "Tense": "Pres",
@@ -279,6 +397,7 @@ MORPH_RULES = {
         },
         "are": {
             LEMMA: "be",
+            "POS": "AUX",
             "VerbForm": "Fin",
             "Person": "Two",
             "Tense": "Pres",
@@ -286,6 +405,7 @@ MORPH_RULES = {
         },
         "is": {
             LEMMA: "be",
+            "POS": "AUX",
             "VerbForm": "Fin",
             "Person": "Three",
             "Tense": "Pres",
@@ -293,6 +413,7 @@ MORPH_RULES = {
         },
         "'re": {
             LEMMA: "be",
+            "POS": "AUX",
             "VerbForm": "Fin",
             "Person": "Two",
             "Tense": "Pres",
@@ -300,26 +421,65 @@ MORPH_RULES = {
         },
         "'s": {
             LEMMA: "be",
+            "POS": "AUX",
             "VerbForm": "Fin",
             "Person": "Three",
             "Tense": "Pres",
             "Mood": "Ind",
         },
+        "has": {LEMMA: "have", "POS": "AUX"},
+        "does": {LEMMA: "do", "POS": "AUX"},
     },
     "VBP": {
-        "are": {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"},
-        "'re": {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"},
+        "are": {
+            LEMMA: "be",
+            "POS": "AUX",
+            "VerbForm": "Fin",
+            "Tense": "Pres",
+            "Mood": "Ind",
+        },
+        "'re": {
+            LEMMA: "be",
+            "POS": "AUX",
+            "VerbForm": "Fin",
+            "Tense": "Pres",
+            "Mood": "Ind",
+        },
         "am": {
             LEMMA: "be",
+            "POS": "AUX",
             "VerbForm": "Fin",
             "Person": "One",
             "Tense": "Pres",
             "Mood": "Ind",
         },
+        "do": {"POS": "AUX"},
+        "have": {"POS": "AUX"},
+        "'m": {"POS": "AUX", LEMMA: "be"},
+        "'ve": {"POS": "AUX"},
+        "'re": {"POS": "AUX", LEMMA: "be"},
+        "'s": {"POS": "AUX"},
+        "is": {"POS": "AUX"},
+        "'d": {"POS": "AUX"},
     },
     "VBD": {
-        "was": {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Sing"},
-        "were": {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Plur"},
+        "was": {
+            LEMMA: "be",
+            "POS": "AUX",
+            "VerbForm": "Fin",
+            "Tense": "Past",
+            "Number": "Sing",
+        },
+        "were": {
+            LEMMA: "be",
+            "POS": "AUX",
+            "VerbForm": "Fin",
+            "Tense": "Past",
+            "Number": "Plur",
+        },
+        "did": {LEMMA: "do", "POS": "AUX"},
+        "had": {LEMMA: "have", "POS": "AUX"},
+        "'d": {LEMMA: "have", "POS": "AUX"},
     },
 }
 
