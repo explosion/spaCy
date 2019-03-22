@@ -80,6 +80,8 @@ class Warnings(object):
             "the v2.x models cannot release the global interpreter lock. "
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
+    W017 = ("Alias '{alias}' already exists in the Knowledge base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge base.")
 
 
 @add_codes
@@ -376,6 +378,11 @@ class Errors(object):
             "Instead, create a new Span object and specify the `kb_id` keyword argument, "
             "for example:\nfrom spacy.tokens import Span\n"
             "span = Span(doc, start={start}, end={end}, label='{label}', kb_id='{kb_id}')")
+    E132 = ("The vectors for entities and probabilities for alias '{alias}' should have equal length, "
+            "but found {entities_length} and {probabilities_length} respectively.")
+    E133 = ("The sum of prior probabilities for alias '{alias}' should not exceed 1, "
+            "but found {sum}.")
+    E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
 
 
 @add_codes

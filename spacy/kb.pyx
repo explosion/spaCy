@@ -1,6 +1,6 @@
 # cython: profile=True
 # coding: utf8
-from spacy.errors import user_warning
+from spacy.errors import Errors, Warnings, user_warning
 
 
 cdef class Candidate:
@@ -77,7 +77,7 @@ cdef class KnowledgeBase:
 
         # Return if this entity was added before
         if id_hash in self._entry_index:
-            user_warning("Entity " + entity_id + " already exists in the KB")
+            user_warning(Warnings.W018.format(entity=entity_id))
             return
 
         cdef int32_t dummy_value = 342
@@ -96,22 +96,20 @@ cdef class KnowledgeBase:
 
         # Throw an error if the length of entities and probabilities are not the same
         if not len(entities) == len(probabilities):
-            raise ValueError("The vectors for entities and probabilities for alias '" + alias
-                             + "' should have equal length, but found "
-                             + str(len(entities)) + " and " + str(len(probabilities)) + "respectively.")
-
+            raise ValueError(Errors.E132.format(alias=alias,
+                                                entities_length=len(entities),
+                                                probabilities_length=len(probabilities)))
 
         # Throw an error if the probabilities sum up to more than 1
         prob_sum = sum(probabilities)
         if prob_sum > 1:
-            raise ValueError("The sum of prior probabilities for alias '" + alias + "' should not exceed 1, "
-                             + "but found " + str(prob_sum))
+            raise ValueError(Errors.E133.format(alias=alias, sum=prob_sum))
 
         cdef hash_t alias_hash = self.vocab.strings.add(alias)
 
         # Return if this alias was added before
         if alias_hash in self._alias_index:
-            user_warning("Alias " + alias + " already exists in the KB")
+            user_warning(Warnings.W017.format(alias=alias))
             return
 
         cdef hash_t entity_hash
@@ -122,7 +120,7 @@ cdef class KnowledgeBase:
         for entity, prob in zip(entities, probabilities):
             entity_id_hash = self.vocab.strings[entity]
             if not entity_id_hash in self._entry_index:
-                raise ValueError("Alias '" + alias + "' defined for unknown entity '" + entity + "'")
+                raise ValueError(Errors.E134.format(alias=alias, entity=entity))
 
             entry_index = <int64_t>self._entry_index.get(entity_id_hash)
             entry_indices.push_back(int(entry_index))
