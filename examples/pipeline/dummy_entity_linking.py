@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import unicode_literals
+
 """Demonstrate how to build a simple knowledge base and run an Entity Linking algorithm.
 Currently still a bit of a dummy algorithm: taking simply the entity with highest probability for a given alias
 """
