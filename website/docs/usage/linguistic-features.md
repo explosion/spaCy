@@ -1149,9 +1149,14 @@ but it also means you'll need a **statistical model** and accurate predictions.
 If your texts are closer to general-purpose news or web text, this should work
 well out-of-the-box. For social media or conversational text that doesn't follow
 the same rules, your application may benefit from a custom rule-based
-implementation. You can either plug a rule-based component into your
-[processing pipeline](/usage/processing-pipelines) or use the
-`SentenceSegmenter` component with a custom strategy.
+implementation. You can either use the built-in
+[`Sentencizer`](/api/sentencizer) or plug an entirely custom rule-based function
+into your [processing pipeline](/usage/processing-pipelines).
+
+spaCy's dependency parser respects already set boundaries, so you can preprocess
+your `Doc` using custom rules _before_ it's parsed. Depending on your text, this
+may also improve accuracy, since the parser is constrained to predict parses
+consistent with the sentence boundaries.
 
 ### Default: Using the dependency parse {#sbd-parser model="parser"}
 
@@ -1168,13 +1173,35 @@ for sent in doc.sents:
     print(sent.text)
 ```
 
-### Setting boundaries manually {#sbd-manual}
+### Rule-based pipeline component {#sbd-component}
 
-spaCy's dependency parser respects already set boundaries, so you can preprocess
-your `Doc` using custom rules _before_ it's parsed. This can be done by adding a
-[custom pipeline component](/usage/processing-pipelines). Depending on your
-text, this may also improve accuracy, since the parser is constrained to predict
-parses consistent with the sentence boundaries.
+The [`Sentencizer`](/api/sentencizer) component is a
+[pipeline component](/usage/processing-pipelines) that splits sentences on
+punctuation like `.`, `!` or `?`. You can plug it into your pipeline if you only
+need sentence boundaries without the dependency parse.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.lang.en import English
+
+nlp = English()  # just the language with no model
+sentencizer = nlp.create_pipe("sentencizer")
+nlp.add_pipe(sentencizer)
+doc = nlp(u"This is a sentence. This is another sentence.")
+for sent in doc.sents:
+    print(sent.text)
+```
+
+### Custom rule-based strategy {id="sbd-custom"}
+
+If you want to implement your own strategy that differs from the default
+rule-based approach of splitting on sentences, you can also create a
+[custom pipeline component](/usage/processing-pipelines#custom-components) that
+takes a `Doc` object and sets the `Token.is_sent_start` attribute on each
+individual token. If set to `False`, the token is explicitly marked as _not_ the
+start of a sentence. If set to `None` (default), it's treated as a missing value
+and can still be overwritten by the parser.
 
 <Infobox title="Important note" variant="warning">
 
@@ -1187,9 +1214,11 @@ adding it to the pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 
 Here's an example of a component that implements a pre-processing rule for
 splitting on `'...'` tokens. The component is added before the parser, which is
-then used to further segment the text. This approach can be useful if you want
-to implement **additional** rules specific to your data, while still being able
-to take advantage of dependency-based sentence segmentation.
+then used to further segment the text. That's possible, because `is_sent_start`
+is only set to `True` for some of the tokens – all others still specify `None`
+for unset sentence boundaries. This approach can be useful if you want to
+implement **additional** rules specific to your data, while still being able to
+take advantage of dependency-based sentence segmentation.
 
 ```python
 ### {executable="true"}
@@ -1210,62 +1239,6 @@ def set_custom_boundaries(doc):
 nlp.add_pipe(set_custom_boundaries, before="parser")
 doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
-```
-
-### Rule-based pipeline component {#sbd-component}
-
-The `sentencizer` component is a
-[pipeline component](/usage/processing-pipelines) that splits sentences on
-punctuation like `.`, `!` or `?`. You can plug it into your pipeline if you only
-need sentence boundaries without the dependency parse. Note that `Doc.sents`
-will **raise an error** if no sentence boundaries are set.
-
-```python
-### {executable="true"}
-import spacy
-from spacy.lang.en import English
-
-nlp = English()  # just the language with no model
-sentencizer = nlp.create_pipe("sentencizer")
-nlp.add_pipe(sentencizer)
-doc = nlp(u"This is a sentence. This is another sentence.")
-for sent in doc.sents:
-    print(sent.text)
-```
-
-### Custom rule-based strategy {#sbd-custom}
-
-If you want to implement your own strategy that differs from the default
-rule-based approach of splitting on sentences, you can also instantiate the
-`SentenceSegmenter` directly and pass in your own strategy. The strategy should
-be a function that takes a `Doc` object and yields a `Span` for each sentence.
-Here's an example of a custom segmentation strategy for splitting on newlines
-only:
-
-```python
-### {executable="true"}
-from spacy.lang.en import English
-from spacy.pipeline import SentenceSegmenter
-
-def split_on_newlines(doc):
-    start = 0
-    seen_newline = False
-    for word in doc:
-        if seen_newline and not word.is_space:
-            yield doc[start:word.i]
-            start = word.i
-            seen_newline = False
-        elif word.text == '\\n':
-            seen_newline = True
-    if start < len(doc):
-        yield doc[start:len(doc)]
-
-nlp = English()  # Just the language with no model
-sentencizer = SentenceSegmenter(nlp.vocab, strategy=split_on_newlines)
-nlp.add_pipe(sentencizer)
-doc = nlp(u"This is a sentence\\n\\nThis is another sentence\\nAnd more")
-for sent in doc.sents:
-    print([token.text for token in sent])
 ```
 
 ## Rule-based matching {#rule-based-matching hidden="true"}

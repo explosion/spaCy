@@ -191,7 +191,7 @@ class EntityRuler(object):
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
 
-        DOCS: https://spacy.io/api/entityruler
+        DOCS: https://spacy.io/api/entityruler#to_disk
         """
         path = ensure_path(path)
         path = path.with_suffix(".jsonl")
