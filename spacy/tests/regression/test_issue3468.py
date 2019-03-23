@@ -18,6 +18,6 @@ def test_issue3468():
     assert len(list(doc.sents)) == 1
     doc_bytes = doc.to_bytes()
     new_doc = Doc(nlp.vocab).from_bytes(doc_bytes)
-    assert doc[0].is_sent_start
+    assert new_doc[0].is_sent_start
     assert new_doc.is_sentenced
     assert len(list(new_doc.sents)) == 1
