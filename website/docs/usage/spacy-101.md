@@ -95,6 +95,21 @@ systems, or to pre-process text for **deep learning**.
   publishing spaCy and other software is called
   [Explosion AI](https://explosion.ai).
 
+<Infobox title="Download the spaCy Cheat Sheet!">
+
+[![spaCy Cheatsheet](../images/cheatsheet.jpg)](http://datacamp-community-prod.s3.amazonaws.com/29aa28bf-570a-4965-8f54-d6a541ae4e06)
+
+For the launch of our
+["Advanced NLP with spaCy"](https://www.datacamp.com/courses/advanced-nlp-with-spacy)
+course on DataCamp we created the first official spaCy cheat sheet! A handy
+two-page reference to the most important concepts and features, from loading
+models and accessing linguistic annotations, to custom pipeline components and
+rule-based matching.
+
+<p><Button to="http://datacamp-community-prod.s3.amazonaws.com/29aa28bf-570a-4965-8f54-d6a541ae4e06" variant="primary">Download</Button></p>
+
+</Infobox>
+
 ## Features {#features}
 
 In the documentation, you'll come across mentions of spaCy's features and
