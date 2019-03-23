@@ -44,7 +44,6 @@ def _train_parser(parser):
 def test_add_label(parser):
     parser = _train_parser(parser)
     parser.add_label("right")
-    doc = parser(doc)
     sgd = Adam(NumpyOps(), 0.001)
     for i in range(10):
         losses = {}
