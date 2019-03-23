@@ -15,8 +15,6 @@ class SentenceSegmenter(object):
     initialization, or assign a new strategy to the .strategy attribute.
     Sentence detection strategies should be generators that take `Doc` objects
     and yield `Span` objects for each sentence.
-
-    DOCS: https://spacy.io/api/sentencesegmenter
     """
 
     name = "sentencizer"
@@ -35,12 +33,12 @@ class SentenceSegmenter(object):
     def split_on_punct(doc):
         start = 0
         seen_period = False
-        for i, word in enumerate(doc):
-            if seen_period and not word.is_punct:
-                yield doc[start : word.i]
-                start = word.i
+        for i, token in enumerate(doc):
+            if seen_period and not token.is_punct:
+                yield doc[start : token.i]
+                start = token.i
                 seen_period = False
-            elif word.text in [".", "!", "?"]:
+            elif token.text in [".", "!", "?"]:
                 seen_period = True
         if start < len(doc):
             yield doc[start : len(doc)]

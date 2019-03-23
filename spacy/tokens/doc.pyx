@@ -230,7 +230,7 @@ cdef class Doc:
         defined as having at least one of the following:
 
         a) An entry "sents" in doc.user_hooks";
-        b) sent.is_parsed is set to True;
+        b) Doc.is_parsed is set to True;
         c) At least one token other than the first where sent_start is not None.
         """
         if "sents" in self.user_hooks:
