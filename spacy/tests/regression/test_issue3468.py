@@ -6,10 +6,9 @@ from spacy.lang.en import English
 from spacy.tokens import Doc
 
 
-@pytest.mark.xfail
 def test_issue3468():
-    """Test that sentence boundaries are serialized if they're not set by the
-    dependency parser."""
+    """Test that sentence boundaries are set correctly so Doc.is_sentenced can
+    be restored after serialization."""
     nlp = English()
     nlp.add_pipe(nlp.create_pipe("sentencizer"))
     doc = nlp("Hello world")
