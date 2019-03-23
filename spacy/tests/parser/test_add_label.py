@@ -43,21 +43,8 @@ def _train_parser(parser):
 
 def test_add_label(parser):
     parser = _train_parser(parser)
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc = parser(doc)
-    assert doc[0].head.i == 1
-    assert doc[0].dep_ == "left"
-    assert doc[1].head.i == 1
-    assert doc[2].head.i == 3
-    assert doc[2].head.i == 3
     parser.add_label("right")
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
     doc = parser(doc)
-    assert doc[0].head.i == 1
-    assert doc[0].dep_ == "left"
-    assert doc[1].head.i == 1
-    assert doc[2].head.i == 3
-    assert doc[2].head.i == 3
     sgd = Adam(NumpyOps(), 0.001)
     for i in range(10):
         losses = {}
