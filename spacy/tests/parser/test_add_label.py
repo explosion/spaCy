@@ -8,7 +8,7 @@ from spacy.attrs import NORM
 from spacy.gold import GoldParse
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
-from spacy.pipeline import DependencyParser
+from spacy.pipeline import DependencyParser, EntityRecognizer
 from spacy.util import fix_random_seed
 
 
@@ -71,3 +71,14 @@ def test_add_label(parser):
     assert doc[0].dep_ == "right"
     assert doc[2].dep_ == "left"
 
+
+def test_add_label_deserializes_correctly():
+    ner1 = EntityRecognizer(Vocab())
+    ner1.add_label("C")
+    ner1.add_label("B")
+    ner1.add_label("A")
+    ner1.begin_training([])
+    ner2 = EntityRecognizer(Vocab()).from_bytes(ner1.to_bytes())
+    assert ner1.moves.n_moves == ner2.moves.n_moves
+    for i in range(ner1.moves.n_moves):
+        assert ner1.moves.get_class_name(i) == ner2.moves.get_class_name(i)
