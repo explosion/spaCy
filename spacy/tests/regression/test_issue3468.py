@@ -13,11 +13,11 @@ def test_issue3468():
     nlp = English()
     nlp.add_pipe(nlp.create_pipe("sentencizer"))
     doc = nlp("Hello world")
-    assert doc.is_sentenced
     assert doc[0].is_sent_start
+    assert doc.is_sentenced
     assert len(list(doc.sents)) == 1
     doc_bytes = doc.to_bytes()
     new_doc = Doc(nlp.vocab).from_bytes(doc_bytes)
-    assert new_doc.is_sentenced
     assert doc[0].is_sent_start
+    assert new_doc.is_sentenced
     assert len(list(new_doc.sents)) == 1
