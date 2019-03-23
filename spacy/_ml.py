@@ -81,18 +81,6 @@ def _zero_init(model):
     return model
 
 
-@layerize
-def _preprocess_doc(docs, drop=0.0):
-    keys = [doc.to_array(LOWER) for doc in docs]
-    # The dtype here matches what thinc is expecting -- which differs per
-    # platform (by int definition). This should be fixed once the problem
-    # is fixed on Thinc's side.
-    lengths = numpy.array([arr.shape[0] for arr in keys], dtype=numpy.int_)
-    keys = numpy.concatenate(keys)
-    vals = numpy.zeros(keys.shape, dtype='f')
-    return (keys, vals, lengths), None
-
-
 def with_cpu(ops, model):
     """Wrap a model that should run on CPU, transferring inputs and outputs
     as necessary."""
@@ -133,20 +121,31 @@ def _to_device(ops, X):
         return ops.asarray(X)
 
 
-@layerize
-def _preprocess_doc_bigrams(docs, drop=0.0):
-    unigrams = [doc.to_array(LOWER) for doc in docs]
-    ops = Model.ops
-    bigrams = [ops.ngrams(2, doc_unis) for doc_unis in unigrams]
-    keys = [ops.xp.concatenate(feats) for feats in zip(unigrams, bigrams)]
-    keys, vals = zip(*[ops.xp.unique(k, return_counts=True) for k in keys])
-    # The dtype here matches what thinc is expecting -- which differs per
-    # platform (by int definition). This should be fixed once the problem
-    # is fixed on Thinc's side.
-    lengths = ops.asarray([arr.shape[0] for arr in keys], dtype=numpy.int_)
-    keys = ops.xp.concatenate(keys)
-    vals = ops.asarray(ops.xp.concatenate(vals), dtype="f")
-    return (keys, vals, lengths), None
+class extract_ngrams(Model):
+    def __init__(self, ngram_size, attr=LOWER):
+        Model.__init__(self)
+        self.ngram_size = ngram_size
+        self.attr = attr
+
+    def begin_update(self, docs, drop=0.0):
+        batch_keys = []
+        batch_vals = []
+        for doc in docs:
+            unigrams = doc.to_array([self.attr])
+            ngrams = [unigrams]
+            for n in range(2, self.ngram_size + 1):
+                ngrams.append(self.ops.ngrams(n, unigrams))
+            keys = self.ops.xp.concatenate(ngrams)
+            keys, vals = self.ops.xp.unique(keys, return_counts=True)
+            batch_keys.append(keys)
+            batch_vals.append(vals)
+        # The dtype here matches what thinc is expecting -- which differs per
+        # platform (by int definition). This should be fixed once the problem
+        # is fixed on Thinc's side.
+        lengths = self.ops.asarray([arr.shape[0] for arr in batch_keys], dtype=numpy.int_)
+        batch_keys = self.ops.xp.concatenate(batch_keys)
+        batch_vals = self.ops.asarray(self.ops.xp.concatenate(batch_vals), dtype="f")
+        return (batch_keys, batch_vals, lengths), None
 
 
 @describe.on_data(
@@ -486,16 +485,6 @@ def zero_init(model):
     return model
 
 
-@layerize
-def preprocess_doc(docs, drop=0.0):
-    keys = [doc.to_array([LOWER]) for doc in docs]
-    ops = Model.ops
-    lengths = ops.asarray([arr.shape[0] for arr in keys])
-    keys = ops.xp.concatenate(keys)
-    vals = ops.allocate(keys.shape[0]) + 1
-    return (keys, vals, lengths), None
-
-
 def getitem(i):
     def getitem_fwd(X, drop=0.0):
         return X[i], None
@@ -602,10 +591,8 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> zero_init(Affine(nr_class, width, drop_factor=0.0))
         )
 
-        linear_model = (
-            _preprocess_doc
-            >> with_cpu(Model.ops, LinearModel(nr_class))
-        )
+        linear_model = build_bow_text_classifier(
+            nr_class, ngram_size=cfg.get("ngram_size", 1), no_output_layer=True)
         if cfg.get('exclusive_classes'):
             output_layer = Softmax(nr_class, nr_class * 2)
         else:
@@ -621,6 +608,33 @@ def build_text_classifier(nr_class, width=64, **cfg):
     model.nO = nr_class
     model.lsuv = False
     return model
+
+
+def build_bow_text_classifier(nr_class, ngram_size=1, exclusive_classes=False,
+        no_output_layer=False, **cfg):
+    with Model.define_operators({">>": chain}):
+        model = (
+            extract_ngrams(ngram_size, attr=ORTH) 
+            >> with_cpu(Model.ops,
+                LinearModel(nr_class)
+            )
+        )
+        if not no_output_layer:
+            model = model >> (cpu_softmax if exclusive_classes else logistic)
+    model.nO = nr_class
+    return model
+
+
+@layerize
+def cpu_softmax(X, drop=0.):
+    ops = NumpyOps()
+
+    Y = ops.softmax(X)
+
+    def cpu_softmax_backward(dY, sgd=None):
+        return dY
+
+    return ops.softmax(X), cpu_softmax_backward
 
 
 def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False, **cfg):
