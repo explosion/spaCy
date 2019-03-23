@@ -404,7 +404,7 @@ class BadHTMLMerger(object):
         for match_id, start, end in matches:
             spans.append(doc[start:end])
         with doc.retokenize() as retokenizer:
-            for span in spans:
+            for span in hashtags:
                 retokenizer.merge(span)
                 for token in span:
                     token._.bad_html = True  # Mark token as bad HTML
