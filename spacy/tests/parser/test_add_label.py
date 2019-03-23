@@ -33,7 +33,7 @@ def _train_parser(parser):
     parser.begin_training([], **parser.cfg)
     sgd = Adam(NumpyOps(), 0.001)
 
-    for i in range(10):
+    for i in range(5):
         losses = {}
         doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
         gold = GoldParse(doc, heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
@@ -43,21 +43,7 @@ def _train_parser(parser):
 
 def test_add_label(parser):
     parser = _train_parser(parser)
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc = parser(doc)
-    assert doc[0].head.i == 1
-    assert doc[0].dep_ == "left"
-    assert doc[1].head.i == 1
-    assert doc[2].head.i == 3
-    assert doc[2].head.i == 3
     parser.add_label("right")
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc = parser(doc)
-    assert doc[0].head.i == 1
-    assert doc[0].dep_ == "left"
-    assert doc[1].head.i == 1
-    assert doc[2].head.i == 3
-    assert doc[2].head.i == 3
     sgd = Adam(NumpyOps(), 0.001)
     for i in range(10):
         losses = {}
@@ -72,7 +58,6 @@ def test_add_label(parser):
     assert doc[2].dep_ == "left"
 
 
-@pytest.mark.xfail
 def test_add_label_deserializes_correctly():
     ner1 = EntityRecognizer(Vocab())
     ner1.add_label("C")
