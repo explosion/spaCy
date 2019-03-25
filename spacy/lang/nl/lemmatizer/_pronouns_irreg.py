@@ -2,30 +2,34 @@
 from __future__ import unicode_literals
 
 
-# Incomplete list. Currently serves to show to that it makes sense to
-# maintain an exceptions index for prononimal forms.
-
 PRONOUNS_IRREG = {
+    "'r": ('haar',),
     "'rzelf": ('haarzelf',),
     "'t": ('het',),
     "d'r": ('haar',),
+    'da': ('dat',),
     'dienen': ('die',),
     'diens': ('die',),
     'dies': ('die',),
     'elkaars': ('elkaar',),
+    'elkanders': ('elkander',),
     'ene': ('een',),
     'enen': ('een',),
-    'er': ('haar',),
+    'fik': ('ik',),
     'gaat': ('gaan',),
     'gene': ('geen',),
+    'harer': ('haar',),
     'ieders': ('ieder',),
     'iemands': ('iemand',),
     'ikke': ('ik',),
-    "ie": ("hij",),
     'mijnen': ('mijn',),
     'oe': ('je',),
+    'onzer': ('ons',),
+    'wa': ('wat',),
     'watte': ('wat',),
     'wier': ('wie',),
+    'zijns': ('zijn',),
+    'zoietsken': ('zoietske',),
     'zulks': ('zulk',),
     'één': ('een',)
 }

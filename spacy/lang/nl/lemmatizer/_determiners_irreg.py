@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 
 
 DETERMINERS_IRREG = {
+    "'r": ('haar',),
+    "'s": ('de',),
     "'t": ('het',),
     "'tgene": ('hetgeen',),
     'alle': ('al',),
     'allen': ('al',),
     'aller': ('al',),
+    'beiden': ('beide',),
     'beider': ('beide',),
     "d'": ('het',),
     "d'r": ('haar',),
@@ -27,6 +30,8 @@ DETERMINERS_IRREG = {
     'genen': ('geen',),
     'hare': ('haar',),
     'haren': ('haar',),
+    'harer': ('haar',),
+    'hunne': ('hun',),
     'hunnen': ('hun',),
     'jou': ('jouw',),
     'jouwe': ('jouw',),
@@ -36,6 +41,7 @@ DETERMINERS_IRREG = {
     'meer': ('veel',),
     'meerderen': ('meerdere',),
     'meest': ('veel',),
+    'meesten': ('veel',),
     'meet': ('veel',),
     'menige': ('menig',),
     'mij': ('mijn',),
@@ -44,8 +50,10 @@ DETERMINERS_IRREG = {
     'mindere': ('weinig',),
     'minst': ('weinig',),
     'minste': ('minst',),
+    'ne': ('een',),
     'onze': ('ons',),
     'onzent': ('ons',),
+    'onzer': ('ons',),
     'ouw': ('uw',),
     'sommige': ('sommig',),
     'sommigen': ('sommig',),
@@ -54,6 +62,8 @@ DETERMINERS_IRREG = {
     'vele': ('veel',),
     'velen': ('veel',),
     'welke': ('welk',),
+    'zijne': ('zijn',),
     'zijnen': ('zijn',),
+    'zijns': ('zijn',),
     'één': ('een',)
 }

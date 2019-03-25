@@ -3,18 +3,22 @@ from __future__ import unicode_literals
 
 
 ADPOSITIONS = set(
-    ('waardoor daarbuiten om daaronder errond terug tot contra rechtover neffen '
-     'boven vanaf daarin rondom neer zoals zonder na buiten omtrent al middels '
-     'erop teneinde naar inzake vanuit als te kralj beneden versus langst langs '
-     'heen onderaan vóór aan afgezien plus dankzij daarbij tegenop gedurende '
-     "linksom t' uitgenomen mits op halverwege voor dichtbij aangaande erover anno "
-     'voorbij an zijdens qua voren weg tegen ná tegenover nabij ervoor bezijden '
-     'doorheen annex via door in vinnen bezuiden bladzij vanwege voort blijkens '
-     'namens von ultimo waaronder toe omheen eruit inclusief daaraan beoosten '
-     'nevenst bij per conform neven spijts sedert van neffe wegens omstreeks onder '
-     'achter hierdoorheen middenop naartoe tijdens daarnaar gegeven benoorden af '
-     'met volgens vandaan mee vanop deure lastens luidens tussen aal getuige trots '
-     'eraf bovenop behoudens langsheen binnen ingevolge bewesten anti behalve '
-     'jegens onafgezien mede up naast hierop rond ongeacht daartegenover tegenaan '
-     'gezien binst betreffende pro lopende uit binnenuit over ondanks cq benevens '
-     'krachtens open à nopens sinds niettegenstaande').split())
+    ('aan aangaande aanwezig achter af afgezien al als an annex anno anti '
+     'behalve behoudens beneden benevens benoorden beoosten betreffende bewesten '
+     'bezijden bezuiden bij binnen binnenuit binst bladzij blijkens boven bovenop '
+     'buiten conform contra cq daaraan daarbij daarbuiten daarin daarnaar '
+     'daaronder daartegenover daarvan dankzij deure dichtbij door doordat doorheen '
+     'echter eraf erop erover errond eruit ervoor evenals exclusief gedaan '
+     'gedurende gegeven getuige gezien halfweg halverwege heen hierdoorheen hierop '
+     'houdende in inclusief indien ingaande ingevolge inzake jegens kortweg '
+     'krachtens kralj langs langsheen langst lastens linksom lopende luidens mede '
+     'mee met middels midden middenop mits na naan naar naartoe naast naat nabij '
+     'nadat namens neer neffe neffen neven nevenst niettegenstaande nopens '
+     'officieel om omheen omstreeks omtrent onafgezien ondanks onder onderaan '
+     'ondere ongeacht ooit op open over per plus pro qua rechtover rond rondom '
+     "sedert sinds spijts strekkende te tegen tegenaan tegenop tegenover telde "
+     'teneinde terug tijdens toe tot totdat trots tussen tégen uit uitgenomen '
+     'ultimo van vanaf vandaan vandoor vanop vanuit vanwege versus via vinnen '
+     'vlakbij volgens voor voor- voorbij voordat voort voren vòòr vóór waaraan '
+     'waarbij waardoor waaronder weg wegens weleens zijdens zoals zodat zonder '
+     'zónder à').split())
