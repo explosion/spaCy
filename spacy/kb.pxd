@@ -14,8 +14,7 @@ from .typedefs cimport hash_t
 cdef struct _EntryC:
 
     # The hash of this entry's unique ID and name in the kB
-    hash_t entity_id_hash
-    hash_t entity_name_hash
+    hash_t entity_hash
 
     # Allows retrieval of one or more vectors.
     # Each element of vector_rows should be an index into a vectors table.
@@ -48,7 +47,7 @@ cdef struct _AliasC:
 cdef class Candidate:
 
     cdef readonly KnowledgeBase kb
-    cdef hash_t entity_id_hash
+    cdef hash_t entity_hash
     cdef hash_t alias_hash
     cdef float prior_prob
 
@@ -97,7 +96,7 @@ cdef class KnowledgeBase:
     # optional data, we can let users configure a DB as the backend for this.
     cdef object _features_table
 
-    cdef inline int64_t c_add_entity(self, hash_t entity_id_hash, hash_t entity_name_hash, float prob,
+    cdef inline int64_t c_add_entity(self, hash_t entity_hash, float prob,
                                      int32_t* vector_rows, int feats_row):
         """Add an entry to the knowledge base."""
         # This is what we'll map the hash key to. It's where the entry will sit
@@ -105,13 +104,12 @@ cdef class KnowledgeBase:
         cdef int64_t new_index = self._entries.size()
         self._entries.push_back(
             _EntryC(
-                entity_id_hash=entity_id_hash,
-                entity_name_hash=entity_name_hash,
+                entity_hash=entity_hash,
                 vector_rows=vector_rows,
                 feats_row=feats_row,
                 prob=prob
             ))
-        self._entry_index[entity_id_hash] = new_index
+        self._entry_index[entity_hash] = new_index
         return new_index
 
     cdef inline int64_t c_add_aliases(self, hash_t alias_hash, vector[int64_t] entry_indices, vector[float] probs):
@@ -136,8 +134,7 @@ cdef class KnowledgeBase:
         self.vocab.strings.add("")
         self._entries.push_back(
             _EntryC(
-                entity_id_hash=self.vocab.strings[""],
-                entity_name_hash=self.vocab.strings[""],
+                entity_hash=self.vocab.strings[""],
                 vector_rows=&dummy_value,
                 feats_row=dummy_value,
                 prob=dummy_value

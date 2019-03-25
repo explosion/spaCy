@@ -5,32 +5,21 @@ from spacy.errors import Errors, Warnings, user_warning
 
 cdef class Candidate:
 
-    def __init__(self, KnowledgeBase kb, entity_id_hash, alias_hash, prior_prob):
+    def __init__(self, KnowledgeBase kb, entity_hash, alias_hash, prior_prob):
         self.kb = kb
-        self.entity_id_hash = entity_id_hash
+        self.entity_hash = entity_hash
         self.alias_hash = alias_hash
         self.prior_prob = prior_prob
 
     @property
-    def entity_id(self):
-        """RETURNS (uint64): hash of the entity's KB ID"""
-        return self.entity_id_hash
+    def entity(self):
+        """RETURNS (uint64): hash of the entity's KB ID/name"""
+        return self.entity_hash
 
     @property
-    def entity_id_(self):
-        """RETURNS (unicode): ID of this entity in the KB"""
-        return self.kb.vocab.strings[self.entity_id]
-
-    @property
-    def entity_name(self):
-        """RETURNS (uint64): hash of the entity's KB name"""
-        entry_index = <int64_t>self.kb._entry_index.get(self.entity_id)
-        return self.kb._entries[entry_index].entity_name_hash
-
-    @property
-    def entity_name_(self):
-        """RETURNS (unicode): name of this entity in the KB"""
-        return self.kb.vocab.strings[self.entity_name]
+    def entity_(self):
+        """RETURNS (unicode): ID/name of this entity in the KB"""
+        return self.kb.vocab.strings[self.entity]
 
     @property
     def alias(self):
@@ -65,28 +54,25 @@ cdef class KnowledgeBase:
     def get_size_aliases(self):
         return self._aliases_table.size() - 1 # not counting dummy element on index 0
 
-    def add_entity(self, unicode entity_id, unicode entity_name=None, float prob=0.5, vectors=None, features=None):
+    def add_entity(self, unicode entity, float prob=0.5, vectors=None, features=None):
         """
         Add an entity to the KB.
         Return the hash of the entity ID at the end
         """
-        if not entity_name:
-            entity_name = entity_id
-        cdef hash_t id_hash = self.vocab.strings.add(entity_id)
-        cdef hash_t name_hash = self.vocab.strings.add(entity_name)
+        cdef hash_t entity_hash = self.vocab.strings.add(entity)
 
         # Return if this entity was added before
-        if id_hash in self._entry_index:
-            user_warning(Warnings.W018.format(entity=entity_id))
+        if entity_hash in self._entry_index:
+            user_warning(Warnings.W018.format(entity=entity))
             return
 
         cdef int32_t dummy_value = 342
-        self.c_add_entity(entity_id_hash=id_hash, entity_name_hash=name_hash, prob=prob,
+        self.c_add_entity(entity_hash=entity_hash, prob=prob,
                           vector_rows=&dummy_value, feats_row=dummy_value)
         # TODO self._vectors_table.get_pointer(vectors),
         # self._features_table.get(features))
 
-        return id_hash
+        return entity_hash
 
     def add_alias(self, unicode alias, entities, probabilities):
         """
@@ -118,11 +104,11 @@ cdef class KnowledgeBase:
         cdef vector[float] probs
 
         for entity, prob in zip(entities, probabilities):
-            entity_id_hash = self.vocab.strings[entity]
-            if not entity_id_hash in self._entry_index:
+            entity_hash = self.vocab.strings[entity]
+            if not entity_hash in self._entry_index:
                 raise ValueError(Errors.E134.format(alias=alias, entity=entity))
 
-            entry_index = <int64_t>self._entry_index.get(entity_id_hash)
+            entry_index = <int64_t>self._entry_index.get(entity_hash)
             entry_indices.push_back(int(entry_index))
             probs.push_back(float(prob))
 
@@ -138,7 +124,7 @@ cdef class KnowledgeBase:
         alias_entry = self._aliases_table[alias_index]
 
         return [Candidate(kb=self,
-                          entity_id_hash=self._entries[entry_index].entity_id_hash,
+                          entity_hash=self._entries[entry_index].entity_hash,
                           alias_hash=alias_hash,
                           prior_prob=prob)
                 for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)

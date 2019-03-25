@@ -17,9 +17,9 @@ def test_kb_valid_entities(nlp):
     mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
-    mykb.add_entity(entity_id=u'Q1', prob=0.9)
-    mykb.add_entity(entity_id=u'Q2', prob=0.2)
-    mykb.add_entity(entity_id=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9)
+    mykb.add_entity(entity=u'Q2')
+    mykb.add_entity(entity=u'Q3', prob=0.5)
 
     # adding aliases
     mykb.add_alias(alias=u'douglas', entities=[u'Q2', u'Q3'], probabilities=[0.8, 0.2])
@@ -35,9 +35,9 @@ def test_kb_invalid_entities(nlp):
     mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
-    mykb.add_entity(entity_id=u'Q1', prob=0.9)
-    mykb.add_entity(entity_id=u'Q2', prob=0.2)
-    mykb.add_entity(entity_id=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9)
+    mykb.add_entity(entity=u'Q2', prob=0.2)
+    mykb.add_entity(entity=u'Q3', prob=0.5)
 
     # adding aliases - should fail because one of the given IDs is not valid
     with pytest.raises(ValueError):
@@ -49,9 +49,9 @@ def test_kb_invalid_probabilities(nlp):
     mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
-    mykb.add_entity(entity_id=u'Q1', prob=0.9)
-    mykb.add_entity(entity_id=u'Q2', prob=0.2)
-    mykb.add_entity(entity_id=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9)
+    mykb.add_entity(entity=u'Q2', prob=0.2)
+    mykb.add_entity(entity=u'Q3', prob=0.5)
 
     # adding aliases - should fail because the sum of the probabilities exceeds 1
     with pytest.raises(ValueError):
@@ -63,9 +63,9 @@ def test_kb_invalid_combination(nlp):
     mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
-    mykb.add_entity(entity_id=u'Q1', prob=0.9)
-    mykb.add_entity(entity_id=u'Q2', prob=0.2)
-    mykb.add_entity(entity_id=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9)
+    mykb.add_entity(entity=u'Q2', prob=0.2)
+    mykb.add_entity(entity=u'Q3', prob=0.5)
 
     # adding aliases - should fail because the entities and probabilities vectors are not of equal length
     with pytest.raises(ValueError):
@@ -77,9 +77,9 @@ def test_candidate_generation(nlp):
     mykb = KnowledgeBase(nlp.vocab)
 
     # adding entities
-    mykb.add_entity(entity_id=u'Q1', prob=0.9)
-    mykb.add_entity(entity_id=u'Q2', prob=0.2)
-    mykb.add_entity(entity_id=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9)
+    mykb.add_entity(entity=u'Q2', prob=0.2)
+    mykb.add_entity(entity=u'Q3', prob=0.5)
 
     # adding aliases
     mykb.add_alias(alias=u'douglas', entities=[u'Q2', u'Q3'], probabilities=[0.8, 0.2])

@@ -1096,7 +1096,7 @@ class EntityLinker(Pipe):
                 if candidates:
                     best_candidate = max(candidates, key=lambda c: c.prior_prob)
                     for token in ent:
-                        token.ent_kb_id_ = best_candidate.entity_id_
+                        token.ent_kb_id_ = best_candidate.entity_
 
     def get_loss(self, docs, golds, scores):
         # TODO
