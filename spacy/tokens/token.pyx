@@ -441,6 +441,7 @@ cdef class Token:
 
     property sent_start:
         def __get__(self):
+            """Deprecated: use Token.is_sent_start instead."""
             # Raising a deprecation warning here causes errors for autocomplete
             # Handle broken backwards compatibility case: doc[0].sent_start
             # was False.

@@ -43,8 +43,9 @@ redirects = [
     {from = "/usage/lightning-tour", to = "/usage/spacy-101#lightning-tour"},
     {from = "/usage/linguistic-features#rule-based-matching", to = "/usage/rule-based-matching"},
     {from = "/models/comparison", to = "/models"},
-    {from = "/api/#section-cython", to = "/api/cython"},
-    {from = "/api/#cython", to = "/api/cython"},
+    {from = "/api/#section-cython", to = "/api/cython", force = true},
+    {from = "/api/#cython", to = "/api/cython", force = true},
+    {from = "/api/sentencesegmenter", to="/api/sentencizer"},
     {from = "/universe", to = "/universe/project/:id", query = {id = ":id"}, force = true},
     {from = "/universe", to = "/universe/category/:category", query = {category = ":category"}, force = true},
 ]

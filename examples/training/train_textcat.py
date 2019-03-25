@@ -43,7 +43,11 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if "textcat" not in nlp.pipe_names:
         textcat = nlp.create_pipe(
-            "textcat", config={"architecture": "simple_cnn", "exclusive_classes": True}
+            "textcat",
+            config={
+                "exclusive_classes": True,
+                "architecture": "simple_cnn",
+            }
         )
         nlp.add_pipe(textcat, last=True)
     # otherwise, get it, so we can add labels to it
@@ -56,7 +60,9 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
 
     # load the IMDB dataset
     print("Loading IMDB data...")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data()
+    train_texts = train_texts[:n_texts]
+    train_cats = train_cats[:n_texts]
     print(
         "Using {} examples ({} training, {} evaluation)".format(
             n_texts, len(train_texts), len(dev_texts)

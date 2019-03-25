@@ -15,7 +15,7 @@ from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
 from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
-from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
+from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .compat import izip, basestring_
@@ -119,7 +119,7 @@ class Language(object):
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
-        "sentencizer": lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
+        "sentencizer": lambda nlp, **cfg: Sentencizer(**cfg),
         "merge_noun_chunks": lambda nlp, **cfg: merge_noun_chunks,
         "merge_entities": lambda nlp, **cfg: merge_entities,
         "merge_subtokens": lambda nlp, **cfg: merge_subtokens,

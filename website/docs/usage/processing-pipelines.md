@@ -138,7 +138,7 @@ require them in the pipeline settings in your model's `meta.json`.
 | `ner`               | [`EntityRecognizer`](/api/entityrecognizer)                      | Assign named entities.                                                                        |
 | `textcat`           | [`TextCategorizer`](/api/textcategorizer)                        | Assign text categories.                                                                       |
 | `entity_ruler`      | [`EntityRuler`](/api/entityruler)                                | Assign named entities based on pattern rules.                                                 |
-| `sentencizer`       | [`SentenceSegmenter`](/api/sentencesegmenter)                    | Add rule-based sentence segmentation without the dependency parse.                            |
+| `sentencizer`       | [`Sentencizer`](/api/sentencizer)                                | Add rule-based sentence segmentation without the dependency parse.                            |
 | `merge_noun_chunks` | [`merge_noun_chunks`](/api/pipeline-functions#merge_noun_chunks) | Merge all noun chunks into a single token. Should be added after the tagger and parser.       |
 | `merge_entities`    | [`merge_entities`](/api/pipeline-functions#merge_entities)       | Merge all entities into a single token. Should be added after the entity recognizer.          |
 | `merge_subtokens`   | [`merge_subtokens`](/api/pipeline-functions#merge_subtokens)     | Merge subtokens predicted by the parser into single tokens. Should be added after the parser. |
