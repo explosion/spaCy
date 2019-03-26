@@ -512,6 +512,7 @@ def decaying(start, stop, decay):
         yield max(curr, stop)
         curr -= (factor)
 
+
 def minibatch_by_words(items, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
     if isinstance(size, int):

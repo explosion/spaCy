@@ -1,13 +1,13 @@
-from spacy import util
+from util import decaying
 
-sizes = util.decaying(1., 10., 0.001)
+sizes = decaying(10., 1.,.5)
 
 size = next(sizes)
 print (size)
-assert size == 1.
+assert size == 10.
 size = next(sizes)
 print (size)
-assert size == 1. - 0.001
+assert size == 10. - 0.5
 size = next(sizes)
 print (size)
-assert size == 1. - 0.001 - 0.001
+assert size == 10. - 0.5 - 0.5
