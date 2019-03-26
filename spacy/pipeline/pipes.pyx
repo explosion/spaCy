@@ -25,6 +25,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from .._ml import Tok2Vec, build_tagger_model
 from .._ml import build_text_classifier, build_simple_cnn_text_classifier
+from .._ml import build_bow_text_classifier
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer
 from ..errors import Errors, TempErrors
@@ -876,6 +877,8 @@ class TextCategorizer(Pipe):
         if cfg.get("architecture") == "simple_cnn":
             tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
             return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
+        elif cfg.get("architecture") == "bow":
+            return build_bow_text_classifier(nr_class, **cfg)
         else:
             return build_text_classifier(nr_class, **cfg)
 
@@ -1107,4 +1110,90 @@ class EntityLinker(Pipe):
         pass
 
 
-__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker"]
+class Sentencizer(object):
+    """Segment the Doc into sentences using a rule-based strategy.
+
+    DOCS: https://spacy.io/api/sentencizer
+    """
+
+    name = "sentencizer"
+    default_punct_chars = [".", "!", "?"]
+
+    def __init__(self, punct_chars=None, **kwargs):
+        """Initialize the sentencizer.
+
+        punct_chars (list): Punctuation characters to split on. Will be
+            serialized with the nlp object.
+        RETURNS (Sentencizer): The sentencizer component.
+
+        DOCS: https://spacy.io/api/sentencizer#init
+        """
+        self.punct_chars = punct_chars or self.default_punct_chars
+
+    def __call__(self, doc):
+        """Apply the sentencizer to a Doc and set Token.is_sent_start.
+
+        doc (Doc): The document to process.
+        RETURNS (Doc): The processed Doc.
+
+        DOCS: https://spacy.io/api/sentencizer#call
+        """
+        start = 0
+        seen_period = False
+        for i, token in enumerate(doc):
+            is_in_punct_chars = token.text in self.punct_chars
+            token.is_sent_start = i == 0
+            if seen_period and not token.is_punct and not is_in_punct_chars:
+                doc[start].is_sent_start = True
+                start = token.i
+                seen_period = False
+            elif is_in_punct_chars:
+                seen_period = True
+        if start < len(doc):
+            doc[start].is_sent_start = True
+        return doc
+
+    def to_bytes(self, **kwargs):
+        """Serialize the sentencizer to a bytestring.
+
+        RETURNS (bytes): The serialized object.
+
+        DOCS: https://spacy.io/api/sentencizer#to_bytes
+        """
+        return srsly.msgpack_dumps({"punct_chars": self.punct_chars})
+
+    def from_bytes(self, bytes_data, **kwargs):
+        """Load the sentencizer from a bytestring.
+
+        bytes_data (bytes): The data to load.
+        returns (Sentencizer): The loaded object.
+
+        DOCS: https://spacy.io/api/sentencizer#from_bytes
+        """
+        cfg = srsly.msgpack_loads(bytes_data)
+        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        return self
+
+    def to_disk(self, path, exclude=tuple(), **kwargs):
+        """Serialize the sentencizer to disk.
+
+        DOCS: https://spacy.io/api/sentencizer#to_disk
+        """
+        path = util.ensure_path(path)
+        path = path.with_suffix(".json")
+        srsly.write_json(path, {"punct_chars": self.punct_chars})
+
+
+    def from_disk(self, path, exclude=tuple(), **kwargs):
+        """Load the sentencizer from disk.
+
+        DOCS: https://spacy.io/api/sentencizer#from_disk
+        """
+        path = util.ensure_path(path)
+        path = path.with_suffix(".json")
+        cfg = srsly.read_json(path)
+        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        return self
+
+      
+__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer"]
