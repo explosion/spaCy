@@ -1,13 +1,10 @@
-from util import decaying
+from spacy.util import decaying
 
-sizes = decaying(10., 1.,.5)
-
-size = next(sizes)
-print (size)
-assert size == 10.
-size = next(sizes)
-print (size)
-assert size == 10. - 0.5
-size = next(sizes)
-print (size)
-assert size == 10. - 0.5 - 0.5
+def test_decaying():
+    sizes = decaying(10., 1., .5)
+    size = next(sizes)
+    assert size == 10.
+    size = next(sizes)
+    assert size == 10. - 0.5
+    size = next(sizes)
+    assert size == 10. - 0.5 - 0.5
