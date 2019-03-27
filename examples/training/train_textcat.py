@@ -24,8 +24,9 @@ from spacy.util import minibatch, compounding
     output_dir=("Optional output directory", "option", "o", Path),
     n_texts=("Number of texts to train from", "option", "t", int),
     n_iter=("Number of training iterations", "option", "n", int),
+    init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path)
 )
-def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
+def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None):
     if output_dir is not None:
         output_dir = Path(output_dir)
         if not output_dir.exists():
@@ -42,7 +43,11 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if "textcat" not in nlp.pipe_names:
         textcat = nlp.create_pipe(
-            "textcat", config={"architecture": "simple_cnn", "exclusive_classes": True}
+            "textcat",
+            config={
+                "exclusive_classes": True,
+                "architecture": "simple_cnn",
+            }
         )
         nlp.add_pipe(textcat, last=True)
     # otherwise, get it, so we can add labels to it
@@ -55,7 +60,9 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
 
     # load the IMDB dataset
     print("Loading IMDB data...")
-    (train_texts, train_cats), (dev_texts, dev_cats) = load_data(limit=n_texts)
+    (train_texts, train_cats), (dev_texts, dev_cats) = load_data()
+    train_texts = train_texts[:n_texts]
+    train_cats = train_cats[:n_texts]
     print(
         "Using {} examples ({} training, {} evaluation)".format(
             n_texts, len(train_texts), len(dev_texts)
@@ -67,12 +74,17 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000):
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "textcat"]
     with nlp.disable_pipes(*other_pipes):  # only train textcat
         optimizer = nlp.begin_training()
+        if init_tok2vec is not None:
+            with init_tok2vec.open("rb") as file_:
+                textcat.model.tok2vec.from_bytes(file_.read())
         print("Training the model...")
         print("{:^5}\t{:^5}\t{:^5}\t{:^5}".format("LOSS", "P", "R", "F"))
+        batch_sizes = compounding(4.0, 32.0, 1.001)
         for i in range(n_iter):
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+            random.shuffle(train_data)
+            batches = minibatch(train_data, size=batch_sizes)
             for batch in batches:
                 texts, annotations = zip(*batch)
                 nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
