@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 
 # Source: https://github.com/stopwords-iso/stopwords-ro
-
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a
 abia
 acea
@@ -472,4 +472,5 @@ zice
 știu
 ți
 ție
-""".split())
+""".split()
+)

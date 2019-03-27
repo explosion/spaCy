@@ -1,0 +1,38 @@
+{
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "tabWidth": 4,
+    "printWidth": 100,
+    "overrides": [
+        {
+            "files": "*.sass",
+            "options": {
+                "printWidth": 999
+            }
+        },
+        {
+            "files": "*.mdx",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80,
+                "proseWrap": "always"
+            }
+        },
+        {
+            "files": "*.md",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80,
+                "proseWrap": "always",
+                "htmlWhitespaceSensitivity": "strict"
+            }
+        },
+        {
+            "files": "*.html",
+            "options": {
+                "htmlWhitespaceSensitivity": "strict"
+            }
+        }
+    ]
+}

@@ -2,12 +2,12 @@
 from __future__ import unicode_literals
 
 import unicodedata
-import regex as re
+import re
 
 from .. import attrs
 
 
-_like_email = re.compile(r'([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)').match
+_like_email = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)").match
 _tlds = set(
     "com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|museum|"
     "name|pro|tel|travel|xxx|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|"
@@ -20,12 +20,13 @@ _tlds = set(
     "na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|"
     "pt|pw|py|qa|re|ro|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|"
     "ss|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|"
-    "ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw".split('|'))
+    "ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw".split("|")
+)
 
 
 def is_punct(text):
     for char in text:
-        if not unicodedata.category(char).startswith('P'):
+        if not unicodedata.category(char).startswith("P"):
             return False
     return True
 
@@ -38,41 +39,80 @@ def is_ascii(text):
 
 
 def like_num(text):
+    if text.startswith(("+", "-", "±", "~")):
+        text = text[1:]
     # can be overwritten by lang with list of number words
-    text = text.replace(',', '').replace('.', '')
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if text.count('/') == 1:
-        num, denom = text.split('/')
+    if text.count("/") == 1:
+        num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
     return False
 
 
 def is_bracket(text):
-    brackets = ('(',')','[',']','{','}','<','>')
+    brackets = ("(", ")", "[", "]", "{", "}", "<", ">")
     return text in brackets
 
 
 def is_quote(text):
-    quotes = ('"',"'",'`','«','»','‘','’','‚','‛','“','”','„','‟','‹','›','❮','❯',"''",'``')
+    quotes = (
+        '"',
+        "'",
+        "`",
+        "«",
+        "»",
+        "‘",
+        "’",
+        "‚",
+        "‛",
+        "“",
+        "”",
+        "„",
+        "‟",
+        "‹",
+        "›",
+        "❮",
+        "❯",
+        "''",
+        "``",
+    )
     return text in quotes
 
 
 def is_left_punct(text):
-    left_punct = ('(','[','{','<','"',"'",'«','‘','‚','‛','“','„','‟','‹','❮','``')
+    left_punct = (
+        "(",
+        "[",
+        "{",
+        "<",
+        '"',
+        "'",
+        "«",
+        "‘",
+        "‚",
+        "‛",
+        "“",
+        "„",
+        "‟",
+        "‹",
+        "❮",
+        "``",
+    )
     return text in left_punct
 
 
 def is_right_punct(text):
-    right_punct = (')',']','}','>','"',"'",'»','’','”','›','❯',"''")
+    right_punct = (")", "]", "}", ">", '"', "'", "»", "’", "”", "›", "❯", "''")
     return text in right_punct
 
 
 def is_currency(text):
     # can be overwritten by lang with list of currency words, e.g. dollar, euro
     for char in text:
-        if unicodedata.category(char) != 'Sc':
+        if unicodedata.category(char) != "Sc":
             return False
     return True
 
@@ -84,23 +124,23 @@ def like_email(text):
 def like_url(text):
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
-    if text.startswith('http://') or text.startswith('https://'):
+    if text.startswith("http://") or text.startswith("https://"):
         return True
-    elif text.startswith('www.') and len(text) >= 5:
+    elif text.startswith("www.") and len(text) >= 5:
         return True
-    if text[0] == '.' or text[-1] == '.':
+    if text[0] == "." or text[-1] == ".":
         return False
-    if '@' in text:
+    if "@" in text:
         # prevent matches on e-mail addresses – check after splitting the text
         # to still allow URLs containing an '@' character (see #1715)
         return False
     for i in range(len(text)):
-        if text[i] == '.':
+        if text[i] == ".":
             break
     else:
         return False
-    tld = text.rsplit('.', 1)[1].split(':', 1)[0]
-    if tld.endswith('/'):
+    tld = text.rsplit(".", 1)[1].split(":", 1)[0]
+    if tld.endswith("/"):
         return True
     if tld.isalpha() and tld in _tlds:
         return True
@@ -109,20 +149,19 @@ def like_url(text):
 
 def word_shape(text):
     if len(text) >= 100:
-        return 'LONG'
-    length = len(text)
+        return "LONG"
     shape = []
-    last = ''
-    shape_char = ''
+    last = ""
+    shape_char = ""
     seq = 0
     for char in text:
         if char.isalpha():
             if char.isupper():
-                shape_char = 'X'
+                shape_char = "X"
             else:
-                shape_char = 'x'
+                shape_char = "x"
         elif char.isdigit():
-            shape_char = 'd'
+            shape_char = "d"
         else:
             shape_char = char
         if shape_char == last:
@@ -132,21 +171,60 @@ def word_shape(text):
             last = shape_char
         if seq < 4:
             shape.append(shape_char)
-    return ''.join(shape)
+    return "".join(shape)
 
-def lower(string): return string.lower()
-def prefix(string): return string[0]
-def suffix(string): return string[-3:]
-def cluster(string): return 0
-def is_alpha(string): return string.isalpha()
-def is_digit(string): return string.isdigit()
-def is_lower(string): return string.islower()
-def is_space(string): return string.isspace()
-def is_title(string): return string.istitle()
-def is_upper(string): return string.isupper()
-def is_stop(string, stops=set()): return string in stops
-def is_oov(string): return True
-def get_prob(string): return -20.
+
+def lower(string):
+    return string.lower()
+
+
+def prefix(string):
+    return string[0]
+
+
+def suffix(string):
+    return string[-3:]
+
+
+def cluster(string):
+    return 0
+
+
+def is_alpha(string):
+    return string.isalpha()
+
+
+def is_digit(string):
+    return string.isdigit()
+
+
+def is_lower(string):
+    return string.islower()
+
+
+def is_space(string):
+    return string.isspace()
+
+
+def is_title(string):
+    return string.istitle()
+
+
+def is_upper(string):
+    return string.isupper()
+
+
+def is_stop(string, stops=set()):
+    return string.lower() in stops
+
+
+def is_oov(string):
+    return True
+
+
+def get_prob(string):
+    return -20.0
+
 
 LEX_ATTRS = {
     attrs.LOWER: lower,
@@ -168,10 +246,10 @@ LEX_ATTRS = {
     attrs.IS_PUNCT: is_punct,
     attrs.IS_ASCII: is_ascii,
     attrs.SHAPE: word_shape,
-    attrs.IS_BRACKET:is_bracket,
+    attrs.IS_BRACKET: is_bracket,
     attrs.IS_QUOTE: is_quote,
     attrs.IS_LEFT_PUNCT: is_left_punct,
     attrs.IS_RIGHT_PUNCT: is_right_punct,
     attrs.IS_CURRENCY: is_currency,
-    attrs.LIKE_URL: like_url
+    attrs.LIKE_URL: like_url,
 }

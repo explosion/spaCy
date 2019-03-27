@@ -1,0 +1,14 @@
+[flake8]
+ignore = E203, E266, E501, E731, W503
+max-line-length = 80
+select = B,C,E,F,W,T4,B9
+exclude =
+    .env,
+    .git,
+    __pycache__,
+    lemmatizer.py,
+    lookup.py,
+    _tokenizer_exceptions_list.py,
+    spacy/lang/fr/lemmatizer,
+    spacy/lang/nb/lemmatizer
+    spacy/__init__.py

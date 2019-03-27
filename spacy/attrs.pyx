@@ -131,7 +131,7 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
             'NumValue', 'PartType', 'Polite', 'StyleVariant',
             'PronType', 'AdjType', 'Person', 'Variant', 'AdpType',
             'Reflex', 'Negative', 'Mood', 'Aspect', 'Case',
-            'Polarity', 'Animacy' # U20
+            'Polarity', 'PrepCase', 'Animacy' # U20
         ]
         for key in morph_keys:
             if key in stringy_attrs:

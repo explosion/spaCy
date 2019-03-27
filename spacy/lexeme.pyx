@@ -4,18 +4,21 @@ from __future__ import unicode_literals, print_function
 
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
+from libc.string cimport memset
 cimport numpy as np
 np.import_array()
-from libc.string cimport memset
+
 import numpy
+from thinc.neural.util import get_array_module
 
 from .typedefs cimport attr_t, flags_t
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_CURRENCY, IS_OOV
-from .attrs cimport PROB
+from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
+from .attrs cimport IS_CURRENCY, IS_OOV, PROB
+
 from .attrs import intify_attrs
-from .errors import Errors
+from .errors import Errors, Warnings, user_warning
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
@@ -26,6 +29,8 @@ cdef class Lexeme:
     word-type, as opposed to a word token.  It therefore has no part-of-speech
     tag, dependency parse, or lemma (lemmatization depends on the
     part-of-speech tag).
+
+    DOCS: https://spacy.io/api/lexeme
     """
     def __init__(self, Vocab vocab, attr_t orth):
         """Create a Lexeme object.
@@ -114,17 +119,19 @@ cdef class Lexeme:
         RETURNS (float): A scalar similarity score. Higher is more similar.
         """
         # Return 1.0 similarity for matches
-        if hasattr(other, 'orth'):
+        if hasattr(other, "orth"):
             if self.c.orth == other.orth:
                 return 1.0
-        elif hasattr(other, '__len__') and len(other) == 1 \
-        and hasattr(other[0], 'orth'):
+        elif hasattr(other, "__len__") and len(other) == 1 \
+        and hasattr(other[0], "orth"):
             if self.c.orth == other[0].orth:
                 return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
+            user_warning(Warnings.W008.format(obj="Lexeme"))
             return 0.0
-        return (numpy.dot(self.vector, other.vector) /
-                (self.vector_norm * other.vector_norm))
+        vector = self.vector
+        xp = get_array_module(vector)
+        return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
     def to_bytes(self):
         lex_data = Lexeme.c_to_bytes(self.c)
@@ -133,7 +140,7 @@ cdef class Lexeme:
         if (end-start) != sizeof(lex_data.data):
             raise ValueError(Errors.E072.format(length=end-start,
                                                 bad_length=sizeof(lex_data.data)))
-        byte_string = b'\0' * sizeof(lex_data.data)
+        byte_string = b"\0" * sizeof(lex_data.data)
         byte_chars = <char*>byte_string
         for i in range(sizeof(lex_data.data)):
             byte_chars[i] = lex_data.data[i]
@@ -154,17 +161,17 @@ cdef class Lexeme:
         Lexeme.c_from_bytes(self.c, lex_data)
         self.orth = self.c.orth
 
-    property has_vector:
+    @property
+    def has_vector(self):
         """RETURNS (bool): Whether a word vector is associated with the object.
         """
-        def __get__(self):
-            return self.vocab.has_vector(self.c.orth)
+        return self.vocab.has_vector(self.c.orth)
 
-    property vector_norm:
+    @property
+    def vector_norm(self):
         """RETURNS (float): The L2 norm of the vector representation."""
-        def __get__(self):
-            vector = self.vector
-            return numpy.sqrt((vector**2).sum())
+        vector = self.vector
+        return numpy.sqrt((vector**2).sum())
 
     property vector:
         """A real-valued meaning representation.
@@ -202,17 +209,17 @@ cdef class Lexeme:
         def __set__(self, float sentiment):
             self.c.sentiment = sentiment
 
-    property orth_:
+    @property
+    def orth_(self):
         """RETURNS (unicode): The original verbatim text of the lexeme
             (identical to `Lexeme.text`). Exists mostly for consistency with
             the other attributes."""
-        def __get__(self):
-            return self.vocab.strings[self.c.orth]
+        return self.vocab.strings[self.c.orth]
 
-    property text:
+    @property
+    def text(self):
         """RETURNS (unicode): The original verbatim text of the lexeme."""
-        def __get__(self):
-            return self.orth_
+        return self.orth_
 
     property lower:
         """RETURNS (unicode): Lowercase form of the lexeme."""

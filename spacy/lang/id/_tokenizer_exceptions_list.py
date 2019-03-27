@@ -1,7 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-ID_BASE_EXCEPTIONS = set("""
+ID_BASE_EXCEPTIONS = set(
+    """
 aba-aba
 abah-abah
 abal-abal
@@ -24,7 +25,7 @@ aci-acinya
 aco-acoan
 ad-blocker
 ad-interim
-ada-ada saja
+ada-ada
 ada-adanya
 ada-adanyakah
 adang-adang
@@ -243,7 +244,6 @@ bari-bari
 barik-barik
 baris-berbaris
 baru-baru
-baru-baru ini
 baru-batu
 barung-barung
 basa-basi
@@ -1059,7 +1059,6 @@ box-to-box
 boyo-boyo
 buah-buahan
 buang-buang
-buang-buang air
 buat-buatan
 buaya-buaya
 bubun-bubun
@@ -1226,7 +1225,6 @@ deg-degan
 degap-degap
 dekak-dekak
 dekat-dekat
-dengan -
 dengar-dengaran
 dengking-mendengking
 departemen-departemen
@@ -1246,6 +1244,7 @@ dibayang-bayangi
 dibuat-buat
 diiming-imingi
 dilebih-lebihkan
+dimana-mana
 dimata-matai
 dinas-dinas
 dinul-Islam
@@ -1278,6 +1277,57 @@ dulang-dulang
 duri-duri
 duta-duta
 dwi-kewarganegaraan
+e-arena
+e-billing
+e-budgeting
+e-cctv
+e-class
+e-commerce
+e-counting
+e-elektronik
+e-entertainment
+e-evolution
+e-faktur
+e-filing
+e-fin
+e-form
+e-government
+e-govt
+e-hakcipta
+e-id
+e-info
+e-katalog
+e-ktp
+e-leadership
+e-lhkpn
+e-library
+e-loket
+e-m1
+e-money
+e-news
+e-nisn
+e-npwp
+e-paspor
+e-paten
+e-pay
+e-perda
+e-perizinan
+e-planning
+e-polisi
+e-power
+e-punten
+e-retribusi
+e-samsat
+e-sport
+e-store
+e-tax
+e-ticketing
+e-tilang
+e-toll
+e-visa
+e-voting
+e-wallet
+e-warong
 ecek-ecek
 eco-friendly
 eco-park
@@ -1440,7 +1490,25 @@ ginang-ginang
 girap-girap
 girik-girik
 giring-giring
+go-auto
+go-bills
+go-bluebird
+go-box
+go-car
+go-clean
+go-food
+go-glam
+go-jek
 go-kart
+go-mart
+go-massage
+go-med
+go-points
+go-pulsa
+go-ride
+go-send
+go-shop
+go-tix
 go-to-market
 goak-goak
 goal-line
@@ -1488,7 +1556,6 @@ hang-out
 hantu-hantu
 happy-happy
 harap-harap
-harap-harap cemas
 harap-harapan
 hard-disk
 harga-harga
@@ -1633,7 +1700,7 @@ jor-joran
 jotos-jotosan
 juak-juak
 jual-beli
-juang-juang !!? lenjuang
+juang-juang
 julo-julo
 julung-julung
 julur-julur
@@ -1787,6 +1854,7 @@ kemarah-marahan
 kemasam-masaman
 kemati-matian
 kembang-kembang
+kemenpan-rb
 kementerian-kementerian
 kemerah-merahan
 kempang-kempis
@@ -1827,7 +1895,6 @@ keras-mengerasi
 kercap-kercip
 kercap-kercup
 keriang-keriut
-kering-kering air
 kerja-kerja
 kernyat-kernyut
 kerobak-kerabit
@@ -1952,7 +2019,7 @@ kuda-kudaan
 kudap-kudap
 kue-kue
 kulah-kulah
-kulak-kulak tangan
+kulak-kulak
 kulik-kulik
 kulum-kulum
 kumat-kamit
@@ -2086,7 +2153,6 @@ lumba-lumba
 lumi-lumi
 luntang-lantung
 lupa-lupa
-lupa-lupa ingat
 lupa-lupaan
 lurah-camat
 maaf-memaafkan
@@ -2097,6 +2163,7 @@ macan-macanan
 machine-to-machine
 mafia-mafia
 mahasiswa-mahasiswi
+mahasiswa/i
 mahi-mahi
 main-main
 main-mainan
@@ -2185,14 +2252,14 @@ memandai-mandai
 memanggil-manggil
 memanis-manis
 memanjut-manjut
-memantas-mantas diri
+memantas-mantas
 memasak-masak
 memata-matai
 mematah-matah
 mematuk-matuk
 mematut-matut
 memau-mau
-memayah-mayahkan (diri)
+memayah-mayahkan
 membaca-baca
 membacah-bacah
 membagi-bagikan
@@ -2576,6 +2643,7 @@ meraung-raungkan
 merayau-rayau
 merayu-rayu
 mercak-mercik
+mercedes-benz
 merek-merek
 mereka-mereka
 mereka-reka
@@ -2627,9 +2695,9 @@ morat-marit
 move-on
 muda-muda
 muda-mudi
+muda/i
 mudah-mudahan
 muka-muka
-muka-muka (dengan -)
 mula-mula
 multiple-output
 muluk-muluk
@@ -2791,6 +2859,7 @@ paus-paus
 paut-memaut
 pay-per-click
 paya-paya
+pdi-p
 pecah-pecah
 pecat-pecatan
 peer-to-peer
@@ -2951,6 +3020,7 @@ putih-hitam
 putih-putih
 putra-putra
 putra-putri
+putra/i
 putri-putri
 putus-putus
 putusan-putusan
@@ -3069,6 +3139,7 @@ sambung-bersambung
 sambung-menyambung
 sambut-menyambut
 samo-samo
+sampah-sampah
 sampai-sampai
 samping-menyamping
 sana-sini
@@ -3204,7 +3275,7 @@ seolah-olah
 sepala-pala
 sepandai-pandai
 sepetang-petangan
-sepoi-sepoi (basa)
+sepoi-sepoi
 sepraktis-praktisnya
 sepuas-puasnya
 serak-serak
@@ -3278,6 +3349,7 @@ sisa-sisa
 sisi-sisi
 siswa-siswa
 siswa-siswi
+siswa/i
 siswi-siswi
 situ-situ
 situs-situs
@@ -3380,6 +3452,7 @@ tanggul-tanggul
 tanggung-menanggung
 tanggung-tanggung
 tank-tank
+tante-tante
 tanya-jawab
 tapa-tapa
 tapak-tapak
@@ -3424,7 +3497,6 @@ teralang-alang
 terambang-ambang
 terambung-ambung
 terang-terang
-terang-terang laras
 terang-terangan
 teranggar-anggar
 terangguk-angguk
@@ -3438,7 +3510,6 @@ terayap-rayap
 terbada-bada
 terbahak-bahak
 terbang-terbang
-terbang-terbang hinggap
 terbata-bata
 terbatuk-batuk
 terbayang-bayang
@@ -3830,4 +3901,5 @@ yel-yel
 yo-yo
 zam-zam
 zig-zag
-""".split())
+""".split()
+)

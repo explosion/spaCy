@@ -18,5 +18,5 @@ sentences = [
     "Where are you?",
     "Who is the president of France?",
     "What is the capital of the United States?",
-    "When was Barack Obama born?"
+    "When was Barack Obama born?",
 ]

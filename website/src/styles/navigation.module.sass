@@ -1,0 +1,92 @@
+@import base
+
+.root
+    position: fixed
+    top: 0
+    left: 0
+    width: 100%
+    height: var(--height-nav)
+    background: var(--color-back)
+    color: var(--color-front)
+    align-items: center
+    display: flex
+    justify-content: space-between
+    flex-flow: row nowrap
+    padding: 0 0 0 1rem
+    z-index: 30
+    width: 100%
+    box-shadow: var(--box-shadow)
+
+.logo
+    min-width: 95px
+    width: 95px
+    height: 30px
+    color: var(--color-theme) !important
+    vertical-align: middle
+
+.title
+    display: none
+
+.list
+    display: flex
+    flex-flow: row nowrap
+    border-color: inherit
+    justify-content: flex-end
+    margin-bottom: 0.25rem
+
+.item
+    display: inline-flex
+    align-items: center
+    height: 100%
+    text-transform: uppercase
+    font-family: var(--font-secondary)
+    font-size: 1.6rem
+    font-weight: bold
+    color: var(--color-theme)
+
+    &:not(:first-child)
+        margin-left: 2em
+
+    &:last-child
+        padding-right: 2rem
+
+    &:first-child
+        padding-left: 2rem
+
+.menu
+    display: flex
+    flex-flow: row nowrap
+    margin-left: 0.5rem
+
+.is-active
+    color: var(--color-dark)
+    pointer-events: none
+
+.search
+    display: inline-flex
+    align-items: center
+    height: 100%
+    padding-right: 2rem
+
+.dropdown
+    --dropdown-text-color: var(--color-theme)
+    font-family: var(--font-secondary)
+    font-size: 1.6rem
+    font-weight: bold
+    color: var(--color-theme)
+    text-transform: uppercase
+    margin-right: 0.5rem
+    border: 2px solid var(--color-back)
+    border-radius: 2em
+
+    &:focus
+        border: 2px dotted var(--color-theme)
+        outline: none
+
+@include breakpoint(max, xs)
+    .list
+        display: none
+
+@include breakpoint(min, sm)
+    .dropdown
+        display: none

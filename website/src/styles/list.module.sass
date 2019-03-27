@@ -1,0 +1,37 @@
+.ol, .ul
+    margin-bottom: var(--spacing-md)
+    font: var(--font-size-md)/var(--line-height-md) var(--font-primary)
+
+.ol
+    counter-reset: li
+
+    li:before
+        content: counter(li, decimal) '.'
+        font-size: 1em
+        padding-right: 1rem
+        padding-top: 0
+
+.li
+    padding-left: 2rem
+    margin-bottom: 0.5em
+    margin-left: 1.25rem
+
+    p
+        display: inline-block
+        margin-bottom: var(--spacing-sm)
+
+    &:before
+        content: '\25CF'
+        position: relative
+        bottom: 1px
+        display: inline-block
+        font-size: 0.6em
+        font-weight: bold
+        padding-right: 1.5em
+        padding-top: 0.5em
+        margin-left: -3.75rem
+        text-align: right
+        width: 2.5rem
+        counter-increment: li
+        box-sizing: content-box
+        vertical-align: top
