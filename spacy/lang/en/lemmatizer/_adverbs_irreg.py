@@ -6,7 +6,7 @@ ADVERBS_IRREG = {
     "best": ("well",),
     "better": ("well",),
     "closer": ("close",),
-    "closest": ("close",)
+    "closest": ("close",),
     "deeper": ("deeply",),
     "earlier": ("early",),
     "earliest": ("early",),
@@ -23,9 +23,9 @@ ADVERBS_IRREG = {
     "nigher": ("nigh",),
     "nighest": ("nigh",),
     "quicker": ("quick",),
-    "quickest": ("quick",)
+    "quickest": ("quick",),
     "slower": ("slow",),
-    "slowest": ("slowest",)
+    "slowest": ("slowest",),
     "sooner": ("soon",),
     "soonest": ("soon",)
 }
