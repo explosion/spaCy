@@ -622,10 +622,10 @@ Yield an infinite series of linearly decaying values.
 > #### Example
 >
 > ```python
-> sizes = decaying(1., 10., 0.001)
-> assert next(sizes) == 1.
-> assert next(sizes) == 1. - 0.001
-> assert next(sizes) == 0.999 - 0.001
+> sizes = decaying(10., 1., 0.001)
+> assert next(sizes) == 10.
+> assert next(sizes) == 10. - 0.001
+> assert next(sizes) == 9.999 - 0.001
 > ```
 
 | Name       | Type        | Description          |

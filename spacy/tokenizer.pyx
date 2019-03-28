@@ -131,6 +131,7 @@ cdef class Tokenizer:
 
         texts: A sequence of unicode texts.
         batch_size (int): Number of texts to accumulate in an internal buffer.
+        Defaults to 1000.
         YIELDS (Doc): A sequence of Doc objects, in order.
 
         DOCS: https://spacy.io/api/tokenizer#pipe

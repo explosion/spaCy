@@ -64,7 +64,7 @@ Tokenize a stream of texts.
 | Name         | Type  | Description                                              |
 | ------------ | ----- | -------------------------------------------------------- |
 | `texts`      | -     | A sequence of unicode texts.                             |
-| `batch_size` | int   | The number of texts to accumulate in an internal buffer. |
+| `batch_size` | int   | The number of texts to accumulate in an internal buffer. Defaults to `1000`.|
 | **YIELDS**   | `Doc` | A sequence of Doc objects, in order.                     |
 
 ## Tokenizer.find_infix {#find_infix tag="method"}
