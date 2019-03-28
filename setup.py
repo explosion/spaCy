@@ -58,7 +58,7 @@ MOD_NAMES = [
     "spacy.tokens._retokenize",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
-    "spacy.matcher.dependencytreematcher",
+    "spacy.matcher.dependencymatcher",
     "spacy.syntax.ner",
     "spacy.symbols",
     "spacy.vectors",

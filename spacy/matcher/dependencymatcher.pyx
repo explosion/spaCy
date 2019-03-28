@@ -12,13 +12,15 @@ from ..tokens.doc cimport Doc
 from .matcher import unpickle_matcher
 from ..errors import Errors
 
+from libcpp cimport bool
+import numpy
 
 DELIMITER = "||"
 INDEX_HEAD = 1
 INDEX_RELOP = 0
 
 
-cdef class DependencyTreeMatcher:
+cdef class DependencyMatcher:
     """Match dependency parse tree based on pattern rules."""
     cdef Pool mem
     cdef readonly Vocab vocab
@@ -32,11 +34,11 @@ cdef class DependencyTreeMatcher:
     cdef public object _tree
 
     def __init__(self, vocab):
-        """Create the DependencyTreeMatcher.
+        """Create the DependencyMatcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the
             documents the matcher will operate on.
-        RETURNS (DependencyTreeMatcher): The newly constructed object.
+        RETURNS (DependencyMatcher): The newly constructed object.
         """
         size = 20
         self.token_matcher = Matcher(vocab)
@@ -238,13 +240,14 @@ cdef class DependencyTreeMatcher:
                     on_match(self, doc, i, matches)
         return matched_key_trees
 
-    def recurse(self,tree,id_to_position,_node_operator_map,patternLength,visitedNodes,matched_trees):
+    def recurse(self,tree,id_to_position,_node_operator_map,int patternLength,visitedNodes,matched_trees):
+        cdef bool isValid;
         if(patternLength == len(id_to_position.keys())):
             isValid = True
             for node in range(patternLength):
                 if(node in tree):
-                    for relop,nbor in tree[node]:
-                        computed_nbors = _node_operator_map[visitedNodes[node]][relop]
+                    for idx, (relop,nbor) in enumerate(tree[node]):
+                        computed_nbors = numpy.asarray(_node_operator_map[visitedNodes[node]][relop])
                         isNbor = False
                         for computed_nbor in computed_nbors:
                             if(computed_nbor.i == visitedNodes[nbor]):
@@ -253,7 +256,7 @@ cdef class DependencyTreeMatcher:
             if(isValid):
                 matched_trees.append(visitedNodes)
             return
-        allPatternNodes = id_to_position[patternLength]
+        allPatternNodes = numpy.asarray(id_to_position[patternLength])
         for patternNode in allPatternNodes:
             self.recurse(tree,id_to_position,_node_operator_map,patternLength+1,visitedNodes+[patternNode],matched_trees)
 
