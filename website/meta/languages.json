@@ -117,6 +117,7 @@
         { "code": "sk", "name": "Slovak" },
         { "code": "sl", "name": "Slovenian" },
         { "code": "sq", "name": "Albanian" },
+        { "code": "et", "name": "Estonian" },
         {
             "code": "th",
             "name": "Thai",

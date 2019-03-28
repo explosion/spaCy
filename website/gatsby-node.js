@@ -40,6 +40,7 @@ exports.createPages = ({ graphql, actions }) => {
                                     resources {
                                         id
                                         title
+                                        slogan
                                     }
                                     categories {
                                         label
@@ -178,6 +179,7 @@ exports.createPages = ({ graphql, actions }) => {
                             slug: slug,
                             isIndex: false,
                             title: page.title || page.id,
+                            teaser: page.slogan,
                             data: { ...page, isProject: true },
                             ...universeContext,
                         },

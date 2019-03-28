@@ -25,21 +25,21 @@ an **annotated document**. It also orchestrates training and serialization.
 
 ### Processing pipeline {#architecture-pipeline}
 
-| Name                                          | Description                                                                                                                   |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| [`Language`](/api/language)                   | A text-processing pipeline. Usually you'll load this once per process as `nlp` and pass the instance around your application. |
-| [`Tokenizer`](/api/tokenizer)                 | Segment text, and create `Doc` objects with the discovered segment boundaries.                                                |
-| [`Lemmatizer`](/api/lemmatizer)               | Determine the base forms of words.                                                                                            |
-| `Morphology`                                  | Assign linguistic features like lemmas, noun case, verb tense etc. based on the word and its part-of-speech tag.              |
-| [`Tagger`](/api/tagger)                       | Annotate part-of-speech tags on `Doc` objects.                                                                                |
-| [`DependencyParser`](/api/dependencyparser)   | Annotate syntactic dependencies on `Doc` objects.                                                                             |
-| [`EntityRecognizer`](/api/entityrecognizer)   | Annotate named entities, e.g. persons or products, on `Doc` objects.                                                          |
-| [`TextCategorizer`](/api/textcategorizer)     | Assign categories or labels to `Doc` objects.                                                                                 |
-| [`Matcher`](/api/matcher)                     | Match sequences of tokens, based on pattern rules, similar to regular expressions.                                            |
-| [`PhraseMatcher`](/api/phrasematcher)         | Match sequences of tokens based on phrases.                                                                                   |
-| [`EntityRuler`](/api/entityruler)             | Add entity spans to the `Doc` using token-based rules or exact phrase matches.                                                |
-| [`SentenceSegmenter`](/api/sentencesegmenter) | Implement custom sentence boundary detection logic that doesn't require the dependency parse.                                 |
-| [Other functions](/api/pipeline-functions)    | Automatically apply something to the `Doc`, e.g. to merge spans of tokens.                                                    |
+| Name                                        | Description                                                                                                                   |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| [`Language`](/api/language)                 | A text-processing pipeline. Usually you'll load this once per process as `nlp` and pass the instance around your application. |
+| [`Tokenizer`](/api/tokenizer)               | Segment text, and create `Doc` objects with the discovered segment boundaries.                                                |
+| [`Lemmatizer`](/api/lemmatizer)             | Determine the base forms of words.                                                                                            |
+| `Morphology`                                | Assign linguistic features like lemmas, noun case, verb tense etc. based on the word and its part-of-speech tag.              |
+| [`Tagger`](/api/tagger)                     | Annotate part-of-speech tags on `Doc` objects.                                                                                |
+| [`DependencyParser`](/api/dependencyparser) | Annotate syntactic dependencies on `Doc` objects.                                                                             |
+| [`EntityRecognizer`](/api/entityrecognizer) | Annotate named entities, e.g. persons or products, on `Doc` objects.                                                          |
+| [`TextCategorizer`](/api/textcategorizer)   | Assign categories or labels to `Doc` objects.                                                                                 |
+| [`Matcher`](/api/matcher)                   | Match sequences of tokens, based on pattern rules, similar to regular expressions.                                            |
+| [`PhraseMatcher`](/api/phrasematcher)       | Match sequences of tokens based on phrases.                                                                                   |
+| [`EntityRuler`](/api/entityruler)           | Add entity spans to the `Doc` using token-based rules or exact phrase matches.                                                |
+| [`Sentencizer`](/api/sentencizer)           | Implement custom sentence boundary detection logic that doesn't require the dependency parse.                                 |
+| [Other functions](/api/pipeline-functions)  | Automatically apply something to the `Doc`, e.g. to merge spans of tokens.                                                    |
 
 ### Other classes {#architecture-other}
 
