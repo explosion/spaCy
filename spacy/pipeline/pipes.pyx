@@ -1061,6 +1061,55 @@ cdef class EntityRecognizer(Parser):
                 if move[0] in ("B", "I", "L", "U")))
 
 
+class EntityLinker(Pipe):
+    name = 'entity_linker'
+
+    @classmethod
+    def Model(cls, nr_class=1, **cfg):
+        # TODO: non-dummy EL implementation
+        return None
+
+    def __init__(self, model=True, **cfg):
+        self.model = False
+        self.cfg = dict(cfg)
+        self.kb = self.cfg["kb"]
+
+    def __call__(self, doc):
+        self.set_annotations([doc], scores=None, tensors=None)
+        return doc
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        """Apply the pipe to a stream of documents.
+        Both __call__ and pipe should delegate to the `predict()`
+        and `set_annotations()` methods.
+        """
+        for docs in util.minibatch(stream, size=batch_size):
+            docs = list(docs)
+            self.set_annotations(docs, scores=None, tensors=None)
+            yield from docs
+
+    def set_annotations(self, docs, scores, tensors=None):
+        """
+        Currently implemented as taking the KB entry with highest prior probability for each named entity
+        TODO: actually use context etc
+        """
+        for i, doc in enumerate(docs):
+            for ent in doc.ents:
+                candidates = self.kb.get_candidates(ent.text)
+                if candidates:
+                    best_candidate = max(candidates, key=lambda c: c.prior_prob)
+                    for token in ent:
+                        token.ent_kb_id_ = best_candidate.entity_
+
+    def get_loss(self, docs, golds, scores):
+        # TODO
+        pass
+
+    def add_label(self, label):
+        # TODO
+        pass
+
+
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.
 
@@ -1146,5 +1195,5 @@ class Sentencizer(object):
         self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
         return self
 
-
-__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "Sentencizer"]
+      
+__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer"]
