@@ -172,16 +172,24 @@ def test_span_as_doc(doc):
     assert span_doc[0].idx == 0
 
 
-def test_span_string_label(doc):
-    span = Span(doc, 0, 1, label="hello")
+def test_span_string_label_kb_id(doc):
+    span = Span(doc, 0, 1, label="hello", kb_id="Q342")
     assert span.label_ == "hello"
     assert span.label == doc.vocab.strings["hello"]
+    assert span.kb_id_ == "Q342"
+    assert span.kb_id == doc.vocab.strings["Q342"]
 
 
 def test_span_label_readonly(doc):
     span = Span(doc, 0, 1)
     with pytest.raises(NotImplementedError):
         span.label_ = "hello"
+
+
+def test_span_kb_id_readonly(doc):
+    span = Span(doc, 0, 1)
+    with pytest.raises(NotImplementedError):
+        span.kb_id_ = "Q342"
 
 
 def test_span_ents_property(doc):
