@@ -118,7 +118,7 @@ def pretrain(
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
-    def _save_model(is_temp=False):
+    def _save_model(epoch, is_temp=False):
         is_temp_str = '.temp' if is_temp else ''
         with model.use_params(optimizer.averages):
             with (output_dir / ("model%d%s.bin" % (epoch, is_temp_str))).open("wb") as file_:
@@ -149,8 +149,8 @@ def pretrain(
                 if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
                     break
             if save_every and save_every % batch_id == 0:
-                _save_model(is_temp=True)
-        _save_model()
+                _save_model(epoch, is_temp=True)
+        _save_model(epoch)
         tracker.epoch_loss = 0.0
         if texts_loc != "-":
             # Reshuffle the texts if texts were loaded from a file
