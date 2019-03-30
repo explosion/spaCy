@@ -35,6 +35,7 @@ from .. import util
     min_length=("Min words per example.", "option", "nw", int),
     seed=("Seed for random number generators", "option", "s", float),
     nr_iter=("Number of iterations to pretrain", "option", "i", int),
+    save_every=("Save model every X iterations.", "option", "se", int),
 )
 def pretrain(
     texts_loc,
@@ -51,6 +52,7 @@ def pretrain(
     max_length=500,
     min_length=5,
     seed=0,
+    save_every=None,
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -115,10 +117,25 @@ def pretrain(
     msg.divider("Pre-training tok2vec layer")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
+
+    def _save_model(is_temp=False):
+        is_temp_str = '.temp' if is_temp else ''
+        with model.use_params(optimizer.averages):
+            with (output_dir / ("model%d%s.bin" % (epoch, is_temp_str))).open("wb") as file_:
+                file_.write(model.tok2vec.to_bytes())
+            log = {
+                "nr_word": tracker.nr_word,
+                "loss": tracker.loss,
+                "epoch_loss": tracker.epoch_loss,
+                "epoch": epoch,
+            }
+            with (output_dir / "log.jsonl").open("a") as file_:
+                file_.write(srsly.json_dumps(log) + "\n")
+
     for epoch in range(nr_iter):
-        for batch in util.minibatch_by_words(
+        for batch_id, batch in enumerate(util.minibatch_by_words(
             ((text, None) for text in texts), size=batch_size
-        ):
+        )):
             docs = make_docs(
                 nlp,
                 [text for (text, _) in batch],
@@ -131,17 +148,9 @@ def pretrain(
                 msg.row(progress, **row_settings)
                 if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
                     break
-        with model.use_params(optimizer.averages):
-            with (output_dir / ("model%d.bin" % epoch)).open("wb") as file_:
-                file_.write(model.tok2vec.to_bytes())
-            log = {
-                "nr_word": tracker.nr_word,
-                "loss": tracker.loss,
-                "epoch_loss": tracker.epoch_loss,
-                "epoch": epoch,
-            }
-            with (output_dir / "log.jsonl").open("a") as file_:
-                file_.write(srsly.json_dumps(log) + "\n")
+            if save_every and save_every % batch_id == 0:
+                _save_model(is_temp=True)
+        _save_model()
         tracker.epoch_loss = 0.0
         if texts_loc != "-":
             # Reshuffle the texts if texts were loaded from a file
