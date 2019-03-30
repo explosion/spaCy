@@ -35,7 +35,7 @@ from .. import util
     min_length=("Min words per example.", "option", "nw", int),
     seed=("Seed for random number generators", "option", "s", float),
     nr_iter=("Number of iterations to pretrain", "option", "i", int),
-    save_every=("Save model every X iterations.", "option", "se", int),
+    save_every=("Save model every X batches.", "option", "se", int),
 )
 def pretrain(
     texts_loc,
@@ -148,7 +148,7 @@ def pretrain(
                 msg.row(progress, **row_settings)
                 if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
                     break
-            if save_every and save_every % batch_id == 0:
+            if save_every and (batch_id % save_every == 0):
                 _save_model(epoch, is_temp=True)
         _save_model(epoch)
         tracker.epoch_loss = 0.0
