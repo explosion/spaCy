@@ -119,9 +119,11 @@ def pretrain(
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
     def _save_model(epoch, is_temp=False):
-        is_temp_str = '.temp' if is_temp else ''
+        is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
-            with (output_dir / ("model%d%s.bin" % (epoch, is_temp_str))).open("wb") as file_:
+            with (output_dir / ("model%d%s.bin" % (epoch, is_temp_str))).open(
+                "wb"
+            ) as file_:
                 file_.write(model.tok2vec.to_bytes())
             log = {
                 "nr_word": tracker.nr_word,
@@ -133,16 +135,18 @@ def pretrain(
                 file_.write(srsly.json_dumps(log) + "\n")
 
     for epoch in range(nr_iter):
-        for batch_id, batch in enumerate(util.minibatch_by_words(
-            ((text, None) for text in texts), size=batch_size
-        )):
+        for batch_id, batch in enumerate(
+            util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
+        ):
             docs = make_docs(
                 nlp,
                 [text for (text, _) in batch],
                 max_length=max_length,
                 min_length=min_length,
             )
-            loss = make_update(model, docs, optimizer, objective=loss_func, drop=dropout)
+            loss = make_update(
+                model, docs, optimizer, objective=loss_func, drop=dropout
+            )
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
@@ -224,8 +228,8 @@ def get_cossim_loss(yh, y):
     norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
     mul_norms = norm_yh * norm_y
     cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
-    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh**2))
-    loss = xp.abs(cosine-1).sum()
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
+    loss = xp.abs(cosine - 1).sum()
     return loss, -d_yh
 
 
