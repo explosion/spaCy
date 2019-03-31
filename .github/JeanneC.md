@@ -102,5 +102,5 @@ mark both statements:
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
 | Date                           |  31st March 2019     |
-| GitHub username                |     jeannefukumaru.  |
+| GitHub username                |     jeannefukumaru   |
 | Website (optional)             |                      |
