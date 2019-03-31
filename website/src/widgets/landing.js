@@ -19,6 +19,7 @@ import { H2 } from '../components/typography'
 import { Ul, Li } from '../components/list'
 import Button from '../components/button'
 import Link from '../components/link'
+import irlBackground from '../images/spacy-irl.jpg'
 
 import BenchmarksChoi from 'usage/_benchmarks-choi.md'
 
@@ -151,19 +152,21 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    title="BERT-style language model pretraining and more"
-                    label="New in v2.1"
-                    to="/usage/v2-1"
-                    button="Read more"
+                    title="spaCy IRL 2019: Two days of NLP"
+                    label="Join us in Berlin"
+                    to="https://irl.spacy.io/2019"
+                    button="Get tickets"
+                    background="#ffc194"
+                    backgroundImage={irlBackground}
+                    color="#1a1e23"
                     small
                 >
-                    Learn more from small training corpora by initializing your models with{' '}
-                    <strong>knowledge from raw text</strong>. The new pretrain command teaches
-                    spaCy's CNN model to predict words based on their context, producing
-                    representations of words in contexts. If you've seen Google's BERT system or
-                    fast.ai's ULMFiT, spaCy's pretraining is similar – but much more efficient. It's
-                    still experimental, but users are already reporting good results, so give it a
-                    try!
+                    We're pleased to invite the spaCy community and other folks working on Natural
+                    Language Processing to Berlin this summer for a small and intimate event{' '}
+                    <strong>July 5-6, 2019</strong>. The event includes a hands-on training day for
+                    teams using spaCy in production, followed by a one-track conference. We booked a
+                    beautiful venue, hand-picked an awesome lineup of speakers and scheduled plenty
+                    of social time to get to know each other and exchange ideas.
                 </LandingBanner>
 
                 <LandingBanner
@@ -191,23 +194,17 @@ const Landing = ({ data }) => {
             <LandingLogos title="Featured on" logos={data.logosPublications} />
 
             <LandingBanner
-                title="Convolutional neural network models"
-                label="New in v2.0"
-                button="Download models"
-                to="/models"
+                title="BERT-style language model pretraining"
+                label="New in v2.1"
+                to="/usage/v2-1"
+                button="Read more"
             >
-                spaCy v2.0 features new neural models for <strong>tagging</strong>,{' '}
-                <strong>parsing</strong> and <strong>entity recognition</strong>. The models have
-                been designed and implemented from scratch specifically for spaCy, to give you an
-                unmatched balance of speed, size and accuracy. A novel bloom embedding strategy with
-                subword features is used to support huge vocabularies in tiny tables. Convolutional
-                layers with residual connections, layer normalization and maxout non-linearity are
-                used, giving much better efficiency than the standard BiLSTM solution. Finally, the
-                parser and NER use an imitation learning objective to deliver accuracy in-line with
-                the latest research systems, even when evaluated from raw text. With these
-                innovations, spaCy v2.0's models are <strong>10× smaller</strong>,{' '}
-                <strong>20% more accurate</strong>, and
-                <strong>even cheaper to run</strong> than the previous generation.
+                Learn more from small training corpora by initializing your models with{' '}
+                <strong>knowledge from raw text</strong>. The new pretrain command teaches spaCy's
+                CNN model to predict words based on their context, producing representations of
+                words in contexts. If you've seen Google's BERT system or fast.ai's ULMFiT, spaCy's
+                pretraining is similar – but much more efficient. It's still experimental, but users
+                are already reporting good results, so give it a try!
             </LandingBanner>
 
             <LandingGrid cols={2}>

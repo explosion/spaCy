@@ -555,6 +555,36 @@
             "category": ["standalone"]
         },
         {
+            "id": "textpipe",
+            "slogan": "clean and extract metadata from text",
+            "description": "`textpipe` is a Python package for converting raw text in to clean, readable text and extracting metadata from that text. Its functionalities include transforming raw text into readable text by removing HTML tags and extracting metadata such as the number of words and named entities from the text.",
+            "github": "textpipe/textpipe",
+            "pip": "textpipe",
+            "author": "Textpipe Contributors",
+            "author_links": {
+                "github": "textpipe",
+                "website": "https://github.com/textpipe/textpipe/blob/master/CONTRIBUTORS.md"
+            },
+            "category": ["standalone"],
+            "tags": ["text-processing", "named-entity-recognition"],
+            "thumb": "https://avatars0.githubusercontent.com/u/40492530",
+            "code_example": [
+                "from textpipe import doc, pipeline",
+                "sample_text = 'Sample text! <!DOCTYPE>'",
+                "document = doc.Doc(sample_text)",
+                "print(document.clean)",
+                "'Sample text!'",
+                "print(document.language)",
+                "# 'en'",
+                "print(document.nwords)",
+                "# 2",
+                "",
+                "pipe = pipeline.Pipeline(['CleanText', 'NWords'])",
+                "print(pipe(sample_text))",
+                "# {'CleanText': 'Sample text!', 'NWords': 2}"
+            ]
+        },
+        {
             "id": "mordecai",
             "slogan": "Full text geoparsing using spaCy, Geonames and Keras",
             "description": "Extract the place names from a piece of text, resolve them to the correct place, and return their coordinates and structured geographic information.",

@@ -507,13 +507,10 @@ def stepping(start, stop, steps):
 def decaying(start, stop, decay):
     """Yield an infinite series of linearly decaying values."""
 
-    def clip(value):
-        return max(value, stop) if (start > stop) else min(value, stop)
-
-    nr_upd = 1.0
+    curr = float(start)
     while True:
-        yield clip(start * 1.0 / (1.0 + decay * nr_upd))
-        nr_upd += 1
+        yield max(curr, stop)
+        curr -= (decay)
 
 
 def minibatch_by_words(items, size, tuples=True, count_words=len):
