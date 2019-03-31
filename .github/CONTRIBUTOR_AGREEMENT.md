@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           |     JeanneC          |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
+| Date                           |  31st March 2019     |
+| GitHub username                |     jeannefukumaru.  |
 | Website (optional)             |                      |
