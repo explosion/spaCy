@@ -86,8 +86,13 @@ def pretrain(
         texts_loc = Path(texts_loc)
         if not texts_loc.exists():
             msg.fail("Input text file doesn't exist", texts_loc, exits=1)
-        with msg.loading("Loading input texts..."):
-            texts = list(srsly.read_jsonl(texts_loc))
+        if texts_loc.suffix == ".txt":
+            with msg.loading("Loading input texts..."):
+                with open(texts_loc, "r") as f:
+                    texts = [{"text": line} for line in f]
+        else:
+            with msg.loading("Loading input texts..."):
+                texts = list(srsly.read_jsonl(texts_loc))
         msg.good("Loaded input texts")
         random.shuffle(texts)
     else:  # reading from stdin
@@ -125,7 +130,9 @@ def pretrain(
                 max_length=max_length,
                 min_length=min_length,
             )
-            loss = make_update(model, docs, optimizer, objective=loss_func, drop=dropout)
+            loss = make_update(
+                model, docs, optimizer, objective=loss_func, drop=dropout
+            )
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
@@ -215,8 +222,8 @@ def get_cossim_loss(yh, y):
     norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
     mul_norms = norm_yh * norm_y
     cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
-    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh**2))
-    loss = xp.abs(cosine-1).sum()
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
+    loss = xp.abs(cosine - 1).sum()
     return loss, -d_yh
 
 
