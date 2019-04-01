@@ -164,9 +164,9 @@ const Landing = ({ data }) => {
                     We're pleased to invite the spaCy community and other folks working on Natural
                     Language Processing to Berlin this summer for a small and intimate event{' '}
                     <strong>July 5-6, 2019</strong>. The event includes a hands-on training day for
-                    teams using spaCy in production, followed by a one-track conference. We booked a
-                    beautiful venue, hand-picked an awesome lineup of speakers and scheduled plenty
-                    of social time to get to know each other and exchange ideas.
+                    teams using spaCy in production, followed by a one-track conference. We've
+                    booked a beautiful venue, hand-picked an awesome lineup of speakers and
+                    scheduled plenty of social time to get to know each other and exchange ideas.
                 </LandingBanner>
 
                 <LandingBanner

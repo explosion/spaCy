@@ -35,7 +35,7 @@ const SEO = ({ description, lang, title, section, sectionTitle, bodyClass }) => 
                 siteMetadata.slogan,
                 sectionTitle
             )
-            const socialImage = getImage(section)
+            const socialImage = siteMetadata.siteUrl + getImage(section)
             const meta = [
                 {
                     name: 'description',
@@ -126,6 +126,7 @@ const query = graphql`
                 title
                 description
                 slogan
+                siteUrl
                 social {
                     twitter
                 }
