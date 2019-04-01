@@ -1,8 +1,12 @@
 # coding: utf8
+from __future__ import unicode_literals
 
-'''
-POS explanations for indonesian available from https://www.aclweb.org/anthology/Y12-1014
-'''
+from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, NUM, DET, ADV, ADP, X, VERB 
+from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX 
+
+
+# POS explanations for indonesian available from https://www.aclweb.org/anthology/Y12-1014
+
 
 TAG_MAP = {
     "NSD" : {POS: NOUN}, 
