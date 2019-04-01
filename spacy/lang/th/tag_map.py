@@ -1,7 +1,7 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, NOUN, PRON, ADJ, ADV, INTJ, PROPN, DET, NUM, AUX,VERB
+from ...symbols import POS, NOUN, PRON, ADJ, ADV, INTJ, PROPN, DET, NUM, AUX, VERB
 from ...symbols import ADP, CCONJ, PART, PUNCT, SPACE, SCONJ
 
 # Source: Korakot Chaovavanich
@@ -17,8 +17,8 @@ TAG_MAP = {
     "CFQC": {POS: NOUN},
     "CVBL": {POS: NOUN},
     # VERB
-    "VACT":{POS:VERB},
-    "VSTA":{POS:VERB},
+    "VACT": {POS: VERB},
+    "VSTA": {POS: VERB},
     # PRON
     "PRON": {POS: PRON},
     "NPRP": {POS: PRON},

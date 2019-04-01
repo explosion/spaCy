@@ -86,7 +86,7 @@ def with_cpu(ops, model):
     as necessary."""
     model.to_cpu()
 
-    def with_cpu_forward(inputs, drop=0.):
+    def with_cpu_forward(inputs, drop=0.0):
         cpu_outputs, backprop = model.begin_update(_to_cpu(inputs), drop=drop)
         gpu_outputs = _to_device(ops, cpu_outputs)
 
@@ -106,7 +106,7 @@ def _to_cpu(X):
         return tuple([_to_cpu(x) for x in X])
     elif isinstance(X, list):
         return [_to_cpu(x) for x in X]
-    elif hasattr(X, 'get'):
+    elif hasattr(X, "get"):
         return X.get()
     else:
         return X
@@ -142,7 +142,9 @@ class extract_ngrams(Model):
         # The dtype here matches what thinc is expecting -- which differs per
         # platform (by int definition). This should be fixed once the problem
         # is fixed on Thinc's side.
-        lengths = self.ops.asarray([arr.shape[0] for arr in batch_keys], dtype=numpy.int_)
+        lengths = self.ops.asarray(
+            [arr.shape[0] for arr in batch_keys], dtype=numpy.int_
+        )
         batch_keys = self.ops.xp.concatenate(batch_keys)
         batch_vals = self.ops.asarray(self.ops.xp.concatenate(batch_vals), dtype="f")
         return (batch_keys, batch_vals, lengths), None
@@ -592,32 +594,27 @@ def build_text_classifier(nr_class, width=64, **cfg):
         )
 
         linear_model = build_bow_text_classifier(
-            nr_class, ngram_size=cfg.get("ngram_size", 1), exclusive_classes=False)
-        if cfg.get('exclusive_classes'):
+            nr_class, ngram_size=cfg.get("ngram_size", 1), exclusive_classes=False
+        )
+        if cfg.get("exclusive_classes"):
             output_layer = Softmax(nr_class, nr_class * 2)
         else:
             output_layer = (
-                zero_init(Affine(nr_class, nr_class * 2, drop_factor=0.0))
-                >> logistic
+                zero_init(Affine(nr_class, nr_class * 2, drop_factor=0.0)) >> logistic
             )
-        model = (
-            (linear_model | cnn_model)
-            >> output_layer
-        )
+        model = (linear_model | cnn_model) >> output_layer
         model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
     model.lsuv = False
     return model
 
 
-def build_bow_text_classifier(nr_class, ngram_size=1, exclusive_classes=False,
-        no_output_layer=False, **cfg):
+def build_bow_text_classifier(
+    nr_class, ngram_size=1, exclusive_classes=False, no_output_layer=False, **cfg
+):
     with Model.define_operators({">>": chain}):
-        model = (
-            with_cpu(Model.ops,
-                extract_ngrams(ngram_size, attr=ORTH) 
-                >> LinearModel(nr_class)
-            )
+        model = with_cpu(
+            Model.ops, extract_ngrams(ngram_size, attr=ORTH) >> LinearModel(nr_class)
         )
         if not no_output_layer:
             model = model >> (cpu_softmax if exclusive_classes else logistic)
@@ -626,10 +623,8 @@ def build_bow_text_classifier(nr_class, ngram_size=1, exclusive_classes=False,
 
 
 @layerize
-def cpu_softmax(X, drop=0.):
+def cpu_softmax(X, drop=0.0):
     ops = NumpyOps()
-
-    Y = ops.softmax(X)
 
     def cpu_softmax_backward(dY, sgd=None):
         return dY
@@ -648,7 +643,9 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
         if exclusive_classes:
             output_layer = Softmax(nr_class, tok2vec.nO)
         else:
-            output_layer = zero_init(Affine(nr_class, tok2vec.nO, drop_factor=0.0)) >> logistic
+            output_layer = (
+                zero_init(Affine(nr_class, tok2vec.nO, drop_factor=0.0)) >> logistic
+            )
         model = tok2vec >> flatten_add_lengths >> Pooling(mean_pool) >> output_layer
     model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
