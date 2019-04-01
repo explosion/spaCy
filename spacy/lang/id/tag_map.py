@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, NUM, DET, ADV, ADP, X, VERB 
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX 
+from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX, SCONJ 
 
 
 # POS explanations for indonesian available from https://www.aclweb.org/anthology/Y12-1014
@@ -33,4 +33,5 @@ TAG_MAP = {
     "APP" : {POS: ADJ}, 
     "CD-" : {POS: NUM}, 
     "VPA" : {POS: VERB}, 
-    "VPP" : {POS: VERB}}
+    "VPP" : {POS: VERB},
+}
