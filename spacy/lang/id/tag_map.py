@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX, SCONJ
+from ...symbols import POS, PUNCT, ADJ, CCONJ, NUM, DET, ADV, ADP, X, VERB
+from ...symbols import NOUN, PRON, AUX, SCONJ
 
 
 # POS explanations for indonesian available from https://www.aclweb.org/anthology/Y12-1014
