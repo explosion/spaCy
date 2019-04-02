@@ -70,6 +70,6 @@ yet you your yours yourself yourselves
 )
 
 for hyphen in ["'", "`", "‘", "´", "’"]:
-    for stopword in "n't 'd 'll 'm 're 's 've".split():
+    for stopword in u"n't 'd 'll 'm 're 's 've".split():
         STOP_WORDS.add(stopword.replace("'", hyphen))
 

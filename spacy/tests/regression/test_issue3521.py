@@ -4,10 +4,10 @@ import pytest
 @pytest.mark.parametrize(
     "word",
     [
-        "don't",
-        "don’t",
-        "I'd",
-        "I’d",
+        u"don't",
+        u"don’t",
+        u"I'd",
+        u"I’d",
     ],
 )
 def test_issue3521(en_tokenizer, word):
