@@ -1,6 +1,8 @@
-import pytest
+# coding: utf8
+from __future__ import unicode_literals
+
 import re
-from ... import compat
+from spacy import compat
 
 prefix_search = (
     b"^\xc2\xa7|^%|^=|^\xe2\x80\x94|^\xe2\x80\x93|^\\+(?![0-9])"
@@ -67,4 +69,4 @@ if compat.is_python2:
     # string above in the xpass message.
     def test_issue3356():
         pattern = re.compile(compat.unescape_unicode(prefix_search.decode("utf8")))
-        assert not pattern.search(u"hello")
+        assert not pattern.search("hello")

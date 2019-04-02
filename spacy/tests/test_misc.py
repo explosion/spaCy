@@ -26,6 +26,7 @@ def symlink_setup_target(request, symlink_target, symlink):
         os.mkdir(path2str(symlink_target))
     # yield -- need to cleanup even if assertion fails
     # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
+
     def cleanup():
         symlink_remove(symlink)
         os.rmdir(path2str(symlink_target))
