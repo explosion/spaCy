@@ -1,7 +1,5 @@
 import pytest
 
-from spacy.lang.en import English
-
 
 @pytest.mark.parametrize(
     "word",
@@ -12,9 +10,7 @@ from spacy.lang.en import English
         "I’d",
     ],
 )
-def test_issue3521(fr_tokenizer, word):
-    nlp = English()
-
-    tok = nlp(word)[1]
+def test_issue3521(en_tokenizer, word):
+    tok = en_tokenizer(word)[1]
+    # 'not' and 'would' should be stopwords, also in their abbreviated forms
     assert tok.is_stop
-
