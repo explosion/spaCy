@@ -152,6 +152,10 @@ def pt_tokenizer():
 @pytest.fixture(scope="session")
 def ro_tokenizer():
     return get_lang_class("ro").Defaults.create_tokenizer()
+    
+@pytest.fixture(scope='session')
+def pl_tokenizer():
+    return util.get_lang_class('pl').Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
