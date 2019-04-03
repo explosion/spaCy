@@ -69,7 +69,10 @@ yet you your yours yourself yourselves
 """.split()
 )
 
-for hyphen in ["'", "`", "‘", "´", "’"]:
-    for stopword in u"n't 'd 'll 'm 're 's 've".split():
-        STOP_WORDS.add(stopword.replace("'", hyphen))
+contractions = ["n't", "'d", "'ll", "'m", "'re", "'s", "'ve"]
+STOP_WORDS.update(contractions)
+
+for apostrophe in ["‘", "’"]:
+    for stopword in contractions:
+        STOP_WORDS.add(stopword.replace("'", apostrophe))
 

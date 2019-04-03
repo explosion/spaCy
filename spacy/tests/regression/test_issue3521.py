@@ -1,14 +1,16 @@
 # coding: utf8
+from __future__ import unicode_literals
+
 import pytest
 
 
 @pytest.mark.parametrize(
     "word",
     [
-        u"don't",
-        u"don’t",
-        u"I'd",
-        u"I’d",
+        "don't",
+        "don’t",
+        "I'd",
+        "I’d",
     ],
 )
 def test_issue3521(en_tokenizer, word):
