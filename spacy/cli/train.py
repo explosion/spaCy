@@ -103,6 +103,7 @@ def train(
     train_path = util.ensure_path(train_path)
     dev_path = util.ensure_path(dev_path)
     meta_path = util.ensure_path(meta_path)
+    output_path = util.ensure_path(output_path)
     if raw_text is not None:
         raw_text = list(srsly.read_jsonl(raw_text))
     if not train_path or not train_path.exists():
