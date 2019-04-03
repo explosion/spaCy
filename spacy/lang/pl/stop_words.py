@@ -17,15 +17,17 @@ cala cali caly cała cały chce choć ci cie
 ciebie cię co cokolwiek coraz cos coś czasami czasem czemu
 czy czyli często
 
-daleko dla dlaczego dlatego do dobrze dokad dokąd
-dosc dość duzo dużo dwa dwaj dwie dwoje dzis
+daleko deda dla dlaczego dlatego do dobrze dokad dokąd
+dosc dość dr duzo dużo dwa dwaj dwie dwoje dzis
 dzisiaj dziś
 
 gdy gdyby gdyz gdyż gdzie gdziekolwiek gdzies gdzieś go
 godz
 
-i ich ile im inna inne inny
-innych iv ix iz iż
+hab
+
+i ich ii iii ile im inna inne inny
+innych inż iv ix iz iż
 
 ja jak jakas jakaś jakby jaki jakichs jakichś jakie
 jakis jakiz jakiś jakiż jakkolwiek jako jakos jakoś je jeden
@@ -36,9 +38,9 @@ kazdy każdy kiedy kierunku kilka kilku kims kimś kto
 ktokolwiek ktora ktore ktorego ktorej ktory ktorych ktorym ktorzy ktos
 ktoś która które którego której który których którym którzy ku
 
-lecz lub
+lat lecz lub
 
-ma mają mam mamy mało mi miał miedzy
+ma mają mam mamy mało mgr mi miał miedzy
 mimo między mna mnie mną moga mogą moi moim moj
 moja moje moze mozliwe mozna może możliwe można mu musi
 my mój
@@ -47,11 +49,11 @@ na nad nam nami nas nasi nasz nasza nasze
 naszego naszych natomiast natychmiast nawet nia nic nich nie niech
 niego niej niemu nigdy nim nimi niz nią niż no
 
-o obok od ok około on ona one
+o o.o. obok od ok około on ona one
 oni ono oraz oto owszem
 
-pan pana pani po pod podczas pomimo ponad
-poniewaz ponieważ powinien powinna powinni powinno poza prawie przeciez
+pan pana pani pl po pod podczas pomimo ponad
+poniewaz ponieważ powinien powinna powinni powinno poza prawie prof przeciez
 przecież przed przede przedtem przez przy
 
 raz razie roku rowniez również
@@ -65,18 +67,18 @@ tobie tobą totez toteż totobą trzeba tu tutaj twoi twoim
 twoj twoja twoje twym twój ty tych tylko tym tys
 tzw tę
 
-u
+u ul
 
-vi vii viii
+vi vii viii vol
 
 w wam wami was wasi wasz wasza wasze we
 według wie wiele wielu więc więcej wlasnie wszyscy wszystkich wszystkie
-wszystkim wszystko wtedy wy właśnie wśród
+wszystkim wszystko wtedy www wy właśnie wśród
 
 xi xii xiii xiv xv
 
 z za zaden zadna zadne zadnych zapewne zawsze zaś
-ze zeby znow znowu znów zostal został
+ze zeby zeznowu znow znowu znów zostal został zł
 
 żaden żadna żadne żadnych że żeby""".split()
 )
