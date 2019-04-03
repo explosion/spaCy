@@ -160,18 +160,12 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_textcat.p
 
 ### Visualizing spaCy vectors in TensorBoard {#tensorboard}
 
-These two scripts let you load any spaCy model containing word vectors into
+This script lets you load any spaCy model containing word vectors into
 [TensorBoard](https://projector.tensorflow.org/) to create an
 [embedding visualization](https://www.tensorflow.org/versions/r1.1/get_started/embedding_viz).
-The first example uses TensorBoard, the second example TensorBoard's standalone
-embedding projector.
 
 ```python
 https://github.com/explosion/spaCy/tree/master/examples/vectors_tensorboard.py
-```
-
-```python
-https://github.com/explosion/spaCy/tree/master/examples/vectors_tensorboard_standalone.py
 ```
 
 ## Deep Learning {#deep-learning hidden="true"}
