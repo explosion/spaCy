@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import LEMMA, PRON_LEMMA, AUX
+from ...symbols import LEMMA, PRON_LEMMA
 
 _subordinating_conjunctions = [
     "that",
@@ -457,7 +457,6 @@ MORPH_RULES = {
         "have": {"POS": "AUX"},
         "'m": {"POS": "AUX", LEMMA: "be"},
         "'ve": {"POS": "AUX"},
-        "'re": {"POS": "AUX", LEMMA: "be"},
         "'s": {"POS": "AUX"},
         "is": {"POS": "AUX"},
         "'d": {"POS": "AUX"},

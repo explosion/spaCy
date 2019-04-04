@@ -125,7 +125,9 @@ def pretrain(
                 max_length=max_length,
                 min_length=min_length,
             )
-            loss = make_update(model, docs, optimizer, objective=loss_func, drop=dropout)
+            loss = make_update(
+                model, docs, optimizer, objective=loss_func, drop=dropout
+            )
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
@@ -215,8 +217,8 @@ def get_cossim_loss(yh, y):
     norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
     mul_norms = norm_yh * norm_y
     cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
-    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh**2))
-    loss = xp.abs(cosine-1).sum()
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
+    loss = xp.abs(cosine - 1).sum()
     return loss, -d_yh
 
 
