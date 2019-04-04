@@ -4,7 +4,6 @@ from __future__ import unicode_literals, division, print_function
 import plac
 from timeit import default_timer as timer
 from wasabi import Printer
-import srsly
 
 from ..gold import GoldCorpus
 from .. import util

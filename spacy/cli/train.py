@@ -342,8 +342,8 @@ def train(
                         iter_since_best = 0
                         best_score = current_score
                     if iter_since_best >= early_stopping_iter:
-                        msg.text(f"Early stopping, best iteration is: {i-iter_since_best}")
-                        msg.text(f"Best score = {best_score}; Final iteration score = {current_score}")
+                        msg.text("Early stopping, best iteration is: {}".format(i-iter_since_best))
+                        msg.text("Best score = {}; Final iteration score = {}".format(best_score, current_score))
                         break
     finally:
         with nlp.use_params(optimizer.averages):
