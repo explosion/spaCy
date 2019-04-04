@@ -2,11 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, ADJ, CCONJ, NUM, DET, ADV, ADP, X, VERB
-<<<<<<< HEAD
 from ...symbols import NOUN, PRON, AUX, SCONJ, INTJ, PART, PROPN
-=======
-from ...symbols import NOUN, PRON, AUX, SCONJ
->>>>>>> 4faf62d5154c2d2adb6def32da914d18d5e9c8fe
 
 
 # POS explanations for indonesian available from https://www.aclweb.org/anthology/Y12-1014
@@ -94,5 +90,4 @@ TAG_MAP = {
 	"CC-+T—": {POS: NUM},  
 	"NPD+PS2":{POS: NOUN},  
 	"D--+PS2":{POS: ADV},  
-	"PP3+T—": {POS: PRON} 
-}
+	"PP3+T—": {POS: PRON}} 
