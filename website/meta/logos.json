@@ -1,6 +1,7 @@
 {
     "logosUsers": [
         { "id": "airbnb", "url": "https://www.airbnb.com" },
+        { "id": "uber", "url": "https://www.uber.com" },
         { "id": "quora", "url": "https://www.quora.com" },
         { "id": "retriever", "url": "https://www.retriever.no" },
         { "id": "stitchfix", "url": "https://www.stitchfix.com" },
