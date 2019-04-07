@@ -1294,6 +1294,23 @@
             "github": "Abhijit-2592/spacy-langdetect",
             "category": ["pipeline"],
             "tags": ["language-detection"]
+        },
+        {
+            "id": "ludwig",
+            "title": "Ludwig",
+            "slogan": "A code-free deep learning toolbox",
+            "description": "Ludwig makes it easy to build deep learning models for many applications, including NLP ones. It uses spaCy for tokenizing text in different languages.",
+            "pip": "ludwig",
+            "github": "uber/ludwig",
+            "thumb": "https://i.imgur.com/j1sORgD.png",
+            "url": "http://ludwig.ai",
+            "author": "Piero Molino @ Uber AI",
+            "author_links": {
+                "github": "w4nderlust",
+                "twitter": "w4nderlus7",
+                "website": "http://w4nderlu.st"
+            },
+            "category": ["standalone", "research"]
         }
     ],
     "categories": [
