@@ -113,7 +113,7 @@ class GoldCorpus(object):
         self.write_msgpack(self.tmp_dir / "dev", dev, limit=self.limit)
 
     def __del__(self):
-        shutil.rmtree(self.tmp_dir)
+        shutil.rmtree(path2str(self.tmp_dir))
 
     @staticmethod
     def write_msgpack(directory, doc_tuples, limit=0):
