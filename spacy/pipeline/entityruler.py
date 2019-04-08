@@ -133,6 +133,10 @@ class EntityRuler(object):
         """
         for entry in patterns:
             label = entry["label"]
+            if 'meta' in entry and 'entity_id' in entry['meta']:
+                entity_id = entry['meta']['entity_id']
+                if isinstance(entity_id, basestring_):
+                    label = f'{label}|{entity_id}'
             pattern = entry["pattern"]
             if isinstance(pattern, basestring_):
                 self.phrase_patterns[label].append(self.nlp(pattern))
