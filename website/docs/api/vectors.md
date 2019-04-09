@@ -306,7 +306,7 @@ vectors, they will be counted individually.
 
 Load [GloVe](https://nlp.stanford.edu/projects/glove/) vectors from a directory.
 Assumes binary format, that the vocab is in a `vocab.txt`, and that vectors are
-named `vectors.{size}.[fd`.bin], e.g. `vectors.128.f.bin` for 128d float32
+named `vectors.{size}.[fd.bin]`, e.g. `vectors.128.f.bin` for 128d float32
 vectors, `vectors.300.d.bin` for 300d float64 (double) vectors, etc. By default
 GloVe outputs 64-bit vectors.
 
