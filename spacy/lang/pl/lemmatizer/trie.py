@@ -5,7 +5,8 @@ import string
 from ...char_classes import LATIN_LOWER
 
 # ALPHABET_SIZE = ord('z') - ord('a') + 1 + len(polish_special_chars)
-charset = LATIN_LOWER.encode().decode('unicode-escape')
+# charset = LATIN_LOWER.encode().decode('unicode-escape')
+charset = string.ascii_lowercase + "ąężźćńółęąś"
 ALPHABET_SIZE = len(charset)
 
 idx_map = {}
@@ -16,7 +17,6 @@ def reverse(string):
     return "".join(reversed(string))
 
 def get_idx(c):
-    print(charset)
     return charset.index(c)
     # return idx_map[c]
 
@@ -34,7 +34,7 @@ class Trie:
 class Node:
     def __init__(self):
         self.is_end = False
-        self.children = ALPHABET_SIZE*[None]
+        self.children = {}
         self.rules = []
 
     def insert(self, word, rule):
@@ -42,10 +42,10 @@ class Node:
             self.is_end = True
             self.rules += [rule]
         else:
-            child = self.children[get_idx(word[0])]
+            child = self.children.get(word[0])
             if child is None:
                 child = Node()
-                self.children[get_idx(word[0])] = child
+                self.children[word[0]] = child
             child.insert(word[1:], rule)
 
     def get_rules(self, word):
@@ -56,22 +56,23 @@ class Node:
             return res
         head = word[-1]
         tail = word[:-1]
-        if self.children[get_idx(head)] is None:
+        if self.children.get(head) is None:
             return res
-        return res + self.children[get_idx(head)].get_rules(tail)
+        return res + self.children[head].get_rules(tail)
 
 def trie_from_rules(rules):
     # rules are expected to be in format:
     # [(suffix, (regex, replacement))]
     expanded_rules = []
     for rule in rules:
-        new_suf = rule[0]
+        replacement = rule[1]
+        regex = rule[0]
         prefixes = list(sre_yield.AllStrings(rule[0], charset=charset))
-        expanded_rules += [(pref, rule[0], new_suf) for pref in prefixes]
+        expanded_rules += [(pref, regex, replacement) for pref in prefixes]
 
     trie = Trie()
-    for suf, regexp, rule in expanded_rules:
-        trie.insert(reverse(suf), (regexp, rule))
+    for suf, regex, replacement in expanded_rules:
+        trie.insert(reverse(suf), (regex, replacement))
 
     return trie
 
