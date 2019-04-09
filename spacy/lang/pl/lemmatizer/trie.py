@@ -42,11 +42,11 @@ class Node:
             self.is_end = True
             self.rules += [rule]
         else:
-            child = self.children.get(word[0])
+            child = self.children.get(word[-1])
             if child is None:
                 child = Node()
-                self.children[word[0]] = child
-            child.insert(word[1:], rule)
+                self.children[word[-1]] = child
+            child.insert(word[:-1], rule)
 
     def get_rules(self, word):
         res = []
@@ -67,12 +67,12 @@ def trie_from_rules(rules):
     for rule in rules:
         replacement = rule[1]
         regex = rule[0]
-        prefixes = list(sre_yield.AllStrings(rule[0], charset=charset))
-        expanded_rules += [(pref, regex, replacement) for pref in prefixes]
+        suffixes = list(sre_yield.AllStrings(rule[0], charset=charset))
+        expanded_rules += [(suf, regex, replacement) for suf in suffixes]
 
     trie = Trie()
     for suf, regex, replacement in expanded_rules:
-        trie.insert(reverse(suf), (regex, replacement))
+        trie.insert(suf, (regex, replacement))
 
     return trie
 

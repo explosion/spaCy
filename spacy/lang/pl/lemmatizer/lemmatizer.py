@@ -55,6 +55,9 @@ class PolishLemmatizer(object):
 def lemmatize(string, index, exceptions, trie):
     string = string.lower()
     forms = []
+    if string in index:
+        forms.append(string)
+
     oov_forms = []
     matches = trie.get_rules(string)
     for matched_rules in matches:
