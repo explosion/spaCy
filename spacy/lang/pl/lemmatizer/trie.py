@@ -5,8 +5,8 @@ import string
 from ...char_classes import LATIN_LOWER
 
 # ALPHABET_SIZE = ord('z') - ord('a') + 1 + len(polish_special_chars)
-ALPHABET_SIZE = len(LATIN_LOWER)
-charset = LATIN_LOWER
+charset = LATIN_LOWER.encode().decode('unicode-escape')
+ALPHABET_SIZE = len(charset)
 
 idx_map = {}
 for i, char in enumerate(LATIN_LOWER):
@@ -16,7 +16,9 @@ def reverse(string):
     return "".join(reversed(string))
 
 def get_idx(c):
-    return idx_map[c]
+    print(charset)
+    return charset.index(c)
+    # return idx_map[c]
 
 class Trie:
     def __init__(self):
@@ -61,8 +63,14 @@ class Node:
 def trie_from_rules(rules):
     # rules are expected to be in format:
     # [(suffix, (regex, replacement))]
+    expanded_rules = []
+    for rule in rules:
+        new_suf = rule[0]
+        prefixes = list(sre_yield.AllStrings(rule[0], charset=charset))
+        expanded_rules += [(pref, rule[0], new_suf) for pref in prefixes]
+
     trie = Trie()
-    for suf, regexp, rule in rules:
+    for suf, regexp, rule in expanded_rules:
         trie.insert(reverse(suf), (regexp, rule))
 
     return trie
