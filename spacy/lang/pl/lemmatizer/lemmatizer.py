@@ -17,8 +17,9 @@ class PolishLemmatizer(object):
         self.lookup_table = lookup if lookup is not None else {}
         self.tries = {}
         self.indexes = {}
+        self.indexes['other'] = trie_from_words(self.index.get('other', {}))
         for univ_pos in ['noun', 'verb', 'adj', 'adv', 'part']:
-            self.indexes[univ_pos] = trie_from_words(self.index.get(univ_pos, {}) | self.index.get('other', {}))
+            self.indexes[univ_pos] = trie_from_words(self.index.get(univ_pos, {}))
             self.tries[univ_pos] = trie_from_rules(self.rules.get(univ_pos, []) + self.rules.get('other', {}))
             # print(f'{univ_pos} index:')
             # print(asizeof.asizeof(self.indexes[univ_pos]))
@@ -45,6 +46,7 @@ class PolishLemmatizer(object):
         exceptions.update(self.exc.get('other', {}))
         lemmas = lemmatize(string,
                                 self.indexes[univ_pos],
+                                self.indexes['other'],
                                 exceptions,
                                 self.tries[univ_pos])
         # lemmas = lemmatize(
@@ -58,10 +60,10 @@ class PolishLemmatizer(object):
     def lookup(self, string):
         return string.lower()
 
-def lemmatize(string, index, exceptions, trie):
+def lemmatize(string, index, others_index, exceptions, trie):
     string = string.lower()
     forms = []
-    if string in index:
+    if string in index or string in others_index:
         forms.append(string)
 
     oov_forms = []
@@ -69,7 +71,7 @@ def lemmatize(string, index, exceptions, trie):
     for matched_rules in matches:
         for rule in matched_rules:
             form = re.sub(rule[0], rule[1], string)
-            if form in index or not form.isalpha():
+            if form in index or form in others_index or not form.isalpha():
                 forms.append(form)
             else:
                 oov_forms.append(form)
