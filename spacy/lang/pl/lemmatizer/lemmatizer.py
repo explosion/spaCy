@@ -1,8 +1,8 @@
 #coding: utf-8
 import re
-
+from pympler import asizeof
 from ....symbols import NOUN, VERB, ADJ, PUNCT, ADV, PART
-from .trie import Trie, trie_from_rules
+from .trie import Trie, trie_from_rules, trie_from_words
 
 
 class PolishLemmatizer(object):
@@ -16,8 +16,14 @@ class PolishLemmatizer(object):
         self.rules = rules
         self.lookup_table = lookup if lookup is not None else {}
         self.tries = {}
+        self.indexes = {}
         for univ_pos in ['noun', 'verb', 'adj', 'adv', 'part']:
+            self.indexes[univ_pos] = trie_from_words(self.index.get(univ_pos, {}) | self.index.get('other', {}))
             self.tries[univ_pos] = trie_from_rules(self.rules.get(univ_pos, []) + self.rules.get('other', {}))
+            # print(f'{univ_pos} index:')
+            # print(asizeof.asizeof(self.indexes[univ_pos]))
+            # print(f'{univ_pos} trie:')
+            # print(asizeof.asizeof(self.tries[univ_pos]))
 
     def __call__(self, string, univ_pos, morphology=None):
         if univ_pos in (NOUN, 'NOUN', 'noun'):
@@ -38,7 +44,7 @@ class PolishLemmatizer(object):
         exceptions = self.exc.get(univ_pos, {}).copy()
         exceptions.update(self.exc.get('other', {}))
         lemmas = lemmatize(string,
-                                self.index.get(univ_pos, {}) | self.index.get('other', {}),
+                                self.indexes[univ_pos],
                                 exceptions,
                                 self.tries[univ_pos])
         # lemmas = lemmatize(
