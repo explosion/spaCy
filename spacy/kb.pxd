@@ -97,58 +97,64 @@ cdef class KnowledgeBase:
     cdef object _features_table
 
     cdef inline int64_t c_add_entity(self, hash_t entity_hash, float prob,
-                                     int32_t* vector_rows, int feats_row):
-        """Add an entry to the knowledge base."""
+                                     int32_t* vector_rows, int feats_row) nogil:
+        """Add an entry to the vector of entries.
+        After calling this method, make sure to update also the _entry_index using the return value"""
         # This is what we'll map the entity hash key to. It's where the entry will sit
         # in the vector of entries, so we can get it later.
         cdef int64_t new_index = self._entries.size()
-        self._entries.push_back(
-            _EntryC(
-                entity_hash=entity_hash,
-                vector_rows=vector_rows,
-                feats_row=feats_row,
-                prob=prob
-            ))
-        self._entry_index[entity_hash] = new_index
+
+        # Avoid struct initializer to enable nogil, cf https://github.com/cython/cython/issues/1642
+        cdef _EntryC entry
+        entry.entity_hash = entity_hash
+        entry.vector_rows = vector_rows
+        entry.feats_row = feats_row
+        entry.prob = prob
+
+        self._entries.push_back(entry)
         return new_index
 
-    cdef inline int64_t c_add_aliases(self, hash_t alias_hash, vector[int64_t] entry_indices, vector[float] probs):
-        """Connect a mention to a list of potential entities with their prior probabilities ."""
+    cdef inline int64_t c_add_aliases(self, hash_t alias_hash, vector[int64_t] entry_indices, vector[float] probs) nogil:
+        """Connect a mention to a list of potential entities with their prior probabilities .
+        After calling this method, make sure to update also the _alias_index using the return value"""
         # This is what we'll map the alias hash key to. It's where the alias will be defined
         # in the vector of aliases.
         cdef int64_t new_index = self._aliases_table.size()
 
-        self._aliases_table.push_back(
-            _AliasC(
-                entry_indices=entry_indices,
-                probs=probs
-            ))
-        self._alias_index[alias_hash] = new_index
+        # Avoid struct initializer to enable nogil
+        cdef _AliasC alias
+        alias.entry_indices = entry_indices
+        alias.probs = probs
+
+        self._aliases_table.push_back(alias)
         return new_index
 
-    cdef inline _create_empty_vectors(self):
+    cdef inline void _create_empty_vectors(self, hash_t dummy_hash) nogil:
         """ 
         Initializing the vectors and making sure the first element of each vector is a dummy,
         because the PreshMap maps pointing to indices in these vectors can not contain 0 as value
         cf. https://github.com/explosion/preshed/issues/17
         """
         cdef int32_t dummy_value = 0
-        self.vocab.strings.add("")
 
-        self._entry_index = PreshMap()
-        self._entries.push_back(
-            _EntryC(
-                entity_hash=self.vocab.strings[""],
-                vector_rows=&dummy_value,
-                feats_row=dummy_value,
-                prob=dummy_value
-            ))
+        # Avoid struct initializer to enable nogil
+        cdef _EntryC entry
+        entry.entity_hash = dummy_hash
+        entry.vector_rows = &dummy_value
+        entry.feats_row = dummy_value
+        entry.prob = dummy_value
 
-        self._alias_index = PreshMap()
-        self._aliases_table.push_back(
-            _AliasC(
-                entry_indices=[dummy_value],
-                probs=[dummy_value]
-            ))
+        # Avoid struct initializer to enable nogil
+        cdef vector[int64_t] dummy_entry_indices
+        dummy_entry_indices.push_back(0)
+        cdef vector[float] dummy_probs
+        dummy_probs.push_back(0)
+
+        cdef _AliasC alias
+        alias.entry_indices = dummy_entry_indices
+        alias.probs = dummy_probs
+
+        self._entries.push_back(entry)
+        self._aliases_table.push_back(alias)
 
 

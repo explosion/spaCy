@@ -28,7 +28,7 @@ def create_kb(vocab):
     print()
     alias_0 = "Douglas"
     print("adding alias", alias_0)
-    kb.add_alias(alias=alias_0, entities=[entity_0, entity_1, entity_2], probabilities=[0.1, 0.6, 0.2])
+    kb.add_alias(alias=alias_0, entities=[entity_0, entity_1, entity_2], probabilities=[0.6, 0.1, 0.2])
 
     alias_1 = "Douglas Adams"
     print("adding alias", alias_1)

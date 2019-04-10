@@ -42,7 +42,11 @@ cdef class KnowledgeBase:
     def __init__(self, Vocab vocab):
         self.vocab = vocab
         self.mem = Pool()
-        self._create_empty_vectors()
+        self._entry_index = PreshMap()
+        self._alias_index = PreshMap()
+
+        self.vocab.strings.add("")
+        self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
     def __len__(self):
         return self.get_size_entities()
@@ -66,8 +70,10 @@ cdef class KnowledgeBase:
             return
 
         cdef int32_t dummy_value = 342
-        self.c_add_entity(entity_hash=entity_hash, prob=prob,
-                          vector_rows=&dummy_value, feats_row=dummy_value)
+        new_index = self.c_add_entity(entity_hash=entity_hash, prob=prob,
+                                      vector_rows=&dummy_value, feats_row=dummy_value)
+        self._entry_index[entity_hash] = new_index
+
         # TODO self._vectors_table.get_pointer(vectors),
         # self._features_table.get(features))
 
@@ -109,7 +115,8 @@ cdef class KnowledgeBase:
             entry_indices.push_back(int(entry_index))
             probs.push_back(float(prob))
 
-        self.c_add_aliases(alias_hash=alias_hash, entry_indices=entry_indices, probs=probs)
+        new_index = self.c_add_aliases(alias_hash=alias_hash, entry_indices=entry_indices, probs=probs)
+        self._alias_index[alias_hash] = new_index
 
         return alias_hash
 
