@@ -1,3 +1,4 @@
+# cython: infer_types=True
 # cython: profile=True
 # coding: utf8
 from spacy.errors import Errors, Warnings, user_warning
@@ -19,7 +20,7 @@ cdef class Candidate:
     @property
     def entity_(self):
         """RETURNS (unicode): ID/name of this entity in the KB"""
-        return self.kb.vocab.strings[self.entity]
+        return self.kb.vocab.strings[self.entity_hash]
 
     @property
     def alias(self):
@@ -29,7 +30,7 @@ cdef class Candidate:
     @property
     def alias_(self):
         """RETURNS (unicode): ID of the original alias"""
-        return self.kb.vocab.strings[self.alias]
+        return self.kb.vocab.strings[self.alias_hash]
 
     @property
     def prior_prob(self):
@@ -40,8 +41,6 @@ cdef class KnowledgeBase:
 
     def __init__(self, Vocab vocab):
         self.vocab = vocab
-        self._entry_index = PreshMap()
-        self._alias_index = PreshMap()
         self.mem = Pool()
         self._create_empty_vectors()
 
@@ -56,8 +55,8 @@ cdef class KnowledgeBase:
 
     def add_entity(self, unicode entity, float prob=0.5, vectors=None, features=None):
         """
-        Add an entity to the KB.
-        Return the hash of the entity ID at the end
+        Add an entity to the KB, optionally specifying its log probability based on corpus frequency
+        Return the hash of the entity ID/name at the end
         """
         cdef hash_t entity_hash = self.vocab.strings.add(entity)
 
@@ -97,8 +96,6 @@ cdef class KnowledgeBase:
         if alias_hash in self._alias_index:
             user_warning(Warnings.W017.format(alias=alias))
             return
-
-        cdef hash_t entity_hash
 
         cdef vector[int64_t] entry_indices
         cdef vector[float] probs

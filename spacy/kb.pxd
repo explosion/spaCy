@@ -13,7 +13,7 @@ from .typedefs cimport hash_t
 # of bits we need to keep track of the answers.
 cdef struct _EntryC:
 
-    # The hash of this entry's unique ID and name in the kB
+    # The hash of this entry's unique ID/name in the kB
     hash_t entity_hash
 
     # Allows retrieval of one or more vectors.
@@ -99,7 +99,7 @@ cdef class KnowledgeBase:
     cdef inline int64_t c_add_entity(self, hash_t entity_hash, float prob,
                                      int32_t* vector_rows, int feats_row):
         """Add an entry to the knowledge base."""
-        # This is what we'll map the hash key to. It's where the entry will sit
+        # This is what we'll map the entity hash key to. It's where the entry will sit
         # in the vector of entries, so we can get it later.
         cdef int64_t new_index = self._entries.size()
         self._entries.push_back(
@@ -114,6 +114,8 @@ cdef class KnowledgeBase:
 
     cdef inline int64_t c_add_aliases(self, hash_t alias_hash, vector[int64_t] entry_indices, vector[float] probs):
         """Connect a mention to a list of potential entities with their prior probabilities ."""
+        # This is what we'll map the alias hash key to. It's where the alias will be defined
+        # in the vector of aliases.
         cdef int64_t new_index = self._aliases_table.size()
 
         self._aliases_table.push_back(
@@ -126,12 +128,14 @@ cdef class KnowledgeBase:
 
     cdef inline _create_empty_vectors(self):
         """ 
-        Making sure the first element of each vector is a dummy,
+        Initializing the vectors and making sure the first element of each vector is a dummy,
         because the PreshMap maps pointing to indices in these vectors can not contain 0 as value
         cf. https://github.com/explosion/preshed/issues/17
         """
         cdef int32_t dummy_value = 0
         self.vocab.strings.add("")
+
+        self._entry_index = PreshMap()
         self._entries.push_back(
             _EntryC(
                 entity_hash=self.vocab.strings[""],
@@ -139,6 +143,8 @@ cdef class KnowledgeBase:
                 feats_row=dummy_value,
                 prob=dummy_value
             ))
+
+        self._alias_index = PreshMap()
         self._aliases_table.push_back(
             _AliasC(
                 entry_indices=[dummy_value],
