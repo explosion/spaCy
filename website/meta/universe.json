@@ -1311,6 +1311,41 @@
                 "website": "http://w4nderlu.st"
             },
             "category": ["standalone", "research"]
+        },
+        {
+            "id": "gracyql",
+            "title": "gracyql",
+            "slogan": "A thin GraphQL wrapper around spacy",
+            "github": "oterrier/gracyql",
+            "description": "An example of a basic [Starlette](https://github.com/encode/starlette) app using [Spacy](https://github.com/explosion/spaCy) and [Graphene](https://github.com/graphql-python/graphene). The main goal is to be able to use the amazing power of spaCy from other languages and retrieving only the information you need thanks to the GraphQL query definition. The GraphQL schema tries to mimic as much as possible the original Spacy API with classes Doc, Span and Token.",
+            "thumb": "https://i.imgur.com/xC7zpTO.png",
+            "category": ["apis"],
+            "tags": ["graphql"],
+            "code_example": [
+                "query ParserDisabledQuery {",
+                "  nlp(model: \"en\", disable: [\"parser\", \"ner\"]) {",
+                "    doc(text: \"I live in Grenoble, France\") {",
+                "      text",
+                "      tokens {",
+                "        id",
+                "        pos",
+                "        lemma",
+                "        dep",
+                "      }",
+                "      ents {",
+                "        start",
+                "        end",
+                "        label",
+                "      }",
+                "    }",
+                "  }",
+                "}"
+            ],
+            "code_language": "json",
+            "author": "Olivier Terrier",
+            "author_links": {
+                "github": "oterrier"
+            }
         }
     ],
     "categories": [
