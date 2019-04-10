@@ -281,7 +281,9 @@ def train(
                         gpu_wps = nwords / (end_time - start_time)
                         with Model.use_device("cpu"):
                             nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            nlp_loaded.parser.cfg["beam_width"]
+                            for name, component in nlp_loaded.pipeline:
+                                if hasattr(component, "cfg"):
+                                    component.cfg["beam_width"] = beam_width
                             dev_docs = list(
                                 corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
                             )
