@@ -9,16 +9,6 @@ from ...char_classes import LATIN_LOWER
 charset = string.ascii_lowercase + "ąężźćńółęąś"
 ALPHABET_SIZE = len(charset)
 
-idx_map = {}
-for i, char in enumerate(LATIN_LOWER):
-    idx_map[char] = i
-
-def reverse(string):
-    return "".join(reversed(string))
-
-def get_idx(c):
-    return charset.index(c)
-    # return idx_map[c]
 
 class Trie:
     def __init__(self):
@@ -89,13 +79,10 @@ def trie_from_rules(rules):
 
     return trie
 
+
 def trie_from_words(words):
     trie = Trie()
     for word in words:
         trie.insert(word, None)
 
     return trie
-
-
-
-
