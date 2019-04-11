@@ -30,6 +30,8 @@ def _read_wikidata():
     # TODO remove hardcoded path
 
     languages = {'en', 'de'}
+    properties = {'P31'}
+    sites = {'enwiki'}
 
     with bz2.open('C:/Users/Sofie/Documents/data/wikidata/wikidata-20190304-all.json.bz2', mode='rb') as file:
         line = file.readline()
@@ -40,8 +42,25 @@ def _read_wikidata():
                 clean_line = clean_line[:-1]
             if len(clean_line) > 1:
                 obj = json.loads(clean_line)
+
                 unique_id = obj["id"]
-                print(unique_id)
+                print("ID:", unique_id)
+
+                entry_type = obj["type"]
+                print("type:", entry_type)
+
+                # TODO: filter on rank:  preferred, normal or deprecated
+                claims = obj["claims"]
+                for prop in properties:
+                    claim_property = claims.get(prop, None)
+                    if claim_property:
+                        for cp in claim_property:
+                            print(prop, cp['mainsnak']['datavalue']['value']['id'])
+
+                entry_sites = obj["sitelinks"]
+                for site in sites:
+                    site_value = entry_sites.get(site, None)
+                    print(site, ":", site_value['title'])
 
                 labels = obj["labels"]
                 if labels:
