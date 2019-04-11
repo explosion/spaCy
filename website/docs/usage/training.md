@@ -36,7 +36,7 @@ mkdir ancora-json
 python -m spacy convert UD_Spanish-AnCora/es_ancora-ud-train.conllu ancora-json
 python -m spacy convert UD_Spanish-AnCora/es_ancora-ud-dev.conllu ancora-json
 mkdir models
-python -m spacy train es models ancora-json/es_ancora-ud-train.json ancora-json/es_ancora-ud-dev.json
+python -m spacy train es models ancora-json/es_ancora-ud-train.jsonl ancora-json/es_ancora-ud-dev.jsonl
 ```
 
 #### Understanding the training output
