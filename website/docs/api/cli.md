@@ -198,7 +198,7 @@ will only train the tagger and parser.
 
 ```bash
 $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
-[--base-model] [--pipeline] [--vectors] [--n-iter] [--n-examples] [--use-gpu]
+[--base-model] [--pipeline] [--vectors] [--n-iter] [--latest] [--n-examples] [--use-gpu]
 [--version] [--meta-path] [--init-tok2vec] [--parser-multitasks]
 [--entity-multitasks] [--gold-preproc] [--noise-level] [--learn-tokens]
 [--verbose]
@@ -213,7 +213,8 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 | `--base-model`, `-b`                                  | option        | Optional name of base model to update. Can be any loadable spaCy model.                                                                                           |
 | `--pipeline`, `-p` <Tag variant="new">2.1</Tag>       | option        | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                                                         |
 | `--vectors`, `-v`                                     | option        | Model to load vectors from.                                                                                                                                       |
-| `--n-iter`, `-n`                                      | option        | Number of iterations (default: `30`).                                                                                                                             |
+| `--n-iter`, `-n`                                      | option        | Number of iterations (default: `30`).|
+| `--latest`, `-l`                                      | option        | Number of epochs to save from the latest epoch (`0` or a negative integer to save all epochs, default: `0`).|
 | `--n-examples`, `-ns`                                 | option        | Number of examples to use (defaults to `0` for all examples).                                                                                                     |
 | `--use-gpu`, `-g`                                     | option        | Whether to use GPU. Can be either `0`, `1` or `-1`.                                                                                                               |
 | `--version`, `-V`                                     | option        | Model version. Will be written out to the model's `meta.json` after training.                                                                                     |

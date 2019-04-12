@@ -36,6 +36,7 @@ from .. import about
     vectors=("Model to load vectors from", "option", "v", str),
     n_iter=("Number of iterations", "option", "n", int),
     n_examples=("Number of examples", "option", "ns", int),
+    latest=("Number of epochs to save from the latest epoch", "option", "l", int),
     use_gpu=("Use GPU", "option", "g", int),
     version=("Model version", "option", "V", str),
     meta_path=("Optional path to meta.json to use as base.", "option", "m", Path),
@@ -74,6 +75,7 @@ def train(
     pipeline="tagger,parser,ner",
     vectors=None,
     n_iter=30,
+    latest=0,
     n_examples=0,
     use_gpu=-1,
     version="0.0.0",
@@ -286,6 +288,8 @@ def train(
                             cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
+            if latest > 0 and i >= latest:
+                shutil.rmtree(output_path / ("model%d" % (i - latest)))
 
                     # Update model meta.json
                     meta["lang"] = nlp.lang
