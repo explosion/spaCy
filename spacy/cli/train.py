@@ -288,8 +288,6 @@ def train(
                             cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
                     srsly.write_json(acc_loc, scorer.scores)
-            if latest > 0 and i >= latest:
-                shutil.rmtree(output_path / ("model%d" % (i - latest)))
 
                     # Update model meta.json
                     meta["lang"] = nlp.lang
@@ -332,6 +330,10 @@ def train(
                         gpu_wps=gpu_wps,
                     )
                     msg.row(progress, **row_settings)
+
+            if latest > 0 and i >= latest:
+                shutil.rmtree(output_path / ("model%d" % (i - latest)))
+
     finally:
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
