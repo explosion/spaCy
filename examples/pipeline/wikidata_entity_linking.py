@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 """Demonstrate how to build a knowledge base from WikiData and run an Entity Linking algorithm.
 """
+import re
 import json
 import spacy
 import bz2
@@ -11,7 +12,8 @@ from spacy.kb import KnowledgeBase
 
 def create_kb(vocab):
     kb = KnowledgeBase(vocab=vocab)
-    _read_wikidata()
+    # _read_wikidata()
+    _read_wikipedia()
 
     # adding entities
     # kb.add_entity(entity=entity, prob=prob)
@@ -87,6 +89,83 @@ def _read_wikidata():
                 print()
             line = file.readline()
             cnt += 1
+
+
+def _read_wikipedia():
+    """ Read the XML wikipedia data """
+    # TODO remove hardcoded path
+
+    # with bz2.open('C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream-index.txt.bz2', mode='rb') as file:
+    with bz2.open('C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream.xml.bz2', mode='rb') as file:
+        line = file.readline()
+        cnt = 1
+        article_text = ""
+        article_title = None
+        article_id = None
+        reading_text = False
+        while line and cnt < 10000:
+            clean_line = line.strip().decode("utf-8")
+
+            # Start reading new page
+            if clean_line == "<page>":
+                article_text = ""
+                article_title = None
+                article_id = 342
+
+            # finished reading this page
+            elif clean_line == "</page>":
+                if article_id:
+                    _store_wp_article(article_id, article_title, article_text.strip())
+
+            # start reading text within a page
+            if "<text" in clean_line:
+                reading_text = True
+
+            if reading_text:
+                article_text += " " + clean_line
+
+            # stop reading text within a page
+            if "</text" in clean_line:
+                reading_text = False
+
+            # read the ID of this article
+            ids = re.findall(r"(?<=<id>)\d*(?=</id>)", clean_line)
+            if ids:
+                article_id = ids[0]
+
+            # read the title of this article
+            titles = re.findall(r"(?<=<title>).*(?=</title>)", clean_line)
+            if titles:
+                article_title = titles[0].strip()
+
+            line = file.readline()
+            cnt += 1
+
+
+def _store_wp_article(article_id, article_title, article_text):
+    print("WP article", article_id, ":", article_title)
+    print(article_text)
+    print(_get_clean_wp_text(article_text))
+    print()
+
+
+def _get_clean_wp_text(article_text):
+    # remove category statements
+    clean_text = re.sub('\[\[Category:.*\]\]', '', article_text)
+
+    # remove nested {{info}} statements by removing the inner/smallest ones first and iterating
+    try_again = True
+    previous_length = len(clean_text)
+    while try_again:
+        clean_text = re.sub('{[^{]*?}', '', clean_text)  # non-greedy match
+        print(clean_text)
+        if len(clean_text) < previous_length:
+            try_again = True
+        else:
+            try_again = False
+        previous_length = len(clean_text)
+
+    return clean_text
 
 
 def add_el(kb, nlp):
