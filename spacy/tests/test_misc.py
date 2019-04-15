@@ -7,7 +7,7 @@ import ctypes
 from pathlib import Path
 from spacy import util
 from spacy import prefer_gpu, require_gpu
-from spacy.compat import symlink_to, symlink_remove, path2str
+from spacy.compat import symlink_to, symlink_remove, path2str, is_windows
 from spacy._ml import PrecomputableAffine
 from subprocess import CalledProcessError
 
@@ -106,9 +106,10 @@ def test_require_gpu():
 def test_create_symlink_windows(
     symlink_setup_target, symlink_target, symlink, is_admin
 ):
-    """Test the creation of symlinks on windows. If run as admin it should succeed, otherwise a CalledProcessError should be raised."""
+    """Test the creation of symlinks on windows. If run as admin or not on windows it should succeed, otherwise a CalledProcessError should be raised."""
     assert symlink_target.exists()
-    if is_admin:
+
+    if is_admin or not is_windows:
         try:
             symlink_to(symlink, symlink_target)
             assert symlink.exists()
