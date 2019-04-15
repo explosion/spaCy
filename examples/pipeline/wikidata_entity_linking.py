@@ -6,8 +6,26 @@ from __future__ import unicode_literals
 import re
 import json
 import spacy
+import datetime
 import bz2
 from spacy.kb import KnowledgeBase
+
+# these will/should be matched ignoring case
+wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
+                   "d", "dbdump", "download", "Draft", "Education", "Foundation",
+                   "Gadget", "Gadget definition", "gerrit", "File", "Help", "Image", "Incubator",
+                   "m", "mail", "mailarchive", "media", "MediaWiki", "MediaWiki talk", "Mediawikiwiki",
+                   "MediaZilla", "Meta", "Metawikipedia", "Module",
+                   "mw", "n", "nost", "oldwikisource", "outreach", "outreachwiki", "otrs", "OTRSwiki",
+                   "Portal", "phab", "Phabricator", "Project", "q", "quality", "rev",
+                   "s", "spcom", "Special", "species", "Strategy", "sulutil", "svn",
+                   "Talk", "Template", "Template talk", "Testwiki", "ticket", "TimedText", "Toollabs", "tools", "tswiki",
+                   "User", "User talk", "v", "voy",
+                   "w", "Wikibooks", "Wikidata", "wikiHow", "Wikinvest", "wikilivres", "Wikimedia", "Wikinews",
+                   "Wikipedia", "Wikipedia talk", "Wikiquote", "Wikisource", "Wikispecies", "Wikitech",
+                   "Wikiversity", "Wikivoyage", "wikt", "wiktionary", "wmf", "wmania", "WP"]
+
+map_alias_to_link = dict()
 
 
 def create_kb(vocab):
@@ -38,7 +56,7 @@ def _read_wikidata():
     with bz2.open('C:/Users/Sofie/Documents/data/wikidata/wikidata-20190304-all.json.bz2', mode='rb') as file:
         line = file.readline()
         cnt = 1
-        while line and cnt < 10:
+        while line and cnt < 100000:
             clean_line = line.strip()
             if clean_line.endswith(b","):
                 clean_line = clean_line[:-1]
@@ -91,6 +109,78 @@ def _read_wikidata():
             cnt += 1
 
 
+def _read_wikipedia_prior_probs():
+    """ Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities """
+
+    # find the links
+    link_regex = re.compile(r'\[\[[^\[\]]*\]\]')
+
+    # match on interwiki links, e.g. `en:` or `:fr:`
+    ns_regex = r":?" + "[a-z][a-z]" + ":"
+
+    # match on Namespace: optionally preceded by a :
+    for ns in wiki_namespaces:
+        ns_regex += "|" + ":?" + ns + ":"
+
+    ns_regex = re.compile(ns_regex, re.IGNORECASE)
+
+    # TODO remove hardcoded path
+    with bz2.open('C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream.xml.bz2', mode='rb') as file:
+        line = file.readline()
+        cnt = 0
+        while line:
+            if cnt % 5000000 == 0:
+                print(datetime.datetime.now(), "processed", cnt, "lines")
+            clean_line = line.strip().decode("utf-8")
+
+            matches = link_regex.findall(clean_line)
+            for match in matches:
+                match = match[2:][:-2].replace("_", " ").strip()
+
+                if ns_regex.match(match):
+                    pass  # ignore namespaces at the beginning of the string
+
+                # this is a simple link, with the alias the same as the mention
+                elif "|" not in match:
+                    _store_alias(match, match)
+
+                # in wiki format, the link is written as [[entity|alias]]
+                else:
+                    splits = match.split("|")
+                    entity = splits[0].strip()
+                    alias = splits[1].strip()
+                    # specific wiki format  [[alias (specification)|]]
+                    if len(alias) == 0 and "(" in entity:
+                        alias = entity.split("(")[0]
+                        _store_alias(alias, entity)
+                    else:
+                        _store_alias(alias, entity)
+
+            line = file.readline()
+            cnt += 1
+
+    # only print aliases with more than one potential entity
+    # TODO remove hardcoded path
+    with open('C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv', mode='w', encoding='utf8') as outputfile:
+        outputfile.write("alias" + "|" + "count" + "|" + "entity" + "\n")
+        for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
+            for entity, count in sorted(alias_dict.items(), key=lambda x: x[1], reverse=True):
+                outputfile.write(alias + "|" + str(count) + "|" + entity + "\n")
+
+
+def _store_alias(alias, entity):
+    alias = alias.strip()
+    entity = entity.strip()
+
+    # remove everything after # as this is not part of the title but refers to a specific paragraph
+    clean_entity = entity.split("#")[0].capitalize()
+
+    if len(alias) > 0 and len(clean_entity) > 0:
+        alias_dict = map_alias_to_link.get(alias, dict())
+        entity_count = alias_dict.get(clean_entity, 0)
+        alias_dict[clean_entity] = entity_count + 1
+        map_alias_to_link[alias] = alias_dict
+
 def _read_wikipedia():
     """ Read the XML wikipedia data """
     # TODO remove hardcoded path
@@ -103,7 +193,7 @@ def _read_wikipedia():
         article_title = None
         article_id = None
         reading_text = False
-        while line and cnt < 10000:
+        while line and cnt < 1000000:
             clean_line = line.strip().decode("utf-8")
 
             # Start reading new page
@@ -143,27 +233,50 @@ def _read_wikipedia():
 
 
 def _store_wp_article(article_id, article_title, article_text):
+    pass
     print("WP article", article_id, ":", article_title)
     print(article_text)
     print(_get_clean_wp_text(article_text))
     print()
 
 
+
 def _get_clean_wp_text(article_text):
-    # remove category statements
-    clean_text = re.sub('\[\[Category:.*\]\]', '', article_text)
+    # TODO: compile the regular expressions
+
+    # remove Category and File statements
+    clean_text = re.sub(r'\[\[Category:[^\[]*]]', '', article_text)
+    print("1", clean_text)
+    clean_text = re.sub(r'\[\[File:[^\[]*]]', '', clean_text)       # TODO: this doesn't work yet
+    print("2", clean_text)
+
+    # remove bolding markup
+    clean_text = re.sub('\'\'\'', '', clean_text)
+    clean_text = re.sub('\'\'', '', clean_text)
 
     # remove nested {{info}} statements by removing the inner/smallest ones first and iterating
     try_again = True
     previous_length = len(clean_text)
     while try_again:
-        clean_text = re.sub('{[^{]*?}', '', clean_text)  # non-greedy match
-        print(clean_text)
+        clean_text = re.sub('{[^{]*?}', '', clean_text)  # non-greedy match excluding a nested {
         if len(clean_text) < previous_length:
             try_again = True
         else:
             try_again = False
         previous_length = len(clean_text)
+
+    # remove multiple spaces
+    while '  ' in clean_text:
+        clean_text = re.sub('  ', ' ', clean_text)
+
+    # remove simple interwiki links (no alternative name)
+    clean_text = re.sub('\[\[([^|]*?)]]', r'\1', clean_text)
+
+    # remove simple interwiki links by picking the alternative name
+    clean_text = re.sub(r'\[\[[^|]*?\|([^|]*?)]]', r'\1', clean_text)
+
+    # remove HTML comments
+    clean_text = re.sub('&lt;!--[^!]*--&gt;', '', clean_text)
 
     return clean_text
 
@@ -187,6 +300,13 @@ def add_el(kb, nlp):
 
 
 if __name__ == "__main__":
-    nlp = spacy.load('en_core_web_sm')
-    my_kb = create_kb(nlp.vocab)
+    _read_wikipedia_prior_probs()
+
+    # nlp = spacy.load('en_core_web_sm')
+    # my_kb = create_kb(nlp.vocab)
     # add_el(my_kb, nlp)
+
+    # clean_text = "[[File:smomething]] jhk"
+    # clean_text = re.sub(r'\[\[Category:[^\[]*]]', '', clean_text)
+    # clean_text = re.sub(r'\[\[File:[^\[]*]]', '', clean_text)
+    # print(clean_text)
