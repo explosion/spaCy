@@ -19,7 +19,7 @@ def patterns():
         {"label": "BYE", "pattern": [{"LOWER": "bye"}, {"LOWER": "bye"}]},
         {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}]},
         {"label": "COMPLEX", "pattern": [{"ORTH": "foo", "OP": "*"}]},
-        {'label': 'TECH_ORG', 'pattern': 'Apple', 'meta': {'entity_id': 'a1'}},
+        {"label": "TECH_ORG", "pattern": "Apple", "id": "a1"},
     ]
 
 
@@ -80,11 +80,13 @@ def test_entity_ruler_existing_complex(nlp, patterns, add_ent):
 
 def test_entity_ruler_entity_id(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
+    if not Span.has_extension("entity_id"):
+        Span.set_extension("entity_id", default=None)
     nlp.add_pipe(ruler)
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "TECH_ORG"
-    assert doc.ents[0]._.entity_id == 'a1'
+    assert doc.ents[0]._.entity_id == "a1"
 
 
 def test_entity_ruler_serialize_bytes(nlp, patterns):
