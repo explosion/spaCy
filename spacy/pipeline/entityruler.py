@@ -11,6 +11,19 @@ from ..tokens import Span
 from ..matcher import Matcher, PhraseMatcher
 
 
+# coding: utf8
+from __future__ import unicode_literals
+
+from collections import defaultdict
+import srsly
+
+from spacy.errors import Errors
+from spacy.compat import basestring_
+from spacy.util import ensure_path
+from spacy.tokens import Span
+from spacy.matcher import Matcher, PhraseMatcher
+
+
 class EntityRuler(object):
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
@@ -48,6 +61,7 @@ class EntityRuler(object):
         self.phrase_patterns = defaultdict(list)
         self.matcher = Matcher(nlp.vocab)
         self.phrase_matcher = PhraseMatcher(nlp.vocab)
+        self.entity_id_sep = cfg.get('entity_id_sep', '|')
         patterns = cfg.get("patterns")
         if patterns is not None:
             self.add_patterns(patterns)
@@ -84,7 +98,18 @@ class EntityRuler(object):
                 continue
             # check for end - 1 here because boundaries are inclusive
             if start not in seen_tokens and end - 1 not in seen_tokens:
-                new_entities.append(Span(doc, start, end, label=match_id))
+                if self.entity_ids:
+                    if not Span.has_extension('entity_id'):
+                        Span.set_extension('entity_id', default=None)
+
+                    label_ = self.nlp.vocab.strings[match_id]
+                    ent_label, ent_id = self.split_label(label_)
+                    span = Span(doc, start, end, label=ent_label)
+                    if ent_id:
+                        span._.entity_id = ent_id
+                else:
+                    span = span = Span(doc, start, end, label=match_id)
+                new_entities.append(span)
                 entities = [
                     e for e in entities if not (e.start < end and e.end > start)
                 ]
@@ -103,6 +128,36 @@ class EntityRuler(object):
         all_labels = set(self.token_patterns.keys())
         all_labels.update(self.phrase_patterns.keys())
         return tuple(all_labels)
+    
+    @property
+    def entity_ids(self):
+        """All entity ids present in the match patterns meta dicts.
+
+        RETURNS (set): The string entity ids.
+
+        DOCS: https://spacy.io/api/entityruler#labels
+        """
+        all_entity_ids = set()
+        for l in self.labels:
+            if self.entity_id_sep in l:
+                _, ent_id = l.split(self.entity_id_sep)
+                all_entity_ids.add(ent_id)
+        return tuple(all_entity_ids)
+    
+    
+    def split_label(self, label):
+        if self.entity_id_sep in label:
+            ent_label, ent_id = label.split(self.entity_id_sep)
+        else:
+            ent_label = label
+            ent_id = None
+        
+        return ent_label, ent_id
+
+    def create_label(self, label, entity_id):
+        if isinstance(entity_id, basestring_):
+            label = '{}{}{}'.format(label, self.entity_id_sep, entity_id)
+        return label
 
     @property
     def patterns(self):
@@ -115,10 +170,19 @@ class EntityRuler(object):
         all_patterns = []
         for label, patterns in self.token_patterns.items():
             for pattern in patterns:
-                all_patterns.append({"label": label, "pattern": pattern})
+                ent_label, ent_id = self.split_label(label)
+                p = {"label": ent_label, "pattern": pattern}
+                if ent_id:
+                    p["id"] = ent_id
+                all_patterns.append(p)
         for label, patterns in self.phrase_patterns.items():
             for pattern in patterns:
-                all_patterns.append({"label": label, "pattern": pattern.text})
+                ent_label, ent_id = self.split_label(label)
+                p = {"label": ent_label, "pattern": pattern.text}
+                if ent_id:
+                    p["id"] = ent_id
+                all_patterns.append(p)
+
         return all_patterns
 
     def add_patterns(self, patterns):
@@ -133,10 +197,8 @@ class EntityRuler(object):
         """
         for entry in patterns:
             label = entry["label"]
-            if 'meta' in entry and 'entity_id' in entry['meta']:
-                entity_id = entry['meta']['entity_id']
-                if isinstance(entity_id, basestring_):
-                    label = '{}|{}'.format(label, entity_id)
+            if 'id' in entry:
+                label = self.create_label(label, entry['id'])
             pattern = entry["pattern"]
             if isinstance(pattern, basestring_):
                 self.phrase_patterns[label].append(self.nlp(pattern))
