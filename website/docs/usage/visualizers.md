@@ -136,7 +136,7 @@ The entity visualizer lets you customize the following `options`:
 | Argument | Type | Description                                                                           | Default |
 | -------- | ---- | ------------------------------------------------------------------------------------- | ------- |
 | `ents`   | list |  Entity types to highlight (`None` for all types).                                    | `None`  |
-| `colors` | dict | Color overrides. Entity types in lowercase should be mapped to color names or values. | `{}`    |
+| `colors` | dict | Color overrides. Entity types in uppercase should be mapped to color names or values. | `{}`    |
 
 If you specify a list of `ents`, only those entity types will be rendered – for
 example, you can choose to display `PERSON` entities. Internally, the visualizer
