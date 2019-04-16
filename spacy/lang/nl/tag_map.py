@@ -5,7 +5,6 @@ from ...symbols import POS, PUNCT, ADJ, NUM, DET, ADV, ADP, X, VERB
 from ...symbols import NOUN, PROPN, SPACE, PRON, CONJ
 
 
-# fmt: off
 TAG_MAP = {
     "ADJ__Number=Sing": {POS: ADJ},
     "ADJ___": {POS: ADJ},
@@ -811,4 +810,3 @@ TAG_MAP = {
     "X___": {POS: X},
     "_SP": {POS: SPACE}
 }
-# fmt: on

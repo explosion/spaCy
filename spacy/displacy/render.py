@@ -50,8 +50,9 @@ class DependencyRenderer(object):
         rendered = []
         for i, p in enumerate(parsed):
             if i == 0:
-                self.direction = p["settings"].get("direction", DEFAULT_DIR)
-                self.lang = p["settings"].get("lang", DEFAULT_LANG)
+                settings = p.get("settings", {})
+                self.direction = settings.get("direction", DEFAULT_DIR)
+                self.lang = settings.get("lang", DEFAULT_LANG)
             render_id = "{}-{}".format(id_prefix, i)
             svg = self.render_svg(render_id, p["words"], p["arcs"])
             rendered.append(svg)
@@ -254,9 +255,10 @@ class EntityRenderer(object):
         rendered = []
         for i, p in enumerate(parsed):
             if i == 0:
-                self.direction = p["settings"].get("direction", DEFAULT_DIR)
-                self.lang = p["settings"].get("lang", DEFAULT_LANG)
-            rendered.append(self.render_ents(p["text"], p["ents"], p["title"]))
+                settings = p.get("settings", {})
+                self.direction = settings.get("direction", DEFAULT_DIR)
+                self.lang = settings.get("lang", DEFAULT_LANG)
+            rendered.append(self.render_ents(p["text"], p["ents"], p.get("title")))
         if page:
             docs = "".join([TPL_FIGURE.format(content=doc) for doc in rendered])
             markup = TPL_PAGE.format(content=docs, lang=self.lang, dir=self.direction)
