@@ -1,10 +1,5 @@
-import re
-import time
-import sre_yield
 import string
 
-# ALPHABET_SIZE = ord('z') - ord('a') + 1 + len(polish_special_chars)
-# charset = LATIN_LOWER.encode().decode('unicode-escape')
 charset = string.ascii_lowercase + "ąężźćńółęąś"
 ALPHABET_SIZE = len(charset)
 
@@ -60,23 +55,6 @@ class Node:
         if self.children.get(head) is None:
             return False
         return tail in self.children[head]
-
-
-def trie_from_rules(rules):
-    # rules are expected to be in format:
-    # [(suffix, (regex, replacement))]
-    expanded_rules = []
-    for rule in rules:
-        replacement = rule[1]
-        regex = rule[0]
-        suffixes = list(sre_yield.AllStrings(rule[0], charset=charset))
-        expanded_rules += [(suf, regex, replacement) for suf in suffixes]
-
-    trie = Trie()
-    for suf, regex, replacement in expanded_rules:
-        trie.insert(suf, (regex, replacement))
-
-    return trie
 
 
 def trie_from_expanded_rules(expanded_rules):
