@@ -1,7 +1,7 @@
 # coding: utf-8
 import re
 from ....symbols import NOUN, VERB, ADJ, PUNCT, ADV, PART
-from .trie import Trie, trie_from_rules, trie_from_words
+from .trie import Trie, trie_from_expanded_rules
 
 
 class PolishLemmatizer(object):
@@ -18,7 +18,7 @@ class PolishLemmatizer(object):
         self.indexes = {}
         for univ_pos in ['noun', 'verb', 'adj', 'adv', 'part']:
             self.indexes[univ_pos] = frozenset(self.index.get(univ_pos, {}) | self.index.get('other', {}))
-            self.tries[univ_pos] = trie_from_rules(self.rules.get(univ_pos, []) + self.rules.get('other', {}))
+            self.tries[univ_pos] = trie_from_expanded_rules(self.rules.get(univ_pos, []))
 
     def __call__(self, string, univ_pos, morphology=None):
         if univ_pos in (NOUN, 'NOUN', 'noun'):

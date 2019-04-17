@@ -2,7 +2,6 @@ import re
 import time
 import sre_yield
 import string
-from ...char_classes import LATIN_LOWER
 
 # ALPHABET_SIZE = ord('z') - ord('a') + 1 + len(polish_special_chars)
 # charset = LATIN_LOWER.encode().decode('unicode-escape')
@@ -73,6 +72,16 @@ def trie_from_rules(rules):
         suffixes = list(sre_yield.AllStrings(rule[0], charset=charset))
         expanded_rules += [(suf, regex, replacement) for suf in suffixes]
 
+    trie = Trie()
+    for suf, regex, replacement in expanded_rules:
+        trie.insert(suf, (regex, replacement))
+
+    return trie
+
+
+def trie_from_expanded_rules(expanded_rules):
+    # rules are expected to be in format:
+    # [(suffix, regex, replacement)]
     trie = Trie()
     for suf, regex, replacement in expanded_rules:
         trie.insert(suf, (regex, replacement))
