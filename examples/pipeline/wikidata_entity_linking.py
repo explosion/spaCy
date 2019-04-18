@@ -204,7 +204,9 @@ def _read_wikidata(limit=None, to_print=False):
 
 
 def _read_wikipedia_prior_probs():
-    """ Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities """
+    """ Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities
+    The full file takes about 2h to parse 1100M lines (update printed every 5M lines)
+     """
 
     # find the links
     link_regex = re.compile(r'\[\[[^\[\]]*\]\]')
@@ -266,9 +268,10 @@ def _store_alias(alias, entity, normalize_alias=False, normalize_entity=True):
 
     # remove everything after # as this is not part of the title but refers to a specific paragraph
     if normalize_entity:
+        # wikipedia titles are always capitalized
         entity = capitalize_first(entity.split("#")[0])
     if normalize_alias:
-        alias = capitalize_first(alias.split("#")[0])
+        alias = alias.split("#")[0]
 
     if alias and entity:
         alias_dict = map_alias_to_link.get(alias, dict())
