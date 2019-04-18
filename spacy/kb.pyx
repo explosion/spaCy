@@ -54,8 +54,14 @@ cdef class KnowledgeBase:
     def get_size_entities(self):
         return self._entries.size() - 1  # not counting dummy element on index 0
 
+    def get_entity_strings(self):
+        return [self.vocab.strings[x] for x in self._entry_index][1:] # removing the dummy element on index 0
+
     def get_size_aliases(self):
-        return self._aliases_table.size() - 1 # not counting dummy element on index 0
+        return self._aliases_table.size() - 1 # not counting dummy element on index
+
+    def get_alias_strings(self):
+        return [self.vocab.strings[x] for x in self._alias_index][1:] # removing the dummy element on index 0
 
     def add_entity(self, unicode entity, float prob=0.5, vectors=None, features=None):
         """

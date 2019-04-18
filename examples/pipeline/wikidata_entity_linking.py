@@ -10,6 +10,13 @@ import datetime
 import bz2
 from spacy.kb import KnowledgeBase
 
+# TODO: remove hardcoded paths
+WIKIDATA_JSON = 'C:/Users/Sofie/Documents/data/wikidata/wikidata-20190304-all.json.bz2'
+ENWIKI_DUMP = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream.xml.bz2'
+ENWIKI_INDEX = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream-index.txt.bz2'
+PRIOR_PROB = 'C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv'
+
+
 # these will/should be matched ignoring case
 wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
                    "d", "dbdump", "download", "Draft", "Education", "Foundation",
@@ -28,21 +35,79 @@ wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
 map_alias_to_link = dict()
 
 
-def create_kb(vocab):
+def create_kb(vocab, max_entities_per_alias, min_occ):
     kb = KnowledgeBase(vocab=vocab)
+
+    _add_entities(kb)
+    _add_aliases(kb, max_entities_per_alias, min_occ)
+
     # _read_wikidata()
-    _read_wikipedia()
-
-    # adding entities
-    # kb.add_entity(entity=entity, prob=prob)
-
-    # adding aliases
-    # kb.add_alias(alias=alias, entities=[entity_0, entity_1, entity_2], probabilities=[0.6, 0.1, 0.2])
+    # _read_wikipedia()
 
     print()
     print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
 
     return kb
+
+
+def _add_entities(kb):
+
+    kb.add_entity(entity="Earthquake", prob=0.342)
+    kb.add_entity(entity="2010 haiti earthquake", prob=0.1)
+    kb.add_entity(entity="1906 san francisco earthquake", prob=0.1)
+    kb.add_entity(entity="2011 christchurch earthquak", prob=0.1)
+
+    kb.add_entity(entity="Soft drink", prob=0.342)
+
+    print("added", kb.get_size_entities(), "entities:", kb.get_entity_strings())
+
+
+def _add_aliases(kb, max_entities_per_alias, min_occ):
+    all_entities = kb.get_entity_strings()
+    # adding aliases with prior probabilities
+    with open(PRIOR_PROB, mode='r', encoding='utf8') as prior_file:
+        # skip header
+        prior_file.readline()
+        line = prior_file.readline()
+        # we can read this file sequentially, it's sorted by alias, and then by count
+        previous_alias = None
+        total_count = 0
+        counts = list()
+        entities = list()
+        while line:
+            splits = line.replace('\n', "").split(sep='|')
+            new_alias = splits[0]
+            count = int(splits[1])
+            entity = splits[2]
+
+            if new_alias != previous_alias and previous_alias:
+                # done reading the previous alias --> output
+                if len(entities) > 0:
+                    selected_entities = list()
+                    prior_probs = list()
+                    for ent_count, ent_string in zip(counts, entities):
+                        if ent_string in all_entities:
+                            p_entity_givenalias = ent_count / total_count
+                            selected_entities.append(ent_string)
+                            prior_probs.append(p_entity_givenalias)
+
+                    if selected_entities:
+                        kb.add_alias(alias=previous_alias, entities=selected_entities, probabilities=prior_probs)
+                total_count = 0
+                counts = list()
+                entities = list()
+
+            total_count += count
+
+            if len(entities) < max_entities_per_alias and count >= min_occ:
+                counts.append(count)
+                entities.append(entity)
+            previous_alias = new_alias
+
+            line = prior_file.readline()
+
+    print()
+    print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
 
 
 def _read_wikidata():
@@ -53,7 +118,7 @@ def _read_wikidata():
     properties = {'P31'}
     sites = {'enwiki'}
 
-    with bz2.open('C:/Users/Sofie/Documents/data/wikidata/wikidata-20190304-all.json.bz2', mode='rb') as file:
+    with bz2.open(WIKIDATA_JSON, mode='rb') as file:
         line = file.readline()
         cnt = 1
         while line and cnt < 100000:
@@ -124,8 +189,7 @@ def _read_wikipedia_prior_probs():
 
     ns_regex = re.compile(ns_regex, re.IGNORECASE)
 
-    # TODO remove hardcoded path
-    with bz2.open('C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream.xml.bz2', mode='rb') as file:
+    with bz2.open(ENWIKI_DUMP, mode='rb') as file:
         line = file.readline()
         cnt = 0
         while line:
@@ -159,9 +223,8 @@ def _read_wikipedia_prior_probs():
             line = file.readline()
             cnt += 1
 
-    # only print aliases with more than one potential entity
-    # TODO remove hardcoded path
-    with open('C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv', mode='w', encoding='utf8') as outputfile:
+    # write all aliases and their entities and occurrences to file
+    with open(PRIOR_PROB, mode='w', encoding='utf8') as outputfile:
         outputfile.write("alias" + "|" + "count" + "|" + "entity" + "\n")
         for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
             for entity, count in sorted(alias_dict.items(), key=lambda x: x[1], reverse=True):
@@ -181,12 +244,11 @@ def _store_alias(alias, entity):
         alias_dict[clean_entity] = entity_count + 1
         map_alias_to_link[alias] = alias_dict
 
+
 def _read_wikipedia():
     """ Read the XML wikipedia data """
-    # TODO remove hardcoded path
 
-    # with bz2.open('C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream-index.txt.bz2', mode='rb') as file:
-    with bz2.open('C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream.xml.bz2', mode='rb') as file:
+    with bz2.open(ENWIKI_DUMP, mode='rb') as file:
         line = file.readline()
         cnt = 1
         article_text = ""
@@ -238,7 +300,6 @@ def _store_wp_article(article_id, article_title, article_text):
     print(article_text)
     print(_get_clean_wp_text(article_text))
     print()
-
 
 
 def _get_clean_wp_text(article_text):
@@ -300,10 +361,13 @@ def add_el(kb, nlp):
 
 
 if __name__ == "__main__":
-    _read_wikipedia_prior_probs()
+    # STEP 1 : create prior probabilities from WP
+    # run only once !
+    # _read_wikipedia_prior_probs()
 
-    # nlp = spacy.load('en_core_web_sm')
-    # my_kb = create_kb(nlp.vocab)
+    # STEP 2 : create KB
+    nlp = spacy.load('en_core_web_sm')
+    my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5)
     # add_el(my_kb, nlp)
 
     # clean_text = "[[File:smomething]] jhk"
