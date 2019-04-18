@@ -113,7 +113,7 @@ class GoldCorpus(object):
         self.write_msgpack(self.tmp_dir / "dev", dev, limit=self.limit)
 
     def __del__(self):
-        shutil.rmtree(self.tmp_dir)
+        shutil.rmtree(path2str(self.tmp_dir))
 
     @staticmethod
     def write_msgpack(directory, doc_tuples, limit=0):
@@ -626,7 +626,7 @@ def docs_to_json(docs, id=0):
                 json_sent["tokens"].append(json_token)
             json_para["sentences"].append(json_sent)
         json_doc["paragraphs"].append(json_para)
-    return json_doc 
+    return json_doc
 
 
 def biluo_tags_from_offsets(doc, entities, missing="O"):

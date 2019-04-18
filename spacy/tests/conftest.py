@@ -134,6 +134,11 @@ def nl_tokenizer():
     return get_lang_class("nl").Defaults.create_tokenizer()
 
 
+@pytest.fixture
+def nl_lemmatizer(scope="session"):
+    return get_lang_class("nl").Defaults.create_lemmatizer()
+
+
 @pytest.fixture(scope="session")
 def pl_tokenizer():
     return get_lang_class("pl").Defaults.create_tokenizer()

@@ -105,7 +105,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E012.format(key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
-        if errors:
+        if any(err for err in errors.values()):
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:
