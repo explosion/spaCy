@@ -38,10 +38,13 @@ map_alias_to_link = dict()
 def create_kb(vocab, max_entities_per_alias, min_occ):
     kb = KnowledgeBase(vocab=vocab)
 
-    _add_entities(kb)
-    _add_aliases(kb, max_entities_per_alias, min_occ)
+    id_to_title = _read_wikidata(limit=100, to_print=False)
+    title_to_id = {v:k for k,v in id_to_title.items()}
 
-    # _read_wikidata()
+    _add_entities(kb, entities=id_to_title.keys(), probs=[0.4 for x in id_to_title.keys()])
+    _add_aliases(kb, title_to_id=title_to_id, max_entities_per_alias=max_entities_per_alias, min_occ=min_occ)
+
+    # TODO: read wikipedia texts for entity context
     # _read_wikipedia()
 
     print()
@@ -50,20 +53,17 @@ def create_kb(vocab, max_entities_per_alias, min_occ):
     return kb
 
 
-def _add_entities(kb):
-
-    kb.add_entity(entity="Earthquake", prob=0.342)
-    kb.add_entity(entity="2010 haiti earthquake", prob=0.1)
-    kb.add_entity(entity="1906 san francisco earthquake", prob=0.1)
-    kb.add_entity(entity="2011 christchurch earthquak", prob=0.1)
-
-    kb.add_entity(entity="Soft drink", prob=0.342)
+def _add_entities(kb, entities, probs):
+    for entity, prob in zip(entities, probs):
+        kb.add_entity(entity=entity, prob=prob)
 
     print("added", kb.get_size_entities(), "entities:", kb.get_entity_strings())
 
 
-def _add_aliases(kb, max_entities_per_alias, min_occ):
-    all_entities = kb.get_entity_strings()
+def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ):
+    wp_titles = title_to_id.keys()
+    print("wp titles", wp_titles)
+
     # adding aliases with prior probabilities
     with open(PRIOR_PROB, mode='r', encoding='utf8') as prior_file:
         # skip header
@@ -86,13 +86,17 @@ def _add_aliases(kb, max_entities_per_alias, min_occ):
                     selected_entities = list()
                     prior_probs = list()
                     for ent_count, ent_string in zip(counts, entities):
-                        if ent_string in all_entities:
+                        if ent_string in wp_titles:
+                            wd_id = title_to_id[ent_string]
                             p_entity_givenalias = ent_count / total_count
-                            selected_entities.append(ent_string)
+                            selected_entities.append(wd_id)
                             prior_probs.append(p_entity_givenalias)
 
                     if selected_entities:
                         kb.add_alias(alias=previous_alias, entities=selected_entities, probabilities=prior_probs)
+                        print("analysed", previous_alias, "with entities", entities, "and counts", counts)
+                        print("added", previous_alias, "with selected entities", selected_entities, "and probs", prior_probs)
+                        print()
                 total_count = 0
                 counts = list()
                 entities = list()
@@ -110,68 +114,93 @@ def _add_aliases(kb, max_entities_per_alias, min_occ):
     print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
 
 
-def _read_wikidata():
+def _read_wikidata(limit=None, to_print=False):
     """ Read the JSON wiki data """
-    # TODO remove hardcoded path
 
     languages = {'en', 'de'}
-    properties = {'P31'}
+    prop_filter = {'P31': {'Q5', 'Q15632617'}}     # currently defined as OR: one property suffices to be selected
     sites = {'enwiki'}
+
+    entity_dict = dict()
 
     with bz2.open(WIKIDATA_JSON, mode='rb') as file:
         line = file.readline()
         cnt = 1
-        while line and cnt < 100000:
+        while line and (not limit or cnt < limit):
             clean_line = line.strip()
             if clean_line.endswith(b","):
                 clean_line = clean_line[:-1]
             if len(clean_line) > 1:
                 obj = json.loads(clean_line)
+                keep = False
 
-                unique_id = obj["id"]
-                print("ID:", unique_id)
-
-                entry_type = obj["type"]
-                print("type:", entry_type)
-
+                # filtering records on their properties
                 # TODO: filter on rank:  preferred, normal or deprecated
                 claims = obj["claims"]
-                for prop in properties:
+                for prop, value_set in prop_filter.items():
                     claim_property = claims.get(prop, None)
                     if claim_property:
                         for cp in claim_property:
-                            print(prop, cp['mainsnak']['datavalue']['value']['id'])
+                            cp_id = cp['mainsnak']['datavalue']['value']['id']
+                            if cp_id in value_set:
+                                keep = True
 
-                entry_sites = obj["sitelinks"]
-                for site in sites:
-                    site_value = entry_sites.get(site, None)
-                    print(site, ":", site_value['title'])
+                if keep:
+                    unique_id = obj["id"]
+                    entry_type = obj["type"]
 
-                labels = obj["labels"]
-                if labels:
-                    for lang in languages:
-                        lang_label = labels.get(lang, None)
-                        if lang_label:
-                            print("label (" + lang + "):", lang_label["value"])
+                    if to_print:
+                        print("ID:", unique_id)
+                        print("type:", entry_type)
 
-                descriptions = obj["descriptions"]
-                if descriptions:
-                    for lang in languages:
-                        lang_descr = descriptions.get(lang, None)
-                        if lang_descr:
-                            print("description (" + lang + "):", lang_descr["value"])
+                    # parsing all properties that refer to other entities
+                    for prop, claim_property in claims.items():
+                        cp_dicts = [cp['mainsnak']['datavalue'].get('value') for cp in claim_property if cp['mainsnak'].get('datavalue')]
+                        cp_values = [cp_dict.get('id') for cp_dict in cp_dicts if isinstance(cp_dict, dict) if cp_dict.get('id') is not None]
+                        if cp_values:
+                            if to_print:
+                                print("prop:", prop, cp_values)
 
-                aliases = obj["aliases"]
-                if aliases:
-                    for lang in languages:
-                        lang_aliases = aliases.get(lang, None)
-                        if lang_aliases:
-                            for item in lang_aliases:
-                                print("alias (" + lang + "):", item["value"])
+                    entry_sites = obj["sitelinks"]
+                    for site in sites:
+                        site_value = entry_sites.get(site, None)
+                        if site_value:
+                            if to_print:
+                                print(site, ":", site_value['title'])
+                            if site == "enwiki":
+                                entity_dict[unique_id] = site_value['title']
 
-                print()
+                    labels = obj["labels"]
+                    if labels:
+                        for lang in languages:
+                            lang_label = labels.get(lang, None)
+                            if lang_label:
+                                if to_print:
+                                    print("label (" + lang + "):", lang_label["value"])
+
+                    descriptions = obj["descriptions"]
+                    if descriptions:
+                        for lang in languages:
+                            lang_descr = descriptions.get(lang, None)
+                            if lang_descr:
+                                if to_print:
+                                    print("description (" + lang + "):", lang_descr["value"])
+
+                    aliases = obj["aliases"]
+                    if aliases:
+                        for lang in languages:
+                            lang_aliases = aliases.get(lang, None)
+                            if lang_aliases:
+                                for item in lang_aliases:
+                                    if to_print:
+                                        print("alias (" + lang + "):", item["value"])
+
+                    if to_print:
+                        print()
             line = file.readline()
             cnt += 1
+
+    return entity_dict
 
 
 def _read_wikipedia_prior_probs():
@@ -206,7 +235,7 @@ def _read_wikipedia_prior_probs():
 
                 # this is a simple link, with the alias the same as the mention
                 elif "|" not in match:
-                    _store_alias(match, match)
+                    _store_alias(match, match, normalize_alias=True, normalize_entity=True)
 
                 # in wiki format, the link is written as [[entity|alias]]
                 else:
@@ -216,9 +245,9 @@ def _read_wikipedia_prior_probs():
                     # specific wiki format  [[alias (specification)|]]
                     if len(alias) == 0 and "(" in entity:
                         alias = entity.split("(")[0]
-                        _store_alias(alias, entity)
+                        _store_alias(alias, entity, normalize_alias=False, normalize_entity=True)
                     else:
-                        _store_alias(alias, entity)
+                        _store_alias(alias, entity, normalize_alias=False, normalize_entity=True)
 
             line = file.readline()
             cnt += 1
@@ -231,17 +260,20 @@ def _read_wikipedia_prior_probs():
                 outputfile.write(alias + "|" + str(count) + "|" + entity + "\n")
 
 
-def _store_alias(alias, entity):
+def _store_alias(alias, entity, normalize_alias=False, normalize_entity=True):
     alias = alias.strip()
     entity = entity.strip()
 
     # remove everything after # as this is not part of the title but refers to a specific paragraph
-    clean_entity = entity.split("#")[0].capitalize()
+    if normalize_entity:
+        entity = capitalize_first(entity.split("#")[0])
+    if normalize_alias:
+        alias = capitalize_first(alias.split("#")[0])
 
-    if len(alias) > 0 and len(clean_entity) > 0:
+    if alias and entity:
         alias_dict = map_alias_to_link.get(alias, dict())
-        entity_count = alias_dict.get(clean_entity, 0)
-        alias_dict[clean_entity] = entity_count + 1
+        entity_count = alias_dict.get(entity, 0)
+        alias_dict[entity] = entity_count + 1
         map_alias_to_link[alias] = alias_dict
 
 
@@ -360,14 +392,22 @@ def add_el(kb, nlp):
         print("ent", ent.text, ent.label_, ent.kb_id_)
 
 
+def capitalize_first(text):
+    if not text:
+        return None
+    result = text[0].capitalize()
+    if len(result) > 0:
+        result += text[1:]
+    return result
+
 if __name__ == "__main__":
     # STEP 1 : create prior probabilities from WP
     # run only once !
-    # _read_wikipedia_prior_probs()
+    _read_wikipedia_prior_probs()
 
     # STEP 2 : create KB
-    nlp = spacy.load('en_core_web_sm')
-    my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5)
+    # nlp = spacy.load('en_core_web_sm')
+    # my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5)
     # add_el(my_kb, nlp)
 
     # clean_text = "[[File:smomething]] jhk"
