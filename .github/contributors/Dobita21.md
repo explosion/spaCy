@@ -5,7 +5,7 @@ This spaCy Contributor Agreement (**"SCA"**) is based on the
 The SCA applies to any contribution that you make to any product or project
 managed by us (the **"project"**), and sets out the intellectual property rights
 you grant to us in the contributed materials. The term **"us"** shall mean
-[ExplosionAI UG (haftungsbeschränkt)](https://explosion.ai/legal). The term
+[ExplosionAI GmbH](https://explosion.ai/legal). The term
 **"you"** shall mean the person or entity identified below.
 
 If you agree to be bound by these terms, fill in the information requested
@@ -96,12 +96,11 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                	|
-|------------------------------- | ----------------------------	|
-| Name                           | Nattapol Choeysungnoen       |
-| Company name (if applicable)   |                      	|
-| Title or role (if applicable)  |                      	|
-| Date                           | 2019-04-18           	|
-| GitHub username                | Dobita21             	|
-| Website (optional)             |                      	|
-
+| Field                          | Entry                |
+|------------------------------- | -------------------- |
+| Name                           |  Nattapol            |
+| Company name (if applicable)   |                      |
+| Title or role (if applicable)  |                      |
+| Date                           |  18.04.2019          |
+| GitHub username                |  Dobita21            |
+| Website (optional)             |                      |
