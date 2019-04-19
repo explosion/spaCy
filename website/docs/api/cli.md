@@ -274,7 +274,7 @@ an approximate language-modeling objective. Specifically, we load pre-trained
 vectors, and train a component like a CNN, BiLSTM, etc to predict vectors which
 match the pre-trained ones. The weights are saved to a directory after each
 epoch. You can then pass a path to one of these pre-trained weights files to the
-'spacy train' command.
+`spacy train` command.
 
 This technique may be especially helpful if you have little labelled data.
 However, it's still quite experimental, so your mileage may vary. To load the
