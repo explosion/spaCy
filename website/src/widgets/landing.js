@@ -75,16 +75,6 @@ const Landing = ({ data }) => {
                 <LandingSubtitle>in Python</LandingSubtitle>
             </LandingHeader>
             <LandingGrid blocks>
-                <LandingCard title="Fastest in the world">
-                    <p>
-                        spaCy excels at large-scale information extraction tasks. It's written from
-                        the ground up in carefully memory-managed Cython. Independent research has
-                        confirmed that spaCy is the fastest in the world. If your application needs
-                        to process entire web dumps, spaCy is the library you want to be using.
-                    </p>
-                    <LandingButton to="/usage/facts-figures">Facts & Figures</LandingButton>
-                </LandingCard>
-
                 <LandingCard title="Get things done">
                     <p>
                         spaCy is designed to help you do real work — to build real products, or
@@ -93,6 +83,15 @@ const Landing = ({ data }) => {
                         like to think of spaCy as the Ruby on Rails of Natural Language Processing.
                     </p>
                     <LandingButton to="/usage">Get started</LandingButton>
+                </LandingCard>
+                <LandingCard title="Blazing fast">
+                    <p>
+                        spaCy excels at large-scale information extraction tasks. It's written from
+                        the ground up in carefully memory-managed Cython. Independent research in
+                        2015 found spaCy to be the fastest in the world. If your application needs
+                        to process entire web dumps, spaCy is the library you want to be using.
+                    </p>
+                    <LandingButton to="/usage/facts-figures">Facts & Figures</LandingButton>
                 </LandingCard>
 
                 <LandingCard title="Deep learning">
@@ -129,6 +128,7 @@ const Landing = ({ data }) => {
                         <Li>
                             Pre-trained <strong>word vectors</strong>
                         </Li>
+                        <Li>State-of-the-art speed</Li>
                         <Li>
                             Easy <strong>deep learning</strong> integration
                         </Li>
@@ -144,7 +144,6 @@ const Landing = ({ data }) => {
                         <Li>
                             Easy <strong>model packaging</strong> and deployment
                         </Li>
-                        <Li>State-of-the-art speed</Li>
                         <Li>Robust, rigorously evaluated accuracy</Li>
                     </Ul>
                 </LandingCol>
