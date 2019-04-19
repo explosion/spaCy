@@ -35,34 +35,46 @@ wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
 map_alias_to_link = dict()
 
 
-def create_kb(vocab, max_entities_per_alias, min_occ):
+def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     kb = KnowledgeBase(vocab=vocab)
 
-    id_to_title = _read_wikidata(limit=100, to_print=False)
+    id_to_title = _read_wikidata(limit=1000)
     title_to_id = {v:k for k,v in id_to_title.items()}
 
-    _add_entities(kb, entities=id_to_title.keys(), probs=[0.4 for x in id_to_title.keys()])
-    _add_aliases(kb, title_to_id=title_to_id, max_entities_per_alias=max_entities_per_alias, min_occ=min_occ)
+    _add_entities(kb,
+                  entities=id_to_title.keys(),
+                  probs=[0.4 for x in id_to_title.keys()],
+                  to_print=to_print)
+
+    _add_aliases(kb,
+                 title_to_id=title_to_id,
+                 max_entities_per_alias=max_entities_per_alias,
+                 min_occ=min_occ,
+                 to_print=to_print)
 
     # TODO: read wikipedia texts for entity context
     # _read_wikipedia()
 
-    print()
-    print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
+    if to_print:
+        print()
+        print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
 
     return kb
 
 
-def _add_entities(kb, entities, probs):
+def _add_entities(kb, entities, probs, to_print=False):
     for entity, prob in zip(entities, probs):
         kb.add_entity(entity=entity, prob=prob)
 
-    print("added", kb.get_size_entities(), "entities:", kb.get_entity_strings())
+    if to_print:
+        print("added", kb.get_size_entities(), "entities:", kb.get_entity_strings())
 
 
-def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ):
+def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, to_print=False):
     wp_titles = title_to_id.keys()
-    print("wp titles", wp_titles)
+
+    if to_print:
+        print("wp titles", wp_titles)
 
     # adding aliases with prior probabilities
     with open(PRIOR_PROB, mode='r', encoding='utf8') as prior_file:
@@ -94,9 +106,6 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ):
 
                     if selected_entities:
                         kb.add_alias(alias=previous_alias, entities=selected_entities, probabilities=prior_probs)
-                        print("analysed", previous_alias, "with entities", entities, "and counts", counts)
-                        print("added", previous_alias, "with selected entities", selected_entities, "and probs", prior_probs)
-                        print()
                 total_count = 0
                 counts = list()
                 entities = list()
@@ -110,8 +119,8 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ):
 
             line = prior_file.readline()
 
-    print()
-    print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
+    if to_print:
+        print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
 
 
 def _read_wikidata(limit=None, to_print=False):
@@ -141,7 +150,7 @@ def _read_wikidata(limit=None, to_print=False):
                     claim_property = claims.get(prop, None)
                     if claim_property:
                         for cp in claim_property:
-                            cp_id = cp['mainsnak']['datavalue']['value']['id']
+                            cp_id = cp['mainsnak'].get('datavalue', {}).get('value', {}).get('id')
                             if cp_id in value_set:
                                 keep = True
 
@@ -383,7 +392,7 @@ def add_el(kb, nlp):
 
     text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
            "Douglas reminds us to always bring our towel. " \
-           "The main character in Doug's novel is called Arthur Dent."
+           "The main character in Doug's novel is the man Arthur Dent, but Douglas doesn't write about George Washington."
     doc = nlp(text)
 
     print()
@@ -406,14 +415,17 @@ def capitalize_first(text):
 if __name__ == "__main__":
     # STEP 1 : create prior probabilities from WP
     # run only once !
-    _read_wikipedia_prior_probs()
+    # _read_wikipedia_prior_probs()
 
     # STEP 2 : create KB
-    # nlp = spacy.load('en_core_web_sm')
-    # my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5)
-    # add_el(my_kb, nlp)
+    nlp = spacy.load('en_core_web_sm')
+    my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5, to_print=True)
 
-    # clean_text = "[[File:smomething]] jhk"
-    # clean_text = re.sub(r'\[\[Category:[^\[]*]]', '', clean_text)
-    # clean_text = re.sub(r'\[\[File:[^\[]*]]', '', clean_text)
-    # print(clean_text)
+    # STEP 3 : write KB to file
+    # TODO
+
+    # STEP 4 : read KB back in from file
+    # TODO
+
+    # STEP 5 : actually use the EL functionality
+    add_el(my_kb, nlp)
