@@ -285,7 +285,7 @@ improvement.
 ```bash
 $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 [--depth] [--embed-rows] [--dropout] [--seed] [--n-iter] [--use-vectors]
-[--save_every]
+[--n-save_every]
 ```
 
 | Argument               | Type       | Description                                                                                                                       |
@@ -303,7 +303,7 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 | `--seed`, `-s`         | option     | Seed for random number generators.                                                                                                |
 | `--n-iter`, `-i`       | option     | Number of iterations to pretrain.                                                                                                 |
 | `--use-vectors`, `-uv` | flag       | Whether to use the static vectors as input features.                                                                              |
-| `--save_every`, `-se`  | option     | Save model every X batches.                                                                                                       |
+| `--n-save_every`, `-se`  | option     | Save model every X batches.                                                                                                       |
 | **CREATES**            | weights    | The pre-trained weights that can be used to initialize `spacy train`.                                                             |
 
 ### JSONL format for raw text {#pretrain-jsonl}

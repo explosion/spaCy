@@ -34,8 +34,8 @@ from .. import util
     max_length=("Max words per example.", "option", "xw", int),
     min_length=("Min words per example.", "option", "nw", int),
     seed=("Seed for random number generators", "option", "s", float),
-    nr_iter=("Number of iterations to pretrain", "option", "i", int),
-    save_every=("Save model every X batches.", "option", "se", int),
+    n_iter=("Number of iterations to pretrain", "option", "i", int),
+    n_save_every=("Save model every X batches.", "option", "se", int),
 )
 def pretrain(
     texts_loc,
@@ -47,12 +47,12 @@ def pretrain(
     loss_func="cosine",
     use_vectors=False,
     dropout=0.2,
-    nr_iter=1000,
+    n_iter=1000,
     batch_size=3000,
     max_length=500,
     min_length=5,
     seed=0,
-    save_every=None,
+    n_save_every=None,
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -134,7 +134,7 @@ def pretrain(
             with (output_dir / "log.jsonl").open("a") as file_:
                 file_.write(srsly.json_dumps(log) + "\n")
 
-    for epoch in range(nr_iter):
+    for epoch in range(n_iter):
         for batch_id, batch in enumerate(
             util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
         ):
@@ -152,7 +152,7 @@ def pretrain(
                 msg.row(progress, **row_settings)
                 if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
                     break
-            if save_every and (batch_id % save_every == 0):
+            if n_save_every and (batch_id % n_save_every == 0):
                 _save_model(epoch, is_temp=True)
         _save_model(epoch)
         tracker.epoch_loss = 0.0
