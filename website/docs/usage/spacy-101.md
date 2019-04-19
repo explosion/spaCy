@@ -29,6 +29,19 @@ quick introduction.
 > [pull requests](https://github.com/explosion/spaCy/pulls). You can find a
 > "Suggest edits" link at the bottom of each page that points you to the source.
 
+<Infobox title="Take the free interactive course">
+
+[![Advanced NLP with spaCy](../images/course.jpg)](https://course.spacy.io)
+
+In this course you'll learn how to use spaCy to build advanced natural language
+understanding systems, using both rule-based and machine learning approaches. It
+includes 55 exercises featuring interactive coding practice, multiple-choice
+questions and slide decks.
+
+<p><Button to="https://course.spacy.io" variant="primary">Start the course</Button></p>
+
+</Infobox>
+
 ## What's spaCy? {#whats-spacy}
 
 <Grid cols={2}>
