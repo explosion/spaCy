@@ -82,7 +82,7 @@ const Landing = ({ data }) => {
                         wasting it. It's easy to install, and its API is simple and productive. We
                         like to think of spaCy as the Ruby on Rails of Natural Language Processing.
                     </p>
-                    <LandingButton to="/usage">Get started</LandingButton>
+                    <LandingButton to="/usage/spacy-101">Get started</LandingButton>
                 </LandingCard>
                 <LandingCard title="Blazing fast">
                     <p>
