@@ -48,7 +48,7 @@ class EntityRuler(object):
         self.phrase_patterns = defaultdict(list)
         self.matcher = Matcher(nlp.vocab)
         self.phrase_matcher = PhraseMatcher(nlp.vocab)
-        self.entity_id_sep = cfg.get("entity_id_sep", "|")
+        self.ent_id_sep = cfg.get("ent_id_sep", "|")
         patterns = cfg.get("patterns")
         if patterns is not None:
             self.add_patterns(patterns)
@@ -86,14 +86,12 @@ class EntityRuler(object):
             # check for end - 1 here because boundaries are inclusive
             if start not in seen_tokens and end - 1 not in seen_tokens:
                 if self.entity_ids:
-                    if not Span.has_extension("entity_id"):
-                        Span.set_extension("entity_id", default=None)
-
                     label_ = self.nlp.vocab.strings[match_id]
                     ent_label, ent_id = self.split_label(label_)
                     span = Span(doc, start, end, label=ent_label)
                     if ent_id:
-                        span._.entity_id = ent_id
+                        for token in span:
+                            token.ent_id_ = ent_id
                 else:
                     span = span = Span(doc, start, end, label=match_id)
                 new_entities.append(span)
@@ -126,14 +124,14 @@ class EntityRuler(object):
         """
         all_entity_ids = set()
         for l in self.labels:
-            if self.entity_id_sep in l:
-                _, ent_id = l.split(self.entity_id_sep)
+            if self.ent_id_sep in l:
+                _, ent_id = l.split(self.ent_id_sep)
                 all_entity_ids.add(ent_id)
         return tuple(all_entity_ids)
 
     def split_label(self, label):
-        if self.entity_id_sep in label:
-            ent_label, ent_id = label.split(self.entity_id_sep)
+        if self.ent_id_sep in label:
+            ent_label, ent_id = label.split(self.ent_id_sep)
         else:
             ent_label = label
             ent_id = None
@@ -142,7 +140,7 @@ class EntityRuler(object):
 
     def create_label(self, label, entity_id):
         if isinstance(entity_id, basestring_):
-            label = "{}{}{}".format(label, self.entity_id_sep, entity_id)
+            label = "{}{}{}".format(label, self.ent_id_sep, entity_id)
         return label
 
     @property

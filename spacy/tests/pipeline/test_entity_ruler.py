@@ -86,7 +86,7 @@ def test_entity_ruler_entity_id(nlp, patterns):
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "TECH_ORG"
-    assert doc.ents[0]._.entity_id == "a1"
+    assert doc.ents[0].ent_id_ == "a1"
 
 
 def test_entity_ruler_serialize_bytes(nlp, patterns):
