@@ -6,11 +6,10 @@ spaCy is a library for advanced Natural Language Processing in Python and
 Cython. It's built on the very latest research, and was designed from day one
 to be used in real products. spaCy comes with
 [pre-trained statistical models](https://spacy.io/models) and word vectors, and
-currently supports tokenization for **45+ languages**. It features the
-**fastest syntactic parser** in the world, convolutional
-**neural network models** for tagging, parsing and **named entity recognition**
-and easy **deep learning** integration. It's commercial open-source software,
-released under the MIT license.
+currently supports tokenization for **49+ languages**. It features
+state-of-the-art speed, convolutional **neural network models** for tagging,
+parsing and **named entity recognition** and easy **deep learning** integration.
+It's commercial open-source software, released under the MIT license.
 
 💫 **Version 2.1 out now!** [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
@@ -66,11 +65,11 @@ valuable if it's shared publicly, so that more people can benefit from it.
 
 ## Features
 
--   **Fastest syntactic parser** in the world
--   **Named entity** recognition
 -   Non-destructive **tokenization**
--   Support for **45+ languages**
+-   **Named entity** recognition
+-   Support for **49+ languages**
 -   Pre-trained [statistical models](https://spacy.io/models) and word vectors
+-   State-of-the-art speed
 -   Easy **deep learning** integration
 -   Part-of-speech tagging
 -   Labelled dependency parsing
@@ -80,7 +79,6 @@ valuable if it's shared publicly, so that more people can benefit from it.
 -   Export to numpy data arrays
 -   Efficient binary serialization
 -   Easy **model packaging** and deployment
--   State-of-the-art speed
 -   Robust, rigorously evaluated accuracy
 
 📖 **For more details, see the

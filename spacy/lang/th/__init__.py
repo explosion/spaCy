@@ -4,11 +4,13 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
+from .norm_exceptions import NORM_EXCEPTIONS
 
-from ...attrs import LANG
+from ..norm_exceptions import BASE_NORMS
+from ...attrs import LANG, NORM
 from ...language import Language
 from ...tokens import Doc
-from ...util import DummyTokenizer
+from ...util import DummyTokenizer, add_lookups
 
 
 class ThaiTokenizer(DummyTokenizer):
@@ -33,7 +35,9 @@ class ThaiTokenizer(DummyTokenizer):
 class ThaiDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda _text: "th"
-
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
+    )
     tokenizer_exceptions = dict(TOKENIZER_EXCEPTIONS)
     tag_map = TAG_MAP
     stop_words = STOP_WORDS

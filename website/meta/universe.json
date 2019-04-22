@@ -885,36 +885,6 @@
         },
         {
             "type": "education",
-            "id": "datacamp-nlp-fundamentals",
-            "title": "Natural Language Processing Fundamentals in Python",
-            "slogan": "Datacamp, 2017",
-            "description": "In this course, you'll learn Natural Language Processing (NLP) basics, such as how to identify and separate words, how to extract topics in a text, and how to build your own fake news classifier. You'll also learn how to use basic libraries such as NLTK, alongside libraries which utilize deep learning to solve common NLP problems. This course will give you the foundation to process and parse text as you move forward in your Python learning.",
-            "url": "https://www.datacamp.com/courses/natural-language-processing-fundamentals-in-python",
-            "thumb": "https://i.imgur.com/0Zks7c0.jpg",
-            "author": "Katharine Jarmul",
-            "author_links": {
-                "twitter": "kjam"
-            },
-            "category": ["courses"]
-        },
-        {
-            "type": "education",
-            "id": "datacamp-advanced-nlp",
-            "title": "Advanced Natural Language Processing with spaCy",
-            "slogan": "Datacamp, 2019",
-            "description": "If you're working with a lot of text, you'll eventually want to know more about it. For example, what's it about? What do the words mean in context? Who is doing what to whom? What companies and products are mentioned? Which texts are similar to each other? In this course, you'll learn how to use spaCy, a fast-growing industry standard library for NLP in Python, to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
-            "url": "https://www.datacamp.com/courses/advanced-nlp-with-spacy",
-            "thumb": "https://i.imgur.com/0Zks7c0.jpg",
-            "author": "Ines Montani",
-            "author_links": {
-                "twitter": "_inesmontani",
-                "github": "ines",
-                "website": "https://ines.io"
-            },
-            "category": ["courses"]
-        },
-        {
-            "type": "education",
             "id": "learning-path-spacy",
             "title": "Learning Path: Mastering spaCy for Natural Language Processing",
             "slogan": "O'Reilly, 2017",
@@ -1311,6 +1281,41 @@
                 "website": "http://w4nderlu.st"
             },
             "category": ["standalone", "research"]
+        },
+        {
+            "id": "gracyql",
+            "title": "gracyql",
+            "slogan": "A thin GraphQL wrapper around spacy",
+            "github": "oterrier/gracyql",
+            "description": "An example of a basic [Starlette](https://github.com/encode/starlette) app using [Spacy](https://github.com/explosion/spaCy) and [Graphene](https://github.com/graphql-python/graphene). The main goal is to be able to use the amazing power of spaCy from other languages and retrieving only the information you need thanks to the GraphQL query definition. The GraphQL schema tries to mimic as much as possible the original Spacy API with classes Doc, Span and Token.",
+            "thumb": "https://i.imgur.com/xC7zpTO.png",
+            "category": ["apis"],
+            "tags": ["graphql"],
+            "code_example": [
+                "query ParserDisabledQuery {",
+                "  nlp(model: \"en\", disable: [\"parser\", \"ner\"]) {",
+                "    doc(text: \"I live in Grenoble, France\") {",
+                "      text",
+                "      tokens {",
+                "        id",
+                "        pos",
+                "        lemma",
+                "        dep",
+                "      }",
+                "      ents {",
+                "        start",
+                "        end",
+                "        label",
+                "      }",
+                "    }",
+                "  }",
+                "}"
+            ],
+            "code_language": "json",
+            "author": "Olivier Terrier",
+            "author_links": {
+                "github": "oterrier"
+            }
         }
     ],
     "categories": [

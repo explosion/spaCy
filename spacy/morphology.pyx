@@ -109,6 +109,7 @@ cdef class Morphology:
             analysis.tag = rich_tag
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
                                             self.tag_map.get(tag_str, {}))
+
             self._cache.set(tag_id, token.lex.orth, analysis)
         if token.lemma == 0:
             token.lemma = analysis.lemma
@@ -140,7 +141,7 @@ cdef class Morphology:
         if tag not in self.reverse_index:
             return
         tag_id = self.reverse_index[tag]
-        orth = self.strings[orth_str]
+        orth = self.strings.add(orth_str)
         cdef RichTagC rich_tag = self.rich_tags[tag_id]
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
         cached = <MorphAnalysisC*>self._cache.get(tag_id, orth)
