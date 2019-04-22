@@ -377,7 +377,7 @@ pipeline.
 
 ```bash
 $ python -m spacy evaluate [model] [data_path] [--displacy-path] [--displacy-limit]
-[--gpu-id] [--gold-preproc]
+[--gpu-id] [--gold-preproc] [--return-scores]
 ```
 
 | Argument                  | Type           | Description                                                                                                                                              |
