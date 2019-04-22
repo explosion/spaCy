@@ -288,23 +288,23 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 [--n-save_every]
 ```
 
-| Argument               | Type       | Description                                                                                                                       |
-| ---------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `texts_loc`            | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"`. [See here](#pretrain-jsonl) for details. |
-| `vectors_model`        | positional | Name or path to spaCy model with vectors to learn from.                                                                           |
-| `output_dir`           | positional | Directory to write models to on each epoch.                                                                                       |
-| `--width`, `-cw`       | option     | Width of CNN layers.                                                                                                              |
-| `--depth`, `-cd`       | option     | Depth of CNN layers.                                                                                                              |
-| `--embed-rows`, `-er`  | option     | Number of embedding rows.                                                                                                         |
-| `--dropout`, `-d`      | option     | Dropout rate.                                                                                                                     |
-| `--batch-size`, `-bs`  | option     | Number of words per training batch.                                                                                               |
-| `--max-length`, `-xw`  | option     | Maximum words per example. Longer examples are discarded.                                                                         |
-| `--min-length`, `-nw`  | option     | Minimum words per example. Shorter examples are discarded.                                                                        |
-| `--seed`, `-s`         | option     | Seed for random number generators.                                                                                                |
-| `--n-iter`, `-i`       | option     | Number of iterations to pretrain.                                                                                                 |
-| `--use-vectors`, `-uv` | flag       | Whether to use the static vectors as input features.                                                                              |
-| `--n-save_every`, `-se`  | option     | Save model every X batches.                                                                                                       |
-| **CREATES**            | weights    | The pre-trained weights that can be used to initialize `spacy train`.                                                             |
+| Argument                | Type       | Description                                                                                                                       |
+| ----------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `texts_loc`             | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"`. [See here](#pretrain-jsonl) for details. |
+| `vectors_model`         | positional | Name or path to spaCy model with vectors to learn from.                                                                           |
+| `output_dir`            | positional | Directory to write models to on each epoch.                                                                                       |
+| `--width`, `-cw`        | option     | Width of CNN layers.                                                                                                              |
+| `--depth`, `-cd`        | option     | Depth of CNN layers.                                                                                                              |
+| `--embed-rows`, `-er`   | option     | Number of embedding rows.                                                                                                         |
+| `--dropout`, `-d`       | option     | Dropout rate.                                                                                                                     |
+| `--batch-size`, `-bs`   | option     | Number of words per training batch.                                                                                               |
+| `--max-length`, `-xw`   | option     | Maximum words per example. Longer examples are discarded.                                                                         |
+| `--min-length`, `-nw`   | option     | Minimum words per example. Shorter examples are discarded.                                                                        |
+| `--seed`, `-s`          | option     | Seed for random number generators.                                                                                                |
+| `--n-iter`, `-i`        | option     | Number of iterations to pretrain.                                                                                                 |
+| `--use-vectors`, `-uv`  | flag       | Whether to use the static vectors as input features.                                                                              |
+| `--n-save_every`, `-se` | option     | Save model every X batches.                                                                                                       |
+| **CREATES**             | weights    | The pre-trained weights that can be used to initialize `spacy train`.                                                             |
 
 ### JSONL format for raw text {#pretrain-jsonl}
 
@@ -388,6 +388,7 @@ $ python -m spacy evaluate [model] [data_path] [--displacy-path] [--displacy-lim
 | `--displacy-limit`, `-dl` | option         | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |
 | `--gpu-id`, `-g`          | option         | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
 | `--gold-preproc`, `-G`    | flag           | Use gold preprocessing.                                                                                                                                  |
+| `--return-scores`, `-R`   | flag           | Return dict containing model scores.                                                                                                                     |
 | **CREATES**               | `stdout`, HTML | Training results and optional displaCy visualizations.                                                                                                   |
 
 ## Package {#package}
