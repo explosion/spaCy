@@ -35,7 +35,12 @@ from .. import about
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     vectors=("Model to load vectors from", "option", "v", str),
     n_iter=("Number of iterations", "option", "n", int),
-    early_stopping_iter=("Maximum number of training epochs without dev accuracy improvement", "option", "e", int),
+    n_early_stopping=(
+        "Maximum number of training epochs without dev accuracy improvement",
+        "option",
+        "ne",
+        int,
+    ),
     n_examples=("Number of examples", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
     version=("Model version", "option", "V", str),
@@ -75,7 +80,7 @@ def train(
     pipeline="tagger,parser,ner",
     vectors=None,
     n_iter=30,
-    early_stopping_iter=None,
+    n_early_stopping=None,
     n_examples=0,
     use_gpu=-1,
     version="0.0.0",
@@ -335,15 +340,15 @@ def train(
                         gpu_wps=gpu_wps,
                     )
                     msg.row(progress, **row_settings)
-                if early_stopping_iter is not None:
                 # Early stopping
+                if n_early_stopping is not None:
                     current_score = _score_for_model(meta)
                     if current_score < best_score:
                         iter_since_best += 1
                     else:
                         iter_since_best = 0
                         best_score = current_score
-                    if iter_since_best >= early_stopping_iter:
+                    if iter_since_best >= n_early_stopping:
                         msg.text(
                             "Early stopping, best iteration "
                             "is: {}".format(i - iter_since_best)
