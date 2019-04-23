@@ -211,16 +211,16 @@ Render a dependency parse tree or named entity visualization.
 > html = displacy.render(doc, style="dep")
 > ```
 
-| Name        | Type                | Description                                                                                                                          | Default                |
-| ----------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
-| `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                            |
-| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`                |
-| `page`      | bool                | Render markup as full HTML page.                                                                                                     | `False`                |
-| `minify`    | bool                | Minify HTML markup.                                                                                                                  | `False`                |
-| `jupyter`   | bool                | Explicitly enable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook.                         | detected automatically |
-| `options`   | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                | `{}`                   |
-| `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`                |
-| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                |
+| Name        | Type                | Description                                                                                                                                               | Default |
+| ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                                                 |
+| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                                                  | `'dep'` |
+| `page`      | bool                | Render markup as full HTML page.                                                                                                                          | `False` |
+| `minify`    | bool                | Minify HTML markup.                                                                                                                                       | `False` |
+| `jupyter`   | bool                | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None`. | `None`  |
+| `options`   | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                                     | `{}`    |
+| `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples.                      | `False` |
+| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                                     |
 
 ### Visualizer options {#displacy_options}
 
