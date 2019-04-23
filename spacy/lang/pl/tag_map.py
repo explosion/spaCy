@@ -21,6 +21,8 @@ from ...symbols import (
     X,
 )
 
+from tag_map_aux.py import TAG_MAP_AUX
+
 # fmt: off
 TAG_MAP = {
     "adja": {POS: ADJ},
@@ -1646,4 +1648,6 @@ TAG_MAP = {
     "X___": {POS: X},
     "X__Abbr=Yes": {POS: X, "morph": "Abbr=Yes"}
 }
+
+TAG_MAP.update(TAG_MAP_AUX)
 # fmt: on
