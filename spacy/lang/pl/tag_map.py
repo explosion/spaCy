@@ -21,7 +21,7 @@ from ...symbols import (
     X,
 )
 
-from tag_map_aux.py import TAG_MAP_AUX
+from .tag_map_aux import TAG_MAP_AUX
 
 # fmt: off
 TAG_MAP = {
