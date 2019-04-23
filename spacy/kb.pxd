@@ -168,7 +168,6 @@ cdef class Writer:
 
 cdef class Reader:
     cdef FILE* _fp
-    cdef public int32_t nr_feat
 
     cdef int read(self, Pool mem, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1
 

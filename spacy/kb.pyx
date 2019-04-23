@@ -157,33 +157,45 @@ cdef class KnowledgeBase:
 
 
     def dump(self, loc):
-        # TODO: actually dump the data in this KB :-)
-
-        cdef int64_t entry_id = 32
-        self.vocab.strings.add("Q342")
-        cdef hash_t entity_hash = self.vocab.strings["Q342"]
-        cdef float prob = 0.333
-
         cdef Writer writer = Writer(loc)
-        writer.write(entry_id, entity_hash, prob)
+
+        for key, entry_index in self._entry_index.items():
+            entry = self._entries[entry_index]
+            print("dumping")
+            print("index", entry_index)
+            print("hash", entry.entity_hash)
+            print("prob", entry.prob)
+            print("")
+            writer.write(entry_index, entry.entity_hash, entry.prob)
+
         writer.close()
 
     def load(self, loc):
         cdef int64_t entry_id
         cdef hash_t entity_hash
         cdef float prob
+        cdef _EntryC entry
+        cdef int32_t dummy_value = 342
 
         cdef Reader reader = Reader(loc)
-        reader.read(self.mem, &entry_id, &entity_hash, &prob)
+        result = reader.read(self.mem, &entry_id, &entity_hash, &prob)  # -1: error, 0: eof after this one
+        while result:
+            print("loading")
+            print("entryID", entry_id)
+            print("hash", entity_hash)
+            print("prob", prob)
+            print("result:", result)
+            print("")
+            entry.entity_hash = entity_hash
+            entry.prob = prob
 
-        cdef _EntryC entry
-        entry.entity_hash = entity_hash
-        entry.prob = prob
+            # TODO features and vectors
+            entry.vector_rows = &dummy_value
+            entry.feats_row = dummy_value
 
-        # TODO
-        cdef int32_t dummy_value = 342
-        entry.vector_rows = &dummy_value
-        entry.feats_row = dummy_value
+            # TODO: use set instead of push_back to ensure the index remains the same?
+            self._entries.push_back(entry)
+            result = reader.read(self.mem, &entry_id, &entity_hash, &prob)
 
 cdef class Writer:
     def __init__(self, object loc):
@@ -199,10 +211,7 @@ cdef class Writer:
         assert status == 0
 
     cdef int write(self, int64_t entry_id, hash_t entry_hash, float entry_prob) except -1:
-        cdef int i = 0
-
         # TODO: feats_rows and vector rows
-
         _write(&entry_id, sizeof(entry_id), self._fp)
         _write(&entry_hash, sizeof(entry_hash), self._fp)
         _write(&entry_prob, sizeof(entry_prob), self._fp)
@@ -227,21 +236,30 @@ cdef class Reader:
         fclose(self._fp)
 
     cdef int read(self, Pool mem, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1:
-        status = fread(entry_id, sizeof(entry_id), 1, self._fp)
+        """ 
+        Return values:
+        -1: error during current read (EOF during call)
+        0: means we read the last line succesfully (EOF after call)
+        1: we can continue reading this file """
+        status = fread(entry_id, sizeof(int64_t), 1, self._fp)
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
             raise IOError("error reading entry ID from input file")
 
-        #status = fread(&entity_hash, sizeof(entity_hash), 1, self._fp)
-        status = fread(entity_hash, sizeof(entity_hash), 1, self._fp)
+        status = fread(entity_hash, sizeof(hash_t), 1, self._fp)
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
             raise IOError("error reading entity hash from input file")
 
-        status = fread(prob, sizeof(prob), 1, self._fp)
+        status = fread(prob, sizeof(float), 1, self._fp)
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
             raise IOError("error reading entity prob from input file")
+
+        if feof(self._fp):
+            return 0
+        else:
+            return 1

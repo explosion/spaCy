@@ -426,16 +426,22 @@ if __name__ == "__main__":
     # STEP 3 : write KB to file
     # TODO
     nlp = spacy.load('en_core_web_sm')
-    kb = KnowledgeBase(vocab=nlp.vocab)
-    kb.dump(KB_FILE)
-    print("DUMPED")
-    kb.load(KB_FILE)
-    print("LOADED")
+    kb1 = KnowledgeBase(vocab=nlp.vocab)
 
-    # PRIOR_PROB = 'C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv'
+    kb1.add_entity(entity="Q53", prob=0.33)
+    kb1.add_entity(entity="Q17", prob=0.1)
+    kb1.add_entity(entity="Q007", prob=0.7)
+    kb1.add_entity(entity="Q44", prob=0.4)
+    print("kb1 size:", len(kb1), kb1.get_size_entities(), kb1.get_size_aliases())
+
+    kb1.dump(KB_FILE)
 
     # STEP 4 : read KB back in from file
     # TODO
+
+    kb2 = KnowledgeBase(vocab=nlp.vocab)
+    kb2.load(KB_FILE)
+    print("kb2 size:", len(kb2), kb2.get_size_entities(), kb2.get_size_aliases())
 
     # STEP 5 : actually use the EL functionality
     # add_el(my_kb, nlp)
