@@ -1,7 +1,22 @@
 # cython: infer_types=True
 # cython: profile=True
 # coding: utf8
+from collections import OrderedDict
+from cpython.exc cimport PyErr_CheckSignals
+
+from spacy import util
 from spacy.errors import Errors, Warnings, user_warning
+
+from cpython.mem cimport PyMem_Malloc
+from cpython.exc cimport PyErr_SetFromErrno
+
+from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
+from libc.stdint cimport int32_t, int64_t
+from libc.stdlib cimport qsort
+
+from .typedefs cimport hash_t
+
+from os import path
 
 
 cdef class Candidate:
@@ -139,3 +154,94 @@ cdef class KnowledgeBase:
                           prior_prob=prob)
                 for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
                 if entry_index != 0]
+
+
+    def dump(self, loc):
+        # TODO: actually dump the data in this KB :-)
+
+        cdef int64_t entry_id = 32
+        self.vocab.strings.add("Q342")
+        cdef hash_t entity_hash = self.vocab.strings["Q342"]
+        cdef float prob = 0.333
+
+        cdef Writer writer = Writer(loc)
+        writer.write(entry_id, entity_hash, prob)
+        writer.close()
+
+    def load(self, loc):
+        cdef int64_t entry_id
+        cdef hash_t entity_hash
+        cdef float prob
+
+        cdef Reader reader = Reader(loc)
+        reader.read(self.mem, &entry_id, &entity_hash, &prob)
+
+        cdef _EntryC entry
+        entry.entity_hash = entity_hash
+        entry.prob = prob
+
+        # TODO
+        cdef int32_t dummy_value = 342
+        entry.vector_rows = &dummy_value
+        entry.feats_row = dummy_value
+
+cdef class Writer:
+    def __init__(self, object loc):
+        if path.exists(loc):
+            assert not path.isdir(loc), "%s is directory." % loc
+        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+        self._fp = fopen(<char*>bytes_loc, 'wb')
+        assert self._fp != NULL
+        fseek(self._fp, 0, 0)
+
+    def close(self):
+        cdef size_t status = fclose(self._fp)
+        assert status == 0
+
+    cdef int write(self, int64_t entry_id, hash_t entry_hash, float entry_prob) except -1:
+        cdef int i = 0
+
+        # TODO: feats_rows and vector rows
+
+        _write(&entry_id, sizeof(entry_id), self._fp)
+        _write(&entry_hash, sizeof(entry_hash), self._fp)
+        _write(&entry_prob, sizeof(entry_prob), self._fp)
+
+
+cdef int _write(void* value, size_t size, FILE* fp) except -1:
+    status = fwrite(value, size, 1, fp)
+    assert status == 1, status
+
+
+cdef class Reader:
+    def __init__(self, object loc):
+        assert path.exists(loc)
+        assert not path.isdir(loc)
+        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+        self._fp = fopen(<char*>bytes_loc, 'rb')
+        if not self._fp:
+            PyErr_SetFromErrno(IOError)
+        status = fseek(self._fp, 0, 0)  # this can be 0 if there is no header
+
+    def __dealloc__(self):
+        fclose(self._fp)
+
+    cdef int read(self, Pool mem, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1:
+        status = fread(entry_id, sizeof(entry_id), 1, self._fp)
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading entry ID from input file")
+
+        #status = fread(&entity_hash, sizeof(entity_hash), 1, self._fp)
+        status = fread(entity_hash, sizeof(entity_hash), 1, self._fp)
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading entity hash from input file")
+
+        status = fread(prob, sizeof(prob), 1, self._fp)
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading entity prob from input file")

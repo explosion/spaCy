@@ -16,6 +16,8 @@ ENWIKI_DUMP = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-art
 ENWIKI_INDEX = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream-index.txt.bz2'
 PRIOR_PROB = 'C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv'
 
+KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb'
+
 
 # these will/should be matched ignoring case
 wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
@@ -418,14 +420,22 @@ if __name__ == "__main__":
     # _read_wikipedia_prior_probs()
 
     # STEP 2 : create KB
-    nlp = spacy.load('en_core_web_sm')
-    my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5, to_print=True)
+    # nlp = spacy.load('en_core_web_sm')
+    # my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5, to_print=True)
 
     # STEP 3 : write KB to file
     # TODO
+    nlp = spacy.load('en_core_web_sm')
+    kb = KnowledgeBase(vocab=nlp.vocab)
+    kb.dump(KB_FILE)
+    print("DUMPED")
+    kb.load(KB_FILE)
+    print("LOADED")
+
+    # PRIOR_PROB = 'C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv'
 
     # STEP 4 : read KB back in from file
     # TODO
 
     # STEP 5 : actually use the EL functionality
-    add_el(my_kb, nlp)
+    # add_el(my_kb, nlp)

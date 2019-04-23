@@ -7,6 +7,8 @@ from libc.stdint cimport int32_t, int64_t
 from spacy.vocab cimport Vocab
 from .typedefs cimport hash_t
 
+from libc.stdio cimport FILE
+
 
 # Internal struct, for storage and disambiguation. This isn't what we return
 # to the user as the answer to "here's your entity". It's the minimum number
@@ -157,4 +159,16 @@ cdef class KnowledgeBase:
         self._entries.push_back(entry)
         self._aliases_table.push_back(alias)
 
+
+cdef class Writer:
+    cdef FILE* _fp
+
+    cdef int write(self, int64_t entry_id, hash_t entity_hash, float prob) except -1
+
+
+cdef class Reader:
+    cdef FILE* _fp
+    cdef public int32_t nr_feat
+
+    cdef int read(self, Pool mem, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1
 
