@@ -9,6 +9,7 @@ from ..compat import basestring_
 from ..util import ensure_path
 from ..tokens import Span
 from ..matcher import Matcher, PhraseMatcher
+from ..kb import KnowledgeBase
 
 
 class EntityRuler(object):
@@ -49,6 +50,7 @@ class EntityRuler(object):
         self.matcher = Matcher(nlp.vocab)
         self.phrase_matcher = PhraseMatcher(nlp.vocab)
         self.ent_id_sep = cfg.get("ent_id_sep", "|")
+        self.kb = KnowledgeBase(nlp.vocab)
         patterns = cfg.get("patterns")
         if patterns is not None:
             self.add_patterns(patterns)
@@ -115,19 +117,19 @@ class EntityRuler(object):
         return tuple(all_labels)
 
     @property
-    def entity_ids(self):
+    def ent_ids(self):
         """All entity ids present in the match patterns meta dicts.
 
         RETURNS (set): The string entity ids.
 
         DOCS: https://spacy.io/api/entityruler#labels
         """
-        all_entity_ids = set()
+        all_ent_ids = set()
         for l in self.labels:
             if self.ent_id_sep in l:
                 _, ent_id = l.split(self.ent_id_sep)
-                all_entity_ids.add(ent_id)
-        return tuple(all_entity_ids)
+                all_ent_ids.add(ent_id)
+        return tuple(all_ent_ids)
 
     def split_label(self, label):
         if self.ent_id_sep in label:
@@ -138,9 +140,9 @@ class EntityRuler(object):
 
         return ent_label, ent_id
 
-    def create_label(self, label, entity_id):
-        if isinstance(entity_id, basestring_):
-            label = "{}{}{}".format(label, self.ent_id_sep, entity_id)
+    def create_label(self, label, ent_id):
+        if isinstance(ent_id, basestring_):
+            label = "{}{}{}".format(label, self.ent_id_sep, ent_id)
         return label
 
     @property
@@ -182,9 +184,12 @@ class EntityRuler(object):
         for entry in patterns:
             label = entry["label"]
             if "id" in entry:
+                self.kb.add_entity(entry["id"])
                 label = self.create_label(label, entry["id"])
             pattern = entry["pattern"]
             if isinstance(pattern, basestring_):
+                if "id" in entry:
+                    self.kb.add_alias(pattern, [entry["id"]], [1.])
                 self.phrase_patterns[label].append(self.nlp(pattern))
             elif isinstance(pattern, list):
                 self.token_patterns[label].append(pattern)
