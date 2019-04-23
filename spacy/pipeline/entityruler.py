@@ -87,7 +87,7 @@ class EntityRuler(object):
                 continue
             # check for end - 1 here because boundaries are inclusive
             if start not in seen_tokens and end - 1 not in seen_tokens:
-                if self.entity_ids:
+                if self.ent_ids:
                     label_ = self.nlp.vocab.strings[match_id]
                     ent_label, ent_id = self.split_label(label_)
                     span = Span(doc, start, end, label=ent_label)
