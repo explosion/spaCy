@@ -19,6 +19,7 @@ cdef class Candidate:
 
     cdef readonly KnowledgeBase kb
     cdef hash_t entity_hash
+    cdef float entity_freq
     cdef hash_t alias_hash
     cdef float prior_prob
 

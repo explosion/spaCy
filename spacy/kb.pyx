@@ -26,9 +26,10 @@ from libcpp.vector cimport vector
 
 cdef class Candidate:
 
-    def __init__(self, KnowledgeBase kb, entity_hash, alias_hash, prior_prob):
+    def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, alias_hash, prior_prob):
         self.kb = kb
         self.entity_hash = entity_hash
+        self.entity_freq = entity_freq
         self.alias_hash = alias_hash
         self.prior_prob = prior_prob
 
@@ -51,6 +52,10 @@ cdef class Candidate:
     def alias_(self):
         """RETURNS (unicode): ID of the original alias"""
         return self.kb.vocab.strings[self.alias_hash]
+
+    @property
+    def entity_freq(self):
+        return self.entity_freq
 
     @property
     def prior_prob(self):
@@ -156,6 +161,7 @@ cdef class KnowledgeBase:
 
         return [Candidate(kb=self,
                           entity_hash=self._entries[entry_index].entity_hash,
+                          entity_freq=self._entries[entry_index].prob,
                           alias_hash=alias_hash,
                           prior_prob=prob)
                 for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)

@@ -442,11 +442,11 @@ if __name__ == "__main__":
 
     print()
     print("dumping kb1")
+    print(KB_FILE, type(KB_FILE))
     kb1.dump(KB_FILE)
 
     # STEP 4 : read KB back in from file
 
-    nlp3 = spacy.load('en_core_web_sm')
     kb3 = KnowledgeBase(vocab=my_vocab)
 
     print("loading kb3")
