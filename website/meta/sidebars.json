@@ -1,0 +1,106 @@
+[
+    {
+        "section": "usage",
+        "items": [
+            {
+                "label": "Get started",
+                "items": [
+                    { "text": "Installation", "url": "/usage" },
+                    { "text": "Models & Languages", "url": "/usage/models" },
+                    { "text": "Facts & Figures", "url": "/usage/facts-figures" },
+                    { "text": "spaCy 101", "url": "/usage/spacy-101" },
+                    { "text": "New in v2.1", "url": "/usage/v2-1" },
+                    { "text": "New in v2.0", "url": "/usage/v2" }
+                ]
+            },
+            {
+                "label": "Guides",
+                "items": [
+                    { "text": "Linguistic Features", "url": "/usage/linguistic-features" },
+                    { "text": "Rule-based Matching", "url": "/usage/rule-based-matching" },
+                    { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
+                    { "text": "Vectors & Similarity", "url": "/usage/vectors-similarity" },
+                    { "text": "Training Models", "url": "/usage/training" },
+                    { "text": "Saving & Loading", "url": "/usage/saving-loading" },
+                    { "text": "Adding Languages", "url": "/usage/adding-languages" },
+                    { "text": "Visualizers", "url": "/usage/visualizers" }
+                ]
+            },
+            {
+                "label": "In-depth",
+                "items": [{ "text": "Code Examples", "url": "/usage/examples" }]
+            }
+        ]
+    },
+    {
+        "section": "models",
+        "items": [
+            {
+                "label": "Models",
+                "items": [{ "text": "Overview", "url": "/models" }]
+            },
+            {
+                "label": "Language Models",
+                "items": []
+            }
+        ]
+    },
+    {
+        "section": "api",
+        "items": [
+            {
+                "label": "Overview",
+                "items": [
+                    { "text": "Architecture", "url": "/api" },
+                    { "text": "Annotation Specs", "url": "/api/annotation" },
+                    { "text": "Command Line", "url": "/api/cli" },
+                    { "text": "Functions", "url": "/api/top-level" }
+                ]
+            },
+            {
+                "label": "Containers",
+                "items": [
+                    { "text": "Doc", "url": "/api/doc" },
+                    { "text": "Token", "url": "/api/token" },
+                    { "text": "Span", "url": "/api/span" },
+                    { "text": "Lexeme", "url": "/api/lexeme" }
+                ]
+            },
+            {
+                "label": "Pipeline",
+                "items": [
+                    { "text": "Language", "url": "/api/language" },
+                    { "text": "Tokenizer", "url": "/api/tokenizer" },
+                    { "text": "Lemmatizer", "url": "/api/lemmatizer" },
+                    { "text": "Tagger", "url": "/api/tagger" },
+                    { "text": "DependencyParser", "url": "/api/dependencyparser" },
+                    { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
+                    { "text": "TextCategorizer", "url": "/api/textcategorizer" },
+                    { "text": "Matcher", "url": "/api/matcher" },
+                    { "text": "PhraseMatcher", "url": "/api/phrasematcher" },
+                    { "text": "EntityRuler", "url": "/api/entityruler" },
+                    { "text": "Sentencizer", "url": "/api/sentencizer" },
+                    { "text": "Other Functions", "url": "/api/pipeline-functions" }
+                ]
+            },
+            {
+                "label": "Other",
+                "items": [
+                    { "text": "Vocab", "url": "/api/vocab" },
+                    { "text": "StringStore", "url": "/api/stringstore" },
+                    { "text": "Vectors", "url": "/api/vectors" },
+                    { "text": "GoldParse", "url": "/api/goldparse" },
+                    { "text": "GoldCorpus", "url": "/api/goldcorpus" }
+                ]
+            },
+            {
+                "label": "Cython",
+                "items": [
+                    { "text": "Architecture", "url": "/api/cython" },
+                    { "text": "Structs", "url": "/api/cython-structs" },
+                    { "text": "Classes", "url": "/api/cython-classes" }
+                ]
+            }
+        ]
+    }
+]

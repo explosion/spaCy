@@ -29,73 +29,113 @@ from spacy.util import minibatch, compounding
 # training data: texts, heads and dependency labels
 # for no relation, we simply chose an arbitrary dependency label, e.g. '-'
 TRAIN_DATA = [
-    ("find a cafe with great wifi", {
-        'heads': [0, 2, 0, 5, 5, 2],  # index of token head
-        'deps': ['ROOT', '-', 'PLACE', '-', 'QUALITY', 'ATTRIBUTE']
-    }),
-    ("find a hotel near the beach", {
-        'heads': [0, 2, 0, 5, 5, 2],
-        'deps': ['ROOT', '-', 'PLACE', 'QUALITY', '-', 'ATTRIBUTE']
-    }),
-    ("find me the closest gym that's open late", {
-        'heads': [0, 0, 4, 4, 0, 6, 4, 6, 6],
-        'deps': ['ROOT', '-', '-', 'QUALITY', 'PLACE', '-', '-', 'ATTRIBUTE', 'TIME']
-    }),
-    ("show me the cheapest store that sells flowers", {
-        'heads': [0, 0, 4, 4, 0, 4, 4, 4],  # attach "flowers" to store!
-        'deps': ['ROOT', '-', '-', 'QUALITY', 'PLACE', '-', '-', 'PRODUCT']
-    }),
-    ("find a nice restaurant in london", {
-        'heads': [0, 3, 3, 0, 3, 3],
-        'deps': ['ROOT', '-', 'QUALITY', 'PLACE', '-', 'LOCATION']
-    }),
-    ("show me the coolest hostel in berlin", {
-        'heads': [0, 0, 4, 4, 0, 4, 4],
-        'deps': ['ROOT', '-', '-', 'QUALITY', 'PLACE', '-', 'LOCATION']
-    }),
-    ("find a good italian restaurant near work", {
-        'heads': [0, 4, 4, 4, 0, 4, 5],
-        'deps': ['ROOT', '-', 'QUALITY', 'ATTRIBUTE', 'PLACE', 'ATTRIBUTE', 'LOCATION']
-    })
+    (
+        "find a cafe with great wifi",
+        {
+            "heads": [0, 2, 0, 5, 5, 2],  # index of token head
+            "deps": ["ROOT", "-", "PLACE", "-", "QUALITY", "ATTRIBUTE"],
+        },
+    ),
+    (
+        "find a hotel near the beach",
+        {
+            "heads": [0, 2, 0, 5, 5, 2],
+            "deps": ["ROOT", "-", "PLACE", "QUALITY", "-", "ATTRIBUTE"],
+        },
+    ),
+    (
+        "find me the closest gym that's open late",
+        {
+            "heads": [0, 0, 4, 4, 0, 6, 4, 6, 6],
+            "deps": [
+                "ROOT",
+                "-",
+                "-",
+                "QUALITY",
+                "PLACE",
+                "-",
+                "-",
+                "ATTRIBUTE",
+                "TIME",
+            ],
+        },
+    ),
+    (
+        "show me the cheapest store that sells flowers",
+        {
+            "heads": [0, 0, 4, 4, 0, 4, 4, 4],  # attach "flowers" to store!
+            "deps": ["ROOT", "-", "-", "QUALITY", "PLACE", "-", "-", "PRODUCT"],
+        },
+    ),
+    (
+        "find a nice restaurant in london",
+        {
+            "heads": [0, 3, 3, 0, 3, 3],
+            "deps": ["ROOT", "-", "QUALITY", "PLACE", "-", "LOCATION"],
+        },
+    ),
+    (
+        "show me the coolest hostel in berlin",
+        {
+            "heads": [0, 0, 4, 4, 0, 4, 4],
+            "deps": ["ROOT", "-", "-", "QUALITY", "PLACE", "-", "LOCATION"],
+        },
+    ),
+    (
+        "find a good italian restaurant near work",
+        {
+            "heads": [0, 4, 4, 4, 0, 4, 5],
+            "deps": [
+                "ROOT",
+                "-",
+                "QUALITY",
+                "ATTRIBUTE",
+                "PLACE",
+                "ATTRIBUTE",
+                "LOCATION",
+            ],
+        },
+    ),
 ]
 
 
 @plac.annotations(
     model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
     output_dir=("Optional output directory", "option", "o", Path),
-    n_iter=("Number of training iterations", "option", "n", int))
+    n_iter=("Number of training iterations", "option", "n", int),
+)
 def main(model=None, output_dir=None, n_iter=15):
     """Load the model, set up the pipeline and train the parser."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
     else:
-        nlp = spacy.blank('en')  # create blank Language class
+        nlp = spacy.blank("en")  # create blank Language class
         print("Created blank 'en' model")
 
     # We'll use the built-in dependency parser class, but we want to create a
     # fresh instance – just in case.
-    if 'parser' in nlp.pipe_names:
-        nlp.remove_pipe('parser')
-    parser = nlp.create_pipe('parser')
+    if "parser" in nlp.pipe_names:
+        nlp.remove_pipe("parser")
+    parser = nlp.create_pipe("parser")
     nlp.add_pipe(parser, first=True)
 
     for text, annotations in TRAIN_DATA:
-        for dep in annotations.get('deps', []):
+        for dep in annotations.get("deps", []):
             parser.add_label(dep)
 
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'parser']
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "parser"]
     with nlp.disable_pipes(*other_pipes):  # only train parser
         optimizer = nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
             # batch up the examples using spaCy's minibatch
-            batches = minibatch(TRAIN_DATA, size=compounding(4., 32., 1.001))
+            batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
             for batch in batches:
                 texts, annotations = zip(*batch)
                 nlp.update(texts, annotations, sgd=optimizer, losses=losses)
-            print('Losses', losses)
+            print("Losses", losses)
 
     # test the trained model
     test_model(nlp)
@@ -115,16 +155,18 @@ def main(model=None, output_dir=None, n_iter=15):
 
 
 def test_model(nlp):
-    texts = ["find a hotel with good wifi",
-             "find me the cheapest gym near work",
-             "show me the best hotel in berlin"]
+    texts = [
+        "find a hotel with good wifi",
+        "find me the cheapest gym near work",
+        "show me the best hotel in berlin",
+    ]
     docs = nlp.pipe(texts)
     for doc in docs:
         print(doc.text)
-        print([(t.text, t.dep_, t.head.text) for t in doc if t.dep_ != '-'])
+        print([(t.text, t.dep_, t.head.text) for t in doc if t.dep_ != "-"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     plac.call(main)
 
     # Expected output:

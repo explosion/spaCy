@@ -18,5 +18,5 @@ sentences = [
     "San Francisco erwägt Verbot von Lieferrobotern",
     "Autonome Fahrzeuge verlagern Haftpflicht auf Hersteller",
     "Wo bist du?",
-    "Was ist die Hauptstadt von Deutschland?"
+    "Was ist die Hauptstadt von Deutschland?",
 ]

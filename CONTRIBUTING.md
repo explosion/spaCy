@@ -55,7 +55,7 @@ even format them as Markdown to copy-paste into GitHub issues:
 `python -m spacy info --markdown`.
 
 * **Checking the model compatibility:** If you're having problems with a
-[statistical model](https://spacy.io/models), it may be because to the
+[statistical model](https://spacy.io/models), it may be because the
 model is incompatible with your spaCy installation. In spaCy v2.0+, you can check
 this on the command line by running `python -m spacy validate`.
 
@@ -186,13 +186,99 @@ sure your test passes and reference the issue in your commit message.
 ## Code conventions
 
 Code should loosely follow [pep8](https://www.python.org/dev/peps/pep-0008/).
-Regular line length is **80 characters**, with some tolerance for lines up to
-90 characters if the alternative would be worse — for instance, if your list
-comprehension comes to 82 characters, it's better not to split it over two lines.
-You can also use a linter like [`flake8`](https://pypi.python.org/pypi/flake8)
-or [`frosted`](https://pypi.python.org/pypi/frosted) – just keep in mind that
-it won't work very well for `.pyx` files and will complain about Cython syntax
-like `<int*>` or `cimport`.
+As of `v2.1.0`, spaCy uses [`black`](https://github.com/ambv/black) for code
+formatting and [`flake8`](http://flake8.pycqa.org/en/latest/) for linting its
+Python modules. If you've built spaCy from source, you'll already have both
+tools installed.
+
+**⚠️ Note that formatting and linting is currently only possible for Python
+modules in `.py` files, not Cython modules in `.pyx` and `.pxd` files.**
+
+### Code formatting
+
+[`black`](https://github.com/ambv/black) is an opinionated Python code
+formatter, optimised to produce readable code and small diffs. You can run
+`black` from the command-line, or via your code editor. For example, if you're
+using [Visual Studio Code](https://code.visualstudio.com/), you can  add the
+following to your `settings.json` to use `black` for formatting and auto-format
+your files on save:
+
+```json
+{
+    "python.formatting.provider": "black",
+    "[python]": {
+        "editor.formatOnSave": true
+    }
+}
+```
+
+[See here](https://github.com/ambv/black#editor-integration) for the full
+list of available editor integrations.
+
+#### Disabling formatting
+
+There are a few cases where auto-formatting doesn't improve readability – for
+example, in some of the the language data files like the `tag_map.py`, or in
+the tests that construct `Doc` objects from lists of words and other labels.
+Wrapping a block in `# fmt: off` and `# fmt: on` lets you disable formatting
+for that particular code. Here's an example:
+
+```python
+# fmt: off
+text = "I look forward to using Thingamajig.  I've been told it will make my life easier..."
+heads = [1, 0, -1, -2, -1, -1, -5, -1, 3, 2, 1, 0, 2, 1, -3, 1, 1, -3, -7]
+deps = ["nsubj", "ROOT", "advmod", "prep", "pcomp", "dobj", "punct", "",
+        "nsubjpass", "aux", "auxpass", "ROOT", "nsubj", "aux", "ccomp",
+        "poss", "nsubj", "ccomp", "punct"]
+# fmt: on
+```
+
+### Code linting
+
+[`flake8`](http://flake8.pycqa.org/en/latest/) is a tool for enforcing code
+style. It scans one or more files and outputs errors and warnings. This feedback
+can help you stick to general standards and conventions, and can be very useful
+for spotting potential mistakes and inconsistencies in your code. The most
+important things to watch out for are syntax errors and undefined names, but you
+also want to keep an eye on unused declared variables or repeated
+(i.e. overwritten) dictionary keys. If your code was formatted with `black`
+(see above), you shouldn't see any formatting-related warnings.
+
+The [`.flake8`](.flake8) config defines the configuration we use for this
+codebase. For example, we're not super strict about the line length, and we're
+excluding very large files like lemmatization and tokenizer exception tables.
+
+Ideally, running the following command from within the repo directory should
+not return any errors or warnings:
+
+```bash
+flake8 spacy
+```
+
+#### Disabling linting
+
+Sometimes, you explicitly want to write code that's not compatible with our
+rules. For example, a module's `__init__.py` might import a function so other
+modules can import it from there, but `flake8` will complain about an unused
+import. And although it's generally discouraged, there might be cases where it
+makes sense to use a bare `except`.
+
+To ignore a given line, you can add a comment like `# noqa: F401`, specifying
+the code of the error or warning we want to ignore. It's also possible to
+ignore several comma-separated codes at once, e.g. `# noqa: E731,E123`. Here
+are some examples:
+
+```python
+# The imported class isn't used in this file, but imported here, so it can be
+# imported *from* here by another module.
+from .submodule import SomeClass  # noqa: F401
+
+try:
+    do_something()
+except:  # noqa: E722
+    # This bare except is justified, for some specific reason
+    do_something_else()
+```
 
 ### Python conventions
 
@@ -206,10 +292,9 @@ for example to show more specific error messages, you can use the `is_config()`
 helper function.
 
 ```python
-from .compat import unicode_, json_dumps, is_config
+from .compat import unicode_, is_config
 
 compatible_unicode = unicode_('hello world')
-compatible_json = json_dumps({'key': 'value'})
 if is_config(windows=True, python2=True):
     print("You are using Python 2 on Windows.")
 ```
@@ -235,7 +320,7 @@ of other types these names. For instance, don't name a text string `doc` — you
 should usually call this `text`. Two general code style preferences further help
 with naming. First, **lean away from introducing temporary variables**, as these
 clutter your namespace. This is one reason why comprehension expressions are
-often preferred. Second, **keep your functions shortish**, so that can work in a
+often preferred. Second, **keep your functions shortish**, so they can work in a
 smaller scope. Of course, this is a question of trade-offs.
 
 ### Cython conventions
@@ -353,7 +438,7 @@ avoid unnecessary imports.
 Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
 Tests that require the model to be loaded should be marked with
 `@pytest.mark.models`. Loading the models is expensive and not necessary if
-you're not actually testing the model performance. If all you needs ia a `Doc`
+you're not actually testing the model performance. If all you need is a `Doc`
 object with annotations like heads, POS tags or the dependency parse, you can
 use the `get_doc()` utility function to construct it manually.
 

@@ -1,0 +1,22 @@
+.root
+    display: block
+    flex: 105%
+    width: 105%
+    height: 3px
+    color: var(--color-theme)
+    background: transparent
+    border: none
+    position: absolute
+    bottom: 0
+    left: -2.5%
+
+    &::-webkit-progress-bar
+        background: var(--color-back)
+        border-radius: none
+
+    &::-webkit-progress-value
+        background: var(--color-theme)
+        border-radius: none
+
+    &::-moz-progress-bar
+        background: var(--color-theme)

@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 """
 Example sentences to test spaCy and its language models.
 
->>> from spacy.lang.es.examples import sentences
+>>> from spacy.lang.ca.examples import sentences
 >>> docs = nlp.pipe(sentences)
 """
 
@@ -17,6 +17,6 @@ sentences = [
     "Londres és una gran ciutat del Regne Unit",
     "El gat menja peix",
     "Veig a l'home amb el telescopi",
-    "L'Aranya menja mosques",
+    "L'aranya menja mosques",
     "El pingüí incuba en el seu niu",
 ]

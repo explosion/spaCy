@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="o-svg" viewBox="270 35 125 240" width="400" height="150" style="max-width: none; color: #fff; background: #1a1e23; font-family: Arial; font-size: 20px">
+    <text fill="currentColor" text-anchor="middle" y="222.0">
+        <tspan style="font-weight: bold" fill="currentColor" x="50">This</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="50">DET</tspan>
+    </text>
+    <text fill="currentColor" text-anchor="middle" y="222.0">
+        <tspan style="font-weight: bold" fill="currentColor" x="225">is</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="225">VERB</tspan>
+    </text>
+    <text fill="currentColor" text-anchor="middle" y="222.0">
+        <tspan style="font-weight: bold" fill="currentColor" x="400">a</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="400">DET</tspan>
+    </text>
+    <text fill="currentColor" text-anchor="middle" y="222.0">
+        <tspan style="font-weight: bold" fill="currentColor" x="575">sentence.</tspan>
+        <tspan dy="2em" class="u-color-theme" style="font-weight: bold" fill="currentColor" x="575">NOUN</tspan>
+    </text>
+    <path id="arrow-0-0" stroke-width="2px" d="M70,177.0 C70,89.5 220.0,89.5 220.0,177.0" fill="none" stroke="currentColor"/>
+    <text dy="1.25em" style="font-size: 0.9em; letter-spacing: 2px">
+        <textPath xlink:href="#arrow-0-0" startOffset="50%" fill="currentColor" text-anchor="middle">nsubj</textPath>
+    </text>
+    <path d="M70,179.0 L62,167.0 78,167.0" fill="currentColor"/>
+    <path id="arrow-0-1" stroke-width="2px" d="M420,177.0 C420,89.5 570.0,89.5 570.0,177.0" fill="none" stroke="currentColor"/>
+    <text dy="1.25em" style="font-size: 0.9em; letter-spacing: 2px">
+        <textPath xlink:href="#arrow-0-1" startOffset="50%" fill="currentColor" text-anchor="middle">det</textPath>
+    </text>
+    <path d="M420,179.0 L412,167.0 428,167.0" fill="currentColor"/>
+    <path id="arrow-0-2" stroke-width="2px" d="M245,177.0 C245,2.0 575.0,2.0 575.0,177.0" fill="none" stroke="currentColor"/>
+    <text dy="1.25em" style="font-size: 0.9em; letter-spacing: 2px">
+        <textPath xlink:href="#arrow-0-2" startOffset="50%" fill="currentColor" text-anchor="middle">attr</textPath>
+    </text>
+    <path d="M575.0,179.0 L583.0,167.0 567.0,167.0" fill="currentColor"/>
+</svg>

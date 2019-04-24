@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-ADJECTIVES = set("""
+ADJECTIVES = set(
+    """
 صفر
 صفرم
 صفر‌ام
@@ -2977,4 +2978,7 @@ ADJECTIVES = set("""
 یک‌دست
 یک‌روزه
 ییلاقی
-""".split('\n'))
+""".split(
+        "\n"
+    )
+)

@@ -1,0 +1,488 @@
+@import base
+
+/* Theme */
+
+\:root
+    // Sizes
+    --height-nav: 55px
+    --width-content: 1250px
+    --width-sidebar: 235px
+    --width-aside: 27.5vw
+
+    // Fonts
+    --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'
+    --font-secondary: 'HK Grotesk', Roboto, Helvetica, Arial, sans-serif
+    --font-code: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace
+
+    // Font Sizes
+    --font-size-xs: 1.1rem
+    --font-size-sm: 1.3rem
+    --font-size-md: 1.35rem
+    --font-size-lg: 1.4rem
+
+    --line-height-xs: 1.25
+    --line-height-sm: 1.375
+    --line-height-md: 1.5
+    --line-height-lg: 1.9
+
+    // Spacing
+    --spacing-xs: 1rem
+    --spacing-sm: 2rem
+    --spacing-md: 4rem
+    --spacing-lg: 6rem
+
+    // Theme Colors
+    --color-theme-blue: hsl(195, 92%, 44%)
+    --color-theme-blue-dark: hsl(195, 92%, 34%)
+    --color-theme-blue-light: hsla(195, 92%, 44%, 0.06)
+    --color-theme-blue-opaque: hsla(195, 92%, 44%, 0.11)
+
+    --color-theme-green: hsl(164, 94%, 35%)
+    --color-theme-green-dark: hsl(164, 94%, 25%)
+    --color-theme-green-light: hsla(164, 94%, 35%, 0.06)
+    --color-theme-green-opaque: hsla(164, 94%, 35%, 0.11)
+
+    --color-theme-purple: hsl(255, 61%, 54%)
+    --color-theme-purple-dark: hsl(255, 61%, 44%)
+    --color-theme-purple-light: hsla(255, 61%, 54%, 0.06)
+    --color-theme-purple-opaque: hsla(255, 61%, 54%, 0.11)
+
+    // Regular colors
+    --color-back: hsl(0, 0%, 100%)
+    --color-front: hsl(213, 15%, 12%)
+    --color-dark: hsl(214, 15%, 32%)
+    --color-dark-secondary: hsl(214, 14%, 22%)
+    --color-subtle-opaque: hsla(0, 0%, 96%, 0.56)
+    --color-subtle: hsl(0, 0%, 87%)
+    --color-subtle-light: hsl(0, 0%, 96%)
+    --color-subtle-dark: hsl(162, 5%, 60%)
+
+    --color-green-medium: hsl(108, 66%, 63%)
+    --color-green-transparent: hsla(108, 66%, 63%, 0.11)
+    --color-red-light: hsl(355, 100%, 96%)
+    --color-red-medium: hsl(346, 84%, 61%)
+    --color-red-dark: hsl(332, 64%, 34%)
+    --color-red-opaque: hsl(346, 96%, 89%)
+    --color-red-transparent: hsla(346, 84%, 61%, 0.11)
+    --color-yellow-light: hsl(46, 100%, 95%)
+    --color-yellow-medium: hsl(45, 90%, 55%)
+    --color-yellow-dark: hsl(44, 94%, 27%)
+    --color-yellow-opaque: hsl(45, 90%, 87%)
+
+    // Syntax Highlighting
+    --syntax-comment: hsl(162, 5%, 60%)
+    --syntax-tag: hsl(266, 72%, 72%)
+    --syntax-number: hsl(266, 72%, 72%)
+    --syntax-selector: hsl(31, 100%, 71%)
+    --syntax-operator: hsl(342, 100%, 59%)
+    --syntax-function: hsl(195, 70%, 54%)
+    --syntax-keyword: hsl(342, 100%, 59%)
+    --syntax-regex: hsl(45, 90%, 55%)
+
+    // Other
+    --color-inline-code-text: var(--color-dark)
+    --color-inline-code-bg: var(--color-subtle-light)
+
+    --color-shadow: hsla(0, 0%, 0%, 0.2)
+    --box-shadow: 0 1px 5px var(--color-shadow)
+    --border-radius: 6px
+
+/* Theming */
+.theme-blue
+    --color-theme: var(--color-theme-blue)
+    --color-theme-dark: var(--color-theme-blue-dark)
+    --color-theme-light: var(--color-theme-blue-light)
+    --color-theme-opaque: var(--color-theme-blue-opaque)
+
+.theme-green
+    --color-theme: var(--color-theme-green)
+    --color-theme-dark: var(--color-theme-green-dark)
+    --color-theme-light: var(--color-theme-green-light)
+    --color-theme-opaque: var(--color-theme-green-opaque)
+
+.theme-purple
+    --color-theme: var(--color-theme-purple)
+    --color-theme-dark: var(--color-theme-purple-dark)
+    --color-theme-light: var(--color-theme-purple-light)
+    --color-theme-opaque: var(--color-theme-purple-opaque)
+
+
+/* Fonts */
+
+@font-face
+    font-family: "HK Grotesk"
+    font-style: normal
+    font-weight: 500
+    src: url("../fonts/hkgrotesk-semibold.woff2") format("woff2"), url("../fonts/hkgrotesk-semibold.woff") format("woff")
+    font-display: swap
+
+@font-face
+    font-family: "HK Grotesk"
+    font-style: italic
+    font-weight: 500
+    src: url("../fonts/hkgrotesk-semibolditalic.woff2") format("woff2"), url("../fonts/hkgrotesk-semibolditalic.woff") format("woff")
+    font-display: swap
+
+@font-face
+    font-family: "HK Grotesk"
+    font-style: normal
+    font-weight: 600
+    src: url("../fonts/hkgrotesk-bold.woff2") format("woff2"), url("../fonts/hkgrotesk-bold.woff") format("woff")
+    font-display: swap
+
+@font-face
+    font-family: "HK Grotesk"
+    font-style: italic
+    font-weight: 600
+    src: url("../fonts/hkgrotesk-bolditalic.woff2") format("woff2"), url("../fonts/hkgrotesk-bolditalic.woff") format("woff")
+    font-display: swap
+
+/* Reset */
+
+*, *:before, *:after
+    box-sizing: border-box
+    padding: 0
+    margin: 0
+    border: 0
+    outline: 0
+
+html
+    font-family: sans-serif
+    text-rendering: optimizeSpeed
+    -ms-text-size-adjust: 100%
+    -webkit-text-size-adjust: 100%
+    -webkit-font-smoothing: antialiased
+    -moz-osx-font-smoothing: grayscale
+
+body
+    margin: 0
+
+article, aside, details, figcaption, figure, footer, header, main, menu, nav,
+section, summary, progress
+    display: block
+
+a
+    background-color: transparent
+    color: inherit
+    text-decoration: none
+
+    &:active,
+    &:hover
+        outline: 0
+
+abbr[title]
+    border-bottom: none
+    text-decoration: underline
+    text-decoration: underline dotted
+
+b, strong
+    font-weight: inherit
+    font-weight: bolder
+
+small
+    font-size: 80%
+
+sub, sup
+    position: relative
+    font-size: 65%
+    line-height: 0
+    vertical-align: baseline
+
+sup
+    top: -0.5em
+
+sub
+    bottom: -0.15em
+
+img
+    border: 0
+    height: auto
+    max-width: 100%
+
+svg
+    max-width: 100%
+    color-interpolation-filters: sRGB
+    fill: currentColor
+
+    &:not(:root)
+        overflow: hidden
+
+hr
+    box-sizing: content-box
+    overflow: visible
+    height: 0
+
+pre
+    overflow: auto
+
+code, pre
+    font-family: monospace, monospace
+    font-size: 1em
+
+table
+    text-align: left
+    width: 100%
+    max-width: 100%
+    border-collapse: collapse
+
+    td, th
+        vertical-align: top
+
+ul, ol
+    list-style: none
+
+input, button
+    appearance: none
+    background: transparent
+
+button
+    cursor: pointer
+
+progress
+    appearance: none
+
+/* Layout */
+
+html
+    font-size: 11px
+
+body
+    background: var(--color-back)
+    color: var(--color-front)
+
+p
+    margin-bottom: var(--spacing-md)
+    font-family: var(--font-primary)
+    font-size: var(--font-size-md)
+    line-height: var(--line-height-md)
+
+    &:empty
+        margin-bottom: 0
+
+a:focus
+    outline: 1px dotted var(--color-theme)
+
+body [id]:target
+    padding-top: calc(var(--height-nav) * 1.25) !important
+
+::selection
+    background: var(--color-theme)
+    color: var(--color-back)
+    text-shadow: none
+
+// Footnotes
+
+.footnotes
+    border-top: 1px dotted var(--color-subtle)
+    color: var(--color-dark)
+
+    li
+        font-size: var(--font-size-xs)
+
+    .footnote-backref
+        border: none
+        margin-left: 1rem
+        display: inline-block
+        width: 1em
+        line-height: 1
+        overflow: hidden
+
+        &:before
+            content: "\21A9\FE0E"
+            width: 1em
+
+    hr
+        display: none
+
+
+// Prism
+
+[class*="language-"] .token
+    &.comment, &.prolog, &.doctype, &.cdata, &.punctuation
+        color: var(--syntax-comment)
+
+    &.property, &.tag, &.constant, &.symbol
+        color: var(--syntax-tag)
+
+    &.boolean, &.number
+        color: var(--syntax-number)
+
+    &.selector, &.attr-name, &.string, &.char, &.builtin
+        color: var(--syntax-selector)
+
+    @at-root .language-css .token.string,
+    &.operator, &.entity, &.url, &.variable
+        color: var(--syntax-operator)
+
+    &.atrule, &.attr-value, &.function
+        color: var(--syntax-function)
+
+    &.regex, &.important
+        color: var(--syntax-regex)
+
+    &.keyword
+        color: var(--syntax-keyword)
+
+    &.inserted, &.deleted
+        padding: 2px 0
+        border-radius: 2px
+
+    &.inserted
+        color: var(--color-green-medium)
+        background: var(--color-green-transparent)
+
+    &.deleted
+        color: var(--color-red-medium)
+        background: var(--color-red-transparent)
+
+    &.italic
+        font-style: italic
+
+.gatsby-highlight-code-line
+    background-color: var(--color-dark-secondary)
+    border-left: 0.35em solid var(--color-theme)
+    display: block
+    margin-right: -2em
+    margin-left: -2em
+    padding-right: 2em
+    padding-left: 1.65em
+
+    &:empty:before
+        // Fix issue where empty lines would disappear
+        content: " "
+
+
+// CodeMirror
+
+.CodeMirror.cm-s-default
+    background: var(--color-front)
+    color: var(--color-subtle)
+
+    .CodeMirror-line
+        padding: 0
+
+    .CodeMirror-selected
+        background: var(--color-theme)
+        color: var(--color-back)
+
+    .CodeMirror-cursor
+        border-left-color: currentColor
+
+    .cm-variable-2
+        color: inherit
+        font-style: italic
+
+    .cm-comment
+        color: var(--syntax-comment)
+
+    .cm-keyword, .cm-builtin
+        color: var(--syntax-keyword)
+
+    .cm-operator
+        color: var(--syntax-operator)
+
+    .cm-string
+        color: var(--syntax-selector)
+
+    .cm-number
+        color: var(--syntax-number)
+
+    .cm-def
+        color: var(--syntax-function)
+
+// Jupyter
+
+.jp-RenderedText pre
+    .ansi-cyan-fg.ansi-cyan-fg
+        color: var(--syntax-function)
+
+    .ansi-green-fg.ansi-green-fg
+        color: var(--color-green-medium)
+
+    .ansi-red-fg.ansi-red-fg
+        color: var(--syntax-operator)
+
+.jp-OutputArea
+    &:not(:empty)
+        padding: 2rem 2rem 1rem
+        border-top: 1px solid var(--color-dark)
+        margin-top: 2rem
+
+    .entities, svg
+        white-space: initial
+        font-family: inherit
+
+    .entities
+        font-size: 1.35rem
+
+    .displacy
+        margin-top: 1rem
+        font-family: var(--font-primary) !important
+        color: var(--color-subtle) !important
+        background: var(--color-front) !important
+
+.jp-OutputArea pre
+    font: inherit
+
+.jp-OutputPrompt.jp-OutputArea-prompt
+    padding-top: 0.5em
+    margin-right: 1rem
+    font-family: inherit
+    font-weight: bold
+
+/* Tooltips */
+
+[data-tooltip]
+    position: relative
+
+@include breakpoint(min, sm)
+    [data-tooltip][data-tooltip-style="code"]:before
+        -webkit-font-smoothing: subpixel-antialiased
+        -moz-osx-font-smoothing: auto
+        padding: 0.35em 0.85em 0.45em
+        font-family: var(--font-code)
+        white-space: nowrap
+        min-width: auto
+
+    [data-tooltip]:before
+        font: normal var(--font-size-xs)/var(--line-height-xs) var(--font-primary)
+        position: absolute
+        top: 125%
+        left: 50%
+        display: inline-block
+        content: attr(data-tooltip)
+        background: var(--color-front)
+        border-radius: var(--border-radius)
+        box-shadow: var(--box-shadow)
+        border: 1px solid var(--color-dark)
+        color: var(--color-back)
+        text-transform: none
+        text-align: left
+        opacity: 0
+        transform: translateX(-50%) translateY(-2px)
+        transition: opacity 0.1s ease-out, transform 0.1s ease-out
+        visibility: hidden
+        max-width: 300px
+        min-width: 200px
+        padding: 0.75em 1em 1em
+        z-index: 200
+        white-space: pre-wrap
+
+    [data-tooltip]:hover:before
+        opacity: 1
+        transform: translateX(-50%) translateY(0)
+        visibility: visible
+
+/* Gatsby Images */
+
+.gatsby-resp-image-figure
+    margin-bottom: var(--spacing-md)
+
+.gatsby-resp-image-figcaption
+    font: var(--font-size-xs)/var(--line-height-md) var(--font-primary)
+    color: var(--color-subtle-dark)
+    padding-top: 0.75rem
+    padding-left: 3rem
+
+    code
+        color: inherit

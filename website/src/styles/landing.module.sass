@@ -1,0 +1,157 @@
+@import base
+
+.header
+    background: var(--color-theme)
+    padding-top: calc(var(--height-nav) * 1.5)
+    width: 100%
+    text-align: center
+
+.header-wrapper
+    background: var(--color-theme)
+    background-position: top center
+    background-repeat: repeat
+    width: 100%
+
+.header-content
+    background: transparent
+    background-position: center -138px
+    background-repeat: no-repeat
+    width: 100%
+    min-height: 573px
+
+.title
+    font: normal 600 7rem/#{1} var(--font-secondary)
+    color: var(--color-back)
+    text-align: center
+    margin-bottom: 0.75rem
+    padding: 0 1rem
+
+@include breakpoint(max, sm)
+    .title
+        font-size: 4rem
+        padding-top: 1.5rem
+
+.label
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+    display: inline-block
+    border-radius: 1em
+    padding: 0 1rem 0.15rem
+    background: var(--color-back)
+    color: var(--color-theme)
+
+.subtitle
+    margin-top: 1rem
+
+.blocks
+    position: relative
+    top: -25rem
+    margin-bottom: -25rem
+
+.card
+    padding: 3rem 2.5rem
+    background: var(--color-back)
+    border-radius: var(--border-radius)
+    box-shadow: var(--box-shadow)
+    margin-bottom: 3rem
+
+.button
+    width: 100%
+
+.demo
+    flex: 0 0 66%
+    grid-column: 1 / span 2
+
+.banner-grid
+    grid-gap: 0
+
+    & > *
+        flex-basis: 50%
+
+.banner
+    background: var(--color-theme)
+    color: var(--color-back)
+    padding: 5rem
+    margin-bottom: var(--spacing-md)
+    background-size: cover
+
+.banner-content
+    margin-bottom: 0
+    height: 100%
+
+.banner-content-small
+    display: block
+
+.banner-title
+    display: block
+    margin-top: 1.5rem
+    margin-bottom: 0.5em
+
+.banner-label
+    margin-bottom: 1rem
+
+.banner-text
+    font-weight: 500
+
+    strong
+        font-weight: 800
+
+    p
+        font-size: 1.5rem
+
+.banner-text-small p
+    font-size: 1.35rem
+    margin-bottom: 1.5rem
+
+@include breakpoint(min, md)
+    .banner-content
+        padding: 0 6.5rem 0 4rem
+
+    .banner-content-small
+        padding: 0 2.25rem 1rem
+
+    .banner-text
+        padding-top: 7rem
+        grid-column: 2 / span 2
+        flex: 0 0 66%
+
+    .banner-text-small
+        padding-top: 1rem
+        grid-column: unset
+        flex: 0 0 100%
+        padding-right: 2rem
+
+@include breakpoint(max, md)
+    .banner-content
+        display: block
+
+    .banner-text
+        padding-top: 0
+
+    .col
+        grid-column: 1 / span 2
+
+.banner-button
+    margin-bottom: var(--spacing-sm)
+    text-align: right
+
+.banner-button-element
+    background: var(--color-theme)
+
+.logos
+    text-align: center
+    padding-bottom: 1rem
+
+    & + &
+        padding-bottom: 7.5rem
+
+.logos-content
+    display: flex
+    justify-content: center
+    align-items: center
+    flex-flow: row wrap
+    margin-bottom: 0
+
+.logo
+    display: inline-block
+    padding: 1.8rem

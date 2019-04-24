@@ -1,14 +1,14 @@
 # coding: utf8
 from __future__ import division, print_function, unicode_literals
 
-from .gold import tags_to_entities
-from .errors import Errors
+from .gold import tags_to_entities, GoldParse
 
 
 class PRFScore(object):
     """
     A precision / recall / F score
     """
+
     def __init__(self):
         self.tp = 0
         self.fp = 0
@@ -75,22 +75,21 @@ class Scorer(object):
     @property
     def scores(self):
         return {
-            'uas': self.uas,
-            'las': self.las,
-            'ents_p': self.ents_p,
-            'ents_r': self.ents_r,
-            'ents_f': self.ents_f,
-            'tags_acc': self.tags_acc,
-            'token_acc': self.token_acc
+            "uas": self.uas,
+            "las": self.las,
+            "ents_p": self.ents_p,
+            "ents_r": self.ents_r,
+            "ents_f": self.ents_f,
+            "tags_acc": self.tags_acc,
+            "token_acc": self.token_acc,
         }
 
-    def score(self, tokens, gold, verbose=False, punct_labels=('p', 'punct')):
+    def score(self, tokens, gold, verbose=False, punct_labels=("p", "punct")):
         if len(tokens) != len(gold):
-            raise ValueError(Errors.E078.format(words_doc=len(tokens), words_gold=len(gold)))
+            gold = GoldParse.from_annot_tuples(tokens, zip(*gold.orig_annot))
         gold_deps = set()
         gold_tags = set()
-        gold_ents = set(tags_to_entities([annot[-1]
-                        for annot in gold.orig_annot]))
+        gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
         for id_, word, tag, head, dep, ner in gold.orig_annot:
             gold_tags.add((id_, tag))
             if dep not in (None, "") and dep.lower() not in punct_labels:
@@ -102,8 +101,7 @@ class Scorer(object):
                 continue
             gold_i = gold.cand_to_gold[token.i]
             if gold_i is None:
-                if token.dep_.lower() not in punct_labels:
-                    self.tokens.fp += 1
+                self.tokens.fp += 1
             else:
                 self.tokens.tp += 1
                 cand_tags.add((gold_i, token.tag_))
@@ -116,11 +114,11 @@ class Scorer(object):
                     self.labelled.fp += 1
                 else:
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
-        if '-' not in [token[-1] for token in gold.orig_annot]:
+        if "-" not in [token[-1] for token in gold.orig_annot]:
             cand_ents = set()
             for ent in tokens.ents:
                 first = gold.cand_to_gold[ent.start]
-                last = gold.cand_to_gold[ent.end-1]
+                last = gold.cand_to_gold[ent.end - 1]
                 if first is None or last is None:
                     self.ner.fp += 1
                 else:
@@ -129,12 +127,11 @@ class Scorer(object):
         self.tags.score_set(cand_tags, gold_tags)
         self.labelled.score_set(cand_deps, gold_deps)
         self.unlabelled.score_set(
-            set(item[:2] for item in cand_deps),
-            set(item[:2] for item in gold_deps),
+            set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
         )
         if verbose:
             gold_words = [item[1] for item in gold.orig_annot]
-            for w_id, h_id, dep in (cand_deps - gold_deps):
-                print('F', gold_words[w_id], dep, gold_words[h_id])
-            for w_id, h_id, dep in (gold_deps - cand_deps):
-                print('M', gold_words[w_id], dep, gold_words[h_id])
+            for w_id, h_id, dep in cand_deps - gold_deps:
+                print("F", gold_words[w_id], dep, gold_words[h_id])
+            for w_id, h_id, dep in gold_deps - cand_deps:
+                print("M", gold_words[w_id], dep, gold_words[h_id])

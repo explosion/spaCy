@@ -1,13 +1,8 @@
-"""
-Slang and abbreviations
-
-Daftar kosakata yang sering salah dieja
-https://id.wikipedia.org/wiki/Wikipedia:Daftar_kosakata_bahasa_Indonesia_yang_sering_salah_dieja
-
-"""
 # coding: utf8
 from __future__ import unicode_literals
 
+# Daftar kosakata yang sering salah dieja
+# https://id.wikipedia.org/wiki/Wikipedia:Daftar_kosakata_bahasa_Indonesia_yang_sering_salah_dieja
 _exc = {
     # Slang and abbreviations
     "silahkan": "silakan",
@@ -37,7 +32,6 @@ _exc = {
     "ngebuat": "membuat",
     "membikin": "membuat",
     "bikin": "buat",
-
     # Daftar kosakata yang sering salah dieja
     "malpraktik": "malapraktik",
     "malfungsi": "malafungsi",

@@ -18,9 +18,10 @@ from ...util import update_exc, add_lookups
 
 class GermanDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'de'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
-                                         NORM_EXCEPTIONS, BASE_NORMS)
+    lex_attr_getters[LANG] = lambda text: "de"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], NORM_EXCEPTIONS, BASE_NORMS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     infixes = TOKENIZER_INFIXES
     tag_map = TAG_MAP
@@ -30,8 +31,8 @@ class GermanDefaults(Language.Defaults):
 
 
 class German(Language):
-    lang = 'de'
+    lang = "de"
     Defaults = GermanDefaults
 
 
-__all__ = ['German']
+__all__ = ["German"]

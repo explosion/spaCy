@@ -6,22 +6,29 @@ from __future__ import unicode_literals
 
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict, Counter
 from thinc.extra.search cimport Beam
+import json
 
+from .nonproj import is_nonproj_tree
+from ..typedefs cimport hash_t, attr_t
+from ..strings cimport hash_string
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .nonproj import is_nonproj_tree
+from . import nonproj
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse, GoldParseC
 from ..structs cimport TokenC
 from ..errors import Errors
+from ..tokens.doc cimport Doc, set_children_from_heads
 
+# Calculate cost as gold/not gold. We don't use scalar value anyway.
+cdef int BINARY_COSTS = 1
+cdef weight_t MIN_SCORE = -90000
+cdef attr_t SUBTOK_LABEL = hash_string('subtok')
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = True
-
-cdef weight_t MIN_SCORE = -90000
 
 # Break transition from here
 # http://www.aclweb.org/anthology/P13-1074
@@ -55,6 +62,8 @@ cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) no
             cost += 1
         if gold.heads[S_i] == target and (NON_MONOTONIC or not stcls.has_head(S_i)):
             cost += 1
+        if BINARY_COSTS and cost >= 1:
+            return cost
     cost += Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0
     return cost
 
@@ -68,6 +77,8 @@ cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nog
         cost += gold.heads[target] == B_i
         if gold.heads[B_i] == B_i or gold.heads[B_i] < target:
             break
+        if BINARY_COSTS and cost >= 1:
+            return cost
     if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
         cost += 1
     return cost
@@ -111,7 +122,8 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and st.B_(0).sent_start != 1
+        sent_start = st._sent[st.B_(0).l_edge].sent_start
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -171,7 +183,10 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.B_(0).sent_start != 1
+        if label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
+            return 0
+        sent_start = st._sent[st.B_(0).l_edge].sent_start
+        return sent_start != 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -206,7 +221,10 @@ cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         # If there's (perhaps partial) parse pre-set, don't allow cycle.
-        return st.B_(0).sent_start != 1 and st.H(st.S(0)) != st.B(0)
+        if label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
+            return 0
+        sent_start = st._sent[st.B_(0).l_edge].sent_start
+        return sent_start != 1 and st.H(st.S(0)) != st.B(0)
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -313,44 +331,59 @@ cdef class ArcEager(TransitionSystem):
 
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions', OrderedDict((
-            (SHIFT, ['']),
-            (REDUCE, ['']),
-            (RIGHT, []),
-            (LEFT, []),
-            (BREAK, ['ROOT']))
-        ))
-        seen_actions = set()
+        min_freq = kwargs.get('min_freq', None)
+        actions = defaultdict(lambda: Counter())
+        actions[SHIFT][''] = 1
+        actions[REDUCE][''] = 1
         for label in kwargs.get('left_labels', []):
-            if label.upper() != 'ROOT':
-                if (LEFT, label) not in seen_actions:
-                    actions[LEFT].append(label)
-                    seen_actions.add((LEFT, label))
+            actions[LEFT][label] = 1
+            actions[SHIFT][label] = 1
         for label in kwargs.get('right_labels', []):
-            if label.upper() != 'ROOT':
-                if (RIGHT, label) not in seen_actions:
-                    actions[RIGHT].append(label)
-                    seen_actions.add((RIGHT, label))
-
+            actions[RIGHT][label] = 1
+            actions[REDUCE][label] = 1
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
+                heads, labels = nonproj.projectivize(heads, labels)
                 for child, head, label in zip(ids, heads, labels):
-                    if label.upper() == 'ROOT':
+                    if label.upper() == 'ROOT' :
                         label = 'ROOT'
-                    if label != 'ROOT':
-                        if head < child:
-                            if (RIGHT, label) not in seen_actions:
-                                actions[RIGHT].append(label)
-                                seen_actions.add((RIGHT, label))
-                        elif head > child:
-                            if (LEFT, label) not in seen_actions:
-                                actions[LEFT].append(label)
-                                seen_actions.add((LEFT, label))
+                    if head == child:
+                        actions[BREAK][label] += 1
+                    elif head < child:
+                        actions[RIGHT][label] += 1
+                        actions[REDUCE][''] += 1
+                    elif head > child:
+                        actions[LEFT][label] += 1
+                        actions[SHIFT][''] += 1
+        if min_freq is not None:
+            for action, label_freqs in actions.items():
+                for label, freq in list(label_freqs.items()):
+                    if freq < min_freq:
+                        label_freqs.pop(label)
+        # Ensure these actions are present
+        actions[BREAK].setdefault('ROOT', 0)
+        actions[RIGHT].setdefault('subtok', 0)
+        actions[LEFT].setdefault('subtok', 0)
+        # Used for backoff
+        actions[RIGHT].setdefault('dep', 0)
+        actions[LEFT].setdefault('dep', 0)
         return actions
 
-    property action_types:
-        def __get__(self):
-            return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
+    @property
+    def action_types(self):
+        return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
+
+    def get_cost(self, StateClass state, GoldParse gold, action):
+        cdef Transition t = self.lookup_transition(action)
+        if not t.is_valid(state.c, t.label):
+            return 9000
+        else:
+            return t.get_cost(state, &gold.c, t.label)
+
+    def transition(self, StateClass state, action):
+        cdef Transition t = self.lookup_transition(action)
+        t.do(state.c, t.label)
+        return state
 
     def is_gold_parse(self, StateClass state, GoldParse gold):
         predicted = set()
@@ -377,18 +410,34 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
-        for i in range(gold.length):
+        for i, (head, dep) in enumerate(zip(gold.heads, gold.labels)):
             # Missing values
-            if gold.heads[i] is None or gold.labels[i] is None:
+            if head is None or dep is None:
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
             else:
-                label = gold.labels[i]
+                if head > i:
+                    action = LEFT
+                elif head < i:
+                    action = RIGHT
+                else:
+                    action = BREAK
+                if dep not in self.labels[action]:
+                    if action == BREAK:
+                        dep = 'ROOT'
+                    elif nonproj.is_decorated(dep):
+                        backoff = nonproj.decompose(dep)[0]
+                        if backoff in self.labels[action]:
+                            dep = backoff
+                        else:
+                            dep = 'dep'
+                    else:
+                        dep = 'dep'
                 gold.c.has_dep[i] = True
-                if label.upper() == 'ROOT':
-                    label = 'ROOT'
-                gold.c.heads[i] = gold.heads[i]
-                gold.c.labels[i] = self.strings.add(label)
+                if dep.upper() == 'ROOT':
+                    dep = 'ROOT'
+                gold.c.heads[i] = head
+                gold.c.labels[i] = self.strings.add(dep)
         return gold
 
     def get_beam_parses(self, Beam beam):
@@ -407,7 +456,10 @@ cdef class ArcEager(TransitionSystem):
                 parses.append((prob, parse))
         return parses
 
-    cdef Transition lookup_transition(self, object name) except *:
+    cdef Transition lookup_transition(self, object name_or_id) except *:
+        if isinstance(name_or_id, int):
+            return self.c[name_or_id]
+        name = name_or_id
         if '-' in name:
             move_str, label_str = name.split('-', 1)
             label = self.strings[label_str]
@@ -426,6 +478,9 @@ cdef class ArcEager(TransitionSystem):
             return MOVE_NAMES[move] + '-' + label_str
         else:
             return MOVE_NAMES[move]
+
+    def class_name(self, int i):
+        return self.move_name(self.c[i].move, self.c[i].label)
 
     cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -476,8 +531,9 @@ cdef class ArcEager(TransitionSystem):
             if st._sent[i].head == 0:
                 st._sent[i].dep = self.root_label
 
-    def finalize_doc(self, doc):
+    def finalize_doc(self, Doc doc):
         doc.is_parsed = True
+        set_children_from_heads(doc.c, doc.length)
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
@@ -488,7 +544,10 @@ cdef class ArcEager(TransitionSystem):
         is_valid[BREAK] = Break.is_valid(st, 0)
         cdef int i
         for i in range(self.n_moves):
-            output[i] = is_valid[self.c[i].move]
+            if self.c[i].label == SUBTOK_LABEL:
+                output[i] = self.c[i].is_valid(st, self.c[i].label)
+            else:
+                output[i] = is_valid[self.c[i].move]
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        StateClass stcls, GoldParse gold) except -1:
