@@ -36,6 +36,7 @@ venv/
 .dev
 .denv
 .pypyenv
+spacy_custom/*
 
 # Distribution / packaging
 env/
