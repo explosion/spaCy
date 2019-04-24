@@ -1148,6 +1148,7 @@ VERBS_IRREG = {
     "marshalling": ("marshal",),
     "marvelled": ("marvel",),
     "marvelling": ("marvel",),
+    "marketing": ("marketing",),
     "matted": ("mat",),
     "matting": ("mat",),
     "meant": ("mean",),
