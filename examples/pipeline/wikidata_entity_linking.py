@@ -425,26 +425,37 @@ if __name__ == "__main__":
 
     # STEP 3 : write KB to file
     nlp1 = spacy.load('en_core_web_sm')
-    kb1 = KnowledgeBase(vocab=nlp1.vocab)
+    my_vocab = nlp1.vocab
+    kb1 = KnowledgeBase(vocab=my_vocab)
 
     kb1.add_entity(entity="Q53", prob=0.33)
     kb1.add_entity(entity="Q17", prob=0.1)
     kb1.add_entity(entity="Q007", prob=0.7)
     kb1.add_entity(entity="Q44", prob=0.4)
-    print("kb1 size:", len(kb1), kb1.get_size_entities(), kb1.get_size_aliases())
-    print("dumping kb1")
+    kb1.add_alias(alias="double07", entities=["Q007", "Q17"], probabilities=[0.9, 0.1])
+    kb1.add_alias(alias="guy", entities=["Q53", "Q007", "Q17", "Q44"], probabilities=[0.3, 0.3, 0.2, 0.1])
+    kb1.add_alias(alias="random", entities=["Q007"], probabilities=[1.0])
 
+    print("kb1 size:", len(kb1), kb1.get_size_entities(), kb1.get_size_aliases())
+    print("kb1 entities:", kb1.get_entity_strings())
+    print("kb1 aliases:", kb1.get_alias_strings())
+
+    print()
+    print("dumping kb1")
     kb1.dump(KB_FILE)
 
     # STEP 4 : read KB back in from file
 
     nlp3 = spacy.load('en_core_web_sm')
-    kb3 = KnowledgeBase(vocab=nlp3.vocab)
-
-    kb3.load_bulk(KB_FILE)
+    kb3 = KnowledgeBase(vocab=my_vocab)
 
     print("loading kb3")
+    kb3.load_bulk(KB_FILE)
+
+    print()
     print("kb3 size:", len(kb3), kb3.get_size_entities(), kb3.get_size_aliases())
+    print("kb3 entities:", kb3.get_entity_strings())
+    print("kb3 aliases:", kb3.get_alias_strings())
 
     # STEP 5 : actually use the EL functionality
     # add_el(my_kb, nlp)

@@ -76,13 +76,13 @@ cdef class KnowledgeBase:
         return len(self._entry_index)
 
     def get_entity_strings(self):
-        return [self.vocab.strings[x] for x in self._entry_index][1:] # removing the dummy element on index 0
+        return [self.vocab.strings[x] for x in self._entry_index]
 
     def get_size_aliases(self):
         return len(self._alias_index)
 
     def get_alias_strings(self):
-        return [self.vocab.strings[x] for x in self._alias_index][1:] # removing the dummy element on index 0
+        return [self.vocab.strings[x] for x in self._alias_index]
 
     def add_entity(self, unicode entity, float prob=0.5, vectors=None, features=None):
         """
@@ -173,31 +173,52 @@ cdef class KnowledgeBase:
             entry = self._entries[entry_index]
             assert entry.entity_hash ==  entry_hash
             assert entry_index == i
-            writer.write_entry(entry_index, entry.entity_hash, entry.prob)
+            writer.write_entry(entry.entity_hash, entry.prob)
+            i = i+1
+
+        writer.write_alias_length(self.get_size_aliases())
+
+        # dumping the aliases in the order in which they are in the _alias_index vector.
+        # index 0 is a dummy object not stored in the _aliases_table and can be ignored.
+        i = 1
+        for alias_hash, alias_index in sorted(self._alias_index.items(), key=lambda x: x[1]):
+            alias = self._aliases_table[alias_index]
+            assert alias_index == i
+
+            candidate_length = len(alias.entry_indices)
+            writer.write_alias_header(alias_hash, candidate_length)
+
+            for j in range(0, candidate_length):
+                writer.write_alias(alias.entry_indices[j], alias.probs[j])
+
             i = i+1
 
         writer.close()
 
     cpdef load_bulk(self, loc):
-        cdef int64_t entry_id
         cdef hash_t entity_hash
+        cdef hash_t alias_hash
+        cdef int64_t entry_index
         cdef float prob
         cdef EntryC entry
+        cdef AliasC alias
         cdef int32_t dummy_value = 342
 
         cdef Reader reader = Reader(loc)
+
+        # Step 1: load entities
+
         cdef int64_t nr_entities
         reader.read_header(&nr_entities)
-
         self._entry_index = PreshMap(nr_entities+1)
         self._entries = entry_vec(nr_entities+1)
 
-        # we assume the data was written in sequence
+        # we assume that the entity data was written in sequence
         # index 0 is a dummy object not stored in the _entry_index and can be ignored.
         # TODO: should we initialize the dummy objects ?
         cdef int i = 1
-        while reader.read_entry(&entry_id, &entity_hash, &prob) and i <= nr_entities:
-            assert i == entry_id
+        while i <= nr_entities:
+            reader.read_entry(&entity_hash, &prob)
 
             # TODO features and vectors
             entry.entity_hash = entity_hash
@@ -209,6 +230,43 @@ cdef class KnowledgeBase:
             self._entry_index[entity_hash] = i
 
             i += 1
+
+        # check that all entities were read in properly
+        assert nr_entities == self.get_size_entities()
+
+        # Step 2: load aliases
+        cdef int64_t nr_aliases
+        reader.read_alias_length(&nr_aliases)
+        self._alias_index = PreshMap(nr_aliases+1)
+        self._aliases_table = alias_vec(nr_aliases+1)
+
+        cdef int64_t nr_candidates
+        cdef vector[int64_t] entry_indices
+        cdef vector[float] probs
+
+        i = 1
+        # we assume the alias data was written in sequence
+        # index 0 is a dummy object not stored in the _entry_index and can be ignored.
+        while i <= nr_aliases:
+            reader.read_alias_header(&alias_hash, &nr_candidates)
+            entry_indices = vector[int64_t](nr_candidates)
+            probs = vector[float](nr_candidates)
+
+            for j in range(0, nr_candidates):
+                reader.read_alias(&entry_index, &prob)
+                entry_indices[j] = entry_index
+                probs[j] = prob
+
+            alias.entry_indices = entry_indices
+            alias.probs = probs
+
+            self._aliases_table[i] = alias
+            self._alias_index[alias_hash] = i
+
+            i += 1
+
+        # check that all aliases were read in properly
+        assert nr_aliases == self.get_size_aliases()
 
 
 cdef class Writer:
@@ -227,11 +285,21 @@ cdef class Writer:
     cdef int write_header(self, int64_t nr_entries) except -1:
         self._write(&nr_entries, sizeof(nr_entries))
 
-    cdef int write_entry(self, int64_t entry_id, hash_t entry_hash, float entry_prob) except -1:
+    cdef int write_entry(self, hash_t entry_hash, float entry_prob) except -1:
         # TODO: feats_rows and vector rows
-        self._write(&entry_id, sizeof(entry_id))
         self._write(&entry_hash, sizeof(entry_hash))
         self._write(&entry_prob, sizeof(entry_prob))
+
+    cdef int write_alias_length(self, int64_t alias_length) except -1:
+        self._write(&alias_length, sizeof(alias_length))
+
+    cdef int write_alias_header(self, hash_t alias_hash, int64_t candidate_length) except -1:
+        self._write(&alias_hash, sizeof(alias_hash))
+        self._write(&candidate_length, sizeof(candidate_length))
+
+    cdef int write_alias(self, int64_t entry_index, float prob) except -1:
+        self._write(&entry_index, sizeof(entry_index))
+        self._write(&prob, sizeof(prob))
 
     cdef int _write(self, void* value, size_t size) except -1:
         status = fwrite(value, size, 1, self._fp)
@@ -258,13 +326,7 @@ cdef class Reader:
                 return 0  # end of file
             raise IOError("error reading header from input file")
 
-    cdef int read_entry(self, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1:
-        status = self._read(entry_id, sizeof(int64_t))
-        if status < 1:
-            if feof(self._fp):
-                return 0  # end of file
-            raise IOError("error reading entry ID from input file")
-
+    cdef int read_entry(self, hash_t* entity_hash, float* prob) except -1:
         status = self._read(entity_hash, sizeof(hash_t))
         if status < 1:
             if feof(self._fp):
@@ -281,6 +343,39 @@ cdef class Reader:
             return 0
         else:
             return 1
+
+    cdef int read_alias_length(self, int64_t* alias_length) except -1:
+        status = self._read(alias_length, sizeof(int64_t))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading alias length from input file")
+
+    cdef int read_alias_header(self, hash_t* alias_hash, int64_t* candidate_length) except -1:
+        status = self._read(alias_hash, sizeof(hash_t))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading alias hash from input file")
+
+        status = self._read(candidate_length, sizeof(int64_t))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading candidate length from input file")
+
+    cdef int read_alias(self, int64_t* entry_index, float* prob) except -1:
+        status = self._read(entry_index, sizeof(int64_t))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading entry index for alias from input file")
+
+        status = self._read(prob, sizeof(float))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading prob for entity/alias from input file")
 
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)
