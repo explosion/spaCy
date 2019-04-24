@@ -129,16 +129,20 @@ cdef class KnowledgeBase:
         self._entries.push_back(entry)
         self._aliases_table.push_back(alias)
 
-    cpdef load_bulk(self, int nr_entities, loc)
+    cpdef load_bulk(self, loc)
 
 
 cdef class Writer:
     cdef FILE* _fp
 
-    cdef int write(self, int64_t entry_id, hash_t entity_hash, float prob) except -1
+    cdef int write_header(self, int64_t nr_entries) except -1
+    cdef int write_entry(self, int64_t entry_id, hash_t entry_hash, float entry_prob) except -1
+    cdef int _write(self, void* value, size_t size) except -1
 
 cdef class Reader:
     cdef FILE* _fp
 
-    cdef int read(self, Pool mem, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1
+    cdef int read_header(self, int64_t* nr_entries) except -1
+    cdef int read_entry(self, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1
+    cdef int _read(self, void* value, size_t size) except -1
 

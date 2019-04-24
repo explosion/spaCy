@@ -432,6 +432,7 @@ if __name__ == "__main__":
     kb1.add_entity(entity="Q007", prob=0.7)
     kb1.add_entity(entity="Q44", prob=0.4)
     print("kb1 size:", len(kb1), kb1.get_size_entities(), kb1.get_size_aliases())
+    print("dumping kb1")
 
     kb1.dump(KB_FILE)
 
@@ -439,7 +440,10 @@ if __name__ == "__main__":
 
     nlp3 = spacy.load('en_core_web_sm')
     kb3 = KnowledgeBase(vocab=nlp3.vocab)
-    kb3.load_bulk(7, KB_FILE)
+
+    kb3.load_bulk(KB_FILE)
+
+    print("loading kb3")
     print("kb3 size:", len(kb3), kb3.get_size_entities(), kb3.get_size_aliases())
 
     # STEP 5 : actually use the EL functionality
