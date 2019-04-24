@@ -7,6 +7,9 @@ from cpython.exc cimport PyErr_CheckSignals
 from spacy import util
 from spacy.errors import Errors, Warnings, user_warning
 
+from cymem.cymem cimport Pool
+from preshed.maps cimport PreshMap
+
 from cpython.mem cimport PyMem_Malloc
 from cpython.exc cimport PyErr_SetFromErrno
 
@@ -17,6 +20,8 @@ from libc.stdlib cimport qsort
 from .typedefs cimport hash_t
 
 from os import path
+from libcpp.vector cimport vector
+
 
 
 cdef class Candidate:
@@ -53,7 +58,6 @@ cdef class Candidate:
 
 
 cdef class KnowledgeBase:
-
     def __init__(self, Vocab vocab):
         self.vocab = vocab
         self.mem = Pool()
@@ -67,13 +71,13 @@ cdef class KnowledgeBase:
         return self.get_size_entities()
 
     def get_size_entities(self):
-        return self._entries.size() - 1  # not counting dummy element on index 0
+        return len(self._entry_index)
 
     def get_entity_strings(self):
         return [self.vocab.strings[x] for x in self._entry_index][1:] # removing the dummy element on index 0
 
     def get_size_aliases(self):
-        return self._aliases_table.size() - 1 # not counting dummy element on index
+        return len(self._alias_index)
 
     def get_alias_strings(self):
         return [self.vocab.strings[x] for x in self._alias_index][1:] # removing the dummy element on index 0
@@ -159,33 +163,44 @@ cdef class KnowledgeBase:
     def dump(self, loc):
         cdef Writer writer = Writer(loc)
 
-        for key, entry_index in self._entry_index.items():
+        # dumping the entry records in the order in which they are in the _entries vector.
+        # index 0 is a dummy object not stored in the _entry_index and can be ignored.
+        i = 1
+        for entry_hash, entry_index in sorted(self._entry_index.items(), key=lambda x: x[1]):
             entry = self._entries[entry_index]
             print("dumping")
             print("index", entry_index)
             print("hash", entry.entity_hash)
+            assert entry.entity_hash ==  entry_hash
+            assert entry_index == i
             print("prob", entry.prob)
             print("")
             writer.write(entry_index, entry.entity_hash, entry.prob)
+            i = i+1
 
         writer.close()
 
-    def load(self, loc):
+    cpdef load_bulk(self, int nr_entities, loc):
+        # TODO: nr_entities from header in file (Reader constructor)
         cdef int64_t entry_id
         cdef hash_t entity_hash
         cdef float prob
-        cdef _EntryC entry
+        cdef EntryC entry
         cdef int32_t dummy_value = 342
 
         cdef Reader reader = Reader(loc)
-        result = reader.read(self.mem, &entry_id, &entity_hash, &prob)  # -1: error, 0: eof after this one
-        while result:
-            print("loading")
-            print("entryID", entry_id)
-            print("hash", entity_hash)
-            print("prob", prob)
-            print("result:", result)
-            print("")
+        to_read = self.get_size_entities()
+
+        self._entry_index = PreshMap(nr_entities+1)
+        self._entries = entry_vec(nr_entities+1)
+
+        # we assume the data was written in sequence
+        # index 0 is a dummy object not stored in the _entry_index and can be ignored.
+        # TODO: should we initialize the dummy objects ?
+        cdef int i = 1
+        while reader.read(self.mem, &entry_id, &entity_hash, &prob) and i <= nr_entities:
+            assert i == entry_id
+
             entry.entity_hash = entity_hash
             entry.prob = prob
 
@@ -193,9 +208,18 @@ cdef class KnowledgeBase:
             entry.vector_rows = &dummy_value
             entry.feats_row = dummy_value
 
-            # TODO: use set instead of push_back to ensure the index remains the same?
-            self._entries.push_back(entry)
-            result = reader.read(self.mem, &entry_id, &entity_hash, &prob)
+            print("bulk loading")
+            print("i", i)
+            print("entryID", entry_id)
+            print("hash", entry.entity_hash)
+            print("prob", entry.prob)
+            print("")
+
+            self._entries[i] = entry
+            self._entry_index[entity_hash] = i
+
+            i += 1
+
 
 cdef class Writer:
     def __init__(self, object loc):
@@ -236,11 +260,6 @@ cdef class Reader:
         fclose(self._fp)
 
     cdef int read(self, Pool mem, int64_t* entry_id, hash_t* entity_hash, float* prob) except -1:
-        """ 
-        Return values:
-        -1: error during current read (EOF during call)
-        0: means we read the last line succesfully (EOF after call)
-        1: we can continue reading this file """
         status = fread(entry_id, sizeof(int64_t), 1, self._fp)
         if status < 1:
             if feof(self._fp):
@@ -263,3 +282,5 @@ cdef class Reader:
             return 0
         else:
             return 1
+
+

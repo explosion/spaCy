@@ -1,48 +1,17 @@
 """Knowledge-base for entity or concept linking."""
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
+
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
+from libc.stdio cimport FILE
 
 from spacy.vocab cimport Vocab
 from .typedefs cimport hash_t
 
-from libc.stdio cimport FILE
-
-
-# Internal struct, for storage and disambiguation. This isn't what we return
-# to the user as the answer to "here's your entity". It's the minimum number
-# of bits we need to keep track of the answers.
-cdef struct _EntryC:
-
-    # The hash of this entry's unique ID/name in the kB
-    hash_t entity_hash
-
-    # Allows retrieval of one or more vectors.
-    # Each element of vector_rows should be an index into a vectors table.
-    # Every entry should have the same number of vectors, so we can avoid storing
-    # the number of vectors in each knowledge-base struct
-    int32_t* vector_rows
-
-    # Allows retrieval of a struct of non-vector features. We could make this a
-    # pointer, but we have 32 bits left over in the struct after prob, so we'd
-    # like this to only be 32 bits. We can also set this to -1, for the common
-    # case where there are no features.
-    int32_t feats_row
-
-    # log probability of entity, based on corpus frequency
-    float prob
-
-
-# Each alias struct stores a list of Entry pointers with their prior probabilities
-# for this specific mention/alias.
-cdef struct _AliasC:
-
-    # All entry candidates for this alias
-    vector[int64_t] entry_indices
-
-    # Prior probability P(entity|alias) - should sum up to (at most) 1.
-    vector[float] probs
+from .structs cimport EntryC, AliasC
+ctypedef vector[EntryC] entry_vec
+ctypedef vector[AliasC] alias_vec
 
 
 # Object used by the Entity Linker that summarizes one entity-alias candidate combination.
@@ -68,7 +37,7 @@ cdef class KnowledgeBase:
     # over allocation.
     # In total we end up with (N*128*1.3)+(N*128*1.3) bits for N entries.
     # Storing 1m entries would take 41.6mb under this scheme.
-    cdef vector[_EntryC] _entries
+    cdef entry_vec _entries
 
     # This maps 64bit keys (hash of unique alias string)
     # to 64bit values (position of the _AliasC struct in the _aliases_table vector).
@@ -78,7 +47,7 @@ cdef class KnowledgeBase:
     # should be P(entity | mention), which is pretty important to know.
     # We can pack both pieces of information into a 64-bit value, to keep things
     # efficient.
-    cdef vector[_AliasC] _aliases_table
+    cdef alias_vec _aliases_table
 
     # This is the part which might take more space: storing various
     # categorical features for the entries, and storing vectors for disambiguation
@@ -98,6 +67,7 @@ cdef class KnowledgeBase:
     # optional data, we can let users configure a DB as the backend for this.
     cdef object _features_table
 
+
     cdef inline int64_t c_add_entity(self, hash_t entity_hash, float prob,
                                      int32_t* vector_rows, int feats_row) nogil:
         """Add an entry to the vector of entries.
@@ -107,7 +77,7 @@ cdef class KnowledgeBase:
         cdef int64_t new_index = self._entries.size()
 
         # Avoid struct initializer to enable nogil, cf https://github.com/cython/cython/issues/1642
-        cdef _EntryC entry
+        cdef EntryC entry
         entry.entity_hash = entity_hash
         entry.vector_rows = vector_rows
         entry.feats_row = feats_row
@@ -124,7 +94,7 @@ cdef class KnowledgeBase:
         cdef int64_t new_index = self._aliases_table.size()
 
         # Avoid struct initializer to enable nogil
-        cdef _AliasC alias
+        cdef AliasC alias
         alias.entry_indices = entry_indices
         alias.probs = probs
 
@@ -140,7 +110,7 @@ cdef class KnowledgeBase:
         cdef int32_t dummy_value = 0
 
         # Avoid struct initializer to enable nogil
-        cdef _EntryC entry
+        cdef EntryC entry
         entry.entity_hash = dummy_hash
         entry.vector_rows = &dummy_value
         entry.feats_row = dummy_value
@@ -152,19 +122,20 @@ cdef class KnowledgeBase:
         cdef vector[float] dummy_probs
         dummy_probs.push_back(0)
 
-        cdef _AliasC alias
+        cdef AliasC alias
         alias.entry_indices = dummy_entry_indices
         alias.probs = dummy_probs
 
         self._entries.push_back(entry)
         self._aliases_table.push_back(alias)
 
+    cpdef load_bulk(self, int nr_entities, loc)
+
 
 cdef class Writer:
     cdef FILE* _fp
 
     cdef int write(self, int64_t entry_id, hash_t entity_hash, float prob) except -1
-
 
 cdef class Reader:
     cdef FILE* _fp
