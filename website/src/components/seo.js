@@ -93,6 +93,7 @@ const SEO = ({ description, lang, title, section, sectionTitle, bodyClass }) => 
 
             return (
                 <Helmet
+                    defer={false}
                     htmlAttributes={{ lang }}
                     bodyAttributes={{ class: bodyClass }}
                     title={pageTitle}
