@@ -447,17 +447,7 @@ use the `get_doc()` utility function to construct it manually.
 
 ## Updating the website
 
-Our [website and docs](https://spacy.io) are implemented in
-[Jade/Pug](https://www.jade-lang.org), and built or served by
-[Harp](https://harpjs.com). Jade/Pug is an extensible templating language with a
-readable syntax, that compiles to HTML. Here's how to view the site locally:
-
-```bash
-sudo npm install --global harp
-git clone https://github.com/explosion/spaCy
-cd spaCy/website
-harp server
-```
+For instructions on how to build and run the [website](https://spacy.io) locally see **[Setup and installation](https://github.com/explosion/spaCy/blob/master/website/README.md#setup-and-installation-setup)** in the *website* directory's README.
 
 The docs can always use another example or more detail, and they should always
 be up to date and not misleading. To quickly find the correct file to edit,
