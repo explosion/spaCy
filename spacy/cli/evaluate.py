@@ -17,7 +17,7 @@ from .. import displacy
     gpu_id=("Use GPU", "option", "g", int),
     displacy_path=("Directory to output rendered parses as HTML", "option", "dp", str),
     displacy_limit=("Limit of parses to render as HTML", "option", "dl", int),
-    return_scores=("Return dict containing model scores", "flag", "r", bool),
+    return_scores=("Return dict containing model scores", "flag", "R", bool),
 )
 def evaluate(
     model,

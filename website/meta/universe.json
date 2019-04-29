@@ -885,36 +885,6 @@
         },
         {
             "type": "education",
-            "id": "datacamp-nlp-fundamentals",
-            "title": "Natural Language Processing Fundamentals in Python",
-            "slogan": "Datacamp, 2017",
-            "description": "In this course, you'll learn Natural Language Processing (NLP) basics, such as how to identify and separate words, how to extract topics in a text, and how to build your own fake news classifier. You'll also learn how to use basic libraries such as NLTK, alongside libraries which utilize deep learning to solve common NLP problems. This course will give you the foundation to process and parse text as you move forward in your Python learning.",
-            "url": "https://www.datacamp.com/courses/natural-language-processing-fundamentals-in-python",
-            "thumb": "https://i.imgur.com/0Zks7c0.jpg",
-            "author": "Katharine Jarmul",
-            "author_links": {
-                "twitter": "kjam"
-            },
-            "category": ["courses"]
-        },
-        {
-            "type": "education",
-            "id": "datacamp-advanced-nlp",
-            "title": "Advanced Natural Language Processing with spaCy",
-            "slogan": "Datacamp, 2019",
-            "description": "If you're working with a lot of text, you'll eventually want to know more about it. For example, what's it about? What do the words mean in context? Who is doing what to whom? What companies and products are mentioned? Which texts are similar to each other? In this course, you'll learn how to use spaCy, a fast-growing industry standard library for NLP in Python, to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
-            "url": "https://www.datacamp.com/courses/advanced-nlp-with-spacy",
-            "thumb": "https://i.imgur.com/0Zks7c0.jpg",
-            "author": "Ines Montani",
-            "author_links": {
-                "twitter": "_inesmontani",
-                "github": "ines",
-                "website": "https://ines.io"
-            },
-            "category": ["courses"]
-        },
-        {
-            "type": "education",
             "id": "learning-path-spacy",
             "title": "Learning Path: Mastering spaCy for Natural Language Processing",
             "slogan": "O'Reilly, 2017",
