@@ -1,3 +1,5 @@
+import spacy
+from spacy.lang.en import English
 from ..util import make_tempdir
 from ...util import ensure_path
 
@@ -5,17 +7,8 @@ from spacy.kb import KnowledgeBase
 
 
 def test_serialize_kb_disk(en_vocab):
-    kb1 = KnowledgeBase(vocab=en_vocab)
-
-    kb1.add_entity(entity="Q53", prob=0.33)
-    kb1.add_entity(entity="Q17", prob=0.2)
-    kb1.add_entity(entity="Q007", prob=0.7)
-    kb1.add_entity(entity="Q44", prob=0.4)
-    kb1.add_alias(alias="double07", entities=["Q17", "Q007"], probabilities=[0.1, 0.9])
-    kb1.add_alias(alias="guy", entities=["Q53", "Q007", "Q17", "Q44"], probabilities=[0.3, 0.3, 0.2, 0.1])
-    kb1.add_alias(alias="random", entities=["Q007"], probabilities=[1.0])
-
     # baseline assertions
+    kb1 = _get_dummy_kb(en_vocab)
     _check_kb(kb1)
 
     # dumping to file & loading back in
@@ -32,6 +25,20 @@ def test_serialize_kb_disk(en_vocab):
 
     # final assertions
     _check_kb(kb2)
+
+
+def _get_dummy_kb(vocab):
+    kb = KnowledgeBase(vocab=vocab)
+
+    kb.add_entity(entity="Q53", prob=0.33)
+    kb.add_entity(entity="Q17", prob=0.2)
+    kb.add_entity(entity="Q007", prob=0.7)
+    kb.add_entity(entity="Q44", prob=0.4)
+    kb.add_alias(alias="double07", entities=["Q17", "Q007"], probabilities=[0.1, 0.9])
+    kb.add_alias(alias="guy", entities=["Q53", "Q007", "Q17", "Q44"], probabilities=[0.3, 0.3, 0.2, 0.1])
+    kb.add_alias(alias="random", entities=["Q007"], probabilities=[1.0])
+
+    return kb
 
 
 def _check_kb(kb):

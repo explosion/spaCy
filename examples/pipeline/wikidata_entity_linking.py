@@ -1,7 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-"""Demonstrate how to build a knowledge base from WikiData and run an Entity Linking algorithm.
+from spacy.vocab import Vocab
+
+"""
+Demonstrate how to build a knowledge base from WikiData and run an Entity Linking algorithm.
 """
 import re
 import json
@@ -17,6 +20,7 @@ ENWIKI_INDEX = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-ar
 PRIOR_PROB = 'C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv'
 
 KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb'
+VOCAB_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/vocab'
 
 
 # these will/should be matched ignoring case
@@ -40,12 +44,16 @@ map_alias_to_link = dict()
 def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     kb = KnowledgeBase(vocab=vocab)
 
-    id_to_title = _read_wikidata(limit=1000)
-    title_to_id = {v:k for k,v in id_to_title.items()}
+    id_to_title = _read_wikidata_entities(limit=None)
+    title_to_id = {v: k for k, v in id_to_title.items()}
+
+    entity_list = list(id_to_title.keys())
+    title_list = [id_to_title[x] for x in entity_list]
+    entity_frequencies = _get_entity_frequencies(entities=title_list, to_print=False)
 
     _add_entities(kb,
-                  entities=id_to_title.keys(),
-                  probs=[0.4 for x in id_to_title.keys()],
+                  entities=entity_list,
+                  probs=entity_frequencies,
                   to_print=to_print)
 
     _add_aliases(kb,
@@ -64,6 +72,38 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     return kb
 
 
+def _get_entity_frequencies(entities, to_print=False):
+    count_entities = [0 for _ in entities]
+    total_count = 0
+
+    with open(PRIOR_PROB, mode='r', encoding='utf8') as prior_file:
+        # skip header
+        prior_file.readline()
+        line = prior_file.readline()
+        # we can read this file sequentially, it's sorted by alias, and then by count
+
+        while line:
+            splits = line.replace('\n', "").split(sep='|')
+            # alias = splits[0]
+            count = int(splits[1])
+            entity = splits[2]
+
+            if entity in entities:
+                index = entities.index(entity)
+                count_entities[index] = count_entities[index] + count
+
+            total_count += count
+
+            line = prior_file.readline()
+
+    if to_print:
+        for entity, count in zip(entities, count_entities):
+            print("Entity count:", entity, count)
+        print("Total count:", total_count)
+
+    return [x*100 / total_count for x in count_entities]
+
+
 def _add_entities(kb, entities, probs, to_print=False):
     for entity, prob in zip(entities, probs):
         kb.add_entity(entity=entity, prob=prob)
@@ -76,7 +116,7 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, to_print=Fals
     wp_titles = title_to_id.keys()
 
     if to_print:
-        print("wp titles", wp_titles)
+        print("wp titles:", wp_titles)
 
     # adding aliases with prior probabilities
     with open(PRIOR_PROB, mode='r', encoding='utf8') as prior_file:
@@ -125,89 +165,100 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, to_print=Fals
         print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
 
 
-def _read_wikidata(limit=None, to_print=False):
-    """ Read the JSON wiki data """
+def _read_wikidata_entities(limit=None, to_print=False):
+    """ Read the JSON wiki data and parse out the entities"""
 
     languages = {'en', 'de'}
     prop_filter = {'P31': {'Q5', 'Q15632617'}}     # currently defined as OR: one property suffices to be selected
-    sites = {'enwiki'}
+    site_filter = 'enwiki'
 
     entity_dict = dict()
 
+    # parse appropriate fields - depending on what we need in the KB
+    parse_properties = False
+    parse_sitelinks = True
+    parse_labels = False
+    parse_descriptions = False
+    parse_aliases = False
+
     with bz2.open(WIKIDATA_JSON, mode='rb') as file:
         line = file.readline()
-        cnt = 1
+        cnt = 0
         while line and (not limit or cnt < limit):
+            if cnt % 100000 == 0:
+                print(datetime.datetime.now(), "processed", cnt, "lines of WikiData dump")
             clean_line = line.strip()
             if clean_line.endswith(b","):
                 clean_line = clean_line[:-1]
             if len(clean_line) > 1:
                 obj = json.loads(clean_line)
-                keep = False
+                unique_id = obj["id"]
+                entry_type = obj["type"]
 
-                # filtering records on their properties
-                # TODO: filter on rank:  preferred, normal or deprecated
-                claims = obj["claims"]
-                for prop, value_set in prop_filter.items():
-                    claim_property = claims.get(prop, None)
-                    if claim_property:
-                        for cp in claim_property:
-                            cp_id = cp['mainsnak'].get('datavalue', {}).get('value', {}).get('id')
-                            if cp_id in value_set:
-                                keep = True
+                if unique_id[0] == 'Q' and entry_type == "item":
+                    # filtering records on their properties
+                    keep = False
+                    claims = obj["claims"]
+                    for prop, value_set in prop_filter.items():
+                        claim_property = claims.get(prop, None)
+                        if claim_property:
+                            for cp in claim_property:
+                                cp_id = cp['mainsnak'].get('datavalue', {}).get('value', {}).get('id')
+                                cp_rank = cp['rank']
+                                if cp_rank != "deprecated" and cp_id in value_set:
+                                    keep = True
 
-                if keep:
-                    unique_id = obj["id"]
-                    entry_type = obj["type"]
+                    if keep:
+                        if to_print:
+                            print("ID:", unique_id)
+                            print("type:", entry_type)
 
-                    if to_print:
-                        print("ID:", unique_id)
-                        print("type:", entry_type)
+                        # parsing all properties that refer to other entities
+                        if parse_properties:
+                            for prop, claim_property in claims.items():
+                                cp_dicts = [cp['mainsnak']['datavalue'].get('value') for cp in claim_property if cp['mainsnak'].get('datavalue')]
+                                cp_values = [cp_dict.get('id') for cp_dict in cp_dicts if isinstance(cp_dict, dict) if cp_dict.get('id') is not None]
+                                if cp_values:
+                                    if to_print:
+                                        print("prop:", prop, cp_values)
 
-                    # parsing all properties that refer to other entities
-                    for prop, claim_property in claims.items():
-                        cp_dicts = [cp['mainsnak']['datavalue'].get('value') for cp in claim_property if cp['mainsnak'].get('datavalue')]
-                        cp_values = [cp_dict.get('id') for cp_dict in cp_dicts if isinstance(cp_dict, dict) if cp_dict.get('id') is not None]
-                        if cp_values:
-                            if to_print:
-                                print("prop:", prop, cp_values)
-
-                    entry_sites = obj["sitelinks"]
-                    for site in sites:
-                        site_value = entry_sites.get(site, None)
-                        if site_value:
-                            if to_print:
-                                print(site, ":", site_value['title'])
-                            if site == "enwiki":
+                        if parse_sitelinks:
+                            site_value = obj["sitelinks"].get(site_filter, None)
+                            if site_value:
+                                if to_print:
+                                    print(site_filter, ":", site_value['title'])
                                 entity_dict[unique_id] = site_value['title']
 
-                    labels = obj["labels"]
-                    if labels:
-                        for lang in languages:
-                            lang_label = labels.get(lang, None)
-                            if lang_label:
-                                if to_print:
-                                    print("label (" + lang + "):", lang_label["value"])
+                        if parse_labels:
+                            labels = obj["labels"]
+                            if labels:
+                                for lang in languages:
+                                    lang_label = labels.get(lang, None)
+                                    if lang_label:
+                                        if to_print:
+                                            print("label (" + lang + "):", lang_label["value"])
 
-                    descriptions = obj["descriptions"]
-                    if descriptions:
-                        for lang in languages:
-                            lang_descr = descriptions.get(lang, None)
-                            if lang_descr:
-                                if to_print:
-                                    print("description (" + lang + "):", lang_descr["value"])
+                        if parse_descriptions:
+                            descriptions = obj["descriptions"]
+                            if descriptions:
+                                for lang in languages:
+                                    lang_descr = descriptions.get(lang, None)
+                                    if lang_descr:
+                                        if to_print:
+                                            print("description (" + lang + "):", lang_descr["value"])
 
-                    aliases = obj["aliases"]
-                    if aliases:
-                        for lang in languages:
-                            lang_aliases = aliases.get(lang, None)
-                            if lang_aliases:
-                                for item in lang_aliases:
-                                    if to_print:
-                                        print("alias (" + lang + "):", item["value"])
+                        if parse_aliases:
+                            aliases = obj["aliases"]
+                            if aliases:
+                                for lang in languages:
+                                    lang_aliases = aliases.get(lang, None)
+                                    if lang_aliases:
+                                        for item in lang_aliases:
+                                            if to_print:
+                                                print("alias (" + lang + "):", item["value"])
 
-                    if to_print:
-                        print()
+                        if to_print:
+                            print()
             line = file.readline()
             cnt += 1
 
@@ -236,7 +287,7 @@ def _read_wikipedia_prior_probs():
         cnt = 0
         while line:
             if cnt % 5000000 == 0:
-                print(datetime.datetime.now(), "processed", cnt, "lines")
+                print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
             clean_line = line.strip().decode("utf-8")
 
             matches = link_regex.findall(clean_line)
@@ -394,7 +445,8 @@ def add_el(kb, nlp):
 
     text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
            "Douglas reminds us to always bring our towel. " \
-           "The main character in Doug's novel is the man Arthur Dent, but Douglas doesn't write about George Washington."
+           "The main character in Doug's novel is the man Arthur Dent, " \
+           "but Douglas doesn't write about George Washington or Homer Simpson."
     doc = nlp(text)
 
     print()
@@ -414,48 +466,46 @@ def capitalize_first(text):
         result += text[1:]
     return result
 
+
 if __name__ == "__main__":
+    to_create_prior_probs = False
+    to_create_kb = True
+    to_read_kb = False
+
     # STEP 1 : create prior probabilities from WP
     # run only once !
-    # _read_wikipedia_prior_probs()
+    if to_create_prior_probs:
+        _read_wikipedia_prior_probs()
 
-    # STEP 2 : create KB
-    # nlp = spacy.load('en_core_web_sm')
-    # my_kb = create_kb(nlp.vocab, max_entities_per_alias=10, min_occ=5, to_print=True)
+    if to_create_kb:
+        # STEP 2 : create KB
+        my_nlp = spacy.load('en_core_web_sm')
+        my_vocab = my_nlp.vocab
+        my_kb = create_kb(my_vocab, max_entities_per_alias=10, min_occ=5, to_print=False)
+        print("kb entities:", my_kb.get_size_entities())
+        print("kb aliases:", my_kb.get_size_aliases())
 
-    # STEP 3 : write KB to file
-    nlp1 = spacy.load('en_core_web_sm')
-    my_vocab = nlp1.vocab
-    kb1 = KnowledgeBase(vocab=my_vocab)
+        # STEP 3 : write KB to file
+        my_kb.dump(KB_FILE)
+        my_vocab.to_disk(VOCAB_DIR)
 
-    kb1.add_entity(entity="Q53", prob=0.33)
-    kb1.add_entity(entity="Q17", prob=0.1)
-    kb1.add_entity(entity="Q007", prob=0.7)
-    kb1.add_entity(entity="Q44", prob=0.4)
-    kb1.add_alias(alias="double07", entities=["Q007", "Q17"], probabilities=[0.9, 0.1])
-    kb1.add_alias(alias="guy", entities=["Q53", "Q007", "Q17", "Q44"], probabilities=[0.3, 0.3, 0.2, 0.1])
-    kb1.add_alias(alias="random", entities=["Q007"], probabilities=[1.0])
+    if to_read_kb:
+        # STEP 4 : read KB back in from file
+        my_vocab = Vocab()
+        my_vocab.from_disk(VOCAB_DIR)
+        my_kb = KnowledgeBase(vocab=my_vocab)
+        my_kb.load_bulk(KB_FILE)
+        print("kb entities:", my_kb.get_size_entities())
+        print("kb aliases:", my_kb.get_size_aliases())
 
-    print("kb1 size:", len(kb1), kb1.get_size_entities(), kb1.get_size_aliases())
-    print("kb1 entities:", kb1.get_entity_strings())
-    print("kb1 aliases:", kb1.get_alias_strings())
+        # test KB
+        candidates = my_kb.get_candidates("Bush")
+        for c in candidates:
+            print()
+            print("entity:", c.entity_)
+            print("entity freq:", c.entity_freq)
+            print("alias:", c.alias_)
+            print("prior prob:", c.prior_prob)
 
-    print()
-    print("dumping kb1")
-    print(KB_FILE, type(KB_FILE))
-    kb1.dump(KB_FILE)
-
-    # STEP 4 : read KB back in from file
-
-    kb3 = KnowledgeBase(vocab=my_vocab)
-
-    print("loading kb3")
-    kb3.load_bulk(KB_FILE)
-
-    print()
-    print("kb3 size:", len(kb3), kb3.get_size_entities(), kb3.get_size_aliases())
-    print("kb3 entities:", kb3.get_entity_strings())
-    print("kb3 aliases:", kb3.get_alias_strings())
-
-    # STEP 5 : actually use the EL functionality
+    # STEP 5: add KB to NLP pipeline
     # add_el(my_kb, nlp)
