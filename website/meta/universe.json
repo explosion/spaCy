@@ -1345,7 +1345,7 @@
             "slogan": "A little GUI for training models with spaCy",
             "description": "Neural gym is a python application with graphical interface to train models with spaCy. Run application, select an output folder, a training data file in spaCy data format, a spacy model or blank model and press 'Start'.",
             "github": "d5555/NeuralGym",
-            "url": "https://github.com/d5555/NeuralGym"
+            "url": "https://github.com/d5555/NeuralGym",
             "image": "https://github.com/d5555/NeuralGym/raw/master/NGym.png",
             "thumb": "https://github.com/d5555/NeuralGym/raw/master/NGym/web.png",
             "author": "d5555",
