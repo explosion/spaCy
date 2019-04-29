@@ -54,11 +54,11 @@ def _check_kb(kb):
     assert len(candidates) == 2
 
     assert candidates[0].entity_ == "Q007"
-    assert candidates[0].entity_freq < 0.701 and candidates[0].entity_freq > 0.699
+    assert 0.6999 < candidates[0].entity_freq < 0.701
     assert candidates[0].alias_ == "double07"
-    assert candidates[0].prior_prob < 0.901 and candidates[0].prior_prob > 0.899
+    assert 0.899 < candidates[0].prior_prob < 0.901
 
     assert candidates[1].entity_ == "Q17"
-    assert candidates[1].entity_freq < 0.201 and candidates[1].entity_freq > 0.199
+    assert 0.199 < candidates[1].entity_freq < 0.201
     assert candidates[1].alias_ == "double07"
-    assert candidates[1].prior_prob < 0.101 and candidates[1].prior_prob > 0.099
+    assert 0.099 < candidates[1].prior_prob < 0.101
