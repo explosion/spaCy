@@ -34,6 +34,7 @@ class ThaiTokenizer(DummyTokenizer):
 
 class ThaiDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda _text: "th"
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
