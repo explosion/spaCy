@@ -5,6 +5,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .norm_exceptions import NORM_EXCEPTIONS
+from .lex_attrs import LEX_ATTRS
 
 from ..norm_exceptions import BASE_NORMS
 from ...attrs import LANG, NORM
