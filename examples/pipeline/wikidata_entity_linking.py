@@ -49,7 +49,8 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     print()
     print("1. _read_wikidata_entities", datetime.datetime.now())
     print()
-    title_to_id = _read_wikidata_entities(limit=100000)
+    # title_to_id = _read_wikidata_entities_regex(limit=1000)
+    title_to_id = _read_wikidata_entities_json(limit=1000)
 
     title_list = list(title_to_id.keys())
     entity_list = [title_to_id[x] for x in title_list]
@@ -62,19 +63,13 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     print()
     print("3. _add_entities", datetime.datetime.now())
     print()
-    _add_entities(kb,
-                  entities=entity_list,
-                  probs=entity_frequencies,
-                  to_print=to_print)
+    kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=None, feature_list=None)
+    # _add_entities(kb, entities=entity_list, probs=entity_frequencies, to_print=to_print)
 
     print()
     print("4. _add_aliases", datetime.datetime.now())
     print()
-    _add_aliases(kb,
-                 title_to_id=title_to_id,
-                 max_entities_per_alias=max_entities_per_alias,
-                 min_occ=min_occ,
-                 to_print=to_print)
+    _add_aliases(kb, title_to_id=title_to_id, max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,)
 
     # TODO: read wikipedia texts for entity context
     # _read_wikipedia()
@@ -82,6 +77,8 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     if to_print:
         print()
         print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
+
+    print("done with kb", datetime.datetime.now())
 
     return kb
 
@@ -131,8 +128,7 @@ def _write_entity_counts(to_print=False):
         print("Total count:", total_count)
 
 
-def _add_entities(kb, entities, probs, to_print=False):
-    # TODO: this should be a bulk method
+def _add_entities_depr(kb, entities, probs, to_print=False):
     for entity, prob in zip(entities, probs):
         kb.add_entity(entity=entity, prob=prob)
 
@@ -193,7 +189,7 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, to_print=Fals
         print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
 
 
-def _read_wikidata_entities(limit=None, to_print=False):
+def _read_wikidata_entities_json(limit=None, to_print=False):
     """ Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines. """
 
     languages = {'en', 'de'}
@@ -259,6 +255,7 @@ def _read_wikidata_entities(limit=None, to_print=False):
                                 if to_print:
                                     print(site_filter, ":", site)
                                 title_to_id[site] = unique_id
+                                # print(site, "for", unique_id)
 
                         if parse_labels:
                             labels = obj["labels"]
@@ -290,6 +287,56 @@ def _read_wikidata_entities(limit=None, to_print=False):
 
                         if to_print:
                             print()
+            line = file.readline()
+            cnt += 1
+
+    return title_to_id
+
+
+def _read_wikidata_entities_regex_depr(limit=None, to_print=False):
+    """ Read the JSON wiki data and parse out the entities with regular expressions. Takes XXX to parse 55M lines. """
+
+    regex_p31 = re.compile(r'mainsnak[^}]*\"P31\"[^}]*}', re.UNICODE)
+    regex_id = re.compile(r'\"id\":"Q[0-9]*"', re.UNICODE)
+    regex_enwiki = re.compile(r'\"enwiki\":[^}]*}', re.UNICODE)
+    regex_title = re.compile(r'\"title\":"[^"]*"', re.UNICODE)
+
+    title_to_id = dict()
+
+    with bz2.open(WIKIDATA_JSON, mode='rb') as file:
+        line = file.readline()
+        cnt = 0
+        while line and (not limit or cnt < limit):
+            if cnt % 100000 == 0:
+                print(datetime.datetime.now(), "processed", cnt, "lines of WikiData dump")
+            clean_line = line.strip()
+            if clean_line.endswith(b","):
+                clean_line = clean_line[:-1]
+            if len(clean_line) > 1:
+                clean_line = line.strip().decode("utf-8")
+                keep = False
+
+                p31_matches = regex_p31.findall(clean_line)
+                if p31_matches:
+                    for p31_match in p31_matches:
+                        id_matches = regex_id.findall(p31_match)
+                        for id_match in id_matches:
+                            id_match = id_match[6:][:-1]
+                            if id_match == "Q5" or id_match == "Q15632617":
+                                keep = True
+
+                if keep:
+                    id_match = regex_id.search(clean_line).group(0)
+                    id_match = id_match[6:][:-1]
+
+                    enwiki_matches = regex_enwiki.findall(clean_line)
+                    if enwiki_matches:
+                        for enwiki_match in enwiki_matches:
+                            title_match = regex_title.search(enwiki_match).group(0)
+                            title = title_match[9:][:-1]
+                            title_to_id[title] = id_match
+                            # print(title, "for", id_match)
+
             line = file.readline()
             cnt += 1
 
@@ -499,50 +546,65 @@ def capitalize_first(text):
 
 
 if __name__ == "__main__":
+    print("START", datetime.datetime.now())
+
     to_create_prior_probs = False
     to_create_entity_counts = False
     to_create_kb = True
-    to_read_kb = False
+    to_read_kb = True
 
     # STEP 1 : create prior probabilities from WP
     # run only once !
     if to_create_prior_probs:
+        print("STEP 1: to_create_prior_probs", datetime.datetime.now())
         _read_wikipedia_prior_probs()
+        print()
 
     # STEP 2 : deduce entity frequencies from WP
     # run only once !
     if to_create_entity_counts:
+        print("STEP 2: to_create_entity_counts", datetime.datetime.now())
         _write_entity_counts()
+        print()
 
     if to_create_kb:
         # STEP 3 : create KB
+        print("STEP 3: to_create_kb", datetime.datetime.now())
         my_nlp = spacy.load('en_core_web_sm')
         my_vocab = my_nlp.vocab
         my_kb = create_kb(my_vocab, max_entities_per_alias=10, min_occ=5, to_print=False)
         print("kb entities:", my_kb.get_size_entities())
         print("kb aliases:", my_kb.get_size_aliases())
+        print()
 
         # STEP 4 : write KB to file
+        print("STEP 4: write KB", datetime.datetime.now())
         my_kb.dump(KB_FILE)
         my_vocab.to_disk(VOCAB_DIR)
+        print()
 
     if to_read_kb:
         # STEP 5 : read KB back in from file
+        print("STEP 5: to_read_kb", datetime.datetime.now())
         my_vocab = Vocab()
         my_vocab.from_disk(VOCAB_DIR)
         my_kb = KnowledgeBase(vocab=my_vocab)
         my_kb.load_bulk(KB_FILE)
         print("kb entities:", my_kb.get_size_entities())
         print("kb aliases:", my_kb.get_size_aliases())
+        print()
 
         # test KB
         candidates = my_kb.get_candidates("Bush")
         for c in candidates:
-            print()
             print("entity:", c.entity_)
             print("entity freq:", c.entity_freq)
             print("alias:", c.alias_)
             print("prior prob:", c.prior_prob)
+            print()
 
     # STEP 6: add KB to NLP pipeline
+    # print("STEP 6: use KB", datetime.datetime.now())
     # add_el(my_kb, nlp)
+
+    print("STOP", datetime.datetime.now())

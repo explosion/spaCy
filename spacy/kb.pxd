@@ -131,6 +131,8 @@ cdef class KnowledgeBase:
         self._aliases_table.push_back(alias)
 
     cpdef load_bulk(self, loc)
+    cpdef set_entities(self, entity_list, prob_list, vector_list, feature_list)
+    cpdef set_aliases(self, alias_list, entities_list, probabilities_list)
 
 
 cdef class Writer:
