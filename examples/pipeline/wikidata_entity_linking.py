@@ -50,7 +50,7 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     print("1. _read_wikidata_entities", datetime.datetime.now())
     print()
     # title_to_id = _read_wikidata_entities_regex(limit=1000)
-    title_to_id = _read_wikidata_entities_json(limit=1000)
+    title_to_id = _read_wikidata_entities_json(limit=None)
 
     title_list = list(title_to_id.keys())
     entity_list = [title_to_id[x] for x in title_list]
@@ -209,7 +209,7 @@ def _read_wikidata_entities_json(limit=None, to_print=False):
         line = file.readline()
         cnt = 0
         while line and (not limit or cnt < limit):
-            if cnt % 100000 == 0:
+            if cnt % 500000 == 0:
                 print(datetime.datetime.now(), "processed", cnt, "lines of WikiData dump")
             clean_line = line.strip()
             if clean_line.endswith(b","):
@@ -307,7 +307,7 @@ def _read_wikidata_entities_regex_depr(limit=None, to_print=False):
         line = file.readline()
         cnt = 0
         while line and (not limit or cnt < limit):
-            if cnt % 100000 == 0:
+            if cnt % 500000 == 0:
                 print(datetime.datetime.now(), "processed", cnt, "lines of WikiData dump")
             clean_line = line.strip()
             if clean_line.endswith(b","):
