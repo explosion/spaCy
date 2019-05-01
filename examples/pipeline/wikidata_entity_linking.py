@@ -61,13 +61,13 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     entity_frequencies = _get_entity_frequencies(entities=title_list)
 
     print()
-    print("3. _add_entities", datetime.datetime.now())
+    print("3. adding", len(entity_list), "entities", datetime.datetime.now())
     print()
     kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=None, feature_list=None)
     # _add_entities(kb, entities=entity_list, probs=entity_frequencies, to_print=to_print)
 
     print()
-    print("4. _add_aliases", datetime.datetime.now())
+    print("4. adding aliases", datetime.datetime.now())
     print()
     _add_aliases(kb, title_to_id=title_to_id, max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,)
 
@@ -171,7 +171,10 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, to_print=Fals
                             prior_probs.append(p_entity_givenalias)
 
                     if selected_entities:
-                        kb.add_alias(alias=previous_alias, entities=selected_entities, probabilities=prior_probs)
+                        try:
+                            kb.add_alias(alias=previous_alias, entities=selected_entities, probabilities=prior_probs)
+                        except ValueError as e:
+                            print(e)
                 total_count = 0
                 counts = list()
                 entities = list()

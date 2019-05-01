@@ -179,9 +179,9 @@ cdef class KnowledgeBase:
                                                 entities_length=len(entities),
                                                 probabilities_length=len(probabilities)))
 
-        # Throw an error if the probabilities sum up to more than 1
+        # Throw an error if the probabilities sum up to more than 1 (allow for some rounding errors)
         prob_sum = sum(probabilities)
-        if prob_sum > 1:
+        if prob_sum > 1.00001:
             raise ValueError(Errors.E133.format(alias=alias, sum=prob_sum))
 
         cdef hash_t alias_hash = self.vocab.strings.add(alias)
