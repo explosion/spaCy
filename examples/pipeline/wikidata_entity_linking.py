@@ -49,7 +49,7 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     print()
     print("1. _read_wikidata_entities", datetime.datetime.now())
     print()
-    # title_to_id = _read_wikidata_entities_regex(limit=1000)
+    # title_to_id = _read_wikidata_entities_regex_depr(limit=1000)
     title_to_id = _read_wikidata_entities_json(limit=None)
 
     title_list = list(title_to_id.keys())
@@ -64,7 +64,6 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     print("3. adding", len(entity_list), "entities", datetime.datetime.now())
     print()
     kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=None, feature_list=None)
-    # _add_entities(kb, entities=entity_list, probs=entity_frequencies, to_print=to_print)
 
     print()
     print("4. adding aliases", datetime.datetime.now())
@@ -126,14 +125,6 @@ def _write_entity_counts(to_print=False):
         for entity, count in entity_to_count.items():
             print("Entity count:", entity, count)
         print("Total count:", total_count)
-
-
-def _add_entities_depr(kb, entities, probs, to_print=False):
-    for entity, prob in zip(entities, probs):
-        kb.add_entity(entity=entity, prob=prob)
-
-    if to_print:
-        print("added", kb.get_size_entities(), "entities:", kb.get_entity_strings())
 
 
 def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, to_print=False):
@@ -553,7 +544,7 @@ if __name__ == "__main__":
 
     to_create_prior_probs = False
     to_create_entity_counts = False
-    to_create_kb = True
+    to_create_kb = False
     to_read_kb = True
 
     # STEP 1 : create prior probabilities from WP
