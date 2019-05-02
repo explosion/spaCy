@@ -10,8 +10,12 @@ import json
 import spacy
 import datetime
 import bz2
+
 from spacy.kb import KnowledgeBase
 from spacy.vocab import Vocab
+
+# requires: pip install neuralcoref --no-binary neuralcoref
+# import neuralcoref
 
 # TODO: remove hardcoded paths
 WIKIDATA_JSON = 'C:/Users/Sofie/Documents/data/wikidata/wikidata-20190304-all.json.bz2'
@@ -20,6 +24,7 @@ ENWIKI_INDEX = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-ar
 
 PRIOR_PROB = 'C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv'
 ENTITY_COUNTS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_freq.csv'
+ENTITY_DEFS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_defs.csv'
 
 KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb'
 VOCAB_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/vocab'
@@ -43,7 +48,151 @@ wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
 map_alias_to_link = dict()
 
 
-def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
+def read_wikipedia_prior_probs():
+    """
+    STEP 1: Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities
+    The full file takes about 2h to parse 1100M lines (update printed every 5M lines).
+    It works relatively fast because we don't care about which article we parsed the interwiki from,
+    we just process line by line.
+    """
+
+    with bz2.open(ENWIKI_DUMP, mode='rb') as file:
+        line = file.readline()
+        cnt = 0
+        while line:
+            if cnt % 5000000 == 0:
+                print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
+            clean_line = line.strip().decode("utf-8")
+
+            aliases, entities, normalizations = _get_wp_links(clean_line)
+            for alias, entity, norm in zip(aliases, entities, normalizations):
+                _store_alias(alias, entity, normalize_alias=norm, normalize_entity=True)
+                _store_alias(alias, entity, normalize_alias=norm, normalize_entity=True)
+
+            line = file.readline()
+            cnt += 1
+
+    # write all aliases and their entities and occurrences to file
+    with open(PRIOR_PROB, mode='w', encoding='utf8') as outputfile:
+        outputfile.write("alias" + "|" + "count" + "|" + "entity" + "\n")
+        for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
+            for entity, count in sorted(alias_dict.items(), key=lambda x: x[1], reverse=True):
+                outputfile.write(alias + "|" + str(count) + "|" + entity + "\n")
+
+
+# find the links
+link_regex = re.compile(r'\[\[[^\[\]]*\]\]')
+
+# match on interwiki links, e.g. `en:` or `:fr:`
+ns_regex = r":?" + "[a-z][a-z]" + ":"
+
+# match on Namespace: optionally preceded by a :
+for ns in wiki_namespaces:
+    ns_regex += "|" + ":?" + ns + ":"
+
+ns_regex = re.compile(ns_regex, re.IGNORECASE)
+
+
+def _get_wp_links(text):
+    aliases = []
+    entities = []
+    normalizations = []
+
+    matches = link_regex.findall(text)
+    for match in matches:
+        match = match[2:][:-2].replace("_", " ").strip()
+
+        if ns_regex.match(match):
+            pass  # ignore namespaces at the beginning of the string
+
+        # this is a simple link, with the alias the same as the mention
+        elif "|" not in match:
+            aliases.append(match)
+            entities.append(match)
+            normalizations.append(True)
+
+        # in wiki format, the link is written as [[entity|alias]]
+        else:
+            splits = match.split("|")
+            entity = splits[0].strip()
+            alias = splits[1].strip()
+            # specific wiki format  [[alias (specification)|]]
+            if len(alias) == 0 and "(" in entity:
+                alias = entity.split("(")[0]
+                aliases.append(alias)
+                entities.append(entity)
+                normalizations.append(False)
+            else:
+                aliases.append(alias)
+                entities.append(entity)
+                normalizations.append(False)
+
+    return aliases, entities, normalizations
+
+
+def _store_alias(alias, entity, normalize_alias=False, normalize_entity=True):
+    alias = alias.strip()
+    entity = entity.strip()
+
+    # remove everything after # as this is not part of the title but refers to a specific paragraph
+    if normalize_entity:
+        # wikipedia titles are always capitalized
+        entity = _capitalize_first(entity.split("#")[0])
+    if normalize_alias:
+        alias = alias.split("#")[0]
+
+    if alias and entity:
+        alias_dict = map_alias_to_link.get(alias, dict())
+        entity_count = alias_dict.get(entity, 0)
+        alias_dict[entity] = entity_count + 1
+        map_alias_to_link[alias] = alias_dict
+
+
+def _capitalize_first(text):
+    if not text:
+        return None
+    result = text[0].capitalize()
+    if len(result) > 0:
+        result += text[1:]
+    return result
+
+
+def write_entity_counts(to_print=False):
+    """ STEP 2: write entity counts  """
+    entity_to_count = dict()
+    total_count = 0
+
+    with open(PRIOR_PROB, mode='r', encoding='utf8') as prior_file:
+        # skip header
+        prior_file.readline()
+        line = prior_file.readline()
+
+        while line:
+            splits = line.replace('\n', "").split(sep='|')
+            # alias = splits[0]
+            count = int(splits[1])
+            entity = splits[2]
+
+            current_count = entity_to_count.get(entity, 0)
+            entity_to_count[entity] = current_count + count
+
+            total_count += count
+
+            line = prior_file.readline()
+
+    with open(ENTITY_COUNTS, mode='w', encoding='utf8') as entity_file:
+        entity_file.write("entity" + "|" + "count" + "\n")
+        for entity, count in entity_to_count.items():
+            entity_file.write(entity + "|" + str(count) + "\n")
+
+    if to_print:
+        for entity, count in entity_to_count.items():
+            print("Entity count:", entity, count)
+        print("Total count:", total_count)
+
+
+def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False, write_entity_defs=True):
+    """ STEP 3: create the knowledge base """
     kb = KnowledgeBase(vocab=vocab)
 
     print()
@@ -51,6 +200,13 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False):
     print()
     # title_to_id = _read_wikidata_entities_regex_depr(limit=1000)
     title_to_id = _read_wikidata_entities_json(limit=None)
+
+    # write the title-ID mapping to file
+    if write_entity_defs:
+        with open(ENTITY_DEFS, mode='w', encoding='utf8') as entity_file:
+            entity_file.write("WP_title" + "|" + "WD_id" + "\n")
+            for title, qid in title_to_id.items():
+                entity_file.write(title + "|" + str(qid) + "\n")
 
     title_list = list(title_to_id.keys())
     entity_list = [title_to_id[x] for x in title_list]
@@ -94,37 +250,16 @@ def _get_entity_frequencies(entities):
     return [entity_to_count.get(e, 0) for e in entities]
 
 
-def _write_entity_counts(to_print=False):
-    entity_to_count = dict()
-    total_count = 0
-
-    with open(PRIOR_PROB, mode='r', encoding='utf8') as prior_file:
+def _get_entity_to_id():
+    entity_to_id = dict()
+    with open(ENTITY_DEFS, 'r', encoding='utf8') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter='|')
         # skip header
-        prior_file.readline()
-        line = prior_file.readline()
+        next(csvreader)
+        for row in csvreader:
+            entity_to_id[row[0]] = row[1]
 
-        while line:
-            splits = line.replace('\n', "").split(sep='|')
-            # alias = splits[0]
-            count = int(splits[1])
-            entity = splits[2]
-
-            current_count = entity_to_count.get(entity, 0)
-            entity_to_count[entity] = current_count + count
-
-            total_count += count
-
-            line = prior_file.readline()
-
-    with open(ENTITY_COUNTS, mode='w', encoding='utf8') as entity_file:
-        entity_file.write("entity" + "|" + "count" + "\n")
-        for entity, count in entity_to_count.items():
-            entity_file.write(entity + "|" + str(count) + "\n")
-
-    if to_print:
-        for entity, count in entity_to_count.items():
-            print("Entity count:", entity, count)
-        print("Total count:", total_count)
+    return entity_to_id
 
 
 def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, to_print=False):
@@ -337,85 +472,60 @@ def _read_wikidata_entities_regex_depr(limit=None, to_print=False):
     return title_to_id
 
 
-def _read_wikipedia_prior_probs():
-    """ Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities
-    The full file takes about 2h to parse 1100M lines (update printed every 5M lines)
-     """
+def test_kb(kb):
+    # TODO: the vocab objects are now different between nlp and kb - will be fixed when KB is written as part of NLP IO
+    nlp = spacy.load('en_core_web_sm')
 
-    # find the links
-    link_regex = re.compile(r'\[\[[^\[\]]*\]\]')
+    el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": kb})
+    nlp.add_pipe(el_pipe, last=True)
 
-    # match on interwiki links, e.g. `en:` or `:fr:`
-    ns_regex = r":?" + "[a-z][a-z]" + ":"
+    candidates = my_kb.get_candidates("Bush")
 
-    # match on Namespace: optionally preceded by a :
-    for ns in wiki_namespaces:
-        ns_regex += "|" + ":?" + ns + ":"
+    print("generating candidates for 'Bush' :")
+    for c in candidates:
+        print(" ", c.prior_prob, c.alias_, "-->", c.entity_ + " (freq=" + str(c.entity_freq) + ")")
+    print()
 
-    ns_regex = re.compile(ns_regex, re.IGNORECASE)
+    text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
+           "Douglas reminds us to always bring our towel. " \
+           "The main character in Doug's novel is the man Arthur Dent, " \
+           "but Douglas doesn't write about George Washington or Homer Simpson."
+    doc = nlp(text)
 
-    with bz2.open(ENWIKI_DUMP, mode='rb') as file:
-        line = file.readline()
-        cnt = 0
-        while line:
-            if cnt % 5000000 == 0:
-                print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
-            clean_line = line.strip().decode("utf-8")
-
-            matches = link_regex.findall(clean_line)
-            for match in matches:
-                match = match[2:][:-2].replace("_", " ").strip()
-
-                if ns_regex.match(match):
-                    pass  # ignore namespaces at the beginning of the string
-
-                # this is a simple link, with the alias the same as the mention
-                elif "|" not in match:
-                    _store_alias(match, match, normalize_alias=True, normalize_entity=True)
-
-                # in wiki format, the link is written as [[entity|alias]]
-                else:
-                    splits = match.split("|")
-                    entity = splits[0].strip()
-                    alias = splits[1].strip()
-                    # specific wiki format  [[alias (specification)|]]
-                    if len(alias) == 0 and "(" in entity:
-                        alias = entity.split("(")[0]
-                        _store_alias(alias, entity, normalize_alias=False, normalize_entity=True)
-                    else:
-                        _store_alias(alias, entity, normalize_alias=False, normalize_entity=True)
-
-            line = file.readline()
-            cnt += 1
-
-    # write all aliases and their entities and occurrences to file
-    with open(PRIOR_PROB, mode='w', encoding='utf8') as outputfile:
-        outputfile.write("alias" + "|" + "count" + "|" + "entity" + "\n")
-        for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
-            for entity, count in sorted(alias_dict.items(), key=lambda x: x[1], reverse=True):
-                outputfile.write(alias + "|" + str(count) + "|" + entity + "\n")
+    for ent in doc.ents:
+        print("ent", ent.text, ent.label_, ent.kb_id_)
 
 
-def _store_alias(alias, entity, normalize_alias=False, normalize_entity=True):
-    alias = alias.strip()
-    entity = entity.strip()
+def add_coref():
+    """ STEP 5: add coreference resolution to our model """
+    nlp = spacy.load('en_core_web_sm')
+    # nlp = spacy.load('en')
 
-    # remove everything after # as this is not part of the title but refers to a specific paragraph
-    if normalize_entity:
-        # wikipedia titles are always capitalized
-        entity = capitalize_first(entity.split("#")[0])
-    if normalize_alias:
-        alias = alias.split("#")[0]
+    # TODO: this doesn't work yet
+    # neuralcoref.add_to_pipe(nlp)
+    print("done adding to pipe")
 
-    if alias and entity:
-        alias_dict = map_alias_to_link.get(alias, dict())
-        entity_count = alias_dict.get(entity, 0)
-        alias_dict[entity] = entity_count + 1
-        map_alias_to_link[alias] = alias_dict
+    doc = nlp(u'My sister has a dog. She loves him.')
+    print("done doc")
+
+    print(doc._.has_coref)
+    print(doc._.coref_clusters)
 
 
-def _read_wikipedia():
-    """ Read the XML wikipedia data """
+def create_training():
+    nlp = spacy.load('en_core_web_sm')
+    wp_to_id = _get_entity_to_id()
+    _read_wikipedia(nlp, wp_to_id, limit=10000)
+
+
+def _read_wikipedia(nlp, wp_to_id, limit=None):
+    """ Read the XML wikipedia data to parse out training data """
+
+    # regex_id = re.compile(r'\"id\":"Q[0-9]*"', re.UNICODE)
+    # regex_title = re.compile(r'\"title\":"[^"]*"', re.UNICODE)
+
+    title_regex = re.compile(r'(?<=<title>).*(?=</title>)')
+    id_regex = re.compile(r'(?<=<id>)\d*(?=</id>)')
 
     with bz2.open(ENWIKI_DUMP, mode='rb') as file:
         line = file.readline()
@@ -424,19 +534,19 @@ def _read_wikipedia():
         article_title = None
         article_id = None
         reading_text = False
-        while line and cnt < 1000000:
+        while line and (not limit or cnt < limit):
             clean_line = line.strip().decode("utf-8")
 
             # Start reading new page
             if clean_line == "<page>":
                 article_text = ""
                 article_title = None
-                article_id = 342
+                article_id = None
 
             # finished reading this page
             elif clean_line == "</page>":
                 if article_id:
-                    _store_wp_article(article_id, article_title, article_text.strip())
+                    _process_wp_text(nlp, wp_to_id, article_id, article_title, article_text.strip())
 
             # start reading text within a page
             if "<text" in clean_line:
@@ -445,17 +555,17 @@ def _read_wikipedia():
             if reading_text:
                 article_text += " " + clean_line
 
-            # stop reading text within a page
+            # stop reading text within a page (we assume a new page doesn't start on the same line)
             if "</text" in clean_line:
                 reading_text = False
 
             # read the ID of this article
-            ids = re.findall(r"(?<=<id>)\d*(?=</id>)", clean_line)
+            ids = id_regex.search(clean_line)
             if ids:
                 article_id = ids[0]
 
             # read the title of this article
-            titles = re.findall(r"(?<=<title>).*(?=</title>)", clean_line)
+            titles = title_regex.search(clean_line)
             if titles:
                 article_title = titles[0].strip()
 
@@ -463,107 +573,145 @@ def _read_wikipedia():
             cnt += 1
 
 
-def _store_wp_article(article_id, article_title, article_text):
-    pass
+def _process_wp_text(nlp, wp_to_id, article_id, article_title, article_text):
+    # remove the text tags
+    text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text>)')
+    text = text_regex.search(article_text).group(0)
+
+    # stop processing if this is a redirect page
+    if text.startswith("#REDIRECT"):
+        return
+
     print("WP article", article_id, ":", article_title)
-    print(article_text)
-    print(_get_clean_wp_text(article_text))
+
+    article_dict = dict()
+    aliases, entities, normalizations = _get_wp_links(text)
+    for alias, entity, norm in zip(aliases, entities, normalizations):
+        entity_id = wp_to_id.get(entity)
+        if entity_id:
+            # print(" ", alias, '-->', entity, '-->', entity_id)
+            article_dict[alias] = entity_id
+            article_dict[entity] = entity_id
+
+    # get the raw text without markup etc
+    clean_text = _get_clean_wp_text(text)
+
+    #print(text)
+    print(clean_text)
     print()
+
+    _run_ner(nlp, article_id, article_title, clean_text, article_dict)
+
+
+info_regex = re.compile(r'{[^{]*?}')
+interwiki_regex = re.compile(r'\[\[([^|]*?)]]')
+interwiki_2_regex = re.compile(r'\[\[[^|]*?\|([^|]*?)]]')
+htlm_regex = re.compile(r'&lt;!--[^!]*--&gt;')
+category_regex = re.compile(r'\[\[Category:[^\[]*]]')
+file_regex = re.compile(r'\[\[File:[^[\]]+]]')
+ref_regex = re.compile(r'&lt;ref.*?&gt;')     # non-greedy
+ref_2_regex = re.compile(r'&lt;/ref.*?&gt;')  # non-greedy
 
 
 def _get_clean_wp_text(article_text):
-    # TODO: compile the regular expressions
+    clean_text = article_text.strip()
 
-    # remove Category and File statements
-    clean_text = re.sub(r'\[\[Category:[^\[]*]]', '', article_text)
-    print("1", clean_text)
-    clean_text = re.sub(r'\[\[File:[^\[]*]]', '', clean_text)       # TODO: this doesn't work yet
-    print("2", clean_text)
-
-    # remove bolding markup
-    clean_text = re.sub('\'\'\'', '', clean_text)
-    clean_text = re.sub('\'\'', '', clean_text)
+    # remove bolding & italic markup
+    clean_text = clean_text.replace('\'\'\'', '')
+    clean_text = clean_text.replace('\'\'', '')
 
     # remove nested {{info}} statements by removing the inner/smallest ones first and iterating
     try_again = True
     previous_length = len(clean_text)
     while try_again:
-        clean_text = re.sub('{[^{]*?}', '', clean_text)  # non-greedy match excluding a nested {
+        clean_text = info_regex.sub('', clean_text)  # non-greedy match excluding a nested {
         if len(clean_text) < previous_length:
             try_again = True
         else:
             try_again = False
         previous_length = len(clean_text)
 
-    # remove multiple spaces
-    while '  ' in clean_text:
-        clean_text = re.sub('  ', ' ', clean_text)
-
     # remove simple interwiki links (no alternative name)
-    clean_text = re.sub('\[\[([^|]*?)]]', r'\1', clean_text)
+    clean_text = interwiki_regex.sub(r'\1', clean_text)
 
     # remove simple interwiki links by picking the alternative name
-    clean_text = re.sub(r'\[\[[^|]*?\|([^|]*?)]]', r'\1', clean_text)
+    clean_text = interwiki_2_regex.sub(r'\1', clean_text)
 
     # remove HTML comments
-    clean_text = re.sub('&lt;!--[^!]*--&gt;', '', clean_text)
+    clean_text = htlm_regex.sub('', clean_text)
 
-    return clean_text
+    # remove Category and File statements
+    clean_text = category_regex.sub('', clean_text)
+    clean_text = file_regex.sub('', clean_text)
+
+    # remove multiple =
+    while '==' in clean_text:
+        clean_text = clean_text.replace("==", "=")
+
+    clean_text = clean_text.replace(". =", ".")
+    clean_text = clean_text.replace(" = ", ". ")
+    clean_text = clean_text.replace("= ", ".")
+    clean_text = clean_text.replace(" =", "")
+
+    # remove refs (non-greedy match)
+    clean_text = ref_regex.sub('', clean_text)
+    clean_text = ref_2_regex.sub('', clean_text)
+
+    # remove additional wikiformatting
+    clean_text = re.sub(r'&lt;blockquote&gt;', '', clean_text)
+    clean_text = re.sub(r'&lt;/blockquote&gt;', '', clean_text)
+
+    # change special characters back to normal ones
+    clean_text = clean_text.replace(r'&lt;', '<')
+    clean_text = clean_text.replace(r'&gt;', '>')
+    clean_text = clean_text.replace(r'&quot;', '"')
+    clean_text = clean_text.replace(r'&amp;nbsp;', ' ')
+    clean_text = clean_text.replace(r'&amp;', '&')
+
+    # remove multiple spaces
+    while '  ' in clean_text:
+        clean_text = clean_text.replace('  ', ' ')
+
+    return clean_text.strip()
 
 
-def add_el(kb, nlp):
-    el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": kb})
-    nlp.add_pipe(el_pipe, last=True)
-
-    text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
-           "Douglas reminds us to always bring our towel. " \
-           "The main character in Doug's novel is the man Arthur Dent, " \
-           "but Douglas doesn't write about George Washington or Homer Simpson."
-    doc = nlp(text)
-
-    print()
-    for token in doc:
-        print("token", token.text, token.ent_type_, token.ent_kb_id_)
-
-    print()
-    for ent in doc.ents:
-        print("ent", ent.text, ent.label_, ent.kb_id_)
-
-
-def capitalize_first(text):
-    if not text:
-        return None
-    result = text[0].capitalize()
-    if len(result) > 0:
-        result += text[1:]
-    return result
-
+def _run_ner(nlp, article_id, article_title, clean_text, article_dict):
+    pass # TODO
 
 if __name__ == "__main__":
     print("START", datetime.datetime.now())
+    print()
+    my_kb = None
 
+    # one-time methods to create KB and write to file
     to_create_prior_probs = False
     to_create_entity_counts = False
     to_create_kb = False
-    to_read_kb = True
+
+    # read KB back in from file
+    to_read_kb = False
+    to_test_kb = False
+
+    create_wp_training = True
 
     # STEP 1 : create prior probabilities from WP
     # run only once !
     if to_create_prior_probs:
         print("STEP 1: to_create_prior_probs", datetime.datetime.now())
-        _read_wikipedia_prior_probs()
+        read_wikipedia_prior_probs()
         print()
 
     # STEP 2 : deduce entity frequencies from WP
     # run only once !
     if to_create_entity_counts:
         print("STEP 2: to_create_entity_counts", datetime.datetime.now())
-        _write_entity_counts()
+        write_entity_counts()
         print()
 
+    # STEP 3 : create KB and write to file
+    # run only once !
     if to_create_kb:
-        # STEP 3 : create KB
-        print("STEP 3: to_create_kb", datetime.datetime.now())
+        print("STEP 3a: to_create_kb", datetime.datetime.now())
         my_nlp = spacy.load('en_core_web_sm')
         my_vocab = my_nlp.vocab
         my_kb = create_kb(my_vocab, max_entities_per_alias=10, min_occ=5, to_print=False)
@@ -571,15 +719,14 @@ if __name__ == "__main__":
         print("kb aliases:", my_kb.get_size_aliases())
         print()
 
-        # STEP 4 : write KB to file
-        print("STEP 4: write KB", datetime.datetime.now())
+        print("STEP 3b: write KB", datetime.datetime.now())
         my_kb.dump(KB_FILE)
         my_vocab.to_disk(VOCAB_DIR)
         print()
 
+    # STEP 4 : read KB back in from file
     if to_read_kb:
-        # STEP 5 : read KB back in from file
-        print("STEP 5: to_read_kb", datetime.datetime.now())
+        print("STEP 4: to_read_kb", datetime.datetime.now())
         my_vocab = Vocab()
         my_vocab.from_disk(VOCAB_DIR)
         my_kb = KnowledgeBase(vocab=my_vocab)
@@ -589,16 +736,17 @@ if __name__ == "__main__":
         print()
 
         # test KB
-        candidates = my_kb.get_candidates("Bush")
-        for c in candidates:
-            print("entity:", c.entity_)
-            print("entity freq:", c.entity_freq)
-            print("alias:", c.alias_)
-            print("prior prob:", c.prior_prob)
+        if to_test_kb:
+            test_kb(my_kb)
             print()
 
-    # STEP 6: add KB to NLP pipeline
-    # print("STEP 6: use KB", datetime.datetime.now())
-    # add_el(my_kb, nlp)
+    # STEP 5: create a training dataset from WP
+    if create_wp_training:
+        print("STEP 5: create training dataset", datetime.datetime.now())
+        create_training()
 
+    # TODO coreference resolution
+    # add_coref()
+
+    print()
     print("STOP", datetime.datetime.now())
