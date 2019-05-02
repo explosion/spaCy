@@ -515,14 +515,11 @@ def add_coref():
 def create_training():
     nlp = spacy.load('en_core_web_sm')
     wp_to_id = _get_entity_to_id()
-    _read_wikipedia(nlp, wp_to_id, limit=10000)
+    _read_wikipedia_texts(nlp, wp_to_id, limit=10000)
 
 
-def _read_wikipedia(nlp, wp_to_id, limit=None):
+def _read_wikipedia_texts(nlp, wp_to_id, limit=None):
     """ Read the XML wikipedia data to parse out training data """
-
-    # regex_id = re.compile(r'\"id\":"Q[0-9]*"', re.UNICODE)
-    # regex_title = re.compile(r'\"title\":"[^"]*"', re.UNICODE)
 
     title_regex = re.compile(r'(?<=<title>).*(?=</title>)')
     id_regex = re.compile(r'(?<=<id>)\d*(?=</id>)')
@@ -589,18 +586,15 @@ def _process_wp_text(nlp, wp_to_id, article_id, article_title, article_text):
     for alias, entity, norm in zip(aliases, entities, normalizations):
         entity_id = wp_to_id.get(entity)
         if entity_id:
-            # print(" ", alias, '-->', entity, '-->', entity_id)
             article_dict[alias] = entity_id
             article_dict[entity] = entity_id
 
     # get the raw text without markup etc
     clean_text = _get_clean_wp_text(text)
-
-    #print(text)
     print(clean_text)
-    print()
 
     _run_ner(nlp, article_id, article_title, clean_text, article_dict)
+    print()
 
 
 info_regex = re.compile(r'{[^{]*?}')
@@ -676,7 +670,15 @@ def _get_clean_wp_text(article_text):
 
 
 def _run_ner(nlp, article_id, article_title, clean_text, article_dict):
-    pass # TODO
+    doc = nlp(clean_text)
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":           # TODO: expand to non-persons
+            ent_id = article_dict.get(ent.text)
+            if ent_id:
+                print(" -", ent.text, ent.label_, ent_id)
+            else:
+                print(" -", ent.text, ent.label_, '???')  # TODO: investigate these cases
+
 
 if __name__ == "__main__":
     print("START", datetime.datetime.now())
