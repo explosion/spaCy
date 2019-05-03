@@ -537,7 +537,7 @@ def _read_wikipedia_texts(kb, wp_to_id, limit=None):
 
     with bz2.open(ENWIKI_DUMP, mode='rb') as file:
         line = file.readline()
-        cnt = 1
+        cnt = 0
         article_text = ""
         article_title = None
         article_id = None
@@ -556,7 +556,12 @@ def _read_wikipedia_texts(kb, wp_to_id, limit=None):
             # finished reading this page
             elif clean_line == "</page>":
                 if article_id:
-                    _process_wp_text(kb, wp_to_id, article_id, article_title, article_text.strip())
+                    try:
+                        _process_wp_text(kb, wp_to_id, article_id, article_title, article_text.strip())
+                    # on a previous run, an error occurred after 46M lines and 2h
+                    except Exception as e:
+                        print("Error processing article", article_id, article_title)
+                        print(e)
 
             # start reading text within a page
             if "<text" in clean_line:
@@ -585,7 +590,7 @@ def _read_wikipedia_texts(kb, wp_to_id, limit=None):
 
 def _process_wp_text(kb, wp_to_id, article_id, article_title, article_text):
     # remove the text tags
-    text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text>)')
+    text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text)')
     text = text_regex.search(article_text).group(0)
 
     # stop processing if this is a redirect page
