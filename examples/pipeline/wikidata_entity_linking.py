@@ -520,7 +520,7 @@ def create_training(kb):
         raise ValueError("kb should be defined")
     # nlp = spacy.load('en_core_web_sm')
     wp_to_id = _get_entity_to_id()
-    _read_wikipedia_texts(kb, wp_to_id, limit=None)
+    _read_wikipedia_texts(kb, wp_to_id, limit=100000000) # TODO: full dataset
 
 
 def _read_wikipedia_texts(kb, wp_to_id, limit=None):
@@ -552,7 +552,7 @@ def _read_wikipedia_texts(kb, wp_to_id, limit=None):
             reading_text = False
             reading_revision = False
             while line and (not limit or cnt < limit):
-                if cnt % 500000 == 0:
+                if cnt % 1000000 == 0:
                     print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
                 clean_line = line.strip().decode("utf-8")
                 # print(clean_line)
