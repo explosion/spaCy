@@ -1341,19 +1341,19 @@
         },
         {
             "id": "NGym",
-            "title": "Neural gym",
-            "slogan": "A little GUI for training models with spaCy",
-            "description": "Neural gym is a python application with graphical interface to train models with spaCy. Run application, select an output folder, a training data file in spaCy data format, a spacy model or blank model and press 'Start'.",
+            "title": "NeuralGym",
+            "slogan": "A little Windows GUI for training models with spaCy",
+            "description": "NeuralGym is a Python application for Windows with a graphical user interface to train models with spaCy. Run the application, select an output folder, a training data file in spaCy's data format, a spaCy model or blank model and press 'Start'.",
             "github": "d5555/NeuralGym",
             "url": "https://github.com/d5555/NeuralGym",
             "image": "https://github.com/d5555/NeuralGym/raw/master/NGym.png",
             "thumb": "https://github.com/d5555/NeuralGym/raw/master/NGym/web.png",
             "author": "d5555",
             "category": ["training"],
-
+            "tags": ["windows"]
         }
     ],
-    
+
     "categories": [
         {
             "label": "Projects",
