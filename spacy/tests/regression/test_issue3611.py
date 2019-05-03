@@ -6,7 +6,7 @@ import spacy
 from spacy.util import minibatch, compounding
 
 
-def test_issue3661():
+def test_issue3611():
     unique_classes = ["offensive", "inoffensive"]
     x_train = ["This is the first offensive text",
                "This is the second offensive text",
