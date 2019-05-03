@@ -29,6 +29,8 @@ ENTITY_DEFS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_defs.csv'
 KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb'
 VOCAB_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/vocab'
 
+TRAINING_SET_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_nel/'
+
 
 # these will/should be matched ignoring case
 wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
@@ -224,7 +226,7 @@ def create_kb(vocab, max_entities_per_alias, min_occ, to_print=False, write_enti
     print()
     print("4. adding aliases", datetime.datetime.now())
     print()
-    _add_aliases(kb, title_to_id=title_to_id, max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,)
+    _add_aliases(kb, title_to_id=title_to_id, max_entities_per_alias=max_entities_per_alias, min_occ=min_occ)
 
     # TODO: read wikipedia texts for entity context
     # _read_wikipedia()
@@ -512,17 +514,26 @@ def add_coref():
     print(doc._.coref_clusters)
 
 
-def create_training():
-    nlp = spacy.load('en_core_web_sm')
+def create_training(kb):
+    if not kb:
+        raise ValueError("kb should be defined")
+    # nlp = spacy.load('en_core_web_sm')
     wp_to_id = _get_entity_to_id()
-    _read_wikipedia_texts(nlp, wp_to_id, limit=10000)
+    _read_wikipedia_texts(kb, wp_to_id, limit=None)
 
 
-def _read_wikipedia_texts(nlp, wp_to_id, limit=None):
+def _read_wikipedia_texts(kb, wp_to_id, limit=None):
     """ Read the XML wikipedia data to parse out training data """
 
     title_regex = re.compile(r'(?<=<title>).*(?=</title>)')
     id_regex = re.compile(r'(?<=<id>)\d*(?=</id>)')
+
+    # read entity training header file
+    _write_training_entity(article_id="article_id",
+                           alias="alias",
+                           entity="entity",
+                           correct="correct",
+                           append=False)
 
     with bz2.open(ENWIKI_DUMP, mode='rb') as file:
         line = file.readline()
@@ -532,6 +543,8 @@ def _read_wikipedia_texts(nlp, wp_to_id, limit=None):
         article_id = None
         reading_text = False
         while line and (not limit or cnt < limit):
+            if cnt % 500000 == 0:
+                print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
             clean_line = line.strip().decode("utf-8")
 
             # Start reading new page
@@ -543,7 +556,7 @@ def _read_wikipedia_texts(nlp, wp_to_id, limit=None):
             # finished reading this page
             elif clean_line == "</page>":
                 if article_id:
-                    _process_wp_text(nlp, wp_to_id, article_id, article_title, article_text.strip())
+                    _process_wp_text(kb, wp_to_id, article_id, article_title, article_text.strip())
 
             # start reading text within a page
             if "<text" in clean_line:
@@ -570,7 +583,7 @@ def _read_wikipedia_texts(nlp, wp_to_id, limit=None):
             cnt += 1
 
 
-def _process_wp_text(nlp, wp_to_id, article_id, article_title, article_text):
+def _process_wp_text(kb, wp_to_id, article_id, article_title, article_text):
     # remove the text tags
     text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text>)')
     text = text_regex.search(article_text).group(0)
@@ -579,7 +592,14 @@ def _process_wp_text(nlp, wp_to_id, article_id, article_title, article_text):
     if text.startswith("#REDIRECT"):
         return
 
-    print("WP article", article_id, ":", article_title)
+    # print("WP article", article_id, ":", article_title)
+    # print()
+    # print(text)
+
+    # get the raw text without markup etc
+    clean_text = _get_clean_wp_text(text)
+    # print()
+    # print(clean_text)
 
     article_dict = dict()
     aliases, entities, normalizations = _get_wp_links(text)
@@ -589,12 +609,37 @@ def _process_wp_text(nlp, wp_to_id, article_id, article_title, article_text):
             article_dict[alias] = entity_id
             article_dict[entity] = entity_id
 
-    # get the raw text without markup etc
-    clean_text = _get_clean_wp_text(text)
-    print(clean_text)
+    # print("found entities:")
+    for alias, entity in article_dict.items():
+        # print(alias, "-->", entity)
+        candidates = kb.get_candidates(alias)
 
-    _run_ner(nlp, article_id, article_title, clean_text, article_dict)
-    print()
+        # as training data, we only store entities that are sufficiently ambiguous
+        if len(candidates) > 1:
+            _write_training_article(article_id=article_id, clean_text=clean_text)
+            # print("alias", alias)
+
+            # print all incorrect candidates
+            for c in candidates:
+                if entity != c.entity_:
+                    _write_training_entity(article_id=article_id,
+                                           alias=alias,
+                                           entity=c.entity_,
+                                           correct="0",
+                                           append=True)
+
+            # print the one correct candidate
+            _write_training_entity(article_id=article_id,
+                                   alias=alias,
+                                   entity=entity,
+                                   correct="1",
+                                   append=True)
+
+            # print("gold entity", entity)
+            # print()
+
+    # _run_ner_depr(nlp, article_id, article_title, clean_text, article_dict)
+    # print()
 
 
 info_regex = re.compile(r'{[^{]*?}')
@@ -669,7 +714,22 @@ def _get_clean_wp_text(article_text):
     return clean_text.strip()
 
 
-def _run_ner(nlp, article_id, article_title, clean_text, article_dict):
+def _write_training_article(article_id, clean_text):
+    file_loc = TRAINING_SET_DIR + "/" + str(article_id) + ".txt"
+    with open(file_loc, mode='w', encoding='utf8') as outputfile:
+        outputfile.write(clean_text)
+
+
+def _write_training_entity(article_id, alias, entity, correct, append=True):
+    mode = "w"
+    if append:
+        mode = "a"
+    file_loc = TRAINING_SET_DIR + "/" + "gold_entities.csv"
+    with open(file_loc, mode=mode, encoding='utf8') as outputfile:
+        outputfile.write(article_id + "|" + alias + "|" + entity + "|" + correct + "\n")
+
+
+def _run_ner_depr(nlp, article_id, article_title, clean_text, article_dict):
     doc = nlp(clean_text)
     for ent in doc.ents:
         if ent.label_ == "PERSON":           # TODO: expand to non-persons
@@ -691,7 +751,7 @@ if __name__ == "__main__":
     to_create_kb = False
 
     # read KB back in from file
-    to_read_kb = False
+    to_read_kb = True
     to_test_kb = False
 
     create_wp_training = True
@@ -745,7 +805,7 @@ if __name__ == "__main__":
     # STEP 5: create a training dataset from WP
     if create_wp_training:
         print("STEP 5: create training dataset", datetime.datetime.now())
-        create_training()
+        create_training(my_kb)
 
     # TODO coreference resolution
     # add_coref()
