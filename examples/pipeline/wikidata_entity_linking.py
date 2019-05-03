@@ -29,7 +29,8 @@ ENTITY_DEFS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_defs.csv'
 KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb'
 VOCAB_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/vocab'
 
-TRAINING_SET_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_nel/'
+TRAINING_OUTPUT_SET_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_nel/'
+TRAINING_INPUT_SET_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_nel_sample_3may2019/'
 
 
 # these will/should be matched ignoring case
@@ -523,74 +524,104 @@ def create_training(kb):
 
 
 def _read_wikipedia_texts(kb, wp_to_id, limit=None):
-    """ Read the XML wikipedia data to parse out training data """
+    """
+    Read the XML wikipedia data to parse out training data:
+    raw text data + positive and negative instances
+    """
 
     title_regex = re.compile(r'(?<=<title>).*(?=</title>)')
     id_regex = re.compile(r'(?<=<id>)\d*(?=</id>)')
 
-    # read entity training header file
-    _write_training_entity(article_id="article_id",
-                           alias="alias",
-                           entity="entity",
-                           correct="correct",
-                           append=False)
+    read_ids = set()
 
-    with bz2.open(ENWIKI_DUMP, mode='rb') as file:
-        line = file.readline()
-        cnt = 0
-        article_text = ""
-        article_title = None
-        article_id = None
-        reading_text = False
-        while line and (not limit or cnt < limit):
-            if cnt % 500000 == 0:
-                print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
-            clean_line = line.strip().decode("utf-8")
+    entityfile_loc = TRAINING_OUTPUT_SET_DIR + "/" + "gold_entities.csv"
+    with open(entityfile_loc, mode="w", encoding='utf8') as entityfile:
+        # write entity training header file
+        _write_training_entity(outputfile=entityfile,
+                               article_id="article_id",
+                               alias="alias",
+                               entity="entity",
+                               correct="correct")
 
-            # Start reading new page
-            if clean_line == "<page>":
-                article_text = ""
-                article_title = None
-                article_id = None
-
-            # finished reading this page
-            elif clean_line == "</page>":
-                if article_id:
-                    try:
-                        _process_wp_text(kb, wp_to_id, article_id, article_title, article_text.strip())
-                    # on a previous run, an error occurred after 46M lines and 2h
-                    except Exception as e:
-                        print("Error processing article", article_id, article_title)
-                        print(e)
-
-            # start reading text within a page
-            if "<text" in clean_line:
-                reading_text = True
-
-            if reading_text:
-                article_text += " " + clean_line
-
-            # stop reading text within a page (we assume a new page doesn't start on the same line)
-            if "</text" in clean_line:
-                reading_text = False
-
-            # read the ID of this article
-            ids = id_regex.search(clean_line)
-            if ids:
-                article_id = ids[0]
-
-            # read the title of this article
-            titles = title_regex.search(clean_line)
-            if titles:
-                article_title = titles[0].strip()
-
+        with bz2.open(ENWIKI_DUMP, mode='rb') as file:
             line = file.readline()
-            cnt += 1
+            cnt = 0
+            article_text = ""
+            article_title = None
+            article_id = None
+            reading_text = False
+            reading_revision = False
+            while line and (not limit or cnt < limit):
+                if cnt % 500000 == 0:
+                    print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
+                clean_line = line.strip().decode("utf-8")
+                # print(clean_line)
+
+                if clean_line == "<revision>":
+                    reading_revision = True
+                elif clean_line == "</revision>":
+                    reading_revision = False
+
+                # Start reading new page
+                if clean_line == "<page>":
+                    article_text = ""
+                    article_title = None
+                    article_id = None
+
+                # finished reading this page
+                elif clean_line == "</page>":
+                    if article_id:
+                        try:
+                            _process_wp_text(kb, wp_to_id, entityfile, article_id, article_title, article_text.strip())
+                        # on a previous run, an error occurred after 46M lines and 2h
+                        except Exception as e:
+                            print("Error processing article", article_id, article_title)
+                            print(e)
+                    else:
+                        print("Done processing a page, but couldn't find an article_id ?")
+                        print(article_title)
+                        print(article_text)
+                    article_text = ""
+                    article_title = None
+                    article_id = None
+                    reading_text = False
+                    reading_revision = False
+
+                # start reading text within a page
+                if "<text" in clean_line:
+                    reading_text = True
+
+                if reading_text:
+                    article_text += " " + clean_line
+
+                # stop reading text within a page (we assume a new page doesn't start on the same line)
+                if "</text" in clean_line:
+                    reading_text = False
+
+                # read the ID of this article (outside the revision portion of the document)
+                if not reading_revision:
+                    ids = id_regex.search(clean_line)
+                    if ids:
+                        article_id = ids[0]
+                        if article_id in read_ids:
+                            print("Found duplicate article ID", article_id, clean_line) # This should never happen ...
+                        read_ids.add(article_id)
+
+                # read the title of this article  (outside the revision portion of the document)
+                if not reading_revision:
+                    titles = title_regex.search(clean_line)
+                    if titles:
+                        article_title = titles[0].strip()
+
+                line = file.readline()
+                cnt += 1
 
 
-def _process_wp_text(kb, wp_to_id, article_id, article_title, article_text):
+text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text)')
+
+
+def _process_wp_text(kb, wp_to_id, entityfile, article_id, article_title, article_text):
     # remove the text tags
-    text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text)')
     text = text_regex.search(article_text).group(0)
 
     # stop processing if this is a redirect page
@@ -607,12 +638,19 @@ def _process_wp_text(kb, wp_to_id, article_id, article_title, article_text):
     # print(clean_text)
 
     article_dict = dict()
+    ambiguous_aliases = set()
     aliases, entities, normalizations = _get_wp_links(text)
     for alias, entity, norm in zip(aliases, entities, normalizations):
-        entity_id = wp_to_id.get(entity)
-        if entity_id:
-            article_dict[alias] = entity_id
-            article_dict[entity] = entity_id
+        if alias not in ambiguous_aliases:
+            entity_id = wp_to_id.get(entity)
+            if entity_id:
+                # TODO: take care of these conflicts ! Currently they are being removed from the dataset
+                if article_dict.get(alias) and article_dict[alias] != entity_id:
+                    ambiguous_aliases.add(alias)
+                    article_dict.pop(alias)
+                    # print("Found conflicting alias", alias, "in article", article_id, article_title)
+                else:
+                    article_dict[alias] = entity_id
 
     # print("found entities:")
     for alias, entity in article_dict.items():
@@ -627,18 +665,18 @@ def _process_wp_text(kb, wp_to_id, article_id, article_title, article_text):
             # print all incorrect candidates
             for c in candidates:
                 if entity != c.entity_:
-                    _write_training_entity(article_id=article_id,
+                    _write_training_entity(outputfile=entityfile,
+                                           article_id=article_id,
                                            alias=alias,
                                            entity=c.entity_,
-                                           correct="0",
-                                           append=True)
+                                           correct="0")
 
             # print the one correct candidate
-            _write_training_entity(article_id=article_id,
+            _write_training_entity(outputfile=entityfile,
+                                   article_id=article_id,
                                    alias=alias,
                                    entity=entity,
-                                   correct="1",
-                                   append=True)
+                                   correct="1")
 
             # print("gold entity", entity)
             # print()
@@ -720,18 +758,13 @@ def _get_clean_wp_text(article_text):
 
 
 def _write_training_article(article_id, clean_text):
-    file_loc = TRAINING_SET_DIR + "/" + str(article_id) + ".txt"
+    file_loc = TRAINING_OUTPUT_SET_DIR + "/" + str(article_id) + ".txt"
     with open(file_loc, mode='w', encoding='utf8') as outputfile:
         outputfile.write(clean_text)
 
 
-def _write_training_entity(article_id, alias, entity, correct, append=True):
-    mode = "w"
-    if append:
-        mode = "a"
-    file_loc = TRAINING_SET_DIR + "/" + "gold_entities.csv"
-    with open(file_loc, mode=mode, encoding='utf8') as outputfile:
-        outputfile.write(article_id + "|" + alias + "|" + entity + "|" + correct + "\n")
+def _write_training_entity(outputfile, article_id, alias, entity, correct):
+    outputfile.write(article_id + "|" + alias + "|" + entity + "|" + correct + "\n")
 
 
 def _run_ner_depr(nlp, article_id, article_title, clean_text, article_dict):
