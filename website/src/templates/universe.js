@@ -125,7 +125,7 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                     </p>
 
                     <InlineList>
-                        <Button variant="primary" to={github('website/universe/README.md')}>
+                        <Button variant="primary" to={github('website/UNIVERSE.md')}>
                             Read the docs
                         </Button>
                         <Button icon="code" to={github('website/meta/universe.json')}>
