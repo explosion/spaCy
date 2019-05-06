@@ -42,7 +42,7 @@ def filter_spans(spans, prefer_longest=True):
     sorted_spans = sorted(spans, key=get_sort_key, reverse=prefer_longest)
     result = []
     seen_tokens = set()
-    for span in spans:
+    for span in sorted_spans:
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
             result.append(span)
             seen_tokens.update(range(span.start, span.end))
