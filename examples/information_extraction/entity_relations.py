@@ -36,10 +36,10 @@ def main(model="en_core_web_sm"):
             print("{:<10}\t{}\t{}".format(r1.text, r2.ent_type_, r2.text))
 
 
-def filter_spans(spans, prefer_longest=True):
+def filter_spans(spans):
     # Filter a sequence of spans so they don't contain overlaps
     get_sort_key = lambda span: (span.end - span.start, span.start)
-    sorted_spans = sorted(spans, key=get_sort_key, reverse=prefer_longest)
+    sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
     seen_tokens = set()
     for span in sorted_spans:
