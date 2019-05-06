@@ -6,6 +6,7 @@ from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.errors import ModelsWarning
+from spacy.util import filter_spans
 
 from ..util import get_doc
 
@@ -219,3 +220,21 @@ def test_span_ents_property(doc):
     assert sentences[2].ents[0].label_ == "PRODUCT"
     assert sentences[2].ents[0].start == 11
     assert sentences[2].ents[0].end == 14
+
+
+def test_filter_spans(doc):
+    # Test filtering duplicates
+    spans = [doc[1:4], doc[6:8], doc[1:4], doc[10:14]]
+    filtered = filter_spans(spans)
+    assert len(filtered) == 3
+    assert filtered[0].start == 1 and filtered[0].end == 4
+    assert filtered[1].start == 6 and filtered[1].end == 8
+    assert filtered[2].start == 10 and filtered[2].end == 14
+    # Test filtering overlaps with longest preference
+    spans = [doc[1:4], doc[1:3], doc[5:10], doc[7:9], doc[1:4]]
+    filtered = filter_spans(spans)
+    assert len(filtered) == 2
+    assert len(filtered[0]) == 3
+    assert len(filtered[1]) == 5
+    assert filtered[0].start == 1 and filtered[0].end == 4
+    assert filtered[1].start == 5 and filtered[1].end == 10
