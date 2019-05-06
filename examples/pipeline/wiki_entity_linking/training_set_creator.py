@@ -1,0 +1,276 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
+import re
+import csv
+import bz2
+import datetime
+
+from . import wikipedia_processor as wp
+
+"""
+Process Wikipedia interlinks to generate a training dataset for the EL algorithm
+"""
+
+
+def create_training(kb, entity_input, training_output):
+    if not kb:
+        raise ValueError("kb should be defined")
+    # nlp = spacy.load('en_core_web_sm')
+    wp_to_id = _get_entity_to_id(entity_input)
+    _process_wikipedia_texts(kb, wp_to_id, training_output, limit=100000000)  # TODO: full dataset
+
+
+def _get_entity_to_id(entity_input):
+    entity_to_id = dict()
+    with open(entity_input, 'r', encoding='utf8') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter='|')
+        # skip header
+        next(csvreader)
+        for row in csvreader:
+            entity_to_id[row[0]] = row[1]
+
+    return entity_to_id
+
+
+def _process_wikipedia_texts(kb, wp_to_id, training_output, limit=None):
+    """
+    Read the XML wikipedia data to parse out training data:
+    raw text data + positive and negative instances
+    """
+
+    title_regex = re.compile(r'(?<=<title>).*(?=</title>)')
+    id_regex = re.compile(r'(?<=<id>)\d*(?=</id>)')
+
+    read_ids = set()
+
+    entityfile_loc = training_output + "/" + "gold_entities.csv"
+    with open(entityfile_loc, mode="w", encoding='utf8') as entityfile:
+        # write entity training header file
+        _write_training_entity(outputfile=entityfile,
+                               article_id="article_id",
+                               alias="alias",
+                               entity="entity",
+                               correct="correct")
+
+        with bz2.open(wp.ENWIKI_DUMP, mode='rb') as file:
+            line = file.readline()
+            cnt = 0
+            article_text = ""
+            article_title = None
+            article_id = None
+            reading_text = False
+            reading_revision = False
+            while line and (not limit or cnt < limit):
+                if cnt % 1000000 == 0:
+                    print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
+                clean_line = line.strip().decode("utf-8")
+                # print(clean_line)
+
+                if clean_line == "<revision>":
+                    reading_revision = True
+                elif clean_line == "</revision>":
+                    reading_revision = False
+
+                # Start reading new page
+                if clean_line == "<page>":
+                    article_text = ""
+                    article_title = None
+                    article_id = None
+
+                # finished reading this page
+                elif clean_line == "</page>":
+                    if article_id:
+                        try:
+                            _process_wp_text(kb, wp_to_id, entityfile, article_id, article_text.strip(), training_output)
+                        # on a previous run, an error occurred after 46M lines and 2h
+                        except Exception as e:
+                            print("Error processing article", article_id, article_title, e)
+                    else:
+                        print("Done processing a page, but couldn't find an article_id ?")
+                        print(article_title)
+                        print(article_text)
+                    article_text = ""
+                    article_title = None
+                    article_id = None
+                    reading_text = False
+                    reading_revision = False
+
+                # start reading text within a page
+                if "<text" in clean_line:
+                    reading_text = True
+
+                if reading_text:
+                    article_text += " " + clean_line
+
+                # stop reading text within a page (we assume a new page doesn't start on the same line)
+                if "</text" in clean_line:
+                    reading_text = False
+
+                # read the ID of this article (outside the revision portion of the document)
+                if not reading_revision:
+                    ids = id_regex.search(clean_line)
+                    if ids:
+                        article_id = ids[0]
+                        if article_id in read_ids:
+                            print("Found duplicate article ID", article_id, clean_line)  # This should never happen ...
+                        read_ids.add(article_id)
+
+                # read the title of this article  (outside the revision portion of the document)
+                if not reading_revision:
+                    titles = title_regex.search(clean_line)
+                    if titles:
+                        article_title = titles[0].strip()
+
+                line = file.readline()
+                cnt += 1
+
+
+text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text)')
+
+
+def _process_wp_text(kb, wp_to_id, entityfile, article_id, article_text, training_output):
+    # remove the text tags
+    text = text_regex.search(article_text).group(0)
+
+    # stop processing if this is a redirect page
+    if text.startswith("#REDIRECT"):
+        return
+
+    # print("WP article", article_id, ":", article_title)
+    # print()
+    # print(text)
+
+    # get the raw text without markup etc
+    clean_text = _get_clean_wp_text(text)
+    # print()
+    # print(clean_text)
+
+    article_dict = dict()
+    ambiguous_aliases = set()
+    aliases, entities, normalizations = wp.get_wp_links(text)
+    for alias, entity, norm in zip(aliases, entities, normalizations):
+        if alias not in ambiguous_aliases:
+            entity_id = wp_to_id.get(entity)
+            if entity_id:
+                # TODO: take care of these conflicts ! Currently they are being removed from the dataset
+                if article_dict.get(alias) and article_dict[alias] != entity_id:
+                    ambiguous_aliases.add(alias)
+                    article_dict.pop(alias)
+                    # print("Found conflicting alias", alias, "in article", article_id, article_title)
+                else:
+                    article_dict[alias] = entity_id
+
+    # print("found entities:")
+    for alias, entity in article_dict.items():
+        # print(alias, "-->", entity)
+        candidates = kb.get_candidates(alias)
+
+        # as training data, we only store entities that are sufficiently ambiguous
+        if len(candidates) > 1:
+            _write_training_article(article_id=article_id, clean_text=clean_text, training_output=training_output)
+            # print("alias", alias)
+
+            # print all incorrect candidates
+            for c in candidates:
+                if entity != c.entity_:
+                    _write_training_entity(outputfile=entityfile,
+                                           article_id=article_id,
+                                           alias=alias,
+                                           entity=c.entity_,
+                                           correct="0")
+
+            # print the one correct candidate
+            _write_training_entity(outputfile=entityfile,
+                                   article_id=article_id,
+                                   alias=alias,
+                                   entity=entity,
+                                   correct="1")
+
+            # print("gold entity", entity)
+            # print()
+
+    # _run_ner_depr(nlp, clean_text, article_dict)
+    # print()
+
+
+info_regex = re.compile(r'{[^{]*?}')
+interwiki_regex = re.compile(r'\[\[([^|]*?)]]')
+interwiki_2_regex = re.compile(r'\[\[[^|]*?\|([^|]*?)]]')
+htlm_regex = re.compile(r'&lt;!--[^!]*--&gt;')
+category_regex = re.compile(r'\[\[Category:[^\[]*]]')
+file_regex = re.compile(r'\[\[File:[^[\]]+]]')
+ref_regex = re.compile(r'&lt;ref.*?&gt;')     # non-greedy
+ref_2_regex = re.compile(r'&lt;/ref.*?&gt;')  # non-greedy
+
+
+def _get_clean_wp_text(article_text):
+    clean_text = article_text.strip()
+
+    # remove bolding & italic markup
+    clean_text = clean_text.replace('\'\'\'', '')
+    clean_text = clean_text.replace('\'\'', '')
+
+    # remove nested {{info}} statements by removing the inner/smallest ones first and iterating
+    try_again = True
+    previous_length = len(clean_text)
+    while try_again:
+        clean_text = info_regex.sub('', clean_text)  # non-greedy match excluding a nested {
+        if len(clean_text) < previous_length:
+            try_again = True
+        else:
+            try_again = False
+        previous_length = len(clean_text)
+
+    # remove simple interwiki links (no alternative name)
+    clean_text = interwiki_regex.sub(r'\1', clean_text)
+
+    # remove simple interwiki links by picking the alternative name
+    clean_text = interwiki_2_regex.sub(r'\1', clean_text)
+
+    # remove HTML comments
+    clean_text = htlm_regex.sub('', clean_text)
+
+    # remove Category and File statements
+    clean_text = category_regex.sub('', clean_text)
+    clean_text = file_regex.sub('', clean_text)
+
+    # remove multiple =
+    while '==' in clean_text:
+        clean_text = clean_text.replace("==", "=")
+
+    clean_text = clean_text.replace(". =", ".")
+    clean_text = clean_text.replace(" = ", ". ")
+    clean_text = clean_text.replace("= ", ".")
+    clean_text = clean_text.replace(" =", "")
+
+    # remove refs (non-greedy match)
+    clean_text = ref_regex.sub('', clean_text)
+    clean_text = ref_2_regex.sub('', clean_text)
+
+    # remove additional wikiformatting
+    clean_text = re.sub(r'&lt;blockquote&gt;', '', clean_text)
+    clean_text = re.sub(r'&lt;/blockquote&gt;', '', clean_text)
+
+    # change special characters back to normal ones
+    clean_text = clean_text.replace(r'&lt;', '<')
+    clean_text = clean_text.replace(r'&gt;', '>')
+    clean_text = clean_text.replace(r'&quot;', '"')
+    clean_text = clean_text.replace(r'&amp;nbsp;', ' ')
+    clean_text = clean_text.replace(r'&amp;', '&')
+
+    # remove multiple spaces
+    while '  ' in clean_text:
+        clean_text = clean_text.replace('  ', ' ')
+
+    return clean_text.strip()
+
+
+def _write_training_article(article_id, clean_text, training_output):
+    file_loc = training_output + "/" + str(article_id) + ".txt"
+    with open(file_loc, mode='w', encoding='utf8') as outputfile:
+        outputfile.write(clean_text)
+
+
+def _write_training_entity(outputfile, article_id, alias, entity, correct):
+    outputfile.write(article_id + "|" + alias + "|" + entity + "|" + correct + "\n")

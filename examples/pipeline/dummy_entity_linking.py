@@ -66,6 +66,6 @@ def add_el(kb, nlp):
 
 
 if __name__ == "__main__":
-    nlp = spacy.load('en_core_web_sm')
-    my_kb = create_kb(nlp.vocab)
-    add_el(my_kb, nlp)
+    my_nlp = spacy.load('en_core_web_sm')
+    my_kb = create_kb(my_nlp.vocab)
+    add_el(my_kb, my_nlp)
