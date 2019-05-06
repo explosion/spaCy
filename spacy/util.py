@@ -510,7 +510,7 @@ def decaying(start, stop, decay):
     curr = float(start)
     while True:
         yield max(curr, stop)
-        curr -= (decay)
+        curr -= decay
 
 
 def minibatch_by_words(items, size, tuples=True, count_words=len):
