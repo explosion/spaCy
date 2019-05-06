@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from . import wikipedia_processor as wp, kb_creator, training_set_creator
+from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el
 
 import spacy
 from spacy.vocab import Vocab
@@ -19,8 +19,7 @@ ENTITY_DEFS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_defs.csv'
 KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb'
 VOCAB_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/vocab'
 
-TRAINING_OUTPUT_SET_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_nel/'
-TRAINING_INPUT_SET_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_nel_sample_3may2019/'
+TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_nel/'
 
 
 if __name__ == "__main__":
@@ -37,7 +36,11 @@ if __name__ == "__main__":
     to_read_kb = True
     to_test_kb = False
 
+    # create training dataset
     create_wp_training = False
+
+    # apply named entity linking to the training dataset
+    apply_to_training = True
 
     # STEP 1 : create prior probabilities from WP
     # run only once !
@@ -88,13 +91,21 @@ if __name__ == "__main__":
 
         # test KB
         if to_test_kb:
-            kb_creator.test_kb(my_kb)
+            my_nlp = spacy.load('en_core_web_sm')
+            run_el.run_el_toy_example(kb=my_kb, nlp=my_nlp)
             print()
 
     # STEP 5: create a training dataset from WP
     if create_wp_training:
         print("STEP 5: create training dataset", datetime.datetime.now())
-        training_set_creator.create_training(kb=my_kb, entity_input=ENTITY_DEFS, training_output=TRAINING_OUTPUT_SET_DIR)
+        training_set_creator.create_training(kb=my_kb, entity_input=ENTITY_DEFS, training_output=TRAINING_DIR)
+
+    # STEP 6: apply the EL algorithm on the training dataset
+    if apply_to_training:
+        my_nlp = spacy.load('en_core_web_sm')
+        run_el.run_el_training(kb=my_kb, nlp=my_nlp, training_dir=TRAINING_DIR, limit=1000)
+        print()
+
 
     # TODO coreference resolution
     # add_coref()

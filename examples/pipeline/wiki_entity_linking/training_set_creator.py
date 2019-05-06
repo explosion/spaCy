@@ -12,6 +12,7 @@ from . import wikipedia_processor as wp
 Process Wikipedia interlinks to generate a training dataset for the EL algorithm
 """
 
+ENTITY_FILE = "gold_entities.csv"
 
 def create_training(kb, entity_input, training_output):
     if not kb:
@@ -44,7 +45,7 @@ def _process_wikipedia_texts(kb, wp_to_id, training_output, limit=None):
 
     read_ids = set()
 
-    entityfile_loc = training_output + "/" + "gold_entities.csv"
+    entityfile_loc = training_output + "/" + ENTITY_FILE
     with open(entityfile_loc, mode="w", encoding='utf8') as entityfile:
         # write entity training header file
         _write_training_entity(outputfile=entityfile,
@@ -274,3 +275,36 @@ def _write_training_article(article_id, clean_text, training_output):
 
 def _write_training_entity(outputfile, article_id, alias, entity, correct):
     outputfile.write(article_id + "|" + alias + "|" + entity + "|" + correct + "\n")
+
+
+def read_training_entities(training_output, collect_correct=True, collect_incorrect=False):
+    entityfile_loc = training_output + "/" + ENTITY_FILE
+    incorrect_entries_per_article = dict()
+    correct_entries_per_article = dict()
+    with open(entityfile_loc, mode='r', encoding='utf8') as file:
+        for line in file:
+            fields = line.replace('\n', "").split(sep='|')
+            article_id = fields[0]
+            alias = fields[1]
+            entity = fields[2]
+            correct = fields[3]
+
+            if correct == "1" and collect_correct:
+                entry_dict = correct_entries_per_article.get(article_id, dict())
+                if alias in entry_dict:
+                    raise ValueError("Found alias", alias, "multiple times for article", article_id, "in", ENTITY_FILE)
+                entry_dict[alias] = entity
+                correct_entries_per_article[article_id] = entry_dict
+
+            if correct == "0" and collect_incorrect:
+                entry_dict = incorrect_entries_per_article.get(article_id, dict())
+                entities = entry_dict.get(alias, set())
+                entities.add(entity)
+                entry_dict[alias] = entities
+                incorrect_entries_per_article[article_id] = entry_dict
+
+    return correct_entries_per_article, incorrect_entries_per_article
+
+
+
+

@@ -112,26 +112,3 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
     if to_print:
         print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
 
-
-def test_kb(kb):
-    # TODO: the vocab objects are now different between nlp and kb - will be fixed when KB is written as part of NLP IO
-    nlp = spacy.load('en_core_web_sm')
-
-    el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": kb})
-    nlp.add_pipe(el_pipe, last=True)
-
-    candidates = kb.get_candidates("Bush")
-
-    print("generating candidates for 'Bush' :")
-    for c in candidates:
-        print(" ", c.prior_prob, c.alias_, "-->", c.entity_ + " (freq=" + str(c.entity_freq) + ")")
-    print()
-
-    text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
-           "Douglas reminds us to always bring our towel. " \
-           "The main character in Doug's novel is the man Arthur Dent, " \
-           "but Douglas doesn't write about George Washington or Homer Simpson."
-    doc = nlp(text)
-
-    for ent in doc.ents:
-        print("ent", ent.text, ent.label_, ent.kb_id_)
