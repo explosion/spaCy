@@ -6,7 +6,7 @@ import csv
 import bz2
 import datetime
 
-from . import wikipedia_processor as wp
+from . import wikipedia_processor as wp, kb_creator
 
 """
 Process Wikipedia interlinks to generate a training dataset for the EL algorithm
@@ -14,24 +14,13 @@ Process Wikipedia interlinks to generate a training dataset for the EL algorithm
 
 ENTITY_FILE = "gold_entities.csv"
 
-def create_training(kb, entity_input, training_output):
+
+def create_training(kb, entity_def_input, training_output):
     if not kb:
         raise ValueError("kb should be defined")
     # nlp = spacy.load('en_core_web_sm')
-    wp_to_id = _get_entity_to_id(entity_input)
+    wp_to_id = kb_creator._get_entity_to_id(entity_def_input)
     _process_wikipedia_texts(kb, wp_to_id, training_output, limit=100000000)  # TODO: full dataset
-
-
-def _get_entity_to_id(entity_input):
-    entity_to_id = dict()
-    with open(entity_input, 'r', encoding='utf8') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='|')
-        # skip header
-        next(csvreader)
-        for row in csvreader:
-            entity_to_id[row[0]] = row[1]
-
-    return entity_to_id
 
 
 def _process_wikipedia_texts(kb, wp_to_id, training_output, limit=None):

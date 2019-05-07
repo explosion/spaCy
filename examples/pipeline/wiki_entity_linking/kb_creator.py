@@ -4,13 +4,16 @@ from __future__ import unicode_literals
 import spacy
 from spacy.kb import KnowledgeBase
 
+import csv
 import datetime
 
 from . import wikipedia_processor as wp
 from . import wikidata_processor as wd
 
 
-def create_kb(vocab, max_entities_per_alias, min_occ, entity_output, count_input, prior_prob_input,
+def create_kb(vocab, max_entities_per_alias, min_occ,
+              entity_def_output, entity_descr_output,
+              count_input, prior_prob_input,
               to_print=False, write_entity_defs=True):
     """ Create the knowledge base from Wikidata entries """
     kb = KnowledgeBase(vocab=vocab)
@@ -18,15 +21,11 @@ def create_kb(vocab, max_entities_per_alias, min_occ, entity_output, count_input
     print()
     print("1. _read_wikidata_entities", datetime.datetime.now())
     print()
-    # title_to_id = _read_wikidata_entities_regex_depr(limit=1000)
-    title_to_id = wd.read_wikidata_entities_json(limit=None)
+    title_to_id, id_to_descr = wd.read_wikidata_entities_json(limit=None)
 
-    # write the title-ID mapping to file
+    # write the title-ID and ID-description mappings to file
     if write_entity_defs:
-        with open(entity_output, mode='w', encoding='utf8') as entity_file:
-            entity_file.write("WP_title" + "|" + "WD_id" + "\n")
-            for title, qid in title_to_id.items():
-                entity_file.write(title + "|" + str(qid) + "\n")
+        _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_to_descr)
 
     title_list = list(title_to_id.keys())
     entity_list = [title_to_id[x] for x in title_list]
@@ -55,6 +54,41 @@ def create_kb(vocab, max_entities_per_alias, min_occ, entity_output, count_input
     print("done with kb", datetime.datetime.now())
 
     return kb
+
+
+def _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_to_descr):
+    with open(entity_def_output, mode='w', encoding='utf8') as id_file:
+        id_file.write("WP_title" + "|" + "WD_id" + "\n")
+        for title, qid in title_to_id.items():
+            id_file.write(title + "|" + str(qid) + "\n")
+    with open(entity_descr_output, mode='w', encoding='utf8') as descr_file:
+        descr_file.write("WD_id" + "|" + "description" + "\n")
+        for qid, descr in id_to_descr.items():
+            descr_file.write(str(qid) + "|" + descr + "\n")
+
+
+def _get_entity_to_id(entity_def_output):
+    entity_to_id = dict()
+    with open(entity_def_output, 'r', encoding='utf8') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter='|')
+        # skip header
+        next(csvreader)
+        for row in csvreader:
+            entity_to_id[row[0]] = row[1]
+
+    return entity_to_id
+
+
+def _get_id_to_description(entity_descr_output):
+    id_to_desc = dict()
+    with open(entity_descr_output, 'r', encoding='utf8') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter='|')
+        # skip header
+        next(csvreader)
+        for row in csvreader:
+            id_to_desc[row[0]] = row[1]
+
+    return id_to_desc
 
 
 def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_input, to_print=False):

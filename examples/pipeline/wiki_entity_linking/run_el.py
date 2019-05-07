@@ -32,7 +32,7 @@ def run_el_toy_example(nlp, kb):
         print("ent", ent.text, ent.label_, ent.kb_id_)
 
 
-def run_el_training(nlp, kb, training_dir, limit=None):
+def run_el_dev(nlp, kb, training_dir, limit=None):
     _prepare_pipeline(nlp, kb)
 
     correct_entries_per_article, _ = training_set_creator.read_training_entities(training_output=training_dir,
@@ -48,7 +48,7 @@ def run_el_training(nlp, kb, training_dir, limit=None):
             if is_dev(f):
                 article_id = f.replace(".txt", "")
                 if cnt % 500 == 0:
-                    print(datetime.datetime.now(), "processed", cnt, "files in the training dataset")
+                    print(datetime.datetime.now(), "processed", cnt, "files in the dev dataset")
                 cnt += 1
                 with open(os.path.join(training_dir, f), mode="r", encoding='utf8') as file:
                     text = file.read()
