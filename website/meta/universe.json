@@ -1351,6 +1351,27 @@
             "author": "d5555",
             "category": ["training"],
             "tags": ["windows"]
+        },
+        {
+            "id": "holmes",
+            "title": "Holmes",
+            "slogan": "Information extraction from English and German texts based on predicate logic",
+            "github": "msg-systems/holmes-extractor",
+            "url": "https://github.com/msg-systems/holmes-extractor",
+            "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural search, topic matching and supervised document classification.",
+            "pip": "holmes-extractor",
+            "category": ["conversational", "research", "standalone"],
+            "tags": ["chatbots", "text-processing"], 
+            "code_example": [
+                "import holmes_extractor as holmes",
+                "holmes_manager = holmes.Manager(model='en_coref_lg')",
+                "holmes_manager.register_search_phrase('A big dog chases a cat')",
+                "holmes_manager.start_chatbot_mode_console()"
+            ],
+            "author": "Richard Paul Hudson",
+            "author_links": {
+                "github": "richardpaulhudson"
+            }
         }
     ],
 
