@@ -233,7 +233,7 @@ GLOSSARY = {
     "punct": "punctuation",
     "quantmod": "modifier of quantifier",
     "rcmod": "relative clause modifier",
-    "relcl": "relative clause modifier"
+    "relcl": "relative clause modifier",
     "reparandum": "overridden disfluency",
     "root": "root",
     "vocative": "vocative",
