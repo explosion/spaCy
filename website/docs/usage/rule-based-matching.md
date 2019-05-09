@@ -214,7 +214,8 @@ example, you might want to match different spellings of a word, without having
 to add a new pattern for each spelling.
 
 ```python
-pattern = [{"TEXT": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}},
+pattern = [{"TEXT": {"REGEX": "^[Uu](\\.?|nited)$"}},
+           {"TEXT": {"REGEX": "^[Ss](\\.?|tates)$"}},
            {"LOWER": "president"}]
 ```
 
@@ -227,7 +228,7 @@ attributes:
 pattern = [{"TAG": {"REGEX": "^V"}}]
 
 # Match custom attribute values with regular expressions
-pattern = [{"_": {"country": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}}}]
+pattern = [{"_": {"country": {"REGEX": "^[Uu](\\.?|nited) ?[Ss](\\.?|tates)$"}}}]
 ```
 
 <Infobox title="Regular expressions in older versions" variant="warning">
