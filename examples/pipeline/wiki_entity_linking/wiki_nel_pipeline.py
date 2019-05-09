@@ -1,7 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el, train_el
+from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el
+from examples.pipeline.wiki_entity_linking.train_el import EL_Model
 
 import spacy
 from spacy.vocab import Vocab
@@ -31,17 +32,17 @@ if __name__ == "__main__":
     # one-time methods to create KB and write to file
     to_create_prior_probs = False
     to_create_entity_counts = False
-    to_create_kb = True
+    to_create_kb = False
 
     # read KB back in from file
     to_read_kb = True
-    to_test_kb = True
+    to_test_kb = False
 
     # create training dataset
     create_wp_training = False
 
     # run training
-    run_training = False
+    run_training = True
 
     # apply named entity linking to the dev dataset
     apply_to_dev = False
@@ -105,16 +106,17 @@ if __name__ == "__main__":
         print("STEP 5: create training dataset", datetime.datetime.now())
         training_set_creator.create_training(kb=my_kb, entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
 
-    # STEP 7: apply the EL algorithm on the training dataset
+    # STEP 6: apply the EL algorithm on the training dataset
     if run_training:
         print("STEP 6: training ", datetime.datetime.now())
-        my_nlp = spacy.load('en_core_web_sm')
-        train_el.train_model(kb=my_kb, nlp=my_nlp, training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, limit=5)
+        my_nlp = spacy.load('en_core_web_md')
+        trainer = EL_Model(kb=my_kb, nlp=my_nlp)
+        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, limit=50)
         print()
 
-    # STEP 8: apply the EL algorithm on the dev dataset
+    # STEP 7: apply the EL algorithm on the dev dataset
     if apply_to_dev:
-        my_nlp = spacy.load('en_core_web_sm')
+        my_nlp = spacy.load('en_core_web_md')
         run_el.run_el_dev(kb=my_kb, nlp=my_nlp, training_dir=TRAINING_DIR, limit=2000)
         print()
 
