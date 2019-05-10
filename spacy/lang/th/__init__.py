@@ -28,7 +28,7 @@ class ThaiTokenizer(DummyTokenizer):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
 
     def __call__(self, text):
-        words = list(self.word_tokenize(text, "newmm"))
+        words = list(self.word_tokenize(text))
         spaces = [False] * len(words)
         return Doc(self.vocab, words=words, spaces=spaces)
 
