@@ -181,10 +181,10 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
 def make_docs(nlp, batch, min_length, max_length):
     docs = []
     for record in batch:
-        text = record["text"]
         if "tokens" in record:
             doc = Doc(nlp.vocab, words=record["tokens"])
         else:
+            text = record["text"]
             doc = nlp.make_doc(text)
         if "heads" in record:
             heads = record["heads"]
