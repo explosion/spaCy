@@ -25,6 +25,11 @@ class Underscore(object):
         object.__setattr__(self, "_start", start)
         object.__setattr__(self, "_end", end)
 
+    def __dir__(self):
+        # Hack to enable autocomplete on custom extensions
+        extensions = list(self._extensions.keys())
+        return ["set", "get", "has"] + extensions
+
     def __getattr__(self, name):
         if name not in self._extensions:
             raise AttributeError(Errors.E046.format(name=name))

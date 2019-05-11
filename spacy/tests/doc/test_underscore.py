@@ -140,3 +140,12 @@ def test_underscore_mutable_defaults_dict(en_vocab):
     assert len(token1._.mutable) == 2
     assert token1._.mutable["x"] == ["y"]
     assert len(token2._.mutable) == 0
+
+
+def test_underscore_dir(en_vocab):
+    """Test that dir() correctly returns extension attributes. This enables
+    things like tab-completion for the attributes in doc._."""
+    Doc.set_extension("test_dir", default=None)
+    doc = Doc(en_vocab, words=["hello", "world"])
+    assert "_" in dir(doc)
+    assert "test_dir" in dir(doc._)
