@@ -120,7 +120,6 @@ Update the models in the pipeline.
 | `drop`                                       | float    | The dropout rate.                                                                                                                                                                                                   |
 | `sgd`                                        | callable | An optimizer.                                                                                                                                                                                                       |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                        |
-| **RETURNS**                                  | dict     | Results from the update.                                                                                                                                                                                            |
 
 ## Language.begin_training {#begin_training tag="method"}
 
