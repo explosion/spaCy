@@ -149,6 +149,8 @@ def test_underscore_dir(en_vocab):
     doc = Doc(en_vocab, words=["hello", "world"])
     assert "_" in dir(doc)
     assert "test_dir" in dir(doc._)
+    assert "test_dir" not in dir(doc[0]._)
+    assert "test_dir" not in dir(doc[0:2]._)
 
 
 def test_underscore_docstring(en_vocab):
