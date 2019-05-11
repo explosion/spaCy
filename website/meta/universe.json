@@ -1361,7 +1361,7 @@
             "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural search, topic matching and supervised document classification.",
             "pip": "holmes-extractor",
             "category": ["conversational", "research", "standalone"],
-            "tags": ["chatbots", "text-processing"], 
+            "tags": ["chatbots", "text-processing"],
             "code_example": [
                 "import holmes_extractor as holmes",
                 "holmes_manager = holmes.Manager(model='en_coref_lg')",
