@@ -40,11 +40,12 @@ class Underscore(object):
             method_partial = functools.partial(method, self._obj)
             # Hack to port over docstrings of the original function
             # See https://stackoverflow.com/q/27362727/6400719
-            method_docstring = (
+            method_docstring = method.__doc__ or ""
+            method_docstring_prefix = (
                 "This method is a partial function and its first argument "
                 "(the object it's called on) will be filled automatically. "
             )
-            method_partial.__doc__ = method_docstring + method.__doc__
+            method_partial.__doc__ = method_docstring_prefix + method_docstring
             return method_partial
         else:
             key = self._get_key(name)
