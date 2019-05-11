@@ -161,6 +161,6 @@ The L2 norm of the lexeme's vector representation.
 | `is_stop`                                    | bool    | Is the lexeme part of a "stop list"?                                                                         |
 | `lang`                                       | int     | Language of the parent vocabulary.                                                                           |
 | `lang_`                                      | unicode | Language of the parent vocabulary.                                                                           |
-| `prob`                                       | float   | Smoothed log probability estimate of the lexeme's type.                                                      |
+| `prob`                                       | float   | Smoothed log probability estimate of the lexeme's word type (context-independent entry in the vocabulary).   |
 | `cluster`                                    | int     | Brown cluster ID.                                                                                            |
 | `sentiment`                                  | float   | A scalar value indicating the positivity or negativity of the lexeme.                                        |

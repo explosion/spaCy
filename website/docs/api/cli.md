@@ -210,7 +210,7 @@ $ python -m spacy train [lang] [output_path] [train_path] [dev_path]
 | `output_path`                                         | positional    | Directory to store model in. Will be created if it doesn't exist.                                                                                                 |
 | `train_path`                                          | positional    | Location of JSON-formatted training data. Can be a file or a directory of files.                                                                                  |
 | `dev_path`                                            | positional    | Location of JSON-formatted development data for evaluation. Can be a file or a directory of files.                                                                |
-| `--base-model`, `-b`                                  | option        | Optional name of base model to update. Can be any loadable spaCy model.                                                                                           |
+| `--base-model`, `-b` <Tag variant="new">2.1</Tag>     | option        | Optional name of base model to update. Can be any loadable spaCy model.                                                                                           |
 | `--pipeline`, `-p` <Tag variant="new">2.1</Tag>       | option        | Comma-separated names of pipeline components to train. Defaults to `'tagger,parser,ner'`.                                                                         |
 | `--vectors`, `-v`                                     | option        | Model to load vectors from.                                                                                                                                       |
 | `--n-iter`, `-n`                                      | option        | Number of iterations (default: `30`).                                                                                                                             |
@@ -327,7 +327,7 @@ tokenization can be provided.
 
 | Key      | Type    | Description                                  |
 | -------- | ------- | -------------------------------------------- |
-| `text`   | unicode | The raw input text.                          |
+| `text`   | unicode | The raw input text. Is not required if `tokens` available. |
 | `tokens` | list    | Optional tokenization, one string per token. |
 
 ```json
@@ -335,6 +335,7 @@ tokenization can be provided.
 {"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
 {"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
 {"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
+{"tokens": ["If", "tokens", "are", "provided", "then", "we", "can", "skip", "the", "raw", "input", "text"]}
 ```
 
 ## Init Model {#init-model new="2"}

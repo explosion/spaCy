@@ -260,7 +260,7 @@ def my_component(doc):
 
 nlp = spacy.load("en_core_web_sm")
 nlp.add_pipe(my_component, name="print_info", last=True)
-print(nlp.pipe_names)  # ['print_info', 'tagger', 'parser', 'ner']
+print(nlp.pipe_names)  # ['tagger', 'parser', 'ner', 'print_info']
 doc = nlp(u"This is a sentence.")
 
 ```
