@@ -149,3 +149,17 @@ def test_underscore_dir(en_vocab):
     doc = Doc(en_vocab, words=["hello", "world"])
     assert "_" in dir(doc)
     assert "test_dir" in dir(doc._)
+
+
+def test_underscore_docstring(en_vocab):
+    """Test that docstrings are available for extension methods, even though
+    they're partials."""
+
+    def test_method(doc, arg1=1, arg2=2):
+        """I am a docstring."""
+        return (arg1, arg2)
+
+    Doc.set_extension("test_docstrings", method=test_method)
+    doc = Doc(en_vocab, words=["hello", "world"])
+    assert test_method.__doc__ == "I am a docstring."
+    assert doc._.test_docstrings.__doc__ == "I am a docstring."

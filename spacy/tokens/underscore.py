@@ -37,7 +37,11 @@ class Underscore(object):
         if getter is not None:
             return getter(self._obj)
         elif method is not None:
-            return functools.partial(method, self._obj)
+            method_partial = functools.partial(method, self._obj)
+            # Hack to port over docstrings of the original function
+            # See https://stackoverflow.com/q/27362727/6400719
+            method_partial.__doc__ = method.__doc__
+            return method_partial
         else:
             key = self._get_key(name)
             if key in self._doc.user_data:
