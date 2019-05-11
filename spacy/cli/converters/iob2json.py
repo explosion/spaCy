@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 import re
-from cytoolz import partition_all
 
 from ...gold import iob_to_biluo
+from ...util import minibatch
 
 
 def iob2json(input_data, n_sents=10, *args, **kwargs):
@@ -46,7 +46,7 @@ def read_iob(raw_sents):
 
 def merge_sentences(docs, n_sents):
     merged = []
-    for group in partition_all(n_sents, docs):
+    for group in minibatch(docs, size=n_sents):
         group = list(group)
         first = group.pop(0)
         to_extend = first["paragraphs"][0]["sentences"]
