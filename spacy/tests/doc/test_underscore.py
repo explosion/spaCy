@@ -158,10 +158,11 @@ def test_underscore_docstring(en_vocab):
     they're partials."""
 
     def test_method(doc, arg1=1, arg2=2):
-        """I am a docstring."""
+        """I am a docstring"""
         return (arg1, arg2)
 
     Doc.set_extension("test_docstrings", method=test_method)
     doc = Doc(en_vocab, words=["hello", "world"])
-    assert test_method.__doc__ == "I am a docstring."
-    assert doc._.test_docstrings.__doc__ == "I am a docstring."
+    assert test_method.__doc__ == "I am a docstring"
+    print(doc._.test_docstrings.__doc__)
+    assert doc._.test_docstrings.__doc__.rsplit(". ")[-1] == "I am a docstring"
