@@ -80,8 +80,16 @@ def test_entity_ruler_existing_complex(nlp, patterns, add_ent):
 
 def test_entity_ruler_entity_id(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    if not Span.has_extension("entity_id"):
-        Span.set_extension("entity_id", default=None)
+    nlp.add_pipe(ruler)
+    doc = nlp("Apple is a technology company")
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "TECH_ORG"
+    assert doc.ents[0].ent_id_ == "a1"
+
+
+def test_entity_ruler_cfg_ent_id_sep(nlp, patterns):
+    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True, ent_id_sep="**")
+    assert "TECH_ORG**a1" in ruler.phrase_patterns
     nlp.add_pipe(ruler)
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
