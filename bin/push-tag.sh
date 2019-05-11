@@ -16,4 +16,4 @@ version=${version/\'/}
 version=${version/\"/}
 version=${version/\"/}
 git tag "v$version"
-git push origin "v$version" --tags
+git push origin "v$version"
