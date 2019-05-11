@@ -2,23 +2,17 @@
 from __future__ import unicode_literals
 
 import re
+from cytoolz import partition_all
 
 from ...gold import iob_to_biluo
-from ...util import minibatch
 
 
 def iob2json(input_data, n_sents=10, *args, **kwargs):
     """
     Convert IOB files into JSON format for use with train cli.
     """
-    docs = []
-    for group in minibatch(docs, n_sents):
-        group = list(group)
-        first = group.pop(0)
-        to_extend = first["paragraphs"][0]["sentences"]
-        for sent in group[1:]:
-            to_extend.extend(sent["paragraphs"][0]["sentences"])
-        docs.append(first)
+    sentences = read_iob(input_data.split("\n"))
+    docs = merge_sentences(sentences, n_sents)
     return docs
 
 
@@ -27,7 +21,6 @@ def read_iob(raw_sents):
     for line in raw_sents:
         if not line.strip():
             continue
-        # tokens = [t.split("|") for t in line.split()]
         tokens = [re.split("[^\w\-]", line.strip())]
         if len(tokens[0]) == 3:
             words, pos, iob = zip(*tokens)
@@ -49,3 +42,15 @@ def read_iob(raw_sents):
     paragraphs = [{"sentences": [sent]} for sent in sentences]
     docs = [{"id": 0, "paragraphs": [para]} for para in paragraphs]
     return docs
+
+
+def merge_sentences(docs, n_sents):
+    merged = []
+    for group in partition_all(n_sents, docs):
+        group = list(group)
+        first = group.pop(0)
+        to_extend = first["paragraphs"][0]["sentences"]
+        for sent in group[1:]:
+            to_extend.extend(sent["paragraphs"][0]["sentences"])
+        merged.append(first)
+    return merged
