@@ -164,5 +164,4 @@ def test_underscore_docstring(en_vocab):
     Doc.set_extension("test_docstrings", method=test_method)
     doc = Doc(en_vocab, words=["hello", "world"])
     assert test_method.__doc__ == "I am a docstring"
-    print(doc._.test_docstrings.__doc__)
     assert doc._.test_docstrings.__doc__.rsplit(". ")[-1] == "I am a docstring"
