@@ -102,7 +102,7 @@ systems, or to pre-process text for **deep learning**.
   integrated and opinionated. spaCy tries to avoid asking the user to choose
   between multiple algorithms that deliver equivalent functionality. Keeping the
   menu small lets spaCy deliver generally better performance and developer
-  experience.M
+  experience.
 
 - **spaCy is not a company**. It's an open-source library. Our company
   publishing spaCy and other software is called

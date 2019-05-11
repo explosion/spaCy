@@ -9,7 +9,7 @@ srsly>=0.0.5,<1.1.0
 # Third party dependencies
 numpy>=1.15.0
 requests>=2.13.0,<3.0.0
-jsonschema>=2.6.0,<3.0.0
+jsonschema>=2.6.0,<3.1.0
 plac<1.0.0,>=0.9.6
 pathlib==1.0.1; python_version < "3.4"
 # Development dependencies

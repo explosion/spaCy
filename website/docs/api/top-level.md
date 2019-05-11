@@ -211,16 +211,16 @@ Render a dependency parse tree or named entity visualization.
 > html = displacy.render(doc, style="dep")
 > ```
 
-| Name        | Type                | Description                                                                                                                          | Default                |
-| ----------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
-| `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                            |
-| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`                |
-| `page`      | bool                | Render markup as full HTML page.                                                                                                     | `False`                |
-| `minify`    | bool                | Minify HTML markup.                                                                                                                  | `False`                |
-| `jupyter`   | bool                | Explicitly enable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook.                         | detected automatically |
-| `options`   | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                | `{}`                   |
-| `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`                |
-| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                |
+| Name        | Type                | Description                                                                                                                                               | Default |
+| ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `docs`      | list, `Doc`, `Span` | Document(s) to visualize.                                                                                                                                 |
+| `style`     | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                                                  | `'dep'` |
+| `page`      | bool                | Render markup as full HTML page.                                                                                                                          | `False` |
+| `minify`    | bool                | Minify HTML markup.                                                                                                                                       | `False` |
+| `jupyter`   | bool                | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None`. | `None`  |
+| `options`   | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                                     | `{}`    |
+| `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples.                      | `False` |
+| **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                                     |
 
 ### Visualizer options {#displacy_options}
 
@@ -653,6 +653,27 @@ for batching. Larger `buffsize` means less bias.
 | `iterable` | iterable | Iterator to shuffle.   |
 | `buffsize` | int      | Items to hold back.    |
 | **YIELDS** | iterable | The shuffled iterator. |
+
+### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
+
+Filter a sequence of [`Span`](/api/span) objects and remove duplicates or
+overlaps. Useful for creating named entities (where one token can only be part
+of one entity) or when merging spans with
+[`Retokenizer.merge`](/api/doc#retokenizer.merge). When spans overlap, the
+(first) longest span is preferred over shorter spans.
+
+> #### Example
+>
+> ```python
+> doc = nlp("This is a sentence.")
+> spans = [doc[0:2], doc[0:2], doc[0:4]]
+> filtered = filter_spans(spans)
+> ```
+
+| Name        | Type     | Description          |
+| ----------- | -------- | -------------------- |
+| `spans`     | iterable | The spans to filter. |
+| **RETURNS** | list     | The filtered spans.  |
 
 ## Compatibility functions {#compat source="spacy/compaty.py"}
 
