@@ -327,7 +327,7 @@ tokenization can be provided.
 
 | Key      | Type    | Description                                  |
 | -------- | ------- | -------------------------------------------- |
-| `text`   | unicode | The raw input text.                          |
+| `text`   | unicode | The raw input text. Is not required if `tokens` available. |
 | `tokens` | list    | Optional tokenization, one string per token. |
 
 ```json
@@ -335,6 +335,7 @@ tokenization can be provided.
 {"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
 {"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
 {"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
+{"tokens": ["If", "tokens", "are", "provided", "then", "we", "can", "skip", "the", "raw", "input", "text"]}
 ```
 
 ## Init Model {#init-model new="2"}
