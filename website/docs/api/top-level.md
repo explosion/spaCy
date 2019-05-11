@@ -351,7 +351,7 @@ the two-letter language code.
 | `name` | unicode    | Two-letter language code, e.g. `'en'`. |
 | `cls`  | `Language` | The language class, e.g. `English`.    |
 
-### util.lang_class_is_loaded (#util.lang_class_is_loaded tag="function" new="2.1")
+### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
 
 Check whether a `Language` class is already loaded. `Language` classes are
 loaded lazily, to avoid expensive setup code associated with the language data.
