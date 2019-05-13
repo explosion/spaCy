@@ -70,11 +70,9 @@ def is_dev(file_name):
     return file_name.endswith("3.txt")
 
 
-def evaluate(predictions, golds):
+def evaluate(predictions, golds, to_print=True):
     if len(predictions) != len(golds):
         raise ValueError("predictions and gold entities should have the same length")
-
-    print("Evaluating", len(golds), "entities")
 
     tp = 0
     fp = 0
@@ -89,17 +87,22 @@ def evaluate(predictions, golds):
         else:
             fp += 1
 
-    print("tp", tp)
-    print("fp", fp)
-    print("fn", fn)
+    if to_print:
+        print("Evaluating", len(golds), "entities")
+        print("tp", tp)
+        print("fp", fp)
+        print("fn", fn)
 
-    precision = tp / (tp + fp + 0.0000001)
-    recall = tp / (tp + fn + 0.0000001)
+    precision = 100 * tp / (tp + fp + 0.0000001)
+    recall = 100 * tp / (tp + fn + 0.0000001)
     fscore = 2 * recall * precision / (recall + precision + 0.0000001)
 
-    print("precision", round(100 * precision, 1), "%")
-    print("recall", round(100 * recall, 1), "%")
-    print("Fscore", round(100 * fscore, 1), "%")
+    if to_print:
+        print("precision", round(precision, 1), "%")
+        print("recall", round(recall, 1), "%")
+        print("Fscore", round(fscore, 1), "%")
+
+    return precision, recall, fscore
 
 
 def _prepare_pipeline(nlp, kb):
