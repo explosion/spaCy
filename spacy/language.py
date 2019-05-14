@@ -333,6 +333,11 @@ class Language(object):
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
+        if not hasattr(component, "__call__"):
+            msg = Errors.E003.format(component=repr(component), name=name)
+            if isinstance(component, basestring_) and component in self.factories:
+                msg += Errors.E135.format(name=name)
+            raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
 
     def rename_pipe(self, old_name, new_name):
