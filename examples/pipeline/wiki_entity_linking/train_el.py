@@ -4,18 +4,17 @@ from __future__ import unicode_literals
 import os
 import datetime
 from os import listdir
-import numpy as np
 from random import shuffle
 
 from examples.pipeline.wiki_entity_linking import run_el, training_set_creator, kb_creator
 
 from spacy._ml import SpacyVectors, create_default_optimizer, zero_init
 
-from thinc.api import chain, flatten_add_lengths, with_getitem, clone, with_flatten
-from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
+from thinc.api import chain, flatten_add_lengths, with_getitem, clone
+from thinc.v2v import Model, Softmax, Maxout, Affine, ReLu
 from thinc.t2v import Pooling, sum_pool, mean_pool
-from thinc.t2t import ExtractWindow, ParametricAttention
-from thinc.misc import Residual, LayerNorm as LN
+from thinc.t2t import ParametricAttention
+from thinc.misc import Residual
 
 from spacy.tokens import Doc
 
@@ -35,18 +34,20 @@ class EL_Model():
         self.entity_encoder = self._simple_encoder(in_width=300, out_width=96)
         self.article_encoder = self._simple_encoder(in_width=300, out_width=96)
 
-    def train_model(self, training_dir, entity_descr_output, limit=None, to_print=True):
+    def train_model(self, training_dir, entity_descr_output, trainlimit=None, devlimit=None, to_print=True):
         Doc.set_extension("entity_id", default=None)
 
         train_instances, train_pos, train_neg, train_doc = self._get_training_data(training_dir,
                                                                                    entity_descr_output,
                                                                                    False,
-                                                                                   limit, to_print)
+                                                                                   trainlimit,
+                                                                                   to_print)
 
         dev_instances, dev_pos, dev_neg, dev_doc = self._get_training_data(training_dir,
                                                                            entity_descr_output,
                                                                            True,
-                                                                           limit / 10, to_print)
+                                                                           devlimit,
+                                                                           to_print)
 
         if to_print:
             print("Training on", len(train_instances.values()), "articles")
@@ -77,7 +78,6 @@ class EL_Model():
 
         if to_print:
             print("Trained on", instance_count, "instance clusters")
-
 
     def _test_dev(self, dev_instances, dev_pos, dev_neg, dev_doc):
         predictions = list()
@@ -129,19 +129,19 @@ class EL_Model():
         conv_depth = 1
         cnn_maxout_pieces = 3
         with Model.define_operators({">>": chain, "**": clone}):
-            # encoder = SpacyVectors \
-            #            >> flatten_add_lengths \
-            #           >> ParametricAttention(in_width)\
-            #            >> Pooling(mean_pool) \
-            #           >> Residual(zero_init(Maxout(in_width, in_width)))  \
-            #           >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
             encoder = SpacyVectors \
-                     >> flatten_add_lengths \
-                     >> with_getitem(0, Affine(in_width, in_width)) \
-                     >> ParametricAttention(in_width) \
-                     >> Pooling(sum_pool) \
-                     >> Residual(ReLu(in_width, in_width)) ** conv_depth \
-                     >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
+                        >> flatten_add_lengths \
+                       >> ParametricAttention(in_width)\
+                        >> Pooling(mean_pool) \
+                       >> Residual(zero_init(Maxout(in_width, in_width)))  \
+                       >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
+            # encoder = SpacyVectors \
+            #         >> flatten_add_lengths \
+            #         >> with_getitem(0, Affine(in_width, in_width)) \
+            #         >> ParametricAttention(in_width) \
+            #         >> Pooling(sum_pool) \
+            #         >> Residual(ReLu(in_width, in_width)) ** conv_depth \
+            #         >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
 
             # >> zero_init(Affine(nr_class, width, drop_factor=0.0))
             # >> logistic
@@ -178,7 +178,6 @@ class EL_Model():
             # print("encoding dim", len(true_entity_encoding[0]))
 
             consensus_encoding = self._calculate_consensus(doc_encoding, true_entity_encoding)
-            # consensus_encoding_t = consensus_encoding.transpose()
 
             doc_mse, doc_diff = self._calculate_similarity(doc_encoding, consensus_encoding)
 
