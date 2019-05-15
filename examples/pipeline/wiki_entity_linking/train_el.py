@@ -26,9 +26,10 @@ from spacy.tokens import Doc
 class EL_Model():
 
     INPUT_DIM = 300
-    OUTPUT_DIM = 5  # 96
-    PRINT_LOSS = True
+    OUTPUT_DIM = 96
+    PRINT_LOSS = False
     PRINT_F = True
+    EPS = 0.0000000005
 
     labels = ["MATCH", "NOMATCH"]
     name = "entity_linker"
@@ -71,12 +72,12 @@ class EL_Model():
         instance_count = 0
 
         for article_id, inst_cluster_set in train_instances.items():
-            print("article", article_id)
+            # print("article", article_id)
             article_doc = train_doc[article_id]
             pos_ex_list = list()
             neg_exs_list = list()
             for inst_cluster in inst_cluster_set:
-                print("inst_cluster", inst_cluster)
+                # print("inst_cluster", inst_cluster)
                 instance_count += 1
                 pos_ex_list.append(train_pos.get(inst_cluster))
                 neg_exs_list.append(train_neg.get(inst_cluster, []))
@@ -143,19 +144,19 @@ class EL_Model():
         conv_depth = 1
         cnn_maxout_pieces = 3
         with Model.define_operators({">>": chain, "**": clone}):
-            encoder = SpacyVectors \
-                        >> flatten_add_lengths \
-                       >> ParametricAttention(in_width)\
-                        >> Pooling(mean_pool) \
-                       >> Residual(zero_init(Maxout(in_width, in_width)))  \
-                       >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
             # encoder = SpacyVectors \
-            #         >> flatten_add_lengths \
-            #         >> with_getitem(0, Affine(in_width, in_width)) \
-            #         >> ParametricAttention(in_width) \
-            #         >> Pooling(sum_pool) \
-            #         >> Residual(ReLu(in_width, in_width)) ** conv_depth \
-            #         >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
+            #            >> flatten_add_lengths \
+            #           >> ParametricAttention(in_width)\
+            #            >> Pooling(mean_pool) \
+            #           >> Residual(zero_init(Maxout(in_width, in_width)))  \
+            #           >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
+            encoder = SpacyVectors \
+                     >> flatten_add_lengths \
+                     >> with_getitem(0, Affine(in_width, in_width)) \
+                     >> ParametricAttention(in_width) \
+                     >> Pooling(sum_pool) \
+                     >> Residual(ReLu(in_width, in_width)) ** conv_depth \
+                     >> zero_init(Affine(out_width, in_width, drop_factor=0.0))
 
             # >> zero_init(Affine(nr_class, width, drop_factor=0.0))
             # >> logistic
@@ -178,20 +179,16 @@ class EL_Model():
         return sgd
 
     def update(self, article_doc, true_entity_list, false_entities_list, drop=0., losses=None):
-
+        doc_encoding, article_bp = self.article_encoder.begin_update([article_doc], drop=drop)
+        doc_encoding = doc_encoding[0]
+        # print("doc", doc_encoding)
 
         for i, true_entity in enumerate(true_entity_list):
-            for cnt in range(10):
-            #try:
+            try:
                 false_vectors = list()
                 false_entities = false_entities_list[i]
                 if len(false_entities) > 0:
                     # TODO: batch per doc
-                    doc_encoding, article_bp = self.article_encoder.begin_update([article_doc], drop=drop)
-                    doc_encoding = doc_encoding[0]
-                    print()
-                    print(cnt)
-                    print("doc", doc_encoding)
 
                     for false_entity in false_entities:
                         # TODO: one call only to begin_update ?
@@ -201,6 +198,7 @@ class EL_Model():
 
                     true_entity_encoding, true_entity_bp = self.entity_encoder.begin_update([true_entity], drop=drop)
                     true_entity_encoding = true_entity_encoding[0]
+                    # true_gradient = self._calculate_true_gradient(doc_encoding, true_entity_encoding)
 
                     all_vectors = [true_entity_encoding]
                     all_vectors.extend(false_vectors)
@@ -208,29 +206,37 @@ class EL_Model():
                     # consensus_encoding = self._calculate_consensus(doc_encoding, true_entity_encoding)
 
                     true_prob = self._calculate_probability(doc_encoding, true_entity_encoding, all_vectors)
-                    print("true", true_prob, true_entity_encoding)
+                    # print("true", true_prob, true_entity_encoding)
+                    # print("true gradient", true_gradient)
+                    # print()
 
                     all_probs = [true_prob]
                     for false_vector in false_vectors:
                         false_prob = self._calculate_probability(doc_encoding, false_vector, all_vectors)
-                        print("false", false_prob, false_vector)
+                        # print("false", false_prob, false_vector)
+                        # print("false gradient", false_gradient)
+                        # print()
                         all_probs.append(false_prob)
 
                     loss = self._calculate_loss(true_prob, all_probs).astype(np.float32)
                     if self.PRINT_LOSS:
-                        print("loss", round(loss, 5))
+                        print(round(loss, 5))
 
-                    doc_gradient = self._calculate_doc_gradient(loss, doc_encoding, true_entity_encoding, false_vectors)
-                    print("doc_gradient", doc_gradient)
-                    article_bp([doc_gradient.astype(np.float32)], sgd=self.sgd_article)
-            #except Exception as e:
-                #pass
+                    #doc_gradient = self._calculate_doc_gradient(loss, doc_encoding, true_entity_encoding, false_vectors)
+                    entity_gradient = self._calculate_entity_gradient(doc_encoding, true_entity_encoding, false_vectors)
+                    # print("entity_gradient", entity_gradient)
+                    # print("doc_gradient", doc_gradient)
+                    # article_bp([doc_gradient.astype(np.float32)], sgd=self.sgd_article)
+                    true_entity_bp([entity_gradient.astype(np.float32)], sgd=self.sgd_entity)
+                    #true_entity_bp([true_gradient.astype(np.float32)], sgd=self.sgd_entity)
+            except Exception as e:
+                pass
 
 
     # TODO: FIX
     def _calculate_consensus(self, vector1, vector2):
         if len(vector1) != len(vector2):
-            raise ValueError("To calculate consenus, both vectors should be of equal length")
+            raise ValueError("To calculate consensus, both vectors should be of equal length")
 
         avg = (vector2 + vector1) / 2
         return avg
@@ -246,12 +252,11 @@ class EL_Model():
         for v in allvectors:
             e_sum += self._calculate_dot_exp(v, vector1_t)
 
-        return float(e / e_sum)
+        return float(e / (self.EPS + e_sum))
 
-    @staticmethod
-    def _calculate_loss(true_prob, all_probs):
+    def _calculate_loss(self, true_prob, all_probs):
         """ all_probs should include true_prob ! """
-        return -1 * np.log(true_prob / sum(all_probs))
+        return -1 * np.log((self.EPS + true_prob) / (self.EPS + sum(all_probs)))
 
     @staticmethod
     def _calculate_doc_gradient(loss, doc_vector, true_vector, false_vectors):
@@ -276,9 +281,53 @@ class EL_Model():
 
         return gradient
 
+    def _calculate_true_gradient(self, doc_vector, entity_vector):
+        # sum_entity_vector = sum(entity_vector)
+        # gradient = [-sum_entity_vector/(self.EPS + np.exp(doc_vector[i] * entity_vector[i])) for i in range(len(doc_vector))]
+        gradient = [1 / (self.EPS + np.exp(doc_vector[i] * entity_vector[i])) for i in range(len(doc_vector))]
+        return np.asarray(gradient)
+
+    def _calculate_entity_gradient(self, doc_vector, true_vector, false_vectors):
+        entity_gradient = list()
+        prob_true = list()
+        false_prob_list = list()
+        for i in range(len(true_vector)):
+            doc_i = np.asarray([doc_vector[i]])
+            true_i = np.asarray([true_vector[i]])
+            falses_i = np.asarray([[fv[i]] for fv in false_vectors])
+            all_i = [true_i]
+            all_i.extend(falses_i)
+
+            prob_true_i = self._calculate_probability(doc_i, true_i, all_i)
+            prob_true.append(prob_true_i)
+
+            false_list = list()
+            all_probs_i = [prob_true_i]
+            for false_vector in falses_i:
+                false_prob_i = self._calculate_probability(doc_i, false_vector, all_i)
+                all_probs_i.append(false_prob_i)
+                false_list.append(false_prob_i)
+            false_prob_list.append(false_list)
+
+            sign_loss_i = 1
+            if doc_vector[i] * true_vector[i] < 0:
+                sign_loss_i = -1
+
+            loss_i = sign_loss_i * self._calculate_loss(prob_true_i, all_probs_i).astype(np.float32)
+            entity_gradient.append(loss_i)
+        # print("prob_true", prob_true)
+        # print("false_prob_list", false_prob_list)
+        return np.asarray(entity_gradient)
+
+
     @staticmethod
     def _calculate_dot_exp(vector1, vector2_transposed):
-        e = np.exp(vector1.dot(vector2_transposed))
+        dot_product = vector1.dot(vector2_transposed)
+        dot_product = min(50, dot_product)
+        # dot_product = max(-10000, dot_product)
+        # print("DOT", dot_product)
+        e = np.exp(dot_product)
+        # print("E", e)
         return e
 
     def _get_training_data(self, training_dir, entity_descr_output, dev, limit, to_print):
