@@ -383,6 +383,8 @@ class Errors(object):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not exceed 1, "
             "but found {sum}.")
     E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
+    E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
+            "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
 
 
 @add_codes

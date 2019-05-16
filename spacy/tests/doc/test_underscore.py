@@ -140,3 +140,28 @@ def test_underscore_mutable_defaults_dict(en_vocab):
     assert len(token1._.mutable) == 2
     assert token1._.mutable["x"] == ["y"]
     assert len(token2._.mutable) == 0
+
+
+def test_underscore_dir(en_vocab):
+    """Test that dir() correctly returns extension attributes. This enables
+    things like tab-completion for the attributes in doc._."""
+    Doc.set_extension("test_dir", default=None)
+    doc = Doc(en_vocab, words=["hello", "world"])
+    assert "_" in dir(doc)
+    assert "test_dir" in dir(doc._)
+    assert "test_dir" not in dir(doc[0]._)
+    assert "test_dir" not in dir(doc[0:2]._)
+
+
+def test_underscore_docstring(en_vocab):
+    """Test that docstrings are available for extension methods, even though
+    they're partials."""
+
+    def test_method(doc, arg1=1, arg2=2):
+        """I am a docstring"""
+        return (arg1, arg2)
+
+    Doc.set_extension("test_docstrings", method=test_method)
+    doc = Doc(en_vocab, words=["hello", "world"])
+    assert test_method.__doc__ == "I am a docstring"
+    assert doc._.test_docstrings.__doc__.rsplit(". ")[-1] == "I am a docstring"
