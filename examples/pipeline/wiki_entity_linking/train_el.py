@@ -12,10 +12,9 @@ from examples.pipeline.wiki_entity_linking import run_el, training_set_creator, 
 
 from spacy._ml import SpacyVectors, create_default_optimizer, zero_init, logistic
 
-from thinc.api import chain, concatenate, flatten_add_lengths, with_getitem, clone, with_flatten
-from thinc.neural.util import get_array_module
-from thinc.v2v import Model, Softmax, Maxout, Affine, ReLu
-from thinc.t2v import Pooling, sum_pool, mean_pool, max_pool
+from thinc.api import chain, concatenate, flatten_add_lengths, clone
+from thinc.v2v import Model, Maxout, Affine
+from thinc.t2v import Pooling, mean_pool
 from thinc.t2t import ParametricAttention
 from thinc.misc import Residual
 from thinc.misc import LayerNorm as LN
@@ -27,16 +26,15 @@ from spacy.tokens import Doc
 
 class EL_Model:
 
-    PRINT_LOSS = True
+    PRINT_LOSS = False
     PRINT_F = True
     EPS = 0.0000000005
     CUTOFF = 0.5
 
     INPUT_DIM = 300
     ENTITY_WIDTH = 64
-    ARTICLE_WIDTH = 64
-    HIDDEN_1_WIDTH = 256
-    HIDDEN_2_WIDTH = 64
+    ARTICLE_WIDTH = 128
+    HIDDEN_WIDTH = 64
 
     name = "entity_linker"
 
@@ -53,46 +51,44 @@ class EL_Model:
 
         Doc.set_extension("entity_id", default=None)
 
-        train_instances, train_pos, train_neg, train_doc = self._get_training_data(training_dir,
-                                                                                   entity_descr_output,
-                                                                                   False,
-                                                                                   trainlimit,
-                                                                                   to_print=False)
+        train_inst, train_pos, train_neg, train_doc = self._get_training_data(training_dir,
+                                                                              entity_descr_output,
+                                                                              False,
+                                                                              trainlimit,
+                                                                              to_print=False)
 
-        dev_instances, dev_pos, dev_neg, dev_doc = self._get_training_data(training_dir,
-                                                                           entity_descr_output,
-                                                                           True,
-                                                                           devlimit,
-                                                                           to_print=False)
+        dev_inst, dev_pos, dev_neg, dev_doc = self._get_training_data(training_dir,
+                                                                      entity_descr_output,
+                                                                      True,
+                                                                      devlimit,
+                                                                      to_print=False)
         self._begin_training()
 
-        if self.PRINT_F:
-            _, _, f_avg_train = -3.42, -3.42, -3.42   # self._test_dev(train_instances, train_pos, train_neg, train_doc, avg=True)
-            _, _, f_nonavg_train = self._test_dev(train_instances, train_pos, train_neg, train_doc, avg=False)
-            _, _, f_random_train = self._test_dev(train_instances, train_pos, train_neg, train_doc, calc_random=True)
-            _, _, f_avg_dev = -3.42, -3.42, -3.42   # self._test_dev(dev_instances, dev_pos, dev_neg, dev_doc, avg=True)
-            _, _, f_nonavg_dev = self._test_dev(dev_instances, dev_pos, dev_neg, dev_doc, avg=False)
-            _, _, f_random_dev = self._test_dev(dev_instances, dev_pos, dev_neg, dev_doc, calc_random=True)
-
-            print("random F train", round(f_random_train, 1))
-            print("random F dev", round(f_random_dev, 1))
-            print()
-            print("avg/nonavg F train", round(f_avg_train, 1), round(f_nonavg_train, 1))
-            print("avg/nonavg F dev", round(f_avg_dev, 1), round(f_nonavg_dev, 1))
-            print()
+        print()
+        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_random", calc_random=True)
+        self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_random", calc_random=True)
+        print()
+        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_pre", calc_random=False)
+        self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_pre", avg=False)
 
         instance_pos_count = 0
         instance_neg_count = 0
 
         if to_print:
-            print("Training on", len(train_instances.values()), "articles")
-            print("Dev test on", len(dev_instances.values()), "articles")
             print()
+            print("Training on", len(train_inst.values()), "articles")
+            print("Dev test on", len(dev_inst.values()), "articles")
 
-        article_docs = list()
-        entities = list()
-        golds = list()
-        for article_id, inst_cluster_set in train_instances.items():
+        # TODO: proper batches. Currently 1 article at the time
+        article_count = 0
+        for article_id, inst_cluster_set in train_inst.items():
+            # if to_print:
+                # print()
+                # print(article_count, "Training on article", article_id)
+            article_count += 1
+            article_docs = list()
+            entities = list()
+            golds = list()
             for inst_cluster in inst_cluster_set:
                 article_docs.append(train_doc[article_id])
                 entities.append(train_pos.get(inst_cluster))
@@ -104,36 +100,31 @@ class EL_Model:
                     golds.append(float(0.0))
                     instance_neg_count += 1
 
-        for x in range(10):
-            print("Updating", x)
             self.update(article_docs=article_docs, entities=entities, golds=golds)
 
-            # eval again
-            if self.PRINT_F:
-                _, _, f_avg_train = -3.42, -3.42, -3.42  # self._test_dev(train_instances, train_pos, train_neg, train_doc, avg=True)
-                _, _, f_nonavg_train = self._test_dev(train_instances, train_pos, train_neg, train_doc, avg=False)
-                _, _, f_avg_dev = -3.42, -3.42, -3.42  # self._test_dev(dev_instances, dev_pos, dev_neg, dev_doc, avg=True)
-                _, _, f_nonavg_dev = self._test_dev(dev_instances, dev_pos, dev_neg, dev_doc, avg=False)
-
-                print("avg/nonavg F train", round(f_avg_train, 1), round(f_nonavg_train, 1))
-                print("avg/nonavg F dev", round(f_avg_dev, 1), round(f_nonavg_dev, 1))
-                print()
+            # dev eval
+            self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter", avg=False)
 
         if to_print:
+            print()
             print("Trained on", instance_pos_count, "/", instance_neg_count, "instances pos/neg")
 
-    def _test_dev(self, dev_instances, dev_pos, dev_neg, dev_doc, avg=False, calc_random=False):
+        print()
+        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post", calc_random=False)
+        self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_post", avg=False)
+
+    def _test_dev(self, instances, pos, neg, doc, print_string, avg=False, calc_random=False):
         predictions = list()
         golds = list()
 
-        for article_id, inst_cluster_set in dev_instances.items():
+        for article_id, inst_cluster_set in instances.items():
             for inst_cluster in inst_cluster_set:
-                pos_ex = dev_pos.get(inst_cluster)
-                neg_exs = dev_neg.get(inst_cluster, [])
+                pos_ex = pos.get(inst_cluster)
+                neg_exs = neg.get(inst_cluster, [])
 
                 article = inst_cluster.split(sep="_")[0]
                 entity_id = inst_cluster.split(sep="_")[1]
-                article_doc = dev_doc[article]
+                article_doc = doc[article]
 
                 if calc_random:
                     prediction = self._predict_random(entity=pos_ex)
@@ -150,9 +141,17 @@ class EL_Model:
                     predictions.append(prediction)
                     golds.append(float(0.0))
 
-        # TODO: use lowest_mse and combine with prior probability
+        # TODO: combine with prior probability
         p, r, f = run_el.evaluate(predictions, golds, to_print=False)
-        return p, r, f
+        if self.PRINT_F:
+            # print("p/r/F", print_string, round(p, 1), round(r, 1), round(f, 1))
+            print("F", print_string, round(f, 1))
+
+        loss, d_scores = self.get_loss(self.model.ops.asarray(predictions), self.model.ops.asarray(golds))
+        if self.PRINT_LOSS:
+            print("loss", print_string, round(loss, 5))
+
+        return loss, p, r, f
 
     def _predict(self, article_doc, entity, avg=False, apply_threshold=True):
         if avg:
@@ -182,20 +181,16 @@ class EL_Model:
 
     def _build_cnn(self, hidden_entity_width, hidden_article_width):
         with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-            self.entity_encoder = self._encoder(in_width=self.INPUT_DIM, hidden_width=hidden_entity_width)  # entity encoding
-            self.article_encoder = self._encoder(in_width=self.INPUT_DIM, hidden_width=hidden_article_width)  # doc encoding
+            self.entity_encoder = self._encoder(in_width=self.INPUT_DIM, hidden_width=hidden_entity_width)
+            self.article_encoder = self._encoder(in_width=self.INPUT_DIM, hidden_width=hidden_article_width)
 
-            hidden_input_with = hidden_entity_width + hidden_article_width
-            hidden_output_with = self.HIDDEN_1_WIDTH
+            nr_i = hidden_entity_width + hidden_article_width
+            nr_o = self.HIDDEN_WIDTH
 
-            convolution_2 = Residual((ExtractWindow(nW=1) >> LN(Maxout(hidden_output_with, hidden_output_with * 3))))
-
-            self.model = Affine(hidden_output_with, hidden_input_with) \
-                       >> LN(Maxout(hidden_output_with, hidden_output_with)) \
-                       >> convolution_2 \
-                       >> Affine(self.HIDDEN_2_WIDTH, hidden_output_with) \
-                       >> Affine(1, self.HIDDEN_2_WIDTH) \
-                       >> logistic
+            self.model = Affine(nr_o, nr_i) \
+                >> LN(Maxout(nr_o, nr_o)) \
+                >> Affine(1, nr_o) \
+                >> logistic
 
     @staticmethod
     def _encoder(in_width, hidden_width):
@@ -204,38 +199,46 @@ class EL_Model:
                 >> flatten_add_lengths \
                 >> ParametricAttention(in_width)\
                 >> Pooling(mean_pool) \
-                >> Residual(zero_init(Maxout(in_width, in_width)))  \
+                >> Residual((ExtractWindow(nW=1) >> LN(Maxout(in_width, in_width * 3))))  \
                 >> zero_init(Affine(hidden_width, in_width, drop_factor=0.0))
+
+            # TODO: ReLu instead of LN(Maxout)  ?
 
         return encoder
 
     def _begin_training(self):
         self.sgd = create_default_optimizer(self.model.ops)
 
-    def update(self, article_docs, entities, golds, drop=0.):
+    @staticmethod
+    def get_loss(predictions, golds):
+        d_scores = (predictions - golds)
+
+        loss = (d_scores ** 2).sum()
+        return loss, d_scores
+
+    def update(self, article_docs, entities, golds, drop=0., apply_threshold=True):
         doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
         entity_encodings, bp_encoding = self.entity_encoder.begin_update(entities, drop=drop)
         concat_encodings = [list(entity_encodings[i]) + list(doc_encodings[i]) for i in range(len(entities))]
 
         predictions, bp_model = self.model.begin_update(np.asarray(concat_encodings), drop=drop)
-
         predictions = self.model.ops.flatten(predictions)
         golds = self.model.ops.asarray(golds)
 
-        # print("predictions", predictions)
-        # print("golds", golds)
+        loss, d_scores = self.get_loss(predictions, golds)
 
-        d_scores = (predictions - golds) # / predictions.shape[0]
-        # print("d_scores (1)", d_scores)
+        # if self.PRINT_LOSS:
+        #    print("loss train", round(loss, 5))
 
-        loss = (d_scores ** 2).sum()
-
-        if self.PRINT_LOSS:
-            print("loss train", round(loss, 5))
+        # if self.PRINT_F:
+        #    predictions_f = [x for x in predictions]
+        #    if apply_threshold:
+        #        predictions_f = [1.0 if x > self.CUTOFF else 0.0 for x in predictions_f]
+        #    p, r, f = run_el.evaluate(predictions_f, golds, to_print=False)
+        #    print("p/r/F train", round(p, 1), round(r, 1), round(f, 1))
 
         d_scores = d_scores.reshape((-1, 1))
         d_scores = d_scores.astype(np.float32)
-        # print("d_scores (2)", d_scores)
 
         model_gradient = bp_model(d_scores, sgd=self.sgd)
 

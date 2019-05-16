@@ -81,7 +81,8 @@ def evaluate(predictions, golds, to_print=True):
     for pred, gold in zip(predictions, golds):
         is_correct = pred == gold
         if not pred:
-            fn += 1
+            if not is_correct:  # we don't care about tn
+                fn += 1
         elif is_correct:
             tp += 1
         else:
