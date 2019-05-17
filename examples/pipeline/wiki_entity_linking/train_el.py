@@ -28,13 +28,16 @@ class EL_Model:
 
     PRINT_LOSS = False
     PRINT_F = True
+    PRINT_TRAIN = True
     EPS = 0.0000000005
     CUTOFF = 0.5
 
     INPUT_DIM = 300
-    ENTITY_WIDTH = 64
-    ARTICLE_WIDTH = 128
-    HIDDEN_WIDTH = 64
+    ENTITY_WIDTH = 4 # 64
+    ARTICLE_WIDTH = 8 #  128
+    HIDDEN_WIDTH = 6 # 64
+
+    DROP = 0.00
 
     name = "entity_linker"
 
@@ -78,40 +81,63 @@ class EL_Model:
             print()
             print("Training on", len(train_inst.values()), "articles")
             print("Dev test on", len(dev_inst.values()), "articles")
+            print()
+            print(" CUTOFF", self.CUTOFF)
+            print(" INPUT_DIM", self.INPUT_DIM)
+            print(" ENTITY_WIDTH", self.ENTITY_WIDTH)
+            print(" ARTICLE_WIDTH", self.ARTICLE_WIDTH)
+            print(" HIDDEN_WIDTH", self.ARTICLE_WIDTH)
+            print(" DROP", self.DROP)
+            print()
 
         # TODO: proper batches. Currently 1 article at the time
         article_count = 0
         for article_id, inst_cluster_set in train_inst.items():
-            # if to_print:
-                # print()
-                # print(article_count, "Training on article", article_id)
-            article_count += 1
-            article_docs = list()
-            entities = list()
-            golds = list()
-            for inst_cluster in inst_cluster_set:
-                article_docs.append(train_doc[article_id])
-                entities.append(train_pos.get(inst_cluster))
-                golds.append(float(1.0))
-                instance_pos_count += 1
-                for neg_entity in train_neg.get(inst_cluster, []):
-                    article_docs.append(train_doc[article_id])
-                    entities.append(neg_entity)
-                    golds.append(float(0.0))
-                    instance_neg_count += 1
+            try:
+                # if to_print:
+                    # print()
+                    # print(article_count, "Training on article", article_id)
+                article_count += 1
+                article_docs = list()
+                entities = list()
+                golds = list()
+                for inst_cluster in inst_cluster_set:
+                    if instance_pos_count < 2:   # TODO remove
+                        article_docs.append(train_doc[article_id])
+                        entities.append(train_pos.get(inst_cluster))
+                        golds.append(float(1.0))
+                        instance_pos_count += 1
+                        for neg_entity in train_neg.get(inst_cluster, []):
+                            article_docs.append(train_doc[article_id])
+                            entities.append(neg_entity)
+                            golds.append(float(0.0))
+                            instance_neg_count += 1
 
-            self.update(article_docs=article_docs, entities=entities, golds=golds)
+                for k in range(5):
+                    print()
+                    print("update", k)
+                    print()
+                    # print("article docs", article_docs)
+                    print("entities", entities)
+                    print("golds", golds)
+                    print()
+                    self.update(article_docs=article_docs, entities=entities, golds=golds)
 
-            # dev eval
-            self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter", avg=False)
+                    # dev eval
+                    self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter", avg=False)
+                    self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter_avg", avg=True)
+            except ValueError as e:
+                print("Error in article id", article_id)
 
         if to_print:
             print()
             print("Trained on", instance_pos_count, "/", instance_neg_count, "instances pos/neg")
 
         print()
-        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post", calc_random=False)
+        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post", avg=False)
+        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post_avg", avg=True)
         self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_post", avg=False)
+        self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_post_avg", avg=True)
 
     def _test_dev(self, instances, pos, neg, doc, print_string, avg=False, calc_random=False):
         predictions = list()
@@ -155,16 +181,24 @@ class EL_Model:
 
     def _predict(self, article_doc, entity, avg=False, apply_threshold=True):
         if avg:
-            with self.sgd.use_params(self.model.averages):
-                doc_encoding = self.article_encoder([article_doc])
-                entity_encoding = self.entity_encoder([entity])
-                return self.model(np.append(entity_encoding, doc_encoding))  # TODO list
+            with self.article_encoder.use_params(self.sgd_article.averages) \
+                 and self.entity_encoder.use_params(self.sgd_article.averages):
+                doc_encoding = self.article_encoder([article_doc])[0]
+                entity_encoding = self.entity_encoder([entity])[0]
 
-        doc_encoding = self.article_encoder([article_doc])[0]
-        entity_encoding = self.entity_encoder([entity])[0]
+        else:
+            doc_encoding = self.article_encoder([article_doc])[0]
+            entity_encoding = self.entity_encoder([entity])[0]
+
         concat_encoding = list(entity_encoding) + list(doc_encoding)
         np_array = np.asarray([concat_encoding])
-        prediction = self.model(np_array)
+
+        if avg:
+           with self.model.use_params(self.sgd.averages):
+               prediction = self.model(np_array)
+        else:
+            prediction = self.model(np_array)
+
         if not apply_threshold:
             return float(prediction)
         if prediction > self.CUTOFF:
@@ -199,14 +233,17 @@ class EL_Model:
                 >> flatten_add_lengths \
                 >> ParametricAttention(in_width)\
                 >> Pooling(mean_pool) \
-                >> Residual((ExtractWindow(nW=1) >> LN(Maxout(in_width, in_width * 3))))  \
+                >> (ExtractWindow(nW=1) >> LN(Maxout(in_width, in_width * 3)))  \
                 >> zero_init(Affine(hidden_width, in_width, drop_factor=0.0))
 
             # TODO: ReLu instead of LN(Maxout)  ?
+            # TODO: more convolutions ?
 
         return encoder
 
     def _begin_training(self):
+        self.sgd_article = create_default_optimizer(self.article_encoder.ops)
+        self.sgd_entity = create_default_optimizer(self.entity_encoder.ops)
         self.sgd = create_default_optimizer(self.model.ops)
 
     @staticmethod
@@ -216,34 +253,49 @@ class EL_Model:
         loss = (d_scores ** 2).sum()
         return loss, d_scores
 
-    def update(self, article_docs, entities, golds, drop=0., apply_threshold=True):
-        doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
-        entity_encodings, bp_encoding = self.entity_encoder.begin_update(entities, drop=drop)
+    def update(self, article_docs, entities, golds, apply_threshold=True):
+        print("article_docs", len(article_docs))
+        for a in article_docs:
+            print(a[0:10], a[-10:])
+            doc_encoding, bp_doc = self.article_encoder.begin_update([a], drop=self.DROP)
+            print(doc_encoding)
+
+        doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=self.DROP)
+        entity_encodings, bp_encoding = self.entity_encoder.begin_update(entities, drop=self.DROP)
         concat_encodings = [list(entity_encodings[i]) + list(doc_encodings[i]) for i in range(len(entities))]
 
-        predictions, bp_model = self.model.begin_update(np.asarray(concat_encodings), drop=drop)
+        print("doc_encodings", len(doc_encodings), doc_encodings)
+        print("entity_encodings", len(entity_encodings), entity_encodings)
+        print("concat_encodings", len(concat_encodings), concat_encodings)
+
+        predictions, bp_model = self.model.begin_update(np.asarray(concat_encodings), drop=self.DROP)
+        print("predictions", predictions)
         predictions = self.model.ops.flatten(predictions)
         golds = self.model.ops.asarray(golds)
 
         loss, d_scores = self.get_loss(predictions, golds)
 
-        # if self.PRINT_LOSS:
-        #    print("loss train", round(loss, 5))
+        if self.PRINT_LOSS and self.PRINT_TRAIN:
+            print("loss train", round(loss, 5))
 
-        # if self.PRINT_F:
-        #    predictions_f = [x for x in predictions]
-        #    if apply_threshold:
-        #        predictions_f = [1.0 if x > self.CUTOFF else 0.0 for x in predictions_f]
-        #    p, r, f = run_el.evaluate(predictions_f, golds, to_print=False)
-        #    print("p/r/F train", round(p, 1), round(r, 1), round(f, 1))
+        if self.PRINT_F and self.PRINT_TRAIN:
+            predictions_f = [x for x in predictions]
+            if apply_threshold:
+                predictions_f = [1.0 if x > self.CUTOFF else 0.0 for x in predictions_f]
+            p, r, f = run_el.evaluate(predictions_f, golds, to_print=False)
+            print("p/r/F train", round(p, 1), round(r, 1), round(f, 1))
 
         d_scores = d_scores.reshape((-1, 1))
         d_scores = d_scores.astype(np.float32)
+        print("d_scores", d_scores)
 
         model_gradient = bp_model(d_scores, sgd=self.sgd)
+        print("model_gradient", model_gradient)
 
         doc_gradient = [x[0:self.ARTICLE_WIDTH] for x in model_gradient]
+        print("doc_gradient", doc_gradient)
         entity_gradient = [x[self.ARTICLE_WIDTH:] for x in model_gradient]
+        print("entity_gradient", entity_gradient)
 
         bp_doc(doc_gradient)
         bp_encoding(entity_gradient)
