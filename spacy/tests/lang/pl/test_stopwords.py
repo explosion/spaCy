@@ -5,14 +5,14 @@ import pytest
 
 STOPWORD_TESTS = [
     ("Ten, który z demonami walczy, winien uważać, by samemu nie stać się jednym z nich.",
-     [False, False, True, True, False, False, False, False, False,
+     [True, False, True, True, False, False, False, False, False,
       False, True, False, True, False, True, True, True, True, False]),
 
     ("Kiedy spoglądasz w otchłań ona również patrzy na ciebie.",
-     [False, False, True, False, True, True, False, True, True, False]),
+     [True, False, True, False, True, True, False, True, True, False]),
 
     ("Nie masz żadnej szansy, ale ją wykorzystaj.",
-     [False, False, False, False, False, True, True, False, False]),
+     [True, False, False, False, False, True, True, False, False]),
 
     ("Pamiętajcie, by patrzeć w gwiazdy, a nie pod swoje nogi.",
      [False, False, True, False, True, False, False, True, True, True, True, False, False])
