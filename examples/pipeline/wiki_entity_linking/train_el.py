@@ -13,7 +13,7 @@ from examples.pipeline.wiki_entity_linking import run_el, training_set_creator, 
 from spacy._ml import SpacyVectors, create_default_optimizer, zero_init, logistic
 
 from thinc.api import chain, concatenate, flatten_add_lengths, clone, with_flatten
-from thinc.v2v import Model, Maxout, Affine
+from thinc.v2v import Model, Maxout, Affine, ReLu
 from thinc.t2v import Pooling, mean_pool, sum_pool
 from thinc.t2t import ParametricAttention
 from thinc.misc import Residual
@@ -28,16 +28,16 @@ class EL_Model:
 
     PRINT_LOSS = False
     PRINT_F = True
-    PRINT_TRAIN = True
+    PRINT_TRAIN = False
     EPS = 0.0000000005
     CUTOFF = 0.5
 
     INPUT_DIM = 300
-    ENTITY_WIDTH = 4  # 64
-    ARTICLE_WIDTH = 8  # 128
-    HIDDEN_WIDTH = 6  # 64
+    ENTITY_WIDTH = 64   # 4
+    ARTICLE_WIDTH = 128  # 8
+    HIDDEN_WIDTH = 64  # 6
 
-    DROP = 0.00
+    DROP = 0.1
 
     name = "entity_linker"
 
@@ -91,41 +91,34 @@ class EL_Model:
             print()
 
         # TODO: proper batches. Currently 1 article at the time
+        # TODO shuffle data (currently positive is always followed by several negatives)
         article_count = 0
         for article_id, inst_cluster_set in train_inst.items():
             try:
                 # if to_print:
                     # print()
-                print(article_count, "Training on article", article_id)
+                    # print(article_count, "Training on article", article_id)
                 article_count += 1
                 article_docs = list()
                 entities = list()
                 golds = list()
                 for inst_cluster in inst_cluster_set:
-                    if instance_pos_count < 2:  # TODO del
+                    article_docs.append(train_doc[article_id])
+                    entities.append(train_pos.get(inst_cluster))
+                    golds.append(float(1.0))
+                    instance_pos_count += 1
+                    for neg_entity in train_neg.get(inst_cluster, []):
                         article_docs.append(train_doc[article_id])
-                        entities.append(train_pos.get(inst_cluster))
-                        golds.append(float(1.0))
-                        instance_pos_count += 1
-                        for neg_entity in train_neg.get(inst_cluster, []):
-                            article_docs.append(train_doc[article_id])
-                            entities.append(neg_entity)
-                            golds.append(float(0.0))
-                            instance_neg_count += 1
+                        entities.append(neg_entity)
+                        golds.append(float(0.0))
+                        instance_neg_count += 1
 
-                for k in range(10):
-                    print()
-                    print("update", k)
-                    print()
-                    # print("article docs", article_docs)
-                    print("entities", entities)
-                    print("golds", golds)
-                    print()
-                    self.update(article_docs=article_docs, entities=entities, golds=golds)
+                self.update(article_docs=article_docs, entities=entities, golds=golds)
 
-                    # dev eval
-                    self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter", avg=False)
-                    self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter_avg", avg=True)
+                # dev eval
+                # self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter", avg=False)
+                self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_inter_avg", avg=True)
+                print()
             except ValueError as e:
                 print("Error in article id", article_id)
 
@@ -133,11 +126,12 @@ class EL_Model:
             print()
             print("Trained on", instance_pos_count, "/", instance_neg_count, "instances pos/neg")
 
-        print()
-        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post", avg=False)
-        self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post_avg", avg=True)
-        self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_post", avg=False)
-        self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_post_avg", avg=True)
+        if self.PRINT_TRAIN:
+            # print()
+            # self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post", avg=False)
+            self._test_dev(train_inst, train_pos, train_neg, train_doc, print_string="train_post_avg", avg=True)
+        # self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_post", avg=False)
+        # self._test_dev(dev_inst, dev_pos, dev_neg, dev_doc, print_string="dev_post_avg", avg=True)
 
     def _test_dev(self, instances, pos, neg, doc, print_string, avg=False, calc_random=False):
         predictions = list()
@@ -170,8 +164,7 @@ class EL_Model:
         # TODO: combine with prior probability
         p, r, f = run_el.evaluate(predictions, golds, to_print=False)
         if self.PRINT_F:
-            # print("p/r/F", print_string, round(p, 1), round(r, 1), round(f, 1))
-            print("F", print_string, round(f, 1))
+            print("p/r/F", print_string, round(p, 1), round(r, 1), round(f, 1))
 
         loss, d_scores = self.get_loss(self.model.ops.asarray(predictions), self.model.ops.asarray(golds))
         if self.PRINT_LOSS:
@@ -242,8 +235,7 @@ class EL_Model:
                       >> Residual(zero_init(Maxout(in_width, in_width))) \
                       >> zero_init(Affine(hidden_width, in_width, drop_factor=0.0))
 
-            # TODO: ReLu instead of LN(Maxout)  ?
-            # TODO: more convolutions ?
+            # TODO: ReLu or LN(Maxout)  ?
             # sum_pool or mean_pool ?
 
         return encoder
@@ -262,17 +254,17 @@ class EL_Model:
 
     def update(self, article_docs, entities, golds, apply_threshold=True):
         doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=self.DROP)
-        print("doc_encodings", len(doc_encodings), doc_encodings)
+        # print("doc_encodings", len(doc_encodings), doc_encodings)
 
         entity_encodings, bp_entity = self.entity_encoder.begin_update(entities, drop=self.DROP)
-        print("entity_encodings", len(entity_encodings), entity_encodings)
+        # print("entity_encodings", len(entity_encodings), entity_encodings)
 
         concat_encodings = [list(entity_encodings[i]) + list(doc_encodings[i]) for i in range(len(entities))]
         # print("concat_encodings", len(concat_encodings), concat_encodings)
 
         predictions, bp_model = self.model.begin_update(np.asarray(concat_encodings), drop=self.DROP)
         predictions = self.model.ops.flatten(predictions)
-        print("predictions", predictions)
+        # print("predictions", predictions)
         golds = self.model.ops.asarray(golds)
 
         loss, d_scores = self.get_loss(predictions, golds)
@@ -292,7 +284,7 @@ class EL_Model:
         # print("d_scores", d_scores)
 
         model_gradient = bp_model(d_scores, sgd=self.sgd)
-        print("model_gradient", model_gradient)
+        # print("model_gradient", model_gradient)
 
         doc_gradient = list()
         entity_gradient = list()
@@ -300,11 +292,11 @@ class EL_Model:
             doc_gradient.append(list(x[0:self.ARTICLE_WIDTH]))
             entity_gradient.append(list(x[self.ARTICLE_WIDTH:]))
 
-        print("doc_gradient", doc_gradient)
-        print("entity_gradient", entity_gradient)
+        # print("doc_gradient", doc_gradient)
+        # print("entity_gradient", entity_gradient)
 
-        bp_doc(doc_gradient)
-        bp_entity(entity_gradient)
+        bp_doc(doc_gradient, sgd=self.sgd_article)
+        bp_entity(entity_gradient, sgd=self.sgd_entity)
 
     def _get_training_data(self, training_dir, entity_descr_output, dev, limit, to_print):
         id_to_descr = kb_creator._get_id_to_description(entity_descr_output)
