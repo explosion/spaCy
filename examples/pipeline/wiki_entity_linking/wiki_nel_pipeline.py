@@ -111,7 +111,7 @@ if __name__ == "__main__":
         print("STEP 6: training", datetime.datetime.now())
         my_nlp = spacy.load('en_core_web_md')
         trainer = EL_Model(kb=my_kb, nlp=my_nlp)
-        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=1000, devlimit=200)
+        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=10, devlimit=10)
         print()
 
     # STEP 7: apply the EL algorithm on the dev dataset
