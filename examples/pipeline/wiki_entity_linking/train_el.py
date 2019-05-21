@@ -33,9 +33,10 @@ class EL_Model:
     CUTOFF = 0.5
 
     INPUT_DIM = 300
-    ENTITY_WIDTH = 64   # 4
-    ARTICLE_WIDTH = 128  # 8
-    HIDDEN_WIDTH = 64  # 6
+    HIDDEN_1_WIDTH = 256  # 10
+    HIDDEN_2_WIDTH = 32  # 6
+    ENTITY_WIDTH = 64     # 4
+    ARTICLE_WIDTH = 128   # 8
 
     DROP = 0.1
 
@@ -46,7 +47,11 @@ class EL_Model:
         self.nlp = nlp
         self.kb = kb
 
-        self._build_cnn(hidden_entity_width=self.ENTITY_WIDTH, hidden_article_width=self.ARTICLE_WIDTH)
+        self._build_cnn(in_width=self.INPUT_DIM,
+                        entity_width=self.ENTITY_WIDTH,
+                        article_width=self.ARTICLE_WIDTH,
+                        hidden_1_width=self.HIDDEN_1_WIDTH,
+                        hidden_2_width=self.HIDDEN_2_WIDTH)
 
     def train_model(self, training_dir, entity_descr_output, trainlimit=None, devlimit=None, to_print=True):
         # raise errors instead of runtime warnings in case of int/float overflow
@@ -81,9 +86,10 @@ class EL_Model:
             print()
             print(" CUTOFF", self.CUTOFF)
             print(" INPUT_DIM", self.INPUT_DIM)
+            print(" HIDDEN_1_WIDTH", self.HIDDEN_1_WIDTH)
             print(" ENTITY_WIDTH", self.ENTITY_WIDTH)
             print(" ARTICLE_WIDTH", self.ARTICLE_WIDTH)
-            print(" HIDDEN_WIDTH", self.ARTICLE_WIDTH)
+            print(" HIDDEN_2_WIDTH", self.HIDDEN_2_WIDTH)
             print(" DROP", self.DROP)
             print()
 
@@ -187,34 +193,34 @@ class EL_Model:
         else:
             return [float(1.0) if random.uniform(0,1) > self.CUTOFF else float(0.0) for e in entities]
 
-    def _build_cnn(self, hidden_entity_width, hidden_article_width):
+    def _build_cnn(self, in_width, entity_width, article_width, hidden_1_width, hidden_2_width):
         with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-            self.entity_encoder = self._encoder(in_width=self.INPUT_DIM, hidden_width=hidden_entity_width)
-            self.article_encoder = self._encoder(in_width=self.INPUT_DIM, hidden_width=hidden_article_width)
+            self.entity_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=entity_width)
+            self.article_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=article_width)
 
-            nr_i = hidden_entity_width + hidden_article_width
-            nr_o = self.HIDDEN_WIDTH
+            in_width = entity_width + article_width
+            out_width = hidden_2_width
 
-            self.model = Affine(nr_o, nr_i) \
-                >> LN(Maxout(nr_o, nr_o)) \
-                >> Affine(1, nr_o) \
+            self.model = Affine(out_width, in_width) \
+                >> LN(Maxout(out_width, out_width)) \
+                >> Affine(1, out_width) \
                 >> logistic
 
     @staticmethod
-    def _encoder(in_width, hidden_width):
+    def _encoder(in_width, hidden_with, end_width):
         conv_depth = 2
         cnn_maxout_pieces = 3
 
         with Model.define_operators({">>": chain}):
-            convolution = Residual((ExtractWindow(nW=1) >> LN(Maxout(in_width, in_width * 3, pieces=cnn_maxout_pieces))))
+            convolution = Residual((ExtractWindow(nW=1) >> LN(Maxout(hidden_with, hidden_with * 3, pieces=cnn_maxout_pieces))))
 
             encoder = SpacyVectors \
-                      >> with_flatten(LN(Maxout(in_width, in_width)) >> convolution ** conv_depth, pad=conv_depth) \
+                      >> with_flatten(LN(Maxout(hidden_with, in_width)) >> convolution ** conv_depth, pad=conv_depth) \
                       >> flatten_add_lengths \
-                      >> ParametricAttention(in_width)\
+                      >> ParametricAttention(hidden_with)\
                       >> Pooling(mean_pool) \
-                      >> Residual(zero_init(Maxout(in_width, in_width))) \
-                      >> zero_init(Affine(hidden_width, in_width, drop_factor=0.0))
+                      >> Residual(zero_init(Maxout(hidden_with, hidden_with))) \
+                      >> zero_init(Affine(end_width, hidden_with, drop_factor=0.0))
 
             # TODO: ReLu or LN(Maxout)  ?
             # sum_pool or mean_pool ?
