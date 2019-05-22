@@ -78,8 +78,15 @@ def evaluate(predictions, golds, to_print=True):
     fp = 0
     fn = 0
 
+    corrects = 0
+    incorrects = 0
+
     for pred, gold in zip(predictions, golds):
         is_correct = pred == gold
+        if is_correct:
+            corrects += 1
+        else:
+            incorrects += 1
         if not pred:
             if not is_correct:  # we don't care about tn
                 fn += 1
@@ -98,12 +105,15 @@ def evaluate(predictions, golds, to_print=True):
     recall = 100 * tp / (tp + fn + 0.0000001)
     fscore = 2 * recall * precision / (recall + precision + 0.0000001)
 
+    accuracy = corrects / (corrects + incorrects)
+
     if to_print:
         print("precision", round(precision, 1), "%")
         print("recall", round(recall, 1), "%")
         print("Fscore", round(fscore, 1), "%")
+        print("Accuracy", round(accuracy, 1), "%")
 
-    return precision, recall, fscore
+    return precision, recall, fscore, accuracy
 
 
 def _prepare_pipeline(nlp, kb):
