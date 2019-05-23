@@ -8,12 +8,12 @@ from ...attrs import LANG
 
 class MarathiDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "mh"
+    lex_attr_getters[LANG] = lambda text: "mr"
     stop_words = STOP_WORDS
 
 
 class Marathi(Language):
-    lang = "mh"
+    lang = "mr"
     Defaults = MarathiDefaults
 
 
