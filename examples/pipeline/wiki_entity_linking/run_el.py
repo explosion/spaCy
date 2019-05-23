@@ -70,7 +70,7 @@ def is_dev(file_name):
     return file_name.endswith("3.txt")
 
 
-def evaluate(predictions, golds, to_print=True):
+def evaluate(predictions, golds, to_print=True, times_hundred=True):
     if len(predictions) != len(golds):
         raise ValueError("predictions and gold entities should have the same length")
 
@@ -101,8 +101,11 @@ def evaluate(predictions, golds, to_print=True):
         print("fp", fp)
         print("fn", fn)
 
-    precision = 100 * tp / (tp + fp + 0.0000001)
-    recall = 100 * tp / (tp + fn + 0.0000001)
+    precision = tp / (tp + fp + 0.0000001)
+    recall = tp / (tp + fn + 0.0000001)
+    if times_hundred:
+        precision = precision*100
+        recall = recall*100
     fscore = 2 * recall * precision / (recall + precision + 0.0000001)
 
     accuracy = corrects / (corrects + incorrects)
