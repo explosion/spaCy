@@ -42,6 +42,7 @@ class EL_Model:
     HIDDEN_2_WIDTH = 32  # 6
     DESC_WIDTH = 64     # 4
     ARTICLE_WIDTH = 64   # 8
+    SENT_WIDTH = 64
 
     DROP = 0.1
 
@@ -55,6 +56,7 @@ class EL_Model:
         self._build_cnn(in_width=self.INPUT_DIM,
                         desc_width=self.DESC_WIDTH,
                         article_width=self.ARTICLE_WIDTH,
+                        sent_width=self.SENT_WIDTH,
                         hidden_1_width=self.HIDDEN_1_WIDTH,
                         hidden_2_width=self.HIDDEN_2_WIDTH)
 
@@ -77,8 +79,8 @@ class EL_Model:
                 print("article text", train_art_texts[train_art[entity]])
                 print()
 
-        train_pos_entities = [k for k,v in train_gold.items() if v]
-        train_neg_entities = [k for k,v in train_gold.items() if not v]
+        train_pos_entities = [k for k, v in train_gold.items() if v]
+        train_neg_entities = [k for k, v in train_gold.items() if not v]
 
         train_pos_count = len(train_pos_entities)
         train_neg_count = len(train_neg_entities)
@@ -122,12 +124,15 @@ class EL_Model:
             print(" HIDDEN_1_WIDTH", self.HIDDEN_1_WIDTH)
             print(" DESC_WIDTH", self.DESC_WIDTH)
             print(" ARTICLE_WIDTH", self.ARTICLE_WIDTH)
+            print(" SENT_WIDTH", self.SENT_WIDTH)
             print(" HIDDEN_2_WIDTH", self.HIDDEN_2_WIDTH)
             print(" DROP", self.DROP)
             print()
 
-        self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, print_string="dev_random", calc_random=True)
-        self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, print_string="dev_pre", avg=True)
+        self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
+                       print_string="dev_random", calc_random=True)
+        self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
+                       print_string="dev_pre", avg=True)
         print()
 
         start = 0
@@ -139,10 +144,12 @@ class EL_Model:
 
             golds = [train_gold[e] for e in next_batch]
             descs = [train_desc[e] for e in next_batch]
-            articles = [train_art_texts[train_art[e]] for e in next_batch]
+            article_texts = [train_art_texts[train_art[e]] for e in next_batch]
+            sent_texts = [train_sent_texts[train_sent[e]] for e in next_batch]
 
-            self.update(entities=next_batch, golds=golds, descs=descs, texts=articles)
-            self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, print_string="dev_inter", avg=True)
+            self.update(entities=next_batch, golds=golds, descs=descs, art_texts=article_texts, sent_texts=sent_texts)
+            self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
+                           print_string="dev_inter", avg=True)
 
             processed += len(next_batch)
 
@@ -153,7 +160,8 @@ class EL_Model:
             print()
             print("Trained on", processed, "entities in total")
 
-    def _test_dev(self, entities, gold_by_entity, desc_by_entity, article_by_entity, texts_by_id, print_string, avg=True, calc_random=False):
+    def _test_dev(self, entities, gold_by_entity, desc_by_entity, art_by_entity, art_texts, sent_by_entity, sent_texts,
+                  print_string, avg=True, calc_random=False):
         golds = [gold_by_entity[e] for e in entities]
 
         if calc_random:
@@ -161,29 +169,35 @@ class EL_Model:
 
         else:
             desc_docs = self.nlp.pipe([desc_by_entity[e] for e in entities])
-            article_docs = self.nlp.pipe([texts_by_id[article_by_entity[e]] for e in entities])
-            predictions = self._predict(entities=entities, article_docs=article_docs, desc_docs=desc_docs, avg=avg)
+            article_docs = self.nlp.pipe([art_texts[art_by_entity[e]] for e in entities])
+            sent_docs = self.nlp.pipe([sent_texts[sent_by_entity[e]] for e in entities])
+            predictions = self._predict(entities=entities, article_docs=article_docs, sent_docs=sent_docs,
+                                        desc_docs=desc_docs, avg=avg)
 
         # TODO: combine with prior probability
         p, r, f, acc = run_el.evaluate(predictions, golds, to_print=False, times_hundred=False)
         loss, gradient = self.get_loss(self.model.ops.asarray(predictions), self.model.ops.asarray(golds))
 
-        print("p/r/F/acc/loss", print_string, round(p, 1), round(r, 1), round(f, 1), round(acc, 2), round(loss, 5))
+        print("p/r/F/acc/loss", print_string, round(p, 2), round(r, 2), round(f, 2), round(acc, 2), round(loss, 2))
 
         return loss, p, r, f
 
-    def _predict(self, entities, article_docs, desc_docs, avg=True, apply_threshold=True):
+    def _predict(self, entities, article_docs, sent_docs, desc_docs, avg=True, apply_threshold=True):
         if avg:
             with self.article_encoder.use_params(self.sgd_article.averages) \
-                 and self.desc_encoder.use_params(self.sgd_entity.averages):
+                 and self.desc_encoder.use_params(self.sgd_desc.averages):
                 doc_encodings = self.article_encoder(article_docs)
                 desc_encodings = self.desc_encoder(desc_docs)
+                sent_encodings = self.sent_encoder(sent_docs)
 
         else:
             doc_encodings = self.article_encoder(article_docs)
             desc_encodings = self.desc_encoder(desc_docs)
+            sent_encodings = self.sent_encoder(sent_docs)
 
-        concat_encodings = [list(desc_encodings[i]) + list(doc_encodings[i]) for i in range(len(entities))]
+        concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) + list(desc_encodings[i]) for i in
+                            range(len(entities))]
+
         np_array_list = np.asarray(concat_encodings)
 
         if avg:
@@ -201,16 +215,17 @@ class EL_Model:
 
     def _predict_random(self, entities, apply_threshold=True):
         if not apply_threshold:
-            return [float(random.uniform(0, 1)) for e in entities]
+            return [float(random.uniform(0, 1)) for _ in entities]
         else:
-            return [float(1.0) if random.uniform(0, 1) > self.CUTOFF else float(0.0) for e in entities]
+            return [float(1.0) if random.uniform(0, 1) > self.CUTOFF else float(0.0) for _ in entities]
 
-    def _build_cnn(self, in_width, desc_width, article_width, hidden_1_width, hidden_2_width):
+    def _build_cnn(self, in_width, desc_width, article_width, sent_width, hidden_1_width, hidden_2_width):
         with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
             self.desc_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=desc_width)
             self.article_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=article_width)
+            self.sent_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=sent_width)
 
-            in_width = desc_width + article_width
+            in_width = article_width + sent_width + desc_width
             out_width = hidden_2_width
 
             self.model = Affine(out_width, in_width) \
@@ -224,7 +239,8 @@ class EL_Model:
         cnn_maxout_pieces = 3
 
         with Model.define_operators({">>": chain}):
-            convolution = Residual((ExtractWindow(nW=1) >> LN(Maxout(hidden_with, hidden_with * 3, pieces=cnn_maxout_pieces))))
+            convolution = Residual((ExtractWindow(nW=1) >>
+                                    LN(Maxout(hidden_with, hidden_with * 3, pieces=cnn_maxout_pieces))))
 
             encoder = SpacyVectors \
                       >> with_flatten(LN(Maxout(hidden_with, in_width)) >> convolution ** conv_depth, pad=conv_depth) \
@@ -241,7 +257,8 @@ class EL_Model:
 
     def _begin_training(self):
         self.sgd_article = create_default_optimizer(self.article_encoder.ops)
-        self.sgd_entity = create_default_optimizer(self.desc_encoder.ops)
+        self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
+        self.sgd_desc = create_default_optimizer(self.desc_encoder.ops)
         self.sgd = create_default_optimizer(self.model.ops)
 
     @staticmethod
@@ -251,17 +268,19 @@ class EL_Model:
         loss = (d_scores ** 2).mean()
         return loss, gradient
 
-    def update(self, entities, golds, descs, texts):
+    def update(self, entities, golds, descs, art_texts, sent_texts):
         golds = self.model.ops.asarray(golds)
 
+        art_docs = self.nlp.pipe(art_texts)
+        sent_docs = self.nlp.pipe(sent_texts)
         desc_docs = self.nlp.pipe(descs)
-        article_docs = self.nlp.pipe(texts)
 
-        doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=self.DROP)
+        doc_encodings, bp_doc = self.article_encoder.begin_update(art_docs, drop=self.DROP)
+        sent_encodings, bp_sent = self.sent_encoder.begin_update(sent_docs, drop=self.DROP)
+        desc_encodings, bp_desc = self.desc_encoder.begin_update(desc_docs, drop=self.DROP)
 
-        desc_encodings, bp_entity = self.desc_encoder.begin_update(desc_docs, drop=self.DROP)
-
-        concat_encodings = [list(desc_encodings[i]) + list(doc_encodings[i]) for i in range(len(entities))]
+        concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) + list(desc_encodings[i])
+                            for i in range(len(entities))]
 
         predictions, bp_model = self.model.begin_update(np.asarray(concat_encodings), drop=self.DROP)
         predictions = self.model.ops.flatten(predictions)
@@ -282,17 +301,23 @@ class EL_Model:
         model_gradient = bp_model(gradient, sgd=self.sgd)
         # print("model_gradient", model_gradient)
 
-        # concat = desc + doc, but doc is the same within this function (TODO: multiple docs/articles)
-        doc_gradient = model_gradient[0][self.DESC_WIDTH:]
-        entity_gradients = list()
+        # concat = doc + sent + desc, but doc is the same within this function
+        sent_start = self.ARTICLE_WIDTH
+        desc_start = self.ARTICLE_WIDTH + self.SENT_WIDTH
+        doc_gradient = model_gradient[0][0:sent_start]
+        sent_gradients = list()
+        desc_gradients = list()
         for x in model_gradient:
-            entity_gradients.append(list(x[0:self.DESC_WIDTH]))
+            sent_gradients.append(list(x[sent_start:desc_start]))
+            desc_gradients.append(list(x[desc_start:]))
 
         # print("doc_gradient", doc_gradient)
-        # print("entity_gradients", entity_gradients)
+        # print("sent_gradients", sent_gradients)
+        # print("desc_gradients", desc_gradients)
 
         bp_doc([doc_gradient], sgd=self.sgd_article)
-        bp_entity(entity_gradients, sgd=self.sgd_entity)
+        bp_sent(sent_gradients, sgd=self.sgd_sent)
+        bp_desc(desc_gradients, sgd=self.sgd_desc)
 
     def _get_training_data(self, training_dir, entity_descr_output, dev, limit, to_print):
         id_to_descr = kb_creator._get_id_to_description(entity_descr_output)
@@ -300,8 +325,6 @@ class EL_Model:
         correct_entries, incorrect_entries = training_set_creator.read_training_entities(training_output=training_dir,
                                                                                          collect_correct=True,
                                                                                          collect_incorrect=True)
-
-        local_vectors = list()   # TODO: local vectors
 
         entities = set()
         gold_by_entity = dict()
@@ -372,14 +395,15 @@ class EL_Model:
                     sentence_to_id = dict()
                     for match_id, start, end in matches:
                         span = article_doc[start:end]
-                        sent_text = span.sent
+                        sent_text = span.sent.text
                         sent_nr = sentence_to_id.get(sent_text,  None)
+                        mention = span.text
                         if sent_nr is None:
                             sent_nr = "S_" + str(next_sent_nr) + article_id
                             next_sent_nr += 1
                             text_by_sentence[sent_nr] = sent_text
                             sentence_to_id[sent_text] = sent_nr
-                        mention_entities = entities_by_mention[span.text]
+                        mention_entities = entities_by_mention[mention]
                         for entity in mention_entities:
                             entities.add(entity)
                             sentence_by_entity[entity] = sent_nr
@@ -399,5 +423,6 @@ class EL_Model:
             print()
             print("Processed", cnt, "training articles, dev=" + str(dev))
             print()
-        return list(entities), gold_by_entity, desc_by_entity, article_by_entity, text_by_article, sentence_by_entity, text_by_sentence
+        return list(entities), gold_by_entity, desc_by_entity, article_by_entity, text_by_article, \
+               sentence_by_entity, text_by_sentence
 
