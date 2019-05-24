@@ -34,6 +34,7 @@ class EL_Model:
     CUTOFF = 0.5
 
     BATCH_SIZE = 5
+    UPSAMPLE = True
 
     DOC_CUTOFF = 300    # number of characters from the doc context
     INPUT_DIM = 300     # dimension of pre-trained vectors
@@ -45,6 +46,8 @@ class EL_Model:
     SENT_WIDTH = 64
 
     DROP = 0.1
+    LEARN_RATE = 0.01
+    EPOCHS = 10
 
     name = "entity_linker"
 
@@ -67,6 +70,12 @@ class EL_Model:
         train_ent, train_gold, train_desc, train_art, train_art_texts, train_sent, train_sent_texts = \
             self._get_training_data(training_dir, entity_descr_output, False, trainlimit, to_print=False)
 
+        dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts = \
+            self._get_training_data(training_dir, entity_descr_output, True, devlimit, to_print=False)
+
+        dev_pos_count = len([g for g in dev_gold.values() if g])
+        dev_neg_count = len([g for g in dev_gold.values() if not g])
+
         # inspect data
         if self.PRINT_INSPECT:
             for entity in train_ent:
@@ -85,28 +94,20 @@ class EL_Model:
         train_pos_count = len(train_pos_entities)
         train_neg_count = len(train_neg_entities)
 
-        if to_print:
-            print()
-            print("Upsampling, original training instances pos/neg:", train_pos_count, train_neg_count)
+        if self.UPSAMPLE:
+            if to_print:
+                print()
+                print("Upsampling, original training instances pos/neg:", train_pos_count, train_neg_count)
 
-        # upsample positives to 50-50 distribution
-        while train_pos_count < train_neg_count:
-            train_ent.append(random.choice(train_pos_entities))
-            train_pos_count += 1
+            # upsample positives to 50-50 distribution
+            while train_pos_count < train_neg_count:
+                train_ent.append(random.choice(train_pos_entities))
+                train_pos_count += 1
 
-        # upsample negatives to 50-50 distribution
-        while train_neg_count < train_pos_count:
-            train_ent.append(random.choice(train_neg_entities))
-            train_neg_count += 1
-
-        shuffle(train_ent)
-
-        dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts = \
-            self._get_training_data(training_dir, entity_descr_output, True, devlimit, to_print=False)
-        shuffle(dev_ent)
-
-        dev_pos_count = len([g for g in dev_gold.values() if g])
-        dev_neg_count = len([g for g in dev_gold.values() if not g])
+            # upsample negatives to 50-50 distribution
+            while train_neg_count < train_pos_count:
+                train_ent.append(random.choice(train_neg_entities))
+                train_neg_count += 1
 
         self._begin_training()
 
@@ -135,30 +136,34 @@ class EL_Model:
                        print_string="dev_pre", avg=True)
         print()
 
-        start = 0
-        stop = min(self.BATCH_SIZE, len(train_ent))
-        processed = 0
+        for i in range(self.EPOCHS):
+            print("EPOCH", i)
+            shuffle(train_ent)
 
-        while start < len(train_ent):
-            next_batch = train_ent[start:stop]
+            start = 0
+            stop = min(self.BATCH_SIZE, len(train_ent))
+            processed = 0
 
-            golds = [train_gold[e] for e in next_batch]
-            descs = [train_desc[e] for e in next_batch]
-            article_texts = [train_art_texts[train_art[e]] for e in next_batch]
-            sent_texts = [train_sent_texts[train_sent[e]] for e in next_batch]
+            while start < len(train_ent):
+                next_batch = train_ent[start:stop]
 
-            self.update(entities=next_batch, golds=golds, descs=descs, art_texts=article_texts, sent_texts=sent_texts)
-            self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
-                           print_string="dev_inter", avg=True)
+                golds = [train_gold[e] for e in next_batch]
+                descs = [train_desc[e] for e in next_batch]
+                article_texts = [train_art_texts[train_art[e]] for e in next_batch]
+                sent_texts = [train_sent_texts[train_sent[e]] for e in next_batch]
 
-            processed += len(next_batch)
+                self.update(entities=next_batch, golds=golds, descs=descs, art_texts=article_texts, sent_texts=sent_texts)
+                self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
+                               print_string="dev_inter", avg=True)
 
-            start = start + self.BATCH_SIZE
-            stop = min(stop + self.BATCH_SIZE, len(train_ent))
+                processed += len(next_batch)
 
-        if to_print:
-            print()
-            print("Trained on", processed, "entities in total")
+                start = start + self.BATCH_SIZE
+                stop = min(stop + self.BATCH_SIZE, len(train_ent))
+
+            if to_print:
+                print()
+                print("Trained on", processed, "entities in total")
 
     def _test_dev(self, entities, gold_by_entity, desc_by_entity, art_by_entity, art_texts, sent_by_entity, sent_texts,
                   print_string, avg=True, calc_random=False):
@@ -257,9 +262,13 @@ class EL_Model:
 
     def _begin_training(self):
         self.sgd_article = create_default_optimizer(self.article_encoder.ops)
+        self.sgd_article.learn_rate = self.LEARN_RATE
         self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
+        self.sgd_sent.learn_rate = self.LEARN_RATE
         self.sgd_desc = create_default_optimizer(self.desc_encoder.ops)
+        self.sgd_desc.learn_rate = self.LEARN_RATE
         self.sgd = create_default_optimizer(self.model.ops)
+        self.sgd.learn_rate = self.LEARN_RATE
 
     @staticmethod
     def get_loss(predictions, golds):
