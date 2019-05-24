@@ -417,7 +417,9 @@ class Language(object):
         golds (iterable): A batch of `GoldParse` objects.
         drop (float): The droput rate.
         sgd (callable): An optimizer.
-        RETURNS (dict): Results from the update.
+        losses (dict): Dictionary to update with the loss, keyed by component.
+        component_cfg (dict): Config parameters for specific pipeline
+            components, keyed by component name.
 
         DOCS: https://spacy.io/api/language#update
         """

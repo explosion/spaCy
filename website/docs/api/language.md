@@ -119,6 +119,7 @@ Update the models in the pipeline.
 | `golds`                                      | iterable | A batch of `GoldParse` objects or dictionaries. Dictionaries will be used to create [`GoldParse`](/api/goldparse) objects. For the available keys and their usage, see [`GoldParse.__init__`](/api/goldparse#init). |
 | `drop`                                       | float    | The dropout rate.                                                                                                                                                                                                   |
 | `sgd`                                        | callable | An optimizer.                                                                                                                                                                                                       |
+| `losses`                                     | dict     | Dictionary to update with the loss, keyed by pipeline component.                                                                                                                                                    |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                        |
 
 ## Language.begin_training {#begin_training tag="method"}
