@@ -122,6 +122,25 @@ Update the models in the pipeline.
 | `losses`                                     | dict     | Dictionary to update with the loss, keyed by pipeline component.                                                                                                                                                    |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                        |
 
+## Language.evaluate {#evaluate tag="method"}
+
+Evaluate a model's pipeline components.
+
+> #### Example
+>
+> ```python
+> scorer = nlp.evaluate(docs_golds, verbose=True)
+> print(scorer.scores)
+> ```
+
+| Name                                         | Type     | Description                                                                           |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects.                                              |
+| `verbose`                                    | bool     | Print debugging information.                                                          |
+| `batch_size`                                 | int      | The batch size to use.                                                                |
+| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.          |
+
 ## Language.begin_training {#begin_training tag="method"}
 
 Allocate models, pre-process training data and acquire an optimizer.
