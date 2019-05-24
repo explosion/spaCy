@@ -90,7 +90,8 @@
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
                     { "text": "GoldParse", "url": "/api/goldparse" },
-                    { "text": "GoldCorpus", "url": "/api/goldcorpus" }
+                    { "text": "GoldCorpus", "url": "/api/goldcorpus" },
+                    { "text": "Scorer", "url": "/api/scorer" }
                 ]
             },
             {
