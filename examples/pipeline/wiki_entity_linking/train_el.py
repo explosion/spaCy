@@ -11,7 +11,7 @@ from thinc.neural._classes.convolution import ExtractWindow
 
 from examples.pipeline.wiki_entity_linking import run_el, training_set_creator, kb_creator
 
-from spacy._ml import SpacyVectors, create_default_optimizer, zero_init, logistic
+from spacy._ml import SpacyVectors, create_default_optimizer, zero_init, logistic, Tok2Vec
 
 from thinc.api import chain, concatenate, flatten_add_lengths, clone, with_flatten
 from thinc.v2v import Model, Maxout, Affine, ReLu
@@ -39,15 +39,15 @@ class EL_Model:
     DOC_CUTOFF = 300    # number of characters from the doc context
     INPUT_DIM = 300     # dimension of pre-trained vectors
 
-    HIDDEN_1_WIDTH = 32   # 10
-    HIDDEN_2_WIDTH = 32  # 6
+    # HIDDEN_1_WIDTH = 32   # 10
+    # HIDDEN_2_WIDTH = 32  # 6
     DESC_WIDTH = 64     # 4
     ARTICLE_WIDTH = 64   # 8
     SENT_WIDTH = 64
 
     DROP = 0.1
-    LEARN_RATE = 0.01
-    EPOCHS = 10
+    LEARN_RATE = 0.001
+    EPOCHS = 20
 
     name = "entity_linker"
 
@@ -56,12 +56,9 @@ class EL_Model:
         self.nlp = nlp
         self.kb = kb
 
-        self._build_cnn(in_width=self.INPUT_DIM,
-                        desc_width=self.DESC_WIDTH,
+        self._build_cnn(desc_width=self.DESC_WIDTH,
                         article_width=self.ARTICLE_WIDTH,
-                        sent_width=self.SENT_WIDTH,
-                        hidden_1_width=self.HIDDEN_1_WIDTH,
-                        hidden_2_width=self.HIDDEN_2_WIDTH)
+                        sent_width=self.SENT_WIDTH)
 
     def train_model(self, training_dir, entity_descr_output, trainlimit=None, devlimit=None, to_print=True):
         # raise errors instead of runtime warnings in case of int/float overflow
@@ -122,27 +119,29 @@ class EL_Model:
             print(" CUTOFF", self.CUTOFF)
             print(" DOC_CUTOFF", self.DOC_CUTOFF)
             print(" INPUT_DIM", self.INPUT_DIM)
-            print(" HIDDEN_1_WIDTH", self.HIDDEN_1_WIDTH)
+            # print(" HIDDEN_1_WIDTH", self.HIDDEN_1_WIDTH)
             print(" DESC_WIDTH", self.DESC_WIDTH)
             print(" ARTICLE_WIDTH", self.ARTICLE_WIDTH)
             print(" SENT_WIDTH", self.SENT_WIDTH)
-            print(" HIDDEN_2_WIDTH", self.HIDDEN_2_WIDTH)
+            # print(" HIDDEN_2_WIDTH", self.HIDDEN_2_WIDTH)
             print(" DROP", self.DROP)
+            print(" LEARNING RATE", self.LEARN_RATE)
+            print(" UPSAMPLE", self.UPSAMPLE)
             print()
 
         self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
                        print_string="dev_random", calc_random=True)
+
         self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
                        print_string="dev_pre", avg=True)
         print()
 
+        processed = 0
         for i in range(self.EPOCHS):
-            print("EPOCH", i)
             shuffle(train_ent)
 
             start = 0
             stop = min(self.BATCH_SIZE, len(train_ent))
-            processed = 0
 
             while start < len(train_ent):
                 next_batch = train_ent[start:stop]
@@ -153,17 +152,22 @@ class EL_Model:
                 sent_texts = [train_sent_texts[train_sent[e]] for e in next_batch]
 
                 self.update(entities=next_batch, golds=golds, descs=descs, art_texts=article_texts, sent_texts=sent_texts)
-                self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
-                               print_string="dev_inter", avg=True)
 
                 processed += len(next_batch)
 
                 start = start + self.BATCH_SIZE
                 stop = min(stop + self.BATCH_SIZE, len(train_ent))
 
-            if to_print:
-                print()
-                print("Trained on", processed, "entities in total")
+            if self.PRINT_TRAIN:
+                self._test_dev(train_ent, train_gold, train_desc, train_art, train_art_texts, train_sent, train_sent_texts,
+                               print_string="train_inter_epoch " + str(i), avg=True)
+
+            self._test_dev(dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts,
+                           print_string="dev_inter_epoch " + str(i), avg=True)
+
+        if to_print:
+            print()
+            print("Trained on", processed, "entities across", self.EPOCHS, "epochs")
 
     def _test_dev(self, entities, gold_by_entity, desc_by_entity, art_by_entity, art_texts, sent_by_entity, sent_texts,
                   print_string, avg=True, calc_random=False):
@@ -224,11 +228,11 @@ class EL_Model:
         else:
             return [float(1.0) if random.uniform(0, 1) > self.CUTOFF else float(0.0) for _ in entities]
 
-    def _build_cnn(self, in_width, desc_width, article_width, sent_width, hidden_1_width, hidden_2_width):
+    def _build_cnn_depr(self, embed_width, desc_width, article_width, sent_width, hidden_1_width, hidden_2_width):
         with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-            self.desc_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=desc_width)
-            self.article_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=article_width)
-            self.sent_encoder = self._encoder(in_width=in_width, hidden_with=hidden_1_width, end_width=sent_width)
+            self.desc_encoder = self._encoder_depr(in_width=embed_width, hidden_with=hidden_1_width, end_width=desc_width)
+            self.article_encoder = self._encoder_depr(in_width=embed_width, hidden_with=hidden_1_width, end_width=article_width)
+            self.sent_encoder = self._encoder_depr(in_width=embed_width, hidden_with=hidden_1_width, end_width=sent_width)
 
             in_width = article_width + sent_width + desc_width
             out_width = hidden_2_width
@@ -238,8 +242,28 @@ class EL_Model:
                 >> Affine(1, out_width) \
                 >> logistic
 
+    def _build_cnn(self, desc_width, article_width, sent_width):
+        with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
+            self.desc_encoder = self._encoder(width=desc_width)
+            self.article_encoder = self._encoder(width=article_width)
+            self.sent_encoder = self._encoder(width=sent_width)
+
+            in_width = desc_width + article_width + sent_width
+
+            output_layer = (
+                    zero_init(Affine(1, in_width, drop_factor=0.0)) >> logistic
+            )
+            self.model = output_layer
+            self.model.nO = 1
+
+    def _encoder(self, width):
+        tok2vec = Tok2Vec(width=width, embed_size=2000, pretrained_vectors=self.nlp.vocab.vectors.name, cnn_maxout_pieces=3,
+                          subword_features=True, conv_depth=4, bilstm_depth=0)
+
+        return tok2vec >> flatten_add_lengths >> Pooling(mean_pool)
+
     @staticmethod
-    def _encoder(in_width, hidden_with, end_width):
+    def _encoder_depr(in_width, hidden_with, end_width):
         conv_depth = 2
         cnn_maxout_pieces = 3
 
@@ -263,12 +287,19 @@ class EL_Model:
     def _begin_training(self):
         self.sgd_article = create_default_optimizer(self.article_encoder.ops)
         self.sgd_article.learn_rate = self.LEARN_RATE
+        self.sgd_article.L2 = 0
+
         self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
         self.sgd_sent.learn_rate = self.LEARN_RATE
+        self.sgd_sent.L2 = 0
+
         self.sgd_desc = create_default_optimizer(self.desc_encoder.ops)
         self.sgd_desc.learn_rate = self.LEARN_RATE
+        self.sgd_desc.L2 = 0
+
         self.sgd = create_default_optimizer(self.model.ops)
         self.sgd.learn_rate = self.LEARN_RATE
+        self.sgd.L2 = 0
 
     @staticmethod
     def get_loss(predictions, golds):
@@ -299,9 +330,6 @@ class EL_Model:
         # print("golds", golds)
 
         loss, gradient = self.get_loss(predictions, golds)
-
-        if self.PRINT_TRAIN:
-            print("loss train", round(loss, 5))
 
         gradient = float(gradient)
         # print("gradient", gradient)
