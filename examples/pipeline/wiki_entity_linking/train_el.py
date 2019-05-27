@@ -29,7 +29,7 @@ from spacy.tokens import Doc
 class EL_Model:
 
     PRINT_INSPECT = False
-    PRINT_TRAIN = False
+    PRINT_TRAIN = True
     EPS = 0.0000000005
     CUTOFF = 0.5
 
@@ -40,14 +40,15 @@ class EL_Model:
     INPUT_DIM = 300     # dimension of pre-trained vectors
 
     # HIDDEN_1_WIDTH = 32   # 10
-    # HIDDEN_2_WIDTH = 32  # 6
+    HIDDEN_2_WIDTH = 32  # 6
     DESC_WIDTH = 64     # 4
     ARTICLE_WIDTH = 64   # 8
     SENT_WIDTH = 64
 
     DROP = 0.1
-    LEARN_RATE = 0.001
+    LEARN_RATE = 0.0001
     EPOCHS = 20
+    L2 = 1e-6
 
     name = "entity_linker"
 
@@ -62,7 +63,10 @@ class EL_Model:
 
     def train_model(self, training_dir, entity_descr_output, trainlimit=None, devlimit=None, to_print=True):
         # raise errors instead of runtime warnings in case of int/float overflow
-        np.seterr(all='raise')
+        # (not sure if we need this. set L2 to 0 because it throws an error otherwsise)
+        # np.seterr(all='raise')
+        # alternative:
+        np.seterr(divide="raise", over="warn", under="ignore", invalid="raise")
 
         train_ent, train_gold, train_desc, train_art, train_art_texts, train_sent, train_sent_texts = \
             self._get_training_data(training_dir, entity_descr_output, False, trainlimit, to_print=False)
@@ -159,6 +163,7 @@ class EL_Model:
                 stop = min(stop + self.BATCH_SIZE, len(train_ent))
 
             if self.PRINT_TRAIN:
+                print()
                 self._test_dev(train_ent, train_gold, train_desc, train_art, train_art_texts, train_sent, train_sent_texts,
                                print_string="train_inter_epoch " + str(i), avg=True)
 
@@ -250,15 +255,20 @@ class EL_Model:
 
             in_width = desc_width + article_width + sent_width
 
-            output_layer = (
-                    zero_init(Affine(1, in_width, drop_factor=0.0)) >> logistic
-            )
-            self.model = output_layer
+            self.model = Affine(self.HIDDEN_2_WIDTH, in_width) \
+                         >> LN(Maxout(self.HIDDEN_2_WIDTH, self.HIDDEN_2_WIDTH)) \
+                         >> Affine(1, self.HIDDEN_2_WIDTH) \
+                         >> logistic
+
+            # output_layer = (
+            #         zero_init(Affine(1, in_width, drop_factor=0.0)) >> logistic
+            # )
+            # self.model = output_layer
             self.model.nO = 1
 
     def _encoder(self, width):
         tok2vec = Tok2Vec(width=width, embed_size=2000, pretrained_vectors=self.nlp.vocab.vectors.name, cnn_maxout_pieces=3,
-                          subword_features=True, conv_depth=4, bilstm_depth=0)
+                          subword_features=False, conv_depth=4, bilstm_depth=0)
 
         return tok2vec >> flatten_add_lengths >> Pooling(mean_pool)
 
@@ -287,19 +297,19 @@ class EL_Model:
     def _begin_training(self):
         self.sgd_article = create_default_optimizer(self.article_encoder.ops)
         self.sgd_article.learn_rate = self.LEARN_RATE
-        self.sgd_article.L2 = 0
+        self.sgd_article.L2 = self.L2
 
         self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
         self.sgd_sent.learn_rate = self.LEARN_RATE
-        self.sgd_sent.L2 = 0
+        self.sgd_sent.L2 = self.L2
 
         self.sgd_desc = create_default_optimizer(self.desc_encoder.ops)
         self.sgd_desc.learn_rate = self.LEARN_RATE
-        self.sgd_desc.L2 = 0
+        self.sgd_desc.L2 = self.L2
 
         self.sgd = create_default_optimizer(self.model.ops)
         self.sgd.learn_rate = self.LEARN_RATE
-        self.sgd.L2 = 0
+        self.sgd.L2 = self.L2
 
     @staticmethod
     def get_loss(predictions, golds):
