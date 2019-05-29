@@ -8,6 +8,7 @@ import numpy as np
 import random
 from random import shuffle
 from thinc.neural._classes.convolution import ExtractWindow
+from thinc.neural.util import get_array_module
 
 from examples.pipeline.wiki_entity_linking import run_el, training_set_creator, kb_creator
 
@@ -20,7 +21,7 @@ from thinc.t2t import ParametricAttention
 from thinc.misc import Residual
 from thinc.misc import LayerNorm as LN
 
-from spacy.cli.pretrain import get_cossim_loss
+# from spacy.cli.pretrain import get_cossim_loss
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc
 
@@ -307,10 +308,33 @@ class EL_Model:
         self.sgd_desc.learn_rate = self.LEARN_RATE
         self.sgd_desc.L2 = self.L2
 
-    @staticmethod
-    def get_loss(predictions, golds):
-        loss, gradients = get_cossim_loss(predictions, golds)
+    def get_loss(self, v1, v2, targets):
+        loss, gradients = self.get_cossim_loss(v1, v2, targets)
         return loss, gradients
+
+    def get_cossim_loss(self, yh, y, t):
+        # Add a small constant to avoid 0 vectors
+        # print()
+        # print("yh", yh)
+        # print("y", y)
+        # print("t", t)
+        yh = yh + 1e-8
+        y = y + 1e-8
+        # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+        xp = get_array_module(yh)
+        norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+        norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+        mul_norms = norm_yh * norm_y
+        cos = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+        # print("cos", cos)
+        d_yh = (y / mul_norms) - (cos * (yh / norm_yh ** 2))
+        # print("abs", xp.abs(cos - t))
+        loss = xp.abs(cos - t).sum()
+        # print("loss", loss)
+        # print("d_yh", d_yh)
+        inverse = np.asarray([int(t[i][0]) * d_yh[i] for i in range(len(t))])
+        # print("inverse", inverse)
+        return loss, -inverse
 
     def update(self, entity_clusters, golds, descs, art_texts, arts, sent_texts, sents):
         all_clusters = list(entity_clusters.keys())
@@ -318,16 +342,22 @@ class EL_Model:
         arts_list = list()
         sents_list = list()
         descs_list = list()
+        targets = list()
 
         for cluster, entities in entity_clusters.items():
             art = art_texts[arts[cluster]]
             sent = sent_texts[sents[cluster]]
             for e in entities:
-                # TODO: more appropriate loss for the whole cluster (currently only pos entities)
                 if golds[e]:
                     arts_list.append(art)
                     sents_list.append(sent)
                     descs_list.append(descs[e])
+                    targets.append([1])
+                else:
+                    arts_list.append(art)
+                    sents_list.append(sent)
+                    descs_list.append(descs[e])
+                    targets.append([-1])
 
         desc_docs = self.nlp.pipe(descs_list)
         desc_encodings, bp_desc = self.desc_encoder.begin_update(desc_docs, drop=self.DROP)
@@ -339,7 +369,7 @@ class EL_Model:
         sent_encodings, bp_sent = self.sent_encoder.begin_update(sent_docs, drop=self.DROP)
 
         concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) for i in
-                            range(len(all_clusters))]
+                            range(len(targets))]
         cont_encodings, bp_cont = self.cont_encoder.begin_update(np.asarray(concat_encodings), drop=self.DROP)
 
         # print("sent_encodings", type(sent_encodings), sent_encodings)
@@ -347,7 +377,7 @@ class EL_Model:
         # print("doc_encodings", type(doc_encodings), doc_encodings)
         # print("getting los for", len(arts_list), "entities")
 
-        loss, gradient = self.get_loss(cont_encodings, desc_encodings)
+        loss, gradient = self.get_loss(cont_encodings, desc_encodings, targets)
 
         # print("gradient", gradient)
         if self.PRINT_BATCH_LOSS:
