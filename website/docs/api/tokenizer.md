@@ -15,11 +15,15 @@ Create a `Tokenizer`, to create `Doc` objects given unicode text.
 >
 > ```python
 > # Construction 1
+> import spacy
 > from spacy.tokenizer import Tokenizer
+> nlp = spacy.load("en_core_web_sm")
 > tokenizer = Tokenizer(nlp.vocab)
 >
 > # Construction 2
+> import spacy
 > from spacy.lang.en import English
+> nlp = spacy.load("en_core_web_sm")
 > tokenizer = English().Defaults.create_tokenizer(nlp)
 > ```
 
