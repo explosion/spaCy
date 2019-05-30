@@ -14,8 +14,11 @@ import functools
 import itertools
 import numpy.random
 import srsly
-from jsonschema import Draft4Validator
 
+try:
+    import jsonschema
+except ImportError:
+    jsonschema = None
 
 try:
     import cupy.random
@@ -682,7 +685,9 @@ def get_json_validator(schema):
     # validator that's used (e.g. different draft implementation), without
     # having to change it all across the codebase.
     # TODO: replace with (stable) Draft6Validator, if available
-    return Draft4Validator(schema)
+    if jsonschema is None:
+        raise ValueError(Errors.E136)
+    return jsonschema.Draft4Validator(schema)
 
 
 def validate_schema(schema):

@@ -385,6 +385,8 @@ class Errors(object):
     E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
+    E136 = ("This additional feature requires the jsonschema library to be "
+            "installed:\npip install jsonschema")
 
 
 @add_codes
