@@ -510,7 +510,7 @@ described in any single publication. The model is a greedy transition-based
 parser guided by a linear model whose weights are learned using the averaged
 perceptron loss, via the
 [dynamic oracle](http://www.aclweb.org/anthology/C12-1059) imitation learning
-strategy. The transition system is equivalent to the BILOU tagging scheme.
+strategy. The transition system is equivalent to the BILUO tagging scheme.
 
 ## Models and training data {#training}
 
