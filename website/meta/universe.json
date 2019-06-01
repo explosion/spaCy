@@ -1,6 +1,30 @@
 {
     "resources": [
         {
+            "id": "Chatterbot",
+            "title": "Chatterbot",
+            "slogan": "deep-learning based tool for information extraction in the biomedical domain",
+            "github": "gunthercox/ChatterBot",
+            "pip": "chatterbot",
+            "thumb": "https://chatterbot.readthedocs.io/en/stable/_images/banner.png",
+            "code_example": [
+                    "from chatterbot import ChatBot",
+                    "from chatterbot.trainers import ListTrainer",
+                    "# Create a new chat bot named Charlie",
+                    "chatbot = ChatBot('Charlie')",
+                    "trainer = ListTrainer(chatbot)",
+                    "trainer.train([",
+                        "'Hi, can I help you?',",
+                        "'Sure, I would like to book a flight to Iceland.",
+                        "'Your flight has been booked.'",
+                    "])",
+                    "",
+                    "response = chatbot.get_response('I would like to book a flight.')"
+            ],
+            "category": ["conversational"],
+            "tags": ["chatbots"]
+        },
+        {
             "id": "saber",
             "title": "saber",
             "slogan": "deep-learning based tool for information extraction in the biomedical domain",
@@ -16,7 +40,22 @@
             "category": ["research", "biomedical"],
             "tags": ["keras"]
         },
-
+        {
+            "id": "alibi",
+            "title": "alibi",
+            "slogan": "Algorithms for monitoring and explaining machine learning models ",
+            "github": "SeldonIO/alibi",
+            "pip": "alibi",
+            "thumb": "https://docs.seldon.io/projects/alibi/en/v0.2.0/_static/Alibi_Logo.png",
+            "code_example": [
+                ">>> from alibi.explainers import AnchorTabular",
+                ">>> explainer = AnchorTabular(predict_fn, feature_names)",
+                ">>> explainer.fit(X_train)",
+                ">>> explainer.explain(x)"
+            ],
+            "category": [""],
+            "tags": ["standalone"]
+        },
         {
             "id": "spacymoji",
             "slogan": "Emoji handling and meta data as a spaCy pipeline component",
