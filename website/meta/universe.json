@@ -1,6 +1,23 @@
 {
     "resources": [
         {
+            "id": "saber",
+            "title": "saber",
+            "slogan": "deep-learning based tool for information extraction in the biomedical domain",
+            "github": "BaderLab/saber",
+            "pip": "saber",
+            "thumb": "https://raw.githubusercontent.com/BaderLab/saber/master/docs/img/saber_logo.png",
+            "code_example": [
+                ">>> from saber.saber import Saber",
+                ">>> saber = Saber()",
+                ">>> saber.load('PRGE')",
+                "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
+            ],
+            "category": ["research", "biomedical"],
+            "tags": ["keras"]
+        },
+
+        {
             "id": "spacymoji",
             "slogan": "Emoji handling and meta data as a spaCy pipeline component",
             "github": "ines/spacymoji",
