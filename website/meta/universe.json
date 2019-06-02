@@ -6,8 +6,7 @@
             "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI",
             "github": "NervanaSystems/nlp-architect",
             "pip": "nlp-architect",
-            "thumb": "https://raw.githubusercontent.com/NervanaSystems/nlp-architect/master/assets/nlp_architect_logo.png",
-            "code_example": [],
+            "thumb": "https://i.imgur.com/vMideRx.png",
             "category": ["standalone", "research"],
             "tags": ["pytorch"]
         },
@@ -17,7 +16,6 @@
             "slogan": "Named-entity recognition using neural networks",
             "github": "Franck-Dernoncourt/NeuroNER",
             "pip": "pyneuroner[cpu]",
-            "thumb": "",
             "code_example": [
                 "from neuroner import neuromodel",
                 "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
@@ -31,7 +29,6 @@
             "slogan": "Natural Language Preprocessing Library in Health data",
             "github": "NIHOPA/NLPre",
             "pip": "nlpre",
-            "thumb": "",
             "code_example": [
                 "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
                 "from nlpre import replace_acronyms, replace_from_dictionary",
@@ -42,8 +39,7 @@
                 "    text = f(text)",
                 "print(text)"
             ],
-            "category": ["standalone"],
-            "tags": []
+            "category": ["standalone"]
         },
         {
             "id": "Chatterbot",
@@ -51,7 +47,7 @@
             "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
             "github": "gunthercox/ChatterBot",
             "pip": "chatterbot",
-            "thumb": "https://chatterbot.readthedocs.io/en/stable/_images/banner.png",
+            "thumb": "https://i.imgur.com/eyAhwXk.jpg",
             "code_example": [
                 "from chatterbot import ChatBot",
                 "from chatterbot.trainers import ListTrainer",
@@ -91,15 +87,14 @@
             "slogan": "Algorithms for monitoring and explaining machine learning models ",
             "github": "SeldonIO/alibi",
             "pip": "alibi",
-            "thumb": "https://docs.seldon.io/projects/alibi/en/v0.2.0/_static/Alibi_Logo.png",
+            "thumb": "https://i.imgur.com/YkzQHRp.png",
             "code_example": [
-                ">>> from alibi.explainers import AnchorTabular",
-                ">>> explainer = AnchorTabular(predict_fn, feature_names)",
-                ">>> explainer.fit(X_train)",
-                ">>> explainer.explain(x)"
+                "from alibi.explainers import AnchorTabular",
+                "explainer = AnchorTabular(predict_fn, feature_names)",
+                "explainer.fit(X_train)",
+                "explainer.explain(x)"
             ],
-            "category": ["standalone", "research"],
-            "tags": []
+            "category": ["standalone", "research"]
         },
         {
             "id": "spacymoji",
