@@ -7,9 +7,8 @@
             "github": "NervanaSystems/nlp-architect",
             "pip": "nlp-architect",
             "thumb": "https://raw.githubusercontent.com/NervanaSystems/nlp-architect/master/assets/nlp_architect_logo.png",
-            "code_example": [
-           ],
-            "category": ["standalone","research"],
+            "code_example": [],
+            "category": ["standalone", "research"],
             "tags": ["pytorch"]
         },
         {
@@ -22,7 +21,7 @@
             "code_example": [
                 "from neuroner import neuromodel",
                 "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
-           ],
+            ],
             "category": ["ner"],
             "tags": ["standalone"]
         },
@@ -34,15 +33,15 @@
             "pip": "nlpre",
             "thumb": "",
             "code_example": [
-               "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
-               "from nlpre import replace_acronyms, replace_from_dictionary",
-               "ABBR = identify_parenthetical_phrases()(text)",
-               "parsers = [dedash(), titlecaps(), replace_acronyms(ABBR),",
-               "        replace_from_dictionary(prefix='MeSH_')]",
-               "for f in parsers:",
-               "    text = f(text)",
-               "print(text)"
-           ],
+                "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
+                "from nlpre import replace_acronyms, replace_from_dictionary",
+                "ABBR = identify_parenthetical_phrases()(text)",
+                "parsers = [dedash(), titlecaps(), replace_acronyms(ABBR),",
+                "        replace_from_dictionary(prefix='MeSH_')]",
+                "for f in parsers:",
+                "    text = f(text)",
+                "print(text)"
+            ],
             "category": [""],
             "tags": ["standalone"]
         },
@@ -54,18 +53,18 @@
             "pip": "chatterbot",
             "thumb": "https://chatterbot.readthedocs.io/en/stable/_images/banner.png",
             "code_example": [
-                    "from chatterbot import ChatBot",
-                    "from chatterbot.trainers import ListTrainer",
-                    "# Create a new chat bot named Charlie",
-                    "chatbot = ChatBot('Charlie')",
-                    "trainer = ListTrainer(chatbot)",
-                    "trainer.train([",
-                        "'Hi, can I help you?',",
-                        "'Sure, I would like to book a flight to Iceland.",
-                        "'Your flight has been booked.'",
-                    "])",
-                    "",
-                    "response = chatbot.get_response('I would like to book a flight.')"
+                "from chatterbot import ChatBot",
+                "from chatterbot.trainers import ListTrainer",
+                "# Create a new chat bot named Charlie",
+                "chatbot = ChatBot('Charlie')",
+                "trainer = ListTrainer(chatbot)",
+                "trainer.train([",
+                "'Hi, can I help you?',",
+                "'Sure, I would like to book a flight to Iceland.",
+                "'Your flight has been booked.'",
+                "])",
+                "",
+                "response = chatbot.get_response('I would like to book a flight.')"
             ],
             "category": ["conversational"],
             "tags": ["chatbots"]
