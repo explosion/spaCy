@@ -940,6 +940,42 @@
             "category": ["standalone"]
         },
         {
+            "id": "prefect",
+            "title": "Prefect",
+            "slogan": "Workflow management system designed for modern infrastructure",
+            "github": "PrefectHQ/prefect",
+            "pip": "prefect",
+            "thumb": "https://i.imgur.com/oLTwr0e.png",
+            "code_example": [
+                "from prefect import Flow",
+                "from prefect.tasks.spacy.spacy_tasks import SpacyNLP",
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "",
+                "with Flow(\"Natural Language Processing\") as flow:",
+                "    doc = SpacyNLP(text=\"This is some text\", nlp=nlp)",
+                "",
+                "flow.run()"
+            ],
+            "author": "Prefect",
+            "author_links": {
+                "website": "https://prefect.io"
+            },
+            "category": ["standalone"]
+        },
+        {
+            "id": "graphbrain",
+            "title": "Graphbrain",
+            "slogan": "Automated meaning extraction and text understanding",
+            "description": "Graphbrain is an Artificial Intelligence open-source software library and scientific research tool. Its aim is to facilitate automated meaning extraction and text understanding, as well as the exploration and inference of knowledge.",
+            "github": "graphbrain/graphbrain",
+            "pip": "graphbrain",
+            "thumb": "https://i.imgur.com/cct9W1E.png",
+            "author": "Graphbrain",
+            "category": ["standalone"]
+        },
+        {
             "type": "education",
             "id": "oreilly-python-ds",
             "title": "Introduction to Machine Learning with Python: A Guide for Data Scientists",
