@@ -26,7 +26,7 @@
         {
             "id": "NLPre",
             "title": "NLPre",
-            "slogan": "Natural Language Preprocessing Library in Health data",
+            "slogan": "Natural Language Preprocessing Library for health data and more",
             "github": "NIHOPA/NLPre",
             "pip": "nlpre",
             "code_example": [
@@ -39,7 +39,7 @@
                 "    text = f(text)",
                 "print(text)"
             ],
-            "category": ["standalone"]
+            "category": ["scientific"]
         },
         {
             "id": "Chatterbot",
@@ -62,6 +62,10 @@
                 "",
                 "response = chatbot.get_response('I would like to book a flight.')"
             ],
+            "author": "Gunther Cox",
+            "author_links": {
+                "github": "gunthercox"
+            },
             "category": ["conversational", "standalone"],
             "tags": ["chatbots"]
         },
@@ -78,7 +82,8 @@
                 "saber.load('PRGE')",
                 "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
             ],
-            "category": ["research"],
+            "author": "Bader Lab, University of Toronto",
+            "category": ["scientific"],
             "tags": ["keras", "biomedical"]
         },
         {
@@ -94,6 +99,7 @@
                 "explainer.fit(X_train)",
                 "explainer.explain(x)"
             ],
+            "author": "Seldon",
             "category": ["standalone", "research"]
         },
         {
@@ -239,7 +245,7 @@
                 "doc = nlp(my_doc_text)"
             ],
             "author": "tc64",
-            "author_link": {
+            "author_links": {
                 "github": "tc64"
             },
             "category": ["pipeline"]
@@ -442,7 +448,7 @@
             "author_links": {
                 "github": "huggingface"
             },
-            "category": ["standalone", "conversational"],
+            "category": ["standalone", "conversational", "models"],
             "tags": ["coref"]
         },
         {
@@ -634,7 +640,7 @@
                 "twitter": "allenai_org",
                 "website": "http://allenai.org"
             },
-            "category": ["models", "research"]
+            "category": ["scientific", "models", "research"]
         },
         {
             "id": "textacy",
@@ -697,7 +703,7 @@
                 "github": "ahalterman",
                 "twitter": "ahalterman"
             },
-            "category": ["standalone"]
+            "category": ["standalone", "scientific"]
         },
         {
             "id": "kindred",
@@ -722,7 +728,7 @@
             "author_links": {
                 "github": "jakelever"
             },
-            "category": ["standalone"]
+            "category": ["standalone", "scientific"]
         },
         {
             "id": "sense2vec",
@@ -992,6 +998,23 @@
         },
         {
             "type": "education",
+            "id": "spacy-course",
+            "title": "Advanced NLP with spaCy",
+            "slogan": "spaCy, 2019",
+            "description": "In this free interactive course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
+            "url": "https://course.spacy.io",
+            "image": "https://i.imgur.com/JC00pHW.jpg",
+            "thumb": "https://i.imgur.com/5RXLtrr.jpg",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            },
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
             "id": "video-spacys-ner-model",
             "title": "spaCy's NER model",
             "slogan": "Incremental parsing with bloom embeddings and residual CNNs",
@@ -1150,7 +1173,7 @@
                 "github": "ecohealthalliance",
                 "website": " https://ecohealthalliance.org/"
             },
-            "category": ["research", "standalone"]
+            "category": ["scientific", "standalone"]
         },
         {
             "id": "self-attentive-parser",
@@ -1472,7 +1495,7 @@
             "url": "https://github.com/msg-systems/holmes-extractor",
             "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural search, topic matching and supervised document classification.",
             "pip": "holmes-extractor",
-            "category": ["conversational", "research", "standalone"],
+            "category": ["conversational", "standalone"],
             "tags": ["chatbots", "text-processing"],
             "code_example": [
                 "import holmes_extractor as holmes",
@@ -1512,6 +1535,11 @@
                     "description": "Frameworks and utilities for developing better NLP models, especially using neural networks"
                 },
                 {
+                    "id": "scientific",
+                    "title": "Scientific",
+                    "description": "Frameworks and utilities for scientific text processing"
+                },
+                {
                     "id": "visualizers",
                     "title": "Visualizers",
                     "description": "Demos and tools to visualize NLP annotations or systems"
@@ -1530,6 +1558,11 @@
                     "id": "standalone",
                     "title": "Standalone",
                     "description": "Self-contained libraries or tools that use spaCy under the hood"
+                },
+                {
+                    "id": "models",
+                    "title": "Models",
+                    "description": "Third-party pre-trained models for different languages and domains"
                 }
             ]
         },
