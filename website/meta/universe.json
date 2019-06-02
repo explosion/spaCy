@@ -48,7 +48,7 @@
         {
             "id": "Chatterbot",
             "title": "Chatterbot",
-            "slogan": "deep-learning based tool for information extraction in the biomedical domain",
+            "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
             "github": "gunthercox/ChatterBot",
             "pip": "chatterbot",
             "thumb": "https://chatterbot.readthedocs.io/en/stable/_images/banner.png",
