@@ -77,9 +77,9 @@
             "pip": "saber",
             "thumb": "https://raw.githubusercontent.com/BaderLab/saber/master/docs/img/saber_logo.png",
             "code_example": [
-                ">>> from saber.saber import Saber",
-                ">>> saber = Saber()",
-                ">>> saber.load('PRGE')",
+                "from saber.saber import Saber",
+                "saber = Saber()",
+                "saber.load('PRGE')",
                 "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
             ],
             "category": ["research", "biomedical"],
