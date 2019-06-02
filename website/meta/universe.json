@@ -1,22 +1,106 @@
 {
     "resources": [
         {
+            "id": "nlp-architect",
+            "title": "NLP Architect",
+            "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI",
+            "github": "NervanaSystems/nlp-architect",
+            "pip": "nlp-architect",
+            "thumb": "https://raw.githubusercontent.com/NervanaSystems/nlp-architect/master/assets/nlp_architect_logo.png",
+            "code_example": [],
+            "category": ["standalone", "research"],
+            "tags": ["pytorch"]
+        },
+        {
+            "id": "NeuroNER",
+            "title": "NeuroNER",
+            "slogan": "Named-entity recognition using neural networks",
+            "github": "Franck-Dernoncourt/NeuroNER",
+            "pip": "pyneuroner[cpu]",
+            "thumb": "",
+            "code_example": [
+                "from neuroner import neuromodel",
+                "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
+            ],
+            "category": ["ner"],
+            "tags": ["standalone"]
+        },
+        {
+            "id": "NLPre",
+            "title": "NLPre",
+            "slogan": "Natural Language Preprocessing Library in Health data",
+            "github": "NIHOPA/NLPre",
+            "pip": "nlpre",
+            "thumb": "",
+            "code_example": [
+                "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
+                "from nlpre import replace_acronyms, replace_from_dictionary",
+                "ABBR = identify_parenthetical_phrases()(text)",
+                "parsers = [dedash(), titlecaps(), replace_acronyms(ABBR),",
+                "        replace_from_dictionary(prefix='MeSH_')]",
+                "for f in parsers:",
+                "    text = f(text)",
+                "print(text)"
+            ],
+            "category": ["standalone"],
+            "tags": []
+        },
+        {
+            "id": "Chatterbot",
+            "title": "Chatterbot",
+            "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
+            "github": "gunthercox/ChatterBot",
+            "pip": "chatterbot",
+            "thumb": "https://chatterbot.readthedocs.io/en/stable/_images/banner.png",
+            "code_example": [
+                "from chatterbot import ChatBot",
+                "from chatterbot.trainers import ListTrainer",
+                "# Create a new chat bot named Charlie",
+                "chatbot = ChatBot('Charlie')",
+                "trainer = ListTrainer(chatbot)",
+                "trainer.train([",
+                "'Hi, can I help you?',",
+                "'Sure, I would like to book a flight to Iceland.",
+                "'Your flight has been booked.'",
+                "])",
+                "",
+                "response = chatbot.get_response('I would like to book a flight.')"
+            ],
+            "category": ["conversational", "standalone"],
+            "tags": ["chatbots"]
+        },
+        {
             "id": "saber",
             "title": "saber",
-            "slogan": "deep-learning based tool for information extraction in the biomedical domain",
+            "slogan": "Deep-learning based tool for information extraction in the biomedical domain",
             "github": "BaderLab/saber",
             "pip": "saber",
             "thumb": "https://raw.githubusercontent.com/BaderLab/saber/master/docs/img/saber_logo.png",
             "code_example": [
-                ">>> from saber.saber import Saber",
-                ">>> saber = Saber()",
-                ">>> saber.load('PRGE')",
+                "from saber.saber import Saber",
+                "saber = Saber()",
+                "saber.load('PRGE')",
                 "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
             ],
-            "category": ["research", "biomedical"],
-            "tags": ["keras"]
+            "category": ["research"],
+            "tags": ["keras", "biomedical"]
         },
-
+        {
+            "id": "alibi",
+            "title": "alibi",
+            "slogan": "Algorithms for monitoring and explaining machine learning models ",
+            "github": "SeldonIO/alibi",
+            "pip": "alibi",
+            "thumb": "https://docs.seldon.io/projects/alibi/en/v0.2.0/_static/Alibi_Logo.png",
+            "code_example": [
+                ">>> from alibi.explainers import AnchorTabular",
+                ">>> explainer = AnchorTabular(predict_fn, feature_names)",
+                ">>> explainer.fit(X_train)",
+                ">>> explainer.explain(x)"
+            ],
+            "category": ["standalone", "research"],
+            "tags": []
+        },
         {
             "id": "spacymoji",
             "slogan": "Emoji handling and meta data as a spaCy pipeline component",
