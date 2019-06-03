@@ -48,7 +48,10 @@ cdef class Matcher:
         self._extra_predicates = []
         self.vocab = vocab
         self.mem = Pool()
-        self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA) if validate else None
+        if validate:
+            self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA)
+        else:
+            self.validator = None
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -105,7 +108,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E012.format(key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
-        if errors:
+        if any(err for err in errors.values()):
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:

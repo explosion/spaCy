@@ -209,7 +209,7 @@ def setup_package():
             generate_cython(root, "spacy")
 
         setup(
-            name=about["__title__"],
+            name="spacy",
             zip_safe=False,
             packages=PACKAGES,
             package_data=PACKAGE_DATA,
@@ -232,7 +232,6 @@ def setup_package():
                 "blis>=0.2.2,<0.3.0",
                 "plac<1.0.0,>=0.9.6",
                 "requests>=2.13.0,<3.0.0",
-                "jsonschema>=2.6.0,<3.0.0",
                 "wasabi>=0.2.0,<1.1.0",
                 "srsly>=0.0.5,<1.1.0",
                 'pathlib==1.0.1; python_version < "3.4"',

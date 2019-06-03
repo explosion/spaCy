@@ -39,7 +39,7 @@ made make many may me meanwhile might mine more moreover most mostly move much
 must my myself
 
 name namely neither never nevertheless next nine no nobody none noone nor not
-nothing now nowhere 
+nothing now nowhere
 
 of off often on once one only onto or other others otherwise our ours ourselves
 out over own
@@ -75,4 +75,3 @@ STOP_WORDS.update(contractions)
 for apostrophe in ["‘", "’"]:
     for stopword in contractions:
         STOP_WORDS.add(stopword.replace("'", apostrophe))
-

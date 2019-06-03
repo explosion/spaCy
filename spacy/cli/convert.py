@@ -39,7 +39,7 @@ FILE_TYPES_STDOUT = ("json", "jsonl")
 def convert(
     input_file,
     output_dir="-",
-    file_type="jsonl",
+    file_type="json",
     n_sents=1,
     morphology=False,
     converter="auto",
@@ -48,8 +48,8 @@ def convert(
     """
     Convert files into JSON format for use with train command and other
     experiment management functions. If no output_dir is specified, the data
-    is written to stdout, so you can pipe them forward to a JSONL file:
-    $ spacy convert some_file.conllu > some_file.jsonl
+    is written to stdout, so you can pipe them forward to a JSON file:
+    $ spacy convert some_file.conllu > some_file.json
     """
     msg = Printer()
     input_path = Path(input_file)

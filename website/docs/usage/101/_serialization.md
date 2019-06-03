@@ -4,7 +4,7 @@ example, everything that's in your `nlp` object. This means you'll have to
 translate its contents and structure into a format that can be saved, like a
 file or a byte string. This process is called serialization. spaCy comes with
 **built-in serialization methods** and supports the
-[Pickle protocol](http://www.diveintopython3.net/serializing.html#dump).
+[Pickle protocol](https://www.diveinto.org/python3/serializing.html#dump).
 
 > #### What's pickle?
 >

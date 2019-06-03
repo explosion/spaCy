@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
+from ...symbols import ORTH
 
 # Extensive list of both common and uncommon dutch abbreviations copied from
 # github.com/diasks2/pragmatic_segmenter, a Ruby library for rule-based
@@ -16,7 +16,7 @@ from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
 # are extremely domain-specific. Tokenizer performance may benefit from some
 # slight pruning, although no performance regression has been observed so far.
 
-
+# fmt: off
 abbrevs = ['a.2d.', 'a.a.', 'a.a.j.b.', 'a.f.t.', 'a.g.j.b.',
            'a.h.v.', 'a.h.w.', 'a.hosp.', 'a.i.', 'a.j.b.', 'a.j.t.',
            'a.m.', 'a.m.r.', 'a.p.m.', 'a.p.r.', 'a.p.t.', 'a.s.',
@@ -326,7 +326,7 @@ abbrevs = ['a.2d.', 'a.a.', 'a.a.j.b.', 'a.f.t.', 'a.g.j.b.',
            'wtvb.', 'ww.', 'x.d.', 'z.a.', 'z.g.', 'z.i.', 'z.j.',
            'z.o.z.', 'z.p.', 'z.s.m.', 'zg.', 'zgn.', 'zn.', 'znw.',
            'zr.', 'zr.', 'ms.', 'zr.ms.']
-
+# fmt: on
 
 _exc = {}
 for orth in abbrevs:

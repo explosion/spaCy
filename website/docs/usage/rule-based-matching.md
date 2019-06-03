@@ -214,7 +214,8 @@ example, you might want to match different spellings of a word, without having
 to add a new pattern for each spelling.
 
 ```python
-pattern = [{"TEXT": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}},
+pattern = [{"TEXT": {"REGEX": "^[Uu](\\.?|nited)$"}},
+           {"TEXT": {"REGEX": "^[Ss](\\.?|tates)$"}},
            {"LOWER": "president"}]
 ```
 
@@ -227,7 +228,7 @@ attributes:
 pattern = [{"TAG": {"REGEX": "^V"}}]
 
 # Match custom attribute values with regular expressions
-pattern = [{"_": {"country": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}}}]
+pattern = [{"_": {"country": {"REGEX": "^[Uu](\\.?|nited) ?[Ss](\\.?|tates)$"}}}]
 ```
 
 <Infobox title="Regular expressions in older versions" variant="warning">
@@ -404,7 +405,7 @@ class BadHTMLMerger(object):
         for match_id, start, end in matches:
             spans.append(doc[start:end])
         with doc.retokenize() as retokenizer:
-            for span in hashtags:
+            for span in spans:
                 retokenizer.merge(span)
                 for token in span:
                     token._.bad_html = True  # Mark token as bad HTML
@@ -678,7 +679,7 @@ for match_id, start, end in matches:
     if doc.vocab.strings[match_id] == "HASHTAG":
         hashtags.append(doc[start:end])
 with doc.retokenize() as retokenizer:
-    for span in spans:
+    for span in hashtags:
         retokenizer.merge(span)
         for token in span:
             token._.is_hashtag = True
@@ -712,9 +713,9 @@ from spacy.matcher import PhraseMatcher
 
 nlp = spacy.load('en_core_web_sm')
 matcher = PhraseMatcher(nlp.vocab)
-terminology_list = [u"Barack Obama", u"Angela Merkel", u"Washington, D.C."]
+terms = [u"Barack Obama", u"Angela Merkel", u"Washington, D.C."]
 # Only run nlp.make_doc to speed things up
-patterns = [nlp.make_doc(text) for text in terminology_list]
+patterns = [nlp.make_doc(text) for text in terms]
 matcher.add("TerminologyList", None, *patterns)
 
 doc = nlp(u"German Chancellor Angela Merkel and US President Barack Obama "

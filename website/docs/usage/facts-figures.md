@@ -50,7 +50,7 @@ together.
 
 ## Benchmarks {#benchmarks}
 
-Two peer-reviewed papers in 2015 confirm that spaCy offers the **fastest
+Two peer-reviewed papers in 2015 confirmed that spaCy offers the **fastest
 syntactic parser in the world** and that **its accuracy is within 1% of the
 best** available. The few systems that are more accurate are 20× slower or more.
 

@@ -1,6 +1,108 @@
 {
     "resources": [
         {
+            "id": "nlp-architect",
+            "title": "NLP Architect",
+            "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI",
+            "github": "NervanaSystems/nlp-architect",
+            "pip": "nlp-architect",
+            "thumb": "https://i.imgur.com/vMideRx.png",
+            "category": ["standalone", "research"],
+            "tags": ["pytorch"]
+        },
+        {
+            "id": "NeuroNER",
+            "title": "NeuroNER",
+            "slogan": "Named-entity recognition using neural networks",
+            "github": "Franck-Dernoncourt/NeuroNER",
+            "pip": "pyneuroner[cpu]",
+            "code_example": [
+                "from neuroner import neuromodel",
+                "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
+            ],
+            "category": ["ner"],
+            "tags": ["standalone"]
+        },
+        {
+            "id": "NLPre",
+            "title": "NLPre",
+            "slogan": "Natural Language Preprocessing Library for health data and more",
+            "github": "NIHOPA/NLPre",
+            "pip": "nlpre",
+            "code_example": [
+                "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
+                "from nlpre import replace_acronyms, replace_from_dictionary",
+                "ABBR = identify_parenthetical_phrases()(text)",
+                "parsers = [dedash(), titlecaps(), replace_acronyms(ABBR),",
+                "        replace_from_dictionary(prefix='MeSH_')]",
+                "for f in parsers:",
+                "    text = f(text)",
+                "print(text)"
+            ],
+            "category": ["scientific"]
+        },
+        {
+            "id": "Chatterbot",
+            "title": "Chatterbot",
+            "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
+            "github": "gunthercox/ChatterBot",
+            "pip": "chatterbot",
+            "thumb": "https://i.imgur.com/eyAhwXk.jpg",
+            "code_example": [
+                "from chatterbot import ChatBot",
+                "from chatterbot.trainers import ListTrainer",
+                "# Create a new chat bot named Charlie",
+                "chatbot = ChatBot('Charlie')",
+                "trainer = ListTrainer(chatbot)",
+                "trainer.train([",
+                "'Hi, can I help you?',",
+                "'Sure, I would like to book a flight to Iceland.",
+                "'Your flight has been booked.'",
+                "])",
+                "",
+                "response = chatbot.get_response('I would like to book a flight.')"
+            ],
+            "author": "Gunther Cox",
+            "author_links": {
+                "github": "gunthercox"
+            },
+            "category": ["conversational", "standalone"],
+            "tags": ["chatbots"]
+        },
+        {
+            "id": "saber",
+            "title": "saber",
+            "slogan": "Deep-learning based tool for information extraction in the biomedical domain",
+            "github": "BaderLab/saber",
+            "pip": "saber",
+            "thumb": "https://raw.githubusercontent.com/BaderLab/saber/master/docs/img/saber_logo.png",
+            "code_example": [
+                "from saber.saber import Saber",
+                "saber = Saber()",
+                "saber.load('PRGE')",
+                "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
+            ],
+            "author": "Bader Lab, University of Toronto",
+            "category": ["scientific"],
+            "tags": ["keras", "biomedical"]
+        },
+        {
+            "id": "alibi",
+            "title": "alibi",
+            "slogan": "Algorithms for monitoring and explaining machine learning models ",
+            "github": "SeldonIO/alibi",
+            "pip": "alibi",
+            "thumb": "https://i.imgur.com/YkzQHRp.png",
+            "code_example": [
+                "from alibi.explainers import AnchorTabular",
+                "explainer = AnchorTabular(predict_fn, feature_names)",
+                "explainer.fit(X_train)",
+                "explainer.explain(x)"
+            ],
+            "author": "Seldon",
+            "category": ["standalone", "research"]
+        },
+        {
             "id": "spacymoji",
             "slogan": "Emoji handling and meta data as a spaCy pipeline component",
             "github": "ines/spacymoji",
@@ -143,7 +245,7 @@
                 "doc = nlp(my_doc_text)"
             ],
             "author": "tc64",
-            "author_link": {
+            "author_links": {
                 "github": "tc64"
             },
             "category": ["pipeline"]
@@ -346,7 +448,7 @@
             "author_links": {
                 "github": "huggingface"
             },
-            "category": ["standalone", "conversational"],
+            "category": ["standalone", "conversational", "models"],
             "tags": ["coref"]
         },
         {
@@ -538,7 +640,7 @@
                 "twitter": "allenai_org",
                 "website": "http://allenai.org"
             },
-            "category": ["models", "research"]
+            "category": ["scientific", "models", "research"]
         },
         {
             "id": "textacy",
@@ -601,7 +703,7 @@
                 "github": "ahalterman",
                 "twitter": "ahalterman"
             },
-            "category": ["standalone"]
+            "category": ["standalone", "scientific"]
         },
         {
             "id": "kindred",
@@ -626,7 +728,7 @@
             "author_links": {
                 "github": "jakelever"
             },
-            "category": ["standalone"]
+            "category": ["standalone", "scientific"]
         },
         {
             "id": "sense2vec",
@@ -838,6 +940,42 @@
             "category": ["standalone"]
         },
         {
+            "id": "prefect",
+            "title": "Prefect",
+            "slogan": "Workflow management system designed for modern infrastructure",
+            "github": "PrefectHQ/prefect",
+            "pip": "prefect",
+            "thumb": "https://i.imgur.com/oLTwr0e.png",
+            "code_example": [
+                "from prefect import Flow",
+                "from prefect.tasks.spacy.spacy_tasks import SpacyNLP",
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "",
+                "with Flow(\"Natural Language Processing\") as flow:",
+                "    doc = SpacyNLP(text=\"This is some text\", nlp=nlp)",
+                "",
+                "flow.run()"
+            ],
+            "author": "Prefect",
+            "author_links": {
+                "website": "https://prefect.io"
+            },
+            "category": ["standalone"]
+        },
+        {
+            "id": "graphbrain",
+            "title": "Graphbrain",
+            "slogan": "Automated meaning extraction and text understanding",
+            "description": "Graphbrain is an Artificial Intelligence open-source software library and scientific research tool. Its aim is to facilitate automated meaning extraction and text understanding, as well as the exploration and inference of knowledge.",
+            "github": "graphbrain/graphbrain",
+            "pip": "graphbrain",
+            "thumb": "https://i.imgur.com/cct9W1E.png",
+            "author": "Graphbrain",
+            "category": ["standalone"]
+        },
+        {
             "type": "education",
             "id": "oreilly-python-ds",
             "title": "Introduction to Machine Learning with Python: A Guide for Data Scientists",
@@ -885,36 +1023,6 @@
         },
         {
             "type": "education",
-            "id": "datacamp-nlp-fundamentals",
-            "title": "Natural Language Processing Fundamentals in Python",
-            "slogan": "Datacamp, 2017",
-            "description": "In this course, you'll learn Natural Language Processing (NLP) basics, such as how to identify and separate words, how to extract topics in a text, and how to build your own fake news classifier. You'll also learn how to use basic libraries such as NLTK, alongside libraries which utilize deep learning to solve common NLP problems. This course will give you the foundation to process and parse text as you move forward in your Python learning.",
-            "url": "https://www.datacamp.com/courses/natural-language-processing-fundamentals-in-python",
-            "thumb": "https://i.imgur.com/0Zks7c0.jpg",
-            "author": "Katharine Jarmul",
-            "author_links": {
-                "twitter": "kjam"
-            },
-            "category": ["courses"]
-        },
-        {
-            "type": "education",
-            "id": "datacamp-advanced-nlp",
-            "title": "Advanced Natural Language Processing with spaCy",
-            "slogan": "Datacamp, 2019",
-            "description": "If you're working with a lot of text, you'll eventually want to know more about it. For example, what's it about? What do the words mean in context? Who is doing what to whom? What companies and products are mentioned? Which texts are similar to each other? In this course, you'll learn how to use spaCy, a fast-growing industry standard library for NLP in Python, to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
-            "url": "https://www.datacamp.com/courses/advanced-nlp-with-spacy",
-            "thumb": "https://i.imgur.com/0Zks7c0.jpg",
-            "author": "Ines Montani",
-            "author_links": {
-                "twitter": "_inesmontani",
-                "github": "ines",
-                "website": "https://ines.io"
-            },
-            "category": ["courses"]
-        },
-        {
-            "type": "education",
             "id": "learning-path-spacy",
             "title": "Learning Path: Mastering spaCy for Natural Language Processing",
             "slogan": "O'Reilly, 2017",
@@ -922,6 +1030,23 @@
             "url": "https://www.safaribooksonline.com/library/view/learning-path-mastering/9781491986653/",
             "thumb": "https://i.imgur.com/9MIgMAc.jpg",
             "author": "Aaron Kramer",
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
+            "id": "spacy-course",
+            "title": "Advanced NLP with spaCy",
+            "slogan": "spaCy, 2019",
+            "description": "In this free interactive course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
+            "url": "https://course.spacy.io",
+            "image": "https://i.imgur.com/JC00pHW.jpg",
+            "thumb": "https://i.imgur.com/5RXLtrr.jpg",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            },
             "category": ["courses"]
         },
         {
@@ -1011,6 +1136,22 @@
             "category": ["podcasts"]
         },
         {
+            "type": "education",
+            "id": "twimlai-podcast",
+            "title": "TWiML & AI: Practical NLP with spaCy and Prodigy",
+            "slogan": "May 2019",
+            "description": "\"Ines and I caught up to discuss her various projects, including the aforementioned SpaCy, an open-source NLP library built with a focus on industry and production use cases. In our conversation, Ines gives us an overview of the SpaCy Library, a look at some of the use cases that excite her, and the Spacy community and contributors. We also discuss her work with Prodigy, an annotation service tool that uses continuous active learning to train models, and finally, what other exciting projects she is working on.\"",
+            "thumb": "https://i.imgur.com/ng2F5gK.png",
+            "url": "https://twimlai.com/twiml-talk-262-practical-natural-language-processing-with-spacy-and-prodigy-w-ines-montani",
+            "iframe": "https://html5-player.libsyn.com/embed/episode/id/9691514/height/90/theme/custom/thumbnail/no/preload/no/direction/backward/render-playlist/no/custom-color/3e85b1/",
+            "iframe_height": 90,
+            "author": "Sam Charrington",
+            "author_links": {
+                "website": "https://twimlai.com"
+            },
+            "category": ["podcasts"]
+        },
+        {
             "id": "adam_qas",
             "title": "ADAM: Question Answering System",
             "slogan": "A question answering system that extracts answers from Wikipedia to questions posed in natural language.",
@@ -1068,7 +1209,7 @@
                 "github": "ecohealthalliance",
                 "website": " https://ecohealthalliance.org/"
             },
-            "category": ["research", "standalone"]
+            "category": ["scientific", "standalone"]
         },
         {
             "id": "self-attentive-parser",
@@ -1311,8 +1452,100 @@
                 "website": "http://w4nderlu.st"
             },
             "category": ["standalone", "research"]
+        },
+        {
+            "id": "gracyql",
+            "title": "gracyql",
+            "slogan": "A thin GraphQL wrapper around spacy",
+            "github": "oterrier/gracyql",
+            "description": "An example of a basic [Starlette](https://github.com/encode/starlette) app using [Spacy](https://github.com/explosion/spaCy) and [Graphene](https://github.com/graphql-python/graphene). The main goal is to be able to use the amazing power of spaCy from other languages and retrieving only the information you need thanks to the GraphQL query definition. The GraphQL schema tries to mimic as much as possible the original Spacy API with classes Doc, Span and Token.",
+            "thumb": "https://i.imgur.com/xC7zpTO.png",
+            "category": ["apis"],
+            "tags": ["graphql"],
+            "code_example": [
+                "query ParserDisabledQuery {",
+                "  nlp(model: \"en\", disable: [\"parser\", \"ner\"]) {",
+                "    doc(text: \"I live in Grenoble, France\") {",
+                "      text",
+                "      tokens {",
+                "        id",
+                "        pos",
+                "        lemma",
+                "        dep",
+                "      }",
+                "      ents {",
+                "        start",
+                "        end",
+                "        label",
+                "      }",
+                "    }",
+                "  }",
+                "}"
+            ],
+            "code_language": "json",
+            "author": "Olivier Terrier",
+            "author_links": {
+                "github": "oterrier"
+            }
+        },
+        {
+            "id": "pyInflect",
+            "slogan": "A python module for word inflections",
+            "description": "This package uses the [spaCy 2.0 extensions](https://spacy.io/usage/processing-pipelines#extensions) to add word inflections to the system.",
+            "github": "bjascob/pyInflect",
+            "pip": "pyinflect",
+            "code_example": [
+                "import spacy",
+                "import pyinflect",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "doc = nlp('This is an example.')",
+                "doc[3].tag_                # NN",
+                "doc[3]._.inflect('NNS')    # examples"
+            ],
+            "author": "Brad Jascob",
+            "author_links": {
+                "github": "bjascob"
+            },
+            "category": ["pipeline"],
+            "tags": ["inflection"]
+        },
+        {
+            "id": "NGym",
+            "title": "NeuralGym",
+            "slogan": "A little Windows GUI for training models with spaCy",
+            "description": "NeuralGym is a Python application for Windows with a graphical user interface to train models with spaCy. Run the application, select an output folder, a training data file in spaCy's data format, a spaCy model or blank model and press 'Start'.",
+            "github": "d5555/NeuralGym",
+            "url": "https://github.com/d5555/NeuralGym",
+            "image": "https://github.com/d5555/NeuralGym/raw/master/NGym.png",
+            "thumb": "https://github.com/d5555/NeuralGym/raw/master/NGym/web.png",
+            "author": "d5555",
+            "category": ["training"],
+            "tags": ["windows"]
+        },
+        {
+            "id": "holmes",
+            "title": "Holmes",
+            "slogan": "Information extraction from English and German texts based on predicate logic",
+            "github": "msg-systems/holmes-extractor",
+            "url": "https://github.com/msg-systems/holmes-extractor",
+            "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural search, topic matching and supervised document classification.",
+            "pip": "holmes-extractor",
+            "category": ["conversational", "standalone"],
+            "tags": ["chatbots", "text-processing"],
+            "code_example": [
+                "import holmes_extractor as holmes",
+                "holmes_manager = holmes.Manager(model='en_coref_lg')",
+                "holmes_manager.register_search_phrase('A big dog chases a cat')",
+                "holmes_manager.start_chatbot_mode_console()"
+            ],
+            "author": "Richard Paul Hudson",
+            "author_links": {
+                "github": "richardpaulhudson"
+            }
         }
     ],
+
     "categories": [
         {
             "label": "Projects",
@@ -1338,6 +1571,11 @@
                     "description": "Frameworks and utilities for developing better NLP models, especially using neural networks"
                 },
                 {
+                    "id": "scientific",
+                    "title": "Scientific",
+                    "description": "Frameworks and utilities for scientific text processing"
+                },
+                {
                     "id": "visualizers",
                     "title": "Visualizers",
                     "description": "Demos and tools to visualize NLP annotations or systems"
@@ -1356,6 +1594,11 @@
                     "id": "standalone",
                     "title": "Standalone",
                     "description": "Self-contained libraries or tools that use spaCy under the hood"
+                },
+                {
+                    "id": "models",
+                    "title": "Models",
+                    "description": "Third-party pre-trained models for different languages and domains"
                 }
             ]
         },

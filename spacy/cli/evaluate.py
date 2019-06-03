@@ -17,6 +17,7 @@ from .. import displacy
     gpu_id=("Use GPU", "option", "g", int),
     displacy_path=("Directory to output rendered parses as HTML", "option", "dp", str),
     displacy_limit=("Limit of parses to render as HTML", "option", "dl", int),
+    return_scores=("Return dict containing model scores", "flag", "R", bool),
 )
 def evaluate(
     model,
@@ -25,6 +26,7 @@ def evaluate(
     gold_preproc=False,
     displacy_path=None,
     displacy_limit=25,
+    return_scores=False,
 ):
     """
     Evaluate a model. To render a sample of parses in a HTML file, set an
@@ -75,6 +77,8 @@ def evaluate(
             ents=render_ents,
         )
         msg.good("Generated {} parses as HTML".format(displacy_limit), displacy_path)
+    if return_scores:
+        return scorer.scores
 
 
 def render_parses(docs, output_path, model_name="", limit=250, deps=True, ents=True):

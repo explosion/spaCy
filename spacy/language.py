@@ -333,6 +333,11 @@ class Language(object):
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
+        if not hasattr(component, "__call__"):
+            msg = Errors.E003.format(component=repr(component), name=name)
+            if isinstance(component, basestring_) and component in self.factories:
+                msg += Errors.E135.format(name=name)
+            raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
 
     def rename_pipe(self, old_name, new_name):
@@ -412,7 +417,9 @@ class Language(object):
         golds (iterable): A batch of `GoldParse` objects.
         drop (float): The droput rate.
         sgd (callable): An optimizer.
-        RETURNS (dict): Results from the update.
+        losses (dict): Dictionary to update with the loss, keyed by component.
+        component_cfg (dict): Config parameters for specific pipeline
+            components, keyed by component name.
 
         DOCS: https://spacy.io/api/language#update
         """
@@ -593,6 +600,19 @@ class Language(object):
     def evaluate(
         self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None
     ):
+        """Evaluate a model's pipeline components.
+
+        docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
+        verbose (bool): Print debugging information.
+        batch_size (int): Batch size to use.
+        scorer (Scorer): Optional `Scorer` to use. If not passed in, a new one
+            will be created.
+        component_cfg (dict): An optional dictionary with extra keyword
+            arguments for specific components.
+        RETURNS (Scorer): The scorer containing the evaluation results.
+
+        DOCS: https://spacy.io/api/language#evaluate
+        """
         if scorer is None:
             scorer = Scorer()
         if component_cfg is None:

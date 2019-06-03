@@ -16,6 +16,7 @@ import random
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
+from ..compat import path2str
 from .. import util
 from .. import about
 
@@ -35,6 +36,12 @@ from .. import about
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     vectors=("Model to load vectors from", "option", "v", str),
     n_iter=("Number of iterations", "option", "n", int),
+    n_early_stopping=(
+        "Maximum number of training epochs without dev accuracy improvement",
+        "option",
+        "ne",
+        int,
+    ),
     n_examples=("Number of examples", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
     version=("Model version", "option", "V", str),
@@ -74,6 +81,7 @@ def train(
     pipeline="tagger,parser,ner",
     vectors=None,
     n_iter=30,
+    n_early_stopping=None,
     n_examples=0,
     use_gpu=-1,
     version="0.0.0",
@@ -101,6 +109,7 @@ def train(
     train_path = util.ensure_path(train_path)
     dev_path = util.ensure_path(dev_path)
     meta_path = util.ensure_path(meta_path)
+    output_path = util.ensure_path(output_path)
     if raw_text is not None:
         raw_text = list(srsly.read_jsonl(raw_text))
     if not train_path or not train_path.exists():
@@ -222,6 +231,8 @@ def train(
     msg.row(row_head, **row_settings)
     msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
     try:
+        iter_since_best = 0
+        best_score = 0.0
         for i in range(n_iter):
             train_docs = corpus.train_docs(
                 nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
@@ -276,7 +287,9 @@ def train(
                         gpu_wps = nwords / (end_time - start_time)
                         with Model.use_device("cpu"):
                             nlp_loaded = util.load_model_from_path(epoch_model_path)
-                            nlp_loaded.parser.cfg["beam_width"]
+                            for name, component in nlp_loaded.pipeline:
+                                if hasattr(component, "cfg"):
+                                    component.cfg["beam_width"] = beam_width
                             dev_docs = list(
                                 corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
                             )
@@ -328,6 +341,24 @@ def train(
                         gpu_wps=gpu_wps,
                     )
                     msg.row(progress, **row_settings)
+                # Early stopping
+                if n_early_stopping is not None:
+                    current_score = _score_for_model(meta)
+                    if current_score < best_score:
+                        iter_since_best += 1
+                    else:
+                        iter_since_best = 0
+                        best_score = current_score
+                    if iter_since_best >= n_early_stopping:
+                        msg.text(
+                            "Early stopping, best iteration "
+                            "is: {}".format(i - iter_since_best)
+                        )
+                        msg.text(
+                            "Best score = {}; Final iteration "
+                            "score = {}".format(best_score, current_score)
+                        )
+                        break
     finally:
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
@@ -336,6 +367,20 @@ def train(
         with msg.loading("Creating best model..."):
             best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
         msg.good("Created best model", best_model_path)
+
+
+def _score_for_model(meta):
+    """ Returns mean score between tasks in pipeline that can be used for early stopping. """
+    mean_acc = list()
+    pipes = meta["pipeline"]
+    acc = meta["accuracy"]
+    if "tagger" in pipes:
+        mean_acc.append(acc["tags_acc"])
+    if "parser" in pipes:
+        mean_acc.append((acc["uas"] + acc["las"]) / 2)
+    if "ner" in pipes:
+        mean_acc.append((acc["ents_p"] + acc["ents_r"] + acc["ents_f"]) / 3)
+    return sum(mean_acc) / len(mean_acc)
 
 
 @contextlib.contextmanager
@@ -379,10 +424,12 @@ def _collate_best_model(meta, output_path, components):
     for component in components:
         bests[component] = _find_best(output_path, component)
     best_dest = output_path / "model-best"
-    shutil.copytree(output_path / "model-final", best_dest)
+    shutil.copytree(path2str(output_path / "model-final"), path2str(best_dest))
     for component, best_component_src in bests.items():
-        shutil.rmtree(best_dest / component)
-        shutil.copytree(best_component_src / component, best_dest / component)
+        shutil.rmtree(path2str(best_dest / component))
+        shutil.copytree(
+            path2str(best_component_src / component), path2str(best_dest / component)
+        )
         accs = srsly.read_json(best_component_src / "accuracy.json")
         for metric in _get_metrics(component):
             meta["accuracy"][metric] = accs[metric]

@@ -29,6 +29,19 @@ quick introduction.
 > [pull requests](https://github.com/explosion/spaCy/pulls). You can find a
 > "Suggest edits" link at the bottom of each page that points you to the source.
 
+<Infobox title="Take the free interactive course">
+
+[![Advanced NLP with spaCy](../images/course.jpg)](https://course.spacy.io)
+
+In this course you'll learn how to use spaCy to build advanced natural language
+understanding systems, using both rule-based and machine learning approaches. It
+includes 55 exercises featuring interactive coding practice, multiple-choice
+questions and slide decks.
+
+<p><Button to="https://course.spacy.io" variant="primary">Start the course</Button></p>
+
+</Infobox>
+
 ## What's spaCy? {#whats-spacy}
 
 <Grid cols={2}>
@@ -89,26 +102,11 @@ systems, or to pre-process text for **deep learning**.
   integrated and opinionated. spaCy tries to avoid asking the user to choose
   between multiple algorithms that deliver equivalent functionality. Keeping the
   menu small lets spaCy deliver generally better performance and developer
-  experience.M
+  experience.
 
 - **spaCy is not a company**. It's an open-source library. Our company
   publishing spaCy and other software is called
   [Explosion AI](https://explosion.ai).
-
-<Infobox title="Download the spaCy Cheat Sheet!">
-
-[![spaCy Cheatsheet](../images/cheatsheet.jpg)](http://datacamp-community-prod.s3.amazonaws.com/29aa28bf-570a-4965-8f54-d6a541ae4e06)
-
-For the launch of our
-["Advanced NLP with spaCy"](https://www.datacamp.com/courses/advanced-nlp-with-spacy)
-course on DataCamp we created the first official spaCy cheat sheet! A handy
-two-page reference to the most important concepts and features, from loading
-models and accessing linguistic annotations, to custom pipeline components and
-rule-based matching.
-
-<p><Button to="http://datacamp-community-prod.s3.amazonaws.com/29aa28bf-570a-4965-8f54-d6a541ae4e06" variant="primary">Download</Button></p>
-
-</Infobox>
 
 ## Features {#features}
 

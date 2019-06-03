@@ -181,7 +181,7 @@ def read_vectors(vectors_loc):
     vectors_keys = []
     for i, line in enumerate(tqdm(f)):
         line = line.rstrip()
-        pieces = line.rsplit(" ", vectors_data.shape[1] + 1)
+        pieces = line.rsplit(" ", vectors_data.shape[1])
         word = pieces.pop(0)
         if len(pieces) != vectors_data.shape[1]:
             msg.fail(Errors.E094.format(line_num=i, loc=vectors_loc), exits=1)

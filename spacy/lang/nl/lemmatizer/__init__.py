@@ -18,23 +18,26 @@ from ._adpositions import ADPOSITIONS
 from ._determiners import DETERMINERS
 
 from .lookup import LOOKUP
-
 from ._lemma_rules import RULES
-
 from .lemmatizer import DutchLemmatizer
 
 
-LEMMA_INDEX = {"adj": ADJECTIVES,
-               "noun": NOUNS,
-               "verb": VERBS,
-               "adp": ADPOSITIONS,
-               "det": DETERMINERS}
+LEMMA_INDEX = {
+    "adj": ADJECTIVES,
+    "noun": NOUNS,
+    "verb": VERBS,
+    "adp": ADPOSITIONS,
+    "det": DETERMINERS,
+}
 
-LEMMA_EXC = {"adj": ADJECTIVES_IRREG,
-             "adv": ADVERBS_IRREG,
-             "adp": ADPOSITIONS_IRREG,
-             "noun": NOUNS_IRREG,
-             "verb": VERBS_IRREG,
-             "det": DETERMINERS_IRREG,
-             "pron": PRONOUNS_IRREG}
+LEMMA_EXC = {
+    "adj": ADJECTIVES_IRREG,
+    "adv": ADVERBS_IRREG,
+    "adp": ADPOSITIONS_IRREG,
+    "noun": NOUNS_IRREG,
+    "verb": VERBS_IRREG,
+    "det": DETERMINERS_IRREG,
+    "pron": PRONOUNS_IRREG,
+}
 
+__all__ = ["LOOKUP", "LEMMA_EXC", "LEMMA_INDEX", "RULES", "DutchLemmatizer"]
