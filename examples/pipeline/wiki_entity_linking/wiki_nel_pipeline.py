@@ -111,7 +111,7 @@ if __name__ == "__main__":
         print("STEP 6: training", datetime.datetime.now())
         my_nlp = spacy.load('en_core_web_md')
         trainer = EL_Model(kb=my_kb, nlp=my_nlp)
-        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=1000, devlimit=100)
+        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=10000, devlimit=500)
         print()
 
     # STEP 7: apply the EL algorithm on the dev dataset
@@ -119,7 +119,6 @@ if __name__ == "__main__":
         my_nlp = spacy.load('en_core_web_md')
         run_el.run_el_dev(kb=my_kb, nlp=my_nlp, training_dir=TRAINING_DIR, limit=2000)
         print()
-
 
     # TODO coreference resolution
     # add_coref()
