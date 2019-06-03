@@ -13,6 +13,8 @@ from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical, copy_array
 
+from spacy.cli.pretrain import get_cossim_loss
+
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -23,13 +25,16 @@ from ..vocab cimport Vocab
 from ..syntax import nonproj
 from ..attrs import POS, ID
 from ..parts_of_speech import X
-from .._ml import Tok2Vec, build_tagger_model
+from .._ml import Tok2Vec, build_tagger_model, cosine
 from .._ml import build_text_classifier, build_simple_cnn_text_classifier
-from .._ml import build_bow_text_classifier
+from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer
 from ..errors import Errors, TempErrors
 from .. import util
+
+# TODO: remove
+from examples.pipeline.wiki_entity_linking import kb_creator
 
 
 def _load_cfg(path):
@@ -1065,50 +1070,141 @@ class EntityLinker(Pipe):
     name = 'entity_linker'
 
     @classmethod
-    def Model(cls, nr_class=1, **cfg):
-        # TODO: non-dummy EL implementation
-        return None
+    def Model(cls, **cfg):
+        embed_width = cfg.get("embed_width", 300)
+        hidden_width = cfg.get("hidden_width", 32)
+        entity_width = cfg.get("entity_width", 64)
+        article_width = cfg.get("article_width", 128)
+        sent_width = cfg.get("sent_width", 64)
 
-    def __init__(self, model=True, **cfg):
-        self.model = False
+        entity_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=entity_width)
+
+        article_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=article_width)
+        sent_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=sent_width)
+
+        # dimension of the mention encoder needs to match the dimension of the entity encoder
+        mention_width = entity_encoder.nO
+        mention_encoder = Affine(entity_width, mention_width, drop_factor=0.0)
+
+        return entity_encoder, article_encoder, sent_encoder, mention_encoder
+
+    def __init__(self, **cfg):
+        # TODO: bring-your-own-model
+        self.mention_encoder = True
+
         self.cfg = dict(cfg)
         self.kb = self.cfg["kb"]
 
+        # TODO: fix this. store entity vectors in the KB ?
+        self.id_to_descr = kb_creator._get_id_to_description('C:/Users/Sofie/Documents/data/wikipedia/entity_descriptions.csv')
+
+    def use_avg_params(self):
+        """Modify the pipe's encoders/models, to use their average parameter values."""
+        with self.article_encoder.use_params(self.sgd_article.averages) \
+                 and self.entity_encoder.use_params(self.sgd_entity.averages)\
+                 and self.sent_encoder.use_params(self.sgd_sent.averages) \
+                 and self.mention_encoder.use_params(self.sgd_mention.averages):
+            yield
+
+    def require_model(self):
+        """Raise an error if the component's model is not initialized."""
+        if getattr(self, "mention_encoder", None) in (None, True, False):
+            raise ValueError(Errors.E109.format(name=self.name))
+
+    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
+        if self.mention_encoder is True:
+            self.entity_encoder, self.article_encoder, self.sent_encoder, self.mention_encoder = self.Model(**self.cfg)
+            self.sgd_article = create_default_optimizer(self.article_encoder.ops)
+            self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
+            self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
+            self.sgd_entity = create_default_optimizer(self.entity_encoder.ops)
+
+    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+        """ docs should be a tuple of (entity_docs, article_docs, sentence_docs) """
+        self.require_model()
+
+        entity_docs, article_docs, sentence_docs = docs
+        assert len(entity_docs) == len(article_docs) == len(sentence_docs)
+
+        if isinstance(entity_docs, Doc):
+            entity_docs = [entity_docs]
+            article_docs = [article_docs]
+            sentence_docs = [sentence_docs]
+
+        entity_encodings, bp_entity = self.entity_encoder.begin_update(entity_docs, drop=drop)
+        doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
+        sent_encodings, bp_sent = self.sent_encoder.begin_update(sentence_docs, drop=drop)
+
+        concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) for i in
+                            range(len(article_docs))]
+        mention_encodings, bp_cont = self.mention_encoder.begin_update(np.asarray(concat_encodings), drop=self.DROP)
+
+        loss, d_scores = self.get_loss(scores=mention_encodings, golds=entity_encodings, docs=None)
+
+        mention_gradient = bp_cont(d_scores, sgd=self.sgd_cont)
+
+        # gradient : concat (doc+sent) vs. desc
+        sent_start = self.article_encoder.nO
+        sent_gradients = list()
+        doc_gradients = list()
+        for x in mention_gradient:
+            doc_gradients.append(list(x[0:sent_start]))
+            sent_gradients.append(list(x[sent_start:]))
+
+        bp_doc(doc_gradients, sgd=self.sgd_article)
+        bp_sent(sent_gradients, sgd=self.sgd_sent)
+
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += loss
+        return loss
+
+    def get_loss(self, docs, golds, scores):
+        loss, gradients = get_cossim_loss(scores, golds)
+        return loss, gradients
+
     def __call__(self, doc):
-        self.set_annotations([doc], scores=None, tensors=None)
+        entities, kb_ids = self.predict([doc])
+        self.set_annotations([doc], entities, kb_ids)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        """Apply the pipe to a stream of documents.
-        Both __call__ and pipe should delegate to the `predict()`
-        and `set_annotations()` methods.
-        """
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
-            self.set_annotations(docs, scores=None, tensors=None)
+            entities, kb_ids = self.predict(docs)
+            self.set_annotations(docs, entities, kb_ids)
             yield from docs
 
-    def set_annotations(self, docs, scores, tensors=None):
-        """
-        Currently implemented as taking the KB entry with highest prior probability for each named entity
-        TODO: actually use context etc
-        """
-        for i, doc in enumerate(docs):
-            for ent in doc.ents:
+    def predict(self, docs):
+        self.require_model()
+        for i, article_doc in enumerate(docs):
+            doc_encoding = self.article_encoder([article_doc])
+            for ent in article_doc.ents:
+                sent_doc = ent.sent.as_doc()
+                sent_encoding = self.sent_encoder([sent_doc])
+                concat_encoding = [list(doc_encoding[0]) + list(sent_encoding[0])]
+                mention_encoding = self.mention_encoder(np.asarray([concat_encoding[0]]))
+                mention_enc_t = np.transpose(mention_encoding)
+
                 candidates = self.kb.get_candidates(ent.text)
                 if candidates:
-                    best_candidate = max(candidates, key=lambda c: c.prior_prob)
-                    for token in ent:
-                        token.ent_kb_id_ = best_candidate.entity_
+                    highest_sim = -5
+                    best_i = -1
+                    with self.use_avg_params:
+                        for c in candidates:
+                            kb_id = c.entity_
+                            description = self.id_to_descr.get(kb_id)
+                            entity_encodings = self.entity_encoder([description])  # TODO: static entity vectors ?
+                            sim = cosine(entity_encodings, mention_enc_t)
+                            if sim >= highest_sim:
+                                best_i = i
+                                highest_sim = sim
 
-    def get_loss(self, docs, golds, scores):
-        # TODO
-        pass
+                    # TODO best_candidate = max(candidates, key=lambda c: c.prior_prob)
 
-    def add_label(self, label):
-        # TODO
-        pass
-
+    def set_annotations(self, docs, entities, kb_ids=None):
+        for token, kb_id in zip(entities, kb_ids):
+            token.ent_kb_id_ = kb_id
 
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.

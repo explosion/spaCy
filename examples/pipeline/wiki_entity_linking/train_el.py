@@ -24,8 +24,6 @@ from thinc.misc import LayerNorm as LN
 # from spacy.cli.pretrain import get_cossim_loss
 from spacy.matcher import PhraseMatcher
 
-""" TODO: this code needs to be implemented in pipes.pyx"""
-
 
 class EL_Model:
 
@@ -45,7 +43,7 @@ class EL_Model:
 
     DROP = 0.1
     LEARN_RATE = 0.001
-    EPOCHS = 20
+    EPOCHS = 5
     L2 = 1e-6
 
     name = "entity_linker"
@@ -213,8 +211,7 @@ class EL_Model:
         if avg:
             with self.article_encoder.use_params(self.sgd_article.averages) \
                  and self.desc_encoder.use_params(self.sgd_desc.averages)\
-                 and self.sent_encoder.use_params(self.sgd_sent.averages)\
-                 and self.cont_encoder.use_params(self.sgd_cont.averages):
+                 and self.sent_encoder.use_params(self.sgd_sent.averages):
                 desc_encodings = self.desc_encoder(desc_docs)
                 doc_encoding = self.article_encoder([article_doc])
                 sent_encoding = self.sent_encoder([sent_doc])
@@ -226,7 +223,13 @@ class EL_Model:
 
         concat_encoding = [list(doc_encoding[0]) + list(sent_encoding[0])]
 
-        cont_encodings = self.cont_encoder(np.asarray([concat_encoding[0]]))
+        if avg:
+            with self.cont_encoder.use_params(self.sgd_cont.averages):
+                cont_encodings = self.cont_encoder(np.asarray([concat_encoding[0]]))
+
+        else:
+            cont_encodings = self.cont_encoder(np.asarray([concat_encoding[0]]))
+
         context_enc = np.transpose(cont_encodings)
 
         highest_sim = -5
@@ -298,8 +301,8 @@ class EL_Model:
         self.sgd_desc.learn_rate = self.LEARN_RATE
         self.sgd_desc.L2 = self.L2
 
-    def get_loss(self, v1, v2, targets):
-        loss, gradients = self.get_cossim_loss(v1, v2, targets)
+    def get_loss(self, pred, gold, targets):
+        loss, gradients = self.get_cossim_loss(pred, gold, targets)
         return loss, gradients
 
     def get_cossim_loss(self, yh, y, t):
@@ -327,8 +330,6 @@ class EL_Model:
         return loss, -inverse
 
     def update(self, entity_clusters, golds, descs, art_texts, arts, sent_texts, sents):
-        all_clusters = list(entity_clusters.keys())
-
         arts_list = list()
         sents_list = list()
         descs_list = list()
