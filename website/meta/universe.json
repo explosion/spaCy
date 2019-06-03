@@ -1152,6 +1152,22 @@
             "category": ["podcasts"]
         },
         {
+            "type": "education",
+            "id": "analytics-vidhya",
+            "title": "DataHack Radio #23: The Brains behind spaCy",
+            "slogan": "June 2019",
+            "description": "\"What would you do if you had the chance to pick the brains behind one of the most popular Natural Language Processing (NLP) libraries of our era? A library that has helped usher in the current boom in NLP applications and nurtured tons of NLP scientists? Well – you invite the creators on our popular DataHack Radio podcast and let them do the talking! We are delighted to welcome Ines Montani and Matt Honnibal, the developers of spaCy – a powerful and advanced library for NLP.\"",
+            "thumb": "https://i.imgur.com/3zJKZ1P.jpg",
+            "url": "https://www.analyticsvidhya.com/blog/2019/06/datahack-radio-ines-montani-matthew-honnibal-brains-behind-spacy/",
+            "soundcloud": "630741825",
+            "author": "Analytics Vidhya",
+            "author_links": {
+                "website": "https://www.analyticsvidhya.com",
+                "twitter": "analyticsvidhya"
+            },
+            "category": ["podcasts"]
+        },
+        {
             "id": "adam_qas",
             "title": "ADAM: Question Answering System",
             "slogan": "A question answering system that extracts answers from Wikipedia to questions posed in natural language.",
