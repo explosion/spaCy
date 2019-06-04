@@ -31,7 +31,7 @@ class EL_Model:
     PRINT_BATCH_LOSS = False
     EPS = 0.0000000005
 
-    BATCH_SIZE = 5
+    BATCH_SIZE = 100
 
     DOC_CUTOFF = 300    # number of characters from the doc context
     INPUT_DIM = 300     # dimension of pre-trained vectors
@@ -41,9 +41,9 @@ class EL_Model:
     ARTICLE_WIDTH = 128
     SENT_WIDTH = 64
 
-    DROP = 0.1
-    LEARN_RATE = 0.001
-    EPOCHS = 5
+    DROP = 0.4
+    LEARN_RATE = 0.005
+    EPOCHS = 10
     L2 = 1e-6
 
     name = "entity_linker"
@@ -62,12 +62,14 @@ class EL_Model:
     def train_model(self, training_dir, entity_descr_output, trainlimit=None, devlimit=None, to_print=True):
         np.seterr(divide="raise", over="warn", under="ignore", invalid="raise")
 
+        id_to_descr = kb_creator._get_id_to_description(entity_descr_output)
+
         train_ent, train_gold, train_desc, train_art, train_art_texts, train_sent, train_sent_texts = \
-            self._get_training_data(training_dir, entity_descr_output, False, trainlimit, to_print=False)
+            self._get_training_data(training_dir, id_to_descr, False, trainlimit, to_print=False)
         train_clusters = list(train_ent.keys())
 
         dev_ent, dev_gold, dev_desc, dev_art, dev_art_texts, dev_sent, dev_sent_texts = \
-            self._get_training_data(training_dir, entity_descr_output, True, devlimit, to_print=False)
+            self._get_training_data(training_dir, id_to_descr, True, devlimit, to_print=False)
         dev_clusters = list(dev_ent.keys())
 
         dev_pos_count = len([g for g in dev_gold.values() if g])
@@ -386,9 +388,7 @@ class EL_Model:
         bp_doc(doc_gradients, sgd=self.sgd_article)
         bp_sent(sent_gradients, sgd=self.sgd_sent)
 
-    def _get_training_data(self, training_dir, entity_descr_output, dev, limit, to_print):
-        id_to_descr = kb_creator._get_id_to_description(entity_descr_output)
-
+    def _get_training_data(self, training_dir, id_to_descr, dev, limit, to_print):
         correct_entries, incorrect_entries = training_set_creator.read_training_entities(training_output=training_dir,
                                                                                          collect_correct=True,
                                                                                          collect_incorrect=True)

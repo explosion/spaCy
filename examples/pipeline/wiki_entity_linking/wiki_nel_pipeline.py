@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el
+from examples.pipeline.wiki_entity_linking.train_descriptions import EntityEncoder
 from examples.pipeline.wiki_entity_linking.train_el import EL_Model
 
 import spacy
@@ -38,11 +39,14 @@ if __name__ == "__main__":
     to_read_kb = True
     to_test_kb = False
 
+    # run entity description pre-training
+    run_desc_training = True
+
     # create training dataset
     create_wp_training = False
 
-    # run training
-    run_training = True
+    # run EL training
+    run_el_training = False
 
     # apply named entity linking to the dev dataset
     apply_to_dev = False
@@ -101,17 +105,25 @@ if __name__ == "__main__":
             run_el.run_el_toy_example(kb=my_kb, nlp=my_nlp)
             print()
 
+    # STEP 4b : read KB back in from file, create entity descriptions
+    # TODO: write back to file
+    if run_desc_training:
+        print("STEP 4b: training entity descriptions", datetime.datetime.now())
+        my_nlp = spacy.load('en_core_web_md')
+        EntityEncoder(my_kb, my_nlp).run(entity_descr_output=ENTITY_DESCR)
+        print()
+
     # STEP 5: create a training dataset from WP
     if create_wp_training:
         print("STEP 5: create training dataset", datetime.datetime.now())
         training_set_creator.create_training(kb=my_kb, entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
 
     # STEP 6: apply the EL algorithm on the training dataset
-    if run_training:
+    if run_el_training:
         print("STEP 6: training", datetime.datetime.now())
         my_nlp = spacy.load('en_core_web_md')
         trainer = EL_Model(kb=my_kb, nlp=my_nlp)
-        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=50, devlimit=20)
+        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=10000, devlimit=500)
         print()
 
     # STEP 7: apply the EL algorithm on the dev dataset

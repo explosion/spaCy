@@ -1177,6 +1177,8 @@ class EntityLinker(Pipe):
 
     def predict(self, docs):
         self.require_model()
+        final_entities = list()
+        final_kb_ids = list()
         for i, article_doc in enumerate(docs):
             doc_encoding = self.article_encoder([article_doc])
             for ent in article_doc.ents:
@@ -1188,23 +1190,27 @@ class EntityLinker(Pipe):
 
                 candidates = self.kb.get_candidates(ent.text)
                 if candidates:
-                    highest_sim = -5
-                    best_i = -1
                     with self.use_avg_params:
+                        scores = list()
                         for c in candidates:
+                            prior_prob = c.prior_prob
                             kb_id = c.entity_
                             description = self.id_to_descr.get(kb_id)
                             entity_encodings = self.entity_encoder([description])  # TODO: static entity vectors ?
                             sim = cosine(entity_encodings, mention_enc_t)
-                            if sim >= highest_sim:
-                                best_i = i
-                                highest_sim = sim
+                            score = prior_prob + sim - (prior_prob*sim)  # TODO: weights ?
+                            scores.append(score)
 
-                    # TODO best_candidate = max(candidates, key=lambda c: c.prior_prob)
+                        best_index = scores.index(max(scores))
+                        best_candidate = candidates[best_index]
+                        final_entities.append(ent)
+                        final_kb_ids.append(best_candidate)
+
+        return final_entities, final_kb_ids
 
     def set_annotations(self, docs, entities, kb_ids=None):
-        for token, kb_id in zip(entities, kb_ids):
-            token.ent_kb_id_ = kb_id
+        for entity, kb_id in zip(entities, kb_ids):
+            entity.ent_kb_id_ = kb_id
 
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.
