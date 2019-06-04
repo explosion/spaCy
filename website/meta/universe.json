@@ -1092,7 +1092,7 @@
         {
             "type": "education",
             "id": "podcast-nlp-highlights",
-            "title": "NLP Highlights 78: Where do corpora come from?",
+            "title": "NLP Highlights #78: Where do corpora come from?",
             "slogan": "January 2019",
             "description": "Most NLP projects rely crucially on the quality of annotations used for training and evaluating models. In this episode, Matt and Ines of Explosion AI tell us how Prodigy can improve data annotation and model development workflows. Prodigy is an annotation tool implemented as a python library, and it comes with a web application and a command line interface. A developer can define input data streams and design simple annotation interfaces. Prodigy can help break down complex annotation decisions into a series of binary decisions, and it provides easy integration with spaCy models. Developers can specify how models should be modified as new annotations come in in an active learning framework.",
             "soundcloud": "559200912",
@@ -1107,7 +1107,7 @@
         {
             "type": "education",
             "id": "podcast-init",
-            "title": "Podcast.__init__ 87: spaCy with Matthew Honnibal",
+            "title": "Podcast.__init__ #87: spaCy with Matthew Honnibal",
             "slogan": "December 2017",
             "description": "As the amount of text available on the internet and in businesses continues to increase, the need for fast and accurate language analysis becomes more prominent. This week Matthew Honnibal, the creator of SpaCy, talks about his experiences researching natural language processing and creating a library to make his findings accessible to industry.",
             "iframe": "https://www.pythonpodcast.com/wp-content/plugins/podlove-podcasting-plugin-for-wordpress/lib/modules/podlove_web_player/player_v4/dist/share.html?episode=https://www.pythonpodcast.com/?podlove_player4=176",
@@ -1123,7 +1123,7 @@
         {
             "type": "education",
             "id": "talk-python-podcast",
-            "title": "Talk Python 202: Building a software business",
+            "title": "Talk Python #202: Building a software business",
             "slogan": "March 2019",
             "description": "One core question around open source is how do you fund it? Well, there is always that PayPal donate button. But that's been a tremendous failure for many projects. Often the go-to answer is consulting. But what if you don't want to trade time for money? You could take things up a notch and change the equation, exchanging value for money. That's what Ines Montani and her co-founder did when they started Explosion AI with spaCy as the foundation.",
             "thumb": "https://i.imgur.com/q1twuK8.png",
