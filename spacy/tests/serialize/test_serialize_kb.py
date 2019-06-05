@@ -20,7 +20,7 @@ def test_serialize_kb_disk(en_vocab):
         print(file_path, type(file_path))
         kb1.dump(str(file_path))
 
-        kb2 = KnowledgeBase(vocab=en_vocab)
+        kb2 = KnowledgeBase(vocab=en_vocab, entity_vector_length=3)
         kb2.load_bulk(str(file_path))
 
     # final assertions
@@ -28,12 +28,13 @@ def test_serialize_kb_disk(en_vocab):
 
 
 def _get_dummy_kb(vocab):
-    kb = KnowledgeBase(vocab=vocab)
+    kb = KnowledgeBase(vocab=vocab, entity_vector_length=3)
 
-    kb.add_entity(entity="Q53", prob=0.33)
-    kb.add_entity(entity="Q17", prob=0.2)
-    kb.add_entity(entity="Q007", prob=0.7)
-    kb.add_entity(entity="Q44", prob=0.4)
+    kb.add_entity(entity="Q53", prob=0.33, entity_vector=[0, 5, 3])
+    kb.add_entity(entity="Q17", prob=0.2, entity_vector=[7, 1, 0])
+    kb.add_entity(entity="Q007", prob=0.7, entity_vector=[0, 0, 7])
+    kb.add_entity(entity="Q44", prob=0.4, entity_vector=[4, 4, 4])
+
     kb.add_alias(alias="double07", entities=["Q17", "Q007"], probabilities=[0.1, 0.9])
     kb.add_alias(alias="guy", entities=["Q53", "Q007", "Q17", "Q44"], probabilities=[0.3, 0.3, 0.2, 0.1])
     kb.add_alias(alias="random", entities=["Q007"], probabilities=[1.0])
@@ -62,10 +63,12 @@ def _check_kb(kb):
 
     assert candidates[0].entity_ == "Q007"
     assert 0.6999 < candidates[0].entity_freq < 0.701
+    assert candidates[0].entity_vector == [0, 0, 7]
     assert candidates[0].alias_ == "double07"
     assert 0.899 < candidates[0].prior_prob < 0.901
 
     assert candidates[1].entity_ == "Q17"
     assert 0.199 < candidates[1].entity_freq < 0.201
+    assert candidates[1].entity_vector == [7, 1, 0]
     assert candidates[1].alias_ == "double07"
     assert 0.099 < candidates[1].prior_prob < 0.101

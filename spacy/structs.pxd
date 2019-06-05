@@ -84,16 +84,12 @@ cdef struct EntryC:
     # The hash of this entry's unique ID/name in the kB
     hash_t entity_hash
 
-    # Allows retrieval of one or more vectors.
-    # Each element of vector_rows should be an index into a vectors table.
-    # Every entry should have the same number of vectors, so we can avoid storing
-    # the number of vectors in each knowledge-base struct
-    int32_t* vector_rows
+    # Allows retrieval of the entity vector, as an index into a vectors table of the KB.
+    # Can be expanded later to refer to multiple rows (compositional model to reduce storage footprint).
+    int32_t vector_index
 
-    # Allows retrieval of a struct of non-vector features. We could make this a
-    # pointer, but we have 32 bits left over in the struct after prob, so we'd
-    # like this to only be 32 bits. We can also set this to -1, for the common
-    # case where there are no features.
+    # Allows retrieval of a struct of non-vector features.
+    # This is currently not implemented and set to -1 for the common case where there are no features.
     int32_t feats_row
 
     # log probability of entity, based on corpus frequency

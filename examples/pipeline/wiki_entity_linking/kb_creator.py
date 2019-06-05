@@ -16,7 +16,7 @@ def create_kb(vocab, max_entities_per_alias, min_occ,
               count_input, prior_prob_input,
               to_print=False, write_entity_defs=True):
     """ Create the knowledge base from Wikidata entries """
-    kb = KnowledgeBase(vocab=vocab)
+    kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)  # TODO: entity vectors !
 
     print()
     print("1. _read_wikidata_entities", datetime.datetime.now())
@@ -38,7 +38,8 @@ def create_kb(vocab, max_entities_per_alias, min_occ,
     print()
     print("3. adding", len(entity_list), "entities", datetime.datetime.now())
     print()
-    kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=None, feature_list=None)
+    # TODO: vector_list !
+    kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=None)
 
     print()
     print("4. adding aliases", datetime.datetime.now())

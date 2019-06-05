@@ -19,7 +19,7 @@ class EntityEncoder:
 
     DROP = 0
     EPOCHS = 5
-    STOP_THRESHOLD = 0.05
+    STOP_THRESHOLD = 0.1
 
     BATCH_SIZE = 1000
 
@@ -37,6 +37,8 @@ class EntityEncoder:
 
         # TODO: apply and write to file afterwards !
         # self._apply_encoder(id_to_descr)
+
+        self._test_encoder()
 
     def _train_model(self, entity_descr_output, id_to_descr):
         # TODO: when loss gets too low, a 'mean of empty slice' warning is thrown by numpy
@@ -111,3 +113,40 @@ class EntityEncoder:
     def get_loss(golds, scores):
         loss, gradients = get_cossim_loss(scores, golds)
         return loss, gradients
+
+    def _test_encoder(self):
+        """ Test encoder on some dummy examples """
+        desc_A1 = "Fictional character in The Simpsons"
+        desc_A2 = "Simpsons - fictional human"
+        desc_A3 = "Fictional character in The Flintstones"
+        desc_A4 = "Politician from the US"
+
+        A1_doc_vector = np.asarray([self._get_doc_embedding(self.nlp(desc_A1))])
+        A2_doc_vector = np.asarray([self._get_doc_embedding(self.nlp(desc_A2))])
+        A3_doc_vector = np.asarray([self._get_doc_embedding(self.nlp(desc_A3))])
+        A4_doc_vector = np.asarray([self._get_doc_embedding(self.nlp(desc_A4))])
+
+        loss_a1_a1, _ = get_cossim_loss(A1_doc_vector, A1_doc_vector)
+        loss_a1_a2, _ = get_cossim_loss(A1_doc_vector, A2_doc_vector)
+        loss_a1_a3, _ = get_cossim_loss(A1_doc_vector, A3_doc_vector)
+        loss_a1_a4, _ = get_cossim_loss(A1_doc_vector, A4_doc_vector)
+
+        print("sim doc A1 A1", loss_a1_a1)
+        print("sim doc A1 A2", loss_a1_a2)
+        print("sim doc A1 A3", loss_a1_a3)
+        print("sim doc A1 A4", loss_a1_a4)
+
+        A1_encoded = self.encoder(A1_doc_vector)
+        A2_encoded = self.encoder(A2_doc_vector)
+        A3_encoded = self.encoder(A3_doc_vector)
+        A4_encoded = self.encoder(A4_doc_vector)
+
+        loss_a1_a1, _ = get_cossim_loss(A1_encoded, A1_encoded)
+        loss_a1_a2, _ = get_cossim_loss(A1_encoded, A2_encoded)
+        loss_a1_a3, _ = get_cossim_loss(A1_encoded, A3_encoded)
+        loss_a1_a4, _ = get_cossim_loss(A1_encoded, A4_encoded)
+
+        print("sim encoded A1 A1", loss_a1_a1)
+        print("sim encoded A1 A2", loss_a1_a2)
+        print("sim encoded A1 A3", loss_a1_a3)
+        print("sim encoded A1 A4", loss_a1_a4)

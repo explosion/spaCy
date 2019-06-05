@@ -3,7 +3,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-cimport numpy as np
+import numpy as np
 
 import numpy
 import srsly

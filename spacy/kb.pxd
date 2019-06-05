@@ -12,6 +12,8 @@ from .typedefs cimport hash_t
 from .structs cimport EntryC, AliasC
 ctypedef vector[EntryC] entry_vec
 ctypedef vector[AliasC] alias_vec
+ctypedef vector[float] float_vec
+ctypedef vector[float_vec] float_matrix
 
 
 # Object used by the Entity Linker that summarizes one entity-alias candidate combination.
@@ -20,6 +22,7 @@ cdef class Candidate:
     cdef readonly KnowledgeBase kb
     cdef hash_t entity_hash
     cdef float entity_freq
+    cdef vector[float] entity_vector
     cdef hash_t alias_hash
     cdef float prior_prob
 
@@ -27,6 +30,7 @@ cdef class Candidate:
 cdef class KnowledgeBase:
     cdef Pool mem
     cpdef readonly Vocab vocab
+    cdef int64_t entity_vector_length
 
     # This maps 64bit keys (hash of unique entity string)
     # to 64bit values (position of the _EntryC struct in the _entries vector).
@@ -59,7 +63,7 @@ cdef class KnowledgeBase:
     # model, that embeds different features of the entities into vectors. We'll
     # still want some per-entity features, like the Wikipedia text or entity
     # co-occurrence. Hopefully those vectors can be narrow, e.g. 64 dimensions.
-    cdef object _vectors_table
+    cdef float_matrix _vectors_table
 
     # It's very useful to track categorical features, at least for output, even
     # if they're not useful in the model itself. For instance, we should be
@@ -69,8 +73,15 @@ cdef class KnowledgeBase:
     cdef object _features_table
 
 
+    cdef inline int64_t c_add_vector(self, vector[float] entity_vector) nogil:
+        """Add an entity vector to the vectors table."""
+        cdef int64_t new_index = self._vectors_table.size()
+        self._vectors_table.push_back(entity_vector)
+        return new_index
+
+
     cdef inline int64_t c_add_entity(self, hash_t entity_hash, float prob,
-                                     int32_t* vector_rows, int feats_row) nogil:
+                                     int32_t vector_index, int feats_row) nogil:
         """Add an entry to the vector of entries.
         After calling this method, make sure to update also the _entry_index using the return value"""
         # This is what we'll map the entity hash key to. It's where the entry will sit
@@ -80,7 +91,7 @@ cdef class KnowledgeBase:
         # Avoid struct initializer to enable nogil, cf https://github.com/cython/cython/issues/1642
         cdef EntryC entry
         entry.entity_hash = entity_hash
-        entry.vector_rows = vector_rows
+        entry.vector_index = vector_index
         entry.feats_row = feats_row
         entry.prob = prob
 
@@ -113,7 +124,7 @@ cdef class KnowledgeBase:
         # Avoid struct initializer to enable nogil
         cdef EntryC entry
         entry.entity_hash = dummy_hash
-        entry.vector_rows = &dummy_value
+        entry.vector_index = dummy_value
         entry.feats_row = dummy_value
         entry.prob = dummy_value
 
@@ -131,15 +142,16 @@ cdef class KnowledgeBase:
         self._aliases_table.push_back(alias)
 
     cpdef load_bulk(self, loc)
-    cpdef set_entities(self, entity_list, prob_list, vector_list, feature_list)
+    cpdef set_entities(self, entity_list, prob_list, vector_list)
     cpdef set_aliases(self, alias_list, entities_list, probabilities_list)
 
 
 cdef class Writer:
     cdef FILE* _fp
 
-    cdef int write_header(self, int64_t nr_entries) except -1
-    cdef int write_entry(self, hash_t entry_hash, float entry_prob) except -1
+    cdef int write_header(self, int64_t nr_entries, int64_t entity_vector_length) except -1
+    cdef int write_vector_element(self, float element) except -1
+    cdef int write_entry(self, hash_t entry_hash, float entry_prob, int32_t vector_index) except -1
 
     cdef int write_alias_length(self, int64_t alias_length) except -1
     cdef int write_alias_header(self, hash_t alias_hash, int64_t candidate_length) except -1
@@ -150,8 +162,9 @@ cdef class Writer:
 cdef class Reader:
     cdef FILE* _fp
 
-    cdef int read_header(self, int64_t* nr_entries) except -1
-    cdef int read_entry(self, hash_t* entity_hash, float* prob) except -1
+    cdef int read_header(self, int64_t* nr_entries, int64_t* entity_vector_length) except -1
+    cdef int read_vector_element(self, float* element) except -1
+    cdef int read_entry(self, hash_t* entity_hash, float* prob, int32_t* vector_index) except -1
 
     cdef int read_alias_length(self, int64_t* alias_length) except -1
     cdef int read_alias_header(self, hash_t* alias_hash, int64_t* candidate_length) except -1

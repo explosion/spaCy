@@ -9,20 +9,20 @@ from spacy.kb import KnowledgeBase
 
 
 def create_kb(vocab):
-    kb = KnowledgeBase(vocab=vocab)
+    kb = KnowledgeBase(vocab=vocab, entity_vector_length=1)
 
     # adding entities
     entity_0 = "Q1004791_Douglas"
     print("adding entity", entity_0)
-    kb.add_entity(entity=entity_0, prob=0.5)
+    kb.add_entity(entity=entity_0, prob=0.5, entity_vector=[0])
 
     entity_1 = "Q42_Douglas_Adams"
     print("adding entity", entity_1)
-    kb.add_entity(entity=entity_1, prob=0.5)
+    kb.add_entity(entity=entity_1, prob=0.5, entity_vector=[1])
 
     entity_2 = "Q5301561_Douglas_Haig"
     print("adding entity", entity_2)
-    kb.add_entity(entity=entity_2, prob=0.5)
+    kb.add_entity(entity=entity_2, prob=0.5, entity_vector=[2])
 
     # adding aliases
     print()

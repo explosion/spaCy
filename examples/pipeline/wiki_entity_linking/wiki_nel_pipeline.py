@@ -93,7 +93,7 @@ if __name__ == "__main__":
         print("STEP 4: to_read_kb", datetime.datetime.now())
         my_vocab = Vocab()
         my_vocab.from_disk(VOCAB_DIR)
-        my_kb = KnowledgeBase(vocab=my_vocab)
+        my_kb = KnowledgeBase(vocab=my_vocab, entity_vector_length=64)  # TODO entity vectors
         my_kb.load_bulk(KB_FILE)
         print("kb entities:", my_kb.get_size_entities())
         print("kb aliases:", my_kb.get_size_aliases())

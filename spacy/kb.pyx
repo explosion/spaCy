@@ -26,10 +26,11 @@ from libcpp.vector cimport vector
 
 cdef class Candidate:
 
-    def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, alias_hash, prior_prob):
+    def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
         self.kb = kb
         self.entity_hash = entity_hash
         self.entity_freq = entity_freq
+        self.entity_vector = entity_vector
         self.alias_hash = alias_hash
         self.prior_prob = prior_prob
 
@@ -58,18 +59,25 @@ cdef class Candidate:
         return self.entity_freq
 
     @property
+    def entity_vector(self):
+        return self.entity_vector
+
+    @property
     def prior_prob(self):
         return self.prior_prob
 
 
 cdef class KnowledgeBase:
-    def __init__(self, Vocab vocab):
+
+    def __init__(self, Vocab vocab, entity_vector_length):
         self.vocab = vocab
         self.mem = Pool()
+        self.entity_vector_length = entity_vector_length
+
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
 
-        # TODO initialize self._entries and self._aliases_table ?
+        # Should we initialize self._entries and self._aliases_table to specific starting size ?
 
         self.vocab.strings.add("")
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
@@ -89,10 +97,10 @@ cdef class KnowledgeBase:
     def get_alias_strings(self):
         return [self.vocab.strings[x] for x in self._alias_index]
 
-    def add_entity(self, unicode entity, float prob=0.5, vectors=None, features=None):
+    def add_entity(self, unicode entity, float prob, vector[float] entity_vector):
         """
         Add an entity to the KB, optionally specifying its log probability based on corpus frequency
-        Return the hash of the entity ID/name at the end
+        Return the hash of the entity ID/name at the end.
         """
         cdef hash_t entity_hash = self.vocab.strings.add(entity)
 
@@ -101,31 +109,41 @@ cdef class KnowledgeBase:
             user_warning(Warnings.W018.format(entity=entity))
             return
 
-        cdef int32_t dummy_value = 342
-        new_index = self.c_add_entity(entity_hash=entity_hash, prob=prob,
-                                      vector_rows=&dummy_value, feats_row=dummy_value)
-        self._entry_index[entity_hash] = new_index
+        if len(entity_vector) != self.entity_vector_length:
+            # TODO: proper error
+            raise ValueError("Entity vector length should have been", self.entity_vector_length)
 
-        # TODO self._vectors_table.get_pointer(vectors),
-        # self._features_table.get(features))
+        vector_index = self.c_add_vector(entity_vector=entity_vector)
+
+        new_index = self.c_add_entity(entity_hash=entity_hash,
+                                      prob=prob,
+                                      vector_index=vector_index,
+                                      feats_row=-1)  # Features table currently not implemented
+        self._entry_index[entity_hash] = new_index
 
         return entity_hash
 
-    cpdef set_entities(self, entity_list, prob_list, vector_list, feature_list):
+    cpdef set_entities(self, entity_list, prob_list, vector_list):
         nr_entities = len(entity_list)
         self._entry_index = PreshMap(nr_entities+1)
         self._entries = entry_vec(nr_entities+1)
 
         i = 0
         cdef EntryC entry
-        cdef int32_t dummy_value = 342
         while i < nr_entities:
-            # TODO features and vectors
-            entity_hash = self.vocab.strings.add(entity_list[i])
+            entity_vector = entity_list[i]
+            if len(entity_vector) != self.entity_vector_length:
+                # TODO: proper error
+                raise ValueError("Entity vector length should have been", self.entity_vector_length)
+
+            entity_hash = self.vocab.strings.add(entity_vector)
             entry.entity_hash = entity_hash
             entry.prob = prob_list[i]
-            entry.vector_rows = &dummy_value
-            entry.feats_row = dummy_value
+
+            vector_index = self.c_add_vector(entity_vector=vector_list[i])
+            entry.vector_index = vector_index
+
+            entry.feats_row = -1   # Features table currently not implemented
 
             self._entries[i+1] = entry
             self._entry_index[entity_hash] = i+1
@@ -186,7 +204,7 @@ cdef class KnowledgeBase:
 
         cdef hash_t alias_hash = self.vocab.strings.add(alias)
 
-        # Return if this alias was added before
+        # Check whether this alias was added before
         if alias_hash in self._alias_index:
             user_warning(Warnings.W017.format(alias=alias))
             return
@@ -208,9 +226,7 @@ cdef class KnowledgeBase:
 
         return alias_hash
 
-
     def get_candidates(self, unicode alias):
-        """ TODO: where to put this functionality ?"""
         cdef hash_t alias_hash = self.vocab.strings[alias]
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
@@ -218,6 +234,7 @@ cdef class KnowledgeBase:
         return [Candidate(kb=self,
                           entity_hash=self._entries[entry_index].entity_hash,
                           entity_freq=self._entries[entry_index].prob,
+                          entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
                           alias_hash=alias_hash,
                           prior_prob=prob)
                 for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
@@ -226,16 +243,23 @@ cdef class KnowledgeBase:
 
     def dump(self, loc):
         cdef Writer writer = Writer(loc)
-        writer.write_header(self.get_size_entities())
+        writer.write_header(self.get_size_entities(), self.entity_vector_length)
+
+        # dumping the entity vectors in their original order
+        i = 0
+        for entity_vector in self._vectors_table:
+            for element in entity_vector:
+                writer.write_vector_element(element)
+            i = i+1
 
         # dumping the entry records in the order in which they are in the _entries vector.
         # index 0 is a dummy object not stored in the _entry_index and can be ignored.
         i = 1
         for entry_hash, entry_index in sorted(self._entry_index.items(), key=lambda x: x[1]):
             entry = self._entries[entry_index]
-            assert entry.entity_hash ==  entry_hash
+            assert entry.entity_hash == entry_hash
             assert entry_index == i
-            writer.write_entry(entry.entity_hash, entry.prob)
+            writer.write_entry(entry.entity_hash, entry.prob, entry.vector_index)
             i = i+1
 
         writer.write_alias_length(self.get_size_aliases())
@@ -262,31 +286,47 @@ cdef class KnowledgeBase:
         cdef hash_t alias_hash
         cdef int64_t entry_index
         cdef float prob
+        cdef int32_t vector_index
         cdef EntryC entry
         cdef AliasC alias
-        cdef int32_t dummy_value = 342
+        cdef float vector_element
 
         cdef Reader reader = Reader(loc)
 
-        # Step 1: load entities
-
+        # STEP 0: load header and initialize KB
         cdef int64_t nr_entities
-        reader.read_header(&nr_entities)
+        cdef int64_t entity_vector_length
+        reader.read_header(&nr_entities, &entity_vector_length)
+
+        self.entity_vector_length = entity_vector_length
         self._entry_index = PreshMap(nr_entities+1)
         self._entries = entry_vec(nr_entities+1)
+        self._vectors_table = float_matrix(nr_entities+1)
 
+        # STEP 1: load entity vectors
+        cdef int i = 0
+        cdef int j = 0
+        while i < nr_entities:
+            entity_vector = float_vec(entity_vector_length)
+            j = 0
+            while j < entity_vector_length:
+                reader.read_vector_element(&vector_element)
+                entity_vector[j] = vector_element
+                j = j+1
+            self._vectors_table[i] = entity_vector
+            i = i+1
+
+        # STEP 2: load entities
         # we assume that the entity data was written in sequence
         # index 0 is a dummy object not stored in the _entry_index and can be ignored.
-        # TODO: should we initialize the dummy objects ?
-        cdef int i = 1
+        i = 1
         while i <= nr_entities:
-            reader.read_entry(&entity_hash, &prob)
+            reader.read_entry(&entity_hash, &prob, &vector_index)
 
-            # TODO features and vectors
             entry.entity_hash = entity_hash
             entry.prob = prob
-            entry.vector_rows = &dummy_value
-            entry.feats_row = dummy_value
+            entry.vector_index = vector_index
+            entry.feats_row = -1    # Features table currently not implemented
 
             self._entries[i] = entry
             self._entry_index[entity_hash] = i
@@ -296,7 +336,8 @@ cdef class KnowledgeBase:
         # check that all entities were read in properly
         assert nr_entities == self.get_size_entities()
 
-        # Step 2: load aliases
+        # STEP 3: load aliases
+
         cdef int64_t nr_aliases
         reader.read_alias_length(&nr_aliases)
         self._alias_index = PreshMap(nr_aliases+1)
@@ -344,13 +385,18 @@ cdef class Writer:
         cdef size_t status = fclose(self._fp)
         assert status == 0
 
-    cdef int write_header(self, int64_t nr_entries) except -1:
+    cdef int write_header(self, int64_t nr_entries, int64_t entity_vector_length) except -1:
         self._write(&nr_entries, sizeof(nr_entries))
+        self._write(&entity_vector_length, sizeof(entity_vector_length))
 
-    cdef int write_entry(self, hash_t entry_hash, float entry_prob) except -1:
-        # TODO: feats_rows and vector rows
+    cdef int write_vector_element(self, float element) except -1:
+        self._write(&element, sizeof(element))
+
+    cdef int write_entry(self, hash_t entry_hash, float entry_prob, int32_t vector_index) except -1:
         self._write(&entry_hash, sizeof(entry_hash))
         self._write(&entry_prob, sizeof(entry_prob))
+        self._write(&vector_index, sizeof(vector_index))
+        # Features table currently not implemented and not written to file
 
     cdef int write_alias_length(self, int64_t alias_length) except -1:
         self._write(&alias_length, sizeof(alias_length))
@@ -381,14 +427,27 @@ cdef class Reader:
     def __dealloc__(self):
         fclose(self._fp)
 
-    cdef int read_header(self, int64_t* nr_entries) except -1:
+    cdef int read_header(self, int64_t* nr_entries, int64_t* entity_vector_length) except -1:
         status = self._read(nr_entries, sizeof(int64_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
             raise IOError("error reading header from input file")
 
-    cdef int read_entry(self, hash_t* entity_hash, float* prob) except -1:
+        status = self._read(entity_vector_length, sizeof(int64_t))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading header from input file")
+
+    cdef int read_vector_element(self, float* element) except -1:
+        status = self._read(element, sizeof(float))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading entity vector from input file")
+
+    cdef int read_entry(self, hash_t* entity_hash, float* prob, int32_t* vector_index) except -1:
         status = self._read(entity_hash, sizeof(hash_t))
         if status < 1:
             if feof(self._fp):
@@ -400,6 +459,12 @@ cdef class Reader:
             if feof(self._fp):
                 return 0  # end of file
             raise IOError("error reading entity prob from input file")
+
+        status = self._read(vector_index, sizeof(int32_t))
+        if status < 1:
+            if feof(self._fp):
+                return 0  # end of file
+            raise IOError("error reading entity vector from input file")
 
         if feof(self._fp):
             return 0

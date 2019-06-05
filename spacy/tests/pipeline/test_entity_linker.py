@@ -14,12 +14,12 @@ def nlp():
 
 def test_kb_valid_entities(nlp):
     """Test the valid construction of a KB with 3 entities and two aliases"""
-    mykb = KnowledgeBase(nlp.vocab)
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity=u'Q1', prob=0.9)
-    mykb.add_entity(entity=u'Q2')
-    mykb.add_entity(entity=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity=u'Q2', prob=0.5, entity_vector=[2])
+    mykb.add_entity(entity=u'Q3', prob=0.5, entity_vector=[3])
 
     # adding aliases
     mykb.add_alias(alias=u'douglas', entities=[u'Q2', u'Q3'], probabilities=[0.8, 0.2])
@@ -32,12 +32,12 @@ def test_kb_valid_entities(nlp):
 
 def test_kb_invalid_entities(nlp):
     """Test the invalid construction of a KB with an alias linked to a non-existing entity"""
-    mykb = KnowledgeBase(nlp.vocab)
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity=u'Q1', prob=0.9)
-    mykb.add_entity(entity=u'Q2', prob=0.2)
-    mykb.add_entity(entity=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity=u'Q2', prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity=u'Q3', prob=0.5, entity_vector=[3])
 
     # adding aliases - should fail because one of the given IDs is not valid
     with pytest.raises(ValueError):
@@ -46,12 +46,12 @@ def test_kb_invalid_entities(nlp):
 
 def test_kb_invalid_probabilities(nlp):
     """Test the invalid construction of a KB with wrong prior probabilities"""
-    mykb = KnowledgeBase(nlp.vocab)
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity=u'Q1', prob=0.9)
-    mykb.add_entity(entity=u'Q2', prob=0.2)
-    mykb.add_entity(entity=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity=u'Q2', prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity=u'Q3', prob=0.5, entity_vector=[3])
 
     # adding aliases - should fail because the sum of the probabilities exceeds 1
     with pytest.raises(ValueError):
@@ -60,26 +60,38 @@ def test_kb_invalid_probabilities(nlp):
 
 def test_kb_invalid_combination(nlp):
     """Test the invalid construction of a KB with non-matching entity and probability lists"""
-    mykb = KnowledgeBase(nlp.vocab)
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity=u'Q1', prob=0.9)
-    mykb.add_entity(entity=u'Q2', prob=0.2)
-    mykb.add_entity(entity=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity=u'Q2', prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity=u'Q3', prob=0.5, entity_vector=[3])
 
     # adding aliases - should fail because the entities and probabilities vectors are not of equal length
     with pytest.raises(ValueError):
         mykb.add_alias(alias=u'douglas', entities=[u'Q2', u'Q3'], probabilities=[0.3, 0.4, 0.1])
 
 
-def test_candidate_generation(nlp):
-    """Test correct candidate generation"""
-    mykb = KnowledgeBase(nlp.vocab)
+def test_kb_invalid_entity_vector(nlp):
+    """Test the invalid construction of a KB with non-matching entity vector lengths"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
 
     # adding entities
-    mykb.add_entity(entity=u'Q1', prob=0.9)
-    mykb.add_entity(entity=u'Q2', prob=0.2)
-    mykb.add_entity(entity=u'Q3', prob=0.5)
+    mykb.add_entity(entity=u'Q1', prob=0.9, entity_vector=[1, 2, 3])
+
+    # this should fail because the kb's expected entity vector length is 3
+    with pytest.raises(ValueError):
+        mykb.add_entity(entity=u'Q2', prob=0.2, entity_vector=[2])
+
+
+def test_candidate_generation(nlp):
+    """Test correct candidate generation"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    mykb.add_entity(entity=u'Q1', prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity=u'Q2', prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity=u'Q3', prob=0.5, entity_vector=[3])
 
     # adding aliases
     mykb.add_alias(alias=u'douglas', entities=[u'Q2', u'Q3'], probabilities=[0.8, 0.2])
