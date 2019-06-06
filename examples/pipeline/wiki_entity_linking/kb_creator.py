@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import spacy
+from examples.pipeline.wiki_entity_linking.train_descriptions import EntityEncoder
 from spacy.kb import KnowledgeBase
 
 import csv
@@ -10,25 +11,47 @@ import datetime
 from . import wikipedia_processor as wp
 from . import wikidata_processor as wd
 
+INPUT_DIM = 300  # dimension of pre-trained vectors
+DESC_WIDTH = 64
 
-def create_kb(vocab, max_entities_per_alias, min_occ,
+def create_kb(nlp, max_entities_per_alias, min_occ,
               entity_def_output, entity_descr_output,
-              count_input, prior_prob_input,
-              to_print=False, write_entity_defs=True):
+              count_input, prior_prob_input, to_print=False):
     """ Create the knowledge base from Wikidata entries """
-    kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)  # TODO: entity vectors !
+    kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=DESC_WIDTH)
 
-    print()
-    print("1. _read_wikidata_entities", datetime.datetime.now())
-    print()
-    title_to_id, id_to_descr = wd.read_wikidata_entities_json(limit=None)
+    # disable parts of the pipeline when rerunning
+    read_raw_data = False
 
-    # write the title-ID and ID-description mappings to file
-    if write_entity_defs:
+    if read_raw_data:
+        print()
+        print("1. _read_wikidata_entities", datetime.datetime.now())
+        print()
+        title_to_id, id_to_descr = wd.read_wikidata_entities_json(limit=None)
+
+        # write the title-ID and ID-description mappings to file
         _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_to_descr)
 
+    else:
+        # read the mappings from file
+        title_to_id = _get_entity_to_id(entity_def_output)
+        id_to_descr = _get_id_to_description(entity_descr_output)
+
     title_list = list(title_to_id.keys())
+
+    # TODO: remove this filter (just for quicker testing of code)
+    title_list = title_list[0:34200]
+    title_to_id = {t: title_to_id[t] for t in title_list}
+
+    # print("title_list", len(title_list), title_list[0:3])
+
     entity_list = [title_to_id[x] for x in title_list]
+    # print("entity_list", len(entity_list), entity_list[0:3])
+
+    # TODO: should we remove entities from the KB where there is no description ?
+    description_list = [id_to_descr.get(x, "No description defined") for x in entity_list]
+    # print("description_list", len(description_list), description_list[0:3])
+
 
     print()
     print("2. _get_entity_frequencies", datetime.datetime.now())
@@ -36,13 +59,27 @@ def create_kb(vocab, max_entities_per_alias, min_occ,
     entity_frequencies = wp.get_entity_frequencies(count_input=count_input, entities=title_list)
 
     print()
-    print("3. adding", len(entity_list), "entities", datetime.datetime.now())
+    print("3. train entity encoder", datetime.datetime.now())
     print()
-    # TODO: vector_list !
-    kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=None)
+
+    encoder = EntityEncoder(nlp, INPUT_DIM, DESC_WIDTH)
+    encoder.train(description_list=description_list, to_print=True)
+    print()
+
+    print("4. get entity embeddings", datetime.datetime.now())
+    print()
+    embeddings = encoder.apply_encoder(description_list)
+    # print("descriptions", description_list[0:3])
+    # print("embeddings", len(embeddings), embeddings[0:3])
+    #print("embeddings[0]", len(embeddings[0]), embeddings[0][0:3])
 
     print()
-    print("4. adding aliases", datetime.datetime.now())
+    print("5. adding", len(entity_list), "entities", datetime.datetime.now())
+    print()
+    kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=embeddings)
+
+    print()
+    print("6. adding aliases", datetime.datetime.now())
     print()
     _add_aliases(kb, title_to_id=title_to_id,
                  max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,
@@ -66,7 +103,6 @@ def _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_
         descr_file.write("WD_id" + "|" + "description" + "\n")
         for qid, descr in id_to_descr.items():
             descr_file.write(str(qid) + "|" + descr + "\n")
-
 
 def _get_entity_to_id(entity_def_output):
     entity_to_id = dict()
@@ -99,11 +135,11 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
         print("wp titles:", wp_titles)
 
     # adding aliases with prior probabilities
+        # we can read this file sequentially, it's sorted by alias, and then by count
     with open(prior_prob_input, mode='r', encoding='utf8') as prior_file:
         # skip header
         prior_file.readline()
         line = prior_file.readline()
-        # we can read this file sequentially, it's sorted by alias, and then by count
         previous_alias = None
         total_count = 0
         counts = list()

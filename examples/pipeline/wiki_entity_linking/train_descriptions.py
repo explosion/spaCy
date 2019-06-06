@@ -14,71 +14,82 @@ from thinc.neural._classes.affine import Affine
 
 class EntityEncoder:
 
-    INPUT_DIM = 300  # dimension of pre-trained vectors
-    DESC_WIDTH = 64
-
     DROP = 0
     EPOCHS = 5
-    STOP_THRESHOLD = 0.1
+    STOP_THRESHOLD = 0.9 # 0.1
 
     BATCH_SIZE = 1000
 
-    def __init__(self, kb, nlp):
+    def __init__(self, nlp, input_dim, desc_width):
         self.nlp = nlp
-        self.kb = kb
+        self.input_dim = input_dim
+        self.desc_width = desc_width
 
-    def run(self, entity_descr_output):
-        id_to_descr = kb_creator._get_id_to_description(entity_descr_output)
+    def apply_encoder(self, description_list):
+        if self.encoder is None:
+            raise ValueError("Can not apply encoder before training it")
 
-        processed, loss = self._train_model(entity_descr_output, id_to_descr)
-        print("Trained on", processed, "entities across", self.EPOCHS, "epochs")
-        print("Final loss:", loss)
-        print()
+        print("Encoding", len(description_list), "entities")
 
-        # TODO: apply and write to file afterwards !
-        # self._apply_encoder(id_to_descr)
+        batch_size = 10000
 
-        self._test_encoder()
+        start = 0
+        stop = min(batch_size, len(description_list))
+        encodings = []
 
-    def _train_model(self, entity_descr_output, id_to_descr):
+        while start < len(description_list):
+            docs = list(self.nlp.pipe(description_list[start:stop]))
+            doc_embeddings = [self._get_doc_embedding(doc) for doc in docs]
+            enc = self.encoder(np.asarray(doc_embeddings))
+            encodings.extend(enc.tolist())
+
+            start = start + batch_size
+            stop = min(stop + batch_size, len(description_list))
+            print("encoded :", len(encodings))
+
+        return encodings
+
+    def train(self, description_list, to_print=False):
+        processed, loss = self._train_model(description_list)
+
+        if to_print:
+            print("Trained on", processed, "entities across", self.EPOCHS, "epochs")
+            print("Final loss:", loss)
+
+        # self._test_encoder()
+
+    def _train_model(self, description_list):
         # TODO: when loss gets too low, a 'mean of empty slice' warning is thrown by numpy
 
-        self._build_network(self.INPUT_DIM, self.DESC_WIDTH)
+        self._build_network(self.input_dim, self.desc_width)
 
         processed = 0
         loss = 1
+        descriptions = description_list.copy()   # copy this list so that shuffling does not affect other functions
 
         for i in range(self.EPOCHS):
-            entity_keys = list(id_to_descr.keys())
-            shuffle(entity_keys)
+            shuffle(descriptions)
 
             batch_nr = 0
             start = 0
-            stop = min(self.BATCH_SIZE, len(entity_keys))
+            stop = min(self.BATCH_SIZE, len(descriptions))
 
-            while loss > self.STOP_THRESHOLD and start < len(entity_keys):
+            while loss > self.STOP_THRESHOLD and start < len(descriptions):
                 batch = []
-                for e in entity_keys[start:stop]:
-                    descr = id_to_descr[e]
+                for descr in descriptions[start:stop]:
                     doc = self.nlp(descr)
                     doc_vector = self._get_doc_embedding(doc)
                     batch.append(doc_vector)
 
-                loss = self.update(batch)
+                loss = self._update(batch)
                 print(i, batch_nr, loss)
                 processed += len(batch)
 
                 batch_nr += 1
                 start = start + self.BATCH_SIZE
-                stop = min(stop + self.BATCH_SIZE, len(entity_keys))
+                stop = min(stop + self.BATCH_SIZE, len(descriptions))
 
         return processed, loss
-
-    def _apply_encoder(self, id_to_descr):
-        for id, descr in id_to_descr.items():
-            doc = self.nlp(descr)
-            doc_vector = self._get_doc_embedding(doc)
-            encoding = self.encoder(np.asarray([doc_vector]))
 
     @staticmethod
     def _get_doc_embedding(doc):
@@ -101,16 +112,16 @@ class EntityEncoder:
 
         self.sgd = create_default_optimizer(self.model.ops)
 
-    def update(self, vectors):
+    def _update(self, vectors):
         predictions, bp_model = self.model.begin_update(np.asarray(vectors), drop=self.DROP)
 
-        loss, d_scores = self.get_loss(scores=predictions, golds=np.asarray(vectors))
+        loss, d_scores = self._get_loss(scores=predictions, golds=np.asarray(vectors))
         bp_model(d_scores, sgd=self.sgd)
 
         return loss / len(vectors)
 
     @staticmethod
-    def get_loss(golds, scores):
+    def _get_loss(golds, scores):
         loss, gradients = get_cossim_loss(scores, golds)
         return loss, gradients
 

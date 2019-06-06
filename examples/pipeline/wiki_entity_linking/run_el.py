@@ -12,6 +12,15 @@ from examples.pipeline.wiki_entity_linking import training_set_creator
 # import neuralcoref
 
 
+def run_kb_toy_example(kb):
+    for mention in ("Bush", "President", "Homer"):
+        candidates = kb.get_candidates(mention)
+
+        print("generating candidates for " + mention + " :")
+        for c in candidates:
+            print(" ", c.prior_prob, c.alias_, "-->", c.entity_ + " (freq=" + str(c.entity_freq) + ")")
+        print()
+
 def run_el_toy_example(nlp, kb):
     _prepare_pipeline(nlp, kb)
 

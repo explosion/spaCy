@@ -124,6 +124,14 @@ cdef class KnowledgeBase:
         return entity_hash
 
     cpdef set_entities(self, entity_list, prob_list, vector_list):
+        if len(entity_list) != len(prob_list):
+            # TODO: proper error
+            raise ValueError("Entity list and prob list should have the same length")
+
+        if len(entity_list) != len(vector_list):
+            # TODO: proper error
+            raise ValueError("Entity list and vector list should have the same length")
+
         nr_entities = len(entity_list)
         self._entry_index = PreshMap(nr_entities+1)
         self._entries = entry_vec(nr_entities+1)
@@ -131,12 +139,12 @@ cdef class KnowledgeBase:
         i = 0
         cdef EntryC entry
         while i < nr_entities:
-            entity_vector = entity_list[i]
+            entity_vector = vector_list[i]
             if len(entity_vector) != self.entity_vector_length:
                 # TODO: proper error
-                raise ValueError("Entity vector length should have been", self.entity_vector_length)
+                raise ValueError("Entity vector is", len(entity_vector), "length but should have been", self.entity_vector_length)
 
-            entity_hash = self.vocab.strings.add(entity_vector)
+            entity_hash = self.vocab.strings.add(entity_list[i])
             entry.entity_hash = entity_hash
             entry.prob = prob_list[i]
 

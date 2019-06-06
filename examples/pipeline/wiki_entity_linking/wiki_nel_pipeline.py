@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el
-from examples.pipeline.wiki_entity_linking.train_descriptions import EntityEncoder
 from examples.pipeline.wiki_entity_linking.train_el import EL_Model
 
 import spacy
@@ -28,6 +27,7 @@ TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 if __name__ == "__main__":
     print("START", datetime.datetime.now())
     print()
+    nlp = spacy.load('en_core_web_lg')
     my_kb = None
 
     # one-time methods to create KB and write to file
@@ -37,10 +37,7 @@ if __name__ == "__main__":
 
     # read KB back in from file
     to_read_kb = True
-    to_test_kb = False
-
-    # run entity description pre-training
-    run_desc_training = True
+    to_test_kb = True
 
     # create training dataset
     create_wp_training = False
@@ -50,6 +47,8 @@ if __name__ == "__main__":
 
     # apply named entity linking to the dev dataset
     apply_to_dev = False
+
+    to_test_pipeline = False
 
     # STEP 1 : create prior probabilities from WP
     # run only once !
@@ -69,9 +68,7 @@ if __name__ == "__main__":
     # run only once !
     if to_create_kb:
         print("STEP 3a: to_create_kb", datetime.datetime.now())
-        my_nlp = spacy.load('en_core_web_sm')
-        my_vocab = my_nlp.vocab
-        my_kb = kb_creator.create_kb(my_vocab,
+        my_kb = kb_creator.create_kb(nlp,
                                      max_entities_per_alias=10,
                                      min_occ=5,
                                      entity_def_output=ENTITY_DEFS,
@@ -85,7 +82,7 @@ if __name__ == "__main__":
 
         print("STEP 3b: write KB", datetime.datetime.now())
         my_kb.dump(KB_FILE)
-        my_vocab.to_disk(VOCAB_DIR)
+        nlp.vocab.to_disk(VOCAB_DIR)
         print()
 
     # STEP 4 : read KB back in from file
@@ -101,17 +98,8 @@ if __name__ == "__main__":
 
         # test KB
         if to_test_kb:
-            my_nlp = spacy.load('en_core_web_sm')
-            run_el.run_el_toy_example(kb=my_kb, nlp=my_nlp)
+            run_el.run_kb_toy_example(kb=my_kb)
             print()
-
-    # STEP 4b : read KB back in from file, create entity descriptions
-    # TODO: write back to file
-    if run_desc_training:
-        print("STEP 4b: training entity descriptions", datetime.datetime.now())
-        my_nlp = spacy.load('en_core_web_md')
-        EntityEncoder(my_kb, my_nlp).run(entity_descr_output=ENTITY_DESCR)
-        print()
 
     # STEP 5: create a training dataset from WP
     if create_wp_training:
@@ -121,15 +109,18 @@ if __name__ == "__main__":
     # STEP 6: apply the EL algorithm on the training dataset
     if run_el_training:
         print("STEP 6: training", datetime.datetime.now())
-        my_nlp = spacy.load('en_core_web_md')
-        trainer = EL_Model(kb=my_kb, nlp=my_nlp)
+        trainer = EL_Model(kb=my_kb, nlp=nlp)
         trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=10000, devlimit=500)
         print()
 
-    # STEP 7: apply the EL algorithm on the dev dataset
+    # STEP 7: apply the EL algorithm on the dev dataset (TODO: overlaps with code from run_el_training ?)
     if apply_to_dev:
-        my_nlp = spacy.load('en_core_web_md')
-        run_el.run_el_dev(kb=my_kb, nlp=my_nlp, training_dir=TRAINING_DIR, limit=2000)
+        run_el.run_el_dev(kb=my_kb, nlp=nlp, training_dir=TRAINING_DIR, limit=2000)
+        print()
+
+    # test KB
+    if to_test_pipeline:
+        run_el.run_el_toy_example(kb=my_kb, nlp=nlp)
         print()
 
     # TODO coreference resolution

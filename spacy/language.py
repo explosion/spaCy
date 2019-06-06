@@ -117,7 +117,7 @@ class Language(object):
         "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
-        "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
+        "entity_linker": lambda nlp, **cfg: EntityLinker(**cfg),
         "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
         "sentencizer": lambda nlp, **cfg: Sentencizer(**cfg),
