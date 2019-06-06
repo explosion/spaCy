@@ -43,15 +43,10 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
     title_list = title_list[0:34200]
     title_to_id = {t: title_to_id[t] for t in title_list}
 
-    # print("title_list", len(title_list), title_list[0:3])
-
     entity_list = [title_to_id[x] for x in title_list]
-    # print("entity_list", len(entity_list), entity_list[0:3])
 
-    # TODO: should we remove entities from the KB where there is no description ?
+    # Currently keeping entities from the KB where there is no description - putting a default void description
     description_list = [id_to_descr.get(x, "No description defined") for x in entity_list]
-    # print("description_list", len(description_list), description_list[0:3])
-
 
     print()
     print("2. _get_entity_frequencies", datetime.datetime.now())
@@ -69,9 +64,6 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
     print("4. get entity embeddings", datetime.datetime.now())
     print()
     embeddings = encoder.apply_encoder(description_list)
-    # print("descriptions", description_list[0:3])
-    # print("embeddings", len(embeddings), embeddings[0:3])
-    #print("embeddings[0]", len(embeddings[0]), embeddings[0][0:3])
 
     print()
     print("5. adding", len(entity_list), "entities", datetime.datetime.now())
@@ -104,6 +96,7 @@ def _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_
         for qid, descr in id_to_descr.items():
             descr_file.write(str(qid) + "|" + descr + "\n")
 
+
 def _get_entity_to_id(entity_def_output):
     entity_to_id = dict()
     with open(entity_def_output, 'r', encoding='utf8') as csvfile:
@@ -135,7 +128,7 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
         print("wp titles:", wp_titles)
 
     # adding aliases with prior probabilities
-        # we can read this file sequentially, it's sorted by alias, and then by count
+    # we can read this file sequentially, it's sorted by alias, and then by count
     with open(prior_prob_input, mode='r', encoding='utf8') as prior_file:
         # skip header
         prior_file.readline()

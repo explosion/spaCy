@@ -1067,41 +1067,37 @@ cdef class EntityRecognizer(Parser):
 
 
 class EntityLinker(Pipe):
+    """Pipeline component for named entity linking.
+
+    DOCS: TODO
+    """
     name = 'entity_linker'
 
     @classmethod
     def Model(cls, **cfg):
         embed_width = cfg.get("embed_width", 300)
         hidden_width = cfg.get("hidden_width", 32)
-        entity_width = cfg.get("entity_width", 64)
         article_width = cfg.get("article_width", 128)
         sent_width = cfg.get("sent_width", 64)
-
-        entity_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=entity_width)
+        entity_width = cfg["kb"].entity_vector_length
 
         article_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=article_width)
         sent_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=sent_width)
 
         # dimension of the mention encoder needs to match the dimension of the entity encoder
-        mention_width = entity_encoder.nO
+        mention_width = article_width + sent_width
         mention_encoder = Affine(entity_width, mention_width, drop_factor=0.0)
 
-        return entity_encoder, article_encoder, sent_encoder, mention_encoder
+        return article_encoder, sent_encoder, mention_encoder
 
     def __init__(self, **cfg):
-        # TODO: bring-your-own-model
         self.mention_encoder = True
-
         self.cfg = dict(cfg)
         self.kb = self.cfg["kb"]
-
-        # TODO: fix this. store entity vectors in the KB ?
-        self.id_to_descr = kb_creator._get_id_to_description('C:/Users/Sofie/Documents/data/wikipedia/entity_descriptions.csv')
 
     def use_avg_params(self):
         """Modify the pipe's encoders/models, to use their average parameter values."""
         with self.article_encoder.use_params(self.sgd_article.averages) \
-                 and self.entity_encoder.use_params(self.sgd_entity.averages)\
                  and self.sent_encoder.use_params(self.sgd_sent.averages) \
                  and self.mention_encoder.use_params(self.sgd_mention.averages):
             yield
@@ -1113,14 +1109,13 @@ class EntityLinker(Pipe):
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
         if self.mention_encoder is True:
-            self.entity_encoder, self.article_encoder, self.sent_encoder, self.mention_encoder = self.Model(**self.cfg)
+            self.article_encoder, self.sent_encoder, self.mention_encoder = self.Model(**self.cfg)
             self.sgd_article = create_default_optimizer(self.article_encoder.ops)
             self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
             self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
-            self.sgd_entity = create_default_optimizer(self.entity_encoder.ops)
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
-        """ docs should be a tuple of (entity_docs, article_docs, sentence_docs) """
+        """ docs should be a tuple of (entity_docs, article_docs, sentence_docs) TODO """
         self.require_model()
 
         entity_docs, article_docs, sentence_docs = docs
@@ -1131,7 +1126,7 @@ class EntityLinker(Pipe):
             article_docs = [article_docs]
             sentence_docs = [sentence_docs]
 
-        entity_encodings, bp_entity = self.entity_encoder.begin_update(entity_docs, drop=drop)
+        entity_encodings = None #TODO
         doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
         sent_encodings, bp_sent = self.sent_encoder.begin_update(sentence_docs, drop=drop)
 
@@ -1195,10 +1190,9 @@ class EntityLinker(Pipe):
                         for c in candidates:
                             prior_prob = c.prior_prob
                             kb_id = c.entity_
-                            description = self.id_to_descr.get(kb_id)
-                            entity_encodings = self.entity_encoder([description])  # TODO: static entity vectors ?
-                            sim = cosine(entity_encodings, mention_enc_t)
-                            score = prior_prob + sim - (prior_prob*sim)  # TODO: weights ?
+                            entity_encoding = c.entity_vector
+                            sim = cosine([entity_encoding], mention_enc_t)
+                            score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
                             scores.append(score)
 
                         best_index = scores.index(max(scores))

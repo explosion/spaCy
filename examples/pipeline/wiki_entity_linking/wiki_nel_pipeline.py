@@ -37,10 +37,12 @@ if __name__ == "__main__":
 
     # read KB back in from file
     to_read_kb = True
-    to_test_kb = True
+    to_test_kb = False
 
     # create training dataset
     create_wp_training = False
+
+    train_pipe = True
 
     # run EL training
     run_el_training = False
@@ -106,7 +108,15 @@ if __name__ == "__main__":
         print("STEP 5: create training dataset", datetime.datetime.now())
         training_set_creator.create_training(kb=my_kb, entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
 
-    # STEP 6: apply the EL algorithm on the training dataset
+    # STEP 6: create the entity linking pipe
+    if train_pipe:
+        # TODO: the vocab objects are now different between nlp and kb - will be fixed when KB is written as part of NLP IO
+        el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": my_kb})
+        nlp.add_pipe(el_pipe, last=True)
+
+    ### BELOW CODE IS DEPRECATED ###
+
+    # STEP 6: apply the EL algorithm on the training dataset - TODO deprecated - code moved to pipes.pyx
     if run_el_training:
         print("STEP 6: training", datetime.datetime.now())
         trainer = EL_Model(kb=my_kb, nlp=nlp)

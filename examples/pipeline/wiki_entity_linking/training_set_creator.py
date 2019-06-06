@@ -18,7 +18,6 @@ ENTITY_FILE = "gold_entities.csv"
 def create_training(kb, entity_def_input, training_output):
     if not kb:
         raise ValueError("kb should be defined")
-    # nlp = spacy.load('en_core_web_sm')
     wp_to_id = kb_creator._get_entity_to_id(entity_def_input)
     _process_wikipedia_texts(kb, wp_to_id, training_output, limit=100000000)  # TODO: full dataset
 

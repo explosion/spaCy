@@ -13,7 +13,7 @@ from examples.pipeline.wiki_entity_linking import training_set_creator
 
 
 def run_kb_toy_example(kb):
-    for mention in ("Bush", "President", "Homer"):
+    for mention in ("Bush", "Douglas Adams", "Homer"):
         candidates = kb.get_candidates(mention)
 
         print("generating candidates for " + mention + " :")
@@ -128,18 +128,12 @@ def evaluate(predictions, golds, to_print=True, times_hundred=True):
     return precision, recall, fscore, accuracy
 
 
-def _prepare_pipeline(nlp, kb):
-    # TODO: the vocab objects are now different between nlp and kb - will be fixed when KB is written as part of NLP IO
-    el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": kb})
-    nlp.add_pipe(el_pipe, last=True)
+
 
 
 # TODO
-def add_coref():
+def add_coref(nlp):
     """ Add coreference resolution to our model """
-    nlp = spacy.load('en_core_web_sm')
-    # nlp = spacy.load('en')
-
     # TODO: this doesn't work yet
     # neuralcoref.add_to_pipe(nlp)
     print("done adding to pipe")
