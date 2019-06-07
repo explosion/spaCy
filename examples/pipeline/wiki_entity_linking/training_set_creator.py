@@ -303,8 +303,7 @@ def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_pri
                                                                 collect_correct=True,
                                                                 collect_incorrect=True)
 
-    docs = list()
-    golds = list()
+    data = []
 
     cnt = 0
     next_entity_nr = 1
@@ -323,7 +322,7 @@ def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_pri
                         article_doc = nlp(text)
                         truncated_text = text[0:min(doc_cutoff, len(text))]
 
-                    gold_entities = dict()
+                    gold_entities = list()
 
                     # process all positive and negative entities, collect all relevant mentions in this article
                     for mention, entity_pos in correct_entries[article_id].items():
@@ -337,11 +336,10 @@ def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_pri
 
                         # store gold entities
                         for match_id, start, end in matches:
-                            gold_entities[(start, end, entity_pos)] = 1.0
+                            gold_entities.append((start, end, entity_pos))
 
-                    gold = GoldParse(doc=article_doc, cats=gold_entities)
-                    docs.append(article_doc)
-                    golds.append(gold)
+                    gold = GoldParse(doc=article_doc, links=gold_entities)
+                    data.append((article_doc, gold))
 
                     cnt += 1
                 except Exception as e:
@@ -352,7 +350,7 @@ def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_pri
         print()
         print("Processed", cnt, "training articles, dev=" + str(dev))
         print()
-    return docs, golds
+    return data
 
 
 

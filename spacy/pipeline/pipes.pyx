@@ -1115,48 +1115,61 @@ class EntityLinker(Pipe):
             self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
-        """ docs should be a tuple of (entity_docs, article_docs, sentence_docs) TODO """
         self.require_model()
 
         if len(docs) != len(golds):
-            raise ValueError(Errors.E077.format(value="loss", n_docs=len(docs),
+            raise ValueError(Errors.E077.format(value="EL training", n_docs=len(docs),
                                                 n_golds=len(golds)))
 
-        entity_docs, article_docs, sentence_docs = docs
-        assert len(entity_docs) == len(article_docs) == len(sentence_docs)
+        if isinstance(docs, Doc):
+            docs = [docs]
+            golds = [golds]
 
-        if isinstance(entity_docs, Doc):
-            entity_docs = [entity_docs]
-            article_docs = [article_docs]
-            sentence_docs = [sentence_docs]
+        for doc, gold in zip(docs, golds):
+            print("doc", doc)
+            for entity in gold.links:
+                start, end, gold_kb = entity
+                print("entity", entity)
+                mention = doc[start:end].text
+                print("mention", mention)
+                candidates = self.kb.get_candidates(mention)
+                for c in candidates:
+                    prior_prob = c.prior_prob
+                    kb_id = c.entity_
+                    print("candidate", kb_id, prior_prob)
+                    entity_encoding = c.entity_vector
+                print()
 
-        entity_encodings = None #TODO
-        doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
-        sent_encodings, bp_sent = self.sent_encoder.begin_update(sentence_docs, drop=drop)
+            print()
 
-        concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) for i in
-                            range(len(article_docs))]
-        mention_encodings, bp_cont = self.mention_encoder.begin_update(np.asarray(concat_encodings), drop=self.DROP)
-
-        loss, d_scores = self.get_loss(scores=mention_encodings, golds=entity_encodings, docs=None)
-
-        mention_gradient = bp_cont(d_scores, sgd=self.sgd_cont)
-
-        # gradient : concat (doc+sent) vs. desc
-        sent_start = self.article_encoder.nO
-        sent_gradients = list()
-        doc_gradients = list()
-        for x in mention_gradient:
-            doc_gradients.append(list(x[0:sent_start]))
-            sent_gradients.append(list(x[sent_start:]))
-
-        bp_doc(doc_gradients, sgd=self.sgd_article)
-        bp_sent(sent_gradients, sgd=self.sgd_sent)
-
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += loss
-        return loss
+        # entity_encodings = None #TODO
+        # doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
+        # sent_encodings, bp_sent = self.sent_encoder.begin_update(sentence_docs, drop=drop)
+        #
+        # concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) for i in
+        #                     range(len(article_docs))]
+        # mention_encodings, bp_cont = self.mention_encoder.begin_update(np.asarray(concat_encodings), drop=self.DROP)
+        #
+        # loss, d_scores = self.get_loss(scores=mention_encodings, golds=entity_encodings, docs=None)
+        #
+        # mention_gradient = bp_cont(d_scores, sgd=self.sgd_cont)
+        #
+        # # gradient : concat (doc+sent) vs. desc
+        # sent_start = self.article_encoder.nO
+        # sent_gradients = list()
+        # doc_gradients = list()
+        # for x in mention_gradient:
+        #     doc_gradients.append(list(x[0:sent_start]))
+        #     sent_gradients.append(list(x[sent_start:]))
+        #
+        # bp_doc(doc_gradients, sgd=self.sgd_article)
+        # bp_sent(sent_gradients, sgd=self.sgd_sent)
+        #
+        # if losses is not None:
+        #     losses.setdefault(self.name, 0.0)
+        #     losses[self.name] += loss
+        # return loss
+        return None
 
     def get_loss(self, docs, golds, scores):
         loss, gradients = get_cossim_loss(scores, golds)

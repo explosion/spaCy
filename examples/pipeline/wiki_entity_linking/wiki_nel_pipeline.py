@@ -1,6 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import random
+
+from spacy.util import minibatch, compounding
+
 from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el
 from examples.pipeline.wiki_entity_linking.train_el import EL_Model
 
@@ -23,9 +27,11 @@ VOCAB_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/vocab'
 
 TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 
-MAX_CANDIDATES=10
-MIN_PAIR_OCC=5
-DOC_CHAR_CUTOFF=300
+MAX_CANDIDATES = 10
+MIN_PAIR_OCC = 5
+DOC_CHAR_CUTOFF = 300
+EPOCHS = 5
+DROPOUT = 0.1
 
 if __name__ == "__main__":
     print("START", datetime.datetime.now())
@@ -115,7 +121,7 @@ if __name__ == "__main__":
     if train_pipe:
         id_to_descr = kb_creator._get_id_to_description(ENTITY_DESCR)
 
-        docs, golds = training_set_creator.read_training(nlp=nlp,
+        train_data = training_set_creator.read_training(nlp=nlp,
                                                          training_dir=TRAINING_DIR,
                                                          id_to_descr=id_to_descr,
                                                          doc_cutoff=DOC_CHAR_CUTOFF,
@@ -123,18 +129,26 @@ if __name__ == "__main__":
                                                          limit=10,
                                                          to_print=False)
 
-        # for doc, gold in zip(docs, golds):
-            # print("doc", doc)
-            # for entity, label in gold.cats.items():
-                # print("entity", entity, label)
-            # print()
-
         el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": my_kb})
         nlp.add_pipe(el_pipe, last=True)
 
         other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
         with nlp.disable_pipes(*other_pipes):  # only train Entity Linking
             nlp.begin_training()
+
+            for itn in range(EPOCHS):
+                random.shuffle(train_data)
+                losses = {}
+                batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+                for batch in batches:
+                    docs, golds = zip(*batch)
+                    nlp.update(
+                        docs,
+                        golds,
+                        drop=DROPOUT,
+                        losses=losses,
+                    )
+                print("Losses", losses)
 
     ### BELOW CODE IS DEPRECATED ###
 
