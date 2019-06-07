@@ -126,7 +126,7 @@ if __name__ == "__main__":
                                                          id_to_descr=id_to_descr,
                                                          doc_cutoff=DOC_CHAR_CUTOFF,
                                                          dev=False,
-                                                         limit=10,
+                                                         limit=100,
                                                          to_print=False)
 
         el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": my_kb})
@@ -137,6 +137,8 @@ if __name__ == "__main__":
             nlp.begin_training()
 
             for itn in range(EPOCHS):
+                print()
+                print("EPOCH", itn)
                 random.shuffle(train_data)
                 losses = {}
                 batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
@@ -149,15 +151,6 @@ if __name__ == "__main__":
                         losses=losses,
                     )
                 print("Losses", losses)
-
-    ### BELOW CODE IS DEPRECATED ###
-
-    # STEP 6: apply the EL algorithm on the training dataset - TODO deprecated - code moved to pipes.pyx
-    if run_el_training:
-        print("STEP 6: training", datetime.datetime.now())
-        trainer = EL_Model(kb=my_kb, nlp=nlp)
-        trainer.train_model(training_dir=TRAINING_DIR, entity_descr_output=ENTITY_DESCR, trainlimit=10000, devlimit=500)
-        print()
 
     # STEP 7: apply the EL algorithm on the dev dataset (TODO: overlaps with code from run_el_training ?)
     if apply_to_dev:
