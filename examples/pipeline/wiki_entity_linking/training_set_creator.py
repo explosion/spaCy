@@ -1,11 +1,15 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import os
 import re
-import csv
 import bz2
 import datetime
+from os import listdir
 
+from examples.pipeline.wiki_entity_linking import run_el
+from spacy.gold import GoldParse
+from spacy.matcher import PhraseMatcher
 from . import wikipedia_processor as wp, kb_creator
 
 """
@@ -292,6 +296,63 @@ def read_training_entities(training_output, collect_correct=True, collect_incorr
                 incorrect_entries_per_article[article_id] = entry_dict
 
     return correct_entries_per_article, incorrect_entries_per_article
+
+
+def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_print):
+    correct_entries, incorrect_entries = read_training_entities(training_output=training_dir,
+                                                                collect_correct=True,
+                                                                collect_incorrect=True)
+
+    docs = list()
+    golds = list()
+
+    cnt = 0
+    next_entity_nr = 1
+    files = listdir(training_dir)
+    for f in files:
+        if not limit or cnt < limit:
+            if dev == run_el.is_dev(f):
+                article_id = f.replace(".txt", "")
+                if cnt % 500 == 0 and to_print:
+                    print(datetime.datetime.now(), "processed", cnt, "files in the training dataset")
+
+                try:
+                    # parse the article text
+                    with open(os.path.join(training_dir, f), mode="r", encoding='utf8') as file:
+                        text = file.read()
+                        article_doc = nlp(text)
+                        truncated_text = text[0:min(doc_cutoff, len(text))]
+
+                    gold_entities = dict()
+
+                    # process all positive and negative entities, collect all relevant mentions in this article
+                    for mention, entity_pos in correct_entries[article_id].items():
+                        # find all matches in the doc for the mentions
+                        # TODO: fix this - doesn't look like all entities are found
+                        matcher = PhraseMatcher(nlp.vocab)
+                        patterns = list(nlp.tokenizer.pipe([mention]))
+
+                        matcher.add("TerminologyList", None, *patterns)
+                        matches = matcher(article_doc)
+
+                        # store gold entities
+                        for match_id, start, end in matches:
+                            gold_entities[(start, end, entity_pos)] = 1.0
+
+                    gold = GoldParse(doc=article_doc, cats=gold_entities)
+                    docs.append(article_doc)
+                    golds.append(gold)
+
+                    cnt += 1
+                except Exception as e:
+                    print("Problem parsing article", article_id)
+                    print(e)
+
+    if to_print:
+        print()
+        print("Processed", cnt, "training articles, dev=" + str(dev))
+        print()
+    return docs, golds
 
 
 

@@ -82,6 +82,11 @@ cdef class KnowledgeBase:
         self.vocab.strings.add("")
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
+    @property
+    def entity_vector_length(self):
+        """RETURNS (uint64): length of the entity vectors"""
+        return self.entity_vector_length
+
     def __len__(self):
         return self.get_size_entities()
 

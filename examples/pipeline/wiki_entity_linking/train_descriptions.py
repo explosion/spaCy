@@ -1,3 +1,4 @@
+# coding: utf-8
 from random import shuffle
 
 from examples.pipeline.wiki_entity_linking import kb_creator

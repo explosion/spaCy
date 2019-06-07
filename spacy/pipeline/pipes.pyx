@@ -1081,8 +1081,8 @@ class EntityLinker(Pipe):
         sent_width = cfg.get("sent_width", 64)
         entity_width = cfg["kb"].entity_vector_length
 
-        article_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=article_width)
-        sent_encoder = build_nel_encoder(in_width=embed_width, hidden_with=hidden_width, end_width=sent_width)
+        article_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=article_width, **cfg)
+        sent_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=sent_width, **cfg)
 
         # dimension of the mention encoder needs to match the dimension of the entity encoder
         mention_width = article_width + sent_width
@@ -1117,6 +1117,10 @@ class EntityLinker(Pipe):
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
         """ docs should be a tuple of (entity_docs, article_docs, sentence_docs) TODO """
         self.require_model()
+
+        if len(docs) != len(golds):
+            raise ValueError(Errors.E077.format(value="loss", n_docs=len(docs),
+                                                n_golds=len(golds)))
 
         entity_docs, article_docs, sentence_docs = docs
         assert len(entity_docs) == len(article_docs) == len(sentence_docs)

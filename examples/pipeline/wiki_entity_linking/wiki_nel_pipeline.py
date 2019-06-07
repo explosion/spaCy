@@ -23,6 +23,9 @@ VOCAB_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/vocab'
 
 TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 
+MAX_CANDIDATES=10
+MIN_PAIR_OCC=5
+DOC_CHAR_CUTOFF=300
 
 if __name__ == "__main__":
     print("START", datetime.datetime.now())
@@ -71,8 +74,8 @@ if __name__ == "__main__":
     if to_create_kb:
         print("STEP 3a: to_create_kb", datetime.datetime.now())
         my_kb = kb_creator.create_kb(nlp,
-                                     max_entities_per_alias=10,
-                                     min_occ=5,
+                                     max_entities_per_alias=MAX_CANDIDATES,
+                                     min_occ=MIN_PAIR_OCC,
                                      entity_def_output=ENTITY_DEFS,
                                      entity_descr_output=ENTITY_DESCR,
                                      count_input=ENTITY_COUNTS,
@@ -110,9 +113,28 @@ if __name__ == "__main__":
 
     # STEP 6: create the entity linking pipe
     if train_pipe:
-        # TODO: the vocab objects are now different between nlp and kb - will be fixed when KB is written as part of NLP IO
+        id_to_descr = kb_creator._get_id_to_description(ENTITY_DESCR)
+
+        docs, golds = training_set_creator.read_training(nlp=nlp,
+                                                         training_dir=TRAINING_DIR,
+                                                         id_to_descr=id_to_descr,
+                                                         doc_cutoff=DOC_CHAR_CUTOFF,
+                                                         dev=False,
+                                                         limit=10,
+                                                         to_print=False)
+
+        # for doc, gold in zip(docs, golds):
+            # print("doc", doc)
+            # for entity, label in gold.cats.items():
+                # print("entity", entity, label)
+            # print()
+
         el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": my_kb})
         nlp.add_pipe(el_pipe, last=True)
+
+        other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
+        with nlp.disable_pipes(*other_pipes):  # only train Entity Linking
+            nlp.begin_training()
 
     ### BELOW CODE IS DEPRECATED ###
 
