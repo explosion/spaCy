@@ -532,7 +532,7 @@ cdef class GoldParse:
                         self.labels[i] = deps[i2j_multi[i]]
                     # Now set NER...This is annoying because if we've split
                     # got an entity word split into two, we need to adjust the
-                    # BILOU tags. We can't have BB or LL etc.
+                    # BILUO tags. We can't have BB or LL etc.
                     # Case 1: O -- easy.
                     ner_tag = entities[i2j_multi[i]]
                     if ner_tag == "O":

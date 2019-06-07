@@ -119,7 +119,27 @@ Update the models in the pipeline.
 | `golds`                                      | iterable | A batch of `GoldParse` objects or dictionaries. Dictionaries will be used to create [`GoldParse`](/api/goldparse) objects. For the available keys and their usage, see [`GoldParse.__init__`](/api/goldparse#init). |
 | `drop`                                       | float    | The dropout rate.                                                                                                                                                                                                   |
 | `sgd`                                        | callable | An optimizer.                                                                                                                                                                                                       |
+| `losses`                                     | dict     | Dictionary to update with the loss, keyed by pipeline component.                                                                                                                                                    |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                                                                        |
+
+## Language.evaluate {#evaluate tag="method"}
+
+Evaluate a model's pipeline components.
+
+> #### Example
+>
+> ```python
+> scorer = nlp.evaluate(docs_golds, verbose=True)
+> print(scorer.scores)
+> ```
+
+| Name                                         | Type     | Description                                                                           |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects.                                              |
+| `verbose`                                    | bool     | Print debugging information.                                                          |
+| `batch_size`                                 | int      | The batch size to use.                                                                |
+| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.          |
 
 ## Language.begin_training {#begin_training tag="method"}
 

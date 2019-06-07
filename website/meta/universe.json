@@ -1,6 +1,108 @@
 {
     "resources": [
         {
+            "id": "nlp-architect",
+            "title": "NLP Architect",
+            "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI",
+            "github": "NervanaSystems/nlp-architect",
+            "pip": "nlp-architect",
+            "thumb": "https://i.imgur.com/vMideRx.png",
+            "category": ["standalone", "research"],
+            "tags": ["pytorch"]
+        },
+        {
+            "id": "NeuroNER",
+            "title": "NeuroNER",
+            "slogan": "Named-entity recognition using neural networks",
+            "github": "Franck-Dernoncourt/NeuroNER",
+            "pip": "pyneuroner[cpu]",
+            "code_example": [
+                "from neuroner import neuromodel",
+                "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
+            ],
+            "category": ["ner"],
+            "tags": ["standalone"]
+        },
+        {
+            "id": "NLPre",
+            "title": "NLPre",
+            "slogan": "Natural Language Preprocessing Library for health data and more",
+            "github": "NIHOPA/NLPre",
+            "pip": "nlpre",
+            "code_example": [
+                "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
+                "from nlpre import replace_acronyms, replace_from_dictionary",
+                "ABBR = identify_parenthetical_phrases()(text)",
+                "parsers = [dedash(), titlecaps(), replace_acronyms(ABBR),",
+                "        replace_from_dictionary(prefix='MeSH_')]",
+                "for f in parsers:",
+                "    text = f(text)",
+                "print(text)"
+            ],
+            "category": ["scientific"]
+        },
+        {
+            "id": "Chatterbot",
+            "title": "Chatterbot",
+            "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
+            "github": "gunthercox/ChatterBot",
+            "pip": "chatterbot",
+            "thumb": "https://i.imgur.com/eyAhwXk.jpg",
+            "code_example": [
+                "from chatterbot import ChatBot",
+                "from chatterbot.trainers import ListTrainer",
+                "# Create a new chat bot named Charlie",
+                "chatbot = ChatBot('Charlie')",
+                "trainer = ListTrainer(chatbot)",
+                "trainer.train([",
+                "'Hi, can I help you?',",
+                "'Sure, I would like to book a flight to Iceland.",
+                "'Your flight has been booked.'",
+                "])",
+                "",
+                "response = chatbot.get_response('I would like to book a flight.')"
+            ],
+            "author": "Gunther Cox",
+            "author_links": {
+                "github": "gunthercox"
+            },
+            "category": ["conversational", "standalone"],
+            "tags": ["chatbots"]
+        },
+        {
+            "id": "saber",
+            "title": "saber",
+            "slogan": "Deep-learning based tool for information extraction in the biomedical domain",
+            "github": "BaderLab/saber",
+            "pip": "saber",
+            "thumb": "https://raw.githubusercontent.com/BaderLab/saber/master/docs/img/saber_logo.png",
+            "code_example": [
+                "from saber.saber import Saber",
+                "saber = Saber()",
+                "saber.load('PRGE')",
+                "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
+            ],
+            "author": "Bader Lab, University of Toronto",
+            "category": ["scientific"],
+            "tags": ["keras", "biomedical"]
+        },
+        {
+            "id": "alibi",
+            "title": "alibi",
+            "slogan": "Algorithms for monitoring and explaining machine learning models ",
+            "github": "SeldonIO/alibi",
+            "pip": "alibi",
+            "thumb": "https://i.imgur.com/YkzQHRp.png",
+            "code_example": [
+                "from alibi.explainers import AnchorTabular",
+                "explainer = AnchorTabular(predict_fn, feature_names)",
+                "explainer.fit(X_train)",
+                "explainer.explain(x)"
+            ],
+            "author": "Seldon",
+            "category": ["standalone", "research"]
+        },
+        {
             "id": "spacymoji",
             "slogan": "Emoji handling and meta data as a spaCy pipeline component",
             "github": "ines/spacymoji",
@@ -143,7 +245,7 @@
                 "doc = nlp(my_doc_text)"
             ],
             "author": "tc64",
-            "author_link": {
+            "author_links": {
                 "github": "tc64"
             },
             "category": ["pipeline"]
@@ -346,7 +448,7 @@
             "author_links": {
                 "github": "huggingface"
             },
-            "category": ["standalone", "conversational"],
+            "category": ["standalone", "conversational", "models"],
             "tags": ["coref"]
         },
         {
@@ -538,7 +640,7 @@
                 "twitter": "allenai_org",
                 "website": "http://allenai.org"
             },
-            "category": ["models", "research"]
+            "category": ["scientific", "models", "research"]
         },
         {
             "id": "textacy",
@@ -601,7 +703,7 @@
                 "github": "ahalterman",
                 "twitter": "ahalterman"
             },
-            "category": ["standalone"]
+            "category": ["standalone", "scientific"]
         },
         {
             "id": "kindred",
@@ -626,7 +728,7 @@
             "author_links": {
                 "github": "jakelever"
             },
-            "category": ["standalone"]
+            "category": ["standalone", "scientific"]
         },
         {
             "id": "sense2vec",
@@ -838,6 +940,42 @@
             "category": ["standalone"]
         },
         {
+            "id": "prefect",
+            "title": "Prefect",
+            "slogan": "Workflow management system designed for modern infrastructure",
+            "github": "PrefectHQ/prefect",
+            "pip": "prefect",
+            "thumb": "https://i.imgur.com/oLTwr0e.png",
+            "code_example": [
+                "from prefect import Flow",
+                "from prefect.tasks.spacy.spacy_tasks import SpacyNLP",
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "",
+                "with Flow(\"Natural Language Processing\") as flow:",
+                "    doc = SpacyNLP(text=\"This is some text\", nlp=nlp)",
+                "",
+                "flow.run()"
+            ],
+            "author": "Prefect",
+            "author_links": {
+                "website": "https://prefect.io"
+            },
+            "category": ["standalone"]
+        },
+        {
+            "id": "graphbrain",
+            "title": "Graphbrain",
+            "slogan": "Automated meaning extraction and text understanding",
+            "description": "Graphbrain is an Artificial Intelligence open-source software library and scientific research tool. Its aim is to facilitate automated meaning extraction and text understanding, as well as the exploration and inference of knowledge.",
+            "github": "graphbrain/graphbrain",
+            "pip": "graphbrain",
+            "thumb": "https://i.imgur.com/cct9W1E.png",
+            "author": "Graphbrain",
+            "category": ["standalone"]
+        },
+        {
             "type": "education",
             "id": "oreilly-python-ds",
             "title": "Introduction to Machine Learning with Python: A Guide for Data Scientists",
@@ -896,6 +1034,23 @@
         },
         {
             "type": "education",
+            "id": "spacy-course",
+            "title": "Advanced NLP with spaCy",
+            "slogan": "spaCy, 2019",
+            "description": "In this free interactive course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
+            "url": "https://course.spacy.io",
+            "image": "https://i.imgur.com/JC00pHW.jpg",
+            "thumb": "https://i.imgur.com/5RXLtrr.jpg",
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            },
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
             "id": "video-spacys-ner-model",
             "title": "spaCy's NER model",
             "slogan": "Incremental parsing with bloom embeddings and residual CNNs",
@@ -937,7 +1092,7 @@
         {
             "type": "education",
             "id": "podcast-nlp-highlights",
-            "title": "NLP Highlights 78: Where do corpora come from?",
+            "title": "NLP Highlights #78: Where do corpora come from?",
             "slogan": "January 2019",
             "description": "Most NLP projects rely crucially on the quality of annotations used for training and evaluating models. In this episode, Matt and Ines of Explosion AI tell us how Prodigy can improve data annotation and model development workflows. Prodigy is an annotation tool implemented as a python library, and it comes with a web application and a command line interface. A developer can define input data streams and design simple annotation interfaces. Prodigy can help break down complex annotation decisions into a series of binary decisions, and it provides easy integration with spaCy models. Developers can specify how models should be modified as new annotations come in in an active learning framework.",
             "soundcloud": "559200912",
@@ -952,7 +1107,7 @@
         {
             "type": "education",
             "id": "podcast-init",
-            "title": "Podcast.__init__ 87: spaCy with Matthew Honnibal",
+            "title": "Podcast.__init__ #87: spaCy with Matthew Honnibal",
             "slogan": "December 2017",
             "description": "As the amount of text available on the internet and in businesses continues to increase, the need for fast and accurate language analysis becomes more prominent. This week Matthew Honnibal, the creator of SpaCy, talks about his experiences researching natural language processing and creating a library to make his findings accessible to industry.",
             "iframe": "https://www.pythonpodcast.com/wp-content/plugins/podlove-podcasting-plugin-for-wordpress/lib/modules/podlove_web_player/player_v4/dist/share.html?episode=https://www.pythonpodcast.com/?podlove_player4=176",
@@ -968,7 +1123,7 @@
         {
             "type": "education",
             "id": "talk-python-podcast",
-            "title": "Talk Python 202: Building a software business",
+            "title": "Talk Python #202: Building a software business",
             "slogan": "March 2019",
             "description": "One core question around open source is how do you fund it? Well, there is always that PayPal donate button. But that's been a tremendous failure for many projects. Often the go-to answer is consulting. But what if you don't want to trade time for money? You could take things up a notch and change the equation, exchanging value for money. That's what Ines Montani and her co-founder did when they started Explosion AI with spaCy as the foundation.",
             "thumb": "https://i.imgur.com/q1twuK8.png",
@@ -993,6 +1148,22 @@
             "author": "Sam Charrington",
             "author_links": {
                 "website": "https://twimlai.com"
+            },
+            "category": ["podcasts"]
+        },
+        {
+            "type": "education",
+            "id": "analytics-vidhya",
+            "title": "DataHack Radio #23: The Brains behind spaCy",
+            "slogan": "June 2019",
+            "description": "\"What would you do if you had the chance to pick the brains behind one of the most popular Natural Language Processing (NLP) libraries of our era? A library that has helped usher in the current boom in NLP applications and nurtured tons of NLP scientists? Well – you invite the creators on our popular DataHack Radio podcast and let them do the talking! We are delighted to welcome Ines Montani and Matt Honnibal, the developers of spaCy – a powerful and advanced library for NLP.\"",
+            "thumb": "https://i.imgur.com/3zJKZ1P.jpg",
+            "url": "https://www.analyticsvidhya.com/blog/2019/06/datahack-radio-ines-montani-matthew-honnibal-brains-behind-spacy/",
+            "soundcloud": "630741825",
+            "author": "Analytics Vidhya",
+            "author_links": {
+                "website": "https://www.analyticsvidhya.com",
+                "twitter": "analyticsvidhya"
             },
             "category": ["podcasts"]
         },
@@ -1054,7 +1225,7 @@
                 "github": "ecohealthalliance",
                 "website": " https://ecohealthalliance.org/"
             },
-            "category": ["research", "standalone"]
+            "category": ["scientific", "standalone"]
         },
         {
             "id": "self-attentive-parser",
@@ -1376,7 +1547,7 @@
             "url": "https://github.com/msg-systems/holmes-extractor",
             "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural search, topic matching and supervised document classification.",
             "pip": "holmes-extractor",
-            "category": ["conversational", "research", "standalone"],
+            "category": ["conversational", "standalone"],
             "tags": ["chatbots", "text-processing"],
             "code_example": [
                 "import holmes_extractor as holmes",
@@ -1416,6 +1587,11 @@
                     "description": "Frameworks and utilities for developing better NLP models, especially using neural networks"
                 },
                 {
+                    "id": "scientific",
+                    "title": "Scientific",
+                    "description": "Frameworks and utilities for scientific text processing"
+                },
+                {
                     "id": "visualizers",
                     "title": "Visualizers",
                     "description": "Demos and tools to visualize NLP annotations or systems"
@@ -1434,6 +1610,11 @@
                     "id": "standalone",
                     "title": "Standalone",
                     "description": "Self-contained libraries or tools that use spaCy under the hood"
+                },
+                {
+                    "id": "models",
+                    "title": "Models",
+                    "description": "Third-party pre-trained models for different languages and domains"
                 }
             ]
         },

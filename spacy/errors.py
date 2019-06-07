@@ -141,8 +141,14 @@ class Errors(object):
     E023 = ("Error cleaning up beam: The same state occurred twice at "
             "memory address {addr} and position {i}.")
     E024 = ("Could not find an optimal move to supervise the parser. Usually, "
-            "this means the GoldParse was not correct. For example, are all "
-            "labels added to the model?")
+            "this means that the model can't be updated in a way that's valid "
+            "and satisfies the correct annotations specified in the GoldParse. "
+            "For example, are all labels added to the model? If you're "
+            "training a named entity recognizer, also make sure that none of "
+            "your annotated entity spans have leading or trailing whitespace. "
+            "You can also use the experimental `debug-data` command to "
+            "validate your JSON-formatted training data. For details, run:\n"
+            "python -m spacy debug-data --help")
     E025 = ("String is too long: {length} characters. Max is 2**30.")
     E026 = ("Error accessing token at position {i}: out of bounds in Doc of "
             "length {length}.")
@@ -383,6 +389,10 @@ class Errors(object):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not exceed 1, "
             "but found {sum}.")
     E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
+    E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
+            "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
+    E136 = ("This additional feature requires the jsonschema library to be "
+            "installed:\npip install jsonschema")
 
 
 @add_codes

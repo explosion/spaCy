@@ -33,7 +33,7 @@ from .. import util
     batch_size=("Number of words per training batch", "option", "bs", int),
     max_length=("Max words per example.", "option", "xw", int),
     min_length=("Min words per example.", "option", "nw", int),
-    seed=("Seed for random number generators", "option", "s", float),
+    seed=("Seed for random number generators", "option", "s", int),
     n_iter=("Number of iterations to pretrain", "option", "i", int),
     n_save_every=("Save model every X batches.", "option", "se", int),
 )

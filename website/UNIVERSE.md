@@ -34,11 +34,10 @@ on the issue tracker.
 
 ## JSON format
 
-To add a project, fork this repository, edit the [`universe.json`](universe.json)
+To add a project, fork this repository, edit the [`universe.json`](meta/universe.json)
 and add an object of the following format to the list of `"resources"`. Before
 you submit your pull request, make sure to use a linter to verify that your
-markup is correct. We'll also be adding linting for the `universe.json` to our
-automated GitHub checks soon.
+markup is correct.
 
 ```json
 {

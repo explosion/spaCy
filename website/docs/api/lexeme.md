@@ -128,7 +128,6 @@ The L2 norm of the lexeme's vector representation.
 | `text`                                       | unicode | Verbatim text content.                                                                                       |
 | `orth`                                       | int     | ID of the verbatim text content.                                                                             |
 | `orth_`                                      | unicode | Verbatim text content (identical to `Lexeme.text`). Exists mostly for consistency with the other attributes. |
-| `lex_id`                                     | int     | ID of the lexeme's lexical type.                                                                             |
 | `rank`                                       | int     | Sequential ID of the lexemes's lexical type, used to index into tables, e.g. for word vectors.               |
 | `flags`                                      | int     | Container of the lexeme's binary flags.                                                                      |
 | `norm`                                       | int     | The lexemes's norm, i.e. a normalized form of the lexeme text.                                               |
