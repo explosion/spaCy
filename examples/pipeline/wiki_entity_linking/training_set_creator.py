@@ -298,7 +298,7 @@ def read_training_entities(training_output, collect_correct=True, collect_incorr
     return correct_entries_per_article, incorrect_entries_per_article
 
 
-def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_print):
+def read_training(nlp, training_dir, dev, limit, to_print):
     correct_entries, incorrect_entries = read_training_entities(training_output=training_dir,
                                                                 collect_correct=True,
                                                                 collect_incorrect=True)
@@ -306,7 +306,6 @@ def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_pri
     data = []
 
     cnt = 0
-    next_entity_nr = 1
     files = listdir(training_dir)
     for f in files:
         if not limit or cnt < limit:
@@ -320,7 +319,6 @@ def read_training(nlp, training_dir, id_to_descr, doc_cutoff, dev, limit, to_pri
                     with open(os.path.join(training_dir, f), mode="r", encoding='utf8') as file:
                         text = file.read()
                         article_doc = nlp(text)
-                        truncated_text = text[0:min(doc_cutoff, len(text))]
 
                     gold_entities = list()
 

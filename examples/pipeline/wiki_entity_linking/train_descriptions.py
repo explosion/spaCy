@@ -17,7 +17,7 @@ class EntityEncoder:
 
     DROP = 0
     EPOCHS = 5
-    STOP_THRESHOLD = 0.9 # 0.1
+    STOP_THRESHOLD = 0.1
 
     BATCH_SIZE = 1000
 
@@ -32,7 +32,7 @@ class EntityEncoder:
 
         print("Encoding", len(description_list), "entities")
 
-        batch_size = 10000
+        batch_size = 100000
 
         start = 0
         stop = min(batch_size, len(description_list))

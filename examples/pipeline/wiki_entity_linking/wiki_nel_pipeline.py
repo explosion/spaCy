@@ -121,15 +121,16 @@ if __name__ == "__main__":
     if train_pipe:
         id_to_descr = kb_creator._get_id_to_description(ENTITY_DESCR)
 
-        train_data = training_set_creator.read_training(nlp=nlp,
-                                                         training_dir=TRAINING_DIR,
-                                                         id_to_descr=id_to_descr,
-                                                         doc_cutoff=DOC_CHAR_CUTOFF,
-                                                         dev=False,
-                                                         limit=100,
-                                                         to_print=False)
+        train_limit = 10
+        print("Training on", train_limit, "articles")
 
-        el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": my_kb})
+        train_data = training_set_creator.read_training(nlp=nlp,
+                                                        training_dir=TRAINING_DIR,
+                                                        dev=False,
+                                                        limit=train_limit,
+                                                        to_print=False)
+
+        el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": my_kb, "doc_cutoff": DOC_CHAR_CUTOFF})
         nlp.add_pipe(el_pipe, last=True)
 
         other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
@@ -141,7 +142,7 @@ if __name__ == "__main__":
                 print("EPOCH", itn)
                 random.shuffle(train_data)
                 losses = {}
-                batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+                batches = minibatch(train_data, size=compounding(4.0, 128.0, 1.001))
                 for batch in batches:
                     docs, golds = zip(*batch)
                     nlp.update(

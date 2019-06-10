@@ -11,9 +11,8 @@ from collections import OrderedDict
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
-from thinc.neural.util import to_categorical, copy_array
-
-from spacy.cli.pretrain import get_cossim_loss
+from thinc.neural.util import to_categorical
+from thinc.neural.util import get_array_module
 
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
@@ -32,9 +31,6 @@ from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer
 from ..errors import Errors, TempErrors
 from .. import util
-
-# TODO: remove
-from examples.pipeline.wiki_entity_linking import kb_creator
 
 
 def _load_cfg(path):
@@ -1094,6 +1090,7 @@ class EntityLinker(Pipe):
         self.mention_encoder = True
         self.cfg = dict(cfg)
         self.kb = self.cfg["kb"]
+        self.doc_cutoff = self.cfg["doc_cutoff"]
 
     def use_avg_params(self):
         """Modify the pipe's encoders/models, to use their average parameter values."""
@@ -1134,6 +1131,7 @@ class EntityLinker(Pipe):
                 start, end, gold_kb = entity
                 mention = doc[start:end]
                 sentence = mention.sent
+                first_par = doc[0:self.doc_cutoff].as_doc()
 
                 candidates = self.kb.get_candidates(mention.text)
                 for c in candidates:
@@ -1144,7 +1142,7 @@ class EntityLinker(Pipe):
                         entity_encoding = c.entity_vector
 
                         entity_encodings.append(entity_encoding)
-                        article_docs.append(doc)
+                        article_docs.append(first_par)
                         sentence_docs.append(sentence.as_doc())
 
         if len(entity_encodings) > 0:
@@ -1158,6 +1156,10 @@ class EntityLinker(Pipe):
             entity_encodings = np.asarray(entity_encodings, dtype=np.float32)
 
             loss, d_scores = self.get_loss(scores=mention_encodings, golds=entity_encodings, docs=None)
+            # print("scores", mention_encodings)
+            # print("golds", entity_encodings)
+            # print("loss", loss)
+            # print("d_scores", d_scores)
 
             mention_gradient = bp_mention(d_scores, sgd=self.sgd_mention)
 
@@ -1180,8 +1182,25 @@ class EntityLinker(Pipe):
         return 0
 
     def get_loss(self, docs, golds, scores):
-        loss, gradients = get_cossim_loss(scores, golds)
+        targets = [[1] for _  in golds]  # assuming we're only using positive examples
+        loss, gradients = self.get_cossim_loss_2(yh=scores, y=golds, t=targets)
+        #loss = loss / len(golds)
         return loss, gradients
+
+    def get_cossim_loss_2(self, yh, y, t):
+        # Add a small constant to avoid 0 vectors
+        yh = yh + 1e-8
+        y = y + 1e-8
+        # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+        xp = get_array_module(yh)
+        norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+        norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+        mul_norms = norm_yh * norm_y
+        cos = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+        d_yh = (y / mul_norms) - (cos * (yh / norm_yh ** 2))
+        loss = xp.abs(cos - t).sum()
+        inverse = np.asarray([int(t[i][0]) * d_yh[i] for i in range(len(t))])
+        return loss, -inverse
 
     def __call__(self, doc):
         entities, kb_ids = self.predict([doc])
@@ -1220,6 +1239,7 @@ class EntityLinker(Pipe):
                             score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
                             scores.append(score)
 
+                        # TODO: thresholding
                         best_index = scores.index(max(scores))
                         best_candidate = candidates[best_index]
                         final_entities.append(ent)
