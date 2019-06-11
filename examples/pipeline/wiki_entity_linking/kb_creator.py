@@ -20,7 +20,7 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
     """ Create the knowledge base from Wikidata entries """
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=DESC_WIDTH)
 
-    # disable parts of the pipeline when rerunning
+    # disable this part of the pipeline when rerunning the KB generation from preprocessed files
     read_raw_data = False
 
     if read_raw_data:

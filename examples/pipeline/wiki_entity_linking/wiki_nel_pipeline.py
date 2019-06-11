@@ -6,7 +6,6 @@ import random
 from spacy.util import minibatch, compounding
 
 from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el
-from examples.pipeline.wiki_entity_linking.train_el import EL_Model
 
 import spacy
 from spacy.vocab import Vocab
@@ -30,10 +29,11 @@ TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 MAX_CANDIDATES = 10
 MIN_PAIR_OCC = 5
 DOC_CHAR_CUTOFF = 300
-EPOCHS = 5
+EPOCHS = 10
 DROPOUT = 0.1
 
-if __name__ == "__main__":
+
+def run_pipeline():
     print("START", datetime.datetime.now())
     print()
     nlp = spacy.load('en_core_web_lg')
@@ -51,15 +51,11 @@ if __name__ == "__main__":
     # create training dataset
     create_wp_training = False
 
+    # train the EL pipe
     train_pipe = True
 
-    # run EL training
-    run_el_training = False
-
-    # apply named entity linking to the dev dataset
-    apply_to_dev = False
-
-    to_test_pipeline = False
+    # test the EL pipe on a simple example
+    to_test_pipeline = True
 
     # STEP 1 : create prior probabilities from WP
     # run only once !
@@ -119,15 +115,22 @@ if __name__ == "__main__":
 
     # STEP 6: create the entity linking pipe
     if train_pipe:
-        id_to_descr = kb_creator._get_id_to_description(ENTITY_DESCR)
-
-        train_limit = 10
+        train_limit = 5
+        dev_limit = 2
         print("Training on", train_limit, "articles")
+        print("Dev testing on", dev_limit, "articles")
+        print()
 
         train_data = training_set_creator.read_training(nlp=nlp,
                                                         training_dir=TRAINING_DIR,
                                                         dev=False,
                                                         limit=train_limit,
+                                                        to_print=False)
+
+        dev_data = training_set_creator.read_training(nlp=nlp,
+                                                      training_dir=TRAINING_DIR,
+                                                      dev=True,
+                                                      limit=dev_limit,
                                                         to_print=False)
 
         el_pipe = nlp.create_pipe(name='entity_linker', config={"kb": my_kb, "doc_cutoff": DOC_CHAR_CUTOFF})
@@ -137,12 +140,12 @@ if __name__ == "__main__":
         with nlp.disable_pipes(*other_pipes):  # only train Entity Linking
             nlp.begin_training()
 
-            for itn in range(EPOCHS):
-                print()
-                print("EPOCH", itn)
-                random.shuffle(train_data)
-                losses = {}
-                batches = minibatch(train_data, size=compounding(4.0, 128.0, 1.001))
+        for itn in range(EPOCHS):
+            random.shuffle(train_data)
+            losses = {}
+            batches = minibatch(train_data, size=compounding(4.0, 128.0, 1.001))
+
+            with nlp.disable_pipes(*other_pipes):
                 for batch in batches:
                     docs, golds = zip(*batch)
                     nlp.update(
@@ -151,20 +154,89 @@ if __name__ == "__main__":
                         drop=DROPOUT,
                         losses=losses,
                     )
-                print("Losses", losses)
 
-    # STEP 7: apply the EL algorithm on the dev dataset (TODO: overlaps with code from run_el_training ?)
-    if apply_to_dev:
-        run_el.run_el_dev(kb=my_kb, nlp=nlp, training_dir=TRAINING_DIR, limit=2000)
-        print()
+            el_pipe.context_weight = 1
+            el_pipe.prior_weight = 1
+            dev_acc_1_1 = _measure_accuracy(dev_data, nlp)
+            train_acc_1_1 = _measure_accuracy(train_data, nlp)
 
-    # test KB
+            el_pipe.context_weight = 0
+            el_pipe.prior_weight = 1
+            dev_acc_0_1 = _measure_accuracy(dev_data, nlp)
+            train_acc_0_1 = _measure_accuracy(train_data, nlp)
+
+            el_pipe.context_weight = 1
+            el_pipe.prior_weight = 0
+            dev_acc_1_0 = _measure_accuracy(dev_data, nlp)
+            train_acc_1_0 = _measure_accuracy(train_data, nlp)
+
+            print("Epoch, train loss, train/dev acc, 1-1, 0-1, 1-0:", itn, losses['entity_linker'],
+                  round(train_acc_1_1, 2), round(train_acc_0_1, 2), round(train_acc_1_0, 2), "/",
+                  round(dev_acc_1_1, 2), round(dev_acc_0_1, 2), round(dev_acc_1_0, 2))
+
+    # test Entity Linker
     if to_test_pipeline:
-        run_el.run_el_toy_example(kb=my_kb, nlp=nlp)
         print()
-
-    # TODO coreference resolution
-    # add_coref()
+        run_el_toy_example(kb=my_kb, nlp=nlp)
+        print()
 
     print()
     print("STOP", datetime.datetime.now())
+
+
+def _measure_accuracy(data, nlp):
+    correct = 0
+    incorrect = 0
+
+    texts = [d.text for d, g in data]
+    docs = list(nlp.pipe(texts))
+    golds = [g for d, g in data]
+
+    for doc, gold in zip(docs, golds):
+        correct_entries_per_article = dict()
+        for entity in gold.links:
+            start, end, gold_kb = entity
+            correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
+
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":  # TODO: expand to other types
+                pred_entity = ent.kb_id_
+                start = ent.start
+                end = ent.end
+                gold_entity = correct_entries_per_article.get(str(start) + "-" + str(end), None)
+                if gold_entity is not None:
+                    if gold_entity == pred_entity:
+                        correct += 1
+                    else:
+                        incorrect += 1
+
+    if correct == incorrect == 0:
+        return 0
+
+    acc = correct / (correct + incorrect)
+    return acc
+
+
+def run_el_toy_example(nlp, kb):
+    text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
+           "Douglas reminds us to always bring our towel. " \
+           "The main character in Doug's novel is the man Arthur Dent, " \
+           "but Douglas doesn't write about George Washington or Homer Simpson."
+    doc = nlp(text)
+
+    for ent in doc.ents:
+        print("ent", ent.text, ent.label_, ent.kb_id_)
+
+    print()
+
+    # Q4426480 is her husband, Q3568763 her tutor
+    text = "Ada Lovelace loved her husband William King dearly. " \
+           "Ada Lovelace was tutored by her favorite physics tutor William King."
+    doc = nlp(text)
+
+    for ent in doc.ents:
+        print("ent", ent.text, ent.label_, ent.kb_id_)
+
+
+if __name__ == "__main__":
+    run_pipeline()

@@ -1068,6 +1068,8 @@ class EntityLinker(Pipe):
     DOCS: TODO
     """
     name = 'entity_linker'
+    context_weight = 1
+    prior_weight = 1
 
     @classmethod
     def Model(cls, **cfg):
@@ -1093,14 +1095,15 @@ class EntityLinker(Pipe):
         self.doc_cutoff = self.cfg["doc_cutoff"]
 
     def use_avg_params(self):
-        """Modify the pipe's encoders/models, to use their average parameter values."""
-        with self.article_encoder.use_params(self.sgd_article.averages) \
-                 and self.sent_encoder.use_params(self.sgd_sent.averages) \
-                 and self.mention_encoder.use_params(self.sgd_mention.averages):
-            yield
+        # Modify the pipe's encoders/models, to use their average parameter values.
+        # TODO: this doesn't work yet because there's no exit method
+        self.article_encoder.use_params(self.sgd_article.averages)
+        self.sent_encoder.use_params(self.sgd_sent.averages)
+        self.mention_encoder.use_params(self.sgd_mention.averages)
+
 
     def require_model(self):
-        """Raise an error if the component's model is not initialized."""
+        # Raise an error if the component's model is not initialized.
         if getattr(self, "mention_encoder", None) in (None, True, False):
             raise ValueError(Errors.E109.format(name=self.name))
 
@@ -1110,6 +1113,7 @@ class EntityLinker(Pipe):
             self.sgd_article = create_default_optimizer(self.article_encoder.ops)
             self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
             self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
+        return self.sgd_article
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
         self.require_model()
@@ -1229,27 +1233,27 @@ class EntityLinker(Pipe):
 
                 candidates = self.kb.get_candidates(ent.text)
                 if candidates:
-                    with self.use_avg_params:
-                        scores = list()
-                        for c in candidates:
-                            prior_prob = c.prior_prob
-                            kb_id = c.entity_
-                            entity_encoding = c.entity_vector
-                            sim = cosine([entity_encoding], mention_enc_t)
-                            score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
-                            scores.append(score)
+                    scores = list()
+                    for c in candidates:
+                        prior_prob = c.prior_prob * self.prior_weight
+                        kb_id = c.entity_
+                        entity_encoding = c.entity_vector
+                        sim = cosine(np.asarray([entity_encoding]), mention_enc_t) * self.context_weight
+                        score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
+                        scores.append(score)
 
-                        # TODO: thresholding
-                        best_index = scores.index(max(scores))
-                        best_candidate = candidates[best_index]
-                        final_entities.append(ent)
-                        final_kb_ids.append(best_candidate)
+                    # TODO: thresholding
+                    best_index = scores.index(max(scores))
+                    best_candidate = candidates[best_index]
+                    final_entities.append(ent)
+                    final_kb_ids.append(best_candidate.entity_)
 
         return final_entities, final_kb_ids
 
     def set_annotations(self, docs, entities, kb_ids=None):
         for entity, kb_id in zip(entities, kb_ids):
-            entity.ent_kb_id_ = kb_id
+            for token in entity:
+                token.ent_kb_id_ = kb_id
 
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.

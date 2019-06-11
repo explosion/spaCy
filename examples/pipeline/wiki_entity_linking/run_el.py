@@ -21,29 +21,10 @@ def run_kb_toy_example(kb):
             print(" ", c.prior_prob, c.alias_, "-->", c.entity_ + " (freq=" + str(c.entity_freq) + ")")
         print()
 
-def run_el_toy_example(nlp, kb):
-    _prepare_pipeline(nlp, kb)
 
-    candidates = kb.get_candidates("Bush")
-
-    print("generating candidates for 'Bush' :")
-    for c in candidates:
-        print(" ", c.prior_prob, c.alias_, "-->", c.entity_ + " (freq=" + str(c.entity_freq) + ")")
-    print()
-
-    text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
-           "Douglas reminds us to always bring our towel. " \
-           "The main character in Doug's novel is the man Arthur Dent, " \
-           "but Douglas doesn't write about George Washington or Homer Simpson."
-    doc = nlp(text)
-
-    for ent in doc.ents:
-        print("ent", ent.text, ent.label_, ent.kb_id_)
 
 
 def run_el_dev(nlp, kb, training_dir, limit=None):
-    _prepare_pipeline(nlp, kb)
-
     correct_entries_per_article, _ = training_set_creator.read_training_entities(training_output=training_dir,
                                                                                  collect_correct=True,
                                                                                  collect_incorrect=False)
