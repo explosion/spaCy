@@ -1220,8 +1220,13 @@ class EntityLinker(Pipe):
 
     def predict(self, docs):
         self.require_model()
+
+        if isinstance(docs, Doc):
+            docs = [docs]
+
         final_entities = list()
         final_kb_ids = list()
+
         for i, article_doc in enumerate(docs):
             doc_encoding = self.article_encoder([article_doc])
             for ent in article_doc.ents:
