@@ -1188,7 +1188,7 @@ class EntityLinker(Pipe):
     def get_loss(self, docs, golds, scores):
         targets = [[1] for _  in golds]  # assuming we're only using positive examples
         loss, gradients = self.get_cossim_loss_2(yh=scores, y=golds, t=targets)
-        #loss = loss / len(golds)
+        loss = loss / len(golds)
         return loss, gradients
 
     def get_cossim_loss_2(self, yh, y, t):

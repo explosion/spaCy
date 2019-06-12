@@ -116,8 +116,8 @@ def run_pipeline():
     # STEP 6: create the entity linking pipe
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
-        train_limit = 100
-        dev_limit = 20
+        train_limit = 5000
+        dev_limit = 1000
         print("Training on", train_limit, "articles")
         print("Dev testing on", dev_limit, "articles")
         print()
@@ -145,6 +145,7 @@ def run_pipeline():
             random.shuffle(train_data)
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 128.0, 1.001))
+            batchnr = 0
 
             with nlp.disable_pipes(*other_pipes):
                 for batch in batches:
@@ -156,35 +157,43 @@ def run_pipeline():
                             drop=DROPOUT,
                             losses=losses,
                         )
+                        batchnr += 1
                     except Exception as e:
                         print("Error updating batch", e)
 
+            losses['entity_linker'] = losses['entity_linker'] / batchnr
             print("Epoch, train loss", itn, round(losses['entity_linker'], 2))
 
-        # baseline using only prior probabilities
-        el_pipe.context_weight = 0
-        el_pipe.prior_weight = 1
-        dev_acc_0_1 = _measure_accuracy(dev_data, el_pipe)
-        train_acc_0_1 = _measure_accuracy(train_data, el_pipe)
+        print()
+        print("STEP 7: performance measurement of Entity Linking pipe", datetime.datetime.now())
+        print()
 
         # print(" measuring accuracy 1-1")
         el_pipe.context_weight = 1
         el_pipe.prior_weight = 1
         dev_acc_1_1 = _measure_accuracy(dev_data, el_pipe)
         train_acc_1_1 = _measure_accuracy(train_data, el_pipe)
+        print("train/dev acc combo:", round(train_acc_1_1, 2), round(dev_acc_1_1, 2))
 
-        # print(" measuring accuracy 1-0")
+        # baseline using only prior probabilities
+        el_pipe.context_weight = 0
+        el_pipe.prior_weight = 1
+        dev_acc_0_1 = _measure_accuracy(dev_data, el_pipe)
+        train_acc_0_1 = _measure_accuracy(train_data, el_pipe)
+        print("train/dev acc prior:", round(train_acc_0_1, 2), round(dev_acc_0_1, 2))
+
+        # using only context
         el_pipe.context_weight = 1
         el_pipe.prior_weight = 0
         dev_acc_1_0 = _measure_accuracy(dev_data, el_pipe)
         train_acc_1_0 = _measure_accuracy(train_data, el_pipe)
 
-        print("train/dev acc, 1-1, 0-1, 1-0:" ,
-              round(train_acc_1_1, 2), round(train_acc_0_1, 2), round(train_acc_1_0, 2), "/",
-              round(dev_acc_1_1, 2), round(dev_acc_0_1, 2), round(dev_acc_1_0, 2))
+        print("train/dev acc context:", round(train_acc_1_0, 2), round(dev_acc_1_0, 2))
+        print()
 
-    # test Entity Linker
     if to_test_pipeline:
+        print()
+        print("STEP 8: applying Entity Linking to toy example", datetime.datetime.now())
         print()
         run_el_toy_example(kb=my_kb, nlp=nlp)
         print()
@@ -197,9 +206,9 @@ def _measure_accuracy(data, el_pipe):
     correct = 0
     incorrect = 0
 
-    docs = [d for d, g in data]
+    docs = [d for d, g in data if len(d) > 0]
     docs = el_pipe.pipe(docs)
-    golds = [g for d, g in data]
+    golds = [g for d, g in data if len(d) > 0]
 
     for doc, gold in zip(docs, golds):
         try:
