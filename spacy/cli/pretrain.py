@@ -18,6 +18,7 @@ from ..attrs import ID, HEAD
 from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
 from .._ml import masked_language_model
 from .. import util
+from .train import _load_pretrained_tok2vec
 
 
 @plac.annotations(
@@ -36,6 +37,12 @@ from .. import util
     seed=("Seed for random number generators", "option", "s", int),
     n_iter=("Number of iterations to pretrain", "option", "i", int),
     n_save_every=("Save model every X batches.", "option", "se", int),
+    init_tok2vec=(
+        "Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.",
+        "option",
+        "t2v",
+        Path,
+    ),
 )
 def pretrain(
     texts_loc,
@@ -53,6 +60,7 @@ def pretrain(
     min_length=5,
     seed=0,
     n_save_every=None,
+    init_tok2vec=None,
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -70,6 +78,9 @@ def pretrain(
     errors around this need some improvement.
     """
     config = dict(locals())
+    for key in config:
+        if isinstance(config[key], Path):
+            config[key] = str(config[key])
     msg = Printer()
     util.fix_random_seed(seed)
 
@@ -112,6 +123,10 @@ def pretrain(
             subword_features=True,  # Set to False for Chinese etc
         ),
     )
+    # Load in pre-trained weights
+    if init_tok2vec is not None:
+        components = _load_pretrained_tok2vec(nlp, init_tok2vec)
+        msg.text("Loaded pretrained tok2vec for: {}".format(components))
     optimizer = create_default_optimizer(model.ops)
     tracker = ProgressTracker(frequency=10000)
     msg.divider("Pre-training tok2vec layer")
