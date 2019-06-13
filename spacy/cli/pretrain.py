@@ -181,6 +181,7 @@ def pretrain(
             random.shuffle(texts)
     if skip_counter > 0:
         msg.warn("Skipped {count} empty values".format(count=str(skip_counter)))
+    msg.good("Successfully finished pretrain")
 
 
 def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
