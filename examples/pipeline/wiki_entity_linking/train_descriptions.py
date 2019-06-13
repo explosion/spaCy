@@ -17,7 +17,7 @@ class EntityEncoder:
 
     DROP = 0
     EPOCHS = 5
-    STOP_THRESHOLD = 0.1
+    STOP_THRESHOLD = 0.04
 
     BATCH_SIZE = 1000
 
@@ -127,7 +127,7 @@ class EntityEncoder:
         return loss, gradients
 
     def _test_encoder(self):
-        """ Test encoder on some dummy examples """
+        # Test encoder on some dummy examples
         desc_A1 = "Fictional character in The Simpsons"
         desc_A2 = "Simpsons - fictional human"
         desc_A3 = "Fictional character in The Flintstones"

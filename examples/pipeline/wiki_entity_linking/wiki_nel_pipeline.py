@@ -22,7 +22,7 @@ ENTITY_COUNTS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_freq.csv'
 ENTITY_DEFS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_defs.csv'
 ENTITY_DESCR = 'C:/Users/Sofie/Documents/data/wikipedia/entity_descriptions.csv'
 
-KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb'
+KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb_1/kb'
 NLP_1_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/nlp_1'
 NLP_2_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/nlp_2'
 
@@ -56,14 +56,14 @@ def run_pipeline():
     create_wp_training = False
 
     # train the EL pipe
-    train_pipe = True
+    train_pipe = False
     measure_performance = False
 
     # test the EL pipe on a simple example
-    to_test_pipeline = True
+    to_test_pipeline = False
 
     # write the NLP object, read back in and test again
-    test_nlp_io = True
+    test_nlp_io = False
 
     # STEP 1 : create prior probabilities from WP
     # run only once !

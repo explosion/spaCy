@@ -14,6 +14,7 @@ from . import wikidata_processor as wd
 INPUT_DIM = 300  # dimension of pre-trained vectors
 DESC_WIDTH = 64
 
+
 def create_kb(nlp, max_entities_per_alias, min_occ,
               entity_def_output, entity_descr_output,
               count_input, prior_prob_input, to_print=False):
@@ -25,8 +26,7 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
 
     if read_raw_data:
         print()
-        print("1. _read_wikidata_entities", datetime.datetime.now())
-        print()
+        print(" * _read_wikidata_entities", datetime.datetime.now())
         title_to_id, id_to_descr = wd.read_wikidata_entities_json(limit=None)
 
         # write the title-ID and ID-description mappings to file
@@ -40,8 +40,8 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
     title_list = list(title_to_id.keys())
 
     # TODO: remove this filter (just for quicker testing of code)
-    title_list = title_list[0:342]
-    title_to_id = {t: title_to_id[t] for t in title_list}
+    # title_list = title_list[0:342]
+    # title_to_id = {t: title_to_id[t] for t in title_list}
 
     entity_list = [title_to_id[x] for x in title_list]
 
@@ -49,29 +49,28 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
     description_list = [id_to_descr.get(x, "No description defined") for x in entity_list]
 
     print()
-    print("2. _get_entity_frequencies", datetime.datetime.now())
+    print(" * _get_entity_frequencies", datetime.datetime.now())
     print()
     entity_frequencies = wp.get_entity_frequencies(count_input=count_input, entities=title_list)
 
     print()
-    print("3. train entity encoder", datetime.datetime.now())
+    print(" * train entity encoder", datetime.datetime.now())
     print()
 
     encoder = EntityEncoder(nlp, INPUT_DIM, DESC_WIDTH)
     encoder.train(description_list=description_list, to_print=True)
     print()
 
-    print("4. get entity embeddings", datetime.datetime.now())
+    print(" * get entity embeddings", datetime.datetime.now())
     print()
     embeddings = encoder.apply_encoder(description_list)
 
     print()
-    print("5. adding", len(entity_list), "entities", datetime.datetime.now())
-    print()
+    print(" * adding", len(entity_list), "entities", datetime.datetime.now())
     kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=embeddings)
 
     print()
-    print("6. adding aliases", datetime.datetime.now())
+    print(" * adding aliases", datetime.datetime.now())
     print()
     _add_aliases(kb, title_to_id=title_to_id,
                  max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,
