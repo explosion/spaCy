@@ -13,6 +13,7 @@ from thinc.neural.util import prefer_gpu, get_array_module
 from wasabi import Printer
 import srsly
 
+from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
@@ -198,11 +199,16 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
 def make_docs(nlp, batch, min_length, max_length):
     docs = []
     for record in batch:
+        if not isinstance(record, dict):
+            raise TypeError(Errors.E137.format(type=type(record), line=record))
         if "tokens" in record:
-            doc = Doc(nlp.vocab, words=record["tokens"])
-        else:
+            words = record["tokens"]
+            doc = Doc(nlp.vocab, words=words)
+        elif "text" in record:
             text = record["text"]
             doc = nlp.make_doc(text)
+        else:
+            raise ValueError(Errors.E138.format(text=record))
         if "heads" in record:
             heads = record["heads"]
             heads = numpy.asarray(heads, dtype="uint64")

@@ -393,6 +393,12 @@ class Errors(object):
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
     E136 = ("This additional feature requires the jsonschema library to be "
             "installed:\npip install jsonschema")
+    E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure to provide a valid JSON "
+            "object as input with either the `text` or `tokens` key. For more info, see the docs:\n"
+            "https://spacy.io/api/cli#pretrain-jsonl")
+    E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input includes either the "
+            "`text` or `tokens` key. For more info, see the docs:\n"
+            "https://spacy.io/api/cli#pretrain-jsonl")
 
 
 @add_codes
