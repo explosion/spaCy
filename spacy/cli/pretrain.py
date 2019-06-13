@@ -101,6 +101,8 @@ def pretrain(
             msg.fail("Input text file doesn't exist", texts_loc, exits=1)
         with msg.loading("Loading input texts..."):
             texts = list(srsly.read_jsonl(texts_loc))
+        if not texts:
+            msg.fail("Input file is empty", texts_loc, exits=1)
         msg.good("Loaded input texts")
         random.shuffle(texts)
     else:  # reading from stdin
