@@ -40,8 +40,8 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
     title_list = list(title_to_id.keys())
 
     # TODO: remove this filter (just for quicker testing of code)
-    # title_list = title_list[0:34200]
-    # title_to_id = {t: title_to_id[t] for t in title_list}
+    title_list = title_list[0:342]
+    title_to_id = {t: title_to_id[t] for t in title_list}
 
     entity_list = [title_to_id[x] for x in title_list]
 

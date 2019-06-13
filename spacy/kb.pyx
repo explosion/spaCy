@@ -2,6 +2,8 @@
 # cython: profile=True
 # coding: utf8
 from collections import OrderedDict
+from pathlib import Path, WindowsPath
+
 from cpython.exc cimport PyErr_CheckSignals
 
 from spacy import util
@@ -389,6 +391,8 @@ cdef class Writer:
     def __init__(self, object loc):
         if path.exists(loc):
             assert not path.isdir(loc), "%s is directory." % loc
+        if isinstance(loc, Path):
+            loc = bytes(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
         assert self._fp != NULL
@@ -431,6 +435,8 @@ cdef class Reader:
     def __init__(self, object loc):
         assert path.exists(loc)
         assert not path.isdir(loc)
+        if isinstance(loc, Path):
+            loc = bytes(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:

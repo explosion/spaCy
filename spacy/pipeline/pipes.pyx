@@ -14,6 +14,7 @@ from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
+from spacy.kb import KnowledgeBase
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -1077,7 +1078,7 @@ class EntityLinker(Pipe):
         hidden_width = cfg.get("hidden_width", 32)
         article_width = cfg.get("article_width", 128)
         sent_width = cfg.get("sent_width", 64)
-        entity_width = cfg["kb"].entity_vector_length
+        entity_width = cfg.get("entity_width")  # no default because this needs to correspond with the KB
 
         article_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=article_width, **cfg)
         sent_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=sent_width, **cfg)
@@ -1089,34 +1090,41 @@ class EntityLinker(Pipe):
         return article_encoder, sent_encoder, mention_encoder
 
     def __init__(self, **cfg):
+        self.article_encoder = True
+        self.sent_encoder = True
         self.mention_encoder = True
+        self.kb = None
         self.cfg = dict(cfg)
-        self.kb = self.cfg["kb"]
-        self.doc_cutoff = self.cfg["doc_cutoff"]
+        self.doc_cutoff = self.cfg.get("doc_cutoff", 150)
 
-    def use_avg_params(self):
-        # Modify the pipe's encoders/models, to use their average parameter values.
-        # TODO: this doesn't work yet because there's no exit method
-        self.article_encoder.use_params(self.sgd_article.averages)
-        self.sent_encoder.use_params(self.sgd_sent.averages)
-        self.mention_encoder.use_params(self.sgd_mention.averages)
-
+    def set_kb(self, kb):
+        self.kb = kb
 
     def require_model(self):
         # Raise an error if the component's model is not initialized.
         if getattr(self, "mention_encoder", None) in (None, True, False):
             raise ValueError(Errors.E109.format(name=self.name))
 
+    def require_kb(self):
+        # Raise an error if the knowledge base is not initialized.
+        if getattr(self, "kb", None) in (None, True, False):
+            # TODO: custom error
+            raise ValueError(Errors.E109.format(name=self.name))
+
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
+        self.require_kb()
+        self.cfg["entity_width"] = self.kb.entity_vector_length
+
         if self.mention_encoder is True:
             self.article_encoder, self.sent_encoder, self.mention_encoder = self.Model(**self.cfg)
-            self.sgd_article = create_default_optimizer(self.article_encoder.ops)
-            self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
-            self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
+        self.sgd_article = create_default_optimizer(self.article_encoder.ops)
+        self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
+        self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
         return self.sgd_article
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
         self.require_model()
+        self.require_kb()
 
         if len(docs) != len(golds):
             raise ValueError(Errors.E077.format(value="EL training", n_docs=len(docs),
@@ -1220,6 +1228,7 @@ class EntityLinker(Pipe):
 
     def predict(self, docs):
         self.require_model()
+        self.require_kb()
 
         if isinstance(docs, Doc):
             docs = [docs]
@@ -1228,30 +1237,32 @@ class EntityLinker(Pipe):
         final_kb_ids = list()
 
         for i, article_doc in enumerate(docs):
-            doc_encoding = self.article_encoder([article_doc])
-            for ent in article_doc.ents:
-                sent_doc = ent.sent.as_doc()
-                sent_encoding = self.sent_encoder([sent_doc])
-                concat_encoding = [list(doc_encoding[0]) + list(sent_encoding[0])]
-                mention_encoding = self.mention_encoder(np.asarray([concat_encoding[0]]))
-                mention_enc_t = np.transpose(mention_encoding)
+            if len(article_doc) > 0:
+                doc_encoding = self.article_encoder([article_doc])
+                for ent in article_doc.ents:
+                    sent_doc = ent.sent.as_doc()
+                    if len(sent_doc) > 0:
+                        sent_encoding = self.sent_encoder([sent_doc])
+                        concat_encoding = [list(doc_encoding[0]) + list(sent_encoding[0])]
+                        mention_encoding = self.mention_encoder(np.asarray([concat_encoding[0]]))
+                        mention_enc_t = np.transpose(mention_encoding)
 
-                candidates = self.kb.get_candidates(ent.text)
-                if candidates:
-                    scores = list()
-                    for c in candidates:
-                        prior_prob = c.prior_prob * self.prior_weight
-                        kb_id = c.entity_
-                        entity_encoding = c.entity_vector
-                        sim = cosine(np.asarray([entity_encoding]), mention_enc_t) * self.context_weight
-                        score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
-                        scores.append(score)
+                        candidates = self.kb.get_candidates(ent.text)
+                        if candidates:
+                            scores = list()
+                            for c in candidates:
+                                prior_prob = c.prior_prob * self.prior_weight
+                                kb_id = c.entity_
+                                entity_encoding = c.entity_vector
+                                sim = cosine(np.asarray([entity_encoding]), mention_enc_t) * self.context_weight
+                                score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
+                                scores.append(score)
 
-                    # TODO: thresholding
-                    best_index = scores.index(max(scores))
-                    best_candidate = candidates[best_index]
-                    final_entities.append(ent)
-                    final_kb_ids.append(best_candidate.entity_)
+                            # TODO: thresholding
+                            best_index = scores.index(max(scores))
+                            best_candidate = candidates[best_index]
+                            final_entities.append(ent)
+                            final_kb_ids.append(best_candidate.entity_)
 
         return final_entities, final_kb_ids
 
@@ -1259,6 +1270,80 @@ class EntityLinker(Pipe):
         for entity, kb_id in zip(entities, kb_ids):
             for token in entity:
                 token.ent_kb_id_ = kb_id
+
+    def to_bytes(self, exclude=tuple(), **kwargs):
+        """Serialize the pipe to a bytestring.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized object.
+        """
+        serialize = OrderedDict()
+        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        serialize["kb"] = self.kb.to_bytes  # TODO
+        if self.mention_encoder not in (True, False, None):
+            serialize["article_encoder"] = self.article_encoder.to_bytes
+            serialize["sent_encoder"] = self.sent_encoder.to_bytes
+            serialize["mention_encoder"] = self.mention_encoder.to_bytes
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+        """Load the pipe from a bytestring."""
+        deserialize = OrderedDict()
+        deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
+        deserialize["kb"] = lambda b: self.kb.from_bytes(b)  # TODO
+        deserialize["article_encoder"] = lambda b: self.article_encoder.from_bytes(b)
+        deserialize["sent_encoder"] = lambda b: self.sent_encoder.from_bytes(b)
+        deserialize["mention_encoder"] = lambda b: self.mention_encoder.from_bytes(b)
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
+    def to_disk(self, path, exclude=tuple(), **kwargs):
+        """Serialize the pipe to disk."""
+        serialize = OrderedDict()
+        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
+        serialize["kb"] = lambda p: self.kb.dump(p)
+        if self.mention_encoder not in (None, True, False):
+            serialize["article_encoder"] = lambda p: p.open("wb").write(self.article_encoder.to_bytes())
+            serialize["sent_encoder"] = lambda p: p.open("wb").write(self.sent_encoder.to_bytes())
+            serialize["mention_encoder"] = lambda p: p.open("wb").write(self.mention_encoder.to_bytes())
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, exclude=tuple(), **kwargs):
+        """Load the pipe from disk."""
+        def load_article_encoder(p):
+            if self.article_encoder is True:
+                self.article_encoder, _, _ = self.Model(**self.cfg)
+            self.article_encoder.from_bytes(p.open("rb").read())
+
+        def load_sent_encoder(p):
+            if self.sent_encoder is True:
+                _, self.sent_encoder, _ = self.Model(**self.cfg)
+            self.sent_encoder.from_bytes(p.open("rb").read())
+
+        def load_mention_encoder(p):
+             if self.mention_encoder is True:
+                _, _, self.mention_encoder = self.Model(**self.cfg)
+             self.mention_encoder.from_bytes(p.open("rb").read())
+
+        deserialize = OrderedDict()
+        deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
+        deserialize["article_encoder"] = load_article_encoder
+        deserialize["sent_encoder"] = load_sent_encoder
+        deserialize["mention_encoder"] = load_mention_encoder
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
+        util.from_disk(path, deserialize, exclude)
+        return self
+
+    def rehearse(self, docs, sgd=None, losses=None, **config):
+        # TODO
+        pass
+
+    def add_label(self, label):
+        pass
+
 
 class Sentencizer(object):
     """Segment the Doc into sentences using a rule-based strategy.

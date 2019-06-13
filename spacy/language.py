@@ -11,6 +11,7 @@ from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
 
+from spacy.kb import KnowledgeBase
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
@@ -809,6 +810,14 @@ class Language(object):
             # Convert to list here in case exclude is (default) tuple
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
+
+        # download the KB for the entity linking component - requires the vocab
+        for pipe_name, pipe in self.pipeline:
+            if pipe_name == "entity_linker":
+                kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=pipe.cfg["entity_width"])
+                kb.load_bulk(path / pipe_name / "kb")
+                pipe.set_kb(kb)
+
         self._path = path
         return self
 
