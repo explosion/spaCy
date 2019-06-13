@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy import util
+from spacy.lang.en import English
 from spacy.cli.converters import conllu2json
 from spacy.cli.pretrain import make_docs
 
@@ -33,7 +33,7 @@ def test_cli_converters_conllu2json():
 
 
 def test_pretrain_make_docs():
-    nlp = util.load_model("en")
+    nlp = English()
 
     valid_jsonl_text = {"text": "Some text"}
     docs, skip_count = make_docs(nlp, [valid_jsonl_text], 1, 10)
