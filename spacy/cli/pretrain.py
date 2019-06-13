@@ -211,11 +211,13 @@ def make_docs(nlp, batch, min_length, max_length):
             words = record["tokens"]
             if not words:
                 skip_count += 1
+                continue
             doc = Doc(nlp.vocab, words=words)
         elif "text" in record:
             text = record["text"]
             if not text:
                 skip_count += 1
+                continue
             doc = nlp.make_doc(text)
         else:
             raise ValueError(Errors.E138.format(text=record))
