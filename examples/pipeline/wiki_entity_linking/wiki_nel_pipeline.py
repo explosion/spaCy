@@ -30,8 +30,8 @@ TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 
 MAX_CANDIDATES = 10
 MIN_PAIR_OCC = 5
-DOC_CHAR_CUTOFF = 300
-EPOCHS = 2
+DOC_SENT_CUTOFF = 2
+EPOCHS = 10
 DROPOUT = 0.1
 
 
@@ -46,14 +46,14 @@ def run_pipeline():
     # one-time methods to create KB and write to file
     to_create_prior_probs = False
     to_create_entity_counts = False
-    to_create_kb = True
+    to_create_kb = False  # TODO: entity_defs should also contain entities not in the KB
 
     # read KB back in from file
-    to_read_kb = True
-    to_test_kb = True
+    to_read_kb = False
+    to_test_kb = False
 
     # create training dataset
-    create_wp_training = False
+    create_wp_training = True
 
     # train the EL pipe
     train_pipe = False
@@ -103,9 +103,6 @@ def run_pipeline():
     # STEP 4 : read KB back in from file
     if to_read_kb:
         print("STEP 4: to_read_kb", datetime.datetime.now())
-        # my_vocab = Vocab()
-        # my_vocab.from_disk(VOCAB_DIR)
-        # my_kb = KnowledgeBase(vocab=my_vocab, entity_vector_length=64)
         nlp_2 = spacy.load(NLP_1_DIR)
         kb_2 = KnowledgeBase(vocab=nlp_2.vocab, entity_vector_length=DESC_WIDTH)
         kb_2.load_bulk(KB_FILE)
@@ -121,13 +118,13 @@ def run_pipeline():
     # STEP 5: create a training dataset from WP
     if create_wp_training:
         print("STEP 5: create training dataset", datetime.datetime.now())
-        training_set_creator.create_training(kb=kb_2, entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
+        training_set_creator.create_training(entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
 
     # STEP 6: create the entity linking pipe
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
-        train_limit = 10
-        dev_limit = 5
+        train_limit = 50
+        dev_limit = 10
         print("Training on", train_limit, "articles")
         print("Dev testing on", dev_limit, "articles")
         print()
@@ -144,7 +141,7 @@ def run_pipeline():
                                                       limit=dev_limit,
                                                       to_print=False)
 
-        el_pipe = nlp_2.create_pipe(name='entity_linker', config={"doc_cutoff": DOC_CHAR_CUTOFF})
+        el_pipe = nlp_2.create_pipe(name='entity_linker', config={"doc_cutoff": DOC_SENT_CUTOFF})
         el_pipe.set_kb(kb_2)
         nlp_2.add_pipe(el_pipe, last=True)
 
@@ -199,9 +196,13 @@ def run_pipeline():
             el_pipe.prior_weight = 0
             dev_acc_1_0 = _measure_accuracy(dev_data, el_pipe)
             train_acc_1_0 = _measure_accuracy(train_data, el_pipe)
-
             print("train/dev acc context:", round(train_acc_1_0, 2), round(dev_acc_1_0, 2))
             print()
+
+            # reset for follow-up tests
+            el_pipe.context_weight = 1
+            el_pipe.prior_weight = 1
+
 
     if to_test_pipeline:
         print()
@@ -215,17 +216,10 @@ def run_pipeline():
         print("STEP 9: testing NLP IO", datetime.datetime.now())
         print()
         print("writing to", NLP_2_DIR)
-        print(" vocab len nlp_2", len(nlp_2.vocab))
-        print(" vocab len kb_2", len(kb_2.vocab))
         nlp_2.to_disk(NLP_2_DIR)
         print()
         print("reading from", NLP_2_DIR)
         nlp_3 = spacy.load(NLP_2_DIR)
-        print(" vocab len nlp_3", len(nlp_3.vocab))
-
-        for pipe_name, pipe in nlp_3.pipeline:
-            if pipe_name == "entity_linker":
-                print(" vocab len kb_3", len(pipe.kb.vocab))
 
         print()
         print("running toy example with NLP 2")
@@ -253,9 +247,10 @@ def _measure_accuracy(data, el_pipe):
             for ent in doc.ents:
                 if ent.label_ == "PERSON":  # TODO: expand to other types
                     pred_entity = ent.kb_id_
-                    start = ent.start
-                    end = ent.end
+                    start = ent.start_char
+                    end = ent.end_char
                     gold_entity = correct_entries_per_article.get(str(start) + "-" + str(end), None)
+                    # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
                     if gold_entity is not None:
                         if gold_entity == pred_entity:
                             correct += 1
@@ -285,7 +280,8 @@ def run_el_toy_example(nlp):
     print()
 
     # Q4426480 is her husband, Q3568763 her tutor
-    text = "Ada Lovelace loved her husband William King dearly. " \
+    text = "Ada Lovelace was the countess of Lovelace. She is known for her programming work on the analytical engine."\
+           "Ada Lovelace loved her husband William King dearly. " \
            "Ada Lovelace was tutored by her favorite physics tutor William King."
     doc = nlp(text)
 

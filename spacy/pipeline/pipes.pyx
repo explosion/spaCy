@@ -1074,6 +1074,9 @@ class EntityLinker(Pipe):
 
     @classmethod
     def Model(cls, **cfg):
+        if "entity_width" not in cfg:
+            raise ValueError("entity_width not found")
+
         embed_width = cfg.get("embed_width", 300)
         hidden_width = cfg.get("hidden_width", 32)
         article_width = cfg.get("article_width", 128)
@@ -1095,7 +1098,10 @@ class EntityLinker(Pipe):
         self.mention_encoder = True
         self.kb = None
         self.cfg = dict(cfg)
-        self.doc_cutoff = self.cfg.get("doc_cutoff", 150)
+        self.doc_cutoff = self.cfg.get("doc_cutoff", 5)
+        self.sgd_article = None
+        self.sgd_sent = None
+        self.sgd_mention = None
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1126,6 +1132,12 @@ class EntityLinker(Pipe):
         self.require_model()
         self.require_kb()
 
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+
+        if not docs or not golds:
+            return 0
+
         if len(docs) != len(golds):
             raise ValueError(Errors.E077.format(value="EL training", n_docs=len(docs),
                                                 n_golds=len(golds)))
@@ -1141,21 +1153,30 @@ class EntityLinker(Pipe):
         for doc, gold in zip(docs, golds):
             for entity in gold.links:
                 start, end, gold_kb = entity
-                mention = doc[start:end]
-                sentence = mention.sent
-                first_par = doc[0:self.doc_cutoff].as_doc()
+                mention = doc.text[start:end]
+                sent_start = 0
+                sent_end = len(doc)
+                first_par_end = len(doc)
+                for index, sent in enumerate(doc.sents):
+                    if start >= sent.start_char and end <= sent.end_char:
+                        sent_start = sent.start
+                        sent_end = sent.end
+                    if index == self.doc_cutoff-1:
+                        first_par_end = sent.end
+                sentence = doc[sent_start:sent_end].as_doc()
+                first_par = doc[0:first_par_end].as_doc()
 
-                candidates = self.kb.get_candidates(mention.text)
+                candidates = self.kb.get_candidates(mention)
                 for c in candidates:
                     kb_id = c.entity_
-                    # TODO: currently only training on the positive instances
+                    # Currently only training on the positive instances
                     if kb_id == gold_kb:
                         prior_prob = c.prior_prob
                         entity_encoding = c.entity_vector
 
                         entity_encodings.append(entity_encoding)
                         article_docs.append(first_par)
-                        sentence_docs.append(sentence.as_doc())
+                        sentence_docs.append(sentence)
 
         if len(entity_encodings) > 0:
             doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
@@ -1168,11 +1189,6 @@ class EntityLinker(Pipe):
             entity_encodings = np.asarray(entity_encodings, dtype=np.float32)
 
             loss, d_scores = self.get_loss(scores=mention_encodings, golds=entity_encodings, docs=None)
-            # print("scores", mention_encodings)
-            # print("golds", entity_encodings)
-            # print("loss", loss)
-            # print("d_scores", d_scores)
-
             mention_gradient = bp_mention(d_scores, sgd=self.sgd_mention)
 
             # gradient : concat (doc+sent) vs. desc
@@ -1187,7 +1203,6 @@ class EntityLinker(Pipe):
             bp_sent(sent_gradients, sgd=self.sgd_sent)
 
             if losses is not None:
-                losses.setdefault(self.name, 0.0)
                 losses[self.name] += loss
             return loss
 
@@ -1230,16 +1245,25 @@ class EntityLinker(Pipe):
         self.require_model()
         self.require_kb()
 
-        if isinstance(docs, Doc):
-            docs = [docs]
-
         final_entities = list()
         final_kb_ids = list()
 
-        for i, article_doc in enumerate(docs):
-            if len(article_doc) > 0:
-                doc_encoding = self.article_encoder([article_doc])
-                for ent in article_doc.ents:
+        if not docs:
+            return final_entities, final_kb_ids
+
+        if isinstance(docs, Doc):
+            docs = [docs]
+
+        for i, doc in enumerate(docs):
+            if len(doc) > 0:
+                first_par_end = len(doc)
+                for index, sent in enumerate(doc.sents):
+                    if index == self.doc_cutoff-1:
+                        first_par_end = sent.end
+                first_par = doc[0:first_par_end].as_doc()
+
+                doc_encoding = self.article_encoder([first_par])
+                for ent in doc.ents:
                     sent_doc = ent.sent.as_doc()
                     if len(sent_doc) > 0:
                         sent_encoding = self.sent_encoder([sent_doc])
@@ -1254,7 +1278,7 @@ class EntityLinker(Pipe):
                                 prior_prob = c.prior_prob * self.prior_weight
                                 kb_id = c.entity_
                                 entity_encoding = c.entity_vector
-                                sim = cosine(np.asarray([entity_encoding]), mention_enc_t) * self.context_weight
+                                sim = float(cosine(np.asarray([entity_encoding]), mention_enc_t)) * self.context_weight
                                 score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
                                 scores.append(score)
 
@@ -1271,36 +1295,7 @@ class EntityLinker(Pipe):
             for token in entity:
                 token.ent_kb_id_ = kb_id
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
-        """Serialize the pipe to a bytestring.
-
-        exclude (list): String names of serialization fields to exclude.
-        RETURNS (bytes): The serialized object.
-        """
-        serialize = OrderedDict()
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        serialize["kb"] = self.kb.to_bytes  # TODO
-        if self.mention_encoder not in (True, False, None):
-            serialize["article_encoder"] = self.article_encoder.to_bytes
-            serialize["sent_encoder"] = self.sent_encoder.to_bytes
-            serialize["mention_encoder"] = self.mention_encoder.to_bytes
-        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
-        """Load the pipe from a bytestring."""
-        deserialize = OrderedDict()
-        deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
-        deserialize["kb"] = lambda b: self.kb.from_bytes(b)  # TODO
-        deserialize["article_encoder"] = lambda b: self.article_encoder.from_bytes(b)
-        deserialize["sent_encoder"] = lambda b: self.sent_encoder.from_bytes(b)
-        deserialize["mention_encoder"] = lambda b: self.mention_encoder.from_bytes(b)
-        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
     def to_disk(self, path, exclude=tuple(), **kwargs):
-        """Serialize the pipe to disk."""
         serialize = OrderedDict()
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["kb"] = lambda p: self.kb.dump(p)
@@ -1312,7 +1307,6 @@ class EntityLinker(Pipe):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
-        """Load the pipe from disk."""
         def load_article_encoder(p):
             if self.article_encoder is True:
                 self.article_encoder, _, _ = self.Model(**self.cfg)
