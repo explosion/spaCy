@@ -15,10 +15,10 @@ INPUT_DIM = 300  # dimension of pre-trained vectors
 DESC_WIDTH = 64
 
 
-def create_kb(nlp, max_entities_per_alias, min_occ,
+def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
               entity_def_output, entity_descr_output,
               count_input, prior_prob_input, to_print=False):
-    """ Create the knowledge base from Wikidata entries """
+    # Create the knowledge base from Wikidata entries
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=DESC_WIDTH)
 
     # disable this part of the pipeline when rerunning the KB generation from preprocessed files
@@ -37,21 +37,26 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
         title_to_id = _get_entity_to_id(entity_def_output)
         id_to_descr = _get_id_to_description(entity_descr_output)
 
-    title_list = list(title_to_id.keys())
-
-    # TODO: remove this filter (just for quicker testing of code)
-    # title_list = title_list[0:342]
-    # title_to_id = {t: title_to_id[t] for t in title_list}
-
-    entity_list = [title_to_id[x] for x in title_list]
-
-    # Currently keeping entities from the KB where there is no description - putting a default void description
-    description_list = [id_to_descr.get(x, "No description defined") for x in entity_list]
-
     print()
     print(" * _get_entity_frequencies", datetime.datetime.now())
     print()
-    entity_frequencies = wp.get_entity_frequencies(count_input=count_input, entities=title_list)
+    entity_frequencies = wp.get_all_frequencies(count_input=count_input)
+
+    # filter the entities for in the KB by frequency, because there's just too much data otherwise
+    filtered_title_to_id = dict()
+    entity_list = list()
+    description_list = list()
+    frequency_list = list()
+    for title, entity in title_to_id.items():
+        freq = entity_frequencies.get(title, 0)
+        desc = id_to_descr.get(entity, None)
+        if desc and freq > min_entity_freq:
+            entity_list.append(entity)
+            description_list.append(desc)
+            frequency_list.append(freq)
+            filtered_title_to_id[title] = entity
+
+    print("Kept", len(filtered_title_to_id.keys()), "out of", len(title_to_id.keys()), "titles")
 
     print()
     print(" * train entity encoder", datetime.datetime.now())
@@ -67,12 +72,12 @@ def create_kb(nlp, max_entities_per_alias, min_occ,
 
     print()
     print(" * adding", len(entity_list), "entities", datetime.datetime.now())
-    kb.set_entities(entity_list=entity_list, prob_list=entity_frequencies, vector_list=embeddings)
+    kb.set_entities(entity_list=entity_list, prob_list=frequency_list, vector_list=embeddings)
 
     print()
     print(" * adding aliases", datetime.datetime.now())
     print()
-    _add_aliases(kb, title_to_id=title_to_id,
+    _add_aliases(kb, title_to_id=filtered_title_to_id,
                  max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,
                  prior_prob_input=prior_prob_input)
 

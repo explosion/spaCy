@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
 import bz2
 import json
 import datetime
@@ -14,7 +13,7 @@ def read_wikidata_entities_json(limit=None, to_print=False):
     """ Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines. """
 
     lang = 'en'
-    prop_filter = {'P31': {'Q5', 'Q15632617'}}     # currently defined as OR: one property suffices to be selected
+    # prop_filter = {'P31': {'Q5', 'Q15632617'}}     # currently defined as OR: one property suffices to be selected
     site_filter = 'enwiki'
 
     title_to_id = dict()
@@ -41,18 +40,19 @@ def read_wikidata_entities_json(limit=None, to_print=False):
                 entry_type = obj["type"]
 
                 if entry_type == "item":
-                    # filtering records on their properties
-                    keep = False
+                    # filtering records on their properties (currently disabled to get ALL data)
+                    # keep = False
+                    keep = True
 
                     claims = obj["claims"]
-                    for prop, value_set in prop_filter.items():
-                        claim_property = claims.get(prop, None)
-                        if claim_property:
-                            for cp in claim_property:
-                                cp_id = cp['mainsnak'].get('datavalue', {}).get('value', {}).get('id')
-                                cp_rank = cp['rank']
-                                if cp_rank != "deprecated" and cp_id in value_set:
-                                    keep = True
+                    # for prop, value_set in prop_filter.items():
+                        # claim_property = claims.get(prop, None)
+                        # if claim_property:
+                            # for cp in claim_property:
+                                # cp_id = cp['mainsnak'].get('datavalue', {}).get('value', {}).get('id')
+                                # cp_rank = cp['rank']
+                                # if cp_rank != "deprecated" and cp_id in value_set:
+                                    # keep = True
 
                     if keep:
                         unique_id = obj["id"]
@@ -70,6 +70,7 @@ def read_wikidata_entities_json(limit=None, to_print=False):
                                     if to_print:
                                         print("prop:", prop, cp_values)
 
+                        found_link = False
                         if parse_sitelinks:
                             site_value = obj["sitelinks"].get(site_filter, None)
                             if site_value:
@@ -77,6 +78,7 @@ def read_wikidata_entities_json(limit=None, to_print=False):
                                 if to_print:
                                     print(site_filter, ":", site)
                                 title_to_id[site] = unique_id
+                                found_link = True
 
                         if parse_labels:
                             labels = obj["labels"]
@@ -86,7 +88,7 @@ def read_wikidata_entities_json(limit=None, to_print=False):
                                     if to_print:
                                         print("label (" + lang + "):", lang_label["value"])
 
-                        if parse_descriptions:
+                        if found_link and parse_descriptions:
                             descriptions = obj["descriptions"]
                             if descriptions:
                                 lang_descr = descriptions.get(lang, None)

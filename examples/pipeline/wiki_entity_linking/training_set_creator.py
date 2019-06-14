@@ -21,7 +21,7 @@ ENTITY_FILE = "gold_entities.csv"
 
 def create_training(entity_def_input, training_output):
     wp_to_id = kb_creator._get_entity_to_id(entity_def_input)
-    _process_wikipedia_texts(wp_to_id, training_output, limit=100000000)  # TODO: full dataset   100000000
+    _process_wikipedia_texts(wp_to_id, training_output, limit=100000000)
 
 
 def _process_wikipedia_texts(wp_to_id, training_output, limit=None):

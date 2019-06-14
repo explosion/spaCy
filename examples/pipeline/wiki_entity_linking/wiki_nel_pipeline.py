@@ -29,6 +29,7 @@ NLP_2_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/nlp_2'
 TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 
 MAX_CANDIDATES = 10
+MIN_ENTITY_FREQ = 200
 MIN_PAIR_OCC = 5
 DOC_SENT_CUTOFF = 2
 EPOCHS = 10
@@ -46,14 +47,14 @@ def run_pipeline():
     # one-time methods to create KB and write to file
     to_create_prior_probs = False
     to_create_entity_counts = False
-    to_create_kb = False  # TODO: entity_defs should also contain entities not in the KB
+    to_create_kb = True
 
     # read KB back in from file
     to_read_kb = False
     to_test_kb = False
 
     # create training dataset
-    create_wp_training = True
+    create_wp_training = False
 
     # train the EL pipe
     train_pipe = False
@@ -84,13 +85,14 @@ def run_pipeline():
     if to_create_kb:
         print("STEP 3a: to_create_kb", datetime.datetime.now())
         kb_1 = kb_creator.create_kb(nlp_1,
-                                     max_entities_per_alias=MAX_CANDIDATES,
-                                     min_occ=MIN_PAIR_OCC,
-                                     entity_def_output=ENTITY_DEFS,
-                                     entity_descr_output=ENTITY_DESCR,
-                                     count_input=ENTITY_COUNTS,
-                                     prior_prob_input=PRIOR_PROB,
-                                     to_print=False)
+                                    max_entities_per_alias=MAX_CANDIDATES,
+                                    min_entity_freq=MIN_ENTITY_FREQ,
+                                    min_occ=MIN_PAIR_OCC,
+                                    entity_def_output=ENTITY_DEFS,
+                                    entity_descr_output=ENTITY_DESCR,
+                                    count_input=ENTITY_COUNTS,
+                                    prior_prob_input=PRIOR_PROB,
+                                    to_print=False)
         print("kb entities:", kb_1.get_size_entities())
         print("kb aliases:", kb_1.get_size_aliases())
         print()
@@ -112,7 +114,7 @@ def run_pipeline():
 
         # test KB
         if to_test_kb:
-            run_el.run_kb_toy_example(kb=kb_2)
+            test_kb(kb_2)
             print()
 
     # STEP 5: create a training dataset from WP
@@ -121,10 +123,18 @@ def run_pipeline():
         training_set_creator.create_training(entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
 
     # STEP 6: create the entity linking pipe
+    el_pipe = nlp_2.create_pipe(name='entity_linker', config={"doc_cutoff": DOC_SENT_CUTOFF})
+    el_pipe.set_kb(kb_2)
+    nlp_2.add_pipe(el_pipe, last=True)
+
+    other_pipes = [pipe for pipe in nlp_2.pipe_names if pipe != "entity_linker"]
+    with nlp_2.disable_pipes(*other_pipes):  # only train Entity Linking
+        nlp_2.begin_training()
+
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
-        train_limit = 50
-        dev_limit = 10
+        train_limit = 10
+        dev_limit = 2
         print("Training on", train_limit, "articles")
         print("Dev testing on", dev_limit, "articles")
         print()
@@ -140,14 +150,6 @@ def run_pipeline():
                                                       dev=True,
                                                       limit=dev_limit,
                                                       to_print=False)
-
-        el_pipe = nlp_2.create_pipe(name='entity_linker', config={"doc_cutoff": DOC_SENT_CUTOFF})
-        el_pipe.set_kb(kb_2)
-        nlp_2.add_pipe(el_pipe, last=True)
-
-        other_pipes = [pipe for pipe in nlp_2.pipe_names if pipe != "entity_linker"]
-        with nlp_2.disable_pipes(*other_pipes):  # only train Entity Linking
-            nlp_2.begin_training()
 
         for itn in range(EPOCHS):
             random.shuffle(train_data)
@@ -180,29 +182,31 @@ def run_pipeline():
             # print(" measuring accuracy 1-1")
             el_pipe.context_weight = 1
             el_pipe.prior_weight = 1
-            dev_acc_1_1 = _measure_accuracy(dev_data, el_pipe)
-            train_acc_1_1 = _measure_accuracy(train_data, el_pipe)
-            print("train/dev acc combo:", round(train_acc_1_1, 2), round(dev_acc_1_1, 2))
+            dev_acc_1_1, dev_acc_1_1_dict = _measure_accuracy(dev_data, el_pipe)
+            print("dev acc combo:", round(dev_acc_1_1, 3), [(x, round(y, 3)) for x, y in dev_acc_1_1_dict.items()])
+            train_acc_1_1, train_acc_1_1_dict = _measure_accuracy(train_data, el_pipe)
+            print("train acc combo:", round(train_acc_1_1, 3), [(x, round(y, 3)) for x, y in train_acc_1_1_dict.items()])
 
             # baseline using only prior probabilities
             el_pipe.context_weight = 0
             el_pipe.prior_weight = 1
-            dev_acc_0_1 = _measure_accuracy(dev_data, el_pipe)
-            train_acc_0_1 = _measure_accuracy(train_data, el_pipe)
-            print("train/dev acc prior:", round(train_acc_0_1, 2), round(dev_acc_0_1, 2))
+            dev_acc_0_1, dev_acc_0_1_dict = _measure_accuracy(dev_data, el_pipe)
+            print("dev acc prior:", round(dev_acc_0_1, 3), [(x, round(y, 3)) for x, y in dev_acc_0_1_dict.items()])
+            train_acc_0_1, train_acc_0_1_dict = _measure_accuracy(train_data, el_pipe)
+            print("train acc prior:", round(train_acc_0_1, 3), [(x, round(y, 3)) for x, y in train_acc_0_1_dict.items()])
 
             # using only context
             el_pipe.context_weight = 1
             el_pipe.prior_weight = 0
-            dev_acc_1_0 = _measure_accuracy(dev_data, el_pipe)
-            train_acc_1_0 = _measure_accuracy(train_data, el_pipe)
-            print("train/dev acc context:", round(train_acc_1_0, 2), round(dev_acc_1_0, 2))
+            dev_acc_1_0, dev_acc_1_0_dict = _measure_accuracy(dev_data, el_pipe)
+            print("dev acc context:", round(dev_acc_1_0, 3), [(x, round(y, 3)) for x, y in dev_acc_1_0_dict.items()])
+            train_acc_1_0, train_acc_1_0_dict = _measure_accuracy(train_data, el_pipe)
+            print("train acc context:", round(train_acc_1_0, 3), [(x, round(y, 3)) for x, y in train_acc_1_0_dict.items()])
             print()
 
             # reset for follow-up tests
             el_pipe.context_weight = 1
             el_pipe.prior_weight = 1
-
 
     if to_test_pipeline:
         print()
@@ -230,8 +234,8 @@ def run_pipeline():
 
 
 def _measure_accuracy(data, el_pipe):
-    correct = 0
-    incorrect = 0
+    correct_by_label = dict()
+    incorrect_by_label = dict()
 
     docs = [d for d, g in data if len(d) > 0]
     docs = el_pipe.pipe(docs)
@@ -245,31 +249,53 @@ def _measure_accuracy(data, el_pipe):
                 correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
 
             for ent in doc.ents:
-                if ent.label_ == "PERSON":  # TODO: expand to other types
-                    pred_entity = ent.kb_id_
-                    start = ent.start_char
-                    end = ent.end_char
-                    gold_entity = correct_entries_per_article.get(str(start) + "-" + str(end), None)
-                    # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
-                    if gold_entity is not None:
-                        if gold_entity == pred_entity:
-                            correct += 1
-                        else:
-                            incorrect += 1
+                ent_label = ent.label_
+                pred_entity = ent.kb_id_
+                start = ent.start_char
+                end = ent.end_char
+                gold_entity = correct_entries_per_article.get(str(start) + "-" + str(end), None)
+                # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
+                if gold_entity is not None:
+                    if gold_entity == pred_entity:
+                        correct = correct_by_label.get(ent_label, 0)
+                        correct_by_label[ent_label] = correct + 1
+                    else:
+                        incorrect = incorrect_by_label.get(ent_label, 0)
+                        incorrect_by_label[ent_label] = incorrect + 1
 
         except Exception as e:
             print("Error assessing accuracy", e)
 
-    if correct == incorrect == 0:
-        return 0
+    acc_by_label = dict()
+    total_correct = 0
+    total_incorrect = 0
+    for label, correct in correct_by_label.items():
+        incorrect = incorrect_by_label.get(label, 0)
+        total_correct += correct
+        total_incorrect += incorrect
+        if correct == incorrect == 0:
+            acc_by_label[label] = 0
+        else:
+            acc_by_label[label] = correct / (correct + incorrect)
+    acc = 0
+    if not (total_correct == total_incorrect == 0):
+        acc = total_correct / (total_correct + total_incorrect)
+    return acc, acc_by_label
 
-    acc = correct / (correct + incorrect)
-    return acc
+
+def test_kb(kb):
+    for mention in ("Bush", "Douglas Adams", "Homer", "Brazil", "China"):
+        candidates = kb.get_candidates(mention)
+
+        print("generating candidates for " + mention + " :")
+        for c in candidates:
+            print(" ", c.prior_prob, c.alias_, "-->", c.entity_ + " (freq=" + str(c.entity_freq) + ")")
+        print()
 
 
 def run_el_toy_example(nlp):
     text = "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, " \
-           "Douglas reminds us to always bring our towel. " \
+           "Douglas reminds us to always bring our towel, even in China or Brazil. " \
            "The main character in Doug's novel is the man Arthur Dent, " \
            "but Douglas doesn't write about George Washington or Homer Simpson."
     doc = nlp(text)

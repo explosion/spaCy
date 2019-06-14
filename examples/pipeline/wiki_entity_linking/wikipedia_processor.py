@@ -175,7 +175,7 @@ def write_entity_counts(prior_prob_input, count_output, to_print=False):
         print("Total count:", total_count)
 
 
-def get_entity_frequencies(count_input, entities):
+def get_all_frequencies(count_input):
     entity_to_count = dict()
     with open(count_input, 'r', encoding='utf8') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='|')
@@ -184,4 +184,5 @@ def get_entity_frequencies(count_input, entities):
         for row in csvreader:
             entity_to_count[row[0]] = int(row[1])
 
-    return [entity_to_count.get(e, 0) for e in entities]
+    return entity_to_count
+
