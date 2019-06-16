@@ -56,7 +56,7 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
             frequency_list.append(freq)
             filtered_title_to_id[title] = entity
 
-    print("Kept", len(filtered_title_to_id.keys()), "out of", len(title_to_id.keys()), "titles")
+    print("Kept", len(filtered_title_to_id.keys()), "out of", len(title_to_id.keys()), "titles with filter frequency", min_entity_freq)
 
     print()
     print(" * train entity encoder", datetime.datetime.now())

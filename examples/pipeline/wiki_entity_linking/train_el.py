@@ -389,9 +389,7 @@ class EL_Model:
         bp_sent(sent_gradients, sgd=self.sgd_sent)
 
     def _get_training_data(self, training_dir, id_to_descr, dev, limit, to_print):
-        correct_entries, incorrect_entries = training_set_creator.read_training_entities(training_output=training_dir,
-                                                                                         collect_correct=True,
-                                                                                         collect_incorrect=True)
+        correct_entries, incorrect_entries = training_set_creator.read_training_entities(training_output=training_dir)
 
         entities_by_cluster = dict()
         gold_by_entity = dict()

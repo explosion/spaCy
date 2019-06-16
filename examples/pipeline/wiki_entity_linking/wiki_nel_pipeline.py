@@ -29,7 +29,7 @@ NLP_2_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/nlp_2'
 TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 
 MAX_CANDIDATES = 10
-MIN_ENTITY_FREQ = 200
+MIN_ENTITY_FREQ = 20
 MIN_PAIR_OCC = 5
 DOC_SENT_CUTOFF = 2
 EPOCHS = 10
@@ -47,21 +47,21 @@ def run_pipeline():
     # one-time methods to create KB and write to file
     to_create_prior_probs = False
     to_create_entity_counts = False
-    to_create_kb = True
+    to_create_kb = False
 
     # read KB back in from file
-    to_read_kb = False
+    to_read_kb = True
     to_test_kb = False
 
     # create training dataset
     create_wp_training = False
 
     # train the EL pipe
-    train_pipe = False
-    measure_performance = False
+    train_pipe = True
+    measure_performance = True
 
     # test the EL pipe on a simple example
-    to_test_pipeline = False
+    to_test_pipeline = True
 
     # write the NLP object, read back in and test again
     test_nlp_io = False
@@ -135,46 +135,50 @@ def run_pipeline():
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
         train_limit = 10
         dev_limit = 2
-        print("Training on", train_limit, "articles")
-        print("Dev testing on", dev_limit, "articles")
-        print()
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
                                                         training_dir=TRAINING_DIR,
                                                         dev=False,
-                                                        limit=train_limit,
-                                                        to_print=False)
+                                                        limit=train_limit)
+
+        print("Training on", len(train_data), "articles")
+        print()
+
+        if not train_data:
+            print("Did not find any training data")
+
+        else:
+            for itn in range(EPOCHS):
+                random.shuffle(train_data)
+                losses = {}
+                batches = minibatch(train_data, size=compounding(4.0, 128.0, 1.001))
+                batchnr = 0
+
+                with nlp_2.disable_pipes(*other_pipes):
+                    for batch in batches:
+                        try:
+                            docs, golds = zip(*batch)
+                            nlp_2.update(
+                                docs,
+                                golds,
+                                drop=DROPOUT,
+                                losses=losses,
+                            )
+                            batchnr += 1
+                        except Exception as e:
+                            print("Error updating batch", e)
+
+                losses['entity_linker'] = losses['entity_linker'] / batchnr
+                print("Epoch, train loss", itn, round(losses['entity_linker'], 2))
 
         dev_data = training_set_creator.read_training(nlp=nlp_2,
                                                       training_dir=TRAINING_DIR,
                                                       dev=True,
-                                                      limit=dev_limit,
-                                                      to_print=False)
+                                                      limit=dev_limit)
+        print("Dev testing on", len(dev_data), "articles")
+        print()
 
-        for itn in range(EPOCHS):
-            random.shuffle(train_data)
-            losses = {}
-            batches = minibatch(train_data, size=compounding(4.0, 128.0, 1.001))
-            batchnr = 0
-
-            with nlp_2.disable_pipes(*other_pipes):
-                for batch in batches:
-                    try:
-                        docs, golds = zip(*batch)
-                        nlp_2.update(
-                            docs,
-                            golds,
-                            drop=DROPOUT,
-                            losses=losses,
-                        )
-                        batchnr += 1
-                    except Exception as e:
-                        print("Error updating batch", e)
-
-            losses['entity_linker'] = losses['entity_linker'] / batchnr
-            print("Epoch, train loss", itn, round(losses['entity_linker'], 2))
-
-        if measure_performance:
+        if len(dev_data) and measure_performance:
             print()
             print("STEP 7: performance measurement of Entity Linking pipe", datetime.datetime.now())
             print()

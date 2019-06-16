@@ -104,7 +104,7 @@ def read_wikidata_entities_json(limit=None, to_print=False):
                                 if lang_aliases:
                                     for item in lang_aliases:
                                         if to_print:
-                                            print("alias (" + lang + "):", item["value"])
+                                             print("alias (" + lang + "):", item["value"])
 
                         if to_print:
                             print()
