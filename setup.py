@@ -233,7 +233,7 @@ def setup_package():
                 "plac<1.0.0,>=0.9.6",
                 "requests>=2.13.0,<3.0.0",
                 "wasabi>=0.2.0,<1.1.0",
-                "srsly>=0.0.5,<1.1.0",
+                "srsly>=0.0.6,<1.1.0",
                 'pathlib==1.0.1; python_version < "3.4"',
             ],
             setup_requires=["wheel"],

@@ -19,6 +19,7 @@ def patterns():
         {"label": "BYE", "pattern": [{"LOWER": "bye"}, {"LOWER": "bye"}]},
         {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}]},
         {"label": "COMPLEX", "pattern": [{"ORTH": "foo", "OP": "*"}]},
+        {"label": "TECH_ORG", "pattern": "Apple", "id": "a1"},
     ]
 
 
@@ -34,7 +35,7 @@ def add_ent():
 def test_entity_ruler_init(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns)
     assert len(ruler) == len(patterns)
-    assert len(ruler.labels) == 3
+    assert len(ruler.labels) == 4
     assert "HELLO" in ruler
     assert "BYE" in ruler
     nlp.add_pipe(ruler)
@@ -77,14 +78,33 @@ def test_entity_ruler_existing_complex(nlp, patterns, add_ent):
     assert len(doc.ents[1]) == 2
 
 
+def test_entity_ruler_entity_id(nlp, patterns):
+    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
+    nlp.add_pipe(ruler)
+    doc = nlp("Apple is a technology company")
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "TECH_ORG"
+    assert doc.ents[0].ent_id_ == "a1"
+
+
+def test_entity_ruler_cfg_ent_id_sep(nlp, patterns):
+    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True, ent_id_sep="**")
+    assert "TECH_ORG**a1" in ruler.phrase_patterns
+    nlp.add_pipe(ruler)
+    doc = nlp("Apple is a technology company")
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "TECH_ORG"
+    assert doc.ents[0].ent_id_ == "a1"
+
+
 def test_entity_ruler_serialize_bytes(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns)
     assert len(ruler) == len(patterns)
-    assert len(ruler.labels) == 3
+    assert len(ruler.labels) == 4
     ruler_bytes = ruler.to_bytes()
     new_ruler = EntityRuler(nlp)
     assert len(new_ruler) == 0
     assert len(new_ruler.labels) == 0
     new_ruler = new_ruler.from_bytes(ruler_bytes)
     assert len(ruler) == len(patterns)
-    assert len(ruler.labels) == 3
+    assert len(ruler.labels) == 4

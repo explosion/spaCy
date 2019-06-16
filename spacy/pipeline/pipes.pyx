@@ -13,6 +13,7 @@ from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical, copy_array
 
+from .functions import merge_subtokens
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -1000,7 +1001,7 @@ cdef class DependencyParser(Parser):
 
     @property
     def postprocesses(self):
-        return [nonproj.deprojectivize]
+        return [nonproj.deprojectivize, merge_subtokens]
 
     def add_multitask_objective(self, target):
         if target == "cloze":
