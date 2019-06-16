@@ -13,6 +13,7 @@ from thinc.neural.util import prefer_gpu, get_array_module
 from wasabi import Printer
 import srsly
 
+from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
@@ -101,6 +102,8 @@ def pretrain(
             msg.fail("Input text file doesn't exist", texts_loc, exits=1)
         with msg.loading("Loading input texts..."):
             texts = list(srsly.read_jsonl(texts_loc))
+        if not texts:
+            msg.fail("Input file is empty", texts_loc, exits=1)
         msg.good("Loaded input texts")
         random.shuffle(texts)
     else:  # reading from stdin
@@ -149,16 +152,18 @@ def pretrain(
             with (output_dir / "log.jsonl").open("a") as file_:
                 file_.write(srsly.json_dumps(log) + "\n")
 
+    skip_counter = 0
     for epoch in range(n_iter):
         for batch_id, batch in enumerate(
             util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
         ):
-            docs = make_docs(
+            docs, count = make_docs(
                 nlp,
                 [text for (text, _) in batch],
                 max_length=max_length,
                 min_length=min_length,
             )
+            skip_counter += count
             loss = make_update(
                 model, docs, optimizer, objective=loss_func, drop=dropout
             )
@@ -174,6 +179,9 @@ def pretrain(
         if texts_loc != "-":
             # Reshuffle the texts if texts were loaded from a file
             random.shuffle(texts)
+    if skip_counter > 0:
+        msg.warn("Skipped {count} empty values".format(count=str(skip_counter)))
+    msg.good("Successfully finished pretrain")
 
 
 def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
@@ -195,12 +203,24 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
 
 def make_docs(nlp, batch, min_length, max_length):
     docs = []
+    skip_count = 0
     for record in batch:
+        if not isinstance(record, dict):
+            raise TypeError(Errors.E137.format(type=type(record), line=record))
         if "tokens" in record:
-            doc = Doc(nlp.vocab, words=record["tokens"])
-        else:
+            words = record["tokens"]
+            if not words:
+                skip_count += 1
+                continue
+            doc = Doc(nlp.vocab, words=words)
+        elif "text" in record:
             text = record["text"]
+            if not text:
+                skip_count += 1
+                continue
             doc = nlp.make_doc(text)
+        else:
+            raise ValueError(Errors.E138.format(text=record))
         if "heads" in record:
             heads = record["heads"]
             heads = numpy.asarray(heads, dtype="uint64")
@@ -208,7 +228,7 @@ def make_docs(nlp, batch, min_length, max_length):
             doc = doc.from_array([HEAD], heads)
         if len(doc) >= min_length and len(doc) < max_length:
             docs.append(doc)
-    return docs
+    return docs, skip_count
 
 
 def get_vectors_loss(ops, docs, prediction, objective="L2"):

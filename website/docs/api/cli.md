@@ -291,7 +291,7 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 
 | Argument                | Type       | Description                                                                                                                       |
 | ----------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `texts_loc`             | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"`. [See here](#pretrain-jsonl) for details. |
+| `texts_loc`             | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `tokens`. [See here](#pretrain-jsonl) for details. |
 | `vectors_model`         | positional | Name or path to spaCy model with vectors to learn from.                                                                           |
 | `output_dir`            | positional | Directory to write models to on each epoch.                                                                                       |
 | `--width`, `-cw`        | option     | Width of CNN layers.                                                                                                              |
