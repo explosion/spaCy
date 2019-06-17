@@ -294,7 +294,6 @@ def read_training(nlp, training_dir, dev, limit):
     # we assume the data is written sequentially
     current_article_id = None
     current_doc = None
-    gold_entities = list()
     ents_by_offset = dict()
     skip_articles = set()
     total_entities = 0
@@ -302,8 +301,6 @@ def read_training(nlp, training_dir, dev, limit):
     with open(entityfile_loc, mode='r', encoding='utf8') as file:
         for line in file:
             if not limit or len(data) < limit:
-                if len(data) > 0 and len(data) % 50 == 0:
-                    print("Read", total_entities, "entities in", len(data), "articles")
                 fields = line.replace('\n', "").split(sep='|')
                 article_id = fields[0]
                 alias = fields[1]
@@ -313,34 +310,42 @@ def read_training(nlp, training_dir, dev, limit):
 
                 if dev == is_dev(article_id) and article_id != "article_id" and article_id not in skip_articles:
                     if not current_doc or (current_article_id != article_id):
-                        # store the data from the previous article
-                        if gold_entities and current_doc:
-                            gold = GoldParse(doc=current_doc, links=gold_entities)
-                            data.append((current_doc, gold))
-                            total_entities += len(gold_entities)
-
                         # parse the new article text
                         file_name = article_id + ".txt"
                         try:
                             with open(os.path.join(training_dir, file_name), mode="r", encoding='utf8') as f:
                                 text = f.read()
-                                current_doc = nlp(text)
-                                for ent in current_doc.ents:
-                                    ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent.text
+                                if len(text) < 30000:   # threshold for convenience / speed of processing
+                                    current_doc = nlp(text)
+                                    current_article_id = article_id
+                                    ents_by_offset = dict()
+                                    for ent in current_doc.ents:
+                                        ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
+                                else:
+                                    skip_articles.add(current_article_id)
+                                    current_doc = None
                         except Exception as e:
                             print("Problem parsing article", article_id, e)
-
-                        current_article_id = article_id
-                        gold_entities = list()
 
                     # repeat checking this condition in case an exception was thrown
                     if current_doc and (current_article_id == article_id):
                         found_ent = ents_by_offset.get(start + "_" + end,  None)
                         if found_ent:
-                            if found_ent != alias:
+                            if found_ent.text != alias:
                                 skip_articles.add(current_article_id)
+                                current_doc = None
                             else:
-                                gold_entities.append((int(start), int(end), wp_title))
+                                sent = found_ent.sent.as_doc()
+                                # currently feeding the gold data one entity per sentence at a time
+                                gold_start = int(start) - found_ent.sent.start_char
+                                gold_end = int(end) - found_ent.sent.start_char
+                                gold_entities = list()
+                                gold_entities.append((gold_start, gold_end, wp_title))
+                                gold = GoldParse(doc=current_doc, links=gold_entities)
+                                data.append((sent, gold))
+                                total_entities += 1
+                                if len(data) % 500 == 0:
+                                    print(" -read", total_entities, "entities")
 
-    print("Read", total_entities, "entities in", len(data), "articles")
+    print(" -read", total_entities, "entities")
     return data

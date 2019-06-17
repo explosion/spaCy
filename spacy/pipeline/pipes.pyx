@@ -1079,36 +1079,39 @@ class EntityLinker(Pipe):
 
         embed_width = cfg.get("embed_width", 300)
         hidden_width = cfg.get("hidden_width", 32)
-        article_width = cfg.get("article_width", 128)
-        sent_width = cfg.get("sent_width", 64)
         entity_width = cfg.get("entity_width")  # no default because this needs to correspond with the KB
+        sent_width = entity_width
 
-        article_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=article_width, **cfg)
-        sent_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=sent_width, **cfg)
+        model = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=sent_width, **cfg)
 
         # dimension of the mention encoder needs to match the dimension of the entity encoder
-        mention_width = article_width + sent_width
-        mention_encoder = Affine(entity_width, mention_width, drop_factor=0.0)
+        # article_width = cfg.get("article_width", 128)
+        # sent_width = cfg.get("sent_width", 64)
+        # article_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=article_width, **cfg)
+        # mention_width = article_width + sent_width
+        # mention_encoder = Affine(entity_width, mention_width, drop_factor=0.0)
+        # return article_encoder, sent_encoder, mention_encoder
 
-        return article_encoder, sent_encoder, mention_encoder
+        return model
 
     def __init__(self, **cfg):
-        self.article_encoder = True
-        self.sent_encoder = True
-        self.mention_encoder = True
+        # self.article_encoder = True
+        # self.sent_encoder = True
+        # self.mention_encoder = True
+        self.model = True
         self.kb = None
         self.cfg = dict(cfg)
         self.doc_cutoff = self.cfg.get("doc_cutoff", 5)
-        self.sgd_article = None
-        self.sgd_sent = None
-        self.sgd_mention = None
+        # self.sgd_article = None
+        # self.sgd_sent = None
+        # self.sgd_mention = None
 
     def set_kb(self, kb):
         self.kb = kb
 
     def require_model(self):
         # Raise an error if the component's model is not initialized.
-        if getattr(self, "mention_encoder", None) in (None, True, False):
+        if getattr(self, "model", None) in (None, True, False):
             raise ValueError(Errors.E109.format(name=self.name))
 
     def require_kb(self):
@@ -1121,12 +1124,19 @@ class EntityLinker(Pipe):
         self.require_kb()
         self.cfg["entity_width"] = self.kb.entity_vector_length
 
-        if self.mention_encoder is True:
-            self.article_encoder, self.sent_encoder, self.mention_encoder = self.Model(**self.cfg)
-        self.sgd_article = create_default_optimizer(self.article_encoder.ops)
-        self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
-        self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
-        return self.sgd_article
+        if self.model is True:
+            self.model = self.Model(**self.cfg)
+
+        if sgd is None:
+            sgd = self.create_optimizer()
+        return sgd
+
+        # if self.mention_encoder is True:
+        #    self.article_encoder, self.sent_encoder, self.mention_encoder = self.Model(**self.cfg)
+        # self.sgd_article = create_default_optimizer(self.article_encoder.ops)
+        # self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
+        # self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
+        # return self.sgd_article
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
         self.require_model()
@@ -1146,7 +1156,7 @@ class EntityLinker(Pipe):
             docs = [docs]
             golds = [golds]
 
-        article_docs = list()
+        # article_docs = list()
         sentence_docs = list()
         entity_encodings = list()
 
@@ -1173,34 +1183,32 @@ class EntityLinker(Pipe):
                     if kb_id == gold_kb:
                         prior_prob = c.prior_prob
                         entity_encoding = c.entity_vector
-
                         entity_encodings.append(entity_encoding)
-                        article_docs.append(first_par)
+                        # article_docs.append(first_par)
                         sentence_docs.append(sentence)
 
         if len(entity_encodings) > 0:
-            doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
-            sent_encodings, bp_sent = self.sent_encoder.begin_update(sentence_docs, drop=drop)
+            # doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
+            # sent_encodings, bp_sent = self.sent_encoder.begin_update(sentence_docs, drop=drop)
 
-            concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) for i in
-                                range(len(article_docs))]
-            mention_encodings, bp_mention = self.mention_encoder.begin_update(np.asarray(concat_encodings), drop=drop)
+            # concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) for i in range(len(article_docs))]
+            # mention_encodings, bp_mention = self.mention_encoder.begin_update(np.asarray(concat_encodings), drop=drop)
 
+            sent_encodings, bp_sent = self.model.begin_update(sentence_docs, drop=drop)
             entity_encodings = np.asarray(entity_encodings, dtype=np.float32)
 
-            loss, d_scores = self.get_loss(scores=mention_encodings, golds=entity_encodings, docs=None)
-            mention_gradient = bp_mention(d_scores, sgd=self.sgd_mention)
+            loss, d_scores = self.get_loss(scores=sent_encodings, golds=entity_encodings, docs=None)
+            bp_sent(d_scores, sgd=sgd)
 
             # gradient : concat (doc+sent) vs. desc
-            sent_start = self.article_encoder.nO
-            sent_gradients = list()
-            doc_gradients = list()
-            for x in mention_gradient:
-                doc_gradients.append(list(x[0:sent_start]))
-                sent_gradients.append(list(x[sent_start:]))
-
-            bp_doc(doc_gradients, sgd=self.sgd_article)
-            bp_sent(sent_gradients, sgd=self.sgd_sent)
+            # sent_start = self.article_encoder.nO
+            # sent_gradients = list()
+            # doc_gradients = list()
+            # for x in mention_gradient:
+                # doc_gradients.append(list(x[0:sent_start]))
+                # sent_gradients.append(list(x[sent_start:]))
+            # bp_doc(doc_gradients, sgd=self.sgd_article)
+            # bp_sent(sent_gradients, sgd=self.sgd_sent)
 
             if losses is not None:
                 losses[self.name] += loss
@@ -1262,14 +1270,17 @@ class EntityLinker(Pipe):
                         first_par_end = sent.end
                 first_par = doc[0:first_par_end].as_doc()
 
-                doc_encoding = self.article_encoder([first_par])
+                # doc_encoding = self.article_encoder([first_par])
                 for ent in doc.ents:
                     sent_doc = ent.sent.as_doc()
                     if len(sent_doc) > 0:
-                        sent_encoding = self.sent_encoder([sent_doc])
-                        concat_encoding = [list(doc_encoding[0]) + list(sent_encoding[0])]
-                        mention_encoding = self.mention_encoder(np.asarray([concat_encoding[0]]))
-                        mention_enc_t = np.transpose(mention_encoding)
+                        # sent_encoding = self.sent_encoder([sent_doc])
+                        # concat_encoding = [list(doc_encoding[0]) + list(sent_encoding[0])]
+                        # mention_encoding = self.mention_encoder(np.asarray([concat_encoding[0]]))
+                        # mention_enc_t = np.transpose(mention_encoding)
+
+                        sent_encoding = self.model([sent_doc])
+                        sent_enc_t = np.transpose(sent_encoding)
 
                         candidates = self.kb.get_candidates(ent.text)
                         if candidates:
@@ -1278,7 +1289,7 @@ class EntityLinker(Pipe):
                                 prior_prob = c.prior_prob * self.prior_weight
                                 kb_id = c.entity_
                                 entity_encoding = c.entity_vector
-                                sim = float(cosine(np.asarray([entity_encoding]), mention_enc_t)) * self.context_weight
+                                sim = float(cosine(np.asarray([entity_encoding]), sent_enc_t)) * self.context_weight
                                 score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
                                 scores.append(score)
 
@@ -1299,34 +1310,20 @@ class EntityLinker(Pipe):
         serialize = OrderedDict()
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["kb"] = lambda p: self.kb.dump(p)
-        if self.mention_encoder not in (None, True, False):
-            serialize["article_encoder"] = lambda p: p.open("wb").write(self.article_encoder.to_bytes())
-            serialize["sent_encoder"] = lambda p: p.open("wb").write(self.sent_encoder.to_bytes())
-            serialize["mention_encoder"] = lambda p: p.open("wb").write(self.mention_encoder.to_bytes())
+        if self.model not in (None, True, False):
+            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
-        def load_article_encoder(p):
-            if self.article_encoder is True:
-                self.article_encoder, _, _ = self.Model(**self.cfg)
-            self.article_encoder.from_bytes(p.open("rb").read())
-
-        def load_sent_encoder(p):
-            if self.sent_encoder is True:
-                _, self.sent_encoder, _ = self.Model(**self.cfg)
-            self.sent_encoder.from_bytes(p.open("rb").read())
-
-        def load_mention_encoder(p):
-             if self.mention_encoder is True:
-                _, _, self.mention_encoder = self.Model(**self.cfg)
-             self.mention_encoder.from_bytes(p.open("rb").read())
+        def load_model(p):
+             if self.model is True:
+                self.model = self.Model(**self.cfg)
+             self.model.from_bytes(p.open("rb").read())
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
-        deserialize["article_encoder"] = load_article_encoder
-        deserialize["sent_encoder"] = load_sent_encoder
-        deserialize["mention_encoder"] = load_mention_encoder
+        deserialize["model"] = load_model
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_disk(path, deserialize, exclude)
         return self

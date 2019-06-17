@@ -9,7 +9,6 @@ from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_
 from examples.pipeline.wiki_entity_linking.kb_creator import DESC_WIDTH
 
 import spacy
-from spacy.vocab import Vocab
 from spacy.kb import KnowledgeBase
 import datetime
 
@@ -64,8 +63,8 @@ def run_pipeline():
     to_test_pipeline = True
 
     # write the NLP object, read back in and test again
-    to_write_nlp = True
-    to_read_nlp = True
+    to_write_nlp = False
+    to_read_nlp = False
 
     # STEP 1 : create prior probabilities from WP
     # run only once !
@@ -134,8 +133,8 @@ def run_pipeline():
 
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
-        train_limit = 5
-        dev_limit = 2
+        train_limit = 25000
+        dev_limit = 1000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
                                                         training_dir=TRAINING_DIR,
@@ -345,7 +344,11 @@ def calculate_acc(correct_by_label, incorrect_by_label):
     acc_by_label = dict()
     total_correct = 0
     total_incorrect = 0
-    for label, correct in correct_by_label.items():
+    all_keys = set()
+    all_keys.update(correct_by_label.keys())
+    all_keys.update(incorrect_by_label.keys())
+    for label in sorted(all_keys):
+        correct = correct_by_label.get(label, 0)
         incorrect = incorrect_by_label.get(label, 0)
         total_correct += correct
         total_incorrect += incorrect
