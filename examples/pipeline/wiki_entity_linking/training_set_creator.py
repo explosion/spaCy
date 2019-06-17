@@ -5,11 +5,8 @@ import os
 import re
 import bz2
 import datetime
-from os import listdir
 
-from examples.pipeline.wiki_entity_linking import run_el
 from spacy.gold import GoldParse
-from spacy.matcher import PhraseMatcher
 from . import wikipedia_processor as wp, kb_creator
 
 """
@@ -17,7 +14,7 @@ Process Wikipedia interlinks to generate a training dataset for the EL algorithm
 """
 
 # ENTITY_FILE = "gold_entities.csv"
-ENTITY_FILE = "gold_entities_100000.csv"   # use this file for faster processing
+ENTITY_FILE = "gold_entities_1000000.csv"   # use this file for faster processing
 
 
 def create_training(entity_def_input, training_output):
@@ -58,7 +55,6 @@ def _process_wikipedia_texts(wp_to_id, training_output, limit=None):
                 if cnt % 1000000 == 0:
                     print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
                 clean_line = line.strip().decode("utf-8")
-                # print(clean_line)
 
                 if clean_line == "<revision>":
                     reading_revision = True
@@ -121,7 +117,6 @@ text_regex = re.compile(r'(?<=<text xml:space=\"preserve\">).*(?=</text)')
 
 def _process_wp_text(wp_to_id, entityfile, article_id, article_title, article_text, training_output):
     found_entities = False
-    # print("Processing", article_id, article_title)
 
     # ignore meta Wikipedia pages
     if article_title.startswith("Wikipedia:"):
@@ -134,13 +129,8 @@ def _process_wp_text(wp_to_id, entityfile, article_id, article_title, article_te
     if text.startswith("#REDIRECT"):
         return
 
-    # print()
-    # print(text)
-
     # get the raw text without markup etc, keeping only interwiki links
     clean_text = _get_clean_wp_text(text)
-    # print()
-    # print(clean_text)
 
     # read the text char by char to get the right offsets of the interwiki links
     final_text = ""
@@ -295,68 +285,62 @@ def is_dev(article_id):
     return article_id.endswith("3")
 
 
-def read_training_entities(training_output, dev, limit):
-    entityfile_loc = training_output + "/" + ENTITY_FILE
-    entries_per_article = dict()
-    article_ids = set()
-
-    with open(entityfile_loc, mode='r', encoding='utf8') as file:
-        for line in file:
-            if not limit or len(article_ids) < limit:
-                fields = line.replace('\n', "").split(sep='|')
-                article_id = fields[0]
-                if dev == is_dev(article_id) and article_id != "article_id":
-                    article_ids.add(article_id)
-
-                    alias = fields[1]
-                    wp_title = fields[2]
-                    start = fields[3]
-                    end = fields[4]
-
-                    entries_by_offset = entries_per_article.get(article_id, dict())
-                    entries_by_offset[start + "-" + end] = (alias, wp_title)
-
-                    entries_per_article[article_id] = entries_by_offset
-
-    return entries_per_article
-
-
 def read_training(nlp, training_dir, dev, limit):
     # This method provides training examples that correspond to the entity annotations found by the nlp object
 
-    print("reading training entities")
-    entries_per_article = read_training_entities(training_output=training_dir, dev=dev, limit=limit)
-    print("done reading training entities")
-
+    entityfile_loc = training_dir + "/" + ENTITY_FILE
     data = []
-    for article_id, entries_by_offset in entries_per_article.items():
-        file_name = article_id + ".txt"
-        try:
-            # parse the article text
-            with open(os.path.join(training_dir, file_name), mode="r", encoding='utf8') as file:
-                text = file.read()
-                article_doc = nlp(text)
 
-            gold_entities = list()
-            for ent in article_doc.ents:
-                start = ent.start_char
-                end = ent.end_char
+    # we assume the data is written sequentially
+    current_article_id = None
+    current_doc = None
+    gold_entities = list()
+    ents_by_offset = dict()
+    skip_articles = set()
+    total_entities = 0
 
-                entity_tuple = entries_by_offset.get(str(start) + "-" + str(end), None)
-                if entity_tuple:
-                    alias, wp_title = entity_tuple
-                    if ent.text != alias:
-                        print("Non-matching entity in", article_id, start, end)
-                    else:
-                        gold_entities.append((start, end, wp_title))
+    with open(entityfile_loc, mode='r', encoding='utf8') as file:
+        for line in file:
+            if not limit or len(data) < limit:
+                if len(data) > 0 and len(data) % 50 == 0:
+                    print("Read", total_entities, "entities in", len(data), "articles")
+                fields = line.replace('\n', "").split(sep='|')
+                article_id = fields[0]
+                alias = fields[1]
+                wp_title = fields[2]
+                start = fields[3]
+                end = fields[4]
 
-            if gold_entities:
-                gold = GoldParse(doc=article_doc, links=gold_entities)
-                data.append((article_doc, gold))
+                if dev == is_dev(article_id) and article_id != "article_id" and article_id not in skip_articles:
+                    if not current_doc or (current_article_id != article_id):
+                        # store the data from the previous article
+                        if gold_entities and current_doc:
+                            gold = GoldParse(doc=current_doc, links=gold_entities)
+                            data.append((current_doc, gold))
+                            total_entities += len(gold_entities)
 
-        except Exception as e:
-            print("Problem parsing article", article_id)
-            print(e)
-            raise e
+                        # parse the new article text
+                        file_name = article_id + ".txt"
+                        try:
+                            with open(os.path.join(training_dir, file_name), mode="r", encoding='utf8') as f:
+                                text = f.read()
+                                current_doc = nlp(text)
+                                for ent in current_doc.ents:
+                                    ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent.text
+                        except Exception as e:
+                            print("Problem parsing article", article_id, e)
 
+                        current_article_id = article_id
+                        gold_entities = list()
+
+                    # repeat checking this condition in case an exception was thrown
+                    if current_doc and (current_article_id == article_id):
+                        found_ent = ents_by_offset.get(start + "_" + end,  None)
+                        if found_ent:
+                            if found_ent != alias:
+                                skip_articles.add(current_article_id)
+                            else:
+                                gold_entities.append((int(start), int(end), wp_title))
+
+    print("Read", total_entities, "entities in", len(data), "articles")
     return data
