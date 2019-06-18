@@ -250,6 +250,8 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
         loss = (d_target ** 2).sum()
     elif objective == "cosine":
         loss, d_target = get_cossim_loss(prediction, target)
+    else:
+        raise ValueError(Errors.E139.format(loss_func=objective))
     return loss, d_target
 
 
