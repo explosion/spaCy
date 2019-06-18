@@ -30,7 +30,7 @@ from .train import _load_pretrained_tok2vec
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
-    loss_func=("Loss function to use for the objective. Either 'L2 or cosine", "option", "L", str),
+    loss_func=("Loss function to use for the objective. Either 'L2' or 'cosine'", "option", "L", str),
     use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
     dropout=("Dropout rate", "option", "d", float),
     batch_size=("Number of words per training batch", "option", "bs", int),
