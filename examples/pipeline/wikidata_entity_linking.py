@@ -5,8 +5,8 @@ import random
 
 from spacy.util import minibatch, compounding
 
-from examples.pipeline.wiki_entity_linking import wikipedia_processor as wp, kb_creator, training_set_creator, run_el
-from examples.pipeline.wiki_entity_linking.kb_creator import DESC_WIDTH
+from bin.wiki_entity_linking import training_set_creator, kb_creator, wikipedia_processor as wp
+from bin.wiki_entity_linking.kb_creator import DESC_WIDTH
 
 import spacy
 from spacy.kb import KnowledgeBase
@@ -30,9 +30,11 @@ TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
 MAX_CANDIDATES = 10
 MIN_ENTITY_FREQ = 20
 MIN_PAIR_OCC = 5
-DOC_SENT_CUTOFF = 2
+
 EPOCHS = 10
 DROPOUT = 0.1
+LEARN_RATE = 0.005
+L2 = 1e-6
 
 
 def run_pipeline():
@@ -40,7 +42,6 @@ def run_pipeline():
     print()
     nlp_1 = spacy.load('en_core_web_lg')
     nlp_2 = None
-    kb_1 = None
     kb_2 = None
 
     # one-time methods to create KB and write to file
@@ -114,7 +115,7 @@ def run_pipeline():
 
         # test KB
         if to_test_kb:
-            test_kb(kb_2)
+            check_kb(kb_2)
             print()
 
     # STEP 5: create a training dataset from WP
@@ -122,19 +123,21 @@ def run_pipeline():
         print("STEP 5: create training dataset", datetime.datetime.now())
         training_set_creator.create_training(entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
 
-    # STEP 6: create the entity linking pipe
-    el_pipe = nlp_2.create_pipe(name='entity_linker', config={"doc_cutoff": DOC_SENT_CUTOFF})
+    # STEP 6: create and train the entity linking pipe
+    el_pipe = nlp_2.create_pipe(name='entity_linker', config={})
     el_pipe.set_kb(kb_2)
     nlp_2.add_pipe(el_pipe, last=True)
 
     other_pipes = [pipe for pipe in nlp_2.pipe_names if pipe != "entity_linker"]
     with nlp_2.disable_pipes(*other_pipes):  # only train Entity Linking
-        nlp_2.begin_training()
+        optimizer = nlp_2.begin_training()
+        optimizer.learn_rate = LEARN_RATE
+        optimizer.L2 = L2
 
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
         train_limit = 25000
-        dev_limit = 1000
+        dev_limit = 5000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
                                                         training_dir=TRAINING_DIR,
@@ -142,6 +145,14 @@ def run_pipeline():
                                                         limit=train_limit)
 
         print("Training on", len(train_data), "articles")
+        print()
+
+        dev_data = training_set_creator.read_training(nlp=nlp_2,
+                                                      training_dir=TRAINING_DIR,
+                                                      dev=True,
+                                                      limit=dev_limit)
+
+        print("Dev testing on", len(dev_data), "articles")
         print()
 
         if not train_data:
@@ -161,53 +172,55 @@ def run_pipeline():
                             nlp_2.update(
                                 docs,
                                 golds,
+                                sgd=optimizer,
                                 drop=DROPOUT,
                                 losses=losses,
                             )
                             batchnr += 1
                         except Exception as e:
                             print("Error updating batch:", e)
-                            raise(e)
 
                 if batchnr > 0:
-                    losses['entity_linker'] = losses['entity_linker'] / batchnr
-                    print("Epoch, train loss", itn, round(losses['entity_linker'], 2))
+                    with el_pipe.model.use_params(optimizer.averages):
+                        el_pipe.context_weight = 1
+                        el_pipe.prior_weight = 0
+                        dev_acc_context, dev_acc_context_dict = _measure_accuracy(dev_data, el_pipe)
+                        losses['entity_linker'] = losses['entity_linker'] / batchnr
+                        print("Epoch, train loss", itn, round(losses['entity_linker'], 2),
+                              " / dev acc context avg", round(dev_acc_context, 3))
 
-        dev_data = training_set_creator.read_training(nlp=nlp_2,
-                                                      training_dir=TRAINING_DIR,
-                                                      dev=True,
-                                                      limit=dev_limit)
-
-        print()
-        print("Dev testing on", len(dev_data), "articles")
-
+        # STEP 7: measure the performance of our trained pipe on an independent dev set
         if len(dev_data) and measure_performance:
             print()
             print("STEP 7: performance measurement of Entity Linking pipe", datetime.datetime.now())
             print()
 
-            acc_random, acc_random_by_label, acc_prior, acc_prior_by_label, acc_oracle, acc_oracle_by_label = _measure_baselines(dev_data, kb_2)
-            print("dev acc oracle:", round(acc_oracle, 3), [(x, round(y, 3)) for x, y in acc_oracle_by_label.items()])
-            print("dev acc random:", round(acc_random, 3), [(x, round(y, 3)) for x, y in acc_random_by_label.items()])
-            print("dev acc prior:", round(acc_prior, 3), [(x, round(y, 3)) for x, y in acc_prior_by_label.items()])
+            acc_r, acc_r_by_label, acc_p, acc_p_by_label, acc_o, acc_o_by_label = _measure_baselines(dev_data, kb_2)
+            print("dev acc oracle:", round(acc_o, 3), [(x, round(y, 3)) for x, y in acc_o_by_label.items()])
+            print("dev acc random:", round(acc_r, 3), [(x, round(y, 3)) for x, y in acc_r_by_label.items()])
+            print("dev acc prior:", round(acc_p, 3), [(x, round(y, 3)) for x, y in acc_p_by_label.items()])
 
-            # print(" measuring accuracy 1-1")
-            el_pipe.context_weight = 1
-            el_pipe.prior_weight = 1
-            dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe)
-            print("dev acc combo:", round(dev_acc_combo, 3), [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])
+            with el_pipe.model.use_params(optimizer.averages):
+                # measuring combined accuracy (prior + context)
+                el_pipe.context_weight = 1
+                el_pipe.prior_weight = 1
+                dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe)
+                print("dev acc combo avg:", round(dev_acc_combo, 3),
+                      [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])
 
-            # using only context
-            el_pipe.context_weight = 1
-            el_pipe.prior_weight = 0
-            dev_acc_context, dev_acc_1_0_dict = _measure_accuracy(dev_data, el_pipe)
-            print("dev acc context:", round(dev_acc_context, 3), [(x, round(y, 3)) for x, y in dev_acc_1_0_dict.items()])
-            print()
+                # using only context
+                el_pipe.context_weight = 1
+                el_pipe.prior_weight = 0
+                dev_acc_context, dev_acc_context_dict = _measure_accuracy(dev_data, el_pipe)
+                print("dev acc context avg:", round(dev_acc_context, 3),
+                      [(x, round(y, 3)) for x, y in dev_acc_context_dict.items()])
+                print()
 
             # reset for follow-up tests
             el_pipe.context_weight = 1
             el_pipe.prior_weight = 1
 
+    # STEP 8: apply the EL pipe on a toy example
     if to_test_pipeline:
         print()
         print("STEP 8: applying Entity Linking to toy example", datetime.datetime.now())
@@ -215,6 +228,7 @@ def run_pipeline():
         run_el_toy_example(nlp=nlp_2)
         print()
 
+    # STEP 9: write the NLP pipeline (including entity linker) to file
     if to_write_nlp:
         print()
         print("STEP 9: testing NLP IO", datetime.datetime.now())
@@ -225,6 +239,7 @@ def run_pipeline():
         print("reading from", NLP_2_DIR)
         nlp_3 = spacy.load(NLP_2_DIR)
 
+        # verify that the IO has gone correctly
         if to_read_nlp:
             print()
             print("running toy example with NLP 2")
@@ -272,6 +287,7 @@ def _measure_accuracy(data, el_pipe):
 
 
 def _measure_baselines(data, kb):
+    # Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound
     random_correct_by_label = dict()
     random_incorrect_by_label = dict()
 
@@ -362,7 +378,7 @@ def calculate_acc(correct_by_label, incorrect_by_label):
     return acc, acc_by_label
 
 
-def test_kb(kb):
+def check_kb(kb):
     for mention in ("Bush", "Douglas Adams", "Homer", "Brazil", "China"):
         candidates = kb.get_candidates(mention)
 
@@ -384,7 +400,7 @@ def run_el_toy_example(nlp):
     print()
 
     # Q4426480 is her husband
-    text = "Ada Lovelace was the countess of Lovelace. She is known for her programming work on the analytical engine. "\
+    text = "Ada Lovelace was the countess of Lovelace. She's known for her programming work on the analytical engine. "\
            "She loved her husband William King dearly. "
     doc = nlp(text)
     print(text)
@@ -393,7 +409,7 @@ def run_el_toy_example(nlp):
     print()
 
     # Q3568763 is her tutor
-    text = "Ada Lovelace was the countess of Lovelace. She is known for her programming work on the analytical engine. "\
+    text = "Ada Lovelace was the countess of Lovelace. She's known for her programming work on the analytical engine. "\
            "She was tutored by her favorite physics tutor William King."
     doc = nlp(text)
     print(text)

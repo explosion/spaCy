@@ -7,7 +7,7 @@ import bz2
 import datetime
 
 from spacy.gold import GoldParse
-from . import wikipedia_processor as wp, kb_creator
+from bin.wiki_entity_linking import kb_creator, wikipedia_processor as wp
 
 """
 Process Wikipedia interlinks to generate a training dataset for the EL algorithm
@@ -18,7 +18,7 @@ ENTITY_FILE = "gold_entities_1000000.csv"   # use this file for faster processin
 
 
 def create_training(entity_def_input, training_output):
-    wp_to_id = kb_creator._get_entity_to_id(entity_def_input)
+    wp_to_id = kb_creator.get_entity_to_id(entity_def_input)
     _process_wikipedia_texts(wp_to_id, training_output, limit=None)
 
 
@@ -71,7 +71,8 @@ def _process_wikipedia_texts(wp_to_id, training_output, limit=None):
                 elif clean_line == "</page>":
                     if article_id:
                         try:
-                            _process_wp_text(wp_to_id, entityfile, article_id, article_title, article_text.strip(), training_output)
+                            _process_wp_text(wp_to_id, entityfile, article_id, article_title, article_text.strip(),
+                                             training_output)
                         except Exception as e:
                             print("Error processing article", article_id, article_title, e)
                     else:

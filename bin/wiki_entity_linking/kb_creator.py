@@ -1,15 +1,13 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import spacy
-from examples.pipeline.wiki_entity_linking.train_descriptions import EntityEncoder
+from bin.wiki_entity_linking.train_descriptions import EntityEncoder
 from spacy.kb import KnowledgeBase
 
 import csv
 import datetime
 
-from . import wikipedia_processor as wp
-from . import wikidata_processor as wd
+from bin.wiki_entity_linking import wikidata_processor as wd, wikipedia_processor as wp
 
 INPUT_DIM = 300  # dimension of pre-trained vectors
 DESC_WIDTH = 64
@@ -34,7 +32,7 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
 
     else:
         # read the mappings from file
-        title_to_id = _get_entity_to_id(entity_def_output)
+        title_to_id = get_entity_to_id(entity_def_output)
         id_to_descr = _get_id_to_description(entity_descr_output)
 
     print()
@@ -56,7 +54,8 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
             frequency_list.append(freq)
             filtered_title_to_id[title] = entity
 
-    print("Kept", len(filtered_title_to_id.keys()), "out of", len(title_to_id.keys()), "titles with filter frequency", min_entity_freq)
+    print("Kept", len(filtered_title_to_id.keys()), "out of", len(title_to_id.keys()),
+          "titles with filter frequency", min_entity_freq)
 
     print()
     print(" * train entity encoder", datetime.datetime.now())
@@ -101,7 +100,7 @@ def _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_
             descr_file.write(str(qid) + "|" + descr + "\n")
 
 
-def _get_entity_to_id(entity_def_output):
+def get_entity_to_id(entity_def_output):
     entity_to_id = dict()
     with open(entity_def_output, 'r', encoding='utf8') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='|')

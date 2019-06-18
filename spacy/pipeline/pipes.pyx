@@ -1078,33 +1078,19 @@ class EntityLinker(Pipe):
             raise ValueError("entity_width not found")
 
         embed_width = cfg.get("embed_width", 300)
-        hidden_width = cfg.get("hidden_width", 32)
-        entity_width = cfg.get("entity_width")  # no default because this needs to correspond with the KB
-        sent_width = entity_width
+        hidden_width = cfg.get("hidden_width", 128)
+
+        # no default because this needs to correspond with the KB entity length
+        sent_width = cfg.get("entity_width")
 
         model = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=sent_width, **cfg)
-
-        # dimension of the mention encoder needs to match the dimension of the entity encoder
-        # article_width = cfg.get("article_width", 128)
-        # sent_width = cfg.get("sent_width", 64)
-        # article_encoder = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=article_width, **cfg)
-        # mention_width = article_width + sent_width
-        # mention_encoder = Affine(entity_width, mention_width, drop_factor=0.0)
-        # return article_encoder, sent_encoder, mention_encoder
 
         return model
 
     def __init__(self, **cfg):
-        # self.article_encoder = True
-        # self.sent_encoder = True
-        # self.mention_encoder = True
         self.model = True
         self.kb = None
         self.cfg = dict(cfg)
-        self.doc_cutoff = self.cfg.get("doc_cutoff", 5)
-        # self.sgd_article = None
-        # self.sgd_sent = None
-        # self.sgd_mention = None
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1130,13 +1116,6 @@ class EntityLinker(Pipe):
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
-
-        # if self.mention_encoder is True:
-        #    self.article_encoder, self.sent_encoder, self.mention_encoder = self.Model(**self.cfg)
-        # self.sgd_article = create_default_optimizer(self.article_encoder.ops)
-        # self.sgd_sent = create_default_optimizer(self.sent_encoder.ops)
-        # self.sgd_mention = create_default_optimizer(self.mention_encoder.ops)
-        # return self.sgd_article
 
     def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
         self.require_model()
@@ -1166,15 +1145,11 @@ class EntityLinker(Pipe):
                 mention = doc.text[start:end]
                 sent_start = 0
                 sent_end = len(doc)
-                first_par_end = len(doc)
                 for index, sent in enumerate(doc.sents):
                     if start >= sent.start_char and end <= sent.end_char:
                         sent_start = sent.start
                         sent_end = sent.end
-                    if index == self.doc_cutoff-1:
-                        first_par_end = sent.end
                 sentence = doc[sent_start:sent_end].as_doc()
-                first_par = doc[0:first_par_end].as_doc()
 
                 candidates = self.kb.get_candidates(mention)
                 for c in candidates:
@@ -1184,31 +1159,14 @@ class EntityLinker(Pipe):
                         prior_prob = c.prior_prob
                         entity_encoding = c.entity_vector
                         entity_encodings.append(entity_encoding)
-                        # article_docs.append(first_par)
                         sentence_docs.append(sentence)
 
         if len(entity_encodings) > 0:
-            # doc_encodings, bp_doc = self.article_encoder.begin_update(article_docs, drop=drop)
-            # sent_encodings, bp_sent = self.sent_encoder.begin_update(sentence_docs, drop=drop)
-
-            # concat_encodings = [list(doc_encodings[i]) + list(sent_encodings[i]) for i in range(len(article_docs))]
-            # mention_encodings, bp_mention = self.mention_encoder.begin_update(np.asarray(concat_encodings), drop=drop)
-
             sent_encodings, bp_sent = self.model.begin_update(sentence_docs, drop=drop)
             entity_encodings = np.asarray(entity_encodings, dtype=np.float32)
 
             loss, d_scores = self.get_loss(scores=sent_encodings, golds=entity_encodings, docs=None)
             bp_sent(d_scores, sgd=sgd)
-
-            # gradient : concat (doc+sent) vs. desc
-            # sent_start = self.article_encoder.nO
-            # sent_gradients = list()
-            # doc_gradients = list()
-            # for x in mention_gradient:
-                # doc_gradients.append(list(x[0:sent_start]))
-                # sent_gradients.append(list(x[sent_start:]))
-            # bp_doc(doc_gradients, sgd=self.sgd_article)
-            # bp_sent(sent_gradients, sgd=self.sgd_sent)
 
             if losses is not None:
                 losses[self.name] += loss
@@ -1264,21 +1222,9 @@ class EntityLinker(Pipe):
 
         for i, doc in enumerate(docs):
             if len(doc) > 0:
-                first_par_end = len(doc)
-                for index, sent in enumerate(doc.sents):
-                    if index == self.doc_cutoff-1:
-                        first_par_end = sent.end
-                first_par = doc[0:first_par_end].as_doc()
-
-                # doc_encoding = self.article_encoder([first_par])
                 for ent in doc.ents:
                     sent_doc = ent.sent.as_doc()
                     if len(sent_doc) > 0:
-                        # sent_encoding = self.sent_encoder([sent_doc])
-                        # concat_encoding = [list(doc_encoding[0]) + list(sent_encoding[0])]
-                        # mention_encoding = self.mention_encoder(np.asarray([concat_encoding[0]]))
-                        # mention_enc_t = np.transpose(mention_encoding)
-
                         sent_encoding = self.model([sent_doc])
                         sent_enc_t = np.transpose(sent_encoding)
 

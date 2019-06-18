@@ -661,10 +661,11 @@ def build_nel_encoder(in_width, hidden_width, end_width, **cfg):
                                 LN(Maxout(hidden_width, hidden_width * 3, pieces=cnn_maxout_pieces))))
 
         encoder = SpacyVectors \
-                  >> with_flatten(LN(Maxout(hidden_width, in_width)) >> convolution ** conv_depth, pad=conv_depth) \
+                  >> with_flatten(Affine(hidden_width, in_width))\
+                  >> with_flatten(LN(Maxout(hidden_width, hidden_width)) >> convolution ** conv_depth, pad=conv_depth) \
                   >> flatten_add_lengths \
                   >> ParametricAttention(hidden_width) \
-                  >> Pooling(mean_pool) \
+                  >> Pooling(sum_pool) \
                   >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
                   >> zero_init(Affine(end_width, hidden_width, drop_factor=0.0))
 
