@@ -14,7 +14,6 @@ from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
-from spacy.kb import KnowledgeBase
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -1081,9 +1080,9 @@ class EntityLinker(Pipe):
         hidden_width = cfg.get("hidden_width", 128)
 
         # no default because this needs to correspond with the KB entity length
-        sent_width = cfg.get("entity_width")
+        entity_width = cfg.get("entity_width")
 
-        model = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=sent_width, **cfg)
+        model = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=entity_width, **cfg)
 
         return model
 
@@ -1135,21 +1134,13 @@ class EntityLinker(Pipe):
             docs = [docs]
             golds = [golds]
 
-        # article_docs = list()
-        sentence_docs = list()
+        context_docs = list()
         entity_encodings = list()
 
         for doc, gold in zip(docs, golds):
             for entity in gold.links:
                 start, end, gold_kb = entity
                 mention = doc.text[start:end]
-                sent_start = 0
-                sent_end = len(doc)
-                for index, sent in enumerate(doc.sents):
-                    if start >= sent.start_char and end <= sent.end_char:
-                        sent_start = sent.start
-                        sent_end = sent.end
-                sentence = doc[sent_start:sent_end].as_doc()
 
                 candidates = self.kb.get_candidates(mention)
                 for c in candidates:
@@ -1159,14 +1150,14 @@ class EntityLinker(Pipe):
                         prior_prob = c.prior_prob
                         entity_encoding = c.entity_vector
                         entity_encodings.append(entity_encoding)
-                        sentence_docs.append(sentence)
+                        context_docs.append(doc)
 
         if len(entity_encodings) > 0:
-            sent_encodings, bp_sent = self.model.begin_update(sentence_docs, drop=drop)
+            context_encodings, bp_context = self.model.begin_update(context_docs, drop=drop)
             entity_encodings = np.asarray(entity_encodings, dtype=np.float32)
 
-            loss, d_scores = self.get_loss(scores=sent_encodings, golds=entity_encodings, docs=None)
-            bp_sent(d_scores, sgd=sgd)
+            loss, d_scores = self.get_loss(scores=context_encodings, golds=entity_encodings, docs=None)
+            bp_context(d_scores, sgd=sgd)
 
             if losses is not None:
                 losses[self.name] += loss
@@ -1222,28 +1213,25 @@ class EntityLinker(Pipe):
 
         for i, doc in enumerate(docs):
             if len(doc) > 0:
+                context_encoding = self.model([doc])
+                context_enc_t = np.transpose(context_encoding)
                 for ent in doc.ents:
-                    sent_doc = ent.sent.as_doc()
-                    if len(sent_doc) > 0:
-                        sent_encoding = self.model([sent_doc])
-                        sent_enc_t = np.transpose(sent_encoding)
+                    candidates = self.kb.get_candidates(ent.text)
+                    if candidates:
+                        scores = list()
+                        for c in candidates:
+                            prior_prob = c.prior_prob * self.prior_weight
+                            kb_id = c.entity_
+                            entity_encoding = c.entity_vector
+                            sim = float(cosine(np.asarray([entity_encoding]), context_enc_t)) * self.context_weight
+                            score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
+                            scores.append(score)
 
-                        candidates = self.kb.get_candidates(ent.text)
-                        if candidates:
-                            scores = list()
-                            for c in candidates:
-                                prior_prob = c.prior_prob * self.prior_weight
-                                kb_id = c.entity_
-                                entity_encoding = c.entity_vector
-                                sim = float(cosine(np.asarray([entity_encoding]), sent_enc_t)) * self.context_weight
-                                score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
-                                scores.append(score)
-
-                            # TODO: thresholding
-                            best_index = scores.index(max(scores))
-                            best_candidate = candidates[best_index]
-                            final_entities.append(ent)
-                            final_kb_ids.append(best_candidate.entity_)
+                        # TODO: thresholding
+                        best_index = scores.index(max(scores))
+                        best_candidate = candidates[best_index]
+                        final_entities.append(ent)
+                        final_kb_ids.append(best_candidate.entity_)
 
         return final_entities, final_kb_ids
 

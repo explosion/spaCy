@@ -10,7 +10,7 @@ WIKIDATA_JSON = 'C:/Users/Sofie/Documents/data/wikidata/wikidata-20190304-all.js
 
 
 def read_wikidata_entities_json(limit=None, to_print=False):
-    """ Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines. """
+    # Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines.
 
     lang = 'en'
     site_filter = 'enwiki'

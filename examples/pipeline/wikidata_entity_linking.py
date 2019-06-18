@@ -195,10 +195,11 @@ def run_pipeline():
             print("STEP 7: performance measurement of Entity Linking pipe", datetime.datetime.now())
             print()
 
-            acc_r, acc_r_by_label, acc_p, acc_p_by_label, acc_o, acc_o_by_label = _measure_baselines(dev_data, kb_2)
-            print("dev acc oracle:", round(acc_o, 3), [(x, round(y, 3)) for x, y in acc_o_by_label.items()])
-            print("dev acc random:", round(acc_r, 3), [(x, round(y, 3)) for x, y in acc_r_by_label.items()])
-            print("dev acc prior:", round(acc_p, 3), [(x, round(y, 3)) for x, y in acc_p_by_label.items()])
+            counts, acc_r, acc_r_label, acc_p, acc_p_label, acc_o, acc_o_label = _measure_baselines(dev_data, kb_2)
+            print("dev counts:", sorted(counts))
+            print("dev acc oracle:", round(acc_o, 3), [(x, round(y, 3)) for x, y in acc_o_label.items()])
+            print("dev acc random:", round(acc_r, 3), [(x, round(y, 3)) for x, y in acc_r_label.items()])
+            print("dev acc prior:", round(acc_p, 3), [(x, round(y, 3)) for x, y in acc_p_label.items()])
 
             with el_pipe.model.use_params(optimizer.averages):
                 # measuring combined accuracy (prior + context)
@@ -288,6 +289,8 @@ def _measure_accuracy(data, el_pipe):
 
 def _measure_baselines(data, kb):
     # Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound
+    counts_by_label = dict()
+
     random_correct_by_label = dict()
     random_incorrect_by_label = dict()
 
@@ -315,6 +318,7 @@ def _measure_baselines(data, kb):
 
                 # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
                 if gold_entity is not None:
+                    counts_by_label[ent_label] = counts_by_label.get(ent_label, 0) + 1
                     candidates = kb.get_candidates(ent.text)
                     oracle_candidate = ""
                     best_candidate = ""
@@ -353,7 +357,7 @@ def _measure_baselines(data, kb):
     acc_random, acc_random_by_label = calculate_acc(random_correct_by_label, random_incorrect_by_label)
     acc_oracle, acc_oracle_by_label = calculate_acc(oracle_correct_by_label, oracle_incorrect_by_label)
 
-    return acc_random, acc_random_by_label, acc_prior, acc_prior_by_label, acc_oracle, acc_oracle_by_label
+    return counts_by_label, acc_random, acc_random_by_label, acc_prior, acc_prior_by_label, acc_oracle, acc_oracle_by_label
 
 
 def calculate_acc(correct_by_label, incorrect_by_label):

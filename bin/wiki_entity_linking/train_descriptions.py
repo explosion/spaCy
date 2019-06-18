@@ -12,6 +12,10 @@ from thinc.neural._classes.affine import Affine
 
 
 class EntityEncoder:
+    """
+    Train the embeddings of entity descriptions to fit a fixed-size entity vector (e.g. 64D).
+    This entity vector will be stored in the KB, and context vectors will be trained to be similar to them.
+    """
 
     DROP = 0
     EPOCHS = 5
@@ -102,6 +106,7 @@ class EntityEncoder:
 
     def _build_network(self, orig_width, hidden_with):
         with Model.define_operators({">>": chain}):
+            # very simple encoder-decoder model
             self.encoder = (
                 Affine(hidden_with, orig_width)
             )

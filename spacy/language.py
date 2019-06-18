@@ -11,7 +11,7 @@ from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
 
-from spacy.kb import KnowledgeBase
+from .kb import KnowledgeBase
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer

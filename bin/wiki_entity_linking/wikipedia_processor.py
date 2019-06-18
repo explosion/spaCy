@@ -8,6 +8,7 @@ import datetime
 
 """
 Process a Wikipedia dump to calculate entity frequencies and prior probabilities in combination with certain mentions.
+Write these results to file for downstream KB and training data generation.
 """
 
 
@@ -142,7 +143,7 @@ def _capitalize_first(text):
 
 
 def write_entity_counts(prior_prob_input, count_output, to_print=False):
-    """ Write entity counts for quick access later  """
+    # Write entity counts for quick access later
     entity_to_count = dict()
     total_count = 0
 

@@ -10,7 +10,8 @@ from spacy.gold import GoldParse
 from bin.wiki_entity_linking import kb_creator, wikipedia_processor as wp
 
 """
-Process Wikipedia interlinks to generate a training dataset for the EL algorithm
+Process Wikipedia interlinks to generate a training dataset for the EL algorithm.
+Gold-standard entities are stored in one file in standoff format (by character offset).
 """
 
 # ENTITY_FILE = "gold_entities.csv"
@@ -321,12 +322,16 @@ def read_training(nlp, training_dir, dev, limit):
                                     current_article_id = article_id
                                     ents_by_offset = dict()
                                     for ent in current_doc.ents:
-                                        ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
+                                        sent_length = len(ent.sent)
+                                        # custom filtering to avoid too long or too short sentences
+                                        if 5 < sent_length < 100:
+                                            ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
                                 else:
                                     skip_articles.add(current_article_id)
                                     current_doc = None
                         except Exception as e:
                             print("Problem parsing article", article_id, e)
+                            skip_articles.add(current_article_id)
 
                     # repeat checking this condition in case an exception was thrown
                     if current_doc and (current_article_id == article_id):
