@@ -1,0 +1,92 @@
+@import base
+
+.heading
+    margin-bottom: 1em
+
+    &:not(:first-child)
+        padding-top: 0.5em
+
+@include breakpoint(max, md)
+    .heading
+        word-wrap: break-word
+
+@each $level, $size in (1: 4.4, 2: 3.4, 3: 2.6, 4: 2.2, 5: 1.8)
+    .h#{$level}
+        font: normal 500 #{$size}rem/#{1.1} var(--font-secondary)
+
+.permalink
+    position: relative
+
+    &:before
+        content: "\00b6"
+        font-size: 0.9em
+        font-weight: normal
+        color: var(--color-subtle)
+        position: absolute
+        top: 0.15em
+        left: -2.85rem
+        opacity: 0
+        transition: opacity 0.2s ease
+
+    &:hover:before
+        opacity: 1
+
+    &:active:before
+        color: var(--color-theme)
+
+    &:target
+        display: inline-block
+
+        &:before
+            bottom: 0.15em
+            top: initial
+
+@include breakpoint(min, md)
+    .abbr
+        cursor: help
+        border-bottom: 1px dotted var(--color-subtle-dark)
+
+@supports(text-decoration: underline dotted)
+    .abbr
+        text-decoration: underline dotted var(--color-subtle-dark)
+        border-bottom: none
+
+@include breakpoint(max, sm)
+    .abbr:after
+        content: " (" attr(aria-label) ")"
+        color: var(--color-subtle-dark)
+        text-decoration: none
+
+.label
+    display: block
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+    color: var(--color-dark)
+
+.inline-list
+    & > *
+        display: inline
+
+        &:not(:last-child)
+            margin-right: 2rem
+
+.no-gutter
+    margin-bottom: 0 !important
+
+.clear:after
+    content: ""
+    clear: both
+    display: table
+
+.action
+    font: var(--font-size-xs)/var(--line-height-sm) var(--font-primary)
+    color: var(--color-subtle-dark)
+    float: right
+    max-width: 33%
+    text-align: right
+    position: relative
+    top: 0.4rem
+    margin-right: 1rem
+
+.help
+    color: var(--color-dark)

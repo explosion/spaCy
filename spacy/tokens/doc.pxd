@@ -19,6 +19,9 @@ ctypedef fused LexemeOrToken:
     const_TokenC_ptr
 
 
+cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+
+
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2
 
 
@@ -26,6 +29,9 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 
 
 cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+
+
+cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 cdef class Doc:
     cdef readonly Pool mem

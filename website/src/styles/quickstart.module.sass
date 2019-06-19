@@ -1,0 +1,125 @@
+@import base
+
+.root
+    font: var(--font-size-sm)/var(--line-height-sm) var(--font-primary)
+    margin-bottom: var(--spacing-md)
+    border-radius: var(--border-radius)
+    background: var(--color-subtle-light)
+    padding-top: 1rem
+
+.title
+    padding: 0 2rem
+    margin-bottom: 2rem
+
+    a:before
+        content: ""
+
+.description
+    padding: 0 2rem
+
+.group
+    padding: 0.75rem 2rem 0
+    border: none
+
+@include breakpoint(min, md)
+    .group
+        display: flex
+        flex-flow: row nowrap
+
+.input
+    // Hide inputs while keeping them focussable
+    opacity: 0
+    width: 0
+    height: 0
+    position: absolute
+    left: -9999px
+
+.label
+    cursor: pointer
+    border: 1px solid var(--color-subtle)
+    border-radius: var(--border-radius)
+    display: inline-block
+    padding: 0.65rem 1.25rem
+    margin: 0 0.5rem 0.75rem 0
+    font-size: var(--font-size-xs)
+    font-weight: bold
+    background: var(--color-back)
+
+    &:hover
+        background: var(--color-subtle-light)
+
+    .input:focus + &
+        border: 1px solid var(--color-theme)
+        outline: none
+
+    .radio:checked + &
+        color: var(--color-back)
+        border-color: var(--color-theme)
+        background: var(--color-theme)
+
+    .checkbox + &:before
+        content: ""
+        display: inline-block
+        width: 20px
+        height: 20px
+        border: 1px solid var(--color-subtle)
+        vertical-align: middle
+        margin-right: 1rem
+        cursor: pointer
+        border-radius: var(--border-radius)
+
+    .checkbox:checked + &:before
+        // Embed "check" icon here for simplicity
+        background: var(--color-theme) url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+);
+        background-size: contain
+        border-color: var(--color-theme)
+
+.legend
+    color: var(--color-dark)
+    padding: 0.75rem 0
+    flex: 1 1 35%
+    font-weight: bold
+
+.fields
+    flex: 100%
+
+.code
+    background: var(--color-front)
+    color: var(--color-back)
+    padding: 0.75em 0
+    overflow: auto
+    width: 100%
+    max-width: 100%
+    margin: 1rem 0 0
+    border-bottom-left-radius: var(--border-radius)
+    border-bottom-right-radius: var(--border-radius)
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
+
+.results
+    display: block
+    font: normal normal var(--font-size-lg)/var(--line-height-lg) var(--font-code)
+    line-height: 2
+    padding: 1em 2em
+
+    & > span
+        display: block
+
+.prompt:before
+    color: var(--color-theme)
+    margin-right: 1em
+
+.bash:before
+    content: "$"
+
+.python:before
+    content: ">>>"
+
+.divider
+    padding: 1.5rem 0
+
+.help
+    color: var(--color-subtle-dark)
+
+    .input:checked + .label &
+        color: inherit

@@ -1,0 +1,42 @@
+.root
+    display: inline-block
+    padding: 0.65rem 1.1rem 0.825rem
+    margin-bottom: 1px
+    border: 2px solid var(--color-theme)
+    border-radius: 2em
+    text-align: center
+    transition: background-color, color 0.25s ease
+    font: bold var(--font-size-xs)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+    white-space: nowrap
+
+    &:hover
+        border-color: var(--color-theme-dark)
+
+.large
+    font-size: var(--font-size-lg)
+    padding: 0.8em 1.1em 1em
+
+.primary
+    background: var(--color-theme)
+    color: var(--color-back)
+
+    &:hover
+        background: var(--color-theme-dark)
+        color: var(--color-back)
+
+.secondary
+    background: var(--color-back)
+    color: var(--color-theme)
+
+    &:hover
+        color: var(--color-theme-dark)
+
+.tertiary
+    background: transparent
+    color: var(--color-back)
+    border-color: currentColor
+
+    &:hover
+        color: var(--color-back)
+        border-color: currentColor

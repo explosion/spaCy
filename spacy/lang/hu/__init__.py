@@ -15,8 +15,10 @@ from ...util import update_exc, add_lookups
 
 class HungarianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'hu'
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
+    lex_attr_getters[LANG] = lambda text: "hu"
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
+    )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     prefixes = TOKENIZER_PREFIXES
@@ -27,8 +29,8 @@ class HungarianDefaults(Language.Defaults):
 
 
 class Hungarian(Language):
-    lang = 'hu'
+    lang = "hu"
     Defaults = HungarianDefaults
 
 
-__all__ = ['Hungarian']
+__all__ = ["Hungarian"]

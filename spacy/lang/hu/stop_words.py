@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a abban ahhoz ahogy ahol aki akik akkor akár alatt amely amelyek amelyekben
 amelyeket amelyet amelynek ami amikor amit amolyan amíg annak arra arról az
 azok azon azonban azt aztán azután azzal azért
@@ -61,4 +62,5 @@ volna volt voltak voltam voltunk
 úgy új újabb újra
 
 ő őket
-""".split())
+""".split()
+)

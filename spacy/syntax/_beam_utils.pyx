@@ -15,7 +15,7 @@ from .stateclass cimport StateC, StateClass
 
 
 # These are passed as callbacks to thinc.search.Beam
-cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1:
+cdef int transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1:
     dest = <StateC*>_dest
     src = <StateC*>_src
     moves = <const Transition*>_moves
@@ -24,17 +24,31 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
     dest.push_hist(clas)
 
 
-cdef int _check_final_state(void* _state, void* extra_args) except -1:
+cdef int check_final_state(void* _state, void* extra_args) except -1:
     state = <StateC*>_state
     return state.is_final()
 
 
-cdef hash_t _hash_state(void* _state, void* _) except 0:
+cdef hash_t hash_state(void* _state, void* _) except 0:
     state = <StateC*>_state
     if state.is_final():
         return 1
     else:
         return state.hash()
+
+
+def collect_states(beams):
+    cdef StateClass state
+    cdef Beam beam
+    states = []
+    for state_or_beam in beams:
+        if isinstance(state_or_beam, StateClass):
+            states.append(state_or_beam)
+        else:
+            beam = state_or_beam
+            state = StateClass.borrow(<StateC*>beam.at(0))
+            states.append(state)
+    return states
 
 
 cdef class ParserBeam(object):
@@ -45,7 +59,7 @@ cdef class ParserBeam(object):
     cdef public object dones
 
     def __init__(self, TransitionSystem moves, states, golds,
-                 int width, float density):
+                 int width, float density=0.):
         self.moves = moves
         self.states = states
         self.golds = golds
@@ -54,7 +68,7 @@ cdef class ParserBeam(object):
         cdef StateClass state
         cdef StateC* st
         for state in states:
-            beam = Beam(self.moves.n_moves, width, density)
+            beam = Beam(self.moves.n_moves, width, min_density=density)
             beam.initialize(self.moves.init_beam_state, state.c.length,
                             state.c._sent)
             for i in range(beam.width):
@@ -82,8 +96,8 @@ cdef class ParserBeam(object):
             self._set_scores(beam, scores[i])
             if self.golds is not None:
                 self._set_costs(beam, self.golds[i], follow_gold=follow_gold)
-            beam.advance(_transition_state, NULL, <void*>self.moves.c)
-            beam.check_done(_check_final_state, NULL)
+            beam.advance(transition_state, hash_state, <void*>self.moves.c)
+            beam.check_done(check_final_state, NULL)
             # This handles the non-monotonic stuff for the parser.
             if beam.is_done and self.golds is not None:
                 for j in range(beam.size):
@@ -92,8 +106,6 @@ cdef class ParserBeam(object):
                         try:
                             if self.moves.is_gold_parse(state, self.golds[i]):
                                 beam._states[j].loss = 0.0
-                            elif beam._states[j].loss == 0.0:
-                                beam._states[j].loss = 1.0
                         except NotImplementedError:
                             break
 
@@ -119,8 +131,12 @@ cdef class ParserBeam(object):
                 self.moves.set_costs(beam.is_valid[i], beam.costs[i],
                                      state, gold)
                 if follow_gold:
+                    min_cost = 0
                     for j in range(beam.nr_class):
-                        if beam.costs[i][j] >= 1:
+                        if beam.is_valid[i][j] and beam.costs[i][j] < min_cost:
+                            min_cost = beam.costs[i][j]
+                    for j in range(beam.nr_class):
+                        if beam.costs[i][j] > min_cost:
                             beam.is_valid[i][j] = 0
 
 
@@ -144,15 +160,13 @@ nr_update = 0
 def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
                 states, golds,
                 state2vec, vec2scores,
-                int width, float density, int hist_feats,
-                losses=None, drop=0.):
+                int width, losses=None, drop=0.,
+                early_update=True, beam_density=0.0):
     global nr_update
     cdef MaxViolation violn
     nr_update += 1
-    pbeam = ParserBeam(moves, states, golds,
-                       width=width, density=density)
-    gbeam = ParserBeam(moves, states, golds,
-                       width=width, density=density)
+    pbeam = ParserBeam(moves, states, golds, width=width, density=beam_density)
+    gbeam = ParserBeam(moves, states, golds, width=width, density=beam_density)
     cdef StateClass state
     beam_maps = []
     backprops = []
@@ -177,13 +191,7 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         # Now that we have our flat list of states, feed them through the model
         token_ids = get_token_ids(states, nr_feature)
         vectors, bp_vectors = state2vec.begin_update(token_ids, drop=drop)
-        if hist_feats:
-            hists = numpy.asarray([st.history[:hist_feats] for st in states],
-                                  dtype='i')
-            scores, bp_scores = vec2scores.begin_update((vectors, hists),
-                                                        drop=drop)
-        else:
-            scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
+        scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
 
         # Store the callbacks for the backward pass
         backprops.append((token_ids, bp_vectors, bp_scores))
@@ -194,7 +202,7 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
                     for indices in p_indices]
         g_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')
                     for indices in g_indices]
-        # Now advance the states in the beams. The gold beam is contrained to
+        # Now advance the states in the beams. The gold beam is constrained to
         # to follow only gold analyses.
         pbeam.advance(p_scores)
         gbeam.advance(g_scores, follow_gold=True)
@@ -264,14 +272,15 @@ def get_gradient(nr_class, beam_maps, histories, losses):
     Each batch has multiple beams
     So history is list of lists of lists of ints
     """
-    nr_step = len(beam_maps)
     grads = []
-    nr_step = 0
+    nr_steps = []
     for eg_id, hists in enumerate(histories):
+        nr_step = 0
         for loss, hist in zip(losses[eg_id], hists):
             if loss != 0.0 and not numpy.isnan(loss):
                 nr_step = max(nr_step, len(hist))
-    for i in range(nr_step):
+        nr_steps.append(nr_step)
+    for i in range(max(nr_steps)):
         grads.append(numpy.zeros((max(beam_maps[i].values())+1, nr_class),
                                  dtype='f'))
     if len(histories) != len(losses):
@@ -282,8 +291,11 @@ def get_gradient(nr_class, beam_maps, histories, losses):
                 continue
             key = tuple([eg_id])
             # Adjust loss for length
+            # We need to do this because each state in a short path is scored
+            # multiple times, as we add in the average cost when we run out
+            # of actions.
             avg_loss = loss / len(hist)
-            loss += avg_loss * (nr_step - len(hist))
+            loss += avg_loss * (nr_steps[eg_id] - len(hist))
             for j, clas in enumerate(hist):
                 i = beam_maps[j][key]
                 # In step j, at state i action clas
@@ -291,3 +303,27 @@ def get_gradient(nr_class, beam_maps, histories, losses):
                 grads[j][i, clas] += loss
                 key = key + tuple([clas])
     return grads
+
+
+def cleanup_beam(Beam beam):
+    cdef StateC* state
+    # Once parsing has finished, states in beam may not be unique. Is this
+    # correct?
+    seen = set()
+    for i in range(beam.width):
+        addr = <size_t>beam._parents[i].content
+        if addr not in seen:
+            state = <StateC*>addr
+            del state
+            seen.add(addr)
+        else:
+            raise ValueError(Errors.E023.format(addr=addr, i=i))
+        addr = <size_t>beam._states[i].content
+        if addr not in seen:
+            state = <StateC*>addr
+            del state
+            seen.add(addr)
+        else:
+            raise ValueError(Errors.E023.format(addr=addr, i=i))
+
+

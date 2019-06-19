@@ -1,0 +1,57 @@
+/* Mixins */
+
+//- Responsive Breakpoint utility
+
+$breakpoints: ( sm: 768px, md: 992px, lg: 1200px )
+
+@mixin breakpoint($limit, $size)
+    $breakpoints-max: ( xs: map-get($breakpoints, sm) - 1, sm: map-get($breakpoints, md) - 1, md: map-get($breakpoints, lg) - 1 )
+
+    @if $limit == "min"
+        @media(min-width: #{map-get($breakpoints, $size)})
+            @content
+
+    @else if $limit == "max"
+        @media(max-width: #{map-get($breakpoints-max, $size)})
+            @content
+
+// Scroll shadows for reponsive tables
+// adapted from David Bushell, http://codepen.io/dbushell/pen/wGaamR
+// $scroll-shadow-color      - color of shadow
+// $scroll-shadow-side       - side to cover shadow (left or right)
+// $scroll-shadow-background - original background color to match
+
+@function scroll-shadow-gradient($scroll-gradient-direction, $scroll-shadow-background)
+    @return linear-gradient(to #{$scroll-gradient-direction}, $scroll-shadow-background 50%, rgba(255, 255, 255, 0) 100%)
+
+@mixin scroll-shadow-base($scroll-shadow-color)
+    background: radial-gradient(ellipse at 0 50%, $scroll-shadow-color 0%, rgba(0,0,0,0) 75%) 0 center, radial-gradient(ellipse at 100% 50%, $scroll-shadow-color 0%, transparent 75%) 100% center
+    background-attachment: scroll, scroll
+    background-repeat: no-repeat
+    background-size: 10px 100%, 10px 100%
+
+@mixin scroll-shadow-cover($scroll-shadow-side, $scroll-shadow-background)
+    $scroll-gradient-direction: right !default
+    background-repeat: no-repeat
+
+    @if $scroll-shadow-side == right
+        $scroll-gradient-direction: left
+        background-position: 100% 0
+
+    @if $scroll-shadow-side == both
+        background-image: scroll-shadow-gradient(left, $scroll-shadow-background), scroll-shadow-gradient(right, $scroll-shadow-background)
+        background-position: 100% 0, 0 0
+        background-size: 20px 100%, 20px 100%
+    @else
+        background-image: scroll-shadow-gradient($scroll-gradient-direction, $scroll-shadow-background)
+        background-size: 20px 100%
+
+// Full vertical scroll shadows
+// adapted from: https://codepen.io/laustdeleuran/pen/DBaAu
+
+@mixin scroll-shadow($background-color, $shadow-color, $shadow-offset: 0, $cover-size: 40px, $shadow-size: 15px)
+    background: linear-gradient($background-color 30%, rgba(255, 255, 255,0)) 0 $shadow-offset, linear-gradient(rgba(255,255,255,0), $background-color 70%) 0 100%, radial-gradient(farthest-side at 50% 0, $shadow-color, rgba(255,255,255,0)) -20px $shadow-offset, radial-gradient(farthest-side at 50% 100%, $shadow-color, rgba(255,255,255,0)) 0 100%
+    background-repeat: no-repeat
+    background-color: $background-color
+    background-size: 100% $cover-size, 100% $cover-size, 100% $shadow-size, 100% $shadow-size
+    background-attachment: local, local, scroll, scroll

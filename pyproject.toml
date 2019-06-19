@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools",
+            "wheel>0.32.0.<0.33.0",
+            "Cython",
+            "cymem>=2.0.2,<2.1.0",
+            "preshed>=2.0.1,<2.1.0",
+            "murmurhash>=0.28.0,<1.1.0",
+            "thinc==7.0.0.dev6",
+            ]
+build-backend = "setuptools.build_meta"

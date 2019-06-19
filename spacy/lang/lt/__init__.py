@@ -17,8 +17,8 @@ from .lex_attrs import LEX_ATTRS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
-from ...attrs import LANG
-from ...util import update_exc
+from ...attrs import LANG, NORM
+from ...util import update_exc, add_lookups
 
 
 # Create a Language subclass

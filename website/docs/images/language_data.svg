@@ -1,0 +1,85 @@
+<svg class="o-svg" xmlns="http://www.w3.org/2000/svg" width="931" height="456" viewBox="-1 -1 932 480" preserveAspectRatio="xMinYMin meet">
+    <style>
+        .svg__langdata__text-large, .svg__langdata__text-small, .svg__langdata__text-tiny {
+            font-family: Arial, sans-serif;
+            fill: #1a1e23
+        }
+        .svg__langdata__text-large { font-size: 20px }
+        .svg__langdata__text-small, .svg__langdata__text-tiny { font-weight: bold; font-size: 15px;  }
+    </style>
+    <path fill="none" stroke="#b85450" stroke-width="3" stroke-miterlimit="10" d="M610 404h-69.8" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#b85450" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M534.2 404l8-4-2 4 2 4z"/>
+    <path fill="#f8cecc" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M642.7 361.3H708l33 43.6-33 43.5H643L610 405z"/>
+    <text class="svg__langdata__text-large" transform="translate(630 410)" width="80" height="22">Tokenizer</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M780 303H621v-56.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M621 240.2l4 8-4-2-4 2z"/>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M855 253v-20.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M855 226.2l4 8-4-2-4 2z"/>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M780 303h-45v-56.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M735 240.2l4 8-4-2-4 2z"/>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M780 303H504v-56.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M504 240.2l4 8-4-2-4 2z"/>
+    <ellipse cx="855" cy="303" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="74.8" ry="49.8"/>
+    <text class="svg__langdata__text-large" transform="translate(815 308)" width="119" height="46">Base data</text>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389 100l.4 39.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389.5 145.8l-4-8 4 2 4-2z"/>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389 100v17h232v22.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M621 145.8l-4-8 4 2 4-2z"/>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389 100v17H280v22.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M280 145.8l-4-8 4 2 4-2z"/>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389 100v17h115v22.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M504 145.8l-4-8 4 2 4-2z"/>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389 100v17h346v22.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M735 145.8l-4-8 4 2 4-2z"/>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389 100v17H163v22.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M163 145.8l-4-8 4 2 4-2z"/>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M389 100v17H46v22.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M46 145.8l-4-8 4 2 4-2z"/>
+    <ellipse cx="389" cy="50" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="74.8" ry="49.8"/>
+    <text class="svg__langdata__text-large" transform="translate(346.5 42)" width="81" height="46">Language <tspan dy="1.45em" dx="-3.7em">data</tspan></text>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M435 193h15.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M456.8 193l-8 4 2-4-2-4z"/>
+    <ellipse cx="390" cy="193" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="45" ry="45"/>
+    <text class="svg__langdata__text-small" transform="translate(368 187.5)" width="39" height="30">stop <tspan dx="-2.8em" dy="1.25em">words</tspan></text>
+    <path fill="none" stroke="#9673a6" stroke-width="3" stroke-miterlimit="10" d="M472 225l-1.5 133.8" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#9673a6" stroke="#9673a6" stroke-width="2" stroke-miterlimit="10" d="M470.4 364.8l-4-8 4 2 4-2z"/>
+    <ellipse cx="504" cy="193" fill="#f5f5f5" stroke="#09a3d5" stroke-width="2" rx="45" ry="45"/>
+    <text class="svg__langdata__text-small" transform="translate(473 187.5)" width="85" height="30">lexical <tspan dx="-4em" dy="1.25em">attributes</tspan></text>
+    <path fill="none" stroke="#b85450" stroke-width="3" stroke-miterlimit="10" d="M653 225l5.6 127.8" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#b85450" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M659 358.8l-4.5-8 4 2 4-2.2z"/>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M576 193h-18.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M551.2 193l8-4-2 4 2 4z"/>
+    <ellipse cx="621" cy="193" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="45" ry="45"/>
+    <text class="svg__langdata__text-small" transform="translate(582 187.5)" width="85" height="30">tokenizer <tspan dx="-5.2em" dy="1.25em">exceptions</tspan></text>
+    <path fill="none" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M690 193h-15.8"/>
+    <path fill="#09a3d5" stroke="#09a3d5" stroke-width="2" stroke-miterlimit="10" d="M668.2 193l8-4-2 4 2 4z"/>
+    <path fill="none" stroke="#b85450" stroke-width="3" stroke-miterlimit="10" d="M703 225l-10.3 127.8" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#b85450" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M692.2 358.8l-3.4-8.3 4 2.3 4-1.7z"/>
+    <ellipse cx="735" cy="193" fill="#f5f5f5" stroke="#09a3d5" stroke-width="2" rx="45" ry="45"/>
+    <text class="svg__langdata__text-small" transform="translate(705 182)" width="53" height="46">prefixes, <tspan dy="1.25em" dx="-4.4em">suffixes,</tspan> <tspan dy="1.25em" dx="-4em">infixes</tspan>
+    </text>
+    <path fill="none" stroke="#d79b00" stroke-width="3" stroke-miterlimit="10" d="M280 238v114.8" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#d79b00" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M280 358.8l-4-8 4 2 4-2z"/>
+    <ellipse cx="280" cy="193" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="45" ry="45"/>
+    <text class="svg__langdata__text-small" transform="translate(254 187.5)" width="71" height="30">lemma <tspan dy="1.25em" dx="-3em">data</tspan></text>
+    <path fill="none" stroke="#d79b00" stroke-width="3" stroke-miterlimit="10" d="M346 404h53.8" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#d79b00" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M405.8 404l-8 4 2-4-2-4z"/>
+    <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M247.7 361.3H313l33 43.6-33 43.5h-65.3L215 405z"/>
+    <text class="svg__langdata__text-large" transform="translate(228 410)" width="100" height="22">Lemmatizer</text>
+    <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M823 193h-34.8"/>
+    <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M782.2 193l8-4-2 4 2 4z"/>
+    <ellipse cx="855" cy="193" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="31.5" ry="31.5"/>
+    <text class="svg__langdata__text-tiny" transform="translate(829 189)" width="50" height="30">char <tspan dy="1.1em" dx="-3.1em">classes</tspan></text>
+    <path fill="#e1d5e7" stroke="#9673a6" stroke-width="2" d="M408 367h124v74H408z"/>
+    <text class="svg__langdata__text-large" transform="translate(443.5 410)" width="51" height="22">Token</text>
+    <path fill="none" stroke="#666" stroke-width="3" stroke-miterlimit="10" d="M131 225l-21 122.2" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M109 353l-2.5-8.5 3.6 2.7 4.4-1.3z"/>
+    <ellipse cx="163" cy="193" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="45" ry="45"/>
+    <text class="svg__langdata__text-small" transform="translate(139 187.5)" width="45" height="30">morph <tspan dy="1.25em" dx="-3.2em">rules</tspan></text>
+    <path fill="none" stroke="#666" stroke-width="3" stroke-miterlimit="10" d="M78 225l15.4 122" stroke-dasharray="1 6" stroke-linecap="round"/>
+    <path fill="#666" stroke="#666" stroke-width="2" stroke-miterlimit="10" d="M94.2 353l-5-7.5 4.2 1.5 3.7-2.5z"/>
+    <ellipse cx="46" cy="193" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="45" ry="45"/>
+    <text class="svg__langdata__text-small" transform="translate(33 187.5)" width="27" height="30">tag <tspan dy="1.25em" dx="-2em">map</tspan></text>
+    <ellipse cx="101" cy="405" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="74.5" ry="49.5"/>
+    <text class="svg__langdata__text-large" transform="translate(49.5 410)" width="100" height="22">Morphology</text>
+</svg>

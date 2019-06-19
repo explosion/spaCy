@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 from ...attrs import LIKE_NUM
 
-_num_words = set("""
+_num_words = set(
+    """
 صفر
 واحد
 إثنان
@@ -52,9 +53,11 @@ _num_words = set("""
 مليون
 مليار
 مليارات
-""".split())
+""".split()
+)
 
-_ordinal_words = set("""
+_ordinal_words = set(
+    """
 اول
 أول
 حاد
@@ -69,18 +72,21 @@ _ordinal_words = set("""
 ثامن
 تاسع
 عاشر
-""".split())
+""".split()
+)
 
 
 def like_num(text):
     """
-    check if text resembles a number
+    Check if text resembles a number
     """
-    text = text.replace(',', '').replace('.', '')
+    if text.startswith(("+", "-", "±", "~")):
+        text = text[1:]
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if text.count('/') == 1:
-        num, denom = text.split('/')
+    if text.count("/") == 1:
+        num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
     if text in _num_words:
@@ -90,6 +96,4 @@ def like_num(text):
     return False
 
 
-LEX_ATTRS = {
-    LIKE_NUM: like_num
-}
+LEX_ATTRS = {LIKE_NUM: like_num}

@@ -3,11 +3,7 @@ from __future__ import unicode_literals
 
 from ...symbols import ORTH, NORM
 
-_exc = {
-    "sağol": [
-        {ORTH: "sağ"},
-        {ORTH: "ol", NORM: "olun"}]
-}
+_exc = {"sağol": [{ORTH: "sağ"}, {ORTH: "ol", NORM: "olun"}]}
 
 
 for exc_data in [
@@ -111,12 +107,12 @@ for exc_data in [
     {ORTH: "Yrd.", NORM: "Yardımcı"},
     {ORTH: "Yrd.Doç.", NORM: "Yardımcı Doçent"},
     {ORTH: "Y.Müh.", NORM: "Yüksek mühendis"},
-    {ORTH: "Y.Mim.", NORM: "Yüksek mimar"}]:
+    {ORTH: "Y.Mim.", NORM: "Yüksek mimar"},
+]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-for orth in [
-    "Dr.", "yy."]:
+for orth in ["Dr.", "yy."]:
     _exc[orth] = [{ORTH: orth}]
 
 

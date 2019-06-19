@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from ...symbols import POS, PUNCT, SYM, ADJ, NUM, DET, ADV, ADP, X, VERB
 from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, SCONJ, AUX, CONJ
 
-
+# fmt: off
 TAG_MAP = {
     "ADJ___": {"morph": "_", POS: ADJ},
     "ADJ__AdpType=Prep": {"morph": "AdpType=Prep", POS: ADJ},
@@ -29,7 +29,7 @@ TAG_MAP = {
     "ADP__AdpType=Preppron|Gender=Fem|Number=Sing": {"morph": "AdpType=Preppron|Gender=Fem|Number=Sing", POS: ADP},
     "ADP__AdpType=Preppron|Gender=Masc|Number=Plur": {"morph": "AdpType=Preppron|Gender=Masc|Number=Plur", POS: ADP},
     "ADP__AdpType=Preppron|Gender=Masc|Number=Sing": {"morph": "AdpType=Preppron|Gender=Masc|Number=Sing", POS: ADP},
-    "ADP": { POS: ADP},
+    "ADP": {POS: ADP},
     "ADV___": {"morph": "_", POS: ADV},
     "ADV__AdpType=Prep": {"morph": "AdpType=Prep", POS: ADV},
     "ADV__AdpType=Preppron|Gender=Masc|Number=Sing": {"morph": "AdpType=Preppron|Gender=Masc|Number=Sing", POS: ADV},
@@ -135,7 +135,7 @@ TAG_MAP = {
     "DET__Number=Sing|PronType=Ind": {"morph": "Number=Sing|PronType=Ind", POS: DET},
     "DET__PronType=Int": {"morph": "PronType=Int", POS: DET},
     "DET__PronType=Rel": {"morph": "PronType=Rel", POS: DET},
-    "DET": { POS: DET},
+    "DET": {POS: DET},
     "INTJ___": {"morph": "_", POS: INTJ},
     "NOUN___": {"morph": "_", POS: NOUN},
     "NOUN__AdvType=Tim": {"morph": "AdvType=Tim", POS: NOUN},
@@ -307,3 +307,4 @@ TAG_MAP = {
     "X___": {"morph": "_", POS: X},
     "_SP": {"morph": "_", POS: SPACE},
 }
+# fmt: on

@@ -18,5 +18,5 @@ sentences = [
     "Jakarta adalah kota besar yang nyaris tidak pernah tidur."
     "Kamu ada di mana semalam?",
     "Siapa yang membeli makanan ringan tersebut?",
-    "Siapa presiden pertama Republik Indonesia?"
+    "Siapa presiden pertama Republik Indonesia?",
 ]

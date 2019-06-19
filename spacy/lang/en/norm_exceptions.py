@@ -12,7 +12,6 @@ _exc = {
     "plz": "please",
     "pls": "please",
     "thx": "thanks",
-
     # US vs. UK spelling
     "accessorise": "accessorize",
     "accessorised": "accessorized",
@@ -690,7 +689,7 @@ _exc = {
     "globalising": "globalizing",
     "glueing ": "gluing ",
     "goin": "going",
-    "goin'":"going",
+    "goin'": "going",
     "goitre": "goiter",
     "goitres": "goiters",
     "gonorrhoea": "gonorrhea",
@@ -1758,7 +1757,7 @@ _exc = {
     "yoghourt": "yogurt",
     "yoghourts": "yogurts",
     "yoghurt": "yogurt",
-    "yoghurts": "yogurts"
+    "yoghurts": "yogurts",
 }
 
 
