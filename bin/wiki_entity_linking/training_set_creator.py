@@ -324,18 +324,19 @@ def read_training(nlp, training_dir, dev, limit):
                                         if 5 < sent_length < 100:
                                             ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
                                 else:
-                                    skip_articles.add(current_article_id)
+                                    skip_articles.add(article_id)
                                     current_doc = None
                         except Exception as e:
                             print("Problem parsing article", article_id, e)
-                            skip_articles.add(current_article_id)
+                            skip_articles.add(article_id)
+                            raise e
 
                     # repeat checking this condition in case an exception was thrown
                     if current_doc and (current_article_id == article_id):
                         found_ent = ents_by_offset.get(start + "_" + end,  None)
                         if found_ent:
                             if found_ent.text != alias:
-                                skip_articles.add(current_article_id)
+                                skip_articles.add(article_id)
                                 current_doc = None
                             else:
                                 sent = found_ent.sent.as_doc()

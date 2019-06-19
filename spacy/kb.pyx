@@ -106,9 +106,9 @@ cdef class KnowledgeBase:
             user_warning(Warnings.W018.format(entity=entity))
             return
 
+        # Raise an error if the provided entity vector is not of the correct length
         if len(entity_vector) != self.entity_vector_length:
-            # TODO: proper error
-            raise ValueError("Entity vector length should have been", self.entity_vector_length)
+            raise ValueError(Errors.E141.format(found=len(entity_vector), required=self.entity_vector_length))
 
         vector_index = self.c_add_vector(entity_vector=entity_vector)
 
@@ -121,13 +121,8 @@ cdef class KnowledgeBase:
         return entity_hash
 
     cpdef set_entities(self, entity_list, prob_list, vector_list):
-        if len(entity_list) != len(prob_list):
-            # TODO: proper error
-            raise ValueError("Entity list and prob list should have the same length")
-
-        if len(entity_list) != len(vector_list):
-            # TODO: proper error
-            raise ValueError("Entity list and vector list should have the same length")
+        if len(entity_list) != len(prob_list) or len(entity_list) != len(vector_list):
+            raise ValueError(Errors.E140)
 
         nr_entities = len(entity_list)
         self._entry_index = PreshMap(nr_entities+1)
@@ -138,8 +133,7 @@ cdef class KnowledgeBase:
         while i < nr_entities:
             entity_vector = vector_list[i]
             if len(entity_vector) != self.entity_vector_length:
-                # TODO: proper error
-                raise ValueError("Entity vector is", len(entity_vector), "length but should have been", self.entity_vector_length)
+                raise ValueError(Errors.E141.format(found=len(entity_vector), required=self.entity_vector_length))
 
             entity_hash = self.vocab.strings.add(entity_list[i])
             entry.entity_hash = entity_hash

@@ -1002,7 +1002,7 @@ cdef class DependencyParser(Parser):
 
     @property
     def postprocesses(self):
-        return [nonproj.deprojectivize, merge_subtokens]
+        return [nonproj.deprojectivize]  # , merge_subtokens]
 
     def add_multitask_objective(self, target):
         if target == "cloze":
@@ -1100,8 +1100,7 @@ class EntityLinker(Pipe):
     def require_kb(self):
         # Raise an error if the knowledge base is not initialized.
         if getattr(self, "kb", None) in (None, True, False):
-            # TODO: custom error
-            raise ValueError(Errors.E109.format(name=self.name))
+            raise ValueError(Errors.E139.format(name=self.name))
 
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
         self.require_kb()
