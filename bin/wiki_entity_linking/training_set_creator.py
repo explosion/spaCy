@@ -18,23 +18,21 @@ Gold-standard entities are stored in one file in standoff format (by character o
 ENTITY_FILE = "gold_entities_1000000.csv"   # use this file for faster processing
 
 
-def create_training(entity_def_input, training_output):
+def create_training(wikipedia_input, entity_def_input, training_output):
     wp_to_id = kb_creator.get_entity_to_id(entity_def_input)
-    _process_wikipedia_texts(wp_to_id, training_output, limit=None)
+    _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=None)
 
 
-def _process_wikipedia_texts(wp_to_id, training_output, limit=None):
+def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=None):
     """
     Read the XML wikipedia data to parse out training data:
     raw text data + positive instances
     """
-
     title_regex = re.compile(r'(?<=<title>).*(?=</title>)')
     id_regex = re.compile(r'(?<=<id>)\d*(?=</id>)')
 
     read_ids = set()
-
-    entityfile_loc = training_output + "/" + ENTITY_FILE
+    entityfile_loc = training_output / ENTITY_FILE
     with open(entityfile_loc, mode="w", encoding='utf8') as entityfile:
         # write entity training header file
         _write_training_entity(outputfile=entityfile,
@@ -44,7 +42,7 @@ def _process_wikipedia_texts(wp_to_id, training_output, limit=None):
                                start="start",
                                end="end")
 
-        with bz2.open(wp.ENWIKI_DUMP, mode='rb') as file:
+        with bz2.open(wikipedia_input, mode='rb') as file:
             line = file.readline()
             cnt = 0
             article_text = ""
@@ -104,7 +102,7 @@ def _process_wikipedia_texts(wp_to_id, training_output, limit=None):
                             print("Found duplicate article ID", article_id, clean_line)  # This should never happen ...
                         read_ids.add(article_id)
 
-                # read the title of this article  (outside the revision portion of the document)
+                # read the title of this article (outside the revision portion of the document)
                 if not reading_revision:
                     titles = title_regex.search(clean_line)
                     if titles:
@@ -134,7 +132,7 @@ def _process_wp_text(wp_to_id, entityfile, article_id, article_title, article_te
     # get the raw text without markup etc, keeping only interwiki links
     clean_text = _get_clean_wp_text(text)
 
-    # read the text char by char to get the right offsets of the interwiki links
+    # read the text char by char to get the right offsets for the interwiki links
     final_text = ""
     open_read = 0
     reading_text = True
@@ -274,7 +272,7 @@ def _get_clean_wp_text(article_text):
 
 
 def _write_training_article(article_id, clean_text, training_output):
-    file_loc = training_output + "/" + str(article_id) + ".txt"
+    file_loc = training_output / str(article_id) + ".txt"
     with open(file_loc, mode='w', encoding='utf8') as outputfile:
         outputfile.write(clean_text)
 
@@ -289,11 +287,10 @@ def is_dev(article_id):
 
 def read_training(nlp, training_dir, dev, limit):
     # This method provides training examples that correspond to the entity annotations found by the nlp object
-
-    entityfile_loc = training_dir + "/" + ENTITY_FILE
+    entityfile_loc = training_dir / ENTITY_FILE
     data = []
 
-    # we assume the data is written sequentially
+    # assume the data is written sequentially, so we can reuse the article docs
     current_article_id = None
     current_doc = None
     ents_by_offset = dict()
@@ -347,10 +344,10 @@ def read_training(nlp, training_dir, dev, limit):
                                 gold_end = int(end) - found_ent.sent.start_char
                                 gold_entities = list()
                                 gold_entities.append((gold_start, gold_end, wp_title))
-                                gold = GoldParse(doc=current_doc, links=gold_entities)
+                                gold = GoldParse(doc=sent, links=gold_entities)
                                 data.append((sent, gold))
                                 total_entities += 1
-                                if len(data) % 500 == 0:
+                                if len(data) % 2500 == 0:
                                     print(" -read", total_entities, "entities")
 
     print(" -read", total_entities, "entities")

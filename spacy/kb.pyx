@@ -1,29 +1,21 @@
 # cython: infer_types=True
 # cython: profile=True
 # coding: utf8
-from collections import OrderedDict
-from pathlib import Path, WindowsPath
-
-from cpython.exc cimport PyErr_CheckSignals
-
-from spacy import util
 from spacy.errors import Errors, Warnings, user_warning
 
+from pathlib import Path
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 
-from cpython.mem cimport PyMem_Malloc
 from cpython.exc cimport PyErr_SetFromErrno
 
-from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, feof, fseek
+from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
-from libc.stdlib cimport qsort
 
 from .typedefs cimport hash_t
 
 from os import path
 from libcpp.vector cimport vector
-
 
 
 cdef class Candidate:
@@ -78,8 +70,6 @@ cdef class KnowledgeBase:
 
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
-
-        # Should we initialize self._entries and self._aliases_table to specific starting size ?
 
         self.vocab.strings.add("")
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
@@ -165,47 +155,11 @@ cdef class KnowledgeBase:
 
             i += 1
 
-    # TODO: this method is untested
-    cpdef set_aliases(self, alias_list, entities_list, probabilities_list):
-        nr_aliases = len(alias_list)
-        self._alias_index = PreshMap(nr_aliases+1)
-        self._aliases_table = alias_vec(nr_aliases+1)
-
-        i = 0
-        cdef AliasC alias
-        cdef int32_t dummy_value = 342
-        while i <= nr_aliases:
-            alias_hash = self.vocab.strings.add(alias_list[i])
-            entities = entities_list[i]
-            probabilities = probabilities_list[i]
-
-            nr_candidates = len(entities)
-            entry_indices = vector[int64_t](nr_candidates)
-            probs = vector[float](nr_candidates)
-
-            for j in range(0, nr_candidates):
-                entity = entities[j]
-                entity_hash = self.vocab.strings[entity]
-                if not entity_hash in self._entry_index:
-                    raise ValueError(Errors.E134.format(alias=alias, entity=entity))
-
-                entry_index = <int64_t>self._entry_index.get(entity_hash)
-                entry_indices[j] = entry_index
-
-            alias.entry_indices = entry_indices
-            alias.probs = probs
-
-            self._aliases_table[i] = alias
-            self._alias_index[alias_hash] = i
-
-            i += 1
-
     def add_alias(self, unicode alias, entities, probabilities):
         """
         For a given alias, add its potential entities and prior probabilies to the KB.
         Return the alias_hash at the end
         """
-
         # Throw an error if the length of entities and probabilities are not the same
         if not len(entities) == len(probabilities):
             raise ValueError(Errors.E132.format(alias=alias,

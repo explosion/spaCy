@@ -18,7 +18,6 @@ ctypedef vector[float_vec] float_matrix
 
 # Object used by the Entity Linker that summarizes one entity-alias candidate combination.
 cdef class Candidate:
-
     cdef readonly KnowledgeBase kb
     cdef hash_t entity_hash
     cdef float entity_freq
@@ -143,7 +142,6 @@ cdef class KnowledgeBase:
 
     cpdef load_bulk(self, loc)
     cpdef set_entities(self, entity_list, prob_list, vector_list)
-    cpdef set_aliases(self, alias_list, entities_list, probabilities_list)
 
 
 cdef class Writer:

@@ -1,31 +1,31 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from bin.wiki_entity_linking.train_descriptions import EntityEncoder
+from .train_descriptions import EntityEncoder
+from . import wikidata_processor as wd, wikipedia_processor as wp
 from spacy.kb import KnowledgeBase
 
 import csv
 import datetime
 
-from bin.wiki_entity_linking import wikidata_processor as wd, wikipedia_processor as wp
 
-INPUT_DIM = 300  # dimension of pre-trained vectors
-DESC_WIDTH = 64
+INPUT_DIM = 300  # dimension of pre-trained input vectors
+DESC_WIDTH = 64  # dimension of output entity vectors
 
 
 def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
               entity_def_output, entity_descr_output,
-              count_input, prior_prob_input, to_print=False):
+              count_input, prior_prob_input, wikidata_input):
     # Create the knowledge base from Wikidata entries
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=DESC_WIDTH)
 
     # disable this part of the pipeline when rerunning the KB generation from preprocessed files
-    read_raw_data = False
+    read_raw_data = True
 
     if read_raw_data:
         print()
         print(" * _read_wikidata_entities", datetime.datetime.now())
-        title_to_id, id_to_descr = wd.read_wikidata_entities_json(limit=None)
+        title_to_id, id_to_descr = wd.read_wikidata_entities_json(wikidata_input)
 
         # write the title-ID and ID-description mappings to file
         _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_to_descr)
@@ -40,7 +40,7 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
     print()
     entity_frequencies = wp.get_all_frequencies(count_input=count_input)
 
-    # filter the entities for in the KB by frequency, because there's just too much data otherwise
+    # filter the entities for in the KB by frequency, because there's just too much data (8M entities) otherwise
     filtered_title_to_id = dict()
     entity_list = list()
     description_list = list()
@@ -60,11 +60,10 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
     print()
     print(" * train entity encoder", datetime.datetime.now())
     print()
-
     encoder = EntityEncoder(nlp, INPUT_DIM, DESC_WIDTH)
     encoder.train(description_list=description_list, to_print=True)
-    print()
 
+    print()
     print(" * get entity embeddings", datetime.datetime.now())
     print()
     embeddings = encoder.apply_encoder(description_list)
@@ -80,12 +79,10 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
                  max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,
                  prior_prob_input=prior_prob_input)
 
-    if to_print:
-        print()
-        print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
+    print()
+    print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
 
     print("done with kb", datetime.datetime.now())
-
     return kb
 
 
@@ -94,6 +91,7 @@ def _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_
         id_file.write("WP_title" + "|" + "WD_id" + "\n")
         for title, qid in title_to_id.items():
             id_file.write(title + "|" + str(qid) + "\n")
+
     with open(entity_descr_output, mode='w', encoding='utf8') as descr_file:
         descr_file.write("WD_id" + "|" + "description" + "\n")
         for qid, descr in id_to_descr.items():
@@ -108,7 +106,6 @@ def get_entity_to_id(entity_def_output):
         next(csvreader)
         for row in csvreader:
             entity_to_id[row[0]] = row[1]
-
     return entity_to_id
 
 
@@ -120,15 +117,11 @@ def _get_id_to_description(entity_descr_output):
         next(csvreader)
         for row in csvreader:
             id_to_desc[row[0]] = row[1]
-
     return id_to_desc
 
 
-def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_input, to_print=False):
+def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_input):
     wp_titles = title_to_id.keys()
-
-    if to_print:
-        print("wp titles:", wp_titles)
 
     # adding aliases with prior probabilities
     # we can read this file sequentially, it's sorted by alias, and then by count
@@ -175,7 +168,4 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
             previous_alias = new_alias
 
             line = prior_file.readline()
-
-    if to_print:
-        print("added", kb.get_size_aliases(), "aliases:", kb.get_alias_strings())
 

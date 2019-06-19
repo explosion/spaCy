@@ -5,17 +5,15 @@ import bz2
 import json
 import datetime
 
-# TODO: remove hardcoded paths
-WIKIDATA_JSON = 'C:/Users/Sofie/Documents/data/wikidata/wikidata-20190304-all.json.bz2'
 
-
-def read_wikidata_entities_json(limit=None, to_print=False):
+def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False):
     # Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines.
+    # get latest-all.json.bz2 from https://dumps.wikimedia.org/wikidatawiki/entities/
 
     lang = 'en'
     site_filter = 'enwiki'
 
-    # filter currently disabled to get ALL data
+    # properties filter (currently disabled to get ALL data)
     prop_filter = dict()
     # prop_filter = {'P31': {'Q5', 'Q15632617'}}     # currently defined as OR: one property suffices to be selected
 
@@ -30,7 +28,7 @@ def read_wikidata_entities_json(limit=None, to_print=False):
     parse_aliases = False
     parse_claims = False
 
-    with bz2.open(WIKIDATA_JSON, mode='rb') as file:
+    with bz2.open(wikidata_file, mode='rb') as file:
         line = file.readline()
         cnt = 0
         while line and (not limit or cnt < limit):

@@ -2,35 +2,45 @@
 from __future__ import unicode_literals
 
 import random
-
-from spacy.util import minibatch, compounding
+import datetime
+from pathlib import Path
 
 from bin.wiki_entity_linking import training_set_creator, kb_creator, wikipedia_processor as wp
 from bin.wiki_entity_linking.kb_creator import DESC_WIDTH
 
 import spacy
 from spacy.kb import KnowledgeBase
-import datetime
+from spacy.util import minibatch, compounding
 
 """
 Demonstrate how to build a knowledge base from WikiData and run an Entity Linking algorithm.
 """
 
-PRIOR_PROB = 'C:/Users/Sofie/Documents/data/wikipedia/prior_prob.csv'
-ENTITY_COUNTS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_freq.csv'
-ENTITY_DEFS = 'C:/Users/Sofie/Documents/data/wikipedia/entity_defs.csv'
-ENTITY_DESCR = 'C:/Users/Sofie/Documents/data/wikipedia/entity_descriptions.csv'
+ROOT_DIR = Path("C:/Users/Sofie/Documents/data/")
+OUTPUT_DIR = ROOT_DIR / 'wikipedia'
+TRAINING_DIR = OUTPUT_DIR / 'training_data_nel'
 
-KB_FILE = 'C:/Users/Sofie/Documents/data/wikipedia/kb_1/kb'
-NLP_1_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/nlp_1'
-NLP_2_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/nlp_2'
+PRIOR_PROB = OUTPUT_DIR / 'prior_prob.csv'
+ENTITY_COUNTS = OUTPUT_DIR / 'entity_freq.csv'
+ENTITY_DEFS = OUTPUT_DIR / 'entity_defs.csv'
+ENTITY_DESCR = OUTPUT_DIR / 'entity_descriptions.csv'
 
-TRAINING_DIR = 'C:/Users/Sofie/Documents/data/wikipedia/training_data_nel/'
+KB_FILE = OUTPUT_DIR / 'kb_1' / 'kb'
+NLP_1_DIR = OUTPUT_DIR / 'nlp_1'
+NLP_2_DIR = OUTPUT_DIR / 'nlp_2'
 
+# get latest-all.json.bz2 from https://dumps.wikimedia.org/wikidatawiki/entities/
+WIKIDATA_JSON = ROOT_DIR / 'wikidata' / 'wikidata-20190304-all.json.bz2'
+
+# get enwiki-latest-pages-articles-multistream.xml.bz2 from https://dumps.wikimedia.org/enwiki/latest/
+ENWIKI_DUMP = ROOT_DIR / 'wikipedia' / 'enwiki-20190320-pages-articles-multistream.xml.bz2'
+
+# KB construction parameters
 MAX_CANDIDATES = 10
 MIN_ENTITY_FREQ = 20
 MIN_PAIR_OCC = 5
 
+# model training parameters
 EPOCHS = 10
 DROPOUT = 0.1
 LEARN_RATE = 0.005
@@ -38,6 +48,7 @@ L2 = 1e-6
 
 
 def run_pipeline():
+    # set the appropriate booleans to define which parts of the pipeline should be re(run)
     print("START", datetime.datetime.now())
     print()
     nlp_1 = spacy.load('en_core_web_lg')
@@ -67,22 +78,19 @@ def run_pipeline():
     to_write_nlp = False
     to_read_nlp = False
 
-    # STEP 1 : create prior probabilities from WP
-    # run only once !
+    # STEP 1 : create prior probabilities from WP (run only once)
     if to_create_prior_probs:
         print("STEP 1: to_create_prior_probs", datetime.datetime.now())
-        wp.read_wikipedia_prior_probs(prior_prob_output=PRIOR_PROB)
+        wp.read_wikipedia_prior_probs(wikipedia_input=ENWIKI_DUMP, prior_prob_output=PRIOR_PROB)
         print()
 
-    # STEP 2 : deduce entity frequencies from WP
-    # run only once !
+    # STEP 2 : deduce entity frequencies from WP (run only once)
     if to_create_entity_counts:
         print("STEP 2: to_create_entity_counts", datetime.datetime.now())
         wp.write_entity_counts(prior_prob_input=PRIOR_PROB, count_output=ENTITY_COUNTS, to_print=False)
         print()
 
-    # STEP 3 : create KB and write to file
-    # run only once !
+    # STEP 3 : create KB and write to file (run only once)
     if to_create_kb:
         print("STEP 3a: to_create_kb", datetime.datetime.now())
         kb_1 = kb_creator.create_kb(nlp_1,
@@ -93,7 +101,7 @@ def run_pipeline():
                                     entity_descr_output=ENTITY_DESCR,
                                     count_input=ENTITY_COUNTS,
                                     prior_prob_input=PRIOR_PROB,
-                                    to_print=False)
+                                    wikidata_input=WIKIDATA_JSON)
         print("kb entities:", kb_1.get_size_entities())
         print("kb aliases:", kb_1.get_size_aliases())
         print()
@@ -121,7 +129,9 @@ def run_pipeline():
     # STEP 5: create a training dataset from WP
     if create_wp_training:
         print("STEP 5: create training dataset", datetime.datetime.now())
-        training_set_creator.create_training(entity_def_input=ENTITY_DEFS, training_output=TRAINING_DIR)
+        training_set_creator.create_training(wikipedia_input=ENWIKI_DUMP,
+                                             entity_def_input=ENTITY_DEFS,
+                                             training_output=TRAINING_DIR)
 
     # STEP 6: create and train the entity linking pipe
     el_pipe = nlp_2.create_pipe(name='entity_linker', config={})
@@ -136,7 +146,8 @@ def run_pipeline():
 
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
-        train_limit = 25000
+        # define the size (nr of entities) of training and dev set
+        train_limit = 10000
         dev_limit = 5000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
@@ -157,7 +168,6 @@ def run_pipeline():
 
         if not train_data:
             print("Did not find any training data")
-
         else:
             for itn in range(EPOCHS):
                 random.shuffle(train_data)
@@ -196,7 +206,7 @@ def run_pipeline():
             print()
 
             counts, acc_r, acc_r_label, acc_p, acc_p_label, acc_o, acc_o_label = _measure_baselines(dev_data, kb_2)
-            print("dev counts:", sorted(counts))
+            print("dev counts:", sorted(counts.items(), key=lambda x: x[0]))
             print("dev acc oracle:", round(acc_o, 3), [(x, round(y, 3)) for x, y in acc_o_label.items()])
             print("dev acc random:", round(acc_r, 3), [(x, round(y, 3)) for x, y in acc_r_label.items()])
             print("dev acc prior:", round(acc_p, 3), [(x, round(y, 3)) for x, y in acc_p_label.items()])
@@ -215,7 +225,6 @@ def run_pipeline():
                 dev_acc_context, dev_acc_context_dict = _measure_accuracy(dev_data, el_pipe)
                 print("dev acc context avg:", round(dev_acc_context, 3),
                       [(x, round(y, 3)) for x, y in dev_acc_context_dict.items()])
-                print()
 
             # reset for follow-up tests
             el_pipe.context_weight = 1
@@ -227,7 +236,6 @@ def run_pipeline():
         print("STEP 8: applying Entity Linking to toy example", datetime.datetime.now())
         print()
         run_el_toy_example(nlp=nlp_2)
-        print()
 
     # STEP 9: write the NLP pipeline (including entity linker) to file
     if to_write_nlp:
@@ -400,25 +408,8 @@ def run_el_toy_example(nlp):
     doc = nlp(text)
     print(text)
     for ent in doc.ents:
-        print("ent", ent.text, ent.label_, ent.kb_id_)
+        print(" ent", ent.text, ent.label_, ent.kb_id_)
     print()
-
-    # Q4426480 is her husband
-    text = "Ada Lovelace was the countess of Lovelace. She's known for her programming work on the analytical engine. "\
-           "She loved her husband William King dearly. "
-    doc = nlp(text)
-    print(text)
-    for ent in doc.ents:
-        print("ent", ent.text, ent.label_, ent.kb_id_)
-    print()
-
-    # Q3568763 is her tutor
-    text = "Ada Lovelace was the countess of Lovelace. She's known for her programming work on the analytical engine. "\
-           "She was tutored by her favorite physics tutor William King."
-    doc = nlp(text)
-    print(text)
-    for ent in doc.ents:
-        print("ent", ent.text, ent.label_, ent.kb_id_)
 
 
 if __name__ == "__main__":

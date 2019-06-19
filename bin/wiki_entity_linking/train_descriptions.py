@@ -32,8 +32,6 @@ class EntityEncoder:
         if self.encoder is None:
             raise ValueError("Can not apply encoder before training it")
 
-        print("Encoding", len(description_list), "entities")
-
         batch_size = 100000
 
         start = 0
@@ -48,13 +46,11 @@ class EntityEncoder:
 
             start = start + batch_size
             stop = min(stop + batch_size, len(description_list))
-            print("encoded :", len(encodings))
 
         return encodings
 
     def train(self, description_list, to_print=False):
         processed, loss = self._train_model(description_list)
-
         if to_print:
             print("Trained on", processed, "entities across", self.EPOCHS, "epochs")
             print("Final loss:", loss)
@@ -111,15 +107,12 @@ class EntityEncoder:
                 Affine(hidden_with, orig_width)
             )
             self.model = self.encoder >> zero_init(Affine(orig_width, hidden_with, drop_factor=0.0))
-
         self.sgd = create_default_optimizer(self.model.ops)
 
     def _update(self, vectors):
         predictions, bp_model = self.model.begin_update(np.asarray(vectors), drop=self.DROP)
-
         loss, d_scores = self._get_loss(scores=predictions, golds=np.asarray(vectors))
         bp_model(d_scores, sgd=self.sgd)
-
         return loss / len(vectors)
 
     @staticmethod

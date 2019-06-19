@@ -11,11 +11,6 @@ Process a Wikipedia dump to calculate entity frequencies and prior probabilities
 Write these results to file for downstream KB and training data generation.
 """
 
-
-# TODO: remove hardcoded paths
-ENWIKI_DUMP = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream.xml.bz2'
-ENWIKI_INDEX = 'C:/Users/Sofie/Documents/data/wikipedia/enwiki-20190320-pages-articles-multistream-index.txt.bz2'
-
 map_alias_to_link = dict()
 
 # these will/should be matched ignoring case
@@ -46,15 +41,13 @@ for ns in wiki_namespaces:
 ns_regex = re.compile(ns_regex, re.IGNORECASE)
 
 
-def read_wikipedia_prior_probs(prior_prob_output):
+def read_wikipedia_prior_probs(wikipedia_input, prior_prob_output):
     """
-    Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities
-    The full file takes about 2h to parse 1100M lines (update printed every 5M lines).
-    It works relatively fast because we don't care about which article we parsed the interwiki from,
-    we just process line by line.
+    Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities.
+    The full file takes about 2h to parse 1100M lines.
+    It works relatively fast because it runs line by line, irrelevant of which article the intrawiki is from.
     """
-
-    with bz2.open(ENWIKI_DUMP, mode='rb') as file:
+    with bz2.open(wikipedia_input, mode='rb') as file:
         line = file.readline()
         cnt = 0
         while line:
@@ -70,7 +63,7 @@ def read_wikipedia_prior_probs(prior_prob_output):
             line = file.readline()
             cnt += 1
 
-    # write all aliases and their entities and occurrences to file
+    # write all aliases and their entities and count occurrences to file
     with open(prior_prob_output, mode='w', encoding='utf8') as outputfile:
         outputfile.write("alias" + "|" + "count" + "|" + "entity" + "\n")
         for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
@@ -108,7 +101,7 @@ def get_wp_links(text):
         if ns_regex.match(match):
             pass  # ignore namespaces at the beginning of the string
 
-        # this is a simple link, with the alias the same as the mention
+        # this is a simple [[link]], with the alias the same as the mention
         elif "|" not in match:
             aliases.append(match)
             entities.append(match)

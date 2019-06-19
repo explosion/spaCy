@@ -1068,8 +1068,6 @@ class EntityLinker(Pipe):
     DOCS: TODO
     """
     name = 'entity_linker'
-    context_weight = 1
-    prior_weight = 1
 
     @classmethod
     def Model(cls, **cfg):
@@ -1078,18 +1076,17 @@ class EntityLinker(Pipe):
 
         embed_width = cfg.get("embed_width", 300)
         hidden_width = cfg.get("hidden_width", 128)
-
-        # no default because this needs to correspond with the KB entity length
-        entity_width = cfg.get("entity_width")
+        entity_width = cfg.get("entity_width")  # this needs to correspond with the KB entity length
 
         model = build_nel_encoder(in_width=embed_width, hidden_width=hidden_width, end_width=entity_width, **cfg)
-
         return model
 
     def __init__(self, **cfg):
         self.model = True
         self.kb = None
         self.cfg = dict(cfg)
+        self.context_weight = cfg.get("context_weight", 1)
+        self.prior_weight = cfg.get("prior_weight", 1)
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1162,7 +1159,6 @@ class EntityLinker(Pipe):
             if losses is not None:
                 losses[self.name] += loss
             return loss
-
         return 0
 
     def get_loss(self, docs, golds, scores):
@@ -1224,7 +1220,7 @@ class EntityLinker(Pipe):
                             kb_id = c.entity_
                             entity_encoding = c.entity_vector
                             sim = float(cosine(np.asarray([entity_encoding]), context_enc_t)) * self.context_weight
-                            score = prior_prob + sim - (prior_prob*sim)  # put weights on the different factors ?
+                            score = prior_prob + sim - (prior_prob*sim)
                             scores.append(score)
 
                         # TODO: thresholding
