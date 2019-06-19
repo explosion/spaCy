@@ -1,0 +1,36 @@
+.root
+    margin-bottom: var(--spacing-md)
+
+    &:after
+        content: ""
+        display: block
+        width: 10%
+        min-width: 6rem
+        height: 6px
+        background: var(--color-theme)
+        margin-top: 3rem
+
+.h1
+    padding-top: 0 !important
+    display: inline
+    margin-bottom: 0.5em
+    vertical-align: middle
+
+    &[id]:target
+        padding-top: 0 !important
+
+.teaser
+    font: normal var(--font-size-sm)/var(--line-height-md) var(--font-primary)
+    color: var(--color-dark)
+    margin-bottom: var(--spacing-sm)
+    margin-top: var(--spacing-sm)
+
+.image
+    $image-size: 100px
+    width: $image-size
+    height: $image-size
+    overflow: hidden
+    border-radius: 50%
+
+.corner
+    float: right

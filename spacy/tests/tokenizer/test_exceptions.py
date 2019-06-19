@@ -29,17 +29,19 @@ def test_tokenizer_handles_emoticons(tokenizer):
     assert tokens[17].text == ":D"
     assert tokens[18].text == "=|"
     assert tokens[19].text == '")'
-    assert tokens[20].text == ':>'
-    assert tokens[21].text == '....'
+    assert tokens[20].text == ":>"
+    assert tokens[21].text == "...."
 
 
-@pytest.mark.parametrize('text,length', [("example:)", 3), ("108)", 2), ("XDN", 1)])
+@pytest.mark.parametrize("text,length", [("example:)", 3), ("108)", 2), ("XDN", 1)])
 def test_tokenizer_excludes_false_pos_emoticons(tokenizer, text, length):
     tokens = tokenizer(text)
     assert len(tokens) == length
 
-@pytest.mark.parametrize('text,length', [('can you still dunk?🍕🍔😵LOL', 8),
-                                         ('i💙you', 3), ('🤘🤘yay!', 4)])
+
+@pytest.mark.parametrize(
+    "text,length", [("can you still dunk?🍕🍔😵LOL", 8), ("i💙you", 3), ("🤘🤘yay!", 4)]
+)
 def test_tokenizer_handles_emoji(tokenizer, text, length):
     # These break on narrow unicode builds, e.g. Windows
     if sys.maxunicode >= 1114111:

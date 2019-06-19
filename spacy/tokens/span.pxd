@@ -11,6 +11,7 @@ cdef class Span:
     cdef readonly int start_char
     cdef readonly int end_char
     cdef readonly attr_t label
+    cdef readonly attr_t kb_id
 
     cdef public _vector
     cdef public _vector_norm

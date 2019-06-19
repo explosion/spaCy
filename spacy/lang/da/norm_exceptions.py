@@ -516,7 +516,7 @@ _exc = {
     "øjeåbner": "øjenåbner",  # 1
     "økonomiministerium": "økonomiministerie",  # 1
     "ørenring": "ørering",  # 2
-    "øvehefte": "øvehæfte"  # 1
+    "øvehefte": "øvehæfte",  # 1
 }
 
 

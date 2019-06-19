@@ -1,0 +1,45 @@
+@import base
+
+.root
+    position: relative
+    padding: 2.5rem 0
+    overflow: auto
+    background: var(--color-subtle-light)
+    font: var(--font-size-md)/var(--line-height-md) var(--font-primary)
+
+.content
+    padding: 2rem 7.5rem 3rem
+    margin: 0 auto
+    width: var(--width-content)
+    max-width: 100%
+
+@include breakpoint(max, sm)
+    .content
+        padding: 3rem
+
+.label
+    color: var(--color-subtle-dark)
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+
+.full
+    flex: 100%
+    grid-column: 1 / span 3
+
+.column
+    margin-bottom: var(--spacing-md)
+
+.copy
+    border-top: 1px dotted var(--color-subtle)
+    font-size: var(--font-size-xs)
+    color: var(--color-subtle-dark)
+    text-align: center
+    width: 100%
+
+.logo
+    margin: 0 3rem
+    display: inline-block
+    vertical-align: middle
+
+    &:hover
+        color: var(--color-theme)

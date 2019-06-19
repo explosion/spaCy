@@ -2,10 +2,11 @@
 from __future__ import unicode_literals
 
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 á a ab aber ach acht achte achten achter achtes ag alle allein allem allen
-aller allerdings alles allgemeinen als also am an andere anderen andern anders
-auch auf aus ausser außer ausserdem außerdem
+aller allerdings alles allgemeinen als also am an andere anderen anderem andern
+anders auch auf aus ausser außer ausserdem außerdem
 
 bald bei beide beiden beim beispiel bekannt bereits besonders besser besten bin
 bis bisher bist
@@ -34,8 +35,8 @@ großen grosser großer grosses großes gut gute guter gutes
 habe haben habt hast hat hatte hätte hatten hätten heisst heißt her heute hier
 hin hinter hoch
 
-ich ihm ihn ihnen ihr ihre ihrem ihrer ihres im immer in indem infolgedessen
-ins irgend ist
+ich ihm ihn ihnen ihr ihre ihrem ihren ihrer ihres im immer in indem
+infolgedessen ins irgend ist
 
 ja jahr jahre jahren je jede jedem jeden jeder jedermann jedermanns jedoch
 jemand jemandem jemanden jene jenem jenen jener jenes jetzt
@@ -78,4 +79,5 @@ wollt wollte wollten worden wurde würde wurden würden
 
 zehn zehnte zehnten zehnter zehntes zeit zu zuerst zugleich zum zunächst zur
 zurück zusammen zwanzig zwar zwei zweite zweiten zweiter zweites zwischen
-""".split())
+""".split()
+)

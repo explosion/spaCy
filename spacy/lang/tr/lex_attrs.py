@@ -4,20 +4,45 @@ from __future__ import unicode_literals
 from ...attrs import LIKE_NUM
 
 
-#Thirteen, fifteen etc. are written separate: on üç
+# Thirteen, fifteen etc. are written separate: on üç
 
-_num_words = ['bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz',
-              'dokuz', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış',
-              'yetmiş', 'seksen', 'doksan', 'yüz', 'bin', 'milyon',
-              'milyar', 'katrilyon', 'kentilyon']
+_num_words = [
+    "bir",
+    "iki",
+    "üç",
+    "dört",
+    "beş",
+    "altı",
+    "yedi",
+    "sekiz",
+    "dokuz",
+    "on",
+    "yirmi",
+    "otuz",
+    "kırk",
+    "elli",
+    "altmış",
+    "yetmiş",
+    "seksen",
+    "doksan",
+    "yüz",
+    "bin",
+    "milyon",
+    "milyar",
+    "trilyon",
+    "katrilyon",
+    "kentilyon",
+]
 
 
 def like_num(text):
-    text = text.replace(',', '').replace('.', '')
+    if text.startswith(("+", "-", "±", "~")):
+        text = text[1:]
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if text.count('/') == 1:
-        num, denom = text.split('/')
+    if text.count("/") == 1:
+        num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
     if text.lower() in _num_words:
@@ -25,7 +50,4 @@ def like_num(text):
     return False
 
 
-LEX_ATTRS = {
-    LIKE_NUM: like_num
-}
-
+LEX_ATTRS = {LIKE_NUM: like_num}

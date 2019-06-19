@@ -1,11 +1,12 @@
-from .download import download
-from .info import info
-from .link import link
-from .package import package
-from .profile import profile
-from .train import train
-from .evaluate import evaluate
-from .convert import convert
-from .vocab import make_vocab as vocab
-from .init_model import init_model
-from .validate import validate
+from .download import download  # noqa: F401
+from .info import info  # noqa: F401
+from .link import link  # noqa: F401
+from .package import package  # noqa: F401
+from .profile import profile  # noqa: F401
+from .train import train  # noqa: F401
+from .pretrain import pretrain  # noqa: F401
+from .debug_data import debug_data  # noqa: F401
+from .evaluate import evaluate  # noqa: F401
+from .convert import convert  # noqa: F401
+from .init_model import init_model  # noqa: F401
+from .validate import validate  # noqa: F401

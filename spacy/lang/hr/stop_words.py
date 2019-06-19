@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 
 # Source: https://github.com/stopwords-iso/stopwords-hr
-
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a
 ah
 aha
@@ -20,7 +20,7 @@ baš
 bez
 bi
 bih
-bijah 
+bijah
 bijahu
 bijaše
 bijasmo
@@ -40,7 +40,7 @@ budimo
 budite
 budu
 budući
-bum 
+bum
 bumo
 će
 ćemo
@@ -344,4 +344,5 @@ zbog
 željeo
 zimus
 zum
-""".split())
+""".split()
+)
