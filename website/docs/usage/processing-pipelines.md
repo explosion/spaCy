@@ -41,7 +41,7 @@ components. spaCy then does the following:
    `Language` class contains the shared vocabulary, tokenization rules and the
    language-specific annotation scheme.
 2. Iterate over the **pipeline names** and create each component using
-   [`create_pipe`](/api/anguage#create_pipe), which looks them up in
+   [`create_pipe`](/api/language#create_pipe), which looks them up in
    `Language.factories`.
 3. Add each pipeline component to the pipeline in order, using
    [`add_pipe`](/api/language#add_pipe).

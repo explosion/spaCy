@@ -11,7 +11,7 @@ Example sentences to test spaCy and its language models.
 
 
 sentences = [
-    "Apple cherche à acheter une startup anglaise pour 1 milliard de dollars",
+    "Apple cherche à acheter une start-up anglaise pour 1 milliard de dollars",
     "Les voitures autonomes déplacent la responsabilité de l'assurance vers les constructeurs",
     "San Francisco envisage d'interdire les robots coursiers sur les trottoirs",
     "Londres est une grande ville du Royaume-Uni",
@@ -21,6 +21,6 @@ sentences = [
     "Nouvelles attaques de Trump contre le maire de Londres",
     "Où es-tu ?",
     "Qui est le président de la France ?",
-    "Où est la capitale des Etats-Unis ?",
+    "Où est la capitale des États-Unis ?",
     "Quand est né Barack Obama ?",
 ]
