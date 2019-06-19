@@ -1,5 +1,4 @@
-import spacy
-from spacy.lang.en import English
+# coding: utf-8
 from ..util import make_tempdir
 from ...util import ensure_path
 
