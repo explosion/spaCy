@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .tag_map import TAG_MAP
 
 # uncomment if files are available
 # from .norm_exceptions import NORM_EXCEPTIONS
@@ -49,7 +50,7 @@ class LithuanianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
 
     # if available: add tag map
-    # tag_map = dict(TAG_MAP)
+    tag_map = dict(TAG_MAP)
 
     # if available: add morph rules
     # morph_rules = dict(MORPH_RULES)
