@@ -285,18 +285,19 @@ improvement.
 
 ```bash
 $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
-[--depth] [--embed-rows] [--dropout] [--seed] [--n-iter] [--use-vectors]
+[--depth] [--embed-rows] [--loss_func] [--dropout] [--seed] [--n-iter] [--use-vectors]
 [--n-save_every]
 ```
 
 | Argument                | Type       | Description                                                                                                                       |
 | ----------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `texts_loc`             | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `tokens`. [See here](#pretrain-jsonl) for details. |
+| `texts_loc`             | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `"tokens"`. [See here](#pretrain-jsonl) for details. |
 | `vectors_model`         | positional | Name or path to spaCy model with vectors to learn from.                                                                           |
 | `output_dir`            | positional | Directory to write models to on each epoch.                                                                                       |
 | `--width`, `-cw`        | option     | Width of CNN layers.                                                                                                              |
 | `--depth`, `-cd`        | option     | Depth of CNN layers.                                                                                                              |
 | `--embed-rows`, `-er`   | option     | Number of embedding rows.                                                                                                         |
+| `--loss-func`, `-L`     | option     | Loss function to use for the objective. Either `"L2"` or `"cosine"`.                                                              |
 | `--dropout`, `-d`       | option     | Dropout rate.                                                                                                                     |
 | `--batch-size`, `-bs`   | option     | Number of words per training batch.                                                                                               |
 | `--max-length`, `-xw`   | option     | Maximum words per example. Longer examples are discarded.                                                                         |
@@ -304,7 +305,7 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 | `--seed`, `-s`          | option     | Seed for random number generators.                                                                                                |
 | `--n-iter`, `-i`        | option     | Number of iterations to pretrain.                                                                                                 |
 | `--use-vectors`, `-uv`  | flag       | Whether to use the static vectors as input features.                                                                              |
-| `--n-save_every`, `-se` | option     | Save model every X batches.                                                                                                       |
+| `--n-save-every`, `-se` | option     | Save model every X batches.                                                                                                       |
 | `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag> | option        | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.|
 | **CREATES**             | weights    | The pre-trained weights that can be used to initialize `spacy train`.                                                             |
 

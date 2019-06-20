@@ -23,18 +23,19 @@ from .train import _load_pretrained_tok2vec
 
 
 @plac.annotations(
-    texts_loc=("Path to jsonl file with texts to learn from", "positional", None, str),
-    vectors_model=("Name or path to vectors model to learn from"),
-    output_dir=("Directory to write models each epoch", "positional", None, str),
+    texts_loc=("Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the "
+               "key 'tokens'", "positional", None, str),
+    vectors_model=("Name or path to spaCy model with vectors to learn from"),
+    output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
-    embed_rows=("Embedding rows", "option", "er", int),
-    loss_func=("Loss to use for the objective. L2 or cosine", "option", "L", str),
+    embed_rows=("Number of embedding rows", "option", "er", int),
+    loss_func=("Loss function to use for the objective. Either 'L2' or 'cosine'", "option", "L", str),
     use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
-    dropout=("Dropout", "option", "d", float),
+    dropout=("Dropout rate", "option", "d", float),
     batch_size=("Number of words per training batch", "option", "bs", int),
-    max_length=("Max words per example.", "option", "xw", int),
-    min_length=("Min words per example.", "option", "nw", int),
+    max_length=("Max words per example. Longer examples are discarded", "option", "xw", int),
+    min_length=("Min words per example. Shorter examples are discarded", "option", "nw", int),
     seed=("Seed for random number generators", "option", "s", int),
     n_iter=("Number of iterations to pretrain", "option", "i", int),
     n_save_every=("Save model every X batches.", "option", "se", int),
@@ -250,6 +251,8 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
         loss = (d_target ** 2).sum()
     elif objective == "cosine":
         loss, d_target = get_cossim_loss(prediction, target)
+    else:
+        raise ValueError(Errors.E139.format(loss_func=objective))
     return loss, d_target
 
 

@@ -402,6 +402,7 @@ class Errors(object):
     E139 = ("Knowledge base for component '{name}' not initialized. Did you forget to call set_kb()?")
     E140 = ("The list of entities, prior probabilities and entity vectors should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the provided {found}.")
+    E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
 
 
 @add_codes
