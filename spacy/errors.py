@@ -399,6 +399,7 @@ class Errors(object):
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input includes either the "
             "`text` or `tokens` key. For more info, see the docs:\n"
             "https://spacy.io/api/cli#pretrain-jsonl")
+    E139 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
 
 
 @add_codes
