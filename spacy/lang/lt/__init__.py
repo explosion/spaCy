@@ -6,10 +6,10 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 from .lemmatizer import LOOKUP
+from .morph_rules import MORPH_RULES
 
 # uncomment if files are available
 # from .norm_exceptions import NORM_EXCEPTIONS
-# from .morph_rules import MORPH_RULES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -49,7 +49,7 @@ class LithuanianDefaults(Language.Defaults):
     tag_map = dict(TAG_MAP)
 
     # if available: add morph rules
-    # morph_rules = dict(MORPH_RULES)
+    morph_rules = dict(MORPH_RULES)
 
     # if available: add lookup lemmatizer
     lemma_lookup = LOOKUP
