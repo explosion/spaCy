@@ -5,15 +5,11 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
+from .lemmatizer import LOOKUP
 
 # uncomment if files are available
 # from .norm_exceptions import NORM_EXCEPTIONS
-# from .tag_map import TAG_MAP
 # from .morph_rules import MORPH_RULES
-
-# uncomment if lookup-based lemmatizer is available
-# from .lemmatizer import LOOKUP
-# from ...lemmatizerlookup import Lemmatizer
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -56,9 +52,7 @@ class LithuanianDefaults(Language.Defaults):
     # morph_rules = dict(MORPH_RULES)
 
     # if available: add lookup lemmatizer
-    # @classmethod
-    # def create_lemmatizer(cls, nlp=None):
-    #     return Lemmatizer(LOOKUP)
+    lemma_lookup = LOOKUP
 
 
 class Lithuanian(Language):
