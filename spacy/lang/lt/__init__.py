@@ -15,9 +15,13 @@ from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
 
+def _return_lt(_):
+    return "lt"
+
+
 class LithuanianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'lt'
+    lex_attr_getters[LANG] = _return_lt
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
     lex_attr_getters.update(LEX_ATTRS)
 
