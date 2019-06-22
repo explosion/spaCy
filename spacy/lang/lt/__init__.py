@@ -27,8 +27,8 @@ class LithuanianDefaults(Language.Defaults):
 
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    tag_map = dict(TAG_MAP)
-    morph_rules = dict(MORPH_RULES)
+    tag_map = TAG_MAP
+    morph_rules = MORPH_RULES
     lemma_lookup = LOOKUP
 
 
