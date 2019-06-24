@@ -42,9 +42,9 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
 
     # filter the entities for in the KB by frequency, because there's just too much data (8M entities) otherwise
     filtered_title_to_id = dict()
-    entity_list = list()
-    description_list = list()
-    frequency_list = list()
+    entity_list = []
+    description_list = []
+    frequency_list = []
     for title, entity in title_to_id.items():
         freq = entity_frequencies.get(title, 0)
         desc = id_to_descr.get(entity, None)
@@ -131,8 +131,8 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
         line = prior_file.readline()
         previous_alias = None
         total_count = 0
-        counts = list()
-        entities = list()
+        counts = []
+        entities = []
         while line:
             splits = line.replace('\n', "").split(sep='|')
             new_alias = splits[0]
@@ -142,8 +142,8 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
             if new_alias != previous_alias and previous_alias:
                 # done reading the previous alias --> output
                 if len(entities) > 0:
-                    selected_entities = list()
-                    prior_probs = list()
+                    selected_entities = []
+                    prior_probs = []
                     for ent_count, ent_string in zip(counts, entities):
                         if ent_string in wp_titles:
                             wd_id = title_to_id[ent_string]
@@ -157,8 +157,8 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
                         except ValueError as e:
                             print(e)
                 total_count = 0
-                counts = list()
-                entities = list()
+                counts = []
+                entities = []
 
             total_count += count
 

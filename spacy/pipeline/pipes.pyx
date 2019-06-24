@@ -1131,8 +1131,8 @@ class EntityLinker(Pipe):
             docs = [docs]
             golds = [golds]
 
-        context_docs = list()
-        entity_encodings = list()
+        context_docs = []
+        entity_encodings = []
 
         for doc, gold in zip(docs, golds):
             for entity in gold.links:
@@ -1198,8 +1198,8 @@ class EntityLinker(Pipe):
         self.require_model()
         self.require_kb()
 
-        final_entities = list()
-        final_kb_ids = list()
+        final_entities = []
+        final_kb_ids = []
 
         if not docs:
             return final_entities, final_kb_ids
@@ -1214,7 +1214,7 @@ class EntityLinker(Pipe):
                 for ent in doc.ents:
                     candidates = self.kb.get_candidates(ent.text)
                     if candidates:
-                        scores = list()
+                        scores = []
                         for c in candidates:
                             prior_prob = c.prior_prob * self.prior_weight
                             kb_id = c.entity_
@@ -1259,11 +1259,10 @@ class EntityLinker(Pipe):
         return self
 
     def rehearse(self, docs, sgd=None, losses=None, **config):
-        # TODO
-        pass
+        raise NotImplementedError
 
     def add_label(self, label):
-        pass
+        raise NotImplementedError
 
 
 class Sentencizer(object):

@@ -343,7 +343,7 @@ def read_training(nlp, training_dir, dev, limit):
                                 # currently feeding the gold data one entity per sentence at a time
                                 gold_start = int(start) - found_ent.sent.start_char
                                 gold_end = int(end) - found_ent.sent.start_char
-                                gold_entities = list()
+                                gold_entities = []
                                 gold_entities.append((gold_start, gold_end, wp_title))
                                 gold = GoldParse(doc=sent, links=gold_entities)
                                 data.append((sent, gold))

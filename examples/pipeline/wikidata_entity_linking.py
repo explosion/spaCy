@@ -147,7 +147,7 @@ def run_pipeline():
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
         # define the size (nr of entities) of training and dev set
-        train_limit = 10000
+        train_limit = 5000
         dev_limit = 5000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
@@ -332,7 +332,7 @@ def _measure_baselines(data, kb):
                     best_candidate = ""
                     random_candidate = ""
                     if candidates:
-                        scores = list()
+                        scores = []
 
                         for c in candidates:
                             scores.append(c.prior_prob)
