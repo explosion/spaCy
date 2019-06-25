@@ -5,6 +5,7 @@ import pytest
 
 from spacy.kb import KnowledgeBase
 from spacy.lang.en import English
+from spacy.pipeline import EntityRuler
 
 
 @pytest.fixture
@@ -101,3 +102,44 @@ def test_candidate_generation(nlp):
     assert(len(mykb.get_candidates('douglas')) == 2)
     assert(len(mykb.get_candidates('adam')) == 1)
     assert(len(mykb.get_candidates('shrubbery')) == 0)
+
+
+def test_preserving_links_asdoc(nlp):
+    """Test that Span.as_doc preserves the existing entity links"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity='Q2', prob=0.8, entity_vector=[1])
+
+    # adding aliases
+    mykb.add_alias(alias='Boston', entities=['Q1'], probabilities=[0.7])
+    mykb.add_alias(alias='Denver', entities=['Q2'], probabilities=[0.6])
+
+    # set up pipeline with NER (Entity Ruler) and NEL (prior probability only, model not trained)
+    sentencizer = nlp.create_pipe("sentencizer")
+    nlp.add_pipe(sentencizer)
+
+    ruler = EntityRuler(nlp)
+    patterns = [{"label": "GPE", "pattern": "Boston"},
+                {"label": "GPE", "pattern": "Denver"}]
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+
+    el_pipe = nlp.create_pipe(name='entity_linker', config={})
+    el_pipe.set_kb(mykb)
+    el_pipe.begin_training()
+    el_pipe.context_weight = 0
+    el_pipe.prior_weight = 1
+    nlp.add_pipe(el_pipe, last=True)
+
+    # test whether the entity links are preserved by the `as_doc()` function
+    text = "She lives in Boston. He lives in Denver."
+    doc = nlp(text)
+    for ent in doc.ents:
+        orig_text = ent.text
+        orig_kb_id = ent.kb_id_
+        sent_doc = ent.sent.as_doc()
+        for s_ent in sent_doc.ents:
+            if s_ent.text == orig_text:
+                assert s_ent.kb_id_ == orig_kb_id

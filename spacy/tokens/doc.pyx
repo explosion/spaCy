@@ -22,7 +22,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_KB_ID, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
@@ -64,6 +64,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_iob
     elif feat_name == ENT_TYPE:
         return token.ent_type
+    elif feat_name == ENT_KB_ID:
+        return token.ent_kb_id
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
@@ -850,7 +852,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.append(TAG)
         # If doc parsed add head and dep attribute
@@ -1004,6 +1006,7 @@ cdef class Doc:
         """
         cdef unicode tag, lemma, ent_type
         deprecation_warning(Warnings.W013.format(obj="Doc"))
+        # TODO: ENT_KB_ID ?
         if len(args) == 3:
             deprecation_warning(Warnings.W003)
             tag, lemma, ent_type = args
