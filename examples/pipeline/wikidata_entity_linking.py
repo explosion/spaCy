@@ -61,22 +61,23 @@ def run_pipeline():
     to_create_kb = False
 
     # read KB back in from file
-    to_read_kb = True
+    to_read_kb = False
     to_test_kb = False
 
     # create training dataset
     create_wp_training = False
 
     # train the EL pipe
-    train_pipe = True
-    measure_performance = True
+    train_pipe = False
+    measure_performance = False
 
     # test the EL pipe on a simple example
-    to_test_pipeline = True
+    to_test_pipeline = False
 
     # write the NLP object, read back in and test again
     to_write_nlp = False
-    to_read_nlp = False
+    to_read_nlp = True
+    test_from_file = True
 
     # STEP 1 : create prior probabilities from WP (run only once)
     if to_create_prior_probs:
@@ -134,21 +135,21 @@ def run_pipeline():
                                              training_output=TRAINING_DIR)
 
     # STEP 6: create and train the entity linking pipe
-    el_pipe = nlp_2.create_pipe(name='entity_linker', config={})
-    el_pipe.set_kb(kb_2)
-    nlp_2.add_pipe(el_pipe, last=True)
-
-    other_pipes = [pipe for pipe in nlp_2.pipe_names if pipe != "entity_linker"]
-    with nlp_2.disable_pipes(*other_pipes):  # only train Entity Linking
-        optimizer = nlp_2.begin_training()
-        optimizer.learn_rate = LEARN_RATE
-        optimizer.L2 = L2
-
     if train_pipe:
+        el_pipe = nlp_2.create_pipe(name='entity_linker', config={})
+        el_pipe.set_kb(kb_2)
+        nlp_2.add_pipe(el_pipe, last=True)
+
+        other_pipes = [pipe for pipe in nlp_2.pipe_names if pipe != "entity_linker"]
+        with nlp_2.disable_pipes(*other_pipes):  # only train Entity Linking
+            optimizer = nlp_2.begin_training()
+            optimizer.learn_rate = LEARN_RATE
+            optimizer.L2 = L2
+
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
         # define the size (nr of entities) of training and dev set
         train_limit = 5000
-        dev_limit = 5000
+        dev_limit = 10000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
                                                         training_dir=TRAINING_DIR,
@@ -230,40 +231,56 @@ def run_pipeline():
             el_pipe.context_weight = 1
             el_pipe.prior_weight = 1
 
-    # STEP 8: apply the EL pipe on a toy example
-    if to_test_pipeline:
-        print()
-        print("STEP 8: applying Entity Linking to toy example", datetime.datetime.now())
-        print()
-        run_el_toy_example(nlp=nlp_2)
+        # STEP 8: apply the EL pipe on a toy example
+        if to_test_pipeline:
+            print()
+            print("STEP 8: applying Entity Linking to toy example", datetime.datetime.now())
+            print()
+            run_el_toy_example(nlp=nlp_2)
 
-    # STEP 9: write the NLP pipeline (including entity linker) to file
-    if to_write_nlp:
-        print()
-        print("STEP 9: testing NLP IO", datetime.datetime.now())
-        print()
-        print("writing to", NLP_2_DIR)
-        nlp_2.to_disk(NLP_2_DIR)
-        print()
+        # STEP 9: write the NLP pipeline (including entity linker) to file
+        if to_write_nlp:
+            print()
+            print("STEP 9: testing NLP IO", datetime.datetime.now())
+            print()
+            print("writing to", NLP_2_DIR)
+            nlp_2.to_disk(NLP_2_DIR)
+            print()
+
+    # verify that the IO has gone correctly
+    if to_read_nlp:
         print("reading from", NLP_2_DIR)
         nlp_3 = spacy.load(NLP_2_DIR)
 
-        # verify that the IO has gone correctly
-        if to_read_nlp:
+        if test_from_file:
+            dev_limit = 5000
+            dev_data = training_set_creator.read_training(nlp=nlp_3,
+                                                          training_dir=TRAINING_DIR,
+                                                          dev=True,
+                                                          limit=dev_limit)
+
+            print("Dev testing from file on", len(dev_data), "articles")
             print()
-            print("running toy example with NLP 2")
+
+            dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data)
+            print("dev acc combo avg:", round(dev_acc_combo, 3),
+                  [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])
+        else:
+            print("running toy example with NLP 3")
             run_el_toy_example(nlp=nlp_3)
 
     print()
     print("STOP", datetime.datetime.now())
 
 
-def _measure_accuracy(data, el_pipe):
+def _measure_accuracy(data, el_pipe=None):
+    # If the docs in the data require further processing with an entity linker, set el_pipe
     correct_by_label = dict()
     incorrect_by_label = dict()
 
     docs = [d for d, g in data if len(d) > 0]
-    docs = el_pipe.pipe(docs)
+    if el_pipe is not None:
+        docs = el_pipe.pipe(docs)
     golds = [g for d, g in data if len(d) > 0]
 
     for doc, gold in zip(docs, golds):

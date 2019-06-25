@@ -655,23 +655,32 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
 def build_nel_encoder(in_width, hidden_width, end_width, **cfg):
     conv_depth = cfg.get("conv_depth", 2)
     cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
+    pretrained_vectors = cfg.get("pretrained_vectors")   # self.nlp.vocab.vectors.name
+
+    tok2vec = Tok2Vec(width=hidden_width, embed_size=in_width, pretrained_vectors=pretrained_vectors,
+                      cnn_maxout_pieces=cnn_maxout_pieces, subword_features=False, conv_depth=conv_depth, bilstm_depth=0)
 
     with Model.define_operators({">>": chain, "**": clone}):
-        convolution = Residual((ExtractWindow(nW=1) >>
-                                LN(Maxout(hidden_width, hidden_width * 3, pieces=cnn_maxout_pieces))))
+        # convolution = Residual((ExtractWindow(nW=1) >>
+        #                         LN(Maxout(hidden_width, hidden_width * 3, pieces=cnn_maxout_pieces))))
 
-        encoder = SpacyVectors \
-                  >> with_flatten(Affine(hidden_width, in_width))\
-                  >> with_flatten(LN(Maxout(hidden_width, hidden_width)) >> convolution ** conv_depth, pad=conv_depth) \
-                  >> flatten_add_lengths \
-                  >> ParametricAttention(hidden_width) \
-                  >> Pooling(sum_pool) \
+        # encoder = SpacyVectors \
+        #           >> with_flatten(Affine(hidden_width, in_width)) \
+        #           >> with_flatten(LN(Maxout(hidden_width, hidden_width)) >> convolution ** conv_depth, pad=conv_depth) \
+        #          >> flatten_add_lengths \
+        #          >> ParametricAttention(hidden_width) \
+        #          >> Pooling(sum_pool) \
+        #          >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
+        #          >> zero_init(Affine(end_width, hidden_width, drop_factor=0.0))
+
+        encoder = tok2vec >> flatten_add_lengths >> Pooling(mean_pool)\
                   >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
                   >> zero_init(Affine(end_width, hidden_width, drop_factor=0.0))
 
         # TODO: ReLu or LN(Maxout)  ?
         # sum_pool or mean_pool ?
 
+    encoder.tok2vec = tok2vec
     encoder.nO = end_width
     return encoder
 
