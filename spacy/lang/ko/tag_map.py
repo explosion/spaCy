@@ -1,76 +1,65 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, PUNCT, INTJ, X, ADJ, AUX, ADP, PART, SCONJ, NOUN
-from ...symbols import SYM, PRON, VERB, ADV, PROPN, NUM, DET
+from ...symbols import (POS, PUNCT, INTJ, X, SYM,
+                        ADJ, AUX, ADP, CONJ, NOUN, PRON, VERB, ADV, PROPN, 
+                        NUM, DET)
 
-
+# mecab-ko-dic의 품사 태그를 universal pos tag로 대응시킴
+# https://docs.google.com/spreadsheets/d/1-9blXKjtjeKZqsf4NzHeYJCrr49-nXeRF6D80udfcwY/edit#gid=589544265
+# https://universaldependencies.org/u/pos/
 TAG_MAP = {
-    # https://docs.google.com/spreadsheets/d/1-9blXKjtjeKZqsf4NzHeYJCrr49-nXeRF6D80udfcwY/edit#gid=589544265
-    "SF": {POS: PUNCT},
-    "SE": {POS: PUNCT},
-    "SSO": {POS: PUNCT},
-    "SSC": {POS: PUNCT},
-    "SC": {POS: PUNCT},
-    "SY": {POS: PUNCT},
-    "IC": {POS: INTJ},
-    "VA": {POS: ADJ},
-    "VX": {POS: AUX},  # XXX ADJ if alone, AUX otherwise
-    "JKS": {POS: ADP},
+    # J.{1,2} 조사 
+    "JKS": {POS: ADP},  
     "JKC": {POS: ADP},
     "JKG": {POS: ADP},
     "JKO": {POS: ADP},
     "JKB": {POS: ADP},
     "JKV": {POS: ADP},
     "JKQ": {POS: ADP},
-    "JX": {POS: ADP},
-    "助詞,終助詞,*,*": {POS: PART},
-    "助詞,準体助詞,*,*": {POS: SCONJ},  # の as in 走るのが速い
-    "助詞,接続助詞,*,*": {POS: SCONJ},  # verb ending て
-    "助詞,副助詞,*,*": {POS: PART},  # ばかり, つつ after a verb
-    "助動詞,*,*,*": {POS: AUX},
-    "接続詞,*,*,*": {POS: SCONJ},  # XXX: might need refinement
-    "接頭辞,*,*,*": {POS: NOUN},
-    "接尾辞,形状詞的,*,*": {POS: ADJ},  # がち, チック
-    "接尾辞,形容詞的,*,*": {POS: ADJ},  # -らしい
-    "接尾辞,動詞的,*,*": {POS: NOUN},  # -じみ
-    "接尾辞,名詞的,サ変可能,*": {POS: NOUN},  # XXX see 名詞,普通名詞,サ変可能,*
-    "接尾辞,名詞的,一般,*": {POS: NOUN},
-    "接尾辞,名詞的,助数詞,*": {POS: NOUN},
-    "接尾辞,名詞的,副詞可能,*": {POS: NOUN},  # -後, -過ぎ
-    "代名詞,*,*,*": {POS: PRON},
-    "動詞,一般,*,*": {POS: VERB},
-    "動詞,非自立可能,*,*": {POS: VERB},  # XXX VERB if alone, AUX otherwise
-    "動詞,非自立可能,*,*,AUX": {POS: AUX},
-    "動詞,非自立可能,*,*,VERB": {POS: VERB},
-    "副詞,*,*,*": {POS: ADV},
-    "補助記号,ＡＡ,一般,*": {POS: SYM},  # text art
-    "補助記号,ＡＡ,顔文字,*": {POS: SYM},  # kaomoji
-    "補助記号,一般,*,*": {POS: SYM},
-    "補助記号,括弧開,*,*": {POS: PUNCT},  # open bracket
-    "補助記号,括弧閉,*,*": {POS: PUNCT},  # close bracket
-    "補助記号,句点,*,*": {POS: PUNCT},  # period or other EOS marker
-    "補助記号,読点,*,*": {POS: PUNCT},  # comma
-    "名詞,固有名詞,一般,*": {POS: PROPN},  # general proper noun
-    "名詞,固有名詞,人名,一般": {POS: PROPN},  # person's name
-    "名詞,固有名詞,人名,姓": {POS: PROPN},  # surname
-    "名詞,固有名詞,人名,名": {POS: PROPN},  # first name
-    "名詞,固有名詞,地名,一般": {POS: PROPN},  # place name
-    "名詞,固有名詞,地名,国": {POS: PROPN},  # country name
-    "名詞,助動詞語幹,*,*": {POS: AUX},
-    "名詞,数詞,*,*": {POS: NUM},  # includes Chinese numerals
-    "名詞,普通名詞,サ変可能,*": {POS: NOUN},  # XXX: sometimes VERB in UDv2; suru-verb noun
-    "名詞,普通名詞,サ変可能,*,NOUN": {POS: NOUN},
-    "名詞,普通名詞,サ変可能,*,VERB": {POS: VERB},
-    "名詞,普通名詞,サ変形状詞可能,*": {POS: NOUN},  # ex: 下手
-    "名詞,普通名詞,一般,*": {POS: NOUN},
-    "名詞,普通名詞,形状詞可能,*": {POS: NOUN},  # XXX: sometimes ADJ in UDv2
-    "名詞,普通名詞,形状詞可能,*,NOUN": {POS: NOUN},
-    "名詞,普通名詞,形状詞可能,*,ADJ": {POS: ADJ},
-    "名詞,普通名詞,助数詞可能,*": {POS: NOUN},  # counter / unit
-    "名詞,普通名詞,副詞可能,*": {POS: NOUN},
-    "連体詞,*,*,*": {POS: ADJ},  # XXX this has exceptions based on literal token
-    "連体詞,*,*,*,ADJ": {POS: ADJ},
-    "連体詞,*,*,*,PRON": {POS: PRON},
-    "連体詞,*,*,*,DET": {POS: DET},
+    "JX": {POS: ADP},   # 보조사
+    "JC": {POS: CONJ},  # 접속 조사
+    "MAJ": {POS: CONJ}, # 접속 부사
+    "MAG": {POS: ADV},  # 일반 부사
+    "MM": {POS: DET},   # 관형사
+    
+    "XPN": {POS: X},  # 접두사
+    # XS. 접미사 
+    "XSN": {POS: X},
+    "XSV": {POS: X},
+    "XSA": {POS: X},
+    "XR": {POS: X},     # 어근
+    # E.{1,2} 어미
+    "EP": {POS: X},
+    "EF": {POS: X},
+    "EC": {POS: X},
+    "ETN": {POS: X},
+    "ETM": {POS: X},
+    
+    "IC": {POS: INTJ},  # 감탄사
+
+    "VV": {POS: VERB},  # 동사
+    "VA": {POS: ADJ},   # 형용사
+    "VX": {POS: AUX},   # 보조 용언
+    "VCP": {POS: ADP},  # 긍정 지정사(이다)
+    "VCN": {POS: ADJ},  # 부정 지정사(아니다)
+
+    "NNG": {POS: NOUN}, # 일반 명사(general noun)
+    "NNB": {POS: NOUN}, # 의존 명사
+    "NNBC": {POS: NOUN}, # 의존 명사(단위: unit)
+    "NNP": {POS: PROPN}, # 고유 명사(proper noun)
+    "NP": {POS: PRON},  # 대명사
+    "NR": {POS: NUM},   # 수사(numerals)
+    "SN": {POS: NUM},   # 숫자
+    
+    # S.{1,2} 부호
+    # 문장 부호 
+    "SF": {POS: PUNCT}, # period or other EOS marker
+    "SE": {POS: PUNCT},
+    "SC": {POS: PUNCT}, # comma, etc.
+    "SSO": {POS: PUNCT},    # open bracket
+    "SSC": {POS: PUNCT},    # close bracket
+    "SY": {POS: SYM},   # 기타 기호 
+    "SL": {POS: X},     # 외국어
+    "SH": {POS: X},     # 한자
 }

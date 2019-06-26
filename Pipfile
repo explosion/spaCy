@@ -7,6 +7,8 @@ verify_ssl = true
 e1839a8 = {editable = true,path = "."}
 spacy = {editable = true,path = "."}
 ptpython = "*"
+yapf = "*"
+py-test = "*"
 
 [packages]
 cymem = ">=2.0.2,<2.1.0"
@@ -26,9 +28,8 @@ pytest-timeout = "<2.0.0,>=1.3.0"
 mock = "<3.0.0,>=2.0.0"
 flake8 = "<3.6.0,>=3.5.0"
 Cython = ">=0.25"
-pyenujeon = "*"
-enujeon = "*"
-eunjeon = "*"
+natto-py = "*"
+py-test = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.7.3"

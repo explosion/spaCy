@@ -1,10 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-# This list was created by taking the top 2000 words from a Wikipedia dump and
-# filtering out everything that wasn't hiragana. ー (one) was also added.
-# Considered keeping some non-hiragana words but too many place names were
-# present.
 STOP_WORDS = set(
 """
 이
@@ -24,13 +20,11 @@ STOP_WORDS = set(
 아니
 등
 같
-우리
 때
 년
 가
 한
 지
-대하
 오
 말
 일
@@ -47,49 +41,23 @@ STOP_WORDS = set(
 일
 그런
 또
-문제
 더
-사회
 많
 그리고
 좋
 크
-따르
-중
-나오
-가지
-씨
 시키
-만들
-지금
 그러
-속
 하나
-집
 살
-모르
-적
 데
-자신
 안
 어떤
-내
-내
-경우
-명
-생각
-시간
-다시
-이런
-보이
 번
 나
 다른
 어떻
-개
-전
 들
-사실
 이렇
 점
 싶
