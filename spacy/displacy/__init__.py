@@ -116,7 +116,7 @@ def parse_deps(orig_doc, options={}):
     doc (Doc): Document do parse.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
-    doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
+    doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes(exclude=["user_data"]))
     if not doc.is_parsed:
         user_warning(Warnings.W005)
     if options.get("collapse_phrases", False):
