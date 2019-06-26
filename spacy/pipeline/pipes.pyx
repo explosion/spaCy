@@ -1196,5 +1196,5 @@ class Sentencizer(object):
         self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
         return self
 
-      
+
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer"]
