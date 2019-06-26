@@ -129,7 +129,7 @@ cdef class KnowledgeBase:
         self._entries = entry_vec(nr_entities+1)
 
         i = 0
-        cdef EntryC entry
+        cdef KBEntryC entry
         while i < nr_entities:
             entity_vector = vector_list[i]
             if len(entity_vector) != self.entity_vector_length:
@@ -250,7 +250,7 @@ cdef class KnowledgeBase:
         cdef int64_t entry_index
         cdef float prob
         cdef int32_t vector_index
-        cdef EntryC entry
+        cdef KBEntryC entry
         cdef AliasC alias
         cdef float vector_element
 

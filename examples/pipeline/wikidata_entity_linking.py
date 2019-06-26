@@ -61,23 +61,23 @@ def run_pipeline():
     to_create_kb = False
 
     # read KB back in from file
-    to_read_kb = False
+    to_read_kb = True
     to_test_kb = False
 
     # create training dataset
     create_wp_training = False
 
     # train the EL pipe
-    train_pipe = False
-    measure_performance = False
+    train_pipe = True
+    measure_performance = True
 
     # test the EL pipe on a simple example
-    to_test_pipeline = False
+    to_test_pipeline = True
 
     # write the NLP object, read back in and test again
-    to_write_nlp = False
+    to_write_nlp = True
     to_read_nlp = False
-    test_from_file = True
+    test_from_file = False
 
     # STEP 1 : create prior probabilities from WP (run only once)
     if to_create_prior_probs:
@@ -149,7 +149,7 @@ def run_pipeline():
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
         # define the size (nr of entities) of training and dev set
         train_limit = 5000
-        dev_limit = 10000
+        dev_limit = 5000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
                                                         training_dir=TRAINING_DIR,
@@ -285,9 +285,7 @@ def _measure_accuracy(data, el_pipe=None):
 
     docs = [d for d, g in data if len(d) > 0]
     if el_pipe is not None:
-        print("applying el_pipe", datetime.datetime.now())
-        docs = list(el_pipe.pipe(docs, batch_size=10000000000))
-        print("done applying el_pipe", datetime.datetime.now())
+        docs = list(el_pipe.pipe(docs))
     golds = [g for d, g in data if len(d) > 0]
 
     for doc, gold in zip(docs, golds):

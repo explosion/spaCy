@@ -9,8 +9,8 @@ from libc.stdio cimport FILE
 from spacy.vocab cimport Vocab
 from .typedefs cimport hash_t
 
-from .structs cimport EntryC, AliasC
-ctypedef vector[EntryC] entry_vec
+from .structs cimport KBEntryC, AliasC
+ctypedef vector[KBEntryC] entry_vec
 ctypedef vector[AliasC] alias_vec
 ctypedef vector[float] float_vec
 ctypedef vector[float_vec] float_matrix
@@ -32,7 +32,7 @@ cdef class KnowledgeBase:
     cdef int64_t entity_vector_length
 
     # This maps 64bit keys (hash of unique entity string)
-    # to 64bit values (position of the _EntryC struct in the _entries vector).
+    # to 64bit values (position of the _KBEntryC struct in the _entries vector).
     # The PreshMap is pretty space efficient, as it uses open addressing. So
     # the only overhead is the vacancy rate, which is approximately 30%.
     cdef PreshMap _entry_index
@@ -88,7 +88,7 @@ cdef class KnowledgeBase:
         cdef int64_t new_index = self._entries.size()
 
         # Avoid struct initializer to enable nogil, cf https://github.com/cython/cython/issues/1642
-        cdef EntryC entry
+        cdef KBEntryC entry
         entry.entity_hash = entity_hash
         entry.vector_index = vector_index
         entry.feats_row = feats_row
@@ -121,7 +121,7 @@ cdef class KnowledgeBase:
         cdef int32_t dummy_value = 0
 
         # Avoid struct initializer to enable nogil
-        cdef EntryC entry
+        cdef KBEntryC entry
         entry.entity_hash = dummy_hash
         entry.vector_index = dummy_value
         entry.feats_row = dummy_value

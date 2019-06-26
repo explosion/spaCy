@@ -79,7 +79,7 @@ cdef struct TokenC:
 
 
 # Internal struct, for storage and disambiguation of entities.
-cdef struct EntryC:
+cdef struct KBEntryC:
 
     # The hash of this entry's unique ID/name in the kB
     hash_t entity_hash
