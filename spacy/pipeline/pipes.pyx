@@ -3,8 +3,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import numpy as np
-
 import numpy
 import srsly
 from collections import OrderedDict
@@ -12,6 +10,7 @@ from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
 from thinc.neural.util import to_categorical
+from thinc.neural.util import get_array_module
 
 from ..cli.pretrain import get_cossim_loss
 from .functions import merge_subtokens
@@ -1151,7 +1150,7 @@ class EntityLinker(Pipe):
 
         if len(entity_encodings) > 0:
             context_encodings, bp_context = self.model.begin_update(context_docs, drop=drop)
-            entity_encodings = np.asarray(entity_encodings, dtype=np.float32)
+            entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
             loss, d_scores = self.get_loss(scores=context_encodings, golds=entity_encodings, docs=None)
             bp_context(d_scores, sgd=sgd)
@@ -1192,24 +1191,30 @@ class EntityLinker(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
 
+        context_encodings = self.model(docs)
+        xp = get_array_module(context_encodings)
+
         for i, doc in enumerate(docs):
             if len(doc) > 0:
-                context_encoding = self.model([doc])
-                context_enc_t = np.transpose(context_encoding)
+                context_encoding = context_encodings[i]
+                context_enc_t = context_encoding.T
+                norm_1 = xp.linalg.norm(context_enc_t)
                 for ent in doc.ents:
                     candidates = self.kb.get_candidates(ent.text)
                     if candidates:
-                        scores = []
-                        for c in candidates:
-                            prior_prob = c.prior_prob * self.prior_weight
-                            kb_id = c.entity_
-                            entity_encoding = c.entity_vector
-                            sim = float(cosine(np.asarray([entity_encoding]), context_enc_t)) * self.context_weight
-                            score = prior_prob + sim - (prior_prob*sim)
-                            scores.append(score)
+                        prior_probs = xp.asarray([c.prior_prob for c in candidates])
+                        prior_probs *= self.prior_weight
+
+                        entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                        norm_2 = xp.linalg.norm(entity_encodings, axis=1)
+
+                        # cosine similarity
+                        sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
+                        sims *= self.context_weight
+                        scores = prior_probs + sims - (prior_probs*sims)
+                        best_index = scores.argmax()
 
                         # TODO: thresholding
-                        best_index = scores.index(max(scores))
                         best_candidate = candidates[best_index]
                         final_entities.append(ent)
                         final_kb_ids.append(best_candidate.entity_)

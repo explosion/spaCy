@@ -76,7 +76,7 @@ def run_pipeline():
 
     # write the NLP object, read back in and test again
     to_write_nlp = False
-    to_read_nlp = True
+    to_read_nlp = False
     test_from_file = True
 
     # STEP 1 : create prior probabilities from WP (run only once)
@@ -252,22 +252,27 @@ def run_pipeline():
         print("reading from", NLP_2_DIR)
         nlp_3 = spacy.load(NLP_2_DIR)
 
-        if test_from_file:
-            dev_limit = 5000
-            dev_data = training_set_creator.read_training(nlp=nlp_3,
-                                                          training_dir=TRAINING_DIR,
-                                                          dev=True,
-                                                          limit=dev_limit)
+        print("running toy example with NLP 3")
+        run_el_toy_example(nlp=nlp_3)
 
-            print("Dev testing from file on", len(dev_data), "articles")
-            print()
+    # testing performance with an NLP model from file
+    if test_from_file:
+        nlp_2 = spacy.load(NLP_1_DIR)
+        nlp_3 = spacy.load(NLP_2_DIR)
+        el_pipe = nlp_3.get_pipe("entity_linker")
 
-            dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data)
-            print("dev acc combo avg:", round(dev_acc_combo, 3),
-                  [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])
-        else:
-            print("running toy example with NLP 3")
-            run_el_toy_example(nlp=nlp_3)
+        dev_limit = 10000
+        dev_data = training_set_creator.read_training(nlp=nlp_2,
+                                                      training_dir=TRAINING_DIR,
+                                                      dev=True,
+                                                      limit=dev_limit)
+
+        print("Dev testing from file on", len(dev_data), "articles")
+        print()
+
+        dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe=el_pipe)
+        print("dev acc combo avg:", round(dev_acc_combo, 3),
+              [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])
 
     print()
     print("STOP", datetime.datetime.now())
@@ -280,7 +285,9 @@ def _measure_accuracy(data, el_pipe=None):
 
     docs = [d for d, g in data if len(d) > 0]
     if el_pipe is not None:
-        docs = el_pipe.pipe(docs)
+        print("applying el_pipe", datetime.datetime.now())
+        docs = list(el_pipe.pipe(docs, batch_size=10000000000))
+        print("done applying el_pipe", datetime.datetime.now())
     golds = [g for d, g in data if len(d) > 0]
 
     for doc, gold in zip(docs, golds):
