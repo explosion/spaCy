@@ -305,11 +305,11 @@ match on the uppercase versions, in case someone has written it as "Google i/o".
 
 ```python
 ### {executable="true"}
-import spacy
+from spacy.lang.en import English
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 
-nlp = spacy.load("en_core_web_sm")
+nlp = English()
 matcher = Matcher(nlp.vocab)
 
 def add_event_ent(matcher, doc, i, matches):
@@ -322,7 +322,7 @@ def add_event_ent(matcher, doc, i, matches):
 
 pattern = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
 matcher.add("GoogleIO", add_event_ent, pattern)
-doc = nlp(u"This is a text about Google I/O.")
+doc = nlp(u"This is a text about Google I/O")
 matches = matcher(doc)
 ```
 
