@@ -666,7 +666,7 @@ def build_nel_encoder(embed_width, hidden_width, **cfg):
     entity_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
-        model = Affine(1, entity_width+context_width+1, drop_factor=0.0)\
+        model = Affine(1, entity_width+context_width, drop_factor=0.0)\
                 >> logistic
 
         # context encoder
