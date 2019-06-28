@@ -1132,7 +1132,8 @@ class EntityLinker(Pipe):
 
         context_docs = []
         entity_encodings = []
-        labels = []
+        cats = []
+        priors = []
 
         for doc, gold in zip(docs, golds):
             for entity in gold.links:
@@ -1143,27 +1144,33 @@ class EntityLinker(Pipe):
                 nr_neg = 0
                 for c in candidates:
                     kb_id = c.entity_
+                    entity_encoding = c.entity_vector
+                    entity_encodings.append(entity_encoding)
+                    context_docs.append(doc)
+
+                    if self.prior_weight > 0:
+                        priors.append([c.prior_prob])
+                    else:
+                        priors.append([0])
+
                     if kb_id == gold_kb:
-                        entity_encoding = c.entity_vector
-                        entity_encodings.append(entity_encoding)
-                        context_docs.append(doc)
-                        labels.append([1])
-                    else:   # elif nr_neg < 1:
+                        cats.append([1])
+                    else:
                         nr_neg += 1
-                        entity_encoding = c.entity_vector
-                        entity_encodings.append(entity_encoding)
-                        context_docs.append(doc)
-                        labels.append([0])
+                        cats.append([0])
 
         if len(entity_encodings) > 0:
+            assert len(priors) == len(entity_encodings) == len(context_docs) == len(cats)
+
             context_encodings, bp_context = self.model.tok2vec.begin_update(context_docs, drop=drop)
             entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
-            mention_encodings = [list(context_encodings[i]) + list(entity_encodings[i]) for i in range(len(entity_encodings))]
+            mention_encodings = [list(context_encodings[i]) + list(entity_encodings[i]) + priors[i]
+                                 for i in range(len(entity_encodings))]
             pred, bp_mention = self.model.begin_update(self.model.ops.asarray(mention_encodings, dtype="float32"), drop=drop)
-            labels = self.model.ops.asarray(labels, dtype="float32")
+            cats = self.model.ops.asarray(cats, dtype="float32")
 
-            loss, d_scores = self.get_loss(prediction=pred, golds=labels, docs=None)
+            loss, d_scores = self.get_loss(prediction=pred, golds=cats, docs=None)
             mention_gradient = bp_mention(d_scores, sgd=sgd)
 
             context_gradients = [list(x[0:self.context_width]) for x in mention_gradient]
@@ -1221,13 +1228,19 @@ class EntityLinker(Pipe):
                     candidates = self.kb.get_candidates(ent.text)
                     if candidates:
                         random.shuffle(candidates)
+
+                        # this will set the prior probabilities to 0 (just like in training) if their weight is 0
                         prior_probs = xp.asarray([[c.prior_prob] for c in candidates])
                         prior_probs *= self.prior_weight
+                        scores = prior_probs
 
-                        entity_encodings = xp.asarray([c.entity_vector for c in candidates])
-                        mention_encodings = [list(context_encoding) + list(entity_encodings[i]) for i in range(len(entity_encodings))]
-                        predictions = self.model(self.model.ops.asarray(mention_encodings, dtype="float32"))
-                        scores = (prior_probs + predictions - (xp.dot(prior_probs.T, predictions)))
+                        if self.context_weight > 0:
+                            entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                            assert len(entity_encodings) == len(prior_probs)
+                            mention_encodings = [list(context_encoding) + list(entity_encodings[i])
+                                                 + list(prior_probs[i])
+                                                 for i in range(len(entity_encodings))]
+                            scores = self.model(self.model.ops.asarray(mention_encodings, dtype="float32"))
 
                         # TODO: thresholding
                         best_index = scores.argmax()

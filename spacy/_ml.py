@@ -666,15 +666,16 @@ def build_nel_encoder(embed_width, hidden_width, **cfg):
     entity_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
-        model = Affine(1, entity_width+context_width, drop_factor=0.0)\
+        model = Affine(entity_width, entity_width+context_width+1)\
+                >> Affine(1, entity_width, drop_factor=0.0)\
                 >> logistic
 
         # context encoder
         tok2vec = Tok2Vec(width=hidden_width, embed_size=embed_width, pretrained_vectors=pretrained_vectors,
-                          cnn_maxout_pieces=cnn_maxout_pieces, subword_features=False, conv_depth=conv_depth,
+                          cnn_maxout_pieces=cnn_maxout_pieces, subword_features=True, conv_depth=conv_depth,
                           bilstm_depth=0) >> flatten_add_lengths >> Pooling(mean_pool)\
                                 >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
-                                >> zero_init(Affine(context_width, hidden_width, drop_factor=0.0))
+                                >> zero_init(Affine(context_width, hidden_width))
 
         model.tok2vec = tok2vec
 

@@ -45,7 +45,7 @@ EPOCHS = 10
 DROPOUT = 0.2
 LEARN_RATE = 0.005
 L2 = 1e-6
-CONTEXT_WIDTH=128
+CONTEXT_WIDTH = 128
 
 
 def run_pipeline():
@@ -138,7 +138,9 @@ def run_pipeline():
     # STEP 6: create and train the entity linking pipe
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
-        el_pipe = nlp_2.create_pipe(name='entity_linker', config={"context_width": CONTEXT_WIDTH})
+        el_pipe = nlp_2.create_pipe(name='entity_linker',
+                                    config={"context_width": CONTEXT_WIDTH,
+                                            "pretrained_vectors": nlp_2.vocab.vectors.name})
         el_pipe.set_kb(kb_2)
         nlp_2.add_pipe(el_pipe, last=True)
 
@@ -195,11 +197,11 @@ def run_pipeline():
                 if batchnr > 0:
                     with el_pipe.model.use_params(optimizer.averages):
                         el_pipe.context_weight = 1
-                        el_pipe.prior_weight = 0
+                        el_pipe.prior_weight = 1
                         dev_acc_context, dev_acc_context_dict = _measure_accuracy(dev_data, el_pipe)
                         losses['entity_linker'] = losses['entity_linker'] / batchnr
                         print("Epoch, train loss", itn, round(losses['entity_linker'], 2),
-                              " / dev acc context avg", round(dev_acc_context, 3))
+                              " / dev acc avg", round(dev_acc_context, 3))
 
         # STEP 7: measure the performance of our trained pipe on an independent dev set
         if len(dev_data) and measure_performance:
