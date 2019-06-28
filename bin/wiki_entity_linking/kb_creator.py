@@ -33,7 +33,7 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
     else:
         # read the mappings from file
         title_to_id = get_entity_to_id(entity_def_output)
-        id_to_descr = _get_id_to_description(entity_descr_output)
+        id_to_descr = get_id_to_description(entity_descr_output)
 
     print()
     print(" * _get_entity_frequencies", datetime.datetime.now())
@@ -109,7 +109,7 @@ def get_entity_to_id(entity_def_output):
     return entity_to_id
 
 
-def _get_id_to_description(entity_descr_output):
+def get_id_to_description(entity_descr_output):
     id_to_desc = dict()
     with open(entity_descr_output, 'r', encoding='utf8') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='|')

@@ -14,7 +14,7 @@ from thinc.neural._classes.affine import Affine
 class EntityEncoder:
     """
     Train the embeddings of entity descriptions to fit a fixed-size entity vector (e.g. 64D).
-    This entity vector will be stored in the KB, and context vectors will be trained to be similar to them.
+    This entity vector will be stored in the KB, for further downstream use in the entity model.
     """
 
     DROP = 0
@@ -97,7 +97,7 @@ class EntityEncoder:
             else:
                 indices[i] = 0
         word_vectors = doc.vocab.vectors.data[indices]
-        doc_vector = np.mean(word_vectors, axis=0)  # TODO: min? max?
+        doc_vector = np.mean(word_vectors, axis=0)
         return doc_vector
 
     def _build_network(self, orig_width, hidden_with):

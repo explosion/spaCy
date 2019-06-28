@@ -42,9 +42,10 @@ MIN_PAIR_OCC = 5
 
 # model training parameters
 EPOCHS = 10
-DROPOUT = 0.1
+DROPOUT = 0.2
 LEARN_RATE = 0.005
 L2 = 1e-6
+CONTEXT_WIDTH=128
 
 
 def run_pipeline():
@@ -136,7 +137,8 @@ def run_pipeline():
 
     # STEP 6: create and train the entity linking pipe
     if train_pipe:
-        el_pipe = nlp_2.create_pipe(name='entity_linker', config={})
+        print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
+        el_pipe = nlp_2.create_pipe(name='entity_linker', config={"context_width": CONTEXT_WIDTH})
         el_pipe.set_kb(kb_2)
         nlp_2.add_pipe(el_pipe, last=True)
 
@@ -146,9 +148,8 @@ def run_pipeline():
             optimizer.learn_rate = LEARN_RATE
             optimizer.L2 = L2
 
-        print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
         # define the size (nr of entities) of training and dev set
-        train_limit = 5000
+        train_limit = 500000
         dev_limit = 5000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,

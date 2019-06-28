@@ -652,37 +652,36 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
     return model
 
 
-def build_nel_encoder(in_width, hidden_width, end_width, **cfg):
+def build_nel_encoder(embed_width, hidden_width, **cfg):
+    # TODO proper error
+    if "entity_width" not in cfg:
+        raise ValueError("entity_width not found")
+    if "context_width" not in cfg:
+        raise ValueError("context_width not found")
+
     conv_depth = cfg.get("conv_depth", 2)
     cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
     pretrained_vectors = cfg.get("pretrained_vectors")   # self.nlp.vocab.vectors.name
-
-    tok2vec = Tok2Vec(width=hidden_width, embed_size=in_width, pretrained_vectors=pretrained_vectors,
-                      cnn_maxout_pieces=cnn_maxout_pieces, subword_features=False, conv_depth=conv_depth, bilstm_depth=0)
+    context_width = cfg.get("context_width")
+    entity_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
-        # convolution = Residual((ExtractWindow(nW=1) >>
-        #                         LN(Maxout(hidden_width, hidden_width * 3, pieces=cnn_maxout_pieces))))
+        model = Affine(1, entity_width+context_width+1, drop_factor=0.0)\
+                >> logistic
 
-        # encoder = SpacyVectors \
-        #           >> with_flatten(Affine(hidden_width, in_width)) \
-        #           >> with_flatten(LN(Maxout(hidden_width, hidden_width)) >> convolution ** conv_depth, pad=conv_depth) \
-        #          >> flatten_add_lengths \
-        #          >> ParametricAttention(hidden_width) \
-        #          >> Pooling(sum_pool) \
-        #          >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
-        #          >> zero_init(Affine(end_width, hidden_width, drop_factor=0.0))
+        # context encoder
+        tok2vec = Tok2Vec(width=hidden_width, embed_size=embed_width, pretrained_vectors=pretrained_vectors,
+                          cnn_maxout_pieces=cnn_maxout_pieces, subword_features=False, conv_depth=conv_depth,
+                          bilstm_depth=0) >> flatten_add_lengths >> Pooling(mean_pool)\
+                                >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
+                                >> zero_init(Affine(context_width, hidden_width, drop_factor=0.0))
 
-        encoder = tok2vec >> flatten_add_lengths >> Pooling(mean_pool)\
-                  >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
-                  >> zero_init(Affine(end_width, hidden_width, drop_factor=0.0))
+        model.tok2vec = tok2vec
 
-        # TODO: ReLu or LN(Maxout)  ?
-        # sum_pool or mean_pool ?
-
-    encoder.tok2vec = tok2vec
-    encoder.nO = end_width
-    return encoder
+    model.tok2vec = tok2vec
+    model.tok2vec.nO = context_width
+    model.nO = 1
+    return model
 
 @layerize
 def flatten(seqs, drop=0.0):

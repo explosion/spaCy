@@ -14,8 +14,7 @@ Process Wikipedia interlinks to generate a training dataset for the EL algorithm
 Gold-standard entities are stored in one file in standoff format (by character offset).
 """
 
-# ENTITY_FILE = "gold_entities.csv"
-ENTITY_FILE = "gold_entities_1000000.csv"   # use this file for faster processing
+ENTITY_FILE = "gold_entities.csv"
 
 
 def create_training(wikipedia_input, entity_def_input, training_output):
