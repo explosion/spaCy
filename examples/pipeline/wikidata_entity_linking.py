@@ -42,7 +42,7 @@ MIN_PAIR_OCC = 5
 
 # model training parameters
 EPOCHS = 10
-DROPOUT = 0.2
+DROPOUT = 0.5
 LEARN_RATE = 0.005
 L2 = 1e-6
 CONTEXT_WIDTH = 128
@@ -73,10 +73,10 @@ def run_pipeline():
     measure_performance = True
 
     # test the EL pipe on a simple example
-    to_test_pipeline = True
+    to_test_pipeline = False
 
     # write the NLP object, read back in and test again
-    to_write_nlp = True
+    to_write_nlp = False
     to_read_nlp = False
     test_from_file = False
 
@@ -138,9 +138,12 @@ def run_pipeline():
     # STEP 6: create and train the entity linking pipe
     if train_pipe:
         print("STEP 6: training Entity Linking pipe", datetime.datetime.now())
+        type_to_int = {label: i for i, label in enumerate(nlp_2.entity.labels)}
+        print(" -analysing", len(type_to_int), "different entity types")
         el_pipe = nlp_2.create_pipe(name='entity_linker',
                                     config={"context_width": CONTEXT_WIDTH,
-                                            "pretrained_vectors": nlp_2.vocab.vectors.name})
+                                            "pretrained_vectors": nlp_2.vocab.vectors.name,
+                                            "type_to_int": type_to_int})
         el_pipe.set_kb(kb_2)
         nlp_2.add_pipe(el_pipe, last=True)
 
@@ -151,8 +154,8 @@ def run_pipeline():
             optimizer.L2 = L2
 
         # define the size (nr of entities) of training and dev set
-        train_limit = 500000
-        dev_limit = 5000
+        train_limit = 50000
+        dev_limit = 50000
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
                                                         training_dir=TRAINING_DIR,
@@ -219,7 +222,7 @@ def run_pipeline():
                 # measuring combined accuracy (prior + context)
                 el_pipe.context_weight = 1
                 el_pipe.prior_weight = 1
-                dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe)
+                dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe, error_analysis=False)
                 print("dev acc combo avg:", round(dev_acc_combo, 3),
                       [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])
 
@@ -264,7 +267,7 @@ def run_pipeline():
         nlp_3 = spacy.load(NLP_2_DIR)
         el_pipe = nlp_3.get_pipe("entity_linker")
 
-        dev_limit = 10000
+        dev_limit = 5000
         dev_data = training_set_creator.read_training(nlp=nlp_2,
                                                       training_dir=TRAINING_DIR,
                                                       dev=True,
@@ -273,7 +276,7 @@ def run_pipeline():
         print("Dev testing from file on", len(dev_data), "articles")
         print()
 
-        dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe=el_pipe)
+        dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe=el_pipe, error_analysis=False)
         print("dev acc combo avg:", round(dev_acc_combo, 3),
               [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])
 
@@ -281,7 +284,7 @@ def run_pipeline():
     print("STOP", datetime.datetime.now())
 
 
-def _measure_accuracy(data, el_pipe=None):
+def _measure_accuracy(data, el_pipe=None, error_analysis=False):
     # If the docs in the data require further processing with an entity linker, set el_pipe
     correct_by_label = dict()
     incorrect_by_label = dict()
@@ -312,6 +315,10 @@ def _measure_accuracy(data, el_pipe=None):
                     else:
                         incorrect = incorrect_by_label.get(ent_label, 0)
                         incorrect_by_label[ent_label] = incorrect + 1
+                        if error_analysis:
+                            print(ent.text, "in", doc)
+                            print("Predicted",  pred_entity, "should have been", gold_entity)
+                            print()
 
         except Exception as e:
             print("Error assessing accuracy", e)

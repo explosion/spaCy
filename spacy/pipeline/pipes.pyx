@@ -1074,8 +1074,9 @@ class EntityLinker(Pipe):
     def Model(cls, **cfg):
         embed_width = cfg.get("embed_width", 300)
         hidden_width = cfg.get("hidden_width", 128)
+        type_to_int = cfg.get("type_to_int", dict())
 
-        model = build_nel_encoder(embed_width=embed_width, hidden_width=hidden_width, **cfg)
+        model = build_nel_encoder(embed_width=embed_width, hidden_width=hidden_width, ner_types=len(type_to_int), **cfg)
         return model
 
     def __init__(self, **cfg):
@@ -1086,6 +1087,7 @@ class EntityLinker(Pipe):
         self.context_weight = cfg.get("context_weight", 1)
         self.prior_weight = cfg.get("prior_weight", 1)
         self.context_width = cfg.get("context_width")
+        self.type_to_int = cfg.get("type_to_int", dict())
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1134,11 +1136,22 @@ class EntityLinker(Pipe):
         entity_encodings = []
         cats = []
         priors = []
+        type_vectors = []
 
         for doc, gold in zip(docs, golds):
+            ents_by_offset = dict()
+            for ent in doc.ents:
+                ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
             for entity in gold.links:
                 start, end, gold_kb = entity
                 mention = doc.text[start:end]
+
+                gold_ent = ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)]
+                assert gold_ent is not None
+                type_vector = [0 for i in range(len(self.type_to_int))]
+                if len(self.type_to_int) > 0:
+                    type_vector[self.type_to_int[gold_ent.label_]] = 1
+
                 candidates = self.kb.get_candidates(mention)
                 random.shuffle(candidates)
                 nr_neg = 0
@@ -1147,6 +1160,7 @@ class EntityLinker(Pipe):
                     entity_encoding = c.entity_vector
                     entity_encodings.append(entity_encoding)
                     context_docs.append(doc)
+                    type_vectors.append(type_vector)
 
                     if self.prior_weight > 0:
                         priors.append([c.prior_prob])
@@ -1160,12 +1174,12 @@ class EntityLinker(Pipe):
                         cats.append([0])
 
         if len(entity_encodings) > 0:
-            assert len(priors) == len(entity_encodings) == len(context_docs) == len(cats)
+            assert len(priors) == len(entity_encodings) == len(context_docs) == len(cats) == len(type_vectors)
 
             context_encodings, bp_context = self.model.tok2vec.begin_update(context_docs, drop=drop)
             entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
-            mention_encodings = [list(context_encodings[i]) + list(entity_encodings[i]) + priors[i]
+            mention_encodings = [list(context_encodings[i]) + list(entity_encodings[i]) + priors[i] + type_vectors[i]
                                  for i in range(len(entity_encodings))]
             pred, bp_mention = self.model.begin_update(self.model.ops.asarray(mention_encodings, dtype="float32"), drop=drop)
             cats = self.model.ops.asarray(cats, dtype="float32")
@@ -1225,6 +1239,10 @@ class EntityLinker(Pipe):
             if len(doc) > 0:
                 context_encoding = context_encodings[i]
                 for ent in doc.ents:
+                    type_vector = [0 for i in range(len(self.type_to_int))]
+                    if len(self.type_to_int) > 0:
+                        type_vector[self.type_to_int[ent.label_]] = 1
+
                     candidates = self.kb.get_candidates(ent.text)
                     if candidates:
                         random.shuffle(candidates)
@@ -1238,7 +1256,7 @@ class EntityLinker(Pipe):
                             entity_encodings = xp.asarray([c.entity_vector for c in candidates])
                             assert len(entity_encodings) == len(prior_probs)
                             mention_encodings = [list(context_encoding) + list(entity_encodings[i])
-                                                 + list(prior_probs[i])
+                                                 + list(prior_probs[i]) + type_vector
                                                  for i in range(len(entity_encodings))]
                             scores = self.model(self.model.ops.asarray(mention_encodings, dtype="float32"))
 

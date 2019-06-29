@@ -652,7 +652,7 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
     return model
 
 
-def build_nel_encoder(embed_width, hidden_width, **cfg):
+def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
     # TODO proper error
     if "entity_width" not in cfg:
         raise ValueError("entity_width not found")
@@ -666,7 +666,7 @@ def build_nel_encoder(embed_width, hidden_width, **cfg):
     entity_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
-        model = Affine(entity_width, entity_width+context_width+1)\
+        model = Affine(entity_width, entity_width+context_width+1+ner_types)\
                 >> Affine(1, entity_width, drop_factor=0.0)\
                 >> logistic
 
