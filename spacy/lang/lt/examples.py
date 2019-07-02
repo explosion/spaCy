@@ -18,5 +18,5 @@ sentences = [
     "Kur tu?",
     "Kas yra Prancūzijos prezidentas?",
     "Kokia yra Jungtinių Amerikos Valstijų sostinė?",
-    "Kada gimė Dalia Grybauskaitė?"
+    "Kada gimė Dalia Grybauskaitė?",
 ]

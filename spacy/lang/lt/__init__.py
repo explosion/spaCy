@@ -22,7 +22,9 @@ def _return_lt(_):
 class LithuanianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = _return_lt
-    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
+    lex_attr_getters[NORM] = add_lookups(
+        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
+    )
     lex_attr_getters.update(LEX_ATTRS)
 
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
@@ -33,8 +35,8 @@ class LithuanianDefaults(Language.Defaults):
 
 
 class Lithuanian(Language):
-    lang = 'lt'
+    lang = "lt"
     Defaults = LithuanianDefaults
 
 
-__all__ = ['Lithuanian']
+__all__ = ["Lithuanian"]
