@@ -15,10 +15,10 @@ _subordinating_conjunctions = [
 ]
 
 MORPH_RULES = {
-    'Cg': {
-        **{word: {"POS": "CCONJ"} for word in _coordinating_conjunctions},
-        **{word: {"POS": "SCONJ"} for word in _subordinating_conjunctions}
-    },
+    'Cg': dict(
+        [(word, {"POS": "CCONJ"}) for word in _coordinating_conjunctions] +
+        [(word, {"POS": "SCONJ"}) for word in _subordinating_conjunctions]
+    ),
     'Pg--an': {
         'keletą': {
             LEMMA: PRON_LEMMA,
