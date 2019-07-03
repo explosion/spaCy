@@ -11,7 +11,6 @@ from copy import copy, deepcopy
 from thinc.neural import Model
 import srsly
 
-from .kb import KnowledgeBase
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
@@ -810,7 +809,6 @@ class Language(object):
             # Convert to list here in case exclude is (default) tuple
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
-
         self._path = path
         return self
 
