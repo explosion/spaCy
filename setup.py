@@ -246,6 +246,7 @@ def setup_package():
                 "cuda100": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda100>=5.0.0b4"],
                 # Language tokenizers with external dependencies
                 "ja": ["mecab-python3==0.7"],
+                "ko": ["natto-py==0.9.0"],
             },
             python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
             classifiers=[

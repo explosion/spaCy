@@ -42,7 +42,7 @@ def try_mecab_import():
         raise ImportError(
             "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
-            " and [natto-py](https://natto-py.readthedocs.io)"
+            "and [natto-py](https://github.com/buruzaemon/natto-py)"
         )
 # fmt: on
 
