@@ -7,7 +7,7 @@ import bz2
 import datetime
 
 from spacy.gold import GoldParse
-from bin.wiki_entity_linking import kb_creator, wikipedia_processor as wp
+from bin.wiki_entity_linking import kb_creator
 
 """
 Process Wikipedia interlinks to generate a training dataset for the EL algorithm.
@@ -342,8 +342,7 @@ def read_training(nlp, training_dir, dev, limit):
                                 # currently feeding the gold data one entity per sentence at a time
                                 gold_start = int(start) - found_ent.sent.start_char
                                 gold_end = int(end) - found_ent.sent.start_char
-                                gold_entities = []
-                                gold_entities.append((gold_start, gold_end, wp_title))
+                                gold_entities = [(gold_start, gold_end, wp_title)]
                                 gold = GoldParse(doc=sent, links=gold_entities)
                                 data.append((sent, gold))
                                 total_entities += 1

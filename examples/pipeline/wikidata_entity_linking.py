@@ -394,10 +394,10 @@ def _measure_baselines(data, kb):
             print("Error assessing accuracy", e)
 
     acc_prior, acc_prior_by_label = calculate_acc(prior_correct_by_label, prior_incorrect_by_label)
-    acc_random, acc_random_by_label = calculate_acc(random_correct_by_label, random_incorrect_by_label)
+    acc_rand, acc_rand_by_label = calculate_acc(random_correct_by_label, random_incorrect_by_label)
     acc_oracle, acc_oracle_by_label = calculate_acc(oracle_correct_by_label, oracle_incorrect_by_label)
 
-    return counts_by_label, acc_random, acc_random_by_label, acc_prior, acc_prior_by_label, acc_oracle, acc_oracle_by_label
+    return counts_by_label, acc_rand, acc_rand_by_label, acc_prior, acc_prior_by_label, acc_oracle, acc_oracle_by_label
 
 
 def calculate_acc(correct_by_label, incorrect_by_label):
