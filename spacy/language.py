@@ -118,7 +118,7 @@ class Language(object):
         "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
-        "entity_linker": lambda nlp, **cfg: EntityLinker(**cfg),
+        "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
         "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
         "sentencizer": lambda nlp, **cfg: Sentencizer(**cfg),
@@ -810,13 +810,6 @@ class Language(object):
             # Convert to list here in case exclude is (default) tuple
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
-
-        # download the KB for the entity linking component - requires the vocab
-        for pipe_name, pipe in self.pipeline:
-            if pipe_name == "entity_linker":
-                kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=pipe.cfg["entity_width"])
-                kb.load_bulk(path / pipe_name / "kb")
-                pipe.set_kb(kb)
 
         self._path = path
         return self
