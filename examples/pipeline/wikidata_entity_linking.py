@@ -73,11 +73,11 @@ def run_pipeline():
     measure_performance = True
 
     # test the EL pipe on a simple example
-    to_test_pipeline = False
+    to_test_pipeline = True
 
     # write the NLP object, read back in and test again
-    to_write_nlp = False
-    to_read_nlp = False
+    to_write_nlp = True
+    to_read_nlp = True
     test_from_file = False
 
     # STEP 1 : create prior probabilities from WP (run only once)
@@ -154,8 +154,8 @@ def run_pipeline():
             optimizer.L2 = L2
 
         # define the size (nr of entities) of training and dev set
-        train_limit = 50000
-        dev_limit = 50000
+        train_limit = 5
+        dev_limit = 5
 
         train_data = training_set_creator.read_training(nlp=nlp_2,
                                                         training_dir=TRAINING_DIR,
@@ -250,7 +250,8 @@ def run_pipeline():
             print("STEP 9: testing NLP IO", datetime.datetime.now())
             print()
             print("writing to", NLP_2_DIR)
-            nlp_2.to_disk(NLP_2_DIR)
+            with el_pipe.model.use_params(optimizer.averages) and el_pipe.model.tok2vec.use_params(el_pipe.sgd_context.averages):
+                nlp_2.to_disk(NLP_2_DIR)
             print()
 
     # verify that the IO has gone correctly
