@@ -284,9 +284,9 @@ same between pretraining and training. The API and errors around this need some
 improvement.
 
 ```bash
-$ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
-[--depth] [--embed-rows] [--loss_func] [--dropout] [--seed] [--n-iter] [--use-vectors]
-[--n-save_every]
+$ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
+[--width] [--depth] [--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length] [--min-length]
+[--seed] [--n-iter] [--use-vectors] [--n-save_every] [--init-tok2vec] [--epoch-start]
 ```
 
 | Argument                | Type       | Description                                                                                                                       |
