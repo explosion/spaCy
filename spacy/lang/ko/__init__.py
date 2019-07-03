@@ -18,6 +18,7 @@ is_python_post_3_7 = is_python3 and sys.version_info[1] >= 7
 
 # fmt: off
 if is_python_pre_3_5:
+    from collections import namedtuple
     Morpheme = namedtuple("Morpheme", "surface lemma tag")
 elif is_python_post_3_7:
     from dataclasses import dataclass
