@@ -109,10 +109,9 @@ class Korean(Language):
 
 
 def pickle_korean(instance):
-    return korean, tuple()
+    return Korean, tuple()
 
 
 copy_reg.pickle(Korean, pickle_korean)
-# copy_reg.pickle(Korean, (lambda instance: Korean, tuple()))
 
 __all__ = ["Korean"]
