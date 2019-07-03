@@ -1,11 +1,12 @@
 # encoding: utf8
 from __future__ import unicode_literals
+from collections import defaultdict
 
 from ...symbols import (POS, PUNCT, INTJ, X, SYM,
                         ADJ, AUX, ADP, CONJ, NOUN, PRON, VERB, ADV, PROPN, 
                         NUM, DET)
-
-# mecab-ko-dic의 품사 태그를 universal pos tag로 대응시킴
+        
+# 은전한닢(mecab-ko-dic)의 품사 태그를 universal pos tag로 대응시킴
 # https://docs.google.com/spreadsheets/d/1-9blXKjtjeKZqsf4NzHeYJCrr49-nXeRF6D80udfcwY/edit#gid=589544265
 # https://universaldependencies.org/u/pos/
 TAG_MAP = {
