@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 
+@pytest.mark.skipif('sys.version_info < (3, 5)')
 @pytest.mark.parametrize(
     "word,lemma",
     [("新しく", "新しい"), ("赤く", "赤い"), ("すごく", "凄い"), ("いただきました", "頂く"), ("なった", "成る")],
