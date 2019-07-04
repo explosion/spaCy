@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import sys
 import pytest
 from spacy.util import get_lang_class
 
@@ -18,6 +19,8 @@ LANGUAGES = ["af", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es",
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_lang_initialize(lang, capfd):
     """Test that languages can be initialized."""
+    if lang == 'ja' and sys.version_info < (3, 5):
+        return  # SudachiPy does not support < 3.5
     nlp = get_lang_class(lang)()
     # Check for stray print statements (see #3342)
     doc = nlp("test")  # noqa: F841
