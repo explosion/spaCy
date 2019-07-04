@@ -14,6 +14,7 @@ from spacy.compat import pickle
 from spacy._ml import link_vectors_to_models
 import numpy
 import random
+import sys
 
 from ..util import get_doc
 
@@ -202,6 +203,9 @@ def test_issue2871():
 
 def test_issue2901():
     """Test that `nlp` doesn't fail."""
+    if sys.version_info < (3, 5):
+        pytest.skip()  # SudachiPy does not support < 3.5
+        return
     try:
         nlp = Japanese()
     except ImportError:

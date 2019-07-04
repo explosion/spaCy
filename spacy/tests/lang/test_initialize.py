@@ -20,6 +20,7 @@ LANGUAGES = ["af", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es",
 def test_lang_initialize(lang, capfd):
     """Test that languages can be initialized."""
     if lang == 'ja' and sys.version_info < (3, 5):
+        pytest.skip()
         return  # SudachiPy does not support < 3.5
     nlp = get_lang_class(lang)()
     # Check for stray print statements (see #3342)
