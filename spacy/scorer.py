@@ -160,8 +160,8 @@ class Scorer(object):
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
         if "-" not in [token[-1] for token in gold.orig_annot]:
             cand_ents = set()
-            current_ent = set()
-            current_gold = set()
+            current_ent = dict()
+            current_gold = dict()
             for ent in doc.ents:
                 if ent.label_ not in self.ner_per_ents:
                     self.ner_per_ents[ent.label_] = PRFScore()
@@ -172,10 +172,10 @@ class Scorer(object):
                     self.ner_per_ents[ent.label_].fp += 1
                 else:
                     cand_ents.add((ent.label_, first, last))
-                    current_ent.add(tuple(x for x in cand_ents if x[0] == ent.label_))
-                    current_gold.add(tuple(x for x in gold_ents if x[0] == ent.label_))
+                    current_ent[ent.label_] = set([tuple(x for x in cand_ents if x[0] == ent.label_)])
+                    current_gold[ent.label_] = set([tuple(x for x in gold_ents if x[0] == ent.label_)])
                 # Scores per ent
-                self.ner_per_ents[ent.label_].score_set(current_ent, current_gold)
+                self.ner_per_ents[ent.label_].score_set(current_ent[ent.label_], current_gold[ent.label_])
             # Score for all ents
             self.ner.score_set(cand_ents, gold_ents)
         self.tags.score_set(cand_tags, gold_tags)
