@@ -52,6 +52,7 @@ class Scorer(object):
         self.labelled = PRFScore()
         self.tags = PRFScore()
         self.ner = PRFScore()
+        self.ner_per_ents = dict()
         self.eval_punct = eval_punct
 
     @property
@@ -104,7 +105,17 @@ class Scorer(object):
             "ents_f": self.ents_f,
             "tags_acc": self.tags_acc,
             "token_acc": self.token_acc,
+
         }
+
+    @property
+    def scores_per_ents(self):
+        """RETURNS (dict): Scores per NER entity
+        """
+        r = dict()
+        for k, v in self.ner_per_ents.items():
+            r[k] = (v.precision, v.recall, v.fscore)
+        return r
 
     def score(self, doc, gold, verbose=False, punct_labels=("p", "punct")):
         """Update the evaluation scores from a single Doc / GoldParse pair.
@@ -149,13 +160,23 @@ class Scorer(object):
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
         if "-" not in [token[-1] for token in gold.orig_annot]:
             cand_ents = set()
+            current_ent = set()
+            current_gold = set()
             for ent in doc.ents:
+                if ent.label_ not in self.ner_per_ents:
+                    self.ner_per_ents[ent.label_] = PRFScore()
                 first = gold.cand_to_gold[ent.start]
                 last = gold.cand_to_gold[ent.end - 1]
                 if first is None or last is None:
                     self.ner.fp += 1
+                    self.ner_per_ents[ent.label_].fp += 1
                 else:
                     cand_ents.add((ent.label_, first, last))
+                    current_ent.add(tuple(x for x in cand_ents if x[0] == ent.label_))
+                    current_gold.add(tuple(x for x in gold_ents if x[0] == ent.label_))
+                # Scores per ent
+                self.ner_per_ents[ent.label_].score_set(current_ent, current_gold)
+            # Score for all ents
             self.ner.score_set(cand_ents, gold_ents)
         self.tags.score_set(cand_tags, gold_tags)
         self.labelled.score_set(cand_deps, gold_deps)
