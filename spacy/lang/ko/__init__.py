@@ -79,10 +79,20 @@ class KoreanTokenizer(DummyTokenizer):
                 if node.is_eos():
                     break
                 surface = node.surface
-                # 품사 태그,	의미 부류,	종성 유무,	읽기,	타입,	첫번째 품사,	마지막 품사,	표현,   *
-                features = node.feature.split(",")
-                tag = features[0]
-                lemma, sep, remainder = features[-2].partition("/")
+                feature = node.feature
+                # 품사 태그, 의미 부류,	종성 유무, 읽기, 타입, 첫번째 품사,	마지막 품사, 표현, *
+                (
+                    pos,
+                    sem_class,
+                    reading,
+                    type_,
+                    start_pos,
+                    end_pos,
+                    expr,
+                    _,
+                ) = feature.split(",")
+                tag = pos
+                lemma, sep, remainder = expr.partition("/")
                 if lemma == "*":
                     lemma = surface
                 yield Morpheme(surface, lemma, tag)
