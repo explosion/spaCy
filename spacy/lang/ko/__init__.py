@@ -84,6 +84,7 @@ class KoreanTokenizer(DummyTokenizer):
                 (
                     pos,
                     sem_class,
+                    jongseong,
                     reading,
                     type_,
                     start_pos,
