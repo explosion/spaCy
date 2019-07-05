@@ -112,10 +112,9 @@ class Scorer(object):
     def scores_per_ents(self):
         """RETURNS (dict): Scores per NER entity
         """
-        r = dict()
-        for k, v in self.ner_per_ents.items():
-            r[k] = (v.precision, v.recall, v.fscore)
-        return r
+        return {
+            k: {'p': v.precision, 'r': v.recall, 'f': v.fscore} for k,v in self.ner_per_ents.items()
+        }
 
     def score(self, doc, gold, verbose=False, punct_labels=("p", "punct")):
         """Update the evaluation scores from a single Doc / GoldParse pair.
