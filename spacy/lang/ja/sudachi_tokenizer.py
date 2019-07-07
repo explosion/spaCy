@@ -19,12 +19,10 @@ SUDACHI_DEFAULT_MODE = 'C'
 SUDACHI_DEFAULT_SPLITMODE = 'C'
 
 
-def try_import_sudachipy():
+def try_import_sudachipy_dictionary():
     try:
-        from sudachipy import config
         from sudachipy import dictionary
-
-        return config, dictionary
+        return dictionary
     except ImportError:
         raise ImportError(
             "Japanese support requires SudachiPy distributed with ja language model"
@@ -51,30 +49,15 @@ class SudachiTokenizer(DummyTokenizer):
     def __init__(self, nlp=None, mode=SUDACHI_DEFAULT_SPLITMODE):
         self.nlp = nlp
         self.vocab = nlp.vocab if nlp is not None else Vocab()
-        config, dictionary = try_import_sudachipy()
+        dictionary = try_import_sudachipy_dictionary()
 
-        resources_path = Path(import_module('sudachidict').__file__).parent / 'resources'
-        config.RESOURCEDIR = str(resources_path)
-        setting_path = resources_path / "sudachi.json"
-        config.SETTINGFILE = str(setting_path)
-
-        with open(str(setting_path), "r", encoding="utf-8") as f:
-            settings = json.load(f)
-        settings['systemDict'] = str(resources_path / settings.get('systemDict', 'system_core.dic'))
-        settings['characterDefinitionFile'] = str(resources_path / settings.get('characterDefinitionFile', 'char.def'))
-        if 'oovProviderPlugin' in settings:
-            for plugin in settings['oovProviderPlugin']:
-                if plugin['class'] == 'com.worksap.nlp.sudachi.MeCabOovProviderPlugin':
-                    plugin['charDef'] = str(resources_path / plugin.get('charDef', 'char.def'))
-                    plugin['unkDef'] = str(resources_path / plugin.get('unkDef', 'unk.def'))
-
-        dict_ = dictionary.Dictionary(settings)
+        dict_ = dictionary.Dictionary()
         self.tokenizer = dict_.create()
         self.mode = mode
         self.use_sentence_separator = True
 
     def __call__(self, text):
-        result = self.tokenizer.tokenize(self.mode, text)
+        result = self.tokenizer.tokenize(text=text, mode=self.mode)
         morph_spaces = []
         last_morph = None
         for m in result:
