@@ -6,7 +6,8 @@ from spacy.tokens import Span
 from spacy.language import Language
 from spacy.pipeline import EntityRuler
 from spacy import load
-from tempfile import TemporaryDirectory
+from tempfile import mkdtemp
+from shutil import rmtree
 
 
 @pytest.fixture
@@ -49,10 +50,14 @@ def test_entity_ruler_in_pipeline_from_issue(patterns, en_vocab):
 
     ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
     nlp.add_pipe(ruler)
-    with TemporaryDirectory() as tmpdir:
+    try:
+        tmpdir = mkdtemp()
         nlp.to_disk(tmpdir)
         assert nlp.pipeline[-1][-1].patterns == [{"label": "ORG", "pattern": "Apple"}]
         assert nlp.pipeline[-1][-1].overwrite is True
         nlp2 = load(tmpdir)
         assert nlp2.pipeline[-1][-1].patterns == [{"label": "ORG", "pattern": "Apple"}]
         assert nlp2.pipeline[-1][-1].overwrite is True
+    finally:
+        rmtree(tmpdir)
+
