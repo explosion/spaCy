@@ -49,6 +49,7 @@ def test_entity_ruler_existing_overwrite_serialize_bytes(nlp, patterns):
     assert new_ruler.ent_id_sep == ruler.ent_id_sep
 
 
+@pytest.mark.models
 def test_entity_ruler_in_pipeline_from_issue(nlp, patterns):
     nlp1 = load('en_core_web_sm')
     ruler = EntityRuler(nlp, overwrite_ents=True)
