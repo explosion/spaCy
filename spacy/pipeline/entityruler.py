@@ -274,4 +274,3 @@ class EntityRuler(object):
         }
         path = ensure_path(path)
         to_disk(path, serializers, {})
-

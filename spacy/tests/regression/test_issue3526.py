@@ -8,6 +8,7 @@ from spacy.pipeline import EntityRuler
 from spacy import load
 from tempfile import TemporaryDirectory
 
+
 @pytest.fixture
 def nlp():
     return Language()
@@ -46,6 +47,7 @@ def test_entity_ruler_existing_overwrite_serialize_bytes(nlp, patterns):
     assert len(ruler.labels) == 4
     assert new_ruler.overwrite == ruler.overwrite
     assert new_ruler.ent_id_sep == ruler.ent_id_sep
+
 
 def test_entity_ruler_in_pipeline_from_issue(nlp, patterns):
     nlp1 = load('en_core_web_sm')
