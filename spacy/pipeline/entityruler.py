@@ -34,6 +34,8 @@ class EntityRuler(object):
 
         nlp (Language): The shared nlp object to pass the vocab to the matchers
             and process phrase patterns.
+        phrase_matcher_attr (int / unicode): Token attribute to match on, passed
+            to the internal PhraseMatcher as `attr`
         patterns (iterable): Optional patterns to load in.
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
