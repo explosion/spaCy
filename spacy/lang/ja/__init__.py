@@ -35,7 +35,7 @@ class JapaneseDefaults(Language.Defaults):
     lex_attr_getters[LANG] = lambda _text: "ja"
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
-    syntax_iterators = SYNTAX_ITERATORS  # TODO not works for spaCy 2.0.12, see work around in JapaneseCorrector
+    syntax_iterators = SYNTAX_ITERATORS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
     @classmethod
