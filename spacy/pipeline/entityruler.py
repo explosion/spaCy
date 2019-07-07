@@ -215,9 +215,12 @@ class EntityRuler(object):
         DOCS: https://spacy.io/api/entityruler#from_bytes
         """
         cfg = srsly.msgpack_loads(patterns_bytes)
-        self.add_patterns(cfg.get('patterns', cfg))
-        self.overwrite = cfg.get('overwrite', False)
-        self.ent_id_sep = cfg.get('ent_id_sep', DEFAULT_ENT_ID_SEP)
+        if isinstance(cfg, dict):
+            self.add_patterns(cfg.get('patterns', cfg))
+            self.overwrite = cfg.get('overwrite', False)
+            self.ent_id_sep = cfg.get('ent_id_sep', DEFAULT_ENT_ID_SEP)
+        else:
+            self.add_patterns(cfg)
         return self
 
     def to_bytes(self, **kwargs):
@@ -245,14 +248,18 @@ class EntityRuler(object):
         DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
-        cfg = {}
-        deserializers = {
-            'patterns': lambda p: self.add_patterns(srsly.read_jsonl(p.with_suffix('.jsonl'))),
-            'cfg': lambda p: cfg.update(srsly.read_json(p))
-        }
-        from_disk(path, deserializers, {})
-        self.overwrite = cfg.get('overwrite', False)
-        self.ent_id_sep = cfg.get('ent_id_sep', DEFAULT_ENT_ID_SEP)
+        if path.is_file():
+            patterns = srsly.read_jsonl(path)
+            self.add_patterns(patterns)
+        else:
+            cfg = {}
+            deserializers = {
+                'patterns': lambda p: self.add_patterns(srsly.read_jsonl(p.with_suffix('.jsonl'))),
+                'cfg': lambda p: cfg.update(srsly.read_json(p))
+            }
+            from_disk(path, deserializers, {})
+            self.overwrite = cfg.get('overwrite', False)
+            self.ent_id_sep = cfg.get('ent_id_sep', DEFAULT_ENT_ID_SEP)
         return self
 
     def to_disk(self, path, **kwargs):
