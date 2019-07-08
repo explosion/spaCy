@@ -22,6 +22,7 @@ NOUN_RULES = [
 VERB_RULES = [
     ["er", "e"],  # vasker -> vaske
     ["et", "e"],  # vasket -> vaske
+    ["a", "e"],  # vaska -> vaske
     ["es", "e"],  # vaskes -> vaske
     ["te", "e"],  # stekte -> steke
     ["år", "å"],  # får -> få
