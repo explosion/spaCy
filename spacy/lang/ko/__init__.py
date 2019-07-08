@@ -74,26 +74,16 @@ class KoreanTokenizer(DummyTokenizer):
         return doc
 
     def detailed_tokens(self, text):
-        with self.Tokenizer() as tokenizer:
+        # 품사 태그(POS)[0], 의미 부류(semantic class)[1],	종성 유무(jongseong)[2], 읽기(reading)[3],
+        # 타입(type)[4], 첫번째 품사(start pos)[5],	마지막 품사(end pos)[6], 표현(expression)[7], *
+        with self.Tokenizer("-F%f[0],%f[7]") as tokenizer:
             for node in tokenizer.parse(text, as_nodes=True):
                 if node.is_eos():
                     break
                 surface = node.surface
                 feature = node.feature
-                # 품사 태그, 의미 부류,	종성 유무, 읽기, 타입, 첫번째 품사,	마지막 품사, 표현, *
-                (
-                    pos,
-                    sem_class,
-                    jongseong,
-                    reading,
-                    type_,
-                    start_pos,
-                    end_pos,
-                    expr,
-                    _,
-                ) = feature.split(",")
-                tag = pos
-                lemma, sep, remainder = expr.partition("/")
+                tag, _, expr = feature.partition(",")
+                lemma, _, remainder = expr.partition("/")
                 if lemma == "*":
                     lemma = surface
                 yield Morpheme(surface, lemma, tag)
