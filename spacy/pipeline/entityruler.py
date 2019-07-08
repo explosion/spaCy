@@ -275,8 +275,8 @@ class EntityRuler(object):
             self.ent_id_sep = cfg.get('ent_id_sep', DEFAULT_ENT_ID_SEP)
 
             if self.phrase_matcher_attr is not None:
-                elf.phrase_matcher = PhraseMatcher(self.nlp.vocab,
-                                                   attr=self.phrase_matcher_attr)
+                self.phrase_matcher = PhraseMatcher(self.nlp.vocab,
+                                                    attr=self.phrase_matcher_attr)
         return self
 
     def to_disk(self, path, **kwargs):
