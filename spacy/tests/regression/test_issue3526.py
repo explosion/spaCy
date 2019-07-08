@@ -6,10 +6,8 @@ from spacy.tokens import Span
 from spacy.language import Language
 from spacy.pipeline import EntityRuler
 from spacy import load
-from tempfile import mkdtemp
-from shutil import rmtree
 import srsly
-from pathlib import Path
+from ..util import make_tempdir
 
 @pytest.fixture
 def patterns():
@@ -59,17 +57,14 @@ def test_entity_ruler_existing_bytes_old_format_safe(patterns, en_vocab):
 def test_entity_ruler_from_disk_old_format_safe(patterns, en_vocab):
     nlp = Language(vocab=en_vocab)
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    try:
-        tmpdir = mkdtemp()
-        out_file = Path(tmpdir) / "entity_ruler.jsonl"
+    with make_tempdir() as tmpdir:
+        out_file = tmpdir / "entity_ruler.jsonl"
         srsly.write_jsonl(out_file, ruler.patterns)
         new_ruler = EntityRuler(nlp)
         new_ruler = new_ruler.from_disk(out_file)
         assert new_ruler.patterns == ruler.patterns
         assert len(new_ruler) == len(ruler)
         assert new_ruler.overwrite is not ruler.overwrite
-    finally:
-        rmtree(tmpdir)
 
 
 def test_entity_ruler_in_pipeline_from_issue(patterns, en_vocab):
@@ -78,14 +73,10 @@ def test_entity_ruler_in_pipeline_from_issue(patterns, en_vocab):
 
     ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
     nlp.add_pipe(ruler)
-    try:
-        tmpdir = mkdtemp()
+    with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
         assert nlp.pipeline[-1][-1].patterns == [{"label": "ORG", "pattern": "Apple"}]
         assert nlp.pipeline[-1][-1].overwrite is True
         nlp2 = load(tmpdir)
         assert nlp2.pipeline[-1][-1].patterns == [{"label": "ORG", "pattern": "Apple"}]
         assert nlp2.pipeline[-1][-1].overwrite is True
-    finally:
-        rmtree(tmpdir)
-
