@@ -9,6 +9,7 @@ from spacy import load
 import srsly
 from ..util import make_tempdir
 
+
 @pytest.fixture
 def patterns():
     return [
@@ -27,6 +28,7 @@ def add_ent():
         return doc
 
     return add_ent_component
+
 
 def test_entity_ruler_existing_overwrite_serialize_bytes(patterns, en_vocab):
     nlp = Language(vocab=en_vocab)
