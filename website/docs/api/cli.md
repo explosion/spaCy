@@ -284,9 +284,9 @@ same between pretraining and training. The API and errors around this need some
 improvement.
 
 ```bash
-$ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
-[--depth] [--embed-rows] [--loss_func] [--dropout] [--seed] [--n-iter] [--use-vectors]
-[--n-save_every]
+$ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir]
+[--width] [--depth] [--embed-rows] [--loss_func] [--dropout] [--batch-size] [--max-length] [--min-length]
+[--seed] [--n-iter] [--use-vectors] [--n-save_every] [--init-tok2vec] [--epoch-start]
 ```
 
 | Argument                | Type       | Description                                                                                                                       |
@@ -306,7 +306,8 @@ $ python -m spacy pretrain [texts_loc] [vectors_model] [output_dir] [--width]
 | `--n-iter`, `-i`        | option     | Number of iterations to pretrain.                                                                                                 |
 | `--use-vectors`, `-uv`  | flag       | Whether to use the static vectors as input features.                                                                              |
 | `--n-save-every`, `-se` | option     | Save model every X batches.                                                                                                       |
-| `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag> | option        | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.|
+| `--init-tok2vec`, `-t2v` <Tag variant="new">2.1</Tag> | option | Path to pretrained weights for the token-to-vector parts of the models. See `spacy pretrain`. Experimental.|
+| `--epoch-start`, `-es` <Tag variant="new">2.1.5</Tag> | option | The epoch to start counting at. Only relevant when using `--init-tok2vec` and the given weight file has been renamed. Prevents unintended overwriting of existing weight files.|
 | **CREATES**             | weights    | The pre-trained weights that can be used to initialize `spacy train`.                                                             |
 
 ### JSONL format for raw text {#pretrain-jsonl}

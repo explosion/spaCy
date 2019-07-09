@@ -51,7 +51,6 @@ def filter_spans(spans):
 
 def extract_currency_relations(doc):
     # Merge entities and noun chunks into one token
-    seen_tokens = set()
     spans = list(doc.ents) + list(doc.noun_chunks)
     spans = filter_spans(spans)
     with doc.retokenize() as retokenizer:
