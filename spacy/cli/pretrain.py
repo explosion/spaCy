@@ -5,6 +5,7 @@ import plac
 import random
 import numpy
 import time
+import re
 from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
@@ -23,19 +24,39 @@ from .train import _load_pretrained_tok2vec
 
 
 @plac.annotations(
-    texts_loc=("Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the "
-               "key 'tokens'", "positional", None, str),
+    texts_loc=(
+        "Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the "
+        "key 'tokens'",
+        "positional",
+        None,
+        str,
+    ),
     vectors_model=("Name or path to spaCy model with vectors to learn from"),
     output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
-    loss_func=("Loss function to use for the objective. Either 'L2' or 'cosine'", "option", "L", str),
+    loss_func=(
+        "Loss function to use for the objective. Either 'L2' or 'cosine'",
+        "option",
+        "L",
+        str,
+    ),
     use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
     dropout=("Dropout rate", "option", "d", float),
     batch_size=("Number of words per training batch", "option", "bs", int),
-    max_length=("Max words per example. Longer examples are discarded", "option", "xw", int),
-    min_length=("Min words per example. Shorter examples are discarded", "option", "nw", int),
+    max_length=(
+        "Max words per example. Longer examples are discarded",
+        "option",
+        "xw",
+        int,
+    ),
+    min_length=(
+        "Min words per example. Shorter examples are discarded",
+        "option",
+        "nw",
+        int,
+    ),
     seed=("Seed for random number generators", "option", "s", int),
     n_iter=("Number of iterations to pretrain", "option", "i", int),
     n_save_every=("Save model every X batches.", "option", "se", int),
@@ -44,6 +65,13 @@ from .train import _load_pretrained_tok2vec
         "option",
         "t2v",
         Path,
+    ),
+    epoch_start=(
+        "The epoch to start counting at. Only relevant when using '--init-tok2vec' and the given weight file has been "
+        "renamed. Prevents unintended overwriting of existing weight files.",
+        "option",
+        "es",
+        int
     ),
 )
 def pretrain(
@@ -63,6 +91,7 @@ def pretrain(
     seed=0,
     n_save_every=None,
     init_tok2vec=None,
+    epoch_start=None,
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -131,9 +160,29 @@ def pretrain(
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
+        # Parse the epoch number from the given weight file
+        model_name = re.search(r"model\d+\.bin", str(init_tok2vec))
+        if model_name:
+            # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
+            epoch_start = int(model_name.group(0)[5:][:-4]) + 1
+        else:
+            if not epoch_start:
+                msg.fail(
+                    "You have to use the '--epoch-start' argument when using a renamed weight file for "
+                    "'--init-tok2vec'", exits=True
+                )
+            elif epoch_start < 0:
+                msg.fail(
+                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid" % epoch_start,
+                    exits=True
+                )
+    else:
+        # Without '--init-tok2vec' the '--epoch-start' argument is ignored
+        epoch_start = 0
+
     optimizer = create_default_optimizer(model.ops)
     tracker = ProgressTracker(frequency=10000)
-    msg.divider("Pre-training tok2vec layer")
+    msg.divider("Pre-training tok2vec layer - starting at epoch %d" % epoch_start)
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
@@ -154,7 +203,7 @@ def pretrain(
                 file_.write(srsly.json_dumps(log) + "\n")
 
     skip_counter = 0
-    for epoch in range(n_iter):
+    for epoch in range(epoch_start, n_iter + epoch_start):
         for batch_id, batch in enumerate(
             util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
         ):

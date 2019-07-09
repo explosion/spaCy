@@ -106,7 +106,12 @@
         { "code": "hi", "name": "Hindi", "example": "यह एक वाक्य है।", "has_examples": true },
         { "code": "kn", "name": "Kannada" },
         { "code": "ta", "name": "Tamil", "has_examples": true },
-        { "code": "id", "name": "Indonesian", "has_examples": true },
+        {
+            "code": "id",
+            "name": "Indonesian",
+            "example": "Ini adalah sebuah kalimat.",
+            "has_examples": true
+        },
         { "code": "tl", "name": "Tagalog" },
         { "code": "af", "name": "Afrikaans" },
         { "code": "bg", "name": "Bulgarian" },
@@ -116,7 +121,12 @@
         { "code": "lv", "name": "Latvian" },
         { "code": "sk", "name": "Slovak" },
         { "code": "sl", "name": "Slovenian" },
-        { "code": "sq", "name": "Albanian" },
+        {
+            "code": "sq",
+            "name": "Albanian",
+            "example": "Kjo është një fjali.",
+            "has_examples": true
+        },
         { "code": "et", "name": "Estonian" },
         {
             "code": "th",

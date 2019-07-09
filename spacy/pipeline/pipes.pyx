@@ -1003,7 +1003,7 @@ cdef class DependencyParser(Parser):
 
     @property
     def postprocesses(self):
-        return [nonproj.deprojectivize]  # , merge_subtokens]
+        return [nonproj.deprojectivize]
 
     def add_multitask_objective(self, target):
         if target == "cloze":
@@ -1398,5 +1398,5 @@ class Sentencizer(object):
         self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
         return self
 
-      
+
 __all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer"]
