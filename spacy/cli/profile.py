@@ -24,7 +24,7 @@ def profile(model, inputs=None, n_texts=10000):
     """
     Profile a spaCy pipeline, to find out which functions take the most time.
     Input should be formatted as one JSON object per line with a key "text".
-    It can either be provided as a JSONL file, or be read from sys.sytdin.
+    It can either be provided as a JSONL file, or be read from sys.stdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
     """
     msg = Printer()
