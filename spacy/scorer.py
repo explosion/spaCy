@@ -105,7 +105,6 @@ class Scorer(object):
             "ents_f": self.ents_f,
             "tags_acc": self.tags_acc,
             "token_acc": self.token_acc,
-
         }
 
     @property
@@ -113,7 +112,8 @@ class Scorer(object):
         """RETURNS (dict): Scores per NER entity
         """
         return {
-            k: {'p': v.precision * 100, 'r': v.recall * 100, 'f': v.fscore * 100} for k,v in self.ner_per_ents.items()
+            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+            for k, v in self.ner_per_ents.items()
         }
 
     def score(self, doc, gold, verbose=False, punct_labels=("p", "punct")):
@@ -159,8 +159,8 @@ class Scorer(object):
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
         if "-" not in [token[-1] for token in gold.orig_annot]:
             cand_ents = set()
-            current_ent = {k.label_:set() for k in doc.ents}
-            current_gold = {k.label_:set() for k in doc.ents}
+            current_ent = {k.label_: set() for k in doc.ents}
+            current_gold = {k.label_: set() for k in doc.ents}
             for ent in doc.ents:
                 if ent.label_ not in self.ner_per_ents:
                     self.ner_per_ents[ent.label_] = PRFScore()
@@ -171,10 +171,18 @@ class Scorer(object):
                     self.ner_per_ents[ent.label_].fp += 1
                 else:
                     cand_ents.add((ent.label_, first, last))
-                    current_ent[ent.label_].add(tuple(x for x in cand_ents if x[0] == ent.label_))
-                    current_gold[ent.label_].add(tuple(x for x in gold_ents if x[0] == ent.label_))
+                    current_ent[ent.label_].add(
+                        tuple(x for x in cand_ents if x[0] == ent.label_)
+                    )
+                    current_gold[ent.label_].add(
+                        tuple(x for x in gold_ents if x[0] == ent.label_)
+                    )
             # Scores per ent
-            [v.score_set(current_ent[k], current_gold[k]) for k, v in self.ner_per_ents.items() if k in current_ent]
+            [
+                v.score_set(current_ent[k], current_gold[k])
+                for k, v in self.ner_per_ents.items()
+                if k in current_ent
+            ]
             # Score for all ents
             self.ner.score_set(cand_ents, gold_ents)
         self.tags.score_set(cand_tags, gold_tags)
