@@ -105,10 +105,10 @@ class Scorer(object):
             "ents_f": self.ents_f,
             "tags_acc": self.tags_acc,
             "token_acc": self.token_acc,
+            "ents_per_type": self.__scores_per_ents(),
         }
 
-    @property
-    def scores_per_ents(self):
+    def __scores_per_ents(self):
         """RETURNS (dict): Scores per NER entity
         """
         return {
