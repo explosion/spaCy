@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
-| Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
+| Name                           |  Veer Bains          |
+| Company name (if applicable)   |  NIL                 |
+| Title or role (if applicable)  |  NIL                 |
+| Date                           |  09-07-2019          |
+| GitHub username                |  veer-bains          |
 | Website (optional)             |                      |
