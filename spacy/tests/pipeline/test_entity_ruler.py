@@ -108,7 +108,9 @@ def test_entity_ruler_serialize_bytes(nlp, patterns):
     new_ruler = new_ruler.from_bytes(ruler_bytes)
     assert len(new_ruler) == len(patterns)
     assert len(new_ruler.labels) == 4
-    assert new_ruler.patterns == ruler.patterns
+    assert len(new_ruler.patterns) == len(ruler.patterns)
+    for pattern in ruler.patterns:
+        assert pattern in new_ruler.patterns
     assert new_ruler.labels == ruler.labels
 
 

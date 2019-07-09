@@ -52,7 +52,8 @@ def test_entity_ruler_existing_bytes_old_format_safe(patterns, en_vocab):
     new_ruler = EntityRuler(nlp)
     new_ruler = new_ruler.from_bytes(bytes_old_style)
     assert len(new_ruler) == len(ruler)
-    assert new_ruler.patterns == ruler.patterns
+    for pattern in ruler.patterns:
+        assert pattern in new_ruler.patterns
     assert new_ruler.overwrite is not ruler.overwrite
 
 
@@ -64,7 +65,8 @@ def test_entity_ruler_from_disk_old_format_safe(patterns, en_vocab):
         srsly.write_jsonl(out_file, ruler.patterns)
         new_ruler = EntityRuler(nlp)
         new_ruler = new_ruler.from_disk(out_file)
-        assert new_ruler.patterns == ruler.patterns
+        for pattern in ruler.patterns:
+            assert pattern in new_ruler.patterns
         assert len(new_ruler) == len(ruler)
         assert new_ruler.overwrite is not ruler.overwrite
 
