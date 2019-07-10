@@ -293,12 +293,13 @@ class EntityRuler(object):
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
 
-        path (unicode / Path): The JSONL file to load.
+        path (unicode / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
 
         DOCS: https://spacy.io/api/entityruler#to_disk
         """
+        path = ensure_path(path)
         cfg = {
             "overwrite": self.overwrite,
             "phrase_matcher_attr": self.phrase_matcher_attr,
@@ -310,5 +311,7 @@ class EntityRuler(object):
             ),
             "cfg": lambda p: srsly.write_json(p, cfg),
         }
-        path = ensure_path(path)
-        to_disk(path, serializers, {})
+        if path.suffix == ".jsonl":  # user wants to save only JSONL
+            srsly.write_jsonl(path, self.patterns)
+        else:
+            to_disk(path, serializers, {})
