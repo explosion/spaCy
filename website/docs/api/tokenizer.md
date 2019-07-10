@@ -25,7 +25,7 @@ Create a `Tokenizer`, to create `Doc` objects given unicode text. For examples o
 > from spacy.lang.en import English
 > nlp = English()
 > # Create a Tokenizer with the default settings for English
-> # including matching rules and exceptions
+> # including punctuation rules and exceptions
 > tokenizer = nlp.Defaults.create_tokenizer(nlp)
 > ```
 
