@@ -34,6 +34,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | ---------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nlp`            | `Language`    | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                  |
 | `patterns`       | iterable      | Optional patterns to load in.                                                                                                                         |
+| `phrase_matcher_attr` | int / unicode | Optional attr to pass to the internal [`PhraseMatcher`](/api/phtasematcher). defaults to `None`
 | `overwrite_ents` | bool          | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`.                      |
 | `**cfg`          | -             | Other config parameters. If pipeline component is loaded as part of a model pipeline, this will include all keyword arguments passed to `spacy.load`. |
 | **RETURNS**      | `EntityRuler` | The newly constructed object.                                                                                                                         |

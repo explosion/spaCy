@@ -10,7 +10,15 @@ _exc = {}
 for exc_data in [
     {ORTH: "jan.", LEMMA: "januar"},
     {ORTH: "feb.", LEMMA: "februar"},
+    {ORTH: "mar.", LEMMA: "mars"},
+    {ORTH: "apr.", LEMMA: "april"},
+    {ORTH: "jun.", LEMMA: "juni"},
     {ORTH: "jul.", LEMMA: "juli"},
+    {ORTH: "aug.", LEMMA: "august"},
+    {ORTH: "sep.", LEMMA: "september"},
+    {ORTH: "okt.", LEMMA: "oktober"},
+    {ORTH: "nov.", LEMMA: "november"},
+    {ORTH: "des.", LEMMA: "desember"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -18,11 +26,13 @@ for exc_data in [
 for orth in [
     "adm.dir.",
     "a.m.",
+    "andelsnr",
     "Aq.",
     "b.c.",
     "bl.a.",
     "bla.",
     "bm.",
+    "bnr.",
     "bto.",
     "ca.",
     "cand.mag.",
@@ -41,6 +51,7 @@ for orth in [
     "el.",
     "e.l.",
     "et.",
+    "etc.",
     "etg.",
     "ev.",
     "evt.",
@@ -76,6 +87,7 @@ for orth in [
     "kgl.res.",
     "kl.",
     "komm.",
+    "kr.",
     "kst.",
     "lø.",
     "ma.",
@@ -106,6 +118,7 @@ for orth in [
     "o.l.",
     "on.",
     "op.",
+    "org."
     "osv.",
     "ovf.",
     "p.",
@@ -130,6 +143,7 @@ for orth in [
     "sep.",
     "siviling.",
     "sms.",
+    "snr.",
     "spm.",
     "sr.",
     "sst.",
