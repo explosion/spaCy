@@ -9,7 +9,10 @@ Segment text, and create `Doc` objects with the discovered segment boundaries.
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 
-Create a `Tokenizer`, to create `Doc` objects given unicode text. For examples of how to construct a custom tokenizer with different tokenization rules, see the [usage documentation](https://spacy.io/usage/linguistic-features#native-tokenizers).
+Create a `Tokenizer`, to create `Doc` objects given unicode text. For examples
+of how to construct a custom tokenizer with different tokenization rules, see
+the
+[usage documentation](https://spacy.io/usage/linguistic-features#native-tokenizers).
 
 > #### Example
 >
