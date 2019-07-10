@@ -62,10 +62,9 @@ def test_entity_ruler_from_disk_old_format_safe(patterns, en_vocab):
     nlp = Language(vocab=en_vocab)
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
     with make_tempdir() as tmpdir:
-        out_file = tmpdir / "entity_ruler.jsonl"
-        srsly.write_jsonl(out_file, ruler.patterns)
-        new_ruler = EntityRuler(nlp)
-        new_ruler = new_ruler.from_disk(out_file)
+        out_file = tmpdir / "entity_ruler"
+        srsly.write_jsonl(out_file.with_suffix(".jsonl"), ruler.patterns)
+        new_ruler = EntityRuler(nlp).from_disk(out_file)
         for pattern in ruler.patterns:
             assert pattern in new_ruler.patterns
         assert len(new_ruler) == len(ruler)

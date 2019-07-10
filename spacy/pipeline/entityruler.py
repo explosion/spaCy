@@ -266,8 +266,9 @@ class EntityRuler(object):
         DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
-        if path.is_file():
-            patterns = srsly.read_jsonl(path)
+        depr_patterns_path = path.with_suffix(".jsonl")
+        if depr_patterns_path.is_file():
+            patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
         else:
             cfg = {}
