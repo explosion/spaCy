@@ -4,7 +4,6 @@ from spacy.lang.en import English
 import pytest
 
 
-@pytest.mark.xfail
 def test_issue3880():
     """Test that `nlp.pipe()` works when an empty string ends the batch.
 
