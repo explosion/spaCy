@@ -902,6 +902,11 @@ class TextCategorizer(Pipe):
     def labels(self):
         return tuple(self.cfg.setdefault("labels", []))
 
+    def require_labels(self):
+        """Raise an error if the component's model has no labels defined."""
+        if not self.labels:
+            raise ValueError(Errors.E143.format(name=self.name))
+
     @labels.setter
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
@@ -931,6 +936,7 @@ class TextCategorizer(Pipe):
                 doc.cats[label] = float(scores[i, j])
 
     def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
+        self.require_model()
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         loss, d_scores = self.get_loss(docs, golds, scores)
         bp_scores(d_scores, sgd=sgd)
@@ -985,6 +991,7 @@ class TextCategorizer(Pipe):
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
         if self.model is True:
             self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
+            self.require_labels()
             self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
         if sgd is None:
