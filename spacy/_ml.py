@@ -652,6 +652,38 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
     return model
 
 
+def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
+    # TODO proper error
+    if "entity_width" not in cfg:
+        raise ValueError("entity_width not found")
+    if "context_width" not in cfg:
+        raise ValueError("context_width not found")
+
+    conv_depth = cfg.get("conv_depth", 2)
+    cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
+    pretrained_vectors = cfg.get("pretrained_vectors")   # self.nlp.vocab.vectors.name
+    context_width = cfg.get("context_width")
+    entity_width = cfg.get("entity_width")
+
+    with Model.define_operators({">>": chain, "**": clone}):
+        model = Affine(entity_width, entity_width+context_width+1+ner_types)\
+                >> Affine(1, entity_width, drop_factor=0.0)\
+                >> logistic
+
+        # context encoder
+        tok2vec = Tok2Vec(width=hidden_width, embed_size=embed_width, pretrained_vectors=pretrained_vectors,
+                          cnn_maxout_pieces=cnn_maxout_pieces, subword_features=True, conv_depth=conv_depth,
+                          bilstm_depth=0) >> flatten_add_lengths >> Pooling(mean_pool)\
+                                >> Residual(zero_init(Maxout(hidden_width, hidden_width))) \
+                                >> zero_init(Affine(context_width, hidden_width))
+
+        model.tok2vec = tok2vec
+
+    model.tok2vec = tok2vec
+    model.tok2vec.nO = context_width
+    model.nO = 1
+    return model
+
 @layerize
 def flatten(seqs, drop=0.0):
     ops = Model.ops
