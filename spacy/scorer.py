@@ -93,6 +93,15 @@ class Scorer(object):
         return self.ner.fscore * 100
 
     @property
+    def ents_per_type(self):
+        """RETURNS (dict): Scores per entity label.
+        """
+        return {
+            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+            for k, v in self.ner_per_ents.items()
+        }
+
+    @property
     def scores(self):
         """RETURNS (dict): All scores with keys `uas`, `las`, `ents_p`,
             `ents_r`, `ents_f`, `tags_acc` and `token_acc`.
@@ -103,17 +112,9 @@ class Scorer(object):
             "ents_p": self.ents_p,
             "ents_r": self.ents_r,
             "ents_f": self.ents_f,
+            "ents_per_type": self.ents_per_type,
             "tags_acc": self.tags_acc,
             "token_acc": self.token_acc,
-            "ents_per_type": self.__scores_per_ents(),
-        }
-
-    def __scores_per_ents(self):
-        """RETURNS (dict): Scores per NER entity
-        """
-        return {
-            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
-            for k, v in self.ner_per_ents.items()
         }
 
     def score(self, doc, gold, verbose=False, punct_labels=("p", "punct")):
