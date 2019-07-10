@@ -39,6 +39,9 @@ mkdir models
 python -m spacy train es models ancora-json/es_ancora-ud-train.json ancora-json/es_ancora-ud-dev.json
 ```
 
+You can also use the [`gold.docs_to_json`](/api/goldparse#docs_to_json) helper
+to convert a list of `Doc` objects to spaCy's JSON training format.
+
 #### Understanding the training output
 
 When you train a model using the [`spacy train`](/api/cli#train) command, you'll
