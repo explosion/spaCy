@@ -13,6 +13,7 @@ from libc.math cimport sqrt
 import numpy
 import numpy.linalg
 import struct
+from libc.stdint cimport int64_t
 import srsly
 from thinc.neural.util import get_array_module, copy_array
 
@@ -710,22 +711,52 @@ cdef class Doc:
         cdef int i
         cdef attr_t attr
         cdef size_t count
+        cdef int64_t this_value
+
+        print("COUNTING")
 
         if counts is None:
             counts = PreshCounter()
             output_dict = True
+            print("counts None")
         else:
             output_dict = False
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
+            print("exclude None")
             for i in range(self.length):
-                counts.inc(get_token_attr(&self.c[i], attr_id), 1)
+                print()
+                print("token", self[i])
+                this_value = get_token_attr(&self.c[i], attr_id)
+                print("token attr value", this_value)
+                print("type attr value", type(this_value))
+
+                print(i, "key this_value before", counts.c_map.cells[this_value].key)
+                print(i, "value this_value before", <int64_t>counts.c_map.cells[this_value].value)
+                counts.inc(this_value, 1)
+                print(i, "key this_value after", counts.c_map.cells[this_value].key)
+                print(i, "value this_value after", <int64_t>counts.c_map.cells[this_value].value)
+
+                print(i, "key 0", counts.c_map.cells[0].key)
+                print(i, "value 0", <int64_t>counts.c_map.cells[0].value)
+                print(i, "key 1", counts.c_map.cells[1].key)
+                print(i, "value 1", <int64_t>counts.c_map.cells[1].value)
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
                     attr = get_token_attr(&self.c[i], attr_id)
                     counts.inc(attr, 1)
         if output_dict:
+            print("output_dict")
+            print(counts.length)
+            print(counts.total)
+            print("key 0", counts.c_map.cells[0].key)
+            print("value 0", <int64_t>counts.c_map.cells[0].value)
+            print("key 1", counts.c_map.cells[1].key)
+            print("value 1", <int64_t>counts.c_map.cells[1].value)
+            print()
+            print(dict(counts))
+            print()
             return dict(counts)
 
     def _realloc(self, new_size):
