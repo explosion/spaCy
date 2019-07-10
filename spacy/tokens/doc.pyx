@@ -85,13 +85,14 @@ cdef class Doc:
     Python-level `Token` and `Span` objects are views of this array, i.e.
     they don't own the data themselves.
 
-    EXAMPLE: Construction 1
+    EXAMPLE:
+        Construction 1
         >>> doc = nlp(u'Some text')
 
         Construction 2
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
-                      spaces=[True, False, False])
+        >>>           spaces=[True, False, False])
 
     DOCS: https://spacy.io/api/doc
     """
