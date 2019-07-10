@@ -10,7 +10,7 @@ from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Span
 from ..matcher import Matcher, PhraseMatcher
 
-DEFAULT_ENT_ID_SEP = '||'
+DEFAULT_ENT_ID_SEP = "||"
 
 
 class EntityRuler(object):
@@ -53,7 +53,9 @@ class EntityRuler(object):
         self.matcher = Matcher(nlp.vocab)
         if phrase_matcher_attr is not None:
             self.phrase_matcher_attr = phrase_matcher_attr
-            self.phrase_matcher = PhraseMatcher(nlp.vocab, attr=self.phrase_matcher_attr)
+            self.phrase_matcher = PhraseMatcher(
+                nlp.vocab, attr=self.phrase_matcher_attr
+            )
         else:
             self.phrase_matcher_attr = None
             self.phrase_matcher = PhraseMatcher(nlp.vocab)
@@ -223,13 +225,14 @@ class EntityRuler(object):
         """
         cfg = srsly.msgpack_loads(patterns_bytes)
         if isinstance(cfg, dict):
-            self.add_patterns(cfg.get('patterns', cfg))
-            self.overwrite = cfg.get('overwrite', False)
-            self.phrase_matcher_attr = cfg.get('phrase_matcher_attr', None)
+            self.add_patterns(cfg.get("patterns", cfg))
+            self.overwrite = cfg.get("overwrite", False)
+            self.phrase_matcher_attr = cfg.get("phrase_matcher_attr", None)
             if self.phrase_matcher_attr is not None:
-                self.phrase_matcher = PhraseMatcher(self.nlp.vocab,
-                                                    attr=self.phrase_matcher_attr)
-            self.ent_id_sep = cfg.get('ent_id_sep', DEFAULT_ENT_ID_SEP)
+                self.phrase_matcher = PhraseMatcher(
+                    self.nlp.vocab, attr=self.phrase_matcher_attr
+                )
+            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         else:
             self.add_patterns(cfg)
         return self
@@ -242,11 +245,14 @@ class EntityRuler(object):
         DOCS: https://spacy.io/api/entityruler#to_bytes
         """
 
-        serial = OrderedDict((
-            ('overwrite', self.overwrite),
-            ('ent_id_sep', self.ent_id_sep),
-            ('phrase_matcher_attr', self.phrase_matcher_attr),
-            ('patterns', self.patterns)))
+        serial = OrderedDict(
+            (
+                ("overwrite", self.overwrite),
+                ("ent_id_sep", self.ent_id_sep),
+                ("phrase_matcher_attr", self.phrase_matcher_attr),
+                ("patterns", self.patterns),
+            )
+        )
         return srsly.msgpack_dumps(serial)
 
     def from_disk(self, path, **kwargs):
@@ -266,17 +272,20 @@ class EntityRuler(object):
         else:
             cfg = {}
             deserializers = {
-                'patterns': lambda p: self.add_patterns(srsly.read_jsonl(p.with_suffix('.jsonl'))),
-                'cfg': lambda p: cfg.update(srsly.read_json(p))
+                "patterns": lambda p: self.add_patterns(
+                    srsly.read_jsonl(p.with_suffix(".jsonl"))
+                ),
+                "cfg": lambda p: cfg.update(srsly.read_json(p)),
             }
             from_disk(path, deserializers, {})
-            self.overwrite = cfg.get('overwrite', False)
-            self.phrase_matcher_attr = cfg.get('phrase_matcher_attr')
-            self.ent_id_sep = cfg.get('ent_id_sep', DEFAULT_ENT_ID_SEP)
+            self.overwrite = cfg.get("overwrite", False)
+            self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
+            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
 
             if self.phrase_matcher_attr is not None:
-                self.phrase_matcher = PhraseMatcher(self.nlp.vocab,
-                                                    attr=self.phrase_matcher_attr)
+                self.phrase_matcher = PhraseMatcher(
+                    self.nlp.vocab, attr=self.phrase_matcher_attr
+                )
         return self
 
     def to_disk(self, path, **kwargs):
@@ -289,13 +298,16 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#to_disk
         """
-        cfg = {'overwrite': self.overwrite,
-               'phrase_matcher_attr': self.phrase_matcher_attr,
-               'ent_id_sep': self.ent_id_sep}
+        cfg = {
+            "overwrite": self.overwrite,
+            "phrase_matcher_attr": self.phrase_matcher_attr,
+            "ent_id_sep": self.ent_id_sep,
+        }
         serializers = {
-            'patterns': lambda p: srsly.write_jsonl(p.with_suffix('.jsonl'),
-                                                    self.patterns),
-            'cfg': lambda p: srsly.write_json(p, cfg)
+            "patterns": lambda p: srsly.write_jsonl(
+                p.with_suffix(".jsonl"), self.patterns
+            ),
+            "cfg": lambda p: srsly.write_json(p, cfg),
         }
         path = ensure_path(path)
         to_disk(path, serializers, {})
