@@ -19,3 +19,6 @@ pytest>=4.0.0,<4.1.0
 pytest-timeout>=1.3.0,<2.0.0
 mock>=2.0.0,<3.0.0
 flake8>=3.5.0,<3.6.0
+# Language specific test dependencies
+SudachiPy>=0.3.3 ; python_version>='3.5'
+https://github.com/megagonlabs/ginza/releases/download/v2.0.0/SudachiDict_core-20190531.tar.gz ; python_version>='3.5'

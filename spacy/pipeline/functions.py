@@ -36,7 +36,7 @@ def merge_entities(doc):
     return doc
 
 
-def merge_subtokens(doc, label="subtok"):
+def merge_subtokens(doc, label="subtok", **kwargs):
     """Merge subtokens into a single token.
 
     doc (Doc): The Doc object.
