@@ -111,7 +111,7 @@ def test_entity_ruler_serialize_bytes(nlp, patterns):
     assert len(new_ruler.patterns) == len(ruler.patterns)
     for pattern in ruler.patterns:
         assert pattern in new_ruler.patterns
-    assert new_ruler.labels == ruler.labels
+    assert sorted(new_ruler.labels) == sorted(ruler.labels)
 
 
 def test_entity_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):

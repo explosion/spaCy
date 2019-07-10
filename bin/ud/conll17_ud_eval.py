@@ -292,8 +292,8 @@ def evaluate(gold_ud, system_ud, deprel_weights=None, check_parse=True):
 
     def spans_score(gold_spans, system_spans):
         correct, gi, si = 0, 0, 0
-        undersegmented = list()
-        oversegmented = list()
+        undersegmented = []
+        oversegmented = []
         combo = 0
         previous_end_si_earlier = False
         previous_end_gi_earlier = False

@@ -55,6 +55,27 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 ## Utilities {#util}
 
+### gold.docs_to_json {#docs_to_json tag="function"}
+
+Convert a list of Doc objects into the
+[JSON-serializable format](/api/annotation#json-input) used by the
+[`spacy train`](/api/cli#train) command.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import docs_to_json
+>
+> doc = nlp(u"I like London")
+> json_data = docs_to_json([doc])
+> ```
+
+| Name        | Type             | Description                                |
+| ----------- | ---------------- | ------------------------------------------ |
+| `docs`      | iterable / `Doc` | The `Doc` object(s) to convert.            |
+| `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
+| **RETURNS** | list             | The data in spaCy's JSON format.           |
+
 ### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
 Encode labelled spans into per-token tags, using the
