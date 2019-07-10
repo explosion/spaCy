@@ -245,10 +245,10 @@ def setup_package():
                 "cuda92": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda92>=5.0.0b4"],
                 "cuda100": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda100>=5.0.0b4"],
                 # Language tokenizers with external dependencies
-                "ja": ["SudachiPy @ https://github.com/megagonlabs/SudachiPy/releases/download/v0.1.2/SudachiPy-0.1.2.tar.gz"],
+                "ja": ["sudachipy>=0.3.3 ; python_version >= '3.5'"],
                 "ko": ["natto-py==0.9.0"],
             },
-            test_requires=["SudachiPy @ https://github.com/megagonlabs/SudachiPy/releases/download/v0.1.2/SudachiPy-0.1.2.tar.gz"],
+            test_requires=["sudachipy ; python_version >= '3.5'"],
             python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
             classifiers=[
                 "Development Status :: 5 - Production/Stable",
