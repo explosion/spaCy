@@ -240,6 +240,8 @@ cdef class Doc:
             return True
         if self.is_parsed:
             return True
+        if len(self) < 2:
+            return True
         for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
                 return True
@@ -251,6 +253,8 @@ cdef class Doc:
         *any* of the tokens has a named entity tag set (even if the others are
         uknown values).
         """
+        if len(self) == 0:
+            return True
         for i in range(self.length):
             if self.c[i].ent_iob != 0:
                 return True
