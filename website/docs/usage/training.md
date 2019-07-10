@@ -630,13 +630,13 @@ should be somewhat larger, especially if your documents are long.
 
 ### Learning rate, regularization and gradient clipping {#tips-hyperparams}
 
-By default spaCy uses the Adam solver, with default settings (`learn_rate=0.001`,
-`beta1=0.9`, `beta2=0.999`). Some researchers have said they found
-these settings terrible on their problems – but they've always performed very
-well in training spaCy's models, in combination with the rest of our recipe. You
-can change these settings directly, by modifying the corresponding attributes on
-the `optimizer` object. You can also set environment variables, to adjust the
-defaults.
+By default spaCy uses the Adam solver, with default settings
+(`learn_rate=0.001`, `beta1=0.9`, `beta2=0.999`). Some researchers have said
+they found these settings terrible on their problems – but they've always
+performed very well in training spaCy's models, in combination with the rest of
+our recipe. You can change these settings directly, by modifying the
+corresponding attributes on the `optimizer` object. You can also set environment
+variables, to adjust the defaults.
 
 There are two other key hyper-parameters of the solver: `L2` **regularization**,
 and **gradient clipping** (`max_grad_norm`). Gradient clipping is a hack that's
