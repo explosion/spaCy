@@ -403,6 +403,7 @@ class Errors(object):
     E140 = ("The list of entities, prior probabilities and entity vectors should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the provided {found}.")
     E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
+    E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
 
 
 @add_codes
