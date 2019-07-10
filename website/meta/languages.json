@@ -104,6 +104,7 @@
         { "code": "ga", "name": "Irish" },
         { "code": "bn", "name": "Bengali", "has_examples": true },
         { "code": "hi", "name": "Hindi", "example": "यह एक वाक्य है।", "has_examples": true },
+        { "code": "mr", "name": "Marathi" },
         { "code": "kn", "name": "Kannada" },
         { "code": "ta", "name": "Tamil", "has_examples": true },
         {
@@ -157,9 +158,12 @@
             "code": "ko",
             "name": "Korean",
             "dependencies": [
-                { "name": "mecab-ko", "url": "https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md" },
+                {
+                    "name": "mecab-ko",
+                    "url": "https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md"
+                },
                 { "name": "mecab-ko-dic", "url": "https://bitbucket.org/eunjeon/mecab-ko-dic" },
-                { "name": "natto-py", "url": "https://github.com/buruzaemon/natto-py"}
+                { "name": "natto-py", "url": "https://github.com/buruzaemon/natto-py" }
             ],
             "example": "이것은 문장입니다.",
             "has_examples": true
