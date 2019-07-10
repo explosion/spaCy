@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pytest
 import numpy
 from spacy.tokens import Doc
+from spacy.matcher import Matcher
 from spacy.displacy import render
 from spacy.gold import iob_to_biluo
 from spacy.lang.it import Italian
@@ -121,6 +122,15 @@ def test_issue2396(en_vocab):
     span = doc[:]
     assert (doc.get_lca_matrix() == matrix).all()
     assert (span.get_lca_matrix() == matrix).all()
+
+
+def test_issue2464(en_vocab):
+    """Test problem with successive ?. This is the same bug, so putting it here."""
+    matcher = Matcher(en_vocab)
+    doc = Doc(en_vocab, words=["a", "b"])
+    matcher.add("4", None, [{"OP": "?"}, {"OP": "?"}])
+    matches = matcher(doc)
+    assert len(matches) == 3
 
 
 def test_issue2482():
