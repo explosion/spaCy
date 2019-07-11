@@ -1,6 +1,5 @@
 from cymem.cymem cimport Pool
 cimport numpy as np
-from preshed.counter cimport PreshCounter
 
 from ..vocab cimport Vocab
 from ..structs cimport TokenC, LexemeC
