@@ -326,7 +326,7 @@ URLs.
 ```text
 ### requirements.txt
 spacy>=2.0.0,<3.0.0
-https://github.com/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz#egg=en_core_web_sm
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.1.0/en_core_web_sm-2.1.0.tar.gz#egg=en_core_web_sm
 ```
 
 Specifying `#egg=` with the package name tells pip which package to expect from

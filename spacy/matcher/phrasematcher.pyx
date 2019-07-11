@@ -127,7 +127,7 @@ cdef class PhraseMatcher:
               and self.attr not in (DEP, POS, TAG, LEMMA):
                 string_attr = self.vocab.strings[self.attr]
                 user_warning(Warnings.W012.format(key=key, attr=string_attr))
-            tags = get_bilou(length)
+            tags = get_biluo(length)
             phrase_key = <attr_t*>mem.alloc(length, sizeof(attr_t))
             for i, tag in enumerate(tags):
                 attr_value = self.get_lex_value(doc, i)
@@ -230,7 +230,7 @@ cdef class PhraseMatcher:
         return "matcher:{}-{}".format(string_attr_name, string_attr_value)
 
 
-def get_bilou(length):
+def get_biluo(length):
     if length == 0:
         raise ValueError(Errors.E127)
     elif length == 1:

@@ -209,7 +209,7 @@ def setup_package():
             generate_cython(root, "spacy")
 
         setup(
-            name=about["__title__"],
+            name="spacy",
             zip_safe=False,
             packages=PACKAGES,
             package_data=PACKAGE_DATA,
@@ -232,9 +232,8 @@ def setup_package():
                 "blis>=0.2.2,<0.3.0",
                 "plac<1.0.0,>=0.9.6",
                 "requests>=2.13.0,<3.0.0",
-                "jsonschema>=2.6.0,<3.1.0",
                 "wasabi>=0.2.0,<1.1.0",
-                "srsly>=0.0.5,<1.1.0",
+                "srsly>=0.0.6,<1.1.0",
                 'pathlib==1.0.1; python_version < "3.4"',
             ],
             setup_requires=["wheel"],
@@ -247,6 +246,7 @@ def setup_package():
                 "cuda100": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda100>=5.0.0b4"],
                 # Language tokenizers with external dependencies
                 "ja": ["mecab-python3==0.7"],
+                "ko": ["natto-py==0.9.0"],
             },
             python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
             classifiers=[

@@ -214,7 +214,8 @@ example, you might want to match different spellings of a word, without having
 to add a new pattern for each spelling.
 
 ```python
-pattern = [{"TEXT": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}},
+pattern = [{"TEXT": {"REGEX": "^[Uu](\\.?|nited)$"}},
+           {"TEXT": {"REGEX": "^[Ss](\\.?|tates)$"}},
            {"LOWER": "president"}]
 ```
 
@@ -227,7 +228,7 @@ attributes:
 pattern = [{"TAG": {"REGEX": "^V"}}]
 
 # Match custom attribute values with regular expressions
-pattern = [{"_": {"country": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}}}]
+pattern = [{"_": {"country": {"REGEX": "^[Uu](\\.?|nited) ?[Ss](\\.?|tates)$"}}}]
 ```
 
 <Infobox title="Regular expressions in older versions" variant="warning">
@@ -304,11 +305,11 @@ match on the uppercase versions, in case someone has written it as "Google i/o".
 
 ```python
 ### {executable="true"}
-import spacy
+from spacy.lang.en import English
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 
-nlp = spacy.load("en_core_web_sm")
+nlp = English()
 matcher = Matcher(nlp.vocab)
 
 def add_event_ent(matcher, doc, i, matches):
@@ -321,7 +322,7 @@ def add_event_ent(matcher, doc, i, matches):
 
 pattern = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
 matcher.add("GoogleIO", add_event_ent, pattern)
-doc = nlp(u"This is a text about Google I/O.")
+doc = nlp(u"This is a text about Google I/O")
 matches = matcher(doc)
 ```
 
@@ -404,7 +405,7 @@ class BadHTMLMerger(object):
         for match_id, start, end in matches:
             spans.append(doc[start:end])
         with doc.retokenize() as retokenizer:
-            for span in hashtags:
+            for span in spans:
                 retokenizer.merge(span)
                 for token in span:
                     token._.bad_html = True  # Mark token as bad HTML
@@ -678,7 +679,7 @@ for match_id, start, end in matches:
     if doc.vocab.strings[match_id] == "HASHTAG":
         hashtags.append(doc[start:end])
 with doc.retokenize() as retokenizer:
-    for span in spans:
+    for span in hashtags:
         retokenizer.merge(span)
         for token in span:
             token._.is_hashtag = True

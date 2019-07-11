@@ -510,7 +510,7 @@ described in any single publication. The model is a greedy transition-based
 parser guided by a linear model whose weights are learned using the averaged
 perceptron loss, via the
 [dynamic oracle](http://www.aclweb.org/anthology/C12-1059) imitation learning
-strategy. The transition system is equivalent to the BILOU tagging scheme.
+strategy. The transition system is equivalent to the BILUO tagging scheme.
 
 ## Models and training data {#training}
 
@@ -520,7 +520,9 @@ spaCy takes training data in JSON format. The built-in
 [`convert`](/api/cli#convert) command helps you convert the `.conllu` format
 used by the
 [Universal Dependencies corpora](https://github.com/UniversalDependencies) to
-spaCy's training format.
+spaCy's training format. To convert one or more existing `Doc` objects to
+spaCy's JSON format, you can use the
+[`gold.docs_to_json`](/api/goldparse#docs_to_json) helper.
 
 > #### Annotating entities
 >

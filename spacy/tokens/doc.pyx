@@ -9,6 +9,7 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
+from collections import Counter
 
 import numpy
 import numpy.linalg
@@ -22,7 +23,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_KB_ID, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
@@ -64,6 +65,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_iob
     elif feat_name == ENT_TYPE:
         return token.ent_type
+    elif feat_name == ENT_KB_ID:
+        return token.ent_kb_id
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
@@ -85,13 +88,14 @@ cdef class Doc:
     Python-level `Token` and `Span` objects are views of this array, i.e.
     they don't own the data themselves.
 
-    EXAMPLE: Construction 1
+    EXAMPLE:
+        Construction 1
         >>> doc = nlp(u'Some text')
 
         Construction 2
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
-                      spaces=[True, False, False])
+        >>>           spaces=[True, False, False])
 
     DOCS: https://spacy.io/api/doc
     """
@@ -237,6 +241,8 @@ cdef class Doc:
             return True
         if self.is_parsed:
             return True
+        if len(self) < 2:
+            return True
         for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
                 return True
@@ -248,6 +254,8 @@ cdef class Doc:
         *any* of the tokens has a named entity tag set (even if the others are
         uknown values).
         """
+        if len(self) == 0:
+            return True
         for i in range(self.length):
             if self.c[i].ent_iob != 0:
                 return True
@@ -690,7 +698,7 @@ cdef class Doc:
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
-    def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
+    def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
         `{attribute (int): count (ints)}` frequencies, keyed by the values of
         the given attribute ID.
@@ -705,19 +713,18 @@ cdef class Doc:
         cdef size_t count
 
         if counts is None:
-            counts = PreshCounter()
+            counts = Counter()
             output_dict = True
         else:
             output_dict = False
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
             for i in range(self.length):
-                counts.inc(get_token_attr(&self.c[i], attr_id), 1)
+                counts[get_token_attr(&self.c[i], attr_id)] += 1
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
-                    attr = get_token_attr(&self.c[i], attr_id)
-                    counts.inc(attr, 1)
+                    counts[get_token_attr(&self.c[i], attr_id)] += 1
         if output_dict:
             return dict(counts)
 
@@ -850,7 +857,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.append(TAG)
         # If doc parsed add head and dep attribute
@@ -1004,6 +1011,7 @@ cdef class Doc:
         """
         cdef unicode tag, lemma, ent_type
         deprecation_warning(Warnings.W013.format(obj="Doc"))
+        # TODO: ENT_KB_ID ?
         if len(args) == 3:
             deprecation_warning(Warnings.W003)
             tag, lemma, ent_type = args

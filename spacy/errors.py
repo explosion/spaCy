@@ -82,6 +82,8 @@ class Warnings(object):
             "parallel inference via multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge base.")
     W018 = ("Entity '{entity}' already exists in the Knowledge base.")
+    W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
+            "previously loaded vectors. See Issue #3853.")
 
 
 @add_codes
@@ -141,8 +143,14 @@ class Errors(object):
     E023 = ("Error cleaning up beam: The same state occurred twice at "
             "memory address {addr} and position {i}.")
     E024 = ("Could not find an optimal move to supervise the parser. Usually, "
-            "this means the GoldParse was not correct. For example, are all "
-            "labels added to the model?")
+            "this means that the model can't be updated in a way that's valid "
+            "and satisfies the correct annotations specified in the GoldParse. "
+            "For example, are all labels added to the model? If you're "
+            "training a named entity recognizer, also make sure that none of "
+            "your annotated entity spans have leading or trailing whitespace. "
+            "You can also use the experimental `debug-data` command to "
+            "validate your JSON-formatted training data. For details, run:\n"
+            "python -m spacy debug-data --help")
     E025 = ("String is too long: {length} characters. Max is 2**30.")
     E026 = ("Error accessing token at position {i}: out of bounds in Doc of "
             "length {length}.")
@@ -383,6 +391,21 @@ class Errors(object):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not exceed 1, "
             "but found {sum}.")
     E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
+    E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
+            "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
+    E136 = ("This additional feature requires the jsonschema library to be "
+            "installed:\npip install jsonschema")
+    E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure to provide a valid JSON "
+            "object as input with either the `text` or `tokens` key. For more info, see the docs:\n"
+            "https://spacy.io/api/cli#pretrain-jsonl")
+    E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input includes either the "
+            "`text` or `tokens` key. For more info, see the docs:\n"
+            "https://spacy.io/api/cli#pretrain-jsonl")
+    E139 = ("Knowledge base for component '{name}' not initialized. Did you forget to call set_kb()?")
+    E140 = ("The list of entities, prior probabilities and entity vectors should be of equal length.")
+    E141 = ("Entity vectors should be of length {required} instead of the provided {found}.")
+    E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
+    E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
 
 
 @add_codes

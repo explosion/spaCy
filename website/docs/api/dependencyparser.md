@@ -102,10 +102,10 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > scores = parser.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                        |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
-| **RETURNS** | tuple    | A `(scores, tensors)` tuple where `scores` is the model's prediction for each document and `tensors` is the token representations used to predict the scores. Each tensor is an array with one row for each token in the document. |
+| Name        | Type                | Description                                    |
+| ----------- | ------------------- | ---------------------------------------------- |
+| `docs`      | iterable            | The documents to predict.                      |
+| **RETURNS** | `syntax.StateClass` | A helper class for the parse state (internal). |
 
 ## DependencyParser.set_annotations {#set_annotations tag="method"}
 

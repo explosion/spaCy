@@ -351,7 +351,7 @@ the two-letter language code.
 | `name` | unicode    | Two-letter language code, e.g. `'en'`. |
 | `cls`  | `Language` | The language class, e.g. `English`.    |
 
-### util.lang_class_is_loaded (#util.lang_class_is_loaded tag="function" new="2.1")
+### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
 
 Check whether a `Language` class is already loaded. `Language` classes are
 loaded lazily, to avoid expensive setup code associated with the language data.
@@ -653,6 +653,27 @@ for batching. Larger `buffsize` means less bias.
 | `iterable` | iterable | Iterator to shuffle.   |
 | `buffsize` | int      | Items to hold back.    |
 | **YIELDS** | iterable | The shuffled iterator. |
+
+### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
+
+Filter a sequence of [`Span`](/api/span) objects and remove duplicates or
+overlaps. Useful for creating named entities (where one token can only be part
+of one entity) or when merging spans with
+[`Retokenizer.merge`](/api/doc#retokenizer.merge). When spans overlap, the
+(first) longest span is preferred over shorter spans.
+
+> #### Example
+>
+> ```python
+> doc = nlp("This is a sentence.")
+> spans = [doc[0:2], doc[0:2], doc[0:4]]
+> filtered = filter_spans(spans)
+> ```
+
+| Name        | Type     | Description          |
+| ----------- | -------- | -------------------- |
+| `spans`     | iterable | The spans to filter. |
+| **RETURNS** | list     | The filtered spans.  |
 
 ## Compatibility functions {#compat source="spacy/compaty.py"}
 

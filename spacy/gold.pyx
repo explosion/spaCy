@@ -427,7 +427,7 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None,
                  heads=None, deps=None, entities=None, make_projective=False,
-                 cats=None, **_):
+                 cats=None, links=None, **_):
         """Create a GoldParse.
 
         doc (Doc): The document the annotations refer to.
@@ -450,6 +450,8 @@ cdef class GoldParse:
             examples of a label to have the value 0.0. Labels not in the
             dictionary are treated as missing - the gradient for those labels
             will be zero.
+        links (iterable): A sequence of `(start_char, end_char, kb_id)` tuples,
+            representing the external ID of an entity in a knowledge base.
         RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
@@ -485,6 +487,7 @@ cdef class GoldParse:
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
         self.cats = {} if cats is None else dict(cats)
+        self.links = links
         self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)
@@ -532,7 +535,7 @@ cdef class GoldParse:
                         self.labels[i] = deps[i2j_multi[i]]
                     # Now set NER...This is annoying because if we've split
                     # got an entity word split into two, we need to adjust the
-                    # BILOU tags. We can't have BB or LL etc.
+                    # BILUO tags. We can't have BB or LL etc.
                     # Case 1: O -- easy.
                     ner_tag = entities[i2j_multi[i]]
                     if ner_tag == "O":
