@@ -299,7 +299,14 @@ def link_vectors_to_models(vocab):
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
-    thinc.extra.load_nlp.VECTORS[(ops.device, vectors.name)] = data
+    key = (ops.device, vectors.name)
+    if key in thinc.extra.load_nlp.VECTORS:
+        if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
+            print(
+                "Warning: Registering vectors data under the same ID as "
+                "existing vectors, and the new vectors data seems different. "
+                "This might lead to incorrect results. See Issue #3853")
+    thinc.extra.load_nlp.VECTORS[key] = data
 
 
 def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
