@@ -9,6 +9,7 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
+from collections import Counter
 
 import numpy
 import numpy.linalg
@@ -697,7 +698,7 @@ cdef class Doc:
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
-    def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
+    def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
         `{attribute (int): count (ints)}` frequencies, keyed by the values of
         the given attribute ID.
@@ -712,19 +713,18 @@ cdef class Doc:
         cdef size_t count
 
         if counts is None:
-            counts = PreshCounter()
+            counts = Counter()
             output_dict = True
         else:
             output_dict = False
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
             for i in range(self.length):
-                counts.inc(get_token_attr(&self.c[i], attr_id), 1)
+                counts[get_token_attr(&self.c[i], attr_id)] += 1
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
-                    attr = get_token_attr(&self.c[i], attr_id)
-                    counts.inc(attr, 1)
+                    counts[get_token_attr(&self.c[i], attr_id)] += 1
         if output_dict:
             return dict(counts)
 
