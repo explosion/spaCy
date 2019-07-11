@@ -6,7 +6,6 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc
 
 
-@pytest.mark.xfail
 def test_issue3839(en_vocab):
     """Test that match IDs returned by the matcher are correct, are in the string """
     doc = Doc(en_vocab, words=["terrific", "group", "of", "people"])
