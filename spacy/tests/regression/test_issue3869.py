@@ -20,8 +20,6 @@ from spacy.lang.en import English
 def test_issue3869(sentence):
     """Test that the Doc's count_by function works consistently"""
     nlp = English()
-
-    print()
     doc = nlp(sentence)
 
     count = 0
