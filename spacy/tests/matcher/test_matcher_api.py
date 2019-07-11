@@ -5,7 +5,6 @@ import pytest
 import re
 from spacy.matcher import Matcher, DependencyMatcher
 from spacy.tokens import Doc, Token
-from ..util import get_doc
 
 
 @pytest.fixture
@@ -288,24 +287,43 @@ def deps():
 def dependency_matcher(en_vocab):
     def is_brown_yellow(text):
         return bool(re.compile(r"brown|yellow|over").match(text))
+
     IS_BROWN_YELLOW = en_vocab.add_flag(is_brown_yellow)
 
     pattern1 = [
         {"SPEC": {"NODE_NAME": "fox"}, "PATTERN": {"ORTH": "fox"}},
-        {"SPEC": {"NODE_NAME": "q", "NBOR_RELOP": ">", "NBOR_NAME": "fox"},"PATTERN": {"ORTH": "quick", "DEP": "amod"}},
-        {"SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">", "NBOR_NAME": "fox"}, "PATTERN": {IS_BROWN_YELLOW: True}},
+        {
+            "SPEC": {"NODE_NAME": "q", "NBOR_RELOP": ">", "NBOR_NAME": "fox"},
+            "PATTERN": {"ORTH": "quick", "DEP": "amod"},
+        },
+        {
+            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">", "NBOR_NAME": "fox"},
+            "PATTERN": {IS_BROWN_YELLOW: True},
+        },
     ]
 
     pattern2 = [
         {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "jumped"}},
-        {"SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"}, "PATTERN": {"ORTH": "fox"}},
-        {"SPEC": {"NODE_NAME": "quick", "NBOR_RELOP": ".", "NBOR_NAME": "jumped"}, "PATTERN": {"ORTH": "fox"}}
+        {
+            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
+            "PATTERN": {"ORTH": "fox"},
+        },
+        {
+            "SPEC": {"NODE_NAME": "quick", "NBOR_RELOP": ".", "NBOR_NAME": "jumped"},
+            "PATTERN": {"ORTH": "fox"},
+        },
     ]
 
     pattern3 = [
         {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "jumped"}},
-        {"SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"}, "PATTERN": {"ORTH": "fox"}},
-        {"SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">>", "NBOR_NAME": "fox"}, "PATTERN": {"ORTH": "brown"}}
+        {
+            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
+            "PATTERN": {"ORTH": "fox"},
+        },
+        {
+            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">>", "NBOR_NAME": "fox"},
+            "PATTERN": {"ORTH": "brown"},
+        },
     ]
 
     matcher = DependencyMatcher(en_vocab)
@@ -320,9 +338,9 @@ def test_dependency_matcher_compile(dependency_matcher):
     assert len(dependency_matcher) == 3
 
 
-def test_dependency_matcher(dependency_matcher, text, heads, deps):
-    doc = get_doc(dependency_matcher.vocab, text.split(), heads=heads, deps=deps)
-    matches = dependency_matcher(doc)
-    # assert matches[0][1] == [[3, 1, 2]]
-    # assert matches[1][1] == [[4, 3, 3]]
-    # assert matches[2][1] == [[4, 3, 2]]
+# def test_dependency_matcher(dependency_matcher, text, heads, deps):
+#     doc = get_doc(dependency_matcher.vocab, text.split(), heads=heads, deps=deps)
+#     matches = dependency_matcher(doc)
+#     assert matches[0][1] == [[3, 1, 2]]
+#     assert matches[1][1] == [[4, 3, 3]]
+#     assert matches[2][1] == [[4, 3, 2]]
