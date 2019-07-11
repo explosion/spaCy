@@ -116,7 +116,7 @@ def merge_boxes(boxes):
     if merged is not None:
         return merged.to_bytes()
     else:
-        return b''
+        return b""
 
 
 def pickle_box(box):
