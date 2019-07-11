@@ -7,8 +7,9 @@ from spacy.util import minibatch, compounding
 
 
 def test_issue3611():
+    """ Test whether adding n-grams in the textcat works even when n > token length of some docs """
     unique_classes = ["offensive", "inoffensive"]
-    x_train = ["This is the first offensive text",
+    x_train = ["This is an offensive text",
                "This is the second offensive text",
                "inoff"]
     y_train = ["offensive", "offensive", "inoffensive"]
@@ -18,8 +19,6 @@ def test_issue3611():
     for train_instance in y_train:
         pos_cats.append({label: label == train_instance for label in unique_classes})
     train_data = list(zip(x_train, [{'cats': cats} for cats in pos_cats]))
-
-    print(train_data)
 
     # set up the spacy model with a text categorizer component
     nlp = spacy.blank('en')
