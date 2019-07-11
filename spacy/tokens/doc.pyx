@@ -14,7 +14,6 @@ from collections import Counter
 import numpy
 import numpy.linalg
 import struct
-from libc.stdint cimport int64_t
 import srsly
 from thinc.neural.util import get_array_module, copy_array
 
@@ -712,7 +711,6 @@ cdef class Doc:
         cdef int i
         cdef attr_t attr
         cdef size_t count
-        cdef int64_t this_value
 
         if counts is None:
             counts = Counter()
@@ -722,13 +720,11 @@ cdef class Doc:
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
             for i in range(self.length):
-                this_value = get_token_attr(&self.c[i], attr_id)
-                counts[this_value] += 1
+                counts[get_token_attr(&self.c[i], attr_id)] += 1
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
-                    attr = get_token_attr(&self.c[i], attr_id)
-                    counts[attr] += 1
+                    counts[get_token_attr(&self.c[i], attr_id)] += 1
         if output_dict:
             return dict(counts)
 

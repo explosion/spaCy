@@ -7,7 +7,6 @@ from ..typedefs cimport attr_t
 from ..attrs cimport attr_id_t
 
 
-
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
 
 
