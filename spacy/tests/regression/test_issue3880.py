@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
+
 from spacy.lang.en import English
-import pytest
 
 
 def test_issue3880():

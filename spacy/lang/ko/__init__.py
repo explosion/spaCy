@@ -6,7 +6,7 @@ import sys
 
 
 from .stop_words import STOP_WORDS
-from .tag_map import TAG_MAP, POS
+from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
 from ...tokens import Doc
@@ -22,6 +22,7 @@ if is_python_pre_3_5:
     Morpheme = namedtuple("Morpheme", "surface lemma tag")
 elif is_python_post_3_7:
     from dataclasses import dataclass
+
     @dataclass(frozen=True)
     class Morpheme:
         surface: str
@@ -29,6 +30,7 @@ elif is_python_post_3_7:
         tag: str
 else:
     from typing import NamedTuple
+
     class Morpheme(NamedTuple):
         surface: str
         lemma: str
