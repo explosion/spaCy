@@ -7,15 +7,15 @@ import pytest
 TOKENIZER_TESTS = [("서울 타워 근처에 살고 있습니다.", "서울 타워 근처 에 살 고 있 습니다 ."),
                    ("영등포구에 있는 맛집 좀 알려주세요.", "영등포구 에 있 는 맛집 좀 알려 주 세요 .")]
 
-TAG_TESTS = [("서울 타워 근처에 살고 있습니다.", 
+TAG_TESTS = [("서울 타워 근처에 살고 있습니다.",
               "NNP NNG NNG JKB VV EC VX EF SF"),
-             ("영등포구에 있는 맛집 좀 알려주세요.", 
+             ("영등포구에 있는 맛집 좀 알려주세요.",
               "NNP JKB VV ETM NNG MAG VV VX EP SF")]
 
 FULL_TAG_TESTS = [("영등포구에 있는 맛집 좀 알려주세요.",
                    "NNP JKB VV ETM NNG MAG VV+EC VX EP+EF SF")]
 
-POS_TESTS = [("서울 타워 근처에 살고 있습니다.", 
+POS_TESTS = [("서울 타워 근처에 살고 있습니다.",
               "PROPN NOUN NOUN ADP VERB X AUX X PUNCT"),
              ("영등포구에 있는 맛집 좀 알려주세요.",
               "PROPN ADP VERB X NOUN ADV VERB AUX X PUNCT")]
