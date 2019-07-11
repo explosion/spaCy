@@ -82,6 +82,8 @@ class Warnings(object):
             "parallel inference via multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge base.")
     W018 = ("Entity '{entity}' already exists in the Knowledge base.")
+    W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
+            "previously loaded vectors. See Issue #3853.")
 
 
 @add_codes
