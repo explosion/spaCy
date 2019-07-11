@@ -9,6 +9,7 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
+from collections import Counter
 
 import numpy
 import numpy.linalg
@@ -698,7 +699,7 @@ cdef class Doc:
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
-    def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
+    def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
         `{attribute (int): count (ints)}` frequencies, keyed by the values of
         the given attribute ID.
@@ -713,50 +714,22 @@ cdef class Doc:
         cdef size_t count
         cdef int64_t this_value
 
-        print("COUNTING")
-
         if counts is None:
-            counts = PreshCounter()
+            counts = Counter()
             output_dict = True
-            print("counts None")
         else:
             output_dict = False
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
-            print("exclude None")
             for i in range(self.length):
-                print()
-                print("token", self[i])
                 this_value = get_token_attr(&self.c[i], attr_id)
-                print("token attr value", this_value)
-                print("type attr value", type(this_value))
-
-                print(i, "key this_value before", counts.c_map.cells[this_value].key)
-                print(i, "value this_value before", <int64_t>counts.c_map.cells[this_value].value)
-                counts.inc(this_value, 1)
-                print(i, "key this_value after", counts.c_map.cells[this_value].key)
-                print(i, "value this_value after", <int64_t>counts.c_map.cells[this_value].value)
-
-                print(i, "key 0", counts.c_map.cells[0].key)
-                print(i, "value 0", <int64_t>counts.c_map.cells[0].value)
-                print(i, "key 1", counts.c_map.cells[1].key)
-                print(i, "value 1", <int64_t>counts.c_map.cells[1].value)
+                counts[this_value] += 1
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
                     attr = get_token_attr(&self.c[i], attr_id)
-                    counts.inc(attr, 1)
+                    counts[attr] += 1
         if output_dict:
-            print("output_dict")
-            print(counts.length)
-            print(counts.total)
-            print("key 0", counts.c_map.cells[0].key)
-            print("value 0", <int64_t>counts.c_map.cells[0].value)
-            print("key 1", counts.c_map.cells[1].key)
-            print("value 1", <int64_t>counts.c_map.cells[1].value)
-            print()
-            print(dict(counts))
-            print()
             return dict(counts)
 
     def _realloc(self, new_size):
