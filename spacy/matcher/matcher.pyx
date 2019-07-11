@@ -262,13 +262,13 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
 
 
 cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    # There have been a few bugs here.
     # The code was originally designed to always have pattern[1].attrs.value
     # be the ent_id when we get to the end of a pattern. However, Issue #2671
     # showed this wasn't the case when we had a reject-and-continue before a
-    # match. I still don't really understand what's going on here, but this
-    # workaround does resolve the issue.
-    while pattern.attrs.attr != ID and \
-            (pattern.nr_attr > 0 or pattern.nr_extra_attr > 0 or pattern.nr_py > 0):
+    # match.
+    # The patch to #2671 was wrong though, which came up in #3839.
+    while pattern.attrs.attr != ID:
         pattern += 1
     return pattern.attrs.value
 
