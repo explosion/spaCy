@@ -24,7 +24,7 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
-from .errors import Errors
+from .errors import Errors, user_warning, Warnings
 from . import util
 
 try:
@@ -302,10 +302,13 @@ def link_vectors_to_models(vocab):
     key = (ops.device, vectors.name)
     if key in thinc.extra.load_nlp.VECTORS:
         if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
-            print(
-                "Warning: Registering vectors data under the same ID as "
-                "existing vectors, and the new vectors data seems different. "
-                "This might lead to incorrect results. See Issue #3853")
+            # This is a hack to avoid the problem in #3853. Maybe we should
+            # print a warning as well?
+            old_name = vectors.name
+            new_name = vectors.name + "_%d" % data.shape[0]
+            user_warning(Warnings.W019.format(old=old_name, new=new_name))
+            vectors.name = new_name
+            key = (ops.device, vectors.name)
     thinc.extra.load_nlp.VECTORS[key] = data
 
 
