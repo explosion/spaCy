@@ -125,6 +125,12 @@ def ja_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def ko_tokenizer():
+    pytest.importorskip("natto")
+    return get_lang_class("ko").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def lt_tokenizer():
     return get_lang_class("lt").Defaults.create_tokenizer()
 

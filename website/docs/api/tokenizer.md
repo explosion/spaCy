@@ -9,7 +9,10 @@ Segment text, and create `Doc` objects with the discovered segment boundaries.
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 
-Create a `Tokenizer`, to create `Doc` objects given unicode text.
+Create a `Tokenizer`, to create `Doc` objects given unicode text. For examples
+of how to construct a custom tokenizer with different tokenization rules, see
+the
+[usage documentation](https://spacy.io/usage/linguistic-features#native-tokenizers).
 
 > #### Example
 >
@@ -18,11 +21,14 @@ Create a `Tokenizer`, to create `Doc` objects given unicode text.
 > from spacy.tokenizer import Tokenizer
 > from spacy.lang.en import English
 > nlp = English()
+> # Create a blank Tokenizer with just the English vocab
 > tokenizer = Tokenizer(nlp.vocab)
 >
 > # Construction 2
 > from spacy.lang.en import English
 > nlp = English()
+> # Create a Tokenizer with the default settings for English
+> # including punctuation rules and exceptions
 > tokenizer = nlp.Defaults.create_tokenizer(nlp)
 > ```
 

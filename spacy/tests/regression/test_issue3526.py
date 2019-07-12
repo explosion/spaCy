@@ -7,6 +7,7 @@ from spacy.language import Language
 from spacy.pipeline import EntityRuler
 from spacy import load
 import srsly
+
 from ..util import make_tempdir
 
 
@@ -61,10 +62,9 @@ def test_entity_ruler_from_disk_old_format_safe(patterns, en_vocab):
     nlp = Language(vocab=en_vocab)
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
     with make_tempdir() as tmpdir:
-        out_file = tmpdir / "entity_ruler.jsonl"
-        srsly.write_jsonl(out_file, ruler.patterns)
-        new_ruler = EntityRuler(nlp)
-        new_ruler = new_ruler.from_disk(out_file)
+        out_file = tmpdir / "entity_ruler"
+        srsly.write_jsonl(out_file.with_suffix(".jsonl"), ruler.patterns)
+        new_ruler = EntityRuler(nlp).from_disk(out_file)
         for pattern in ruler.patterns:
             assert pattern in new_ruler.patterns
         assert len(new_ruler) == len(ruler)
@@ -79,8 +79,10 @@ def test_entity_ruler_in_pipeline_from_issue(patterns, en_vocab):
     nlp.add_pipe(ruler)
     with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
-        assert nlp.pipeline[-1][-1].patterns == [{"label": "ORG", "pattern": "Apple"}]
-        assert nlp.pipeline[-1][-1].overwrite is True
+        ruler = nlp.get_pipe("entity_ruler")
+        assert ruler.patterns == [{"label": "ORG", "pattern": "Apple"}]
+        assert ruler.overwrite is True
         nlp2 = load(tmpdir)
-        assert nlp2.pipeline[-1][-1].patterns == [{"label": "ORG", "pattern": "Apple"}]
-        assert nlp2.pipeline[-1][-1].overwrite is True
+        new_ruler = nlp2.get_pipe("entity_ruler")
+        assert new_ruler.patterns == [{"label": "ORG", "pattern": "Apple"}]
+        assert new_ruler.overwrite is True
