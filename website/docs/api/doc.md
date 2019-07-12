@@ -264,7 +264,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 | ----------- | -------------------------------------- | ----------------------------------------------- |
 | **RETURNS** | `numpy.ndarray[ndim=2, dtype='int32']` | The lowest common ancestor matrix of the `Doc`. |
 
-## Doc.to_json {#to_json, tag="method" new="2.1"}
+## Doc.to_json {#to_json tag="method" new="2.1"}
 
 Convert a Doc to JSON. The format it produces will be the new format for the
 [`spacy train`](/api/cli#train) command (not implemented yet). If custom

@@ -30,13 +30,14 @@ be a token pattern (list) or a phrase pattern (string). For example:
 > ruler = EntityRuler(nlp, overwrite_ents=True)
 > ```
 
-| Name             | Type          | Description                                                                                                                                           |
-| ---------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nlp`            | `Language`    | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                  |
-| `patterns`       | iterable      | Optional patterns to load in.                                                                                                                         |
-| `overwrite_ents` | bool          | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`.                      |
-| `**cfg`          | -             | Other config parameters. If pipeline component is loaded as part of a model pipeline, this will include all keyword arguments passed to `spacy.load`. |
-| **RETURNS**      | `EntityRuler` | The newly constructed object.                                                                                                                         |
+| Name                  | Type          | Description                                                                                                                                           |
+| --------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`                 | `Language`    | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                  |
+| `patterns`            | iterable      | Optional patterns to load in.                                                                                                                         |
+| `phrase_matcher_attr` | int / unicode | Optional attr to pass to the internal [`PhraseMatcher`](/api/phtasematcher). defaults to `None`                                                       |
+| `overwrite_ents`      | bool          | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`.                      |
+| `**cfg`               | -             | Other config parameters. If pipeline component is loaded as part of a model pipeline, this will include all keyword arguments passed to `spacy.load`. |
+| **RETURNS**           | `EntityRuler` | The newly constructed object.                                                                                                                         |
 
 ## EntityRuler.\_\len\_\_ {#len tag="method"}
 
@@ -122,35 +123,41 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 ## EntityRuler.to_disk {#to_disk tag="method"}
 
 Save the entity ruler patterns to a directory. The patterns will be saved as
-newline-delimited JSON (JSONL).
+newline-delimited JSON (JSONL). If a file with the suffix `.jsonl` is provided,
+only the patterns are saved as JSONL. If a directory name is provided, a
+`patterns.jsonl` and `cfg` file with the component configuration is exported.
 
 > #### Example
 >
 > ```python
 > ruler = EntityRuler(nlp)
-> ruler.to_disk("/path/to/rules.jsonl")
+> ruler.to_disk("/path/to/patterns.jsonl")  # saves patterns only
+> ruler.to_disk("/path/to/entity_ruler")    # saves patterns and config
 > ```
 
-| Name   | Type             | Description                                                                                                      |
-| ------ | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `path` | unicode / `Path` | A path to a file, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Type             | Description                                                                                                                         |
+| ------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `path` | unicode / `Path` | A path to a JSONL file or directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
 ## EntityRuler.from_disk {#from_disk tag="method"}
 
-Load the entity ruler from a file. Expects a file containing newline-delimited
-JSON (JSONL) with one entry per line.
+Load the entity ruler from a file. Expects either a file containing
+newline-delimited JSON (JSONL) with one entry per line, or a directory
+containing a `patterns.jsonl` file and a `cfg` file with the component
+configuration.
 
 > #### Example
 >
 > ```python
 > ruler = EntityRuler(nlp)
-> ruler.from_disk("/path/to/rules.jsonl")
+> ruler.from_disk("/path/to/patterns.jsonl")  # loads patterns only
+> ruler.from_disk("/path/to/entity_ruler")    # loads patterns and config
 > ```
 
-| Name        | Type             | Description                                                                 |
-| ----------- | ---------------- | --------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a JSONL file. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `EntityRuler`    | The modified `EntityRuler` object.                                          |
+| Name        | Type             | Description                                                                              |
+| ----------- | ---------------- | ---------------------------------------------------------------------------------------- |
+| `path`      | unicode / `Path` | A path to a JSONL file or directory. Paths may be either strings or `Path`-like objects. |
+| **RETURNS** | `EntityRuler`    | The modified `EntityRuler` object.                                                       |
 
 ## EntityRuler.to_bytes {#to_bytes tag="method"}
 

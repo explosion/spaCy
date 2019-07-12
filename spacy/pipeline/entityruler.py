@@ -1,14 +1,16 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import srsly
 
 from ..errors import Errors
 from ..compat import basestring_
-from ..util import ensure_path
+from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Span
 from ..matcher import Matcher, PhraseMatcher
+
+DEFAULT_ENT_ID_SEP = "||"
 
 
 class EntityRuler(object):
@@ -24,7 +26,7 @@ class EntityRuler(object):
 
     name = "entity_ruler"
 
-    def __init__(self, nlp, **cfg):
+    def __init__(self, nlp, phrase_matcher_attr=None, **cfg):
         """Initialize the entitiy ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
         key. A pattern can either be a token pattern (list) or a phrase pattern
@@ -32,6 +34,8 @@ class EntityRuler(object):
 
         nlp (Language): The shared nlp object to pass the vocab to the matchers
             and process phrase patterns.
+        phrase_matcher_attr (int / unicode): Token attribute to match on, passed
+            to the internal PhraseMatcher as `attr`
         patterns (iterable): Optional patterns to load in.
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
@@ -47,8 +51,15 @@ class EntityRuler(object):
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self.matcher = Matcher(nlp.vocab)
-        self.phrase_matcher = PhraseMatcher(nlp.vocab)
-        self.ent_id_sep = cfg.get("ent_id_sep", "||")
+        if phrase_matcher_attr is not None:
+            self.phrase_matcher_attr = phrase_matcher_attr
+            self.phrase_matcher = PhraseMatcher(
+                nlp.vocab, attr=self.phrase_matcher_attr
+            )
+        else:
+            self.phrase_matcher_attr = None
+            self.phrase_matcher = PhraseMatcher(nlp.vocab)
+        self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         patterns = cfg.get("patterns")
         if patterns is not None:
             self.add_patterns(patterns)
@@ -196,7 +207,7 @@ class EntityRuler(object):
 
     def _create_label(self, label, ent_id):
         """Join Entity label with ent_id if the pattern has an `id` attribute
-        
+
         RETURNS (str): The ent_label joined with configured `ent_id_sep`
         """
         if isinstance(ent_id, basestring_):
@@ -212,8 +223,18 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#from_bytes
         """
-        patterns = srsly.msgpack_loads(patterns_bytes)
-        self.add_patterns(patterns)
+        cfg = srsly.msgpack_loads(patterns_bytes)
+        if isinstance(cfg, dict):
+            self.add_patterns(cfg.get("patterns", cfg))
+            self.overwrite = cfg.get("overwrite", False)
+            self.phrase_matcher_attr = cfg.get("phrase_matcher_attr", None)
+            if self.phrase_matcher_attr is not None:
+                self.phrase_matcher = PhraseMatcher(
+                    self.nlp.vocab, attr=self.phrase_matcher_attr
+                )
+            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
+        else:
+            self.add_patterns(cfg)
         return self
 
     def to_bytes(self, **kwargs):
@@ -223,7 +244,16 @@ class EntityRuler(object):
 
         DOCS: https://spacy.io/api/entityruler#to_bytes
         """
-        return srsly.msgpack_dumps(self.patterns)
+
+        serial = OrderedDict(
+            (
+                ("overwrite", self.overwrite),
+                ("ent_id_sep", self.ent_id_sep),
+                ("phrase_matcher_attr", self.phrase_matcher_attr),
+                ("patterns", self.patterns),
+            )
+        )
+        return srsly.msgpack_dumps(serial)
 
     def from_disk(self, path, **kwargs):
         """Load the entity ruler from a file. Expects a file containing
@@ -236,21 +266,52 @@ class EntityRuler(object):
         DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
-        path = path.with_suffix(".jsonl")
-        patterns = srsly.read_jsonl(path)
-        self.add_patterns(patterns)
+        depr_patterns_path = path.with_suffix(".jsonl")
+        if depr_patterns_path.is_file():
+            patterns = srsly.read_jsonl(depr_patterns_path)
+            self.add_patterns(patterns)
+        else:
+            cfg = {}
+            deserializers = {
+                "patterns": lambda p: self.add_patterns(
+                    srsly.read_jsonl(p.with_suffix(".jsonl"))
+                ),
+                "cfg": lambda p: cfg.update(srsly.read_json(p)),
+            }
+            from_disk(path, deserializers, {})
+            self.overwrite = cfg.get("overwrite", False)
+            self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
+            self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
+
+            if self.phrase_matcher_attr is not None:
+                self.phrase_matcher = PhraseMatcher(
+                    self.nlp.vocab, attr=self.phrase_matcher_attr
+                )
         return self
 
     def to_disk(self, path, **kwargs):
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
 
-        path (unicode / Path): The JSONL file to load.
+        path (unicode / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
         RETURNS (EntityRuler): The loaded entity ruler.
 
         DOCS: https://spacy.io/api/entityruler#to_disk
         """
         path = ensure_path(path)
-        path = path.with_suffix(".jsonl")
-        srsly.write_jsonl(path, self.patterns)
+        cfg = {
+            "overwrite": self.overwrite,
+            "phrase_matcher_attr": self.phrase_matcher_attr,
+            "ent_id_sep": self.ent_id_sep,
+        }
+        serializers = {
+            "patterns": lambda p: srsly.write_jsonl(
+                p.with_suffix(".jsonl"), self.patterns
+            ),
+            "cfg": lambda p: srsly.write_json(p, cfg),
+        }
+        if path.suffix == ".jsonl":  # user wants to save only JSONL
+            srsly.write_jsonl(path, self.patterns)
+        else:
+            to_disk(path, serializers, {})

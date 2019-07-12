@@ -520,7 +520,9 @@ spaCy takes training data in JSON format. The built-in
 [`convert`](/api/cli#convert) command helps you convert the `.conllu` format
 used by the
 [Universal Dependencies corpora](https://github.com/UniversalDependencies) to
-spaCy's training format.
+spaCy's training format. To convert one or more existing `Doc` objects to
+spaCy's JSON format, you can use the
+[`gold.docs_to_json`](/api/goldparse#docs_to_json) helper.
 
 > #### Annotating entities
 >
