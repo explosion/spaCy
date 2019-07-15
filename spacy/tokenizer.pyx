@@ -348,7 +348,7 @@ cdef class Tokenizer:
         """Add a special-case tokenization rule.
 
         string (unicode): The string to specially tokenize.
-        token_attrs (iterable): A sequence of dicts, where each dict describes
+        substrings (iterable): A sequence of dicts, where each dict describes
             a token and its attributes. The `ORTH` fields of the attributes
             must exactly match the string when they are concatenated.
 
