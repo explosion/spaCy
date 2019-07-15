@@ -793,11 +793,20 @@ cdef class Doc:
             for i in range(length):
                 if array[i, col] != 0:
                     self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
+        # Copy HEAD only when it refers to a token in this doc (in case this represents a span of a larger doc)
+        cdef attr_t value
+        if HEAD in attrs:
+            col = attrs.index(HEAD)
+            for i in range(length):
+                token = &self.c[i]
+                value =  array[i, col]
+                if (i+value) in range(self.length):
+                    Token.set_struct_attr(token, attr_ids[col], value)
         # Now load the data
         for i in range(self.length):
             token = &self.c[i]
             for j in range(n_attrs):
-                if attr_ids[j] != TAG:
+                if attr_ids[j] != TAG and attr_ids[j] != HEAD:
                     Token.set_struct_attr(token, attr_ids[j], array[i, j])
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
