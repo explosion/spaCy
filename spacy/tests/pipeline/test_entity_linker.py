@@ -129,8 +129,8 @@ def test_preserving_links_asdoc(nlp):
     el_pipe = nlp.create_pipe(name='entity_linker', config={"context_width": 64})
     el_pipe.set_kb(mykb)
     el_pipe.begin_training()
-    el_pipe.context_weight = 0
-    el_pipe.prior_weight = 1
+    el_pipe.incl_context = False
+    el_pipe.incl_prior = True
     nlp.add_pipe(el_pipe, last=True)
 
     # test whether the entity links are preserved by the `as_doc()` function

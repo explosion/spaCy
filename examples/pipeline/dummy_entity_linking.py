@@ -45,8 +45,8 @@ def add_el(kb, nlp):
     el_pipe.set_kb(kb)
     nlp.add_pipe(el_pipe, last=True)
     nlp.begin_training()
-    el_pipe.context_weight = 0
-    el_pipe.prior_weight = 1
+    el_pipe.incl_context = False
+    el_pipe.incl_prior = True
 
     for alias in ["Douglas Adams", "Douglas"]:
         candidates = nlp.linker.kb.get_candidates(alias)

@@ -198,8 +198,8 @@ def run_pipeline():
                             print("Error updating batch:", e)
 
                 if batchnr > 0:
-                    el_pipe.cfg["context_weight"] = 1
-                    el_pipe.cfg["prior_weight"] = 1
+                    el_pipe.cfg["incl_context"] = True
+                    el_pipe.cfg["incl_prior"] = True
                     dev_acc_context, dev_acc_context_dict = _measure_accuracy(dev_data, el_pipe)
                     losses['entity_linker'] = losses['entity_linker'] / batchnr
                     print("Epoch, train loss", itn, round(losses['entity_linker'], 2),
@@ -218,15 +218,15 @@ def run_pipeline():
             print("dev acc prior:", round(acc_p, 3), [(x, round(y, 3)) for x, y in acc_p_label.items()])
 
             # using only context
-            el_pipe.cfg["context_weight"] = 1
-            el_pipe.cfg["prior_weight"] = 0
+            el_pipe.cfg["incl_context"] = True
+            el_pipe.cfg["incl_prior"] = False
             dev_acc_context, dev_acc_context_dict = _measure_accuracy(dev_data, el_pipe)
             print("dev acc context avg:", round(dev_acc_context, 3),
                   [(x, round(y, 3)) for x, y in dev_acc_context_dict.items()])
 
             # measuring combined accuracy (prior + context)
-            el_pipe.cfg["context_weight"] = 1
-            el_pipe.cfg["prior_weight"] = 1
+            el_pipe.cfg["incl_context"] = True
+            el_pipe.cfg["incl_prior"] = True
             dev_acc_combo, dev_acc_combo_dict = _measure_accuracy(dev_data, el_pipe, error_analysis=False)
             print("dev acc combo avg:", round(dev_acc_combo, 3),
                   [(x, round(y, 3)) for x, y in dev_acc_combo_dict.items()])

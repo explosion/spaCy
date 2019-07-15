@@ -1074,7 +1074,7 @@ cdef class EntityRecognizer(Parser):
 class EntityLinker(Pipe):
     """Pipeline component for named entity linking.
 
-    DOCS: TODO
+    DOCS: https://spacy.io/api/entitylinker
     """
     name = 'entity_linker'
 
@@ -1170,7 +1170,7 @@ class EntityLinker(Pipe):
                     context_docs.append(doc)
                     type_vectors.append(type_vector)
 
-                    if self.cfg.get("prior_weight", 1) > 0:
+                    if self.cfg.get("incl_prior", True):
                         priors.append([c.prior_prob])
                     else:
                         priors.append([0])
@@ -1257,12 +1257,13 @@ class EntityLinker(Pipe):
                     if candidates:
                         random.shuffle(candidates)
 
-                        # this will set the prior probabilities to 0 (just like in training) if their weight is 0
+                        # this will set the prior probabilities to 0 if they should be excluded from the model
                         prior_probs = xp.asarray([[c.prior_prob] for c in candidates])
-                        prior_probs *= self.cfg.get("prior_weight", 1)
+                        if not self.cfg.get("incl_prior", True):
+                            prior_probs *= 0
                         scores = prior_probs
 
-                        if self.cfg.get("context_weight", 1) > 0:
+                        if self.cfg.get("incl_context", True) > 0:
                             entity_encodings = xp.asarray([c.entity_vector for c in candidates])
                             assert len(entity_encodings) == len(prior_probs)
                             mention_encodings = [list(context_encoding) + list(entity_encodings[i])
