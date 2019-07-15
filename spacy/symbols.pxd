@@ -81,7 +81,6 @@ cdef enum symbol_t:
     DEP
     ENT_IOB
     ENT_TYPE
-    ENT_KB_ID
     HEAD
     SENT_START
     SPACY
@@ -461,3 +460,5 @@ cdef enum symbol_t:
     xcomp
 
     acl
+
+    ENT_KB_ID

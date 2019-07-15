@@ -116,7 +116,7 @@ def merge_boxes(boxes):
     if merged is not None:
         return merged.to_bytes()
     else:
-        return b''
+        return b""
 
 
 def pickle_box(box):
@@ -124,10 +124,10 @@ def pickle_box(box):
 
 
 def unpickle_box(byte_string):
-    return Box().from_bytes(byte_string)
+    return DocBox().from_bytes(byte_string)
 
 
-copy_reg.pickle(Box, pickle_box, unpickle_box)
+copy_reg.pickle(DocBox, pickle_box, unpickle_box)
 # Compatibility, as we had named it this previously.
 Binder = DocBox
 

@@ -52,6 +52,7 @@ for exc_data in [
     {ORTH: "Ons.", LEMMA: "onsdag"},
     {ORTH: "Fre.", LEMMA: "fredag"},
     {ORTH: "Lør.", LEMMA: "lørdag"},
+    {ORTH: "og/eller", LEMMA: "og/eller", NORM: "og/eller", TAG: "CC"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -64,6 +65,8 @@ for orth in [
     "mik.",
     "pers.",
     "A.D.",
+    "A/B",
+    "a/s",
     "A/S",
     "B.C.",
     "BK.",
@@ -79,7 +82,9 @@ for orth in [
     "Kprs.",
     "L.A.",
     "Ll.",
+    "m/k",
     "m/s",
+    "m/sek.",
     "M/S",
     "Mag.",
     "Mr.",
@@ -90,6 +95,7 @@ for orth in [
     "Sdr.",
     "Skt.",
     "Spl.",
+    "TCP/IP",
     "Vg.",
 ]:
     _exc[orth] = [{ORTH: orth}]
@@ -141,6 +147,7 @@ for orth in [
     "brolægn.",
     "bto.",
     "bygn.",
+    "c/o",
     "ca.",
     "cand.",
     "d.d.",
@@ -293,6 +300,7 @@ for orth in [
     "kgl.",
     "kl.",
     "kld.",
+    "km/t",
     "knsp.",
     "komm.",
     "kons.",

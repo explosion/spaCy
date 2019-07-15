@@ -152,20 +152,21 @@ const Landing = ({ data }) => {
             <LandingBannerGrid>
                 <LandingBanner
                     title="spaCy IRL 2019: Two days of NLP"
-                    label="Join us in Berlin"
-                    to="https://irl.spacy.io/2019"
-                    button="Get tickets"
+                    label="Watch the videos"
+                    to="https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc"
+                    button="Watch the videos"
                     background="#ffc194"
                     backgroundImage={irlBackground}
                     color="#1a1e23"
                     small
                 >
-                    We're pleased to invite the spaCy community and other folks working on Natural
+                    We were pleased to invite the spaCy community and other folks working on Natural
                     Language Processing to Berlin this summer for a small and intimate event{' '}
-                    <strong>July 5-6, 2019</strong>. The event includes a hands-on training day for
-                    teams using spaCy in production, followed by a one-track conference. We've
-                    booked a beautiful venue, hand-picked an awesome lineup of speakers and
-                    scheduled plenty of social time to get to know each other and exchange ideas.
+                    <strong>July 6, 2019</strong>. We booked a beautiful venue, hand-picked an
+                    awesome lineup of speakers and scheduled plenty of social time to get to know
+                    each other and exchange ideas. The YouTube playlist includes 12 talks about NLP
+                    research, development and applications, with keynotes by Sebastian Ruder
+                    (DeepMind) and Yoav Goldberg (Allen AI).
                 </LandingBanner>
 
                 <LandingBanner
