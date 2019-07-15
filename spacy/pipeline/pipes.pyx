@@ -1093,6 +1093,8 @@ class EntityLinker(Pipe):
         self.kb = None
         self.cfg = dict(cfg)
         self.sgd_context = None
+        if not self.cfg.get("context_width"):
+            self.cfg["context_width"] = 128
 
     def set_kb(self, kb):
         self.kb = kb
