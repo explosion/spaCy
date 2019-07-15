@@ -1,22 +1,24 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import spacy
+import pytest
+
+from ..util import get_doc
 
 
-def test_issue3962():
-    nlp = spacy.load('en_core_web_md')  # TODO: not supposed to have a model in a unit test here
-    doc = nlp('He jests at scars, that never felt a wound.')
+@pytest.fixture
+def doc(en_tokenizer):
+    text = "He jests at scars, that never felt a wound."
+    heads = [1, 6, -1, -1, 3, 2, 1, 0, 1, -2, -3]
+    deps = ["nsubj", "ccomp", "prep", "pobj", "punct", "nsubj", "neg", "ROOT",
+            "det", "dobj", "punct"]
+    tokens = en_tokenizer(text)
+    return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
+
+def test_issue3962(doc):
     span = doc[0:3]
     doc2 = span.as_doc()
     assert doc2
     doc2_json = doc2.to_json()
     assert doc2_json
-
-    # TODO: remove
-    for i, token in enumerate(doc):
-        print(i, token.text, token.pos, token.pos_, token.dep, token.dep_, token.head)
-    print()
-    for i, token in enumerate(doc2):
-        print(i, token.text, token.pos, token.pos_, token.dep, token.dep_, token.head)
