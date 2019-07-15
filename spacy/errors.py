@@ -406,6 +406,7 @@ class Errors(object):
     E141 = ("Entity vectors should be of length {required} instead of the provided {found}.")
     E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
     E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
+    E144 = ("Could not find parameter `{param}` when building the entity linker model.")
 
 
 @add_codes
