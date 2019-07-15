@@ -16,7 +16,7 @@ lookup_lemmatization_cases = [
 ]
 
 oov_lemmatization_cases = [
-
+    ("popielgrzymiłem", "popielgrzymić", "verb")
 ]
 
 @pytest.fixture
@@ -33,4 +33,4 @@ def test_pl_lemmatizer_lookup(pl_lemmatizer, text, lemma, pos):
 @pytest.mark.parametrize("text,lemma,pos", oov_lemmatization_cases)
 def test_pl_lemmatizer_oov(pl_lemmatizer, text, lemma, pos):
     lemmas_pred = pl_lemmatizer(text, pos)
-    assert lemma == sorted(lemmas_pred)[0]
+    assert lemma in lemmas_pred
