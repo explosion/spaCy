@@ -800,10 +800,10 @@ cdef class Doc:
             for i in range(length):
                 token = &self.c[i]
                 value =  array[i, col]
-                if (i+value) in range(self.length):
+                if (i+value) in range(length):
                     Token.set_struct_attr(token, attr_ids[col], value)
         # Now load the data
-        for i in range(self.length):
+        for i in range(length):
             token = &self.c[i]
             for j in range(n_attrs):
                 if attr_ids[j] != TAG and attr_ids[j] != HEAD:
@@ -813,7 +813,7 @@ cdef class Doc:
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
-            set_children_from_heads(self.c, self.length)
+            set_children_from_heads(self.c, length)
         return self
 
     def get_lca_matrix(self):

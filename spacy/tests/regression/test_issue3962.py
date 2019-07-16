@@ -17,8 +17,26 @@ def doc(en_tokenizer):
 
 
 def test_issue3962(doc):
-    span = doc[0:3]
+    """ Ensure that as_doc does not result in out-of-bound access of tokens.
+    This is achieved by setting the head to itself it it would lie out of the span otherwise."""
+    assert doc[1].dep_ == "ccomp"
+    assert doc[1].head.text == "felt"
+    assert doc[2].dep_ == "prep"
+    assert doc[2].head.text == "jests"
+    assert doc[3].dep_ == "pobj"
+    assert doc[3].head.text == "at"
+    assert doc[4].dep_ == "punct"
+    assert doc[4].head.text == "felt"
+    span = doc[1:5]
     doc2 = span.as_doc()
     assert doc2
     doc2_json = doc2.to_json()
     assert doc2_json
+    assert doc2[0].dep_ == "ccomp"
+    assert doc2[0].head.text == "jests"  # head set back to itself
+    assert doc2[1].dep_ == "prep"
+    assert doc2[1].head.text == "jests"
+    assert doc2[2].dep_ == "pobj"
+    assert doc2[2].head.text == "at"
+    assert doc2[3].dep_ == "punct"
+    assert doc2[3].head.text == ","      # head set back to itself
