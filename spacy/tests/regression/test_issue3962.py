@@ -10,8 +10,19 @@ from ..util import get_doc
 def doc(en_tokenizer):
     text = "He jests at scars, that never felt a wound."
     heads = [1, 6, -1, -1, 3, 2, 1, 0, 1, -2, -3]
-    deps = ["nsubj", "ccomp", "prep", "pobj", "punct", "nsubj", "neg", "ROOT",
-            "det", "dobj", "punct"]
+    deps = [
+        "nsubj",
+        "ccomp",
+        "prep",
+        "pobj",
+        "punct",
+        "nsubj",
+        "neg",
+        "ROOT",
+        "det",
+        "dobj",
+        "punct",
+    ]
     tokens = en_tokenizer(text)
     return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
@@ -39,4 +50,4 @@ def test_issue3962(doc):
     assert doc2[2].dep_ == "pobj"
     assert doc2[2].head.text == "at"
     assert doc2[3].dep_ == "punct"
-    assert doc2[3].head.text == ","      # head set back to itself
+    assert doc2[3].head.text == ","  # head set back to itself
