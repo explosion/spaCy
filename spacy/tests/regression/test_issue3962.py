@@ -18,7 +18,7 @@ def doc(en_tokenizer):
 
 def test_issue3962(doc):
     """ Ensure that as_doc does not result in out-of-bound access of tokens.
-    This is achieved by setting the head to itself it it would lie out of the span otherwise."""
+    This is achieved by setting the head to itself if it would lie out of the span otherwise."""
     assert doc[1].dep_ == "ccomp"
     assert doc[1].head.text == "felt"
     assert doc[2].dep_ == "prep"
