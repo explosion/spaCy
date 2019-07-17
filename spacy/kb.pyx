@@ -191,7 +191,7 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, unicode alias):
         cdef hash_t alias_hash = self.vocab.strings[alias]
-        alias_index = <int64_t>self._alias_index.get(alias_hash)
+        alias_index = <int64_t>self._alias_index.get(alias_hash)  # TODO: check for error? unit test !
         alias_entry = self._aliases_table[alias_index]
 
         return [Candidate(kb=self,
@@ -199,12 +199,12 @@ cdef class KnowledgeBase:
                           entity_freq=self._entries[entry_index].prob,
                           entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
                           alias_hash=alias_hash,
-                          prior_prob=prob)
-                for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
+                          prior_prob=prior_prob)
+                for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
                 if entry_index != 0]
 
     def get_vector(self, unicode entity):
-        cdef hash_t entity_hash = self.vocab.strings.add(entity)
+        cdef hash_t entity_hash = self.vocab.strings[entity]
 
         # Return an empty list if this entity is unknown in this KB
         if entity_hash not in self._entry_index:
@@ -212,6 +212,27 @@ cdef class KnowledgeBase:
         entry_index = self._entry_index[entity_hash]
 
         return self._vectors_table[self._entries[entry_index].vector_index]
+
+    def get_prior_prob(self, unicode entity, unicode alias):
+        """ Return the prior probability of a given alias being linked to a given entity,
+        or return 0.0 when this combination is not known in the knowledge base"""
+        cdef hash_t alias_hash = self.vocab.strings[alias]
+        cdef hash_t entity_hash = self.vocab.strings[entity]
+
+        # TODO: error  ?
+        if entity_hash not in self._entry_index or alias_hash not in self._alias_index:
+            return 0.0
+
+        alias_index = <int64_t>self._alias_index.get(alias_hash)
+        entry_index = self._entry_index[entity_hash]
+
+        alias_entry = self._aliases_table[alias_index]
+        for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs):
+            if self._entries[entry_index].entity_hash == entity_hash:
+                return prior_prob
+
+        return 0.0
+
 
     def dump(self, loc):
         cdef Writer writer = Writer(loc)

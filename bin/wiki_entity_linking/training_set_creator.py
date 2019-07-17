@@ -401,15 +401,13 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                 gold_start = int(start) - found_ent.sent.start_char
                                 gold_end = int(end) - found_ent.sent.start_char
 
-                                # add both positive and negative examples (in random order just to be sure)
+                                # add both pos and neg examples (in random order)
                                 if kb:
                                     gold_entities = {}
-                                    candidate_ids = [
-                                        c.entity_ for c in kb.get_candidates(alias)
-                                    ]
-                                    candidate_ids.append(
-                                        wd_id
-                                    )  # in case the KB doesn't have it
+                                    candidates = kb.get_candidates(alias)
+                                    candidate_ids = [c.entity_ for c in candidates]
+                                    # add positive example in case the KB doesn't have it
+                                    candidate_ids.append(wd_id)
                                     random.shuffle(candidate_ids)
                                     for kb_id in candidate_ids:
                                         entry = (gold_start, gold_end, kb_id)
@@ -418,7 +416,8 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                         else:
                                             gold_entities[entry] = 1.0
                                 else:
-                                    gold_entities = {}
+                                    entry = (gold_start, gold_end, wd_id)
+                                    gold_entities = {entry: 1.0}
 
                                 gold = GoldParse(doc=sent, links=gold_entities)
                                 data.append((sent, gold))
