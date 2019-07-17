@@ -203,6 +203,15 @@ cdef class KnowledgeBase:
                 for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
                 if entry_index != 0]
 
+    def get_vector(self, unicode entity):
+        cdef hash_t entity_hash = self.vocab.strings.add(entity)
+
+        # Return an empty list if this entity is unknown in this KB
+        if entity_hash not in self._entry_index:
+            return []
+        entry_index = self._entry_index[entity_hash]
+
+        return self._vectors_table[self._entries[entry_index].vector_index]
 
     def dump(self, loc):
         cdef Writer writer = Writer(loc)
