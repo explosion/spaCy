@@ -172,12 +172,8 @@ class Scorer(object):
                     self.ner_per_ents[ent.label_].fp += 1
                 else:
                     cand_ents.add((ent.label_, first, last))
-                    current_ent[ent.label_].add(
-                        tuple(x for x in cand_ents if x[0] == ent.label_)
-                    )
-                    current_gold[ent.label_].add(
-                        tuple(x for x in gold_ents if x[0] == ent.label_)
-                    )
+                    current_ent[ent.label_].update([x for x in cand_ents if x[0] == ent.label_])
+                    current_gold[ent.label_].update([x for x in gold_ents if x[0] == ent.label_])
             # Scores per ent
             [
                 v.score_set(current_ent[k], current_gold[k])
