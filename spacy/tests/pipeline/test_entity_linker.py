@@ -15,20 +15,25 @@ def nlp():
 
 def test_kb_valid_entities(nlp):
     """Test the valid construction of a KB with 3 entities and two aliases"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
 
     # adding entities
-    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1])
-    mykb.add_entity(entity='Q2', prob=0.5, entity_vector=[2])
-    mykb.add_entity(entity='Q3', prob=0.5, entity_vector=[3])
+    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[8, 4, 3])
+    mykb.add_entity(entity="Q2", prob=0.5, entity_vector=[2, 1, 0])
+    mykb.add_entity(entity="Q3", prob=0.5, entity_vector=[-1, -6, 5])
 
     # adding aliases
-    mykb.add_alias(alias='douglas', entities=['Q2', 'Q3'], probabilities=[0.8, 0.2])
-    mykb.add_alias(alias='adam', entities=['Q2'], probabilities=[0.9])
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.2])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the corresponding KB
-    assert(mykb.get_size_entities() == 3)
-    assert(mykb.get_size_aliases() == 2)
+    assert mykb.get_size_entities() == 3
+    assert mykb.get_size_aliases() == 2
+
+    # test retrieval of the entity vectors
+    assert mykb.get_vector("Q1") == [8, 4, 3]
+    assert mykb.get_vector("Q2") == [2, 1, 0]
+    assert mykb.get_vector("Q3") == [-1, -6, 5]
 
 
 def test_kb_invalid_entities(nlp):
@@ -36,13 +41,15 @@ def test_kb_invalid_entities(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1])
-    mykb.add_entity(entity='Q2', prob=0.2, entity_vector=[2])
-    mykb.add_entity(entity='Q3', prob=0.5, entity_vector=[3])
+    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity="Q2", prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity="Q3", prob=0.5, entity_vector=[3])
 
     # adding aliases - should fail because one of the given IDs is not valid
     with pytest.raises(ValueError):
-        mykb.add_alias(alias='douglas', entities=['Q2', 'Q342'], probabilities=[0.8, 0.2])
+        mykb.add_alias(
+            alias="douglas", entities=["Q2", "Q342"], probabilities=[0.8, 0.2]
+        )
 
 
 def test_kb_invalid_probabilities(nlp):
@@ -50,13 +57,13 @@ def test_kb_invalid_probabilities(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1])
-    mykb.add_entity(entity='Q2', prob=0.2, entity_vector=[2])
-    mykb.add_entity(entity='Q3', prob=0.5, entity_vector=[3])
+    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity="Q2", prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity="Q3", prob=0.5, entity_vector=[3])
 
     # adding aliases - should fail because the sum of the probabilities exceeds 1
     with pytest.raises(ValueError):
-        mykb.add_alias(alias='douglas', entities=['Q2', 'Q3'], probabilities=[0.8, 0.4])
+        mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.4])
 
 
 def test_kb_invalid_combination(nlp):
@@ -64,13 +71,15 @@ def test_kb_invalid_combination(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1])
-    mykb.add_entity(entity='Q2', prob=0.2, entity_vector=[2])
-    mykb.add_entity(entity='Q3', prob=0.5, entity_vector=[3])
+    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity="Q2", prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity="Q3", prob=0.5, entity_vector=[3])
 
     # adding aliases - should fail because the entities and probabilities vectors are not of equal length
     with pytest.raises(ValueError):
-        mykb.add_alias(alias='douglas', entities=['Q2', 'Q3'], probabilities=[0.3, 0.4, 0.1])
+        mykb.add_alias(
+            alias="douglas", entities=["Q2", "Q3"], probabilities=[0.3, 0.4, 0.1]
+        )
 
 
 def test_kb_invalid_entity_vector(nlp):
@@ -78,11 +87,11 @@ def test_kb_invalid_entity_vector(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
 
     # adding entities
-    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1, 2, 3])
+    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[1, 2, 3])
 
     # this should fail because the kb's expected entity vector length is 3
     with pytest.raises(ValueError):
-        mykb.add_entity(entity='Q2', prob=0.2, entity_vector=[2])
+        mykb.add_entity(entity="Q2", prob=0.2, entity_vector=[2])
 
 
 def test_candidate_generation(nlp):
@@ -90,18 +99,18 @@ def test_candidate_generation(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1])
-    mykb.add_entity(entity='Q2', prob=0.2, entity_vector=[2])
-    mykb.add_entity(entity='Q3', prob=0.5, entity_vector=[3])
+    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity="Q2", prob=0.2, entity_vector=[2])
+    mykb.add_entity(entity="Q3", prob=0.5, entity_vector=[3])
 
     # adding aliases
-    mykb.add_alias(alias='douglas', entities=['Q2', 'Q3'], probabilities=[0.8, 0.2])
-    mykb.add_alias(alias='adam', entities=['Q2'], probabilities=[0.9])
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.2])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert(len(mykb.get_candidates('douglas')) == 2)
-    assert(len(mykb.get_candidates('adam')) == 1)
-    assert(len(mykb.get_candidates('shrubbery')) == 0)
+    assert len(mykb.get_candidates("douglas")) == 2
+    assert len(mykb.get_candidates("adam")) == 1
+    assert len(mykb.get_candidates("shrubbery")) == 0
 
 
 def test_preserving_links_asdoc(nlp):
@@ -109,24 +118,26 @@ def test_preserving_links_asdoc(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity='Q1', prob=0.9, entity_vector=[1])
-    mykb.add_entity(entity='Q2', prob=0.8, entity_vector=[1])
+    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity="Q2", prob=0.8, entity_vector=[1])
 
     # adding aliases
-    mykb.add_alias(alias='Boston', entities=['Q1'], probabilities=[0.7])
-    mykb.add_alias(alias='Denver', entities=['Q2'], probabilities=[0.6])
+    mykb.add_alias(alias="Boston", entities=["Q1"], probabilities=[0.7])
+    mykb.add_alias(alias="Denver", entities=["Q2"], probabilities=[0.6])
 
     # set up pipeline with NER (Entity Ruler) and NEL (prior probability only, model not trained)
     sentencizer = nlp.create_pipe("sentencizer")
     nlp.add_pipe(sentencizer)
 
     ruler = EntityRuler(nlp)
-    patterns = [{"label": "GPE", "pattern": "Boston"},
-                {"label": "GPE", "pattern": "Denver"}]
+    patterns = [
+        {"label": "GPE", "pattern": "Boston"},
+        {"label": "GPE", "pattern": "Denver"},
+    ]
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
-    el_pipe = nlp.create_pipe(name='entity_linker', config={"context_width": 64})
+    el_pipe = nlp.create_pipe(name="entity_linker", config={"context_width": 64})
     el_pipe.set_kb(mykb)
     el_pipe.begin_training()
     el_pipe.context_weight = 0
