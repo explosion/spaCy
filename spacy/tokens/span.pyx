@@ -17,6 +17,7 @@ from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 from ..attrs cimport *
 from ..lexeme cimport Lexeme
+from ..symbols cimport dep
 
 from ..util import normalize_slice
 from ..compat import is_config, basestring_
@@ -220,7 +221,7 @@ cdef class Span:
         else:
             array_head.append(SENT_START)
         array = self.doc.to_array(array_head)
-        doc.from_array(array_head, array[self.start : self.end])
+        doc.from_array(array_head, self._get_sub_array(array_head, array, self.start, self.end))
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
@@ -234,6 +235,40 @@ cdef class Span:
                 if cat_start == self.start_char and cat_end == self.end_char:
                     doc.cats[cat_label] = value
         return doc
+
+    def _get_sub_array(self, attrs, orig_array, int start, int end):
+        """ Rewire dependency links to try and make sure their heads fall into the span"""
+        array = orig_array[start : end]
+
+        cdef int length = len(array)
+        cdef attr_t value, newvalue
+        cdef int i, x
+        cdef int head_col
+        if HEAD in attrs:
+            head_col = attrs.index(HEAD)
+            for i in range(length):
+                # if the HEAD refers to a token outside this span, find a more appropriate ancestor
+                value = array[i, head_col]
+                if (i+value) not in range(length):
+                    x = 0   # Guard against infinite loop
+                    newvalue = 1
+                    while value != 0 and newvalue != 0 and x < length:
+                        newvalue = orig_array[start+i+value, head_col]  # fetch ancestors in original array
+                        value += newvalue
+                        if (i+value) in range(length):
+                            array[i, head_col] = value
+                            if DEP in attrs:
+                                array[i, attrs.index(DEP)] = dep
+                            x = length  # stop loop after finding first ancestor within this span
+                        x += 1
+                # if we couldn't find a better ancestor, set its head to itself
+                value = array[i, head_col]
+                if (i+value) not in range(length):
+                    array[i, head_col] = 0
+                    if DEP in attrs:
+                        array[i, attrs.index(DEP)] = dep
+
+        return array
 
     def merge(self, *args, **attributes):
         """Retokenize the document, such that the span is merged into a single
