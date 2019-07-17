@@ -978,6 +978,16 @@ helper returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the
 number of misaligned tokens, the one-to-one mappings of token indices in both
 directions and the indices where multiple tokens align to one single token.
 
+> #### ✏️ Things to try
+>
+> 1. Change the capitalization in one of the token lists – for example,
+>    `"Obama"`. You'll see that the alignment is case-insensitive.
+> 2. Change `"podcasts"` in `other_tokens` to `"pod", "casts"`. You should see
+>    that there are now 4 misaligned tokens and that the new many-to-one mapping
+>    is reflected in `a2b_multi`.
+> 3. Make `other_tokens` and `spacy_tokens` identical. You'll see that the
+>    `cost` is `0` and all corresponding mappings are also identical.
+
 ```python
 ### {executable="true"}
 from spacy.gold import align
