@@ -76,6 +76,50 @@ Convert a list of Doc objects into the
 | `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
 | **RETURNS** | list             | The data in spaCy's JSON format.           |
 
+### gold.align {#align tag="function"}
+
+Calculate alignment tables between two tokenizations, using the Levenshtein
+algorithm. The alignment is case-insensitive.
+
+> #### Example
+>
+> ```python
+> from spacy.gold import align
+>
+> bert_tokens = ["obama", "'", "s", "podcast"]
+> spacy_tokens = ["obama", "'s", "podcast"]
+> alignment = align(bert_tokens, spacy_tokens)
+> cost, a2b, b2a, a2b_multi, b2a_multi = alignment
+> ```
+
+| Name        | Type  | Description                                                                |
+| ----------- | ----- | -------------------------------------------------------------------------- |
+| `tokens_a`  | list  | String values of candidate tokens to align.                                |
+| `tokens_b`  | list  | String values of reference tokens to align.                                |
+| **RETURNS** | tuple | A `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the alignment. |
+
+The returned tuple contains the following alignment information:
+
+> #### Example
+>
+> ```python
+> a2b = array([0, -1, -1, 2])
+> b2a = array([0, 2, 3])
+> a2b_multi = {1: 1, 2: 1}
+> b2a_multi = {}
+> ```
+>
+> If `a2b[3] == 2`, that means that `tokens_a[3]` aligns to `tokens_b[2]`. If
+> there's no one-to-one alignment for a token, it has the value `-1`.
+
+| Name        | Type                                   | Description                                                                                                                                     |
+| ----------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cost`      | int                                    | The number of misaligned tokens.                                                                                                                |
+| `a2b`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_a` to indices in `tokens_b`.                                                                          |
+| `b2a`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_b` to indices in `tokens_a`.                                                                          |
+| `a2b_multi` | dict                                   | A dictionary mapping indices in `tokens_a` to indices in `tokens_b`, where multiple tokens of `tokens_a` align to the same token of `tokens_b`. |
+| `b2a_multi` | dict                                   | A dictionary mapping indices in `tokens_b` to indices in `tokens_a`, where multiple tokens of `tokens_b` align to the same token of `tokens_a`. |
+
 ### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
 Encode labelled spans into per-token tags, using the
