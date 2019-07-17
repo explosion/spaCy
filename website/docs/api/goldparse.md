@@ -81,6 +81,15 @@ Convert a list of Doc objects into the
 Calculate alignment tables between two tokenizations, using the Levenshtein
 algorithm. The alignment is case-insensitive.
 
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
