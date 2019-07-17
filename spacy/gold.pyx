@@ -71,6 +71,23 @@ def merge_sents(sents):
 
 
 def align(cand_words, gold_words):
+    """Calculate alignment tables between two tokenizations, using the Levenshtein
+    algorithm. The alignment is case-insensitive.
+
+    cand_words (List[str]): The candidate tokenization.
+    gold_words (List[str]): The reference tokenization.
+    RETURNS: (tuple): A 5-tuple consisting of the following information:
+      * cost (int): The number of misaligned tokens.
+      * a2b (List[int]): Mapping of indices in `cand_words` to indices in `gold_words`.
+            For instance, if `a2b[4] == 6`, that means that `cand_words[4]` aligns
+            to `gold_words[6]`. If there's no one-to-one alignment for a token,
+            it has the value -1.
+      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `a` to indices
+            in `b`, where multiple tokens of `a` align to the same token of `b`.
+      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
+            direction.
+    """
     if cand_words == gold_words:
         alignment = numpy.arange(len(cand_words))
         return 0, alignment, alignment, {}, {}
