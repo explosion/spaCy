@@ -1019,6 +1019,15 @@ above:
 - The dictionary `b2a_multi` shows that there are no tokens in `spacy_tokens`
   that map to multiple tokens in `other_tokens`.
 
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
+
 ## Merging and splitting {#retokenization new="2.1"}
 
 The [`Doc.retokenize`](/api/doc#retokenize) context manager lets you merge and
