@@ -67,7 +67,7 @@ valuable if it's shared publicly, so that more people can benefit from it.
 
 -   Non-destructive **tokenization**
 -   **Named entity** recognition
--   Support for **49+ languages**
+-   Support for **50+ languages**
 -   Pre-trained [statistical models](https://spacy.io/models) and word vectors
 -   State-of-the-art speed
 -   Easy **deep learning** integration
