@@ -967,9 +967,8 @@ attributes. For details, see the respective usage pages.
 
 spaCy's tokenization is non-destructive and uses language-specific rules
 optimized for compatibility with treebank annotations. Other tools and resources
-can sometimes tokenize things differently – for example, `"I'm"` → `["I", "am"]`
-instead of `["I", "'m"]`, or `"Obama's"` → `["Obama", "'", "s"]` instead of
-`["Obama", "'s"]`.
+can sometimes tokenize things differently – for example, `"I'm"` →
+`["I", "'", "m"]` instead of `["I", "'m"]`.
 
 In cases like that, you often want to align the tokenization so that you can
 merge annotations from different sources together, or take vectors predicted by
