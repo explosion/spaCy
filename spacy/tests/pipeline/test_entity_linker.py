@@ -13,6 +13,11 @@ def nlp():
     return English()
 
 
+def assert_almost_equal(a, b):
+    delta = 0.0001
+    assert a - delta <= b <= a + delta
+
+
 def test_kb_valid_entities(nlp):
     """Test the valid construction of a KB with 3 entities and two aliases"""
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
@@ -34,6 +39,10 @@ def test_kb_valid_entities(nlp):
     assert mykb.get_vector("Q1") == [8, 4, 3]
     assert mykb.get_vector("Q2") == [2, 1, 0]
     assert mykb.get_vector("Q3") == [-1, -6, 5]
+
+    # test retrieval of prior probabilities
+    assert_almost_equal(mykb.get_prior_prob(entity="Q2", alias="douglas"), 0.8)
+    assert_almost_equal(mykb.get_prior_prob(entity="Q3", alias="douglas"), 0.2)
 
 
 def test_kb_invalid_entities(nlp):
@@ -99,18 +108,24 @@ def test_candidate_generation(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    mykb.add_entity(entity="Q1", prob=0.9, entity_vector=[1])
+    mykb.add_entity(entity="Q1", prob=0.7, entity_vector=[1])
     mykb.add_entity(entity="Q2", prob=0.2, entity_vector=[2])
     mykb.add_entity(entity="Q3", prob=0.5, entity_vector=[3])
 
     # adding aliases
-    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.2])
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
     assert len(mykb.get_candidates("douglas")) == 2
     assert len(mykb.get_candidates("adam")) == 1
     assert len(mykb.get_candidates("shrubbery")) == 0
+
+    # test the content of the candidates
+    assert mykb.get_candidates("adam")[0].entity_ == "Q2"
+    assert mykb.get_candidates("adam")[0].alias_ == "adam"
+    assert_almost_equal(mykb.get_candidates("adam")[0].entity_freq, 0.2)
+    assert_almost_equal(mykb.get_candidates("adam")[0].prior_prob, 0.9)
 
 
 def test_preserving_links_asdoc(nlp):
