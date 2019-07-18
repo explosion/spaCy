@@ -221,7 +221,9 @@ cdef class Span:
         else:
             array_head.append(SENT_START)
         array = self.doc.to_array(array_head)
-        doc.from_array(array_head, self._get_sub_array(array_head, array, self.start, self.end))
+        array = array[self.start : self.end]
+        self._fix_dep_copy(array_head, array)
+        doc.from_array(array_head, array)
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
@@ -236,39 +238,34 @@ cdef class Span:
                     doc.cats[cat_label] = value
         return doc
 
-    def _get_sub_array(self, attrs, orig_array, int start, int end):
+    def _fix_dep_copy(self, attrs, array):
         """ Rewire dependency links to try and make sure their heads fall into the span"""
-        array = orig_array[start : end]
-
         cdef int length = len(array)
-        cdef attr_t value, newvalue
-        cdef int i, x
-        cdef int head_col
+        cdef attr_t value
+        cdef int i, head_col, ancestor_i
         if HEAD in attrs:
             head_col = attrs.index(HEAD)
             for i in range(length):
                 # if the HEAD refers to a token outside this span, find a more appropriate ancestor
-                value = array[i, head_col]
-                if (i+value) not in range(length):
-                    x = 0   # Guard against infinite loop
-                    newvalue = 1
-                    while value != 0 and newvalue != 0 and x < length:
-                        newvalue = orig_array[start+i+value, head_col]  # fetch ancestors in original array
-                        value += newvalue
-                        if (i+value) in range(length):
-                            array[i, head_col] = value
-                            if DEP in attrs:
-                                array[i, attrs.index(DEP)] = dep
-                            x = length  # stop loop after finding first ancestor within this span
-                        x += 1
-                # if we couldn't find a better ancestor, set its head to itself
+                token = self[i]
+                ancestor_i = token.head.i - self.start   # span offset
+                if ancestor_i not in range(length):
+                    if DEP in attrs:
+                        array[i, attrs.index(DEP)] = dep
+
+                    # try finding an ancestor within this span
+                    ancestors = token.ancestors
+                    for ancestor in ancestors:
+                        ancestor_i = ancestor.i - self.start
+                        if ancestor_i in range(length):
+                            array[i, head_col] = ancestor_i - i
+
+                # if we couldn't find a better ancestor, set its head to the span root
                 value = array[i, head_col]
                 if (i+value) not in range(length):
                     span_root = self.root.i - self.start
                     assert span_root in range(length)
                     array[i, head_col] = span_root - i
-                    if DEP in attrs:
-                        array[i, attrs.index(DEP)] = dep
 
         return array
 
