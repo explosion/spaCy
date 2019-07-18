@@ -47,7 +47,7 @@ def test_issue3962(doc):
     assert doc2[3].head.text == "jests"  # head set to span root
     assert doc2[3].dep_ == "dep"
 
-    span3 = doc[6:9]
+    span3 = doc[6:9]  # "never felt a"
     doc3 = span3.as_doc()
     doc3_json = doc3.to_json()
     assert doc3_json
@@ -87,7 +87,7 @@ def two_sent_doc(en_tokenizer):
 def test_issue3962_long(two_sent_doc):
     """ Ensure that as_doc does not result in out-of-bound access of tokens.
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
-    span2 = two_sent_doc[1:7]
+    span2 = two_sent_doc[1:7]  # "jests at scars. They never"
     doc2 = span2.as_doc()
     doc2_json = doc2.to_json()
     assert doc2_json
