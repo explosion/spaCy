@@ -18,6 +18,10 @@ Gold-standard entities are stored in one file in standoff format (by character o
 ENTITY_FILE = "gold_entities.csv"
 
 
+def now():
+    return datetime.datetime.now()
+
+
 def create_training(wikipedia_input, entity_def_input, training_output):
     wp_to_id = kb_creator.get_entity_to_id(entity_def_input)
     _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=None)
@@ -54,12 +58,7 @@ def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=N
             reading_revision = False
             while line and (not limit or cnt < limit):
                 if cnt % 1000000 == 0:
-                    print(
-                        datetime.datetime.now(),
-                        "processed",
-                        cnt,
-                        "lines of Wikipedia dump",
-                    )
+                    print(now(), "processed", cnt, "lines of Wikipedia dump")
                 clean_line = line.strip().decode("utf-8")
 
                 if clean_line == "<revision>":
@@ -328,8 +327,9 @@ def is_dev(article_id):
 
 def read_training(nlp, training_dir, dev, limit, kb=None):
     """ This method provides training examples that correspond to the entity annotations found by the nlp object.
-     When kb is provided, it will include also negative training examples by using the candidate generator.
-     When kb=None, it will only include positive training examples."""
+     When kb is provided (for training), it will include negative training examples by using the candidate generator,
+     and it will only keep positive training examples that can be found in the KB.
+     When kb=None (for testing), it will include all positive examples only."""
     entityfile_loc = training_dir / ENTITY_FILE
     data = []
 
@@ -402,12 +402,11 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                 gold_end = int(end) - found_ent.sent.start_char
 
                                 # add both pos and neg examples (in random order)
+                                # this will exclude examples not in the KB
                                 if kb:
                                     gold_entities = {}
                                     candidates = kb.get_candidates(alias)
                                     candidate_ids = [c.entity_ for c in candidates]
-                                    # add positive example in case the KB doesn't have it
-                                    candidate_ids.append(wd_id)
                                     random.shuffle(candidate_ids)
                                     for kb_id in candidate_ids:
                                         entry = (gold_start, gold_end, kb_id)
@@ -415,6 +414,7 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                             gold_entities[entry] = 0.0
                                         else:
                                             gold_entities[entry] = 1.0
+                                # keep all positive examples
                                 else:
                                     entry = (gold_start, gold_end, wd_id)
                                     gold_entities = {entry: 1.0}

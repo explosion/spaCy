@@ -1151,9 +1151,11 @@ class EntityLinker(Pipe):
             ents_by_offset = dict()
             for ent in doc.ents:
                 ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
-            for entity in gold.links:
-                start, end, gold_kb = entity
+            for entity, value in gold.links.items():
+                start, end, kb_id = entity
                 mention = doc.text[start:end]
+                entity_encoding = self.kb.get_vector(kb_id)
+                prior_prob = self.kb.get_prior_prob(kb_id, mention)
 
                 gold_ent = ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)]
                 assert gold_ent is not None
@@ -1161,24 +1163,17 @@ class EntityLinker(Pipe):
                 if len(type_to_int) > 0:
                     type_vector[type_to_int[gold_ent.label_]] = 1
 
-                candidates = self.kb.get_candidates(mention)
-                random.shuffle(candidates)
-                for c in candidates:
-                    kb_id = c.entity_
-                    entity_encoding = c.entity_vector
-                    entity_encodings.append(entity_encoding)
-                    context_docs.append(doc)
-                    type_vectors.append(type_vector)
+                # store data
+                entity_encodings.append(entity_encoding)
+                context_docs.append(doc)
+                type_vectors.append(type_vector)
 
-                    if self.cfg.get("prior_weight", 1) > 0:
-                        priors.append([c.prior_prob])
-                    else:
-                        priors.append([0])
+                if self.cfg.get("prior_weight", 1) > 0:
+                    priors.append([prior_prob])
+                else:
+                    priors.append([0])
 
-                    if kb_id == gold_kb:
-                        cats.append([1])
-                    else:
-                        cats.append([0])
+                cats.append([value])
 
         if len(entity_encodings) > 0:
             assert len(priors) == len(entity_encodings) == len(context_docs) == len(cats) == len(type_vectors)
