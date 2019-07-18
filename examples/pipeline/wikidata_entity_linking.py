@@ -295,11 +295,7 @@ def run_pipeline():
 
         dev_limit = 5000
         dev_data = training_set_creator.read_training(
-            nlp=nlp_2,
-            training_dir=TRAINING_DIR,
-            dev=True,
-            limit=dev_limit,
-            kb=el_pipe.kb,
+            nlp=nlp_2, training_dir=TRAINING_DIR, dev=True, limit=dev_limit, kb=None
         )
 
         print("Dev testing from file on", len(dev_data), "articles")
@@ -383,9 +379,11 @@ def _measure_baselines(data, kb):
     for doc, gold in zip(docs, golds):
         try:
             correct_entries_per_article = dict()
-            for entity in gold.links:
+            for entity, value in gold.links.items():
                 start, end, gold_kb = entity
-                correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
+                # only evaluating on positive examples
+                if value:
+                    correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
 
             for ent in doc.ents:
                 label = ent.label_
