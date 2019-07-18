@@ -208,7 +208,7 @@ cdef class KnowledgeBase:
 
         # Return an empty list if this entity is unknown in this KB
         if entity_hash not in self._entry_index:
-            return []
+            return [0] * self.entity_vector_length
         entry_index = self._entry_index[entity_hash]
 
         return self._vectors_table[self._entries[entry_index].vector_index]
