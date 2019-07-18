@@ -264,7 +264,9 @@ cdef class Span:
                 # if we couldn't find a better ancestor, set its head to itself
                 value = array[i, head_col]
                 if (i+value) not in range(length):
-                    array[i, head_col] = 0
+                    span_root = self.root.i - self.start
+                    assert span_root in range(length)
+                    array[i, head_col] = span_root - i
                     if DEP in attrs:
                         array[i, attrs.index(DEP)] = dep
 
