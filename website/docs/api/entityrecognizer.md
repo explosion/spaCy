@@ -210,7 +210,7 @@ Modify the pipe's model, to use the given parameter values.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> with ner.use_params():
+> with ner.use_params(optimizer.averages):
 >     ner.to_disk("/best_model")
 > ```
 

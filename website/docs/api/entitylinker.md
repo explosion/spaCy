@@ -105,13 +105,13 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> entities, kb_ids = entity_linker.predict([doc1, doc2])
+> kb_ids, tensors = entity_linker.predict([doc1, doc2])
 > ```
 
 | Name        | Type     | Description                                                                                                                                                                                                 |
 | ----------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | iterable | The documents to predict.                                                                                                                                                                                   |
-| **RETURNS** | tuple    | An `(entities, kb_ids)` tuple where `entities` are the named entities obtained from the [`entity recognizer`](/api/entityrecognizer), and the `kb_ids` are the model's predictions for best matching IDs.   |
+| **RETURNS** | tuple    | A `(kb_ids, tensors)` tuple where `kb_ids` are the model's KB ID predictions for the entities in the `docs`, and `tensors` is the token representations used to predict these identifiers.                  |
 
 ## EntityLinker.set_annotations {#set_annotations tag="method"}
 
@@ -121,15 +121,14 @@ Modify a batch of documents, using pre-computed entity IDs for a list of named e
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> entities, kb_ids = entity_linker.predict([doc1, doc2])
-> entity_linker.set_annotations([doc1, doc2], entities, kb_ids)
+> kb_ids, tensors = entity_linker.predict([doc1, doc2])
+> entity_linker.set_annotations([doc1, doc2], kb_ids, tensors)
 > ```
 
-| Name       | Type     | Description                                                                             |
-| ---------- | -------- | --------------------------------------------------------------------------------------- |
-| `docs`     | iterable | The documents to modify.                                                                |
-| `entities` | -        | The named entities for which we obtained predictions with `EntityLinker.predict`.       |
-| `kb_ids`   | -        | The knowledge base identifiers for the entities, predicted by `EntityLinker.predict`.   |
+| Name       | Type     | Description                                                                                         |
+| ---------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `docs`     | iterable | The documents to modify.                                                                            |
+| `kb_ids`   | iterable | The knowledge base identifiers for the entities in the docs, predicted by `EntityLinker.predict`.   |
 
 ## EntityLinker.update {#update tag="method"}
 
@@ -163,27 +162,43 @@ predicted scores.
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> entities, kb_ids = entity_linker.predict(docs)
-> loss, d_loss = entity_linker.get_loss(docs, [gold1, gold2], [score1, score2])
+> kb_ids, tensors = entity_linker.predict(docs)
+> loss, d_loss = entity_linker.get_loss(docs, [gold1, gold2], kb_ids)
 > ```
 
 | Name            | Type     | Description                                                  |
 | --------------- | -------- | ------------------------------------------------------------ |
 | `docs`          | iterable | The batch of documents.                                      |
 | `golds`         | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `scores`        | -        | Scores representing the model's predictions.                 |
+| `kb_ids`        | -        | KB identifiers representing the model's predictions.         |
 | **RETURNS**     | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
 
-## EntityLinker.begin_training {#begin_training tag="method"}
+## EntityLinker.set_kb {#set_kb tag="method"}
 
-Initialize the pipe for training, using data examples if available. If no model
-has been initialized yet, the model is added.
+Define the knowledge base (KB) used for disambiguating named entities to KB identifiers.
 
 > #### Example
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> nlp.pipeline.append(entity_linker)
+> entity_linker.set_kb(kb)
+> ```
+
+| Name            | Type            | Description                                                  |
+| --------------- | --------------- | ------------------------------------------------------------ |
+| `kb`            | `KnowledgeBase` | The [`KnowledgeBase`](/api/kb).                              |
+
+## EntityLinker.begin_training {#begin_training tag="method"}
+
+Initialize the pipe for training, using data examples if available. If no model
+has been initialized yet, the model is added. 
+Before calling this method, a knowledge base should have been defined with [`set_kb`](/api/entitylinker#set_kb)
+
+> #### Example
+>
+> ```python
+> entity_linker = EntityLinker(nlp.vocab)
+> nlp.add_pipe(entity_linker, last=True)
 > optimizer = entity_linker.begin_training(pipeline=nlp.pipeline)
 > ```
 
@@ -191,7 +206,7 @@ has been initialized yet, the model is added.
 | ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                                           |
 | `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                                        |
-| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`EntityLinker`](/api/entitylinker#create_optimizer) if not set. |
+| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`EntityLinker`](/api/entitylinker#create_optimizer) if not set.         |
 | **RETURNS**   | callable | An optimizer.                                                                                                                                                                               |
 
 ## EntityLinker.create_optimizer {#create_optimizer tag="method"}
@@ -211,13 +226,13 @@ Create an optimizer for the pipeline component.
 
 ## EntityLinker.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's EL model, to use the given parameter values.
 
 > #### Example
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> with entity_linker.use_params():
+> with entity_linker.use_params(optimizer.averages):
 >     entity_linker.to_disk("/best_model")
 > ```
 
@@ -225,10 +240,6 @@ Modify the pipe's model, to use the given parameter values.
 | -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
 | `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
 
-
-| Name    | Type    | Description       |
-| ------- | ------- | ----------------- |
-| `label` | unicode | The label to add. |
 
 ## EntityLinker.to_disk {#to_disk tag="method"}
 
@@ -261,42 +272,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | ----------- | ------------------ | -------------------------------------------------------------------------- |
 | `path`      | unicode / `Path`   | A path to a directory. Paths may be either strings or `Path`-like objects. |
 | `exclude`   | list               | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `EntityLinker` | The modified `EntityLinker` object.                                    |
-
-## EntityLinker.to_bytes {#to_bytes tag="method"}
-
-> #### Example
->
-> ```python
-> entity_linker = EntityLinker(nlp.vocab)
-> entity_linker = entity_linker.to_bytes()
-> ```
-
-Serialize the pipe to a bytestring.
-
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `EntityLinker` object.                     |
-
-## EntityLinker.from_bytes {#from_bytes tag="method"}
-
-Load the pipe from a bytestring. Modifies the object in place and returns it.
-
-> #### Example
->
-> ```python
-> el_bytes = entity_linker.to_bytes()
-> entity_linker = EntityLinker(nlp.vocab)
-> entity_linker.from_bytes(el_bytes)
-> ```
-
-| Name         | Type               | Description                                                               |
-| ------------ | ------------------ | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes              | The data to load from.                                                    |
-| `exclude`    | list               | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `EntityLinker` | The `EntityLinker` object.                                            |
-
+| **RETURNS** | `EntityLinker`     | The modified `EntityLinker` object.                                    |
 
 ## Serialization fields {#serialization-fields}
 
@@ -315,3 +291,5 @@ serialization by passing in the string names via the `exclude` argument.
 | `vocab` | The shared [`Vocab`](/api/vocab).                              |
 | `cfg`   | The config file. You usually don't want to exclude this.       |
 | `model` | The binary model data. You usually don't want to exclude this. |
+| `kb`    | The knowledge base. You usually don't want to exclude this.    |
+

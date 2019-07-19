@@ -227,7 +227,7 @@ Modify the pipe's model, to use the given parameter values.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> with textcat.use_params():
+> with textcat.use_params(optimizer.averages):
 >     textcat.to_disk("/best_model")
 > ```
 
