@@ -150,7 +150,7 @@ pipe's entity linking model and context encoder. Delegates to [`predict`](/api/e
 | -------- | -------- | ------------------------------------------------------------------------------------------------------------- |
 | `docs`   | iterable | A batch of documents to learn from.                                                                           |
 | `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                                  |
-| `drop`   | float    | The dropout rate.                                                                                             |
+| `drop`   | float    | The dropout rate, used both for the EL model and the context encoder.                                                                                             |
 | `sgd`    | callable | The optimizer for the EL model. Should take two arguments `weights` and `gradient`, and an optional ID.       |
 | `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated.                  |
 
