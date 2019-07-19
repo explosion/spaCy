@@ -1076,6 +1076,7 @@ class EntityLinker(Pipe):
     DOCS: TODO
     """
     name = 'entity_linker'
+    NIL = "NIL"  # string used to refer to a non-existing link
 
     @classmethod
     def Model(cls, **cfg):
@@ -1151,27 +1152,28 @@ class EntityLinker(Pipe):
             ents_by_offset = dict()
             for ent in doc.ents:
                 ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
-            for entity, value in gold.links.items():
-                start, end, kb_id = entity
+            for entity, kb_dict in gold.links.items():
+                start, end = entity
                 mention = doc.text[start:end]
-                entity_encoding = self.kb.get_vector(kb_id)
-                prior_prob = self.kb.get_prior_prob(kb_id, mention)
+                for kb_id, value in kb_dict.items():
+                    entity_encoding = self.kb.get_vector(kb_id)
+                    prior_prob = self.kb.get_prior_prob(kb_id, mention)
 
-                gold_ent = ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)]
-                assert gold_ent is not None
-                type_vector = [0 for i in range(len(type_to_int))]
-                if len(type_to_int) > 0:
-                    type_vector[type_to_int[gold_ent.label_]] = 1
+                    gold_ent = ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)]
+                    assert gold_ent is not None
+                    type_vector = [0 for i in range(len(type_to_int))]
+                    if len(type_to_int) > 0:
+                        type_vector[type_to_int[gold_ent.label_]] = 1
 
-                # store data
-                entity_encodings.append(entity_encoding)
-                context_docs.append(doc)
-                type_vectors.append(type_vector)
+                    # store data
+                    entity_encodings.append(entity_encoding)
+                    context_docs.append(doc)
+                    type_vectors.append(type_vector)
 
-                if self.cfg.get("prior_weight", 1) > 0:
-                    priors.append([prior_prob])
-                else:
-                    priors.append([0])
+                    if self.cfg.get("prior_weight", 1) > 0:
+                        priors.append([prior_prob])
+                    else:
+                        priors.append([0])
 
         if len(entity_encodings) > 0:
             assert len(priors) == len(entity_encodings) == len(context_docs) == len(type_vectors)
@@ -1197,8 +1199,9 @@ class EntityLinker(Pipe):
     def get_loss(self, docs, golds, scores):
         cats = []
         for gold in golds:
-            for entity, value in gold.links.items():
-                cats.append([value])
+            for entity, kb_dict in gold.links.items():
+                for kb_id, value in kb_dict.items():
+                    cats.append([value])
 
         cats = self.model.ops.asarray(cats, dtype="float32")
         assert len(scores) == len(cats)
@@ -1209,26 +1212,27 @@ class EntityLinker(Pipe):
         return loss, d_scores
 
     def __call__(self, doc):
-        entities, kb_ids = self.predict([doc])
-        self.set_annotations([doc], entities, kb_ids)
+        kb_ids = self.predict([doc])
+        self.set_annotations([doc], kb_ids)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
-            entities, kb_ids = self.predict(docs)
-            self.set_annotations(docs, entities, kb_ids)
+            kb_ids = self.predict(docs)
+            self.set_annotations(docs, kb_ids)
             yield from docs
 
     def predict(self, docs):
+        """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
         self.require_model()
         self.require_kb()
 
-        final_entities = []
+        entity_count = 0
         final_kb_ids = []
 
         if not docs:
-            return final_entities, final_kb_ids
+            return final_kb_ids
 
         if isinstance(docs, Doc):
             docs = [docs]
@@ -1242,12 +1246,15 @@ class EntityLinker(Pipe):
             if len(doc) > 0:
                 context_encoding = context_encodings[i]
                 for ent in doc.ents:
+                    entity_count += 1
                     type_vector = [0 for i in range(len(type_to_int))]
                     if len(type_to_int) > 0:
                         type_vector[type_to_int[ent.label_]] = 1
 
                     candidates = self.kb.get_candidates(ent.text)
-                    if candidates:
+                    if not candidates:
+                        final_kb_ids.append(self.NIL)  # no prediction possible for this entity
+                    else:
                         random.shuffle(candidates)
 
                         # this will set the prior probabilities to 0 (just like in training) if their weight is 0
@@ -1266,15 +1273,20 @@ class EntityLinker(Pipe):
                         # TODO: thresholding
                         best_index = scores.argmax()
                         best_candidate = candidates[best_index]
-                        final_entities.append(ent)
                         final_kb_ids.append(best_candidate.entity_)
 
-        return final_entities, final_kb_ids
+        assert len(final_kb_ids) == entity_count
 
-    def set_annotations(self, docs, entities, kb_ids=None):
-        for entity, kb_id in zip(entities, kb_ids):
-            for token in entity:
-                token.ent_kb_id_ = kb_id
+        return final_kb_ids
+
+    def set_annotations(self, docs, kb_ids, tensors=None):
+        i=0
+        for doc in docs:
+            for ent in doc.ents:
+                kb_id = kb_ids[i]
+                i += 1
+                for token in ent:
+                    token.ent_kb_id_ = kb_id
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serialize = OrderedDict()

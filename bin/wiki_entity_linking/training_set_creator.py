@@ -397,33 +397,43 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                 current_doc = None
                             else:
                                 sent = found_ent.sent.as_doc()
-                                # currently feeding the gold data one entity per sentence at a time
+
                                 gold_start = int(start) - found_ent.sent.start_char
                                 gold_end = int(end) - found_ent.sent.start_char
 
-                                # add both pos and neg examples (in random order)
-                                # this will exclude examples not in the KB
-                                if kb:
-                                    gold_entities = {}
-                                    candidates = kb.get_candidates(alias)
-                                    candidate_ids = [c.entity_ for c in candidates]
-                                    random.shuffle(candidate_ids)
-                                    for kb_id in candidate_ids:
-                                        entry = (gold_start, gold_end, kb_id)
-                                        if kb_id != wd_id:
-                                            gold_entities[entry] = 0.0
+                                gold_entities = {}
+                                found_useful = False
+                                for ent in sent.ents:
+                                    if ent.start_char == gold_start and ent.end_char == gold_end:
+                                        # add both pos and neg examples (in random order)
+                                        # this will exclude examples not in the KB
+                                        if kb:
+                                            value_by_id = {}
+                                            candidates = kb.get_candidates(alias)
+                                            candidate_ids = [c.entity_ for c in candidates]
+                                            random.shuffle(candidate_ids)
+                                            for kb_id in candidate_ids:
+                                                found_useful = True
+                                                if kb_id != wd_id:
+                                                    value_by_id[kb_id] = 0.0
+                                                else:
+                                                    value_by_id[kb_id] = 1.0
+                                            gold_entities[(ent.start_char, ent.end_char)] = value_by_id
+                                        # if no KB, keep all positive examples
                                         else:
-                                            gold_entities[entry] = 1.0
-                                # keep all positive examples
-                                else:
-                                    entry = (gold_start, gold_end, wd_id)
-                                    gold_entities = {entry: 1.0}
-
-                                gold = GoldParse(doc=sent, links=gold_entities)
-                                data.append((sent, gold))
-                                total_entities += 1
-                                if len(data) % 2500 == 0:
-                                    print(" -read", total_entities, "entities")
+                                            found_useful = True
+                                            value_by_id = {wd_id: 1.0}
+                                            gold_entities[(ent.start_char, ent.end_char)] = value_by_id
+                                    # currently feeding the gold data one entity per sentence at a time
+                                    # setting all other entities to empty gold dictionary
+                                    else:
+                                        gold_entities[(ent.start_char, ent.end_char)] = {}
+                                if found_useful:
+                                    gold = GoldParse(doc=sent, links=gold_entities)
+                                    data.append((sent, gold))
+                                    total_entities += 1
+                                    if len(data) % 2500 == 0:
+                                        print(" -read", total_entities, "entities")
 
     print(" -read", total_entities, "entities")
     return data
