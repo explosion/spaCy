@@ -70,7 +70,7 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
 
     print()
     print(" * adding", len(entity_list), "entities", datetime.datetime.now())
-    kb.set_entities(entity_list=entity_list, prob_list=frequency_list, vector_list=embeddings)
+    kb.set_entities(entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings)
 
     print()
     print(" * adding aliases", datetime.datetime.now())
