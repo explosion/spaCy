@@ -1011,9 +1011,9 @@ above:
   they map to each other. This makes sense because they're also identical in the
   input: `"i"`, `"listened"`, `"to"` and `"obama"`.
 - The index mapped to `a2b[6]` is `5`, which means that `other_tokens[6]`
-  (`"podcasts"`) aligns to `spacy_tokens[6]` (also `"podcasts"`).
+  (`"podcasts"`) aligns to `spacy_tokens[5]` (also `"podcasts"`).
 - `a2b[4]` is `-1`, which means that there is no one-to-one alignment for the
-  token at `other_tokens[5]`. The token `"'"` doesn't exist on its own in
+  token at `other_tokens[4]`. The token `"'"` doesn't exist on its own in
   `spacy_tokens`. The same goes for `a2b[5]` and `other_tokens[5]`, i.e. `"s"`.
 - The dictionary `a2b_multi` shows that both tokens 4 and 5 of `other_tokens`
   (`"'"` and `"s"`) align to token 4 of `spacy_tokens` (`"'s"`).
