@@ -86,11 +86,11 @@ generate [Markdown](https://en.wikipedia.org/wiki/Markdown)-formatted markup to
 copy-paste into [GitHub issues](https://github.com/explosion/spaCy/issues).
 
 ```bash
-$ python -m spacy info [--markdown]
+$ python -m spacy info [--markdown] [--silent]
 ```
 
 ```bash
-$ python -m spacy info [model] [--markdown]
+$ python -m spacy info [model] [--markdown] [--silent]
 ```
 
 | Argument                                         | Type       | Description                                                   |
