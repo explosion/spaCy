@@ -322,11 +322,12 @@ def _measure_acc(data, el_pipe=None, error_analysis=False):
     for doc, gold in zip(docs, golds):
         try:
             correct_entries_per_article = dict()
-            for entity, value in gold.links.items():
+            for entity, kb_dict in gold.links.items():
+                start, end = entity
                 # only evaluating on positive examples
-                if value:
-                    start, end, gold_kb = entity
-                    correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
+                for gold_kb, value in kb_dict.items():
+                    if value:
+                        correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
 
             for ent in doc.ents:
                 ent_label = ent.label_
@@ -379,11 +380,12 @@ def _measure_baselines(data, kb):
     for doc, gold in zip(docs, golds):
         try:
             correct_entries_per_article = dict()
-            for entity, value in gold.links.items():
-                start, end, gold_kb = entity
-                # only evaluating on positive examples
-                if value:
-                    correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
+            for entity, kb_dict in gold.links.items():
+                start, end = entity
+                for gold_kb, value in kb_dict.items():
+                    # only evaluating on positive examples
+                    if value:
+                        correct_entries_per_article[str(start) + "-" + str(end)] = gold_kb
 
             for ent in doc.ents:
                 label = ent.label_
@@ -487,7 +489,7 @@ def run_el_toy_example(nlp):
         "In The Hitchhiker's Guide to the Galaxy, written by Douglas Adams, "
         "Douglas reminds us to always bring our towel, even in China or Brazil. "
         "The main character in Doug's novel is the man Arthur Dent, "
-        "but Douglas doesn't write about George Washington or Homer Simpson."
+        "but Dougledydoug doesn't write about George Washington or Homer Simpson."
     )
     doc = nlp(text)
     print(text)

@@ -450,10 +450,11 @@ cdef class GoldParse:
             examples of a label to have the value 0.0. Labels not in the
             dictionary are treated as missing - the gradient for those labels
             will be zero.
-        links (dict): A dict with `(start_char, end_char, kb_id)` keys,
-            representing the external ID of an entity in a knowledge base,
-            and the values being either 1.0 or 0.0, indicating positive and
-            negative examples, respectively.
+        links (dict): A dict with `(start_char, end_char)` keys,
+            and the values being dicts with kb_id:value entries,
+            representing the external IDs in a knowledge base (KB)
+            mapped to either 1.0 or 0.0, indicating positive and
+            negative examples respectively.
         RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
