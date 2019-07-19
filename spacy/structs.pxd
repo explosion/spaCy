@@ -93,7 +93,7 @@ cdef struct KBEntryC:
     int32_t feats_row
 
     # log probability of entity, based on corpus frequency
-    float prob
+    float freq
 
 
 # Each alias struct stores a list of Entry pointers with their prior probabilities
