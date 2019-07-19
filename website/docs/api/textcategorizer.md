@@ -233,7 +233,7 @@ Modify the pipe's model, to use the given parameter values.
 
 | Name     | Type | Description                                                                                                |
 | -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| `params` | dict | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
 
 ## TextCategorizer.add_label {#add_label tag="method"}
 

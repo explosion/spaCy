@@ -12,7 +12,7 @@ via the ID `"entity_linker"`.
 ## EntityLinker.Model {#model tag="classmethod"}
 
 Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API, and should contain a field `tok2vec` that contains  
+`thinc.neural.Model` API, and should contain a field `tok2vec` that contains 
 the context encoder. Wrappers are under development for most major machine
 learning libraries.
 
@@ -111,7 +111,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 | Name        | Type     | Description                                                                                                                                                                                                 |
 | ----------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | iterable | The documents to predict.                                                                                                                                                                                   |
-| **RETURNS** | tuple    | A `(kb_ids, tensors)` tuple where `kb_ids` are the model's KB ID predictions for the entities in the `docs`, and `tensors` is the token representations used to predict these identifiers.                  |
+| **RETURNS** | tuple    | A `(kb_ids, tensors)` tuple where `kb_ids` are the model's predicted KB identifiers for the entities in the `docs`, and `tensors` are the token representations used to predict these identifiers.          |
 
 ## EntityLinker.set_annotations {#set_annotations tag="method"}
 
@@ -129,6 +129,7 @@ Modify a batch of documents, using pre-computed entity IDs for a list of named e
 | ---------- | -------- | --------------------------------------------------------------------------------------------------- |
 | `docs`     | iterable | The documents to modify.                                                                            |
 | `kb_ids`   | iterable | The knowledge base identifiers for the entities in the docs, predicted by `EntityLinker.predict`.   |
+| `tensors`  | iterable | The token representations used to predict the identifiers                                           |
 
 ## EntityLinker.update {#update tag="method"}
 
@@ -163,14 +164,15 @@ predicted scores.
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
 > kb_ids, tensors = entity_linker.predict(docs)
-> loss, d_loss = entity_linker.get_loss(docs, [gold1, gold2], kb_ids)
+> loss, d_loss = entity_linker.get_loss(docs, [gold1, gold2], kb_ids, tensors)
 > ```
 
 | Name            | Type     | Description                                                  |
 | --------------- | -------- | ------------------------------------------------------------ |
 | `docs`          | iterable | The batch of documents.                                      |
 | `golds`         | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `kb_ids`        | -        | KB identifiers representing the model's predictions.         |
+| `kb_ids`        | iterable | KB identifiers representing the model's predictions.         |
+| `tensors`       | iterable | The token representations used to predict the identifiers    |
 | **RETURNS**     | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
 
 ## EntityLinker.set_kb {#set_kb tag="method"}
@@ -192,12 +194,13 @@ Define the knowledge base (KB) used for disambiguating named entities to KB iden
 
 Initialize the pipe for training, using data examples if available. If no model
 has been initialized yet, the model is added. 
-Before calling this method, a knowledge base should have been defined with [`set_kb`](/api/entitylinker#set_kb)
+Before calling this method, a knowledge base should have been defined with [`set_kb`](/api/entitylinker#set_kb).
 
 > #### Example
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
+> entity_linker.set_kb(kb)
 > nlp.add_pipe(entity_linker, last=True)
 > optimizer = entity_linker.begin_training(pipeline=nlp.pipeline)
 > ```
@@ -238,7 +241,7 @@ Modify the pipe's EL model, to use the given parameter values.
 
 | Name     | Type | Description                                                                                                |
 | -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| `params` | dict | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
 
 
 ## EntityLinker.to_disk {#to_disk tag="method"}
