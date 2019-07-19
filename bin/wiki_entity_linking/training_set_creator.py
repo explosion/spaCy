@@ -365,9 +365,8 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                 encoding="utf8",
                             ) as f:
                                 text = f.read()
-                                if (
-                                    len(text) < 30000
-                                ):  # threshold for convenience / speed of processing
+                                # threshold for convenience / speed of processing
+                                if len(text) < 30000:
                                     current_doc = nlp(text)
                                     current_article_id = article_id
                                     ents_by_offset = dict()
@@ -386,7 +385,6 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                         except Exception as e:
                             print("Problem parsing article", article_id, e)
                             skip_articles.add(article_id)
-                            raise e
 
                     # repeat checking this condition in case an exception was thrown
                     if current_doc and (current_article_id == article_id):
@@ -404,13 +402,17 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                 gold_entities = {}
                                 found_useful = False
                                 for ent in sent.ents:
-                                    if ent.start_char == gold_start and ent.end_char == gold_end:
+                                    entry = (ent.start_char, ent.end_char)
+                                    gold_entry = (gold_start, gold_end)
+                                    if entry == gold_entry:
                                         # add both pos and neg examples (in random order)
                                         # this will exclude examples not in the KB
                                         if kb:
                                             value_by_id = {}
                                             candidates = kb.get_candidates(alias)
-                                            candidate_ids = [c.entity_ for c in candidates]
+                                            candidate_ids = [
+                                                c.entity_ for c in candidates
+                                            ]
                                             random.shuffle(candidate_ids)
                                             for kb_id in candidate_ids:
                                                 found_useful = True
@@ -418,16 +420,17 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                                     value_by_id[kb_id] = 0.0
                                                 else:
                                                     value_by_id[kb_id] = 1.0
-                                            gold_entities[(ent.start_char, ent.end_char)] = value_by_id
+                                            gold_entities[entry] = value_by_id
                                         # if no KB, keep all positive examples
                                         else:
                                             found_useful = True
                                             value_by_id = {wd_id: 1.0}
-                                            gold_entities[(ent.start_char, ent.end_char)] = value_by_id
+
+                                            gold_entities[entry] = value_by_id
                                     # currently feeding the gold data one entity per sentence at a time
                                     # setting all other entities to empty gold dictionary
                                     else:
-                                        gold_entities[(ent.start_char, ent.end_char)] = {}
+                                        gold_entities[entry] = {}
                                 if found_useful:
                                     gold = GoldParse(doc=sent, links=gold_entities)
                                     data.append((sent, gold))
