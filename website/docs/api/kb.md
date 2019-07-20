@@ -54,7 +54,7 @@ and entity vector, which should be of length [`entity_vector_length`](/api/kb#en
 | --------------- | ------------- | ------------------------------------------------- |
 | `entity`        | unicode       | The unique entity identifier                      |
 | `freq`          | float         | The frequency of the entity in a typical corpus   |
-| `entity_vector` | vector        | The entity vector of the entity                   |
+| `entity_vector` | vector        | The pre-trained vector of the entity              |
 
 ## KnowledgeBase.set_entities {#set_entities tag="method"}
 
