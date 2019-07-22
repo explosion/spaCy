@@ -23,7 +23,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 >
 > ```python
 > # Construction via create_pipe
-> ruler = nlp.create_pipe("entityruler")
+> ruler = nlp.create_pipe("entity_ruler")
 >
 > # Construction from class
 > from spacy.pipeline import EntityRuler

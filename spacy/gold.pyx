@@ -70,15 +70,33 @@ def merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-def align(cand_words, gold_words):
-    if cand_words == gold_words:
-        alignment = numpy.arange(len(cand_words))
+def align(tokens_a, tokens_b):
+    """Calculate alignment tables between two tokenizations, using the Levenshtein
+    algorithm. The alignment is case-insensitive.
+
+    tokens_a (List[str]): The candidate tokenization.
+    tokens_b (List[str]): The reference tokenization.
+    RETURNS: (tuple): A 5-tuple consisting of the following information:
+      * cost (int): The number of misaligned tokens.
+      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
+        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
+        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
+        it has the value -1.
+      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
+        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
+        the same token of `tokens_b`.
+      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
+            direction.
+    """
+    if tokens_a == tokens_b:
+        alignment = numpy.arange(len(tokens_a))
         return 0, alignment, alignment, {}, {}
-    cand_words = [w.replace(" ", "").lower() for w in cand_words]
-    gold_words = [w.replace(" ", "").lower() for w in gold_words]
-    cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
-                                [len(w) for w in gold_words])
+    tokens_a = [w.replace(" ", "").lower() for w in tokens_a]
+    tokens_b = [w.replace(" ", "").lower() for w in tokens_b]
+    cost, i2j, j2i, matrix = _align.align(tokens_a, tokens_b)
+    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in tokens_a],
+                                                        [len(w) for w in tokens_b])
     for i, j in list(i2j_multi.items()):
         if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
             i2j[i] = j
