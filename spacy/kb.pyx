@@ -278,7 +278,7 @@ cdef class KnowledgeBase:
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
-        cdef float freq
+        cdef float freq, prob
         cdef int32_t vector_index
         cdef KBEntryC entry
         cdef AliasC alias
@@ -373,7 +373,7 @@ cdef class Writer:
             loc = bytes(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
-        assert self._fp != NULL
+        assert self._fp != NULL, "Could not access %s" % loc
         fseek(self._fp, 0, 0)
 
     def close(self):
