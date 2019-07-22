@@ -191,7 +191,7 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, unicode alias):
         cdef hash_t alias_hash = self.vocab.strings[alias]
-        alias_index = <int64_t>self._alias_index.get(alias_hash)  # TODO: check for error? unit test !
+        alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 
         return [Candidate(kb=self,
@@ -219,7 +219,6 @@ cdef class KnowledgeBase:
         cdef hash_t alias_hash = self.vocab.strings[alias]
         cdef hash_t entity_hash = self.vocab.strings[entity]
 
-        # TODO: error  ?
         if entity_hash not in self._entry_index or alias_hash not in self._alias_index:
             return 0.0
 

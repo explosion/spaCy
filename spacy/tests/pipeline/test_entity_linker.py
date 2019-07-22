@@ -43,6 +43,8 @@ def test_kb_valid_entities(nlp):
     # test retrieval of prior probabilities
     assert_almost_equal(mykb.get_prior_prob(entity="Q2", alias="douglas"), 0.8)
     assert_almost_equal(mykb.get_prior_prob(entity="Q3", alias="douglas"), 0.2)
+    assert_almost_equal(mykb.get_prior_prob(entity="Q342", alias="douglas"), 0.0)
+    assert_almost_equal(mykb.get_prior_prob(entity="Q3", alias="douglassssss"), 0.0)
 
 
 def test_kb_invalid_entities(nlp):
