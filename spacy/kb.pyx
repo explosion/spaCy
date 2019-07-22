@@ -428,39 +428,39 @@ cdef class Reader:
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading header from input file")
+            raise IOError(Errors.E145.format(param="header"))
 
         status = self._read(entity_vector_length, sizeof(int64_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading header from input file")
+            raise IOError(Errors.E145.format(param="vector length"))
 
     cdef int read_vector_element(self, float* element) except -1:
         status = self._read(element, sizeof(float))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity vector from input file")
+            raise IOError(Errors.E145.format(param="vector element"))
 
     cdef int read_entry(self, hash_t* entity_hash, float* freq, int32_t* vector_index) except -1:
         status = self._read(entity_hash, sizeof(hash_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity hash from input file")
+            raise IOError(Errors.E145.format(param="entity hash"))
 
         status = self._read(freq, sizeof(float))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity freq from input file")
+            raise IOError(Errors.E145.format(param="entity freq"))
 
         status = self._read(vector_index, sizeof(int32_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity vector from input file")
+            raise IOError(Errors.E145.format(param="vector index"))
 
         if feof(self._fp):
             return 0
@@ -472,33 +472,33 @@ cdef class Reader:
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading alias length from input file")
+            raise IOError(Errors.E145.format(param="alias length"))
 
     cdef int read_alias_header(self, hash_t* alias_hash, int64_t* candidate_length) except -1:
         status = self._read(alias_hash, sizeof(hash_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading alias hash from input file")
+            raise IOError(Errors.E145.format(param="alias hash"))
 
         status = self._read(candidate_length, sizeof(int64_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading candidate length from input file")
+            raise IOError(Errors.E145.format(param="candidate length"))
 
     cdef int read_alias(self, int64_t* entry_index, float* prob) except -1:
         status = self._read(entry_index, sizeof(int64_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entry index for alias from input file")
+            raise IOError(Errors.E145.format(param="entry index"))
 
         status = self._read(prob, sizeof(float))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading prob for entity/alias from input file")
+            raise IOError(Errors.E145.format(param="prior probability"))
 
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)
