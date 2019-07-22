@@ -1151,7 +1151,7 @@ class EntityLinker(Pipe):
         for doc, gold in zip(docs, golds):
             ents_by_offset = dict()
             for ent in doc.ents:
-                ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
+                ents_by_offset["{}_{}".format(ent.start_char, ent.end_char)] = ent
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
@@ -1159,7 +1159,7 @@ class EntityLinker(Pipe):
                     entity_encoding = self.kb.get_vector(kb_id)
                     prior_prob = self.kb.get_prior_prob(kb_id, mention)
 
-                    gold_ent = ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)]
+                    gold_ent = ents_by_offset["{}_{}".format(start, end)]
                     assert gold_ent is not None
                     type_vector = [0 for i in range(len(type_to_int))]
                     if len(type_to_int) > 0:
