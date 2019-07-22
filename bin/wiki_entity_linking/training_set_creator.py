@@ -307,18 +307,8 @@ def _write_training_article(article_id, clean_text, training_output):
 
 
 def _write_training_entity(outputfile, article_id, alias, entity, start, end):
-    outputfile.write(
-        article_id
-        + "|"
-        + alias
-        + "|"
-        + entity
-        + "|"
-        + str(start)
-        + "|"
-        + str(end)
-        + "\n"
-    )
+    line = "{}|{}|{}|{}|{}\n".format(article_id, alias, entity, start, end)
+    outputfile.write(line)
 
 
 def is_dev(article_id):
