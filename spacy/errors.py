@@ -407,6 +407,7 @@ class Errors(object):
     E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
     E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
     E144 = ("Could not find parameter `{param}` when building the entity linker model.")
+    E145 = ("Error reading `{param}` from input file.")
 
 
 @add_codes
