@@ -30,9 +30,9 @@ of a `KnowledgeBase`.
 ## Attributes {#attributes}
 
 | Name                   | Type         | Description                                                        |
-| ---------------------- | ------------ | ------------------------------------------------------------------ |                                                                                                                                                                            |
+| ---------------------- | ------------ | ------------------------------------------------------------------ |
 | `entity`               | int          | The entity's unique KB identifier                                  |
-| `entity_`              | unicode      | The entity's unique KB identifier                                  |                                                                                                                                                                         |
+| `entity_`              | unicode      | The entity's unique KB identifier                                  |
 | `alias`                | int          | The alias or textual mention                                       |
 | `alias_`               | unicode      | The alias or textual mention                                       |
 | `prior_prob`           | long         | The prior probability of the `alias` referring to the `entity`     |
