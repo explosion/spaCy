@@ -408,6 +408,7 @@ class Errors(object):
     E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
     E144 = ("Could not find parameter `{param}` when building the entity linker model.")
     E145 = ("Error reading `{param}` from input file.")
+    E146 = ("Could not access `{path}`.")
 
 
 @add_codes
