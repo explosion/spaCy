@@ -963,6 +963,72 @@ Once you have a [`Doc`](/api/doc) object, you can write to its attributes to set
 the part-of-speech tags, syntactic dependencies, named entities and other
 attributes. For details, see the respective usage pages.
 
+### Aligning tokenization {#aligning-tokenization}
+
+spaCy's tokenization is non-destructive and uses language-specific rules
+optimized for compatibility with treebank annotations. Other tools and resources
+can sometimes tokenize things differently – for example, `"I'm"` →
+`["I", "'", "m"]` instead of `["I", "'m"]`.
+
+In situations like that, you often want to align the tokenization so that you
+can merge annotations from different sources together, or take vectors predicted
+by a
+[pre-trained BERT model](https://github.com/huggingface/pytorch-transformers)
+and apply them to spaCy tokens. spaCy's [`gold.align`](/api/goldparse#align)
+helper returns a `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the
+number of misaligned tokens, the one-to-one mappings of token indices in both
+directions and the indices where multiple tokens align to one single token.
+
+> #### ✏️ Things to try
+>
+> 1. Change the capitalization in one of the token lists – for example,
+>    `"obama"` to `"Obama"`. You'll see that the alignment is case-insensitive.
+> 2. Change `"podcasts"` in `other_tokens` to `"pod", "casts"`. You should see
+>    that there are now 4 misaligned tokens and that the new many-to-one mapping
+>    is reflected in `a2b_multi`.
+> 3. Make `other_tokens` and `spacy_tokens` identical. You'll see that the
+>    `cost` is `0` and all corresponding mappings are also identical.
+
+```python
+### {executable="true"}
+from spacy.gold import align
+
+other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
+spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
+cost, a2b, b2a, a2b_multi, b2a_multi = align(other_tokens, spacy_tokens)
+print("Misaligned tokens:", cost)  # 2
+print("One-to-one mappings a -> b", a2b)  # array([0, 1, 2, 3, -1, -1, 5, 6])
+print("One-to-one mappings b -> a", b2a)  # array([0, 1, 2, 3, 5, 6, 7])
+print("Many-to-one mappings a -> b", a2b_multi)  # {4: 4, 5: 4}
+print("Many-to-one mappings b-> a", b2a_multi)  # {}
+```
+
+Here are some insights from the alignment information generated in the example
+above:
+
+- Two tokens are misaligned.
+- The one-to-one mappings for the first four tokens are identical, which means
+  they map to each other. This makes sense because they're also identical in the
+  input: `"i"`, `"listened"`, `"to"` and `"obama"`.
+- The index mapped to `a2b[6]` is `5`, which means that `other_tokens[6]`
+  (`"podcasts"`) aligns to `spacy_tokens[5]` (also `"podcasts"`).
+- `a2b[4]` is `-1`, which means that there is no one-to-one alignment for the
+  token at `other_tokens[4]`. The token `"'"` doesn't exist on its own in
+  `spacy_tokens`. The same goes for `a2b[5]` and `other_tokens[5]`, i.e. `"s"`.
+- The dictionary `a2b_multi` shows that both tokens 4 and 5 of `other_tokens`
+  (`"'"` and `"s"`) align to token 4 of `spacy_tokens` (`"'s"`).
+- The dictionary `b2a_multi` shows that there are no tokens in `spacy_tokens`
+  that map to multiple tokens in `other_tokens`.
+
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
+
 ## Merging and splitting {#retokenization new="2.1"}
 
 The [`Doc.retokenize`](/api/doc#retokenize) context manager lets you merge and
