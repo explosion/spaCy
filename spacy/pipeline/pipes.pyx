@@ -612,7 +612,7 @@ class Tagger(Pipe):
                 try:
                     self.model.from_bytes(file_.read())
                 except AttributeError:
-                    raise ValueError(Errors.E144)
+                    raise ValueError(Errors.E149)
 
         def load_tag_map(p):
             tag_map = srsly.read_msgpack(p)
