@@ -13,9 +13,17 @@ INPUT_DIM = 300  # dimension of pre-trained input vectors
 DESC_WIDTH = 64  # dimension of output entity vectors
 
 
-def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
-              entity_def_output, entity_descr_output,
-              count_input, prior_prob_input, wikidata_input):
+def create_kb(
+    nlp,
+    max_entities_per_alias,
+    min_entity_freq,
+    min_occ,
+    entity_def_output,
+    entity_descr_output,
+    count_input,
+    prior_prob_input,
+    wikidata_input,
+):
     # Create the knowledge base from Wikidata entries
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=DESC_WIDTH)
 
@@ -28,7 +36,9 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
         title_to_id, id_to_descr = wd.read_wikidata_entities_json(wikidata_input)
 
         # write the title-ID and ID-description mappings to file
-        _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_to_descr)
+        _write_entity_files(
+            entity_def_output, entity_descr_output, title_to_id, id_to_descr
+        )
 
     else:
         # read the mappings from file
@@ -54,8 +64,8 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
             frequency_list.append(freq)
             filtered_title_to_id[title] = entity
 
-    print("Kept", len(filtered_title_to_id.keys()), "out of", len(title_to_id.keys()),
-          "titles with filter frequency", min_entity_freq)
+    print(len(title_to_id.keys()), "original titles")
+    print("kept", len(filtered_title_to_id.keys()), " with frequency", min_entity_freq)
 
     print()
     print(" * train entity encoder", datetime.datetime.now())
@@ -70,14 +80,20 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
 
     print()
     print(" * adding", len(entity_list), "entities", datetime.datetime.now())
-    kb.set_entities(entity_list=entity_list, prob_list=frequency_list, vector_list=embeddings)
+    kb.set_entities(
+        entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings
+    )
 
     print()
     print(" * adding aliases", datetime.datetime.now())
     print()
-    _add_aliases(kb, title_to_id=filtered_title_to_id,
-                 max_entities_per_alias=max_entities_per_alias, min_occ=min_occ,
-                 prior_prob_input=prior_prob_input)
+    _add_aliases(
+        kb,
+        title_to_id=filtered_title_to_id,
+        max_entities_per_alias=max_entities_per_alias,
+        min_occ=min_occ,
+        prior_prob_input=prior_prob_input,
+    )
 
     print()
     print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
@@ -86,13 +102,15 @@ def create_kb(nlp, max_entities_per_alias, min_entity_freq, min_occ,
     return kb
 
 
-def _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_to_descr):
-    with open(entity_def_output, mode='w', encoding='utf8') as id_file:
+def _write_entity_files(
+    entity_def_output, entity_descr_output, title_to_id, id_to_descr
+):
+    with entity_def_output.open("w", encoding="utf8") as id_file:
         id_file.write("WP_title" + "|" + "WD_id" + "\n")
         for title, qid in title_to_id.items():
             id_file.write(title + "|" + str(qid) + "\n")
 
-    with open(entity_descr_output, mode='w', encoding='utf8') as descr_file:
+    with entity_descr_output.open("w", encoding="utf8") as descr_file:
         descr_file.write("WD_id" + "|" + "description" + "\n")
         for qid, descr in id_to_descr.items():
             descr_file.write(str(qid) + "|" + descr + "\n")
@@ -100,8 +118,8 @@ def _write_entity_files(entity_def_output, entity_descr_output, title_to_id, id_
 
 def get_entity_to_id(entity_def_output):
     entity_to_id = dict()
-    with open(entity_def_output, 'r', encoding='utf8') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='|')
+    with entity_def_output.open("r", encoding="utf8") as csvfile:
+        csvreader = csv.reader(csvfile, delimiter="|")
         # skip header
         next(csvreader)
         for row in csvreader:
@@ -111,8 +129,8 @@ def get_entity_to_id(entity_def_output):
 
 def get_id_to_description(entity_descr_output):
     id_to_desc = dict()
-    with open(entity_descr_output, 'r', encoding='utf8') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='|')
+    with entity_descr_output.open("r", encoding="utf8") as csvfile:
+        csvreader = csv.reader(csvfile, delimiter="|")
         # skip header
         next(csvreader)
         for row in csvreader:
@@ -125,7 +143,7 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
 
     # adding aliases with prior probabilities
     # we can read this file sequentially, it's sorted by alias, and then by count
-    with open(prior_prob_input, mode='r', encoding='utf8') as prior_file:
+    with prior_prob_input.open("r", encoding="utf8") as prior_file:
         # skip header
         prior_file.readline()
         line = prior_file.readline()
@@ -134,7 +152,7 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
         counts = []
         entities = []
         while line:
-            splits = line.replace('\n', "").split(sep='|')
+            splits = line.replace("\n", "").split(sep="|")
             new_alias = splits[0]
             count = int(splits[1])
             entity = splits[2]
@@ -153,7 +171,11 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
 
                     if selected_entities:
                         try:
-                            kb.add_alias(alias=previous_alias, entities=selected_entities, probabilities=prior_probs)
+                            kb.add_alias(
+                                alias=previous_alias,
+                                entities=selected_entities,
+                                probabilities=prior_probs,
+                            )
                         except ValueError as e:
                             print(e)
                 total_count = 0
@@ -168,4 +190,3 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
             previous_alias = new_alias
 
             line = prior_file.readline()
-

@@ -30,10 +30,10 @@ def test_serialize_kb_disk(en_vocab):
 def _get_dummy_kb(vocab):
     kb = KnowledgeBase(vocab=vocab, entity_vector_length=3)
 
-    kb.add_entity(entity='Q53', prob=0.33, entity_vector=[0, 5, 3])
-    kb.add_entity(entity='Q17', prob=0.2, entity_vector=[7, 1, 0])
-    kb.add_entity(entity='Q007', prob=0.7, entity_vector=[0, 0, 7])
-    kb.add_entity(entity='Q44', prob=0.4, entity_vector=[4, 4, 4])
+    kb.add_entity(entity='Q53', freq=0.33, entity_vector=[0, 5, 3])
+    kb.add_entity(entity='Q17', freq=0.2, entity_vector=[7, 1, 0])
+    kb.add_entity(entity='Q007', freq=0.7, entity_vector=[0, 0, 7])
+    kb.add_entity(entity='Q44', freq=0.4, entity_vector=[4, 4, 4])
 
     kb.add_alias(alias='double07', entities=['Q17', 'Q007'], probabilities=[0.1, 0.9])
     kb.add_alias(alias='guy', entities=['Q53', 'Q007', 'Q17', 'Q44'], probabilities=[0.3, 0.3, 0.2, 0.1])
