@@ -409,6 +409,10 @@ class Errors(object):
     E144 = ("Could not find parameter `{param}` when building the entity linker model.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
+    E147 = ("Unexpected error in the {method} functionality of the EntityLinker: {msg}. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
+    E148 = ("Expected {ents} KB identifiers but got {ids}. Make sure that each entity in `doc.ents` "
+            "is assigned to a KB identifier.")
 
 
 @add_codes
