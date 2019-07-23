@@ -207,7 +207,6 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#as_doc
         """
-        # TODO: Fix!
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
@@ -239,10 +238,12 @@ cdef class Span:
         return doc
 
     def _fix_dep_copy(self, attrs, array):
-        """ Rewire dependency links to try and make sure their heads fall into the span"""
+        """ Rewire dependency links to make sure their heads fall into the span
+        while still keeping the correct number of sentences. """
         cdef int length = len(array)
         cdef attr_t value
         cdef int i, head_col, ancestor_i
+        old_to_new_root = dict()
         if HEAD in attrs:
             head_col = attrs.index(HEAD)
             for i in range(length):
@@ -260,12 +261,17 @@ cdef class Span:
                         if ancestor_i in range(length):
                             array[i, head_col] = ancestor_i - i
 
-                # if we couldn't find a better ancestor, set its head to the span root
+                # if there is no appropriate ancestor, define a new artificial root
                 value = array[i, head_col]
                 if (i+value) not in range(length):
-                    span_root = self.root.i - self.start
-                    assert span_root in range(length)
-                    array[i, head_col] = span_root - i
+                    new_root = old_to_new_root.get(ancestor_i, None)
+                    if new_root is not None:
+                        # take the same artificial root as a previous token from the same sentence
+                        array[i, head_col] = new_root - i
+                    else:
+                        # set this token as the new artificial root
+                        array[i, head_col] = 0
+                        old_to_new_root[ancestor_i] = i
 
         return array
 
@@ -534,7 +540,7 @@ cdef class Span:
         if "root" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["root"](self)
         # This should probably be called 'head', and the other one called
-        # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
+        # 'gov'. But we went with 'head' elsewhere, and now we're stuck =/
         cdef int i
         # First, we scan through the Span, and check whether there's a word
         # with head==0, i.e. a sentence root. If so, we can return it. The

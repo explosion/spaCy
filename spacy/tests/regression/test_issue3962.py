@@ -35,17 +35,17 @@ def test_issue3962(doc):
     doc2_json = doc2.to_json()
     assert doc2_json
 
-    # We should still have 1 sentence
-    assert len(list(doc2.sents)) == 1
-
-    assert doc2[0].head.text == "jests"  # head set to itself
+    assert doc2[0].head.text == "jests"  # head set to itself, being the new artificial root
     assert doc2[0].dep_ == "dep"
     assert doc2[1].head.text == "jests"
     assert doc2[1].dep_ == "prep"
     assert doc2[2].head.text == "at"
     assert doc2[2].dep_ == "pobj"
-    assert doc2[3].head.text == "jests"  # head set to span root
+    assert doc2[3].head.text == "jests"  # head set to the new artificial root
     assert doc2[3].dep_ == "dep"
+
+    # We should still have 1 sentence
+    assert len(list(doc2.sents)) == 1
 
     span3 = doc[6:9]  # "never felt a"
     doc3 = span3.as_doc()
@@ -92,10 +92,7 @@ def test_issue3962_long(two_sent_doc):
     doc2_json = doc2.to_json()
     assert doc2_json
 
-    # We should still have 2 sentences - currently not the case because all is attached to "jests"
-    # assert len(list(doc2.sents)) == 2
-
-    assert doc2[0].head.text == "jests"  # head set to itself
+    assert doc2[0].head.text == "jests"  # head set to itself, being the new artificial root (in sentence 1)
     assert doc2[0].dep_ == "ROOT"
     assert doc2[1].head.text == "jests"
     assert doc2[1].dep_ == "prep"
@@ -103,7 +100,13 @@ def test_issue3962_long(two_sent_doc):
     assert doc2[2].dep_ == "pobj"
     assert doc2[3].head.text == "jests"
     assert doc2[3].dep_ == "punct"
-    assert doc2[4].head.text == "jests"  # head set to span root
+    assert doc2[4].head.text == "They"  # head set to itself, being the new artificial root (in sentence 2)
     assert doc2[4].dep_ == "dep"
-    assert doc2[4].head.text == "jests"  # head set to span root
+    assert doc2[4].head.text == "They"  # head set to the new artificial head (in sentence 2)
     assert doc2[4].dep_ == "dep"
+
+    # We should still have 2 sentences
+    sents = list(doc2.sents)
+    assert len(sents) == 2
+    assert sents[0].text == "jests at scars ."
+    assert sents[1].text == "They never"
