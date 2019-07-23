@@ -634,7 +634,7 @@ cdef class Parser:
             try:
                 self.model.from_bytes(bytes_data)
             except AttributeError:
-                raise ValueError(Errors.E144)
+                raise ValueError(Errors.E149)
             self.cfg.update(cfg)
         return self
 
