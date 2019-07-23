@@ -209,12 +209,10 @@ set.
 | `NE`      | `PROPN` |                                             | proper noun                                       |
 | `NNE`     | `PROPN` |                                             | proper noun                                       |
 | `NN`      | `NOUN`  |                                             | noun, singular or mass                            |
-| `PAV`     | `ADV`   | `PronType=dem`                              | pronominal adverb                                 |
 | `PROAV`   | `ADV`   | `PronType=dem`                              | pronominal adverb                                 |
 | `PDAT`    | `DET`   | `PronType=dem`                              | attributive demonstrative pronoun                 |
 | `PDS`     | `PRON`  | `PronType=dem`                              | substituting demonstrative pronoun                |
 | `PIAT`    | `DET`   | `PronType=ind\|neg\|tot`                    | attributive indefinite pronoun without determiner |
-| `PIDAT`   | `DET`   | `AdjType=pdt PronType=ind\|neg\|tot`        | attributive indefinite pronoun with determiner    |
 | `PIS`     | `PRON`  | `PronType=ind\|neg\|tot`                    | substituting indefinite pronoun                   |
 | `PPER`    | `PRON`  | `PronType=prs`                              | non-reflexive personal pronoun                    |
 | `PPOSAT`  | `DET`   | `Poss=yes PronType=prs`                     | attributive possessive pronoun                    |
@@ -226,7 +224,7 @@ set.
 | `PTKANT`  | `PART`  | `PartType=res`                              | answer particle                                   |
 | `PTKNEG`  | `PART`  | `Negative=yes`                              | negative particle                                 |
 | `PTKVZ`   | `PART`  | `PartType=vbp`                              | separable verbal particle                         |
-| `PTKZU`   | `PART`  | `PartType=inf" | "zu" before infinitive     |
+| `PTKZU`   | `PART`  | `PartType=inf`  | "zu" before infinitive    |
 | `PWAT`    | `DET`   | `PronType=int`                              | attributive interrogative pronoun                 |
 | `PWAV`    | `ADV`   | `PronType=int`                              | adverbial interrogative or relative pronoun       |
 | `PWS`     | `PRON`  | `PronType=int`                              | substituting interrogative pronoun                |
@@ -241,7 +239,7 @@ set.
 | `VVFIN`   | `VERB`  | `Mood=ind VerbForm=fin`                     | finite verb, full                                 |
 | `VVIMP`   | `VERB`  | `Mood=imp VerbForm=fin`                     | imperative, full                                  |
 | `VVINF`   | `VERB`  | `VerbForm=inf`                              | infinitive, full                                  |
-| `VVIZU`   | `VERB`  | `VerbForm=inf" | infinitive with "zu", full |
+| `VVIZU`   | `VERB`  | `VerbForm=inf`  | infinitive with "zu", full |
 | `VVPP`    | `VERB`  | `Aspect=perf VerbForm=part`                 | perfect participle, full                          |
 | `XY`      | `X`     |                                             | non-word containing non-letter                    |
 | `SP`      | `SPACE` |                                             | space                                             |
@@ -396,10 +394,8 @@ annotation scheme.
 | `cp`   | complementizer                  |
 | `cvc`  | collocational verb construction |
 | `da`   | dative                          |
-| `dh`   | discourse-level head            |
 | `dm`   | discourse marker                |
 | `ep`   | expletive es                    |
-| `hd`   | head                            |
 | `ju`   | junctor                         |
 | `mnr`  | postnominal modifier            |
 | `mo`   | modifier                        |
@@ -407,7 +403,7 @@ annotation scheme.
 | `nk`   | noun kernel element             |
 | `nmc`  | numerical component             |
 | `oa`   | accusative object               |
-| `oa`   | second accusative object        |
+| `oa2`  | second accusative object        |
 | `oc`   | clausal object                  |
 | `og`   | genitive object                 |
 | `op`   | prepositional object            |
@@ -417,11 +413,13 @@ annotation scheme.
 | `ph`   | placeholder                     |
 | `pm`   | morphological particle          |
 | `pnc`  | proper noun component           |
+| `punct` | punctuation                    |
 | `rc`   | relative clause                 |
 | `re`   | repeated element                |
 | `rs`   | reported speech                 |
 | `sb`   | subject                         |
-| `sp`   | "subject or predicate           |
+| `sbp`  | passivized subject (PP)         |
+| `sp`   | subject or predicate            |
 | `svp`  | separable verb prefix           |
 | `uc`   | unit component                  |
 | `vo`   | vocative                        |

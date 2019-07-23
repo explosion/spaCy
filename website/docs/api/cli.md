@@ -86,11 +86,11 @@ generate [Markdown](https://en.wikipedia.org/wiki/Markdown)-formatted markup to
 copy-paste into [GitHub issues](https://github.com/explosion/spaCy/issues).
 
 ```bash
-$ python -m spacy info [--markdown]
+$ python -m spacy info [--markdown] [--silent]
 ```
 
 ```bash
-$ python -m spacy info [model] [--markdown]
+$ python -m spacy info [model] [--markdown] [--silent]
 ```
 
 | Argument                                         | Type       | Description                                                   |
@@ -422,6 +422,7 @@ pip install dist/en_model-0.0.0.tar.gz
 | `input_dir`                                      | positional | Path to directory containing model data.                                                                                                                                                        |
 | `output_dir`                                     | positional | Directory to create package folder in.                                                                                                                                                          |
 | `--meta-path`, `-m` <Tag variant="new">2</Tag>   | option     | Path to `meta.json` file (optional).                                                                                                                                                            |
-| `--create-meta`, `-c` <Tag variant="new">2</Tag> | flag       | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. | `--force`, `-f` | flag | Force overwriting of existing folder in output directory. |
+| `--create-meta`, `-c` <Tag variant="new">2</Tag> | flag       | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt.
+| `--force`, `-f`                                  | flag       | Force overwriting of existing folder in output directory. |
 | `--help`, `-h`                                   | flag       | Show help message and available arguments.                                                                                                                                                      |
 | **CREATES**                                      | directory  | A Python package containing the spaCy model.                                                                                                                                                    |

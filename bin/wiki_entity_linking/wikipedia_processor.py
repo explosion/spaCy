@@ -14,22 +14,97 @@ Write these results to file for downstream KB and training data generation.
 map_alias_to_link = dict()
 
 # these will/should be matched ignoring case
-wiki_namespaces = ["b", "betawikiversity", "Book", "c", "Category", "Commons",
-                   "d", "dbdump", "download", "Draft", "Education", "Foundation",
-                   "Gadget", "Gadget definition", "gerrit", "File", "Help", "Image", "Incubator",
-                   "m", "mail", "mailarchive", "media", "MediaWiki", "MediaWiki talk", "Mediawikiwiki",
-                   "MediaZilla", "Meta", "Metawikipedia", "Module",
-                   "mw", "n", "nost", "oldwikisource", "outreach", "outreachwiki", "otrs", "OTRSwiki",
-                   "Portal", "phab", "Phabricator", "Project", "q", "quality", "rev",
-                   "s", "spcom", "Special", "species", "Strategy", "sulutil", "svn",
-                   "Talk", "Template", "Template talk", "Testwiki", "ticket", "TimedText", "Toollabs", "tools",
-                   "tswiki", "User", "User talk", "v", "voy",
-                   "w", "Wikibooks", "Wikidata", "wikiHow", "Wikinvest", "wikilivres", "Wikimedia", "Wikinews",
-                   "Wikipedia", "Wikipedia talk", "Wikiquote", "Wikisource", "Wikispecies", "Wikitech",
-                   "Wikiversity", "Wikivoyage", "wikt", "wiktionary", "wmf", "wmania", "WP"]
+wiki_namespaces = [
+    "b",
+    "betawikiversity",
+    "Book",
+    "c",
+    "Category",
+    "Commons",
+    "d",
+    "dbdump",
+    "download",
+    "Draft",
+    "Education",
+    "Foundation",
+    "Gadget",
+    "Gadget definition",
+    "gerrit",
+    "File",
+    "Help",
+    "Image",
+    "Incubator",
+    "m",
+    "mail",
+    "mailarchive",
+    "media",
+    "MediaWiki",
+    "MediaWiki talk",
+    "Mediawikiwiki",
+    "MediaZilla",
+    "Meta",
+    "Metawikipedia",
+    "Module",
+    "mw",
+    "n",
+    "nost",
+    "oldwikisource",
+    "outreach",
+    "outreachwiki",
+    "otrs",
+    "OTRSwiki",
+    "Portal",
+    "phab",
+    "Phabricator",
+    "Project",
+    "q",
+    "quality",
+    "rev",
+    "s",
+    "spcom",
+    "Special",
+    "species",
+    "Strategy",
+    "sulutil",
+    "svn",
+    "Talk",
+    "Template",
+    "Template talk",
+    "Testwiki",
+    "ticket",
+    "TimedText",
+    "Toollabs",
+    "tools",
+    "tswiki",
+    "User",
+    "User talk",
+    "v",
+    "voy",
+    "w",
+    "Wikibooks",
+    "Wikidata",
+    "wikiHow",
+    "Wikinvest",
+    "wikilivres",
+    "Wikimedia",
+    "Wikinews",
+    "Wikipedia",
+    "Wikipedia talk",
+    "Wikiquote",
+    "Wikisource",
+    "Wikispecies",
+    "Wikitech",
+    "Wikiversity",
+    "Wikivoyage",
+    "wikt",
+    "wiktionary",
+    "wmf",
+    "wmania",
+    "WP",
+]
 
 # find the links
-link_regex = re.compile(r'\[\[[^\[\]]*\]\]')
+link_regex = re.compile(r"\[\[[^\[\]]*\]\]")
 
 # match on interwiki links, e.g. `en:` or `:fr:`
 ns_regex = r":?" + "[a-z][a-z]" + ":"
@@ -41,18 +116,22 @@ for ns in wiki_namespaces:
 ns_regex = re.compile(ns_regex, re.IGNORECASE)
 
 
-def read_wikipedia_prior_probs(wikipedia_input, prior_prob_output):
+def now():
+    return datetime.datetime.now()
+
+
+def read_prior_probs(wikipedia_input, prior_prob_output):
     """
     Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities.
     The full file takes about 2h to parse 1100M lines.
     It works relatively fast because it runs line by line, irrelevant of which article the intrawiki is from.
     """
-    with bz2.open(wikipedia_input, mode='rb') as file:
+    with bz2.open(wikipedia_input, mode="rb") as file:
         line = file.readline()
         cnt = 0
         while line:
             if cnt % 5000000 == 0:
-                print(datetime.datetime.now(), "processed", cnt, "lines of Wikipedia dump")
+                print(now(), "processed", cnt, "lines of Wikipedia dump")
             clean_line = line.strip().decode("utf-8")
 
             aliases, entities, normalizations = get_wp_links(clean_line)
@@ -64,10 +143,11 @@ def read_wikipedia_prior_probs(wikipedia_input, prior_prob_output):
             cnt += 1
 
     # write all aliases and their entities and count occurrences to file
-    with open(prior_prob_output, mode='w', encoding='utf8') as outputfile:
+    with prior_prob_output.open("w", encoding="utf8") as outputfile:
         outputfile.write("alias" + "|" + "count" + "|" + "entity" + "\n")
         for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
-            for entity, count in sorted(alias_dict.items(), key=lambda x: x[1], reverse=True):
+            s_dict = sorted(alias_dict.items(), key=lambda x: x[1], reverse=True)
+            for entity, count in s_dict:
                 outputfile.write(alias + "|" + str(count) + "|" + entity + "\n")
 
 
@@ -140,13 +220,13 @@ def write_entity_counts(prior_prob_input, count_output, to_print=False):
     entity_to_count = dict()
     total_count = 0
 
-    with open(prior_prob_input, mode='r', encoding='utf8') as prior_file:
+    with prior_prob_input.open("r", encoding="utf8") as prior_file:
         # skip header
         prior_file.readline()
         line = prior_file.readline()
 
         while line:
-            splits = line.replace('\n', "").split(sep='|')
+            splits = line.replace("\n", "").split(sep="|")
             # alias = splits[0]
             count = int(splits[1])
             entity = splits[2]
@@ -158,7 +238,7 @@ def write_entity_counts(prior_prob_input, count_output, to_print=False):
 
             line = prior_file.readline()
 
-    with open(count_output, mode='w', encoding='utf8') as entity_file:
+    with count_output.open("w", encoding="utf8") as entity_file:
         entity_file.write("entity" + "|" + "count" + "\n")
         for entity, count in entity_to_count.items():
             entity_file.write(entity + "|" + str(count) + "\n")
@@ -171,12 +251,11 @@ def write_entity_counts(prior_prob_input, count_output, to_print=False):
 
 def get_all_frequencies(count_input):
     entity_to_count = dict()
-    with open(count_input, 'r', encoding='utf8') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='|')
+    with count_input.open("r", encoding="utf8") as csvfile:
+        csvreader = csv.reader(csvfile, delimiter="|")
         # skip header
         next(csvreader)
         for row in csvreader:
             entity_to_count[row[0]] = int(row[1])
 
     return entity_to_count
-
