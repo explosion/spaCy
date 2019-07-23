@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import os
 import random
 import re
 import bz2
@@ -37,7 +36,7 @@ def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=N
 
     read_ids = set()
     entityfile_loc = training_output / ENTITY_FILE
-    with open(entityfile_loc, mode="w", encoding="utf8") as entityfile:
+    with entityfile_loc.open("w", encoding="utf8") as entityfile:
         # write entity training header file
         _write_training_entity(
             outputfile=entityfile,
@@ -301,8 +300,8 @@ def _get_clean_wp_text(article_text):
 
 
 def _write_training_article(article_id, clean_text, training_output):
-    file_loc = training_output / str(article_id) + ".txt"
-    with open(file_loc, mode="w", encoding="utf8") as outputfile:
+    file_loc = training_output / "{}.txt".format(article_id)
+    with file_loc.open("w", encoding="utf8") as outputfile:
         outputfile.write(clean_text)
 
 
@@ -330,7 +329,7 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
     skip_articles = set()
     total_entities = 0
 
-    with open(entityfile_loc, mode="r", encoding="utf8") as file:
+    with entityfile_loc.open("r", encoding="utf8") as file:
         for line in file:
             if not limit or len(data) < limit:
                 fields = line.replace("\n", "").split(sep="|")
@@ -349,11 +348,8 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                         # parse the new article text
                         file_name = article_id + ".txt"
                         try:
-                            with open(
-                                os.path.join(training_dir, file_name),
-                                mode="r",
-                                encoding="utf8",
-                            ) as f:
+                            training_file = training_dir / file_name
+                            with training_file.open("r", encoding="utf8") as f:
                                 text = f.read()
                                 # threshold for convenience / speed of processing
                                 if len(text) < 30000:
@@ -364,7 +360,9 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                         sent_length = len(ent.sent)
                                         # custom filtering to avoid too long or too short sentences
                                         if 5 < sent_length < 100:
-                                            offset = "{}_{}".format(ent.start_char, ent.end_char)
+                                            offset = "{}_{}".format(
+                                                ent.start_char, ent.end_char
+                                            )
                                             ents_by_offset[offset] = ent
                                 else:
                                     skip_articles.add(article_id)
