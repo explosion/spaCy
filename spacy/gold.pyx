@@ -647,7 +647,7 @@ def docs_to_json(docs, id=0):
                 json_sent["tokens"].append(json_token)
             json_para["sentences"].append(json_sent)
         json_doc["paragraphs"].append(json_para)
-    return json_doc
+    return [json_doc]
 
 
 def biluo_tags_from_offsets(doc, entities, missing="O"):

@@ -1,8 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import srsly
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, GoldParse
+from spacy.gold import GoldCorpus, docs_to_json
+from spacy.lang.en import English
 from spacy.tokens import Doc
 
 
@@ -68,3 +71,23 @@ def test_gold_ner_missing_tags(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = [None, "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     gold = GoldParse(doc, entities=biluo_tags)  # noqa: F841
+
+
+def test_docs_to_json_roundtrip(tmpdir):
+    text = "I flew to Silicon Valley via London."
+    nlp = English()
+    doc = nlp(text)
+    doc[0].is_sent_start = True
+    for i in range(1, len(doc)):
+        doc[i].is_sent_start = False
+
+    json_str = srsly.json_dumps(docs_to_json(doc))
+    json_file = tmpdir.mkdir("docs_to_json_roundtrip").join("flew.json")
+    with open(json_file, "w") as fileh:
+        fileh.write(json_str)
+
+    goldcorpus = GoldCorpus(str(json_file), str(json_file))
+    (reloaded_doc, goldparse) = next(goldcorpus.train_docs(nlp))
+
+    assert goldcorpus.count_train() == len(doc)
+    assert text == reloaded_doc.text
