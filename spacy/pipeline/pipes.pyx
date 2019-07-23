@@ -170,7 +170,7 @@ class Pipe(object):
             try:
                 self.model.from_bytes(b)
             except AttributeError:
-                raise ValueError(Errors.E144)
+                raise ValueError(Errors.E149)
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
