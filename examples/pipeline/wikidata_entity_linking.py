@@ -333,7 +333,7 @@ def _measure_acc(data, el_pipe=None, error_analysis=False):
                 # only evaluating on positive examples
                 for gold_kb, value in kb_dict.items():
                     if value:
-                        offset = str(start) + "-" + str(end)
+                        offset = _offset(start, end)
                         correct_entries_per_article[offset] = gold_kb
 
             for ent in doc.ents:
@@ -341,7 +341,7 @@ def _measure_acc(data, el_pipe=None, error_analysis=False):
                 pred_entity = ent.kb_id_
                 start = ent.start_char
                 end = ent.end_char
-                offset = str(start) + "-" + str(end)
+                offset = _offset(start, end)
                 gold_entity = correct_entries_per_article.get(offset, None)
                 # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
                 if gold_entity is not None:
@@ -392,14 +392,14 @@ def _measure_baselines(data, kb):
                 for gold_kb, value in kb_dict.items():
                     # only evaluating on positive examples
                     if value:
-                        offset = str(start) + "-" + str(end)
+                        offset = _offset(start, end)
                         correct_entries_per_article[offset] = gold_kb
 
             for ent in doc.ents:
                 label = ent.label_
                 start = ent.start_char
                 end = ent.end_char
-                offset = str(start) + "-" + str(end)
+                offset = _offset(start, end)
                 gold_entity = correct_entries_per_article.get(offset, None)
 
                 # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
@@ -452,6 +452,10 @@ def _measure_baselines(data, kb):
         acc_oracle,
         acc_oracle_d,
     )
+
+
+def _offset(start, end):
+    return "{}_{}".format(start, end)
 
 
 def calculate_acc(correct_by_label, incorrect_by_label):

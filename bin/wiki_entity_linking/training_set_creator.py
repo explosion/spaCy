@@ -364,11 +364,8 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
                                         sent_length = len(ent.sent)
                                         # custom filtering to avoid too long or too short sentences
                                         if 5 < sent_length < 100:
-                                            ents_by_offset[
-                                                str(ent.start_char)
-                                                + "_"
-                                                + str(ent.end_char)
-                                            ] = ent
+                                            offset = "{}_{}".format(ent.start_char, ent.end_char)
+                                            ents_by_offset[offset] = ent
                                 else:
                                     skip_articles.add(article_id)
                                     current_doc = None
@@ -378,7 +375,8 @@ def read_training(nlp, training_dir, dev, limit, kb=None):
 
                     # repeat checking this condition in case an exception was thrown
                     if current_doc and (current_article_id == article_id):
-                        found_ent = ents_by_offset.get(start + "_" + end, None)
+                        offset = "{}_{}".format(start, end)
+                        found_ent = ents_by_offset.get(offset, None)
                         if found_ent:
                             if found_ent.text != alias:
                                 skip_articles.add(article_id)
