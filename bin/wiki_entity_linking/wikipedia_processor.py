@@ -143,7 +143,7 @@ def read_prior_probs(wikipedia_input, prior_prob_output):
             cnt += 1
 
     # write all aliases and their entities and count occurrences to file
-    with open(prior_prob_output, mode="w", encoding="utf8") as outputfile:
+    with prior_prob_output.open("w", encoding="utf8") as outputfile:
         outputfile.write("alias" + "|" + "count" + "|" + "entity" + "\n")
         for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
             s_dict = sorted(alias_dict.items(), key=lambda x: x[1], reverse=True)
@@ -220,7 +220,7 @@ def write_entity_counts(prior_prob_input, count_output, to_print=False):
     entity_to_count = dict()
     total_count = 0
 
-    with open(prior_prob_input, mode="r", encoding="utf8") as prior_file:
+    with prior_prob_input.open("r", encoding="utf8") as prior_file:
         # skip header
         prior_file.readline()
         line = prior_file.readline()
@@ -238,7 +238,7 @@ def write_entity_counts(prior_prob_input, count_output, to_print=False):
 
             line = prior_file.readline()
 
-    with open(count_output, mode="w", encoding="utf8") as entity_file:
+    with count_output.open("w", encoding="utf8") as entity_file:
         entity_file.write("entity" + "|" + "count" + "\n")
         for entity, count in entity_to_count.items():
             entity_file.write(entity + "|" + str(count) + "\n")
@@ -251,7 +251,7 @@ def write_entity_counts(prior_prob_input, count_output, to_print=False):
 
 def get_all_frequencies(count_input):
     entity_to_count = dict()
-    with open(count_input, "r", encoding="utf8") as csvfile:
+    with count_input.open("r", encoding="utf8") as csvfile:
         csvreader = csv.reader(csvfile, delimiter="|")
         # skip header
         next(csvreader)
