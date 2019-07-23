@@ -1332,7 +1332,7 @@ class EntityLinker(Pipe):
             try: 
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
-                raise ValueError(Errors.E144)
+                raise ValueError(Errors.E149)
 
         def load_kb(p):
             kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=self.cfg["entity_width"])
