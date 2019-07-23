@@ -1237,7 +1237,7 @@ class EntityLinker(Pipe):
         final_tensors = []
 
         if not docs:
-            return final_kb_ids
+            return final_kb_ids, final_tensors
 
         if isinstance(docs, Doc):
             docs = [docs]
