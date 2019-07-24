@@ -7,6 +7,7 @@ from spacy.gold import spans_from_biluo_tags, GoldParse
 from spacy.gold import GoldCorpus, docs_to_json
 from spacy.lang.en import English
 from spacy.tokens import Doc
+from .util import make_tempdir
 
 
 def test_gold_biluo_U(en_vocab):
@@ -81,12 +82,12 @@ def test_docs_to_json_roundtrip(tmpdir):
     for i in range(1, len(doc)):
         doc[i].is_sent_start = False
 
-    json_str = srsly.json_dumps(docs_to_json(doc))
-    json_file = tmpdir.mkdir("docs_to_json_roundtrip").join("flew.json")
-    with open(json_file, "w") as fileh:
-        fileh.write(json_str)
+    with make_tempdir() as tmpdir:
+        json_file = tmpdir / "flew.json"
+        srsly.write_json(json_file, docs_to_json(doc))
 
-    goldcorpus = GoldCorpus(str(json_file), str(json_file))
+        goldcorpus = GoldCorpus(json_file, json_file)
+
     (reloaded_doc, goldparse) = next(goldcorpus.train_docs(nlp))
 
     assert goldcorpus.count_train() == len(doc)
