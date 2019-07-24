@@ -413,7 +413,8 @@ class Errors(object):
             "This is likely a bug in spaCy, so feel free to open an issue.")
     E148 = ("Expected {ents} KB identifiers but got {ids}. Make sure that each entity in `doc.ents` "
             "is assigned to a KB identifier.")
-
+    E149 = ("Error deserializing model. Check that the config used to create the "
+            "component matches the model being loaded.")
 
 @add_codes
 class TempErrors(object):

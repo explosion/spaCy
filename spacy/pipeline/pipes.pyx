@@ -167,7 +167,10 @@ class Pipe(object):
                 self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            self.model.from_bytes(b)
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
@@ -196,7 +199,10 @@ class Pipe(object):
                 self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            self.model.from_bytes(p.open("rb").read())
+            try:
+                self.model.from_bytes(p.open("rb").read())
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
@@ -562,7 +568,10 @@ class Tagger(Pipe):
                     "token_vector_width",
                     self.cfg.get("token_vector_width", 96))
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
-            self.model.from_bytes(b)
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         def load_tag_map(b):
             tag_map = srsly.msgpack_loads(b)
@@ -600,7 +609,10 @@ class Tagger(Pipe):
             if self.model is True:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             with p.open("rb") as file_:
-                self.model.from_bytes(file_.read())
+                try:
+                    self.model.from_bytes(file_.read())
+                except AttributeError:
+                    raise ValueError(Errors.E149)
 
         def load_tag_map(p):
             tag_map = srsly.read_msgpack(p)
@@ -1315,9 +1327,12 @@ class EntityLinker(Pipe):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-             if self.model is True:
+            if self.model is True:
                 self.model = self.Model(**self.cfg)
-             self.model.from_bytes(p.open("rb").read())
+            try: 
+                self.model.from_bytes(p.open("rb").read())
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         def load_kb(p):
             kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=self.cfg["entity_width"])

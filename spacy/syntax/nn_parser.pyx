@@ -631,7 +631,10 @@ cdef class Parser:
                 cfg = {}
             with (path / 'model').open('rb') as file_:
                 bytes_data = file_.read()
-            self.model.from_bytes(bytes_data)
+            try:
+                self.model.from_bytes(bytes_data)
+            except AttributeError:
+                raise ValueError(Errors.E149)
             self.cfg.update(cfg)
         return self
 
@@ -663,6 +666,9 @@ cdef class Parser:
             else:
                 cfg = {}
             if 'model' in msg:
-                self.model.from_bytes(msg['model'])
+                try:
+                    self.model.from_bytes(msg['model'])
+                except AttributeError:
+                    raise ValueError(Errors.E149)
             self.cfg.update(cfg)
         return self
