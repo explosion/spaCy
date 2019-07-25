@@ -45,10 +45,11 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 | Name                              | Type | Description                                                                                                                                              |
 | --------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `words`                           | list | The words.                                                                                                                                               |
 | `tags`                            | list | The part-of-speech tag annotations.                                                                                                                      |
 | `heads`                           | list | The syntactic head annotations.                                                                                                                          |
 | `labels`                          | list | The syntactic relation-type annotations.                                                                                                                 |
-| `ents`                            | list | The named entity annotations.                                                                                                                            |
+| `ner`                             | list | The named entity annotations as BILUO tags.                                                                                                              |
 | `cand_to_gold`                    | list | The alignment from candidate tokenization to gold tokenization.                                                                                          |
 | `gold_to_cand`                    | list | The alignment from gold tokenization to candidate tokenization.                                                                                          |
 | `cats` <Tag variant="new">2</Tag> | list | Entries in the list should be either a label, or a `(start, end, label)` triple. The tuple form is used for categories applied to spans of the document. |
