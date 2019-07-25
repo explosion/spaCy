@@ -51,12 +51,15 @@ def try_mecab_import():
 
 
 def check_spaces(text, tokens):
-    token_pattern = re.compile(r"\s?".join(f"({t})" for t in tokens))
-    m = token_pattern.match(text)
-    if m is not None:
-        for i in range(1, m.lastindex):
-            yield m.end(i) < m.start(i + 1)
-        yield False
+    prev_end = -1
+    start = 0
+    for token in tokens:
+        idx = text.find(token, start)
+        if prev_end > 0:
+            yield prev_end != idx
+        prev_end = idx + len(token)
+        start = prev_end
+    yield False
 
 
 class KoreanTokenizer(DummyTokenizer):
