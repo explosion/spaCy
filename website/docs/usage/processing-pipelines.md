@@ -182,8 +182,8 @@ initializing a Language class via [`from_disk`](/api/language#from_disk).
 - nlp = spacy.load('en', tagger=False, entity=False)
 - doc = nlp(u"I don't want parsed", parse=False)
 
-+ nlp = spacy.load('en', disable=['ner'])
-+ nlp.remove_pipe('parser')
++ nlp = spacy.load("en", disable=["ner"])
++ nlp.remove_pipe("parser")
 + doc = nlp(u"I don't want parsed")
 ```
 
