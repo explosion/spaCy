@@ -14,7 +14,6 @@ from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
 from spacy.kb import KnowledgeBase
-from ..cli.pretrain import get_cossim_loss
 from .functions import merge_subtokens
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
@@ -168,7 +167,10 @@ class Pipe(object):
                 self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            self.model.from_bytes(b)
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
@@ -197,7 +199,10 @@ class Pipe(object):
                 self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            self.model.from_bytes(p.open("rb").read())
+            try:
+                self.model.from_bytes(p.open("rb").read())
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
@@ -563,7 +568,10 @@ class Tagger(Pipe):
                     "token_vector_width",
                     self.cfg.get("token_vector_width", 96))
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
-            self.model.from_bytes(b)
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         def load_tag_map(b):
             tag_map = srsly.msgpack_loads(b)
@@ -601,7 +609,10 @@ class Tagger(Pipe):
             if self.model is True:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             with p.open("rb") as file_:
-                self.model.from_bytes(file_.read())
+                try:
+                    self.model.from_bytes(file_.read())
+                except AttributeError:
+                    raise ValueError(Errors.E149)
 
         def load_tag_map(p):
             tag_map = srsly.read_msgpack(p)
@@ -1077,6 +1088,7 @@ class EntityLinker(Pipe):
     DOCS: TODO
     """
     name = 'entity_linker'
+    NIL = "NIL"  # string used to refer to a non-existing link
 
     @classmethod
     def Model(cls, **cfg):
@@ -1093,6 +1105,8 @@ class EntityLinker(Pipe):
         self.kb = None
         self.cfg = dict(cfg)
         self.sgd_context = None
+        if not self.cfg.get("context_width"):
+            self.cfg["context_width"] = 128
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1140,7 +1154,7 @@ class EntityLinker(Pipe):
 
         context_docs = []
         entity_encodings = []
-        cats = []
+
         priors = []
         type_vectors = []
 
@@ -1149,50 +1163,44 @@ class EntityLinker(Pipe):
         for doc, gold in zip(docs, golds):
             ents_by_offset = dict()
             for ent in doc.ents:
-                ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)] = ent
-            for entity in gold.links:
-                start, end, gold_kb = entity
+                ents_by_offset["{}_{}".format(ent.start_char, ent.end_char)] = ent
+            for entity, kb_dict in gold.links.items():
+                start, end = entity
                 mention = doc.text[start:end]
+                for kb_id, value in kb_dict.items():
+                    entity_encoding = self.kb.get_vector(kb_id)
+                    prior_prob = self.kb.get_prior_prob(kb_id, mention)
 
-                gold_ent = ents_by_offset[str(ent.start_char) + "_" + str(ent.end_char)]
-                assert gold_ent is not None
-                type_vector = [0 for i in range(len(type_to_int))]
-                if len(type_to_int) > 0:
-                    type_vector[type_to_int[gold_ent.label_]] = 1
+                    gold_ent = ents_by_offset["{}_{}".format(start, end)]
+                    if gold_ent is None:
+                        raise RuntimeError(Errors.E147.format(method="update", msg="gold entity not found"))
 
-                candidates = self.kb.get_candidates(mention)
-                random.shuffle(candidates)
-                nr_neg = 0
-                for c in candidates:
-                    kb_id = c.entity_
-                    entity_encoding = c.entity_vector
+                    type_vector = [0 for i in range(len(type_to_int))]
+                    if len(type_to_int) > 0:
+                        type_vector[type_to_int[gold_ent.label_]] = 1
+
+                    # store data
                     entity_encodings.append(entity_encoding)
                     context_docs.append(doc)
                     type_vectors.append(type_vector)
 
                     if self.cfg.get("prior_weight", 1) > 0:
-                        priors.append([c.prior_prob])
+                        priors.append([prior_prob])
                     else:
                         priors.append([0])
 
-                    if kb_id == gold_kb:
-                        cats.append([1])
-                    else:
-                        nr_neg += 1
-                        cats.append([0])
-
         if len(entity_encodings) > 0:
-            assert len(priors) == len(entity_encodings) == len(context_docs) == len(cats) == len(type_vectors)
+            if not (len(priors) == len(entity_encodings) == len(context_docs) == len(type_vectors)):
+                raise RuntimeError(Errors.E147.format(method="update", msg="vector lengths not equal"))
 
-            context_encodings, bp_context = self.model.tok2vec.begin_update(context_docs, drop=drop)
             entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
+            context_encodings, bp_context = self.model.tok2vec.begin_update(context_docs, drop=drop)
             mention_encodings = [list(context_encodings[i]) + list(entity_encodings[i]) + priors[i] + type_vectors[i]
                                  for i in range(len(entity_encodings))]
             pred, bp_mention = self.model.begin_update(self.model.ops.asarray(mention_encodings, dtype="float32"), drop=drop)
-            cats = self.model.ops.asarray(cats, dtype="float32")
 
-            loss, d_scores = self.get_loss(prediction=pred, golds=cats, docs=None)
+            loss, d_scores = self.get_loss(scores=pred, golds=golds, docs=docs)
             mention_gradient = bp_mention(d_scores, sgd=sgd)
 
             context_gradients = [list(x[0:self.cfg.get("context_width")]) for x in mention_gradient]
@@ -1203,39 +1211,45 @@ class EntityLinker(Pipe):
             return loss
         return 0
 
-    def get_loss(self, docs, golds, prediction):
-        d_scores = (prediction - golds)
+    def get_loss(self, docs, golds, scores):
+        cats = []
+        for gold in golds:
+            for entity, kb_dict in gold.links.items():
+                for kb_id, value in kb_dict.items():
+                    cats.append([value])
+
+        cats = self.model.ops.asarray(cats, dtype="float32")
+        if len(scores) != len(cats):
+            raise RuntimeError(Errors.E147.format(method="get_loss", msg="gold entities do not match up"))
+
+        d_scores = (scores - cats)
         loss = (d_scores ** 2).sum()
-        loss = loss / len(golds)
+        loss = loss / len(cats)
         return loss, d_scores
 
-    def get_loss_old(self, docs, golds, scores):
-        # this loss function assumes we're only using positive examples
-        loss, gradients = get_cossim_loss(yh=scores, y=golds)
-        loss = loss / len(golds)
-        return loss, gradients
-
     def __call__(self, doc):
-        entities, kb_ids = self.predict([doc])
-        self.set_annotations([doc], entities, kb_ids)
+        kb_ids, tensors = self.predict([doc])
+        self.set_annotations([doc], kb_ids, tensors=tensors)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
-            entities, kb_ids = self.predict(docs)
-            self.set_annotations(docs, entities, kb_ids)
+            kb_ids, tensors = self.predict(docs)
+            self.set_annotations(docs, kb_ids, tensors=tensors)
             yield from docs
 
     def predict(self, docs):
+        """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
         self.require_model()
         self.require_kb()
 
-        final_entities = []
+        entity_count = 0
         final_kb_ids = []
+        final_tensors = []
 
         if not docs:
-            return final_entities, final_kb_ids
+            return final_kb_ids, final_tensors
 
         if isinstance(docs, Doc):
             docs = [docs]
@@ -1247,14 +1261,19 @@ class EntityLinker(Pipe):
 
         for i, doc in enumerate(docs):
             if len(doc) > 0:
+                # currently, the context is the same for each entity in a sentence (should be refined)
                 context_encoding = context_encodings[i]
                 for ent in doc.ents:
+                    entity_count += 1
                     type_vector = [0 for i in range(len(type_to_int))]
                     if len(type_to_int) > 0:
                         type_vector[type_to_int[ent.label_]] = 1
 
                     candidates = self.kb.get_candidates(ent.text)
-                    if candidates:
+                    if not candidates:
+                        final_kb_ids.append(self.NIL)  # no prediction possible for this entity
+                        final_tensors.append(context_encoding)
+                    else:
                         random.shuffle(candidates)
 
                         # this will set the prior probabilities to 0 (just like in training) if their weight is 0
@@ -1264,7 +1283,9 @@ class EntityLinker(Pipe):
 
                         if self.cfg.get("context_weight", 1) > 0:
                             entity_encodings = xp.asarray([c.entity_vector for c in candidates])
-                            assert len(entity_encodings) == len(prior_probs)
+                            if len(entity_encodings) != len(prior_probs):
+                                raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+
                             mention_encodings = [list(context_encoding) + list(entity_encodings[i])
                                                  + list(prior_probs[i]) + type_vector
                                                  for i in range(len(entity_encodings))]
@@ -1273,15 +1294,26 @@ class EntityLinker(Pipe):
                         # TODO: thresholding
                         best_index = scores.argmax()
                         best_candidate = candidates[best_index]
-                        final_entities.append(ent)
                         final_kb_ids.append(best_candidate.entity_)
+                        final_tensors.append(context_encoding)
 
-        return final_entities, final_kb_ids
+        if not (len(final_tensors) == len(final_kb_ids) == entity_count):
+            raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))
 
-    def set_annotations(self, docs, entities, kb_ids=None):
-        for entity, kb_id in zip(entities, kb_ids):
-            for token in entity:
-                token.ent_kb_id_ = kb_id
+        return final_kb_ids, final_tensors
+
+    def set_annotations(self, docs, kb_ids, tensors=None):
+        count_ents = len([ent for doc in docs for ent in doc.ents])
+        if count_ents != len(kb_ids):
+            raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
+
+        i=0
+        for doc in docs:
+            for ent in doc.ents:
+                kb_id = kb_ids[i]
+                i += 1
+                for token in ent:
+                    token.ent_kb_id_ = kb_id
 
     def to_disk(self, path, exclude=tuple(), **kwargs):
         serialize = OrderedDict()
@@ -1295,9 +1327,12 @@ class EntityLinker(Pipe):
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         def load_model(p):
-             if self.model is True:
+            if self.model is True:
                 self.model = self.Model(**self.cfg)
-             self.model.from_bytes(p.open("rb").read())
+            try: 
+                self.model.from_bytes(p.open("rb").read())
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         def load_kb(p):
             kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=self.cfg["entity_width"])

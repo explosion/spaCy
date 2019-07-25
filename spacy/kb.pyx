@@ -94,7 +94,7 @@ cdef class KnowledgeBase:
     def get_alias_strings(self):
         return [self.vocab.strings[x] for x in self._alias_index]
 
-    def add_entity(self, unicode entity, float prob, vector[float] entity_vector):
+    def add_entity(self, unicode entity, float freq, vector[float] entity_vector):
         """
         Add an entity to the KB, optionally specifying its log probability based on corpus frequency
         Return the hash of the entity ID/name at the end.
@@ -113,15 +113,15 @@ cdef class KnowledgeBase:
         vector_index = self.c_add_vector(entity_vector=entity_vector)
 
         new_index = self.c_add_entity(entity_hash=entity_hash,
-                                      prob=prob,
+                                      freq=freq,
                                       vector_index=vector_index,
                                       feats_row=-1)  # Features table currently not implemented
         self._entry_index[entity_hash] = new_index
 
         return entity_hash
 
-    cpdef set_entities(self, entity_list, prob_list, vector_list):
-        if len(entity_list) != len(prob_list) or len(entity_list) != len(vector_list):
+    cpdef set_entities(self, entity_list, freq_list, vector_list):
+        if len(entity_list) != len(freq_list) or len(entity_list) != len(vector_list):
             raise ValueError(Errors.E140)
 
         nr_entities = len(entity_list)
@@ -137,7 +137,7 @@ cdef class KnowledgeBase:
 
             entity_hash = self.vocab.strings.add(entity_list[i])
             entry.entity_hash = entity_hash
-            entry.prob = prob_list[i]
+            entry.freq = freq_list[i]
 
             vector_index = self.c_add_vector(entity_vector=vector_list[i])
             entry.vector_index = vector_index
@@ -196,12 +196,41 @@ cdef class KnowledgeBase:
 
         return [Candidate(kb=self,
                           entity_hash=self._entries[entry_index].entity_hash,
-                          entity_freq=self._entries[entry_index].prob,
+                          entity_freq=self._entries[entry_index].freq,
                           entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
                           alias_hash=alias_hash,
-                          prior_prob=prob)
-                for (entry_index, prob) in zip(alias_entry.entry_indices, alias_entry.probs)
+                          prior_prob=prior_prob)
+                for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
                 if entry_index != 0]
+
+    def get_vector(self, unicode entity):
+        cdef hash_t entity_hash = self.vocab.strings[entity]
+
+        # Return an empty list if this entity is unknown in this KB
+        if entity_hash not in self._entry_index:
+            return [0] * self.entity_vector_length
+        entry_index = self._entry_index[entity_hash]
+
+        return self._vectors_table[self._entries[entry_index].vector_index]
+
+    def get_prior_prob(self, unicode entity, unicode alias):
+        """ Return the prior probability of a given alias being linked to a given entity,
+        or return 0.0 when this combination is not known in the knowledge base"""
+        cdef hash_t alias_hash = self.vocab.strings[alias]
+        cdef hash_t entity_hash = self.vocab.strings[entity]
+
+        if entity_hash not in self._entry_index or alias_hash not in self._alias_index:
+            return 0.0
+
+        alias_index = <int64_t>self._alias_index.get(alias_hash)
+        entry_index = self._entry_index[entity_hash]
+
+        alias_entry = self._aliases_table[alias_index]
+        for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs):
+            if self._entries[entry_index].entity_hash == entity_hash:
+                return prior_prob
+
+        return 0.0
 
 
     def dump(self, loc):
@@ -222,7 +251,7 @@ cdef class KnowledgeBase:
             entry = self._entries[entry_index]
             assert entry.entity_hash == entry_hash
             assert entry_index == i
-            writer.write_entry(entry.entity_hash, entry.prob, entry.vector_index)
+            writer.write_entry(entry.entity_hash, entry.freq, entry.vector_index)
             i = i+1
 
         writer.write_alias_length(self.get_size_aliases())
@@ -248,7 +277,7 @@ cdef class KnowledgeBase:
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
-        cdef float prob
+        cdef float freq, prob
         cdef int32_t vector_index
         cdef KBEntryC entry
         cdef AliasC alias
@@ -284,10 +313,10 @@ cdef class KnowledgeBase:
         # index 0 is a dummy object not stored in the _entry_index and can be ignored.
         i = 1
         while i <= nr_entities:
-            reader.read_entry(&entity_hash, &prob, &vector_index)
+            reader.read_entry(&entity_hash, &freq, &vector_index)
 
             entry.entity_hash = entity_hash
-            entry.prob = prob
+            entry.freq = freq
             entry.vector_index = vector_index
             entry.feats_row = -1    # Features table currently not implemented
 
@@ -343,7 +372,8 @@ cdef class Writer:
             loc = bytes(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
-        assert self._fp != NULL
+        if not self._fp:
+            raise IOError(Errors.E146.format(path=loc))
         fseek(self._fp, 0, 0)
 
     def close(self):
@@ -357,9 +387,9 @@ cdef class Writer:
     cdef int write_vector_element(self, float element) except -1:
         self._write(&element, sizeof(element))
 
-    cdef int write_entry(self, hash_t entry_hash, float entry_prob, int32_t vector_index) except -1:
+    cdef int write_entry(self, hash_t entry_hash, float entry_freq, int32_t vector_index) except -1:
         self._write(&entry_hash, sizeof(entry_hash))
-        self._write(&entry_prob, sizeof(entry_prob))
+        self._write(&entry_freq, sizeof(entry_freq))
         self._write(&vector_index, sizeof(vector_index))
         # Features table currently not implemented and not written to file
 
@@ -399,39 +429,39 @@ cdef class Reader:
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading header from input file")
+            raise IOError(Errors.E145.format(param="header"))
 
         status = self._read(entity_vector_length, sizeof(int64_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading header from input file")
+            raise IOError(Errors.E145.format(param="vector length"))
 
     cdef int read_vector_element(self, float* element) except -1:
         status = self._read(element, sizeof(float))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity vector from input file")
+            raise IOError(Errors.E145.format(param="vector element"))
 
-    cdef int read_entry(self, hash_t* entity_hash, float* prob, int32_t* vector_index) except -1:
+    cdef int read_entry(self, hash_t* entity_hash, float* freq, int32_t* vector_index) except -1:
         status = self._read(entity_hash, sizeof(hash_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity hash from input file")
+            raise IOError(Errors.E145.format(param="entity hash"))
 
-        status = self._read(prob, sizeof(float))
+        status = self._read(freq, sizeof(float))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity prob from input file")
+            raise IOError(Errors.E145.format(param="entity freq"))
 
         status = self._read(vector_index, sizeof(int32_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entity vector from input file")
+            raise IOError(Errors.E145.format(param="vector index"))
 
         if feof(self._fp):
             return 0
@@ -443,33 +473,33 @@ cdef class Reader:
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading alias length from input file")
+            raise IOError(Errors.E145.format(param="alias length"))
 
     cdef int read_alias_header(self, hash_t* alias_hash, int64_t* candidate_length) except -1:
         status = self._read(alias_hash, sizeof(hash_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading alias hash from input file")
+            raise IOError(Errors.E145.format(param="alias hash"))
 
         status = self._read(candidate_length, sizeof(int64_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading candidate length from input file")
+            raise IOError(Errors.E145.format(param="candidate length"))
 
     cdef int read_alias(self, int64_t* entry_index, float* prob) except -1:
         status = self._read(entry_index, sizeof(int64_t))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading entry index for alias from input file")
+            raise IOError(Errors.E145.format(param="entry index"))
 
         status = self._read(prob, sizeof(float))
         if status < 1:
             if feof(self._fp):
                 return 0  # end of file
-            raise IOError("error reading prob for entity/alias from input file")
+            raise IOError(Errors.E145.format(param="prior probability"))
 
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)

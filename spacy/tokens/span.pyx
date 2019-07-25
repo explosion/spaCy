@@ -17,6 +17,7 @@ from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 from ..attrs cimport *
 from ..lexeme cimport Lexeme
+from ..symbols cimport dep
 
 from ..util import normalize_slice
 from ..compat import is_config, basestring_
@@ -206,7 +207,6 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#as_doc
         """
-        # TODO: Fix!
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
@@ -220,7 +220,9 @@ cdef class Span:
         else:
             array_head.append(SENT_START)
         array = self.doc.to_array(array_head)
-        doc.from_array(array_head, array[self.start : self.end])
+        array = array[self.start : self.end]
+        self._fix_dep_copy(array_head, array)
+        doc.from_array(array_head, array)
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
@@ -234,6 +236,44 @@ cdef class Span:
                 if cat_start == self.start_char and cat_end == self.end_char:
                     doc.cats[cat_label] = value
         return doc
+
+    def _fix_dep_copy(self, attrs, array):
+        """ Rewire dependency links to make sure their heads fall into the span
+        while still keeping the correct number of sentences. """
+        cdef int length = len(array)
+        cdef attr_t value
+        cdef int i, head_col, ancestor_i
+        old_to_new_root = dict()
+        if HEAD in attrs:
+            head_col = attrs.index(HEAD)
+            for i in range(length):
+                # if the HEAD refers to a token outside this span, find a more appropriate ancestor
+                token = self[i]
+                ancestor_i = token.head.i - self.start   # span offset
+                if ancestor_i not in range(length):
+                    if DEP in attrs:
+                        array[i, attrs.index(DEP)] = dep
+
+                    # try finding an ancestor within this span
+                    ancestors = token.ancestors
+                    for ancestor in ancestors:
+                        ancestor_i = ancestor.i - self.start
+                        if ancestor_i in range(length):
+                            array[i, head_col] = ancestor_i - i
+
+                # if there is no appropriate ancestor, define a new artificial root
+                value = array[i, head_col]
+                if (i+value) not in range(length):
+                    new_root = old_to_new_root.get(ancestor_i, None)
+                    if new_root is not None:
+                        # take the same artificial root as a previous token from the same sentence
+                        array[i, head_col] = new_root - i
+                    else:
+                        # set this token as the new artificial root
+                        array[i, head_col] = 0
+                        old_to_new_root[ancestor_i] = i
+
+        return array
 
     def merge(self, *args, **attributes):
         """Retokenize the document, such that the span is merged into a single
@@ -500,7 +540,7 @@ cdef class Span:
         if "root" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["root"](self)
         # This should probably be called 'head', and the other one called
-        # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
+        # 'gov'. But we went with 'head' elsewhere, and now we're stuck =/
         cdef int i
         # First, we scan through the Span, and check whether there's a word
         # with head==0, i.e. a sentence root. If so, we can return it. The
