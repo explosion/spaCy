@@ -2,6 +2,7 @@
 title: Language Processing Pipelines
 next: vectors-similarity
 menu:
+  - ['Processing Text', 'processing']
   - ['How Pipelines Work', 'pipelines']
   - ['Custom Components', 'custom-components']
   - ['Extension Attributes', 'custom-components-attributes']
@@ -11,6 +12,82 @@ menu:
 import Pipelines101 from 'usage/101/\_pipelines.md'
 
 <Pipelines101 />
+
+## Processing text {#processing}
+
+When you call `nlp` on a text, spaCy will **tokenize** it and then **call each
+component** on the `Doc`, in order. It then returns the processed `Doc` that you
+can work with.
+
+```python
+doc = nlp(u"This is a text")
+```
+
+When processing large volumes of text, the statistical models are usually more
+efficient if you let them work on batches of texts. spaCy's
+[`nlp.pipe`](/api/language#pipe) method takes an iterable of texts and yields
+processed `Doc` objects. The batching is done internally.
+
+```diff
+texts = [u"This is a text", u"These are lots of texts", u"..."]
+- docs = [nlp(text) for text in texts]
++ docs = list(nlp.pipe(texts))
+```
+
+<Infobox title="Tips for efficient processing">
+
+- Process the texts **as a stream** using [`nlp.pipe`](/api/language#pipe) and
+  buffer them in batches, instead of one-by-one. This is usually much more
+  efficient.
+- Only apply the **pipeline components you need**. Getting predictions from the
+  model that you don't actually need adds up and becomes very inefficient at
+  scale. To prevent this, use the `disable` keyword argument to disable
+  components you don't need – either when loading a model, or during processing
+  with `nlp.pipe`. See the section on
+  [disabling pipeline components](#disabling) for more details and examples.
+
+</Infobox>
+
+In this example, we're using [`nlp.pipe`](/api/language#pipe) to process a
+(potentially very large) iterable of texts as a stream. Because we're only
+accessing the named entities in `doc.ents` (set by the `ner` component), we'll
+disable all other statistical components (the `tagger` and `parser`) during
+processing. `nlp.pipe` yields `Doc` objects, so we can iterate over them and
+access the named entity predictions:
+
+> #### ✏️ Things to try
+>
+> 1. Also disable the `"ner"` component. You'll see that the `doc.ents` are now
+>    empty, because the entity recognizer didn't run.
+
+```python
+### {executable="true"}
+import spacy
+
+texts = [
+    "Net income was $9.4 million compared to the prior year of $2.7 million.",
+    "Revenue exceeded twelve billion dollars, with a loss of $1b.",
+]
+
+nlp = spacy.load("en_core_web_sm")
+for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
+    # Do something with the doc here
+    print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+<Infobox title="Important note" variant="warning">
+
+When using [`nlp.pipe`](/api/language#pipe), keep in mind that it returns a
+[generator](https://realpython.com/introduction-to-python-generators/) that
+yields `Doc` objects – not a list. So if you want to use it like a list, you'll
+have to call `list()` on it first:
+
+```diff
+- docs = nlp.pipe(texts)[0]         # will raise an error
++ docs = list(nlp.pipe(texts))[0]   # works as expected
+```
+
+</Infobox>
 
 ## How pipelines work {#pipelines}
 
