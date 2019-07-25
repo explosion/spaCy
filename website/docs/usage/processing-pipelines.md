@@ -146,19 +146,56 @@ require them in the pipeline settings in your model's `meta.json`.
 ### Disabling and modifying pipeline components {#disabling}
 
 If you don't need a particular component of the pipeline – for example, the
-tagger or the parser, you can disable loading it. This can sometimes make a big
-difference and improve loading speed. Disabled component names can be provided
-to [`spacy.load`](/api/top-level#spacy.load),
+tagger or the parser, you can **disable loading** it. This can sometimes make a
+big difference and improve loading speed. Disabled component names can be
+provided to [`spacy.load`](/api/top-level#spacy.load),
 [`Language.from_disk`](/api/language#from_disk) or the `nlp` object itself as a
 list:
 
 ```python
-nlp = spacy.load("en", disable=["parser", "tagger"])
+### Disable loading
+nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
 nlp = English().from_disk("/model", disable=["ner"])
 ```
 
-You can also use the [`remove_pipe`](/api/language#remove_pipe) method to remove
-pipeline components from an existing pipeline, the
+In some cases, you do want to load all pipeline components and their weights,
+because you need them at different points in your application. However, if you
+only need a `Doc` object with named entities, there's no need to run all
+pipeline components on it – that can potentially make processing much slower.
+Instead, you can use the `disable` keyword argument on
+[`nlp.pipe`](/api/language#pipe) to temporarily disable the components **during
+processing**:
+
+```python
+### Disable for processing
+for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
+    # Do something with the doc here
+```
+
+If you need to **execute more code** with components disabled – e.g. to reset
+the weights or update only some components during training – you can use the
+[`nlp.disable_pipes`](/api/language#disable_pipes) contextmanager. At the end of
+the `with` block, the disabled pipeline components will be restored
+automatically. Alternatively, `disable_pipes` returns an object that lets you
+call its `restore()` method to restore the disabled components when needed. This
+can be useful if you want to prevent unnecessary code indentation of large
+blocks.
+
+```python
+### Disable for block
+# 1. Use as a contextmanager
+with nlp.disable_pipes("tagger", "parser"):
+    doc = nlp(u"I won't be tagged and parsed")
+doc = nlp(u"I will be tagged and parsed")
+
+# 2. Restore manually
+disabled = nlp.disable_pipes("ner")
+doc = nlp(u"I won't have named entities")
+disabled.restore()
+```
+
+Finally, you can also use the [`remove_pipe`](/api/language#remove_pipe) method
+to remove pipeline components from an existing pipeline, the
 [`rename_pipe`](/api/language#rename_pipe) method to rename them, or the
 [`replace_pipe`](/api/language#replace_pipe) method to replace them with a
 custom component entirely (more details on this in the section on
