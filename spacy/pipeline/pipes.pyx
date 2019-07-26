@@ -1282,7 +1282,7 @@ class EntityLinker(Pipe):
                             prior_probs *= 0
                         scores = prior_probs
 
-                        if self.cfg.get("incl_context", True) > 0:
+                        if self.cfg.get("incl_context", True):
                             entity_encodings = xp.asarray([c.entity_vector for c in candidates])
                             if len(entity_encodings) != len(prior_probs):
                                 raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
@@ -1330,7 +1330,7 @@ class EntityLinker(Pipe):
         def load_model(p):
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            try: 
+            try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
                 raise ValueError(Errors.E149)
