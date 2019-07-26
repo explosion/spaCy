@@ -14,15 +14,15 @@ def create_kb(vocab):
     # adding entities
     entity_0 = "Q1004791_Douglas"
     print("adding entity", entity_0)
-    kb.add_entity(entity=entity_0, prob=0.5, entity_vector=[0])
+    kb.add_entity(entity=entity_0, freq=0.5, entity_vector=[0])
 
     entity_1 = "Q42_Douglas_Adams"
     print("adding entity", entity_1)
-    kb.add_entity(entity=entity_1, prob=0.5, entity_vector=[1])
+    kb.add_entity(entity=entity_1, freq=0.5, entity_vector=[1])
 
     entity_2 = "Q5301561_Douglas_Haig"
     print("adding entity", entity_2)
-    kb.add_entity(entity=entity_2, prob=0.5, entity_vector=[2])
+    kb.add_entity(entity=entity_2, freq=0.5, entity_vector=[2])
 
     # adding aliases
     print()

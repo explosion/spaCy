@@ -11,6 +11,11 @@ compressed binary strings. The `Doc` object holds an array of `TokenC]` structs.
 The Python-level `Token` and [`Span`](/api/span) objects are views of this
 array, i.e. they don't own the data themselves.
 
+## Doc.\_\_init\_\_ {#init tag="method"}
+
+Construct a `Doc` object. The most common way to get a `Doc` object is via the
+`nlp` object.
+
 > #### Example
 >
 > ```python
@@ -23,11 +28,6 @@ array, i.e. they don't own the data themselves.
 > spaces = [True, False, False]
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
-
-## Doc.\_\_init\_\_ {#init tag="method"}
-
-Construct a `Doc` object. The most common way to get a `Doc` object is via the
-`nlp` object.
 
 | Name        | Type     | Description                                                                                                                                                         |
 | ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

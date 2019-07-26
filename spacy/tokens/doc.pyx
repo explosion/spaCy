@@ -794,7 +794,7 @@ cdef class Doc:
                 if array[i, col] != 0:
                     self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
         # Now load the data
-        for i in range(self.length):
+        for i in range(length):
             token = &self.c[i]
             for j in range(n_attrs):
                 if attr_ids[j] != TAG:
@@ -804,7 +804,7 @@ cdef class Doc:
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
-            set_children_from_heads(self.c, self.length)
+            set_children_from_heads(self.c, length)
         return self
 
     def get_lca_matrix(self):

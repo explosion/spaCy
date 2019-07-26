@@ -663,15 +663,14 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
 
 
 def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
-    # TODO proper error
     if "entity_width" not in cfg:
-        raise ValueError("entity_width not found")
+        raise ValueError(Errors.E144.format(param="entity_width"))
     if "context_width" not in cfg:
-        raise ValueError("context_width not found")
+        raise ValueError(Errors.E144.format(param="context_width"))
 
     conv_depth = cfg.get("conv_depth", 2)
     cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
-    pretrained_vectors = cfg.get("pretrained_vectors")  # self.nlp.vocab.vectors.name
+    pretrained_vectors = cfg.get("pretrained_vectors", None)
     context_width = cfg.get("context_width")
     entity_width = cfg.get("entity_width")
 
