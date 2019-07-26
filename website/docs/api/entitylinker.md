@@ -129,7 +129,7 @@ Modify a batch of documents, using pre-computed entity IDs for a list of named e
 | ---------- | -------- | --------------------------------------------------------------------------------------------------- |
 | `docs`     | iterable | The documents to modify.                                                                            |
 | `kb_ids`   | iterable | The knowledge base identifiers for the entities in the docs, predicted by `EntityLinker.predict`.   |
-| `tensors`  | iterable | The token representations used to predict the identifiers                                           |
+| `tensors`  | iterable | The token representations used to predict the identifiers.                                          |
 
 ## EntityLinker.update {#update tag="method"}
 

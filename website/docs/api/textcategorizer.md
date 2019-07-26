@@ -116,7 +116,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> scores = textcat.predict([doc1, doc2])
+> scores, tensors = textcat.predict([doc1, doc2])
 > ```
 
 | Name        | Type     | Description                                                                                                                                                                                                                        |
@@ -132,14 +132,15 @@ Modify a batch of documents, using pre-computed scores.
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> scores = textcat.predict([doc1, doc2])
-> textcat.set_annotations([doc1, doc2], scores)
+> scores, tensors = textcat.predict([doc1, doc2])
+> textcat.set_annotations([doc1, doc2], scores, tensors)
 > ```
 
 | Name     | Type     | Description                                               |
 | -------- | -------- | --------------------------------------------------------- |
 | `docs`   | iterable | The documents to modify.                                  |
 | `scores` | -        | The scores to set, produced by `TextCategorizer.predict`. |
+| `tensors`| iterable | The token representations used to predict the scores.     |
 
 ## TextCategorizer.update {#update tag="method"}
 
