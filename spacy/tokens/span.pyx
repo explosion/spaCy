@@ -311,7 +311,7 @@ cdef class Span:
         DOCS: https://spacy.io/api/span#similarity
         """
         if "similarity" in self.doc.user_span_hooks:
-            self.doc.user_span_hooks["similarity"](self, other)
+            return self.doc.user_span_hooks["similarity"](self, other)
         if len(self) == 1 and hasattr(other, "orth"):
             if self[0].orth == other.orth:
                 return 1.0
