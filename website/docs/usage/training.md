@@ -10,8 +10,9 @@ menu:
 ---
 
 This guide describes how to train new statistical models for spaCy's
-part-of-speech tagger, named entity recognizer and dependency parser. Once the
-model is trained, you can then [save and load](/usage/saving-loading#models) it.
+part-of-speech tagger, named entity recognizer, dependency parser, 
+text classifier and entity linker. Once the model is trained, 
+you can then [save and load](/usage/saving-loading#models) it.
 
 ## Training basics {#basics}
 
@@ -221,9 +222,10 @@ of being dropped.
 
 > - [`begin_training()`](/api/language#begin_training): Start the training and
 >   return an optimizer function to update the model's weights. Can take an
->   optional function converting the training data to spaCy's training
->   format. -[`update()`](/api/language#update): Update the model with the
->   training example and gold data. -[`to_disk()`](/api/language#to_disk): Save
+>   optional function converting the training data to spaCy's training format. 
+> - [`update()`](/api/language#update): Update the model with the
+>   training example and gold data.
+> - [`to_disk()`](/api/language#to_disk): Save
 >   the updated model to a directory.
 
 ```python
