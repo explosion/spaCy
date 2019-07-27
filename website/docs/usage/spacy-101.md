@@ -243,7 +243,7 @@ of a model, see the usage guides on
 To learn more about entity linking in spaCy, and how to **train and update** 
 the entity linker predictions, see the usage guides on
 [entity linking](/usage/linguistic-features#entity-linking) and
-[training the entity linker](/usage/training#entity_linker).
+[training the entity linker](/usage/training#entity-linker).
 
 </Infobox>
 

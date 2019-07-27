@@ -1171,13 +1171,14 @@ class EntityLinker(Pipe):
                     entity_encoding = self.kb.get_vector(kb_id)
                     prior_prob = self.kb.get_prior_prob(kb_id, mention)
 
-                    gold_ent = ents_by_offset["{}_{}".format(start, end)]
-                    if gold_ent is None:
-                        raise RuntimeError(Errors.E147.format(method="update", msg="gold entity not found"))
-
+                    # by default, create a meaningless type vector
                     type_vector = [0 for i in range(len(type_to_int))]
-                    if len(type_to_int) > 0:
-                        type_vector[type_to_int[gold_ent.label_]] = 1
+
+                    # add type information if this entity aligns with a named entity found by the NER
+                    gold_ent = ents_by_offset.get("{}_{}".format(start, end), None)
+                    if gold_ent is not None:
+                        if len(type_to_int) > 0:
+                            type_vector[type_to_int[gold_ent.label_]] = 1
 
                     # store data
                     entity_encodings.append(entity_encoding)

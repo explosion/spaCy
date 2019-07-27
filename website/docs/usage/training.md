@@ -403,6 +403,42 @@ referred to as the "catastrophic forgetting" problem.
 4. **Save** the trained model using [`nlp.to_disk`](/api/language#to_disk).
 5. **Test** the model to make sure the new entity is recognized correctly.
 
+## Training an entity linking model {#entity-linker}
+
+This example shows how to update spaCy's entity linker with your own
+examples, starting off with an existing, pre-trained model, or from scratch
+using a blank `Language` class. To do this, you'll need **example texts**,
+the **character offsets** and **knowledge base identifiers** 
+of each entity contained in the texts. 
+
+```python
+https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_linker.py
+```
+
+#### Step by step guide {#step-by-step-entity-linker}
+
+1. **Load the model** you want to start with, or create an **empty model** using
+   [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language. If
+   you're using a blank model, you need to specify the path to 
+   a `KnowledgeBase` (KB) that contains the identifiers of your examples, and the path
+   to the `Vocab` object that was used to create the KB. 
+   Don't forget to add the KB to the entity linker,
+   and then add the entity linker to the pipeline.
+   If you're using an existing model, make sure to disable all other
+   pipeline components during training using
+   [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
+   training the entity linker.
+2. **Shuffle and loop over** the examples. For each example, **update the
+   model** by calling [`nlp.update`](/api/language#update), which steps through
+   the annotated examples of the input. For each combination of a mention in text and
+   a potential KB identifier, the model makes a **prediction** whether or not 
+   this is the correct match. It then
+   consults the annotations to see whether it was right. If it was wrong, it
+   adjusts its weights so that the correct combination will score higher next time.
+3. **Save** the trained model using [`nlp.to_disk`](/api/language#to_disk).
+4. **Test** the model to make sure the entities in the training data are
+   recognized correctly.
+
 ## Training the tagger and parser {#tagger-parser}
 
 ### Updating the Dependency Parser {#example-train-parser}
