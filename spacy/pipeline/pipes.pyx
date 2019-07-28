@@ -104,8 +104,7 @@ class Pipe(object):
 
         Delegates to predict() and get_loss().
         """
-        self.require_model()
-        raise NotImplementedError
+        pass
 
     def rehearse(self, docs, sgd=None, losses=None, **config):
         pass
