@@ -942,9 +942,16 @@ class TextCategorizer(Pipe):
 
     def predict(self, docs):
         self.require_model()
+        tensors = [doc.tensor for doc in docs]
+
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            xp = get_array_module(tensors)
+            scores = xp.zeros((len(docs), len(self.labels)))
+            return scores, tensors
+
         scores = self.model(docs)
         scores = self.model.ops.asarray(scores)
-        tensors = [doc.tensor for doc in docs]
         return scores, tensors
 
     def set_annotations(self, docs, scores, tensors=None):
