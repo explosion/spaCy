@@ -51,6 +51,7 @@ def test_issue4030():
                     losses=losses,
                 )
 
-    # these should run without throwing an error
-    nlp("Not sure whether this is offensive or not")
-    nlp("")  # should give cats {'offensive': 0.0, 'inoffensive': 0.0}
+    # processing of an empty doc should result in 0.0 for all categories
+    doc = nlp("")
+    assert doc.cats["offensive"] == 0.0
+    assert doc.cats["inoffensive"] == 0.0
