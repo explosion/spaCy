@@ -2,7 +2,7 @@
 # coding: utf8
 
 """Example of training spaCy's entity linker, starting off with an
-existing model or a blank model with a pre-defined knowledge base.
+existing model and a pre-defined knowledge base.
 
 For more details, see the documentation:
 * Training: https://spacy.io/usage/training
@@ -18,12 +18,10 @@ import random
 from pathlib import Path
 
 from spacy.symbols import PERSON
-from spacy.vocab import Vocab
 
 import spacy
 from spacy.kb import KnowledgeBase
 
-from spacy import Errors
 from spacy.tokens import Span
 from spacy.util import minibatch, compounding
 
@@ -35,19 +33,19 @@ def sample_train_data():
     # Q7381115 (Russ Cochran): publisher
 
     text_1 = "Russ Cochran's reprints include The Complete EC Library."
-    dict_1 = {(0, 12): {"Q7381115": True, "Q2146908": False}}
+    dict_1 = {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}
     train_data.append((text_1, {"links": dict_1}))
 
     text_2 = "Russ Cochran has been publishing comic art."
-    dict_2 = {(0, 12): {"Q7381115": True, "Q2146908": False}}
+    dict_2 = {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}
     train_data.append((text_2, {"links": dict_2}))
 
     text_3 = "Russ Cochran captured his first major title with his son as caddie."
-    dict_3 = {(0, 12): {"Q7381115": False, "Q2146908": True}}
+    dict_3 = {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}}
     train_data.append((text_3, {"links": dict_3}))
 
     text_4 = "Russ Cochran was a member of University of Kentucky's golf team."
-    dict_4 = {(0, 12): {"Q7381115": False, "Q2146908": True}}
+    dict_4 = {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}}
     train_data.append((text_4, {"links": dict_4}))
 
     return train_data
@@ -58,26 +56,15 @@ TRAIN_DATA = sample_train_data()
 
 
 @plac.annotations(
-    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
-    kb_path=("Path to the knowledge base", "option", "kb", Path),
-    vocab_path=("Path to the vocab", "option", "v", Path),
+    nlp_path=("Path to the nlp model", "positional", None, Path),
+    kb_path=("Path to the knowledge base", "positional", None, Path),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(model=None, kb_path=None, vocab_path=None, output_dir=None, n_iter=1000):
+def main(nlp_path=None, kb_path=None, output_dir=None, n_iter=2000):
     """Load the model, set up the pipeline and train the entity linker."""
-    if model is None and (kb_path is None or vocab_path is None):
-        raise ValueError(Errors.E150)
-
-    if model is not None:
-        nlp = spacy.load(model)  # load existing spaCy model
-        vocab = nlp.vocab
-        print("Loaded model '%s'" % model)
-    else:
-        vocab = Vocab().from_disk(vocab_path)
-        nlp = spacy.blank("en", vocab=vocab)  # create blank Language class
-        nlp.vocab.vectors.name = "spacy_pretrained_vectors"
-        print("Created blank 'en' model with pre-defined vocab")
+    nlp = spacy.load(nlp_path)
+    vocab = nlp.vocab
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
@@ -111,10 +98,8 @@ def main(model=None, kb_path=None, vocab_path=None, output_dir=None, n_iter=1000
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
     with nlp.disable_pipes(*other_pipes):  # only train entity linker
-        # reset and initialize the weights randomly – but only if we're
-        # training a new model
-        if model is None:
-            nlp.begin_training()
+        # reset and initialize the weights randomly
+        optimizer = nlp.begin_training()
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
@@ -125,8 +110,9 @@ def main(model=None, kb_path=None, vocab_path=None, output_dir=None, n_iter=1000
                 nlp.update(
                     texts,  # batch of texts
                     annotations,  # batch of annotations
-                    drop=0.5,  # dropout - make it harder to memorise data
+                    drop=0.0,  # dropout - make it harder to memorise data
                     losses=losses,
+                    sgd=optimizer
                 )
             print("Losses", losses)
 
