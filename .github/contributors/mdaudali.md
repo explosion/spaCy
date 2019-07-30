@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | Mohammed Daudali     |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           | 30/07/2019           |
+| Date                           | 30 July 2019         |
 | GitHub username                | mdaudali             |
 | Website (optional)             |                      |
