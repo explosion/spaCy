@@ -618,7 +618,7 @@ class Language(object):
         if component_cfg is None:
             component_cfg = {}
         docs, golds = zip(*docs_golds)
-        docs = list(docs)
+        docs = [self.make_doc(doc) if isinstance(doc, basestring_) else doc for doc in docs]
         golds = list(golds)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
@@ -628,6 +628,8 @@ class Language(object):
             else:
                 docs = pipe.pipe(docs, **kwargs)
         for doc, gold in zip(docs, golds):
+            if not isinstance(gold, GoldParse):
+                gold = GoldParse(doc, **gold)
             if verbose:
                 print(doc)
             kwargs = component_cfg.get("scorer", {})

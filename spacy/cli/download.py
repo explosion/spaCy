@@ -19,7 +19,7 @@ msg = Printer()
 @plac.annotations(
     model=("Model to download (shortcut or name)", "positional", None, str),
     direct=("Force direct download of name + version", "flag", "d", bool),
-    pip_args=("additional arguments to be passed to `pip install` on model install"),
+    pip_args=("Additional arguments to be passed to `pip install` on model install"),
 )
 def download(model, direct=False, *pip_args):
     """

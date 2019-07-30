@@ -150,6 +150,8 @@ def list_requirements(meta):
     requirements = [parent_package + meta['spacy_version']]
     if 'setup_requires' in meta:
         requirements += meta['setup_requires']
+    if 'requirements' in meta:
+        requirements += meta['requirements']
     return requirements
 
 
