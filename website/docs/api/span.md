@@ -258,7 +258,7 @@ Retokenize the document, such that the span is merged into a single token.
 | `**attributes` | -       | Attributes to assign to the merged token. By default, attributes are inherited from the syntactic root token of the span. |
 | **RETURNS**    | `Token` | The newly merged token.                                                                                                   |
 
-## Span.ents {#ents tag="property" new="2.0.12" model="ner"}
+## Span.ents {#ents tag="property" new="2.0.13" model="ner"}
 
 The named entities in the span. Returns a tuple of named entity `Span` objects,
 if the entity recognizer has been applied.
