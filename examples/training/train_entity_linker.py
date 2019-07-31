@@ -18,10 +18,12 @@ import random
 from pathlib import Path
 
 from spacy.symbols import PERSON
+from spacy.vocab import Vocab
 
 import spacy
 from spacy.kb import KnowledgeBase
 
+from spacy import Errors
 from spacy.tokens import Span
 from spacy.util import minibatch, compounding
 
@@ -56,21 +58,32 @@ TRAIN_DATA = sample_train_data()
 
 
 @plac.annotations(
-    nlp_path=("Path to the nlp model", "positional", None, Path),
     kb_path=("Path to the knowledge base", "positional", None, Path),
+    vocab_path=("Path to the vocab for the kb", "option", "v", Path),
+    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(nlp_path=None, kb_path=None, output_dir=None, n_iter=50):
-    """Load the model, set up the pipeline and train the entity linker."""
-    nlp = spacy.load(nlp_path)
-    vocab = nlp.vocab
+def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
+    """Load the model, set up the pipeline and train the entity linker.
+    The `nlp` model specified as input, must share the same `vocab` as the KB."""
+    if model is None and (kb_path is None or vocab_path is None):
+        raise ValueError(Errors.E150)
+
+    if model is not None:
+        nlp = spacy.load(model)  # load existing spaCy model
+        print("Loaded model '%s'" % model)
+    else:
+        vocab = Vocab().from_disk(vocab_path)
+        nlp = spacy.blank("en", vocab=vocab)  # create blank Language class
+        nlp.vocab.vectors.name = "spacy_pretrained_vectors"
+        print("Created blank 'en' model")
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if "entity_linker" not in nlp.pipe_names:
         entity_linker = nlp.create_pipe("entity_linker")
-        kb = KnowledgeBase(vocab=vocab)
+        kb = KnowledgeBase(vocab=nlp.vocab)
         kb.load_bulk(kb_path)
         print("Loaded Knowledge Base")
         entity_linker.set_kb(kb)
@@ -110,11 +123,11 @@ def main(nlp_path=None, kb_path=None, output_dir=None, n_iter=50):
                 nlp.update(
                     texts,  # batch of texts
                     annotations,  # batch of annotations
-                    drop=0.0,  # dropout - make it harder to memorise data
+                    drop=0.2,  # dropout - make it harder to memorise data
                     losses=losses,
                     sgd=optimizer
                 )
-            print("Losses", losses)
+            print(itn, "Losses", losses)
 
     # test the trained model
     _apply_model(nlp)
