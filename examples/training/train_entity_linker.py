@@ -6,7 +6,7 @@ existing model and a pre-defined knowledge base.
 
 For more details, see the documentation:
 * Training: https://spacy.io/usage/training
-* NER: https://spacy.io/usage/linguistic-features#entity-linking
+* Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
 Compatible with: spaCy vX.X
 Last tested with: vX.X
@@ -67,7 +67,7 @@ TRAIN_DATA = sample_train_data()
 def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
     """Load the model, set up the pipeline and train the entity linker.
     The `nlp` model specified as input, must share the same `vocab` as the KB."""
-    if model is None and (kb_path is None or vocab_path is None):
+    if model is None and vocab_path is None:
         raise ValueError(Errors.E150)
 
     if model is not None:
@@ -125,7 +125,7 @@ def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
                     annotations,  # batch of annotations
                     drop=0.2,  # dropout - make it harder to memorise data
                     losses=losses,
-                    sgd=optimizer
+                    sgd=optimizer,
                 )
             print(itn, "Losses", losses)
 
