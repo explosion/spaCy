@@ -41,7 +41,7 @@ def create_kb(vocab):
 
 
 def add_el(kb, nlp):
-    el_pipe = nlp.create_pipe(name='entity_linker', config={"context_width": 64})
+    el_pipe = nlp.create_pipe(name='entity_linker')
     el_pipe.set_kb(kb)
     nlp.add_pipe(el_pipe, last=True)
     nlp.begin_training()

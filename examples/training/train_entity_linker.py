@@ -32,7 +32,7 @@ def sample_train_data():
     # Q2146908 (Russ Cochran): American golfer
     # Q7381115 (Russ Cochran): publisher
 
-    text_1 = "Russ Cochran's reprints include The Complete EC Library."
+    text_1 = "Russ Cochran his reprints include The Complete EC Library."
     dict_1 = {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}
     train_data.append((text_1, {"links": dict_1}))
 
@@ -61,7 +61,7 @@ TRAIN_DATA = sample_train_data()
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(nlp_path=None, kb_path=None, output_dir=None, n_iter=2000):
+def main(nlp_path=None, kb_path=None, output_dir=None, n_iter=50):
     """Load the model, set up the pipeline and train the entity linker."""
     nlp = spacy.load(nlp_path)
     vocab = nlp.vocab
@@ -128,9 +128,9 @@ def main(nlp_path=None, kb_path=None, output_dir=None, n_iter=2000):
         # re-apply the entity linker which will now make predictions for the entities
         doc = entity_linker(doc)
 
+        print()
         print("Entities", [(ent.text, ent.label_, ent.kb_id_) for ent in doc.ents])
         print("Tokens", [(t.text, t.ent_type_, t.ent_kb_id_) for t in doc])
-        print()
 
     # save model to output directory
     if output_dir is not None:
@@ -154,18 +154,18 @@ def main(nlp_path=None, kb_path=None, output_dir=None, n_iter=2000):
             # re-apply the entity linker which will now make predictions for the entities
             doc = entity_linker(doc)
 
+            print()
             print("Entities", [(ent.text, ent.label_, ent.kb_id_) for ent in doc.ents])
             print("Tokens", [(t.text, t.ent_type_, t.ent_kb_id_) for t in doc])
-            print()
 
 
 if __name__ == "__main__":
     plac.call(main)
 
-    # Expected output:
+    # Expected output (can be shuffled):
 
     # Entities[('Russ Cochran', 'PERSON', 'Q7381115')]
-    # Tokens[('Russ', 'PERSON', 'Q7381115'), ('Cochran', 'PERSON', 'Q7381115'), ("'s", '', ''), ('reprints', '', ''), ('include', '', ''), ('The', '', ''), ('Complete', '', ''), ('EC', '', ''), ('Library', '', ''), ('.', '', '')]
+    # Tokens[('Russ', 'PERSON', 'Q7381115'), ('Cochran', 'PERSON', 'Q7381115'), ("his", '', ''), ('reprints', '', ''), ('include', '', ''), ('The', '', ''), ('Complete', '', ''), ('EC', '', ''), ('Library', '', ''), ('.', '', '')]
 
     # Entities[('Russ Cochran', 'PERSON', 'Q7381115')]
     # Tokens[('Russ', 'PERSON', 'Q7381115'), ('Cochran', 'PERSON', 'Q7381115'), ('has', '', ''), ('been', '', ''), ('publishing', '', ''), ('comic', '', ''), ('art', '', ''), ('.', '', '')]

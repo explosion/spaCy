@@ -51,7 +51,6 @@ EPOCHS = 10
 DROPOUT = 0.5
 LEARN_RATE = 0.005
 L2 = 1e-6
-CONTEXT_WIDTH = 128
 
 
 def now():
@@ -160,7 +159,6 @@ def run_pipeline():
         el_pipe = nlp_2.create_pipe(
             name="entity_linker",
             config={
-                "context_width": CONTEXT_WIDTH,
                 "pretrained_vectors": nlp_2.vocab.vectors.name,
                 "type_to_int": type_to_int,
             },

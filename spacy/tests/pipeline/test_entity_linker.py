@@ -154,7 +154,7 @@ def test_preserving_links_asdoc(nlp):
     ruler.add_patterns(patterns)
     nlp.add_pipe(ruler)
 
-    el_pipe = nlp.create_pipe(name="entity_linker", config={"context_width": 64})
+    el_pipe = nlp.create_pipe(name="entity_linker")
     el_pipe.set_kb(mykb)
     el_pipe.begin_training()
     el_pipe.incl_context = False
