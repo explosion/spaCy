@@ -51,9 +51,8 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
         print("Loaded model '%s'" % model)
     else:
         vocab = Vocab().from_disk(vocab_path)
-        nlp = spacy.blank(
-            "en", vocab=vocab
-        )  # create blank Language class with specified vocab
+        # create blank Language class with specified vocab
+        nlp = spacy.blank("en", vocab=vocab)
         print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
     kb = KnowledgeBase(vocab=nlp.vocab)
@@ -69,6 +68,7 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
         frequencies.append(freq)
 
     # training entity description encodings
+    # this part can easily be replaced with a custom entity encoder
     encoder = EntityEncoder(
         nlp=nlp,
         input_dim=INPUT_DIM,
