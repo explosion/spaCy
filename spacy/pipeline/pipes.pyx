@@ -1254,10 +1254,10 @@ class EntityLinker(Pipe):
                     else:
                         random.shuffle(candidates)
 
-                        # this will set all prior probabilities to 1 if they should be excluded from the model
+                        # this will set all prior probabilities to 0 if they should be excluded from the model
                         prior_probs = xp.asarray([c.prior_prob for c in candidates])
                         if not self.cfg.get("incl_prior", True):
-                            prior_probs = xp.asarray([[1.0] for c in candidates])
+                            prior_probs = xp.asarray([[0.0] for c in candidates])
                         scores = prior_probs
 
                         # add in similarity from the context
