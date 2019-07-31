@@ -77,7 +77,7 @@ def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
         vocab = Vocab().from_disk(vocab_path)
         nlp = spacy.blank("en", vocab=vocab)  # create blank Language class
         nlp.vocab.vectors.name = "spacy_pretrained_vectors"
-        print("Created blank 'en' model")
+        print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
@@ -155,7 +155,7 @@ def _apply_model(nlp):
         rc_ent = Span(doc, 0, 2, label=PERSON)
         doc.ents = [rc_ent]
 
-        # re-apply the entity linker which will now make predictions for the entities
+        # apply the entity linker which will now make predictions for the 'Russ Cochran' entities
         doc = nlp.get_pipe("entity_linker")(doc)
 
         print()
