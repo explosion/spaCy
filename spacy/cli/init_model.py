@@ -24,6 +24,7 @@ except ImportError:
     ftfy = None
 
 
+DEFAULT_OOV_PROB = -20
 msg = Printer()
 
 
@@ -108,23 +109,30 @@ def open_file(loc):
 
 
 def read_attrs_from_deprecated(freqs_loc, clusters_loc):
-    with msg.loading("Counting frequencies..."):
-        probs, oov_prob = read_freqs(freqs_loc) if freqs_loc is not None else ({}, -20)
-    msg.good("Counted frequencies")
-    with msg.loading("Reading clusters..."):
-        clusters = read_clusters(clusters_loc) if clusters_loc else {}
-    msg.good("Read clusters")
+    if freqs_loc is not None:
+        with msg.loading("Counting frequencies..."):
+            probs, _ = read_freqs(freqs_loc)
+        msg.good("Counted frequencies")
+    else:
+        probs, _ = ({}, DEFAULT_OOV_PROB)
+    if clusters_loc:
+        with msg.loading("Reading clusters..."):
+            clusters = read_clusters(clusters_loc)
+        msg.good("Read clusters")
+    else:
+        clusters = {}
     lex_attrs = []
     sorted_probs = sorted(probs.items(), key=lambda item: item[1], reverse=True)
-    for i, (word, prob) in tqdm(enumerate(sorted_probs)):
-        attrs = {"orth": word, "id": i, "prob": prob}
-        # Decode as a little-endian string, so that we can do & 15 to get
-        # the first 4 bits. See _parse_features.pyx
-        if word in clusters:
-            attrs["cluster"] = int(clusters[word][::-1], 2)
-        else:
-            attrs["cluster"] = 0
-        lex_attrs.append(attrs)
+    if len(sorted_probs):
+        for i, (word, prob) in tqdm(enumerate(sorted_probs)):
+            attrs = {"orth": word, "id": i, "prob": prob}
+            # Decode as a little-endian string, so that we can do & 15 to get
+            # the first 4 bits. See _parse_features.pyx
+            if word in clusters:
+                attrs["cluster"] = int(clusters[word][::-1], 2)
+            else:
+                attrs["cluster"] = 0
+            lex_attrs.append(attrs)
     return lex_attrs
 
 
@@ -142,8 +150,11 @@ def create_model(lang, lex_attrs):
         lexeme.is_oov = False
         lex_added += 1
         lex_added += 1
-    oov_prob = min(lex.prob for lex in nlp.vocab)
-    nlp.vocab.cfg.update({"oov_prob": oov_prob - 1})
+    if len(nlp.vocab):
+        oov_prob = min(lex.prob for lex in nlp.vocab) - 1
+    else:
+        oov_prob = DEFAULT_OOV_PROB
+    nlp.vocab.cfg.update({"oov_prob": oov_prob})
     return nlp
 
 
