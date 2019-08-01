@@ -5,7 +5,7 @@ tag: class
 source: spacy/tokenizer.pyx
 ---
 
-Segment text, and create `Doc` objects with the discovered segment boundaries. For a deeper understanding read about [how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
+Segment text, and create `Doc` objects with the discovered segment boundaries. For a deeper understanding, see the docs on [how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 
