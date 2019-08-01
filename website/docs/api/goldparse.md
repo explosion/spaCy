@@ -191,7 +191,7 @@ token-based tags, e.g. to overwrite the `doc.ents`.
 > #### Example
 >
 > ```python
-> from spacy.gold import offsets_from_biluo_tags
+> from spacy.gold import spans_from_biluo_tags
 >
 > doc = nlp(u"I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
