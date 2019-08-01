@@ -85,8 +85,12 @@ class Pipe(object):
         """
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
-            scores, tensors = self.predict(docs)
-            self.set_annotations(docs, scores, tensor=tensors)
+            predictions = self.predict(docs)
+            if isinstance(predictions, tuple) and len(tuple) == 2:
+                scores, tensors = predictions
+                self.set_annotations(docs, scores, tensor=tensors)
+            else:
+                self.set_annotations(docs, predictions)
             yield from docs
 
     def predict(self, docs):
@@ -106,8 +110,7 @@ class Pipe(object):
 
         Delegates to predict() and get_loss().
         """
-        self.require_model()
-        raise NotImplementedError
+        pass
 
     def rehearse(self, docs, sgd=None, losses=None, **config):
         pass
@@ -136,7 +139,8 @@ class Pipe(object):
         If no model has been initialized yet, the model is added."""
         if self.model is True:
             self.model = self.Model(**self.cfg)
-        link_vectors_to_models(self.vocab)
+        if hasattr(self, "vocab"):
+            link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -156,7 +160,8 @@ class Pipe(object):
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         if self.model not in (True, False, None):
             serialize["model"] = self.model.to_bytes
-        serialize["vocab"] = self.vocab.to_bytes
+        if hasattr(self, "vocab"):
+            serialize["vocab"] = self.vocab.to_bytes
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
@@ -176,7 +181,8 @@ class Pipe(object):
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
-        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        if hasattr(self, "vocab"):
+            deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
         deserialize["model"] = load_model
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -938,9 +944,16 @@ class TextCategorizer(Pipe):
 
     def predict(self, docs):
         self.require_model()
+        tensors = [doc.tensor for doc in docs]
+
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            xp = get_array_module(tensors)
+            scores = xp.zeros((len(docs), len(self.labels)))
+            return scores, tensors
+
         scores = self.model(docs)
         scores = self.model.ops.asarray(scores)
-        tensors = [doc.tensor for doc in docs]
         return scores, tensors
 
     def set_annotations(self, docs, scores, tensors=None):
