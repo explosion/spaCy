@@ -160,7 +160,7 @@ class Language(object):
             if vocab.vectors.name is None:
                 vocab.vectors.name = meta.get("vectors", {}).get("name")
         else:
-            if (self.lang and vocab.lang) and (self.lang is not vocab.lang):
+            if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
         self.vocab = vocab
         if make_doc is True:
