@@ -102,17 +102,26 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
         output_dir = Path(output_dir)
         if not output_dir.exists():
             output_dir.mkdir()
-        file_path = str(output_dir / "kb")
-        kb.dump(file_path)
+        kb_path = str(output_dir / "kb")
+        kb.dump(kb_path)
         print()
-        print("Saved KB to", file_path)
+        print("Saved KB to", kb_path)
+
+        # only storing the vocab if we weren't already reading it from file
+        if not vocab_path:
+            vocab_path = output_dir / "vocab"
+            kb.vocab.to_disk(vocab_path)
+            print("Saved vocab to", vocab_path)
+
         print()
 
         # test the saved model
         # always reload a knowledge base with the same vocab instance!
-        print("Loading KB from", file_path)
-        kb2 = KnowledgeBase(vocab=nlp.vocab)
-        kb2.load_bulk(file_path)
+        print("Loading vocab from", vocab_path)
+        print("Loading KB from", kb_path)
+        vocab2 = Vocab().from_disk(vocab_path)
+        kb2 = KnowledgeBase(vocab=vocab2)
+        kb2.load_bulk(kb_path)
         _print_kb(kb2)
         print()
 

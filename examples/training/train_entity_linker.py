@@ -59,25 +59,17 @@ TRAIN_DATA = sample_train_data()
 
 @plac.annotations(
     kb_path=("Path to the knowledge base", "positional", None, Path),
-    vocab_path=("Path to the vocab for the kb", "option", "v", Path),
-    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+    vocab_path=("Path to the vocab for the kb", "positional", None, Path),
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
-    """Load the model, set up the pipeline and train the entity linker.
-    The `nlp` model specified as input, must share the same `vocab` as the KB."""
-    if model is None and vocab_path is None:
-        raise ValueError(Errors.E151)
-
-    if model is not None:
-        nlp = spacy.load(model)  # load existing spaCy model
-        print("Loaded model '%s'" % model)
-    else:
-        vocab = Vocab().from_disk(vocab_path)
-        nlp = spacy.blank("en", vocab=vocab)  # create blank Language class
-        nlp.vocab.vectors.name = "spacy_pretrained_vectors"
-        print("Created blank 'en' model with vocab from '%s'" % vocab_path)
+def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
+    """Create a blank model with the specified vocab, set up the pipeline and train the entity linker.
+    The `vocab` should be the one used during creation of the KB."""
+    vocab = Vocab().from_disk(vocab_path)
+    nlp = spacy.blank("en", vocab=vocab)  # create blank Language class with correct vocab
+    nlp.vocab.vectors.name = "spacy_pretrained_vectors"
+    print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
@@ -85,7 +77,7 @@ def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
         entity_linker = nlp.create_pipe("entity_linker")
         kb = KnowledgeBase(vocab=nlp.vocab)
         kb.load_bulk(kb_path)
-        print("Loaded Knowledge Base")
+        print("Loaded Knowledge Base from '%s'" % kb_path)
         entity_linker.set_kb(kb)
         nlp.add_pipe(entity_linker, last=True)
     else:
@@ -138,6 +130,7 @@ def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
         if not output_dir.exists():
             output_dir.mkdir()
         nlp.to_disk(output_dir)
+        print()
         print("Saved model to", output_dir)
 
         # test the saved model

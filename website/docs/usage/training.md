@@ -405,8 +405,7 @@ referred to as the "catastrophic forgetting" problem.
 
 ## Entity linking {#entity-linker}
 
-To train an entity linking model, you first need to define an knowledge base (KB).
-After creating the KB, you can train an entity linking component.
+To train an entity linking model, you first need to define a knowledge base (KB).
 
 ### Creating a knowledge base {#kb}
 
@@ -428,25 +427,21 @@ https://github.com/explosion/spaCy/tree/master/examples/training/pretrain_kb.py
 
 1. **Load the model** you want to start with, or create an **empty model** using
    [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language and
-   a pre-defined [`vocab`](/api/vocab) object. The script requires .
+   a pre-defined [`vocab`](/api/vocab) object.
 2. **Pretrain the entity embeddings** by running the descriptions of the entities
    through a simple encoder-decoder network. The current implementation requires 
    the `nlp` model to have access to pre-trained word embeddings, but a custom 
-   implementation of this enoding step could also be used.
+   implementation of this enoding step can also be used.
 3. **Construct the KB** by defining all entities with their pretrained vectors,
     and all aliases with their prior probabilities.
-4. **Save** the kb using [`kb.dump`](/api/kb#dump).
-5. **Test** the model to make sure the entities were added correctly.
+4. **Save** the KB using [`kb.dump`](/api/kb#dump).
+5. **Test** the KB to make sure the entities were added correctly.
 
 ### Training an entity linking model {#entity-linker-model}
 
 This example shows how to create an entity linker pipe using a previously created
 knowledge base. The entity linker pipe is then trained with your own
-examples, starting off with an existing, pre-trained `nlp` model, or from scratch
-using a blank `Language` class. In both cases, the `vocab` instance needs to correspond
-with the `vocab` used for creating the knowledge base.
-
-To train the entity linker with your own examples, you'll need to provide 
+examples. To do so, you'll need to provide 
 **example texts**, and the **character offsets** and **knowledge base identifiers** 
 of each entity contained in the texts. 
 
@@ -456,13 +451,15 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_li
 
 #### Step by step guide {#step-by-step-entity-linker}
 
-1. **Load the KB and the model** you want to start with, or create an **empty model** using
-   [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language. If
-   you're using a blank model, you need to specify the path
-   to the `Vocab` object that was used to create the KB. 
+1. **Load the KB** you want to start with, and specify the path
+   to the `Vocab` object that was used to create this KB. 
+   Then, create an **empty model** using
+   [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language. 
    Don't forget to add the KB to the entity linker,
    and to add the entity linker to the pipeline.
-   If you're using an existing model, make sure to disable all other
+   In practical applications, you will want a more advanced pipeline including
+   also components for [named entity recognition](/usage/training#ner).
+   If you're using a model with additional components, make sure to disable all other
    pipeline components during training using
    [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
    training the entity linker.

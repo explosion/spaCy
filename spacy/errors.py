@@ -124,7 +124,8 @@ class Errors(object):
     E016 = ("MultitaskObjective target should be function or one of: dep, "
             "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add unicode or bytes. Got type: {value_type}")
-    E018 = ("Can't retrieve string for hash '{hash_value}'.")
+    E018 = ("Can't retrieve string for hash '{hash_value}'. This usually refers "
+            "to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
             "IDs are enumerated in spacy/syntax/{src}.pyx.")
     E020 = ("Could not find a gold-standard action to supervise the "
