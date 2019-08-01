@@ -415,7 +415,6 @@ class Errors(object):
             "is assigned to a KB identifier.")
     E149 = ("Error deserializing model. Check that the config used to create the "
             "component matches the model being loaded.")
-    E150 = ("Either the `nlp` model or the `vocab` should be specified.")
 
 @add_codes
 class TempErrors(object):
