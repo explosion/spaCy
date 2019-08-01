@@ -44,7 +44,7 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
     Either an nlp model or a vocab is needed to provide access to pre-trained word embeddings.
     If an output_dir is provided, the KB will be stored there in a file 'kb'."""
     if model is None and vocab_path is None:
-        raise ValueError(Errors.E150)
+        raise ValueError(Errors.E151)
 
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model

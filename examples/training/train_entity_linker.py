@@ -68,7 +68,7 @@ def main(kb_path, vocab_path=None, model=None, output_dir=None, n_iter=50):
     """Load the model, set up the pipeline and train the entity linker.
     The `nlp` model specified as input, must share the same `vocab` as the KB."""
     if model is None and vocab_path is None:
-        raise ValueError(Errors.E150)
+        raise ValueError(Errors.E151)
 
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
