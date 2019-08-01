@@ -417,6 +417,7 @@ class Errors(object):
             "component matches the model being loaded.")
     E150 = ("The language of the `nlp` object and the `vocab` should be the same, "
             "but found '{nlp}' and '{vocab}' respectively.")
+    E151 = ("Either the `nlp` model or the `vocab` should be specified.")
 
 @add_codes
 class TempErrors(object):
