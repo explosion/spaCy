@@ -409,6 +409,12 @@ cdef class Token:
         return xp.sqrt(total) if total != 0. else 0.
 
     @property
+    def tensor(self):
+        if self.doc.tensor is None:
+            return None
+        return self.doc.tensor[self.i]
+
+    @property
     def n_lefts(self):
         """The number of leftward immediate children of the word, in the
         syntactic dependency parse.

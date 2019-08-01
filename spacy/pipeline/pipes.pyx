@@ -66,8 +66,12 @@ class Pipe(object):
         and `set_annotations()` methods.
         """
         self.require_model()
-        scores, tensors = self.predict([doc])
-        self.set_annotations([doc], scores, tensors=tensors)
+        predictions = self.predict([doc])
+        if isinstance(predictions, tuple) and len(tuple) == 2:
+            scores, tensors = predictions
+            self.set_annotations([doc], scores, tensor=tensors)
+        else:
+            self.set_annotations([doc], predictions)
         return doc
 
     def require_model(self):
