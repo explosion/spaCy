@@ -142,7 +142,7 @@ class GoldCorpus(object):
                 continue
             elif path.is_dir():
                 paths.extend(path.iterdir())
-            elif path.parts[-1].endswith([".json", ".jsonl"]):
+            elif path.parts[-1].endswith((".json", ".jsonl")):
                 locs.append(path)
         return locs
 
