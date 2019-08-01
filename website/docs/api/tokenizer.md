@@ -5,7 +5,7 @@ tag: class
 source: spacy/tokenizer.pyx
 ---
 
-Segment text, and create `Doc` objects with the discovered segment boundaries.
+Segment text, and create `Doc` objects with the discovered segment boundaries. For a deeper understanding, see the docs on [how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 
@@ -109,7 +109,7 @@ if no suffix rules match.
 
 Add a special-case tokenization rule. This mechanism is also used to add custom
 tokenizer exceptions to the language data. See the usage guide on
-[adding languages](/usage/adding-languages#tokenizer-exceptions) for more
+[adding languages](/usage/adding-languages#tokenizer-exceptions) and [linguistic features](/usage/linguistic-features#special-cases) for more
 details and examples.
 
 > #### Example
