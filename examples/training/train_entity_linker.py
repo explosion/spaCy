@@ -67,7 +67,8 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
     """Create a blank model with the specified vocab, set up the pipeline and train the entity linker.
     The `vocab` should be the one used during creation of the KB."""
     vocab = Vocab().from_disk(vocab_path)
-    nlp = spacy.blank("en", vocab=vocab)  # create blank Language class with correct vocab
+    # create blank Language class with correct vocab
+    nlp = spacy.blank("en", vocab=vocab)
     nlp.vocab.vectors.name = "spacy_pretrained_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
@@ -94,9 +95,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
                     new_dict[kb_id] = value
                 else:
                     print(
-                        "Removed",
-                        kb_id,
-                        "from the training data because it is not in the KB.",
+                        "Removed", kb_id, "from training because it is not in the KB."
                     )
             annotation["links"][offset] = new_dict
 
@@ -144,7 +143,7 @@ def _apply_model(nlp):
         doc = nlp.tokenizer(text)
 
         # set entities so the evaluation is independent of the NER step
-        # all the examples contain Russ Cochran as the first two tokens in the sentence
+        # all the examples contain 'Russ Cochran' as the first two tokens in the sentence
         rc_ent = Span(doc, 0, 2, label=PERSON)
         doc.ents = [rc_ent]
 

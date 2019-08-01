@@ -430,8 +430,8 @@ kb.add_alias(alias="Douglas", entities=["Q1004791", "Q42", "Q5301561"], probabil
 kb.add_alias(alias="Douglas Adams", entities=["Q42"], probabilities=[0.9])
 
 print()
-print("Number of entities in KB:",kb.get_size_entities())
-print("Number of aliases in KB:", kb.get_size_aliases())
+print("Number of entities in KB:",kb.get_size_entities()) # 3
+print("Number of aliases in KB:", kb.get_size_aliases()) # 2
 ```
 
 ### Candidate generation

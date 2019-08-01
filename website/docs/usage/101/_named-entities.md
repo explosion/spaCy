@@ -8,7 +8,8 @@ _perfectly_ and might need some tuning later, depending on your use case.
 Some models can disambiguate a named entity in text to a unique identifier
 from a knowledge base (KB). This grounds the meaning of the named entity into
 the real-world, allowing downstream integration of the textual information with
-structured knowledge, using the unique identifiers as anchors.
+structured knowledge, using the unique identifiers as anchors. If no appropriate 
+ID could be assigned to an entity, this will be tagged with the string `NIL`.
 
 Named entities are available as the `ents` property of a `Doc`:
 
@@ -33,7 +34,7 @@ for ent in doc.ents:
 | ----------- | :---: | :-: | ------- | ---------------------------------------------------- | ---------- | 
 | Apple       |   0   |  5  | `ORG`   | Companies, agencies, institutions.                   | Q312       | 
 | U.K.        |  27   | 31  | `GPE`   | Geopolitical entity, i.e. countries, cities, states. | Q145       | 
-| \$1 billion |  44   | 54  | `MONEY` | Monetary values, including unit.                     |            | 
+| \$1 billion |  44   | 54  | `MONEY` | Monetary values, including unit.                     | NIL        | 
 
 Using spaCy's built-in [displaCy visualizer](/usage/visualizers), here's what
 our example sentence and its named entities look like:

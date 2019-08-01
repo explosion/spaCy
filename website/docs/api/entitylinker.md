@@ -32,7 +32,6 @@ shortcut for this and instantiate the component using its string name and
 > ```python
 > # Construction via create_pipe
 > entity_linker = nlp.create_pipe("entity_linker")
-> entity_linker = nlp.create_pipe("entity_linker", config={"context_width": 128})
 >
 > # Construction from class
 > from spacy.pipeline import EntityLinker
@@ -44,7 +43,6 @@ shortcut for this and instantiate the component using its string name and
 | --------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `vocab`         | `Vocab`                       | The shared vocabulary.                                                                                                                                |
 | `model`         | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `context_width` | int                           | Width of the context encoder, defaults to 128.                                                                                                        |
 | `hidden_width`  | int                           | Width of the hidden layer of the entity linking model, defaults to 128.                                                                               |
 | `incl_prior`    | bool                          | Whether or not to include prior probabilities in the model. Defaults to True.                                                                         |
 | `incl_context`  | bool                          | Whether or not to include the local context in the model (if not: only prior probabilites are used). Defaults to True.                                |

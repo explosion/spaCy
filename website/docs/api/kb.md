@@ -27,7 +27,7 @@ Create the knowledge base.
 | ----------------------- | ---------------- | ----------------------------------------- |
 | `vocab`                 | `Vocab`          | A `Vocab` object.                         |  
 | `entity_vector_length`  | int              | Length of the fixed-size entity vectors.  |   
-| **RETURNS**             | `KnowledgeBase`  | The newly constructed object.             |                                                                                     |
+| **RETURNS**             | `KnowledgeBase`  | The newly constructed object.             |  
 
 
 ## KnowledgeBase.entity_vector_length {#entity_vector_length tag="property"}
@@ -46,8 +46,8 @@ and entity vector, which should be of length [`entity_vector_length`](/api/kb#en
 > #### Example
 >
 > ```python
-> kb.add_entity(entity="Q42", freq=0.3, entity_vector=vector1)
-> kb.add_entity(entity="Q463035", freq=0.1, entity_vector=vector2)
+> kb.add_entity(entity="Q42", freq=32, entity_vector=vector1)
+> kb.add_entity(entity="Q463035", freq=111, entity_vector=vector2)
 > ```
 
 | Name            | Type          | Description                                       |
@@ -64,7 +64,7 @@ and entity vector for each entity.
 > #### Example
 >
 > ```python
-> kb.set_entities(entity_list=["Q42", "Q463035"], freq_list=[0.3, 0.1], vector_list=[vector1, vector2])
+> kb.set_entities(entity_list=["Q42", "Q463035"], freq_list=[32, 111], vector_list=[vector1, vector2])
 > ```
 
 | Name          | Type          | Description                                       |
@@ -113,7 +113,7 @@ Get a list of all entity IDs in the knowledge base.
 > #### Example
 >
 > ```python
-> all_entities = kb.get_entity_strings
+> all_entities = kb.get_entity_strings()
 > ```
 
 | Name        | Type | Description                                   |
@@ -127,7 +127,7 @@ Get the total number of aliases in the knowledge base.
 > #### Example
 >
 > ```python
-> total_aliases = kb.get_size_aliases
+> total_aliases = kb.get_size_aliases()
 > ```
 
 | Name        | Type | Description                                   |
@@ -141,7 +141,7 @@ Get a list of all aliases in the knowledge base.
 > #### Example
 >
 > ```python
-> all_aliases = kb.get_alias_strings
+> all_aliases = kb.get_alias_strings()
 > ```
 
 | Name        | Type | Description                                   |
@@ -187,7 +187,7 @@ the prior probability of the fact that the mention links to the entity ID.
 > #### Example
 >
 > ```python
-> probability = kb.get_prior_prob("Q42", "douglas")
+> probability = kb.get_prior_prob("Q42", "Douglas")
 > ```
 
 | Name          | Type          | Description                                                     |
@@ -203,7 +203,7 @@ Save the current state of the knowledge base to a directory.
 > #### Example
 >
 > ```python
-> kb.dump(my_location)
+> kb.dump(loc)
 > ```
 
 | Name          | Type             | Description                                                                                                              |

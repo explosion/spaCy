@@ -458,7 +458,7 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_li
    Don't forget to add the KB to the entity linker,
    and to add the entity linker to the pipeline.
    In practical applications, you will want a more advanced pipeline including
-   also components for [named entity recognition](/usage/training#ner).
+   also a component for [named entity recognition](/usage/training#ner).
    If you're using a model with additional components, make sure to disable all other
    pipeline components during training using
    [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be

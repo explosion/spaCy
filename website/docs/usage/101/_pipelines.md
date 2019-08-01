@@ -42,7 +42,9 @@ entity recognizer doesn't use any features set by the tagger and parser, and so
 on. This means that you can swap them, or remove single components from the
 pipeline without affecting the others.
 
-One exception is the entity linker, which should be preceded by the named entity recognizer.
+One exception is the entity linker, which should always be preceded by 
+a pipeline component that recognizes entities such as the 
+[`EntityRecognizer`](/api/entityrecognizer).
 
 Custom components may also depend on annotations set by other components.
 For example, a custom lemmatizer may need the part-of-speech tags assigned, so

@@ -585,7 +585,8 @@ spaCy provides functionality to perform entity linking, which resolves a textual
 to a unique identifier from a knowledge base (KB).
  
 The default model assigns WikiData identifiers, but you can create your own 
-[`KnowledgeBase`](/api/kb) and [train a new Entity Linking model](/usage/training#entity-linker) using that KB.
+[`KnowledgeBase`](/api/kb) and [train a new Entity Linking model](/usage/training#entity-linker) using 
+that custom-made KB.
 
 
 ### Accessing entity identifiers {#accessing}

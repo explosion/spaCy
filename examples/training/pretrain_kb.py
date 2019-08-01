@@ -42,7 +42,8 @@ DESC_WIDTH = 64  # dimension of output entity vectors
 def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
     """Load the model, create the KB and pretrain the entity encodings.
     Either an nlp model or a vocab is needed to provide access to pre-trained word embeddings.
-    If an output_dir is provided, the KB will be stored there in a file 'kb'."""
+    If an output_dir is provided, the KB will be stored there in a file 'kb'.
+    When providing an nlp model, the updated vocab will also be written to a directory in the output_dir."""
     if model is None and vocab_path is None:
         raise ValueError(Errors.E151)
 
@@ -60,12 +61,12 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
     # set up the data
     entity_ids = []
     descriptions = []
-    frequencies = []
+    freqs = []
     for key, value in ENTITIES.items():
         desc, freq = value
         entity_ids.append(key)
         descriptions.append(desc)
-        frequencies.append(freq)
+        freqs.append(freq)
 
     # training entity description encodings
     # this part can easily be replaced with a custom entity encoder
@@ -82,9 +83,7 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
     embeddings = encoder.apply_encoder(descriptions)
 
     # set the entities, can also be done by calling `kb.add_entity` for each entity
-    kb.set_entities(
-        entity_list=entity_ids, freq_list=frequencies, vector_list=embeddings
-    )
+    kb.set_entities(entity_list=entity_ids, freq_list=freqs, vector_list=embeddings)
 
     # adding aliases, the entities need to be defined in the KB beforehand
     kb.add_alias(
