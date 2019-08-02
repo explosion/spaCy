@@ -3,14 +3,21 @@
         {
             "code": "en",
             "name": "English",
-            "models": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
+            "models": [
+                "en_core_web_sm",
+                "en_core_web_md",
+                "en_core_web_lg",
+                "en_vectors_web_lg",
+                "en_pytt_bertbaseuncased_lg",
+                "en_pytt_xlnetbasecased_lg"
+            ],
             "example": "This is a sentence.",
             "has_examples": true
         },
         {
             "code": "de",
             "name": "German",
-            "models": ["de_core_news_sm", "de_core_news_md"],
+            "models": ["de_core_news_sm", "de_core_news_md", "de_pytt_bertbasecased_lg"],
             "example": "Dies ist ein Satz.",
             "has_examples": true
         },
