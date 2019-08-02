@@ -795,7 +795,7 @@ class Language(object):
         serializers["vocab"] = lambda p: self.vocab.to_disk(p)
         util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path, exclude=tuple(), disable=None):
+    def from_disk(self, path, exclude=tuple(), disable=None, pipeline=None):
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
@@ -806,9 +806,14 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#from_disk
         """
+        if pipeline is True:
+            pipeline = self.Defaults.pipe_names
+        elif pipeline in (False, None):
+            pipeline = []
         if disable is not None:
             deprecation_warning(Warnings.W014)
             exclude = disable
+
         path = util.ensure_path(path)
         deserializers = OrderedDict()
         deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
@@ -818,18 +823,29 @@ class Language(object):
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
             p, exclude=["vocab"]
         )
-        for name, proc in self.pipeline:
-            if name in exclude:
-                continue
-            if not hasattr(proc, "from_disk"):
-                continue
-            deserializers[name] = lambda p, proc=proc: proc.from_disk(
-                p, exclude=["vocab"]
-            )
+
         if not (path / "vocab").exists() and "vocab" not in exclude:
             # Convert to list here in case exclude is (default) tuple
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
+
+        # initialize and deserialize component by component
+        for name in pipeline:
+            if not disable or name not in disable:
+                if name in exclude:
+                    continue
+
+                config = self.meta.get("pipeline_args", {}).get(name, {})
+                proc = self.create_pipe(name, config=config)
+                self.add_pipe(proc, name=name)
+
+                if hasattr(proc, "from_disk"):
+                    proc_deserializers = OrderedDict()
+                    proc_deserializers[name] = lambda p, proc=proc: proc.from_disk(
+                        p, exclude=["vocab"]
+                     )
+                    util.from_disk(path, proc_deserializers, exclude=exclude)
+
         self._path = path
         return self
 
