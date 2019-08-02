@@ -472,6 +472,17 @@ cdef class Span:
         return self._vector_norm
 
     @property
+    def tensor(self):
+        """The span's slice of the doc's tensor.
+        
+        RETURNS (ndarray[ndim=2, dtype='float32']): A 2D numpy or cupy array
+            representing the span's semantics.
+        """
+        if self.doc.tensor is None:
+            return None
+        return self.doc.tensor[self.start : self.end]
+
+    @property
     def sentiment(self):
         """RETURNS (float): A scalar value indicating the positivity or
             negativity of the span.
