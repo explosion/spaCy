@@ -56,7 +56,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 [`__call__`](/api/entitylinker#call) and
 [`pipe`](/api/entitylinker#pipe) delegate to the
 [`predict`](/api/entitylinker#predict) and
-[`set_annotations`](/api/entitylinker#set_annotations) methods.
+[`set_annotations`](/api/entitylinker#set_annotations) methods. 
 
 > #### Example
 >
