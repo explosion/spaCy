@@ -419,7 +419,7 @@ class Errors(object):
             "but found '{nlp}' and '{vocab}' respectively.")
     E151 = ("Trying to call nlp.update without required annotation types. "
             "Expected top-level keys 'words', 'tags', 'heads', 'deps', 'entities' or 'cats'."
-            " Got: {annotations}.")
+            " Got: {unexpected_keys}.")
 
 
 @add_codes
