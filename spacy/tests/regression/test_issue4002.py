@@ -6,7 +6,6 @@ from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc
 
 
-@pytest.mark.xfail
 def test_issue4002(en_vocab):
     """Test that the PhraseMatcher can match on overwritten NORM attributes.
     """
