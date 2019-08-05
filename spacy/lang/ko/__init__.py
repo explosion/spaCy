@@ -32,6 +32,7 @@ else:
     from typing import NamedTuple
 
     class Morpheme(NamedTuple):
+        
         surface = str("")
         lemma = str("")
         tag = str("")
