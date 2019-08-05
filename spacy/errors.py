@@ -418,7 +418,7 @@ class Errors(object):
     E150 = ("The language of the `nlp` object and the `vocab` should be the same, "
             "but found '{nlp}' and '{vocab}' respectively.")
     E151 = ("Trying to call nlp.update without required annotation types. "
-            "Expected top-level keys 'words', 'tags', 'heads', 'deps', 'entities' or 'cats'."
+            "Expected top-level keys: {expected_keys}."
             " Got: {unexpected_keys}.")
 
 
