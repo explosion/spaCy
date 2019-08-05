@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import os
-from os import path
 import random
 import datetime
 from pathlib import Path
@@ -122,8 +120,8 @@ def run_pipeline():
 
         print("STEP 3b: write KB and NLP", now())
 
-        if not path.exists(KB_DIR):
-            os.makedirs(KB_DIR)
+        if not KB_DIR.exists():
+            KB_DIR.mkdir()
         kb_1.dump(KB_DIR / KB_FILE)
         nlp_1.to_disk(NLP_1_DIR)
         print()

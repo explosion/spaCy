@@ -1,16 +1,103 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from .train_descriptions import EntityEncoder
-from . import wikidata_processor as wd, wikipedia_processor as wp
+import spacy
+from bin.wiki_entity_linking.train_descriptions import EntityEncoder
+from bin.wiki_entity_linking import wikidata_processor as wd, wikipedia_processor as wp
 from spacy.kb import KnowledgeBase
+from pathlib import Path
 
 import csv
 import datetime
 
+import plac
+
 
 INPUT_DIM = 300  # dimension of pre-trained input vectors
 DESC_WIDTH = 64  # dimension of output entity vectors
+
+
+@plac.annotations(
+    wd_json=("Path to the downloaded WikiData JSON dump.", "positional", None, Path),
+    output_dir=("Output directory", "positional", None, Path),
+    model=("Model name, should include pretrained vectors.", "positional", None, str),
+    max_per_alias=("Max. # entities per alias (default 10)", "option", "a", int),
+    min_freq=("Min. count of an entity in the corpus (default 20)", "option", "e", int),
+    min_pair=("Min. count of entity-alias pairs (default 5)", "option", "c", int),
+    loc_prior_prob=("Location to file with prior probabilities", "option", "p", Path),
+    loc_entity_freq=("Location to file with entity frequencies", "option", "f", Path),
+    limit=("Optional threshold to limit lines read from dump", "option", "l", int),
+)
+def main(
+    wd_json,
+    output_dir,
+    model,
+    max_per_alias=10,
+    min_freq=20,
+    min_pair=5,
+    loc_prior_prob=None,
+    loc_entity_freq=None,
+    limit=None,
+):
+    nlp = spacy.load(model)  # load existing spaCy model
+    print("Loaded model '%s'" % model)
+
+    # TODO: get dim of pretrained vectors
+
+    if limit is not None:
+        print("Warning: reading only", limit, "lines of Wikipedia/Wikidata dumps.")
+
+    # STEP 0: set up IO
+    if not output_dir.exists():
+        output_dir.mkdir()
+
+    loc_entity_defs = output_dir / "entity_defs.csv"
+    loc_entity_desc = output_dir / "entity_descriptions.csv"
+
+    loc_kb = output_dir / "kb"
+    loc_nlp = output_dir / "nlp"
+
+    # STEP 1 : create prior probabilities from WP (run only once)
+    print()
+    if loc_prior_prob:
+        print("STEP 1: reading prior probabilities from", loc_prior_prob, now())
+    else:
+        loc_prior_prob = output_dir / "prior_prob.csv"
+        print("STEP 1: writing prior probabilities at", loc_prior_prob, now())
+        wp.read_prior_probs(wd_json, loc_prior_prob, limit=limit)
+
+    # STEP 2 : deduce entity frequencies from WP (run only once)
+    print()
+    if loc_entity_freq:
+        print("STEP 2: reading entity frequencies from", loc_entity_freq, now())
+    else:
+        loc_entity_freq = output_dir / "entity_freq.csv"
+        print("STEP 2: writing entity frequencies at", loc_entity_freq, now())
+        wp.write_entity_counts(loc_prior_prob, loc_entity_freq, to_print=False)
+
+    # STEP 3 : create KB and write to file
+    print()
+    print("STEP 3: creating the KB", now())
+    kb = create_kb(
+        nlp=nlp,
+        max_entities_per_alias=max_per_alias,
+        min_entity_freq=min_freq,
+        min_occ=min_pair,
+        entity_def_output=loc_entity_defs,
+        entity_descr_output=loc_entity_desc,
+        count_input=loc_entity_freq,
+        prior_prob_input=loc_prior_prob,
+        wikidata_input=wd_json,
+        limit=limit,
+    )
+
+    # STEP 4 : write the KB to file
+    print()
+    print("STEP 4: writing the KB to", loc_kb, now())
+
+    kb.dump(loc_kb)
+    nlp.to_disk(loc_nlp)
+    print()
 
 
 def create_kb(
@@ -23,6 +110,7 @@ def create_kb(
     count_input,
     prior_prob_input,
     wikidata_input,
+    limit=None,
 ):
     # Create the knowledge base from Wikidata entries
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=DESC_WIDTH)
@@ -32,8 +120,10 @@ def create_kb(
 
     if read_raw_data:
         print()
-        print(" * _read_wikidata_entities", datetime.datetime.now())
-        title_to_id, id_to_descr = wd.read_wikidata_entities_json(wikidata_input)
+        print(" * read wikidata entities:", now())
+        title_to_id, id_to_descr = wd.read_wikidata_entities_json(
+            wikidata_input, limit=limit
+        )
 
         # write the title-ID and ID-description mappings to file
         _write_entity_files(
@@ -46,7 +136,7 @@ def create_kb(
         id_to_descr = get_id_to_description(entity_descr_output)
 
     print()
-    print(" * _get_entity_frequencies", datetime.datetime.now())
+    print(" *  get entity frequencies:", now())
     print()
     entity_frequencies = wp.get_all_frequencies(count_input=count_input)
 
@@ -65,40 +155,41 @@ def create_kb(
             filtered_title_to_id[title] = entity
 
     print(len(title_to_id.keys()), "original titles")
-    print("kept", len(filtered_title_to_id.keys()), " with frequency", min_entity_freq)
+    kept_nr = len(filtered_title_to_id.keys())
+    print("kept", kept_nr, "entities with min. frequency", min_entity_freq)
 
     print()
-    print(" * train entity encoder", datetime.datetime.now())
+    print(" * train entity encoder:", now())
     print()
     encoder = EntityEncoder(nlp, INPUT_DIM, DESC_WIDTH)
     encoder.train(description_list=description_list, to_print=True)
 
     print()
-    print(" * get entity embeddings", datetime.datetime.now())
+    print(" * get entity embeddings:", now())
     print()
     embeddings = encoder.apply_encoder(description_list)
 
-    print()
-    print(" * adding", len(entity_list), "entities", datetime.datetime.now())
+    print(" * adding", len(entity_list), "entities", now())
     kb.set_entities(
         entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings
     )
 
-    print()
-    print(" * adding aliases", datetime.datetime.now())
-    print()
-    _add_aliases(
+    alias_cnt = _add_aliases(
         kb,
         title_to_id=filtered_title_to_id,
         max_entities_per_alias=max_entities_per_alias,
         min_occ=min_occ,
         prior_prob_input=prior_prob_input,
     )
+    print()
+    print(" * adding", alias_cnt, "aliases", now())
+    print()
 
     print()
-    print("kb size:", len(kb), kb.get_size_entities(), kb.get_size_aliases())
+    print("# of entities in kb:", kb.get_size_entities())
+    print("# of aliases in kb:", kb.get_size_aliases())
 
-    print("done with kb", datetime.datetime.now())
+    print("done with kb", now())
     return kb
 
 
@@ -140,6 +231,7 @@ def get_id_to_description(entity_descr_output):
 
 def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_input):
     wp_titles = title_to_id.keys()
+    cnt = 0
 
     # adding aliases with prior probabilities
     # we can read this file sequentially, it's sorted by alias, and then by count
@@ -176,6 +268,7 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
                                 entities=selected_entities,
                                 probabilities=prior_probs,
                             )
+                            cnt += 1
                         except ValueError as e:
                             print(e)
                 total_count = 0
@@ -190,3 +283,12 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
             previous_alias = new_alias
 
             line = prior_file.readline()
+    return cnt
+
+
+def now():
+    return datetime.datetime.now()
+
+
+if __name__ == "__main__":
+    plac.call(main)
