@@ -758,7 +758,7 @@
             ],
             "category": ["pipeline", "standalone", "visualizers"],
             "tags": ["vectors"],
-            "author": "Explosion AI",
+            "author": "Explosion",
             "author_links": {
                 "twitter": "explosion_ai",
                 "github": "explosion",
@@ -918,7 +918,7 @@
             ],
             "code_language": "bash",
             "category": ["standalone", "training"],
-            "author": "Explosion AI",
+            "author": "Explosion",
             "author_links": {
                 "twitter": "explosion_ai",
                 "github": "explosion",
@@ -1558,6 +1558,30 @@
             "author": "Richard Paul Hudson",
             "author_links": {
                 "github": "richardpaulhudson"
+            }
+        },
+        {
+            "id": "spacy-pytorch-transformers",
+            "title": "spacy-pytorch-transformers",
+            "slogan": "spaCy pipelines for pre-trained BERT, XLNet and GPT-2",
+            "description": "This package provides spaCy model pipelines that wrap [Hugging Face's `pytorch-transformers`](https://github.com/huggingface/pytorch-transformers) package, so you can use them in spaCy. The result is convenient access to state-of-the-art transformer architectures, such as BERT, GPT-2, XLNet, etc.",
+            "github": "explosion/spacy-pytorch-transformers",
+            "url": "https://explosion.ai/blog/spacy-pytorch-transformers",
+            "pip": "spacy-pytorch-transformers",
+            "category": ["pipeline", "models", "research"],
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"en_pytt_bertbaseuncased_lg\")",
+                "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")",
+                "print(doc[0].similarity(doc[7]))",
+                "print(doc._.pytt_last_hidden_state.shape)"
+            ],
+            "author": "Explosion",
+            "author_links": {
+                "twitter": "explosion_ai",
+                "github": "explosion",
+                "website": "https://explosion.ai"
             }
         }
     ],
