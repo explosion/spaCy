@@ -32,9 +32,9 @@ else:
     from typing import NamedTuple
 
     class Morpheme(NamedTuple):
-        surface = str("")
-        lemma = str("")
-        tag = str("")
+        surface: str
+        lemma: str
+        tag: str
 
 
 def try_mecab_import():
