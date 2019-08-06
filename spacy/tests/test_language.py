@@ -22,6 +22,7 @@ def nlp():
 def test_language_update(nlp):
     text = "hello world"
     annots = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
+    wrongkeyannots = {"LABEL": True}
     doc = Doc(nlp.vocab, words=text.split(" "))
     gold = GoldParse(doc, **annots)
     # Update with doc and gold objects
@@ -37,6 +38,8 @@ def test_language_update(nlp):
         nlp.update([doc], [])
     with pytest.raises(IndexError):
         nlp.update([], [gold])
+    with pytest.raises(ValueError):
+        nlp.update([text], [wrongkeyannots])
 
 
 def test_language_evaluate(nlp):
