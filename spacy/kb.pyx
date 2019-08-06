@@ -63,7 +63,7 @@ cdef class Candidate:
 
 cdef class KnowledgeBase:
 
-    def __init__(self, Vocab vocab, entity_vector_length):
+    def __init__(self, Vocab vocab, entity_vector_length=64):
         self.vocab = vocab
         self.mem = Pool()
         self.entity_vector_length = entity_vector_length

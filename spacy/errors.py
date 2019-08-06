@@ -419,6 +419,9 @@ class Errors(object):
             "but found '{nlp}' and '{vocab}' respectively.")
     E151 = ("The `nlp` object should have access to pre-trained word vectors, cf. "
             "https://spacy.io/usage/models#languages.")
+    E152 = ("The `nlp` object should have a pre-trained `ner` component.")
+    E153 = ("Either provide a path to a preprocessed training directory, "
+            "or to the original Wikipedia XML dump.")
 
 @add_codes
 class TempErrors(object):
