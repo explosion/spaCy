@@ -7,7 +7,6 @@ from pathlib import Path
 
 from bin.wiki_entity_linking import wikipedia_processor as wp
 from bin.wiki_entity_linking import training_set_creator, kb_creator
-from bin.wiki_entity_linking.kb_creator import DESC_WIDTH
 
 import spacy
 from spacy.kb import KnowledgeBase
@@ -49,6 +48,7 @@ EPOCHS = 10
 DROPOUT = 0.5
 LEARN_RATE = 0.005
 L2 = 1e-6
+ENTITY_VECTOR_LENGTH = 64
 CONTEXT_WIDTH = 128
 
 
@@ -113,6 +113,7 @@ def run_pipeline():
             count_input=ENTITY_COUNTS,
             prior_prob_input=PRIOR_PROB,
             wikidata_input=WIKIDATA_JSON,
+            entity_vector_length=ENTITY_VECTOR_LENGTH,
         )
         print("kb entities:", kb_1.get_size_entities())
         print("kb aliases:", kb_1.get_size_aliases())
@@ -130,7 +131,7 @@ def run_pipeline():
     if to_read_kb:
         print("STEP 4: to_read_kb", now())
         nlp_2 = spacy.load(NLP_1_DIR)
-        kb_2 = KnowledgeBase(vocab=nlp_2.vocab, entity_vector_length=DESC_WIDTH)
+        kb_2 = KnowledgeBase(vocab=nlp_2.vocab, entity_vector_length=ENTITY_VECTOR_LENGTH)
         kb_2.load_bulk(KB_DIR / KB_FILE)
         print("kb entities:", kb_2.get_size_entities())
         print("kb aliases:", kb_2.get_size_aliases())

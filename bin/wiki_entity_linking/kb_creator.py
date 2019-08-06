@@ -12,29 +12,29 @@ import datetime
 
 import plac
 
-
-INPUT_DIM = 300  # dimension of pre-trained input vectors
-DESC_WIDTH = 64  # dimension of output entity vectors
+from spacy import Errors
 
 
 @plac.annotations(
     wd_json=("Path to the downloaded WikiData JSON dump.", "positional", None, Path),
-    output_dir=("Output directory", "positional", None, Path),
     model=("Model name, should include pretrained vectors.", "positional", None, str),
+    output_dir=("Output directory", "positional", None, Path),
     max_per_alias=("Max. # entities per alias (default 10)", "option", "a", int),
     min_freq=("Min. count of an entity in the corpus (default 20)", "option", "e", int),
     min_pair=("Min. count of entity-alias pairs (default 5)", "option", "c", int),
+    entity_vector_length=("Length of entity vectors (default 64)", "option", "v", int),
     loc_prior_prob=("Location to file with prior probabilities", "option", "p", Path),
     loc_entity_freq=("Location to file with entity frequencies", "option", "f", Path),
     limit=("Optional threshold to limit lines read from dump", "option", "l", int),
 )
 def main(
     wd_json,
-    output_dir,
     model,
+    output_dir,
     max_per_alias=10,
     min_freq=20,
     min_pair=5,
+    entity_vector_length=64,
     loc_prior_prob=None,
     loc_entity_freq=None,
     limit=None,
@@ -42,7 +42,9 @@ def main(
     nlp = spacy.load(model)  # load existing spaCy model
     print("Loaded model '%s'" % model)
 
-    # TODO: get dim of pretrained vectors
+    # check the length of the nlp vectors
+    if not "vectors" in nlp.meta or not nlp.vocab.vectors.size:
+        raise ValueError(Errors.E151)
 
     if limit is not None:
         print("Warning: reading only", limit, "lines of Wikipedia/Wikidata dumps.")
@@ -88,6 +90,7 @@ def main(
         count_input=loc_entity_freq,
         prior_prob_input=loc_prior_prob,
         wikidata_input=wd_json,
+        entity_vector_length=entity_vector_length,
         limit=limit,
     )
 
@@ -110,10 +113,18 @@ def create_kb(
     count_input,
     prior_prob_input,
     wikidata_input,
+    entity_vector_length,
     limit=None,
 ):
     # Create the knowledge base from Wikidata entries
-    kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=DESC_WIDTH)
+    kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=entity_vector_length)
+
+    # check the length of the nlp vectors
+    if "vectors" in nlp.meta and nlp.vocab.vectors.size:
+        input_dim = nlp.vocab.vectors_length
+        print("Loaded pre-trained vectors of size %s" % input_dim)
+    else:
+        raise ValueError(Errors.E151)
 
     # disable this part of the pipeline when rerunning the KB generation from preprocessed files
     read_raw_data = True
@@ -161,7 +172,7 @@ def create_kb(
     print()
     print(" * train entity encoder:", now())
     print()
-    encoder = EntityEncoder(nlp, INPUT_DIM, DESC_WIDTH)
+    encoder = EntityEncoder(nlp, input_dim, entity_vector_length)
     encoder.train(description_list=description_list, to_print=True)
 
     print()
