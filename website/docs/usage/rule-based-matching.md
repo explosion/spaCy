@@ -298,7 +298,7 @@ character, but no whitespace – so you'll know it will be handled as one token.
 
 #### Validating and debugging patterns {#pattern-validation new="2.1"}
 
-`Matcher` can validate patterns against a JSON schema with the option
+The `Matcher` can validate patterns against a JSON schema with the option
 `validate=True`. This is useful for debugging patterns during development, in
 particular for catching unsupported attributes.
 
