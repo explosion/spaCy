@@ -173,18 +173,18 @@ def main(
                     except Exception as e:
                         print("Error updating batch:", e)
 
-            if batchnr > 0:
-                el_pipe.cfg["context_weight"] = 1
-                el_pipe.cfg["prior_weight"] = 1
-                dev_acc_context, _ = _measure_acc(dev_data, el_pipe)
-                losses["entity_linker"] = losses["entity_linker"] / batchnr
-                print(
-                    "Epoch, train loss",
-                    itn,
-                    round(losses["entity_linker"], 2),
-                    " / dev acc avg",
-                    round(dev_acc_context, 3),
-                )
+                if batchnr > 0:
+                    el_pipe.cfg["incl_context"] = True
+                    el_pipe.cfg["incl_prior"] = True
+                    dev_acc_context, _ = _measure_acc(dev_data, el_pipe)
+                    losses["entity_linker"] = losses["entity_linker"] / batchnr
+                    print(
+                        "Epoch, train loss",
+                        itn,
+                        round(losses["entity_linker"], 2),
+                        " / dev acc avg",
+                        round(dev_acc_context, 3),
+                    )
 
     # STEP 5: measure the performance of our trained pipe on an independent dev set
     print()
@@ -208,15 +208,15 @@ def main(
         print("dev acc prior:", round(acc_p, 3), prior_by_label)
 
         # using only context
-        el_pipe.cfg["context_weight"] = 1
-        el_pipe.cfg["prior_weight"] = 0
+        el_pipe.cfg["incl_context"] = True
+        el_pipe.cfg["incl_prior"] = False
         dev_acc_context, dev_acc_cont_d = _measure_acc(dev_data, el_pipe)
         context_by_label = [(x, round(y, 3)) for x, y in dev_acc_cont_d.items()]
         print("dev acc context avg:", round(dev_acc_context, 3), context_by_label)
 
         # measuring combined accuracy (prior + context)
-        el_pipe.cfg["context_weight"] = 1
-        el_pipe.cfg["prior_weight"] = 1
+        el_pipe.cfg["incl_context"] = True
+        el_pipe.cfg["incl_prior"] = True
         dev_acc_combo, dev_acc_combo_d = _measure_acc(dev_data, el_pipe)
         combo_by_label = [(x, round(y, 3)) for x, y in dev_acc_combo_d.items()]
         print("dev acc combo avg:", round(dev_acc_combo, 3), combo_by_label)

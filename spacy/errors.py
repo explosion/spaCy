@@ -124,7 +124,8 @@ class Errors(object):
     E016 = ("MultitaskObjective target should be function or one of: dep, "
             "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add unicode or bytes. Got type: {value_type}")
-    E018 = ("Can't retrieve string for hash '{hash_value}'.")
+    E018 = ("Can't retrieve string for hash '{hash_value}'. This usually refers "
+            "to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
             "IDs are enumerated in spacy/syntax/{src}.pyx.")
     E020 = ("Could not find a gold-standard action to supervise the "
@@ -422,6 +423,7 @@ class Errors(object):
     E152 = ("The `nlp` object should have a pre-trained `ner` component.")
     E153 = ("Either provide a path to a preprocessed training directory, "
             "or to the original Wikipedia XML dump.")
+    E154 = ("Either the `nlp` model or the `vocab` should be specified.")
 
 @add_codes
 class TempErrors(object):
