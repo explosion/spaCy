@@ -342,10 +342,8 @@ matcher = Matcher(nlp.vocab, validate=True)
 # Add match ID "HelloWorld" with unsupported attribute CASEINSENSITIVE
 pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"CASEINSENSITIVE": "world"}]
 matcher.add("HelloWorld", None, pattern)
-
-# Raises an error:
-#
-# spacy.errors.MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
+# 🚨 Raises an error:
+# MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
 # Pattern 0:
 # - Additional properties are not allowed ('CASEINSENSITIVE' was unexpected) [2]
 
@@ -926,11 +924,11 @@ doc = nlp(u"MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation}
+#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
 
 The `EntityRuler` can validate patterns against a JSON schema with the option
-`validate=True`. See details under [Validating and debugging
-patterns](#pattern-validation).
+`validate=True`. See details under
+[Validating and debugging patterns](#pattern-validation).
 
 ```python
 ruler = EntityRuler(nlp, validate=True)
