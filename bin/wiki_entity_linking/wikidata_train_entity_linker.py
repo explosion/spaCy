@@ -23,10 +23,6 @@ from spacy.kb import KnowledgeBase
 from spacy import Errors
 from spacy.util import minibatch, compounding
 
-"""
-Demonstrate how to build a knowledge base from WikiData and run an Entity Linking algorithm.
-"""
-
 
 def now():
     return datetime.datetime.now()

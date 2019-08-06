@@ -45,7 +45,7 @@ def main(vocab_path=None, model=None, output_dir=None, n_iter=50):
     If an output_dir is provided, the KB will be stored there in a file 'kb'.
     When providing an nlp model, the updated vocab will also be written to a directory in the output_dir."""
     if model is None and vocab_path is None:
-        raise ValueError(Errors.E151)
+        raise ValueError(Errors.E154)
 
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model

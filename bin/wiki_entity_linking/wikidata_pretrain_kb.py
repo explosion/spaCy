@@ -62,7 +62,7 @@ def main(
     if not output_dir.exists():
         output_dir.mkdir()
 
-    # STEP 1 : create the NLP object
+    # STEP 1: create the NLP object
     print("STEP 1: loaded model", model, now())
     nlp = spacy.load(model)
 
@@ -70,7 +70,7 @@ def main(
     if "vectors" not in nlp.meta or not nlp.vocab.vectors.size:
         raise ValueError(Errors.E151)
 
-    # STEP 2a : create prior probabilities from WP
+    # STEP 2: create prior probabilities from WP
     print()
     if loc_prior_prob:
         print("STEP 2: reading prior probabilities from", loc_prior_prob, now())
@@ -79,7 +79,7 @@ def main(
         print("STEP 2: writing prior probabilities at", loc_prior_prob, now())
         wp.read_prior_probs(wp_xml, loc_prior_prob, limit=limit)
 
-    # STEP 3 : deduce entity frequencies from WP
+    # STEP 3: deduce entity frequencies from WP
     print()
     if loc_entity_freq:
         print("STEP 3: reading entity frequencies from", loc_entity_freq, now())
@@ -92,7 +92,8 @@ def main(
     loc_entity_defs = output_dir / "entity_defs.csv"
     loc_entity_desc = output_dir / "entity_descriptions.csv"
 
-    # STEP 2c : creating the actual KB
+    # STEP 4: creating the actual KB
+    print()
     print("STEP 4: creating the KB at", loc_kb, now())
     kb = kb_creator.create_kb(
         nlp=nlp,
