@@ -49,6 +49,10 @@ cdef int bounds_check(int i, int length, int padding) except -1:
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     if feat_name == LEMMA:
         return token.lemma
+    elif feat_name == NORM:
+        if not token.norm:
+            return token.lex.norm
+        return token.norm
     elif feat_name == POS:
         return token.pos
     elif feat_name == TAG:

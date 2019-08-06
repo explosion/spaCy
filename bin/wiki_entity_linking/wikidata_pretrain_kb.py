@@ -68,7 +68,7 @@ def main(
 
     # check the length of the nlp vectors
     if "vectors" not in nlp.meta or not nlp.vocab.vectors.size:
-        raise ValueError(Errors.E151)
+        raise ValueError(Errors.E155)
 
     # STEP 2: create prior probabilities from WP
     print()

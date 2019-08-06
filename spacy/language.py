@@ -445,6 +445,10 @@ class Language(object):
             if isinstance(doc, basestring_):
                 doc = self.make_doc(doc)
             if not isinstance(gold, GoldParse):
+                expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
+                unexpected_keys = [k for k in gold if k not in expected_keys]
+                if unexpected_keys:
+                    raise ValueError(Errors.E151.format(unexpected_keys=unexpected_keys, expected_keys=expected_keys))
                 gold = GoldParse(doc, **gold)
             doc_objs.append(doc)
             gold_objs.append(gold)

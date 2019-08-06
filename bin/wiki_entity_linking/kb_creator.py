@@ -32,7 +32,7 @@ def create_kb(
         input_dim = nlp.vocab.vectors_length
         print("Loaded pre-trained vectors of size %s" % input_dim)
     else:
-        raise ValueError(Errors.E151)
+        raise ValueError(Errors.E155)
 
     # disable this part of the pipeline when rerunning the KB generation from preprocessed files
     read_raw_data = True

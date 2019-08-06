@@ -418,12 +418,15 @@ class Errors(object):
             "component matches the model being loaded.")
     E150 = ("The language of the `nlp` object and the `vocab` should be the same, "
             "but found '{nlp}' and '{vocab}' respectively.")
-    E151 = ("The `nlp` object should have access to pre-trained word vectors, cf. "
-            "https://spacy.io/usage/models#languages.")
+    E151 = ("Trying to call nlp.update without required annotation types. "
+            "Expected top-level keys: {expected_keys}."
+            " Got: {unexpected_keys}.")
     E152 = ("The `nlp` object should have a pre-trained `ner` component.")
     E153 = ("Either provide a path to a preprocessed training directory, "
             "or to the original Wikipedia XML dump.")
     E154 = ("Either the `nlp` model or the `vocab` should be specified.")
+    E155 = ("The `nlp` object should have access to pre-trained word vectors, cf. "
+            "https://spacy.io/usage/models#languages.")
 
 @add_codes
 class TempErrors(object):
