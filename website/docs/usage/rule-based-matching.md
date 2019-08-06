@@ -851,7 +851,7 @@ pattern. The entity ruler accepts two types of patterns:
 2. **Token patterns** with one dictionary describing one token (list).
 
    ```python
-   {"label": "GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]}
+   {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
    ```
 
 ### Using the entity ruler {#entityruler-usage}
@@ -869,7 +869,7 @@ from spacy.pipeline import EntityRuler
 nlp = English()
 ruler = EntityRuler(nlp)
 patterns = [{"label": "ORG", "pattern": "Apple"},
-            {"label": "GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]}]
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}]
 ruler.add_patterns(patterns)
 nlp.add_pipe(ruler)
 
@@ -911,7 +911,7 @@ line.
 ```json
 ### patterns.jsonl
 {"label": "ORG", "pattern": "Apple"}
-{"label": "GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]}
+{"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
 ```
 
 ```python
