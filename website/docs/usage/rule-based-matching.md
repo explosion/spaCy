@@ -898,7 +898,7 @@ print([(ent.text, ent.label_) for ent in doc.ents])
 
 #### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation}
 
-`EntityRuler` can validate patterns against a JSON schema with the option
+The `EntityRuler` can validate patterns against a JSON schema with the option
 `validate=True`. See details under [Validating and debugging
 patterns](#pattern-validation).
 
