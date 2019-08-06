@@ -21,7 +21,6 @@ import spacy
 from spacy.kb import KnowledgeBase
 
 from spacy import Errors
-from spacy.language import Language
 from spacy.util import minibatch, compounding
 
 """
@@ -36,10 +35,9 @@ def now():
 @plac.annotations(
     dir_kb=("Directory holding the KB, NLP and related files", "positional", None, Path),
     output_dir=("Output directory", "option", "o", Path),
-    loc_training=("Location to training data", "option", "k", Path),  # TRAINING_DIR
+    loc_training=("Location to training data", "option", "k", Path),
     wp_xml=("Path to the downloaded Wikipedia XML dump.", "option", "w", Path),
     epochs=("Number of training iterations (default 10)", "option", "e", int),
-    context_width=("Width of the context encoder (default 128)", "option", "c", int),
     dropout=("Dropout to prevent overfitting (default 0.5)", "option", "p", float),
     lr=("Learning rate (default 0.005)", "option", "n", float),
     l2=("L2 regularization", "option", "r", float),
@@ -53,7 +51,6 @@ def main(
     loc_training=None,
     wp_xml=None,
     epochs=10,
-    context_width=128,
     dropout=0.5,
     lr=0.005,
     l2=1e-6,
@@ -116,7 +113,6 @@ def main(
     el_pipe = nlp.create_pipe(
         name="entity_linker",
         config={
-            "context_width": context_width,
             "pretrained_vectors": nlp.vocab.vectors.name,
         },
     )
