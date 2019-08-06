@@ -157,18 +157,18 @@ The available token pattern keys are uppercase versions of the
 [`Token` attributes](/api/token#attributes). The most relevant ones for
 rule-based matching are:
 
-| Attribute                              | Type    |  Description                                                                                     |
-| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `ORTH`                                 | unicode | The exact verbatim text of a token.                                                              |
-| `TEXT` <Tag variant="new">2.1</Tag>    | unicode | The exact verbatim text of a token.                                                              |
-| `LOWER`                                | unicode | The lowercase form of the token text.                                                            |
-|  `LENGTH`                              | int     | The length of the token text.                                                                    |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphanumeric characters, ASCII characters, digits.                        |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool    | Token text is in lowercase, uppercase, titlecase.                                                |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool    | Token is punctuation, whitespace, stop word.                                                     |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool    | Token text resembles a number, URL, email.                                                       |
-|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | unicode | The token's simple and extended part-of-speech tag, dependency label, lemma, shape.              |
-| `ENT_TYPE`                             | unicode | The token's entity label.                                                                        |
+| Attribute                              | Type    |  Description                                                                                           |
+| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `ORTH`                                 | unicode | The exact verbatim text of a token.                                                                    |
+| `TEXT` <Tag variant="new">2.1</Tag>    | unicode | The exact verbatim text of a token.                                                                    |
+| `LOWER`                                | unicode | The lowercase form of the token text.                                                                  |
+|  `LENGTH`                              | int     | The length of the token text.                                                                          |
+|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphanumeric characters, ASCII characters, digits.                              |
+|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool    | Token text is in lowercase, uppercase, titlecase.                                                      |
+|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool    | Token is punctuation, whitespace, stop word.                                                           |
+|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool    | Token text resembles a number, URL, email.                                                             |
+|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | unicode | The token's simple and extended part-of-speech tag, dependency label, lemma, shape.                    |
+| `ENT_TYPE`                             | unicode | The token's entity label.                                                                              |
 | `_` <Tag variant="new">2.1</Tag>       | dict    | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). |
 
 <Infobox title="Tip: Try the interactive matcher explorer">
@@ -1140,8 +1140,9 @@ To apply this logic automatically when we process a text, we can add it to the
 above logic also expects that entities are merged into single tokens. spaCy
 ships with a handy built-in `merge_entities` that takes care of that. Instead of
 just printing the result, you could also write it to
-[custom attributes](/usage/processing-pipelines#custom-components-attributes) on the
-entity `Span` – for example `._.orgs` or `._.prev_orgs` and `._.current_orgs`.
+[custom attributes](/usage/processing-pipelines#custom-components-attributes) on
+the entity `Span` – for example `._.orgs` or `._.prev_orgs` and
+`._.current_orgs`.
 
 > #### Merging entities
 >
