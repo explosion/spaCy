@@ -130,7 +130,7 @@ def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
         line = file.readline()
         cnt = 0
         while line and (not limit or cnt < limit):
-            if cnt % 5000000 == 0:
+            if cnt % 25000000 == 0:
                 print(now(), "processed", cnt, "lines of Wikipedia XML dump")
             clean_line = line.strip().decode("utf-8")
 

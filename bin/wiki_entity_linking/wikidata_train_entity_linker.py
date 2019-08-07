@@ -54,7 +54,7 @@ def main(
     dev_inst=5000,
     limit=None,
 ):
-    print("Creating Entity Linker with Wikipedia and WikiData", now())
+    print(now(), "Creating Entity Linker with Wikipedia and WikiData")
     print()
 
     # STEP 0: set up IO
@@ -63,7 +63,7 @@ def main(
 
     # STEP 1 : load the NLP object
     nlp_dir = dir_kb / "nlp"
-    print("STEP 1: loading model from", nlp_dir, now())
+    print(now(), "STEP 1: loading model from", nlp_dir)
     nlp = spacy.load(nlp_dir)
 
     # check that there is a NER component in the pipeline
@@ -72,14 +72,14 @@ def main(
 
     # STEP 2 : read the KB
     print()
-    print("STEP 2: reading the KB from", dir_kb / "kb", now())
+    print(now(), "STEP 2: reading the KB from", dir_kb / "kb")
     kb = KnowledgeBase(vocab=nlp.vocab)
     kb.load_bulk(dir_kb / "kb")
 
     # STEP 3: create a training dataset from WP
     print()
     if loc_training:
-        print("STEP 3: reading training dataset from", loc_training, now())
+        print(now(), "STEP 3: reading training dataset from", loc_training)
     else:
         if not wp_xml:
             raise ValueError(Errors.E153)
@@ -90,7 +90,7 @@ def main(
             loc_training = dir_kb / "training_data"
         if not loc_training.exists():
             loc_training.mkdir()
-        print("STEP 3: creating training dataset at", loc_training, now())
+        print(now(), "STEP 3: creating training dataset at", loc_training)
 
         if limit is not None:
             print("Warning: reading only", limit, "lines of Wikipedia dump.")
@@ -105,7 +105,7 @@ def main(
 
     # STEP 4: create and train the entity linking pipe
     print()
-    print("STEP 4: training Entity Linking pipe", now())
+    print(now(), "STEP 4: training Entity Linking pipe")
     el_pipe = nlp.create_pipe(
         name="entity_linker",
         config={
@@ -182,7 +182,7 @@ def main(
     print()
     if len(dev_data):
         print()
-        print("STEP 5: performance measurement of Entity Linking pipe", now())
+        print(now(), "STEP 5: performance measurement of Entity Linking pipe")
         print()
 
         counts, acc_r, acc_r_d, acc_p, acc_p_d, acc_o, acc_o_d = _measure_baselines(
@@ -215,7 +215,7 @@ def main(
 
     # STEP 6: apply the EL pipe on a toy example
     print()
-    print("STEP 6: applying Entity Linking to toy example", now())
+    print(now(), "STEP 6: applying Entity Linking to toy example")
     print()
     run_el_toy_example(nlp=nlp)
 
@@ -223,12 +223,12 @@ def main(
     if output_dir:
         print()
         nlp_loc = output_dir / "nlp"
-        print("STEP 7: Writing trained NLP to", nlp_loc, now())
+        print(now(), "STEP 7: Writing trained NLP to", nlp_loc)
         nlp.to_disk(nlp_loc)
         print()
 
     print()
-    print("Done!", now())
+    print(now(), "Done!")
 
 
 def _measure_acc(data, el_pipe=None, error_analysis=False):

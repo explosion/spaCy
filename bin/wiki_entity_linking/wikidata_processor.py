@@ -32,7 +32,7 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False):
         line = file.readline()
         cnt = 0
         while line and (not limit or cnt < limit):
-            if cnt % 500000 == 0:
+            if cnt % 1000000 == 0:
                 print(
                     datetime.datetime.now(), "processed", cnt, "lines of WikiData JSON dump"
                 )

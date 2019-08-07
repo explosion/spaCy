@@ -20,12 +20,17 @@ class EntityEncoder:
     DROP = 0
     BATCH_SIZE = 1000
 
-    def __init__(self, nlp, input_dim, desc_width, epochs=5, threshold=0.04):
+    # Set min. acceptable loss to avoid a 'mean of empty slice' warning by numpy
+    MIN_LOSS = 0.01
+
+    # Reasonable default to stop training when things are not improving
+    MAX_NO_IMPROVEMENT = 20
+
+    def __init__(self, nlp, input_dim, desc_width, epochs=5):
         self.nlp = nlp
         self.input_dim = input_dim
         self.desc_width = desc_width
         self.epochs = epochs
-        self.threshold = threshold
 
     def apply_encoder(self, description_list):
         if self.encoder is None:
@@ -45,6 +50,7 @@ class EntityEncoder:
 
             start = start + batch_size
             stop = min(stop + batch_size, len(description_list))
+            print("encoded:", stop, "entities")
 
         return encodings
 
@@ -61,14 +67,15 @@ class EntityEncoder:
             print("Final loss:", loss)
 
     def _train_model(self, description_list):
-        # TODO: when loss gets too low, a 'mean of empty slice' warning is thrown by numpy
-
+        best_loss = 1.0
+        iter_since_best = 0
         self._build_network(self.input_dim, self.desc_width)
 
         processed = 0
         loss = 1
         # copy this list so that shuffling does not affect other functions
         descriptions = description_list.copy()
+        to_continue = True
 
         for i in range(self.epochs):
             shuffle(descriptions)
@@ -77,7 +84,7 @@ class EntityEncoder:
             start = 0
             stop = min(self.BATCH_SIZE, len(descriptions))
 
-            while loss > self.threshold and start < len(descriptions):
+            while to_continue and start < len(descriptions):
                 batch = []
                 for descr in descriptions[start:stop]:
                     doc = self.nlp(descr)
@@ -85,8 +92,23 @@ class EntityEncoder:
                     batch.append(doc_vector)
 
                 loss = self._update(batch)
-                print(i, batch_nr, loss)
+                if batch_nr % 25 == 0:
+                    print("loss:", loss)
                 processed += len(batch)
+
+                # in general, continue training if we haven't reached our ideal min yet
+                to_continue = loss > self.MIN_LOSS
+
+                # store the best loss and track how long it's been
+                if loss < best_loss:
+                    best_loss = loss
+                    iter_since_best = 0
+                else:
+                    iter_since_best += 1
+
+                # stop learning if we haven't seen improvement since the last few iterations
+                if iter_since_best > self.MAX_NO_IMPROVEMENT:
+                    to_continue = False
 
                 batch_nr += 1
                 start = start + self.BATCH_SIZE

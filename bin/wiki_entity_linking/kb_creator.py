@@ -23,6 +23,7 @@ def create_kb(
     wikidata_input,
     entity_vector_length,
     limit=None,
+    read_raw_data=True,
 ):
     # Create the knowledge base from Wikidata entries
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=entity_vector_length)
@@ -35,11 +36,9 @@ def create_kb(
         raise ValueError(Errors.E155)
 
     # disable this part of the pipeline when rerunning the KB generation from preprocessed files
-    read_raw_data = True
-
     if read_raw_data:
         print()
-        print(" * read wikidata entities:", now())
+        print(now(), " * read wikidata entities:")
         title_to_id, id_to_descr = wd.read_wikidata_entities_json(
             wikidata_input, limit=limit
         )
@@ -55,7 +54,7 @@ def create_kb(
         id_to_descr = get_id_to_description(entity_descr_output)
 
     print()
-    print(" *  get entity frequencies:", now())
+    print(now(), " *  get entity frequencies:")
     print()
     entity_frequencies = wp.get_all_frequencies(count_input=count_input)
 
@@ -78,17 +77,17 @@ def create_kb(
     print("kept", kept_nr, "entities with min. frequency", min_entity_freq)
 
     print()
-    print(" * train entity encoder:", now())
+    print(now(), " * train entity encoder:")
     print()
     encoder = EntityEncoder(nlp, input_dim, entity_vector_length)
     encoder.train(description_list=description_list, to_print=True)
 
     print()
-    print(" * get entity embeddings:", now())
+    print(now(), " * get entity embeddings:")
     print()
     embeddings = encoder.apply_encoder(description_list)
 
-    print(" * adding", len(entity_list), "entities", now())
+    print(now(), " * adding", len(entity_list), "entities")
     kb.set_entities(
         entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings
     )
@@ -101,14 +100,14 @@ def create_kb(
         prior_prob_input=prior_prob_input,
     )
     print()
-    print(" * adding", alias_cnt, "aliases", now())
+    print(now(), " * adding", alias_cnt, "aliases")
     print()
 
     print()
     print("# of entities in kb:", kb.get_size_entities())
     print("# of aliases in kb:", kb.get_size_aliases())
 
-    print("done with kb", now())
+    print(now(), "Done with kb")
     return kb
 
 
@@ -207,4 +206,3 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
 
 def now():
     return datetime.datetime.now()
-
