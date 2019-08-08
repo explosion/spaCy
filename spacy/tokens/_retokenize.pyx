@@ -407,7 +407,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     to_process_tensor = (doc.tensor is not None and doc.tensor.size != 0)
     if to_process_tensor:
         xp = get_array_module(doc.tensor)
-        doc.tensor = xp.append(doc.tensor, numpy.zeros((nb_subtokens,doc.tensor.shape[1]), dtype="float32"), axis=0)
+        doc.tensor = xp.append(doc.tensor, xp.zeros((nb_subtokens,doc.tensor.shape[1]), dtype="float32"), axis=0)
     for token_to_move in range(doc.length - 1, token_index, -1):
         doc.c[token_to_move + nb_subtokens - 1] = doc.c[token_to_move]
         if to_process_tensor:
@@ -421,7 +421,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         token.lemma = 0  # reset lemma
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
-            doc.tensor[token_index + i] = numpy.zeros((1,doc.tensor.shape[1]), dtype="float32")
+            doc.tensor[token_index + i] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
         # Update the character offset of the subtokens
         if i != 0:
             token.idx = orig_token.idx + idx_offset
