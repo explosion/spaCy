@@ -92,8 +92,6 @@ class SudachiTokenizer(DummyTokenizer):
                     token.pos_ = 'ADJ'
             token._.inf = ','.join(morph.part_of_speech()[4:])
             token.lemma_ = morph.normalized_form()  # work around: lemma_ must be set after tag_
-        if self.use_sentence_separator:
-            separate_sentences(doc)
         return doc
 
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
