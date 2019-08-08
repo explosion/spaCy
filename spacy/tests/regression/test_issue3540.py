@@ -1,14 +1,22 @@
-import spacy
+# coding: utf8
+from __future__ import unicode_literals
+
+from spacy.tokens import Doc
+
+import numpy as np
 
 
-def test_issue3540():
-    nlp = spacy.load("en_core_web_sm")
-    doc = nlp(u"I live in NewYork right now")
+def test_issue3540(en_vocab):
+
+    words = ["I", "live", "in", "NewYork", "right", "now"]
+    tensor = np.asarray([[1.0, 1.1], [2.0, 2.1], [3.0, 3.1], [4.0, 4.1], [5.0, 5.1], [6.0, 6.1]], dtype="f")
+    doc = Doc(en_vocab, words=words)
+    doc.tensor = tensor
 
     gold_text = ["I", "live", "in", "NewYork", "right", "now"]
     assert [token.text for token in doc] == gold_text
 
-    gold_lemma = ["-PRON-", "live", "in", "NewYork", "right", "now"]
+    gold_lemma = ["I", "live", "in", "NewYork", "right", "now"]
     assert [token.lemma_ for token in doc] == gold_lemma
 
     vectors_1 = [token.vector for token in doc]
@@ -22,11 +30,15 @@ def test_issue3540():
     gold_text = ["I", "live", "in", "New", "York", "right", "now"]
     assert [token.text for token in doc] == gold_text
 
-    gold_lemma = ["-PRON-", "live", "in", "New", "York", "right", "now"]
+    gold_lemma = ["I", "live", "in", "New", "York", "right", "now"]
     assert [token.lemma_ for token in doc] == gold_lemma
 
     vectors_2 = [token.vector for token in doc]
     assert len(vectors_2) == len(doc)
 
     assert vectors_1[0].tolist() == vectors_2[0].tolist()
+    assert vectors_1[1].tolist() == vectors_2[1].tolist()
+    assert vectors_1[2].tolist() == vectors_2[2].tolist()
+
+    assert vectors_1[4].tolist() == vectors_2[5].tolist()
     assert vectors_1[5].tolist() == vectors_2[6].tolist()
