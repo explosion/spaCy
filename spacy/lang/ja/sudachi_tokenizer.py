@@ -15,10 +15,6 @@ from ...util import DummyTokenizer
 from .tag_map import TAG_MAP
 
 
-SUDACHI_DEFAULT_MODE = 'C'
-SUDACHI_DEFAULT_SPLITMODE = 'C'
-
-
 def try_import_sudachipy_dictionary():
     try:
         from sudachipy import dictionary
@@ -46,18 +42,16 @@ def morph_tag(tag_array):
 
 
 class SudachiTokenizer(DummyTokenizer):
-    def __init__(self, nlp=None, mode=SUDACHI_DEFAULT_SPLITMODE):
+    def __init__(self, nlp=None):
         self.nlp = nlp
         self.vocab = nlp.vocab if nlp is not None else Vocab()
         dictionary = try_import_sudachipy_dictionary()
 
         dict_ = dictionary.Dictionary()
         self.tokenizer = dict_.create()
-        self.mode = mode
-        self.use_sentence_separator = True
 
     def __call__(self, text):
-        result = self.tokenizer.tokenize(text=text, mode=self.mode)
+        result = self.tokenizer.tokenize(text=text)
         morph_spaces = []
         last_morph = None
         for m in result:
@@ -76,7 +70,6 @@ class SudachiTokenizer(DummyTokenizer):
         if last_morph:
             morph_spaces.append((last_morph, False))
 
-        # the last space is removed by JapaneseReviser at the final stage of pipeline
         words = [m.surface() for m, spaces in morph_spaces]
         spaces = [space for m, space in morph_spaces]
         doc = Doc(self.nlp.vocab if self.nlp else Vocab(), words=words, spaces=spaces)
