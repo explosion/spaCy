@@ -5,6 +5,7 @@ import pytest
 from spacy.tokens import Span
 from spacy.language import Language
 from spacy.pipeline import EntityRuler
+from spacy.errors import MatchPatternError
 
 
 @pytest.fixture
@@ -127,3 +128,21 @@ def test_entity_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
     assert len(new_ruler) == len(patterns)
     assert len(new_ruler.labels) == 4
     assert new_ruler.phrase_matcher_attr == "LOWER"
+
+
+def test_entity_ruler_validate(nlp):
+    ruler = EntityRuler(nlp)
+    validated_ruler = EntityRuler(nlp, validate=True)
+
+    valid_pattern = {"label": "HELLO", "pattern": [{"LOWER": "HELLO"}]}
+    invalid_pattern = {"label": "HELLO", "pattern": [{"ASDF": "HELLO"}]}
+
+    # invalid pattern is added without errors without validate
+    ruler.add_patterns([invalid_pattern])
+
+    # valid pattern is added without errors with validate
+    validated_ruler.add_patterns([valid_pattern])
+
+    # invalid pattern raises error with validate
+    with pytest.raises(MatchPatternError):
+        validated_ruler.add_patterns([invalid_pattern])

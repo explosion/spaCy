@@ -26,7 +26,7 @@ class EntityRuler(object):
 
     name = "entity_ruler"
 
-    def __init__(self, nlp, phrase_matcher_attr=None, **cfg):
+    def __init__(self, nlp, phrase_matcher_attr=None, validate=False, **cfg):
         """Initialize the entitiy ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
         key. A pattern can either be a token pattern (list) or a phrase pattern
@@ -36,6 +36,8 @@ class EntityRuler(object):
             and process phrase patterns.
         phrase_matcher_attr (int / unicode): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`
+        validate (bool): Whether patterns should be validated, passed to
+            Matcher and PhraseMatcher as `validate`
         patterns (iterable): Optional patterns to load in.
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
@@ -50,15 +52,15 @@ class EntityRuler(object):
         self.overwrite = cfg.get("overwrite_ents", False)
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
-        self.matcher = Matcher(nlp.vocab)
+        self.matcher = Matcher(nlp.vocab, validate=validate)
         if phrase_matcher_attr is not None:
             self.phrase_matcher_attr = phrase_matcher_attr
             self.phrase_matcher = PhraseMatcher(
-                nlp.vocab, attr=self.phrase_matcher_attr
+                nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
             )
         else:
             self.phrase_matcher_attr = None
-            self.phrase_matcher = PhraseMatcher(nlp.vocab)
+            self.phrase_matcher = PhraseMatcher(nlp.vocab, validate=validate)
         self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         patterns = cfg.get("patterns")
         if patterns is not None:
