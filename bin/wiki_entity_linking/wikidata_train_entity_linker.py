@@ -29,7 +29,7 @@ def now():
 
 
 @plac.annotations(
-    dir_kb=("Directory holding the KB, NLP and related files", "positional", None, Path),
+    dir_kb=("Directory with KB, NLP and related files", "positional", None, Path),
     output_dir=("Output directory", "option", "o", Path),
     loc_training=("Location to training data", "option", "k", Path),
     wp_xml=("Path to the downloaded Wikipedia XML dump.", "option", "w", Path),
@@ -37,8 +37,8 @@ def now():
     dropout=("Dropout to prevent overfitting (default 0.5)", "option", "p", float),
     lr=("Learning rate (default 0.005)", "option", "n", float),
     l2=("L2 regularization", "option", "r", float),
-    train_inst=("Number of training instances (default unlimited, 90% of all)", "option", "t", int),
-    dev_inst=("Number of dev instances (default unlimited, 10% of all)", "option", "d", int),
+    train_inst=("# training instances (default 90% of all)", "option", "t", int),
+    dev_inst=("# test instances (default 10% of all)", "option", "d", int),
     limit=("Optional threshold to limit lines read from WP dump", "option", "l", int),
 )
 def main(
@@ -100,35 +100,17 @@ def main(
             wikipedia_input=wp_xml,
             entity_def_input=loc_entity_defs,
             training_output=loc_training,
-            limit=limit
+            limit=limit,
         )
 
-    # STEP 4: create and train the entity linking pipe
+    # STEP 4: parse the training data
     print()
-    print(now(), "STEP 4: training Entity Linking pipe")
-    el_pipe = nlp.create_pipe(
-        name="entity_linker",
-        config={
-            "pretrained_vectors": nlp.vocab.vectors.name,
-        },
-    )
-    el_pipe.set_kb(kb)
-    nlp.add_pipe(el_pipe, last=True)
-
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
-    with nlp.disable_pipes(*other_pipes):  # only train Entity Linking
-        optimizer = nlp.begin_training()
-        optimizer.learn_rate = lr
-        optimizer.L2 = l2
+    print(now(), "STEP 4: parse the training & evaluation data")
 
     # for training, get pos & neg instances that correspond to entries in the kb
     print("Parsing training data, limit =", train_inst)
     train_data = training_set_creator.read_training(
-        nlp=nlp,
-        training_dir=loc_training,
-        dev=False,
-        limit=train_inst,
-        kb=el_pipe.kb,
+        nlp=nlp, training_dir=loc_training, dev=False, limit=train_inst, kb=kb
     )
 
     print("Training on", len(train_data), "articles")
@@ -142,6 +124,22 @@ def main(
 
     print("Dev testing on", len(dev_data), "articles")
     print()
+
+    # STEP 5: create and train the entity linking pipe
+    print()
+    print(now(), "STEP 5: training Entity Linking pipe")
+
+    el_pipe = nlp.create_pipe(
+        name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.name}
+    )
+    el_pipe.set_kb(kb)
+    nlp.add_pipe(el_pipe, last=True)
+
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "entity_linker"]
+    with nlp.disable_pipes(*other_pipes):  # only train Entity Linking
+        optimizer = nlp.begin_training()
+        optimizer.learn_rate = lr
+        optimizer.L2 = l2
 
     if not train_data:
         print("Did not find any training data")
@@ -180,11 +178,11 @@ def main(
                         round(dev_acc_context, 3),
                     )
 
-    # STEP 5: measure the performance of our trained pipe on an independent dev set
+    # STEP 6: measure the performance of our trained pipe on an independent dev set
     print()
     if len(dev_data):
         print()
-        print(now(), "STEP 5: performance measurement of Entity Linking pipe")
+        print(now(), "STEP 6: performance measurement of Entity Linking pipe")
         print()
 
         counts, acc_r, acc_r_d, acc_p, acc_p_d, acc_o, acc_o_d = _measure_baselines(
@@ -215,17 +213,17 @@ def main(
         combo_by_label = [(x, round(y, 3)) for x, y in dev_acc_combo_d.items()]
         print("dev accuracy prior+context:", round(dev_acc_combo, 3), combo_by_label)
 
-    # STEP 6: apply the EL pipe on a toy example
+    # STEP 7: apply the EL pipe on a toy example
     print()
-    print(now(), "STEP 6: applying Entity Linking to toy example")
+    print(now(), "STEP 7: applying Entity Linking to toy example")
     print()
     run_el_toy_example(nlp=nlp)
 
-    # STEP 7: write the NLP pipeline (including entity linker) to file
+    # STEP 8: write the NLP pipeline (including entity linker) to file
     if output_dir:
         print()
         nlp_loc = output_dir / "nlp"
-        print(now(), "STEP 7: Writing trained NLP to", nlp_loc)
+        print(now(), "STEP 8: Writing trained NLP to", nlp_loc)
         nlp.to_disk(nlp_loc)
         print()
 
