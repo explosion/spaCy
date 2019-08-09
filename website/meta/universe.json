@@ -1527,6 +1527,22 @@
             "tags": ["inflection"]
         },
         {
+            "id": "blackstone",
+            "title": "Blackstone",
+            "slogan": "A spaCy pipeline and model for NLP on unstructured legal text.",
+            "github": "ICLRandD/Blackstone",
+            "pip": "blackstone",
+            "thumb": "https://iclr.s3-eu-west-1.amazonaws.com/assets/iclrand/Blackstone/thumb.png",
+            "url": "https://research.iclr.co.uk",
+            "author": " ICLR&D",
+            "author_links": {
+                "github": "ICLRandD",
+                "twitter": "ICLRanD",
+                "website": "https://research.iclr.co.uk"
+            },
+            "category": ["scientific", "models", "research"]
+        },
+        {
             "id": "NGym",
             "title": "NeuralGym",
             "slogan": "A little Windows GUI for training models with spaCy",
