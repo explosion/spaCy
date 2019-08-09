@@ -37,8 +37,8 @@ def now():
     dropout=("Dropout to prevent overfitting (default 0.5)", "option", "p", float),
     lr=("Learning rate (default 0.005)", "option", "n", float),
     l2=("L2 regularization", "option", "r", float),
-    train_inst=("Number of training instance (default 5000)", "option", "t", int),
-    dev_inst=("Number of dev instances (default 5000)", "option", "d", int),
+    train_inst=("Number of training instances (default unlimited, 90% of all)", "option", "t", int),
+    dev_inst=("Number of dev instances (default unlimited, 10% of all)", "option", "d", int),
     limit=("Optional threshold to limit lines read from WP dump", "option", "l", int),
 )
 def main(
@@ -50,8 +50,8 @@ def main(
     dropout=0.5,
     lr=0.005,
     l2=1e-6,
-    train_inst=5000,
-    dev_inst=5000,
+    train_inst=None,
+    dev_inst=None,
     limit=None,
 ):
     print(now(), "Creating Entity Linker with Wikipedia and WikiData")
@@ -122,6 +122,7 @@ def main(
         optimizer.L2 = l2
 
     # for training, get pos & neg instances that correspond to entries in the kb
+    print("Parsing training data, limit =", train_inst)
     train_data = training_set_creator.read_training(
         nlp=nlp,
         training_dir=loc_training,
@@ -133,6 +134,7 @@ def main(
     print("Training on", len(train_data), "articles")
     print()
 
+    print("Parsing dev testing data, limit =", dev_inst)
     # for testing, get all pos instances, whether or not they are in the kb
     dev_data = training_set_creator.read_training(
         nlp=nlp, training_dir=loc_training, dev=True, limit=dev_inst, kb=None
@@ -174,7 +176,7 @@ def main(
                         "Epoch, train loss",
                         itn,
                         round(losses["entity_linker"], 2),
-                        " / dev acc avg",
+                        " / dev accuracy avg",
                         round(dev_acc_context, 3),
                     )
 
@@ -191,27 +193,27 @@ def main(
         print("dev counts:", sorted(counts.items(), key=lambda x: x[0]))
 
         oracle_by_label = [(x, round(y, 3)) for x, y in acc_o_d.items()]
-        print("dev acc oracle:", round(acc_o, 3), oracle_by_label)
+        print("dev accuracy oracle:", round(acc_o, 3), oracle_by_label)
 
         random_by_label = [(x, round(y, 3)) for x, y in acc_r_d.items()]
-        print("dev acc random:", round(acc_r, 3), random_by_label)
+        print("dev accuracy random:", round(acc_r, 3), random_by_label)
 
         prior_by_label = [(x, round(y, 3)) for x, y in acc_p_d.items()]
-        print("dev acc prior:", round(acc_p, 3), prior_by_label)
+        print("dev accuracy prior:", round(acc_p, 3), prior_by_label)
 
         # using only context
         el_pipe.cfg["incl_context"] = True
         el_pipe.cfg["incl_prior"] = False
         dev_acc_context, dev_acc_cont_d = _measure_acc(dev_data, el_pipe)
         context_by_label = [(x, round(y, 3)) for x, y in dev_acc_cont_d.items()]
-        print("dev acc context avg:", round(dev_acc_context, 3), context_by_label)
+        print("dev accuracy context:", round(dev_acc_context, 3), context_by_label)
 
         # measuring combined accuracy (prior + context)
         el_pipe.cfg["incl_context"] = True
         el_pipe.cfg["incl_prior"] = True
         dev_acc_combo, dev_acc_combo_d = _measure_acc(dev_data, el_pipe)
         combo_by_label = [(x, round(y, 3)) for x, y in dev_acc_combo_d.items()]
-        print("dev acc combo avg:", round(dev_acc_combo, 3), combo_by_label)
+        print("dev accuracy prior+context:", round(dev_acc_combo, 3), combo_by_label)
 
     # STEP 6: apply the EL pipe on a toy example
     print()
