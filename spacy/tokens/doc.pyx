@@ -9,6 +9,7 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
+from collections import Counter
 
 import numpy
 import numpy.linalg
@@ -48,6 +49,10 @@ cdef int bounds_check(int i, int length, int padding) except -1:
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     if feat_name == LEMMA:
         return token.lemma
+    elif feat_name == NORM:
+        if not token.norm:
+            return token.lex.norm
+        return token.norm
     elif feat_name == POS:
         return token.pos
     elif feat_name == TAG:
@@ -240,6 +245,8 @@ cdef class Doc:
             return True
         if self.is_parsed:
             return True
+        if len(self) < 2:
+            return True
         for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
                 return True
@@ -251,6 +258,8 @@ cdef class Doc:
         *any* of the tokens has a named entity tag set (even if the others are
         uknown values).
         """
+        if len(self) == 0:
+            return True
         for i in range(self.length):
             if self.c[i].ent_iob != 0:
                 return True
@@ -693,7 +702,7 @@ cdef class Doc:
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
-    def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
+    def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
         `{attribute (int): count (ints)}` frequencies, keyed by the values of
         the given attribute ID.
@@ -708,19 +717,18 @@ cdef class Doc:
         cdef size_t count
 
         if counts is None:
-            counts = PreshCounter()
+            counts = Counter()
             output_dict = True
         else:
             output_dict = False
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
             for i in range(self.length):
-                counts.inc(get_token_attr(&self.c[i], attr_id), 1)
+                counts[get_token_attr(&self.c[i], attr_id)] += 1
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
-                    attr = get_token_attr(&self.c[i], attr_id)
-                    counts.inc(attr, 1)
+                    counts[get_token_attr(&self.c[i], attr_id)] += 1
         if output_dict:
             return dict(counts)
 
@@ -790,7 +798,7 @@ cdef class Doc:
                 if array[i, col] != 0:
                     self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
         # Now load the data
-        for i in range(self.length):
+        for i in range(length):
             token = &self.c[i]
             for j in range(n_attrs):
                 if attr_ids[j] != TAG:
@@ -800,7 +808,7 @@ cdef class Doc:
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
-            set_children_from_heads(self.c, self.length)
+            set_children_from_heads(self.c, length)
         return self
 
     def get_lca_matrix(self):

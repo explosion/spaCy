@@ -5,7 +5,6 @@ import logging
 from pathlib import Path
 from collections import defaultdict
 from gensim.models import Word2Vec
-from preshed.counter import PreshCounter
 import plac
 import spacy
 

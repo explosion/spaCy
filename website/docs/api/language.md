@@ -133,13 +133,13 @@ Evaluate a model's pipeline components.
 > print(scorer.scores)
 > ```
 
-| Name                                         | Type     | Description                                                                           |
-| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
-| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects.                                              |
-| `verbose`                                    | bool     | Print debugging information.                                                          |
-| `batch_size`                                 | int      | The batch size to use.                                                                |
-| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
-| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.          |
+| Name                                         | Type     | Description                                                                                                                                                   |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects or `(text, annotations)` of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
+| `verbose`                                    | bool     | Print debugging information.                                                                                                                                  |
+| `batch_size`                                 | int      | The batch size to use.                                                                                                                                        |
+| `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                         |
+| `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                  |
 
 ## Language.begin_training {#begin_training tag="method"}
 

@@ -79,7 +79,7 @@ cdef class KnowledgeBase:
         return new_index
 
 
-    cdef inline int64_t c_add_entity(self, hash_t entity_hash, float prob,
+    cdef inline int64_t c_add_entity(self, hash_t entity_hash, float freq,
                                      int32_t vector_index, int feats_row) nogil:
         """Add an entry to the vector of entries.
         After calling this method, make sure to update also the _entry_index using the return value"""
@@ -92,7 +92,7 @@ cdef class KnowledgeBase:
         entry.entity_hash = entity_hash
         entry.vector_index = vector_index
         entry.feats_row = feats_row
-        entry.prob = prob
+        entry.freq = freq
 
         self._entries.push_back(entry)
         return new_index
@@ -125,7 +125,7 @@ cdef class KnowledgeBase:
         entry.entity_hash = dummy_hash
         entry.vector_index = dummy_value
         entry.feats_row = dummy_value
-        entry.prob = dummy_value
+        entry.freq = dummy_value
 
         # Avoid struct initializer to enable nogil
         cdef vector[int64_t] dummy_entry_indices
@@ -141,7 +141,7 @@ cdef class KnowledgeBase:
         self._aliases_table.push_back(alias)
 
     cpdef load_bulk(self, loc)
-    cpdef set_entities(self, entity_list, prob_list, vector_list)
+    cpdef set_entities(self, entity_list, freq_list, vector_list)
 
 
 cdef class Writer:
@@ -149,7 +149,7 @@ cdef class Writer:
 
     cdef int write_header(self, int64_t nr_entries, int64_t entity_vector_length) except -1
     cdef int write_vector_element(self, float element) except -1
-    cdef int write_entry(self, hash_t entry_hash, float entry_prob, int32_t vector_index) except -1
+    cdef int write_entry(self, hash_t entry_hash, float entry_freq, int32_t vector_index) except -1
 
     cdef int write_alias_length(self, int64_t alias_length) except -1
     cdef int write_alias_header(self, hash_t alias_hash, int64_t candidate_length) except -1
@@ -162,7 +162,7 @@ cdef class Reader:
 
     cdef int read_header(self, int64_t* nr_entries, int64_t* entity_vector_length) except -1
     cdef int read_vector_element(self, float* element) except -1
-    cdef int read_entry(self, hash_t* entity_hash, float* prob, int32_t* vector_index) except -1
+    cdef int read_entry(self, hash_t* entity_hash, float* freq, int32_t* vector_index) except -1
 
     cdef int read_alias_length(self, int64_t* alias_length) except -1
     cdef int read_alias_header(self, hash_t* alias_hash, int64_t* candidate_length) except -1

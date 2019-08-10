@@ -82,6 +82,8 @@ class Warnings(object):
             "parallel inference via multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge base.")
     W018 = ("Entity '{entity}' already exists in the Knowledge base.")
+    W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
+            "previously loaded vectors. See Issue #3853.")
 
 
 @add_codes
@@ -403,6 +405,21 @@ class Errors(object):
     E140 = ("The list of entities, prior probabilities and entity vectors should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the provided {found}.")
     E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
+    E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
+    E144 = ("Could not find parameter `{param}` when building the entity linker model.")
+    E145 = ("Error reading `{param}` from input file.")
+    E146 = ("Could not access `{path}`.")
+    E147 = ("Unexpected error in the {method} functionality of the EntityLinker: {msg}. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
+    E148 = ("Expected {ents} KB identifiers but got {ids}. Make sure that each entity in `doc.ents` "
+            "is assigned to a KB identifier.")
+    E149 = ("Error deserializing model. Check that the config used to create the "
+            "component matches the model being loaded.")
+    E150 = ("The language of the `nlp` object and the `vocab` should be the same, "
+            "but found '{nlp}' and '{vocab}' respectively.")
+    E151 = ("Trying to call nlp.update without required annotation types. "
+            "Expected top-level keys: {expected_keys}."
+            " Got: {unexpected_keys}.")
 
 
 @add_codes

@@ -11,29 +11,27 @@ from ..tokens import Doc
 from ..attrs import SPACY, ORTH
 
 
-class Binder(object):
+class DocBox(object):
     """Serialize analyses from a collection of doc objects."""
 
-    def __init__(self, attrs=None):
-        """Create a Binder object, to hold serialized annotations.
+    def __init__(self, attrs=None, store_user_data=False):
+        """Create a DocBox object, to hold serialized annotations.
 
         attrs (list): List of attributes to serialize. 'orth' and 'spacy' are
             always serialized, so they're not required. Defaults to None.
         """
         attrs = attrs or []
-        self.attrs = list(attrs)
         # Ensure ORTH is always attrs[0]
-        if ORTH in self.attrs:
-            self.attrs.pop(ORTH)
-        if SPACY in self.attrs:
-            self.attrs.pop(SPACY)
+        self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)
         self.tokens = []
         self.spaces = []
+        self.user_data = []
         self.strings = set()
+        self.store_user_data = store_user_data
 
     def add(self, doc):
-        """Add a doc's annotations to the binder for serialization."""
+        """Add a doc's annotations to the DocBox for serialization."""
         array = doc.to_array(self.attrs)
         if len(array.shape) == 1:
             array = array.reshape((array.shape[0], 1))
@@ -43,27 +41,35 @@ class Binder(object):
         spaces = spaces.reshape((spaces.shape[0], 1))
         self.spaces.append(numpy.asarray(spaces, dtype=bool))
         self.strings.update(w.text for w in doc)
+        if self.store_user_data:
+            self.user_data.append(srsly.msgpack_dumps(doc.user_data))
 
     def get_docs(self, vocab):
         """Recover Doc objects from the annotations, using the given vocab."""
         for string in self.strings:
             vocab[string]
         orth_col = self.attrs.index(ORTH)
-        for tokens, spaces in zip(self.tokens, self.spaces):
+        for i in range(len(self.tokens)):
+            tokens = self.tokens[i]
+            spaces = self.spaces[i]
             words = [vocab.strings[orth] for orth in tokens[:, orth_col]]
             doc = Doc(vocab, words=words, spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
+            if self.store_user_data:
+                doc.user_data.update(srsly.msgpack_loads(self.user_data[i]))
             yield doc
 
     def merge(self, other):
-        """Extend the annotations of this binder with the annotations from another."""
+        """Extend the annotations of this DocBox with the annotations from another."""
         assert self.attrs == other.attrs
         self.tokens.extend(other.tokens)
         self.spaces.extend(other.spaces)
         self.strings.update(other.strings)
+        if self.store_user_data:
+            self.user_data.extend(other.user_data)
 
     def to_bytes(self):
-        """Serialize the binder's annotations into a byte string."""
+        """Serialize the DocBox's annotations into a byte string."""
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape
         lengths = [len(tokens) for tokens in self.tokens]
@@ -74,10 +80,12 @@ class Binder(object):
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
             "strings": list(self.strings),
         }
+        if self.store_user_data:
+            msg["user_data"] = self.user_data
         return gzip.compress(srsly.msgpack_dumps(msg))
 
     def from_bytes(self, string):
-        """Deserialize the binder's annotations from a byte string."""
+        """Deserialize the DocBox's annotations from a byte string."""
         msg = srsly.msgpack_loads(gzip.decompress(string))
         self.attrs = msg["attrs"]
         self.strings = set(msg["strings"])
@@ -89,29 +97,38 @@ class Binder(object):
         flat_spaces = flat_spaces.reshape((flat_spaces.size, 1))
         self.tokens = NumpyOps().unflatten(flat_tokens, lengths)
         self.spaces = NumpyOps().unflatten(flat_spaces, lengths)
+        if self.store_user_data and "user_data" in msg:
+            self.user_data = list(msg["user_data"])
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape
         return self
 
 
-def merge_bytes(binder_strings):
-    """Concatenate multiple serialized binders into one byte string."""
-    output = None
-    for byte_string in binder_strings:
-        binder = Binder().from_bytes(byte_string)
-        if output is None:
-            output = binder
-        else:
-            output.merge(binder)
-    return output.to_bytes()
+def merge_boxes(boxes):
+    merged = None
+    for byte_string in boxes:
+        if byte_string is not None:
+            box = DocBox(store_user_data=True).from_bytes(byte_string)
+            if merged is None:
+                merged = box
+            else:
+                merged.merge(box)
+    if merged is not None:
+        return merged.to_bytes()
+    else:
+        return b""
 
 
-def pickle_binder(binder):
-    return (unpickle_binder, (binder.to_bytes(),))
+def pickle_box(box):
+    return (unpickle_box, (box.to_bytes(),))
 
 
-def unpickle_binder(byte_string):
-    return Binder().from_bytes(byte_string)
+def unpickle_box(byte_string):
+    return DocBox().from_bytes(byte_string)
 
 
-copy_reg.pickle(Binder, pickle_binder, unpickle_binder)
+copy_reg.pickle(DocBox, pickle_box, unpickle_box)
+# Compatibility, as we had named it this previously.
+Binder = DocBox
+
+__all__ = ["DocBox"]
