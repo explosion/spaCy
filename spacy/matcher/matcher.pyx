@@ -591,7 +591,7 @@ def _get_attr_values(spec, string_store):
                 continue
             if attr == "TEXT":
                 attr = "ORTH"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"].keys():
+            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
                 raise ValueError(Errors.E152.format(attr=attr))
             attr = IDS.get(attr)
         if isinstance(value, basestring):
