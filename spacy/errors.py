@@ -417,6 +417,10 @@ class Errors(object):
             "component matches the model being loaded.")
     E150 = ("The language of the `nlp` object and the `vocab` should be the same, "
             "but found '{nlp}' and '{vocab}' respectively.")
+    E151 = ("Trying to call nlp.update without required annotation types. "
+            "Expected top-level keys: {expected_keys}."
+            " Got: {unexpected_keys}.")
+
 
 @add_codes
 class TempErrors(object):
