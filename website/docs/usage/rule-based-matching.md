@@ -326,6 +326,29 @@ character, but no whitespace – so you'll know it will be handled as one token.
 [{"ORTH": "User"}, {"ORTH": "name"}, {"ORTH": ":"}, {}]
 ```
 
+#### Validating and debugging patterns {#pattern-validation new="2.1"}
+
+The `Matcher` can validate patterns against a JSON schema with the option
+`validate=True`. This is useful for debugging patterns during development, in
+particular for catching unsupported attributes.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.matcher import Matcher
+
+nlp = spacy.load("en_core_web_sm")
+matcher = Matcher(nlp.vocab, validate=True)
+# Add match ID "HelloWorld" with unsupported attribute CASEINSENSITIVE
+pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"CASEINSENSITIVE": "world"}]
+matcher.add("HelloWorld", None, pattern)
+# 🚨 Raises an error:
+# MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
+# Pattern 0:
+# - Additional properties are not allowed ('CASEINSENSITIVE' was unexpected) [2]
+
+```
+
 ### Adding on_match rules {#on_match}
 
 To move on to a more realistic example, let's say you're working with a large
@@ -765,11 +788,11 @@ token pattern covering the exact tokenization of the term.
 
 To create the patterns, each phrase has to be processed with the `nlp` object.
 If you have a mode loaded, doing this in a loop or list comprehension can easily
-become inefficient and slow. If you only need the tokenization and lexical
-attributes, you can run [`nlp.make_doc`](/api/language#make_doc) instead, which
-will only run the tokenizer. For an additional speed boost, you can also use the
-[`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process the texts
-as a stream.
+become inefficient and slow. If you **only need the tokenization and lexical
+attributes**, you can run [`nlp.make_doc`](/api/language#make_doc) instead,
+which will only run the tokenizer. For an additional speed boost, you can also
+use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process
+the texts as a stream.
 
 ```diff
 - patterns = [nlp(term) for term in LOTS_OF_TERMS]
@@ -801,6 +824,20 @@ doc = nlp(u"angela merkel and us president barack Obama")
 for match_id, start, end in matcher(doc):
     print("Matched based on lowercase token text:", doc[start:end])
 ```
+
+<Infobox title="Important note on creating patterns" variant="warning">
+
+The examples here use [`nlp.make_doc`](/api/language#make_doc) to create `Doc`
+object patterns as efficiently as possible and without running any of the other
+pipeline components. If the token attribute you want to match on are set by a
+pipeline component, **make sure that the pipeline component runs** when you
+create the pattern. For example, to match on `POS` or `LEMMA`, the pattern `Doc`
+objects need to have part-of-speech tags set by the `tagger`. You can either
+call the `nlp` object on your pattern texts instead of `nlp.make_doc`, or use
+[`nlp.disable_pipes`](/api/language#disable_pipes) to disable components
+selectively.
+
+</Infobox>
 
 Another possible use case is matching number tokens like IP addresses based on
 their shape. This means that you won't have to worry about how those string will
@@ -899,6 +936,16 @@ nlp.add_pipe(ruler)
 
 doc = nlp(u"MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
+
+The `EntityRuler` can validate patterns against a JSON schema with the option
+`validate=True`. See details under
+[Validating and debugging patterns](#pattern-validation).
+
+```python
+ruler = EntityRuler(nlp, validate=True)
 ```
 
 ### Using pattern files {#entityruler-files}
