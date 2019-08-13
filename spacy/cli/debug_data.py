@@ -426,7 +426,7 @@ def debug_data(
         if len(root_labels) > 1:
             msg.warn(
                 "Multiple root labels ({}) ".format(", ".join(root_labels)) +
-                "found in training data. Spacy's parser uses a single root "
+                "found in training data. spaCy's parser uses a single root "
                 "label ROOT so this distinction will not be available."
             )
 
