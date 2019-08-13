@@ -21,9 +21,9 @@ def now():
     return datetime.datetime.now()
 
 
-def create_training(wikipedia_input, entity_def_input, training_output):
+def create_training(wikipedia_input, entity_def_input, training_output, limit=None):
     wp_to_id = kb_creator.get_entity_to_id(entity_def_input)
-    _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=None)
+    _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=limit)
 
 
 def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=None):
@@ -128,6 +128,7 @@ def _process_wikipedia_texts(wikipedia_input, wp_to_id, training_output, limit=N
 
                 line = file.readline()
                 cnt += 1
+            print(now(), "processed", cnt, "lines of Wikipedia dump")
 
 
 text_regex = re.compile(r"(?<=<text xml:space=\"preserve\">).*(?=</text)")
