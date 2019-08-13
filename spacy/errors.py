@@ -420,23 +420,23 @@ class Errors(object):
     E151 = ("Trying to call nlp.update without required annotation types. "
             "Expected top-level keys: {expected_keys}."
             " Got: {unexpected_keys}.")
-    E152 = ("The attribute {attr} is not supported for token patterns. "
-            "Please use the option validate=True with Matcher, PhraseMatcher, "
+    E152 = ("The attribute '{attr}' is not supported for token patterns. "
+            "Use the option `validate=True` with the Matcher, PhraseMatcher, "
             "or EntityRuler for more details.")
-    E153 = ("The value type {vtype} is not supported for token patterns. "
-            "Please use the option validate=True with Matcher, PhraseMatcher, "
+    E153 = ("The value type '{vtype}' is not supported for token patterns. "
+            "Use the option `validate=True` with the Matcher, PhraseMatcher, "
             "or EntityRuler for more details.")
     E154 = ("One of the attributes or values is not supported for token "
-            "patterns. Please use the option validate=True with Matcher, "
+            "patterns. Use the option `validate=True` with the Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
-    E155 = ("The pipeline needs to include a tagger in order to use "
+    E155 = ("The pipeline needs to include a tagger in order to use the "
             "PhraseMatcher with the attributes POS, TAG, or LEMMA. Try using "
-            "nlp() instead of nlp.make_doc() or list(nlp.pipe()) instead of "
-            "list(nlp.tokenizer.pipe()).")
-    E156 = ("The pipeline needs to include a parser in order to use "
+            "`nlp()` instead of `nlp.make_doc()` or `list(nlp.pipe())` instead "
+            "of `list(nlp.tokenizer.pipe())`.")
+    E156 = ("The pipeline needs to include a parser in order to use the "
             "PhraseMatcher with the attribute DEP. Try using "
-            "nlp() instead of nlp.make_doc() or list(nlp.pipe()) instead of "
-            "list(nlp.tokenizer.pipe()).")
+            "`nlp()` instead of `nlp.make_doc()` or `list(nlp.pipe())` instead "
+            "of `list(nlp.tokenizer.pipe())`.")
 
 
 @add_codes
