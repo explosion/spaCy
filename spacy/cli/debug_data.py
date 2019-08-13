@@ -317,7 +317,7 @@ def debug_data(
         for doc, gold in train_docs_unpreprocessed:
             sent_lengths.append(len(gold.words))
         msg.info(
-            "Found {} sentence{} with an average length of {:.1f} words.".format(
+            "Found {} document{} with an average length of {:.1f} words.".format(
                 len(train_docs), 
                 "s" if len(train_docs) > 1 else "", 
                 sum(sent_lengths) / len(sent_lengths))
@@ -418,15 +418,10 @@ def debug_data(
             )
 
         # multiple root labels
-        root_labels = set()
-        for doc, gold in train_docs_unpreprocessed:
-            for i, (dep, head) in enumerate(zip(gold.labels, gold.heads)):
-                if head == i:
-                    root_labels.add(dep)
-        if len(root_labels) > 1:
+        if len(gold_train_unpreprocessed_data["roots"]) > 1:
             msg.warn(
-                "Multiple root labels ({}) ".format(", ".join(root_labels)) +
-                "found in training data. spaCy's parser uses a single root "
+                "Multiple root labels ({}) ".format(", ".join(gold_train_unpreprocessed_data["roots"]) +
+                "found in training data. Spacy's parser uses a single root "
                 "label ROOT so this distinction will not be available."
             )
 
@@ -495,6 +490,7 @@ def _compile_gold(train_docs, pipeline):
         "tags": Counter(),
         "deps": Counter(),
         "words": Counter(),
+        "roots": Counter(),
         "ws_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
@@ -524,6 +520,9 @@ def _compile_gold(train_docs, pipeline):
             data["tags"].update([x for x in gold.tags if x is not None])
         if "parser" in pipeline:
             data["deps"].update([x for x in gold.labels if x is not None])
+            for i, (dep, head) in enumerate(zip(gold.labels, gold.heads)):
+                if head == i:
+                    data["roots"].update([dep])
     return data
 
 
