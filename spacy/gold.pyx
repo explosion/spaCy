@@ -216,6 +216,10 @@ class GoldCorpus(object):
                                         make_projective=True)
         yield from gold_docs
 
+    def train_docs_without_preprocessing(self, nlp, gold_preproc=False):
+        gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc=gold_preproc)
+        yield from gold_docs
+
     def dev_docs(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc)
         yield from gold_docs
