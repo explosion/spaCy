@@ -424,7 +424,7 @@ def debug_data(
         # these should not happen, but just in case
         if gold_train_data["n_nonproj"] > 0:
             msg.fail(
-                "Found {} nonprojective projectivizted train sentence{}".format(
+                "Found {} nonprojective projectivized train sentence{}".format(
                     gold_train_data["n_nonproj"],
                     "s" if gold_train_data["n_nonproj"] > 1 else ""
                 )
@@ -432,8 +432,8 @@ def debug_data(
         if gold_train_data["n_cycles"] > 0:
             msg.fail(
                 "Found {} projectivized train sentence{} with cycles".format(
-                    gold_train_data["n_cycle"],
-                    "s" if gold_train_data["n_cycle"] > 1 else ""
+                    gold_train_data["n_cycles"],
+                    "s" if gold_train_data["n_cycles"] > 1 else ""
                 )
             )
 
