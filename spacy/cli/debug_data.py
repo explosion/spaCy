@@ -313,14 +313,12 @@ def debug_data(
         msg.divider("Dependency Parsing")
 
         # profile sentence length
-        sent_lengths = []
-        for doc, gold in train_docs_unpreprocessed:
-            sent_lengths.append(len(gold.words))
         msg.info(
-            "Found {} document{} with an average length of {:.1f} words.".format(
-                len(train_docs), 
+            "Found {} sentence{} with an average length of {:.1f} words.".format(
+                gold_train_data["n_sents"], 
                 "s" if len(train_docs) > 1 else "", 
-                sum(sent_lengths) / len(sent_lengths))
+                gold_train_data["n_words"] / gold_train_data["n_sents"]
+            )
         )
 
         # profile labels
@@ -328,20 +326,18 @@ def debug_data(
         labels_train_unpreprocessed = [label for label in gold_train_unpreprocessed_data["deps"]]
         labels_dev = [label for label in gold_dev_data["deps"]]
 
-        nonproj_train_unpreprocessed_count = _get_nonprojective_examples(train_docs_unpreprocessed)
-        if nonproj_train_unpreprocessed_count > 0:
+        if gold_train_unpreprocessed_data["n_nonproj"] > 0:
             msg.info(
                 "Found {} nonprojective train sentence{}".format(
-                    nonproj_train_unpreprocessed_count,
-                    "s" if nonproj_train_unpreprocessed_count > 1 else ""
+                    gold_train_unpreprocessed_data["n_nonproj"],
+                    "s" if gold_train_unpreprocessed_data["n_nonproj"] > 1 else ""
                 )
             )
-        nonproj_dev_count = _get_nonprojective_examples(dev_docs)
-        if nonproj_dev_count > 0:
+        if gold_dev_data["n_nonproj"] > 0:
             msg.info(
                 "Found {} nonprojective dev sentence{}".format(
-                    nonproj_dev_count,
-                    "s" if nonproj_dev_count > 1 else ""
+                    gold_dev_data["n_nonproj"],
+                    "s" if gold_dev_data["n_nonproj"] > 1 else ""
                 )
             )
 
@@ -420,25 +416,23 @@ def debug_data(
         # multiple root labels
         if len(gold_train_unpreprocessed_data["roots"]) > 1:
             msg.warn(
-                "Multiple root labels ({}) ".format(", ".join(gold_train_unpreprocessed_data["roots"]) +
-                "found in training data. Spacy's parser uses a single root "
+                "Multiple root labels ({}) ".format(", ".join(gold_train_unpreprocessed_data["roots"])) +
+                "found in training data. spaCy's parser uses a single root "
                 "label ROOT so this distinction will not be available."
             )
 
         # these should not happen, but just in case
-        nonproj_train_count = _get_nonprojective_examples(train_docs)
-        if nonproj_train_count > 0:
+        if gold_train_data["n_nonproj"] > 0:
             msg.fail(
                 "Found {} nonprojective projectivizted train sentence{}".format(
-                    nonproj_train_count,
+                    gold_train_data["n_nonproj"],
                     "s" if nonproj_train_count > 1 else ""
                 )
             )
-        cycle_train_count = _get_examples_with_cycles(train_docs)
-        if _get_examples_with_cycles(train_docs) > 0:
+        if gold_train_data["n_cycles"] > 0:
             msg.fail(
                 "Found {} projectivized train sentence{} with cycles".format(
-                    cycle_train_count,
+                    gold_train_data["n_cycle"],
                     "s" if cycle_train_count > 1 else ""
                 )
             )
@@ -494,6 +488,9 @@ def _compile_gold(train_docs, pipeline):
         "ws_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
+        "n_sents": 0,
+        "n_nonproj": 0,
+        "n_cycles": 0,
         "texts": set(),
     }
     for doc, gold in train_docs:
@@ -523,6 +520,11 @@ def _compile_gold(train_docs, pipeline):
             for i, (dep, head) in enumerate(zip(gold.labels, gold.heads)):
                 if head == i:
                     data["roots"].update([dep])
+                    data["n_sents"] += 1
+            if nonproj.is_nonproj_tree(gold.heads):
+                data["n_nonproj"] += 1
+            if nonproj.contains_cycle(gold.heads):
+                data["n_cycles"] += 1
     return data
 
 
@@ -546,18 +548,3 @@ def _get_labels_from_model(nlp, pipe_name):
         return set()
     pipe = nlp.get_pipe(pipe_name)
     return pipe.labels
-
-
-def _get_nonprojective_examples(data):
-    count = 0
-    for doc, gold in data:
-        if nonproj.is_nonproj_tree(gold.heads):
-            count += 1
-    return count
-
-def _get_examples_with_cycles(data):
-    count = 0
-    for doc, gold in data:
-        if nonproj.contains_cycle(gold.heads):
-            count += 1
-    return count
