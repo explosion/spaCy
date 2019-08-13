@@ -30,10 +30,10 @@ def test_serialize_kb_disk(en_vocab):
 def _get_dummy_kb(vocab):
     kb = KnowledgeBase(vocab=vocab, entity_vector_length=3)
 
-    kb.add_entity(entity='Q53', freq=0.33, entity_vector=[0, 5, 3])
-    kb.add_entity(entity='Q17', freq=0.2, entity_vector=[7, 1, 0])
-    kb.add_entity(entity='Q007', freq=0.7, entity_vector=[0, 0, 7])
-    kb.add_entity(entity='Q44', freq=0.4, entity_vector=[4, 4, 4])
+    kb.add_entity(entity='Q53', freq=33, entity_vector=[0, 5, 3])
+    kb.add_entity(entity='Q17', freq=2, entity_vector=[7, 1, 0])
+    kb.add_entity(entity='Q007', freq=7, entity_vector=[0, 0, 7])
+    kb.add_entity(entity='Q44', freq=342, entity_vector=[4, 4, 4])
 
     kb.add_alias(alias='double07', entities=['Q17', 'Q007'], probabilities=[0.1, 0.9])
     kb.add_alias(alias='guy', entities=['Q53', 'Q007', 'Q17', 'Q44'], probabilities=[0.3, 0.3, 0.2, 0.1])
@@ -62,13 +62,13 @@ def _check_kb(kb):
     assert len(candidates) == 2
 
     assert candidates[0].entity_ == 'Q007'
-    assert 0.6999 < candidates[0].entity_freq < 0.701
+    assert 6.999 < candidates[0].entity_freq < 7.01
     assert candidates[0].entity_vector == [0, 0, 7]
     assert candidates[0].alias_ == 'double07'
     assert 0.899 < candidates[0].prior_prob < 0.901
 
     assert candidates[1].entity_ == 'Q17'
-    assert 0.199 < candidates[1].entity_freq < 0.201
+    assert 1.99 < candidates[1].entity_freq < 2.01
     assert candidates[1].entity_vector == [7, 1, 0]
     assert candidates[1].alias_ == 'double07'
     assert 0.099 < candidates[1].prior_prob < 0.101
