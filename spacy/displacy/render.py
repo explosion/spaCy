@@ -5,7 +5,7 @@ import uuid
 
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
-from ..util import minify_html, escape_html
+from ..util import minify_html, escape_html, get_entry_points
 
 DEFAULT_LANG = "en"
 DEFAULT_DIR = "ltr"
@@ -237,6 +237,9 @@ class EntityRenderer(object):
             "CARDINAL": "#e4e7d2",
             "PERCENT": "#e4e7d2",
         }
+        user_colors = get_entry_points("spacy_displacy_colors")
+        for user_color in user_colors.values():
+            colors.update(user_color)
         colors.update(options.get("colors", {}))
         self.default_color = "#ddd"
         self.colors = colors
