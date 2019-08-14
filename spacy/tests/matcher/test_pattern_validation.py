@@ -18,6 +18,8 @@ TEST_PATTERNS = [
     ([{"IS_DIGIT": -1}], 1, 1),
     ([{"ORTH": -1}], 1, 1),
     ([{"_": "foo"}], 1, 1),
+    ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
+    ([1, 2, 3], 3, 1),
     # Bad patterns flagged outside of Matcher
     ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 1, 0),
     # Bad patterns not flagged with minimal checks

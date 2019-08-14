@@ -571,6 +571,8 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
             # Signifier for 'any token'
             tokens.append((ONE, [(NULL_ATTR, 0)], [], []))
             continue
+        if not isinstance(spec, dict):
+            raise ValueError(Errors.E154.format())
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
