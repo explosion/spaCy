@@ -788,11 +788,11 @@ token pattern covering the exact tokenization of the term.
 
 To create the patterns, each phrase has to be processed with the `nlp` object.
 If you have a mode loaded, doing this in a loop or list comprehension can easily
-become inefficient and slow. If you only need the tokenization and lexical
-attributes, you can run [`nlp.make_doc`](/api/language#make_doc) instead, which
-will only run the tokenizer. For an additional speed boost, you can also use the
-[`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process the texts
-as a stream.
+become inefficient and slow. If you **only need the tokenization and lexical
+attributes**, you can run [`nlp.make_doc`](/api/language#make_doc) instead,
+which will only run the tokenizer. For an additional speed boost, you can also
+use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process
+the texts as a stream.
 
 ```diff
 - patterns = [nlp(term) for term in LOTS_OF_TERMS]
@@ -824,6 +824,20 @@ doc = nlp(u"angela merkel and us president barack Obama")
 for match_id, start, end in matcher(doc):
     print("Matched based on lowercase token text:", doc[start:end])
 ```
+
+<Infobox title="Important note on creating patterns" variant="warning">
+
+The examples here use [`nlp.make_doc`](/api/language#make_doc) to create `Doc`
+object patterns as efficiently as possible and without running any of the other
+pipeline components. If the token attribute you want to match on are set by a
+pipeline component, **make sure that the pipeline component runs** when you
+create the pattern. For example, to match on `POS` or `LEMMA`, the pattern `Doc`
+objects need to have part-of-speech tags set by the `tagger`. You can either
+call the `nlp` object on your pattern texts instead of `nlp.make_doc`, or use
+[`nlp.disable_pipes`](/api/language#disable_pipes) to disable components
+selectively.
+
+</Infobox>
 
 Another possible use case is matching number tokens like IP addresses based on
 their shape. This means that you won't have to worry about how those string will

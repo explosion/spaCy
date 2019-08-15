@@ -18,15 +18,19 @@ class EntityEncoder:
     """
 
     DROP = 0
-    EPOCHS = 5
-    STOP_THRESHOLD = 0.04
-
     BATCH_SIZE = 1000
 
-    def __init__(self, nlp, input_dim, desc_width):
+    # Set min. acceptable loss to avoid a 'mean of empty slice' warning by numpy
+    MIN_LOSS = 0.01
+
+    # Reasonable default to stop training when things are not improving
+    MAX_NO_IMPROVEMENT = 20
+
+    def __init__(self, nlp, input_dim, desc_width, epochs=5):
         self.nlp = nlp
         self.input_dim = input_dim
         self.desc_width = desc_width
+        self.epochs = epochs
 
     def apply_encoder(self, description_list):
         if self.encoder is None:
@@ -46,32 +50,41 @@ class EntityEncoder:
 
             start = start + batch_size
             stop = min(stop + batch_size, len(description_list))
+            print("encoded:", stop, "entities")
 
         return encodings
 
     def train(self, description_list, to_print=False):
         processed, loss = self._train_model(description_list)
         if to_print:
-            print("Trained on", processed, "entities across", self.EPOCHS, "epochs")
+            print(
+                "Trained entity descriptions on",
+                processed,
+                "(non-unique) entities across",
+                self.epochs,
+                "epochs",
+            )
             print("Final loss:", loss)
 
     def _train_model(self, description_list):
-        # TODO: when loss gets too low, a 'mean of empty slice' warning is thrown by numpy
-
+        best_loss = 1.0
+        iter_since_best = 0
         self._build_network(self.input_dim, self.desc_width)
 
         processed = 0
         loss = 1
-        descriptions = description_list.copy()   # copy this list so that shuffling does not affect other functions
+        # copy this list so that shuffling does not affect other functions
+        descriptions = description_list.copy()
+        to_continue = True
 
-        for i in range(self.EPOCHS):
+        for i in range(self.epochs):
             shuffle(descriptions)
 
             batch_nr = 0
             start = 0
             stop = min(self.BATCH_SIZE, len(descriptions))
 
-            while loss > self.STOP_THRESHOLD and start < len(descriptions):
+            while to_continue and start < len(descriptions):
                 batch = []
                 for descr in descriptions[start:stop]:
                     doc = self.nlp(descr)
@@ -79,8 +92,23 @@ class EntityEncoder:
                     batch.append(doc_vector)
 
                 loss = self._update(batch)
-                print(i, batch_nr, loss)
+                if batch_nr % 25 == 0:
+                    print("loss:", loss)
                 processed += len(batch)
+
+                # in general, continue training if we haven't reached our ideal min yet
+                to_continue = loss > self.MIN_LOSS
+
+                # store the best loss and track how long it's been
+                if loss < best_loss:
+                    best_loss = loss
+                    iter_since_best = 0
+                else:
+                    iter_since_best += 1
+
+                # stop learning if we haven't seen improvement since the last few iterations
+                if iter_since_best > self.MAX_NO_IMPROVEMENT:
+                    to_continue = False
 
                 batch_nr += 1
                 start = start + self.BATCH_SIZE
@@ -103,14 +131,16 @@ class EntityEncoder:
     def _build_network(self, orig_width, hidden_with):
         with Model.define_operators({">>": chain}):
             # very simple encoder-decoder model
-            self.encoder = (
-                Affine(hidden_with, orig_width)
+            self.encoder = Affine(hidden_with, orig_width)
+            self.model = self.encoder >> zero_init(
+                Affine(orig_width, hidden_with, drop_factor=0.0)
             )
-            self.model = self.encoder >> zero_init(Affine(orig_width, hidden_with, drop_factor=0.0))
         self.sgd = create_default_optimizer(self.model.ops)
 
     def _update(self, vectors):
-        predictions, bp_model = self.model.begin_update(np.asarray(vectors), drop=self.DROP)
+        predictions, bp_model = self.model.begin_update(
+            np.asarray(vectors), drop=self.DROP
+        )
         loss, d_scores = self._get_loss(scores=predictions, golds=np.asarray(vectors))
         bp_model(d_scores, sgd=self.sgd)
         return loss / len(vectors)
