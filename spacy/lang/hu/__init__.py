@@ -1,16 +1,17 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from pathlib import Path
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
-from .lemmatizer import LOOKUP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...util import update_exc, add_lookups, load_language_data
 
 
 class HungarianDefaults(Language.Defaults):
@@ -25,7 +26,8 @@ class HungarianDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     token_match = TOKEN_MATCH
-    lemma_lookup = LOOKUP
+    lemma_path = Path(__file__).parent / "lemmas.json"
+    lemma_lookup = load_language_data(lemma_path)
 
 
 class Hungarian(Language):
