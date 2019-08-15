@@ -1,9 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .lookup import LOOKUP
+from pathlib import Path
+
 from ._adjectives import ADJECTIVES
-from ._adjectives_irreg import ADJECTIVES_IRREG
 from ._adp_irreg import ADP_IRREG
 from ._adverbs import ADVERBS
 from ._auxiliary_verbs_irreg import AUXILIARY_VERBS_IRREG
@@ -15,8 +15,14 @@ from ._nouns_irreg import NOUNS_IRREG
 from ._pronouns_irreg import PRONOUNS_IRREG
 from ._sconj_irreg import SCONJ_IRREG
 from ._verbs import VERBS
-from ._verbs_irreg import VERBS_IRREG
 
+from ....util import load_language_data
+
+BASE_PATH =  Path(__file__).parent
+
+LOOKUP = load_language_data(BASE_PATH / 'lookup.json')
+VERBS_IRREG = load_language_data(BASE_PATH / '_verbs_irreg.json')
+ADJECTIVES_IRREG = load_language_data(BASE_PATH / '_adjectives_irreg.json')
 
 LEMMA_INDEX = {'adj': ADJECTIVES, 'adv': ADVERBS, 'noun': NOUNS, 'verb': VERBS}
 
