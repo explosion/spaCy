@@ -131,6 +131,17 @@ def generate_cython(root, source):
     if p != 0:
         raise RuntimeError("Running cythonize failed")
 
+def gzip_language_data(root, source):
+    print("Gzipping language data")
+    import srsly
+    from pathlib import Path
+
+    base = Path(root) / source
+
+    for jsonfile in base.glob("**/*.json"):
+        outfile = jsonfile.with_suffix(jsonfile.suffix + '.gz')
+        data = srsly.read_json(jsonfile)
+        srsly.write_json(outfile, data, use_gzip=True)
 
 def is_source_release(path):
     return os.path.exists(os.path.join(path, "PKG-INFO"))
@@ -207,6 +218,7 @@ def setup_package():
 
         if not is_source_release(root):
             generate_cython(root, "spacy")
+            gzip_language_data(root, "spacy/lang")
 
         setup(
             name="spacy",
