@@ -678,11 +678,23 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         >>> tags = biluo_tags_from_offsets(doc, entities)
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
+    # Ensure no overlapping entity labels exist
+    tokens_in_ents = {}
+       
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
     # Handle entity cases
     for start_char, end_char, label in entities:
+        for token_index in range(start_char, end_char):
+            if token_index in tokens_in_ents.keys():
+                raise ValueError(Errors.E103.format(
+                    span1=(tokens_in_ents[token_index][0],
+                            tokens_in_ents[token_index][1],
+                            tokens_in_ents[token_index][2]),
+                    span2=(start_char, end_char, label)))
+            tokens_in_ents[token_index] = (start_char, end_char, label)
+
         start_token = starts.get(start_char)
         end_token = ends.get(end_char)
         # Only interested if the tokenization is correct
