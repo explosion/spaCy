@@ -89,20 +89,24 @@ def debug_data(
         sys.exit(1)
 
     # Create the gold corpus to be able to better analyze data
-    loading_error_message = None
+    loading_train_error_message = ""
+    loading_dev_error_message = ""
     with msg.loading("Loading corpus..."):
         corpus = GoldCorpus(train_path, dev_path)
         try:
             train_docs = list(corpus.train_docs(nlp))
             train_docs_unpreprocessed = list(corpus.train_docs_without_preprocessing(nlp))
         except ValueError as e:
-            loading_error_message = "Training data cannot be loaded: {}".format(str(e))
+            loading_train_error_message = "Training data cannot be loaded: {}".format(str(e))
         try:
             dev_docs = list(corpus.dev_docs(nlp))
         except ValueError as e:
-            loading_error_message = "Development data cannot be loaded: {}".format(str(e))
-    if loading_error_message:
-        msg.fail(loading_error_message)
+            loading_dev_error_message = "Development data cannot be loaded: {}".format(str(e))
+    if loading_train_error_message or loading_dev_error_message:
+        if loading_train_error_message:
+            msg.fail(loading_train_error_message)
+        if loading_dev_error_message:
+            msg.fail(loading_dev_error_message)
         sys.exit(1)
     msg.good("Corpus is loadable")
 
