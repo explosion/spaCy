@@ -243,7 +243,8 @@ class Errors(object):
             "Tag sequence:\n{tags}")
     E068 = ("Invalid BILUO tag: '{tag}'.")
     E069 = ("Invalid gold-standard parse tree. Found cycle between word "
-            "IDs: {cycle}")
+            "IDs: {cycle} (tokens: {cycle_tokens}) in the document starting "
+            "with tokens: {doc_tokens}.")
     E070 = ("Invalid gold-standard data. Number of documents ({n_docs}) "
             "does not align with number of annotations ({n_annots}).")
     E071 = ("Error creating lexeme: specified orth ID ({orth}) does not "
