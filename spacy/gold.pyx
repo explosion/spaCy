@@ -590,7 +590,7 @@ cdef class GoldParse:
 
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
-            raise ValueError(Errors.E069.format(cycle=cycle))
+            raise ValueError(Errors.E069.format(cycle=cycle, cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]), doc_tokens=" ".join(words[:50])))
 
     def __len__(self):
         """Get the number of gold-standard tokens.
