@@ -156,12 +156,14 @@ def debug_data(
             n_words, "word" if n_words == 1 else "words", len(gold_train_data["words"])
         )
     )
-    msg.warn(
-        "{} misaligned tokens in the training data".format(gold_train_data["n_misaligned_words"])
-    )
-    msg.warn(
-        "{} misaligned tokens in the dev data".format(gold_dev_data["n_misaligned_words"])
-    )
+    if gold_train_data["n_misaligned_words"] > 0:
+        msg.warn(
+            "{} misaligned tokens in the training data".format(gold_train_data["n_misaligned_words"])
+        )
+    if gold_dev_data["n_misaligned_words"] > 0:
+        msg.warn(
+            "{} misaligned tokens in the dev data".format(gold_dev_data["n_misaligned_words"])
+        )
     most_common_words = gold_train_data["words"].most_common(10)
     msg.text(
         "10 most common words: {}".format(
