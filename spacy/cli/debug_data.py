@@ -245,7 +245,7 @@ def debug_data(
         if not has_low_data_warning:
             msg.good("Good amount of examples for all labels")
         if not has_no_neg_warning:
-            msg.good("Examples without occurences available for all labels")
+            msg.good("Examples without occurrences available for all labels")
         if not has_ws_ents_error:
             msg.good("No entities consisting of or starting/ending with whitespace")
 
@@ -321,8 +321,8 @@ def debug_data(
         # profile sentence length
         msg.info(
             "Found {} sentence{} with an average length of {:.1f} words.".format(
-                gold_train_data["n_sents"], 
-                "s" if len(train_docs) > 1 else "", 
+                gold_train_data["n_sents"],
+                "s" if len(train_docs) > 1 else "",
                 gold_train_data["n_words"] / gold_train_data["n_sents"]
             )
         )
