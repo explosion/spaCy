@@ -16,7 +16,8 @@ def merge_noun_chunks(doc):
         return doc
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:
-            attrs = {"tag": np.root.tag, "dep": np.root.dep}
+            lemma = doc[np.start:np.end].lemma_
+            attrs = {"tag": np.root.tag, "dep": np.root.dep, "lemma": lemma, "ent_type": np.root.ent_type}
             retokenizer.merge(np, attrs=attrs)
     return doc
 
