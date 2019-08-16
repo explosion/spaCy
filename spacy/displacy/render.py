@@ -247,6 +247,15 @@ class EntityRenderer(object):
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
 
+        template = options.get("template")
+        if template:
+            self.ent_template = template
+        else:
+            if self.direction == "rtl":
+                self.ent_template = TPL_ENT_RTL
+            else:
+                self.ent_template = TPL_ENT
+
     def render(self, parsed, page=False, minify=False):
         """Render complete markup.
 
@@ -284,6 +293,7 @@ class EntityRenderer(object):
             label = span["label"]
             start = span["start"]
             end = span["end"]
+            additional_params = span.get("params", {})
             entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
             for i, fragment in enumerate(fragments):
@@ -293,10 +303,8 @@ class EntityRenderer(object):
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
                 ent_settings = {"label": label, "text": entity, "bg": color}
-                if self.direction == "rtl":
-                    markup += TPL_ENT_RTL.format(**ent_settings)
-                else:
-                    markup += TPL_ENT.format(**ent_settings)
+                ent_settings.update(additional_params)
+                markup += self.ent_template.format(**ent_settings)
             else:
                 markup += entity
             offset = end
