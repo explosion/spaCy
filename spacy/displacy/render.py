@@ -247,7 +247,7 @@ class EntityRenderer(object):
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
 
-        template = options.get("template", "")
+        template = options.get("template")
         if template:
             self.ent_template = template
         else:
