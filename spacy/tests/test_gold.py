@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
 from spacy.gold import spans_from_biluo_tags, GoldParse
 from spacy.tokens import Doc
-
+import pytest
 
 def test_gold_biluo_U(en_vocab):
     words = ["I", "flew", "to", "London", "."]
@@ -32,6 +32,14 @@ def test_gold_biluo_BIL(en_vocab):
     tags = biluo_tags_from_offsets(doc, entities)
     assert tags == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
+def test_gold_biluo_overlap(en_vocab):
+    words = ["I", "flew", "to", "San", "Francisco", "Valley", "."]
+    spaces = [True, True, True, True, True, False, True]
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC"),
+    (len("I flew to "), len("I flew to San Francisco"), "LOC")]
+    with pytest.raises(ValueError):
+        tags = biluo_tags_from_offsets(doc, entities)
 
 def test_gold_biluo_misalign(en_vocab):
     words = ["I", "flew", "to", "San", "Francisco", "Valley."]

@@ -124,7 +124,8 @@ class Errors(object):
     E016 = ("MultitaskObjective target should be function or one of: dep, "
             "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add unicode or bytes. Got type: {value_type}")
-    E018 = ("Can't retrieve string for hash '{hash_value}'.")
+    E018 = ("Can't retrieve string for hash '{hash_value}'. This usually refers "
+            "to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
             "IDs are enumerated in spacy/syntax/{src}.pyx.")
     E020 = ("Could not find a gold-standard action to supervise the "
@@ -242,7 +243,8 @@ class Errors(object):
             "Tag sequence:\n{tags}")
     E068 = ("Invalid BILUO tag: '{tag}'.")
     E069 = ("Invalid gold-standard parse tree. Found cycle between word "
-            "IDs: {cycle}")
+            "IDs: {cycle} (tokens: {cycle_tokens}) in the document starting "
+            "with tokens: {doc_tokens}.")
     E070 = ("Invalid gold-standard data. Number of documents ({n_docs}) "
             "does not align with number of annotations ({n_annots}).")
     E071 = ("Error creating lexeme: specified orth ID ({orth}) does not "
@@ -420,7 +422,12 @@ class Errors(object):
     E151 = ("Trying to call nlp.update without required annotation types. "
             "Expected top-level keys: {expected_keys}."
             " Got: {unexpected_keys}.")
-
+    E152 = ("The `nlp` object should have a pre-trained `ner` component.")
+    E153 = ("Either provide a path to a preprocessed training directory, "
+            "or to the original Wikipedia XML dump.")
+    E154 = ("Either the `nlp` model or the `vocab` should be specified.")
+    E155 = ("The `nlp` object should have access to pre-trained word vectors, cf. "
+            "https://spacy.io/usage/models#languages.")
 
 @add_codes
 class TempErrors(object):
