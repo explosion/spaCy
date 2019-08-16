@@ -1,6 +1,23 @@
 {
     "resources": [
-        {
+         {
+            "id": "deeppavlov",
+            "title": "DeepPavlov",
+            "description": "DeepPavlov is an open-source program library for virtual dialog assistants development and text analysis, built on TensorFlow and Keras. It contains a set of components for quick dialog system prototyping. Solutions developed on DeepPavlov help automate communication processes in marketing, sales and customer support, enable product and information search in a dialog assistant’s interface, and automate a contact center’s work.",
+            "github": "deepmipt/DeepPavlov",
+            "pip": "deeppavlov",
+            "code_language": "python",
+            "author": "iPavlov",
+            "author_links": {
+                 "twitter": "deeppavlov",
+                 "github": "deepmipt/DeepPavlov",
+                 "website": "https://ipavlov.ai"
+            },
+            "thumb": "https://github.com/deepmipt/DeepPavlov/blob/master/docs/_static/ipavlov_logo.png",
+            "category": ["conversational", "scientific"],
+            "tags": ["TensorFlow", "keras", "chatbots"]
+        },
+	{
             "id": "nlp-architect",
             "title": "NLP Architect",
             "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI",
