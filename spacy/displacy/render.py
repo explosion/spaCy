@@ -293,7 +293,7 @@ class EntityRenderer(object):
             label = span["label"]
             start = span["start"]
             end = span["end"]
-            additional_params = span.get("additional_params", {})
+            additional_params = span.get("params", {})
             entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
             for i, fragment in enumerate(fragments):
