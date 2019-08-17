@@ -126,7 +126,7 @@ def load_language_data(path):
     try:
         return srsly.read_json(path)
     except FileNotFoundError:
-        return srsly.read_json(path + ".gz", use_gzip=True)
+        return srsly.read_gzip_json(path + ".gz")
 
 def load_model(name, **overrides):
     """Load a model from a shortcut link, package or data path.

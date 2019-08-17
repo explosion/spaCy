@@ -141,7 +141,7 @@ def gzip_language_data(root, source):
     for jsonfile in base.glob("**/*.json"):
         outfile = jsonfile.with_suffix(jsonfile.suffix + '.gz')
         data = srsly.read_json(jsonfile)
-        srsly.write_json(outfile, data, use_gzip=True)
+        srsly.write_gzip_json(outfile, data)
 
 def is_source_release(path):
     return os.path.exists(os.path.join(path, "PKG-INFO"))
