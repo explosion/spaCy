@@ -23,10 +23,10 @@ from .lemmatizer import DutchLemmatizer
 
 from ....util import load_language_data
 
-BASE_PATH =  Path(__file__).parent
+BASE_PATH = Path(__file__).parent
 
-LOOKUP = load_language_data(BASE_PATH / 'lookup.json')
-NOUNS = load_language_data(BASE_PATH / '_nouns.json')
+LOOKUP = load_language_data(BASE_PATH / "lookup.json")
+NOUNS = load_language_data(BASE_PATH / "_nouns.json")
 
 LEMMA_INDEX = {
     "adj": ADJECTIVES,

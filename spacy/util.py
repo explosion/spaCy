@@ -116,8 +116,9 @@ def ensure_path(path):
     else:
         return path
 
+
 def load_language_data(path):
-    """Load JSON language data using the given path as a base. 
+    """Load JSON language data using the given path as a base.
 
     If the provided path isn't present, will attempt to load a gzipped version
     before giving up.
@@ -127,6 +128,7 @@ def load_language_data(path):
         return srsly.read_json(path)
     except FileNotFoundError:
         return srsly.read_gzip_json(path + ".gz")
+
 
 def load_model(name, **overrides):
     """Load a model from a shortcut link, package or data path.

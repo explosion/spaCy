@@ -16,6 +16,7 @@ from ...util import update_exc, add_lookups, load_language_data
 # Original pairs downloaded from http://www.lexiconista.com/datasets/lemmatization/
 # Replaced characters using cedillas with the correct ones (ș and ț)
 
+
 class RomanianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: "ro"
