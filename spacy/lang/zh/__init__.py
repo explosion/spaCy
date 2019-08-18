@@ -8,6 +8,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 
+
 class ChineseDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: "zh"

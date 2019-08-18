@@ -674,14 +674,14 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
     with Model.define_operators({">>": chain, "**": clone}):
         # context encoder
         tok2vec = Tok2Vec(
-                width=hidden_width,
-                embed_size=embed_width,
-                pretrained_vectors=pretrained_vectors,
-                cnn_maxout_pieces=cnn_maxout_pieces,
-                subword_features=True,
-                conv_depth=conv_depth,
-                bilstm_depth=0,
-            )
+            width=hidden_width,
+            embed_size=embed_width,
+            pretrained_vectors=pretrained_vectors,
+            cnn_maxout_pieces=cnn_maxout_pieces,
+            subword_features=True,
+            conv_depth=conv_depth,
+            bilstm_depth=0,
+        )
 
         model = (
             tok2vec

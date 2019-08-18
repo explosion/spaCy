@@ -8,7 +8,7 @@ import sys
 import srsly
 from wasabi import Printer, MESSAGES
 
-from ..gold import GoldCorpus, read_json_object
+from ..gold import GoldCorpus
 from ..syntax import nonproj
 from ..util import load_model, get_lang_class
 
@@ -95,13 +95,19 @@ def debug_data(
         corpus = GoldCorpus(train_path, dev_path)
         try:
             train_docs = list(corpus.train_docs(nlp))
-            train_docs_unpreprocessed = list(corpus.train_docs_without_preprocessing(nlp))
+            train_docs_unpreprocessed = list(
+                corpus.train_docs_without_preprocessing(nlp)
+            )
         except ValueError as e:
-            loading_train_error_message = "Training data cannot be loaded: {}".format(str(e))
+            loading_train_error_message = "Training data cannot be loaded: {}".format(
+                str(e)
+            )
         try:
             dev_docs = list(corpus.dev_docs(nlp))
         except ValueError as e:
-            loading_dev_error_message = "Development data cannot be loaded: {}".format(str(e))
+            loading_dev_error_message = "Development data cannot be loaded: {}".format(
+                str(e)
+            )
     if loading_train_error_message or loading_dev_error_message:
         if loading_train_error_message:
             msg.fail(loading_train_error_message)
@@ -158,11 +164,15 @@ def debug_data(
     )
     if gold_train_data["n_misaligned_words"] > 0:
         msg.warn(
-            "{} misaligned tokens in the training data".format(gold_train_data["n_misaligned_words"])
+            "{} misaligned tokens in the training data".format(
+                gold_train_data["n_misaligned_words"]
+            )
         )
     if gold_dev_data["n_misaligned_words"] > 0:
         msg.warn(
-            "{} misaligned tokens in the dev data".format(gold_dev_data["n_misaligned_words"])
+            "{} misaligned tokens in the dev data".format(
+                gold_dev_data["n_misaligned_words"]
+            )
         )
     most_common_words = gold_train_data["words"].most_common(10)
     msg.text(
@@ -184,7 +194,9 @@ def debug_data(
 
     if "ner" in pipeline:
         # Get all unique NER labels present in the data
-        labels = set(label for label in gold_train_data["ner"] if label not in ("O", "-"))
+        labels = set(
+            label for label in gold_train_data["ner"] if label not in ("O", "-")
+        )
         label_counts = gold_train_data["ner"]
         model_labels = _get_labels_from_model(nlp, "ner")
         new_labels = [l for l in labels if l not in model_labels]
@@ -222,7 +234,9 @@ def debug_data(
             )
 
         if gold_train_data["ws_ents"]:
-            msg.fail("{} invalid whitespace entity spans".format(gold_train_data["ws_ents"]))
+            msg.fail(
+                "{} invalid whitespace entity spans".format(gold_train_data["ws_ents"])
+            )
             has_ws_ents_error = True
 
         for label in new_labels:
@@ -323,33 +337,36 @@ def debug_data(
             "Found {} sentence{} with an average length of {:.1f} words.".format(
                 gold_train_data["n_sents"],
                 "s" if len(train_docs) > 1 else "",
-                gold_train_data["n_words"] / gold_train_data["n_sents"]
+                gold_train_data["n_words"] / gold_train_data["n_sents"],
             )
         )
 
         # profile labels
         labels_train = [label for label in gold_train_data["deps"]]
-        labels_train_unpreprocessed = [label for label in gold_train_unpreprocessed_data["deps"]]
+        labels_train_unpreprocessed = [
+            label for label in gold_train_unpreprocessed_data["deps"]
+        ]
         labels_dev = [label for label in gold_dev_data["deps"]]
 
         if gold_train_unpreprocessed_data["n_nonproj"] > 0:
             msg.info(
                 "Found {} nonprojective train sentence{}".format(
                     gold_train_unpreprocessed_data["n_nonproj"],
-                    "s" if gold_train_unpreprocessed_data["n_nonproj"] > 1 else ""
+                    "s" if gold_train_unpreprocessed_data["n_nonproj"] > 1 else "",
                 )
             )
         if gold_dev_data["n_nonproj"] > 0:
             msg.info(
                 "Found {} nonprojective dev sentence{}".format(
                     gold_dev_data["n_nonproj"],
-                    "s" if gold_dev_data["n_nonproj"] > 1 else ""
+                    "s" if gold_dev_data["n_nonproj"] > 1 else "",
                 )
             )
 
         msg.info(
             "{} {} in train data".format(
-                len(labels_train_unpreprocessed), "label" if len(labels_train) == 1 else "labels"
+                len(labels_train_unpreprocessed),
+                "label" if len(labels_train) == 1 else "labels",
             )
         )
         msg.info(
@@ -373,43 +390,45 @@ def debug_data(
                 )
                 has_low_data_warning = True
 
-
         # rare labels in projectivized train
         rare_projectivized_labels = []
         for label in gold_train_data["deps"]:
             if gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD and "||" in label:
-                rare_projectivized_labels.append("{}: {}".format(label, str(gold_train_data["deps"][label])))
+                rare_projectivized_labels.append(
+                    "{}: {}".format(label, str(gold_train_data["deps"][label]))
+                )
 
         if len(rare_projectivized_labels) > 0:
-                msg.warn(
-                    "Low number of examples for {} label{} in the "
-                    "projectivized dependency trees used for training. You may "
-                    "want to projectivize labels such as punct before "
-                    "training in order to improve parser performance.".format(
-                        len(rare_projectivized_labels),
-                        "s" if len(rare_projectivized_labels) > 1 else "")
+            msg.warn(
+                "Low number of examples for {} label{} in the "
+                "projectivized dependency trees used for training. You may "
+                "want to projectivize labels such as punct before "
+                "training in order to improve parser performance.".format(
+                    len(rare_projectivized_labels),
+                    "s" if len(rare_projectivized_labels) > 1 else "",
                 )
-                msg.warn(
-                    "Projectivized labels with low numbers of examples: "
-                    "{}".format("\n".join(rare_projectivized_labels)),
-                    show=verbose
-                )
-                has_low_data_warning = True
+            )
+            msg.warn(
+                "Projectivized labels with low numbers of examples: "
+                "{}".format("\n".join(rare_projectivized_labels)),
+                show=verbose,
+            )
+            has_low_data_warning = True
 
         # labels only in train
         if set(labels_train) - set(labels_dev):
             msg.warn(
                 "The following labels were found only in the train data: "
                 "{}".format(", ".join(set(labels_train) - set(labels_dev))),
-                show=verbose
+                show=verbose,
             )
 
         # labels only in dev
         if set(labels_dev) - set(labels_train):
             msg.warn(
-                "The following labels were found only in the dev data: " +
-                ", ".join(set(labels_dev) - set(labels_train)),
-                show=verbose
+                "The following labels were found only in the dev data: "
+                + ", ".join(set(labels_dev) - set(labels_train)),
+                show=verbose,
             )
 
         if has_low_data_warning:
@@ -422,8 +441,10 @@ def debug_data(
         # multiple root labels
         if len(gold_train_unpreprocessed_data["roots"]) > 1:
             msg.warn(
-                "Multiple root labels ({}) ".format(", ".join(gold_train_unpreprocessed_data["roots"])) +
-                "found in training data. spaCy's parser uses a single root "
+                "Multiple root labels ({}) ".format(
+                    ", ".join(gold_train_unpreprocessed_data["roots"])
+                )
+                + "found in training data. spaCy's parser uses a single root "
                 "label ROOT so this distinction will not be available."
             )
 
@@ -432,14 +453,14 @@ def debug_data(
             msg.fail(
                 "Found {} nonprojective projectivized train sentence{}".format(
                     gold_train_data["n_nonproj"],
-                    "s" if gold_train_data["n_nonproj"] > 1 else ""
+                    "s" if gold_train_data["n_nonproj"] > 1 else "",
                 )
             )
         if gold_train_data["n_cycles"] > 0:
             msg.fail(
                 "Found {} projectivized train sentence{} with cycles".format(
                     gold_train_data["n_cycles"],
-                    "s" if gold_train_data["n_cycles"] > 1 else ""
+                    "s" if gold_train_data["n_cycles"] > 1 else "",
                 )
             )
 
