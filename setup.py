@@ -138,12 +138,9 @@ def gzip_language_data(root, source):
     from pathlib import Path
 
     base = Path(root) / source
-
     for jsonfile in base.glob("**/*.json"):
         outfile = jsonfile.with_suffix(jsonfile.suffix + ".gz")
-        if os.path.isfile(outfile) and os.path.getctime(outfile) > os.path.getctime(
-            jsonfile
-        ):
+        if outfile.is_file() and outfile.stat().st_ctime > jsonfile.stat().st_ctime:
             # If the gz is newer it doesn't need updating
             print("Skipping {}, already compressed".format(jsonfile))
             continue
