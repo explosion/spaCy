@@ -203,7 +203,7 @@ displacy.render(doc2, style="ent")
 
 <Infobox variant="warning" title="Important note">
 
-To explicitly enable or disable "Jupyter mode", you can use the jupyter`
+To explicitly enable or disable "Jupyter mode", you can use the `jupyter`
 keyword argument – e.g. to return raw HTML in a notebook, or to force Jupyter
 rendering if auto-detection fails.
 
