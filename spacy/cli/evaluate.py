@@ -85,11 +85,11 @@ def render_parses(docs, output_path, model_name="", limit=250, deps=True, ents=T
     docs[0].user_data["title"] = model_name
     if ents:
         html = displacy.render(docs[:limit], style="ent", page=True)
-        with (output_path / "entities.html").open("w") as file_:
+        with (output_path / "entities.html").open("w", encoding="utf8") as file_:
             file_.write(html)
     if deps:
         html = displacy.render(
             docs[:limit], style="dep", page=True, options={"compact": True}
         )
-        with (output_path / "parses.html").open("w") as file_:
+        with (output_path / "parses.html").open("w", encoding="utf8") as file_:
             file_.write(html)
