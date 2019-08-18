@@ -1,4 +1,6 @@
 # Reserve 64 values for flag features
+from . cimport symbols
+
 cdef enum attr_id_t:
     NULL_ATTR
     IS_ALPHA
@@ -82,10 +84,10 @@ cdef enum attr_id_t:
     DEP
     ENT_IOB
     ENT_TYPE
-    ENT_KB_ID
     HEAD
     SENT_START
     SPACY
     PROB
 
     LANG
+    ENT_KB_ID = symbols.ENT_KB_ID

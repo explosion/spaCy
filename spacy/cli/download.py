@@ -6,6 +6,7 @@ import requests
 import os
 import subprocess
 import sys
+import pkg_resources
 from wasabi import Printer
 
 from .link import link
@@ -19,7 +20,7 @@ msg = Printer()
 @plac.annotations(
     model=("Model to download (shortcut or name)", "positional", None, str),
     direct=("Force direct download of name + version", "flag", "d", bool),
-    pip_args=("additional arguments to be passed to `pip install` on model install"),
+    pip_args=("Additional arguments to be passed to `pip install` on model install"),
 )
 def download(model, direct=False, *pip_args):
     """
@@ -67,6 +68,16 @@ def download(model, direct=False, *pip_args):
                     "the model via its full package name: "
                     "nlp = spacy.load('{}')".format(model, model_name),
                 )
+        # If a model is downloaded and then loaded within the same process, our
+        # is_package check currently fails, because pkg_resources.working_set
+        # is not refreshed automatically (see #3923). We're trying to work
+        # around this here be requiring the package explicitly.
+        try:
+            pkg_resources.working_set.require(model_name)
+        except:  # noqa: E722
+            # Maybe it's possible to remove this – mostly worried about cross-
+            # platform and cross-Python copmpatibility here
+            pass
 
 
 def get_json(url, desc):

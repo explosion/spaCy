@@ -12,10 +12,6 @@ from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
-# Borrowing french syntax parser because both languages use
-# universal dependencies for tagging/parsing.
-# Read here for more:
-# https://github.com/explosion/spaCy/pull/1882#issuecomment-361409573
 from .syntax_iterators import SYNTAX_ITERATORS
 
 

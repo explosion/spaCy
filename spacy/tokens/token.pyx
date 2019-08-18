@@ -202,7 +202,7 @@ cdef class Token:
         DOCS: https://spacy.io/api/token#similarity
         """
         if "similarity" in self.doc.user_token_hooks:
-            return self.doc.user_token_hooks["similarity"](self)
+            return self.doc.user_token_hooks["similarity"](self, other)
         if hasattr(other, "__len__") and len(other) == 1 and hasattr(other, "__getitem__"):
             if self.c.lex.orth == getattr(other[0], "orth", None):
                 return 1.0
@@ -407,6 +407,12 @@ cdef class Token:
         xp = get_array_module(vector)
         total = (vector ** 2).sum()
         return xp.sqrt(total) if total != 0. else 0.
+
+    @property
+    def tensor(self):
+        if self.doc.tensor is None:
+            return None
+        return self.doc.tensor[self.i]
 
     @property
     def n_lefts(self):

@@ -1,12 +1,10 @@
 # encoding: utf8
 from __future__ import unicode_literals, print_function
 
-import re
 import sys
 
-
 from .stop_words import STOP_WORDS
-from .tag_map import TAG_MAP, POS
+from .tag_map import TAG_MAP
 from ...attrs import LANG
 from ...language import Language
 from ...tokens import Doc
@@ -22,6 +20,7 @@ if is_python_pre_3_5:
     Morpheme = namedtuple("Morpheme", "surface lemma tag")
 elif is_python_post_3_7:
     from dataclasses import dataclass
+
     @dataclass(frozen=True)
     class Morpheme:
         surface: str
@@ -29,10 +28,12 @@ elif is_python_post_3_7:
         tag: str
 else:
     from typing import NamedTuple
+
     class Morpheme(NamedTuple):
-        surface: str
-        lemma: str
-        tag: str
+
+        surface = str("")
+        lemma = str("")
+        tag = str("")
 
 
 def try_mecab_import():
@@ -49,12 +50,15 @@ def try_mecab_import():
 
 
 def check_spaces(text, tokens):
-    token_pattern = re.compile(r"\s?".join(f"({t})" for t in tokens))
-    m = token_pattern.match(text)
-    if m is not None:
-        for i in range(1, m.lastindex):
-            yield m.end(i) < m.start(i + 1)
-        yield False
+    prev_end = -1
+    start = 0
+    for token in tokens:
+        idx = text.find(token, start)
+        if prev_end > 0:
+            yield prev_end != idx
+        prev_end = idx + len(token)
+        start = prev_end
+    yield False
 
 
 class KoreanTokenizer(DummyTokenizer):

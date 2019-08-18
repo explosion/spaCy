@@ -70,15 +70,33 @@ def merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-def align(cand_words, gold_words):
-    if cand_words == gold_words:
-        alignment = numpy.arange(len(cand_words))
+def align(tokens_a, tokens_b):
+    """Calculate alignment tables between two tokenizations, using the Levenshtein
+    algorithm. The alignment is case-insensitive.
+
+    tokens_a (List[str]): The candidate tokenization.
+    tokens_b (List[str]): The reference tokenization.
+    RETURNS: (tuple): A 5-tuple consisting of the following information:
+      * cost (int): The number of misaligned tokens.
+      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
+        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
+        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
+        it has the value -1.
+      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
+        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
+        the same token of `tokens_b`.
+      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
+            direction.
+    """
+    if tokens_a == tokens_b:
+        alignment = numpy.arange(len(tokens_a))
         return 0, alignment, alignment, {}, {}
-    cand_words = [w.replace(" ", "").lower() for w in cand_words]
-    gold_words = [w.replace(" ", "").lower() for w in gold_words]
-    cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
-                                [len(w) for w in gold_words])
+    tokens_a = [w.replace(" ", "").lower() for w in tokens_a]
+    tokens_b = [w.replace(" ", "").lower() for w in tokens_b]
+    cost, i2j, j2i, matrix = _align.align(tokens_a, tokens_b)
+    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in tokens_a],
+                                                        [len(w) for w in tokens_b])
     for i, j in list(i2j_multi.items()):
         if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
             i2j[i] = j
@@ -142,7 +160,7 @@ class GoldCorpus(object):
                 continue
             elif path.is_dir():
                 paths.extend(path.iterdir())
-            elif path.parts[-1].endswith(".json"):
+            elif path.parts[-1].endswith((".json", ".jsonl")):
                 locs.append(path)
         return locs
 
@@ -196,6 +214,10 @@ class GoldCorpus(object):
                                         max_length=max_length,
                                         noise_level=noise_level,
                                         make_projective=True)
+        yield from gold_docs
+
+    def train_docs_without_preprocessing(self, nlp, gold_preproc=False):
+        gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc=gold_preproc)
         yield from gold_docs
 
     def dev_docs(self, nlp, gold_preproc=False):
@@ -450,8 +472,11 @@ cdef class GoldParse:
             examples of a label to have the value 0.0. Labels not in the
             dictionary are treated as missing - the gradient for those labels
             will be zero.
-        links (iterable): A sequence of `(start_char, end_char, kb_id)` tuples,
-            representing the external ID of an entity in a knowledge base.
+        links (dict): A dict with `(start_char, end_char)` keys,
+            and the values being dicts with kb_id:value entries,
+            representing the external IDs in a knowledge base (KB)
+            mapped to either 1.0 or 0.0, indicating positive and
+            negative examples respectively.
         RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
@@ -569,7 +594,7 @@ cdef class GoldParse:
 
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
-            raise ValueError(Errors.E069.format(cycle=cycle))
+            raise ValueError(Errors.E069.format(cycle=cycle, cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]), doc_tokens=" ".join(words[:50])))
 
     def __len__(self):
         """Get the number of gold-standard tokens.
@@ -657,11 +682,23 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         >>> tags = biluo_tags_from_offsets(doc, entities)
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
+    # Ensure no overlapping entity labels exist
+    tokens_in_ents = {}
+       
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
     # Handle entity cases
     for start_char, end_char, label in entities:
+        for token_index in range(start_char, end_char):
+            if token_index in tokens_in_ents.keys():
+                raise ValueError(Errors.E103.format(
+                    span1=(tokens_in_ents[token_index][0],
+                            tokens_in_ents[token_index][1],
+                            tokens_in_ents[token_index][2]),
+                    span2=(start_char, end_char, label)))
+            tokens_in_ents[token_index] = (start_char, end_char, label)
+
         start_token = starts.get(start_char)
         end_token = ends.get(end_char)
         # Only interested if the tokenization is correct

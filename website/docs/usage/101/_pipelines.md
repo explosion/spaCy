@@ -52,4 +52,18 @@ entities into account when making predictions.
 
 </Accordion>
 
+<Accordion title="Why is the tokenizer special?" id="pipeline-components-tokenizer">
+
+The tokenizer is a "special" component and isn't part of the regular pipeline.
+It also doesn't show up in `nlp.pipe_names`. The reason is that there can only
+really be one tokenizer, and while all other pipeline components take a `Doc`
+and return it, the tokenizer takes a **string of text** and turns it into a
+`Doc`. You can still customize the tokenizer, though. `nlp.tokenizer` is
+writable, so you can either create your own
+[`Tokenizer` class from scratch](/usage/linguistic-features#native-tokenizers),
+or even replace it with an
+[entirely custom function](/usage/linguistic-features#custom-tokenizer).
+
+</Accordion>
+
 ---

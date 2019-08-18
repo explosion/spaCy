@@ -29,7 +29,7 @@ class. The data will be loaded in via
 > nlp = spacy.load("/path/to/en") # unicode path
 > nlp = spacy.load(Path("/path/to/en")) # pathlib Path
 >
-> nlp = spacy.load("en", disable=["parser", "tagger"])
+> nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
 | Name        | Type             | Description                                                                       |
