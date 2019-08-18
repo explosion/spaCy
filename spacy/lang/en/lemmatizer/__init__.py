@@ -7,7 +7,6 @@ from ._adjectives import ADJECTIVES
 from ._adjectives_irreg import ADJECTIVES_IRREG
 from ._adverbs import ADVERBS
 from ._adverbs_irreg import ADVERBS_IRREG
-from ._nouns import NOUNS
 from ._nouns_irreg import NOUNS_IRREG
 from ._verbs import VERBS
 from ._verbs_irreg import VERBS_IRREG
