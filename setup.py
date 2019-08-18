@@ -132,7 +132,7 @@ def generate_cython(root, source):
         raise RuntimeError("Running cythonize failed")
 
 def gzip_language_data(root, source):
-    print("Gzipping language data")
+    print("Compressing language data")
     import srsly
     from pathlib import Path
 
@@ -140,8 +140,14 @@ def gzip_language_data(root, source):
 
     for jsonfile in base.glob("**/*.json"):
         outfile = jsonfile.with_suffix(jsonfile.suffix + '.gz')
+        if (os.path.isfile(outfile) and 
+           os.path.getctime(outfile) > os.path.getctime(jsonfile)):
+               # if the gz is newer it doesn't need updating
+               print("Skipping {}, already compressed".format(jsonfile))
+               continue
         data = srsly.read_json(jsonfile)
         srsly.write_gzip_json(outfile, data)
+        print("Compressed {}".format(jsonfile))
 
 def is_source_release(path):
     return os.path.exists(os.path.join(path, "PKG-INFO"))
