@@ -8,11 +8,12 @@ from pathlib import Path
 from .lookup import LOOKUP
 from ._adverbs_wordforms import ADVERBS_WORDFORMS
 from ._lemma_rules import ADJECTIVE_RULES, NOUN_RULES, VERB_RULES, PUNCT_RULES
-from ._verbs import VERBS
-from ._nouns import NOUNS
-from ._adjectives import ADJECTIVES
-from ._adverbs import ADVERBS
 from ....util import load_language_data
+
+ADJECTIVES = set()
+ADVERBS = set()
+NOUNS = set()
+VERBS = set()
 
 LEMMA_INDEX = {"adj": ADJECTIVES, "adv": ADVERBS, "noun": NOUNS, "verb": VERBS}
 
