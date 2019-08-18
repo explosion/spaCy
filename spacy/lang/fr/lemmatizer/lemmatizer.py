@@ -1,9 +1,13 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from pathlib import Path
+
 from ....symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP, SCONJ, CCONJ
 from ....symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
-from .lookup import LOOKUP
+from ....util import load_language_data
+
+LOOKUP = load_language_data(Path(__file__).parent / 'lookup.json')
 
 '''
 French language lemmatizer applies the default rule based lemmatization
