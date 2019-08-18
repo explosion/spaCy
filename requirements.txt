@@ -5,7 +5,7 @@ thinc>=7.0.8,<7.1.0
 blis>=0.2.2,<0.3.0
 murmurhash>=0.28.0,<1.1.0
 wasabi>=0.2.0,<1.1.0
-srsly>=0.0.6,<1.1.0
+srsly>=0.1.0,<1.1.0
 # Third party dependencies
 numpy>=1.15.0
 requests>=2.13.0,<3.0.0
