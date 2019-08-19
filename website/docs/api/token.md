@@ -63,6 +63,7 @@ For details, see the documentation on
 | `method`  | callable | Set a custom method on the object, for example `token._.compare(other_token)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.              |
 | `setter`  | callable | Setter function that takes the `Token` and a value, and modifies the object. Is called when the user writes to the `Token._` attribute. |
+| `force`   | bool     | Force overwriting existing attribute.                                                                                                   |
 
 ## Token.get_extension {#get_extension tag="classmethod" new="2"}
 
