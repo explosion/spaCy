@@ -1601,7 +1601,7 @@
                 "website": "https://explosion.ai"
             }
         },
-                {
+        {
             "id": "negspacy",
             "title": "negspaCy",
             "slogan": "spaCy pipeline object for negating concepts in text based on the NegEx algorithm.",
@@ -1630,7 +1630,27 @@
                 "github": "jenojp",
                 "twitter": "jenojp"
             }
-        }
+        },
+		{
+			"id": "RONEC-v1.0",
+            "title": "RONEC - Romanian Named Entity Corpus",
+            "slogan": "Named Entity Recognition corpus for Romanian language.",
+            "github": "dumitrescustefan/ronec",
+            "url": "https://github.com/dumitrescustefan/ronec",
+            "description": "The corpus holds 5127 sentences, annotated with 16 classes, with a total of 26376 annotated entities. The corpus comes into two formats: BRAT and CONLLUP.",
+            "category": ["standalone"],
+            "tags": ["ner", "romanian"],
+            "thumb":"https://github.com/dumitrescustefan/ronec/blob/master/res/thumb.png",
+            "code_example": [
+                "python3 convert_spacy.py ronec/conllup/ronec.conllup output",
+				"python3 -m spacy train ro models output/train_ronec.json output/train_ronec.json -p ent"
+            ],
+            "author": "Stefan Daniel Dumitrescu, Andrei-Marius Avram",
+            "author_links": {
+                "github": "dumitrescustefan",
+                "github": "avramandrei"
+            }
+		}
     ],
 
     "categories": [
