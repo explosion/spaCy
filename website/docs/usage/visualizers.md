@@ -201,11 +201,14 @@ doc2 = nlp(LONG_NEWS_ARTICLE)
 displacy.render(doc2, style="ent")
 ```
 
-> #### Enabling or disabling Jupyter mode
->
-> To explicitly enable or disable "Jupyter mode", you can use the jupyter`
-> keyword argument – e.g. to return raw HTML in a notebook, or to force Jupyter
-> rendering if auto-detection fails.
+<Infobox variant="warning" title="Important note">
+
+To explicitly enable or disable "Jupyter mode", you can use the `jupyter`
+keyword argument – e.g. to return raw HTML in a notebook, or to force Jupyter
+rendering if auto-detection fails.
+
+</Infobox>
+
 
 ![displaCy visualizer in a Jupyter notebook](../images/displacy_jupyter.jpg)
 
@@ -281,7 +284,7 @@ nlp = spacy.load("en_core_web_sm")
 sentences = [u"This is an example.", u"This is another one."]
 for sent in sentences:
     doc = nlp(sent)
-    svg = displacy.render(doc, style="dep")
+    svg = displacy.render(doc, style="dep", jupyter=False)
     file_name = '-'.join([w.text for w in doc if not w.is_punct]) + ".svg"
     output_path = Path("/images/" + file_name)
     output_path.open("w", encoding="utf-8").write(svg)
