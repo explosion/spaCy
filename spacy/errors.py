@@ -429,6 +429,7 @@ class Errors(object):
     E155 = ("The `nlp` object should have access to pre-trained word vectors, cf. "
             "https://spacy.io/usage/models#languages.")
 
+
 @add_codes
 class TempErrors(object):
     T003 = ("Resizing pre-trained Tagger models is not currently supported.")
