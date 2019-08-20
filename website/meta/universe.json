@@ -1658,11 +1658,7 @@
                 "for ent in doc.ents:",
                 "\tprint(ent.text, ent.start_char, ent.end_char, ent.label_)"
             ],
-            "author": "Stefan Daniel Dumitrescu, Andrei-Marius Avram",
-            "author_links": {
-                "github": "dumitrescustefan",
-                "github": "avramandrei"
-            }
+            "author": "Stefan Daniel Dumitrescu, Andrei-Marius Avram"
         }
     ],
 
