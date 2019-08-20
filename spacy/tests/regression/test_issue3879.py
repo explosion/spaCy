@@ -2,20 +2,15 @@
 from __future__ import unicode_literals
 
 import pytest
-from spacy.lang.en import English
 from spacy.matcher import Matcher
+from spacy.tokens import Doc
 
 
 @pytest.mark.xfail
 def test_issue3879(en_vocab):
-    nlp = English()
-    text = "This is a test."
-    doc = nlp(text)
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
     assert len(doc) == 5
-
     pattern = [{"ORTH": "This", "OP": "?"}, {"OP": "?"}, {"ORTH": "test"}]
-    matcher = Matcher(nlp.vocab)
-    matcher.add("rule", None, pattern)
-    matches = matcher(doc)
-
-    assert len(matches) == 2  # fails because of a FP match 'is a test'
+    matcher = Matcher(en_vocab)
+    matcher.add("TEST", None, pattern)
+    assert len(matcher(doc)) == 2  # fails because of a FP match 'is a test'
