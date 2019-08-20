@@ -34,7 +34,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | --------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nlp`                 | `Language`    | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                  |
 | `patterns`            | iterable      | Optional patterns to load in.                                                                                                                         |
-| `phrase_matcher_attr` | int / unicode | Optional attr to pass to the internal [`PhraseMatcher`](/api/phtasematcher). defaults to `None`                                                       |
+| `phrase_matcher_attr` | int / unicode | Optional attr to pass to the internal [`PhraseMatcher`](/api/phrasematcher). defaults to `None`                                                       |
 | `validate`            | bool          | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`.                                         |
 | `overwrite_ents`      | bool          | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`.                      |
 | `**cfg`               | -             | Other config parameters. If pipeline component is loaded as part of a model pipeline, this will include all keyword arguments passed to `spacy.load`. |
@@ -213,6 +213,6 @@ Get all patterns that were added to the entity ruler.
 | Name              | Type                                  | Description                                                      |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------- |
 | `matcher`         | [`Matcher`](/api/matcher)             | The underlying matcher used to process token patterns.           |
-| `phrase_matcher`  | [`PhraseMatcher`](/api/phtasematcher) | The underlying phrase matcher, used to process phrase patterns.  |
+| `phrase_matcher`  | [`PhraseMatcher`](/api/phrasematcher) | The underlying phrase matcher, used to process phrase patterns.  |
 | `token_patterns`  | dict                                  | The token patterns present in the entity ruler, keyed by label.  |
 | `phrase_patterns` | dict                                  | The phrase patterns present in the entity ruler, keyed by label. |
