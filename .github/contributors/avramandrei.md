@@ -101,6 +101,6 @@ mark both statements:
 | Name                           | Andrei-Marius Avram       |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           | 20/08/209         |
+| Date                           | 20/08/2019         |
 | GitHub username                | avramandrei              |
 | Website (optional)             |                      |
