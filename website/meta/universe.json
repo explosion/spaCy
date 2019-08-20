@@ -1611,8 +1611,8 @@
             "pip": "negspacy",
             "category": ["pipeline", "scientific"],
             "tags": ["negation", "text-processing"],
-            "thumb":"https://github.com/jenojp/negspacy/blob/master/docs/thumb.png?raw=true",
-            "image":"https://github.com/jenojp/negspacy/blob/master/docs/icon.png?raw=true",
+            "thumb": "https://github.com/jenojp/negspacy/blob/master/docs/thumb.png?raw=true",
+            "image": "https://github.com/jenojp/negspacy/blob/master/docs/icon.png?raw=true",
             "code_example": [
                 "import spacy",
                 "from negspacy.negation import Negex",
