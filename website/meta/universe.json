@@ -1638,7 +1638,7 @@
             "github": "dumitrescustefan/ronec",
             "url": "https://github.com/dumitrescustefan/ronec",
             "description": "The corpus holds 5127 sentences, annotated with 16 classes, with a total of 26376 annotated entities. The corpus comes into two formats: BRAT and CONLLUP.",
-            "category": ["standalone"],
+            "category": ["standalone", "models"],
             "tags": ["ner", "romanian"],
             "thumb": "https://raw.githubusercontent.com/dumitrescustefan/ronec/master/res/thumb.png",
             "code_example": [
