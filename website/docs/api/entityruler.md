@@ -213,6 +213,6 @@ Get all patterns that were added to the entity ruler.
 | Name              | Type                                  | Description                                                      |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------- |
 | `matcher`         | [`Matcher`](/api/matcher)             | The underlying matcher used to process token patterns.           |
-| `phrase_matcher`  | [`PhraseMatcher`](/api/phtasematcher) | The underlying phrase matcher, used to process phrase patterns.  |
+| `phrase_matcher`  | [`PhraseMatcher`](/api/phrasematcher) | The underlying phrase matcher, used to process phrase patterns.  |
 | `token_patterns`  | dict                                  | The token patterns present in the entity ruler, keyed by label.  |
 | `phrase_patterns` | dict                                  | The phrase patterns present in the entity ruler, keyed by label. |
