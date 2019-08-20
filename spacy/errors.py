@@ -428,6 +428,10 @@ class Errors(object):
     E154 = ("Either the `nlp` model or the `vocab` should be specified.")
     E155 = ("The `nlp` object should have access to pre-trained word vectors, cf. "
             "https://spacy.io/usage/models#languages.")
+    E156 = ("Can't render negative values for dependency arc start or end. "
+            "Make sure that you're passing in absolute token indices, not "
+            "relative token offsets.\nstart: {start}, end: {end}, label: "
+            "{label}, direction: {dir}")
 
 
 @add_codes
