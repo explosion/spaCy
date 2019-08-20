@@ -19,6 +19,13 @@ from libcpp.vector cimport vector
 
 
 cdef class Candidate:
+    """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
+    to a specific `entity` from a Knowledge Base. This will be used as input for the entity linking
+    algorithm which will disambiguate the various candidates to the correct one.
+    Each candidate (alias, entity) pair is assigned to a certain prior probability.
+
+    DOCS: https://spacy.io/api/candidate
+    """
 
     def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
         self.kb = kb
@@ -62,8 +69,13 @@ cdef class Candidate:
 
 
 cdef class KnowledgeBase:
+    """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
+    to support entity linking of named entities to real-world concepts.
 
-    def __init__(self, Vocab vocab, entity_vector_length):
+    DOCS: https://spacy.io/api/kb
+    """
+
+    def __init__(self, Vocab vocab, entity_vector_length=64):
         self.vocab = vocab
         self.mem = Pool()
         self.entity_vector_length = entity_vector_length

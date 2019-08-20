@@ -546,6 +546,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
                 self.c[i].ent_iob = 0  # Means missing.
             cdef attr_t ent_type
             cdef int start, end

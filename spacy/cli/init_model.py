@@ -114,7 +114,7 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
             probs, _ = read_freqs(freqs_loc)
         msg.good("Counted frequencies")
     else:
-        probs, _ = ({}, DEFAULT_OOV_PROB)
+        probs, _ = ({}, DEFAULT_OOV_PROB)  # noqa: F841
     if clusters_loc:
         with msg.loading("Reading clusters..."):
             clusters = read_clusters(clusters_loc)

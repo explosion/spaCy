@@ -14,6 +14,8 @@ from thinc.neural.util import to_categorical
 from thinc.neural.util import get_array_module
 
 from spacy.kb import KnowledgeBase
+
+from spacy.cli.pretrain import get_cossim_loss
 from .functions import merge_subtokens
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
@@ -1102,7 +1104,7 @@ cdef class EntityRecognizer(Parser):
 class EntityLinker(Pipe):
     """Pipeline component for named entity linking.
 
-    DOCS: TODO
+    DOCS: https://spacy.io/api/entitylinker
     """
     name = 'entity_linker'
     NIL = "NIL"  # string used to refer to a non-existing link
@@ -1121,9 +1123,6 @@ class EntityLinker(Pipe):
         self.model = True
         self.kb = None
         self.cfg = dict(cfg)
-        self.sgd_context = None
-        if not self.cfg.get("context_width"):
-            self.cfg["context_width"] = 128
 
     def set_kb(self, kb):
         self.kb = kb
@@ -1144,7 +1143,6 @@ class EntityLinker(Pipe):
 
         if self.model is True:
             self.model = self.Model(**self.cfg)
-            self.sgd_context = self.create_optimizer()
 
         if sgd is None:
             sgd = self.create_optimizer()
@@ -1170,12 +1168,6 @@ class EntityLinker(Pipe):
             golds = [golds]
 
         context_docs = []
-        entity_encodings = []
-
-        priors = []
-        type_vectors = []
-
-        type_to_int = self.cfg.get("type_to_int", dict())
 
         for doc, gold in zip(docs, golds):
             ents_by_offset = dict()
@@ -1184,49 +1176,38 @@ class EntityLinker(Pipe):
             for entity, kb_dict in gold.links.items():
                 start, end = entity
                 mention = doc.text[start:end]
+
                 for kb_id, value in kb_dict.items():
-                    entity_encoding = self.kb.get_vector(kb_id)
-                    prior_prob = self.kb.get_prior_prob(kb_id, mention)
+                    # Currently only training on the positive instances
+                    if value:
+                        context_docs.append(doc)
 
-                    gold_ent = ents_by_offset["{}_{}".format(start, end)]
-                    if gold_ent is None:
-                        raise RuntimeError(Errors.E147.format(method="update", msg="gold entity not found"))
+        context_encodings, bp_context = self.model.begin_update(context_docs, drop=drop)
+        loss, d_scores = self.get_similarity_loss(scores=context_encodings, golds=golds, docs=None)
+        bp_context(d_scores, sgd=sgd)
 
-                    type_vector = [0 for i in range(len(type_to_int))]
-                    if len(type_to_int) > 0:
-                        type_vector[type_to_int[gold_ent.label_]] = 1
+        if losses is not None:
+            losses[self.name] += loss
+        return loss
 
-                    # store data
-                    entity_encodings.append(entity_encoding)
-                    context_docs.append(doc)
-                    type_vectors.append(type_vector)
+    def get_similarity_loss(self, docs, golds, scores):
+        entity_encodings = []
+        for gold in golds:
+            for entity, kb_dict in gold.links.items():
+                for kb_id, value in kb_dict.items():
+                    # this loss function assumes we're only using positive examples
+                    if value:
+                        entity_encoding = self.kb.get_vector(kb_id)
+                        entity_encodings.append(entity_encoding)
 
-                    if self.cfg.get("prior_weight", 1) > 0:
-                        priors.append([prior_prob])
-                    else:
-                        priors.append([0])
+        entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
 
-        if len(entity_encodings) > 0:
-            if not (len(priors) == len(entity_encodings) == len(context_docs) == len(type_vectors)):
-                raise RuntimeError(Errors.E147.format(method="update", msg="vector lengths not equal"))
+        if scores.shape != entity_encodings.shape:
+            raise RuntimeError(Errors.E147.format(method="get_loss", msg="gold entities do not match up"))
 
-            entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
-
-            context_encodings, bp_context = self.model.tok2vec.begin_update(context_docs, drop=drop)
-            mention_encodings = [list(context_encodings[i]) + list(entity_encodings[i]) + priors[i] + type_vectors[i]
-                                 for i in range(len(entity_encodings))]
-            pred, bp_mention = self.model.begin_update(self.model.ops.asarray(mention_encodings, dtype="float32"), drop=drop)
-
-            loss, d_scores = self.get_loss(scores=pred, golds=golds, docs=docs)
-            mention_gradient = bp_mention(d_scores, sgd=sgd)
-
-            context_gradients = [list(x[0:self.cfg.get("context_width")]) for x in mention_gradient]
-            bp_context(self.model.ops.asarray(context_gradients, dtype="float32"), sgd=self.sgd_context)
-
-            if losses is not None:
-                losses[self.name] += loss
-            return loss
-        return 0
+        loss, gradients = get_cossim_loss(yh=scores, y=entity_encodings)
+        loss = loss / len(entity_encodings)
+        return loss, gradients
 
     def get_loss(self, docs, golds, scores):
         cats = []
@@ -1271,20 +1252,17 @@ class EntityLinker(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
 
-        context_encodings = self.model.tok2vec(docs)
+        context_encodings = self.model(docs)
         xp = get_array_module(context_encodings)
-
-        type_to_int = self.cfg.get("type_to_int", dict())
 
         for i, doc in enumerate(docs):
             if len(doc) > 0:
                 # currently, the context is the same for each entity in a sentence (should be refined)
                 context_encoding = context_encodings[i]
+                context_enc_t = context_encoding.T
+                norm_1 = xp.linalg.norm(context_enc_t)
                 for ent in doc.ents:
                     entity_count += 1
-                    type_vector = [0 for i in range(len(type_to_int))]
-                    if len(type_to_int) > 0:
-                        type_vector[type_to_int[ent.label_]] = 1
 
                     candidates = self.kb.get_candidates(ent.text)
                     if not candidates:
@@ -1293,20 +1271,23 @@ class EntityLinker(Pipe):
                     else:
                         random.shuffle(candidates)
 
-                        # this will set the prior probabilities to 0 (just like in training) if their weight is 0
-                        prior_probs = xp.asarray([[c.prior_prob] for c in candidates])
-                        prior_probs *= self.cfg.get("prior_weight", 1)
+                        # this will set all prior probabilities to 0 if they should be excluded from the model
+                        prior_probs = xp.asarray([c.prior_prob for c in candidates])
+                        if not self.cfg.get("incl_prior", True):
+                            prior_probs = xp.asarray([[0.0] for c in candidates])
                         scores = prior_probs
 
-                        if self.cfg.get("context_weight", 1) > 0:
+                        # add in similarity from the context
+                        if self.cfg.get("incl_context", True):
                             entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                            norm_2 = xp.linalg.norm(entity_encodings, axis=1)
+
                             if len(entity_encodings) != len(prior_probs):
                                 raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
 
-                            mention_encodings = [list(context_encoding) + list(entity_encodings[i])
-                                                 + list(prior_probs[i]) + type_vector
-                                                 for i in range(len(entity_encodings))]
-                            scores = self.model(self.model.ops.asarray(mention_encodings, dtype="float32"))
+                             # cosine similarity
+                            sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
+                            scores = prior_probs + sims - (prior_probs*sims)
 
                         # TODO: thresholding
                         best_index = scores.argmax()
@@ -1346,7 +1327,7 @@ class EntityLinker(Pipe):
         def load_model(p):
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            try: 
+            try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
                 raise ValueError(Errors.E149)
