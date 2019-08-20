@@ -1632,7 +1632,7 @@
             }
         },
         {
-            "id": "RONEC-v1.0",
+            "id": "ronec",
             "title": "RONEC - Romanian Named Entity Corpus",
             "slogan": "Named Entity Recognition corpus for Romanian language.",
             "github": "dumitrescustefan/ronec",
