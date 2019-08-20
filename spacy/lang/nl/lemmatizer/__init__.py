@@ -1,6 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from pathlib import Path
+
 from ._verbs_irreg import VERBS_IRREG
 from ._nouns_irreg import NOUNS_IRREG
 from ._adjectives_irreg import ADJECTIVES_IRREG
@@ -11,16 +13,20 @@ from ._determiners_irreg import DETERMINERS_IRREG
 from ._pronouns_irreg import PRONOUNS_IRREG
 
 from ._verbs import VERBS
-from ._nouns import NOUNS
 from ._adjectives import ADJECTIVES
 
 from ._adpositions import ADPOSITIONS
 from ._determiners import DETERMINERS
 
-from .lookup import LOOKUP
 from ._lemma_rules import RULES
 from .lemmatizer import DutchLemmatizer
 
+from ....util import load_language_data
+
+BASE_PATH = Path(__file__).parent
+
+LOOKUP = load_language_data(BASE_PATH / "lookup.json")
+NOUNS = load_language_data(BASE_PATH / "_nouns.json")
 
 LEMMA_INDEX = {
     "adj": ADJECTIVES,
