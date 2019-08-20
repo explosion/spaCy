@@ -71,7 +71,7 @@ from .train import _load_pretrained_tok2vec
         "renamed. Prevents unintended overwriting of existing weight files.",
         "option",
         "es",
-        int
+        int,
     ),
 )
 def pretrain(
@@ -169,12 +169,14 @@ def pretrain(
             if not epoch_start:
                 msg.fail(
                     "You have to use the '--epoch-start' argument when using a renamed weight file for "
-                    "'--init-tok2vec'", exits=True
+                    "'--init-tok2vec'",
+                    exits=True,
                 )
             elif epoch_start < 0:
                 msg.fail(
-                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid" % epoch_start,
-                    exits=True
+                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid"
+                    % epoch_start,
+                    exits=True,
                 )
     else:
         # Without '--init-tok2vec' the '--epoch-start' argument is ignored
