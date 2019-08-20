@@ -564,19 +564,16 @@ For more details and examples, see the
 import spacy
 from spacy import displacy
 
-text = """But Google is starting from behind. The company made a late push
-into hardware, and Apple’s Siri, available on iPhones, and Amazon’s Alexa
-software, which runs on its Echo and Dot devices, have clear leads in
-consumer adoption."""
+text = u"When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously."
 
-nlp = spacy.load("custom_ner_model")
+nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-import DisplacyEntHtml from 'images/displacy-ent.html'
+import DisplacyEntHtml from 'images/displacy-ent2.html'
 
-<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={275} />
+<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={180} />
 
 ## Tokenization {#tokenization}
 

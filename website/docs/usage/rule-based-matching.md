@@ -249,36 +249,60 @@ pattern = [{"TEXT": {"REGEX": "^[Uu](\\.?|nited)$"}},
            {"LOWER": "president"}]
 ```
 
-`'REGEX'` as an operator (instead of a top-level property that only matches on
-the token's text) allows defining rules for any string value, including custom
-attributes:
+The `REGEX` operator allows defining rules for any attribute string value,
+including custom attributes. It always needs to be applied to an attribute like
+`TEXT`, `LOWER` or `TAG`:
 
 ```python
+# Match different spellings of token texts
+pattern = [{"TEXT": {"REGEX": "deff?in[ia]tely"}}]
+
 # Match tokens with fine-grained POS tags starting with 'V'
 pattern = [{"TAG": {"REGEX": "^V"}}]
 
 # Match custom attribute values with regular expressions
-pattern = [{"_": {"country": {"REGEX": "^[Uu](\\.?|nited) ?[Ss](\\.?|tates)$"}}}]
+pattern = [{"_": {"country": {"REGEX": "^[Uu](nited|\\.?) ?[Ss](tates|\\.?)$"}}}]
 ```
 
-<Infobox title="Regular expressions in older versions" variant="warning">
+<Infobox title="Important note" variant="warning">
 
-Versions before v2.1.0 don't yet support the `REGEX` operator. A simple solution
-is to match a regular expression on the `Doc.text` with `re.finditer` and use
-the [`Doc.char_span`](/api/doc#char_span) method to create a `Span` from the
-character indices of the match.
-
-You can also use the regular expression by converting it to a **binary token
-flag**. [`Vocab.add_flag`](/api/vocab#add_flag) returns a flag ID which you can
-use as a key of a token match pattern.
-
-```python
-definitely_flag = lambda text: bool(re.compile(r"deff?in[ia]tely").match(text))
-IS_DEFINITELY = nlp.vocab.add_flag(definitely_flag)
-pattern = [{IS_DEFINITELY: True}]
-```
+When using the `REGEX` operator, keep in mind that it operates on **single
+tokens**, not the whole text. Each expression you provide will be matched on a
+token. If you need to match on the whole text instead, see the details on
+[regex matching on the whole text](#regex-text).
 
 </Infobox>
+
+##### Matching regular expressions on the full text {#regex-text}
+
+If your expressions apply to multiple tokens, a simple solution is to match on
+the `doc.text` with `re.finditer` and use the
+[`Doc.char_span`](/api/doc#char_span) method to create a `Span` from the
+character indices of the match. If the matched characters don't map to one or
+more valid tokens, `Doc.char_span` returns `None`.
+
+> #### What's a valid token sequence?
+>
+> In the example, the expression will also match `"US"` in `"USA"`. However,
+> `"USA"` is a single token and `Span` objects are **sequences of tokens**. So
+> `"US"` cannot be its own span, because it does not end on a token boundary.
+
+```python
+### {executable="true"}
+import spacy
+import re
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("The United States of America (USA) are commonly known as the United States (U.S. or US) or America.")
+
+expression = r"[Uu](nited|\\.?) ?[Ss](tates|\\.?)"
+for match in re.finditer(expression, doc.text):
+    start, end = match.span()
+    span = doc.char_span(start, end)
+    # This is a Span object or None if match doesn't map to valid token sequence
+    if span is not None:
+        print("Found match:", span.text)
+```
 
 #### Operators and quantifiers {#quantifiers}
 

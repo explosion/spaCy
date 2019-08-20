@@ -120,7 +120,7 @@ def now():
     return datetime.datetime.now()
 
 
-def read_prior_probs(wikipedia_input, prior_prob_output):
+def read_prior_probs(wikipedia_input, prior_prob_output, limit=None):
     """
     Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities.
     The full file takes about 2h to parse 1100M lines.
@@ -129,9 +129,9 @@ def read_prior_probs(wikipedia_input, prior_prob_output):
     with bz2.open(wikipedia_input, mode="rb") as file:
         line = file.readline()
         cnt = 0
-        while line:
-            if cnt % 5000000 == 0:
-                print(now(), "processed", cnt, "lines of Wikipedia dump")
+        while line and (not limit or cnt < limit):
+            if cnt % 25000000 == 0:
+                print(now(), "processed", cnt, "lines of Wikipedia XML dump")
             clean_line = line.strip().decode("utf-8")
 
             aliases, entities, normalizations = get_wp_links(clean_line)
@@ -141,6 +141,7 @@ def read_prior_probs(wikipedia_input, prior_prob_output):
 
             line = file.readline()
             cnt += 1
+        print(now(), "processed", cnt, "lines of Wikipedia XML dump")
 
     # write all aliases and their entities and count occurrences to file
     with prior_prob_output.open("w", encoding="utf8") as outputfile:

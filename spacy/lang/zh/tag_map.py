@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, PUNCT, SYM, ADJ, CONJ, CCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX
+from ...symbols import POS, PUNCT, ADJ, CONJ, CCONJ, NUM, DET, ADV, ADP, X, VERB
+from ...symbols import NOUN, PART, INTJ, PRON
 
 # The Chinese part-of-speech tagger uses the OntoNotes 5 version of the Penn Treebank tag set.
 # We also map the tags to the simpler Google Universal POS tag set.
@@ -43,5 +43,5 @@ TAG_MAP = {
     "JJ": {POS: ADJ},
     "P": {POS: ADP},
     "PN": {POS: PRON},
-    "PU": {POS: PUNCT}
+    "PU": {POS: PUNCT},
 }
