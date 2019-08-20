@@ -18,16 +18,24 @@ from ._verbs import VERBS
 
 from ....util import load_language_data
 
-BASE_PATH =  Path(__file__).parent
+BASE_PATH = Path(__file__).parent
 
-LOOKUP = load_language_data(BASE_PATH / 'lookup.json')
-VERBS_IRREG = load_language_data(BASE_PATH / '_verbs_irreg.json')
-ADJECTIVES_IRREG = load_language_data(BASE_PATH / '_adjectives_irreg.json')
+LOOKUP = load_language_data(BASE_PATH / "lookup.json")
+VERBS_IRREG = load_language_data(BASE_PATH / "_verbs_irreg.json")
+ADJECTIVES_IRREG = load_language_data(BASE_PATH / "_adjectives_irreg.json")
 
-LEMMA_INDEX = {'adj': ADJECTIVES, 'adv': ADVERBS, 'noun': NOUNS, 'verb': VERBS}
+LEMMA_INDEX = {"adj": ADJECTIVES, "adv": ADVERBS, "noun": NOUNS, "verb": VERBS}
 
-LEMMA_EXC = {'adj': ADJECTIVES_IRREG, 'adp': ADP_IRREG, 'aux': AUXILIARY_VERBS_IRREG,
-             'cconj': CCONJ_IRREG, 'det': DETS_IRREG, 'noun': NOUNS_IRREG, 'verb': VERBS_IRREG, 
-             'pron': PRONOUNS_IRREG, 'sconj': SCONJ_IRREG}
+LEMMA_EXC = {
+    "adj": ADJECTIVES_IRREG,
+    "adp": ADP_IRREG,
+    "aux": AUXILIARY_VERBS_IRREG,
+    "cconj": CCONJ_IRREG,
+    "det": DETS_IRREG,
+    "noun": NOUNS_IRREG,
+    "verb": VERBS_IRREG,
+    "pron": PRONOUNS_IRREG,
+    "sconj": SCONJ_IRREG,
+}
 
-LEMMA_RULES = {'adj': ADJECTIVE_RULES, 'noun': NOUN_RULES, 'verb': VERB_RULES}
+LEMMA_RULES = {"adj": ADJECTIVE_RULES, "noun": NOUN_RULES, "verb": VERB_RULES}

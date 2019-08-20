@@ -52,7 +52,9 @@ def test_get_pipe(nlp, name):
     assert nlp.get_pipe(name) == new_pipe
 
 
-@pytest.mark.parametrize("name,replacement,not_callable", [("my_component", lambda doc: doc, {})])
+@pytest.mark.parametrize(
+    "name,replacement,not_callable", [("my_component", lambda doc: doc, {})]
+)
 def test_replace_pipe(nlp, name, replacement, not_callable):
     with pytest.raises(ValueError):
         nlp.replace_pipe(name, new_pipe)

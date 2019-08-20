@@ -17,13 +17,13 @@ VERBS = set()
 
 LEMMA_INDEX = {"adj": ADJECTIVES, "adv": ADVERBS, "noun": NOUNS, "verb": VERBS}
 
-BASE_PATH = Path(__file__).parent 
+BASE_PATH = Path(__file__).parent
 
 LEMMA_EXC = {
-    "adj": load_language_data(BASE_PATH / '_adjectives_wordforms.json'),
+    "adj": load_language_data(BASE_PATH / "_adjectives_wordforms.json"),
     "adv": ADVERBS_WORDFORMS,
-    "noun": load_language_data(BASE_PATH / '_nouns_wordforms.json'),
-    "verb": load_language_data(BASE_PATH / '_verbs_wordforms.json'),
+    "noun": load_language_data(BASE_PATH / "_nouns_wordforms.json"),
+    "verb": load_language_data(BASE_PATH / "_verbs_wordforms.json"),
 }
 
 LEMMA_RULES = {
@@ -39,5 +39,3 @@ LEMMA_RULES = {
 # https://www.nb.no/sprakbanken/show?serial=oai%3Anb.no%3Asbr-5&lang=en
 # License:
 # Creative_Commons-BY (CC-BY) (https://creativecommons.org/licenses/by/4.0/)
-
-

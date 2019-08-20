@@ -9,7 +9,7 @@ ADJECTIVE_SUFFIX_RULES = [
     ["er", ""],
     ["en", ""],
     ["e", ""],
-    ["ende", "end"]
+    ["ende", "end"],
 ]
 
 VERB_SUFFIX_RULES = [
@@ -39,7 +39,7 @@ NOUN_SUFFIX_RULES = [
     ["ssen", "s"],
     ["rren", "r"],
     ["kken", "k"],
-    ["bben", "b"]
+    ["bben", "b"],
 ]
 
 NUM_SUFFIX_RULES = [
@@ -50,23 +50,20 @@ NUM_SUFFIX_RULES = [
     ["de", ""],
     ["er", ""],
     ["ër", ""],
-    ["tjes", ""]
+    ["tjes", ""],
 ]
 
-PUNCT_SUFFIX_RULES = [
-    ["“", "\""],
-    ["”", "\""],
-    ["\u2018", "'"],
-    ["\u2019", "'"]
-]
+PUNCT_SUFFIX_RULES = [["“", '"'], ["”", '"'], ["\u2018", "'"], ["\u2019", "'"]]
 
 
 # In-place sort guaranteeing that longer -- more specific -- rules are
 # applied first.
-for rule_set in (ADJECTIVE_SUFFIX_RULES,
-                 NOUN_SUFFIX_RULES,
-                 NUM_SUFFIX_RULES,
-                 VERB_SUFFIX_RULES):
+for rule_set in (
+    ADJECTIVE_SUFFIX_RULES,
+    NOUN_SUFFIX_RULES,
+    NUM_SUFFIX_RULES,
+    VERB_SUFFIX_RULES,
+):
     rule_set.sort(key=lambda r: len(r[0]), reverse=True)
 
 
@@ -75,5 +72,5 @@ RULES = {
     "noun": NOUN_SUFFIX_RULES,
     "verb": VERB_SUFFIX_RULES,
     "num": NUM_SUFFIX_RULES,
-    "punct": PUNCT_SUFFIX_RULES
+    "punct": PUNCT_SUFFIX_RULES,
 }
