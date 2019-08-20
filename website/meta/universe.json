@@ -1631,8 +1631,8 @@
                 "twitter": "jenojp"
             }
         },
-		{
-			"id": "RONEC-v1.0",
+        {
+            "id": "RONEC-v1.0",
             "title": "RONEC - Romanian Named Entity Corpus",
             "slogan": "Named Entity Recognition corpus for Romanian language.",
             "github": "dumitrescustefan/ronec",
@@ -1640,30 +1640,30 @@
             "description": "The corpus holds 5127 sentences, annotated with 16 classes, with a total of 26376 annotated entities. The corpus comes into two formats: BRAT and CONLLUP.",
             "category": ["standalone"],
             "tags": ["ner", "romanian"],
-            "thumb":"https://raw.githubusercontent.com/dumitrescustefan/ronec/master/res/thumb.png",
+            "thumb": "https://raw.githubusercontent.com/dumitrescustefan/ronec/master/res/thumb.png",
             "code_example": [
-				"# to train a new model on ronec",
+                "# to train a new model on ronec",
                 "python3 convert_spacy.py ronec/conllup/ronec.conllup output",
-				"python3 -m spacy train ro models output/train_ronec.json output/train_ronec.json -p ent",
-				"",
-				"# download the Romanian NER model",
-				"python -m spacy download ro_ner",
-				"",
-				"# load the model and print entities for a simple sentence",
-				"import spacy",
-				"",
-				"nlp = spacy.load(\"ro_ner\")",
-				"doc = nlp(\"Popescu Ion a fost la Cluj\")",
-				"",
-				"for ent in doc.ents:",
-				"\tprint(ent.text, ent.start_char, ent.end_char, ent.label_)"
+                "python3 -m spacy train ro models output/train_ronec.json output/train_ronec.json -p ent",
+                "",
+                "# download the Romanian NER model",
+                "python -m spacy download ro_ner",
+                "",
+                "# load the model and print entities for a simple sentence",
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"ro_ner\")",
+                "doc = nlp(\"Popescu Ion a fost la Cluj\")",
+                "",
+                "for ent in doc.ents:",
+                "\tprint(ent.text, ent.start_char, ent.end_char, ent.label_)"
             ],
             "author": "Stefan Daniel Dumitrescu, Andrei-Marius Avram",
             "author_links": {
                 "github": "dumitrescustefan",
                 "github": "avramandrei"
             }
-		}
+        }
     ],
 
     "categories": [
