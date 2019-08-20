@@ -7,7 +7,7 @@ from spacy.matcher._schemas import TOKEN_PATTERN_SCHEMA
 from spacy.errors import MatchPatternError
 from spacy.util import get_json_validator, validate_json
 
-# (pattern, num errors with validation, num errors identified with minimal 
+# (pattern, num errors with validation, num errors identified with minimal
 #  checks)
 TEST_PATTERNS = [
     # Bad patterns flagged in all cases
@@ -35,9 +35,8 @@ TEST_PATTERNS = [
     ([{"_": {"foo": {"NOT_IN": ["bar", "baz"]}, "a": 5, "b": {">": 10}}}], 0, 0),
 ]
 
-XFAIL_TEST_PATTERNS = [
-    ([{"orth": "foo"}], 0, 0),
-]
+XFAIL_TEST_PATTERNS = [([{"orth": "foo"}], 0, 0)]
+
 
 @pytest.fixture
 def validator():

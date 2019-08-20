@@ -103,7 +103,7 @@ def test_phrase_matcher_validation(en_vocab):
 
 def test_attr_validation(en_vocab):
     with pytest.raises(ValueError):
-        matcher = PhraseMatcher(en_vocab, attr="UNSUPPORTED")
+        PhraseMatcher(en_vocab, attr="UNSUPPORTED")
 
 
 def test_attr_pipeline_checks(en_vocab):
