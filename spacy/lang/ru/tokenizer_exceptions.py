@@ -19,7 +19,6 @@ _abbrev_exc = [
     {ORTH: "вс", LEMMA: "воскресенье", NORM: "воскресенье"},
     {ORTH: "вскр", LEMMA: "воскресенье", NORM: "воскресенье"},
     {ORTH: "воскр", LEMMA: "воскресенье", NORM: "воскресенье"},
-
     # Months abbreviations
     {ORTH: "янв", LEMMA: "январь", NORM: "январь"},
     {ORTH: "фев", LEMMA: "февраль", NORM: "февраль"},
@@ -49,16 +48,18 @@ for abbrev_desc in _abbrev_exc:
     abbrev = abbrev_desc[ORTH]
     for orth in (abbrev, abbrev.capitalize(), abbrev.upper()):
         _exc[orth] = [{ORTH: orth, LEMMA: abbrev_desc[LEMMA], NORM: abbrev_desc[NORM]}]
-        _exc[orth + '.'] = [{ORTH: orth + '.', LEMMA: abbrev_desc[LEMMA], NORM: abbrev_desc[NORM]}]
+        _exc[orth + "."] = [
+            {ORTH: orth + ".", LEMMA: abbrev_desc[LEMMA], NORM: abbrev_desc[NORM]}
+        ]
 
 
 _slang_exc = [
-    {ORTH: '2к15', LEMMA: '2015', NORM: '2015'},
-    {ORTH: '2к16', LEMMA: '2016', NORM: '2016'},
-    {ORTH: '2к17', LEMMA: '2017', NORM: '2017'},
-    {ORTH: '2к18', LEMMA: '2018', NORM: '2018'},
-    {ORTH: '2к19', LEMMA: '2019', NORM: '2019'},
-    {ORTH: '2к20', LEMMA: '2020', NORM: '2020'},
+    {ORTH: "2к15", LEMMA: "2015", NORM: "2015"},
+    {ORTH: "2к16", LEMMA: "2016", NORM: "2016"},
+    {ORTH: "2к17", LEMMA: "2017", NORM: "2017"},
+    {ORTH: "2к18", LEMMA: "2018", NORM: "2018"},
+    {ORTH: "2к19", LEMMA: "2019", NORM: "2019"},
+    {ORTH: "2к20", LEMMA: "2020", NORM: "2020"},
 ]
 
 for slang_desc in _slang_exc:

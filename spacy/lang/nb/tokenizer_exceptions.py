@@ -118,7 +118,7 @@ for orth in [
     "o.l.",
     "on.",
     "op.",
-    "org."
+    "org.",
     "osv.",
     "ovf.",
     "p.",

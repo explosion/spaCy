@@ -27,5 +27,5 @@ ADVERBS_IRREG = {
     "slower": ("slow",),
     "slowest": ("slowest",),
     "sooner": ("soon",),
-    "soonest": ("soon",)
+    "soonest": ("soon",),
 }
