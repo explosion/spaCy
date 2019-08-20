@@ -6,6 +6,7 @@ from spacy.lang.en import English
 from spacy.matcher import Matcher
 
 
+@pytest.mark.xfail
 def test_issue3879(en_vocab):
     nlp = English()
     text = "This is a test."
