@@ -48,7 +48,10 @@ cdef class Matcher:
         self._extra_predicates = []
         self.vocab = vocab
         self.mem = Pool()
-        self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA) if validate else None
+        if validate:
+            self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA)
+        else:
+            self.validator = None
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -105,7 +108,7 @@ cdef class Matcher:
                 raise ValueError(Errors.E012.format(key=key))
             if self.validator:
                 errors[i] = validate_json(pattern, self.validator)
-        if errors:
+        if any(err for err in errors.values()):
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:
@@ -259,13 +262,13 @@ cdef find_matches(TokenPatternC** patterns, int n, Doc doc, extensions=None,
 
 
 cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+    # There have been a few bugs here.
     # The code was originally designed to always have pattern[1].attrs.value
     # be the ent_id when we get to the end of a pattern. However, Issue #2671
     # showed this wasn't the case when we had a reject-and-continue before a
-    # match. I still don't really understand what's going on here, but this
-    # workaround does resolve the issue.
-    while pattern.attrs.attr != ID and \
-            (pattern.nr_attr > 0 or pattern.nr_extra_attr > 0 or pattern.nr_py > 0):
+    # match.
+    # The patch to #2671 was wrong though, which came up in #3839.
+    while pattern.attrs.attr != ID:
         pattern += 1
     return pattern.attrs.value
 

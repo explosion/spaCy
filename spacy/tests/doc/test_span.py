@@ -6,6 +6,7 @@ from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.errors import ModelsWarning
+from spacy.util import filter_spans
 
 from ..util import get_doc
 
@@ -172,16 +173,24 @@ def test_span_as_doc(doc):
     assert span_doc[0].idx == 0
 
 
-def test_span_string_label(doc):
-    span = Span(doc, 0, 1, label="hello")
+def test_span_string_label_kb_id(doc):
+    span = Span(doc, 0, 1, label="hello", kb_id="Q342")
     assert span.label_ == "hello"
     assert span.label == doc.vocab.strings["hello"]
+    assert span.kb_id_ == "Q342"
+    assert span.kb_id == doc.vocab.strings["Q342"]
 
 
 def test_span_label_readonly(doc):
     span = Span(doc, 0, 1)
     with pytest.raises(NotImplementedError):
         span.label_ = "hello"
+
+
+def test_span_kb_id_readonly(doc):
+    span = Span(doc, 0, 1)
+    with pytest.raises(NotImplementedError):
+        span.kb_id_ = "Q342"
 
 
 def test_span_ents_property(doc):
@@ -211,3 +220,21 @@ def test_span_ents_property(doc):
     assert sentences[2].ents[0].label_ == "PRODUCT"
     assert sentences[2].ents[0].start == 11
     assert sentences[2].ents[0].end == 14
+
+
+def test_filter_spans(doc):
+    # Test filtering duplicates
+    spans = [doc[1:4], doc[6:8], doc[1:4], doc[10:14]]
+    filtered = filter_spans(spans)
+    assert len(filtered) == 3
+    assert filtered[0].start == 1 and filtered[0].end == 4
+    assert filtered[1].start == 6 and filtered[1].end == 8
+    assert filtered[2].start == 10 and filtered[2].end == 14
+    # Test filtering overlaps with longest preference
+    spans = [doc[1:4], doc[1:3], doc[5:10], doc[7:9], doc[1:4]]
+    filtered = filter_spans(spans)
+    assert len(filtered) == 2
+    assert len(filtered[0]) == 3
+    assert len(filtered[1]) == 5
+    assert filtered[0].start == 1 and filtered[0].end == 4
+    assert filtered[1].start == 5 and filtered[1].end == 10

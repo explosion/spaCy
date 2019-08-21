@@ -16,6 +16,7 @@ import random
 from .._ml import create_default_optimizer
 from ..attrs import PROB, IS_OOV, CLUSTER, LANG
 from ..gold import GoldCorpus
+from ..compat import path2str
 from .. import util
 from .. import about
 
@@ -35,6 +36,12 @@ from .. import about
     pipeline=("Comma-separated names of pipeline components", "option", "p", str),
     vectors=("Model to load vectors from", "option", "v", str),
     n_iter=("Number of iterations", "option", "n", int),
+    n_early_stopping=(
+        "Maximum number of training epochs without dev accuracy improvement",
+        "option",
+        "ne",
+        int,
+    ),
     n_examples=("Number of examples", "option", "ns", int),
     use_gpu=("Use GPU", "option", "g", int),
     version=("Model version", "option", "V", str),
@@ -58,6 +65,7 @@ from .. import about
         str,
     ),
     noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
+    eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
     verbose=("Display more information for debug", "flag", "VV", bool),
@@ -73,6 +81,7 @@ def train(
     pipeline="tagger,parser,ner",
     vectors=None,
     n_iter=30,
+    n_early_stopping=None,
     n_examples=0,
     use_gpu=-1,
     version="0.0.0",
@@ -81,6 +90,7 @@ def train(
     parser_multitasks="",
     entity_multitasks="",
     noise_level=0.0,
+    eval_beam_widths="",
     gold_preproc=False,
     learn_tokens=False,
     verbose=False,
@@ -99,6 +109,7 @@ def train(
     train_path = util.ensure_path(train_path)
     dev_path = util.ensure_path(dev_path)
     meta_path = util.ensure_path(meta_path)
+    output_path = util.ensure_path(output_path)
     if raw_text is not None:
         raw_text = list(srsly.read_jsonl(raw_text))
     if not train_path or not train_path.exists():
@@ -133,6 +144,15 @@ def train(
         util.env_opt("batch_to", 1000.0),
         util.env_opt("batch_compound", 1.001),
     )
+
+    if not eval_beam_widths:
+        eval_beam_widths = [1]
+    else:
+        eval_beam_widths = [int(bw) for bw in eval_beam_widths.split(",")]
+        if 1 not in eval_beam_widths:
+            eval_beam_widths.append(1)
+        eval_beam_widths.sort()
+    has_beam_widths = eval_beam_widths != [1]
 
     # Set up the base model and pipeline. If a base model is specified, load
     # the model and make sure the pipeline matches the pipeline setting. If
@@ -200,17 +220,19 @@ def train(
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
 
     # fmt: off
-    row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
-    row_settings = {
-        "widths": (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
-        "aligns": tuple(["r" for i in row_head]),
-        "spacing": 2
-    }
+    row_head = ["Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS"]
+    row_widths = [3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7]
+    if has_beam_widths:
+        row_head.insert(1, "Beam W.")
+        row_widths.insert(1, 7)
+    row_settings = {"widths": row_widths, "aligns": tuple(["r" for i in row_head]), "spacing": 2}
     # fmt: on
     print("")
     msg.row(row_head, **row_settings)
     msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
     try:
+        iter_since_best = 0
+        best_score = 0.0
         for i in range(n_iter):
             train_docs = corpus.train_docs(
                 nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
@@ -247,51 +269,96 @@ def train(
                 epoch_model_path = output_path / ("model%d" % i)
                 nlp.to_disk(epoch_model_path)
                 nlp_loaded = util.load_model_from_path(epoch_model_path)
-                dev_docs = list(corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc))
-                nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
-                start_time = timer()
-                scorer = nlp_loaded.evaluate(dev_docs, debug)
-                end_time = timer()
-                if use_gpu < 0:
-                    gpu_wps = None
-                    cpu_wps = nwords / (end_time - start_time)
-                else:
-                    gpu_wps = nwords / (end_time - start_time)
-                    with Model.use_device("cpu"):
-                        nlp_loaded = util.load_model_from_path(epoch_model_path)
-                        dev_docs = list(
-                            corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
-                        )
-                        start_time = timer()
-                        scorer = nlp_loaded.evaluate(dev_docs)
-                        end_time = timer()
+                for beam_width in eval_beam_widths:
+                    for name, component in nlp_loaded.pipeline:
+                        if hasattr(component, "cfg"):
+                            component.cfg["beam_width"] = beam_width
+                    dev_docs = list(
+                        corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                    )
+                    nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+                    start_time = timer()
+                    scorer = nlp_loaded.evaluate(dev_docs, debug)
+                    end_time = timer()
+                    if use_gpu < 0:
+                        gpu_wps = None
                         cpu_wps = nwords / (end_time - start_time)
-                acc_loc = output_path / ("model%d" % i) / "accuracy.json"
-                srsly.write_json(acc_loc, scorer.scores)
+                    else:
+                        gpu_wps = nwords / (end_time - start_time)
+                        with Model.use_device("cpu"):
+                            nlp_loaded = util.load_model_from_path(epoch_model_path)
+                            for name, component in nlp_loaded.pipeline:
+                                if hasattr(component, "cfg"):
+                                    component.cfg["beam_width"] = beam_width
+                            dev_docs = list(
+                                corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
+                            )
+                            start_time = timer()
+                            scorer = nlp_loaded.evaluate(dev_docs)
+                            end_time = timer()
+                            cpu_wps = nwords / (end_time - start_time)
+                    acc_loc = output_path / ("model%d" % i) / "accuracy.json"
+                    srsly.write_json(acc_loc, scorer.scores)
 
-                # Update model meta.json
-                meta["lang"] = nlp.lang
-                meta["pipeline"] = nlp.pipe_names
-                meta["spacy_version"] = ">=%s" % about.__version__
-                meta["accuracy"] = scorer.scores
-                meta["speed"] = {"nwords": nwords, "cpu": cpu_wps, "gpu": gpu_wps}
-                meta["vectors"] = {
-                    "width": nlp.vocab.vectors_length,
-                    "vectors": len(nlp.vocab.vectors),
-                    "keys": nlp.vocab.vectors.n_keys,
-                    "name": nlp.vocab.vectors.name
-                }
-                meta.setdefault("name", "model%d" % i)
-                meta.setdefault("version", version)
-                meta_loc = output_path / ("model%d" % i) / "meta.json"
-                srsly.write_json(meta_loc, meta)
+                    # Update model meta.json
+                    meta["lang"] = nlp.lang
+                    meta["pipeline"] = nlp.pipe_names
+                    meta["spacy_version"] = ">=%s" % about.__version__
+                    if beam_width == 1:
+                        meta["speed"] = {
+                            "nwords": nwords,
+                            "cpu": cpu_wps,
+                            "gpu": gpu_wps,
+                        }
+                        meta["accuracy"] = scorer.scores
+                    else:
+                        meta.setdefault("beam_accuracy", {})
+                        meta.setdefault("beam_speed", {})
+                        meta["beam_accuracy"][beam_width] = scorer.scores
+                        meta["beam_speed"][beam_width] = {
+                            "nwords": nwords,
+                            "cpu": cpu_wps,
+                            "gpu": gpu_wps,
+                        }
+                    meta["vectors"] = {
+                        "width": nlp.vocab.vectors_length,
+                        "vectors": len(nlp.vocab.vectors),
+                        "keys": nlp.vocab.vectors.n_keys,
+                        "name": nlp.vocab.vectors.name,
+                    }
+                    meta.setdefault("name", "model%d" % i)
+                    meta.setdefault("version", version)
+                    meta_loc = output_path / ("model%d" % i) / "meta.json"
+                    srsly.write_json(meta_loc, meta)
+                    util.set_env_log(verbose)
 
-                util.set_env_log(verbose)
-
-            progress = _get_progress(
-                i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
-            )
-            msg.row(progress, **row_settings)
+                    progress = _get_progress(
+                        i,
+                        losses,
+                        scorer.scores,
+                        beam_width=beam_width if has_beam_widths else None,
+                        cpu_wps=cpu_wps,
+                        gpu_wps=gpu_wps,
+                    )
+                    msg.row(progress, **row_settings)
+                # Early stopping
+                if n_early_stopping is not None:
+                    current_score = _score_for_model(meta)
+                    if current_score < best_score:
+                        iter_since_best += 1
+                    else:
+                        iter_since_best = 0
+                        best_score = current_score
+                    if iter_since_best >= n_early_stopping:
+                        msg.text(
+                            "Early stopping, best iteration "
+                            "is: {}".format(i - iter_since_best)
+                        )
+                        msg.text(
+                            "Best score = {}; Final iteration "
+                            "score = {}".format(best_score, current_score)
+                        )
+                        break
     finally:
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
@@ -300,6 +367,20 @@ def train(
         with msg.loading("Creating best model..."):
             best_model_path = _collate_best_model(meta, output_path, nlp.pipe_names)
         msg.good("Created best model", best_model_path)
+
+
+def _score_for_model(meta):
+    """ Returns mean score between tasks in pipeline that can be used for early stopping. """
+    mean_acc = list()
+    pipes = meta["pipeline"]
+    acc = meta["accuracy"]
+    if "tagger" in pipes:
+        mean_acc.append(acc["tags_acc"])
+    if "parser" in pipes:
+        mean_acc.append((acc["uas"] + acc["las"]) / 2)
+    if "ner" in pipes:
+        mean_acc.append((acc["ents_p"] + acc["ents_r"] + acc["ents_f"]) / 3)
+    return sum(mean_acc) / len(mean_acc)
 
 
 @contextlib.contextmanager
@@ -343,10 +424,12 @@ def _collate_best_model(meta, output_path, components):
     for component in components:
         bests[component] = _find_best(output_path, component)
     best_dest = output_path / "model-best"
-    shutil.copytree(output_path / "model-final", best_dest)
+    shutil.copytree(path2str(output_path / "model-final"), path2str(best_dest))
     for component, best_component_src in bests.items():
-        shutil.rmtree(best_dest / component)
-        shutil.copytree(best_component_src / component, best_dest / component)
+        shutil.rmtree(path2str(best_dest / component))
+        shutil.copytree(
+            path2str(best_component_src / component), path2str(best_dest / component)
+        )
         accs = srsly.read_json(best_component_src / "accuracy.json")
         for metric in _get_metrics(component):
             meta["accuracy"][metric] = accs[metric]
@@ -377,7 +460,7 @@ def _get_metrics(component):
     return ("token_acc",)
 
 
-def _get_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
+def _get_progress(itn, losses, dev_scores, beam_width=None, cpu_wps=0.0, gpu_wps=0.0):
     scores = {}
     for col in [
         "dep_loss",
@@ -398,7 +481,7 @@ def _get_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
     scores.update(dev_scores)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
-    return [
+    result = [
         itn,
         "{:.3f}".format(scores["dep_loss"]),
         "{:.3f}".format(scores["ner_loss"]),
@@ -411,3 +494,6 @@ def _get_progress(itn, losses, dev_scores, cpu_wps=0.0, gpu_wps=0.0):
         "{:.0f}".format(scores["cpu_wps"]),
         "{:.0f}".format(scores["gpu_wps"]),
     ]
+    if beam_width is not None:
+        result.insert(1, beam_width)
+    return result

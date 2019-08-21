@@ -24,7 +24,7 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
-from .errors import Errors
+from .errors import Errors, user_warning, Warnings
 from . import util
 
 try:
@@ -48,11 +48,11 @@ def cosine(vec1, vec2):
 
 def create_default_optimizer(ops, **cfg):
     learn_rate = util.env_opt("learn_rate", 0.001)
-    beta1 = util.env_opt("optimizer_B1", 0.8)
-    beta2 = util.env_opt("optimizer_B2", 0.8)
-    eps = util.env_opt("optimizer_eps", 0.00001)
+    beta1 = util.env_opt("optimizer_B1", 0.9)
+    beta2 = util.env_opt("optimizer_B2", 0.999)
+    eps = util.env_opt("optimizer_eps", 1e-8)
     L2 = util.env_opt("L2_penalty", 1e-6)
-    max_grad_norm = util.env_opt("grad_norm_clip", 5.0)
+    max_grad_norm = util.env_opt("grad_norm_clip", 1.0)
     optimizer = Adam(ops, learn_rate, L2=L2, beta1=beta1, beta2=beta2, eps=eps)
     optimizer.max_grad_norm = max_grad_norm
     optimizer.device = ops.device
@@ -81,24 +81,12 @@ def _zero_init(model):
     return model
 
 
-@layerize
-def _preprocess_doc(docs, drop=0.0):
-    keys = [doc.to_array(LOWER) for doc in docs]
-    # The dtype here matches what thinc is expecting -- which differs per
-    # platform (by int definition). This should be fixed once the problem
-    # is fixed on Thinc's side.
-    lengths = numpy.array([arr.shape[0] for arr in keys], dtype=numpy.int_)
-    keys = numpy.concatenate(keys)
-    vals = numpy.zeros(keys.shape, dtype='f')
-    return (keys, vals, lengths), None
-
-
 def with_cpu(ops, model):
     """Wrap a model that should run on CPU, transferring inputs and outputs
     as necessary."""
     model.to_cpu()
 
-    def with_cpu_forward(inputs, drop=0.):
+    def with_cpu_forward(inputs, drop=0.0):
         cpu_outputs, backprop = model.begin_update(_to_cpu(inputs), drop=drop)
         gpu_outputs = _to_device(ops, cpu_outputs)
 
@@ -118,7 +106,7 @@ def _to_cpu(X):
         return tuple([_to_cpu(x) for x in X])
     elif isinstance(X, list):
         return [_to_cpu(x) for x in X]
-    elif hasattr(X, 'get'):
+    elif hasattr(X, "get"):
         return X.get()
     else:
         return X
@@ -133,20 +121,33 @@ def _to_device(ops, X):
         return ops.asarray(X)
 
 
-@layerize
-def _preprocess_doc_bigrams(docs, drop=0.0):
-    unigrams = [doc.to_array(LOWER) for doc in docs]
-    ops = Model.ops
-    bigrams = [ops.ngrams(2, doc_unis) for doc_unis in unigrams]
-    keys = [ops.xp.concatenate(feats) for feats in zip(unigrams, bigrams)]
-    keys, vals = zip(*[ops.xp.unique(k, return_counts=True) for k in keys])
-    # The dtype here matches what thinc is expecting -- which differs per
-    # platform (by int definition). This should be fixed once the problem
-    # is fixed on Thinc's side.
-    lengths = ops.asarray([arr.shape[0] for arr in keys], dtype=numpy.int_)
-    keys = ops.xp.concatenate(keys)
-    vals = ops.asarray(ops.xp.concatenate(vals), dtype="f")
-    return (keys, vals, lengths), None
+class extract_ngrams(Model):
+    def __init__(self, ngram_size, attr=LOWER):
+        Model.__init__(self)
+        self.ngram_size = ngram_size
+        self.attr = attr
+
+    def begin_update(self, docs, drop=0.0):
+        batch_keys = []
+        batch_vals = []
+        for doc in docs:
+            unigrams = doc.to_array([self.attr])
+            ngrams = [unigrams]
+            for n in range(2, self.ngram_size + 1):
+                ngrams.append(self.ops.ngrams(n, unigrams))
+            keys = self.ops.xp.concatenate(ngrams)
+            keys, vals = self.ops.xp.unique(keys, return_counts=True)
+            batch_keys.append(keys)
+            batch_vals.append(vals)
+        # The dtype here matches what thinc is expecting -- which differs per
+        # platform (by int definition). This should be fixed once the problem
+        # is fixed on Thinc's side.
+        lengths = self.ops.asarray(
+            [arr.shape[0] for arr in batch_keys], dtype=numpy.int_
+        )
+        batch_keys = self.ops.xp.concatenate(batch_keys)
+        batch_vals = self.ops.asarray(self.ops.xp.concatenate(batch_vals), dtype="f")
+        return (batch_keys, batch_vals, lengths), None
 
 
 @describe.on_data(
@@ -298,7 +299,17 @@ def link_vectors_to_models(vocab):
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
-    thinc.extra.load_nlp.VECTORS[(ops.device, vectors.name)] = data
+    key = (ops.device, vectors.name)
+    if key in thinc.extra.load_nlp.VECTORS:
+        if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
+            # This is a hack to avoid the problem in #3853. Maybe we should
+            # print a warning as well?
+            old_name = vectors.name
+            new_name = vectors.name + "_%d" % data.shape[0]
+            user_warning(Warnings.W019.format(old=old_name, new=new_name))
+            vectors.name = new_name
+            key = (ops.device, vectors.name)
+    thinc.extra.load_nlp.VECTORS[key] = data
 
 
 def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
@@ -509,16 +520,6 @@ def zero_init(model):
     return model
 
 
-@layerize
-def preprocess_doc(docs, drop=0.0):
-    keys = [doc.to_array([LOWER]) for doc in docs]
-    ops = Model.ops
-    lengths = ops.asarray([arr.shape[0] for arr in keys])
-    keys = ops.xp.concatenate(keys)
-    vals = ops.allocate(keys.shape[0]) + 1
-    return (keys, vals, lengths), None
-
-
 def getitem(i):
     def getitem_fwd(X, drop=0.0):
         return X[i], None
@@ -694,9 +695,8 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> zero_init(Affine(nr_class, width, drop_factor=0.0))
         )
 
-        linear_model = (
-            _preprocess_doc
-            >> with_cpu(Model.ops, LinearModel(nr_class))
+        linear_model = build_bow_text_classifier(
+            nr_class, ngram_size=cfg.get("ngram_size", 1), exclusive_classes=False
         )
         if cfg.get("exclusive_classes"):
             output_layer = Softmax(nr_class, nr_class * 2)
@@ -709,6 +709,29 @@ def build_text_classifier(nr_class, width=64, **cfg):
     model.nO = nr_class
     model.lsuv = False
     return model
+
+
+def build_bow_text_classifier(
+    nr_class, ngram_size=1, exclusive_classes=False, no_output_layer=False, **cfg
+):
+    with Model.define_operators({">>": chain}):
+        model = with_cpu(
+            Model.ops, extract_ngrams(ngram_size, attr=ORTH) >> LinearModel(nr_class)
+        )
+        if not no_output_layer:
+            model = model >> (cpu_softmax if exclusive_classes else logistic)
+    model.nO = nr_class
+    return model
+
+
+@layerize
+def cpu_softmax(X, drop=0.0):
+    ops = NumpyOps()
+
+    def cpu_softmax_backward(dY, sgd=None):
+        return dY
+
+    return ops.softmax(X), cpu_softmax_backward
 
 
 def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False, **cfg):
@@ -728,6 +751,50 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
         model = tok2vec >> flatten_add_lengths >> Pooling(mean_pool) >> output_layer
     model.tok2vec = chain(tok2vec, flatten)
     model.nO = nr_class
+    return model
+
+
+def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
+    if "entity_width" not in cfg:
+        raise ValueError(Errors.E144.format(param="entity_width"))
+    if "context_width" not in cfg:
+        raise ValueError(Errors.E144.format(param="context_width"))
+
+    conv_depth = cfg.get("conv_depth", 2)
+    cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
+    pretrained_vectors = cfg.get("pretrained_vectors", None)
+    context_width = cfg.get("context_width")
+    entity_width = cfg.get("entity_width")
+
+    with Model.define_operators({">>": chain, "**": clone}):
+        model = (
+            Affine(entity_width, entity_width + context_width + 1 + ner_types)
+            >> Affine(1, entity_width, drop_factor=0.0)
+            >> logistic
+        )
+
+        # context encoder
+        tok2vec = (
+            Tok2Vec(
+                width=hidden_width,
+                embed_size=embed_width,
+                pretrained_vectors=pretrained_vectors,
+                cnn_maxout_pieces=cnn_maxout_pieces,
+                subword_features=True,
+                conv_depth=conv_depth,
+                bilstm_depth=0,
+            )
+            >> flatten_add_lengths
+            >> Pooling(mean_pool)
+            >> Residual(zero_init(Maxout(hidden_width, hidden_width)))
+            >> zero_init(Affine(context_width, hidden_width))
+        )
+
+        model.tok2vec = tok2vec
+
+    model.tok2vec = tok2vec
+    model.tok2vec.nO = context_width
+    model.nO = 1
     return model
 
 

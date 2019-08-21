@@ -14,8 +14,9 @@ import srsly
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
-from .pipeline import DependencyParser, Tensorizer, Tagger, EntityRecognizer
-from .pipeline import SimilarityHook, TextCategorizer, SentenceSegmenter
+from .pipeline import DependencyParser, Tagger
+from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
+from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
 from .pipeline import Morphologizer
@@ -119,9 +120,10 @@ class Language(object):
         "morphologizer": lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
+        "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),
         "similarity": lambda nlp, **cfg: SimilarityHook(nlp.vocab, **cfg),
         "textcat": lambda nlp, **cfg: TextCategorizer(nlp.vocab, **cfg),
-        "sentencizer": lambda nlp, **cfg: SentenceSegmenter(nlp.vocab, **cfg),
+        "sentencizer": lambda nlp, **cfg: Sentencizer(**cfg),
         "merge_noun_chunks": lambda nlp, **cfg: merge_noun_chunks,
         "merge_entities": lambda nlp, **cfg: merge_entities,
         "merge_subtokens": lambda nlp, **cfg: merge_subtokens,
@@ -159,6 +161,9 @@ class Language(object):
             vocab = factory(self, **meta.get("vocab", {}))
             if vocab.vectors.name is None:
                 vocab.vectors.name = meta.get("vectors", {}).get("name")
+        else:
+            if (self.lang and vocab.lang) and (self.lang != vocab.lang):
+                raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
         self.vocab = vocab
         if make_doc is True:
             factory = self.Defaults.create_tokenizer
@@ -174,7 +179,10 @@ class Language(object):
 
     @property
     def meta(self):
-        self._meta.setdefault("lang", self.vocab.lang)
+        if self.vocab.lang:
+            self._meta.setdefault("lang", self.vocab.lang)
+        else:
+            self._meta.setdefault("lang", self.lang)
         self._meta.setdefault("name", "model")
         self._meta.setdefault("version", "0.0.0")
         self._meta.setdefault("spacy_version", ">={}".format(about.__version__))
@@ -213,6 +221,10 @@ class Language(object):
     @property
     def entity(self):
         return self.get_pipe("ner")
+
+    @property
+    def linker(self):
+        return self.get_pipe("entity_linker")
 
     @property
     def matcher(self):
@@ -330,6 +342,11 @@ class Language(object):
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
+        if not hasattr(component, "__call__"):
+            msg = Errors.E003.format(component=repr(component), name=name)
+            if isinstance(component, basestring_) and component in self.factories:
+                msg += Errors.E135.format(name=name)
+            raise ValueError(msg)
         self.pipeline[self.pipe_names.index(name)] = (name, component)
 
     def rename_pipe(self, old_name, new_name):
@@ -409,7 +426,9 @@ class Language(object):
         golds (iterable): A batch of `GoldParse` objects.
         drop (float): The droput rate.
         sgd (callable): An optimizer.
-        RETURNS (dict): Results from the update.
+        losses (dict): Dictionary to update with the loss, keyed by component.
+        component_cfg (dict): Config parameters for specific pipeline
+            components, keyed by component name.
 
         DOCS: https://spacy.io/api/language#update
         """
@@ -428,6 +447,10 @@ class Language(object):
             if isinstance(doc, basestring_):
                 doc = self.make_doc(doc)
             if not isinstance(gold, GoldParse):
+                expected_keys = ("words", "tags", "heads", "deps", "entities", "cats", "links")
+                unexpected_keys = [k for k in gold if k not in expected_keys]
+                if unexpected_keys:
+                    raise ValueError(Errors.E151.format(unexpected_keys=unexpected_keys, expected_keys=expected_keys))
                 gold = GoldParse(doc, **gold)
             doc_objs.append(doc)
             gold_objs.append(gold)
@@ -590,19 +613,38 @@ class Language(object):
     def evaluate(
         self, docs_golds, verbose=False, batch_size=256, scorer=None, component_cfg=None
     ):
+        """Evaluate a model's pipeline components.
+
+        docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
+        verbose (bool): Print debugging information.
+        batch_size (int): Batch size to use.
+        scorer (Scorer): Optional `Scorer` to use. If not passed in, a new one
+            will be created.
+        component_cfg (dict): An optional dictionary with extra keyword
+            arguments for specific components.
+        RETURNS (Scorer): The scorer containing the evaluation results.
+
+        DOCS: https://spacy.io/api/language#evaluate
+        """
         if scorer is None:
             scorer = Scorer()
+        if component_cfg is None:
+            component_cfg = {}
         docs, golds = zip(*docs_golds)
-        docs = list(docs)
+        docs = [
+            self.make_doc(doc) if isinstance(doc, basestring_) else doc for doc in docs
+        ]
         golds = list(golds)
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
-                docs = (pipe(doc, **kwargs) for doc in docs)
+                docs = _pipe(pipe, docs, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)
         for doc, gold in zip(docs, golds):
+            if not isinstance(gold, GoldParse):
+                gold = GoldParse(doc, **gold)
             if verbose:
                 print(doc)
             kwargs = component_cfg.get("scorer", {})
@@ -742,8 +784,12 @@ class Language(object):
             exclude = disable
         path = util.ensure_path(path)
         serializers = OrderedDict()
-        serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(p, exclude=["vocab"])
-        serializers["meta.json"] = lambda p: p.open("w").write(srsly.json_dumps(self.meta))
+        serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
+            p, exclude=["vocab"]
+        )
+        serializers["meta.json"] = lambda p: p.open("w").write(
+            srsly.json_dumps(self.meta)
+        )
         for name, proc in self.pipeline:
             if not hasattr(proc, "name"):
                 continue
@@ -772,14 +818,20 @@ class Language(object):
         path = util.ensure_path(path)
         deserializers = OrderedDict()
         deserializers["meta.json"] = lambda p: self.meta.update(srsly.read_json(p))
-        deserializers["vocab"] = lambda p: self.vocab.from_disk(p) and _fix_pretrained_vectors_name(self)
-        deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(p, exclude=["vocab"])
+        deserializers["vocab"] = lambda p: self.vocab.from_disk(
+            p
+        ) and _fix_pretrained_vectors_name(self)
+        deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
+            p, exclude=["vocab"]
+        )
         for name, proc in self.pipeline:
             if name in exclude:
                 continue
             if not hasattr(proc, "from_disk"):
                 continue
-            deserializers[name] = lambda p, proc=proc: proc.from_disk(p, exclude=["vocab"])
+            deserializers[name] = lambda p, proc=proc: proc.from_disk(
+                p, exclude=["vocab"]
+            )
         if not (path / "vocab").exists() and "vocab" not in exclude:
             # Convert to list here in case exclude is (default) tuple
             exclude = list(exclude) + ["vocab"]
@@ -825,14 +877,20 @@ class Language(object):
             exclude = disable
         deserializers = OrderedDict()
         deserializers["meta.json"] = lambda b: self.meta.update(srsly.json_loads(b))
-        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b) and _fix_pretrained_vectors_name(self)
-        deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(b, exclude=["vocab"])
+        deserializers["vocab"] = lambda b: self.vocab.from_bytes(
+            b
+        ) and _fix_pretrained_vectors_name(self)
+        deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
+            b, exclude=["vocab"]
+        )
         for name, proc in self.pipeline:
             if name in exclude:
                 continue
             if not hasattr(proc, "from_bytes"):
                 continue
-            deserializers[name] = lambda b, proc=proc: proc.from_bytes(b, exclude=["vocab"])
+            deserializers[name] = lambda b, proc=proc: proc.from_bytes(
+                b, exclude=["vocab"]
+            )
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         util.from_bytes(bytes_data, deserializers, exclude)
         return self

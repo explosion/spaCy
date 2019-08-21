@@ -119,6 +119,8 @@ cdef class Parser:
             cfg['beam_width'] = util.env_opt('beam_width', 1)
         if 'beam_density' not in cfg:
             cfg['beam_density'] = util.env_opt('beam_density', 0.0)
+        if 'beam_update_prob' not in cfg:
+            cfg['beam_update_prob'] = util.env_opt('beam_update_prob', 1.0)
         cfg.setdefault('cnn_maxout_pieces', 3)
         self.cfg = cfg
         self.model = model
@@ -381,7 +383,7 @@ cdef class Parser:
                     self.moves.set_valid(beam.is_valid[i], state)
                     memcpy(beam.scores[i], c_scores, scores.shape[1] * sizeof(float))
                     c_scores += scores.shape[1]
-            beam.advance(_beam_utils.transition_state, NULL, <void*>self.moves.c)
+            beam.advance(_beam_utils.transition_state, _beam_utils.hash_state, <void*>self.moves.c)
             beam.check_done(_beam_utils.check_final_state, NULL)
         return [b for b in beams if not b.is_done]
 
@@ -400,11 +402,11 @@ cdef class Parser:
             multitask.update(docs, golds, drop=drop, sgd=sgd)
         # The probability we use beam update, instead of falling back to
         # a greedy update
-        beam_update_prob = self.cfg.get('beam_update_prob', 1.0)
+        beam_update_prob = self.cfg.get('beam_update_prob', 0.5)
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
             return self.update_beam(docs, golds, self.cfg.get('beam_width', 1),
                     drop=drop, sgd=sgd, losses=losses,
-                    beam_density=self.cfg.get('beam_density', 0.0))
+                    beam_density=self.cfg.get('beam_density', 0.001))
         # Chop sequences into lengths of this many transitions, to make the
         # batch uniform length.
         cut_gold = numpy.random.choice(range(20, 100))
@@ -572,11 +574,12 @@ cdef class Parser:
         cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
                                          min_freq=cfg.get('min_action_freq', 30))
-        previous_labels = dict(self.moves.labels)
+        for action, labels in self.moves.labels.items():
+            actions.setdefault(action, {})
+            for label, freq in labels.items():
+                if label not in actions[action]:
+                    actions[action][label] = freq
         self.moves.initialize_actions(actions)
-        for action, label_freqs in previous_labels.items():
-            for label in label_freqs:
-                self.moves.add_action(action, label)
         cfg.setdefault('token_vector_width', 96)
         if self.model is True:
             self.model, cfg = self.Model(self.moves.n_moves, **cfg)
@@ -628,7 +631,10 @@ cdef class Parser:
                 cfg = {}
             with (path / 'model').open('rb') as file_:
                 bytes_data = file_.read()
-            self.model.from_bytes(bytes_data)
+            try:
+                self.model.from_bytes(bytes_data)
+            except AttributeError:
+                raise ValueError(Errors.E149)
             self.cfg.update(cfg)
         return self
 
@@ -660,6 +666,9 @@ cdef class Parser:
             else:
                 cfg = {}
             if 'model' in msg:
-                self.model.from_bytes(msg['model'])
+                try:
+                    self.model.from_bytes(msg['model'])
+                except AttributeError:
+                    raise ValueError(Errors.E149)
             self.cfg.update(cfg)
         return self

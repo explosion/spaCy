@@ -530,11 +530,13 @@ for orth in [
     "Ms.",
     "p.m.",
     "Ph.D.",
+    "Prof.",
     "Rep.",
     "Rev.",
     "Sen.",
     "St.",
     "vs.",
+    "v.s."
 ]:
     _exc[orth] = [{ORTH: orth}]
 

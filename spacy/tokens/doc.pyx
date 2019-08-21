@@ -9,6 +9,7 @@ cimport cython
 cimport numpy as np
 from libc.string cimport memcpy, memset
 from libc.math cimport sqrt
+from collections import Counter
 
 import numpy
 import numpy.linalg
@@ -22,7 +23,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_KB_ID, SENT_START, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
@@ -48,6 +49,10 @@ cdef int bounds_check(int i, int length, int padding) except -1:
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     if feat_name == LEMMA:
         return token.lemma
+    elif feat_name == NORM:
+        if not token.norm:
+            return token.lex.norm
+        return token.norm
     elif feat_name == POS:
         return token.pos
     elif feat_name == TAG:
@@ -64,6 +69,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_iob
     elif feat_name == ENT_TYPE:
         return token.ent_type
+    elif feat_name == ENT_KB_ID:
+        return token.ent_kb_id
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
@@ -85,13 +92,14 @@ cdef class Doc:
     Python-level `Token` and `Span` objects are views of this array, i.e.
     they don't own the data themselves.
 
-    EXAMPLE: Construction 1
+    EXAMPLE:
+        Construction 1
         >>> doc = nlp(u'Some text')
 
         Construction 2
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
-                      spaces=[True, False, False])
+        >>>           spaces=[True, False, False])
 
     DOCS: https://spacy.io/api/doc
     """
@@ -230,12 +238,14 @@ cdef class Doc:
         defined as having at least one of the following:
 
         a) An entry "sents" in doc.user_hooks";
-        b) sent.is_parsed is set to True;
+        b) Doc.is_parsed is set to True;
         c) At least one token other than the first where sent_start is not None.
         """
         if "sents" in self.user_hooks:
             return True
         if self.is_parsed:
+            return True
+        if len(self) < 2:
             return True
         for i in range(1, self.length):
             if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
@@ -248,6 +258,8 @@ cdef class Doc:
         *any* of the tokens has a named entity tag set (even if the others are
         uknown values).
         """
+        if len(self) == 0:
+            return True
         for i in range(self.length):
             if self.c[i].ent_iob != 0:
                 return True
@@ -326,7 +338,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, vector=None):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
         """Create a `Span` object from the slice `doc.text[start : end]`.
 
         doc (Doc): The parent document.
@@ -334,6 +346,7 @@ cdef class Doc:
         end (int): The index of the first character after the span.
         label (uint64 or string): A label to attach to the Span, e.g. for
             named entities.
+        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
         RETURNS (Span): The newly constructed object.
@@ -342,6 +355,8 @@ cdef class Doc:
         """
         if not isinstance(label, int):
             label = self.vocab.strings.add(label)
+        if not isinstance(kb_id, int):
+            kb_id = self.vocab.strings.add(kb_id)
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -350,7 +365,7 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = Span(self, start, end, label=label, vector=vector)
+        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, vector=vector)
         return span
 
     def similarity(self, other):
@@ -416,8 +431,9 @@ cdef class Doc:
                 return self.user_hooks["vector"](self)
             if self._vector is not None:
                 return self._vector
-            elif not len(self):
-                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype="f")
+            xp = get_array_module(self.vocab.vectors.data)
+            if not len(self):
+                self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
                 return self._vector
             elif self.vocab.vectors.data.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
@@ -426,7 +442,7 @@ cdef class Doc:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:
-                return numpy.zeros((self.vocab.vectors_length,), dtype="float32")
+                return xp.zeros((self.vocab.vectors_length,), dtype="float32")
 
         def __set__(self, value):
             self._vector = value
@@ -483,6 +499,7 @@ cdef class Doc:
             cdef const TokenC* token
             cdef int start = -1
             cdef attr_t label = 0
+            cdef attr_t kb_id = 0
             output = []
             for i in range(self.length):
                 token = &self.c[i]
@@ -492,16 +509,18 @@ cdef class Doc:
                         raise ValueError(Errors.E093.format(seq=" ".join(seq)))
                 elif token.ent_iob == 2 or token.ent_iob == 0:
                     if start != -1:
-                        output.append(Span(self, start, i, label=label))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
                     start = -1
                     label = 0
+                    kb_id = 0
                 elif token.ent_iob == 3:
                     if start != -1:
-                        output.append(Span(self, start, i, label=label))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
                     start = i
                     label = token.ent_type
+                    kb_id = token.ent_kb_id
             if start != -1:
-                output.append(Span(self, start, self.length, label=label))
+                output.append(Span(self, start, self.length, label=label, kb_id=kb_id))
             return tuple(output)
 
         def __set__(self, ents):
@@ -683,7 +702,7 @@ cdef class Doc:
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
-    def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
+    def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
         `{attribute (int): count (ints)}` frequencies, keyed by the values of
         the given attribute ID.
@@ -698,19 +717,18 @@ cdef class Doc:
         cdef size_t count
 
         if counts is None:
-            counts = PreshCounter()
+            counts = Counter()
             output_dict = True
         else:
             output_dict = False
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
             for i in range(self.length):
-                counts.inc(get_token_attr(&self.c[i], attr_id), 1)
+                counts[get_token_attr(&self.c[i], attr_id)] += 1
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
-                    attr = get_token_attr(&self.c[i], attr_id)
-                    counts.inc(attr, 1)
+                    counts[get_token_attr(&self.c[i], attr_id)] += 1
         if output_dict:
             return dict(counts)
 
@@ -780,7 +798,7 @@ cdef class Doc:
                 if array[i, col] != 0:
                     self.vocab.morphology.assign_tag(&tokens[i], array[i, col])
         # Now load the data
-        for i in range(self.length):
+        for i in range(length):
             token = &self.c[i]
             for j in range(n_attrs):
                 if attr_ids[j] != TAG:
@@ -790,7 +808,7 @@ cdef class Doc:
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
-            set_children_from_heads(self.c, self.length)
+            set_children_from_heads(self.c, length)
         return self
 
     def get_lca_matrix(self):
@@ -843,7 +861,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
             array_head.append(TAG)
         # If doc parsed add head and dep attribute
@@ -997,6 +1015,7 @@ cdef class Doc:
         """
         cdef unicode tag, lemma, ent_type
         deprecation_warning(Warnings.W013.format(obj="Doc"))
+        # TODO: ENT_KB_ID ?
         if len(args) == 3:
             deprecation_warning(Warnings.W003)
             tag, lemma, ent_type = args

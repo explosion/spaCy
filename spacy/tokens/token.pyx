@@ -203,7 +203,7 @@ cdef class Token:
         DOCS: https://spacy.io/api/token#similarity
         """
         if "similarity" in self.doc.user_token_hooks:
-            return self.doc.user_token_hooks["similarity"](self)
+            return self.doc.user_token_hooks["similarity"](self, other)
         if hasattr(other, "__len__") and len(other) == 1 and hasattr(other, "__getitem__"):
             if self.c.lex.orth == getattr(other[0], "orth", None):
                 return 1.0
@@ -409,7 +409,15 @@ cdef class Token:
         if "vector_norm" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector_norm"](self)
         vector = self.vector
-        return numpy.sqrt((vector ** 2).sum())
+        xp = get_array_module(vector)
+        total = (vector ** 2).sum()
+        return xp.sqrt(total) if total != 0. else 0.
+
+    @property
+    def tensor(self):
+        if self.doc.tensor is None:
+            return None
+        return self.doc.tensor[self.i]
 
     @property
     def n_lefts(self):
@@ -444,6 +452,7 @@ cdef class Token:
 
     property sent_start:
         def __get__(self):
+            """Deprecated: use Token.is_sent_start instead."""
             # Raising a deprecation warning here causes errors for autocomplete
             # Handle broken backwards compatibility case: doc[0].sent_start
             # was False.
@@ -771,6 +780,22 @@ cdef class Token:
 
         def __set__(self, name):
             self.c.ent_id = self.vocab.strings.add(name)
+
+    property ent_kb_id:
+        """RETURNS (uint64): Named entity KB ID."""
+        def __get__(self):
+            return self.c.ent_kb_id
+
+        def __set__(self, attr_t ent_kb_id):
+            self.c.ent_kb_id = ent_kb_id
+
+    property ent_kb_id_:
+        """RETURNS (unicode): Named entity KB ID."""
+        def __get__(self):
+            return self.vocab.strings[self.c.ent_kb_id]
+
+        def __set__(self, ent_kb_id):
+            self.c.ent_kb_id = self.vocab.strings.add(ent_kb_id)
 
     @property
     def whitespace_(self):

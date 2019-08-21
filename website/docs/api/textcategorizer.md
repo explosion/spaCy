@@ -56,10 +56,11 @@ of problems. To handle a wider variety of problems, the `TextCategorizer` object
 allows configuration of its model architecture, using the `architecture` keyword
 argument.
 
-| Name           | Description                                                                                                                                              |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `"ensemble"`   | **Default:** Stacked ensemble of a unigram bag-of-words model and a neural network model. The neural network uses a CNN with mean pooling and attention. |
-| `"simple_cnn"` | A neural network model where token vectors are calculated using a CNN. The vectors are mean pooled and used as features in a feed-forward network.       |
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"ensemble"`   | **Default:** Stacked ensemble of a bag-of-words model and a neural network model. The neural network uses a CNN with mean pooling and attention. The "ngram_size" and "attr" arguments can be used to configure the feature extraction for the bag-of-words model.                                                                                                                                               |
+| `"simple_cnn"` | A neural network model where token vectors are calculated using a CNN. The vectors are mean pooled and used as features in a feed-forward network. This architecture is usually less accurate than the ensemble, but runs faster.                                                                                                                                                                                |
+| `"bow"`        | An ngram "bag-of-words" model. This architecture should run much faster than the others, but may not be as accurate, especially if texts are short. The features extracted can be controlled using the keyword arguments `ngram_size` and `attr`. For instance, `ngram_size=3` and `attr="lower"` would give lower-cased unigram, trigram and bigram features. 2, 3 or 4 are usually good choices of ngram size. |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 

@@ -14,8 +14,11 @@ import functools
 import itertools
 import numpy.random
 import srsly
-from jsonschema import Draft4Validator
 
+try:
+    import jsonschema
+except ImportError:
+    jsonschema = None
 
 try:
     import cupy.random
@@ -157,7 +160,10 @@ def load_model_from_path(model_path, meta=False, **overrides):
     pipeline from meta.json and then calls from_disk() with path."""
     if not meta:
         meta = get_model_meta(model_path)
-    cls = get_lang_class(meta["lang"])
+    # Support language factories registered via entry points (e.g. custom
+    # language subclass) while keeping top-level language identifier "lang"
+    lang = meta.get("lang_factory", meta["lang"])
+    cls = get_lang_class(lang)
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get("pipeline", [])
     disable = overrides.get("disable", [])
@@ -507,13 +513,10 @@ def stepping(start, stop, steps):
 def decaying(start, stop, decay):
     """Yield an infinite series of linearly decaying values."""
 
-    def clip(value):
-        return max(value, stop) if (start > stop) else min(value, stop)
-
-    nr_upd = 1.0
+    curr = float(start)
     while True:
-        yield clip(start * 1.0 / (1.0 + decay * nr_upd))
-        nr_upd += 1
+        yield max(curr, stop)
+        curr -= decay
 
 
 def minibatch_by_words(items, size, tuples=True, count_words=len):
@@ -572,6 +575,28 @@ def itershuffle(iterable, bufsize=1000):
         while buf:
             yield buf.pop()
         raise StopIteration
+
+
+def filter_spans(spans):
+    """Filter a sequence of spans and remove duplicates or overlaps. Useful for
+    creating named entities (where one token can only be part of one entity) or
+    when merging spans with `Retokenizer.merge`. When spans overlap, the (first)
+    longest span is preferred over shorter spans.
+
+    spans (iterable): The spans to filter.
+    RETURNS (list): The filtered spans.
+    """
+    get_sort_key = lambda span: (span.end - span.start, span.start)
+    sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
+    result = []
+    seen_tokens = set()
+    for span in sorted_spans:
+        # Check for end - 1 here because boundaries are inclusive
+        if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
+            result.append(span)
+        seen_tokens.update(range(span.start, span.end))
+    result = sorted(result, key=lambda span: span.start)
+    return result
 
 
 def to_bytes(getters, exclude):
@@ -663,7 +688,9 @@ def get_json_validator(schema):
     # validator that's used (e.g. different draft implementation), without
     # having to change it all across the codebase.
     # TODO: replace with (stable) Draft6Validator, if available
-    return Draft4Validator(schema)
+    if jsonschema is None:
+        raise ValueError(Errors.E136)
+    return jsonschema.Draft4Validator(schema)
 
 
 def validate_schema(schema):

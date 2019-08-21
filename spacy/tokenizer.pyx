@@ -14,6 +14,7 @@ import re
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
+from .compat import unescape_unicode
 
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
@@ -130,6 +131,7 @@ cdef class Tokenizer:
 
         texts: A sequence of unicode texts.
         batch_size (int): Number of texts to accumulate in an internal buffer.
+        Defaults to 1000.
         YIELDS (Doc): A sequence of Doc objects, in order.
 
         DOCS: https://spacy.io/api/tokenizer#pipe
@@ -346,7 +348,7 @@ cdef class Tokenizer:
         """Add a special-case tokenization rule.
 
         string (unicode): The string to specially tokenize.
-        token_attrs (iterable): A sequence of dicts, where each dict describes
+        substrings (iterable): A sequence of dicts, where each dict describes
             a token and its attributes. The `ORTH` fields of the attributes
             must exactly match the string when they are concatenated.
 
@@ -428,6 +430,9 @@ cdef class Tokenizer:
         ))
         exclude = util.get_serialization_exclude(deserializers, exclude, kwargs)
         msg = util.from_bytes(bytes_data, deserializers, exclude)
+        for key in ["prefix_search", "suffix_search", "infix_finditer"]:
+            if key in data:
+                data[key] = unescape_unicode(data[key])
         if data.get("prefix_search"):
             self.prefix_search = re.compile(data["prefix_search"]).search
         if data.get("suffix_search"):

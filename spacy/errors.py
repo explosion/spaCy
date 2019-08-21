@@ -80,6 +80,10 @@ class Warnings(object):
             "the v2.x models cannot release the global interpreter lock. "
             "Future versions may introduce a `n_process` argument for "
             "parallel inference via multiprocessing.")
+    W017 = ("Alias '{alias}' already exists in the Knowledge base.")
+    W018 = ("Entity '{entity}' already exists in the Knowledge base.")
+    W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
+            "previously loaded vectors. See Issue #3853.")
 
 
 @add_codes
@@ -139,8 +143,14 @@ class Errors(object):
     E023 = ("Error cleaning up beam: The same state occurred twice at "
             "memory address {addr} and position {i}.")
     E024 = ("Could not find an optimal move to supervise the parser. Usually, "
-            "this means the GoldParse was not correct. For example, are all "
-            "labels added to the model?")
+            "this means that the model can't be updated in a way that's valid "
+            "and satisfies the correct annotations specified in the GoldParse. "
+            "For example, are all labels added to the model? If you're "
+            "training a named entity recognizer, also make sure that none of "
+            "your annotated entity spans have leading or trailing whitespace. "
+            "You can also use the experimental `debug-data` command to "
+            "validate your JSON-formatted training data. For details, run:\n"
+            "python -m spacy debug-data --help")
     E025 = ("String is too long: {length} characters. Max is 2**30.")
     E026 = ("Error accessing token at position {i}: out of bounds in Doc of "
             "length {length}.")
@@ -367,6 +377,49 @@ class Errors(object):
             "Instead, create a new Span object and specify the `label` keyword argument, "
             "for example:\nfrom spacy.tokens import Span\n"
             "span = Span(doc, start={start}, end={end}, label='{label}')")
+    E130 = ("You are running a narrow unicode build, which is incompatible "
+            "with spacy >= 2.1.0. To fix this, reinstall Python and use a wide "
+            "unicode build instead. You can also rebuild Python and set the "
+            "--enable-unicode=ucs4 flag.")
+    E131 = ("Cannot write the kb_id of an existing Span object because a Span "
+            "is a read-only view of the underlying Token objects stored in the Doc. "
+            "Instead, create a new Span object and specify the `kb_id` keyword argument, "
+            "for example:\nfrom spacy.tokens import Span\n"
+            "span = Span(doc, start={start}, end={end}, label='{label}', kb_id='{kb_id}')")
+    E132 = ("The vectors for entities and probabilities for alias '{alias}' should have equal length, "
+            "but found {entities_length} and {probabilities_length} respectively.")
+    E133 = ("The sum of prior probabilities for alias '{alias}' should not exceed 1, "
+            "but found {sum}.")
+    E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
+    E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
+            "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
+    E136 = ("This additional feature requires the jsonschema library to be "
+            "installed:\npip install jsonschema")
+    E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure to provide a valid JSON "
+            "object as input with either the `text` or `tokens` key. For more info, see the docs:\n"
+            "https://spacy.io/api/cli#pretrain-jsonl")
+    E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input includes either the "
+            "`text` or `tokens` key. For more info, see the docs:\n"
+            "https://spacy.io/api/cli#pretrain-jsonl")
+    E139 = ("Knowledge base for component '{name}' not initialized. Did you forget to call set_kb()?")
+    E140 = ("The list of entities, prior probabilities and entity vectors should be of equal length.")
+    E141 = ("Entity vectors should be of length {required} instead of the provided {found}.")
+    E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
+    E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
+    E144 = ("Could not find parameter `{param}` when building the entity linker model.")
+    E145 = ("Error reading `{param}` from input file.")
+    E146 = ("Could not access `{path}`.")
+    E147 = ("Unexpected error in the {method} functionality of the EntityLinker: {msg}. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
+    E148 = ("Expected {ents} KB identifiers but got {ids}. Make sure that each entity in `doc.ents` "
+            "is assigned to a KB identifier.")
+    E149 = ("Error deserializing model. Check that the config used to create the "
+            "component matches the model being loaded.")
+    E150 = ("The language of the `nlp` object and the `vocab` should be the same, "
+            "but found '{nlp}' and '{vocab}' respectively.")
+    E151 = ("Trying to call nlp.update without required annotation types. "
+            "Expected top-level keys: {expected_keys}."
+            " Got: {unexpected_keys}.")
 
 @add_codes
 class TempErrors(object):

@@ -19,7 +19,7 @@ RENDER_WRAPPER = None
 
 
 def render(
-    docs, style="dep", page=False, minify=False, jupyter=False, options={}, manual=False
+    docs, style="dep", page=False, minify=False, jupyter=None, options={}, manual=False
 ):
     """Render displaCy visualisation.
 
@@ -27,7 +27,7 @@ def render(
     style (unicode): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
-    jupyter (bool): Experimental, use Jupyter's `display()` to output markup.
+    jupyter (bool): Override Jupyter auto-detection.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     RETURNS (unicode): Rendered HTML markup.
@@ -53,7 +53,8 @@ def render(
     html = _html["parsed"]
     if RENDER_WRAPPER is not None:
         html = RENDER_WRAPPER(html)
-    if jupyter or is_in_jupyter():  # return HTML rendered by IPython display()
+    if jupyter or (jupyter is None and is_in_jupyter()):
+        # return HTML rendered by IPython display()
         from IPython.core.display import display, HTML
 
         return display(HTML(html))
@@ -115,7 +116,7 @@ def parse_deps(orig_doc, options={}):
     doc (Doc): Document do parse.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
-    doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
+    doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes(exclude=["user_data"]))
     if not doc.is_parsed:
         user_warning(Warnings.W005)
     if options.get("collapse_phrases", False):

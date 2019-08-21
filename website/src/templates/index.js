@@ -4,6 +4,7 @@ import { graphql } from 'gatsby'
 import { MDXProvider } from '@mdx-js/tag'
 import { withMDXScope } from 'gatsby-mdx/context'
 import useOnlineStatus from '@rehooks/online-status'
+import classNames from 'classnames'
 
 import MDXRenderer from './mdx-renderer'
 
@@ -108,6 +109,7 @@ class Layout extends React.Component {
             source: PropTypes.string,
             isIndex: PropTypes.bool.isRequired,
             theme: PropTypes.string,
+            searchExclude: PropTypes.bool,
             next: PropTypes.shape({
                 title: PropTypes.string.isRequired,
                 slug: PropTypes.string.isRequired,
@@ -128,8 +130,8 @@ class Layout extends React.Component {
         const { data, pageContext, location, children } = this.props
         const { file, site = {} } = data || {}
         const mdx = file ? file.childMdx : null
-        const { title, section, sectionTitle, teaser, theme = 'blue' } = pageContext
-        const bodyClass = `theme-${theme}`
+        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
+        const bodyClass = classNames(`theme-${theme}`, { 'search-exclude': !!searchExclude })
         const meta = site.siteMetadata || {}
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
@@ -191,7 +193,6 @@ export const pageQuery = graphql`
                 docSearch {
                     apiKey
                     indexName
-                    appId
                 }
             }
         }

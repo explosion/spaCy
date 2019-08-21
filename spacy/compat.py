@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 import os
 import sys
 import itertools
+import ast
 
 from thinc.neural.util import copy_array
 
@@ -91,7 +92,9 @@ def symlink_to(orig, dest):
     if is_windows:
         import subprocess
 
-        subprocess.call(["mklink", "/d", path2str(orig), path2str(dest)], shell=True)
+        subprocess.check_call(
+            ["mklink", "/d", path2str(orig), path2str(dest)], shell=True
+        )
     else:
         orig.symlink_to(dest)
 
@@ -150,3 +153,26 @@ def import_file(name, loc):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
+
+
+def unescape_unicode(string):
+    """Python2.7's re module chokes when compiling patterns that have ranges
+    between escaped unicode codepoints if the two codepoints are unrecognised
+    in the unicode database. For instance:
+
+        re.compile('[\\uAA77-\\uAA79]').findall("hello")
+
+    Ends up matching every character (on Python 2). This problem doesn't occur
+    if we're dealing with unicode literals.
+    """
+    if string is None:
+        return string
+    # We only want to unescape the unicode, so we first must protect the other
+    # backslashes.
+    string = string.replace("\\", "\\\\")
+    # Now we remove that protection for the unicode.
+    string = string.replace("\\\\u", "\\u")
+    string = string.replace("\\\\U", "\\U")
+    # Now we unescape by evaling the string with the AST. This can't execute
+    # code -- it only does the representational level.
+    return ast.literal_eval("u'''" + string + "'''")

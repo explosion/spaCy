@@ -17,6 +17,7 @@ from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 from ..attrs cimport *
 from ..lexeme cimport Lexeme
+from ..symbols cimport dep
 
 from ..util import normalize_slice
 from ..compat import is_config, basestring_
@@ -85,13 +86,14 @@ cdef class Span:
         return Underscore.span_extensions.pop(name)
 
     def __cinit__(self, Doc doc, int start, int end, label=0, vector=None,
-                  vector_norm=None):
+                  vector_norm=None, kb_id=0):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
         label (uint64): A label to attach to the Span, e.g. for named entities.
+        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
         RETURNS (Span): The newly constructed object.
@@ -110,11 +112,14 @@ cdef class Span:
             self.end_char = 0
         if isinstance(label, basestring_):
             label = doc.vocab.strings.add(label)
+        if isinstance(kb_id, basestring_):
+            kb_id = doc.vocab.strings.add(kb_id)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
+        self.kb_id = kb_id
 
     def __richcmp__(self, Span other, int op):
         if other is None:
@@ -202,11 +207,10 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#as_doc
         """
-        # TODO: Fix!
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_KB_ID]
         if self.doc.is_tagged:
             array_head.append(TAG)
         # If doc parsed add head and dep attribute
@@ -216,7 +220,9 @@ cdef class Span:
         else:
             array_head.append(SENT_START)
         array = self.doc.to_array(array_head)
-        doc.from_array(array_head, array[self.start : self.end])
+        array = array[self.start : self.end]
+        self._fix_dep_copy(array_head, array)
+        doc.from_array(array_head, array)
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
@@ -230,6 +236,44 @@ cdef class Span:
                 if cat_start == self.start_char and cat_end == self.end_char:
                     doc.cats[cat_label] = value
         return doc
+
+    def _fix_dep_copy(self, attrs, array):
+        """ Rewire dependency links to make sure their heads fall into the span
+        while still keeping the correct number of sentences. """
+        cdef int length = len(array)
+        cdef attr_t value
+        cdef int i, head_col, ancestor_i
+        old_to_new_root = dict()
+        if HEAD in attrs:
+            head_col = attrs.index(HEAD)
+            for i in range(length):
+                # if the HEAD refers to a token outside this span, find a more appropriate ancestor
+                token = self[i]
+                ancestor_i = token.head.i - self.start   # span offset
+                if ancestor_i not in range(length):
+                    if DEP in attrs:
+                        array[i, attrs.index(DEP)] = dep
+
+                    # try finding an ancestor within this span
+                    ancestors = token.ancestors
+                    for ancestor in ancestors:
+                        ancestor_i = ancestor.i - self.start
+                        if ancestor_i in range(length):
+                            array[i, head_col] = ancestor_i - i
+
+                # if there is no appropriate ancestor, define a new artificial root
+                value = array[i, head_col]
+                if (i+value) not in range(length):
+                    new_root = old_to_new_root.get(ancestor_i, None)
+                    if new_root is not None:
+                        # take the same artificial root as a previous token from the same sentence
+                        array[i, head_col] = new_root - i
+                    else:
+                        # set this token as the new artificial root
+                        array[i, head_col] = 0
+                        old_to_new_root[ancestor_i] = i
+
+        return array
 
     def merge(self, *args, **attributes):
         """Retokenize the document, such that the span is merged into a single
@@ -267,7 +311,7 @@ cdef class Span:
         DOCS: https://spacy.io/api/span#similarity
         """
         if "similarity" in self.doc.user_span_hooks:
-            self.doc.user_span_hooks["similarity"](self, other)
+            return self.doc.user_span_hooks["similarity"](self, other)
         if len(self) == 1 and hasattr(other, "orth"):
             if self[0].orth == other.orth:
                 return 1.0
@@ -420,14 +464,23 @@ cdef class Span:
         """
         if "vector_norm" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["vector"](self)
-        cdef float value
-        cdef double norm = 0
+        vector = self.vector
+        xp = get_array_module(vector)
         if self._vector_norm is None:
-            norm = 0
-            for value in self.vector:
-                norm += value * value
-            self._vector_norm = sqrt(norm) if norm != 0 else 0
+            total = (vector*vector).sum()
+            self._vector_norm = xp.sqrt(total) if total != 0. else 0.
         return self._vector_norm
+
+    @property
+    def tensor(self):
+        """The span's slice of the doc's tensor.
+        
+        RETURNS (ndarray[ndim=2, dtype='float32']): A 2D numpy or cupy array
+            representing the span's semantics.
+        """
+        if self.doc.tensor is None:
+            return None
+        return self.doc.tensor[self.start : self.end]
 
     @property
     def sentiment(self):
@@ -498,7 +551,7 @@ cdef class Span:
         if "root" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["root"](self)
         # This should probably be called 'head', and the other one called
-        # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
+        # 'gov'. But we went with 'head' elsewhere, and now we're stuck =/
         cdef int i
         # First, we scan through the Span, and check whether there's a word
         # with head==0, i.e. a sentence root. If so, we can return it. The
@@ -656,6 +709,20 @@ cdef class Span:
             if not label_:
                 label_ = ''
             raise NotImplementedError(Errors.E129.format(start=self.start, end=self.end, label=label_))
+
+    property kb_id_:
+        """RETURNS (unicode): The named entity's KB ID."""
+        def __get__(self):
+            return self.doc.vocab.strings[self.kb_id]
+
+        def __set__(self, unicode kb_id_):
+            if not kb_id_:
+                kb_id_ = ''
+            current_label = self.label_
+            if not current_label:
+                current_label = ''
+            raise NotImplementedError(Errors.E131.format(start=self.start, end=self.end,
+                                                         label=current_label, kb_id=kb_id_))
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:

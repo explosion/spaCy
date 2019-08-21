@@ -8,6 +8,7 @@ import {
     LandingSubtitle,
     LandingGrid,
     LandingCard,
+    LandingCol,
     LandingButton,
     LandingDemo,
     LandingBannerGrid,
@@ -18,6 +19,7 @@ import { H2 } from '../components/typography'
 import { Ul, Li } from '../components/list'
 import Button from '../components/button'
 import Link from '../components/link'
+import irlBackground from '../images/spacy-irl.jpg'
 
 import BenchmarksChoi from 'usage/_benchmarks-choi.md'
 
@@ -30,24 +32,21 @@ import spacy
 nlp = spacy.load("en_core_web_sm")
 
 # Process whole documents
-text = (u"When Sebastian Thrun started working on self-driving cars at "
-        u"Google in 2007, few people outside of the company took him "
-        u"seriously. “I can tell you very senior CEOs of major American "
-        u"car companies would shake my hand and turn away because I wasn’t "
-        u"worth talking to,” said Thrun, now the co-founder and CEO of "
-        u"online higher education startup Udacity, in an interview with "
-        u"Recode earlier this week.")
+text = ("When Sebastian Thrun started working on self-driving cars at "
+        "Google in 2007, few people outside of the company took him "
+        "seriously. “I can tell you very senior CEOs of major American "
+        "car companies would shake my hand and turn away because I wasn’t "
+        "worth talking to,” said Thrun, in an interview with Recode earlier "
+        "this week.")
 doc = nlp(text)
+
+# Analyze syntax
+print("Noun phrases:", [chunk.text for chunk in doc.noun_chunks])
+print("Verbs:", [token.lemma_ for token in doc if token.pos_ == "VERB"])
 
 # Find named entities, phrases and concepts
 for entity in doc.ents:
     print(entity.text, entity.label_)
-
-# Determine semantic similarities
-doc1 = nlp(u"my fries were super gross")
-doc2 = nlp(u"such disgusting fries")
-similarity = doc1.similarity(doc2)
-print(doc1.text, doc2.text, similarity)
 `
 
 /**
@@ -76,16 +75,6 @@ const Landing = ({ data }) => {
                 <LandingSubtitle>in Python</LandingSubtitle>
             </LandingHeader>
             <LandingGrid blocks>
-                <LandingCard title="Fastest in the world">
-                    <p>
-                        spaCy excels at large-scale information extraction tasks. It's written from
-                        the ground up in carefully memory-managed Cython. Independent research has
-                        confirmed that spaCy is the fastest in the world. If your application needs
-                        to process entire web dumps, spaCy is the library you want to be using.
-                    </p>
-                    <LandingButton to="/usage/facts-figures">Facts & Figures</LandingButton>
-                </LandingCard>
-
                 <LandingCard title="Get things done">
                     <p>
                         spaCy is designed to help you do real work — to build real products, or
@@ -93,7 +82,16 @@ const Landing = ({ data }) => {
                         wasting it. It's easy to install, and its API is simple and productive. We
                         like to think of spaCy as the Ruby on Rails of Natural Language Processing.
                     </p>
-                    <LandingButton to="/usage">Get started</LandingButton>
+                    <LandingButton to="/usage/spacy-101">Get started</LandingButton>
+                </LandingCard>
+                <LandingCard title="Blazing fast">
+                    <p>
+                        spaCy excels at large-scale information extraction tasks. It's written from
+                        the ground up in carefully memory-managed Cython. Independent research in
+                        2015 found spaCy to be the fastest in the world. If your application needs
+                        to process entire web dumps, spaCy is the library you want to be using.
+                    </p>
+                    <LandingButton to="/usage/facts-figures">Facts & Figures</LandingButton>
                 </LandingCard>
 
                 <LandingCard title="Deep learning">
@@ -111,7 +109,7 @@ const Landing = ({ data }) => {
             <LandingGrid>
                 <LandingDemo title="Edit the code & try spaCy">{CODE_EXAMPLE}</LandingDemo>
 
-                <div>
+                <LandingCol>
                     <H2>Features</H2>
                     <Ul>
                         <Li>
@@ -130,6 +128,7 @@ const Landing = ({ data }) => {
                         <Li>
                             Pre-trained <strong>word vectors</strong>
                         </Li>
+                        <Li>State-of-the-art speed</Li>
                         <Li>
                             Easy <strong>deep learning</strong> integration
                         </Li>
@@ -145,27 +144,29 @@ const Landing = ({ data }) => {
                         <Li>
                             Easy <strong>model packaging</strong> and deployment
                         </Li>
-                        <Li>State-of-the-art speed</Li>
                         <Li>Robust, rigorously evaluated accuracy</Li>
                     </Ul>
-                </div>
+                </LandingCol>
             </LandingGrid>
 
             <LandingBannerGrid>
                 <LandingBanner
-                    title="BERT-style language model pretraining and more"
-                    label="New in v2.1"
-                    to="/usage/v2-1"
-                    button="Read more"
+                    title="spaCy IRL 2019: Two days of NLP"
+                    label="Watch the videos"
+                    to="https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc"
+                    button="Watch the videos"
+                    background="#ffc194"
+                    backgroundImage={irlBackground}
+                    color="#1a1e23"
                     small
                 >
-                    Learn more from small training corpora by initializing your models with{' '}
-                    <strong>knowledge from raw text</strong>. The new pretrain command teaches
-                    spaCy's CNN model to predict words based on their context, producing
-                    representations of words in contexts. If you've seen Google's BERT system or
-                    fast.ai's ULMFiT, spaCy's pretraining is similar – but much more efficient. It's
-                    still experimental, but users are already reporting good results, so give it a
-                    try!
+                    We were pleased to invite the spaCy community and other folks working on Natural
+                    Language Processing to Berlin this summer for a small and intimate event{' '}
+                    <strong>July 6, 2019</strong>. We booked a beautiful venue, hand-picked an
+                    awesome lineup of speakers and scheduled plenty of social time to get to know
+                    each other and exchange ideas. The YouTube playlist includes 12 talks about NLP
+                    research, development and applications, with keynotes by Sebastian Ruder
+                    (DeepMind) and Yoav Goldberg (Allen AI).
                 </LandingBanner>
 
                 <LandingBanner
@@ -193,31 +194,25 @@ const Landing = ({ data }) => {
             <LandingLogos title="Featured on" logos={data.logosPublications} />
 
             <LandingBanner
-                title="Convolutional neural network models"
-                label="New in v2.0"
-                button="Download models"
-                to="/models"
+                title="BERT-style language model pretraining"
+                label="New in v2.1"
+                to="/usage/v2-1"
+                button="Read more"
             >
-                spaCy v2.0 features new neural models for <strong>tagging</strong>,{' '}
-                <strong>parsing</strong> and <strong>entity recognition</strong>. The models have
-                been designed and implemented from scratch specifically for spaCy, to give you an
-                unmatched balance of speed, size and accuracy. A novel bloom embedding strategy with
-                subword features is used to support huge vocabularies in tiny tables. Convolutional
-                layers with residual connections, layer normalization and maxout non-linearity are
-                used, giving much better efficiency than the standard BiLSTM solution. Finally, the
-                parser and NER use an imitation learning objective to deliver accuracy in-line with
-                the latest research systems, even when evaluated from raw text. With these
-                innovations, spaCy v2.0's models are <strong>10× smaller</strong>,{' '}
-                <strong>20% more accurate</strong>, and
-                <strong>even cheaper to run</strong> than the previous generation.
+                Learn more from small training corpora by initializing your models with{' '}
+                <strong>knowledge from raw text</strong>. The new pretrain command teaches spaCy's
+                CNN model to predict words based on their context, producing representations of
+                words in contexts. If you've seen Google's BERT system or fast.ai's ULMFiT, spaCy's
+                pretraining is similar – but much more efficient. It's still experimental, but users
+                are already reporting good results, so give it a try!
             </LandingBanner>
 
             <LandingGrid cols={2}>
-                <div>
+                <LandingCol>
                     <H2>Benchmarks</H2>
                     <p>
                         In 2015, independent researchers from Emory University and Yahoo! Labs
-                        showed that spaCy offered the
+                        showed that spaCy offered the{' '}
                         <strong>fastest syntactic parser in the world</strong> and that its accuracy
                         was <strong>within 1% of the best</strong> available (
                         <Link to="https://aclweb.org/anthology/P/P15/P15-1038.pdf">
@@ -231,11 +226,11 @@ const Landing = ({ data }) => {
                             See details
                         </Button>
                     </p>
-                </div>
+                </LandingCol>
 
-                <div>
+                <LandingCol>
                     <BenchmarksChoi />
-                </div>
+                </LandingCol>
             </LandingGrid>
         </>
     )

@@ -1,0 +1,51 @@
+redirects = [
+    # Netlify
+    {from = "https://spacy.netlify.com/*", to="https://spacy.io/:splat", force = true },
+    # Old subdomains
+    {from = "https://survey.spacy.io/*", to = "https://spacy.io", force = true},
+    {from = "http://survey.spacy.io/*", to = "https://spacy.io", force = true},
+    {from = "https://alpha.spacy.io/*", to = "https://spacy.io", force = true},
+    {from = "http://alpha.spacy.io/*", to = "https://spacy.io", force = true},
+    # Old demos
+    {from = "/demos/*", to = "https://explosion.ai/demos/:splat"},
+    # Old blog
+    {from = "/blog/*", to = "https://explosion.ai/blog/:splat"},
+    {from = "/feed", to = "https://explosion.ai/feed"},
+    {from = "/feed.xml", to = "https://explosion.ai/feed"},
+    # Old documentation pages (1.x)
+    {from = "/docs/usage/processing-text", to = "/usage/linguistic-features"},
+    {from = "/docs/usage/deep-learning", to = "/usage/training"},
+    {from = "/docs/usage/pos-tagging", to = "/usage/linguistic-features#pos-tagging"},
+    {from = "/docs/usage/dependency-parse", to = "/usage/linguistic-features#dependency-parse"},
+    {from = "/docs/usage/entity-recognition", to = "/usage/linguistic-features#named-entities"},
+    {from = "/docs/usage/word-vectors-similarities", to = "/usage/vectors-similarity"},
+    {from = "/docs/usage/customizing-tokenizer", to = "/usage/linguistic-features#tokenization"},
+    {from = "/docs/usage/language-processing-pipeline", to = "/usage/processing-pipelines"},
+    {from = "/docs/usage/customizing-pipeline", to = "/usage/processing-pipelines"},
+    {from = "/docs/usage/training-ner", to = "/usage/training#ner"},
+    {from = "/docs/usage/tutorials", to = "/usage/examples"},
+    {from = "/docs/usage/data-model", to = "/api"},
+    {from = "/docs/usage/cli", to = "/api/cli"},
+    {from = "/docs/usage/lightning-tour", to = "/usage/spacy-101#lightning-tour"},
+    {from = "/docs/api/language-models", to = "/usage/models#languages"},
+    {from = "/docs/api/spacy", to = "/docs/api/top-level"},
+    {from = "/docs/api/displacy", to = "/api/top-level#displacy"},
+    {from = "/docs/api/util", to = "/api/top-level#util"},
+    {from = "/docs/api/features", to = "/models/#architecture"},
+    {from = "/docs/api/philosophy", to = "/usage/spacy-101"},
+    {from = "/docs/usage/showcase", to = "/universe"},
+    {from = "/tutorials/load-new-word-vectors", to = "/usage/vectors-similarity#custom"},
+    {from = "/tutorials", to = "/usage/examples"},
+    # Rewrite all other docs pages to /
+    {from = "/docs/*", to = "/:splat"},
+    # Updated documentation pages
+    {from = "/usage/resources", to = "/universe"},
+    {from = "/usage/lightning-tour", to = "/usage/spacy-101#lightning-tour"},
+    {from = "/usage/linguistic-features#rule-based-matching", to = "/usage/rule-based-matching"},
+    {from = "/models/comparison", to = "/models"},
+    {from = "/api/#section-cython", to = "/api/cython", force = true},
+    {from = "/api/#cython", to = "/api/cython", force = true},
+    {from = "/api/sentencesegmenter", to="/api/sentencizer"},
+    {from = "/universe", to = "/universe/project/:id", query = {id = ":id"}, force = true},
+    {from = "/universe", to = "/universe/category/:category", query = {category = ":category"}, force = true},
+]

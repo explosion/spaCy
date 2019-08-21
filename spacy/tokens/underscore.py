@@ -25,6 +25,11 @@ class Underscore(object):
         object.__setattr__(self, "_start", start)
         object.__setattr__(self, "_end", end)
 
+    def __dir__(self):
+        # Hack to enable autocomplete on custom extensions
+        extensions = list(self._extensions.keys())
+        return ["set", "get", "has"] + extensions
+
     def __getattr__(self, name):
         if name not in self._extensions:
             raise AttributeError(Errors.E046.format(name=name))
@@ -32,7 +37,16 @@ class Underscore(object):
         if getter is not None:
             return getter(self._obj)
         elif method is not None:
-            return functools.partial(method, self._obj)
+            method_partial = functools.partial(method, self._obj)
+            # Hack to port over docstrings of the original function
+            # See https://stackoverflow.com/q/27362727/6400719
+            method_docstring = method.__doc__ or ""
+            method_docstring_prefix = (
+                "This method is a partial function and its first argument "
+                "(the object it's called on) will be filled automatically. "
+            )
+            method_partial.__doc__ = method_docstring_prefix + method_docstring
+            return method_partial
         else:
             key = self._get_key(name)
             if key in self._doc.user_data:

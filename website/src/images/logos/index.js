@@ -1,4 +1,5 @@
 import { ReactComponent as AirbnbLogo } from './airbnb.svg'
+import { ReactComponent as UberLogo } from './uber.svg'
 import { ReactComponent as QuoraLogo } from './quora.svg'
 import { ReactComponent as RetrieverLogo } from './retriever.svg'
 import { ReactComponent as StitchfixLogo } from './stitchfix.svg'
@@ -14,6 +15,7 @@ import { ReactComponent as ThoughtworksLogo } from './thoughtworks.svg'
 
 export default {
     airbnb: AirbnbLogo,
+    uber: UberLogo,
     quora: QuoraLogo,
     retriever: RetrieverLogo,
     stitchfix: StitchfixLogo,

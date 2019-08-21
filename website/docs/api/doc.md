@@ -11,6 +11,11 @@ compressed binary strings. The `Doc` object holds an array of `TokenC]` structs.
 The Python-level `Token` and [`Span`](/api/span) objects are views of this
 array, i.e. they don't own the data themselves.
 
+## Doc.\_\_init\_\_ {#init tag="method"}
+
+Construct a `Doc` object. The most common way to get a `Doc` object is via the
+`nlp` object.
+
 > #### Example
 >
 > ```python
@@ -23,11 +28,6 @@ array, i.e. they don't own the data themselves.
 > spaces = [True, False, False]
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
-
-## Doc.\_\_init\_\_ {#init tag="method"}
-
-Construct a `Doc` object. The most common way to get a `Doc` object is via the
-`nlp` object.
 
 | Name        | Type     | Description                                                                                                                                                         |
 | ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -264,7 +264,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 | ----------- | -------------------------------------- | ----------------------------------------------- |
 | **RETURNS** | `numpy.ndarray[ndim=2, dtype='int32']` | The lowest common ancestor matrix of the `Doc`. |
 
-## Doc.to_json {#to_json, tag="method" new="2.1"}
+## Doc.to_json {#to_json tag="method" new="2.1"}
 
 Convert a Doc to JSON. The format it produces will be the new format for the
 [`spacy train`](/api/cli#train) command (not implemented yet). If custom
@@ -651,7 +651,7 @@ The L2 norm of the document's vector representation.
 | `text_with_ws`                          | unicode      | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                                                                                                                                      |
 | `mem`                                   | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                                                                                                                                  |
 | `vocab`                                 | `Vocab`      | The store of lexical types.                                                                                                                                                                                                                                                                |
-| `tensor` <Tag variant="new">2</Tag>     | object       | Container for dense vector representations.                                                                                                                                                                                                                                                |
+| `tensor` <Tag variant="new">2</Tag>     | `ndarray`    | Container for dense vector representations.                                                                                                                                                                                                                                                |
 | `cats` <Tag variant="new">2</Tag>       | dictionary   | Maps either a label to a score for categories applied to whole document, or `(start_char, end_char, label)` to score for categories applied to spans. `start_char` and `end_char` should be character offsets, label can be either a string or an integer ID, and score should be a float. |
 | `user_data`                             | -            | A generic storage area, for user custom data.                                                                                                                                                                                                                                              |
 | `lang` <Tag variant="new">2.1</Tag>     | int          | Language of the document's vocabulary.                                                                                                                                                                                                                                                     |

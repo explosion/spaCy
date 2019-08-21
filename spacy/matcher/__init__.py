@@ -3,6 +3,6 @@ from __future__ import unicode_literals
 
 from .matcher import Matcher
 from .phrasematcher import PhraseMatcher
-from .dependencymatcher import DependencyTreeMatcher
+from .dependencymatcher import DependencyMatcher
 
-__all__ = ["Matcher", "PhraseMatcher", "DependencyTreeMatcher"]
+__all__ = ["Matcher", "PhraseMatcher", "DependencyMatcher"]

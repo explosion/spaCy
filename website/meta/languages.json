@@ -3,14 +3,21 @@
         {
             "code": "en",
             "name": "English",
-            "models": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_vectors_web_lg"],
+            "models": [
+                "en_core_web_sm",
+                "en_core_web_md",
+                "en_core_web_lg",
+                "en_vectors_web_lg",
+                "en_pytt_bertbaseuncased_lg",
+                "en_pytt_xlnetbasecased_lg"
+            ],
             "example": "This is a sentence.",
             "has_examples": true
         },
         {
             "code": "de",
             "name": "German",
-            "models": ["de_core_news_sm", "de_core_news_md"],
+            "models": ["de_core_news_sm", "de_core_news_md", "de_pytt_bertbasecased_lg"],
             "example": "Dies ist ein Satz.",
             "has_examples": true
         },
@@ -104,9 +111,15 @@
         { "code": "ga", "name": "Irish" },
         { "code": "bn", "name": "Bengali", "has_examples": true },
         { "code": "hi", "name": "Hindi", "example": "यह एक वाक्य है।", "has_examples": true },
+        { "code": "mr", "name": "Marathi" },
         { "code": "kn", "name": "Kannada" },
         { "code": "ta", "name": "Tamil", "has_examples": true },
-        { "code": "id", "name": "Indonesian", "has_examples": true },
+        {
+            "code": "id",
+            "name": "Indonesian",
+            "example": "Ini adalah sebuah kalimat.",
+            "has_examples": true
+        },
         { "code": "tl", "name": "Tagalog" },
         { "code": "af", "name": "Afrikaans" },
         { "code": "bg", "name": "Bulgarian" },
@@ -114,9 +127,16 @@
         { "code": "is", "name": "Icelandic" },
         { "code": "lt", "name": "Lithuanian" },
         { "code": "lv", "name": "Latvian" },
+        { "code": "rs", "name": "Serbian" },
         { "code": "sk", "name": "Slovak" },
         { "code": "sl", "name": "Slovenian" },
-        { "code": "sq", "name": "Albanian" },
+        {
+            "code": "sq",
+            "name": "Albanian",
+            "example": "Kjo është një fjali.",
+            "has_examples": true
+        },
+        { "code": "et", "name": "Estonian" },
         {
             "code": "th",
             "name": "Thai",
@@ -140,6 +160,20 @@
                 { "name": "Mecab", "url": "https://github.com/taku910/mecab" }
             ],
             "example": "これは文章です。",
+            "has_examples": true
+        },
+        {
+            "code": "ko",
+            "name": "Korean",
+            "dependencies": [
+                {
+                    "name": "mecab-ko",
+                    "url": "https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md"
+                },
+                { "name": "mecab-ko-dic", "url": "https://bitbucket.org/eunjeon/mecab-ko-dic" },
+                { "name": "natto-py", "url": "https://github.com/buruzaemon/natto-py" }
+            ],
+            "example": "이것은 문장입니다.",
             "has_examples": true
         },
         {

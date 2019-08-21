@@ -7,6 +7,8 @@ the IMDB movie reviews dataset and will be loaded automatically via Thinc's
 built-in dataset loader.
 
 Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
+Prerequisites: pip install joblib
 """
 from __future__ import print_function, unicode_literals
 

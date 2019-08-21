@@ -40,6 +40,7 @@ exports.createPages = ({ graphql, actions }) => {
                                     resources {
                                         id
                                         title
+                                        slogan
                                     }
                                     categories {
                                         label
@@ -71,6 +72,7 @@ exports.createPages = ({ graphql, actions }) => {
                                             tag
                                             new
                                             next
+                                            search_exclude
                                             menu
                                             sidebar {
                                                 label
@@ -133,6 +135,7 @@ exports.createPages = ({ graphql, actions }) => {
                                 tag: frontmatter.tag,
                                 version: frontmatter.new,
                                 theme: sectionMeta.theme,
+                                searchExclude: frontmatter.search_exclude,
                                 relativePath: page.node.relativePath,
                                 next: next
                                     ? {
@@ -175,7 +178,8 @@ exports.createPages = ({ graphql, actions }) => {
                             id: page.id,
                             slug: slug,
                             isIndex: false,
-                            title: page.title,
+                            title: page.title || page.id,
+                            teaser: page.slogan,
                             data: { ...page, isProject: true },
                             ...universeContext,
                         },

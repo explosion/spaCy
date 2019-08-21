@@ -44,6 +44,8 @@ export const LandingGrid = ({ cols = 3, blocks = false, children }) => (
     </Content>
 )
 
+export const LandingCol = ({ children }) => <div className={classes.col}>{children}</div>
+
 export const LandingCard = ({ title, children }) => (
     <div className={classes.card}>
         {title && <H3>{title}</H3>}
@@ -73,14 +75,28 @@ export const LandingBannerGrid = ({ children }) => (
     </Grid>
 )
 
-export const LandingBanner = ({ title, label, to, button, small, background, color, children }) => {
+export const LandingBanner = ({
+    title,
+    label,
+    to,
+    button,
+    small,
+    background,
+    backgroundImage,
+    color,
+    children,
+}) => {
     const contentClassNames = classNames(classes.bannerContent, {
         [classes.bannerContentSmall]: small,
     })
     const textClassNames = classNames(classes.bannerText, {
         [classes.bannerTextSmall]: small,
     })
-    const style = { '--color-theme': background, '--color-back': color }
+    const style = {
+        '--color-theme': background,
+        '--color-back': color,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : null,
+    }
     const Heading = small ? H2 : H1
     return (
         <div className={classes.banner} style={style}>
@@ -111,7 +127,7 @@ export const LandingBanner = ({ title, label, to, button, small, background, col
 
 export const LandingBannerButton = ({ to, small, children }) => (
     <div className={classes.bannerButton}>
-        <Button to={to} variant="tertiary" large={!small}>
+        <Button to={to} variant="tertiary" large={!small} className={classes.bannerButtonElement}>
             {children}
         </Button>
     </div>

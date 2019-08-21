@@ -153,23 +153,53 @@ processes.
 
 #### Available token attributes {#adding-patterns-attributes}
 
-The available token pattern keys are uppercase versions of the
-[`Token` attributes](/api/token#attributes). The most relevant ones for
+The available token pattern keys correspond to a number of
+[`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                              | Type    |  Description                                                                                     |
-| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `ORTH`                                 | unicode | The exact verbatim text of a token.                                                              |
-| `TEXT` <Tag variant="new">2.1</Tag>    | unicode | The exact verbatim text of a token.                                                              |
-| `LOWER`                                | unicode | The lowercase form of the token text.                                                            |
-|  `LENGTH`                              | int     | The length of the token text.                                                                    |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphanumeric characters, ASCII characters, digits.                        |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool    | Token text is in lowercase, uppercase, titlecase.                                                |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool    | Token is punctuation, whitespace, stop word.                                                     |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool    | Token text resembles a number, URL, email.                                                       |
-|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | unicode | The token's simple and extended part-of-speech tag, dependency label, lemma, shape.              |
-| `ENT_TYPE`                             | unicode | The token's entity label.                                                                        |
-| `_` <Tag variant="new">2.1</Tag>       | dict    | Properties in [custom extension attributes](/processing-pipelines#custom-components-attributes). |
+| Attribute                              | Type    |  Description                                                                                           |
+| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `ORTH`                                 | unicode | The exact verbatim text of a token.                                                                    |
+| `TEXT` <Tag variant="new">2.1</Tag>    | unicode | The exact verbatim text of a token.                                                                    |
+| `LOWER`                                | unicode | The lowercase form of the token text.                                                                  |
+|  `LENGTH`                              | int     | The length of the token text.                                                                          |
+|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphanumeric characters, ASCII characters, digits.                              |
+|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool    | Token text is in lowercase, uppercase, titlecase.                                                      |
+|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool    | Token is punctuation, whitespace, stop word.                                                           |
+|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool    | Token text resembles a number, URL, email.                                                             |
+|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | unicode | The token's simple and extended part-of-speech tag, dependency label, lemma, shape.                    |
+| `ENT_TYPE`                             | unicode | The token's entity label.                                                                              |
+| `_` <Tag variant="new">2.1</Tag>       | dict    | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). |
+
+<Accordion title="Does it matter if the attribute names are uppercase or lowercase?">
+
+No, it shouldn't. spaCy will normalize the names internally and
+`{"LOWER": "text"}` and `{"lower": "text"}` will both produce the same result.
+Using the uppercase version is mostly a convention to make it clear that the
+attributes are "special" and don't exactly map to the token attributes like
+`Token.lower` and `Token.lower_`.
+
+</Accordion>
+
+<Accordion title="Why are not all token attributes supported?">
+
+spaCy can't provide access to all of the attributes because the `Matcher` loops
+over the Cython data, not the Python objects. Inside the matcher, we're dealing
+with a [`TokenC` struct](/api/cython-structs#tokenc) – we don't have an instance
+of [`Token`](/api/token). This means that all of the attributes that refer to
+computed properties can't be accessed.
+
+The uppercase attribute names like `LOWER` or `IS_PUNCT` refer to symbols from
+the
+[`spacy.attrs`](https://github.com/explosion/spaCy/tree/master/spacy/attrs.pyx)
+enum table. They're passed into a function that essentially is a big case/switch
+statement, to figure out which struct field to return. The same attribute
+identifiers are used in [`Doc.to_array`](/api/doc#to_array), and a few other
+places in the code where you need to describe fields like this.
+
+</Accordion>
+
+---
 
 <Infobox title="Tip: Try the interactive matcher explorer">
 
@@ -214,7 +244,8 @@ example, you might want to match different spellings of a word, without having
 to add a new pattern for each spelling.
 
 ```python
-pattern = [{"TEXT": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}},
+pattern = [{"TEXT": {"REGEX": "^[Uu](\\.?|nited)$"}},
+           {"TEXT": {"REGEX": "^[Ss](\\.?|tates)$"}},
            {"LOWER": "president"}]
 ```
 
@@ -227,7 +258,7 @@ attributes:
 pattern = [{"TAG": {"REGEX": "^V"}}]
 
 # Match custom attribute values with regular expressions
-pattern = [{"_": {"country": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}}}]
+pattern = [{"_": {"country": {"REGEX": "^[Uu](\\.?|nited) ?[Ss](\\.?|tates)$"}}}]
 ```
 
 <Infobox title="Regular expressions in older versions" variant="warning">
@@ -295,6 +326,29 @@ character, but no whitespace – so you'll know it will be handled as one token.
 [{"ORTH": "User"}, {"ORTH": "name"}, {"ORTH": ":"}, {}]
 ```
 
+#### Validating and debugging patterns {#pattern-validation new="2.1"}
+
+The `Matcher` can validate patterns against a JSON schema with the option
+`validate=True`. This is useful for debugging patterns during development, in
+particular for catching unsupported attributes.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.matcher import Matcher
+
+nlp = spacy.load("en_core_web_sm")
+matcher = Matcher(nlp.vocab, validate=True)
+# Add match ID "HelloWorld" with unsupported attribute CASEINSENSITIVE
+pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"CASEINSENSITIVE": "world"}]
+matcher.add("HelloWorld", None, pattern)
+# 🚨 Raises an error:
+# MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
+# Pattern 0:
+# - Additional properties are not allowed ('CASEINSENSITIVE' was unexpected) [2]
+
+```
+
 ### Adding on_match rules {#on_match}
 
 To move on to a more realistic example, let's say you're working with a large
@@ -304,11 +358,11 @@ match on the uppercase versions, in case someone has written it as "Google i/o".
 
 ```python
 ### {executable="true"}
-import spacy
+from spacy.lang.en import English
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 
-nlp = spacy.load("en_core_web_sm")
+nlp = English()
 matcher = Matcher(nlp.vocab)
 
 def add_event_ent(matcher, doc, i, matches):
@@ -321,7 +375,7 @@ def add_event_ent(matcher, doc, i, matches):
 
 pattern = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
 matcher.add("GoogleIO", add_event_ent, pattern)
-doc = nlp(u"This is a text about Google I/O.")
+doc = nlp(u"This is a text about Google I/O")
 matches = matcher(doc)
 ```
 
@@ -678,7 +732,7 @@ for match_id, start, end in matches:
     if doc.vocab.strings[match_id] == "HASHTAG":
         hashtags.append(doc[start:end])
 with doc.retokenize() as retokenizer:
-    for span in spans:
+    for span in hashtags:
         retokenizer.merge(span)
         for token in span:
             token._.is_hashtag = True
@@ -712,9 +766,9 @@ from spacy.matcher import PhraseMatcher
 
 nlp = spacy.load('en_core_web_sm')
 matcher = PhraseMatcher(nlp.vocab)
-terminology_list = [u"Barack Obama", u"Angela Merkel", u"Washington, D.C."]
+terms = [u"Barack Obama", u"Angela Merkel", u"Washington, D.C."]
 # Only run nlp.make_doc to speed things up
-patterns = [nlp.make_doc(text) for text in terminology_list]
+patterns = [nlp.make_doc(text) for text in terms]
 matcher.add("TerminologyList", None, *patterns)
 
 doc = nlp(u"German Chancellor Angela Merkel and US President Barack Obama "
@@ -820,7 +874,7 @@ pattern. The entity ruler accepts two types of patterns:
 2. **Token patterns** with one dictionary describing one token (list).
 
    ```python
-   {"label": "GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]}
+   {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
    ```
 
 ### Using the entity ruler {#entityruler-usage}
@@ -838,7 +892,7 @@ from spacy.pipeline import EntityRuler
 nlp = English()
 ruler = EntityRuler(nlp)
 patterns = [{"label": "ORG", "pattern": "Apple"},
-            {"label": "GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]}]
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}]
 ruler.add_patterns(patterns)
 nlp.add_pipe(ruler)
 
@@ -870,6 +924,16 @@ doc = nlp(u"MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
+#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
+
+The `EntityRuler` can validate patterns against a JSON schema with the option
+`validate=True`. See details under
+[Validating and debugging patterns](#pattern-validation).
+
+```python
+ruler = EntityRuler(nlp, validate=True)
+```
+
 ### Using pattern files {#entityruler-files}
 
 The [`to_disk`](/api/entityruler#to_disk) and
@@ -880,7 +944,7 @@ line.
 ```json
 ### patterns.jsonl
 {"label": "ORG", "pattern": "Apple"}
-{"label": "GPE", "pattern": [{"lower": "san"}, {"lower": "francisco"}]}
+{"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
 ```
 
 ```python
@@ -1139,8 +1203,9 @@ To apply this logic automatically when we process a text, we can add it to the
 above logic also expects that entities are merged into single tokens. spaCy
 ships with a handy built-in `merge_entities` that takes care of that. Instead of
 just printing the result, you could also write it to
-[custom attributes](/processing-pipelines#custom-components-attributes) on the
-entity `Span` – for example `._.orgs` or `._.prev_orgs` and `._.current_orgs`.
+[custom attributes](/usage/processing-pipelines#custom-components-attributes) on
+the entity `Span` – for example `._.orgs` or `._.prev_orgs` and
+`._.current_orgs`.
 
 > #### Merging entities
 >

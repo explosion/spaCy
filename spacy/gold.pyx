@@ -70,15 +70,33 @@ def merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-def align(cand_words, gold_words):
-    if cand_words == gold_words:
-        alignment = numpy.arange(len(cand_words))
+def align(tokens_a, tokens_b):
+    """Calculate alignment tables between two tokenizations, using the Levenshtein
+    algorithm. The alignment is case-insensitive.
+
+    tokens_a (List[str]): The candidate tokenization.
+    tokens_b (List[str]): The reference tokenization.
+    RETURNS: (tuple): A 5-tuple consisting of the following information:
+      * cost (int): The number of misaligned tokens.
+      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
+        For instance, if `a2b[4] == 6`, that means that `tokens_a[4]` aligns
+        to `tokens_b[6]`. If there's no one-to-one alignment for a token,
+        it has the value -1.
+      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b_multi (Dict[int, int]): A dictionary mapping indices in `tokens_a`
+        to indices in `tokens_b`, where multiple tokens of `tokens_a` align to
+        the same token of `tokens_b`.
+      * b2a_multi (Dict[int, int]): As with `a2b_multi`, but mapping the other
+            direction.
+    """
+    if tokens_a == tokens_b:
+        alignment = numpy.arange(len(tokens_a))
         return 0, alignment, alignment, {}, {}
-    cand_words = [w.replace(" ", "").lower() for w in cand_words]
-    gold_words = [w.replace(" ", "").lower() for w in gold_words]
-    cost, i2j, j2i, matrix = _align.align(cand_words, gold_words)
-    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in cand_words],
-                                [len(w) for w in gold_words])
+    tokens_a = [w.replace(" ", "").lower() for w in tokens_a]
+    tokens_b = [w.replace(" ", "").lower() for w in tokens_b]
+    cost, i2j, j2i, matrix = _align.align(tokens_a, tokens_b)
+    i2j_multi, j2i_multi = _align.multi_align(i2j, j2i, [len(w) for w in tokens_a],
+                                                        [len(w) for w in tokens_b])
     for i, j in list(i2j_multi.items()):
         if i2j_multi.get(i+1) != j and i2j_multi.get(i-1) != j:
             i2j[i] = j
@@ -113,7 +131,7 @@ class GoldCorpus(object):
         self.write_msgpack(self.tmp_dir / "dev", dev, limit=self.limit)
 
     def __del__(self):
-        shutil.rmtree(self.tmp_dir)
+        shutil.rmtree(path2str(self.tmp_dir))
 
     @staticmethod
     def write_msgpack(directory, doc_tuples, limit=0):
@@ -142,7 +160,7 @@ class GoldCorpus(object):
                 continue
             elif path.is_dir():
                 paths.extend(path.iterdir())
-            elif path.parts[-1].endswith(".json"):
+            elif path.parts[-1].endswith((".json", ".jsonl")):
                 locs.append(path)
         return locs
 
@@ -427,7 +445,7 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, morphology=None,
                  heads=None, deps=None, entities=None, make_projective=False,
-                 cats=None, **_):
+                 cats=None, links=None, **_):
         """Create a GoldParse.
 
         doc (Doc): The document the annotations refer to.
@@ -450,6 +468,11 @@ cdef class GoldParse:
             examples of a label to have the value 0.0. Labels not in the
             dictionary are treated as missing - the gradient for those labels
             will be zero.
+        links (dict): A dict with `(start_char, end_char)` keys,
+            and the values being dicts with kb_id:value entries,
+            representing the external IDs in a knowledge base (KB)
+            mapped to either 1.0 or 0.0, indicating positive and
+            negative examples respectively.
         RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
@@ -486,6 +509,7 @@ cdef class GoldParse:
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
         self.cats = {} if cats is None else dict(cats)
+        self.links = links
         self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)
@@ -536,7 +560,7 @@ cdef class GoldParse:
                         self.labels[i] = deps[i2j_multi[i]]
                     # Now set NER...This is annoying because if we've split
                     # got an entity word split into two, we need to adjust the
-                    # BILOU tags. We can't have BB or LL etc.
+                    # BILUO tags. We can't have BB or LL etc.
                     # Case 1: O -- easy.
                     ner_tag = entities[i2j_multi[i]]
                     if ner_tag == "O":
@@ -603,19 +627,35 @@ cdef class GoldParse:
                         self.c.sent_start[i] = 0
 
 
-def docs_to_json(docs, underscore=None):
+def docs_to_json(docs, id=0):
     """Convert a list of Doc objects into the JSON-serializable format used by
     the spacy train command.
 
     docs (iterable / Doc): The Doc object(s) to convert.
-    underscore (list): Optional list of string names of custom doc._.
-        attributes. Attribute values need to be JSON-serializable. Values will
-        be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
+    id (int): Id for the JSON.
     RETURNS (list): The data in spaCy's JSON format.
     """
     if isinstance(docs, Doc):
         docs = [docs]
-    return [doc.to_json(underscore=underscore) for doc in docs]
+    json_doc = {"id": id, "paragraphs": []}
+    for i, doc in enumerate(docs):
+        json_para = {'raw': doc.text, "sentences": []}
+        ent_offsets = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
+        biluo_tags = biluo_tags_from_offsets(doc, ent_offsets)
+        for j, sent in enumerate(doc.sents):
+            json_sent = {"tokens": [], "brackets": []}
+            for token in sent:
+                json_token = {"id": token.i, "orth": token.text}
+                if doc.is_tagged:
+                    json_token["tag"] = token.tag_
+                if doc.is_parsed:
+                    json_token["head"] = token.head.i-token.i
+                    json_token["dep"] = token.dep_
+                json_token["ner"] = biluo_tags[token.i]
+                json_sent["tokens"].append(json_token)
+            json_para["sentences"].append(json_sent)
+        json_doc["paragraphs"].append(json_para)
+    return json_doc
 
 
 def biluo_tags_from_offsets(doc, entities, missing="O"):

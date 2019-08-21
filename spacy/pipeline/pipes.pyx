@@ -3,16 +3,18 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-cimport numpy as np
-
 import numpy
 import srsly
+import random
 from collections import OrderedDict
 from thinc.api import chain
 from thinc.v2v import Affine, Maxout, Softmax
 from thinc.misc import LayerNorm
-from thinc.neural.util import to_categorical, copy_array
+from thinc.neural.util import to_categorical
+from thinc.neural.util import get_array_module
 
+from spacy.kb import KnowledgeBase
+from .functions import merge_subtokens
 from ..tokens.doc cimport Doc
 from ..syntax.nn_parser cimport Parser
 from ..syntax.ner cimport BiluoPushDown
@@ -23,8 +25,9 @@ from ..vocab cimport Vocab
 from ..syntax import nonproj
 from ..attrs import POS, ID
 from ..parts_of_speech import X
-from .._ml import Tok2Vec, build_tagger_model
+from .._ml import Tok2Vec, build_tagger_model, cosine
 from .._ml import build_text_classifier, build_simple_cnn_text_classifier
+from .._ml import build_bow_text_classifier, build_nel_encoder
 from .._ml import link_vectors_to_models, zero_init, flatten
 from .._ml import masked_language_model, create_default_optimizer
 from ..errors import Errors, TempErrors
@@ -63,8 +66,12 @@ class Pipe(object):
         and `set_annotations()` methods.
         """
         self.require_model()
-        scores, tensors = self.predict([doc])
-        self.set_annotations([doc], scores, tensors=tensors)
+        predictions = self.predict([doc])
+        if isinstance(predictions, tuple) and len(tuple) == 2:
+            scores, tensors = predictions
+            self.set_annotations([doc], scores, tensor=tensors)
+        else:
+            self.set_annotations([doc], predictions)
         return doc
 
     def require_model(self):
@@ -80,8 +87,12 @@ class Pipe(object):
         """
         for docs in util.minibatch(stream, size=batch_size):
             docs = list(docs)
-            scores, tensors = self.predict(docs)
-            self.set_annotations(docs, scores, tensor=tensors)
+            predictions = self.predict(docs)
+            if isinstance(predictions, tuple) and len(tuple) == 2:
+                scores, tensors = predictions
+                self.set_annotations(docs, scores, tensor=tensors)
+            else:
+                self.set_annotations(docs, predictions)
             yield from docs
 
     def predict(self, docs):
@@ -101,8 +112,7 @@ class Pipe(object):
 
         Delegates to predict() and get_loss().
         """
-        self.require_model()
-        raise NotImplementedError
+        pass
 
     def rehearse(self, docs, sgd=None, losses=None, **config):
         pass
@@ -131,7 +141,8 @@ class Pipe(object):
         If no model has been initialized yet, the model is added."""
         if self.model is True:
             self.model = self.Model(**self.cfg)
-        link_vectors_to_models(self.vocab)
+        if hasattr(self, "vocab"):
+            link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -151,7 +162,8 @@ class Pipe(object):
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         if self.model not in (True, False, None):
             serialize["model"] = self.model.to_bytes
-        serialize["vocab"] = self.vocab.to_bytes
+        if hasattr(self, "vocab"):
+            serialize["vocab"] = self.vocab.to_bytes
         exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
         return util.to_bytes(serialize, exclude)
 
@@ -164,11 +176,15 @@ class Pipe(object):
                 self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            self.model.from_bytes(b)
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
-        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        if hasattr(self, "vocab"):
+            deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
         deserialize["model"] = load_model
         exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -193,7 +209,10 @@ class Pipe(object):
                 self.cfg["pretrained_vectors"] = self.vocab.vectors.name
             if self.model is True:
                 self.model = self.Model(**self.cfg)
-            self.model.from_bytes(p.open("rb").read())
+            try:
+                self.model.from_bytes(p.open("rb").read())
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         deserialize = OrderedDict()
         deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
@@ -227,7 +246,7 @@ class Tensorizer(Pipe):
 
         vocab (Vocab): A `Vocab` instance. The model must share the same
             `Vocab` instance with the `Doc` objects it will process.
-        model (Model): A `Model` instance or `True` allocate one later.
+        model (Model): A `Model` instance or `True` to allocate one later.
         **cfg: Config parameters.
 
         EXAMPLE:
@@ -292,7 +311,7 @@ class Tensorizer(Pipe):
 
         docs (iterable): A batch of `Doc` objects.
         golds (iterable): A batch of `GoldParse` objects.
-        drop (float): The droput rate.
+        drop (float): The dropout rate.
         sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
         """
@@ -384,7 +403,7 @@ class Tagger(Pipe):
     def predict(self, docs):
         self.require_model()
         if not any(len(doc) for doc in docs):
-            # Handle case where there are no tokens in any docs.
+            # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
             guesses = [self.model.ops.allocate((0, n_labels)) for doc in docs]
             tokvecs = self.model.ops.allocate((0, self.model.tok2vec.nO))
@@ -563,7 +582,10 @@ class Tagger(Pipe):
                     "token_vector_width",
                     self.cfg.get("token_vector_width", 96))
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
-            self.model.from_bytes(b)
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149)
 
         def load_tag_map(b):
             tag_map = srsly.msgpack_loads(b)
@@ -601,7 +623,10 @@ class Tagger(Pipe):
             if self.model is True:
                 self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)
             with p.open("rb") as file_:
-                self.model.from_bytes(file_.read())
+                try:
+                    self.model.from_bytes(file_.read())
+                except AttributeError:
+                    raise ValueError(Errors.E149)
 
         def load_tag_map(p):
             tag_map = srsly.read_msgpack(p)
@@ -880,6 +905,8 @@ class TextCategorizer(Pipe):
         if cfg.get("architecture") == "simple_cnn":
             tok2vec = Tok2Vec(token_vector_width, embed_size, **cfg)
             return build_simple_cnn_text_classifier(tok2vec, nr_class, **cfg)
+        elif cfg.get("architecture") == "bow":
+            return build_bow_text_classifier(nr_class, **cfg)
         else:
             return build_text_classifier(nr_class, **cfg)
 
@@ -900,6 +927,11 @@ class TextCategorizer(Pipe):
     def labels(self):
         return tuple(self.cfg.setdefault("labels", []))
 
+    def require_labels(self):
+        """Raise an error if the component's model has no labels defined."""
+        if not self.labels:
+            raise ValueError(Errors.E143.format(name=self.name))
+
     @labels.setter
     def labels(self, value):
         self.cfg["labels"] = tuple(value)
@@ -918,9 +950,16 @@ class TextCategorizer(Pipe):
 
     def predict(self, docs):
         self.require_model()
+        tensors = [doc.tensor for doc in docs]
+
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            xp = get_array_module(tensors)
+            scores = xp.zeros((len(docs), len(self.labels)))
+            return scores, tensors
+
         scores = self.model(docs)
         scores = self.model.ops.asarray(scores)
-        tensors = [doc.tensor for doc in docs]
         return scores, tensors
 
     def set_annotations(self, docs, scores, tensors=None):
@@ -929,6 +968,7 @@ class TextCategorizer(Pipe):
                 doc.cats[label] = float(scores[i, j])
 
     def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
+        self.require_model()
         scores, bp_scores = self.model.begin_update(docs, drop=drop)
         loss, d_scores = self.get_loss(docs, golds, scores)
         bp_scores(d_scores, sgd=sgd)
@@ -983,6 +1023,7 @@ class TextCategorizer(Pipe):
     def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
         if self.model is True:
             self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
+            self.require_labels()
             self.model = self.Model(len(self.labels), **self.cfg)
             link_vectors_to_models(self.vocab)
         if sgd is None:
@@ -1062,4 +1103,363 @@ cdef class EntityRecognizer(Parser):
                 if move[0] in ("B", "I", "L", "U")))
 
 
-__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer"]
+class EntityLinker(Pipe):
+    """Pipeline component for named entity linking.
+
+    DOCS: TODO
+    """
+    name = 'entity_linker'
+    NIL = "NIL"  # string used to refer to a non-existing link
+
+    @classmethod
+    def Model(cls, **cfg):
+        embed_width = cfg.get("embed_width", 300)
+        hidden_width = cfg.get("hidden_width", 128)
+        type_to_int = cfg.get("type_to_int", dict())
+
+        model = build_nel_encoder(embed_width=embed_width, hidden_width=hidden_width, ner_types=len(type_to_int), **cfg)
+        return model
+
+    def __init__(self, vocab, **cfg):
+        self.vocab = vocab
+        self.model = True
+        self.kb = None
+        self.cfg = dict(cfg)
+        self.sgd_context = None
+        if not self.cfg.get("context_width"):
+            self.cfg["context_width"] = 128
+
+    def set_kb(self, kb):
+        self.kb = kb
+
+    def require_model(self):
+        # Raise an error if the component's model is not initialized.
+        if getattr(self, "model", None) in (None, True, False):
+            raise ValueError(Errors.E109.format(name=self.name))
+
+    def require_kb(self):
+        # Raise an error if the knowledge base is not initialized.
+        if getattr(self, "kb", None) in (None, True, False):
+            raise ValueError(Errors.E139.format(name=self.name))
+
+    def begin_training(self, get_gold_tuples=lambda: [], pipeline=None, sgd=None, **kwargs):
+        self.require_kb()
+        self.cfg["entity_width"] = self.kb.entity_vector_length
+
+        if self.model is True:
+            self.model = self.Model(**self.cfg)
+            self.sgd_context = self.create_optimizer()
+
+        if sgd is None:
+            sgd = self.create_optimizer()
+
+        return sgd
+
+    def update(self, docs, golds, state=None, drop=0.0, sgd=None, losses=None):
+        self.require_model()
+        self.require_kb()
+
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+
+        if not docs or not golds:
+            return 0
+
+        if len(docs) != len(golds):
+            raise ValueError(Errors.E077.format(value="EL training", n_docs=len(docs),
+                                                n_golds=len(golds)))
+
+        if isinstance(docs, Doc):
+            docs = [docs]
+            golds = [golds]
+
+        context_docs = []
+        entity_encodings = []
+
+        priors = []
+        type_vectors = []
+
+        type_to_int = self.cfg.get("type_to_int", dict())
+
+        for doc, gold in zip(docs, golds):
+            ents_by_offset = dict()
+            for ent in doc.ents:
+                ents_by_offset["{}_{}".format(ent.start_char, ent.end_char)] = ent
+            for entity, kb_dict in gold.links.items():
+                start, end = entity
+                mention = doc.text[start:end]
+                for kb_id, value in kb_dict.items():
+                    entity_encoding = self.kb.get_vector(kb_id)
+                    prior_prob = self.kb.get_prior_prob(kb_id, mention)
+
+                    gold_ent = ents_by_offset["{}_{}".format(start, end)]
+                    if gold_ent is None:
+                        raise RuntimeError(Errors.E147.format(method="update", msg="gold entity not found"))
+
+                    type_vector = [0 for i in range(len(type_to_int))]
+                    if len(type_to_int) > 0:
+                        type_vector[type_to_int[gold_ent.label_]] = 1
+
+                    # store data
+                    entity_encodings.append(entity_encoding)
+                    context_docs.append(doc)
+                    type_vectors.append(type_vector)
+
+                    if self.cfg.get("prior_weight", 1) > 0:
+                        priors.append([prior_prob])
+                    else:
+                        priors.append([0])
+
+        if len(entity_encodings) > 0:
+            if not (len(priors) == len(entity_encodings) == len(context_docs) == len(type_vectors)):
+                raise RuntimeError(Errors.E147.format(method="update", msg="vector lengths not equal"))
+
+            entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
+
+            context_encodings, bp_context = self.model.tok2vec.begin_update(context_docs, drop=drop)
+            mention_encodings = [list(context_encodings[i]) + list(entity_encodings[i]) + priors[i] + type_vectors[i]
+                                 for i in range(len(entity_encodings))]
+            pred, bp_mention = self.model.begin_update(self.model.ops.asarray(mention_encodings, dtype="float32"), drop=drop)
+
+            loss, d_scores = self.get_loss(scores=pred, golds=golds, docs=docs)
+            mention_gradient = bp_mention(d_scores, sgd=sgd)
+
+            context_gradients = [list(x[0:self.cfg.get("context_width")]) for x in mention_gradient]
+            bp_context(self.model.ops.asarray(context_gradients, dtype="float32"), sgd=self.sgd_context)
+
+            if losses is not None:
+                losses[self.name] += loss
+            return loss
+        return 0
+
+    def get_loss(self, docs, golds, scores):
+        cats = []
+        for gold in golds:
+            for entity, kb_dict in gold.links.items():
+                for kb_id, value in kb_dict.items():
+                    cats.append([value])
+
+        cats = self.model.ops.asarray(cats, dtype="float32")
+        if len(scores) != len(cats):
+            raise RuntimeError(Errors.E147.format(method="get_loss", msg="gold entities do not match up"))
+
+        d_scores = (scores - cats)
+        loss = (d_scores ** 2).sum()
+        loss = loss / len(cats)
+        return loss, d_scores
+
+    def __call__(self, doc):
+        kb_ids, tensors = self.predict([doc])
+        self.set_annotations([doc], kb_ids, tensors=tensors)
+        return doc
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        for docs in util.minibatch(stream, size=batch_size):
+            docs = list(docs)
+            kb_ids, tensors = self.predict(docs)
+            self.set_annotations(docs, kb_ids, tensors=tensors)
+            yield from docs
+
+    def predict(self, docs):
+        """ Return the KB IDs for each entity in each doc, including NIL if there is no prediction """
+        self.require_model()
+        self.require_kb()
+
+        entity_count = 0
+        final_kb_ids = []
+        final_tensors = []
+
+        if not docs:
+            return final_kb_ids, final_tensors
+
+        if isinstance(docs, Doc):
+            docs = [docs]
+
+        context_encodings = self.model.tok2vec(docs)
+        xp = get_array_module(context_encodings)
+
+        type_to_int = self.cfg.get("type_to_int", dict())
+
+        for i, doc in enumerate(docs):
+            if len(doc) > 0:
+                # currently, the context is the same for each entity in a sentence (should be refined)
+                context_encoding = context_encodings[i]
+                for ent in doc.ents:
+                    entity_count += 1
+                    type_vector = [0 for i in range(len(type_to_int))]
+                    if len(type_to_int) > 0:
+                        type_vector[type_to_int[ent.label_]] = 1
+
+                    candidates = self.kb.get_candidates(ent.text)
+                    if not candidates:
+                        final_kb_ids.append(self.NIL)  # no prediction possible for this entity
+                        final_tensors.append(context_encoding)
+                    else:
+                        random.shuffle(candidates)
+
+                        # this will set the prior probabilities to 0 (just like in training) if their weight is 0
+                        prior_probs = xp.asarray([[c.prior_prob] for c in candidates])
+                        prior_probs *= self.cfg.get("prior_weight", 1)
+                        scores = prior_probs
+
+                        if self.cfg.get("context_weight", 1) > 0:
+                            entity_encodings = xp.asarray([c.entity_vector for c in candidates])
+                            if len(entity_encodings) != len(prior_probs):
+                                raise RuntimeError(Errors.E147.format(method="predict", msg="vectors not of equal length"))
+
+                            mention_encodings = [list(context_encoding) + list(entity_encodings[i])
+                                                 + list(prior_probs[i]) + type_vector
+                                                 for i in range(len(entity_encodings))]
+                            scores = self.model(self.model.ops.asarray(mention_encodings, dtype="float32"))
+
+                        # TODO: thresholding
+                        best_index = scores.argmax()
+                        best_candidate = candidates[best_index]
+                        final_kb_ids.append(best_candidate.entity_)
+                        final_tensors.append(context_encoding)
+
+        if not (len(final_tensors) == len(final_kb_ids) == entity_count):
+            raise RuntimeError(Errors.E147.format(method="predict", msg="result variables not of equal length"))
+
+        return final_kb_ids, final_tensors
+
+    def set_annotations(self, docs, kb_ids, tensors=None):
+        count_ents = len([ent for doc in docs for ent in doc.ents])
+        if count_ents != len(kb_ids):
+            raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
+
+        i=0
+        for doc in docs:
+            for ent in doc.ents:
+                kb_id = kb_ids[i]
+                i += 1
+                for token in ent:
+                    token.ent_kb_id_ = kb_id
+
+    def to_disk(self, path, exclude=tuple(), **kwargs):
+        serialize = OrderedDict()
+        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p)
+        serialize["kb"] = lambda p: self.kb.dump(p)
+        if self.model not in (None, True, False):
+            serialize["model"] = lambda p: p.open("wb").write(self.model.to_bytes())
+        exclude = util.get_serialization_exclude(serialize, exclude, kwargs)
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, exclude=tuple(), **kwargs):
+        def load_model(p):
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            try: 
+                self.model.from_bytes(p.open("rb").read())
+            except AttributeError:
+                raise ValueError(Errors.E149)
+
+        def load_kb(p):
+            kb = KnowledgeBase(vocab=self.vocab, entity_vector_length=self.cfg["entity_width"])
+            kb.load_bulk(p)
+            self.set_kb(kb)
+
+        deserialize = OrderedDict()
+        deserialize["cfg"] = lambda p: self.cfg.update(_load_cfg(p))
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
+        deserialize["kb"] = load_kb
+        deserialize["model"] = load_model
+        exclude = util.get_serialization_exclude(deserialize, exclude, kwargs)
+        util.from_disk(path, deserialize, exclude)
+        return self
+
+    def rehearse(self, docs, sgd=None, losses=None, **config):
+        raise NotImplementedError
+
+    def add_label(self, label):
+        raise NotImplementedError
+
+
+class Sentencizer(object):
+    """Segment the Doc into sentences using a rule-based strategy.
+
+    DOCS: https://spacy.io/api/sentencizer
+    """
+
+    name = "sentencizer"
+    default_punct_chars = [".", "!", "?"]
+
+    def __init__(self, punct_chars=None, **kwargs):
+        """Initialize the sentencizer.
+
+        punct_chars (list): Punctuation characters to split on. Will be
+            serialized with the nlp object.
+        RETURNS (Sentencizer): The sentencizer component.
+
+        DOCS: https://spacy.io/api/sentencizer#init
+        """
+        self.punct_chars = punct_chars or self.default_punct_chars
+
+    def __call__(self, doc):
+        """Apply the sentencizer to a Doc and set Token.is_sent_start.
+
+        doc (Doc): The document to process.
+        RETURNS (Doc): The processed Doc.
+
+        DOCS: https://spacy.io/api/sentencizer#call
+        """
+        start = 0
+        seen_period = False
+        for i, token in enumerate(doc):
+            is_in_punct_chars = token.text in self.punct_chars
+            token.is_sent_start = i == 0
+            if seen_period and not token.is_punct and not is_in_punct_chars:
+                doc[start].is_sent_start = True
+                start = token.i
+                seen_period = False
+            elif is_in_punct_chars:
+                seen_period = True
+        if start < len(doc):
+            doc[start].is_sent_start = True
+        return doc
+
+    def to_bytes(self, **kwargs):
+        """Serialize the sentencizer to a bytestring.
+
+        RETURNS (bytes): The serialized object.
+
+        DOCS: https://spacy.io/api/sentencizer#to_bytes
+        """
+        return srsly.msgpack_dumps({"punct_chars": self.punct_chars})
+
+    def from_bytes(self, bytes_data, **kwargs):
+        """Load the sentencizer from a bytestring.
+
+        bytes_data (bytes): The data to load.
+        returns (Sentencizer): The loaded object.
+
+        DOCS: https://spacy.io/api/sentencizer#from_bytes
+        """
+        cfg = srsly.msgpack_loads(bytes_data)
+        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        return self
+
+    def to_disk(self, path, exclude=tuple(), **kwargs):
+        """Serialize the sentencizer to disk.
+
+        DOCS: https://spacy.io/api/sentencizer#to_disk
+        """
+        path = util.ensure_path(path)
+        path = path.with_suffix(".json")
+        srsly.write_json(path, {"punct_chars": self.punct_chars})
+
+
+    def from_disk(self, path, exclude=tuple(), **kwargs):
+        """Load the sentencizer from disk.
+
+        DOCS: https://spacy.io/api/sentencizer#from_disk
+        """
+        path = util.ensure_path(path)
+        path = path.with_suffix(".json")
+        cfg = srsly.read_json(path)
+        self.punct_chars = cfg.get("punct_chars", self.default_punct_chars)
+        return self
+
+
+__all__ = ["Tagger", "DependencyParser", "EntityRecognizer", "Tensorizer", "TextCategorizer", "EntityLinker", "Sentencizer"]

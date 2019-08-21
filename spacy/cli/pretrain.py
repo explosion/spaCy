@@ -5,32 +5,74 @@ import plac
 import random
 import numpy
 import time
+import re
 from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
 from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu
+from thinc.neural.util import prefer_gpu, get_array_module
 from wasabi import Printer
 import srsly
 
+from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
 from .._ml import masked_language_model
 from .. import util
+from .train import _load_pretrained_tok2vec
 
 
 @plac.annotations(
-    texts_loc=("Path to jsonl file with texts to learn from", "positional", None, str),
-    vectors_model=("Name or path to vectors model to learn from"),
-    output_dir=("Directory to write models each epoch", "positional", None, str),
+    texts_loc=(
+        "Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the "
+        "key 'tokens'",
+        "positional",
+        None,
+        str,
+    ),
+    vectors_model=("Name or path to spaCy model with vectors to learn from"),
+    output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
     depth=("Depth of CNN layers", "option", "cd", int),
-    embed_rows=("Embedding rows", "option", "er", int),
+    embed_rows=("Number of embedding rows", "option", "er", int),
+    loss_func=(
+        "Loss function to use for the objective. Either 'L2' or 'cosine'",
+        "option",
+        "L",
+        str,
+    ),
     use_vectors=("Whether to use the static vectors as input features", "flag", "uv"),
-    dropout=("Dropout", "option", "d", float),
-    seed=("Seed for random number generators", "option", "s", float),
-    nr_iter=("Number of iterations to pretrain", "option", "i", int),
+    dropout=("Dropout rate", "option", "d", float),
+    batch_size=("Number of words per training batch", "option", "bs", int),
+    max_length=(
+        "Max words per example. Longer examples are discarded",
+        "option",
+        "xw",
+        int,
+    ),
+    min_length=(
+        "Min words per example. Shorter examples are discarded",
+        "option",
+        "nw",
+        int,
+    ),
+    seed=("Seed for random number generators", "option", "s", int),
+    n_iter=("Number of iterations to pretrain", "option", "i", int),
+    n_save_every=("Save model every X batches.", "option", "se", int),
+    init_tok2vec=(
+        "Path to pretrained weights for the token-to-vector parts of the models. See 'spacy pretrain'. Experimental.",
+        "option",
+        "t2v",
+        Path,
+    ),
+    epoch_start=(
+        "The epoch to start counting at. Only relevant when using '--init-tok2vec' and the given weight file has been "
+        "renamed. Prevents unintended overwriting of existing weight files.",
+        "option",
+        "es",
+        int
+    ),
 )
 def pretrain(
     texts_loc,
@@ -39,10 +81,17 @@ def pretrain(
     width=96,
     depth=4,
     embed_rows=2000,
+    loss_func="cosine",
     use_vectors=False,
     dropout=0.2,
-    nr_iter=1000,
+    n_iter=1000,
+    batch_size=3000,
+    max_length=500,
+    min_length=5,
     seed=0,
+    n_save_every=None,
+    init_tok2vec=None,
+    epoch_start=None,
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -60,6 +109,9 @@ def pretrain(
     errors around this need some improvement.
     """
     config = dict(locals())
+    for key in config:
+        if isinstance(config[key], Path):
+            config[key] = str(config[key])
     msg = Printer()
     util.fix_random_seed(seed)
 
@@ -80,6 +132,8 @@ def pretrain(
             msg.fail("Input text file doesn't exist", texts_loc, exits=1)
         with msg.loading("Loading input texts..."):
             texts = list(srsly.read_jsonl(texts_loc))
+        if not texts:
+            msg.fail("Input file is empty", texts_loc, exits=1)
         msg.good("Loaded input texts")
         random.shuffle(texts)
     else:  # reading from stdin
@@ -102,24 +156,42 @@ def pretrain(
             subword_features=True,  # Set to False for Chinese etc
         ),
     )
+    # Load in pre-trained weights
+    if init_tok2vec is not None:
+        components = _load_pretrained_tok2vec(nlp, init_tok2vec)
+        msg.text("Loaded pretrained tok2vec for: {}".format(components))
+        # Parse the epoch number from the given weight file
+        model_name = re.search(r"model\d+\.bin", str(init_tok2vec))
+        if model_name:
+            # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
+            epoch_start = int(model_name.group(0)[5:][:-4]) + 1
+        else:
+            if not epoch_start:
+                msg.fail(
+                    "You have to use the '--epoch-start' argument when using a renamed weight file for "
+                    "'--init-tok2vec'", exits=True
+                )
+            elif epoch_start < 0:
+                msg.fail(
+                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid" % epoch_start,
+                    exits=True
+                )
+    else:
+        # Without '--init-tok2vec' the '--epoch-start' argument is ignored
+        epoch_start = 0
+
     optimizer = create_default_optimizer(model.ops)
     tracker = ProgressTracker(frequency=10000)
-    msg.divider("Pre-training tok2vec layer")
+    msg.divider("Pre-training tok2vec layer - starting at epoch %d" % epoch_start)
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
-    for epoch in range(nr_iter):
-        for batch in util.minibatch_by_words(
-            ((text, None) for text in texts), size=3000
-        ):
-            docs = make_docs(nlp, [text for (text, _) in batch])
-            loss = make_update(model, docs, optimizer, drop=dropout)
-            progress = tracker.update(epoch, loss, docs)
-            if progress:
-                msg.row(progress, **row_settings)
-                if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
-                    break
+
+    def _save_model(epoch, is_temp=False):
+        is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
-            with (output_dir / ("model%d.bin" % epoch)).open("wb") as file_:
+            with (output_dir / ("model%d%s.bin" % (epoch, is_temp_str))).open(
+                "wb"
+            ) as file_:
                 file_.write(model.tok2vec.to_bytes())
             log = {
                 "nr_word": tracker.nr_word,
@@ -129,10 +201,37 @@ def pretrain(
             }
             with (output_dir / "log.jsonl").open("a") as file_:
                 file_.write(srsly.json_dumps(log) + "\n")
+
+    skip_counter = 0
+    for epoch in range(epoch_start, n_iter + epoch_start):
+        for batch_id, batch in enumerate(
+            util.minibatch_by_words(((text, None) for text in texts), size=batch_size)
+        ):
+            docs, count = make_docs(
+                nlp,
+                [text for (text, _) in batch],
+                max_length=max_length,
+                min_length=min_length,
+            )
+            skip_counter += count
+            loss = make_update(
+                model, docs, optimizer, objective=loss_func, drop=dropout
+            )
+            progress = tracker.update(epoch, loss, docs)
+            if progress:
+                msg.row(progress, **row_settings)
+                if texts_loc == "-" and tracker.words_per_epoch[epoch] >= 10 ** 7:
+                    break
+            if n_save_every and (batch_id % n_save_every == 0):
+                _save_model(epoch, is_temp=True)
+        _save_model(epoch)
         tracker.epoch_loss = 0.0
         if texts_loc != "-":
             # Reshuffle the texts if texts were loaded from a file
             random.shuffle(texts)
+    if skip_counter > 0:
+        msg.warn("Skipped {count} empty values".format(count=str(skip_counter)))
+    msg.good("Successfully finished pretrain")
 
 
 def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
@@ -152,14 +251,26 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
     return float(loss)
 
 
-def make_docs(nlp, batch, min_length=1, max_length=500):
+def make_docs(nlp, batch, min_length, max_length):
     docs = []
+    skip_count = 0
     for record in batch:
-        text = record["text"]
+        if not isinstance(record, dict):
+            raise TypeError(Errors.E137.format(type=type(record), line=record))
         if "tokens" in record:
-            doc = Doc(nlp.vocab, words=record["tokens"])
-        else:
+            words = record["tokens"]
+            if not words:
+                skip_count += 1
+                continue
+            doc = Doc(nlp.vocab, words=words)
+        elif "text" in record:
+            text = record["text"]
+            if not text:
+                skip_count += 1
+                continue
             doc = nlp.make_doc(text)
+        else:
+            raise ValueError(Errors.E138.format(text=record))
         if "heads" in record:
             heads = record["heads"]
             heads = numpy.asarray(heads, dtype="uint64")
@@ -167,7 +278,7 @@ def make_docs(nlp, batch, min_length=1, max_length=500):
             doc = doc.from_array([HEAD], heads)
         if len(doc) >= min_length and len(doc) < max_length:
             docs.append(doc)
-    return docs
+    return docs, skip_count
 
 
 def get_vectors_loss(ops, docs, prediction, objective="L2"):
@@ -185,11 +296,28 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
     if objective == "L2":
-        d_scores = prediction - target
-        loss = (d_scores ** 2).sum()
+        d_target = prediction - target
+        loss = (d_target ** 2).sum()
+    elif objective == "cosine":
+        loss, d_target = get_cossim_loss(prediction, target)
     else:
-        raise NotImplementedError(objective)
-    return loss, d_scores
+        raise ValueError(Errors.E142.format(loss_func=objective))
+    return loss, d_target
+
+
+def get_cossim_loss(yh, y):
+    # Add a small constant to avoid 0 vectors
+    yh = yh + 1e-8
+    y = y + 1e-8
+    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+    xp = get_array_module(yh)
+    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+    mul_norms = norm_yh * norm_y
+    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
+    loss = xp.abs(cosine - 1).sum()
+    return loss, -d_yh
 
 
 def create_pretraining_model(nlp, tok2vec):
@@ -241,11 +369,23 @@ class ProgressTracker(object):
             status = (
                 epoch,
                 self.nr_word,
-                "%.8f" % self.loss,
-                "%.8f" % loss_per_word,
+                _smart_round(self.loss, width=10),
+                _smart_round(loss_per_word, width=6),
                 int(wps),
             )
             self.prev_loss = float(self.loss)
             return status
         else:
             return None
+
+
+def _smart_round(figure, width=10, max_decimal=4):
+    """Round large numbers as integers, smaller numbers as decimals."""
+    n_digits = len(str(int(figure)))
+    n_decimal = width - (n_digits + 1)
+    if n_decimal <= 1:
+        return str(int(figure))
+    else:
+        n_decimal = min(n_decimal, max_decimal)
+        format_str = "%." + str(n_decimal) + "f"
+        return format_str % figure

@@ -623,8 +623,8 @@ solves this with a clear distinction between setting up the instance and loading
 the data.
 
 ```diff
-- nlp = spacy.load("en", path="/path/to/data")
-+ nlp = spacy.blank("en").from_disk("/path/to/data")
+- nlp = spacy.load("en_core_web_sm", path="/path/to/data")
++ nlp = spacy.blank("en_core_web_sm").from_disk("/path/to/data")
 ```
 
 </Infobox>

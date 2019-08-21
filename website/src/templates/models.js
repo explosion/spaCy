@@ -14,7 +14,7 @@ import Icon from '../components/icon'
 import Link from '../components/link'
 import Grid from '../components/grid'
 import Infobox from '../components/infobox'
-import { join, arrayToObj, abbrNum } from '../components/util'
+import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
@@ -41,6 +41,10 @@ const MODEL_META = {
     benchmark_ner: 'NER accuracy',
     benchmark_speed: 'Speed',
     compat: 'Latest compatible model version for your spaCy installation',
+}
+
+const MARKDOWN_COMPONENTS = {
+    code: InlineCode,
 }
 
 function getModelComponents(name) {
@@ -192,10 +196,8 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     python -m spacy download {name}
                 </CodeBlock>
             </Aside>
-            {meta.description && <p>{meta.description}</p>}
-
+            {meta.description && markdownToReact(meta.description, MARKDOWN_COMPONENTS)}
             {isError && error}
-
             <Table>
                 <tbody>
                     {rows.map(({ label, tag, help, content }, i) =>
@@ -243,7 +245,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                         )
                     )}
             </Grid>
-            {meta.notes && <p>{meta.notes}</p>}
+            {meta.notes && markdownToReact(meta.notes, MARKDOWN_COMPONENTS)}
             {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
                     {[

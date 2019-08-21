@@ -6,6 +6,7 @@ model or a blank model. For more details, see the documentation:
 * Dependency Parse: https://spacy.io/usage/linguistic-features#dependency-parse
 
 Compatible with: spaCy v2.0.0+
+Last tested with: v2.1.0
 """
 from __future__ import unicode_literals, print_function
 
@@ -40,7 +41,7 @@ TRAIN_DATA = [
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(model=None, output_dir=None, n_iter=10):
+def main(model=None, output_dir=None, n_iter=15):
     """Load the model, set up the pipeline and train the parser."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
