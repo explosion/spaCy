@@ -304,6 +304,54 @@ for match in re.finditer(expression, doc.text):
         print("Found match:", span.text)
 ```
 
+<Accordion title="How can I expand the match to a valid token sequence?">
+
+In some cases, you might want to expand the match to the closest token
+boundaries, so you can create a `Span` for `"USA"`, even though only the
+substring `"US"` is matched. You can calculate this using the character offsets
+of the tokens in the document, available as
+[`Token.idx`](/api/token#attributes). This lets you create a list of valid token
+start and end boundaries and leaves you with a rather basic algorithmic problem:
+Given a number, find the next lowest (start token) or the next highest (end
+token) number that's part of a given list of numbers. This will be the closest
+valid token boundary.
+
+There are many ways to do this and the most straightforward one is to create a
+dict keyed by characters in the `Doc`, mapped to the token they're part of. It's
+easy to write and less error-prone, and gives you a constant lookup time: you
+only ever need to create the dict once per `Doc`.
+
+```python
+chars_to_tokens = {}
+for token in doc:
+    for i in range(token.idx, token.idx + len(token.text)):
+        chars_to_tokens[i] = token.i
+```
+
+You can then look up character at a given position, and get the index of the
+corresponding token that the character is part of. Your span would then be
+`doc[token_start:token_end]`. If a character isn't in the dict, it means it's
+the (white)space tokens are split on. That hopefully shouldn't happen, though,
+because it'd mean your regex is producing matches with leading or trailing
+whitespace.
+
+```python
+### {highlight="5-8"}
+span = doc.char_span(start, end)
+if span is not None:
+    print("Found match:", span.text)
+else:
+    start_token = chars_to_tokens.get(start)
+    end_token = chars_to_tokens.get(end)
+    if start_token is not None and end_token is not None:
+        span = doc[start_token:end_token + 1]
+        print("Found closest match:", span.text)
+```
+
+</Accordion>
+
+---
+
 #### Operators and quantifiers {#quantifiers}
 
 The matcher also lets you use quantifiers, specified as the `'OP'` key.
