@@ -73,7 +73,10 @@ def main(
 
     # check the length of the nlp vectors
     if "vectors" not in nlp.meta or not nlp.vocab.vectors.size:
-        raise ValueError(Errors.E155)
+        raise ValueError(
+            "The `nlp` object should have access to pre-trained word vectors, "
+            " cf. https://spacy.io/usage/models#languages."
+        )
 
     # STEP 2: create prior probabilities from WP
     print()

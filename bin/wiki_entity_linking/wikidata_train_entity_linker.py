@@ -19,8 +19,6 @@ from bin.wiki_entity_linking import training_set_creator
 
 import spacy
 from spacy.kb import KnowledgeBase
-
-from spacy import Errors
 from spacy.util import minibatch, compounding
 
 
@@ -68,7 +66,7 @@ def main(
 
     # check that there is a NER component in the pipeline
     if "ner" not in nlp.pipe_names:
-        raise ValueError(Errors.E152)
+        raise ValueError("The `nlp` object should have a pre-trained `ner` component.")
 
     # STEP 2 : read the KB
     print()
@@ -82,7 +80,10 @@ def main(
         print(now(), "STEP 3: reading training dataset from", loc_training)
     else:
         if not wp_xml:
-            raise ValueError(Errors.E153)
+            raise ValueError(
+                "Either provide a path to a preprocessed training directory, "
+                "or to the original Wikipedia XML dump."
+            )
 
         if output_dir:
             loc_training = output_dir / "training_data"
