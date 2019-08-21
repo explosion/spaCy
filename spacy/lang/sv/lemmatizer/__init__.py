@@ -1,13 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from pathlib import Path
-
-from ....util import load_language_data
-
-lemma_path = Path(__file__).parent / "lookup.json"
-LOOKUP = load_language_data(lemma_path)
-
 LEMMA_RULES = {
     "noun": [
         ["t", ""],

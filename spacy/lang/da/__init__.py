@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from pathlib import Path
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .norm_exceptions import NORM_EXCEPTIONS
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
@@ -15,7 +13,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups, load_language_data
+from ...util import update_exc, add_lookups
 
 
 class DanishDefaults(Language.Defaults):
@@ -31,8 +29,7 @@ class DanishDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
-    lemma_path = Path(__file__).parent / "lemmas.json"
-    lemma_lookup = load_language_data(lemma_path)
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Danish(Language):
