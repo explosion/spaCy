@@ -46,10 +46,8 @@ class BaseDefaults(object):
         root_path = util.get_module_path(cls)
         lookups = Lookups()
         for name, filename in cls.resources.items():
-            # TODO: figure out how to prevent this
-            if name not in lookups:
-                data = util.load_language_data(root_path / filename)
-                lookups.add_table(name, data)
+            data = util.load_language_data(root_path / filename)
+            lookups.add_table(name, data)
         return lookups
 
     @classmethod

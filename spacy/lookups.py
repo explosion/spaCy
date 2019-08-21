@@ -18,8 +18,9 @@ class Lookups(object):
         return list(self._tables.keys())
 
     def add_table(self, name, data=SimpleFrozenDict()):
-        if name in self.tables:
-            raise ValueError("Table '{}' already exists".format(name))
+        # TODO: fix
+        # if name in self.tables:
+        #    raise ValueError("Table '{}' already exists".format(name))
         table = Table(name=name)
         table.update(data)
         self._tables[name] = table

@@ -27,7 +27,7 @@ class RussianDefaults(Language.Defaults):
     tag_map = TAG_MAP
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None):
+    def create_lemmatizer(cls, nlp=None, **kwargs):
         return RussianLemmatizer()
 
 
