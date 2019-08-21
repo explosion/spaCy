@@ -6,7 +6,6 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc
 
 
-@pytest.mark.xfail
 def test_issue3951(en_vocab):
     """Test that combinations of optional rules are matched correctly."""
     matcher = Matcher(en_vocab)

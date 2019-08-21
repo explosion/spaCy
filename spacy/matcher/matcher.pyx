@@ -307,12 +307,12 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if action == RETRY_EXTEND:
                 # This handles the 'extend'
                 new_states.push_back(
-                    PatternStateC(pattern=state.pattern, start=state.start,
+                    PatternStateC(pattern=states[q].pattern, start=state.start,
                                   length=state.length+1))
             if action == RETRY_ADVANCE:
                 # This handles the 'advance'
                 new_states.push_back(
-                    PatternStateC(pattern=state.pattern+1, start=state.start,
+                    PatternStateC(pattern=states[q].pattern+1, start=state.start,
                                   length=state.length+1))
             states[q].pattern += 1
             if states[q].pattern.nr_py != 0:
