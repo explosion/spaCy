@@ -12,6 +12,7 @@ from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
 from ..typedefs cimport attr_t, hash_t
 
+from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..errors import Errors, Warnings, deprecation_warning, user_warning
 from ..attrs import FLAG61 as U_ENT
 from ..attrs import FLAG60 as B2_ENT
@@ -62,6 +63,11 @@ cdef class PhraseMatcher:
         if isinstance(attr, long):
             self.attr = attr
         else:
+            attr = attr.upper()
+            if attr == "TEXT":
+                attr = "ORTH"
+            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+                raise ValueError(Errors.E152.format(attr=attr))
             self.attr = self.vocab.strings[attr]
         self.phrase_ids = PreshMap()
         abstract_patterns = [
@@ -123,6 +129,10 @@ cdef class PhraseMatcher:
             length = doc.length
             if length == 0:
                 continue
+            if self.attr in (POS, TAG, LEMMA) and not doc.is_tagged:
+                raise ValueError(Errors.E155.format())
+            if self.attr == DEP and not doc.is_parsed:
+                raise ValueError(Errors.E156.format())
             if self._validate and (doc.is_tagged or doc.is_parsed) \
               and self.attr not in (DEP, POS, TAG, LEMMA):
                 string_attr = self.vocab.strings[self.attr]

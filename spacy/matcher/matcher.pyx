@@ -15,7 +15,7 @@ from ..structs cimport TokenC
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
 from ..tokens.token cimport Token
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..util import get_json_validator, validate_json
@@ -45,7 +45,7 @@ cdef class Matcher:
         self._patterns = {}
         self._callbacks = {}
         self._extensions = {}
-        self._extra_predicates = []
+        self._seen_attrs = set()
         self.vocab = vocab
         self.mem = Pool()
         if validate:
@@ -112,9 +112,15 @@ cdef class Matcher:
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:
-            specs = _preprocess_pattern(pattern, self.vocab.strings,
-                self._extensions, self._extra_predicates)
-            self.patterns.push_back(init_pattern(self.mem, key, specs))
+            try:
+                specs = _preprocess_pattern(pattern, self.vocab.strings,
+                    self._extensions, self._extra_predicates)
+                self.patterns.push_back(init_pattern(self.mem, key, specs))
+                for spec in specs:
+                    for attr, _ in spec[1]:
+                        self._seen_attrs.add(attr)
+            except OverflowError, AttributeError:
+                raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
         self._patterns[key].extend(patterns)
@@ -177,6 +183,11 @@ cdef class Matcher:
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
+        if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
+          and not doc.is_tagged:
+            raise ValueError(Errors.E155.format())
+        if DEP in self._seen_attrs and not doc.is_parsed:
+            raise ValueError(Errors.E156.format())
         matches = find_matches(&self.patterns[0], self.patterns.size(), doc,
                                extensions=self._extensions,
                                predicates=self._extra_predicates)
@@ -568,6 +579,8 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
             # Signifier for 'any token'
             tokens.append((ONE, [(NULL_ATTR, 0)], [], []))
             continue
+        if not isinstance(spec, dict):
+            raise ValueError(Errors.E154.format())
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
@@ -581,21 +594,29 @@ def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
         if isinstance(attr, basestring):
+            attr = attr.upper()
             if attr == '_':
                 continue
-            elif attr.upper() == "OP":
+            elif attr == "OP":
                 continue
-            if attr.upper() == "TEXT":
+            if attr == "TEXT":
                 attr = "ORTH"
-            attr = IDS.get(attr.upper())
+            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+                raise ValueError(Errors.E152.format(attr=attr))
+            attr = IDS.get(attr)
         if isinstance(value, basestring):
             value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
         elif isinstance(value, dict):
             continue
+        else:
+            raise ValueError(Errors.E153.format(vtype=type(value).__name__))
         if attr is not None:
             attr_values.append((attr, value))
+        else:
+            # should be caught above using TOKEN_PATTERN_SCHEMA
+            raise ValueError(Errors.E152.format(attr=attr))
     return attr_values
 
 
@@ -755,11 +776,13 @@ def _get_operators(spec):
         return lookup[spec["OP"]]
     else:
         keys = ", ".join(lookup.keys())
-        raise KeyError(Errors.E011.format(op=spec["OP"], opts=keys))
+        raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
 
 
 def _get_extensions(spec, string_store, name2index):
     attr_values = []
+    if not isinstance(spec.get("_", {}), dict):
+        raise ValueError(Errors.E154.format())
     for name, value in spec.get("_", {}).items():
         if isinstance(value, dict):
             # Handle predicates (e.g. "IN", in the extra_predicates, not here.
