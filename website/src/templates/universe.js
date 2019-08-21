@@ -86,6 +86,7 @@ const UniverseContent = ({ content = [], categories, pageContext, location, mdxC
                                         <img
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
                                             alt=""
+                                            style={{ clipPath: 'inset(12.5% 0)' }}
                                         />
                                     )
                                     return cover ? (
