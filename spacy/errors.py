@@ -124,8 +124,8 @@ class Errors(object):
     E016 = ("MultitaskObjective target should be function or one of: dep, "
             "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add unicode or bytes. Got type: {value_type}")
-    E018 = ("Can't retrieve string for hash '{hash_value}'. This usually refers "
-            "to an issue with the `Vocab` or `StringStore`.")
+    E018 = ("Can't retrieve string for hash '{hash_value}'. This usually "
+            "refers to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
             "IDs are enumerated in spacy/syntax/{src}.pyx.")
     E020 = ("Could not find a gold-standard action to supervise the "
@@ -314,9 +314,9 @@ class Errors(object):
             "have been declared in previous edges.")
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
             "tokens to merge.")
-    E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A token"
-            " can only be part of one entity, so make sure the entities you're "
-            "setting don't overlap.")
+    E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
+            "token can only be part of one entity, so make sure the entities "
+            "you're setting don't overlap.")
     E104 = ("Can't find JSON schema for '{name}'.")
     E105 = ("The Doc.print_tree() method is now deprecated. Please use "
             "Doc.to_json() instead or write your own function.")
@@ -326,8 +326,8 @@ class Errors(object):
     E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
             "in favor of the pipe name `sentencizer`, which does the same "
             "thing. For example, use `nlp.create_pipeline('sentencizer')`")
-    E109 = ("Model for component '{name}' not initialized. Did you forget to load "
-            "a model, or forget to call begin_training()?")
+    E109 = ("Model for component '{name}' not initialized. Did you forget to "
+            "load a model, or forget to call begin_training()?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
     E111 = ("Pickling a token is not supported, because tokens are only views "
             "of the parent Doc and can't exist on their own. A pickled token "
@@ -352,12 +352,12 @@ class Errors(object):
     E118 = ("The custom extension attribute '{attr}' is not registered on the "
             "Token object so it can't be set during retokenization. To "
             "register an attribute, use the Token.set_extension classmethod.")
-    E119 = ("Can't set custom extension attribute '{attr}' during retokenization "
-            "because it's not writable. This usually means it was registered "
-            "with a getter function (and no setter) or as a method extension, "
-            "so the value is computed dynamically. To overwrite a custom "
-            "attribute manually, it should be registered with a default value "
-            "or with a getter AND setter.")
+    E119 = ("Can't set custom extension attribute '{attr}' during "
+            "retokenization because it's not writable. This usually means it "
+            "was registered with a getter function (and no setter) or as a "
+            "method extension, so the value is computed dynamically. To "
+            "overwrite a custom attribute manually, it should be registered "
+            "with a default value or with a getter AND setter.")
     E120 = ("Can't set custom extension attributes during retokenization. "
             "Expected dict mapping attribute names to values, but got: {value}")
     E121 = ("Can't bulk merge spans. Attribute length {attr_len} should be "
@@ -375,59 +375,72 @@ class Errors(object):
             "is now deprecated. Please use the `exclude` argument instead. "
             "For example: exclude=['{arg}'].")
     E129 = ("Cannot write the label of an existing Span object because a Span "
-            "is a read-only view of the underlying Token objects stored in the Doc. "
-            "Instead, create a new Span object and specify the `label` keyword argument, "
-            "for example:\nfrom spacy.tokens import Span\n"
+            "is a read-only view of the underlying Token objects stored in the "
+            "Doc. Instead, create a new Span object and specify the `label` "
+            "keyword argument, for example:\nfrom spacy.tokens import Span\n"
             "span = Span(doc, start={start}, end={end}, label='{label}')")
     E130 = ("You are running a narrow unicode build, which is incompatible "
             "with spacy >= 2.1.0. To fix this, reinstall Python and use a wide "
             "unicode build instead. You can also rebuild Python and set the "
             "--enable-unicode=ucs4 flag.")
     E131 = ("Cannot write the kb_id of an existing Span object because a Span "
-            "is a read-only view of the underlying Token objects stored in the Doc. "
-            "Instead, create a new Span object and specify the `kb_id` keyword argument, "
-            "for example:\nfrom spacy.tokens import Span\n"
-            "span = Span(doc, start={start}, end={end}, label='{label}', kb_id='{kb_id}')")
-    E132 = ("The vectors for entities and probabilities for alias '{alias}' should have equal length, "
-            "but found {entities_length} and {probabilities_length} respectively.")
-    E133 = ("The sum of prior probabilities for alias '{alias}' should not exceed 1, "
-            "but found {sum}.")
+            "is a read-only view of the underlying Token objects stored in "
+            "the Doc. Instead, create a new Span object and specify the "
+            "`kb_id` keyword argument, for example:\nfrom spacy.tokens "
+            "import Span\nspan = Span(doc, start={start}, end={end}, "
+            "label='{label}', kb_id='{kb_id}')")
+    E132 = ("The vectors for entities and probabilities for alias '{alias}' "
+            "should have equal length, but found {entities_length} and "
+            "{probabilities_length} respectively.")
+    E133 = ("The sum of prior probabilities for alias '{alias}' should not "
+            "exceed 1, but found {sum}.")
     E134 = ("Alias '{alias}' defined for unknown entity '{entity}'.")
     E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
             "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
     E136 = ("This additional feature requires the jsonschema library to be "
             "installed:\npip install jsonschema")
-    E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure to provide a valid JSON "
-            "object as input with either the `text` or `tokens` key. For more info, see the docs:\n"
+    E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
+            "to provide a valid JSON object as input with either the `text` "
+            "or `tokens` key. For more info, see the docs:\n"
             "https://spacy.io/api/cli#pretrain-jsonl")
-    E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input includes either the "
-            "`text` or `tokens` key. For more info, see the docs:\n"
-            "https://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge base for component '{name}' not initialized. Did you forget to call set_kb()?")
-    E140 = ("The list of entities, prior probabilities and entity vectors should be of equal length.")
-    E141 = ("Entity vectors should be of length {required} instead of the provided {found}.")
-    E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or 'cosine'")
-    E143 = ("Labels for component '{name}' not initialized. Did you forget to call add_label()?")
-    E144 = ("Could not find parameter `{param}` when building the entity linker model.")
+    E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
+            "includes either the `text` or `tokens` key. For more info, see "
+            "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
+    E139 = ("Knowledge base for component '{name}' not initialized. Did you "
+            "forget to call set_kb()?")
+    E140 = ("The list of entities, prior probabilities and entity vectors "
+            "should be of equal length.")
+    E141 = ("Entity vectors should be of length {required} instead of the "
+            "provided {found}.")
+    E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or "
+            "'cosine'.")
+    E143 = ("Labels for component '{name}' not initialized. Did you forget to "
+            "call add_label()?")
+    E144 = ("Could not find parameter `{param}` when building the entity "
+            "linker model.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
-    E147 = ("Unexpected error in the {method} functionality of the EntityLinker: {msg}. "
-            "This is likely a bug in spaCy, so feel free to open an issue.")
-    E148 = ("Expected {ents} KB identifiers but got {ids}. Make sure that each entity in `doc.ents` "
-            "is assigned to a KB identifier.")
-    E149 = ("Error deserializing model. Check that the config used to create the "
-            "component matches the model being loaded.")
-    E150 = ("The language of the `nlp` object and the `vocab` should be the same, "
-            "but found '{nlp}' and '{vocab}' respectively.")
+    E147 = ("Unexpected error in the {method} functionality of the "
+            "EntityLinker: {msg}. This is likely a bug in spaCy, so feel free "
+            "to open an issue.")
+    E148 = ("Expected {ents} KB identifiers but got {ids}. Make sure that "
+            "each entity in `doc.ents` is assigned to a KB identifier.")
+    E149 = ("Error deserializing model. Check that the config used to create "
+            "the component matches the model being loaded.")
+    E150 = ("The language of the `nlp` object and the `vocab` should be the "
+            "same, but found '{nlp}' and '{vocab}' respectively.")
     E151 = ("Trying to call nlp.update without required annotation types. "
-            "Expected top-level keys: {expected_keys}."
-            " Got: {unexpected_keys}.")
+            "Expected top-level keys: {exp}. Got: {unexp}.")
     E152 = ("The `nlp` object should have a pre-trained `ner` component.")
     E153 = ("Either provide a path to a preprocessed training directory, "
             "or to the original Wikipedia XML dump.")
     E154 = ("Either the `nlp` model or the `vocab` should be specified.")
-    E155 = ("The `nlp` object should have access to pre-trained word vectors, cf. "
-            "https://spacy.io/usage/models#languages.")
+    E155 = ("The `nlp` object should have access to pre-trained word vectors, "
+            " cf. https://spacy.io/usage/models#languages.")
+    E156 = ("Can't render negative values for dependency arc start or end. "
+            "Make sure that you're passing in absolute token indices, not "
+            "relative token offsets.\nstart: {start}, end: {end}, label: "
+            "{label}, direction: {dir}")
 
 
 @add_codes

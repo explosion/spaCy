@@ -6,6 +6,8 @@ import uuid
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
 from ..util import minify_html, escape_html, get_entry_points
+from ..errors import Errors
+
 
 DEFAULT_LANG = "en"
 DEFAULT_DIR = "ltr"
@@ -124,6 +126,9 @@ class DependencyRenderer(object):
         i (int): Unique ID, typically arrow index.
         RETURNS (unicode): Rendered SVG markup.
         """
+        if start < 0 or end < 0:
+            error_args = dict(start=start, end=end, label=label, dir=direction)
+            raise ValueError(Errors.E156.format(**error_args))
         level = self.levels.index(end - start) + 1
         x_start = self.offset_x + start * self.distance + self.arrow_spacing
         if self.direction == "rtl":

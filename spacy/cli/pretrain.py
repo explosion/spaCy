@@ -10,7 +10,7 @@ from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
 from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu, get_array_module
+from thinc.neural.util import prefer_gpu
 from wasabi import Printer
 import srsly
 
@@ -18,7 +18,7 @@ from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
-from .._ml import masked_language_model
+from .._ml import masked_language_model, get_cossim_loss
 from .. import util
 from .train import _load_pretrained_tok2vec
 
@@ -71,7 +71,7 @@ from .train import _load_pretrained_tok2vec
         "renamed. Prevents unintended overwriting of existing weight files.",
         "option",
         "es",
-        int
+        int,
     ),
 )
 def pretrain(
@@ -169,12 +169,14 @@ def pretrain(
             if not epoch_start:
                 msg.fail(
                     "You have to use the '--epoch-start' argument when using a renamed weight file for "
-                    "'--init-tok2vec'", exits=True
+                    "'--init-tok2vec'",
+                    exits=True,
                 )
             elif epoch_start < 0:
                 msg.fail(
-                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid" % epoch_start,
-                    exits=True
+                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid"
+                    % epoch_start,
+                    exits=True,
                 )
     else:
         # Without '--init-tok2vec' the '--epoch-start' argument is ignored
@@ -303,21 +305,6 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     else:
         raise ValueError(Errors.E142.format(loss_func=objective))
     return loss, d_target
-
-
-def get_cossim_loss(yh, y):
-    # Add a small constant to avoid 0 vectors
-    yh = yh + 1e-8
-    y = y + 1e-8
-    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
-    xp = get_array_module(yh)
-    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
-    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
-    mul_norms = norm_yh * norm_y
-    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
-    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
-    loss = xp.abs(cosine - 1).sum()
-    return loss, -d_yh
 
 
 def create_pretraining_model(nlp, tok2vec):

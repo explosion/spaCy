@@ -47,8 +47,12 @@ TAG_MAP = {
     "Adj_Prep|adv|vergr|onverv_voor__Degree=Cmp|Variant=Short": {POS: ADJ},
     "Adj_V_Conj_V__Degree=Pos|VerbForm=Inf": {POS: ADJ},
     "Adj_V_N__Degree=Pos|Number=Sing|Tense=Past|VerbForm=Part": {POS: ADJ},
-    "Adj_V|adv|stell|onverv_intrans|inf__Degree=Pos|Variant=Short|VerbForm=Inf": {POS: ADJ},
-    "Adj_V|adv|stell|onverv_trans|imp__Degree=Pos|Mood=Imp|Variant=Short|VerbForm=Fin": {POS: ADJ},
+    "Adj_V|adv|stell|onverv_intrans|inf__Degree=Pos|Variant=Short|VerbForm=Inf": {
+        POS: ADJ
+    },
+    "Adj_V|adv|stell|onverv_trans|imp__Degree=Pos|Mood=Imp|Variant=Short|VerbForm=Fin": {
+        POS: ADJ
+    },
     "Adj|adv|stell|onverv__Degree=Pos|Variant=Short": {POS: ADJ},
     "Adj|adv|stell|vervneut__Case=Nom|Degree=Pos|Variant=Short": {POS: ADJ},
     "Adj|adv|vergr|onverv__Degree=Cmp|Variant=Short": {POS: ADJ},
@@ -133,15 +137,21 @@ TAG_MAP = {
     "Art_Num__Definite=Def|Degree=Sup|Gender=Neut|PronType=Ind": {POS: DET},
     "Art_Num__Definite=Def|Gender=Neut": {POS: DET},
     "Art_Num__Degree=Pos|Number=Sing|PronType=Ind": {POS: DET},
-    "Art_N|bep|onzijd|neut_eigen|ev|neut__Definite=Def|Gender=Neut|Number=Sing": {POS: DET},
-    "Art_N|bep|onzijd|neut_soort|ev|neut__Definite=Def|Gender=Neut|Number=Sing": {POS: DET},
+    "Art_N|bep|onzijd|neut_eigen|ev|neut__Definite=Def|Gender=Neut|Number=Sing": {
+        POS: DET
+    },
+    "Art_N|bep|onzijd|neut_soort|ev|neut__Definite=Def|Gender=Neut|Number=Sing": {
+        POS: DET
+    },
     "Art_Pron_N__Case=Gen|Number=Plur|PronType=Ind": {POS: DET},
     "Art_Pron__Number=Sing|PronType=Ind": {POS: DET},
     "Art_V_N__AdpType=Prep": {POS: DET},
     "Art|bep|onzijd|neut__Definite=Def|Gender=Neut|PronType=Art": {POS: DET},
     "Art|bep|zijdofmv|gen__Case=Gen|Definite=Def|PronType=Art": {POS: DET},
     "Art|bep|zijdofmv|neut__Definite=Def|PronType=Art": {POS: DET},
-    "Art|bep|zijdofonzijd|gen__Case=Gen|Definite=Def|Number=Sing|PronType=Art": {POS: DET},
+    "Art|bep|zijdofonzijd|gen__Case=Gen|Definite=Def|Number=Sing|PronType=Art": {
+        POS: DET
+    },
     "Art|bep|zijd|dat__Case=Dat|Definite=Def|Gender=Com|PronType=Art": {POS: DET},
     "Art|onbep|zijdofonzijd|neut__Definite=Ind|Number=Sing|PronType=Art": {POS: DET},
     "CCONJ___": {POS: CONJ},
@@ -159,17 +169,23 @@ TAG_MAP = {
     "Conj_Int|onder|metfin___": {POS: CONJ},
     "Conj_N_Adv__AdpType=Preppron|Gender=Masc|Number=Plur": {POS: CONJ},
     "Conj_N_Prep__AdpType=Preppron|Gender=Masc|Number=Plur": {POS: CONJ},
-    "Conj_N|onder|metfin_soort|ev|neut__AdpType=Preppron|Gender=Masc|Number=Plur": {POS: CONJ},
+    "Conj_N|onder|metfin_soort|ev|neut__AdpType=Preppron|Gender=Masc|Number=Plur": {
+        POS: CONJ
+    },
     "Conj_Pron_Adv__Degree=Pos|Number=Sing|Person=3": {POS: CONJ},
     "Conj_Pron_V__AdpType=Preppron|Gender=Masc|Number=Plur": {POS: CONJ},
     "Conj_Pron|neven_aanw|neut|zelfst__AdpType=Prep": {POS: CONJ},
     "Conj_Punc_Conj|neven_schuinstreep_neven__AdpType=Prep": {POS: CONJ},
-    "Conj_V|onder|metfin_intrans|ott|3|ev__AdpType=Preppron|Gender=Masc|Number=Plur": {POS: CONJ},
+    "Conj_V|onder|metfin_intrans|ott|3|ev__AdpType=Preppron|Gender=Masc|Number=Plur": {
+        POS: CONJ
+    },
     "Conj|neven___": {POS: CONJ},
     "Conj|onder|metfin___": {POS: CONJ},
     "Conj|onder|metinf___": {POS: CONJ},
     "DET__Degree=Cmp|NumType=Card|PronType=Ind": {POS: DET},
-    "DET__Gender=Fem|Number=Sing|Number[psor]=Plur|Person=1|Poss=Yes|PronType=Prs": {POS: DET},
+    "DET__Gender=Fem|Number=Sing|Number[psor]=Plur|Person=1|Poss=Yes|PronType=Prs": {
+        POS: DET
+    },
     "DET__Gender=Fem|Number=Sing|PronType=Art": {POS: DET},
     "DET__Gender=Masc|Number=Plur|PronType=Art": {POS: DET},
     "DET__Gender=Masc|Number=Sing|PronType=Tot": {POS: DET},
@@ -185,7 +201,9 @@ TAG_MAP = {
     "Misc_Misc_Misc_Misc_Misc_Misc_Punc_Misc_Misc_Misc___": {POS: X},
     "Misc_Misc_Misc_Misc_Misc_Misc___": {POS: X},
     "Misc_Misc_Misc_Misc_Misc_N_Misc_Misc_Misc_Misc_Misc_Misc___": {POS: X},
-    "Misc_Misc_Misc_Misc|vreemd_vreemd_vreemd_vreemd__AdpType=Preppron|Gender=Masc|Number=Sing": {POS: X},
+    "Misc_Misc_Misc_Misc|vreemd_vreemd_vreemd_vreemd__AdpType=Preppron|Gender=Masc|Number=Sing": {
+        POS: X
+    },
     "Misc_Misc_Misc_Misc|vreemd_vreemd_vreemd_vreemd___": {POS: X},
     "Misc_Misc_Misc_N__Number=Sing": {POS: X},
     "Misc_Misc_Misc|vreemd_vreemd_vreemd___": {POS: X},
@@ -217,7 +235,9 @@ TAG_MAP = {
     "N_Adj__Degree=Pos|Number=Plur": {POS: NOUN},
     "N_Adj__Degree=Pos|Number=Sing": {POS: NOUN},
     "N_Adj___": {POS: NOUN},
-    "N_Adv_Punc_V_Pron_V__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Inf": {POS: NOUN},
+    "N_Adv_Punc_V_Pron_V__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Inf": {
+        POS: NOUN
+    },
     "N_Adv__Degree=Pos|Number=Sing": {POS: NOUN},
     "N_Adv___": {POS: NOUN},
     "N_Adv|soort|ev|neut_deelv__Number=Sing": {POS: NOUN},
@@ -320,12 +340,20 @@ TAG_MAP = {
     "N_N|eigen|ev|gen_soort|mv|neut___": {POS: NOUN},
     "N_N|eigen|ev|neut_eigen|ev|gen___": {POS: NOUN},
     "N_N|eigen|ev|neut_eigen|ev|neut__AdpType=Prep": {POS: NOUN},
-    "N_N|eigen|ev|neut_eigen|ev|neut__AdpType=Preppron|Gender=Fem|Number=Plur": {POS: NOUN},
-    "N_N|eigen|ev|neut_eigen|ev|neut__AdpType=Preppron|Gender=Masc|Number=Sing": {POS: NOUN},
+    "N_N|eigen|ev|neut_eigen|ev|neut__AdpType=Preppron|Gender=Fem|Number=Plur": {
+        POS: NOUN
+    },
+    "N_N|eigen|ev|neut_eigen|ev|neut__AdpType=Preppron|Gender=Masc|Number=Sing": {
+        POS: NOUN
+    },
     "N_N|eigen|ev|neut_eigen|ev|neut__Gender=Fem|Number=Plur|PronType=Art": {POS: NOUN},
     "N_N|eigen|ev|neut_eigen|ev|neut__Gender=Fem|Number=Sing|PronType=Art": {POS: NOUN},
-    "N_N|eigen|ev|neut_eigen|ev|neut__Gender=Masc|Number=Plur|PronType=Art": {POS: NOUN},
-    "N_N|eigen|ev|neut_eigen|ev|neut__Gender=Masc|Number=Sing|PronType=Art": {POS: NOUN},
+    "N_N|eigen|ev|neut_eigen|ev|neut__Gender=Masc|Number=Plur|PronType=Art": {
+        POS: NOUN
+    },
+    "N_N|eigen|ev|neut_eigen|ev|neut__Gender=Masc|Number=Sing|PronType=Art": {
+        POS: NOUN
+    },
     "N_N|eigen|ev|neut_eigen|ev|neut__NumType=Card": {POS: NOUN},
     "N_N|eigen|ev|neut_eigen|ev|neut__Number=Sing": {POS: NOUN},
     "N_N|eigen|ev|neut_eigen|ev|neut___": {POS: NOUN},
@@ -335,7 +363,9 @@ TAG_MAP = {
     "N_N|eigen|ev|neut_soort|mv|neut___": {POS: NOUN},
     "N_N|eigen|mv|neut_eigen|mv|neut___": {POS: NOUN},
     "N_N|soort|ev|neut_eigen|ev|neut__Number=Sing": {POS: NOUN},
-    "N_N|soort|ev|neut_soort|ev|neut__Gender=Masc|Number=Plur|PronType=Art": {POS: NOUN},
+    "N_N|soort|ev|neut_soort|ev|neut__Gender=Masc|Number=Plur|PronType=Art": {
+        POS: NOUN
+    },
     "N_N|soort|ev|neut_soort|ev|neut__NumForm=Digit|NumType=Card": {POS: NOUN},
     "N_N|soort|ev|neut_soort|ev|neut__Number=Sing": {POS: NOUN},
     "N_N|soort|ev|neut_soort|mv|neut__Number=Plur": {POS: NOUN},
@@ -365,7 +395,9 @@ TAG_MAP = {
     "N_Pron___": {POS: NOUN},
     "N_Punc_Adj_N___": {POS: NOUN},
     "N_Punc_Adj_Pron_Punc__Degree=Pos|Number=Sing|Person=2": {POS: NOUN},
-    "N_Punc_Adv_V_Pron_N__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin": {POS: NOUN},
+    "N_Punc_Adv_V_Pron_N__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin": {
+        POS: NOUN
+    },
     "N_Punc_Misc_Punc_N___": {POS: NOUN},
     "N_Punc_N_N_N_N__Number=Sing": {POS: NOUN},
     "N_Punc_N_Punc_N__Number=Sing": {POS: NOUN},
@@ -415,8 +447,12 @@ TAG_MAP = {
     "Num|hoofd|bep|attr|onverv__Definite=Def|NumType=Card": {POS: NUM},
     "Num|hoofd|bep|zelfst|onverv__Definite=Def|NumType=Card": {POS: NUM},
     "Num|hoofd|bep|zelfst|vervmv__Definite=Def|Number=Plur|NumType=Card": {POS: NUM},
-    "Num|hoofd|onbep|attr|stell|onverv__Degree=Pos|NumType=Card|PronType=Ind": {POS: NUM},
-    "Num|hoofd|onbep|attr|vergr|onverv__Degree=Cmp|NumType=Card|PronType=Ind": {POS: NUM},
+    "Num|hoofd|onbep|attr|stell|onverv__Degree=Pos|NumType=Card|PronType=Ind": {
+        POS: NUM
+    },
+    "Num|hoofd|onbep|attr|vergr|onverv__Degree=Cmp|NumType=Card|PronType=Ind": {
+        POS: NUM
+    },
     "Num|rang|bep|attr|onverv__Definite=Def|NumType=Ord": {POS: NUM},
     "Num|rang|bep|zelfst|onverv__Definite=Def|NumType=Ord": {POS: NUM},
     "N|eigen|ev|gen__Case=Gen|Number=Sing": {POS: NOUN},
@@ -469,7 +505,9 @@ TAG_MAP = {
     "Prep_N_Adv|voor_soort|ev|neut_pron|aanw__AdpType=Prep": {POS: ADP},
     "Prep_N_Adv|voor_soort|ev|neut_pron|aanw__Number=Sing|PronType=Dem": {POS: ADP},
     "Prep_N_Adv|voor_soort|ev|neut_pron|vrag__Number=Sing|PronType=Int": {POS: ADP},
-    "Prep_N_Adv|voor_soort|mv|neut_deelv__Gender=Masc|Number=Sing|PronType=Tot": {POS: ADP},
+    "Prep_N_Adv|voor_soort|mv|neut_deelv__Gender=Masc|Number=Sing|PronType=Tot": {
+        POS: ADP
+    },
     "Prep_N_Conj_N__Number=Sing": {POS: ADP},
     "Prep_N_Conj__AdpType=Prep": {POS: ADP},
     "Prep_N_Prep_N__Number=Sing": {POS: ADP},
@@ -489,7 +527,9 @@ TAG_MAP = {
     "Prep_N|voor_soort|ev|neut__Number=Sing": {POS: ADP},
     "Prep_N|voor_soort|mv|neut__AdpType=Prep": {POS: ADP},
     "Prep_N|voor_soort|mv|neut__Number=Plur": {POS: ADP},
-    "Prep_Prep_Adj|voor_voor_adv|stell|onverv__Gender=Masc|Number=Sing|PronType=Tot": {POS: ADP},
+    "Prep_Prep_Adj|voor_voor_adv|stell|onverv__Gender=Masc|Number=Sing|PronType=Tot": {
+        POS: ADP
+    },
     "Prep_Prep_Adv__Degree=Pos": {POS: ADP},
     "Prep_Pron_Adj__Degree=Cmp|Number=Sing|Person=3": {POS: ADP},
     "Prep_Pron_N_Adv__Number=Plur": {POS: ADP},
@@ -503,7 +543,9 @@ TAG_MAP = {
     "Prep_Pron|voor_ref|3|evofmv__Number=Plur,Sing|Person=3": {POS: ADP},
     "Prep_Punc_N_Conj_N__AdpType=Prep": {POS: ADP},
     "Prep_V_N__Number=Sing|Tense=Pres|VerbForm=Part": {POS: ADP},
-    "Prep_V_Pron_Pron_Adv__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Dem|Tense=Pres|VerbForm=Fin": {POS: ADP},
+    "Prep_V_Pron_Pron_Adv__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Dem|Tense=Pres|VerbForm=Fin": {
+        POS: ADP
+    },
     "Prep_V|voor_intrans|inf__VerbForm=Inf": {POS: ADP},
     "Prep_V|voorinf_trans|inf__VerbForm=Inf": {POS: ADP},
     "Prep|achter__AdpType=Post": {POS: ADP},
@@ -511,17 +553,25 @@ TAG_MAP = {
     "Prep|voor__AdpType=Prep": {POS: ADP},
     "Prep|voorinf__AdpType=Prep|PartType=Inf": {POS: ADP},
     "Pron_Adj_N_Punc_Art_Adj_N_Prep_Art_Adj_N__NumType=Card": {POS: PRON},
-    "Pron_Adj__Case=Nom|Degree=Sup|Number=Sing|Person=2|Poss=Yes|PronType=Prs": {POS: PRON},
+    "Pron_Adj__Case=Nom|Degree=Sup|Number=Sing|Person=2|Poss=Yes|PronType=Prs": {
+        POS: PRON
+    },
     "Pron_Adj__Degree=Cmp|PronType=Ind": {POS: PRON},
     "Pron_Adv|vrag|neut|attr_deelv__PronType=Int": {POS: PRON},
     "Pron_Art_N_N__Number=Plur|PronType=Ind": {POS: PRON},
     "Pron_Art__Number=Sing|PronType=Int": {POS: PRON},
     "Pron_N_Adv__Number=Sing|PronType=Ind": {POS: PRON},
-    "Pron_N_V_Adv_Num_Punc__Aspect=Imp|Definite=Def|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {POS: PRON},
-    "Pron_N_V_Conj_N__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {POS: PRON},
+    "Pron_N_V_Adv_Num_Punc__Aspect=Imp|Definite=Def|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {
+        POS: PRON
+    },
+    "Pron_N_V_Conj_N__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {
+        POS: PRON
+    },
     "Pron_N__Case=Gen|Number=Sing|PronType=Ind": {POS: PRON},
     "Pron_N__Number=Sing|PronType=Ind": {POS: PRON},
-    "Pron_N|aanw|gen|attr_soort|mv|neut__Case=Gen|Number=Plur|PronType=Dem": {POS: PRON},
+    "Pron_N|aanw|gen|attr_soort|mv|neut__Case=Gen|Number=Plur|PronType=Dem": {
+        POS: PRON
+    },
     "Pron_N|onbep|neut|attr_soort|ev|neut__Number=Sing|PronType=Ind": {POS: PRON},
     "Pron_Prep_Art__Number=Sing|PronType=Int": {POS: PRON},
     "Pron_Prep_Art__Number=Sing|PronType=Rel": {POS: PRON},
@@ -529,10 +579,16 @@ TAG_MAP = {
     "Pron_Prep|betr|neut|zelfst_voor__PronType=Rel": {POS: PRON},
     "Pron_Prep|onbep|neut|zelfst_voor__PronType=Ind": {POS: PRON},
     "Pron_Prep|vrag|neut|attr_voor__PronType=Int": {POS: PRON},
-    "Pron_Pron_V__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Rel|Tense=Pres|VerbForm=Fin": {POS: PRON},
+    "Pron_Pron_V__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Rel|Tense=Pres|VerbForm=Fin": {
+        POS: PRON
+    },
     "Pron_Pron__Person=3|PronType=Prs|Reflex=Yes": {POS: PRON},
-    "Pron_V_V__Aspect=Imp|Mood=Ind|Person=3|PronType=Dem|Tense=Pres|VerbForm=Inf": {POS: PRON},
-    "Pron_V__Case=Gen|Number=Sing|Person=3|Poss=Yes|PronType=Prs|VerbForm=Inf": {POS: PRON},
+    "Pron_V_V__Aspect=Imp|Mood=Ind|Person=3|PronType=Dem|Tense=Pres|VerbForm=Inf": {
+        POS: PRON
+    },
+    "Pron_V__Case=Gen|Number=Sing|Person=3|Poss=Yes|PronType=Prs|VerbForm=Inf": {
+        POS: PRON
+    },
     "Pron_V__Number=Plur|Person=1|Poss=Yes|PronType=Prs|VerbForm=Inf": {POS: PRON},
     "Pron|aanw|dat|attr__Case=Dat|PronType=Dem": {POS: PRON},
     "Pron|aanw|gen|attr__Case=Gen|PronType=Dem": {POS: PRON},
@@ -547,27 +603,47 @@ TAG_MAP = {
     "Pron|bez|1|mv|neut|attr__Number=Plur|Person=1|Poss=Yes|PronType=Prs": {POS: PRON},
     "Pron|bez|2|ev|neut|attr__Number=Sing|Person=2|Poss=Yes|PronType=Prs": {POS: PRON},
     "Pron|bez|2|mv|neut|attr__Number=Plur|Person=2|Poss=Yes|PronType=Prs": {POS: PRON},
-    "Pron|bez|3|ev|gen|attr__Case=Gen|Number=Sing|Person=3|Poss=Yes|PronType=Prs": {POS: PRON},
+    "Pron|bez|3|ev|gen|attr__Case=Gen|Number=Sing|Person=3|Poss=Yes|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|bez|3|ev|neut|attr__Number=Sing|Person=3|Poss=Yes|PronType=Prs": {POS: PRON},
-    "Pron|bez|3|ev|neut|zelfst__Number=Sing|Person=3|Poss=Yes|PronType=Prs": {POS: PRON},
+    "Pron|bez|3|ev|neut|zelfst__Number=Sing|Person=3|Poss=Yes|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|bez|3|mv|neut|attr__Number=Plur|Person=3|Poss=Yes|PronType=Prs": {POS: PRON},
     "Pron|onbep|gen|attr__Case=Gen|PronType=Ind": {POS: PRON},
     "Pron|onbep|gen|zelfst__Case=Gen|PronType=Ind": {POS: PRON},
     "Pron|onbep|neut|attr__PronType=Ind": {POS: PRON},
     "Pron|onbep|neut|zelfst__PronType=Ind": {POS: PRON},
-    "Pron|per|1|ev|datofacc__Case=Acc,Dat|Number=Sing|Person=1|PronType=Prs": {POS: PRON},
+    "Pron|per|1|ev|datofacc__Case=Acc,Dat|Number=Sing|Person=1|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|per|1|ev|nom__Case=Nom|Number=Sing|Person=1|PronType=Prs": {POS: PRON},
-    "Pron|per|1|mv|datofacc__Case=Acc,Dat|Number=Plur|Person=1|PronType=Prs": {POS: PRON},
+    "Pron|per|1|mv|datofacc__Case=Acc,Dat|Number=Plur|Person=1|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|per|1|mv|nom__Case=Nom|Number=Plur|Person=1|PronType=Prs": {POS: PRON},
-    "Pron|per|2|ev|datofacc__Case=Acc,Dat|Number=Sing|Person=2|PronType=Prs": {POS: PRON},
+    "Pron|per|2|ev|datofacc__Case=Acc,Dat|Number=Sing|Person=2|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|per|2|ev|nom__Case=Nom|Number=Sing|Person=2|PronType=Prs": {POS: PRON},
-    "Pron|per|2|mv|datofacc__Case=Acc,Dat|Number=Plur|Person=2|PronType=Prs": {POS: PRON},
+    "Pron|per|2|mv|datofacc__Case=Acc,Dat|Number=Plur|Person=2|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|per|2|mv|nom__Case=Nom|Number=Plur|Person=2|PronType=Prs": {POS: PRON},
-    "Pron|per|3|evofmv|datofacc__Case=Acc,Dat|Number=Plur,Sing|Person=3|PronType=Prs": {POS: PRON},
-    "Pron|per|3|evofmv|nom__Case=Nom|Number=Plur,Sing|Person=3|PronType=Prs": {POS: PRON},
-    "Pron|per|3|ev|datofacc__Case=Acc,Dat|Number=Sing|Person=3|PronType=Prs": {POS: PRON},
+    "Pron|per|3|evofmv|datofacc__Case=Acc,Dat|Number=Plur,Sing|Person=3|PronType=Prs": {
+        POS: PRON
+    },
+    "Pron|per|3|evofmv|nom__Case=Nom|Number=Plur,Sing|Person=3|PronType=Prs": {
+        POS: PRON
+    },
+    "Pron|per|3|ev|datofacc__Case=Acc,Dat|Number=Sing|Person=3|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|per|3|ev|nom__Case=Nom|Number=Sing|Person=3|PronType=Prs": {POS: PRON},
-    "Pron|per|3|mv|datofacc__Case=Acc,Dat|Number=Plur|Person=3|PronType=Prs": {POS: PRON},
+    "Pron|per|3|mv|datofacc__Case=Acc,Dat|Number=Plur|Person=3|PronType=Prs": {
+        POS: PRON
+    },
     "Pron|rec|gen__Case=Gen|PronType=Rcp": {POS: PRON},
     "Pron|rec|neut__PronType=Rcp": {POS: PRON},
     "Pron|ref|1|ev__Number=Sing|Person=1|PronType=Prs|Reflex=Yes": {POS: PRON},
@@ -597,20 +673,34 @@ TAG_MAP = {
     "Punc|vraag__PunctType=Qest": {POS: PUNCT},
     "V_Adv_Art_N_Prep_Pron_N__Degree=Pos|Number=Plur|Person=2|Subcat=Tran": {POS: VERB},
     "V_Adv__Degree=Pos|Subcat=Tran": {POS: VERB},
-    "V_Art_N_Num_N__Aspect=Imp|Definite=Def|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Mod": {POS: VERB},
+    "V_Art_N_Num_N__Aspect=Imp|Definite=Def|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Mod": {
+        POS: VERB
+    },
     "V_Art_N__Number=Sing|Subcat=Tran": {POS: VERB},
     "V_Conj_N_N__Number=Sing|Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
     "V_Conj_Pron__Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V_N_Conj_Adj_N_Prep_Art_N__Degree=Pos|Number=Sing|Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
+    "V_N_Conj_Adj_N_Prep_Art_N__Degree=Pos|Number=Sing|Subcat=Tran|Tense=Past|VerbForm=Part": {
+        POS: VERB
+    },
     "V_N_N__Number=Sing|Subcat=Intr|Tense=Pres|VerbForm=Part": {POS: VERB},
     "V_N_N__Number=Sing|Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V_N_V__Aspect=Imp|Mood=Ind|Number=Sing|Subcat=Intr|Tense=Pres|VerbForm=Inf": {POS: VERB},
+    "V_N_V__Aspect=Imp|Mood=Ind|Number=Sing|Subcat=Intr|Tense=Pres|VerbForm=Inf": {
+        POS: VERB
+    },
     "V_N__Number=Plur|Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
     "V_N|trans|imp_eigen|ev|neut__Number=Sing|Subcat=Tran": {POS: VERB},
-    "V_Prep|intrans|verldw|onverv_voor__Subcat=Intr|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V_Pron_Adv_Adv_Pron_V__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V_Pron_Adv__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V_Pron_V__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: VERB},
+    "V_Prep|intrans|verldw|onverv_voor__Subcat=Intr|Tense=Past|VerbForm=Part": {
+        POS: VERB
+    },
+    "V_Pron_Adv_Adv_Pron_V__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V_Pron_Adv__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V_Pron_V__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
     "V_Pron__VerbType=Aux,Cop": {POS: VERB},
     "V_V|hulp|imp_intrans|inf__VerbForm=Inf|VerbType=Mod": {POS: VERB},
     "V|hulpofkopp|conj__Mood=Sub|VerbForm=Fin": {POS: VERB},
@@ -620,94 +710,220 @@ TAG_MAP = {
     "V|hulpofkopp|inf__VerbForm=Inf": {POS: VERB},
     "V|hulpofkopp|inf__VerbForm=Inf|VerbType=Aux,Cop": {POS: VERB},
     "V|hulpofkopp|inf|subst__VerbForm=Inf": {POS: VERB},
-    "V|hulpofkopp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulpofkopp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {POS: VERB},
-    "V|hulpofkopp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulpofkopp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {POS: VERB},
-    "V|hulpofkopp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulpofkopp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {POS: VERB},
-    "V|hulpofkopp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulpofkopp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {POS: VERB},
-    "V|hulpofkopp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin": {POS: VERB},
-    "V|hulpofkopp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|VerbType=Aux,Cop": {POS: VERB},
-    "V|hulpofkopp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin": {POS: VERB},
-    "V|hulpofkopp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin|VerbType=Aux,Cop": {POS: VERB},
+    "V|hulpofkopp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Aux,Cop": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|VerbType=Aux,Cop": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulpofkopp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin|VerbType=Aux,Cop": {
+        POS: VERB
+    },
     "V|hulpofkopp|tegdw|vervneut__Case=Nom|Tense=Pres|VerbForm=Part": {POS: VERB},
-    "V|hulpofkopp|tegdw|vervneut__Case=Nom|Tense=Pres|VerbForm=Part|VerbType=Aux,Cop": {POS: VERB},
+    "V|hulpofkopp|tegdw|vervneut__Case=Nom|Tense=Pres|VerbForm=Part|VerbType=Aux,Cop": {
+        POS: VERB
+    },
     "V|hulpofkopp|verldw|onverv__Tense=Past|VerbForm=Part": {POS: VERB},
-    "V|hulpofkopp|verldw|onverv__Tense=Past|VerbForm=Part|VerbType=Aux,Cop": {POS: VERB},
+    "V|hulpofkopp|verldw|onverv__Tense=Past|VerbForm=Part|VerbType=Aux,Cop": {
+        POS: VERB
+    },
     "V|hulp|conj__Mood=Sub|VerbForm=Fin|VerbType=Mod": {POS: VERB},
     "V|hulp|inf__VerbForm=Inf": {POS: VERB},
     "V|hulp|inf__VerbForm=Inf|VerbType=Mod": {POS: VERB},
-    "V|hulp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin|VerbType=Mod": {POS: VERB},
-    "V|hulp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|VerbType=Mod": {POS: VERB},
-    "V|hulp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin|VerbType=Mod": {POS: VERB},
-    "V|hulp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|hulp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Mod": {POS: VERB},
-    "V|hulp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin": {POS: VERB},
-    "V|hulp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|VerbType=Mod": {POS: VERB},
-    "V|hulp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin": {POS: VERB},
-    "V|hulp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin|VerbType=Mod": {POS: VERB},
+    "V|hulp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulp|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Pres|VerbForm=Fin|VerbType=Mod": {
+        POS: VERB
+    },
+    "V|hulp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulp|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|VerbType=Mod": {
+        POS: VERB
+    },
+    "V|hulp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulp|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Fin|VerbType=Mod": {
+        POS: VERB
+    },
+    "V|hulp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulp|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Mod": {
+        POS: VERB
+    },
+    "V|hulp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulp|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|VerbType=Mod": {
+        POS: VERB
+    },
+    "V|hulp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|hulp|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin|VerbType=Mod": {
+        POS: VERB
+    },
     "V|hulp|verldw|onverv__Tense=Past|VerbForm=Part": {POS: VERB},
     "V|hulp|verldw|onverv__Tense=Past|VerbForm=Part|VerbType=Mod": {POS: VERB},
     "V|intrans|conj__Mood=Sub|Subcat=Intr|VerbForm=Fin": {POS: VERB},
     "V|intrans|imp__Mood=Imp|Subcat=Intr|VerbForm=Fin": {POS: VERB},
     "V|intrans|inf__Subcat=Intr|VerbForm=Inf": {POS: VERB},
     "V|intrans|inf|subst__Subcat=Intr|VerbForm=Inf": {POS: VERB},
-    "V|intrans|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Intr|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|intrans|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Subcat=Intr|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|intrans|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Intr|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|intrans|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Intr|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|intrans|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Subcat=Intr|Tense=Past|VerbForm=Fin": {POS: VERB},
-    "V|intrans|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Intr|Tense=Past|VerbForm=Fin": {POS: VERB},
+    "V|intrans|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Intr|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|intrans|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Subcat=Intr|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|intrans|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Intr|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|intrans|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Intr|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|intrans|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Subcat=Intr|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|intrans|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Intr|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
     "V|intrans|tegdw|onverv__Subcat=Intr|Tense=Pres|VerbForm=Part": {POS: VERB},
-    "V|intrans|tegdw|vervmv__Number=Plur|Subcat=Intr|Tense=Pres|VerbForm=Part": {POS: VERB},
-    "V|intrans|tegdw|vervneut__Case=Nom|Subcat=Intr|Tense=Pres|VerbForm=Part": {POS: VERB},
-    "V|intrans|tegdw|vervvergr__Degree=Cmp|Subcat=Intr|Tense=Pres|VerbForm=Part": {POS: VERB},
+    "V|intrans|tegdw|vervmv__Number=Plur|Subcat=Intr|Tense=Pres|VerbForm=Part": {
+        POS: VERB
+    },
+    "V|intrans|tegdw|vervneut__Case=Nom|Subcat=Intr|Tense=Pres|VerbForm=Part": {
+        POS: VERB
+    },
+    "V|intrans|tegdw|vervvergr__Degree=Cmp|Subcat=Intr|Tense=Pres|VerbForm=Part": {
+        POS: VERB
+    },
     "V|intrans|verldw|onverv__Subcat=Intr|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V|intrans|verldw|vervmv__Number=Plur|Subcat=Intr|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V|intrans|verldw|vervneut__Case=Nom|Subcat=Intr|Tense=Past|VerbForm=Part": {POS: VERB},
+    "V|intrans|verldw|vervmv__Number=Plur|Subcat=Intr|Tense=Past|VerbForm=Part": {
+        POS: VERB
+    },
+    "V|intrans|verldw|vervneut__Case=Nom|Subcat=Intr|Tense=Past|VerbForm=Part": {
+        POS: VERB
+    },
     "V|refl|imp__Mood=Imp|Reflex=Yes|VerbForm=Fin": {POS: VERB},
     "V|refl|inf__Reflex=Yes|VerbForm=Inf": {POS: VERB},
     "V|refl|inf|subst__Reflex=Yes|VerbForm=Inf": {POS: VERB},
-    "V|refl|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Reflex=Yes|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|refl|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Reflex=Yes|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|refl|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Reflex=Yes|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|refl|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Reflex=Yes|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|refl|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Reflex=Yes|Tense=Past|VerbForm=Fin": {POS: VERB},
-    "V|refl|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Reflex=Yes|Tense=Past|VerbForm=Fin": {POS: VERB},
+    "V|refl|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Reflex=Yes|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|refl|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Reflex=Yes|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|refl|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Reflex=Yes|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|refl|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Reflex=Yes|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|refl|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Reflex=Yes|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|refl|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Reflex=Yes|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
     "V|refl|tegdw|vervneut__Case=Nom|Reflex=Yes|Tense=Pres|VerbForm=Part": {POS: VERB},
     "V|refl|verldw|onverv__Reflex=Yes|Tense=Past|VerbForm=Part": {POS: VERB},
     "V|trans|conj__Mood=Sub|Subcat=Tran|VerbForm=Fin": {POS: VERB},
     "V|trans|imp__Mood=Imp|Subcat=Tran|VerbForm=Fin": {POS: VERB},
     "V|trans|inf__Subcat=Tran|VerbForm=Inf": {POS: VERB},
     "V|trans|inf|subst__Subcat=Tran|VerbForm=Inf": {POS: VERB},
-    "V|trans|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|trans|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|trans|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|trans|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: VERB},
-    "V|trans|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Subcat=Tran|Tense=Past|VerbForm=Fin": {POS: VERB},
-    "V|trans|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Tran|Tense=Past|VerbForm=Fin": {POS: VERB},
+    "V|trans|ott|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|trans|ott|1|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|trans|ott|2|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|trans|ott|3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|trans|ovt|1of2of3|ev__Aspect=Imp|Mood=Ind|Number=Sing|Subcat=Tran|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
+    "V|trans|ovt|1of2of3|mv__Aspect=Imp|Mood=Ind|Number=Plur|Subcat=Tran|Tense=Past|VerbForm=Fin": {
+        POS: VERB
+    },
     "V|trans|tegdw|onverv__Subcat=Tran|Tense=Pres|VerbForm=Part": {POS: VERB},
-    "V|trans|tegdw|vervneut__Case=Nom|Subcat=Tran|Tense=Pres|VerbForm=Part": {POS: VERB},
+    "V|trans|tegdw|vervneut__Case=Nom|Subcat=Tran|Tense=Pres|VerbForm=Part": {
+        POS: VERB
+    },
     "V|trans|verldw|onverv__Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V|trans|verldw|vervmv__Number=Plur|Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V|trans|verldw|vervneut__Case=Nom|Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
-    "V|trans|verldw|vervvergr__Degree=Cmp|Subcat=Tran|Tense=Past|VerbForm=Part": {POS: VERB},
-    "X__Aspect=Imp|Definite=Def|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Mod": {POS: X},
-    "X__Aspect=Imp|Definite=Def|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {POS: X},
-    "X__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: X},
-    "X__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Tense=Past|VerbForm=Part": {POS: X},
-    "X__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Inf": {POS: X},
+    "V|trans|verldw|vervmv__Number=Plur|Subcat=Tran|Tense=Past|VerbForm=Part": {
+        POS: VERB
+    },
+    "V|trans|verldw|vervneut__Case=Nom|Subcat=Tran|Tense=Past|VerbForm=Part": {
+        POS: VERB
+    },
+    "V|trans|verldw|vervvergr__Degree=Cmp|Subcat=Tran|Tense=Past|VerbForm=Part": {
+        POS: VERB
+    },
+    "X__Aspect=Imp|Definite=Def|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|VerbType=Mod": {
+        POS: X
+    },
+    "X__Aspect=Imp|Definite=Def|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {
+        POS: X
+    },
+    "X__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: X
+    },
+    "X__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Tense=Past|VerbForm=Part": {
+        POS: X
+    },
+    "X__Aspect=Imp|Degree=Pos|Mood=Ind|Number=Sing|Person=2|Tense=Pres|VerbForm=Inf": {
+        POS: X
+    },
     "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin": {POS: X},
-    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Dem|Tense=Pres|VerbForm=Fin": {POS: X},
-    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Rel|Tense=Pres|VerbForm=Fin": {POS: X},
-    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: X},
-    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {POS: X},
-    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Tran|Tense=Pres|VerbForm=Fin": {POS: X},
+    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Dem|Tense=Pres|VerbForm=Fin": {
+        POS: X
+    },
+    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|PronType=Rel|Tense=Pres|VerbForm=Fin": {
+        POS: X
+    },
+    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: X
+    },
+    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|PronType=Ind|Tense=Pres|VerbForm=Fin": {
+        POS: X
+    },
+    "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Subcat=Tran|Tense=Pres|VerbForm=Fin": {
+        POS: X
+    },
     "X__Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin": {POS: X},
     "X__Aspect=Imp|Mood=Ind|Number=Sing|Subcat=Intr|Tense=Pres|VerbForm=Inf": {POS: X},
     "X__Aspect=Imp|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin": {POS: X},
@@ -808,5 +1024,5 @@ TAG_MAP = {
     "X__VerbForm=Inf|VerbType=Mod": {POS: X},
     "X__VerbType=Aux,Cop": {POS: X},
     "X___": {POS: X},
-    "_SP": {POS: SPACE}
+    "_SP": {POS: SPACE},
 }

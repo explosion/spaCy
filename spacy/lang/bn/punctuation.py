@@ -22,7 +22,9 @@ _suffixes = (
         r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:[{c}])".format(c=_currency),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[{al}{e}{q}(?:{c})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency),
+        r"(?<=[{al}{e}{q}(?:{c})])\.".format(
+            al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency
+        ),
     ]
 )
 
@@ -35,8 +37,8 @@ _infixes = (
         ),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}])({h})(?=[{ae}])".format(a=ALPHA, h=HYPHENS, ae="এ"),
-        r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
-        r'(?<=[{a}])[:<>=/](?=[{a}])'.format(a=ALPHA),
+        r"(?<=[{a}])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
+        r"(?<=[{a}])[:<>=/](?=[{a}])".format(a=ALPHA),
     ]
 )
 

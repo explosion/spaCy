@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 from spacy import displacy
+from spacy.displacy.render import DependencyRenderer
 from spacy.tokens import Span
 from spacy.lang.fa import Persian
 
@@ -40,6 +41,17 @@ def test_displacy_parse_deps(en_vocab):
         {"start": 2, "end": 3, "label": "det", "dir": "left"},
         {"start": 1, "end": 3, "label": "attr", "dir": "right"},
     ]
+
+
+def test_displacy_invalid_arcs():
+    renderer = DependencyRenderer()
+    words = [{"text": "This", "tag": "DET"}, {"text": "is", "tag": "VERB"}]
+    arcs = [
+        {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
+        {"start": -1, "end": 2, "label": "det", "dir": "left"},
+    ]
+    with pytest.raises(ValueError):
+        renderer.render([{"words": words, "arcs": arcs}])
 
 
 def test_displacy_spans(en_vocab):

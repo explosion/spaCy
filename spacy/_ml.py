@@ -808,3 +808,18 @@ def _replace_word(word, random_words, mask="[MASK]"):
         return random_words.next()
     else:
         return word
+
+
+def get_cossim_loss(yh, y):
+    # Add a small constant to avoid 0 vectors
+    yh = yh + 1e-8
+    y = y + 1e-8
+    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+    xp = get_array_module(yh)
+    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+    mul_norms = norm_yh * norm_y
+    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
+    loss = xp.abs(cosine - 1).sum()
+    return loss, -d_yh
