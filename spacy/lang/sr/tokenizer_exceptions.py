@@ -8,19 +8,12 @@ _exc = {}
 
 _abbrev_exc = [
     # Weekdays abbreviations
-    {ORTH: "пo", LEMMA: "понедељак", NORM: "понедељак"},
     {ORTH: "пoн", LEMMA: "понедељак", NORM: "понедељак"},
-    {ORTH: "ут", LEMMA: "уторак", NORM: "уторак"},
     {ORTH: "уто", LEMMA: "уторак", NORM: "уторак"},
-    {ORTH: "ср", LEMMA: "среда", NORM: "среда"},
     {ORTH: "сре", LEMMA: "среда", NORM: "среда"},
-    {ORTH: "че", LEMMA: "четвртак", NORM: "четвртак"},
     {ORTH: "чет", LEMMA: "четвртак", NORM: "четвртак"},
-    {ORTH: "пе", LEMMA: "петак", NORM: "петак"},
     {ORTH: "пет", LEMMA: "петак", NORM: "петак"},
-    {ORTH: "су", LEMMA: "субота", NORM: "субота"},
     {ORTH: "суб", LEMMA: "субота", NORM: "субота"},
-    {ORTH: "не", LEMMA: "недеља", NORM: "недеља"},
     {ORTH: "нед", LEMMA: "недеља", NORM: "недеља"},
 
     # Months abbreviations
