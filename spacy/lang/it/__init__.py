@@ -23,7 +23,7 @@ class ItalianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
-    resources = {"lemma_lookup": "lemmas.json"}
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Italian(Language):
