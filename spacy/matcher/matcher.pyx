@@ -15,7 +15,7 @@ from ..structs cimport TokenC
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
 from ..tokens.token cimport Token
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
 
 from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..util import get_json_validator, validate_json
@@ -45,7 +45,7 @@ cdef class Matcher:
         self._patterns = {}
         self._callbacks = {}
         self._extensions = {}
-        self._extra_predicates = []
+        self._seen_attrs = set()
         self.vocab = vocab
         self.mem = Pool()
         if validate:
@@ -116,6 +116,9 @@ cdef class Matcher:
                 specs = _preprocess_pattern(pattern, self.vocab.strings,
                     self._extensions, self._extra_predicates)
                 self.patterns.push_back(init_pattern(self.mem, key, specs))
+                for spec in specs:
+                    for attr, _ in spec[1]:
+                        self._seen_attrs.add(attr)
             except OverflowError, AttributeError:
                 raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
@@ -180,6 +183,11 @@ cdef class Matcher:
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `label_id` and `key` are both integers.
         """
+        if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
+          and not doc.is_tagged:
+            raise ValueError(Errors.E155.format())
+        if DEP in self._seen_attrs and not doc.is_parsed:
+            raise ValueError(Errors.E156.format())
         matches = find_matches(&self.patterns[0], self.patterns.size(), doc,
                                extensions=self._extensions,
                                predicates=self._extra_predicates)

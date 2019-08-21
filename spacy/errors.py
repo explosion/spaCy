@@ -441,11 +441,11 @@ class Errors(object):
             "patterns. Please use the option validate=True with Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
     E155 = ("The pipeline needs to include a tagger in order to use "
-            "PhraseMatcher with the attributes POS, TAG, or LEMMA. Try using "
-            "nlp() instead of nlp.make_doc() or list(nlp.pipe()) instead of "
-            "list(nlp.tokenizer.pipe()).")
+            "Matcher or PhraseMatcher with the attributes POS, TAG, or LEMMA. "
+            "Try using nlp() instead of nlp.make_doc() or list(nlp.pipe()) "
+            "instead of list(nlp.tokenizer.pipe()).")
     E156 = ("The pipeline needs to include a parser in order to use "
-            "PhraseMatcher with the attribute DEP. Try using "
+            "Matcher or PhraseMatcher with the attribute DEP. Try using "
             "nlp() instead of nlp.make_doc() or list(nlp.pipe()) instead of "
             "list(nlp.tokenizer.pipe()).")
     E157 = ("Can't render negative values for dependency arc start or end. "
