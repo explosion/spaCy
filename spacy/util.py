@@ -118,16 +118,20 @@ def ensure_path(path):
 
 
 def load_language_data(path):
-    """Load JSON language data using the given path as a base.
+    """Load JSON language data using the given path as a base. If the provided
+    path isn't present, will attempt to load a gzipped version before giving up.
 
-    If the provided path isn't present, will attempt to load a gzipped version
-    before giving up.
+    path (unicode / Path): The data to load.
+    RETURNS: The loaded data.
     """
-
-    try:
+    path = ensure_path(path)
+    if path.exists():
         return srsly.read_json(path)
-    except FileNotFoundError:
-        return srsly.read_gzip_json(path + ".gz")
+    path = path.with_suffix(path.suffix + ".gz")
+    if path.exists():
+        return srsly.read_gzip_json(path)
+    # TODO: move to spacy.errors
+    raise ValueError("Can't find language data file: {}".format(path2str(path)))
 
 
 def load_model(name, **overrides):
