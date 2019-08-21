@@ -9,7 +9,10 @@ import numpy as np
 def test_issue3540(en_vocab):
 
     words = ["I", "live", "in", "NewYork", "right", "now"]
-    tensor = np.asarray([[1.0, 1.1], [2.0, 2.1], [3.0, 3.1], [4.0, 4.1], [5.0, 5.1], [6.0, 6.1]], dtype="f")
+    tensor = np.asarray(
+        [[1.0, 1.1], [2.0, 2.1], [3.0, 3.1], [4.0, 4.1], [5.0, 5.1], [6.0, 6.1]],
+        dtype="f",
+    )
     doc = Doc(en_vocab, words=words)
     doc.tensor = tensor
 
@@ -25,7 +28,7 @@ def test_issue3540(en_vocab):
     with doc.retokenize() as retokenizer:
         heads = [(doc[3], 1), doc[2]]
         attrs = {"POS": ["PROPN", "PROPN"], "DEP": ["pobj", "compound"]}
-        retokenizer.split(doc[3], [u"New", u"York"], heads=heads, attrs=attrs)
+        retokenizer.split(doc[3], ["New", "York"], heads=heads, attrs=attrs)
 
     gold_text = ["I", "live", "in", "New", "York", "right", "now"]
     assert [token.text for token in doc] == gold_text

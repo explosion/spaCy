@@ -117,19 +117,16 @@ text.
 import spacy
 from spacy import displacy
 
-text = """But Google is starting from behind. The company made a late push
-into hardware, and Apple’s Siri, available on iPhones, and Amazon’s Alexa
-software, which runs on its Echo and Dot devices, have clear leads in
-consumer adoption."""
+text = u"When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously."
 
-nlp = spacy.load("custom_ner_model")
+nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-import DisplacyEntHtml from 'images/displacy-ent.html'
+import DisplacyEntHtml from 'images/displacy-ent2.html'
 
-<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={275} />
+<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={180} />
 
 The entity visualizer lets you customize the following `options`:
 
@@ -204,11 +201,14 @@ doc2 = nlp(LONG_NEWS_ARTICLE)
 displacy.render(doc2, style="ent")
 ```
 
-> #### Enabling or disabling Jupyter mode
->
-> To explicitly enable or disable "Jupyter mode", you can use the jupyter`
-> keyword argument – e.g. to return raw HTML in a notebook, or to force Jupyter
-> rendering if auto-detection fails.
+<Infobox variant="warning" title="Important note">
+
+To explicitly enable or disable "Jupyter mode", you can use the `jupyter`
+keyword argument – e.g. to return raw HTML in a notebook, or to force Jupyter
+rendering if auto-detection fails.
+
+</Infobox>
+
 
 ![displaCy visualizer in a Jupyter notebook](../images/displacy_jupyter.jpg)
 
@@ -284,7 +284,7 @@ nlp = spacy.load("en_core_web_sm")
 sentences = [u"This is an example.", u"This is another one."]
 for sent in sentences:
     doc = nlp(sent)
-    svg = displacy.render(doc, style="dep")
+    svg = displacy.render(doc, style="dep", jupyter=False)
     file_name = '-'.join([w.text for w in doc if not w.is_punct]) + ".svg"
     output_path = Path("/images/" + file_name)
     output_path.open("w", encoding="utf-8").write(svg)

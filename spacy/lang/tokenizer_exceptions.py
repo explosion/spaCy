@@ -109,7 +109,7 @@ for orth in [
 
 
 emoticons = set(
-    """
+    r"""
 :)
 :-)
 :))

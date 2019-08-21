@@ -216,6 +216,10 @@ class GoldCorpus(object):
                                         make_projective=True)
         yield from gold_docs
 
+    def train_docs_without_preprocessing(self, nlp, gold_preproc=False):
+        gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc=gold_preproc)
+        yield from gold_docs
+
     def dev_docs(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc=gold_preproc)
         yield from gold_docs
@@ -590,7 +594,7 @@ cdef class GoldParse:
 
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
-            raise ValueError(Errors.E069.format(cycle=cycle))
+            raise ValueError(Errors.E069.format(cycle=cycle, cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]), doc_tokens=" ".join(words[:50])))
 
     def __len__(self):
         """Get the number of gold-standard tokens.
@@ -678,11 +682,23 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         >>> tags = biluo_tags_from_offsets(doc, entities)
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
+    # Ensure no overlapping entity labels exist
+    tokens_in_ents = {}
+       
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
     # Handle entity cases
     for start_char, end_char, label in entities:
+        for token_index in range(start_char, end_char):
+            if token_index in tokens_in_ents.keys():
+                raise ValueError(Errors.E103.format(
+                    span1=(tokens_in_ents[token_index][0],
+                            tokens_in_ents[token_index][1],
+                            tokens_in_ents[token_index][2]),
+                    span2=(start_char, end_char, label)))
+            tokens_in_ents[token_index] = (start_char, end_char, label)
+
         start_token = starts.get(start_char)
         end_token = ends.get(end_char)
         # Only interested if the tokenization is correct
