@@ -112,9 +112,12 @@ cdef class Matcher:
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:
-            specs = _preprocess_pattern(pattern, self.vocab.strings,
-                self._extensions, self._extra_predicates)
-            self.patterns.push_back(init_pattern(self.mem, key, specs))
+            try:
+                specs = _preprocess_pattern(pattern, self.vocab.strings,
+                    self._extensions, self._extra_predicates)
+                self.patterns.push_back(init_pattern(self.mem, key, specs))
+            except OverflowError, AttributeError:
+                raise ValueError(Errors.E154.format())
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
         self._patterns[key].extend(patterns)
@@ -568,6 +571,8 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
             # Signifier for 'any token'
             tokens.append((ONE, [(NULL_ATTR, 0)], [], []))
             continue
+        if not isinstance(spec, dict):
+            raise ValueError(Errors.E154.format())
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
@@ -581,21 +586,29 @@ def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
         if isinstance(attr, basestring):
+            attr = attr.upper()
             if attr == '_':
                 continue
-            elif attr.upper() == "OP":
+            elif attr == "OP":
                 continue
-            if attr.upper() == "TEXT":
+            if attr == "TEXT":
                 attr = "ORTH"
-            attr = IDS.get(attr.upper())
+            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+                raise ValueError(Errors.E152.format(attr=attr))
+            attr = IDS.get(attr)
         if isinstance(value, basestring):
             value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
         elif isinstance(value, dict):
             continue
+        else:
+            raise ValueError(Errors.E153.format(vtype=type(value).__name__))
         if attr is not None:
             attr_values.append((attr, value))
+        else:
+            # should be caught above using TOKEN_PATTERN_SCHEMA
+            raise ValueError(Errors.E152.format(attr=attr))
     return attr_values
 
 
@@ -755,11 +768,13 @@ def _get_operators(spec):
         return lookup[spec["OP"]]
     else:
         keys = ", ".join(lookup.keys())
-        raise KeyError(Errors.E011.format(op=spec["OP"], opts=keys))
+        raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
 
 
 def _get_extensions(spec, string_store, name2index):
     attr_values = []
+    if not isinstance(spec.get("_", {}), dict):
+        raise ValueError(Errors.E154.format())
     for name, value in spec.get("_", {}).items():
         if isinstance(value, dict):
             # Handle predicates (e.g. "IN", in the extra_predicates, not here.
