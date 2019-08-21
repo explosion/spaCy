@@ -859,12 +859,12 @@ token pattern covering the exact tokenization of the term.
 <Infobox title="Important note on creating patterns" variant="warning">
 
 To create the patterns, each phrase has to be processed with the `nlp` object.
-If you have a mode loaded, doing this in a loop or list comprehension can easily
-become inefficient and slow. If you **only need the tokenization and lexical
-attributes**, you can run [`nlp.make_doc`](/api/language#make_doc) instead,
-which will only run the tokenizer. For an additional speed boost, you can also
-use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process
-the texts as a stream.
+If you have a model loaded, doing this in a loop or list comprehension can
+easily become inefficient and slow. If you **only need the tokenization and
+lexical attributes**, you can run [`nlp.make_doc`](/api/language#make_doc)
+instead, which will only run the tokenizer. For an additional speed boost, you
+can also use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will
+process the texts as a stream.
 
 ```diff
 - patterns = [nlp(term) for term in LOTS_OF_TERMS]

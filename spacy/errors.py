@@ -431,13 +431,24 @@ class Errors(object):
             "same, but found '{nlp}' and '{vocab}' respectively.")
     E151 = ("Trying to call nlp.update without required annotation types. "
             "Expected top-level keys: {exp}. Got: {unexp}.")
-    E152 = ("The `nlp` object should have a pre-trained `ner` component.")
-    E153 = ("Either provide a path to a preprocessed training directory, "
-            "or to the original Wikipedia XML dump.")
-    E154 = ("Either the `nlp` model or the `vocab` should be specified.")
-    E155 = ("The `nlp` object should have access to pre-trained word vectors, "
-            " cf. https://spacy.io/usage/models#languages.")
-    E156 = ("Can't render negative values for dependency arc start or end. "
+    E152 = ("The attribute {attr} is not supported for token patterns. "
+            "Please use the option validate=True with Matcher, PhraseMatcher, "
+            "or EntityRuler for more details.")
+    E153 = ("The value type {vtype} is not supported for token patterns. "
+            "Please use the option validate=True with Matcher, PhraseMatcher, "
+            "or EntityRuler for more details.")
+    E154 = ("One of the attributes or values is not supported for token "
+            "patterns. Please use the option validate=True with Matcher, "
+            "PhraseMatcher, or EntityRuler for more details.")
+    E155 = ("The pipeline needs to include a tagger in order to use "
+            "Matcher or PhraseMatcher with the attributes POS, TAG, or LEMMA. "
+            "Try using nlp() instead of nlp.make_doc() or list(nlp.pipe()) "
+            "instead of list(nlp.tokenizer.pipe()).")
+    E156 = ("The pipeline needs to include a parser in order to use "
+            "Matcher or PhraseMatcher with the attribute DEP. Try using "
+            "nlp() instead of nlp.make_doc() or list(nlp.pipe()) instead of "
+            "list(nlp.tokenizer.pipe()).")
+    E157 = ("Can't render negative values for dependency arc start or end. "
             "Make sure that you're passing in absolute token indices, not "
             "relative token offsets.\nstart: {start}, end: {end}, label: "
             "{label}, direction: {dir}")

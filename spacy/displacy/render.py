@@ -128,7 +128,7 @@ class DependencyRenderer(object):
         """
         if start < 0 or end < 0:
             error_args = dict(start=start, end=end, label=label, dir=direction)
-            raise ValueError(Errors.E156.format(**error_args))
+            raise ValueError(Errors.E157.format(**error_args))
         level = self.levels.index(end - start) + 1
         x_start = self.offset_x + start * self.distance + self.arrow_spacing
         if self.direction == "rtl":

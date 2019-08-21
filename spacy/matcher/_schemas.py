@@ -102,6 +102,10 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Entity label of single token",
                 "$ref": "#/definitions/string_value",
             },
+            "NORM": {
+                "title": "Normalized form of the token text",
+                "$ref": "#/definitions/string_value",
+            },
             "LENGTH": {
                 "title": "Token character length",
                 "$ref": "#/definitions/integer_value",

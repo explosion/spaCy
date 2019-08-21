@@ -137,8 +137,9 @@ def test_entity_ruler_validate(nlp):
     valid_pattern = {"label": "HELLO", "pattern": [{"LOWER": "HELLO"}]}
     invalid_pattern = {"label": "HELLO", "pattern": [{"ASDF": "HELLO"}]}
 
-    # invalid pattern is added without errors without validate
-    ruler.add_patterns([invalid_pattern])
+    # invalid pattern raises error without validate
+    with pytest.raises(ValueError):
+        ruler.add_patterns([invalid_pattern])
 
     # valid pattern is added without errors with validate
     validated_ruler.add_patterns([valid_pattern])

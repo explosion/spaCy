@@ -1091,6 +1091,62 @@
         },
         {
             "type": "education",
+            "id": "video-intro-to-nlp-episode-1",
+            "title": "Intro to NLP with spaCy",
+            "slogan": "Episode 1: Data exploration",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "WnGPv6HnBok",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-spacy-irl-entity-linking",
+            "title": "Entity Linking functionality in spaCy",
+            "slogan": "spaCy IRL 2019",
+            "url": "https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc",
+            "author": "Sofie Van Landeghem",
+            "author_links": {
+                "twitter": "OxyKodit",
+                "github": "svlandeg"
+            },
+            "youtube": "PW3RJM8tDGo",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-spacy-irl-lemmatization",
+            "title": "Rethinking rule-based lemmatization",
+            "slogan": "spaCy IRL 2019",
+            "url": "https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc",
+            "author": "Guadalupe Romero",
+            "author_links": {
+                "twitter": "_guadiromero",
+                "github": "guadi1994"
+            },
+            "youtube": "88zcQODyuko",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
+            "id": "video-spacy-irl-scispacy",
+            "title": "ScispaCy: A spaCy pipeline & models for scientific & biomedical text",
+            "slogan": "spaCy IRL 2019",
+            "url": "https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc",
+            "author": "Mark Neumann",
+            "author_links": {
+                "twitter": "MarkNeumannnn",
+                "github": "DeNeutoy"
+            },
+            "youtube": "2_HSKDALwuw",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
             "id": "podcast-nlp-highlights",
             "title": "NLP Highlights #78: Where do corpora come from?",
             "slogan": "January 2019",

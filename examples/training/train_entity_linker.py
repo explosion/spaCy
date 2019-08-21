@@ -22,8 +22,6 @@ from spacy.vocab import Vocab
 
 import spacy
 from spacy.kb import KnowledgeBase
-
-from spacy import Errors
 from spacy.tokens import Span
 from spacy.util import minibatch, compounding
 

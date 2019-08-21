@@ -12,7 +12,7 @@ from ...util import update_exc, add_lookups
 
 class SerbianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "rs"
+    lex_attr_getters[LANG] = lambda text: "sr"
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
@@ -21,7 +21,7 @@ class SerbianDefaults(Language.Defaults):
 
 
 class Serbian(Language):
-    lang = "rs"
+    lang = "sr"
     Defaults = SerbianDefaults
 
 
