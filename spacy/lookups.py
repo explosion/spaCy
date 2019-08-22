@@ -68,6 +68,16 @@ class Lookups(object):
             raise KeyError(Errors.E159.format(name=name, tables=self.tables))
         return self._tables[name]
 
+    def remove_table(self, name):
+        """Remove a table. Raises an error if the table doesn't exist.
+
+        name (unicode): The name to remove.
+        RETURNS (Table): The removed table.
+        """
+        if name not in self._tables:
+            raise KeyError(Errors.E159.format(name=name, tables=self.tables))
+        return self._tables.pop(name)
+
     def has_table(self, name):
         """Check if the lookups contain a table of a given name.
 

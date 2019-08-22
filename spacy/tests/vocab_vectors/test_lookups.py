@@ -28,6 +28,12 @@ def test_lookups_api():
         lookups.get_table("xyz")
     with pytest.raises(ValueError):
         lookups.add_table(table_name)
+    table = lookups.remove_table(table_name)
+    assert table.name == table_name
+    assert len(lookups) == 0
+    assert table_name not in lookups
+    with pytest.raises(KeyError):
+        lookups.get_table(table_name)
 
 
 def test_lookups_to_from_bytes():
