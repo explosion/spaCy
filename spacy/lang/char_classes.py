@@ -25,6 +25,10 @@ _latin_u_supplement = r"\u00C0-\u00D6\u00D8-\u00DE"
 _latin_l_supplement = r"\u00DF-\u00F6\u00F8-\u00FF"
 _latin_supplement = r"\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF"
 
+_hangul_syllables = r"\uAC00-\uD7AF"
+_hangul_jamo = r"\u1100-\u11FF"
+_hangul = _hangul_syllables + _hangul_jamo
+
 # letters with diacritics - Catalan, Czech, Latin, Latvian, Lithuanian, Polish, Slovak, Turkish, Welsh
 _latin_u_extendedA = (
     r"\u0100\u0102\u0104\u0106\u0108\u010A\u010C\u010E\u0110\u0112\u0114\u0116\u0118\u011A\u011C"
@@ -195,7 +199,7 @@ _ukrainian = r"а-щюяіїєґА-ЩЮЯІЇЄҐ"
 _upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian_upper
 _lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower
 
-_uncased = _bengali + _hebrew + _persian + _sinhala + _hindi
+_uncased = _bengali + _hebrew + _persian + _sinhala + _hindi  + _hangul
 
 ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _uncased)
 ALPHA_LOWER = group_chars(_lower + _uncased)
@@ -208,7 +212,7 @@ _units = (
     "кг г мг м/с км/ч кПа Па мбар Кб КБ кб Мб МБ мб Гб ГБ гб Тб ТБ тб"
     "كم كم² كم³ م م² م³ سم سم² سم³ مم مم² مم³ كم غرام جرام جم كغ ملغ كوب اكواب"
 )
-_currency = r"\$ £ € ¥ ฿ US\$ C\$ A\$ ₽ ﷼ ₴"
+_currency = r"\$ £ € ¥ ฿ US\$ C\$ A\$ ₽ ﷼ ₴₩"
 
 # These expressions contain various unicode variations, including characters
 # used in Chinese (see #1333, #1340, #1351) – unless there are cross-language
