@@ -177,6 +177,11 @@ def ru_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def sr_tokenizer():
+    return get_lang_class("sr").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def sv_tokenizer():
     return get_lang_class("sv").Defaults.create_tokenizer()
 
