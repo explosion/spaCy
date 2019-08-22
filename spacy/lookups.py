@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from .errors import Errors
 from .util import SimpleFrozenDict
 
 
@@ -45,7 +46,7 @@ class Lookups(object):
         RETURNS (Table): The newly added table.
         """
         if name in self.tables:
-            raise ValueError("Table '{}' already exists".format(name))
+            raise ValueError(Errors.E158.format(name=name))
         table = Table(name=name)
         table.update(data)
         self._tables[name] = table
@@ -58,7 +59,7 @@ class Lookups(object):
         RETURNS (Table): The table.
         """
         if name not in self._tables:
-            raise KeyError("Can't find table '{}'".format(name))
+            raise KeyError(Errors.E159.format(name=name, tables=self.tables))
         return self._tables[name]
 
     def has_table(self, name):
