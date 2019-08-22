@@ -33,6 +33,10 @@ class Lookups(object):
         """
         return self.has_table(name)
 
+    def __len__(self):
+        """RETURNS (int): The number of tables in the lookups."""
+        return len(self._tables)
+
     @property
     def tables(self):
         """RETURNS (list): Names of all tables in the lookups."""

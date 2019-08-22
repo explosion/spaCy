@@ -10,6 +10,7 @@ def test_lookups_api():
     data = {"foo": "bar", "hello": "world"}
     lookups = Lookups()
     lookups.add_table(table_name, data)
+    assert len(lookups) == 1
     assert table_name in lookups
     assert lookups.has_table(table_name)
     table = lookups.get_table(table_name)
