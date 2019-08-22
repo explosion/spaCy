@@ -22,5 +22,5 @@ def test_lookups_api():
     assert len(table) == 3
     with pytest.raises(KeyError):
         lookups.get_table("xyz")
-    # with pytest.raises(ValueError):
-    #     lookups.add_table(table_name)
+    with pytest.raises(ValueError):
+        lookups.add_table(table_name)
