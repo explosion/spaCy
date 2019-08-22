@@ -327,7 +327,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             states[q].length += 1
             q += 1
         else:
-            ent_id = get_ent_id(&state.pattern[1])
+            ent_id = get_ent_id(state.pattern)
             if action == MATCH:
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
