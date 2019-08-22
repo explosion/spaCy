@@ -120,8 +120,8 @@ class Lookups(object):
         RETURNS (Lookups): The loaded lookups.
         """
         path = ensure_path(path)
-        if path.exists():
-            filepath = path / "lookups.bin"
+        filepath = path / "lookups.bin"
+        if filepath.exists():
             self._tables = srsly.read_msgpack(filepath)
         return self
 
