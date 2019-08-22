@@ -43,6 +43,7 @@ cdef class Vocab:
         lemmatizer (object): A lemmatizer. Defaults to `None`.
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
+        lookups (Lookups): Container for large lookup tables and dictionaries.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
