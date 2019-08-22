@@ -104,26 +104,25 @@ class Lookups(object):
         return self
 
     def to_disk(self, path, **kwargs):
-        """Save the lookups to a directory. Will create a compressed
-        lookups.json.gz file.
+        """Save the lookups to a directory as lookups.bin.
 
         path (unicode / Path): The file path.
         """
         if len(self._tables):
             path = ensure_path(path)
-            filepath = path / "lookups.json.gz"
-            srsly.write_gzip_json(filepath, self._tables)
+            filepath = path / "lookups.bin"
+            srsly.write_msgpack(filepath, self._tables)
 
     def from_disk(self, path, **kwargs):
-        """Load lookups from a directory. Expects a "lookups.json.gz".
+        """Load lookups from a directory containing a lookups.bin.
 
         path (unicode / Path): The file path.
         RETURNS (Lookups): The loaded lookups.
         """
         path = ensure_path(path)
         if path.exists():
-            filepath = path / "lookups.json.gz"
-            self._tables = srsly.read_gzip_json(filepath)
+            filepath = path / "lookups.bin"
+            self._tables = srsly.read_msgpack(filepath)
         return self
 
 
