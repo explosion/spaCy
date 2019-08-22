@@ -18,7 +18,6 @@ passed on to the next component.
 | **tagger**        | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
 | **parser**        | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
 | **ner**           | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
-| **entity_linker** | [`EntityLinker`](/api/entitylinker)                                | `Doc[i].ent_kb_id`                                          | Resolve named entities to knowledge base IDs.    |
 | **textcat**       | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
 | ...               | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
 
@@ -42,11 +41,7 @@ entity recognizer doesn't use any features set by the tagger and parser, and so
 on. This means that you can swap them, or remove single components from the
 pipeline without affecting the others.
 
-One exception is the entity linker, which should always be preceded by 
-a pipeline component that recognizes entities such as the 
-[`EntityRecognizer`](/api/entityrecognizer).
-
-Custom components may also depend on annotations set by other components.
+However, custom components may depend on annotations set by other components.
 For example, a custom lemmatizer may need the part-of-speech tags assigned, so
 it'll only work if it's added after the tagger. The parser will respect
 pre-defined sentence boundaries, so if a previous component in the pipeline sets
@@ -54,6 +49,10 @@ them, its dependency predictions may be different. Similarly, it matters if you
 add the [`EntityRuler`](/api/entityruler) before or after the statistical entity
 recognizer: if it's added before, the entity recognizer will take the existing
 entities into account when making predictions.
+The [`EntityLinker`](/api/entitylinker), which resolves named entities to 
+knowledge base IDs, should be preceded by 
+a pipeline component that recognizes entities such as the 
+[`EntityRecognizer`](/api/entityrecognizer).
 
 </Accordion>
 
