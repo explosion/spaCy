@@ -184,7 +184,7 @@ cdef class PhraseMatcher:
             # e.g. Doc(nlp.vocab, words=[token.pos_ for token in doc])
             words = [self.get_lex_value(doc, i) for i in range(len(doc))]
             match_doc = Doc(self.vocab, words=words)
-        for other_ent_id, start, end in self.matcher(match_doc):
+        for _, start, end in self.matcher(match_doc):
             ent_ids = self.accept_match(match_doc, start, end)
             if ent_ids is not None:
                 for ent_id in ent_ids:
