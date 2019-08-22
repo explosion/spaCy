@@ -1,8 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import srsly
+
 from .errors import Errors
-from .util import SimpleFrozenDict
+from .util import SimpleFrozenDict, ensure_path
 
 
 class Lookups(object):
@@ -75,16 +77,44 @@ class Lookups(object):
         return name in self._tables
 
     def to_bytes(self, exclude=tuple(), **kwargs):
-        raise NotImplementedError
+        """Serialize the lookups to a bytestring.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized Lookups.
+        """
+        return srsly.msgpack_dumps(self._tables)
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
-        raise NotImplementedError
+        """Load the lookups from a bytestring.
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
-        raise NotImplementedError
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): The loaded Lookups.
+        """
+        self._tables = srsly.msgpack_loads(bytes_data)
+        return self
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
-        raise NotImplementedError
+    def to_disk(self, path, **kwargs):
+        """Save the lookups to a directory. Will create a compressed
+        lookups.json.gz file.
+
+        path (unicode / Path): The file path.
+        """
+        if len(self._tables):
+            path = ensure_path(path)
+            filepath = path / "lookups.json.gz"
+            srsly.write_gzip_json(filepath, self._tables)
+
+    def from_disk(self, path, **kwargs):
+        """Load lookups from a directory. Expects a "lookups.json.gz".
+
+        path (unicode / Path): The file path.
+        RETURNS (Lookups): The loaded lookups.
+        """
+        path = ensure_path(path)
+        if path.exists():
+            filepath = path / "lookups.json.gz"
+            self._tables = srsly.read_gzip_json(filepath)
+        return self
 
 
 class Table(dict):
