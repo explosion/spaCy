@@ -254,7 +254,7 @@ of a `KnowledgeBase`.
 | `prior_prob`  | float           | The prior probability of the `alias` referring to the `entity` |
 | **RETURNS**   | `Candidate`     | The newly constructed object.                                  |
 
-## Attributes {#attributes}
+## Candidate attributes {#candidate_attributes}
 
 | Name                   | Type         | Description                                                        |
 | ---------------------- | ------------ | ------------------------------------------------------------------ |
