@@ -18,6 +18,7 @@ from .structs cimport SerializedLexemeC
 from .compat import copy_reg, basestring_
 from .errors import Errors
 from .lemmatizer import Lemmatizer
+from .lookups import Lookups
 from .attrs import intify_attrs, NORM
 from .vectors import Vectors
 from ._ml import link_vectors_to_models
@@ -32,7 +33,7 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), oov_prob=-20., **deprecated_kwargs):
+                 strings=tuple(), lookups=None, oov_prob=-20., **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -48,6 +49,8 @@ cdef class Vocab:
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer({}, {}, {})
+        if lookups in (None, True, False):
+            lookups = Lookups()
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -59,6 +62,7 @@ cdef class Vocab:
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.vectors = Vectors()
+        self.lookups = lookups
 
     @property
     def lang(self):

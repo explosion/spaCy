@@ -14,6 +14,7 @@ import srsly
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .lemmatizer import Lemmatizer
+from .lookups import Lookups
 from .pipeline import DependencyParser, Tagger
 from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
 from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
@@ -36,14 +37,23 @@ from . import about
 
 class BaseDefaults(object):
     @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(
-            cls.lemma_index, cls.lemma_exc, cls.lemma_rules, cls.lemma_lookup
-        )
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        lemma_rules, lemma_index, lemma_exc, lemma_lookup = util.get_lemma_tables(lookups)
+        return Lemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
+
+    @classmethod
+    def create_lookups(cls, nlp=None):
+        root_path = util.get_module_path(cls)
+        lookups = Lookups()
+        for name, filename in cls.resources.items():
+            data = util.load_language_data(root_path / filename)
+            lookups.add_table(name, data)
+        return lookups
 
     @classmethod
     def create_vocab(cls, nlp=None):
-        lemmatizer = cls.create_lemmatizer(nlp)
+        lookups = cls.create_lookups(nlp)
+        lemmatizer = cls.create_lemmatizer(nlp, lookups=lookups)
         lex_attr_getters = dict(cls.lex_attr_getters)
         # This is messy, but it's the minimal working fix to Issue #639.
         lex_attr_getters[IS_STOP] = functools.partial(is_stop, stops=cls.stop_words)
@@ -51,6 +61,7 @@ class BaseDefaults(object):
             lex_attr_getters=lex_attr_getters,
             tag_map=cls.tag_map,
             lemmatizer=lemmatizer,
+            lookups=lookups,
         )
         for tag_str, exc in cls.morph_rules.items():
             for orth_str, attrs in exc.items():
@@ -95,6 +106,7 @@ class BaseDefaults(object):
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = {}
+    resources = {}
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
 
 

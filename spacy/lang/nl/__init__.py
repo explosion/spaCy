@@ -6,16 +6,15 @@ from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
-from .lemmatizer import LOOKUP, LEMMA_EXC, LEMMA_INDEX, RULES, DutchLemmatizer
+from .lemmatizer import DutchLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...util import update_exc, add_lookups, get_lemma_tables
 
 
 class DutchDefaults(Language.Defaults):
-
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: "nl"
@@ -27,16 +26,17 @@ class DutchDefaults(Language.Defaults):
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
+    resources = {
+        "lemma_rules": "lemmatizer/lemma_rules.json",
+        "lemma_index": "lemmatizer/lemma_index.json",
+        "lemma_exc": "lemmatizer/lemma_exc.json",
+        "lemma_lookup": "lemmatizer/lemma_lookup.json",
+    }
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        rules = RULES
-        lemma_index = LEMMA_INDEX
-        lemma_exc = LEMMA_EXC
-        lemma_lookup = LOOKUP
-        return DutchLemmatizer(
-            index=lemma_index, exceptions=lemma_exc, lookup=lemma_lookup, rules=rules
-        )
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        lemma_rules, lemma_index, lemma_exc, lemma_lookup = get_lemma_tables(lookups)
+        return DutchLemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
 
 
 class Dutch(Language):
