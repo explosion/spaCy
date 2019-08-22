@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import srsly
+from collections import OrderedDict
 
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path
@@ -24,7 +25,7 @@ class Lookups(object):
 
         RETURNS (Lookups): The newly created object.
         """
-        self._tables = {}
+        self._tables = OrderedDict()
 
     def __contains__(self, name):
         """Check if the lookups contain a table of a given name. Delegates to
@@ -126,7 +127,7 @@ class Lookups(object):
         return self
 
 
-class Table(dict):
+class Table(OrderedDict):
     """A table in the lookups. Subclass of builtin dict that implements a
     slightly more consistent and unified API.
     """
