@@ -5,7 +5,7 @@ tag: class
 source: spacy/kb.pyx
 ---
 
-The `KnowledgeBase` object provides a method to generate [`Candidate`](/api/candidate) 
+The `KnowledgeBase` object provides a method to generate [`Candidate`](/api/kb/#candidate_init) 
 objects, which are plausible external identifiers given a certain textual mention. 
 Each such `Candidate` holds information from the relevant KB entities,
 such as its frequency in text and possible aliases. 
@@ -151,7 +151,7 @@ Get a list of all aliases in the knowledge base.
 ## KnowledgeBase.get_candidates {#get_candidates tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities 
-of type [`Candidate`](/api/candidate).
+of type [`Candidate`](/api/kb/#candidate_init).  
 
 > #### Example
 >
@@ -230,3 +230,38 @@ should also be the same as the one used to create the KB.
 | ----------- | ---------------- | ----------------------------------------------------------------------------------------- |
 | `loc`       | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
 | **RETURNS** | `KnowledgeBase`  | The modified `KnowledgeBase` object.                                                           |
+
+
+## Candidate.\_\_init\_\_ {#candidate_init tag="method"}
+
+Construct a `Candidate` object. Usually this constructor is not called directly,
+but instead these objects are returned by the [`get_candidates`](/api/kb#get_candidates) method
+of a `KnowledgeBase`.
+
+> #### Example
+>
+> ```python
+> from spacy.kb import Candidate
+> candidate = Candidate(kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob)
+> ```
+
+| Name          | Type            | Description                                                    |
+| ------------- | --------------- | -------------------------------------------------------------- |
+| `kb`          | `KnowledgeBase` | The knowledge base that defined this candidate.                |
+| `entity_hash` | int             | The hash of the entity's KB ID.                                |
+| `entity_freq` | float           | The entity frequency as recorded in the KB.                    |
+| `alias_hash`  | int             | The hash of the textual mention or alias.                      |
+| `prior_prob`  | float           | The prior probability of the `alias` referring to the `entity` |
+| **RETURNS**   | `Candidate`     | The newly constructed object.                                  |
+
+## Attributes {#attributes}
+
+| Name                   | Type         | Description                                                        |
+| ---------------------- | ------------ | ------------------------------------------------------------------ |
+| `entity`               | int          | The entity's unique KB identifier                                  |
+| `entity_`              | unicode      | The entity's unique KB identifier                                  |
+| `alias`                | int          | The alias or textual mention                                       |
+| `alias_`               | unicode      | The alias or textual mention                                       |
+| `prior_prob`           | long         | The prior probability of the `alias` referring to the `entity`     |
+| `entity_freq`          | long         | The frequency of the entity in a typical corpus                    |
+| `entity_vector`        | vector       | The pre-trained vector of the entity                               |
