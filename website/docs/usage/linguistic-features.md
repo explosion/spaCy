@@ -598,7 +598,7 @@ or the `ent_kb_id` and `ent_kb_id_` attributes of a [`Token`](/api/token) object
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("my_custom_el_model")
 doc = nlp(u"Ada Lovelace was born in London")
 
 # document level
