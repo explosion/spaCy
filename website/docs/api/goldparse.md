@@ -54,7 +54,7 @@ Whether the provided syntactic annotations form a projective dependency tree.
 | `cand_to_gold`                       | list | The alignment from candidate tokenization to gold tokenization.                                                                                          |
 | `gold_to_cand`                       | list | The alignment from gold tokenization to candidate tokenization.                                                                                          |
 | `cats` <Tag variant="new">2</Tag>    | list | Entries in the list should be either a label, or a `(start, end, label)` triple. The tuple form is used for categories applied to spans of the document. |
-| `links` <Tag variant="new">X.X</Tag> | dict | Keys in the dictionary are `(start_char, end_char)` triples, and the values are dictionaries with `kb_id:value` entries.                                 |
+| `links` <Tag variant="new">2.2</Tag> | dict | Keys in the dictionary are `(start_char, end_char)` triples, and the values are dictionaries with `kb_id:value` entries.                                 |
 
 ## Utilities {#util}
 

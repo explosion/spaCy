@@ -3,6 +3,7 @@ title: KnowledgeBase
 teaser: A storage class for entities and aliases of a specific knowledge base (ontology)
 tag: class
 source: spacy/kb.pyx
+new: 2.2
 ---
 
 The `KnowledgeBase` object provides a method to generate [`Candidate`](/api/kb/#candidate_init) 

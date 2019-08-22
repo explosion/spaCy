@@ -1,8 +1,9 @@
 ---
 title: EntityLinker
+teaser: Functionality to disambiguate a named entity in text to a unique knowledge base identifier.
 tag: class
 source: spacy/pipeline/pipes.pyx
-new: X.X
+new: 2.2
 ---
 
 This class is a subclass of `Pipe` and follows the same API. The pipeline
