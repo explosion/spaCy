@@ -17,6 +17,7 @@ cdef enum action_t:
     RETRY_ADVANCE = 0110
     MATCH_EXTEND = 1001
     MATCH_REJECT = 2000
+    MATCH_DOUBLE = 3000
 
 
 cdef enum quantifier_t:

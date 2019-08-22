@@ -6,7 +6,6 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc
 
 
-@pytest.mark.xfail
 def test_issue3879(en_vocab):
     doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
     assert len(doc) == 5
