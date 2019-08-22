@@ -8,8 +8,6 @@ from spacy.kb import KnowledgeBase
 import csv
 import datetime
 
-from spacy import Errors
-
 
 def create_kb(
     nlp,
@@ -33,7 +31,10 @@ def create_kb(
         input_dim = nlp.vocab.vectors_length
         print("Loaded pre-trained vectors of size %s" % input_dim)
     else:
-        raise ValueError(Errors.E155)
+        raise ValueError(
+            "The `nlp` object should have access to pre-trained word vectors, "
+            " cf. https://spacy.io/usage/models#languages."
+        )
 
     # disable this part of the pipeline when rerunning the KB generation from preprocessed files
     if read_raw_data:

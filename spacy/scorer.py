@@ -160,14 +160,15 @@ class Scorer(object):
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
         if "-" not in [token[-1] for token in gold.orig_annot]:
             # Find all NER labels in gold and doc
-            ent_labels = set([x[0] for x in gold_ents]
-                    + [k.label_ for k in doc.ents])
+            ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
             # Set up all labels for per type scoring and prepare gold per type
             gold_per_ents = {ent_label: set() for ent_label in ent_labels}
             for ent_label in ent_labels:
                 if ent_label not in self.ner_per_ents:
                     self.ner_per_ents[ent_label] = PRFScore()
-                gold_per_ents[ent_label].update([x for x in gold_ents if x[0] == ent_label])
+                gold_per_ents[ent_label].update(
+                    [x for x in gold_ents if x[0] == ent_label]
+                )
             # Find all candidate labels, for all and per type
             cand_ents = set()
             cand_per_ents = {ent_label: set() for ent_label in ent_labels}

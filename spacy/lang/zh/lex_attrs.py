@@ -47,7 +47,7 @@ _single_num_words = [
     "拾陆",
     "拾柒",
     "拾捌",
-    "拾玖"
+    "拾玖",
 ]
 
 _count_num_words = [
@@ -68,27 +68,16 @@ _count_num_words = [
     "陆",
     "柒",
     "捌",
-    "玖"
+    "玖",
 ]
 
-_base_num_words = [
-    "十",
-    "百",
-    "千",
-    "万",
-    "亿",
-    "兆",
-    "拾",
-    "佰",
-    "仟"
-]
+_base_num_words = ["十", "百", "千", "万", "亿", "兆", "拾", "佰", "仟"]
 
 
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
-    text = text.replace(",", "").replace(
-        ".", "").replace("，", "").replace("。", "")
+    text = text.replace(",", "").replace(".", "").replace("，", "").replace("。", "")
     if text.isdigit():
         return True
     if text.count("/") == 1:
@@ -97,10 +86,12 @@ def like_num(text):
             return True
     if text in _single_num_words:
         return True
+    # fmt: off
     if re.match('^((' + '|'.join(_count_num_words) + '){1}'
                 + '(' + '|'.join(_base_num_words) + '){1})+'
                 + '(' + '|'.join(_count_num_words) + ')?$', text):
         return True
+    # fmt: on
     return False
 
 

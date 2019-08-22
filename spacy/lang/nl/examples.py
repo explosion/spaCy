@@ -14,5 +14,5 @@ sentences = [
     "Apple overweegt om voor 1 miljard een U.K. startup te kopen",
     "Autonome auto's verschuiven de verzekeringverantwoordelijkheid naar producenten",
     "San Francisco overweegt robots op voetpaden te verbieden",
-    "Londen is een grote stad in het Verenigd Koninkrijk"
+    "Londen is een grote stad in het Verenigd Koninkrijk",
 ]

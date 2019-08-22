@@ -365,5 +365,5 @@ AUXILIARY_VERBS_IRREG = {
     "va": ("aller",),
     "vais": ("aller",),
     "vas": ("aller",),
-    "vont": ("aller",)
+    "vont": ("aller",),
 }

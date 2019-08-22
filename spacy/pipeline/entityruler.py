@@ -54,6 +54,8 @@ class EntityRuler(object):
         self.phrase_patterns = defaultdict(list)
         self.matcher = Matcher(nlp.vocab, validate=validate)
         if phrase_matcher_attr is not None:
+            if phrase_matcher_attr.upper() == "TEXT":
+                phrase_matcher_attr = "ORTH"
             self.phrase_matcher_attr = phrase_matcher_attr
             self.phrase_matcher = PhraseMatcher(
                 nlp.vocab, attr=self.phrase_matcher_attr, validate=validate

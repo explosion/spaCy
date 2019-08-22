@@ -3,6 +3,7 @@ spacy/data/
 corpora/
 /models/
 keys/
+*.json.gz
 
 # Website
 website/.cache/

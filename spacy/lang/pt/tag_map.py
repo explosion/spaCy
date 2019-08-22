@@ -5039,5 +5039,5 @@ TAG_MAP = {
     "punc": {POS: PUNCT},
     "v-pcp|M|P": {POS: VERB},
     "v-pcp|M|S": {POS: VERB},
-    "_SP": {POS: SPACE}
+    "_SP": {POS: SPACE},
 }
