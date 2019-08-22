@@ -5,10 +5,8 @@ from .util import SimpleFrozenDict
 
 
 class Lookups(object):
-    _tables = {}
-
     def __init__(self):
-        pass
+        self._tables = {}
 
     def __contains__(self, name):
         return self.has_table(name)
@@ -18,9 +16,8 @@ class Lookups(object):
         return list(self._tables.keys())
 
     def add_table(self, name, data=SimpleFrozenDict()):
-        # TODO: fix
-        # if name in self.tables:
-        #    raise ValueError("Table '{}' already exists".format(name))
+        if name in self.tables:
+            raise ValueError("Table '{}' already exists".format(name))
         table = Table(name=name)
         table.update(data)
         self._tables[name] = table
