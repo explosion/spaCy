@@ -186,10 +186,7 @@ def train(
                 pipe_cfg = {"learn_tokens": learn_tokens}
             else:
                 pipe_cfg = {}
-            nlp.add_pipe(nlp.create_pipe(pipe, config=config))
-
-    if learn_tokens:
-        nlp.add_pipe(nlp.create_pipe("merge_subtokens"))
+            nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))
