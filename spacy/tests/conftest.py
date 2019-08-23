@@ -143,8 +143,8 @@ def lt_lemmatizer():
 
 
 @pytest.fixture(scope="session")
-def nb_tokenizer():
-    return get_lang_class("nb").Defaults.create_tokenizer()
+def no_tokenizer():
+    return get_lang_class("no").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")

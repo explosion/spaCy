@@ -1,40 +1,11 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .stop_words import STOP_WORDS
-from .morph_rules import MORPH_RULES
-from .syntax_iterators import SYNTAX_ITERATORS
-from .tag_map import TAG_MAP
-
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ..norm_exceptions import BASE_NORMS
-from ...language import Language
-from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ..no import Norwegian as NewNorwegian
+from ...errors import user_warning, Warnings
 
 
-class NorwegianDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "nb"
-    lex_attr_getters[NORM] = add_lookups(
-        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
-    )
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = STOP_WORDS
-    morph_rules = MORPH_RULES
-    tag_map = TAG_MAP
-    syntax_iterators = SYNTAX_ITERATORS
-    resources = {
-        "lemma_lookup": "lemmatizer/lemma_lookup.json",
-        "lemma_exc": "lemmatizer/lemma_exc.json",
-        "lemma_rules": "lemmatizer/lemma_rules.json",
-    }
-
-
-class Norwegian(Language):
-    lang = "nb"
-    Defaults = NorwegianDefaults
-
+user_warning(Warnings.W020)
+Norwegian = NewNorwegian
 
 __all__ = ["Norwegian"]

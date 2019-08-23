@@ -72,7 +72,7 @@
         { "code": "sv", "name": "Swedish", "has_examples": true },
         { "code": "fi", "name": "Finnish", "has_examples": true },
         {
-            "code": "nb",
+            "code": "no",
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
             "has_examples": true

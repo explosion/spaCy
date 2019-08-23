@@ -84,6 +84,9 @@ class Warnings(object):
     W018 = ("Entity '{entity}' already exists in the Knowledge base.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
+    W020 = ("Norwegian has moved from spacy.lang.nb to spacy.lang.no. This "
+            "makes it more consisten with treebanks the ISO language codes. "
+            "spaCy has automatically imported the new language class for you.")
 
 
 @add_codes
