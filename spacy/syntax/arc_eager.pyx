@@ -362,8 +362,9 @@ cdef class ArcEager(TransitionSystem):
                         label_freqs.pop(label)
         # Ensure these actions are present
         actions[BREAK].setdefault('ROOT', 0)
-        actions[RIGHT].setdefault('subtok', 0)
-        actions[LEFT].setdefault('subtok', 0)
+        if kwargs.get("learn_tokens") is True:
+            actions[RIGHT].setdefault('subtok', 0)
+            actions[LEFT].setdefault('subtok', 0)
         # Used for backoff
         actions[RIGHT].setdefault('dep', 0)
         actions[LEFT].setdefault('dep', 0)
