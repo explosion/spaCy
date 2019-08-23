@@ -864,7 +864,7 @@ cdef class Doc:
         """
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
-            array_head.append(TAG)
+            array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
         if self.is_parsed:
             array_head.extend([HEAD, DEP])

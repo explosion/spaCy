@@ -6,15 +6,14 @@ from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC, LOOKUP
-from .lemmatizer.lemmatizer import FrenchLemmatizer
+from .lemmatizer import FrenchLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...util import update_exc, add_lookups, get_lemma_tables
 
 
 class FrenchDefaults(Language.Defaults):
@@ -31,19 +30,17 @@ class FrenchDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     token_match = TOKEN_MATCH
     syntax_iterators = SYNTAX_ITERATORS
+    resources = {
+        "lemma_rules": "lemmatizer/lemma_rules.json",
+        "lemma_index": "lemmatizer/lemma_index.json",
+        "lemma_exc": "lemmatizer/lemma_exc.json",
+        "lemma_lookup": "lemmatizer/lemma_lookup.json",
+    }
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        lemma_rules = LEMMA_RULES
-        lemma_index = LEMMA_INDEX
-        lemma_exc = LEMMA_EXC
-        lemma_lookup = LOOKUP
-        return FrenchLemmatizer(
-            index=lemma_index,
-            exceptions=lemma_exc,
-            rules=lemma_rules,
-            lookup=lemma_lookup,
-        )
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        lemma_rules, lemma_index, lemma_exc, lemma_lookup = get_lemma_tables(lookups)
+        return FrenchLemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
 
 
 class French(Language):

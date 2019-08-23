@@ -299,7 +299,6 @@ class EntityRuler(object):
 
         path (unicode / Path): The JSONL file to save.
         **kwargs: Other config paramters, mostly for consistency.
-        RETURNS (EntityRuler): The loaded entity ruler.
 
         DOCS: https://spacy.io/api/entityruler#to_disk
         """

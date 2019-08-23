@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from pathlib import Path
-
 from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
@@ -15,7 +13,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups, load_language_data
+from ...util import update_exc, add_lookups
 
 
 class IndonesianDefaults(Language.Defaults):
@@ -31,9 +29,8 @@ class IndonesianDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     syntax_iterators = SYNTAX_ITERATORS
-    lemma_path = Path(__file__).parent / "lemmas.json"
-    lemma_lookup = load_language_data(lemma_path)
     tag_map = TAG_MAP
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Indonesian(Language):

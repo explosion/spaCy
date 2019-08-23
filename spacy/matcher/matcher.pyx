@@ -307,12 +307,12 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if action == RETRY_EXTEND:
                 # This handles the 'extend'
                 new_states.push_back(
-                    PatternStateC(pattern=state.pattern, start=state.start,
+                    PatternStateC(pattern=states[q].pattern, start=state.start,
                                   length=state.length+1))
             if action == RETRY_ADVANCE:
                 # This handles the 'advance'
                 new_states.push_back(
-                    PatternStateC(pattern=state.pattern+1, start=state.start,
+                    PatternStateC(pattern=states[q].pattern+1, start=state.start,
                                   length=state.length+1))
             states[q].pattern += 1
             if states[q].pattern.nr_py != 0:
@@ -327,8 +327,18 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             states[q].length += 1
             q += 1
         else:
-            ent_id = get_ent_id(&state.pattern[1])
+            ent_id = get_ent_id(state.pattern)
             if action == MATCH:
+                matches.push_back(
+                    MatchC(pattern_id=ent_id, start=state.start,
+                            length=state.length+1))
+            elif action == MATCH_DOUBLE:
+                # push match without last token if length > 0
+                if state.length > 0:
+                    matches.push_back(
+                        MatchC(pattern_id=ent_id, start=state.start,
+                                length=state.length))
+                # push match with last token
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
                             length=state.length+1))
@@ -439,6 +449,7 @@ cdef action_t get_action(PatternStateC state,
     RETRY_ADVANCE = 0110
     RETRY_EXTEND = 0011
     MATCH_REJECT = 2000 # Match, but don't include last token
+    MATCH_DOUBLE = 3000 # Match both with and without last token
 
     Problem: If a quantifier is matching, we're adding a lot of open partials
     """
@@ -476,8 +487,10 @@ cdef action_t get_action(PatternStateC state,
           return RETRY
     elif quantifier == ZERO_ONE:
       if is_match and is_final:
-          # Yes, final: 1000
-          return MATCH
+          # Yes, final: 3000
+          # To cater for a pattern ending in "?", we need to add
+          # a match both with and without the last token
+          return MATCH_DOUBLE
       elif is_match and not is_final:
           # Yes, non-final: 0110
           # We need both branches here, consider a pair like:

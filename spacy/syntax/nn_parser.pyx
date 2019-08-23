@@ -573,7 +573,8 @@ cdef class Parser:
             get_gold_tuples = lambda: gold_tuples
         cfg.setdefault('min_action_freq', 30)
         actions = self.moves.get_actions(gold_parses=get_gold_tuples(),
-                                         min_freq=cfg.get('min_action_freq', 30))
+                                         min_freq=cfg.get('min_action_freq', 30),
+                                         learn_tokens=self.cfg.get("learn_tokens", False))
         for action, labels in self.moves.labels.items():
             actions.setdefault(action, {})
             for label, freq in labels.items():

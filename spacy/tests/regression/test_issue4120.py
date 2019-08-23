@@ -6,15 +6,15 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc
 
 
-@pytest.mark.xfail
 def test_issue4120(en_vocab):
     """Test that matches without a final {OP: ?} token are returned."""
     matcher = Matcher(en_vocab)
     matcher.add("TEST", None, [{"ORTH": "a"}, {"OP": "?"}])
     doc1 = Doc(en_vocab, words=["a"])
     assert len(matcher(doc1)) == 1  # works
+
     doc2 = Doc(en_vocab, words=["a", "b", "c"])
-    assert len(matcher(doc2)) == 2  # doesn't work
+    assert len(matcher(doc2)) == 2  # fixed
 
     matcher = Matcher(en_vocab)
     matcher.add("TEST", None, [{"ORTH": "a"}, {"OP": "?"}, {"ORTH": "b"}])
@@ -24,4 +24,4 @@ def test_issue4120(en_vocab):
     matcher = Matcher(en_vocab)
     matcher.add("TEST", None, [{"ORTH": "a"}, {"OP": "?"}, {"ORTH": "b", "OP": "?"}])
     doc4 = Doc(en_vocab, words=["a", "b", "b", "c"])
-    assert len(matcher(doc4)) == 3  # doesn't work
+    assert len(matcher(doc4)) == 3  # fixed

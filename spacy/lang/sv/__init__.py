@@ -5,7 +5,6 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .morph_rules import MORPH_RULES
-from .lemmatizer import LEMMA_RULES, LOOKUP
 
 # Punctuation stolen from Danish
 from ..da.punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
@@ -29,9 +28,11 @@ class SwedishDefaults(Language.Defaults):
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
-    lemma_rules = LEMMA_RULES
-    lemma_lookup = LOOKUP
     morph_rules = MORPH_RULES
+    resources = {
+        "lemma_lookup": "lemmatizer/lemma_lookup.json",
+        "lemma_rules": "lemmatizer/lemma_rules.json",
+    }
 
 
 class Swedish(Language):
