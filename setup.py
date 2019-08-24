@@ -265,6 +265,7 @@ def setup_package():
                 # Language tokenizers with external dependencies
                 "ja": ["mecab-python3==0.7"],
                 "ko": ["natto-py==0.9.0"],
+                "th": ["pythainlp>=2.0"],
             },
             python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
             classifiers=[
