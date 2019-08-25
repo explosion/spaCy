@@ -44,7 +44,7 @@ def convert(
     input_file,
     output_dir="-",
     file_type="json",
-    n_sents=10,
+    n_sents=1,
     seg_sents=False,
     model=None,
     morphology=False,
@@ -104,7 +104,7 @@ def convert(
             srsly.write_jsonl(output_file, data)
         elif file_type == "msg":
             srsly.write_msgpack(output_file, data)
-        msg.good("Generated output file ({} documents): {}".format(len(data), output_file))
+        msg.good("Generated output file ({} documents)".format(len(data), output_file))
     else:
         # Print to stdout
         if file_type == "json":
