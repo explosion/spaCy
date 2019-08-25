@@ -1723,7 +1723,7 @@
             "description": "This package provide a wrapper for the Numeric Fused-Head in English. It provides another information layer on numbers that refer to another entity which is not obvious from the syntactic tree.",
             "github": "yanaiela/num_fh",
             "pip": "num_fh",
-            "category": ["pipeline", "models", "research"],
+            "category": ["pipeline", "research"],
             "code_example": [
                 "import spacy",
                 "from num_fh import NFH",
