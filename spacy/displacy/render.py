@@ -5,7 +5,9 @@ import uuid
 
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
-from ..util import minify_html, escape_html
+from ..util import minify_html, escape_html, get_entry_points
+from ..errors import Errors
+
 
 DEFAULT_LANG = "en"
 DEFAULT_DIR = "ltr"
@@ -124,6 +126,9 @@ class DependencyRenderer(object):
         i (int): Unique ID, typically arrow index.
         RETURNS (unicode): Rendered SVG markup.
         """
+        if start < 0 or end < 0:
+            error_args = dict(start=start, end=end, label=label, dir=direction)
+            raise ValueError(Errors.E157.format(**error_args))
         level = self.levels.index(end - start) + 1
         x_start = self.offset_x + start * self.distance + self.arrow_spacing
         if self.direction == "rtl":
@@ -237,12 +242,24 @@ class EntityRenderer(object):
             "CARDINAL": "#e4e7d2",
             "PERCENT": "#e4e7d2",
         }
+        user_colors = get_entry_points("spacy_displacy_colors")
+        for user_color in user_colors.values():
+            colors.update(user_color)
         colors.update(options.get("colors", {}))
         self.default_color = "#ddd"
         self.colors = colors
         self.ents = options.get("ents", None)
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
+
+        template = options.get("template")
+        if template:
+            self.ent_template = template
+        else:
+            if self.direction == "rtl":
+                self.ent_template = TPL_ENT_RTL
+            else:
+                self.ent_template = TPL_ENT
 
     def render(self, parsed, page=False, minify=False):
         """Render complete markup.
@@ -281,6 +298,7 @@ class EntityRenderer(object):
             label = span["label"]
             start = span["start"]
             end = span["end"]
+            additional_params = span.get("params", {})
             entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
             for i, fragment in enumerate(fragments):
@@ -290,10 +308,8 @@ class EntityRenderer(object):
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
                 ent_settings = {"label": label, "text": entity, "bg": color}
-                if self.direction == "rtl":
-                    markup += TPL_ENT_RTL.format(**ent_settings)
-                else:
-                    markup += TPL_ENT.format(**ent_settings)
+                ent_settings.update(additional_params)
+                markup += self.ent_template.format(**ent_settings)
             else:
                 markup += entity
             offset = end

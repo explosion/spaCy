@@ -134,6 +134,23 @@ def generate_cython(root, source):
         raise RuntimeError("Running cythonize failed")
 
 
+def gzip_language_data(root, source):
+    print("Compressing language data")
+    import srsly
+    from pathlib import Path
+
+    base = Path(root) / source
+    for jsonfile in base.glob("**/*.json"):
+        outfile = jsonfile.with_suffix(jsonfile.suffix + ".gz")
+        if outfile.is_file() and outfile.stat().st_ctime > jsonfile.stat().st_ctime:
+            # If the gz is newer it doesn't need updating
+            print("Skipping {}, already compressed".format(jsonfile))
+            continue
+        data = srsly.read_json(jsonfile)
+        srsly.write_gzip_json(outfile, data)
+        print("Compressed {}".format(jsonfile))
+
+
 def is_source_release(path):
     return os.path.exists(os.path.join(path, "PKG-INFO"))
 
@@ -209,6 +226,7 @@ def setup_package():
 
         if not is_source_release(root):
             generate_cython(root, "spacy")
+            gzip_language_data(root, "spacy/lang")
 
         setup(
             name="spacy",
@@ -235,7 +253,7 @@ def setup_package():
                 "plac<1.0.0,>=0.9.6",
                 "requests>=2.13.0,<3.0.0",
                 "wasabi>=0.2.0,<1.1.0",
-                "srsly>=0.0.6,<1.1.0",
+                "srsly>=0.1.0,<1.1.0",
                 'pathlib==1.0.1; python_version < "3.4"',
             ],
             setup_requires=["wheel"],
@@ -249,6 +267,7 @@ def setup_package():
                 # Language tokenizers with external dependencies
                 "ja": ["mecab-python3==0.7"],
                 "ko": ["natto-py==0.9.0"],
+                "th": ["pythainlp>=2.0"],
             },
             python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
             classifiers=[

@@ -2,6 +2,7 @@
 # cython: profile=True
 from __future__ import unicode_literals
 
+from libcpp.vector cimport vector
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 from preshed.maps cimport PreshMap
@@ -12,6 +13,7 @@ from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr
 from ..typedefs cimport attr_t, hash_t
 
+from ._schemas import TOKEN_PATTERN_SCHEMA
 from ..errors import Errors, Warnings, deprecation_warning, user_warning
 from ..attrs import FLAG61 as U_ENT
 from ..attrs import FLAG60 as B2_ENT
@@ -36,6 +38,7 @@ cdef class PhraseMatcher:
     cdef Vocab vocab
     cdef Matcher matcher
     cdef PreshMap phrase_ids
+    cdef vector[hash_vec] ent_id_matrix
     cdef int max_length
     cdef attr_id_t attr
     cdef public object _callbacks
@@ -62,6 +65,11 @@ cdef class PhraseMatcher:
         if isinstance(attr, long):
             self.attr = attr
         else:
+            attr = attr.upper()
+            if attr == "TEXT":
+                attr = "ORTH"
+            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+                raise ValueError(Errors.E152.format(attr=attr))
             self.attr = self.vocab.strings[attr]
         self.phrase_ids = PreshMap()
         abstract_patterns = [
@@ -123,6 +131,10 @@ cdef class PhraseMatcher:
             length = doc.length
             if length == 0:
                 continue
+            if self.attr in (POS, TAG, LEMMA) and not doc.is_tagged:
+                raise ValueError(Errors.E155.format())
+            if self.attr == DEP and not doc.is_parsed:
+                raise ValueError(Errors.E156.format())
             if self._validate and (doc.is_tagged or doc.is_parsed) \
               and self.attr not in (DEP, POS, TAG, LEMMA):
                 string_attr = self.vocab.strings[self.attr]
@@ -135,7 +147,23 @@ cdef class PhraseMatcher:
                 lexeme.set_flag(tag, True)
                 phrase_key[i] = lexeme.orth
             phrase_hash = hash64(phrase_key, length * sizeof(attr_t), 0)
-            self.phrase_ids.set(phrase_hash, <void*>ent_id)
+
+            if phrase_hash in self.phrase_ids:
+                phrase_index = self.phrase_ids[phrase_hash]
+                ent_id_list = self.ent_id_matrix[phrase_index]
+                ent_id_list.append(ent_id)
+                self.ent_id_matrix[phrase_index] = ent_id_list
+
+            else:
+                ent_id_list = hash_vec(1)
+                ent_id_list[0] = ent_id
+                new_index = self.ent_id_matrix.size()
+                if new_index == 0:
+                    # PreshMaps can not contain 0 as value, so storing a dummy at 0
+                    self.ent_id_matrix.push_back(hash_vec(0))
+                    new_index = 1
+                self.ent_id_matrix.push_back(ent_id_list)
+                self.phrase_ids.set(phrase_hash,  <void*>new_index)
 
     def __call__(self, Doc doc):
         """Find all sequences matching the supplied patterns on the `Doc`.
@@ -157,9 +185,10 @@ cdef class PhraseMatcher:
             words = [self.get_lex_value(doc, i) for i in range(len(doc))]
             match_doc = Doc(self.vocab, words=words)
         for _, start, end in self.matcher(match_doc):
-            ent_id = self.accept_match(match_doc, start, end)
-            if ent_id is not None:
-                matches.append((ent_id, start, end))
+            ent_ids = self.accept_match(match_doc, start, end)
+            if ent_ids is not None:
+                for ent_id in ent_ids:
+                    matches.append((ent_id, start, end))
         for i, (ent_id, start, end) in enumerate(matches):
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
@@ -206,11 +235,11 @@ cdef class PhraseMatcher:
         for i, j in enumerate(range(start, end)):
             phrase_key[i] = doc.c[j].lex.orth
         cdef hash_t key = hash64(phrase_key, (end-start) * sizeof(attr_t), 0)
-        ent_id = <hash_t>self.phrase_ids.get(key)
-        if ent_id == 0:
+
+        ent_index = <hash_t>self.phrase_ids.get(key)
+        if ent_index == 0:
             return None
-        else:
-            return ent_id
+        return self.ent_id_matrix[ent_index]
 
     def get_lex_value(self, Doc doc, int i):
         if self.attr == ORTH:

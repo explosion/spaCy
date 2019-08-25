@@ -536,7 +536,7 @@ for orth in [
     "Sen.",
     "St.",
     "vs.",
-    "v.s."
+    "v.s.",
 ]:
     _exc[orth] = [{ORTH: orth}]
 

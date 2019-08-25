@@ -14,6 +14,7 @@ import functools
 import itertools
 import numpy.random
 import srsly
+import sys
 
 try:
     import jsonschema
@@ -115,6 +116,29 @@ def ensure_path(path):
         return Path(path)
     else:
         return path
+
+
+def load_language_data(path):
+    """Load JSON language data using the given path as a base. If the provided
+    path isn't present, will attempt to load a gzipped version before giving up.
+
+    path (unicode / Path): The data to load.
+    RETURNS: The loaded data.
+    """
+    path = ensure_path(path)
+    if path.exists():
+        return srsly.read_json(path)
+    path = path.with_suffix(path.suffix + ".gz")
+    if path.exists():
+        return srsly.read_gzip_json(path)
+    # TODO: move to spacy.errors
+    raise ValueError("Can't find language data file: {}".format(path2str(path)))
+
+
+def get_module_path(module):
+    if not hasattr(module, "__module__"):
+        raise ValueError("Can't find module {}".format(repr(module)))
+    return Path(sys.modules[module.__module__].__file__).parent
 
 
 def load_model(name, **overrides):
@@ -431,6 +455,23 @@ def expand_exc(excs, search, replace):
             new_value = [_fix_token(t, search, replace) for t in tokens]
             new_excs[new_key] = new_value
     return new_excs
+
+
+def get_lemma_tables(lookups):
+    lemma_rules = {}
+    lemma_index = {}
+    lemma_exc = {}
+    lemma_lookup = None
+    if lookups is not None:
+        if "lemma_rules" in lookups:
+            lemma_rules = lookups.get_table("lemma_rules")
+        if "lemma_index" in lookups:
+            lemma_index = lookups.get_table("lemma_index")
+        if "lemma_exc" in lookups:
+            lemma_exc = lookups.get_table("lemma_exc")
+        if "lemma_lookup" in lookups:
+            lemma_lookup = lookups.get_table("lemma_lookup")
+    return (lemma_rules, lemma_index, lemma_exc, lemma_lookup)
 
 
 def normalize_slice(length, start, stop, step=None):

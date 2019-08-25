@@ -362,8 +362,9 @@ cdef class ArcEager(TransitionSystem):
                         label_freqs.pop(label)
         # Ensure these actions are present
         actions[BREAK].setdefault('ROOT', 0)
-        actions[RIGHT].setdefault('subtok', 0)
-        actions[LEFT].setdefault('subtok', 0)
+        if kwargs.get("learn_tokens") is True:
+            actions[RIGHT].setdefault('subtok', 0)
+            actions[LEFT].setdefault('subtok', 0)
         # Used for backoff
         actions[RIGHT].setdefault('dep', 0)
         actions[LEFT].setdefault('dep', 0)
@@ -410,10 +411,22 @@ cdef class ArcEager(TransitionSystem):
     def preprocess_gold(self, GoldParse gold):
         if not self.has_gold(gold):
             return None
+        # Figure out whether we're using subtok
+        use_subtok = False
+        for action, labels in self.labels.items():
+            if SUBTOK_LABEL in labels:
+                use_subtok = True
+                break
         for i, (head, dep) in enumerate(zip(gold.heads, gold.labels)):
             # Missing values
             if head is None or dep is None:
                 gold.c.heads[i] = i
+                gold.c.has_dep[i] = False
+            elif dep == SUBTOK_LABEL and not use_subtok:
+                # If we're not doing the joint tokenization and parsing,
+                # regard these subtok labels as missing
+                gold.c.heads[i] = i
+                gold.c.labels[i] = 0
                 gold.c.has_dep[i] = False
             else:
                 if head > i:

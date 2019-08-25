@@ -546,6 +546,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
                 self.c[i].ent_iob = 0  # Means missing.
             cdef attr_t ent_type
             cdef int start, end
@@ -863,7 +864,7 @@ cdef class Doc:
         """
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
         if self.is_tagged:
-            array_head.append(TAG)
+            array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
         if self.is_parsed:
             array_head.extend([HEAD, DEP])

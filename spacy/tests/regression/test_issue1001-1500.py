@@ -19,7 +19,7 @@ from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
 def test_issue1235():
     """Test that g is not split of if preceded by a number and a letter"""
     nlp = English()
-    testwords = u'e2g 2g 52g'
+    testwords = "e2g 2g 52g"
     doc = nlp(testwords)
     assert len(doc) == 5
     assert doc[0].text == "e2g"

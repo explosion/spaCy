@@ -8,7 +8,6 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .morph_rules import MORPH_RULES
 from ..tag_map import TAG_MAP
-from .lemmatizer import LOOKUP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -30,7 +29,7 @@ class DanishDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
-    lemma_lookup = LOOKUP
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Danish(Language):

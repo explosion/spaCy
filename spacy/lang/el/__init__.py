@@ -6,8 +6,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map_general import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC
-from .lemmatizer.lemmatizer import GreekLemmatizer
+from .lemmatizer import GreekLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -15,13 +14,13 @@ from .norm_exceptions import NORM_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
+from ...util import update_exc, add_lookups, get_lemma_tables
 
 
 class GreekDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = lambda text: "el"  # ISO code
+    lex_attr_getters[LANG] = lambda text: "el"
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
     )
@@ -32,22 +31,21 @@ class GreekDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     syntax_iterators = SYNTAX_ITERATORS
+    resources = {
+        "lemma_index": "lemmatizer/lemma_index.json",
+        "lemma_exc": "lemmatizer/lemma_exc.json",
+        "lemma_rules": "lemmatizer/lemma_rules.json",
+    }
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        lemma_rules = LEMMA_RULES
-        lemma_index = LEMMA_INDEX
-        lemma_exc = LEMMA_EXC
-        return GreekLemmatizer(
-            index=lemma_index, exceptions=lemma_exc, rules=lemma_rules
-        )
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        lemma_rules, lemma_index, lemma_exc, lemma_lookup = get_lemma_tables(lookups)
+        return GreekLemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
 
 
 class Greek(Language):
+    lang = "el"
+    Defaults = GreekDefaults
 
-    lang = "el"  # ISO code
-    Defaults = GreekDefaults  # set Defaults to custom language defaults
 
-
-# set default export – this allows the language class to be lazy-loaded
 __all__ = ["Greek"]

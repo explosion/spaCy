@@ -757,44 +757,34 @@ def build_simple_cnn_text_classifier(tok2vec, nr_class, exclusive_classes=False,
 def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
     if "entity_width" not in cfg:
         raise ValueError(Errors.E144.format(param="entity_width"))
-    if "context_width" not in cfg:
-        raise ValueError(Errors.E144.format(param="context_width"))
 
     conv_depth = cfg.get("conv_depth", 2)
     cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
     pretrained_vectors = cfg.get("pretrained_vectors", None)
-    context_width = cfg.get("context_width")
-    entity_width = cfg.get("entity_width")
+    context_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
-        model = (
-            Affine(entity_width, entity_width + context_width + 1 + ner_types)
-            >> Affine(1, entity_width, drop_factor=0.0)
-            >> logistic
+        # context encoder
+        tok2vec = Tok2Vec(
+            width=hidden_width,
+            embed_size=embed_width,
+            pretrained_vectors=pretrained_vectors,
+            cnn_maxout_pieces=cnn_maxout_pieces,
+            subword_features=True,
+            conv_depth=conv_depth,
+            bilstm_depth=0,
         )
 
-        # context encoder
-        tok2vec = (
-            Tok2Vec(
-                width=hidden_width,
-                embed_size=embed_width,
-                pretrained_vectors=pretrained_vectors,
-                cnn_maxout_pieces=cnn_maxout_pieces,
-                subword_features=True,
-                conv_depth=conv_depth,
-                bilstm_depth=0,
-            )
+        model = (
+            tok2vec
             >> flatten_add_lengths
             >> Pooling(mean_pool)
             >> Residual(zero_init(Maxout(hidden_width, hidden_width)))
-            >> zero_init(Affine(context_width, hidden_width))
+            >> zero_init(Affine(context_width, hidden_width, drop_factor=0.0))
         )
 
         model.tok2vec = tok2vec
-
-    model.tok2vec = tok2vec
-    model.tok2vec.nO = context_width
-    model.nO = 1
+        model.nO = context_width
     return model
 
 
@@ -972,3 +962,16 @@ class CharacterEmbed(Model):
         return output, backprop_character_embed
 
 
+def get_cossim_loss(yh, y):
+    # Add a small constant to avoid 0 vectors
+    yh = yh + 1e-8
+    y = y + 1e-8
+    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+    xp = get_array_module(yh)
+    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+    mul_norms = norm_yh * norm_y
+    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
+    loss = xp.abs(cosine - 1).sum()
+    return loss, -d_yh

@@ -249,36 +249,108 @@ pattern = [{"TEXT": {"REGEX": "^[Uu](\\.?|nited)$"}},
            {"LOWER": "president"}]
 ```
 
-`'REGEX'` as an operator (instead of a top-level property that only matches on
-the token's text) allows defining rules for any string value, including custom
-attributes:
+The `REGEX` operator allows defining rules for any attribute string value,
+including custom attributes. It always needs to be applied to an attribute like
+`TEXT`, `LOWER` or `TAG`:
 
 ```python
+# Match different spellings of token texts
+pattern = [{"TEXT": {"REGEX": "deff?in[ia]tely"}}]
+
 # Match tokens with fine-grained POS tags starting with 'V'
 pattern = [{"TAG": {"REGEX": "^V"}}]
 
 # Match custom attribute values with regular expressions
-pattern = [{"_": {"country": {"REGEX": "^[Uu](\\.?|nited) ?[Ss](\\.?|tates)$"}}}]
+pattern = [{"_": {"country": {"REGEX": "^[Uu](nited|\\.?) ?[Ss](tates|\\.?)$"}}}]
 ```
 
-<Infobox title="Regular expressions in older versions" variant="warning">
+<Infobox title="Important note" variant="warning">
 
-Versions before v2.1.0 don't yet support the `REGEX` operator. A simple solution
-is to match a regular expression on the `Doc.text` with `re.finditer` and use
-the [`Doc.char_span`](/api/doc#char_span) method to create a `Span` from the
-character indices of the match.
-
-You can also use the regular expression by converting it to a **binary token
-flag**. [`Vocab.add_flag`](/api/vocab#add_flag) returns a flag ID which you can
-use as a key of a token match pattern.
-
-```python
-definitely_flag = lambda text: bool(re.compile(r"deff?in[ia]tely").match(text))
-IS_DEFINITELY = nlp.vocab.add_flag(definitely_flag)
-pattern = [{IS_DEFINITELY: True}]
-```
+When using the `REGEX` operator, keep in mind that it operates on **single
+tokens**, not the whole text. Each expression you provide will be matched on a
+token. If you need to match on the whole text instead, see the details on
+[regex matching on the whole text](#regex-text).
 
 </Infobox>
+
+##### Matching regular expressions on the full text {#regex-text}
+
+If your expressions apply to multiple tokens, a simple solution is to match on
+the `doc.text` with `re.finditer` and use the
+[`Doc.char_span`](/api/doc#char_span) method to create a `Span` from the
+character indices of the match. If the matched characters don't map to one or
+more valid tokens, `Doc.char_span` returns `None`.
+
+> #### What's a valid token sequence?
+>
+> In the example, the expression will also match `"US"` in `"USA"`. However,
+> `"USA"` is a single token and `Span` objects are **sequences of tokens**. So
+> `"US"` cannot be its own span, because it does not end on a token boundary.
+
+```python
+### {executable="true"}
+import spacy
+import re
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("The United States of America (USA) are commonly known as the United States (U.S. or US) or America.")
+
+expression = r"[Uu](nited|\\.?) ?[Ss](tates|\\.?)"
+for match in re.finditer(expression, doc.text):
+    start, end = match.span()
+    span = doc.char_span(start, end)
+    # This is a Span object or None if match doesn't map to valid token sequence
+    if span is not None:
+        print("Found match:", span.text)
+```
+
+<Accordion title="How can I expand the match to a valid token sequence?">
+
+In some cases, you might want to expand the match to the closest token
+boundaries, so you can create a `Span` for `"USA"`, even though only the
+substring `"US"` is matched. You can calculate this using the character offsets
+of the tokens in the document, available as
+[`Token.idx`](/api/token#attributes). This lets you create a list of valid token
+start and end boundaries and leaves you with a rather basic algorithmic problem:
+Given a number, find the next lowest (start token) or the next highest (end
+token) number that's part of a given list of numbers. This will be the closest
+valid token boundary.
+
+There are many ways to do this and the most straightforward one is to create a
+dict keyed by characters in the `Doc`, mapped to the token they're part of. It's
+easy to write and less error-prone, and gives you a constant lookup time: you
+only ever need to create the dict once per `Doc`.
+
+```python
+chars_to_tokens = {}
+for token in doc:
+    for i in range(token.idx, token.idx + len(token.text)):
+        chars_to_tokens[i] = token.i
+```
+
+You can then look up character at a given position, and get the index of the
+corresponding token that the character is part of. Your span would then be
+`doc[token_start:token_end]`. If a character isn't in the dict, it means it's
+the (white)space tokens are split on. That hopefully shouldn't happen, though,
+because it'd mean your regex is producing matches with leading or trailing
+whitespace.
+
+```python
+### {highlight="5-8"}
+span = doc.char_span(start, end)
+if span is not None:
+    print("Found match:", span.text)
+else:
+    start_token = chars_to_tokens.get(start)
+    end_token = chars_to_tokens.get(end)
+    if start_token is not None and end_token is not None:
+        span = doc[start_token:end_token + 1]
+        print("Found closest match:", span.text)
+```
+
+</Accordion>
+
+---
 
 #### Operators and quantifiers {#quantifiers}
 
@@ -787,12 +859,12 @@ token pattern covering the exact tokenization of the term.
 <Infobox title="Important note on creating patterns" variant="warning">
 
 To create the patterns, each phrase has to be processed with the `nlp` object.
-If you have a mode loaded, doing this in a loop or list comprehension can easily
-become inefficient and slow. If you only need the tokenization and lexical
-attributes, you can run [`nlp.make_doc`](/api/language#make_doc) instead, which
-will only run the tokenizer. For an additional speed boost, you can also use the
-[`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process the texts
-as a stream.
+If you have a model loaded, doing this in a loop or list comprehension can
+easily become inefficient and slow. If you **only need the tokenization and
+lexical attributes**, you can run [`nlp.make_doc`](/api/language#make_doc)
+instead, which will only run the tokenizer. For an additional speed boost, you
+can also use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will
+process the texts as a stream.
 
 ```diff
 - patterns = [nlp(term) for term in LOTS_OF_TERMS]
@@ -824,6 +896,20 @@ doc = nlp(u"angela merkel and us president barack Obama")
 for match_id, start, end in matcher(doc):
     print("Matched based on lowercase token text:", doc[start:end])
 ```
+
+<Infobox title="Important note on creating patterns" variant="warning">
+
+The examples here use [`nlp.make_doc`](/api/language#make_doc) to create `Doc`
+object patterns as efficiently as possible and without running any of the other
+pipeline components. If the token attribute you want to match on are set by a
+pipeline component, **make sure that the pipeline component runs** when you
+create the pattern. For example, to match on `POS` or `LEMMA`, the pattern `Doc`
+objects need to have part-of-speech tags set by the `tagger`. You can either
+call the `nlp` object on your pattern texts instead of `nlp.make_doc`, or use
+[`nlp.disable_pipes`](/api/language#disable_pipes) to disable components
+selectively.
+
+</Infobox>
 
 Another possible use case is matching number tokens like IP addresses based on
 their shape. This means that you won't have to worry about how those string will

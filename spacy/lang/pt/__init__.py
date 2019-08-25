@@ -1,10 +1,11 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from pathlib import Path
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .lemmatizer import LOOKUP
 from .tag_map import TAG_MAP
 from .norm_exceptions import NORM_EXCEPTIONS
 
@@ -25,10 +26,10 @@ class PortugueseDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    lemma_lookup = LOOKUP
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     prefixes = TOKENIZER_PREFIXES
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Portuguese(Language):

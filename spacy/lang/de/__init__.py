@@ -6,7 +6,6 @@ from .norm_exceptions import NORM_EXCEPTIONS
 from .punctuation import TOKENIZER_INFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
-from .lemmatizer import LOOKUP
 from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -27,7 +26,7 @@ class GermanDefaults(Language.Defaults):
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
-    lemma_lookup = LOOKUP
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class German(Language):

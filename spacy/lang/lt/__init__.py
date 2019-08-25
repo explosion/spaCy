@@ -5,7 +5,6 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
-from .lemmatizer import LOOKUP
 from .morph_rules import MORPH_RULES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -31,7 +30,7 @@ class LithuanianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     morph_rules = MORPH_RULES
-    lemma_lookup = LOOKUP
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Lithuanian(Language):

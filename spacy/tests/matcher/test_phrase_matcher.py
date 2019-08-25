@@ -99,3 +99,36 @@ def test_phrase_matcher_validation(en_vocab):
     with pytest.warns(None) as record:
         matcher.add("TEST4", None, doc2)
         assert not record.list
+
+
+def test_attr_validation(en_vocab):
+    with pytest.raises(ValueError):
+        PhraseMatcher(en_vocab, attr="UNSUPPORTED")
+
+
+def test_attr_pipeline_checks(en_vocab):
+    doc1 = Doc(en_vocab, words=["Test"])
+    doc1.is_parsed = True
+    doc2 = Doc(en_vocab, words=["Test"])
+    doc2.is_tagged = True
+    doc3 = Doc(en_vocab, words=["Test"])
+    # DEP requires is_parsed
+    matcher = PhraseMatcher(en_vocab, attr="DEP")
+    matcher.add("TEST1", None, doc1)
+    with pytest.raises(ValueError):
+        matcher.add("TEST2", None, doc2)
+    with pytest.raises(ValueError):
+        matcher.add("TEST3", None, doc3)
+    # TAG, POS, LEMMA require is_tagged
+    for attr in ("TAG", "POS", "LEMMA"):
+        matcher = PhraseMatcher(en_vocab, attr=attr)
+        matcher.add("TEST2", None, doc2)
+        with pytest.raises(ValueError):
+            matcher.add("TEST1", None, doc1)
+        with pytest.raises(ValueError):
+            matcher.add("TEST3", None, doc3)
+    # TEXT/ORTH only require tokens
+    matcher = PhraseMatcher(en_vocab, attr="ORTH")
+    matcher.add("TEST3", None, doc3)
+    matcher = PhraseMatcher(en_vocab, attr="TEXT")
+    matcher.add("TEST3", None, doc3)
