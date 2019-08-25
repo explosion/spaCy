@@ -1720,7 +1720,7 @@
             "id": "num_fh",
             "title": "Numeric Fused-Head",
             "slogan": "Numeric Fused-Head Identificaiton and Resolution in English",
-            "description": "This package provide a wrapper for the Numeric Fused-Head in English. It provides another information layer information on numbers that refer to another entity which is not     obvious from the syntactic tree.",
+            "description": "This package provide a wrapper for the Numeric Fused-Head in English. It provides another information layer on numbers that refer to another entity which is not obvious from the syntactic tree.",
             "github": "yanaiela/num_fh",
             "pip": "num_fh",
             "category": ["pipeline", "models", "research"],
