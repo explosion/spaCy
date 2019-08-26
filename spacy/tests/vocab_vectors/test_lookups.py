@@ -52,6 +52,7 @@ def test_lookups_to_from_bytes():
     table2 = new_lookups.get_table("table2")
     assert len(table2) == 3
     assert table2.get("b") == 2
+    assert new_lookups.to_bytes() == lookups_bytes
 
 
 def test_lookups_to_from_disk():
@@ -87,6 +88,7 @@ def test_lookups_to_from_bytes_via_vocab():
     table = new_vocab.lookups.get_table(table_name)
     assert len(table) == 2
     assert table.get("hello") == "world"
+    assert new_vocab.to_bytes() == vocab_bytes
 
 
 def test_lookups_to_from_disk_via_vocab():
