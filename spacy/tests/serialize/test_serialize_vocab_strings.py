@@ -18,6 +18,7 @@ def test_serialize_vocab(en_vocab, text):
     vocab_bytes = en_vocab.to_bytes()
     new_vocab = Vocab().from_bytes(vocab_bytes)
     assert new_vocab.strings[text_hash] == text
+    assert new_vocab.to_bytes() == vocab_bytes
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
