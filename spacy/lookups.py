@@ -123,7 +123,8 @@ class Lookups(object):
         path = ensure_path(path)
         filepath = path / "lookups.bin"
         if filepath.exists():
-            self._tables = srsly.read_msgpack(filepath)
+            data = srsly.read_msgpack(filepath)
+            self._tables = OrderedDict(data)
         return self
 
 
