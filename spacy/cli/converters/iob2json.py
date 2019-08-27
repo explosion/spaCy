@@ -23,6 +23,8 @@ def iob2json(input_data, n_sents=10, msg=None, *args, **kwargs):
     if n_sents > 0:
         if msg:
             msg.info("Grouping every {} sentences into a document.".format(n_sents))
+            if n_sents == 1:
+                msg.warn("To generate better training data, you may want to group sentences into documents with `-n 10`.")
         docs = merge_sentences(docs, n_sents)
     return docs
 

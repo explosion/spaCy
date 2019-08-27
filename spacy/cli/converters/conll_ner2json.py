@@ -40,12 +40,14 @@ def conll_ner2json(input_data, n_sents=10, seg_sents=False, model=None, msg=None
         seg_sents = False
     if doc_delimiter in input_data and n_sents:
         if msg:
-            msg.warn("Document delimiters found, automatic document segmentation with `-n` (default: `-n 10`) disabled.")
+            msg.warn("Document delimiters found, automatic document segmentation with `-n` disabled.")
         n_sents = 0
     # do document segmentation with existing sentences
     if "\n\n" in input_data and not doc_delimiter in input_data and n_sents:
         if msg:
             msg.info("Grouping every {} sentences into a document.".format(n_sents))
+            if n_sents == 1:
+                msg.warn("To generate better training data, you may want to group sentences into documents with `-n 10`.")
         input_data = segment_docs(input_data, n_sents, doc_delimiter)
     # do sentence segmentation with existing documents
     if not "\n\n" in input_data and doc_delimiter in input_data and seg_sents:
@@ -55,10 +57,13 @@ def conll_ner2json(input_data, n_sents=10, seg_sents=False, model=None, msg=None
     if not "\n\n" in input_data and not doc_delimiter in input_data:
         # sentence segmentation required for document segmentation
         if msg and n_sents > 0 and not seg_sents:
-                msg.warn("No sentence boundaries found to use with option `-n {}` (default: `-n 10`). Use `-s` to automatically segment sentences or `-n 0` to disable.".format(n_sents))
+            msg.warn("No sentence boundaries found to use with option `-n {}`. Use `-s` to automatically segment sentences or `-n 0` to disable.".format(n_sents))
         else:
             if msg and n_sents:
                 msg.info("Grouping every {} sentences into a document.".format(n_sents))
+                if n_sents == 1:
+                    msg.warn("To generate better training data, you may want to group sentences into documents with `-n 10`.")
+
             input_data = segment_sents_and_docs(input_data, n_sents, doc_delimiter, model=model, msg=msg)
     # provide warnings for problematic data
     if not "\n\n" in input_data:
