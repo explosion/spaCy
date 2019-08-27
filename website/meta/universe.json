@@ -1736,7 +1736,7 @@
                 "assert doc[18]._.is_nfh == False",
                 "assert doc[3]._.is_deter_nfh == True",
                 "assert doc[16]._.is_deter_nfh == False",
-                "assert len(doc._.nfh) == 4",
+                "assert len(doc._.nfh) == 4"
             ],
             "author": "Yanai Elazar",
             "author_links": {
@@ -1744,7 +1744,7 @@
                 "twitter": "yanaiela",
                 "website": "https://yanaiela.github.io"
             }
-        },
+        }
     ],
 
     "categories": [
