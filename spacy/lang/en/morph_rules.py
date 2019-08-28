@@ -73,10 +73,11 @@ _subordinating_conjunctions = [
     "will",
 ]
 
-_relative_pronouns = ["this", "that", "those", "these"]
+# This seems kind of wrong too?
+#_relative_pronouns = ["this", "that", "those", "these"]
 
 MORPH_RULES = {
-    "DT": {word: {"POS": "PRON"} for word in _relative_pronouns},
+    #"DT": {word: {"POS": "PRON"} for word in _relative_pronouns},
     "IN": {word: {"POS": "SCONJ"} for word in _subordinating_conjunctions},
     "NN": {
         "something": {"POS": "PRON"},
