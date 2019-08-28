@@ -2,12 +2,14 @@
 from __future__ import unicode_literals
 
 import re
+from wasabi import Printer
 
 from ...gold import iob_to_biluo
 from ...util import minibatch
+from .conll_ner2json import n_sents_info
 
 
-def iob2json(input_data, n_sents=10, msg=None, *args, **kwargs):
+def iob2json(input_data, n_sents=10, *args, **kwargs):
     """
     Convert IOB files with one sentence per line and tags separated with '|'
     into JSON format for use with train cli. IOB and IOB2 are accepted.
@@ -19,12 +21,10 @@ def iob2json(input_data, n_sents=10, msg=None, *args, **kwargs):
     I|PRP|O like|VBP|O London|NNP|I-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     """
+    msg = Printer()
     docs = read_iob(input_data.split("\n"))
     if n_sents > 0:
-        if msg:
-            msg.info("Grouping every {} sentences into a document.".format(n_sents))
-            if n_sents == 1:
-                msg.warn("To generate better training data, you may want to group sentences into documents with `-n 10`.")
+        n_sents_info(msg, n_sents)
         docs = merge_sentences(docs, n_sents)
     return docs
 

@@ -93,7 +93,7 @@ def convert(
         msg.fail("Can't find converter for {}".format(converter), exits=1)
     # Use converter function to convert data
     func = CONVERTERS[converter]
-    data = func(input_data, n_sents=n_sents, seg_sents=seg_sents, use_morphology=morphology, lang=lang, msg=msg, model=model)
+    data = func(input_data, n_sents=n_sents, seg_sents=seg_sents, use_morphology=morphology, lang=lang, model=model)
     if output_dir != "-":
         # Export data to a file
         suffix = ".{}".format(file_type)
