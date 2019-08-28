@@ -240,7 +240,7 @@ def train(
         best_score = 0.0
         for i in range(n_iter):
             train_docs = corpus.train_docs(
-                nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
+                nlp, orth_variant_level=noise_level, gold_preproc=gold_preproc, max_length=0
             )
             if raw_text:
                 random.shuffle(raw_text)
