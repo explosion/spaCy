@@ -7,6 +7,7 @@ import random
 import numpy
 import tempfile
 import shutil
+import itertools
 from pathlib import Path
 import srsly
 
@@ -206,13 +207,14 @@ class GoldCorpus(object):
         return n
 
     def train_docs(self, nlp, gold_preproc=False, max_length=None,
-                    noise_level=0.0):
+                    noise_level=0.0, orth_variant_level=0.0):
         locs = list((self.tmp_dir / 'train').iterdir())
         random.shuffle(locs)
         train_tuples = self.read_tuples(locs, limit=self.limit)
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
                                         max_length=max_length,
                                         noise_level=noise_level,
+                                        orth_variant_level=orth_variant_level,
                                         make_projective=True)
         yield from gold_docs
 
@@ -226,27 +228,32 @@ class GoldCorpus(object):
 
     @classmethod
     def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
-                       noise_level=0.0, make_projective=False):
+                       noise_level=0.0, orth_variant_level=0.0, make_projective=False):
         for raw_text, paragraph_tuples in tuples:
             if gold_preproc:
                 raw_text = None
             else:
                 paragraph_tuples = merge_sents(paragraph_tuples)
-            docs = cls._make_docs(nlp, raw_text, paragraph_tuples, gold_preproc,
-                                  noise_level=noise_level)
+            docs, paragraph_tuples = cls._make_docs(nlp, raw_text,
+                    paragraph_tuples, gold_preproc, noise_level=noise_level,
+                    orth_variant_level=orth_variant_level)
             golds = cls._make_golds(docs, paragraph_tuples, make_projective)
             for doc, gold in zip(docs, golds):
                 if (not max_length) or len(doc) < max_length:
                     yield doc, gold
 
     @classmethod
-    def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc, noise_level=0.0):
+    def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc, noise_level=0.0, orth_variant_level=0.0):
         if raw_text is not None:
+            raw_text, paragraph_tuples = make_orth_variants(nlp, raw_text, paragraph_tuples, orth_variant_level=orth_variant_level)
             raw_text = add_noise(raw_text, noise_level)
-            return [nlp.make_doc(raw_text)]
+            return [nlp.make_doc(raw_text)], paragraph_tuples
         else:
+            docs = []
+            raw_text, paragraph_tuples = make_orth_variants(nlp, None, paragraph_tuples, orth_variant_level=orth_variant_level)
             return [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
-                    for (sent_tuples, brackets) in paragraph_tuples]
+                    for (sent_tuples, brackets) in paragraph_tuples], paragraph_tuples
+
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples, make_projective):
@@ -261,6 +268,88 @@ class GoldCorpus(object):
                                                 make_projective=make_projective)
                     for doc, (sent_tuples, brackets)
                     in zip(docs, paragraph_tuples)]
+
+
+def make_orth_variants(nlp, raw, paragraph_tuples, orth_variant_level=0.0):
+    if random.random() >= orth_variant_level:
+        return raw, paragraph_tuples
+    ndsv = nlp.Defaults.single_orth_variants
+    ndpv = nlp.Defaults.paired_orth_variants
+    # modify words in paragraph_tuples
+    variant_paragraph_tuples = []
+    for sent_tuples, brackets in paragraph_tuples:
+        ids, words, tags, heads, labels, ner = sent_tuples
+        # single variants
+        punct_choices = [random.choice(x["variants"]) for x in ndsv]
+        for word_idx in range(len(words)):
+            for punct_idx in range(len(ndsv)):
+                if tags[word_idx] in ndsv[punct_idx]["tags"] \
+                        and words[word_idx] in ndsv[punct_idx]["variants"]:
+                    words[word_idx] = punct_choices[punct_idx]
+        # paired variants
+        punct_choices = [random.choice(x["variants"]) for x in ndpv]
+        for word_idx in range(len(words)):
+            for punct_idx in range(len(ndpv)):
+                if tags[word_idx] in ndpv[punct_idx]["tags"] \
+                        and words[word_idx] in itertools.chain.from_iterable(ndpv[punct_idx]["variants"]):
+                    # backup option: random left vs. right from pair
+                    pair_idx = random.choice([0, 1])
+                    # best option: rely on paired POS tags like `` / ''
+                    if len(ndpv[punct_idx]["tags"]) == 2:
+                        pair_idx = ndpv[punct_idx]["tags"].index(tags[word_idx])
+                    # next best option: rely on position in variants
+                    # (may not be unambiguous, so order of variants matters)
+                    else:
+                        for pair in ndpv[punct_idx]["variants"]:
+                            if words[word_idx] in pair:
+                                pair_idx = pair.index(words[word_idx])
+                    words[word_idx] = punct_choices[punct_idx][pair_idx]
+
+        variant_paragraph_tuples.append(((ids, words, tags, heads, labels, ner), brackets))
+    # modify raw to match variant_paragraph_tuples
+    if raw is not None:
+        variants = []
+        for single_variants in ndsv:
+            variants.extend(single_variants["variants"])
+        for paired_variants in ndpv:
+            variants.extend(list(itertools.chain.from_iterable(paired_variants["variants"])))
+        # store variants in reverse length order to be able to prioritize
+        # longer matches (e.g., "---" before "--")
+        variants = sorted(variants, key=lambda x: len(x))
+        variants.reverse()
+        variant_raw = ""
+        raw_idx = 0
+        # add initial whitespace
+        while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
+            variant_raw += raw[raw_idx]
+            raw_idx += 1
+        for sent_tuples, brackets in variant_paragraph_tuples:
+            ids, words, tags, heads, labels, ner = sent_tuples
+            for word in words:
+                match_found = False
+                # add identical word
+                if word not in variants and raw[raw_idx:].startswith(word):
+                    variant_raw += word
+                    raw_idx += len(word)
+                    match_found = True
+                # add variant word
+                else:
+                    for variant in variants:
+                        if not match_found and \
+                                raw[raw_idx:].startswith(variant):
+                            raw_idx += len(variant)
+                            variant_raw += word
+                            match_found = True
+                # something went wrong, abort
+                # (add a warning message?)
+                if not match_found:
+                    return raw, paragraph_tuples
+                # add following whitespace
+                while raw_idx < len(raw) and re.match("\s", raw[raw_idx]):
+                    variant_raw += raw[raw_idx]
+                    raw_idx += 1
+        return variant_raw, variant_paragraph_tuples
+    return raw, variant_paragraph_tuples
 
 
 def add_noise(orig, noise_level):

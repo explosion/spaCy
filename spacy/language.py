@@ -109,6 +109,8 @@ class BaseDefaults(object):
     syntax_iterators = {}
     resources = {}
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
+    single_orth_variants = []
+    paired_orth_variants = []
 
 
 class Language(object):
