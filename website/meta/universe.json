@@ -1744,6 +1744,21 @@
                 "twitter": "yanaiela",
                 "website": "https://yanaiela.github.io"
             }
+        },
+        {
+            "id": "presidio",
+            "title": "Presidio",
+            "slogan": "Context aware, pluggable and customizable data protection and PII data anonymization",
+            "description": "Presidio *(Origin from Latin praesidium ‘protection, garrison’)* helps to ensure sensitive text is properly managed and governed. It provides fast ***analytics*** and ***anonymization*** for sensitive text such as credit card numbers, names, locations, social security numbers, bitcoin wallets, US phone numbers and financial data. Presidio analyzes the text using predefined or custom recognizers to identify entities, patterns, formats, and checksums with relevant context.",
+            "url": "https://aka.ms/presidio",
+            "image": "https://raw.githubusercontent.com/microsoft/presidio/master/docs/assets/before-after.png",
+            "github": "microsoft/presidio",
+            "category": ["standalone"],
+            "thumb": "https://avatars0.githubusercontent.com/u/6154722",
+            "author": "Microsoft",
+            "author_links": {
+                "github": "microsoft"
+            }
         }
     ],
 
