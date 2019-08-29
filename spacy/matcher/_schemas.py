@@ -89,7 +89,10 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Fine-grained part-of-speech tag",
                 "$ref": "#/definitions/string_value",
             },
-            "DEP": {"title": "Dependency label", "$ref": "#/definitions/string_value"},
+            "DEP": {
+                "title": "Dependency label",
+                "$ref": "#/definitions/string_value"
+            },
             "LEMMA": {
                 "title": "Lemma (base form)",
                 "$ref": "#/definitions/string_value",
@@ -142,8 +145,32 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Token is whitespace",
                 "$ref": "#/definitions/boolean_value",
             },
+            "IS_BRACKET": {
+                "title": "Token is a bracket",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_QUOTE": {
+                "title": "Token is a quotation mark",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_LEFT_PUNCT": {
+                "title": "Token is a left punctuation mark",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_RIGHT_PUNCT": {
+                "title": "Token is a right punctuation mark",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_CURRENCY": {
+                "title": "Token is a currency symbol",
+                "$ref": "#/definitions/boolean_value",
+            },
             "IS_STOP": {
                 "title": "Token is stop word",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_SENT_START": {
+                "title": "Token is the first in a sentence",
                 "$ref": "#/definitions/boolean_value",
             },
             "LIKE_NUM": {
