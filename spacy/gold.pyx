@@ -635,7 +635,7 @@ cdef class GoldParse:
                 self.tags[i] = "_SP"
                 self.heads[i] = None
                 self.labels[i] = None
-                self.ner[i] = "O"
+                self.ner[i] = None
                 self.morphology[i] = set()
             if gold_i is None:
                 if i in i2j_multi:
@@ -686,9 +686,20 @@ cdef class GoldParse:
                 self.labels[i] = deps[gold_i]
                 self.ner[i] = entities[gold_i]
 
+        # Prevent whitespace that isn't within entities from being tagged as
+        # an entity.
+        for i in range(len(self.ner)):
+            if self.tags[i] == "_SP":
+                prev_ner = self.ner[i-1] if i >= 1 else None
+                next_ner = self.ner[i+1] if (i+1) < len(self.ner) else None
+                if prev_ner == "O" or next_ner == "O":
+                    self.ner[i] = "O"
+
         cycle = nonproj.contains_cycle(self.heads)
         if cycle is not None:
-            raise ValueError(Errors.E069.format(cycle=cycle, cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]), doc_tokens=" ".join(words[:50])))
+            raise ValueError(Errors.E069.format(cycle=cycle,
+                cycle_tokens=" ".join(["'{}'".format(self.words[tok_id]) for tok_id in cycle]),
+                doc_tokens=" ".join(words[:50])))
 
     def __len__(self):
         """Get the number of gold-standard tokens.
