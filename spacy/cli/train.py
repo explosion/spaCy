@@ -65,6 +65,7 @@ from .. import about
         str,
     ),
     noise_level=("Amount of corruption for data augmentation", "option", "nl", float),
+    orth_variant_level=("Amount of orthography variation for data augmentation", "option", "ovl", float),
     eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
@@ -90,6 +91,7 @@ def train(
     parser_multitasks="",
     entity_multitasks="",
     noise_level=0.0,
+    orth_variant_level=0.0,
     eval_beam_widths="",
     gold_preproc=False,
     learn_tokens=False,
@@ -240,7 +242,7 @@ def train(
         best_score = 0.0
         for i in range(n_iter):
             train_docs = corpus.train_docs(
-                nlp, orth_variant_level=noise_level, gold_preproc=gold_preproc, max_length=0
+                nlp, noise_level=noise_level, orth_variant_level=orth_variant_level, gold_preproc=gold_preproc, max_length=0
             )
             if raw_text:
                 random.shuffle(raw_text)
