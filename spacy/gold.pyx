@@ -356,22 +356,18 @@ def add_noise(orig, noise_level):
     if random.random() >= noise_level:
         return orig
     elif type(orig) == list:
-        corrupted = [_corrupt(word, noise_level, replace_space=False) for word in orig]
+        corrupted = [_corrupt(word, noise_level) for word in orig]
         corrupted = [w for w in corrupted if w]
         return corrupted
     else:
-        return "".join(_corrupt(c, noise_level, replace_space=False) for c in orig)
+        return "".join(_corrupt(c, noise_level) for c in orig)
 
 
-def _corrupt(c, noise_level, replace_space=False):
+def _corrupt(c, noise_level):
     if random.random() >= noise_level:
         return c
-    elif replace_space and c == " ":
-        return "\n"
-    elif replace_space and c == "\n":
-        return " "
     elif c in [".", "'", "!", "?", ","]:
-        return ""
+        return "\n"
     else:
         return c.lower()
 
