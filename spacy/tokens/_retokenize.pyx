@@ -256,6 +256,13 @@ def _bulk_merge(Doc doc, merges):
         spans.append(span)
         # House the new merged token where it starts
         token = &doc.c[start]
+        # Initially set attributes to attributes of span root
+        token.tag = doc.c[span.root.i].tag
+        token.pos = doc.c[span.root.i].pos
+        token.morph = doc.c[span.root.i].morph
+        # Unset attributes that don't match new token
+        token.lemma = 0
+        token.norm = 0
         tokens[merge_index] = token
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
     # for the merged region. To do this, we create a boolean array indicating
