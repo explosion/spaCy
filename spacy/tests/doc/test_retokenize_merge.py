@@ -99,6 +99,41 @@ def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
     assert doc[0].ent_type_ == "GPE"
 
 
+def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
+    text = "The players start."
+    heads = [1, 1, 0, -1]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], tags=["DT", "NN", "VBZ", "."], pos=["DET", "NOUN", "VERB", "PUNCT"], heads=heads)
+    assert len(doc) == 4
+    assert doc[0].text == "The"
+    assert doc[0].tag_ == "DT"
+    assert doc[0].pos_ == "DET"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2])
+    assert len(doc) == 3
+    assert doc[0].text == "The players"
+    assert doc[0].tag_ == "NN"
+    assert doc[0].pos_ == "NOUN"
+    assert doc[0].lemma_ == "The players"
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], tags=["DT", "NN", "VBZ", "."], pos=["DET", "NOUN", "VERB", "PUNCT"], heads=heads)
+    assert len(doc) == 4
+    assert doc[0].text == "The"
+    assert doc[0].tag_ == "DT"
+    assert doc[0].pos_ == "DET"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2])
+        retokenizer.merge(doc[2:4])
+    assert len(doc) == 2
+    assert doc[0].text == "The players"
+    assert doc[0].tag_ == "NN"
+    assert doc[0].pos_ == "NOUN"
+    assert doc[0].lemma_ == "The players"
+    assert doc[1].text == "start ."
+    assert doc[1].tag_ == "VBZ"
+    assert doc[1].pos_ == "VERB"
+    assert doc[1].lemma_ == "start ."
+
+
 def test_doc_retokenize_spans_merge_heads(en_tokenizer):
     text = "I found a pilates class near work."
     heads = [1, 0, 2, 1, -3, -1, -1, -6]
