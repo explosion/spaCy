@@ -327,16 +327,11 @@ cdef class Morphology:
                 self.add_special_case(tag_str, form_str, attrs)
 
     def to_bytes(self, exclude=tuple(), **kwargs):
-        tag_map = {}
-        for key in self.tags:
-            tag_ptr = <MorphAnalysisC*>self.tags.get(key)
-            if tag_ptr != NULL:
-                tag_map[key] = tag_to_json(tag_ptr)
         exceptions = {}
         for (tag_str, orth_int), attrs in sorted(self.exc.items()):
             exceptions.setdefault(tag_str, {})
             exceptions[tag_str][self.strings[orth_int]] = attrs
-        data = {"tag_map": tag_map, "exceptions": exceptions}
+        data = {"tag_map": self.tag_map, "exceptions": exceptions}
         return srsly.msgpack_dumps(data)
 
     def from_bytes(self, byte_string):
@@ -898,7 +893,7 @@ FEATURES = [
    "Aspect_mod",
    "Aspect_none",
    "Aspect_perf",
-   "Aspect_prof",
+   "Aspect_prog",
    "Aspect_prosp",
    "Case_abe",
    "Case_abl",
