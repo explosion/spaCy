@@ -433,8 +433,6 @@ cdef class Vocab:
                 file_.write(self.lexemes_to_bytes())
         if "vectors" not in "exclude" and self.vectors is not None:
             self.vectors.to_disk(path)
-        if "morphology" not in exclude:
-            self.morphology.to_disk(path / "morphology.bin")
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         """Loads state from a directory. Modifies the object in place and
@@ -459,8 +457,6 @@ cdef class Vocab:
                 self.vectors.from_disk(path, exclude=["strings"])
             if self.vectors.name is not None:
                 link_vectors_to_models(self)
-        if "morphology" not in exclude:
-            self.morphology.from_disk(path / "morphology.bin")
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):
@@ -481,7 +477,6 @@ cdef class Vocab:
             ("strings", lambda: self.strings.to_bytes()),
             ("lexemes", lambda: self.lexemes_to_bytes()),
             ("vectors", deserialize_vectors),
-            ("morphology", lambda: self.morphology.to_bytes())
         ))
         exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
@@ -505,7 +500,6 @@ cdef class Vocab:
             ("strings", lambda b: self.strings.from_bytes(b)),
             ("lexemes", lambda b: self.lexemes_from_bytes(b)),
             ("vectors", lambda b: serialize_vectors(b)),
-            ("morphology", lambda b: self.morphology.from_bytes(b))
         ))
         exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)

@@ -326,30 +326,6 @@ cdef class Morphology:
             for form_str, attrs in entries.items():
                 self.add_special_case(tag_str, form_str, attrs)
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
-        exceptions = {}
-        for (tag_str, orth_int), attrs in sorted(self.exc.items()):
-            exceptions.setdefault(tag_str, {})
-            exceptions[tag_str][self.strings[orth_int]] = attrs
-        data = {"tag_map": self.tag_map, "exceptions": exceptions}
-        return srsly.msgpack_dumps(data)
-
-    def from_bytes(self, byte_string):
-        msg = srsly.msgpack_loads(byte_string)
-        self._load_from_tag_map(msg["tag_map"])
-        self.load_morph_exceptions(msg["exceptions"])
-        return self
-
-    def to_disk(self, path, exclude=tuple(), **kwargs):
-        path = ensure_path(path)
-        with path.open("wb") as file_:
-            file_.write(self.to_bytes())
-
-    def from_disk(self, path):
-        with path.open("rb") as file_:
-            byte_string = file_.read()
-        return self.from_bytes(byte_string)
-
     @classmethod
     def create_class_map(cls):
         return MorphologyClassMap(FEATURES)
