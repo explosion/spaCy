@@ -167,6 +167,13 @@ def _merge(Doc doc, int start, int end, attributes):
     cdef const LexemeC* lex = doc.vocab.get(doc.mem, new_orth)
     # House the new merged token where it starts
     cdef TokenC* token = &doc.c[start]
+    # Initially set attributes to attributes of span root
+    token.tag = doc.c[span.root.i].tag
+    token.pos = doc.c[span.root.i].pos
+    token.morph = doc.c[span.root.i].morph
+    # Unset attributes that don't match new token
+    token.lemma = 0
+    token.norm = 0
     token.spacy = doc.c[end-1].spacy
     for attr_name, attr_value in attributes.items():
         if attr_name == "_":  # Set extension attributes
