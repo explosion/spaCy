@@ -394,7 +394,7 @@ def test_attr_pipeline_checks(en_vocab):
         ([{"IS_PUNCT": True}], "."),
         ([{"IS_SPACE": True}], "\n"),
         ([{"IS_BRACKET": True}], "["),
-        ([{"IS_QUOTE": True}], "\""),
+        ([{"IS_QUOTE": True}], '"'),
         ([{"IS_LEFT_PUNCT": True}], "``"),
         ([{"IS_RIGHT_PUNCT": True}], "''"),
         ([{"IS_STOP": True}], "the"),
@@ -405,7 +405,7 @@ def test_attr_pipeline_checks(en_vocab):
 )
 def test_matcher_schema_token_attributes(en_vocab, pattern, text):
     matcher = Matcher(en_vocab)
-    doc = Doc(en_vocab, words=text.split(' '))
+    doc = Doc(en_vocab, words=text.split(" "))
     matcher.add("Rule", None, pattern)
     assert len(matcher) == 1
     matches = matcher(doc)

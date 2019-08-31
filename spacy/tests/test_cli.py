@@ -49,8 +49,10 @@ def test_cli_converters_iob2json():
         sent = converted[0]["paragraphs"][0]["sentences"][i]
         assert len(sent["tokens"]) == 8
         tokens = sent["tokens"]
+        # fmt: off
         assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
         assert [t["ner"] for t in tokens] == ["O", "O", "U-GPE", "O", "B-GPE", "I-GPE", "L-GPE", "O"]
+        # fmt: on
 
 
 def test_cli_converters_conll_ner2json():
@@ -113,8 +115,10 @@ def test_cli_converters_conll_ner2json():
         sent = converted[0]["paragraphs"][0]["sentences"][i]
         assert len(sent["tokens"]) == 8
         tokens = sent["tokens"]
+        # fmt: off
         assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
         assert [t["ner"] for t in tokens] == ["O", "O", "U-GPE", "O", "B-GPE", "I-GPE", "L-GPE", "O"]
+        # fmt: on
 
 
 def test_pretrain_make_docs():

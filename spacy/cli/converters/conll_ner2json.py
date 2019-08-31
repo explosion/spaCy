@@ -38,32 +38,50 @@ def conll_ner2json(input_data, n_sents=10, seg_sents=False, model=None, **kwargs
     doc_delimiter = "-DOCSTART- -X- O O"
     # check for existing delimiters, which should be preserved
     if "\n\n" in input_data and seg_sents:
-        msg.warn("Sentence boundaries found, automatic sentence segmentation with `-s` disabled.")
+        msg.warn(
+            "Sentence boundaries found, automatic sentence segmentation with "
+            "`-s` disabled."
+        )
         seg_sents = False
     if doc_delimiter in input_data and n_sents:
-        msg.warn("Document delimiters found, automatic document segmentation with `-n` disabled.")
+        msg.warn(
+            "Document delimiters found, automatic document segmentation with "
+            "`-n` disabled."
+        )
         n_sents = 0
     # do document segmentation with existing sentences
-    if "\n\n" in input_data and not doc_delimiter in input_data and n_sents:
+    if "\n\n" in input_data and doc_delimiter not in input_data and n_sents:
         n_sents_info(msg, n_sents)
         input_data = segment_docs(input_data, n_sents, doc_delimiter)
     # do sentence segmentation with existing documents
-    if not "\n\n" in input_data and doc_delimiter in input_data and seg_sents:
+    if "\n\n" not in input_data and doc_delimiter in input_data and seg_sents:
         input_data = segment_sents_and_docs(input_data, 0, "", model=model, msg=msg)
     # do both sentence segmentation and document segmentation according
     # to options
-    if not "\n\n" in input_data and not doc_delimiter in input_data:
+    if "\n\n" not in input_data and doc_delimiter not in input_data:
         # sentence segmentation required for document segmentation
         if n_sents > 0 and not seg_sents:
-            msg.warn("No sentence boundaries found to use with option `-n {}`. Use `-s` to automatically segment sentences or `-n 0` to disable.".format(n_sents))
+            msg.warn(
+                "No sentence boundaries found to use with option `-n {}`. "
+                "Use `-s` to automatically segment sentences or `-n 0` "
+                "to disable.".format(n_sents)
+            )
         else:
             n_sents_info(msg, n_sents)
-            input_data = segment_sents_and_docs(input_data, n_sents, doc_delimiter, model=model, msg=msg)
+            input_data = segment_sents_and_docs(
+                input_data, n_sents, doc_delimiter, model=model, msg=msg
+            )
     # provide warnings for problematic data
-    if not "\n\n" in input_data:
-        msg.warn("No sentence boundaries found. Use `-s` to automatically segment sentences.")
-    if not doc_delimiter in input_data:
-        msg.warn("No document delimiters found. Use `-n` to automatically group sentences into documents.")
+    if "\n\n" not in input_data:
+        msg.warn(
+            "No sentence boundaries found. Use `-s` to automatically segment "
+            "sentences."
+        )
+    if doc_delimiter not in input_data:
+        msg.warn(
+            "No document delimiters found. Use `-n` to automatically group "
+            "sentences into documents."
+        )
     output_docs = []
     for doc in input_data.strip().split(doc_delimiter):
         doc = doc.strip()
@@ -78,8 +96,10 @@ def conll_ner2json(input_data, n_sents=10, seg_sents=False, model=None, **kwargs
             cols = list(zip(*[line.split() for line in lines]))
             if len(cols) < 2:
                 raise ValueError(
-                    "The token-per-line NER file is not formatted correctly. Try checking whitespace and delimiters. See https://spacy.io/api/cli#convert"
-            )
+                    "The token-per-line NER file is not formatted correctly. "
+                    "Try checking whitespace and delimiters. See "
+                    "https://spacy.io/api/cli#convert"
+                )
             words = cols[0]
             iob_ents = cols[-1]
             if len(cols) > 2:
@@ -110,7 +130,10 @@ def segment_sents_and_docs(doc, n_sents, doc_delimiter, model=None, msg=None):
             msg.info("Segmenting sentences with parser from model '{}'.".format(model))
             sentencizer = nlp.get_pipe("parser")
     if not sentencizer:
-        msg.info("Segmenting sentences with sentencizer. (Use `-b model` for improved parser-based sentence segmentation.)")
+        msg.info(
+            "Segmenting sentences with sentencizer. (Use `-b model` for "
+            "improved parser-based sentence segmentation.)"
+        )
         nlp = MultiLanguage()
         sentencizer = nlp.create_pipe("sentencizer")
     lines = doc.strip().split("\n")
@@ -132,7 +155,7 @@ def segment_sents_and_docs(doc, n_sents, doc_delimiter, model=None, msg=None):
 def segment_docs(input_data, n_sents, doc_delimiter):
     sent_delimiter = "\n\n"
     sents = input_data.split(sent_delimiter)
-    docs = [sents[i:i+n_sents] for i in range(0, len(sents), n_sents)]
+    docs = [sents[i : i + n_sents] for i in range(0, len(sents), n_sents)]
     input_data = ""
     for doc in docs:
         input_data += sent_delimiter + doc_delimiter
@@ -143,4 +166,7 @@ def segment_docs(input_data, n_sents, doc_delimiter):
 def n_sents_info(msg, n_sents):
     msg.info("Grouping every {} sentences into a document.".format(n_sents))
     if n_sents == 1:
-        msg.warn("To generate better training data, you may want to group sentences into documents with `-n 10`.")
+        msg.warn(
+            "To generate better training data, you may want to group "
+            "sentences into documents with `-n 10`."
+        )

@@ -89,10 +89,7 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Fine-grained part-of-speech tag",
                 "$ref": "#/definitions/string_value",
             },
-            "DEP": {
-                "title": "Dependency label",
-                "$ref": "#/definitions/string_value"
-            },
+            "DEP": {"title": "Dependency label", "$ref": "#/definitions/string_value"},
             "LEMMA": {
                 "title": "Lemma (base form)",
                 "$ref": "#/definitions/string_value",

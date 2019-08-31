@@ -34,7 +34,7 @@ def read_iob(raw_sents):
     for line in raw_sents:
         if not line.strip():
             continue
-        tokens = [t.split('|') for t in line.split()]
+        tokens = [t.split("|") for t in line.split()]
         if len(tokens[0]) == 3:
             words, pos, iob = zip(*tokens)
         elif len(tokens[0]) == 2:

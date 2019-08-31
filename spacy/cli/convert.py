@@ -88,12 +88,21 @@ def convert(
             msg.info("Auto-detected sentence-per-line NER format")
             converter = converter_autodetect
         else:
-            msg.warn("Can't automatically detect NER format. Conversion may not succeed. See https://spacy.io/api/cli#convert")
+            msg.warn(
+                "Can't automatically detect NER format. Conversion may not succeed. See https://spacy.io/api/cli#convert"
+            )
     if converter not in CONVERTERS:
         msg.fail("Can't find converter for {}".format(converter), exits=1)
     # Use converter function to convert data
     func = CONVERTERS[converter]
-    data = func(input_data, n_sents=n_sents, seg_sents=seg_sents, use_morphology=morphology, lang=lang, model=model)
+    data = func(
+        input_data,
+        n_sents=n_sents,
+        seg_sents=seg_sents,
+        use_morphology=morphology,
+        lang=lang,
+        model=model,
+    )
     if output_dir != "-":
         # Export data to a file
         suffix = ".{}".format(file_type)
@@ -104,7 +113,9 @@ def convert(
             srsly.write_jsonl(output_file, data)
         elif file_type == "msg":
             srsly.write_msgpack(output_file, data)
-        msg.good("Generated output file ({} documents): {}".format(len(data), output_file))
+        msg.good(
+            "Generated output file ({} documents): {}".format(len(data), output_file)
+        )
     else:
         # Print to stdout
         if file_type == "json":
