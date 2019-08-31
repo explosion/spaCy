@@ -173,17 +173,19 @@ def _merge(Doc doc, int start, int end, attributes):
     token.morph = doc.c[span.root.i].morph
     token.ent_iob = doc.c[span.root.i].ent_iob
     token.ent_type = doc.c[span.root.i].ent_type
+    merged_iob = token.ent_iob
     # If span root is part of an entity, merged token is B-ENT
     if token.ent_iob in (1, 3):
-        token.ent_iob = 3
-        # Unless start token is not B-ENT and previous token is of the same
-        # type, then I-ENT
-        if doc.c[start].ent_iob != 3 \
-                and doc.c[start].ent_type != token.ent_type \
+        merged_iob = 3
+        # If start token is I-ENT and previous token is of the same
+        # type, then I-ENT (could check I-ENT from start to span root)
+        if doc.c[start].ent_iob == 1 \
+                and doc.c[start].ent_type == token.ent_type \
                 and doc.c[start - 1].ent_type == token.ent_type:
-            token.ent_iob = 1
-    # If following token is part of a different entity, following token is B
-    if end < len(doc) and doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
+            merged_iob = 1
+    token.ent_iob = merged_iob
+    # If following token has a different entity type, following token is B
+    if doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
         doc.c[end].ent_iob = 3
     # Unset attributes that don't match new token
     token.lemma = 0
@@ -283,17 +285,19 @@ def _bulk_merge(Doc doc, merges):
         token.morph = doc.c[span.root.i].morph
         token.ent_iob = doc.c[span.root.i].ent_iob
         token.ent_type = doc.c[span.root.i].ent_type
+        merged_iob = token.ent_iob
         # If span root is part of an entity, merged token is B-ENT
         if token.ent_iob in (1, 3):
-            token.ent_iob = 3
-            # Unless start token is not B-ENT and previous token is of the same
-            # type, then I-ENT
-            if doc.c[start].ent_iob != 3 \
-                    and doc.c[start].ent_type != token.ent_type \
+            merged_iob = 3
+            # If start token is I-ENT and previous token is of the same
+            # type, then I-ENT (could check I-ENT from start to span root)
+            if doc.c[start].ent_iob == 1 \
+                    and doc.c[start].ent_type == token.ent_type \
                     and doc.c[start - 1].ent_type == token.ent_type:
-                token.ent_iob = 1
-        # If following token is part of a different entity, following token is B
-        if end < len(doc) and doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
+                merged_iob = 1
+        token.ent_iob = merged_iob
+        # If following token has a different entity type, following token is B
+        if doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
             doc.c[end].ent_iob = 3
         # Unset attributes that don't match new token
         token.lemma = 0

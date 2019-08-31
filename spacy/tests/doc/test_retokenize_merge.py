@@ -234,6 +234,8 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
 
+    # if no parse/heads, the first word in the span is the root and provides
+    # default values
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
     doc = Doc(Vocab(), words=words)
     doc.ents = [
@@ -250,11 +252,11 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
         retokenizer.merge(doc[7:9])
     assert len(doc) == 6
     assert doc[3].ent_iob_ == "B"
+    assert doc[3].ent_type_ == "ent-de"
     assert doc[4].ent_iob_ == "B"
+    assert doc[4].ent_type_ == "ent-fg"
 
-    # check that entities not aligned with spans are assigned using span.root
-    # (note the unwanted behavior that now there are two ent-de ents rather
-    # than one)
+    # if there is a parse, span.root provides default values
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
     heads = [ 0,  -1,   1,  -3,  -4,  -5,  -1,  -7,  -8 ]
     ents =  [
@@ -266,6 +268,8 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     en_vocab.strings.add("ent-fg")
     en_vocab.strings.add("dep")
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
+    assert doc[2:4].root == doc[3] # root of 'c d' is d
+    assert doc[4:6].root == doc[4] # root is 'e f' is e
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[2:4])
         retokenizer.merge(doc[4:6])
@@ -273,7 +277,7 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     assert len(doc) == 6
     assert doc[2].ent_iob_ == "B"
     assert doc[2].ent_type_ == "ent-de"
-    assert doc[3].ent_iob_ == "B"
+    assert doc[3].ent_iob_ == "I"
     assert doc[3].ent_type_ == "ent-de"
     assert doc[4].ent_iob_ == "B"
     assert doc[4].ent_type_ == "ent-fg"
@@ -292,7 +296,7 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
         retokenizer.merge(doc[5:7])
     assert len(doc) == 7
     assert doc[3].ent_iob_ == "B"
-    assert doc[4].ent_type_ == "ent-de"
+    assert doc[3].ent_type_ == "ent-de"
     assert doc[4].ent_iob_ == "B"
     assert doc[4].ent_type_ == "ent-de"
 
