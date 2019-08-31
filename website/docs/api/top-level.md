@@ -192,7 +192,7 @@ browser. Will run a simple web server.
 | `style`   | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`     |
 | `page`    | bool                | Render markup as full HTML page.                                                                                                     | `True`      |
 | `minify`  | bool                | Minify HTML markup.                                                                                                                  | `False`     |
-| `options` | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                | `{}`        |
+| `options` | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                                | `{}`        |
 | `manual`  | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`     |
 | `port`    | int                 | Port to serve visualization.                                                                                                         | `5000`      |
 | `host`    | unicode             | Host to serve visualization.                                                                                                         | `'0.0.0.0'` |
@@ -218,7 +218,7 @@ Render a dependency parse tree or named entity visualization.
 | `page`      | bool                | Render markup as full HTML page.                                                                                                                          | `False` |
 | `minify`    | bool                | Minify HTML markup.                                                                                                                                       | `False` |
 | `jupyter`   | bool                | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None`. | `None`  |
-| `options`   | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                                     | `{}`    |
+| `options`   | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                                                     | `{}`    |
 | `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples.                      | `False` |
 | **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                                     |
 

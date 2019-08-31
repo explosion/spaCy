@@ -19,6 +19,8 @@ It's commercial open-source software, released under the MIT license.
 [![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square)](https://pypi.org/project/spacy/)
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square)](https://anaconda.org/conda-forge/spacy)
 [![Python wheels](https://img.shields.io/badge/wheels-%E2%9C%93-4c1.svg?longCache=true&style=flat-square&logo=python&logoColor=white)](https://github.com/explosion/wheelwright/releases)
+[![PyPi downloads](https://img.shields.io/pypi/dm/spacy?style=flat-square)](https://pypi.org/project/spacy/)
+[![Conda downloads](https://img.shields.io/conda/dn/conda-forge/spacy?style=flat-square)](https://anaconda.org/conda-forge/spacy)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 [![spaCy on Twitter](https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow)](https://twitter.com/spacy_io)
 
