@@ -171,6 +171,20 @@ def _merge(Doc doc, int start, int end, attributes):
     token.tag = doc.c[span.root.i].tag
     token.pos = doc.c[span.root.i].pos
     token.morph = doc.c[span.root.i].morph
+    token.ent_iob = doc.c[span.root.i].ent_iob
+    token.ent_type = doc.c[span.root.i].ent_type
+    # If span root is part of an entity, merged token is B-ENT
+    if token.ent_iob in (1, 3):
+        token.ent_iob = 3
+        # Unless start token is not B-ENT and previous token is of the same
+        # type, then I-ENT
+        if doc.c[start].ent_iob != 3 \
+                and doc.c[start].ent_type != token.ent_type \
+                and doc.c[start - 1].ent_type == token.ent_type:
+            token.ent_iob = 1
+    # If following token is part of a different entity, following token is B
+    if end < len(doc) and doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
+        doc.c[end].ent_iob = 3
     # Unset attributes that don't match new token
     token.lemma = 0
     token.norm = 0
@@ -267,6 +281,20 @@ def _bulk_merge(Doc doc, merges):
         token.tag = doc.c[span.root.i].tag
         token.pos = doc.c[span.root.i].pos
         token.morph = doc.c[span.root.i].morph
+        token.ent_iob = doc.c[span.root.i].ent_iob
+        token.ent_type = doc.c[span.root.i].ent_type
+        # If span root is part of an entity, merged token is B-ENT
+        if token.ent_iob in (1, 3):
+            token.ent_iob = 3
+            # Unless start token is not B-ENT and previous token is of the same
+            # type, then I-ENT
+            if doc.c[start].ent_iob != 3 \
+                    and doc.c[start].ent_type != token.ent_type \
+                    and doc.c[start - 1].ent_type == token.ent_type:
+                token.ent_iob = 1
+        # If following token is part of a different entity, following token is B
+        if end < len(doc) and doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
+            doc.c[end].ent_iob = 3
         # Unset attributes that don't match new token
         token.lemma = 0
         token.norm = 0

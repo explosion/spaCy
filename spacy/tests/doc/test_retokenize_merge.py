@@ -217,7 +217,7 @@ def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     assert len(doc) == 15
 
 
-def test_doc_retokenize_spans_entity_merge_iob():
+def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     # Test entity IOB stays consistent after merging
     words = ["a", "b", "c", "d", "e"]
     doc = Doc(Vocab(), words=words)
@@ -250,7 +250,51 @@ def test_doc_retokenize_spans_entity_merge_iob():
         retokenizer.merge(doc[7:9])
     assert len(doc) == 6
     assert doc[3].ent_iob_ == "B"
-    assert doc[4].ent_iob_ == "I"
+    assert doc[4].ent_iob_ == "B"
+
+    # check that entities not aligned with spans are assigned using span.root
+    # (note the unwanted behavior that now there are two ent-de ents rather
+    # than one)
+    words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+    heads = [ 0,  -1,   1,  -3,  -4,  -5,  -1,  -7,  -8 ]
+    ents =  [
+        (3, 5, "ent-de"),
+        (5, 7, "ent-fg"),
+    ]
+    deps =  ["dep"] * len(words)
+    en_vocab.strings.add("ent-de")
+    en_vocab.strings.add("ent-fg")
+    en_vocab.strings.add("dep")
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[2:4])
+        retokenizer.merge(doc[4:6])
+        retokenizer.merge(doc[7:9])
+    assert len(doc) == 6
+    assert doc[2].ent_iob_ == "B"
+    assert doc[2].ent_type_ == "ent-de"
+    assert doc[3].ent_iob_ == "B"
+    assert doc[3].ent_type_ == "ent-de"
+    assert doc[4].ent_iob_ == "B"
+    assert doc[4].ent_type_ == "ent-fg"
+
+    # check that B is preserved if span[start] is B
+    words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+    heads = [ 0,  -1,   1,   1,  -4,  -5,  -1,  -7,  -8 ]
+    ents =  [
+        (3, 5, "ent-de"),
+        (5, 7, "ent-de"),
+    ]
+    deps =  ["dep"] * len(words)
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[3:5])
+        retokenizer.merge(doc[5:7])
+    assert len(doc) == 7
+    assert doc[3].ent_iob_ == "B"
+    assert doc[4].ent_type_ == "ent-de"
+    assert doc[4].ent_iob_ == "B"
+    assert doc[4].ent_type_ == "ent-de"
 
 
 def test_doc_retokenize_spans_sentence_update_after_merge(en_tokenizer):
