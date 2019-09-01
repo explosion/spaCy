@@ -1,0 +1,6 @@
+This list of Croatian lemmas was adapted from the Croatian lexicon: hrLex (https://reldi.spur.uzh.ch/blog/croatian-lexicon/) (https://www.clarin.si/repository/xmlui/handle/11356/1067#show-files)
+
+The work is licenced under GPL v3.
+
+The lexicon and its construction process have been described in detail in the following paper:
+Nikola Ljubešić, Filip Klubička, Željko Agić, Ivo-Pavao Jazbec (2016). New Inflectional Lexicons and Training Corpora for Improved Morphosyntactic Annotation of Croatian and Serbian. Proceedings of the Tenth International Conference on Language Resources and Evaluation (LREC’16). Portorož, Slovenia
