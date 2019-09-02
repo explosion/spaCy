@@ -175,7 +175,7 @@ def _merge(Doc doc, merges):
             merged_iob = 3
             # If start token is I-ENT and previous token is of the same
             # type, then I-ENT (could check I-ENT from start to span root)
-            if doc.c[start].ent_iob == 1 \
+            if doc.c[start].ent_iob == 1 and start > 0 \
                     and doc.c[start].ent_type == token.ent_type \
                     and doc.c[start - 1].ent_type == token.ent_type:
                 merged_iob = 1
