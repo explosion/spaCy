@@ -200,8 +200,6 @@ def _merge(Doc doc, int start, int end, attributes):
             # If an attribute name is not valid, set_struct_attr will ignore it.
             Token.set_struct_attr(token, attr_name, attr_value)
             Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
-    # Make sure ent_iob remains consistent
-    make_iob_consistent(doc.c, doc.length)
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -239,6 +237,8 @@ def _merge(Doc doc, int start, int end, attributes):
         doc.c[i].head -= i
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
+    # Make sure ent_iob remains consistent
+    make_iob_consistent(doc.c, doc.length)
     # Return the merged Python object
     return doc[start]
 
@@ -512,5 +512,6 @@ cdef make_iob_consistent(TokenC* tokens, int length):
     if tokens[0].ent_iob == 1:
         tokens[0].ent_iob = 3
     for i in range(1, length):
+        print(tokens[i].ent_iob, tokens[i].ent_type)
         if tokens[i].ent_iob == 1 and tokens[i - 1].ent_type != tokens[i].ent_type:
             tokens[i].ent_iob = 3
