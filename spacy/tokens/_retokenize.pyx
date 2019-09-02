@@ -512,6 +512,5 @@ cdef make_iob_consistent(TokenC* tokens, int length):
     if tokens[0].ent_iob == 1:
         tokens[0].ent_iob = 3
     for i in range(1, length):
-        print(tokens[i].ent_iob, tokens[i].ent_type)
         if tokens[i].ent_iob == 1 and tokens[i - 1].ent_type != tokens[i].ent_type:
             tokens[i].ent_iob = 3
