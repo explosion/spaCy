@@ -184,9 +184,6 @@ def _merge(Doc doc, int start, int end, attributes):
                 and doc.c[start - 1].ent_type == token.ent_type:
             merged_iob = 1
     token.ent_iob = merged_iob
-    # If following token has a different entity type, following token is B
-    if doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
-        doc.c[end].ent_iob = 3
     # Unset attributes that don't match new token
     token.lemma = 0
     token.norm = 0
@@ -204,12 +201,7 @@ def _merge(Doc doc, int start, int end, attributes):
             Token.set_struct_attr(token, attr_name, attr_value)
             Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
     # Make sure ent_iob remains consistent
-    if doc.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
-        if token.ent_type == doc.c[end].ent_type:
-            token.ent_iob = 3
-        else:
-            # If they're not the same entity type, let them be two entities
-            doc.c[end].ent_iob = 3
+    make_iob_consistent(doc.c, doc.length)
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -296,9 +288,6 @@ def _bulk_merge(Doc doc, merges):
                     and doc.c[start - 1].ent_type == token.ent_type:
                 merged_iob = 1
         token.ent_iob = merged_iob
-        # If following token has a different entity type, following token is B
-        if doc.c[end].ent_iob in (1, 3) and doc.c[end].ent_type != token.ent_type:
-            doc.c[end].ent_iob = 3
         # Unset attributes that don't match new token
         token.lemma = 0
         token.norm = 0
@@ -397,17 +386,7 @@ def _bulk_merge(Doc doc, merges):
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
     # Make sure ent_iob remains consistent
-    for (span, _) in merges:
-        if(span.end < len(offsets)):
-        # If it's not the last span
-            token_after_span_position = offsets[span.end]
-            if doc.c[token_after_span_position].ent_iob == 1\
-                    and doc.c[token_after_span_position - 1].ent_iob in (0, 2):
-                if doc.c[token_after_span_position - 1].ent_type == doc.c[token_after_span_position].ent_type:
-                    doc.c[token_after_span_position - 1].ent_iob = 3
-                else:
-                    # If they're not the same entity type, let them be two entities
-                    doc.c[token_after_span_position].ent_iob = 3
+    make_iob_consistent(doc.c, doc.length)
     # Return the merged Python object
     return doc[spans[0].start]
 
@@ -526,3 +505,12 @@ def _validate_extensions(extensions):
             raise ValueError(Errors.E118.format(attr=key))
         if not is_writable_attr(extension):
             raise ValueError(Errors.E119.format(attr=key))
+
+
+cdef make_iob_consistent(TokenC* tokens, int length):
+    cdef int i
+    if tokens[0].ent_iob == 1:
+        tokens[0].ent_iob = 3
+    for i in range(1, length):
+        if tokens[i].ent_iob == 1 and tokens[i - 1].ent_type != tokens[i].ent_type:
+            tokens[i].ent_iob = 3

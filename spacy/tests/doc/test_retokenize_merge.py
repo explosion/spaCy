@@ -230,7 +230,18 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     assert doc[2].ent_iob_ == "I"
     assert doc[3].ent_iob_ == "B"
     with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[0:1])
+        retokenizer.merge(doc[0:2])
+    assert len(doc) == len(words) - 1
+    assert doc[0].ent_iob_ == "B"
+    assert doc[1].ent_iob_ == "I"
+
+    # Test that IOB stays consistent with provided IOB
+    words = ["a", "b", "c", "d", "e"]
+    doc = Doc(Vocab(), words=words)
+    with doc.retokenize() as retokenizer:
+        attrs = {"ent_type": "ent-abc", "ent_iob": 1}
+        retokenizer.merge(doc[0:3], attrs=attrs)
+        retokenizer.merge(doc[3:5], attrs=attrs)
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
 
