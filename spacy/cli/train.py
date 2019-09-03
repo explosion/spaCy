@@ -68,6 +68,9 @@ from .. import about
     eval_beam_widths=("Beam widths to evaluate, e.g. 4,8", "option", "bw", str),
     gold_preproc=("Use gold preprocessing", "flag", "G", bool),
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
+    textcat_multilabel=("Textcat classes aren't mututally exclusive (multilabel).", "flag", "tml", bool),
+    textcat_arch=("Textcat model architecture.", "option", "a", str),
+    textcat_positive_label=("Textcat positive label for binary classes with two labels.", "option", "tpl", str),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
 )
@@ -93,6 +96,9 @@ def train(
     eval_beam_widths="",
     gold_preproc=False,
     learn_tokens=False,
+    textcat_multilabel=False,
+    textcat_arch="bow",
+    textcat_positive_label=None,
     verbose=False,
     debug=False,
 ):
@@ -174,6 +180,12 @@ def train(
             if pipe not in nlp.pipe_names:
                 if pipe == "parser":
                     pipe_cfg = {"learn_tokens": learn_tokens}
+                elif pipe == "textcat":
+                    pipe_cfg = {
+                        "exclusive_classes": not textcat_multilabel,
+                        "architecture": textcat_arch,
+                        "positive_label": textcat_positive_label,
+                    }
                 else:
                     pipe_cfg = {}
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
@@ -184,6 +196,12 @@ def train(
         for pipe in pipeline:
             if pipe == "parser":
                 pipe_cfg = {"learn_tokens": learn_tokens}
+            elif pipe == "textcat":
+                pipe_cfg = {
+                    "exclusive_classes": not textcat_multilabel,
+                    "architecture": textcat_arch,
+                    "positive_label": textcat_positive_label,
+                }
             else:
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
@@ -224,12 +242,26 @@ def train(
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
 
+    # Verify textcat config
+    if "textcat" in pipeline:
+        if textcat_positive_label and textcat_positive_label not in nlp.get_pipe("textcat").cfg["labels"]:
+            msg.fail("The textcat_positive_label (tpl) '{}' does not match any label in the training data.".format(textcat_positive_label), exits=1)
+        if textcat_positive_label and len(nlp.get_pipe("textcat").cfg["labels"]) != 2:
+            msg.fail("A textcat_positive_label (tpl) '{}' was provided for training data that does not appear to be a binary classification problem with two labels.".format(textcat_positive_label), exits=1)
+        if textcat_multilabel:
+            msg.text("Textcat evaluation score: ROC AUC score macro-averaged across the labels '{}'".format(", ".join(nlp.get_pipe("textcat").cfg["labels"])))
+        elif textcat_positive_label and len(nlp.get_pipe("textcat").cfg["labels"]) == 2:
+            msg.text("Textcat evaluation score: F1-score for the label '{}'".format(textcat_positive_label))
+        elif len(nlp.get_pipe("textcat").cfg["labels"]) > 1:
+            if len(nlp.get_pipe("textcat").cfg["labels"]) == 2:
+                msg.warn("If the textcat component is a binary classifier with exclusive classes, provide 'textcat_positive_label' for an evaluation on the positive class.")
+            msg.text("Textcat evaluation score: F1-score macro-averaged across the labels '{}'".format(", ".join(nlp.get_pipe("textcat").cfg["labels"])))
+        else:
+            msg.fail("Unsupported textcat configuration. Use `spacy debug-data` for more information.")
+
     # fmt: off
-    row_head = ["Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS"]
-    row_widths = [3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7]
-    if has_beam_widths:
-        row_head.insert(1, "Beam W.")
-        row_widths.insert(1, 7)
+    row_head, output_stats = _configure_training_output(pipeline, use_gpu, has_beam_widths)
+    row_widths = [len(w) for w in row_head]
     row_settings = {"widths": row_widths, "aligns": tuple(["r" for i in row_head]), "spacing": 2}
     # fmt: on
     print("")
@@ -283,7 +315,7 @@ def train(
                     )
                     nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
                     start_time = timer()
-                    scorer = nlp_loaded.evaluate(dev_docs, debug)
+                    scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
                     end_time = timer()
                     if use_gpu < 0:
                         gpu_wps = None
@@ -299,7 +331,7 @@ def train(
                                 corpus.dev_docs(nlp_loaded, gold_preproc=gold_preproc)
                             )
                             start_time = timer()
-                            scorer = nlp_loaded.evaluate(dev_docs)
+                            scorer = nlp_loaded.evaluate(dev_docs, verbose=verbose)
                             end_time = timer()
                             cpu_wps = nwords / (end_time - start_time)
                     acc_loc = output_path / ("model%d" % i) / "accuracy.json"
@@ -341,10 +373,15 @@ def train(
                         i,
                         losses,
                         scorer.scores,
+                        output_stats,
                         beam_width=beam_width if has_beam_widths else None,
                         cpu_wps=cpu_wps,
                         gpu_wps=gpu_wps,
                     )
+                    if i == 0 and "textcat" in pipeline:
+                        for cat, cat_score in scorer.scores.get("textcats_per_cat", {}).items():
+                            if cat_score.get("roc_auc_score", 0) < 0:
+                                msg.warn("Textcat ROC AUC score is undefined due to only one value in label '{}'.".format(cat))
                     msg.row(progress, **row_settings)
                 # Early stopping
                 if n_early_stopping is not None:
@@ -465,39 +502,54 @@ def _get_metrics(component):
     return ("token_acc",)
 
 
-def _get_progress(itn, losses, dev_scores, beam_width=None, cpu_wps=0.0, gpu_wps=0.0):
+def _configure_training_output(pipeline, use_gpu, has_beam_widths):
+    row_head = ["Itn"]
+    output_stats = []
+    for pipe in pipeline:
+        if pipe == "tagger":
+            row_head.extend(["Tag Loss ", " Tag %  "])
+            output_stats.extend(["tag_loss", "tags_acc"])
+        elif pipe == "parser":
+            row_head.extend(["Dep Loss ", " UAS  ", " LAS  "])
+            output_stats.extend(["dep_loss", "uas", "las"])
+        elif pipe == "ner":
+            row_head.extend(["NER Loss ", "NER P ", "NER R ", "NER F "])
+            output_stats.extend(["ner_loss", "ents_p", "ents_r", "ents_f"])
+        elif pipe == "textcat":
+            row_head.extend(["Textcat Loss", "Textcat"])
+            output_stats.extend(["textcat_loss", "textcat_score"])
+    row_head.extend(["Token %", "CPU WPS"])
+    output_stats.extend(["token_acc", "cpu_wps"])
+
+    if use_gpu >= 0:
+        row_head.extend(["GPU WPS"])
+        output_stats.extend(["gpu_wps"])
+
+    if has_beam_widths:
+        row_head.insert(1, "Beam W.")
+    return row_head, output_stats
+
+
+def _get_progress(itn, losses, dev_scores, output_stats, beam_width=None, cpu_wps=0.0, gpu_wps=0.0):
     scores = {}
-    for col in [
-        "dep_loss",
-        "tag_loss",
-        "uas",
-        "tags_acc",
-        "token_acc",
-        "ents_p",
-        "ents_r",
-        "ents_f",
-        "cpu_wps",
-        "gpu_wps",
-    ]:
-        scores[col] = 0.0
+    for stat in output_stats:
+        scores[stat] = 0.0
     scores["dep_loss"] = losses.get("parser", 0.0)
     scores["ner_loss"] = losses.get("ner", 0.0)
     scores["tag_loss"] = losses.get("tagger", 0.0)
-    scores.update(dev_scores)
+    scores["textcat_loss"] = losses.get("textcat", 0.0)
     scores["cpu_wps"] = cpu_wps
     scores["gpu_wps"] = gpu_wps or 0.0
+    scores.update(dev_scores)
+    formatted_scores = []
+    for stat in output_stats:
+        format_spec = "{:.3f}"
+        if stat.endswith("_wps"):
+            format_spec = "{:.0f}"
+        formatted_scores.append(format_spec.format(scores[stat]))
     result = [
-        itn,
-        "{:.3f}".format(scores["dep_loss"]),
-        "{:.3f}".format(scores["ner_loss"]),
-        "{:.3f}".format(scores["uas"]),
-        "{:.3f}".format(scores["ents_p"]),
-        "{:.3f}".format(scores["ents_r"]),
-        "{:.3f}".format(scores["ents_f"]),
-        "{:.3f}".format(scores["tags_acc"]),
-        "{:.3f}".format(scores["token_acc"]),
-        "{:.0f}".format(scores["cpu_wps"]),
-        "{:.0f}".format(scores["gpu_wps"]),
+        itn + 1,
+        *formatted_scores
     ]
     if beam_width is not None:
         result.insert(1, beam_width)

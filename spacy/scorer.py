@@ -1,6 +1,8 @@
 # coding: utf8
 from __future__ import division, print_function, unicode_literals
 
+from sklearn.metrics import roc_auc_score
+from math import inf
 from .gold import tags_to_entities, GoldParse
 
 
@@ -34,10 +36,39 @@ class PRFScore(object):
         return 2 * ((p * r) / (p + r + 1e-100))
 
 
+class ROCAUCScore(object):
+    """
+    An AUC ROC score.
+    """
+
+    def __init__(self):
+        self.golds = []
+        self.cands = []
+        self.saved_score = 0.0
+        self.saved_score_at_len = 0
+
+    def score_set(self, cand, gold):
+        self.cands.append(cand)
+        self.golds.append(gold)
+
+    @property
+    def score(self):
+        if len(self.golds) == self.saved_score_at_len:
+            return self.saved_score
+        try:
+            self.saved_score = roc_auc_score(self.golds, self.cands)
+        # catch ValueError: Only one class present in y_true.
+        # ROC AUC score is not defined in that case.
+        except:
+            self.saved_score = -inf
+        self.saved_score_at_len = len(self.golds)
+        return self.saved_score
+
+
 class Scorer(object):
     """Compute evaluation scores."""
 
-    def __init__(self, eval_punct=False):
+    def __init__(self, eval_punct=False, pipeline=None):
         """Initialize the Scorer.
 
         eval_punct (bool): Evaluate the dependency attachments to and from
@@ -54,6 +85,23 @@ class Scorer(object):
         self.ner = PRFScore()
         self.ner_per_ents = dict()
         self.eval_punct = eval_punct
+        self.textcat = None
+        self.textcat_per_cat = dict()
+        self.textcat_positive_label = None
+        self.textcat_multilabel = False
+
+        for name, model in pipeline:
+            if name == "textcat":
+                self.textcat_positive_label = model.cfg.get("positive_label", None)
+                if self.textcat_positive_label:
+                    self.textcat = PRFScore()
+                if not model.cfg["exclusive_classes"]:
+                    self.textcat_multilabel = True
+                    for label in model.cfg["labels"]:
+                        self.textcat_per_cat[label] = ROCAUCScore()
+                else:
+                    for label in model.cfg["labels"]:
+                        self.textcat_per_cat[label] = PRFScore()
 
     @property
     def tags_acc(self):
@@ -102,9 +150,38 @@ class Scorer(object):
         }
 
     @property
+    def textcat_score(self):
+        """RETURNS (float): f-score on positive label for binary exclusive,
+        macro-averaged f-score for 3+ exclusive,
+        macro-averaged AUC ROC score for multilabel (-1 if undefined)
+        """
+        if not self.textcat_multilabel:
+            # binary multiclass
+            if self.textcat_positive_label:
+                return self.textcat.fscore * 100
+            # other multiclass
+            return sum([score.fscore for label, score in self.textcat_per_cat.items()]) / (len(self.textcat_per_cat) + 1e-100) * 100
+        # multilabel
+        return max(sum([score.score for label, score in self.textcat_per_cat.items()]) / (len(self.textcat_per_cat) + 1e-100), -1)
+
+    @property
+    def textcats_per_cat(self):
+        """RETURNS (dict): Scores per textcat label.
+        """
+        if not self.textcat_multilabel:
+            return {
+                k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+                for k, v in self.textcat_per_cat.items()
+            }
+        return {
+            k: {"roc_auc_score": max(v.score, -1)}
+            for k, v in self.textcat_per_cat.items()
+        }
+
+    @property
     def scores(self):
         """RETURNS (dict): All scores with keys `uas`, `las`, `ents_p`,
-            `ents_r`, `ents_f`, `tags_acc` and `token_acc`.
+            `ents_r`, `ents_f`, `tags_acc`, `token_acc`, and `textcat_score`.
         """
         return {
             "uas": self.uas,
@@ -115,6 +192,8 @@ class Scorer(object):
             "ents_per_type": self.ents_per_type,
             "tags_acc": self.tags_acc,
             "token_acc": self.token_acc,
+            "textcat_score": self.textcat_score,
+            "textcats_per_cat": self.textcats_per_cat,
         }
 
     def score(self, doc, gold, verbose=False, punct_labels=("p", "punct")):
@@ -192,6 +271,18 @@ class Scorer(object):
         self.unlabelled.score_set(
             set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
         )
+        if set(self.textcat_per_cat) == set(gold.cats) and set(gold.cats) == set(doc.cats):
+            goldcat = max(gold.cats, key=gold.cats.get)
+            candcat = max(doc.cats, key=doc.cats.get)
+            if self.textcat_positive_label:
+                self.textcat.score_set(set([self.textcat_positive_label]) & set([candcat]), set([self.textcat_positive_label]) & set([goldcat]))
+            for label in self.textcat_per_cat:
+                if self.textcat_multilabel:
+                    self.textcat_per_cat[label].score_set(doc.cats[label], gold.cats[label])
+                else:
+                    self.textcat_per_cat[label].score_set(set([label]) & set([candcat]), set([label]) & set([goldcat]))
+        elif len(self.textcat_per_cat) > 0:
+            raise ValueError("Cannot evaluate textcat model on data with different labels.\nLabels in model: {}\nLabels in evaluation data: {}".format(set(self.textcat_per_cat), set(gold.cats)))
         if verbose:
             gold_words = [item[1] for item in gold.orig_annot]
             for w_id, h_id, dep in cand_deps - gold_deps:

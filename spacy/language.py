@@ -639,7 +639,7 @@ class Language(object):
         DOCS: https://spacy.io/api/language#evaluate
         """
         if scorer is None:
-            scorer = Scorer()
+            scorer = Scorer(pipeline=self.pipeline)
         if component_cfg is None:
             component_cfg = {}
         docs, golds = zip(*docs_golds)
