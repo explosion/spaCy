@@ -90,18 +90,19 @@ class Scorer(object):
         self.textcat_positive_label = None
         self.textcat_multilabel = False
 
-        for name, model in pipeline:
-            if name == "textcat":
-                self.textcat_positive_label = model.cfg.get("positive_label", None)
-                if self.textcat_positive_label:
-                    self.textcat = PRFScore()
-                if not model.cfg["exclusive_classes"]:
-                    self.textcat_multilabel = True
-                    for label in model.cfg["labels"]:
-                        self.textcat_per_cat[label] = ROCAUCScore()
-                else:
-                    for label in model.cfg["labels"]:
-                        self.textcat_per_cat[label] = PRFScore()
+        if pipeline:
+            for name, model in pipeline:
+                if name == "textcat":
+                    self.textcat_positive_label = model.cfg.get("positive_label", None)
+                    if self.textcat_positive_label:
+                        self.textcat = PRFScore()
+                    if not model.cfg.get("exclusive_classes", False):
+                        self.textcat_multilabel = True
+                        for label in model.cfg.get("labels", []):
+                            self.textcat_per_cat[label] = ROCAUCScore()
+                    else:
+                        for label in model.cfg.get("labels", []):
+                            self.textcat_per_cat[label] = PRFScore()
 
     @property
     def tags_acc(self):
