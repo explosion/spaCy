@@ -500,6 +500,7 @@ class Tagger(Pipe):
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
+            _ = annots_brackets.pop()
             for annots, brackets in annots_brackets:
                 ids, words, tags, heads, deps, ents = annots
                 for tag in tags:

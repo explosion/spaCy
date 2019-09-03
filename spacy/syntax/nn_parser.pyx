@@ -589,6 +589,7 @@ cdef class Parser:
             doc_sample = []
             gold_sample = []
             for raw_text, annots_brackets in islice(get_gold_tuples(), 1000):
+                _ = annots_brackets.pop()
                 for annots, brackets in annots_brackets:
                     ids, words, tags, heads, deps, ents = annots
                     doc_sample.append(Doc(self.vocab, words=words))

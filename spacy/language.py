@@ -570,6 +570,7 @@ class Language(object):
         # Populate vocab
         else:
             for _, annots_brackets in get_gold_tuples():
+                _ = annots_brackets.pop()
                 for annots, _ in annots_brackets:
                     for word in annots[1]:
                         _ = self.vocab[word]  # noqa: F841
