@@ -22,11 +22,11 @@ class BaselineResults(NamedTuple):
 
     def report_accuracy(self, model: str) -> str:
         model_str = model.title()
-        recall = getattr(self, f"{model}_recall")
-        precision = getattr(self, f"{model}_precision")
-        return (f"{model_str}: "
-                f"Recall = {round(recall, 3)} | "
-                f"Precision = {round(precision, 3)}")
+        recall = getattr(self, "{}_recall".format(model))
+        precision = getattr(self, "{}_precision".format(model))
+        return ("{}: ".format(model_str) +
+                "Recall = {} | ".format(round(recall, 3)) +
+                "Precision = {}".format(round(precision, 3)))
 
 
 def measure_performance(dev_data, kb, el_pipe):

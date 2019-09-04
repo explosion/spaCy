@@ -63,7 +63,7 @@ def create_kb(
     logger.info("Get entity embeddings:")
     embeddings = encoder.apply_encoder(description_list)
 
-    logger.info(f"Adding {len(entity_list)} entities")
+    logger.info("Adding {} entities".format(len(entity_list)))
     kb.set_entities(
         entity_list=entity_list, freq_list=frequency_list, vector_list=embeddings
     )
@@ -77,7 +77,10 @@ def create_kb(
         prior_prob_input=prior_prob_input,
     )
 
-    logger.info(f"KB size: {len(kb)} {kb.get_size_entities()} {kb.get_size_aliases()}")
+    logger.info("KB size: {} {} {}".format(
+        len(kb),
+        kb.get_size_entities(),
+        kb.get_size_aliases()))
 
     logger.info("Done with kb")
     return kb
@@ -180,6 +183,6 @@ def read_nlp_kb(model_dir, kb_file):
     nlp = spacy.load(model_dir)
     kb = KnowledgeBase(vocab=nlp.vocab)
     kb.load_bulk(kb_file)
-    logger.info(f"kb entities: {kb.get_size_entities()}")
-    logger.info(f"kb aliases: {kb.get_size_aliases()}")
+    logger.info("kb entities: {}".format(kb.get_size_entities()))
+    logger.info("kb aliases: {}".format(kb.get_size_aliases()))
     return nlp, kb

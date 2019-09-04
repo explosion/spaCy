@@ -59,7 +59,7 @@ def _process_wikipedia_texts(wikipedia_input,
             reading_text = False
             reading_revision = False
 
-            print(f"Processed {article_count} articles")
+            print("Processed {} articles".format(article_count))
 
             for line in file:
                 clean_line = line.strip().decode("utf-8")
@@ -97,7 +97,7 @@ def _process_wikipedia_texts(wikipedia_input,
                                 )
                             article_count += 1
                             if article_count % 10000 == 0:
-                                print(f"Processed {article_count} articles")
+                                print("Processed {} articles".format(article_count))
                     article_text = ""
                     article_title = None
                     article_id = None
@@ -131,7 +131,7 @@ def _process_wikipedia_texts(wikipedia_input,
                     titles = title_regex.search(clean_line)
                     if titles:
                         article_title = titles[0].strip()
-    print(f"Finished. Processed {article_count} articles")
+    print("Finished. Processed {} articles".format(article_count))
 
 
 text_regex = re.compile(r"(?<=<text xml:space=\"preserve\">).*(?=</text)")
@@ -317,7 +317,7 @@ def read_training(nlp, entity_file_path, dev, limit, kb):
     skipped_ents = 0
     get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb)
 
-    print(f"Reading {'dev' if dev else 'train'} data with limit {limit}")
+    print("Reading {} data with limit {}".format('dev' if dev else 'train', limit))
     with entity_file_path.open("r", encoding="utf8") as file:
         with tqdm(total=limit, leave=False) as pbar:
             for i, line in enumerate(file):
@@ -337,7 +337,7 @@ def read_training(nlp, entity_file_path, dev, limit, kb):
                     pbar.update(len(gold.links))
                 if num_entities >= limit:
                     break
-    print(f"Read {num_entities} entities in {len(data)} articles")
+    print("Read {} entities in {} articles".format(num_entities, len(data)))
     return data
 
 

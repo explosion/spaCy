@@ -102,14 +102,14 @@ def main(
         optimizer.learn_rate = lr
         optimizer.L2 = l2
 
-    logger.info(f"Training on {len(train_data)} articles")
-    logger.info(f"Dev testing on {len(dev_data)} articles")
+    logger.info("Training on {} articles".format(len(train_data)))
+    logger.info("Dev testing on {} articles".format(len(dev_data)))
 
     dev_baseline_accuracies = measure_baselines(
         dev_data, kb
     )
 
-    logger.info(f"Dev Baseline Accuracies:")
+    logger.info("Dev Baseline Accuracies:")
     logger.info(dev_baseline_accuracies.report_accuracy("random"))
     logger.info(dev_baseline_accuracies.report_accuracy("prior"))
     logger.info(dev_baseline_accuracies.report_accuracy("oracle"))
@@ -139,10 +139,10 @@ def main(
             el_pipe.cfg["incl_prior"] = True
             dev_precision_context, dev_recall_context, _ = measure_acc(dev_data, el_pipe)
             losses["entity_linker"] = losses["entity_linker"] / batchnr
-            logger.info(f"Epoch {itn} | "
-                        f"train loss {round(losses['entity_linker'] / batchnr, 2)} | "
-                        f"Dev precision with prior {round(dev_precision_context, 3)} | "
-                        f"Dev recall with prior {round(dev_precision_context, 3)}")
+            logger.info("Epoch {} | ".format(itn) +
+                        "train loss {} | ".format(round(losses['entity_linker'] / batchnr, 2)) +
+                        "Dev precision with prior {} | ".format(round(dev_precision_context, 3)) +
+                        "Dev recall with prior {}".format(round(dev_precision_context, 3)))
 
     # STEP 6: measure the performance of our trained pipe on an independent dev set
     logger.info("STEP 6: performance measurement of Entity Linking pipe")
