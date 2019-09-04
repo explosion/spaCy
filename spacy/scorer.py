@@ -2,7 +2,6 @@
 from __future__ import division, print_function, unicode_literals
 
 from sklearn.metrics import roc_auc_score
-from math import inf
 from .gold import tags_to_entities, GoldParse
 
 
@@ -60,7 +59,7 @@ class ROCAUCScore(object):
         # catch ValueError: Only one class present in y_true.
         # ROC AUC score is not defined in that case.
         except:
-            self.saved_score = -inf
+            self.saved_score = -float("inf")
         self.saved_score_at_len = len(self.golds)
         return self.saved_score
 
