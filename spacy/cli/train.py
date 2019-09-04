@@ -547,10 +547,8 @@ def _get_progress(itn, losses, dev_scores, output_stats, beam_width=None, cpu_wp
         if stat.endswith("_wps"):
             format_spec = "{:.0f}"
         formatted_scores.append(format_spec.format(scores[stat]))
-    result = [
-        itn + 1,
-        *formatted_scores
-    ]
+    result = [itn + 1]
+    result.extend(formatted_scores)
     if beam_width is not None:
         result.insert(1, beam_width)
     return result
