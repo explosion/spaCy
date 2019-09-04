@@ -1,17 +1,16 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import bz2
+import gzip
 import json
 import datetime
 
 
-def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False):
+def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en"):
     # Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines.
     # get latest-all.json.bz2 from https://dumps.wikimedia.org/wikidatawiki/entities/
 
-    lang = "en"
-    site_filter = "enwiki"
+    site_filter = '{}wiki'.format(lang)
 
     # properties filter (currently disabled to get ALL data)
     prop_filter = dict()
@@ -24,18 +23,16 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False):
     parse_properties = False
     parse_sitelinks = True
     parse_labels = False
-    parse_descriptions = True
+    parse_descriptions = False
     parse_aliases = False
     parse_claims = False
 
-    with bz2.open(wikidata_file, mode="rb") as file:
-        line = file.readline()
-        cnt = 0
-        while line and (not limit or cnt < limit):
-            if cnt % 1000000 == 0:
-                print(
-                    datetime.datetime.now(), "processed", cnt, "lines of WikiData JSON dump"
-                )
+    with gzip.open(wikidata_file, mode='rb') as file:
+        for cnt, line in enumerate(file):
+            if limit and cnt >= limit:
+                break
+            if cnt % 500000 == 0:
+                print(datetime.datetime.now(), "processed", cnt, "lines of WikiData dump")
             clean_line = line.strip()
             if clean_line.endswith(b","):
                 clean_line = clean_line[:-1]
@@ -134,8 +131,12 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False):
 
                         if to_print:
                             print()
-            line = file.readline()
-            cnt += 1
-        print(datetime.datetime.now(), "processed", cnt, "lines of WikiData JSON dump")
 
-    return title_to_id, id_to_descr
+    return title_to_id
+
+
+def write_entity_files(entity_def_output, title_to_id):
+    with entity_def_output.open("w", encoding="utf8") as id_file:
+        id_file.write("WP_title" + "|" + "WD_id" + "\n")
+        for title, qid in title_to_id.items():
+            id_file.write(title + "|" + str(qid) + "\n")

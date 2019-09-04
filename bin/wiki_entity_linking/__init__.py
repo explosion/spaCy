@@ -1,0 +1,10 @@
+TRAINING_DATA_FILE = "gold_entities.jsonl"
+KB_FILE = "kb"
+KB_MODEL_DIR = "nlp_kb"
+OUTPUT_MODEL_DIR = "nlp_long_descr"
+
+PRIOR_PROB_PATH = "prior_prob.csv"
+ENTITY_COUNTS_PATH = "entity_freq.csv"
+ENTITY_DEFS_PATH = "entity_defs.csv"
+ENTITY_DESCR_PATH = "entity_descriptions.csv"
+FILTERED_ENTITY_DESCR_PATH = "entity_descriptions_filtered.csv"
