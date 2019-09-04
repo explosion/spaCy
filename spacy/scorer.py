@@ -282,7 +282,7 @@ class Scorer(object):
                     self.textcat_per_cat[label].score_set(doc.cats[label], gold.cats[label])
                 else:
                     self.textcat_per_cat[label].score_set(set([label]) & set([candcat]), set([label]) & set([goldcat]))
-        elif len(self.textcat_per_cat) > 0 or len(gold.cats) == 0:
+        elif len(self.textcat_per_cat) > 0:
             raise ValueError("Cannot evaluate textcat model on data with different labels.\nLabels in model: {}\nLabels in evaluation data: {}".format(set(self.textcat_per_cat), set(gold.cats)))
         if verbose:
             gold_words = [item[1] for item in gold.orig_annot]
