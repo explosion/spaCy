@@ -24,7 +24,7 @@ from spacy.util import minibatch, compounding
     output_dir=("Optional output directory", "option", "o", Path),
     n_texts=("Number of texts to train from", "option", "t", int),
     n_iter=("Number of training iterations", "option", "n", int),
-    init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path)
+    init_tok2vec=("Pretrained tok2vec weights", "option", "t2v", Path),
 )
 def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None):
     if output_dir is not None:
@@ -43,11 +43,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if "textcat" not in nlp.pipe_names:
         textcat = nlp.create_pipe(
-            "textcat",
-            config={
-                "exclusive_classes": True,
-                "architecture": "simple_cnn",
-            }
+            "textcat", config={"exclusive_classes": True, "architecture": "simple_cnn"}
         )
         nlp.add_pipe(textcat, last=True)
     # otherwise, get it, so we can add labels to it

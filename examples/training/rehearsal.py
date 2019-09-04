@@ -80,14 +80,12 @@ def main(model_name, unlabelled_loc):
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)
             print("Losses", losses)
             print("R. Losses", r_losses)
-    print(nlp.get_pipe('ner').model.unseen_classes)
+    print(nlp.get_pipe("ner").model.unseen_classes)
     test_text = "Do you like horses?"
     doc = nlp(test_text)
     print("Entities in '%s'" % test_text)
     for ent in doc.ents:
         print(ent.label_, ent.text)
-
-
 
 
 if __name__ == "__main__":

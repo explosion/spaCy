@@ -38,8 +38,8 @@ from . import about
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
-        lemma_rules, lemma_index, lemma_exc, lemma_lookup = util.get_lemma_tables(lookups)
-        return Lemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
+        rules, index, exc, lookup = util.get_lemma_tables(lookups)
+        return Lemmatizer(index, exc, rules, lookup)
 
     @classmethod
     def create_lookups(cls, nlp=None):
