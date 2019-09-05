@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 @plac.annotations(
-    wikidata_json=("Path to the downloaded WikiData JSON dump.", "positional", None, Path),
-    wikipedia_xml=("Path to the downloaded Wikipedia XML dump.", "positional", None, Path),
+    wd_json=("Path to the downloaded WikiData JSON dump.", "positional", None, Path),
+    wp_xml=("Path to the downloaded Wikipedia XML dump.", "positional", None, Path),
     output_dir=("Output directory", "positional", None, Path),
     model=("Model name, should include pretrained vectors.", "positional", None, str),
     model_is_path=("Model is a path not a model name.", "flag", "mp"),
@@ -37,14 +37,16 @@ logger = logging.getLogger(__name__)
     min_freq=("Min. count of an entity in the corpus (default 20)", "option", "f", int),
     min_pair=("Min. count of entity-alias pairs (default 5)", "option", "c", int),
     entity_vector_length=("Length of entity vectors (default 64)", "option", "v", int),
+    loc_prior_prob=("Location to file with prior probabilities", "option", "p", Path),
+    loc_entity_defs=("Location to file with entity definitions", "option", "d", Path),
+    loc_entity_desc=("Location to file with entity descriptions", "option", "s", Path),
+    descriptions_from_wikipedia=("Flag for using wp descriptions not wd", "flag", "wd"),
     limit=("Optional threshold to limit lines read from dumps", "option", "l", int),
-    create_prior_probs=("Flag to recreate prior probs", "flag", "cp"),
-    create_training_set=("Flag to recreate training data", "flag", "t"),
     lang=("Optional language for which to get wikidata titles. Defaults to 'en'", "option", "la", str),
 )
 def main(
-    wikidata_json,
-    wikipedia_xml,
+    wd_json,
+    wp_xml,
     output_dir,
     model,
     model_is_path=False,
@@ -52,16 +54,18 @@ def main(
     min_freq=20,
     min_pair=5,
     entity_vector_length=64,
+    loc_prior_prob=None,
+    loc_entity_defs=None,
+    loc_entity_desc=None,
+    descriptions_from_wikipedia=False,
     limit=None,
-    create_prior_probs=False,
-    create_training_set=False,
     lang="en",
 ):
 
-    entity_defs_path = output_dir / "entity_defs.csv"
-    entity_descr_path = output_dir / "entity_descriptions.csv"
+    entity_defs_path = loc_entity_defs if loc_entity_defs else output_dir / "entity_defs.csv"
+    entity_descr_path = loc_entity_desc if loc_entity_desc else output_dir / "entity_descriptions.csv"
     entity_freq_path = output_dir / "entity_freq.csv"
-    prior_prob_path = output_dir / "prior_prob.csv"
+    prior_prob_path = loc_prior_prob if loc_prior_prob else output_dir / "prior_prob.csv"
     training_entities_path = output_dir / TRAINING_DATA_FILE
     kb_path = output_dir / KB_FILE
 
@@ -89,10 +93,10 @@ def main(
         )
 
     # STEP 2: create prior probabilities from WP
-    if create_prior_probs or not prior_prob_path.exists():
+    if not prior_prob_path.exists():
         # It takes about 2h to process 1000M lines of Wikipedia XML dump
         logger.info("STEP 2: writing prior probabilities to {}".format(prior_prob_path))
-        wp.read_prior_probs(wikipedia_xml, prior_prob_path, limit=limit)
+        wp.read_prior_probs(wp_xml, prior_prob_path, limit=limit)
     logger.info("STEP 2: reading prior probabilities from {}".format(prior_prob_path))
 
     # STEP 3: deduce entity frequencies from WP (takes only a few minutes)
@@ -103,22 +107,24 @@ def main(
     if not entity_defs_path.exists():
         # It takes about 10h to process 55M lines of Wikidata JSON dump
         logger.info("STEP 4: parsing wikidata for entity definitions")
-        title_to_id = wd.read_wikidata_entities_json(
-            wikidata_json,
+        title_to_id, id_to_descr = wd.read_wikidata_entities_json(
+            wd_json,
             limit,
             to_print=False,
-            lang=lang
+            lang=lang,
+            parse_descriptions=(not descriptions_from_wikipedia),
         )
         wd.write_entity_files(entity_defs_path, title_to_id)
 
     # STEP 5: Getting descriptions and gold entities from wikipedia
     logger.info("STEP 5: getting descriptions and gold entities")
-    if create_training_set or not (entity_descr_path.exists() and training_entities_path.exists()):
+    if not (entity_descr_path.exists() and training_entities_path.exists()):
         training_set_creator.create_training_examples_and_descriptions(
-            wikipedia_xml,
+            wp_xml,
             entity_defs_path,
             entity_descr_path,
-            training_entities_path
+            training_entities_path,
+            parse_descriptions=descriptions_from_wikipedia,
         )
 
     # STEP 6: creating the actual KB

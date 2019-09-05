@@ -28,18 +28,21 @@ def now():
 def create_training_examples_and_descriptions(wikipedia_input,
                                               entity_def_input,
                                               description_output,
-                                              training_output):
+                                              training_output,
+                                              parse_descriptions):
     wp_to_id = kb_creator.get_entity_to_id(entity_def_input)
     _process_wikipedia_texts(wikipedia_input,
                              wp_to_id,
                              description_output,
-                             training_output)
+                             training_output,
+                             parse_descriptions)
 
 
 def _process_wikipedia_texts(wikipedia_input,
                              wp_to_id,
                              output,
-                             training_output):
+                             training_output,
+                             parse_descriptions):
     """
     Read the XML wikipedia data to parse out training data:
     raw text data + positive instances
@@ -88,7 +91,7 @@ def _process_wikipedia_texts(wikipedia_input,
                                                      clean_text,
                                                      entities)
 
-                            if article_title in wp_to_id:
+                            if article_title in wp_to_id and parse_descriptions:
                                 description = " ".join(clean_text[:1000].split(" ")[:-1])
                                 _write_training_description(
                                     descr_file,

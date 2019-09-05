@@ -6,7 +6,7 @@ import json
 import datetime
 
 
-def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en"):
+def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descriptions=True):
     # Read the JSON wiki data and parse out the entities. Takes about 7u30 to parse 55M lines.
     # get latest-all.json.bz2 from https://dumps.wikimedia.org/wikidatawiki/entities/
 
@@ -23,7 +23,6 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     parse_properties = False
     parse_sitelinks = True
     parse_labels = False
-    parse_descriptions = False
     parse_aliases = False
     parse_claims = False
 

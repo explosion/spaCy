@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 
 
 @plac.annotations(
-    output_dir=("Output directory", "positional"),
+    dir_kb=("Directory with KB, NLP and related files", "positional", None, Path),
+    output_dir=("Output directory", "option", "o", Path),
+    loc_training=("Location to training data", "option", "k", Path),
     epochs=("Number of training iterations (default 10)", "option", "e", int),
     dropout=("Dropout to prevent overfitting (default 0.5)", "option", "p", float),
     lr=("Learning rate (default 0.005)", "option", "n", float),
@@ -38,7 +40,10 @@ logger = logging.getLogger(__name__)
     limit=("Optional threshold to limit lines read from WP dump", "option", "l", int),
 )
 def main(
-    output_dir,
+    dir_kb,
+    output_dir=None,
+    loc_training=None,
+    wp_xml=None,
     epochs=10,
     dropout=0.5,
     lr=0.005,
@@ -50,8 +55,8 @@ def main(
     logger.info("Creating Entity Linker with Wikipedia and WikiData")
 
     output_dir = Path(output_dir)
-    training_path = output_dir / TRAINING_DATA_FILE
-    nlp_dir = output_dir / KB_MODEL_DIR
+    training_path = training_loc if training_loc else output_dir / TRAINING_DATA_FILE
+    nlp_dir = nlp_dir = dir_kb / "nlp"
     kb_path = output_dir / KB_FILE
     nlp_loc = output_dir / "nlp"
 
@@ -169,11 +174,12 @@ def main(
     logger.info("STEP 7: applying Entity Linking to toy example")
     run_el_toy_example(nlp=nlp)
 
-    # STEP 8: write the NLP pipeline (including entity linker) to file
-    logger.info("STEP 8: Writing trained NLP to", nlp_loc)
-    nlp.to_disk(nlp_loc)
+    if output_dir:
+        # STEP 8: write the NLP pipeline (including entity linker) to file
+        logger.info("STEP 8: Writing trained NLP to", nlp_loc)
+        nlp.to_disk(nlp_loc)
 
-    logger.info("Done!")
+        logger.info("Done!")
 
 
 def check_kb(kb):
