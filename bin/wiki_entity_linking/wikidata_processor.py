@@ -131,7 +131,7 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
                         if to_print:
                             print()
 
-    return title_to_id
+    return title_to_id, id_to_descr
 
 
 def write_entity_files(entity_def_output, title_to_id):
@@ -139,3 +139,10 @@ def write_entity_files(entity_def_output, title_to_id):
         id_file.write("WP_title" + "|" + "WD_id" + "\n")
         for title, qid in title_to_id.items():
             id_file.write(title + "|" + str(qid) + "\n")
+
+
+def write_entity_description_files(entity_descr_output, id_to_descr):
+    with entity_descr_output.open("w", encoding="utf8") as descr_file:
+        descr_file.write("WD_id" + "|" + "description" + "\n")
+        for qid, descr in id_to_descr.items():
+            descr_file.write(str(qid) + "|" + descr + "\n")

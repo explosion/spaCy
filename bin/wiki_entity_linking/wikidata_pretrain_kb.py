@@ -31,8 +31,7 @@ logger = logging.getLogger(__name__)
     wd_json=("Path to the downloaded WikiData JSON dump.", "positional", None, Path),
     wp_xml=("Path to the downloaded Wikipedia XML dump.", "positional", None, Path),
     output_dir=("Output directory", "positional", None, Path),
-    model=("Model name, should include pretrained vectors.", "positional", None, str),
-    model_is_path=("Model is a path not a model name.", "flag", "mp"),
+    model=("Model name or path, should include pretrained vectors.", "positional", None, str),
     max_per_alias=("Max. # entities per alias (default 10)", "option", "a", int),
     min_freq=("Min. count of an entity in the corpus (default 20)", "option", "f", int),
     min_pair=("Min. count of entity-alias pairs (default 5)", "option", "c", int),
@@ -49,7 +48,6 @@ def main(
     wp_xml,
     output_dir,
     model,
-    model_is_path=False,
     max_per_alias=10,
     min_freq=20,
     min_pair=5,
@@ -79,11 +77,7 @@ def main(
         output_dir.mkdir(parents=True)
 
     # STEP 1: create the NLP object
-    logger.info("STEP 1: loading model {}".format(model))
-    if model_is_path:
-        nlp = spacy.load(Path(model))
-    else:
-        nlp = spacy.load(model)
+    nlp = spacy.load(model)
 
     # check the length of the nlp vectors
     if "vectors" not in nlp.meta or not nlp.vocab.vectors.size:
@@ -103,10 +97,11 @@ def main(
     logger.info("STEP 3: calculating entity frequencies")
     wp.write_entity_counts(prior_prob_path, entity_freq_path, to_print=False)
 
-    # STEP 4: reading entity descriptions and definitions from WikiData or from file
-    if not entity_defs_path.exists():
+    # STEP 4: reading definitions and (possibly) descriptions from WikiData or from file
+    if (not entity_defs_path.exists()) or (not descriptions_from_wikipedia and not entity_descr_path.exists()):
         # It takes about 10h to process 55M lines of Wikidata JSON dump
-        logger.info("STEP 4: parsing wikidata for entity definitions")
+        message = " and descriptions" if not descriptions_from_wikipedia else ""
+        logger.info("STEP 4: parsing wikidata for entity definitions" + message)
         title_to_id, id_to_descr = wd.read_wikidata_entities_json(
             wd_json,
             limit,
@@ -115,16 +110,20 @@ def main(
             parse_descriptions=(not descriptions_from_wikipedia),
         )
         wd.write_entity_files(entity_defs_path, title_to_id)
+        if not descriptions_from_wikipedia:
+            wd.write_entity_description_files(entity_descr_path, id_to_descr)
 
-    # STEP 5: Getting descriptions and gold entities from wikipedia
-    logger.info("STEP 5: getting descriptions and gold entities")
-    if not (entity_descr_path.exists() and training_entities_path.exists()):
+    # STEP 5: Getting gold entities from wikipedia
+    message = " and descriptions" if descriptions_from_wikipedia else ""
+    logger.info("STEP 5: parsing wikipedia for gold entities" + message)
+    if (not training_entities_path.exists()) or (descriptions_from_wikipedia and not entity_descr_path.exists()):
         training_set_creator.create_training_examples_and_descriptions(
             wp_xml,
             entity_defs_path,
             entity_descr_path,
             training_entities_path,
             parse_descriptions=descriptions_from_wikipedia,
+            limit=limit,
         )
 
     # STEP 6: creating the actual KB

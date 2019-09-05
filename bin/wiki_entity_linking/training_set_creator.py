@@ -29,20 +29,23 @@ def create_training_examples_and_descriptions(wikipedia_input,
                                               entity_def_input,
                                               description_output,
                                               training_output,
-                                              parse_descriptions):
+                                              parse_descriptions,
+                                              limit=None):
     wp_to_id = kb_creator.get_entity_to_id(entity_def_input)
     _process_wikipedia_texts(wikipedia_input,
                              wp_to_id,
                              description_output,
                              training_output,
-                             parse_descriptions)
+                             parse_descriptions,
+                             limit)
 
 
 def _process_wikipedia_texts(wikipedia_input,
                              wp_to_id,
                              output,
                              training_output,
-                             parse_descriptions):
+                             parse_descriptions,
+                             limit=None):
     """
     Read the XML wikipedia data to parse out training data:
     raw text data + positive instances
@@ -52,8 +55,9 @@ def _process_wikipedia_texts(wikipedia_input,
 
     read_ids = set()
 
-    with output.open("w", encoding="utf8") as descr_file, training_output.open("w", encoding="utf8") as entity_file:
-        _write_training_description(descr_file, "WD_id", "description")
+    with output.open("a", encoding="utf8") as descr_file, training_output.open("w", encoding="utf8") as entity_file:
+        if parse_descriptions:
+            _write_training_description(descr_file, "WD_id", "description")
         with bz2.open(wikipedia_input, mode="rb") as file:
             article_count = 0
             article_text = ""
@@ -101,6 +105,8 @@ def _process_wikipedia_texts(wikipedia_input,
                             article_count += 1
                             if article_count % 10000 == 0:
                                 print("Processed {} articles".format(article_count))
+                            if limit and article_count >= limit:
+                                break
                     article_text = ""
                     article_title = None
                     article_id = None
@@ -317,7 +323,6 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
 def read_training(nlp, entity_file_path, dev, limit, kb):
     data = []
     num_entities = 0
-    skipped_ents = 0
     get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb)
 
     print("Reading {} data with limit {}".format('dev' if dev else 'train', limit))
@@ -338,7 +343,7 @@ def read_training(nlp, entity_file_path, dev, limit, kb):
                     data.append((doc, gold))
                     num_entities += len(gold.links)
                     pbar.update(len(gold.links))
-                if num_entities >= limit:
+                if limit and num_entities >= limit:
                     break
     print("Read {} entities in {} articles".format(num_entities, len(data)))
     return data

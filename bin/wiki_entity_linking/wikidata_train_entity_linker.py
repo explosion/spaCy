@@ -37,31 +37,28 @@ logger = logging.getLogger(__name__)
     l2=("L2 regularization", "option", "r", float),
     train_inst=("# training instances (default 90% of all)", "option", "t", int),
     dev_inst=("# test instances (default 10% of all)", "option", "d", int),
-    limit=("Optional threshold to limit lines read from WP dump", "option", "l", int),
 )
 def main(
     dir_kb,
     output_dir=None,
     loc_training=None,
-    wp_xml=None,
     epochs=10,
     dropout=0.5,
     lr=0.005,
     l2=1e-6,
     train_inst=None,
     dev_inst=None,
-    limit=None,
 ):
     logger.info("Creating Entity Linker with Wikipedia and WikiData")
 
-    output_dir = Path(output_dir)
-    training_path = training_loc if training_loc else output_dir / TRAINING_DATA_FILE
-    nlp_dir = nlp_dir = dir_kb / "nlp"
+    output_dir = Path(output_dir) if output_dir else dir_kb
+    training_path = loc_training if loc_training else output_dir / TRAINING_DATA_FILE
+    nlp_dir = dir_kb / KB_MODEL_DIR
     kb_path = output_dir / KB_FILE
-    nlp_loc = output_dir / "nlp"
+    nlp_output_dir = output_dir / "nlp"
 
     # STEP 0: set up IO
-    if output_dir and not output_dir.exists():
+    if not output_dir.exists():
         output_dir.mkdir()
 
     # STEP 1 : load the NLP object
@@ -176,8 +173,8 @@ def main(
 
     if output_dir:
         # STEP 8: write the NLP pipeline (including entity linker) to file
-        logger.info("STEP 8: Writing trained NLP to", nlp_loc)
-        nlp.to_disk(nlp_loc)
+        logger.info("STEP 8: Writing trained NLP to", nlp_output_dir)
+        nlp.to_disk(nlp_output_dir)
 
         logger.info("Done!")
 
