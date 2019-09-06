@@ -77,6 +77,7 @@ def main(
         output_dir.mkdir(parents=True)
 
     # STEP 1: create the NLP object
+    logger.info("Loading model {}".format(model))
     nlp = spacy.load(model)
 
     # check the length of the nlp vectors
@@ -112,6 +113,7 @@ def main(
         wd.write_entity_files(entity_defs_path, title_to_id)
         if not descriptions_from_wikipedia:
             wd.write_entity_description_files(entity_descr_path, id_to_descr)
+    logger.info("STEP 4: read entity definitions" + message)
 
     # STEP 5: Getting gold entities from wikipedia
     message = " and descriptions" if descriptions_from_wikipedia else ""
@@ -125,6 +127,7 @@ def main(
             parse_descriptions=descriptions_from_wikipedia,
             limit=limit,
         )
+    logger.info("STEP 5: read gold entities" + message)
 
     # STEP 6: creating the actual KB
     # It takes ca. 30 minutes to pretrain the entity embeddings

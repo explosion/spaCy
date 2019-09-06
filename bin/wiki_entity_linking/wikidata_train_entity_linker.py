@@ -69,8 +69,8 @@ def main(
     if "ner" not in nlp.pipe_names:
         raise ValueError("The `nlp` object should have a pre-trained `ner` component.")
 
-    # STEP 3: create a training dataset from WP
-    logger.info("STEP 3: reading training dataset from {}".format(training_path))
+    # STEP 2: create a training dataset from WP
+    logger.info("STEP 2: reading training dataset from {}".format(training_path))
 
     train_data = training_set_creator.read_training(
         nlp=nlp,
@@ -89,8 +89,8 @@ def main(
         kb=kb,
     )
 
-    # STEP 5: create and train the entity linking pipe
-    logger.info("STEP 5: training Entity Linking pipe")
+    # STEP 3: create and train the entity linking pipe
+    logger.info("STEP 3: training Entity Linking pipe")
 
     el_pipe = nlp.create_pipe(
         name="entity_linker", config={"pretrained_vectors": nlp.vocab.vectors.name}
@@ -144,10 +144,10 @@ def main(
             logger.info("Epoch {} | ".format(itn) +
                         "train loss {} | ".format(round(losses['entity_linker'] / batchnr, 2)) +
                         "Dev precision with prior {} | ".format(round(dev_precision_context, 3)) +
-                        "Dev recall with prior {}".format(round(dev_precision_context, 3)))
+                        "Dev recall with prior {}".format(round(dev_recall_context, 3)))
 
-    # STEP 6: measure the performance of our trained pipe on an independent dev set
-    logger.info("STEP 6: performance measurement of Entity Linking pipe")
+    # STEP 4: measure the performance of our trained pipe on an independent dev set
+    logger.info("STEP 4: performance measurement of Entity Linking pipe")
 
     # using only context
     el_pipe.cfg["incl_context"] = True
@@ -156,24 +156,24 @@ def main(
     logger.info("Dev precision with context "
                 "{} | ".format(round(dev_precision_context, 3)) +
                 "Dev recall with context "
-                "{}".format(round(dev_precision_context, 3)))
+                "{}".format(round(dev_recall_context, 3)))
 
     # measuring combined accuracy (prior + context)
     el_pipe.cfg["incl_context"] = True
     el_pipe.cfg["incl_prior"] = True
-    dev_precision_context, dev_recall_context, _ = measure_acc(dev_data, el_pipe)
+    dev_precision_average, dev_recall_average, _ = measure_acc(dev_data, el_pipe)
     logger.info("Dev precision with prior + context "
-                "{} | ".format(round(dev_precision_context, 3)) +
+                "{} | ".format(round(dev_precision_average, 3)) +
                 "Dev recall with prior + context "
-                "{}".format(round(dev_precision_context, 3)))
+                "{}".format(round(dev_recall_average, 3)))
 
-    # STEP 7: apply the EL pipe on a toy example
-    logger.info("STEP 7: applying Entity Linking to toy example")
+    # STEP 5: apply the EL pipe on a toy example
+    logger.info("STEP 5: applying Entity Linking to toy example")
     run_el_toy_example(nlp=nlp)
 
     if output_dir:
-        # STEP 8: write the NLP pipeline (including entity linker) to file
-        logger.info("STEP 8: Writing trained NLP to", nlp_output_dir)
+        # STEP 6: write the NLP pipeline (including entity linker) to file
+        logger.info("STEP 6: Writing trained NLP to", nlp_output_dir)
         nlp.to_disk(nlp_output_dir)
 
         logger.info("Done!")
