@@ -441,8 +441,13 @@ cdef class Tokenizer:
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
         if data.get("token_match"):
             self.token_match = re.compile(data["token_match"]).match
-        for string, substrings in data.get("rules", {}).items():
-            self.add_special_case(string, substrings)
+        if data.get("rules"):
+            # make sure to hard reset the cache to remove data from the default exceptions
+            self._rules = {}
+            self._cache = PreshMap()
+            for string, substrings in data.get("rules", {}).items():
+                self.add_special_case(string, substrings)
+
         return self
 
 

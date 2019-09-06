@@ -8,6 +8,8 @@ import Icon from './icon'
 import classes from '../styles/link.module.sass'
 import { isString } from './util'
 
+const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io)/gi
+
 const Whitespace = ({ children }) => (
     // Ensure that links are always wrapped in spaces
     <> {children} </>
@@ -68,13 +70,15 @@ const Link = ({
             </Wrapper>
         )
     }
+    const isInternal = internalRegex.test(dest)
+    const rel = isInternal ? null : 'noopener nofollow noreferrer'
     return (
         <Wrapper>
             <OutboundLink
                 href={dest}
                 className={linkClassNames}
                 target="_blank"
-                rel="noopener nofollow noreferrer"
+                rel={rel}
                 {...other}
             >
                 {content}

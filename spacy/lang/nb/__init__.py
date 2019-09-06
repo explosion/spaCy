@@ -4,15 +4,14 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .morph_rules import MORPH_RULES
-from .lemmatizer import LEMMA_EXC, LEMMA_INDEX, LOOKUP, LEMMA_RULES
+from .syntax_iterators import SYNTAX_ITERATORS
+from .tag_map import TAG_MAP
+
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
-from .tag_map import TAG_MAP
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
-
-from .syntax_iterators import SYNTAX_ITERATORS
 
 
 class NorwegianDefaults(Language.Defaults):
@@ -25,11 +24,12 @@ class NorwegianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     morph_rules = MORPH_RULES
     tag_map = TAG_MAP
-    lemma_lookup = LOOKUP
-    lemma_exc = LEMMA_EXC
-    lemma_index = LEMMA_INDEX
-    lemma_rules = LEMMA_RULES
     syntax_iterators = SYNTAX_ITERATORS
+    resources = {
+        "lemma_lookup": "lemmatizer/lemma_lookup.json",
+        "lemma_exc": "lemmatizer/lemma_exc.json",
+        "lemma_rules": "lemmatizer/lemma_rules.json",
+    }
 
 
 class Norwegian(Language):

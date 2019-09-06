@@ -1038,7 +1038,10 @@ cdef class DependencyParser(Parser):
 
     @property
     def postprocesses(self):
-        return [nonproj.deprojectivize]
+        output = [nonproj.deprojectivize]
+        if self.cfg.get("learn_tokens") is True:
+            output.append(merge_subtokens)
+        return tuple(output)
 
     def add_multitask_objective(self, target):
         if target == "cloze":

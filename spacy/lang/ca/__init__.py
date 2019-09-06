@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from pathlib import Path
-
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
@@ -11,7 +9,7 @@ from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups, load_language_data
+from ...util import update_exc, add_lookups
 
 from .punctuation import TOKENIZER_INFIXES
 
@@ -25,9 +23,8 @@ class CatalanDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    lemma_path = Path(__file__).parent / "lemmas.json"
-    lemma_lookup = load_language_data(lemma_path)
     infixes = TOKENIZER_INFIXES
+    resources = {"lemma_lookup": "lemma_lookup.json"}
 
 
 class Catalan(Language):

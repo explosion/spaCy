@@ -192,7 +192,7 @@ browser. Will run a simple web server.
 | `style`   | unicode             | Visualization style, `'dep'` or `'ent'`.                                                                                             | `'dep'`     |
 | `page`    | bool                | Render markup as full HTML page.                                                                                                     | `True`      |
 | `minify`  | bool                | Minify HTML markup.                                                                                                                  | `False`     |
-| `options` | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                | `{}`        |
+| `options` | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                                | `{}`        |
 | `manual`  | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. | `False`     |
 | `port`    | int                 | Port to serve visualization.                                                                                                         | `5000`      |
 | `host`    | unicode             | Host to serve visualization.                                                                                                         | `'0.0.0.0'` |
@@ -218,7 +218,7 @@ Render a dependency parse tree or named entity visualization.
 | `page`      | bool                | Render markup as full HTML page.                                                                                                                          | `False` |
 | `minify`    | bool                | Minify HTML markup.                                                                                                                                       | `False` |
 | `jupyter`   | bool                | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None`. | `None`  |
-| `options`   | dict                | [Visualizer-specific options](#options), e.g. colors.                                                                                                     | `{}`    |
+| `options`   | dict                | [Visualizer-specific options](#displacy_options), e.g. colors.                                                                                                     | `{}`    |
 | `manual`    | bool                | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples.                      | `False` |
 | **RETURNS** | unicode             | Rendered HTML markup.                                                                                                                                     |
 
@@ -639,7 +639,7 @@ Yield an infinite series of linearly decaying values.
 
 Shuffle an iterator. This works by holding `bufsize` items back and yielding
 them sometime later. Obviously, this is not unbiased – but should be good enough
-for batching. Larger `buffsize` means less bias.
+for batching. Larger `bufsize` means less bias.
 
 > #### Example
 >
@@ -648,11 +648,11 @@ for batching. Larger `buffsize` means less bias.
 > shuffled = itershuffle(values)
 > ```
 
-| Name       | Type     | Description            |
-| ---------- | -------- | ---------------------- |
-| `iterable` | iterable | Iterator to shuffle.   |
-| `buffsize` | int      | Items to hold back.    |
-| **YIELDS** | iterable | The shuffled iterator. |
+| Name       | Type     | Description                           |
+| ---------- | -------- | ------------------------------------- |
+| `iterable` | iterable | Iterator to shuffle.                  |
+| `bufsize`  | int      | Items to hold back (default: 1000).   |
+| **YIELDS** | iterable | The shuffled iterator.                |
 
 ### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
 

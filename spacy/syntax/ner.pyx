@@ -258,7 +258,7 @@ cdef class Begin:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        cdef int preset_ent_label = st.B_(0).ent_type
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
         # If we're the last token of the input, we can't B -- must U or O.
         if st.B(1) == -1:
             return False
@@ -395,6 +395,9 @@ cdef class Last:
             return False
         elif not st.entity_is_open():
             return False
+        elif st.B_(0).ent_iob == 1 and st.B_(1).ent_iob != 1:
+            # If a preset entity has I followed by not-I, is L
+            return True
         elif st.E_(0).ent_type != label:
             return False
         elif st.B_(1).ent_iob == 1:

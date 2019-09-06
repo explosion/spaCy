@@ -172,16 +172,21 @@ def train(
         nlp.disable_pipes(*other_pipes)
         for pipe in pipeline:
             if pipe not in nlp.pipe_names:
-                nlp.add_pipe(nlp.create_pipe(pipe))
+                if pipe == "parser":
+                    pipe_cfg = {"learn_tokens": learn_tokens}
+                else:
+                    pipe_cfg = {}
+                nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
     else:
         msg.text("Starting with blank model '{}'".format(lang))
         lang_cls = util.get_lang_class(lang)
         nlp = lang_cls()
         for pipe in pipeline:
-            nlp.add_pipe(nlp.create_pipe(pipe))
-
-    if learn_tokens:
-        nlp.add_pipe(nlp.create_pipe("merge_subtokens"))
+            if pipe == "parser":
+                pipe_cfg = {"learn_tokens": learn_tokens}
+            else:
+                pipe_cfg = {}
+            nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
     if vectors:
         msg.text("Loading vector from model '{}'".format(vectors))
