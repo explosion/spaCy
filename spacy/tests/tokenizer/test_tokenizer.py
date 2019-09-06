@@ -120,3 +120,18 @@ def test_tokenizer_add_special_case_tag(text, tokens):
     assert doc[0].tag_ == tokens[0]["tag"]
     assert doc[0].pos_ == "NOUN"
     assert doc[1].text == tokens[1]["orth"]
+
+@pytest.mark.parametrize(
+    "text,tokens",
+    [
+        ("»", [{"orth": '"'}]),
+        ("»", [{"orth": '"'}, {"orth": "'"}]),
+        (".", [{"orth": '。'}]),
+        ("。", [{"orth": '.'}]),
+    ]
+)
+def test_tokenizer_affix_as_special_case(tokenizer, text, tokens):
+    tokenizer.add_special_case(text, tokens)
+    doc = tokenizer(text)
+    for i in range(len(doc)):
+        assert doc[i].text == tokens[i]["orth"]

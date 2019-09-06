@@ -158,6 +158,20 @@ cdef class Tokenizer:
                 tokens.push_back(&cached.data.tokens[i], False)
         return True
 
+    cdef int _push_back_affix(self, Pool mem, unicode affix, vector[const LexemeC*] *affixes) except -1:
+        if len(affix) == 0:
+            return False
+        cdef int i
+        cdef hash_t key = hash_string(affix)
+        if affix and self._specials.get(key) != NULL:
+            cached = <_Cached*>self._cache.get(key)
+            if cached != NULL:
+                for i in range(cached.length):
+                    affixes.push_back(cached.data.tokens[i].lex)
+                return True
+        affixes.push_back(self.vocab.get(mem, affix))
+        return True
+
     cdef int _tokenize(self, Doc tokens, unicode span, hash_t orig_key) except -1:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
@@ -189,12 +203,10 @@ cdef class Tokenizer:
                 prefix = string[:pre_len]
                 minus_pre = string[pre_len:]
                 # Check whether we've hit a special-case
-                if minus_pre and self._specials.get(hash_string(minus_pre)) != NULL:
+                if minus_pre and (self._specials.get(hash_string(minus_pre)) != NULL):
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
                     has_special[0] = 1
-                    break
-                if self.token_match and self.token_match(string):
                     break
             suf_len = self.find_suffix(string)
             if suf_len != 0:
@@ -208,14 +220,14 @@ cdef class Tokenizer:
                     break
             if pre_len and suf_len and (pre_len + suf_len) <= len(string):
                 string = string[pre_len:-suf_len]
-                prefixes.push_back(self.vocab.get(mem, prefix))
-                suffixes.push_back(self.vocab.get(mem, suffix))
+                self._push_back_affix(mem, prefix, prefixes)
+                self._push_back_affix(mem, suffix, suffixes)
             elif pre_len:
                 string = minus_pre
-                prefixes.push_back(self.vocab.get(mem, prefix))
+                self._push_back_affix(mem, prefix, prefixes)
             elif suf_len:
                 string = minus_suf
-                suffixes.push_back(self.vocab.get(mem, suffix))
+                self._push_back_affix(mem, suffix, suffixes)
             if string and (self._specials.get(hash_string(string)) != NULL):
                 has_special[0] = 1
                 break
