@@ -3,7 +3,16 @@ the statistical model comes in, which enables spaCy to **make a prediction** of
 which tag or label most likely applies in this context. A model consists of
 binary data and is produced by showing a system enough examples for it to make
 predictions that generalize across the language – for example, a word following
-"the" in English is most likely a noun.
+"the" in English is most likely a noun. spaCy assigns tags on two different levels
+of granularity: `Tag` is a more fine-grained, and `POS` is a more simple version.
+
+<Infobox title="📖 Part-of-speech tag scheme">
+
+For a list of the fine-grained and coarse-grained part-of-speech tags assigned
+by spaCy's models across different languages, see the
+[POS tag scheme documentation](/api/annotation#pos-tagging).
+
+</Infobox>
 
 Linguistic annotations are available as
 [`Token` attributes](/api/token#attributes). Like many NLP libraries, spaCy
