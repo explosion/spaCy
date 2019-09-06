@@ -15,7 +15,7 @@ class BaselineResults(NamedTuple):
     oracle_recall: float
     oracle_precision: float
 
-    def report_accuracy(self, model: str) -> str:
+    def report_accuracy(self, model):
         model_str = model.title()
         recall = getattr(self, "{}_recall".format(model))
         precision = getattr(self, "{}_precision".format(model))
