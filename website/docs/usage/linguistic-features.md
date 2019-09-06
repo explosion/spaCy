@@ -26,6 +26,14 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 
 <PosDeps101 />
 
+<Infobox title="📖 Part-of-speech tag scheme">
+
+For a list of the fine-grained and coarse-grained part-of-speech tags assigned
+by spaCy's models across different languages, see the
+[POS tag scheme documentation](/api/annotation#pos-tagging).
+
+</Infobox>
+
 ### Rule-based morphology {#rule-based-morphology}
 
 Inflectional morphology is the process by which a root form of a word is
@@ -61,14 +69,7 @@ of the two. The system works as follows:
    morphological information, without consulting the context of the token. The
    lemmatizer also accepts list-based exception files, acquired from
    [WordNet](https://wordnet.princeton.edu/).
-
-<Infobox title="📖 Part-of-speech tag scheme">
-
-For a list of the fine-grained and coarse-grained part-of-speech tags assigned
-by spaCy's models across different languages, see the
-[POS tag scheme documentation](/api/annotation#pos-tagging).
-
-</Infobox>
+   
 
 ## Dependency Parsing {#dependency-parse model="parser"}
 
@@ -289,7 +290,7 @@ for token in doc:
 
 For a list of the syntactic dependency labels assigned by spaCy's models across
 different languages, see the
-[dependency label scheme documentation](/api/annotation#pos-tagging).
+[dependency label scheme documentation](/api/annotation#dependency-parsing).
 
 </Infobox>
 
