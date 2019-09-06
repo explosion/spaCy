@@ -26,6 +26,14 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 
 <PosDeps101 />
 
+<Infobox title="📖 Part-of-speech tag scheme">
+
+For a list of the fine-grained and coarse-grained part-of-speech tags assigned
+by spaCy's models across different languages, see the
+[POS tag scheme documentation](/api/annotation#pos-tagging).
+
+</Infobox>
+
 ### Rule-based morphology {#rule-based-morphology}
 
 Inflectional morphology is the process by which a root form of a word is
