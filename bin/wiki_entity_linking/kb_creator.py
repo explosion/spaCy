@@ -38,7 +38,7 @@ def create_kb(
     # check the length of the nlp vectors
     if "vectors" in nlp.meta and nlp.vocab.vectors.size:
         input_dim = nlp.vocab.vectors_length
-        print("Loaded pre-trained vectors of size %s" % input_dim)
+        logger.info("Loaded pre-trained vectors of size %s" % input_dim)
     else:
         raise ValueError(
             "The `nlp` object should have access to pre-trained word vectors, "
@@ -48,6 +48,7 @@ def create_kb(
     logger.info("Get entity frequencies")
     entity_frequencies = wp.get_all_frequencies(count_input=count_input)
 
+    logger.info("Filtering entities with fewer than {} mentions".format(min_entity_freq))
     # filter the entities for in the KB by frequency, because there's just too much data (8M entities) otherwise
     filtered_title_to_id, entity_list, description_list, frequency_list = get_filtered_entities(
         title_to_id,
@@ -55,6 +56,7 @@ def create_kb(
         entity_frequencies,
         min_entity_freq
     )
+    logger.info("Left with {} entities".format(len(description_list)))
 
     logger.info("Train entity encoder")
     encoder = EntityEncoder(nlp, input_dim, entity_vector_length)
@@ -77,8 +79,7 @@ def create_kb(
         prior_prob_input=prior_prob_input,
     )
 
-    logger.info("KB size: {} {} {}".format(
-        len(kb),
+    logger.info("KB size: {} entities, {} aliases".format(
         kb.get_size_entities(),
         kb.get_size_aliases()))
 
@@ -164,7 +165,7 @@ def _add_aliases(kb, title_to_id, max_entities_per_alias, min_occ, prior_prob_in
                                 probabilities=prior_probs,
                             )
                         except ValueError as e:
-                            print(e)
+                            logger.error(e)
                 total_count = 0
                 counts = []
                 entities = []

@@ -3,7 +3,10 @@ from __future__ import unicode_literals
 
 import gzip
 import json
+import logging
 import datetime
+
+logger = logging.getLogger(__name__)
 
 
 def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descriptions=True):
@@ -31,7 +34,7 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
             if limit and cnt >= limit:
                 break
             if cnt % 500000 == 0:
-                print(datetime.datetime.now(), "processed", cnt, "lines of WikiData dump")
+                logger.info("processed {} lines of WikiData dump".format(cnt))
             clean_line = line.strip()
             if clean_line.endswith(b","):
                 clean_line = clean_line[:-1]

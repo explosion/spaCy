@@ -16,14 +16,12 @@ from pathlib import Path
 import plac
 
 from bin.wiki_entity_linking import training_set_creator
-from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_MODEL_DIR, KB_FILE
-from bin.wiki_entity_linking.entity_linker_evaluation import measure_acc, measure_baselines
+from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_MODEL_DIR, KB_FILE, LOG_FORMAT, OUTPUT_MODEL_DIR
+from bin.wiki_entity_linking.entity_linker_evaluation import measure_performance, measure_baselines
 from bin.wiki_entity_linking.kb_creator import read_nlp_kb
 
 from spacy.util import minibatch, compounding
 
-
-LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 logger = logging.getLogger(__name__)
 
 
@@ -55,7 +53,7 @@ def main(
     training_path = loc_training if loc_training else output_dir / TRAINING_DATA_FILE
     nlp_dir = dir_kb / KB_MODEL_DIR
     kb_path = output_dir / KB_FILE
-    nlp_output_dir = output_dir / "nlp"
+    nlp_output_dir = output_dir / OUTPUT_MODEL_DIR
 
     # STEP 0: set up IO
     if not output_dir.exists():
@@ -135,37 +133,11 @@ def main(
                     )
                     batchnr += 1
                 except Exception as e:
-                    print("Error updating batch:", e)
-
-            el_pipe.cfg["incl_context"] = True
-            el_pipe.cfg["incl_prior"] = True
-            dev_precision_context, dev_recall_context, _ = measure_acc(dev_data, el_pipe)
-            losses["entity_linker"] = losses["entity_linker"] / batchnr
-            logger.info("Epoch {} | ".format(itn) +
-                        "train loss {} | ".format(round(losses['entity_linker'] / batchnr, 2)) +
-                        "Dev precision with prior {} | ".format(round(dev_precision_context, 3)) +
-                        "Dev recall with prior {}".format(round(dev_recall_context, 3)))
+                    logger.error("Error updating batch:" + str(e))
 
     # STEP 4: measure the performance of our trained pipe on an independent dev set
     logger.info("STEP 4: performance measurement of Entity Linking pipe")
-
-    # using only context
-    el_pipe.cfg["incl_context"] = True
-    el_pipe.cfg["incl_prior"] = False
-    dev_precision_context, dev_recall_context, _ = measure_acc(dev_data, el_pipe)
-    logger.info("Dev precision with context "
-                "{} | ".format(round(dev_precision_context, 3)) +
-                "Dev recall with context "
-                "{}".format(round(dev_recall_context, 3)))
-
-    # measuring combined accuracy (prior + context)
-    el_pipe.cfg["incl_context"] = True
-    el_pipe.cfg["incl_prior"] = True
-    dev_precision_average, dev_recall_average, _ = measure_acc(dev_data, el_pipe)
-    logger.info("Dev precision with prior + context "
-                "{} | ".format(round(dev_precision_average, 3)) +
-                "Dev recall with prior + context "
-                "{}".format(round(dev_recall_average, 3)))
+    measure_performance(dev_data, kb, el_pipe)
 
     # STEP 5: apply the EL pipe on a toy example
     logger.info("STEP 5: applying Entity Linking to toy example")
@@ -173,7 +145,7 @@ def main(
 
     if output_dir:
         # STEP 6: write the NLP pipeline (including entity linker) to file
-        logger.info("STEP 6: Writing trained NLP to", nlp_output_dir)
+        logger.info("STEP 6: Writing trained NLP to {}".format(nlp_output_dir))
         nlp.to_disk(nlp_output_dir)
 
         logger.info("Done!")
@@ -183,15 +155,14 @@ def check_kb(kb):
     for mention in ("Bush", "Douglas Adams", "Homer", "Brazil", "China"):
         candidates = kb.get_candidates(mention)
 
-        print("generating candidates for " + mention + " :")
+        logger.info("generating candidates for " + mention + " :")
         for c in candidates:
-            print(
-                " ",
-                c.prior_prob,
+            logger.info(" ".join[
+                str(c.prior_prob),
                 c.alias_,
                 "-->",
-                c.entity_ + " (freq=" + str(c.entity_freq) + ")",
-            )
+                c.entity_ + " (freq=" + str(c.entity_freq) + ")"
+            ])
 
 
 def run_el_toy_example(nlp):
@@ -202,9 +173,9 @@ def run_el_toy_example(nlp):
         "but Dougledydoug doesn't write about George Washington or Homer Simpson."
     )
     doc = nlp(text)
-    print(text)
+    logger.info(text)
     for ent in doc.ents:
-        print(" ent", ent.text, ent.label_, ent.kb_id_)
+        logger.info(" ".join(["ent", ent.text, ent.label_, ent.kb_id_]))
 
 
 if __name__ == "__main__":

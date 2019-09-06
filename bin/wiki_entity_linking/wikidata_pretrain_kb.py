@@ -20,10 +20,10 @@ import plac
 from bin.wiki_entity_linking import wikipedia_processor as wp, wikidata_processor as wd
 from bin.wiki_entity_linking import kb_creator
 from bin.wiki_entity_linking import training_set_creator
-from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_FILE, KB_MODEL_DIR
+from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_FILE, ENTITY_DESCR_PATH, KB_MODEL_DIR, LOG_FORMAT
+from bin.wiki_entity_linking import ENTITY_FREQ_PATH, PRIOR_PROB_PATH, ENTITY_DEFS_PATH
 import spacy
 
-LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
     loc_prior_prob=("Location to file with prior probabilities", "option", "p", Path),
     loc_entity_defs=("Location to file with entity definitions", "option", "d", Path),
     loc_entity_desc=("Location to file with entity descriptions", "option", "s", Path),
-    descriptions_from_wikipedia=("Flag for using wp descriptions not wd", "flag", "wd"),
+    descriptions_from_wikipedia=("Flag for using wp descriptions not wd", "flag", "wp"),
     limit=("Optional threshold to limit lines read from dumps", "option", "l", int),
     lang=("Optional language for which to get wikidata titles. Defaults to 'en'", "option", "la", str),
 )
@@ -60,10 +60,10 @@ def main(
     lang="en",
 ):
 
-    entity_defs_path = loc_entity_defs if loc_entity_defs else output_dir / "entity_defs.csv"
-    entity_descr_path = loc_entity_desc if loc_entity_desc else output_dir / "entity_descriptions.csv"
-    entity_freq_path = output_dir / "entity_freq.csv"
-    prior_prob_path = loc_prior_prob if loc_prior_prob else output_dir / "prior_prob.csv"
+    entity_defs_path = loc_entity_defs if loc_entity_defs else output_dir / ENTITY_DEFS_PATH
+    entity_descr_path = loc_entity_desc if loc_entity_desc else output_dir / ENTITY_DESCR_PATH
+    entity_freq_path = output_dir / ENTITY_FREQ_PATH
+    prior_prob_path = loc_prior_prob if loc_prior_prob else output_dir / PRIOR_PROB_PATH
     training_entities_path = output_dir / TRAINING_DATA_FILE
     kb_path = output_dir / KB_FILE
 
@@ -77,7 +77,7 @@ def main(
         output_dir.mkdir(parents=True)
 
     # STEP 1: create the NLP object
-    logger.info("Loading model {}".format(model))
+    logger.info("STEP 1: Loading model {}".format(model))
     nlp = spacy.load(model)
 
     # check the length of the nlp vectors

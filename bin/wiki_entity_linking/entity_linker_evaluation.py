@@ -1,24 +1,19 @@
 import logging
 import random
 
-from collections import defaultdict
 from tqdm import tqdm
-from typing import Dict, NamedTuple
+from typing import NamedTuple
 
 logger = logging.getLogger(__name__)
 
 
 class BaselineResults(NamedTuple):
-    counts_dict: Dict
     random_recall: float
     random_precision: float
-    random_accuracy_by_label: Dict
     prior_recall: float
     prior_precision: float
-    prior_accuracy_by_label: Dict
     oracle_recall: float
     oracle_precision: float
-    oracle_accuracy_by_label: Dict
 
     def report_accuracy(self, model: str) -> str:
         model_str = model.title()
@@ -29,11 +24,36 @@ class BaselineResults(NamedTuple):
                 "Precision = {}".format(round(precision, 3)))
 
 
+class Metrics(object):
+    def __init__(self, true_pos, false_pos, false_neg):
+        self.true_pos = true_pos
+        self.false_pos = false_pos
+        self.false_neg = false_neg
+
+    def update_results(self, true_entity, candidate):
+        candidate_is_correct = true_entity == candidate
+        self.true_pos += candidate_is_correct
+        self.false_neg += not candidate_is_correct
+        if candidate != "" and candidate != "NIL":
+            self.false_pos += not candidate_is_correct
+
+    def calculate_precision(self):
+        if self.true_pos == 0:
+            return 0.0
+        else:
+            return self.true_pos / (self.true_pos + self.false_pos)
+
+    def calculate_recall(self):
+        if self.true_pos == 0:
+            return 0.0
+        else:
+            return self.true_pos / (self.true_pos + self.false_neg)
+
+
 def measure_performance(dev_data, kb, el_pipe):
     baseline_accuracies = measure_baselines(
         dev_data, kb
     )
-    print("dev counts:", sorted(baseline_accuracies.counts_dict.items(), key=lambda x: x[0]))
 
     logger.info(baseline_accuracies.report_accuracy("random"))
     logger.info(baseline_accuracies.report_accuracy("prior"))
@@ -42,33 +62,31 @@ def measure_performance(dev_data, kb, el_pipe):
     # using only context
     el_pipe.cfg["incl_context"] = True
     el_pipe.cfg["incl_prior"] = False
-    dev_precision_context, dev_recall_context, dev_acc_cont_d = measure_acc(dev_data, el_pipe)
-    print("dev precision context avg:", round(dev_precision_context, 3))
-    print("dev recall context avg:", round(dev_recall_context, 3))
+    dev_precision_context, dev_recall_context = measure_precision_recall(dev_data, el_pipe)
+    logger.info("dev precision context avg: {}".format(round(dev_precision_context, 3)))
+    logger.info("dev recall context avg: {}".format(round(dev_recall_context, 3)))
 
     # measuring combined accuracy (prior + context)
     el_pipe.cfg["incl_context"] = True
     el_pipe.cfg["incl_prior"] = True
-    dev_precision_combo, dev_recall_combo, dev_acc_combo_d = measure_acc(dev_data, el_pipe)
-    print("dev precision combo avg:", round(dev_precision_combo, 3))
-    print("dev recall combo avg:", round(dev_recall_combo, 3))
+    dev_precision_combo, dev_recall_combo = measure_precision_recall(dev_data, el_pipe)
+    logger.info("dev precision combo avg: {}".format(round(dev_precision_combo, 3)))
+    logger.info("dev recall combo avg: {}".format(round(dev_recall_combo, 3)))
 
 
-def measure_acc(data, el_pipe=None, error_analysis=False):
+def measure_precision_recall(data, el_pipe=None):
     # If the docs in the data require further processing with an entity linker, set el_pipe
-    correct_by_label = defaultdict(int)
-    incorrect_by_label = defaultdict(int)
-
     docs = []
     golds = []
     for d, g in tqdm(data, leave=False):
         if len(d) > 0:
-            docs.append(el_pipe(d))
             golds.append(g)
+            if el_pipe is not None:
+                docs.append(el_pipe(d))
+            else:
+                docs.append(d)
 
-    false_positives = 0
-    true_positives = 0
-    false_negatives = 0
+    results = Metrics(0, 0, 0)
     for doc, gold in zip(docs, golds):
         try:
             correct_entries_per_article = dict()
@@ -81,7 +99,6 @@ def measure_acc(data, el_pipe=None, error_analysis=False):
                         correct_entries_per_article[offset] = gold_kb
 
             for ent in doc.ents:
-                ent_label = ent.label_
                 pred_entity = ent.kb_id_
                 start = ent.start_char
                 end = ent.end_char
@@ -89,48 +106,21 @@ def measure_acc(data, el_pipe=None, error_analysis=False):
                 gold_entity = correct_entries_per_article.get(offset, None)
                 # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
                 if gold_entity is not None:
-                    if gold_entity == pred_entity:
-                        correct_by_label[ent_label] += 1
-                        true_positives += 1
-                    elif pred_entity == "NIL":
-                        false_negatives += 1
-                    else:
-                        incorrect_by_label[ent_label] += 1
-                        false_positives += 1
-                        false_negatives += 1
+                    results.update_results(gold_entity, pred_entity)
 
         except Exception as e:
-            print("Error assessing accuracy", e)
+            logging.error("Error assessing accuracy " + str(e))
 
-    _, acc_by_label = calculate_acc(correct_by_label, incorrect_by_label)
-    return (
-        _calculate_precision(true_positives, false_positives),
-        _calculate_recall(true_positives, false_negatives),
-        acc_by_label
-    )
+    return results.calculate_precision(), results.calculate_recall()
 
 
 def measure_baselines(data, kb):
     # Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound
     counts_d = dict()
 
-    random_true_positives = 0
-    random_false_positives = 0
-    random_false_negatives = 0
-    random_correct_d = defaultdict(int)
-    random_incorrect_d = defaultdict(int)
-
-    oracle_true_positives = 0
-    oracle_false_positives = 0
-    oracle_false_negatives = 0
-    oracle_correct_d = defaultdict(int)
-    oracle_incorrect_d = defaultdict(int)
-
-    prior_true_positives = 0
-    prior_false_positives = 0
-    prior_false_negatives = 0
-    prior_correct_d = defaultdict(int)
-    prior_incorrect_d = defaultdict(int)
+    random_results = Metrics(0, 0, 0)
+    oracle_results = Metrics(0, 0, 0)
+    prior_results = Metrics(0, 0, 0)
 
     docs = [d for d, g in data if len(d) > 0]
     golds = [g for d, g in data if len(d) > 0]
@@ -146,12 +136,11 @@ def measure_baselines(data, kb):
                     offset = _offset(start, end)
                     correct_entries_per_article[offset] = gold_kb
                     if offset not in tagged_entries_per_article:
-                        random_false_negatives += 1
-                        oracle_false_negatives += 1
-                        prior_false_negatives += 1
+                        random_results.false_neg += 1
+                        oracle_results.false_neg += 1
+                        prior_results.false_neg += 1
 
         for ent in doc.ents:
-            label = ent.label_
             start = ent.start_char
             end = ent.end_char
             offset = _offset(start, end)
@@ -159,7 +148,6 @@ def measure_baselines(data, kb):
 
             # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
             if gold_entity is not None:
-                counts_d[label] = counts_d.get(label, 0) + 1
                 candidates = kb.get_candidates(ent.text)
                 oracle_candidate = ""
                 best_candidate = ""
@@ -176,72 +164,19 @@ def measure_baselines(data, kb):
                     best_candidate = candidates[best_index].entity_
                     random_candidate = random.choice(candidates).entity_
 
-                random_correct_d[label] += (gold_entity == random_candidate)
-                random_incorrect_d[label] += (not gold_entity == random_candidate)
-
-                random_true_positives += (gold_entity == random_candidate)
-                random_false_negatives += (not gold_entity == random_candidate)
-                if candidates:
-                    random_false_positives += (not gold_entity == random_candidate)
-
-                prior_correct_d[label] += (gold_entity == best_candidate)
-                prior_incorrect_d[label] += (not gold_entity == best_candidate)
-
-                prior_true_positives += (gold_entity == best_candidate)
-                prior_false_negatives += (not gold_entity == best_candidate)
-                if candidates:
-                    prior_false_positives += (not gold_entity == best_candidate)
-
-                oracle_correct_d[label] += (gold_entity == oracle_candidate)
-                oracle_incorrect_d[label] += (not gold_entity == oracle_candidate)
-
-                oracle_true_positives += (gold_entity == oracle_candidate)
-                oracle_false_negatives += (not gold_entity == oracle_candidate)
-                if candidates:
-                    oracle_false_positives += (not gold_entity == oracle_candidate)
+                oracle_results.update_results(gold_entity, oracle_candidate)
+                prior_results.update_results(gold_entity, best_candidate)
+                random_results.update_results(gold_entity, random_candidate)
 
     return BaselineResults(
-        counts_d,
-        _calculate_recall(random_true_positives, random_false_negatives),
-        _calculate_precision(random_true_positives, random_false_positives),
-        calculate_acc(random_correct_d, random_incorrect_d)[1],
-        _calculate_recall(prior_true_positives, prior_false_negatives),
-        _calculate_precision(prior_true_positives, prior_false_positives),
-        calculate_acc(prior_correct_d, prior_incorrect_d)[1],
-        _calculate_recall(oracle_true_positives, oracle_false_negatives),
-        _calculate_precision(oracle_true_positives, oracle_false_positives),
-        calculate_acc(oracle_correct_d, oracle_incorrect_d)[1],
+        random_results.calculate_recall(),
+        random_results.calculate_precision(),
+        prior_results.calculate_recall(),
+        prior_results.calculate_precision(),
+        oracle_results.calculate_recall(),
+        oracle_results.calculate_precision(),
     )
 
 
 def _offset(start, end):
     return "{}_{}".format(start, end)
-
-
-def calculate_acc(correct_by_label, incorrect_by_label):
-    acc_by_label = dict()
-    all_keys = set(correct_by_label.keys()).union(set(incorrect_by_label.keys()))
-
-    total_correct = sum(correct_by_label.values())
-    total_incorrect = sum(incorrect_by_label.values())
-    acc = _calculate_precision(total_correct, total_incorrect)
-
-    for label in sorted(all_keys):
-        correct = correct_by_label.get(label, 0)
-        incorrect = incorrect_by_label.get(label, 0)
-        acc_by_label[label] = _calculate_precision(correct, incorrect)
-    return acc, acc_by_label
-
-
-def _calculate_precision(true_positives: int, false_positives: int):
-    if true_positives == 0:
-        return 0.0
-    else:
-        return true_positives / (true_positives + false_positives)
-
-
-def _calculate_recall(true_positives: int, false_negatives: int):
-    if true_positives == 0:
-        return 0.0
-    else:
-        return true_positives / (true_positives + false_negatives)

@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import logging
 import random
 import re
 import bz2
@@ -19,10 +20,8 @@ Gold-standard entities are stored in one file in standoff format (by character o
 """
 
 ENTITY_FILE = "gold_entities.csv"
+logger = logging.getLogger(__name__)
 
-
-def now():
-    return datetime.datetime.now()
 
 
 def create_training_examples_and_descriptions(wikipedia_input,
@@ -66,7 +65,7 @@ def _process_wikipedia_texts(wikipedia_input,
             reading_text = False
             reading_revision = False
 
-            print("Processed {} articles".format(article_count))
+            logger.info("Processed {} articles".format(article_count))
 
             for line in file:
                 clean_line = line.strip().decode("utf-8")
@@ -104,7 +103,7 @@ def _process_wikipedia_texts(wikipedia_input,
                                 )
                             article_count += 1
                             if article_count % 10000 == 0:
-                                print("Processed {} articles".format(article_count))
+                                logger.info("Processed {} articles".format(article_count))
                             if limit and article_count >= limit:
                                 break
                     article_text = ""
@@ -130,7 +129,7 @@ def _process_wikipedia_texts(wikipedia_input,
                     if ids:
                         article_id = ids[0]
                         if article_id in read_ids:
-                            print(
+                            logger.info(
                                 "Found duplicate article ID", article_id, clean_line
                             )  # This should never happen ...
                         read_ids.add(article_id)
@@ -140,7 +139,7 @@ def _process_wikipedia_texts(wikipedia_input,
                     titles = title_regex.search(clean_line)
                     if titles:
                         article_title = titles[0].strip()
-    print("Finished. Processed {} articles".format(article_count))
+    logger.info("Finished. Processed {} articles".format(article_count))
 
 
 text_regex = re.compile(r"(?<=<text xml:space=\"preserve\">).*(?=</text)")
@@ -325,7 +324,7 @@ def read_training(nlp, entity_file_path, dev, limit, kb):
     num_entities = 0
     get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb)
 
-    print("Reading {} data with limit {}".format('dev' if dev else 'train', limit))
+    logger.info("Reading {} data with limit {}".format('dev' if dev else 'train', limit))
     with entity_file_path.open("r", encoding="utf8") as file:
         with tqdm(total=limit, leave=False) as pbar:
             for i, line in enumerate(file):
@@ -345,7 +344,7 @@ def read_training(nlp, entity_file_path, dev, limit, kb):
                     pbar.update(len(gold.links))
                 if limit and num_entities >= limit:
                     break
-    print("Read {} entities in {} articles".format(num_entities, len(data)))
+    logger.info("Read {} entities in {} articles".format(num_entities, len(data)))
     return data
 
 
