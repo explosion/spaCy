@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from .tag_map import TAG_MAP
 from .norm_exceptions import NORM_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -20,6 +21,7 @@ class SerbianDefaults(Language.Defaults):
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS, NORM_EXCEPTIONS
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tag_map = TAG_MAP
     stop_words = STOP_WORDS
     resources = {"lemma_lookup": "lemma_lookup.json"}
 
