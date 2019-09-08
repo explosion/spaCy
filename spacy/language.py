@@ -39,6 +39,8 @@ from . import about
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = cls.create_lookups(nlp=nlp)
         lemma_rules, lemma_index, lemma_exc, lemma_lookup = util.get_lemma_tables(lookups)
         return Lemmatizer(lemma_index, lemma_exc, lemma_rules, lemma_lookup)
 
