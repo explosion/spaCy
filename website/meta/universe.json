@@ -1562,7 +1562,7 @@
         },
         {
             "id": "pyInflect",
-            "slogan": "A python module for word inflections",
+            "slogan": "A Python module for word inflections",
             "description": "This package uses the [spaCy 2.0 extensions](https://spacy.io/usage/processing-pipelines#extensions) to add word inflections to the system.",
             "github": "bjascob/pyInflect",
             "pip": "pyinflect",
@@ -1581,6 +1581,29 @@
             },
             "category": ["pipeline"],
             "tags": ["inflection"]
+        },
+        {
+            "id": "lemminflect",
+            "slogan": "A Python module for English lemmatization and inflection",
+            "description": "LemmInflect uses a dictionary approach to lemmatize English words and inflect them into forms specified by a user supplied [Universal Dependencies](https://universaldependencies.org/u/pos/) or [Penn Treebank](https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html) tag.  The library works with out-of-vocabulary (OOV) words by applying neural network techniques to classify word forms and choose the appropriate morphing rules. The system acts as a standalone module or as an extension to spaCy.",
+            "github": "bjascob/LemmInflect",
+            "pip": "lemminflect",
+            "thumb": "https://raw.githubusercontent.com/bjascob/LemmInflect/master/docs/img/icons8-citrus-80.png",
+            "code_example": [
+                "import spacy",
+                "import lemminflect",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "doc = nlp('I am testing this example.')",
+                "doc[2]._.lemma()         # 'test'",
+                "doc[4]._.inflect('NNS')  # 'examples'"
+            ],
+            "author": "Brad Jascob",
+            "author_links": {
+                "github": "bjascob"
+            },
+            "category": ["pipeline"],
+            "tags": ["inflection", "lemmatizer"]
         },
         {
             "id": "blackstone",
@@ -1743,6 +1766,21 @@
                 "github": "yanaiela",
                 "twitter": "yanaiela",
                 "website": "https://yanaiela.github.io"
+            }
+        },
+        {
+            "id": "presidio",
+            "title": "Presidio",
+            "slogan": "Context aware, pluggable and customizable data protection and PII data anonymization",
+            "description": "Presidio *(Origin from Latin praesidium ‘protection, garrison’)* helps to ensure sensitive text is properly managed and governed. It provides fast ***analytics*** and ***anonymization*** for sensitive text such as credit card numbers, names, locations, social security numbers, bitcoin wallets, US phone numbers and financial data. Presidio analyzes the text using predefined or custom recognizers to identify entities, patterns, formats, and checksums with relevant context.",
+            "url": "https://aka.ms/presidio",
+            "image": "https://raw.githubusercontent.com/microsoft/presidio/master/docs/assets/before-after.png",
+            "github": "microsoft/presidio",
+            "category": ["standalone"],
+            "thumb": "https://avatars0.githubusercontent.com/u/6154722",
+            "author": "Microsoft",
+            "author_links": {
+                "github": "microsoft"
             }
         }
     ],

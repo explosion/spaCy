@@ -329,3 +329,4 @@ def test_issue_1971_4(en_vocab):
     matches = matcher(doc)
     # Uncommenting this caused a segmentation fault
     assert len(matches) == 1
+    assert matches[0] == (en_vocab.strings["TEST"], 0, 3)

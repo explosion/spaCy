@@ -58,7 +58,8 @@ def check_spaces(text, tokens):
             yield prev_end != idx
         prev_end = idx + len(token)
         start = prev_end
-    yield False
+    if start > 0:
+        yield False
 
 
 class KoreanTokenizer(DummyTokenizer):
