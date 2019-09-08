@@ -62,6 +62,7 @@ cdef class Tokenizer:
         self._rules = {}
         self._special_matcher = Matcher(self.vocab)
         self._load_special_cases(rules)
+        self._property_init_count = 0
 
     property token_match:
         def __get__(self):
@@ -69,7 +70,8 @@ cdef class Tokenizer:
 
         def __set__(self, token_match):
             self._token_match = token_match
-            self._flush_cache()
+            self._reload_special_cases()
+            self._property_init_count += 1
 
     property prefix_search:
         def __get__(self):
@@ -77,7 +79,8 @@ cdef class Tokenizer:
 
         def __set__(self, prefix_search):
             self._prefix_search = prefix_search
-            self._flush_cache()
+            self._reload_special_cases()
+            self._property_init_count += 1
 
     property suffix_search:
         def __get__(self):
@@ -85,7 +88,8 @@ cdef class Tokenizer:
 
         def __set__(self, suffix_search):
             self._suffix_search = suffix_search
-            self._flush_cache()
+            self._reload_special_cases()
+            self._property_init_count += 1
 
     property infix_finditer:
         def __get__(self):
@@ -93,7 +97,8 @@ cdef class Tokenizer:
 
         def __set__(self, infix_finditer):
             self._infix_finditer = infix_finditer
-            self._flush_cache()
+            self._reload_special_cases()
+            self._property_init_count += 1
 
     def __reduce__(self):
         args = (self.vocab,
@@ -466,6 +471,20 @@ cdef class Tokenizer:
         self._rules[string] = substrings
         self._special_matcher.add(string, None, [{ORTH: token.text} for token in self._tokenize_affixes(string)])
 
+    def _reload_special_cases(self):
+        try:
+            self._property_init_count
+        except AttributeError:
+            return
+        # only reload if all 4 of prefix, suffix, infix, token_match have
+        # have been initialized
+        if self.vocab is not None and self._property_init_count >= 4:
+            self._reset_cache([key for key in self._cache])
+            self._reset_specials()
+            self._cache = PreshMap()
+            self._specials = PreshMap()
+            self._load_special_cases(self._rules)
+
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
 
@@ -550,8 +569,7 @@ cdef class Tokenizer:
             self._reset_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
-            for string, substrings in data.get("rules", {}).items():
-                self.add_special_case(string, substrings)
+            self._load_special_cases(data.get("rules", {}))
 
         return self
 
