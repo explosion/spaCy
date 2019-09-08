@@ -13,7 +13,6 @@ from spacy.lemmatizer import Lemmatizer
 from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
 
 
-@pytest.mark.xfail
 def test_issue1061():
     '''Test special-case works after tokenizing. Was caching problem.'''
     text = 'I like _MATH_ even _MATH_ when _MATH_, except when _MATH_ is _MATH_! but not _MATH_.'
