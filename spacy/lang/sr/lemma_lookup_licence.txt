@@ -1,0 +1,32 @@
+Copyright @InProceedings{ljubesic16-new,
+  author = {Nikola Ljubešić and Filip Klubička and Željko Agić and Ivo-Pavao Jazbec},
+  title = {New Inflectional Lexicons and Training Corpora for Improved Morphosyntactic Annotation of Croatian and Serbian},
+  booktitle = {Proceedings of the Tenth International Conference on Language Resources and Evaluation (LREC 2016)},
+  year = {2016},
+  date = {23-28},
+  location = {Portorož, Slovenia},
+  editor = {Nicoletta Calzolari (Conference Chair) and Khalid Choukri and Thierry Declerck and Sara Goggi and Marko Grobelnik and Bente Maegaard and Joseph Mariani and Helene Mazo and Asuncion Moreno and Jan Odijk and Stelios Piperidis},
+  publisher = {European Language Resources Association (ELRA)},
+  address = {Paris, France},
+  isbn = {978-2-9517408-9-1}
+ }
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+The licence of Serbian lemmas was adopted from Serbian lexicon:
+ - sr.lexicon (https://github.com/clarinsi/reldi-tagger/blob/master/sr.lexicon)
+
+Changelog:
+ - Lexicon is translated into cyrilic
+ - Word order is sorted

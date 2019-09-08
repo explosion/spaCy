@@ -15,6 +15,7 @@ _abbrev_exc = [
     {ORTH: "пет", LEMMA: "петак", NORM: "петак"},
     {ORTH: "суб", LEMMA: "субота", NORM: "субота"},
     {ORTH: "нед", LEMMA: "недеља", NORM: "недеља"},
+
     # Months abbreviations
     {ORTH: "јан", LEMMA: "јануар", NORM: "јануар"},
     {ORTH: "феб", LEMMA: "фебруар", NORM: "фебруар"},
@@ -27,7 +28,7 @@ _abbrev_exc = [
     {ORTH: "септ", LEMMA: "септембар", NORM: "септембар"},
     {ORTH: "окт", LEMMA: "октобар", NORM: "октобар"},
     {ORTH: "нов", LEMMA: "новембар", NORM: "новембар"},
-    {ORTH: "дец", LEMMA: "децембар", NORM: "децембар"},
+    {ORTH: "дец", LEMMA: "децембар", NORM: "децембар"}
 ]
 
 
