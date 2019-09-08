@@ -55,6 +55,8 @@ class Lemmatizer(object):
         Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.
         """
+        if morphology is None:
+            morphology = {}
         if univ_pos == "noun" and morphology.get("Number") == "sing":
             return True
         elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
