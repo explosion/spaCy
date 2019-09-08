@@ -33,6 +33,11 @@ def test_issue1061():
     doc = tokenizer(text)
     assert '_MATH_' in [w.text for w in doc]
     assert 'MATH' not in [w.text for w in doc]
+    text = '...gimme...? that ...gimme...? or else ...gimme...?!'
+
+    tokenizer = English.Defaults.create_tokenizer()
+    tokenizer.add_special_case(u'...gimme...?', [{ORTH: u'...gimme...?'}])
+    assert [w.text for w in nlp(text)] == ['...gimme...?', 'that', '...gimme...?', 'or', 'else', '...gimme...?', '!']
 
 
 @pytest.mark.xfail(

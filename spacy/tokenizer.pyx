@@ -19,6 +19,9 @@ from .compat import unescape_unicode
 from .errors import Errors, Warnings, deprecation_warning
 from . import util
 
+from .attrs import intify_attrs
+from .matcher import Matcher
+from .symbols import ORTH
 
 cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment
@@ -57,9 +60,8 @@ cdef class Tokenizer:
         self.infix_finditer = infix_finditer
         self.vocab = vocab
         self._rules = {}
-        if rules is not None:
-            for chunk, substrings in sorted(rules.items()):
-                self.add_special_case(chunk, substrings)
+        self._special_matcher = Matcher(self.vocab)
+        self._load_special_cases(rules)
 
     def __reduce__(self):
         args = (self.vocab,
@@ -74,7 +76,6 @@ cdef class Tokenizer:
         deprecation_warning(Warnings.W002)
         return Doc(self.vocab, words=strings)
 
-    @cython.boundscheck(False)
     def __call__(self, unicode string):
         """Tokenize a string.
 
@@ -82,6 +83,17 @@ cdef class Tokenizer:
         RETURNS (Doc): A container for linguistic annotations.
 
         DOCS: https://spacy.io/api/tokenizer#call
+        """
+        doc = self._tokenize_affixes(string)
+        self._apply_special_cases(doc)
+        return doc
+
+    @cython.boundscheck(False)
+    cdef Doc _tokenize_affixes(self, unicode string):
+        """Tokenize according to affix and token_match settings.
+
+        string (unicode): The string to tokenize.
+        RETURNS (Doc): A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
             raise ValueError(Errors.E025.format(length=len(string)))
@@ -145,6 +157,51 @@ cdef class Tokenizer:
         for k in keys:
             del self._cache[k]
 
+    cdef int _apply_special_cases(self, Doc doc):
+        """Retokenize doc according to special cases.
+
+        doc (Doc): Document.
+        """
+        cdef int i
+        # Find all special cases and filter overlapping matches
+        spans = [doc[match[1]:match[2]] for match in self._special_matcher(doc)]
+        spans = util.filter_spans(spans)
+        spans = [(span.text, span.start, span.end) for span in spans]
+        # Modify tokenization according to filtered special cases
+        cdef int offset = 0
+        cdef int span_length_diff
+        cdef int idx_offset
+        for span in spans:
+            # Allocate more memory for doc if needed
+            span_length_diff = len(self._rules[span[0]]) - (span[2] - span[1])
+            while doc.length + offset + span_length_diff >= doc.max_length:
+                doc._realloc(doc.length * 2)
+            # Find special case entries in cache
+            cached = <_Cached*>self._specials.get(hash_string(span[0]))
+            if cached == NULL:
+                continue
+            # Shift original tokens...
+            # ...from span position to end if new span is shorter
+            if span_length_diff < 0:
+                for i in range(span[2] + offset, doc.length + offset):
+                    doc.c[span_length_diff + i] = doc.c[i]
+            # ...from end to span position if new span is longer
+            elif span_length_diff > 0:
+                for i in range(doc.length + offset - 1, span[2] + offset - 1, -1):
+                    doc.c[span_length_diff + i] = doc.c[i]
+            # Copy special case tokens into doc and adjust token and character
+            # offsets
+            idx_offset = 0
+            for i in range(cached.length):
+                orig_idx = doc.c[span[1] + offset + i].idx
+                doc.c[span[1] + offset + i] = cached.data.tokens[i]
+                doc.c[span[1] + offset + i].idx = orig_idx + idx_offset
+                idx_offset += cached.data.tokens[i].lex.length
+            # Token offset for special case spans
+            offset += span_length_diff
+        doc.length += offset
+        return True
+
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
@@ -162,18 +219,15 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
-        cdef int has_special = 0
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes,
-                                   &has_special)
+        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
         self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.c[orig_size], orig_key, has_special,
+        self._save_cached(&tokens.c[orig_size], orig_key, 
                           tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes,
-                                int* has_special):
+                                vector[const LexemeC*] *suffixes):
         cdef size_t i
         cdef unicode prefix
         cdef unicode suffix
@@ -188,24 +242,10 @@ cdef class Tokenizer:
             if pre_len != 0:
                 prefix = string[:pre_len]
                 minus_pre = string[pre_len:]
-                # Check whether we've hit a special-case
-                if minus_pre and self._specials.get(hash_string(minus_pre)) != NULL:
-                    string = minus_pre
-                    prefixes.push_back(self.vocab.get(mem, prefix))
-                    has_special[0] = 1
-                    break
-                if self.token_match and self.token_match(string):
-                    break
             suf_len = self.find_suffix(string)
             if suf_len != 0:
                 suffix = string[-suf_len:]
                 minus_suf = string[:-suf_len]
-                # Check whether we've hit a special-case
-                if minus_suf and (self._specials.get(hash_string(minus_suf)) != NULL):
-                    string = minus_suf
-                    suffixes.push_back(self.vocab.get(mem, suffix))
-                    has_special[0] = 1
-                    break
             if pre_len and suf_len and (pre_len + suf_len) <= len(string):
                 string = string[pre_len:-suf_len]
                 prefixes.push_back(self.vocab.get(mem, prefix))
@@ -216,9 +256,6 @@ cdef class Tokenizer:
             elif suf_len:
                 string = minus_suf
                 suffixes.push_back(self.vocab.get(mem, suffix))
-            if string and (self._specials.get(hash_string(string)) != NULL):
-                has_special[0] = 1
-                break
         return string
 
     cdef int _attach_tokens(self, Doc tokens, unicode string,
@@ -280,14 +317,11 @@ cdef class Tokenizer:
             tokens.push_back(lexeme, False)
 
     cdef int _save_cached(self, const TokenC* tokens, hash_t key,
-                          int has_special, int n) except -1:
+                          int n) except -1:
         cdef int i
         for i in range(n):
             if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
                 return 0
-        # See #1250
-        if has_special:
-            return 0
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
         cached.is_lex = True
@@ -339,10 +373,24 @@ cdef class Tokenizer:
         match = self.suffix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    def _load_special_tokenization(self, special_cases):
+    def _load_special_cases(self, special_cases):
         """Add special-case tokenization rules."""
-        for chunk, substrings in sorted(special_cases.items()):
-            self.add_special_case(chunk, substrings)
+        if special_cases is not None:
+            for chunk, substrings in sorted(special_cases.items()):
+                self._validate_special_case(chunk, substrings)
+                self.add_special_case(chunk, substrings)
+
+    def _validate_special_case(self, chunk, substrings):
+        """Check whether the `ORTH` fields match the string.
+
+        string (unicode): The string to specially tokenize.
+        substrings (iterable): A sequence of dicts, where each dict describes
+            a token and its attributes.
+        """
+        attrs = [intify_attrs(spec, _do_deprecated=True) for spec in substrings]
+        orth = "".join([spec[ORTH] for spec in attrs])
+        if chunk != orth:
+            raise ValueError(Errors.E158.format(chunk=chunk, orth=orth, token_attrs=substrings))
 
     def add_special_case(self, unicode string, substrings):
         """Add a special-case tokenization rule.
@@ -354,6 +402,7 @@ cdef class Tokenizer:
 
         DOCS: https://spacy.io/api/tokenizer#add_special_case
         """
+        self._validate_special_case(string, substrings)
         substrings = list(substrings)
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = len(substrings)
@@ -361,8 +410,8 @@ cdef class Tokenizer:
         cached.data.tokens = self.vocab.make_fused_token(substrings)
         key = hash_string(string)
         self._specials.set(key, cached)
-        self._cache.set(key, cached)
         self._rules[string] = substrings
+        self._special_matcher.add(string, None, [{ORTH: token.text} for token in self._tokenize_affixes(string)])
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
