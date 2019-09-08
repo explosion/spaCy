@@ -63,6 +63,38 @@ cdef class Tokenizer:
         self._special_matcher = Matcher(self.vocab)
         self._load_special_cases(rules)
 
+    property token_match:
+        def __get__(self):
+            return self._token_match
+
+        def __set__(self, token_match):
+            self._token_match = token_match
+            self._flush_cache()
+
+    property prefix_search:
+        def __get__(self):
+            return self._prefix_search
+
+        def __set__(self, prefix_search):
+            self._prefix_search = prefix_search
+            self._flush_cache()
+
+    property suffix_search:
+        def __get__(self):
+            return self._suffix_search
+
+        def __set__(self, suffix_search):
+            self._suffix_search = suffix_search
+            self._flush_cache()
+
+    property infix_finditer:
+        def __get__(self):
+            return self._infix_finditer
+
+        def __set__(self, infix_finditer):
+            self._infix_finditer = infix_finditer
+            self._flush_cache()
+
     def __reduce__(self):
         args = (self.vocab,
                 self._rules,
@@ -153,9 +185,23 @@ cdef class Tokenizer:
         for text in texts:
             yield self(text)
 
+    def _flush_cache(self):
+        self._reset_cache([key for key in self._cache if not key in self._specials])
+
     def _reset_cache(self, keys):
         for k in keys:
             del self._cache[k]
+            if not k in self._specials:
+                cached = <_Cached*>self._cache.get(k)
+                if cached is not NULL:
+                    self.mem.free(cached)
+
+    def _reset_specials(self):
+        for k in self._specials:
+            cached = <_Cached*>self._specials.get(k)
+            del self._specials[k]
+            if cached is not NULL:
+                self.mem.free(cached)
 
     cdef int _apply_special_cases(self, Doc doc):
         """Retokenize doc according to special cases.
@@ -409,7 +455,14 @@ cdef class Tokenizer:
         cached.is_lex = False
         cached.data.tokens = self.vocab.make_fused_token(substrings)
         key = hash_string(string)
+        stale_special = <_Cached*>self._specials.get(key)
+        stale_cached = <_Cached*>self._cache.get(key)
+        self._flush_cache()
         self._specials.set(key, cached)
+        if stale_special is not NULL:
+            self.mem.free(stale_special)
+        if stale_special != stale_cached and stale_cached is not NULL:
+            self.mem.free(stale_cached)
         self._rules[string] = substrings
         self._special_matcher.add(string, None, [{ORTH: token.text} for token in self._tokenize_affixes(string)])
 
@@ -493,7 +546,10 @@ cdef class Tokenizer:
         if data.get("rules"):
             # make sure to hard reset the cache to remove data from the default exceptions
             self._rules = {}
+            self._reset_cache([key for key in self._cache])
+            self._reset_specials()
             self._cache = PreshMap()
+            self._specials = PreshMap()
             for string, substrings in data.get("rules", {}).items():
                 self.add_special_case(string, substrings)
 
