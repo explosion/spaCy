@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import plac
-import tqdm
 from pathlib import Path
 import re
 import sys
@@ -462,6 +461,9 @@ def main(
     vectors_dir=None,
     use_oracle_segments=False,
 ):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     spacy.util.fix_random_seed()
     lang.zh.Chinese.Defaults.use_jieba = False
     lang.ja.Japanese.Defaults.use_janome = False

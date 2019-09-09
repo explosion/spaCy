@@ -13,7 +13,6 @@ import numpy
 import plac
 import spacy
 import tensorflow as tf
-import tqdm
 from tensorflow.contrib.tensorboard.plugins.projector import (
     visualize_embeddings,
     ProjectorConfig,
@@ -36,6 +35,9 @@ from tensorflow.contrib.tensorboard.plugins.projector import (
     ),
 )
 def main(vectors_loc, out_loc, name="spaCy_vectors"):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     meta_file = "{}.tsv".format(name)
     out_meta_file = path.join(out_loc, meta_file)
 
