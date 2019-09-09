@@ -138,7 +138,7 @@ class Table(OrderedDict):
     """
     @classmethod
     def from_dict(cls, data, name=None):
-        self = OrderedDict.__init__(self, data)
+        self = OrderedDict.__init__(cls, data)
         self.name = name
         return self
 
