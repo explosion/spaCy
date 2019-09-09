@@ -93,7 +93,7 @@ class Lookups(object):
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized Lookups.
         """
-        keys = self._tables.keys()
+        keys = list(self._tables.keys())
         # Forces consistent round-trips, so tests pass.
         keys.sort()
         tables = OrderedDict((k, self._tables[k]) for k in keys)
