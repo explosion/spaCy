@@ -101,7 +101,10 @@ class Lookups(object):
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The loaded Lookups.
         """
-        self._tables = srsly.msgpack_loads(bytes_data)
+        self._tables = OrderedDict()
+        msg = srsly.msgpack_loads(bytes_data)
+        for key, value in msg.items():
+            self._tables[key] = Table.from_dict(data)
         return self
 
     def to_disk(self, path, **kwargs):
@@ -123,8 +126,9 @@ class Lookups(object):
         path = ensure_path(path)
         filepath = path / "lookups.bin"
         if filepath.exists():
-            data = srsly.read_msgpack(filepath)
-            self._tables = OrderedDict(data)
+            with filepath.open("rb") as file_:
+                data = file_.read()
+            return self.from_bytes(data)
         return self
 
 
@@ -132,6 +136,11 @@ class Table(OrderedDict):
     """A table in the lookups. Subclass of builtin dict that implements a
     slightly more consistent and unified API.
     """
+    @classmethod
+    def from_dict(cls, data, name=None):
+        self = OrderedDict.__init__(self, data)
+        self.name = name
+        return self
 
     def __init__(self, name=None):
         """Initialize a new table.
