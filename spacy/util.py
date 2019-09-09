@@ -131,8 +131,7 @@ def load_language_data(path):
     path = path.with_suffix(path.suffix + ".gz")
     if path.exists():
         return srsly.read_gzip_json(path)
-    # TODO: move to spacy.errors
-    raise ValueError("Can't find language data file: {}".format(path2str(path)))
+    raise ValueError(Errors.E160.format(path=path2str(path)))
 
 
 def get_module_path(module):
@@ -458,6 +457,14 @@ def expand_exc(excs, search, replace):
 
 
 def get_lemma_tables(lookups):
+    """Load lemmatizer data from lookups table. Mostly used via
+    Language.Defaults.create_lemmatizer, but available as helper so it can be
+    reused in language classes that implement custom lemmatizers.
+
+    lookups (Lookups): The lookups table.
+    RETURNS (tuple): A (lemma_rules, lemma_index, lemma_exc, lemma_lookup)
+        tuple that can be used to initialize a Lemmatizer.
+    """
     lemma_rules = {}
     lemma_index = {}
     lemma_exc = {}
