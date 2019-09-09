@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 
-from .symbols import POS, NOUN, VERB, ADJ, PUNCT, PROPN, DET, ADV
+from .symbols import POS, NOUN, VERB, ADJ, PUNCT, PROPN, DET, ADV, PRON
 from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
@@ -35,8 +35,10 @@ class Lemmatizer(object):
             univ_pos = "adj"
         elif univ_pos in (PUNCT, "PUNCT", "punct"):
             univ_pos = "punct"
-        elif univ_pos in (PROPN, "PROPN", "propn"):
+        elif univ_pos in (PROPN, "PROPN"):
             return [string]
+        elif univ_pos in (PRON, "PRON", "pron"):
+            univ_pos = "pron"
         elif univ_pos in (DET, "DET", "det"):
             univ_pos = "det"
         elif univ_pos in (ADV, "ADV", "adv"):
