@@ -138,8 +138,8 @@ class Table(OrderedDict):
     """
     @classmethod
     def from_dict(cls, data, name=None):
-        self = OrderedDict.__init__(cls, data)
-        self.name = name
+        self = cls(name=name)
+        self.update(data)
         return self
 
     def __init__(self, name=None):
