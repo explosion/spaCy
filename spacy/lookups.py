@@ -96,8 +96,13 @@ class Lookups(object):
         keys = list(self._tables.keys())
         # Forces consistent round-trips, so tests pass.
         keys.sort()
-        tables = OrderedDict((k, self._tables[k]) for k in keys)
-        return srsly.msgpack_dumps(self._tables)
+        tables = OrderedDict()
+        for key in keys:
+            table_keys = self._tables[key].keys()
+            table_keys.sort()
+            sorted_values = OrderedDict((k, self._tables[key][k]) for k in table_keys)
+            tables[key] = sorted_values
+        return srsly.msgpack_dumps(tables)
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         """Load the lookups from a bytestring.
