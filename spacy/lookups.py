@@ -149,6 +149,7 @@ class Table(OrderedDict):
         name (unicode): Optional table name for reference.
         RETURNS (Table): The newly created object.
         """
+        OrderedDict.__init__(self)
         self.name = name
 
     def set(self, key, value):
