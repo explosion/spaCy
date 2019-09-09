@@ -133,3 +133,9 @@ def test_en_tokenizer_splits_em_dash_infix(en_tokenizer):
     assert tokens[6].text == "Puddleton"
     assert tokens[7].text == "?"
     assert tokens[8].text == "\u2014"
+
+
+@pytest.mark.parametrize("text,length", [("_MATH_", 3), ("_MATH_.", 4)])
+def test_final_period(en_tokenizer, text, length):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == length
