@@ -93,16 +93,7 @@ class Lookups(object):
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized Lookups.
         """
-        keys = list(self._tables.keys())
-        # Forces consistent round-trips, so tests pass.
-        keys.sort()
-        tables = OrderedDict()
-        for key in keys:
-            table_keys = list(self._tables[key].keys())
-            table_keys.sort()
-            sorted_values = OrderedDict((k, self._tables[key][k]) for k in table_keys)
-            tables[key] = sorted_values
-        return srsly.msgpack_dumps(tables)
+        return srsly.msgpack_dumps(self._tables)
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
         """Load the lookups from a bytestring.
