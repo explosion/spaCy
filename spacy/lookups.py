@@ -93,6 +93,10 @@ class Lookups(object):
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized Lookups.
         """
+        keys = self._tables.keys()
+        # Forces consistent round-trips, so tests pass.
+        keys.sort()
+        tables = OrderedDict((k, self._tables[k]) for k in keys)
         return srsly.msgpack_dumps(self._tables)
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
@@ -115,7 +119,8 @@ class Lookups(object):
         if len(self._tables):
             path = ensure_path(path)
             filepath = path / "lookups.bin"
-            srsly.write_msgpack(filepath, self._tables)
+            with filepath.open("wb") as file_:
+                file_.write(self.to_bytes())
 
     def from_disk(self, path, **kwargs):
         """Load lookups from a directory containing a lookups.bin.
