@@ -104,7 +104,7 @@ class Lookups(object):
         self._tables = OrderedDict()
         msg = srsly.msgpack_loads(bytes_data)
         for key, value in msg.items():
-            self._tables[key] = Table.from_dict(data)
+            self._tables[key] = Table.from_dict(value)
         return self
 
     def to_disk(self, path, **kwargs):
