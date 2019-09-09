@@ -98,7 +98,7 @@ class Lookups(object):
         keys.sort()
         tables = OrderedDict()
         for key in keys:
-            table_keys = self._tables[key].keys()
+            table_keys = list(self._tables[key].keys())
             table_keys.sort()
             sorted_values = OrderedDict((k, self._tables[key][k]) for k in table_keys)
             tables[key] = sorted_values
