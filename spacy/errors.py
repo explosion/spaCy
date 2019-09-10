@@ -452,7 +452,10 @@ class Errors(object):
             "Make sure that you're passing in absolute token indices, not "
             "relative token offsets.\nstart: {start}, end: {end}, label: "
             "{label}, direction: {dir}")
-    E158 = ("Tokenizer special cases are not allowed to modify the text. "
+    E158 = ("Can't add table '{name}' to lookups because it already exists.")
+    E159 = ("Can't find table '{name}' in lookups. Available tables: {tables}")
+    E160 = ("Can't find language data file: {path}")
+    E161 = ("Tokenizer special cases are not allowed to modify the text. "
             "This would map '{chunk}' to '{orth}' given token attributes "
             "'{token_attrs}'.")
 
