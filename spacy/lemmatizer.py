@@ -99,9 +99,9 @@ class Lemmatizer(object):
     def punct(self, string, morphology=None):
         return self(string, "punct", morphology)
 
-    def lookup(self, string):
-        if self.lookup_table.contains_string(string):
-            return self.lookup_table.get_string(string)
+    def lookup(self, orth, string):
+        if orth in self.lookup_table:
+            return self.lookup_table[orth]
         return string
 
 

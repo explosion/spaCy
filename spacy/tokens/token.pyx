@@ -857,7 +857,7 @@ cdef class Token:
         """
         def __get__(self):
             if self.c.lemma == 0:
-                return self.vocab.morphology.lemmatizer.lookup(self.orth_)
+                return self.vocab.morphology.lemmatizer.lookup(self.orth_, self.orth)
             else:
                 return self.vocab.strings[self.c.lemma]
 
