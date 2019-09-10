@@ -62,25 +62,25 @@ class DutchLemmatizer(object):
             # are not lemmatized. They are lowercased, however.
             return [string]
             # if string in self.lemma_index.get(univ_pos)
-        lemma_index = self.index.get(univ_pos, {})
+        lemma_index = self.index.get_string(univ_pos, {})
         # string is already lemma
         if string in lemma_index:
             return [string]
-        exceptions = self.exc.get(univ_pos, {})
+        exceptions = self.exc.get_string(univ_pos, {})
         # string is irregular token contained in exceptions index.
         try:
             lemma = exceptions[string]
             return [lemma[0]]
         except KeyError:
             pass
-        # string corresponds to  key in lookup table
+        # string corresponds to key in lookup table
         lookup_table = self.lookup_table
-        looked_up_lemma = lookup_table.get(string)
+        looked_up_lemma = lookup_table.get_string(string)
         if looked_up_lemma and looked_up_lemma in lemma_index:
             return [looked_up_lemma]
 
         forms, is_known = lemmatize(
-            string, lemma_index, exceptions, self.rules.get(univ_pos, [])
+            string, lemma_index, exceptions, self.rules.get_string(univ_pos, [])
         )
 
         # Back-off through remaining return value candidates.
@@ -105,7 +105,7 @@ class DutchLemmatizer(object):
     # table consists entirely of lowercase keys.
     def lookup(self, string):
         string = string.lower()
-        return self.lookup_table.get(string, string)
+        return self.lookup_table.get_string(string, string)
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)
