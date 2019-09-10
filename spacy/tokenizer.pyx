@@ -220,9 +220,11 @@ cdef class Tokenizer:
         spans = [(span.text, span.start, span.end) for span in spans]
         # Modify tokenization according to filtered special cases
         cdef int offset = 0
-        cdef int span_length_diff
-        cdef int idx_offset
+        cdef int span_length_diff = 0
+        cdef int idx_offset = 0
         for span in spans:
+            if not span[0] in self._rules:
+                continue
             # Allocate more memory for doc if needed
             span_length_diff = len(self._rules[span[0]]) - (span[2] - span[1])
             while doc.length + offset + span_length_diff >= doc.max_length:
@@ -234,23 +236,26 @@ cdef class Tokenizer:
             # Shift original tokens...
             # ...from span position to end if new span is shorter
             if span_length_diff < 0:
-                for i in range(span[2] + offset, doc.length + offset):
+                for i in range(span[2] + offset, doc.length):
                     doc.c[span_length_diff + i] = doc.c[i]
             # ...from end to span position if new span is longer
             elif span_length_diff > 0:
-                for i in range(doc.length + offset - 1, span[2] + offset - 1, -1):
+                for i in range(doc.length - 1, span[2] + offset - 1, -1):
                     doc.c[span_length_diff + i] = doc.c[i]
             # Copy special case tokens into doc and adjust token and character
             # offsets
             idx_offset = 0
+            orig_final_spacy = doc.c[span[2] + offset - 1].spacy
             for i in range(cached.length):
                 orig_idx = doc.c[span[1] + offset + i].idx
                 doc.c[span[1] + offset + i] = cached.data.tokens[i]
                 doc.c[span[1] + offset + i].idx = orig_idx + idx_offset
-                idx_offset += cached.data.tokens[i].lex.length
+                idx_offset += cached.data.tokens[i].lex.length + \
+                        1 if cached.data.tokens[i].spacy else 0
+            doc.c[span[2] + offset + - 1].spacy = orig_final_spacy
             # Token offset for special case spans
             offset += span_length_diff
-        doc.length += offset
+            doc.length += span_length_diff
         return True
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
