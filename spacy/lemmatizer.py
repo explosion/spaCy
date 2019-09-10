@@ -100,8 +100,8 @@ class Lemmatizer(object):
         return self(string, "punct", morphology)
 
     def lookup(self, string):
-        if string in self.lookup_table:
-            return self.lookup_table[string]
+        if self.lookup_table.contains_string(string):
+            return self.lookup_table.get_string(string)
         return string
 
 

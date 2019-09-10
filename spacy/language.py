@@ -48,9 +48,7 @@ class BaseDefaults(object):
         lookups = Lookups()
         for name, filename in cls.resources.items():
             data = util.load_language_data(root_path / filename)
-            #TODO convert data to integers
-            hashed = {hash_string(key): val for key, val in data.items()}
-            lookups.add_table(name, hashed)
+            lookups.add_table(name, data)
         return lookups
 
     @classmethod
