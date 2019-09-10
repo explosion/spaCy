@@ -1,7 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from .util import SimpleFrozenDict
+import srsly
+from collections import OrderedDict
+
+from .errors import Errors
+from .util import SimpleFrozenDict, ensure_path
 
 from . import util
 
@@ -9,81 +13,143 @@ import srsly
 from preshed.bloom import BloomFilter
 
 class Lookups(object):
-    """Lookup tables for language data such as lemmas.
+    """Container for large lookup tables and dictionaries, e.g. lemmatization
+    data or tokenizer exception lists. Lookups are available via vocab.lookups,
+    so they can be accessed before the pipeline components are applied (e.g.
+    in the tokenizer and lemmatizer), as well as within the pipeline components
+    via doc.vocab.lookups.
 
-    This is a thin wrapper around a dictionary of names to Tables, where a
-    Table is itself just a dictionary with a bloom filter for faster miss
-    handling.
     """
+
     def __init__(self):
-        self._tables = {}
+        """Initialize the Lookups object.
+
+        RETURNS (Lookups): The newly created object.
+        """
+        self._tables = OrderedDict()
 
     def __contains__(self, name):
+        """Check if the lookups contain a table of a given name. Delegates to
+        Lookups.has_table.
+
+        name (unicode): Name of the table.
+        RETURNS (bool): Whether a table of that name exists.
+        """
         return self.has_table(name)
+
+    def __len__(self):
+        """RETURNS (int): The number of tables in the lookups."""
+        return len(self._tables)
 
     @property
     def tables(self):
+        """RETURNS (list): Names of all tables in the lookups."""
         return list(self._tables.keys())
 
     def add_table(self, name, data=SimpleFrozenDict()):
+        """Add a new table to the lookups. Raises an error if the table exists.
+
+        name (unicode): Unique name of table.
+        data (dict): Optional data to add to the table.
+        RETURNS (Table): The newly added table.
+        """
         if name in self.tables:
-            raise ValueError("Table '{}' already exists".format(name))
+            raise ValueError(Errors.E158.format(name=name))
         table = Table(name=name, data=data)
         self._tables[name] = table
         return table
 
     def get_table(self, name):
+        """Get a table. Raises an error if the table doesn't exist.
+
+        name (unicode): Name of the table.
+        RETURNS (Table): The table.
+        """
         if name not in self._tables:
-            raise KeyError("Can't find table '{}'".format(name))
+            raise KeyError(Errors.E159.format(name=name, tables=self.tables))
         return self._tables[name]
 
+    def remove_table(self, name):
+        """Remove a table. Raises an error if the table doesn't exist.
+
+        name (unicode): The name to remove.
+        RETURNS (Table): The removed table.
+        """
+        if name not in self._tables:
+            raise KeyError(Errors.E159.format(name=name, tables=self.tables))
+        return self._tables.pop(name)
+
     def has_table(self, name):
+        """Check if the lookups contain a table of a given name.
+
+        name (unicode): Name of the table.
+        RETURNS (bool): Whether a table of that name exists.
+        """
         return name in self._tables
 
     def to_bytes(self, exclude=tuple(), **kwargs):
-        serializers = dict(
-            ( (key, val.to_bytes) for key, val in self._tables.items() )
-        )
-            
-        return util.to_bytes(serializers, [])
+        """Serialize the lookups to a bytestring.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized Lookups.
+        """
+        return srsly.msgpack_dumps(self._tables)
 
     def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
-        msg = srsly.msgpack_loads(bytes_data)
-        for name, val in msg.items():
-            table = Table(name=name)
-            table.from_bytes(val)
-            self._tables[name] = table
+        """Load the lookups from a bytestring.
+
+        exclude (list): String names of serialization fields to exclude.
+        RETURNS (bytes): The loaded Lookups.
+        """
+        self._tables = srsly.msgpack_loads(bytes_data)
         return self
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
-        path = util.ensure_path(path)
+    def to_disk(self, path, **kwargs):
+        """Save the lookups to a directory as lookups.bin.
 
-        with path.open('wb') as file_:
-            file_.write(self.to_bytes())
+        path (unicode / Path): The file path.
+        """
+        if len(self._tables):
+            path = ensure_path(path)
+            filepath = path / "lookups.bin"
+            srsly.write_msgpack(filepath, self._tables)
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
-        path = util.ensure_path(path)
-        with path.open('rb') as file_:
-            self.from_bytes(file_.read())
+    def from_disk(self, path, **kwargs):
+        """Load lookups from a directory containing a lookups.bin.
+
+        path (unicode / Path): The file path.
+        RETURNS (Lookups): The loaded lookups.
+        """
+        path = ensure_path(path)
+        filepath = path / "lookups.bin"
+        if filepath.exists():
+            data = srsly.read_msgpack(filepath)
+            self._tables = OrderedDict(data)
         return self
 
-class Table(dict):
-    """A dict with a bloom filter to check for misses.
 
-    The main use case for this is checking for specific terms, so the miss rate
-    will be high. Since bloom filter access is fast and gives no false
-    negatives this should be faster than just using a dict."""
+class Table(OrderedDict):
+    """A table in the lookups. Subclass of builtin dict that implements a
+    slightly more consistent and unified API. 
+    """
 
-    def __init__(self, name, data=None):
+    def __init__(self, name=None, data=None):
+        """Initialize a new table.
+
+        name (unicode): Optional table name for reference.
+        data (dict): Initial data, used to hint Bloom Filter.
+        RETURNS (Table): The newly created object.
+        """
         self.name = name
         # assume a default size of 1M items
-        datacount = 1E6
-        if data:
-            datacount = len(data)
-        self.bloom = BloomFilter.from_error_rate(len(data))
+        size = 1E6
+        if data and len(data) > 0:
+            size = len(data)
+        self.bloom = BloomFilter.from_error_rate(size)
         self.update(data)
 
     def set(self, key, value):
+        """Set new key/value pair. Same as table[key] = value."""
         self[key] = value
         self.bloom.add(key)
 
