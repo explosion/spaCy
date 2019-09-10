@@ -1,5 +1,7 @@
-# coding: utf8
+# coding: utf-8
 from __future__ import unicode_literals
+
+from libc.stdint cimport uint64_t
 
 from .util import SimpleFrozenDict
 
@@ -8,7 +10,7 @@ from . import util
 import srsly
 from preshed.bloom import BloomFilter
 
-class Lookups(object):
+cdef class Lookups(object):
     """Lookup tables for language data such as lemmas.
 
     This is a thin wrapper around a dictionary of names to Tables, where a
@@ -25,11 +27,10 @@ class Lookups(object):
     def tables(self):
         return list(self._tables.keys())
 
-    def add_table(self, name, data=SimpleFrozenDict()):
+    def add_table(self, str name, data=SimpleFrozenDict()):
         if name in self.tables:
             raise ValueError("Table '{}' already exists".format(name))
-        table = Table(name=name)
-        table.update(data)
+        table = Table(name=name, data=data)
         self._tables[name] = table
         return table
 
@@ -43,7 +44,7 @@ class Lookups(object):
 
     def to_bytes(self, exclude=tuple(), **kwargs):
         serializers = dict(
-            ( (tt.name, tt.to_bytes) for tt in self._tables.values() )
+            ( (key, val.to_bytes) for key, val in self._tables.items() )
         )
             
         return util.to_bytes(serializers, [])
@@ -68,44 +69,45 @@ class Lookups(object):
             self.from_bytes(file_.read())
         return self
 
-class Table(object):
+cdef class Table(dict):
     """A dict with a bloom filter to check for misses.
 
     The main use case for this is checking for specific terms, so the miss rate
     will be high. Since bloom filter access is fast and gives no false
     negatives this should be faster than just using a dict."""
 
-    def __init__(self, name=None):
+    def __init__(self, str name, data=None):
         self.name = name
-        self.bloom = BloomFilter()
-        self.dict = dict()
+        # assume a default size of 1M items
+        datacount = 1E6
+        if data:
+            datacount = len(data)
+        self.bloom = BloomFilter.from_error_rate(len(data))
+        self.update(data)
 
-    def set(self, key, value):
-        self.dict[key] = value
+    def set(self, uint64_t key, value):
+        self[key] = value
         self.bloom.add(key)
 
     def update(self, data):
         for key, val in data.items():
             self.set(key, val)
 
-    def __getitem__(self, key):
-        return self.dict[key]
-
-    def __contains__(self, key):
+    def __contains__(self, uint64_t key):
         # This can give a false positive, so we need to check it after
         if key not in self.bloom: 
             return False
-        return key in self.dict
+        return self[key]
 
     def to_bytes(self):
         # TODO: serialize bloom too. For now just reconstruct it.
-        return srsly.msgpack_dumps({'name': self.name, 'dict': self.dict})
+        return srsly.msgpack_dumps({'name': self.name, 'dict': dict(self)})
 
-    def from_bytes(self, data):
+    def from_bytes(self, bytes data):
         loaded = srsly.msgpack_loads(data)
         self.name = loaded['name']
-        self.dict = loaded['dict']
-        for key, val in self.dict.items():
+        for key, val in loaded['dict'].items():
+            self[key] = val
             self.bloom.add(key)
 
         return self

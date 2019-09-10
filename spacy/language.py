@@ -31,6 +31,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS, is_stop
 from .errors import Errors, Warnings, deprecation_warning
+from .strings import hash_string
 from . import util
 from . import about
 
@@ -47,7 +48,9 @@ class BaseDefaults(object):
         lookups = Lookups()
         for name, filename in cls.resources.items():
             data = util.load_language_data(root_path / filename)
-            lookups.add_table(name, data)
+            #TODO convert data to integers
+            hashed = {hash_string(key): val for key, val in data.items()}
+            lookups.add_table(name, hashed)
         return lookups
 
     @classmethod
