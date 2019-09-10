@@ -191,22 +191,24 @@ cdef class Tokenizer:
             yield self(text)
 
     def _flush_cache(self):
-        self._reset_cache([key for key in self._cache if not key in self._specials])
+        self._reset_cache([key for key in self._cache])
 
     def _reset_cache(self, keys):
         for k in keys:
+            cached = <_Cached*>self._cache.get(k)
             del self._cache[k]
-            if not k in self._specials:
-                cached = <_Cached*>self._cache.get(k)
-                if cached is not NULL:
-                    self.mem.free(cached)
+            if cached is not NULL:
+                self.mem.free(cached)
+        if len(self._cache) == 0:
+            self._cache = PreshMap()
 
-    def _reset_specials(self):
+    def _flush_specials(self):
         for k in self._specials:
             cached = <_Cached*>self._specials.get(k)
             del self._specials[k]
             if cached is not NULL:
                 self.mem.free(cached)
+        self._specials = PreshMap()
 
     cdef int _apply_special_cases(self, Doc doc):
         """Retokenize doc according to special cases.
@@ -466,14 +468,11 @@ cdef class Tokenizer:
         cached.data.tokens = self.vocab.make_fused_token(substrings)
         key = hash_string(string)
         stale_special = <_Cached*>self._specials.get(key)
-        stale_cached = <_Cached*>self._cache.get(key)
-        self._flush_cache()
         self._specials.set(key, cached)
         if stale_special is not NULL:
             self.mem.free(stale_special)
-        if stale_special != stale_cached and stale_cached is not NULL:
-            self.mem.free(stale_cached)
         self._rules[string] = substrings
+        self._flush_cache()
         self._special_matcher.add(string, None, [{ORTH: token.text} for token in self._tokenize_affixes(string)])
 
     def _reload_special_cases(self):
@@ -484,10 +483,8 @@ cdef class Tokenizer:
         # only reload if all 4 of prefix, suffix, infix, token_match have
         # have been initialized
         if self.vocab is not None and self._property_init_count >= 4:
-            self._reset_cache([key for key in self._cache])
-            self._reset_specials()
-            self._cache = PreshMap()
-            self._specials = PreshMap()
+            self._flush_cache()
+            self._flush_specials()
             self._load_special_cases(self._rules)
 
     def to_disk(self, path, **kwargs):
@@ -570,10 +567,8 @@ cdef class Tokenizer:
         if data.get("rules"):
             # make sure to hard reset the cache to remove data from the default exceptions
             self._rules = {}
-            self._reset_cache([key for key in self._cache])
-            self._reset_specials()
-            self._cache = PreshMap()
-            self._specials = PreshMap()
+            self._flush_cache()
+            self._flush_specials()
             self._load_special_cases(data.get("rules", {}))
 
         return self
