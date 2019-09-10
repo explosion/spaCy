@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import plac
-import tqdm
 from pathlib import Path
 import re
 import sys

@@ -4,7 +4,6 @@ from __future__ import unicode_literals, division, print_function
 import plac
 import os
 from pathlib import Path
-import tqdm
 from thinc.neural._classes.model import Model
 from timeit import default_timer as timer
 import shutil
@@ -103,6 +102,10 @@ def train(
     JSON format. To convert data from other formats, use the `spacy convert`
     command.
     """
+
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     msg = Printer()
     util.fix_random_seed()
     util.set_env_log(verbose)
@@ -392,6 +395,9 @@ def _score_for_model(meta):
 
 @contextlib.contextmanager
 def _create_progress_bar(total):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     if int(os.environ.get("LOG_FRIENDLY", 0)):
         yield
     else:

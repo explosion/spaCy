@@ -18,7 +18,6 @@ import random
 import spacy
 import thinc.extra.datasets
 from spacy.util import minibatch, use_gpu, compounding
-import tqdm
 from spacy._ml import Tok2Vec
 from spacy.pipeline import TextCategorizer
 import numpy
@@ -107,6 +106,9 @@ def create_pipeline(width, embed_size, vectors_model):
 
 
 def train_tensorizer(nlp, texts, dropout, n_iter):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     tensorizer = nlp.create_pipe("tensorizer")
     nlp.add_pipe(tensorizer)
     optimizer = nlp.begin_training()
@@ -120,6 +122,9 @@ def train_tensorizer(nlp, texts, dropout, n_iter):
 
 
 def train_textcat(nlp, n_texts, n_iter=10):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     textcat = nlp.get_pipe("textcat")
     tok2vec_weights = textcat.model.tok2vec.to_bytes()
     (train_texts, train_cats), (dev_texts, dev_cats) = load_textcat_data(limit=n_texts)
