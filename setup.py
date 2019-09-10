@@ -63,7 +63,6 @@ MOD_NAMES = [
     "spacy.syntax.ner",
     "spacy.symbols",
     "spacy.vectors",
-    "spacy.lookups",
 ]
 
 

@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from libc.stdint cimport uint64_t
-
 from .util import SimpleFrozenDict
 
 from . import util
@@ -10,7 +8,7 @@ from . import util
 import srsly
 from preshed.bloom import BloomFilter
 
-cdef class Lookups(object):
+class Lookups(object):
     """Lookup tables for language data such as lemmas.
 
     This is a thin wrapper around a dictionary of names to Tables, where a
@@ -27,7 +25,7 @@ cdef class Lookups(object):
     def tables(self):
         return list(self._tables.keys())
 
-    def add_table(self, str name, data=SimpleFrozenDict()):
+    def add_table(self, name, data=SimpleFrozenDict()):
         if name in self.tables:
             raise ValueError("Table '{}' already exists".format(name))
         table = Table(name=name, data=data)
@@ -69,14 +67,14 @@ cdef class Lookups(object):
             self.from_bytes(file_.read())
         return self
 
-cdef class Table(dict):
+class Table(dict):
     """A dict with a bloom filter to check for misses.
 
     The main use case for this is checking for specific terms, so the miss rate
     will be high. Since bloom filter access is fast and gives no false
     negatives this should be faster than just using a dict."""
 
-    def __init__(self, str name, data=None):
+    def __init__(self, name, data=None):
         self.name = name
         # assume a default size of 1M items
         datacount = 1E6
@@ -85,7 +83,7 @@ cdef class Table(dict):
         self.bloom = BloomFilter.from_error_rate(len(data))
         self.update(data)
 
-    def set(self, uint64_t key, value):
+    def set(self, key, value):
         self[key] = value
         self.bloom.add(key)
 
@@ -93,7 +91,7 @@ cdef class Table(dict):
         for key, val in data.items():
             self.set(key, val)
 
-    def __contains__(self, uint64_t key):
+    def __contains__(self, key):
         # This can give a false positive, so we need to check it after
         if key not in self.bloom: 
             return False
@@ -103,7 +101,7 @@ cdef class Table(dict):
         # TODO: serialize bloom too. For now just reconstruct it.
         return srsly.msgpack_dumps({'name': self.name, 'dict': dict(self)})
 
-    def from_bytes(self, bytes data):
+    def from_bytes(self, data):
         loaded = srsly.msgpack_loads(data)
         self.name = loaded['name']
         for key, val in loaded['dict'].items():

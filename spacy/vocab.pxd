@@ -8,7 +8,6 @@ from .structs cimport LexemeC, TokenC
 from .typedefs cimport utf8_t, attr_t, hash_t
 from .strings cimport StringStore
 from .morphology cimport Morphology
-from .lookups cimport Lookups
 
 
 cdef LexemeC EMPTY_LEXEME
@@ -30,7 +29,7 @@ cdef class Vocab:
     cpdef readonly StringStore strings
     cpdef public Morphology morphology
     cpdef public object vectors
-    cpdef public Lookups lookups
+    cpdef public object lookups
     cdef readonly int length
     cdef public object data_dir
     cdef public object lex_attr_getters
