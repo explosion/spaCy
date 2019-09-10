@@ -103,6 +103,11 @@ def he_tokenizer():
     return get_lang_class("he").Defaults.create_tokenizer()
 
 
+@pytest.fixture(scope="session")
+def hr_tokenizer():
+    return get_lang_class("hr").Defaults.create_tokenizer()
+
+
 @pytest.fixture
 def hu_tokenizer():
     return get_lang_class("hu").Defaults.create_tokenizer()

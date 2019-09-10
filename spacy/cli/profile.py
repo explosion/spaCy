@@ -7,7 +7,6 @@ import srsly
 import cProfile
 import pstats
 import sys
-import tqdm
 import itertools
 import thinc.extra.datasets
 from wasabi import Printer
@@ -48,6 +47,9 @@ def profile(model, inputs=None, n_texts=10000):
 
 
 def parse_texts(nlp, texts):
+    # temp fix to avoid import issues cf https://github.com/explosion/spaCy/issues/4200
+    import tqdm
+
     for doc in nlp.pipe(tqdm.tqdm(texts), batch_size=16):
         pass
 

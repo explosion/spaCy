@@ -19,7 +19,6 @@ class Lookups(object):
     so they can be accessed before the pipeline components are applied (e.g.
     in the tokenizer and lemmatizer), as well as within the pipeline components
     via doc.vocab.lookups.
-
     """
 
     def __init__(self):
@@ -115,7 +114,8 @@ class Lookups(object):
         if len(self._tables):
             path = ensure_path(path)
             filepath = path / "lookups.bin"
-            srsly.write_msgpack(filepath, self._tables)
+            with filepath.open("wb") as file_:
+                file_.write(self.to_bytes())
 
     def from_disk(self, path, **kwargs):
         """Load lookups from a directory containing a lookups.bin.
@@ -132,6 +132,30 @@ class Lookups(object):
                 self._tables[key].update_raw(value)
         return self
 
+    def from_disk(self, path, **kwargs):
+        """Load lookups from a directory containing a lookups.bin.
+
+        path (unicode / Path): The file path.
+        RETURNS (Lookups): The loaded lookups.
+        """
+        path = ensure_path(path)
+        filepath = path / "lookups.bin"
+        if filepath.exists():
+            with filepath.open("rb") as file_:
+                data = file_.read()
+            return self.from_bytes(data)
+        return self
+
+
+class Table(OrderedDict):
+    """A table in the lookups. Subclass of builtin dict that implements a
+    slightly more consistent and unified API.
+    """
+    @classmethod
+    def from_dict(cls, data, name=None):
+        self = cls(name=name)
+        self.update(data)
+        return self
 
 class Table(OrderedDict):
     """A table in the lookups. Subclass of builtin dict that implements a
@@ -147,6 +171,7 @@ class Table(OrderedDict):
         data (dict): Initial data, used to hint Bloom Filter.
         RETURNS (Table): The newly created object.
         """
+        OrderedDict.__init__(self)
         self.name = name
         # assume a default size of 1M items
         size = 1E6
