@@ -199,8 +199,6 @@ cdef class Tokenizer:
             del self._cache[k]
             if cached is not NULL:
                 self.mem.free(cached)
-        if len(self._cache) == 0:
-            self._cache = PreshMap()
 
     def _flush_specials(self):
         for k in self._specials:
@@ -208,7 +206,6 @@ cdef class Tokenizer:
             del self._specials[k]
             if cached is not NULL:
                 self.mem.free(cached)
-        self._specials = PreshMap()
 
     cdef int _apply_special_cases(self, Doc doc):
         """Retokenize doc according to special cases.
