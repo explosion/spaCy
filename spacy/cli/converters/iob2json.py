@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import re
 from wasabi import Printer
 
 from ...gold import iob_to_biluo

@@ -103,7 +103,13 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
     text = "The players start."
     heads = [1, 1, 0, -1]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], tags=["DT", "NN", "VBZ", "."], pos=["DET", "NOUN", "VERB", "PUNCT"], heads=heads)
+    doc = get_doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        tags=["DT", "NN", "VBZ", "."],
+        pos=["DET", "NOUN", "VERB", "PUNCT"],
+        heads=heads,
+    )
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -115,7 +121,13 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
     assert doc[0].lemma_ == "The players"
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], tags=["DT", "NN", "VBZ", "."], pos=["DET", "NOUN", "VERB", "PUNCT"], heads=heads)
+    doc = get_doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        tags=["DT", "NN", "VBZ", "."],
+        pos=["DET", "NOUN", "VERB", "PUNCT"],
+        heads=heads,
+    )
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -269,18 +281,15 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
 
     # if there is a parse, span.root provides default values
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
-    heads = [ 0,  -1,   1,  -3,  -4,  -5,  -1,  -7,  -8 ]
-    ents =  [
-        (3, 5, "ent-de"),
-        (5, 7, "ent-fg"),
-    ]
-    deps =  ["dep"] * len(words)
+    heads = [0, -1, 1, -3, -4, -5, -1, -7, -8]
+    ents = [(3, 5, "ent-de"), (5, 7, "ent-fg")]
+    deps = ["dep"] * len(words)
     en_vocab.strings.add("ent-de")
     en_vocab.strings.add("ent-fg")
     en_vocab.strings.add("dep")
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
-    assert doc[2:4].root == doc[3] # root of 'c d' is d
-    assert doc[4:6].root == doc[4] # root is 'e f' is e
+    assert doc[2:4].root == doc[3]  # root of 'c d' is d
+    assert doc[4:6].root == doc[4]  # root is 'e f' is e
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[2:4])
         retokenizer.merge(doc[4:6])
@@ -295,12 +304,9 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
 
     # check that B is preserved if span[start] is B
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
-    heads = [ 0,  -1,   1,   1,  -4,  -5,  -1,  -7,  -8 ]
-    ents =  [
-        (3, 5, "ent-de"),
-        (5, 7, "ent-de"),
-    ]
-    deps =  ["dep"] * len(words)
+    heads = [0, -1, 1, 1, -4, -5, -1, -7, -8]
+    ents = [(3, 5, "ent-de"), (5, 7, "ent-de")]
+    deps = ["dep"] * len(words)
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[3:5])
