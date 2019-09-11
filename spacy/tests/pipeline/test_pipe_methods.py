@@ -128,3 +128,19 @@ def test_pipe_base_class_add_label(nlp, component):
         assert label in pipe.labels
     else:
         assert pipe.labels == (label,)
+
+
+def test_pipe_labels(nlp):
+    input_labels = {
+        "ner": ["PERSON", "ORG", "GPE"],
+        "textcat": ["POSITIVE", "NEGATIVE"],
+    }
+    for name, labels in input_labels.items():
+        pipe = nlp.create_pipe(name)
+        for label in labels:
+            pipe.add_label(label)
+        assert len(pipe.labels) == len(labels)
+        nlp.add_pipe(pipe)
+    assert len(nlp.pipe_labels) == len(input_labels)
+    for name, labels in nlp.pipe_labels.items():
+        assert sorted(input_labels[name]) == sorted(labels)
