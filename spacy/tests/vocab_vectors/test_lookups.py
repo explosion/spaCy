@@ -56,6 +56,7 @@ def test_lookups_to_from_bytes():
     assert table2.get("b") == 2
     assert new_lookups.to_bytes() == lookups_bytes
 
+
 # This fails on Python 3.5
 @pytest.mark.xfail
 def test_lookups_to_from_disk():
@@ -75,6 +76,7 @@ def test_lookups_to_from_disk():
     table2 = new_lookups.get_table("table2")
     assert len(table2) == 3
     assert table2.get("b") == 2
+
 
 # This fails on Python 3.5
 @pytest.mark.xfail
