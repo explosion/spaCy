@@ -1,40 +1,21 @@
 import logging
 import random
 
-from tqdm import tqdm
-from typing import NamedTuple
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
 
-class BaselineResults(NamedTuple):
-    random_recall: float
-    random_precision: float
-    prior_recall: float
-    prior_precision: float
-    oracle_recall: float
-    oracle_precision: float
-
-    def report_accuracy(self, model):
-        model_str = model.title()
-        recall = getattr(self, "{}_recall".format(model))
-        precision = getattr(self, "{}_precision".format(model))
-        return ("{}: ".format(model_str) +
-                "Recall = {} | ".format(round(recall, 3)) +
-                "Precision = {}".format(round(precision, 3)))
-
-
 class Metrics(object):
-    def __init__(self, true_pos, false_pos, false_neg):
-        self.true_pos = true_pos
-        self.false_pos = false_pos
-        self.false_neg = false_neg
+    true_pos = 0
+    false_pos = 0
+    false_neg = 0
 
     def update_results(self, true_entity, candidate):
         candidate_is_correct = true_entity == candidate
         self.true_pos += candidate_is_correct
         self.false_neg += not candidate_is_correct
-        if candidate != "" and candidate != "NIL":
+        if candidate not in {"", "NIL"}:
             self.false_pos += not candidate_is_correct
 
     def calculate_precision(self):
@@ -50,6 +31,45 @@ class Metrics(object):
             return self.true_pos / (self.true_pos + self.false_neg)
 
 
+class EvaluationResults(object):
+    def __init__(self):
+        self.metrics = Metrics()
+        self.metrics_by_label = defaultdict(Metrics)
+
+    def update_metrics(self, ent_label, true_entity, candidate):
+        self.metrics.update_results(true_entity, candidate)
+        self.metrics_by_label[ent_label].update_results(true_entity, candidate)
+
+    def increment_false_negatives(self):
+        self.metrics.false_neg += 1
+
+    def report_metrics(self, model_name):
+        model_str = model_name.title()
+        recall = self.metrics.calculate_recall()
+        precision = self.metrics.calculate_precision()
+        return ("{}: ".format(model_str) +
+                "Recall = {} | ".format(round(recall, 3)) +
+                "Precision = {} | ".format(round(precision, 3)) +
+                "Precision by label = {}".format({k: v.calculate_precision()
+                                                  for k, v in self.metrics_by_label.items()}))
+
+
+class BaselineResults(object):
+    def __init__(self):
+        self.random = EvaluationResults()
+        self.prior = EvaluationResults()
+        self.oracle = EvaluationResults()
+
+    def report_accuracy(self, model):
+        results = getattr(self, model)
+        return results.report_metrics(model)
+
+    def update_baselines(self, true_entity, ent_label, random_candidate, prior_candidate, oracle_candidate):
+        self.oracle.update_metrics(ent_label, true_entity, oracle_candidate)
+        self.prior.update_metrics(ent_label, true_entity, prior_candidate)
+        self.random.update_metrics(ent_label, true_entity, random_candidate)
+
+
 def measure_performance(dev_data, kb, el_pipe):
     baseline_accuracies = measure_baselines(
         dev_data, kb
@@ -62,20 +82,20 @@ def measure_performance(dev_data, kb, el_pipe):
     # using only context
     el_pipe.cfg["incl_context"] = True
     el_pipe.cfg["incl_prior"] = False
-    dev_precision_context, dev_recall_context = measure_precision_recall(dev_data, el_pipe)
-    logger.info("dev precision context avg: {}".format(round(dev_precision_context, 3)))
-    logger.info("dev recall context avg: {}".format(round(dev_recall_context, 3)))
+    results = get_eval_results(dev_data, el_pipe)
+    logger.info(results.report_metrics("context only"))
 
     # measuring combined accuracy (prior + context)
     el_pipe.cfg["incl_context"] = True
     el_pipe.cfg["incl_prior"] = True
-    dev_precision_combo, dev_recall_combo = measure_precision_recall(dev_data, el_pipe)
-    logger.info("dev precision combo avg: {}".format(round(dev_precision_combo, 3)))
-    logger.info("dev recall combo avg: {}".format(round(dev_recall_combo, 3)))
+    results = get_eval_results(dev_data, el_pipe)
+    logger.info(results.report_metrics("context and prior"))
 
 
-def measure_precision_recall(data, el_pipe=None):
+def get_eval_results(data, el_pipe=None):
     # If the docs in the data require further processing with an entity linker, set el_pipe
+    from tqdm import tqdm
+
     docs = []
     golds = []
     for d, g in tqdm(data, leave=False):
@@ -86,8 +106,9 @@ def measure_precision_recall(data, el_pipe=None):
             else:
                 docs.append(d)
 
-    results = Metrics(0, 0, 0)
+    results = EvaluationResults()
     for doc, gold in zip(docs, golds):
+        tagged_entries_per_article = {_offset(ent.start_char, ent.end_char): ent for ent in doc.ents}
         try:
             correct_entries_per_article = dict()
             for entity, kb_dict in gold.links.items():
@@ -97,8 +118,11 @@ def measure_precision_recall(data, el_pipe=None):
                     if value:
                         offset = _offset(start, end)
                         correct_entries_per_article[offset] = gold_kb
+                        if offset not in tagged_entries_per_article:
+                            results.increment_false_negatives()
 
             for ent in doc.ents:
+                ent_label = ent.label_
                 pred_entity = ent.kb_id_
                 start = ent.start_char
                 end = ent.end_char
@@ -106,21 +130,19 @@ def measure_precision_recall(data, el_pipe=None):
                 gold_entity = correct_entries_per_article.get(offset, None)
                 # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
                 if gold_entity is not None:
-                    results.update_results(gold_entity, pred_entity)
+                    results.update_metrics(ent_label, gold_entity, pred_entity)
 
         except Exception as e:
             logging.error("Error assessing accuracy " + str(e))
 
-    return results.calculate_precision(), results.calculate_recall()
+    return results
 
 
 def measure_baselines(data, kb):
     # Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound
     counts_d = dict()
 
-    random_results = Metrics(0, 0, 0)
-    oracle_results = Metrics(0, 0, 0)
-    prior_results = Metrics(0, 0, 0)
+    baseline_results = BaselineResults()
 
     docs = [d for d, g in data if len(d) > 0]
     golds = [g for d, g in data if len(d) > 0]
@@ -136,11 +158,12 @@ def measure_baselines(data, kb):
                     offset = _offset(start, end)
                     correct_entries_per_article[offset] = gold_kb
                     if offset not in tagged_entries_per_article:
-                        random_results.false_neg += 1
-                        oracle_results.false_neg += 1
-                        prior_results.false_neg += 1
+                        baseline_results.random.increment_false_negatives()
+                        baseline_results.oracle.increment_false_negatives()
+                        baseline_results.prior.increment_false_negatives()
 
         for ent in doc.ents:
+            ent_label = ent.label_
             start = ent.start_char
             end = ent.end_char
             offset = _offset(start, end)
@@ -164,18 +187,10 @@ def measure_baselines(data, kb):
                     best_candidate = candidates[best_index].entity_
                     random_candidate = random.choice(candidates).entity_
 
-                oracle_results.update_results(gold_entity, oracle_candidate)
-                prior_results.update_results(gold_entity, best_candidate)
-                random_results.update_results(gold_entity, random_candidate)
+                baseline_results.update_baselines(gold_entity, ent_label,
+                                                  random_candidate, best_candidate, oracle_candidate)
 
-    return BaselineResults(
-        random_results.calculate_recall(),
-        random_results.calculate_precision(),
-        prior_results.calculate_recall(),
-        prior_results.calculate_precision(),
-        oracle_results.calculate_recall(),
-        oracle_results.calculate_precision(),
-    )
+    return baseline_results
 
 
 def _offset(start, end):

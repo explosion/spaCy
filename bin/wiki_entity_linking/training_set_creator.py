@@ -5,11 +5,9 @@ import logging
 import random
 import re
 import bz2
-import datetime
 import json
 
 from functools import partial
-from tqdm import tqdm
 
 from spacy.gold import GoldParse
 from bin.wiki_entity_linking import kb_creator
@@ -21,7 +19,6 @@ Gold-standard entities are stored in one file in standoff format (by character o
 
 ENTITY_FILE = "gold_entities.csv"
 logger = logging.getLogger(__name__)
-
 
 
 def create_training_examples_and_descriptions(wikipedia_input,
@@ -320,6 +317,7 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
 
 
 def read_training(nlp, entity_file_path, dev, limit, kb):
+    from tqdm import tqdm
     data = []
     num_entities = 0
     get_gold_parse = partial(_get_gold_parse, dev=dev, kb=kb)
