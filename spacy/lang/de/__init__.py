@@ -27,10 +27,20 @@ class GermanDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
     resources = {"lemma_lookup": "lemma_lookup.json"}
-    single_orth_variants = [{"tags": ["$("], "variants": ["…", "..."]},
-            {"tags": ["$("], "variants": ["-", "—", "–", "--", "---", "——"]}]
-    paired_orth_variants = [{"tags": ["$("], "variants": [("'", "'"), (",", "'"), ("‚", "‘"), ("›", "‹"), ("‹", "›")]},
-            {"tags": ["$("], "variants": [("``", "''"), ('"', '"'), ("„", "“"), ("»", "«"), ("«", "»")]}]
+    single_orth_variants = [
+        {"tags": ["$("], "variants": ["…", "..."]},
+        {"tags": ["$("], "variants": ["-", "—", "–", "--", "---", "——"]},
+    ]
+    paired_orth_variants = [
+        {
+            "tags": ["$("],
+            "variants": [("'", "'"), (",", "'"), ("‚", "‘"), ("›", "‹"), ("‹", "›")],
+        },
+        {
+            "tags": ["$("],
+            "variants": [("``", "''"), ('"', '"'), ("„", "“"), ("»", "«"), ("«", "»")],
+        },
+    ]
 
 
 class German(Language):

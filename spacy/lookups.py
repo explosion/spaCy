@@ -137,6 +137,7 @@ class Table(OrderedDict):
     """A table in the lookups. Subclass of builtin dict that implements a
     slightly more consistent and unified API.
     """
+
     @classmethod
     def from_dict(cls, data, name=None):
         self = cls(name=name)

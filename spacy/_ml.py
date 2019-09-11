@@ -348,7 +348,7 @@ def Tok2Vec(width, embed_size, **kwargs):
         if pretrained_vectors is not None:
             glove = StaticVectors(pretrained_vectors, width, column=cols.index(ID))
 
-            if subword_features: 
+            if subword_features:
                 embed = uniqued(
                     (glove | norm | prefix | suffix | shape)
                     >> LN(Maxout(width, width * 5, pieces=3)),
@@ -363,14 +363,16 @@ def Tok2Vec(width, embed_size, **kwargs):
             embed = uniqued(
                 (norm | prefix | suffix | shape)
                 >> LN(Maxout(width, width * 4, pieces=3)),
-                column=cols.index(ORTH)
+                column=cols.index(ORTH),
             )
-        elif char_embed: 
+        elif char_embed:
             embed = concatenate_lists(
                 CharacterEmbed(nM=64, nC=8),
-                FeatureExtracter(cols) >> with_flatten(norm)
+                FeatureExtracter(cols) >> with_flatten(norm),
             )
-            reduce_dimensions = LN(Maxout(width, 64*8+width, pieces=cnn_maxout_pieces))
+            reduce_dimensions = LN(
+                Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
+            )
         else:
             embed = norm
 
@@ -379,22 +381,14 @@ def Tok2Vec(width, embed_size, **kwargs):
             >> LN(Maxout(width, width * 3, pieces=cnn_maxout_pieces))
         )
         if char_embed:
-            tok2vec = (
-                embed
-                >> with_flatten(
-                    reduce_dimensions
-                    >> convolution ** conv_depth, pad=conv_depth
-                )
+            tok2vec = embed >> with_flatten(
+                reduce_dimensions >> convolution ** conv_depth, pad=conv_depth
             )
         else:
-            tok2vec = (
-                FeatureExtracter(cols)
-                >> with_flatten(
-                    embed
-                    >> convolution ** conv_depth, pad=conv_depth
-                )
+            tok2vec = FeatureExtracter(cols) >> with_flatten(
+                embed >> convolution ** conv_depth, pad=conv_depth
             )
- 
+
         if bilstm_depth >= 1:
             tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
@@ -611,9 +605,7 @@ def build_morphologizer_model(class_nums, **cfg):
                 char_embed=char_embed,
                 pretrained_vectors=pretrained_vectors,
             )
-        softmax = with_flatten(
-            MultiSoftmax(class_nums, token_vector_width)
-        )
+        softmax = with_flatten(MultiSoftmax(class_nums, token_vector_width))
         softmax.out_sizes = class_nums
         model = tok2vec >> softmax
     model.nI = None
@@ -906,16 +898,17 @@ def _replace_word(word, random_words, mask="[MASK]"):
 def _uniform_init(lo, hi):
     def wrapped(W, ops):
         copy_array(W, ops.xp.random.uniform(lo, hi, W.shape))
+
     return wrapped
 
 
 @describe.attributes(
     nM=Dimension("Vector dimensions"),
     nC=Dimension("Number of characters per word"),
-    vectors=Synapses("Embed matrix",
-        lambda obj: (obj.nC, obj.nV, obj.nM),
-        _uniform_init(-0.1, 0.1)),
-    d_vectors=Gradient("vectors")
+    vectors=Synapses(
+        "Embed matrix", lambda obj: (obj.nC, obj.nV, obj.nM), _uniform_init(-0.1, 0.1)
+    ),
+    d_vectors=Gradient("vectors"),
 )
 class CharacterEmbed(Model):
     def __init__(self, nM=None, nC=None, **kwargs):
@@ -926,12 +919,12 @@ class CharacterEmbed(Model):
     @property
     def nO(self):
         return self.nM * self.nC
-    
+
     @property
     def nV(self):
         return 256
 
-    def begin_update(self, docs, drop=0.):
+    def begin_update(self, docs, drop=0.0):
         if not docs:
             return []
         ids = []
@@ -959,6 +952,7 @@ class CharacterEmbed(Model):
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
             return None
+
         return output, backprop_character_embed
 
 

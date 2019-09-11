@@ -38,10 +38,14 @@ class EnglishDefaults(Language.Defaults):
         "lemma_index": "lemmatizer/lemma_index.json",
         "lemma_exc": "lemmatizer/lemma_exc.json",
     }
-    single_orth_variants = [{"tags": ["NFP"], "variants": ["…", "..."]},
-            {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]}]
-    paired_orth_variants = [{"tags": ["``", "''"], "variants": [("'", "'"), ("‘", "’")]},
-            {"tags": ["``", "''"], "variants": [('"', '"'), ("“", "”")]}]
+    single_orth_variants = [
+        {"tags": ["NFP"], "variants": ["…", "..."]},
+        {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
+    ]
+    paired_orth_variants = [
+        {"tags": ["``", "''"], "variants": [("'", "'"), ("‘", "’")]},
+        {"tags": ["``", "''"], "variants": [('"', '"'), ("“", "”")]},
+    ]
 
 
 class English(Language):
