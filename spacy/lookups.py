@@ -126,36 +126,11 @@ class Lookups(object):
         path = ensure_path(path)
         filepath = path / "lookups.bin"
         if filepath.exists():
-            data = srsly.read_msgpack(filepath)
-            for key, value in data.items():
-                self._tables[key] = Table(key)
-                self._tables[key].update_raw(value)
-        return self
-
-    def from_disk(self, path, **kwargs):
-        """Load lookups from a directory containing a lookups.bin.
-
-        path (unicode / Path): The file path.
-        RETURNS (Lookups): The loaded lookups.
-        """
-        path = ensure_path(path)
-        filepath = path / "lookups.bin"
-        if filepath.exists():
             with filepath.open("rb") as file_:
                 data = file_.read()
             return self.from_bytes(data)
         return self
 
-
-class Table(OrderedDict):
-    """A table in the lookups. Subclass of builtin dict that implements a
-    slightly more consistent and unified API.
-    """
-    @classmethod
-    def from_dict(cls, data, name=None):
-        self = cls(name=name)
-        self.update(data)
-        return self
 
 class Table(OrderedDict):
     """A table in the lookups. Subclass of builtin dict that implements a
