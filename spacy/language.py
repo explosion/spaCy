@@ -254,7 +254,7 @@ class Language(object):
 
         RETURNS (dict): Labels keyed by component name.
         """
-        labels = {}
+        labels = OrderedDict()
         for name, pipe in self.pipeline:
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
