@@ -139,6 +139,12 @@ class Table(OrderedDict):
     Includes a Bloom filter to speed up missed lookups.
     """
 
+    @classmethod
+    def from_dict(cls, data, name=None):
+        self = cls(name=name)
+        self.update(data)
+        return self
+
     def __init__(self, name=None, data=None):
         """Initialize a new table.
 

@@ -456,6 +456,7 @@ class Errors(object):
     E159 = ("Can't find table '{name}' in lookups. Available tables: {tables}")
     E160 = ("Can't find language data file: {path}")
 
+
 @add_codes
 class TempErrors(object):
     T003 = ("Resizing pre-trained Tagger models is not currently supported.")

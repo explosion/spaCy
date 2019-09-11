@@ -119,28 +119,8 @@ def test_oracle_moves_missing_B(en_vocab):
 
 
 def test_oracle_moves_whitespace(en_vocab):
-    words = [
-        "production",
-        "\n",
-        "of",
-        "Northrop",
-        "\n",
-        "Corp.",
-        "\n",
-        "'s",
-        "radar",
-    ]
-    biluo_tags = [
-        "O",
-        "O",
-        "O",
-        "B-ORG",
-        None,
-        "I-ORG",
-        "L-ORG",
-        "O",
-        "O",
-    ]
+    words = ["production", "\n", "of", "Northrop", "\n", "Corp.", "\n", "'s", "radar"]
+    biluo_tags = ["O", "O", "O", "B-ORG", None, "I-ORG", "L-ORG", "O", "O"]
 
     doc = Doc(en_vocab, words=words)
     gold = GoldParse(doc, words=words, entities=biluo_tags)
@@ -156,4 +136,4 @@ def test_oracle_moves_whitespace(en_vocab):
             action, label = tag.split("-")
             moves.add_action(move_types.index(action), label)
     moves.preprocess_gold(gold)
-    seq = moves.get_oracle_sequence(doc, gold)
+    moves.get_oracle_sequence(doc, gold)

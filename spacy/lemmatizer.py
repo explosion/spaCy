@@ -2,8 +2,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 
-from .symbols import POS, NOUN, VERB, ADJ, PUNCT, PROPN
-from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
+from .symbols import NOUN, VERB, ADJ, PUNCT, PROPN
 
 
 class Lemmatizer(object):
@@ -71,13 +70,13 @@ class Lemmatizer(object):
             return True
         elif univ_pos == "adj" and morphology.get("Degree") == "pos":
             return True
-        elif morphology.get('VerbForm') == 'inf':
+        elif morphology.get("VerbForm") == "inf":
             return True
-        elif morphology.get('VerbForm') == 'none':
+        elif morphology.get("VerbForm") == "none":
             return True
-        elif morphology.get('VerbForm') == 'inf':
+        elif morphology.get("VerbForm") == "inf":
             return True
-        elif morphology.get('Degree') == 'pos':
+        elif morphology.get("Degree") == "pos":
             return True
         else:
             return False
