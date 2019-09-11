@@ -43,10 +43,12 @@ processing.
 > - **Verbs**: writes, writing, wrote, written → write
 
 A lemma is the uninflected form of a word. The English lemmatization data is
-taken from [WordNet](https://wordnet.princeton.edu). Lookup tables are taken
-from [Lexiconista](http://www.lexiconista.com/datasets/lemmatization/). spaCy
-also adds a **special case for pronouns**: all pronouns are lemmatized to the
-special token `-PRON-`.
+taken from [WordNet](https://wordnet.princeton.edu) and the Spanish
+lemmatization is taken from 
+[Wiktionary](https://es.wikipedia.org/wiki/Wikcionario). Lookup tables are
+taken from [Lexiconista](http://www.lexiconista.com/datasets/lemmatization/).
+spaCy also adds a **special case for pronouns**: all pronouns are lemmatized to
+the special token `-PRON-`.
 
 <Infobox title="About spaCy's custom pronoun lemma" variant="warning">
 
