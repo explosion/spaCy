@@ -26,6 +26,7 @@ from .. import util
 from ..compat import is_config
 from ..errors import Errors, Warnings, user_warning, models_warning
 from .underscore import Underscore, get_ext_args
+from .morphanalysis cimport MorphAnalysis
 
 
 cdef class Token:
@@ -217,6 +218,10 @@ cdef class Token:
         vector = self.vector
         xp = get_array_module(vector)
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
+
+    @property
+    def morph(self):
+        return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
     @property
     def lex_id(self):

@@ -32,7 +32,7 @@ def test_displacy_parse_deps(en_vocab):
     assert isinstance(deps, dict)
     assert deps["words"] == [
         {"text": "This", "tag": "DET"},
-        {"text": "is", "tag": "VERB"},
+        {"text": "is", "tag": "AUX"},
         {"text": "a", "tag": "DET"},
         {"text": "sentence", "tag": "NOUN"},
     ]

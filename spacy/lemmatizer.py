@@ -55,12 +55,8 @@ class Lemmatizer(object):
         Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.
         """
-        morphology = {} if morphology is None else morphology
-        others = [
-            key
-            for key in morphology
-            if key not in (POS, "Number", "POS", "VerbForm", "Tense")
-        ]
+        if morphology is None:
+            morphology = {}
         if univ_pos == "noun" and morphology.get("Number") == "sing":
             return True
         elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
@@ -71,18 +67,17 @@ class Lemmatizer(object):
             morphology.get("VerbForm") == "fin"
             and morphology.get("Tense") == "pres"
             and morphology.get("Number") is None
-            and not others
         ):
             return True
         elif univ_pos == "adj" and morphology.get("Degree") == "pos":
             return True
-        elif VerbForm_inf in morphology:
+        elif morphology.get('VerbForm') == 'inf':
             return True
-        elif VerbForm_none in morphology:
+        elif morphology.get('VerbForm') == 'none':
             return True
-        elif Number_sing in morphology:
+        elif morphology.get('VerbForm') == 'inf':
             return True
-        elif Degree_pos in morphology:
+        elif morphology.get('Degree') == 'pos':
             return True
         else:
             return False

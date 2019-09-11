@@ -20,6 +20,7 @@ from .pipeline import Tensorizer, EntityRecognizer, EntityLinker
 from .pipeline import SimilarityHook, TextCategorizer, Sentencizer
 from .pipeline import merge_noun_chunks, merge_entities, merge_subtokens
 from .pipeline import EntityRuler
+from .pipeline import Morphologizer
 from .compat import izip, basestring_
 from .gold import GoldParse
 from .scorer import Scorer
@@ -39,6 +40,8 @@ from . import about
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = cls.create_lookups(nlp=nlp)
         rules, index, exc, lookup = util.get_lemma_tables(lookups)
         return Lemmatizer(index, exc, rules, lookup)
 
@@ -109,6 +112,8 @@ class BaseDefaults(object):
     syntax_iterators = {}
     resources = {}
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
+    single_orth_variants = []
+    paired_orth_variants = []
 
 
 class Language(object):
@@ -129,6 +134,7 @@ class Language(object):
         "tokenizer": lambda nlp: nlp.Defaults.create_tokenizer(nlp),
         "tensorizer": lambda nlp, **cfg: Tensorizer(nlp.vocab, **cfg),
         "tagger": lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        "morphologizer": lambda nlp, **cfg: Morphologizer(nlp.vocab, **cfg),
         "parser": lambda nlp, **cfg: DependencyParser(nlp.vocab, **cfg),
         "ner": lambda nlp, **cfg: EntityRecognizer(nlp.vocab, **cfg),
         "entity_linker": lambda nlp, **cfg: EntityLinker(nlp.vocab, **cfg),

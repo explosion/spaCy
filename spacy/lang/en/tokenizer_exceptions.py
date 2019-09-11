@@ -35,8 +35,6 @@ for pron in ["i"]:
                 LEMMA: "be",
                 NORM: "am",
                 TAG: "VBP",
-                "tenspect": 1,
-                "number": 1,
             },
         ]
 

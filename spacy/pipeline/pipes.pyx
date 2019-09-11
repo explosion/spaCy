@@ -424,18 +424,22 @@ class Tagger(Pipe):
         cdef Doc doc
         cdef int idx = 0
         cdef Vocab vocab = self.vocab
+        assign_morphology = self.cfg.get("set_morphology", True)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
-                if doc.c[j].tag == 0 and doc.c[j].pos == 0:
-                    # Don't clobber preset lemmas
-                    lemma = doc.c[j].lemma
-                    vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
-                    if lemma != 0 and lemma != doc.c[j].lex.orth:
-                        doc.c[j].lemma = lemma
+                if doc.c[j].tag == 0:
+                    if doc.c[j].pos == 0 and assign_morphology:
+                        # Don't clobber preset lemmas
+                        lemma = doc.c[j].lemma
+                        vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
+                        if lemma != 0 and lemma != doc.c[j].lex.orth:
+                            doc.c[j].lemma = lemma
+                    else:
+                        doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
                 idx += 1
             if tensors is not None and len(tensors):
                 if isinstance(doc.tensor, numpy.ndarray) \
