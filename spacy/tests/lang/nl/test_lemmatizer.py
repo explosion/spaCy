@@ -133,11 +133,11 @@ def test_nl_lemmatizer_pronoun_lemmas(nl_lemmatizer, text, lemma):
 # Using the lemma lookup table only
 @pytest.mark.parametrize("text,lemma", noun_irreg_lemmatization_cases)
 def test_nl_lemmatizer_lookup_noun(nl_lemmatizer, text, lemma):
-    lemma_pred = nl_lemmatizer.lookup(text)
+    lemma_pred = nl_lemmatizer.lookup(None, text)
     assert lemma_pred in (lemma, text)
 
 
 @pytest.mark.parametrize("text,lemma", verb_irreg_lemmatization_cases)
 def test_nl_lemmatizer_lookup_verb(nl_lemmatizer, text, lemma):
-    lemma_pred = nl_lemmatizer.lookup(text)
+    lemma_pred = nl_lemmatizer.lookup(None, text)
     assert lemma_pred in (lemma, text)
