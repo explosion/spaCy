@@ -46,6 +46,11 @@ class GreekLemmatizer(object):
         )
         return lemmas
 
+    def lookup(self, orth, string):
+        if orth in self.lookup_table:
+            return self.lookup_table[orth]
+        return string
+
 
 def lemmatize(string, index, exceptions, rules):
     string = string.lower()

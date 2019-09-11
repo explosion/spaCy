@@ -78,6 +78,7 @@ def test_lookups_to_from_disk():
     assert table2.get_string("b") == 2
 
 
+
 # This fails on Python 3.5
 @pytest.mark.xfail
 def test_lookups_to_from_bytes_via_vocab():
