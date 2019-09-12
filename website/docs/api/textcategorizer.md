@@ -75,7 +75,7 @@ delegate to the [`predict`](/api/textcategorizer#predict) and
 >
 > ```python
 > textcat = TextCategorizer(nlp.vocab)
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > # This usually happens under the hood
 > processed = textcat(doc)
 > ```
@@ -136,11 +136,11 @@ Modify a batch of documents, using pre-computed scores.
 > textcat.set_annotations([doc1, doc2], scores, tensors)
 > ```
 
-| Name     | Type     | Description                                               |
-| -------- | -------- | --------------------------------------------------------- |
-| `docs`   | iterable | The documents to modify.                                  |
-| `scores` | -        | The scores to set, produced by `TextCategorizer.predict`. |
-| `tensors`| iterable | The token representations used to predict the scores.     |
+| Name      | Type     | Description                                               |
+| --------- | -------- | --------------------------------------------------------- |
+| `docs`    | iterable | The documents to modify.                                  |
+| `scores`  | -        | The scores to set, produced by `TextCategorizer.predict`. |
+| `tensors` | iterable | The token representations used to predict the scores.     |
 
 ## TextCategorizer.update {#update tag="method"}
 

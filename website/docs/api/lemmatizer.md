@@ -37,8 +37,8 @@ Lemmatize a string.
 > from spacy.lemmatizer import Lemmatizer
 > from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
 > lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
-> lemmas = lemmatizer(u"ducks", u"NOUN")
-> assert lemmas == [u"duck"]
+> lemmas = lemmatizer("ducks", "NOUN")
+> assert lemmas == ["duck"]
 > ```
 
 | Name         | Type          | Description                                                                                              |
@@ -58,9 +58,9 @@ variable, set on the individual `Language` class.
 > #### Example
 >
 > ```python
-> lookup = {u"going": u"go"}
+> lookup = {"going": "go"}
 > lemmatizer = Lemmatizer(lookup=lookup)
-> assert lemmatizer.lookup(u"going") == u"go"
+> assert lemmatizer.lookup("going") == "go"
 > ```
 
 | Name        | Type    | Description                                                       |

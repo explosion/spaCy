@@ -64,7 +64,7 @@ _then_ loads in the binary data. You can read more about this process
 > #### Example
 >
 > ```python
-> doc = nlp(u"This is a text.")
+> doc = nlp("This is a text.")
 > data = pickle.dumps(doc)
 > ```
 
@@ -84,8 +84,8 @@ the _same_ `Vocab` object, it will only be included once.
 
 ```python
 ### Pickling objects with shared data {highlight="8-9"}
-doc1 = nlp(u"Hello world")
-doc2 = nlp(u"This is a test")
+doc1 = nlp("Hello world")
+doc2 = nlp("This is a test")
 
 doc1_data = pickle.dumps(doc1)
 doc2_data = pickle.dumps(doc2)
@@ -347,7 +347,7 @@ spaCy is now able to create the pipeline component `'snek'`:
 >>> nlp = English()
 >>> snek = nlp.create_pipe("snek")  # this now works! 🐍🎉
 >>> nlp.add_pipe(snek)
->>> doc = nlp(u"I am snek")
+>>> doc = nlp("I am snek")
     --..,_                     _,.--.
        `'.'.                .'`__ o  `;__.
           '.'.            .'.'`  '---'`  `
@@ -497,8 +497,8 @@ If you're training a named entity recognition model for a custom domain, you may
 end up training different labels that don't have pre-defined colors in the
 [`displacy` visualizer](/usage/visualizers#ent). The `spacy_displacy_colors`
 entry point lets you define a dictionary of entity labels mapped to their color
-values. It's added to the pre-defined colors and can also overwrite
-existing values.
+values. It's added to the pre-defined colors and can also overwrite existing
+values.
 
 > #### Domain-specific NER labels
 >
@@ -528,8 +528,8 @@ setup(
 ```
 
 After installing the package, the the custom colors will be used when
-visualizing text with `displacy`. Whenever the label `SNEK` is assigned, it
-will be displayed in `#3dff74`.
+visualizing text with `displacy`. Whenever the label `SNEK` is assigned, it will
+be displayed in `#3dff74`.
 
 import DisplaCyEntSnekHtml from 'images/displacy-ent-snek.html'
 

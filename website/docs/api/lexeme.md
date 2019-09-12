@@ -27,7 +27,7 @@ Change the value of a boolean flag.
 >
 > ```python
 > COOL_FLAG = nlp.vocab.add_flag(lambda text: False)
-> nlp.vocab[u'spaCy'].set_flag(COOL_FLAG, True)
+> nlp.vocab["spaCy"].set_flag(COOL_FLAG, True)
 > ```
 
 | Name      | Type | Description                          |
@@ -42,9 +42,9 @@ Check the value of a boolean flag.
 > #### Example
 >
 > ```python
-> is_my_library = lambda text: text in [u"spaCy", u"Thinc"]
+> is_my_library = lambda text: text in ["spaCy", "Thinc"]
 > MY_LIBRARY = nlp.vocab.add_flag(is_my_library)
-> assert nlp.vocab[u"spaCy"].check_flag(MY_LIBRARY) == True
+> assert nlp.vocab["spaCy"].check_flag(MY_LIBRARY) == True
 > ```
 
 | Name        | Type | Description                            |
@@ -59,8 +59,8 @@ Compute a semantic similarity estimate. Defaults to cosine over vectors.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
-> orange = nlp.vocab[u"orange"]
+> apple = nlp.vocab["apple"]
+> orange = nlp.vocab["orange"]
 > apple_orange = apple.similarity(orange)
 > orange_apple = orange.similarity(apple)
 > assert apple_orange == orange_apple
@@ -78,7 +78,7 @@ A boolean value indicating whether a word vector is associated with the lexeme.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
+> apple = nlp.vocab["apple"]
 > assert apple.has_vector
 > ```
 
@@ -93,7 +93,7 @@ A real-valued meaning representation.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
+> apple = nlp.vocab["apple"]
 > assert apple.vector.dtype == "float32"
 > assert apple.vector.shape == (300,)
 > ```
@@ -109,8 +109,8 @@ The L2 norm of the lexeme's vector representation.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab[u"apple"]
-> pasta = nlp.vocab[u"pasta"]
+> apple = nlp.vocab["apple"]
+> pasta = nlp.vocab["pasta"]
 > apple.vector_norm  # 7.1346845626831055
 > pasta.vector_norm  # 7.759851932525635
 > assert apple.vector_norm != pasta.vector_norm

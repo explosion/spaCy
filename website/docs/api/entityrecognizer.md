@@ -58,7 +58,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > # This usually happens under the hood
 > processed = ner(doc)
 > ```
@@ -119,11 +119,11 @@ Modify a batch of documents, using pre-computed scores.
 > ner.set_annotations([doc1, doc2], scores, tensors)
 > ```
 
-| Name     | Type     | Description                                                |
-| -------- | -------- | ---------------------------------------------------------- |
-| `docs`   | iterable | The documents to modify.                                   |
-| `scores` | -        | The scores to set, produced by `EntityRecognizer.predict`. |
-| `tensors`| iterable | The token representations used to predict the scores.      |
+| Name      | Type     | Description                                                |
+| --------- | -------- | ---------------------------------------------------------- |
+| `docs`    | iterable | The documents to modify.                                   |
+| `scores`  | -        | The scores to set, produced by `EntityRecognizer.predict`. |
+| `tensors` | iterable | The token representations used to predict the scores.      |
 
 ## EntityRecognizer.update {#update tag="method"}
 

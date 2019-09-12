@@ -1,5 +1,5 @@
 A named entity is a "real-world object" that's assigned a name – for example, a
-person, a country, a product or a book title. spaCy can **recognize** 
+person, a country, a product or a book title. spaCy can **recognize**
 [various types](/api/annotation#named-entities) of named entities in a document,
 by asking the model for a **prediction**. Because models are statistical and
 strongly depend on the examples they were trained on, this doesn't always work
@@ -12,7 +12,7 @@ Named entities are available as the `ents` property of a `Doc`:
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Apple is looking at buying U.K. startup for $1 billion")
+doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
 
 for ent in doc.ents:
     print(ent.text, ent.start_char, ent.end_char, ent.label_)
@@ -23,10 +23,10 @@ for ent in doc.ents:
 > - **End:** Index of end of entity in the `Doc`.
 > - **Label:** Entity label, i.e. type.
 
-| Text        | Start | End | Label   | Description                                          |  
-| ----------- | :---: | :-: | ------- | ---------------------------------------------------- | 
-| Apple       |   0   |  5  | `ORG`   | Companies, agencies, institutions.                   |  
-| U.K.        |  27   | 31  | `GPE`   | Geopolitical entity, i.e. countries, cities, states. | 
+| Text        | Start | End | Label   | Description                                          |
+| ----------- | :---: | :-: | ------- | ---------------------------------------------------- |
+| Apple       |   0   |  5  | `ORG`   | Companies, agencies, institutions.                   |
+| U.K.        |  27   | 31  | `GPE`   | Geopolitical entity, i.e. countries, cities, states. |
 | \$1 billion |  44   | 54  | `MONEY` | Monetary values, including unit.                     |
 
 Using spaCy's built-in [displaCy visualizer](/usage/visualizers), here's what

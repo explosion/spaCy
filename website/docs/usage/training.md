@@ -298,10 +298,10 @@ imports. It also makes it easier to structure and load your training data.
 ```python
 ### Simple training loop
 TRAIN_DATA = [
-        (u"Uber blew through $1 million a week", {"entities": [(0, 4, "ORG")]}),
-        (u"Google rebrands its business apps", {"entities": [(0, 6, "ORG")]})]
+        ("Uber blew through $1 million a week", {"entities": [(0, 4, "ORG")]}),
+        ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]})]
 
-nlp = spacy.blank('en')
+nlp = spacy.blank("en")
 optimizer = nlp.begin_training()
 for i in range(20):
     random.shuffle(TRAIN_DATA)
@@ -498,7 +498,7 @@ like this:
 ![Custom dependencies](../images/displacy-custom-parser.svg)
 
 ```python
-doc = nlp(u"find a hotel with good wifi")
+doc = nlp("find a hotel with good wifi")
 print([(t.text, t.dep_, t.head.text) for t in doc if t.dep_ != '-'])
 # [('find', 'ROOT', 'find'), ('hotel', 'PLACE', 'find'),
 #  ('good', 'QUALITY', 'wifi'), ('wifi', 'ATTRIBUTE', 'hotel')]

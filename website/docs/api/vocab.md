@@ -18,7 +18,7 @@ Create the vocabulary.
 >
 > ```python
 > from spacy.vocab import Vocab
-> vocab = Vocab(strings=[u"hello", u"world"])
+> vocab = Vocab(strings=["hello", "world"])
 > ```
 
 | Name               | Type                 | Description                                                                                                        |
@@ -36,7 +36,7 @@ Get the current number of lexemes in the vocabulary.
 > #### Example
 >
 > ```python
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > assert len(nlp.vocab) > 0
 > ```
 
@@ -52,8 +52,8 @@ unicode string is given, a new lexeme is created and stored.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab.strings[u"apple"]
-> assert nlp.vocab[apple] == nlp.vocab[u"apple"]
+> apple = nlp.vocab.strings["apple"]
+> assert nlp.vocab[apple] == nlp.vocab["apple"]
 > ```
 
 | Name           | Type          | Description                                      |
@@ -84,8 +84,8 @@ given string, you need to look it up in
 > #### Example
 >
 > ```python
-> apple = nlp.vocab.strings[u"apple"]
-> oov = nlp.vocab.strings[u"dskfodkfos"]
+> apple = nlp.vocab.strings["apple"]
+> oov = nlp.vocab.strings["dskfodkfos"]
 > assert apple in nlp.vocab
 > assert oov not in nlp.vocab
 > ```
@@ -106,11 +106,11 @@ using `token.check_flag(flag_id)`.
 >
 > ```python
 > def is_my_product(text):
->     products = [u"spaCy", u"Thinc", u"displaCy"]
+>     products = ["spaCy", "Thinc", "displaCy"]
 >     return text in products
 >
 > MY_PRODUCT = nlp.vocab.add_flag(is_my_product)
-> doc = nlp(u"I like spaCy")
+> doc = nlp("I like spaCy")
 > assert doc[2].check_flag(MY_PRODUCT) == True
 > ```
 
@@ -170,7 +170,7 @@ or hash value. If no vectors data is loaded, a `ValueError` is raised.
 > #### Example
 >
 > ```python
-> nlp.vocab.get_vector(u"apple")
+> nlp.vocab.get_vector("apple")
 > ```
 
 | Name        | Type                                     | Description                                                                   |
@@ -186,7 +186,7 @@ or hash value.
 > #### Example
 >
 > ```python
-> nlp.vocab.set_vector(u"apple", array([...]))
+> nlp.vocab.set_vector("apple", array([...]))
 > ```
 
 | Name     | Type                                     | Description                                      |
@@ -202,8 +202,8 @@ Words can be looked up by string or hash value.
 > #### Example
 >
 > ```python
-> if nlp.vocab.has_vector(u"apple"):
->     vector = nlp.vocab.get_vector(u"apple")
+> if nlp.vocab.has_vector("apple"):
+>     vector = nlp.vocab.get_vector("apple")
 > ```
 
 | Name        | Type          | Description                                      |
@@ -282,9 +282,9 @@ Load state from a binary string.
 > #### Example
 >
 > ```python
-> apple_id = nlp.vocab.strings[u"apple"]
+> apple_id = nlp.vocab.strings["apple"]
 > assert type(apple_id) == int
-> PERSON = nlp.vocab.strings[u"PERSON"]
+> PERSON = nlp.vocab.strings["PERSON"]
 > assert type(PERSON) == int
 > ```
 

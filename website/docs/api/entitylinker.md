@@ -1,6 +1,8 @@
 ---
 title: EntityLinker
-teaser: Functionality to disambiguate a named entity in text to a unique knowledge base identifier.
+teaser:
+  Functionality to disambiguate a named entity in text to a unique knowledge
+  base identifier.
 tag: class
 source: spacy/pipeline/pipes.pyx
 new: 2.2
@@ -13,9 +15,9 @@ via the ID `"entity_linker"`.
 ## EntityLinker.Model {#model tag="classmethod"}
 
 Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API, and should contain a field `tok2vec` that contains 
-the context encoder. Wrappers are under development for most major machine
-learning libraries.
+`thinc.neural.Model` API, and should contain a field `tok2vec` that contains the
+context encoder. Wrappers are under development for most major machine learning
+libraries.
 
 | Name        | Type   | Description                           |
 | ----------- | ------ | ------------------------------------- |
@@ -40,30 +42,29 @@ shortcut for this and instantiate the component using its string name and
 > entity_linker.from_disk("/path/to/model")
 > ```
 
-| Name            | Type                          | Description                                                                                                                                           |
-| --------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`         | `Vocab`                       | The shared vocabulary.                                                                                                                                |
-| `model`         | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `hidden_width`  | int                           | Width of the hidden layer of the entity linking model, defaults to 128.                                                                               |
-| `incl_prior`    | bool                          | Whether or not to include prior probabilities in the model. Defaults to True.                                                                         |
-| `incl_context`  | bool                          | Whether or not to include the local context in the model (if not: only prior probabilites are used). Defaults to True.                                |
-| **RETURNS**     | `EntityLinker`                | The newly constructed object.                                                                                                                         |
+| Name           | Type                          | Description                                                                                                                                           |
+| -------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | `Vocab`                       | The shared vocabulary.                                                                                                                                |
+| `model`        | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
+| `hidden_width` | int                           | Width of the hidden layer of the entity linking model, defaults to 128.                                                                               |
+| `incl_prior`   | bool                          | Whether or not to include prior probabilities in the model. Defaults to True.                                                                         |
+| `incl_context` | bool                          | Whether or not to include the local context in the model (if not: only prior probabilites are used). Defaults to True.                                |
+| **RETURNS**    | `EntityLinker`                | The newly constructed object.                                                                                                                         |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
-[`__call__`](/api/entitylinker#call) and
-[`pipe`](/api/entitylinker#pipe) delegate to the
-[`predict`](/api/entitylinker#predict) and
-[`set_annotations`](/api/entitylinker#set_annotations) methods. 
+[`__call__`](/api/entitylinker#call) and [`pipe`](/api/entitylinker#pipe)
+delegate to the [`predict`](/api/entitylinker#predict) and
+[`set_annotations`](/api/entitylinker#set_annotations) methods.
 
 > #### Example
 >
 > ```python
 > entity_linker = EntityLinker(nlp.vocab)
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > # This usually happens under the hood
 > processed = entity_linker(doc)
 > ```
@@ -107,14 +108,15 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 > kb_ids, tensors = entity_linker.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                 |
-| ----------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                                                                                                                   |
-| **RETURNS** | tuple    | A `(kb_ids, tensors)` tuple where `kb_ids` are the model's predicted KB identifiers for the entities in the `docs`, and `tensors` are the token representations used to predict these identifiers.          |
+| Name        | Type     | Description                                                                                                                                                                                        |
+| ----------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`      | iterable | The documents to predict.                                                                                                                                                                          |
+| **RETURNS** | tuple    | A `(kb_ids, tensors)` tuple where `kb_ids` are the model's predicted KB identifiers for the entities in the `docs`, and `tensors` are the token representations used to predict these identifiers. |
 
 ## EntityLinker.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed entity IDs for a list of named entities.
+Modify a batch of documents, using pre-computed entity IDs for a list of named
+entities.
 
 > #### Example
 >
@@ -124,16 +126,17 @@ Modify a batch of documents, using pre-computed entity IDs for a list of named e
 > entity_linker.set_annotations([doc1, doc2], kb_ids, tensors)
 > ```
 
-| Name       | Type     | Description                                                                                         |
-| ---------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `docs`     | iterable | The documents to modify.                                                                            |
-| `kb_ids`   | iterable | The knowledge base identifiers for the entities in the docs, predicted by `EntityLinker.predict`.   |
-| `tensors`  | iterable | The token representations used to predict the identifiers.                                          |
+| Name      | Type     | Description                                                                                       |
+| --------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `docs`    | iterable | The documents to modify.                                                                          |
+| `kb_ids`  | iterable | The knowledge base identifiers for the entities in the docs, predicted by `EntityLinker.predict`. |
+| `tensors` | iterable | The token representations used to predict the identifiers.                                        |
 
 ## EntityLinker.update {#update tag="method"}
 
 Learn from a batch of documents and gold-standard information, updating both the
-pipe's entity linking model and context encoder. Delegates to [`predict`](/api/entitylinker#predict) and
+pipe's entity linking model and context encoder. Delegates to
+[`predict`](/api/entitylinker#predict) and
 [`get_loss`](/api/entitylinker#get_loss).
 
 > #### Example
@@ -145,18 +148,18 @@ pipe's entity linking model and context encoder. Delegates to [`predict`](/api/e
 > entity_linker.update([doc1, doc2], [gold1, gold2], losses=losses, sgd=optimizer)
 > ```
 
-| Name     | Type     | Description                                                                                                   |
-| -------- | -------- | ------------------------------------------------------------------------------------------------------------- |
-| `docs`   | iterable | A batch of documents to learn from.                                                                           |
-| `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                                  |
-| `drop`   | float    | The dropout rate, used both for the EL model and the context encoder.                                                                                             |
-| `sgd`    | callable | The optimizer for the EL model. Should take two arguments `weights` and `gradient`, and an optional ID.       |
-| `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated.                  |
+| Name     | Type     | Description                                                                                             |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `docs`   | iterable | A batch of documents to learn from.                                                                     |
+| `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                            |
+| `drop`   | float    | The dropout rate, used both for the EL model and the context encoder.                                   |
+| `sgd`    | callable | The optimizer for the EL model. Should take two arguments `weights` and `gradient`, and an optional ID. |
+| `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated.            |
 
 ## EntityLinker.get_loss {#get_loss tag="method"}
 
-Find the loss and gradient of loss for the entities in a batch of documents and their
-predicted scores.
+Find the loss and gradient of loss for the entities in a batch of documents and
+their predicted scores.
 
 > #### Example
 >
@@ -166,17 +169,18 @@ predicted scores.
 > loss, d_loss = entity_linker.get_loss(docs, [gold1, gold2], kb_ids, tensors)
 > ```
 
-| Name            | Type     | Description                                                  |
-| --------------- | -------- | ------------------------------------------------------------ |
-| `docs`          | iterable | The batch of documents.                                      |
-| `golds`         | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `kb_ids`        | iterable | KB identifiers representing the model's predictions.         |
-| `tensors`       | iterable | The token representations used to predict the identifiers    |
-| **RETURNS**     | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
+| Name        | Type     | Description                                                  |
+| ----------- | -------- | ------------------------------------------------------------ |
+| `docs`      | iterable | The batch of documents.                                      |
+| `golds`     | iterable | The gold-standard data. Must have the same length as `docs`. |
+| `kb_ids`    | iterable | KB identifiers representing the model's predictions.         |
+| `tensors`   | iterable | The token representations used to predict the identifiers    |
+| **RETURNS** | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
 
 ## EntityLinker.set_kb {#set_kb tag="method"}
 
-Define the knowledge base (KB) used for disambiguating named entities to KB identifiers.
+Define the knowledge base (KB) used for disambiguating named entities to KB
+identifiers.
 
 > #### Example
 >
@@ -185,15 +189,16 @@ Define the knowledge base (KB) used for disambiguating named entities to KB iden
 > entity_linker.set_kb(kb)
 > ```
 
-| Name            | Type            | Description                                                  |
-| --------------- | --------------- | ------------------------------------------------------------ |
-| `kb`            | `KnowledgeBase` | The [`KnowledgeBase`](/api/kb).                              |
+| Name | Type            | Description                     |
+| ---- | --------------- | ------------------------------- |
+| `kb` | `KnowledgeBase` | The [`KnowledgeBase`](/api/kb). |
 
 ## EntityLinker.begin_training {#begin_training tag="method"}
 
 Initialize the pipe for training, using data examples if available. If no model
-has been initialized yet, the model is added. 
-Before calling this method, a knowledge base should have been defined with [`set_kb`](/api/entitylinker#set_kb).
+has been initialized yet, the model is added. Before calling this method, a
+knowledge base should have been defined with
+[`set_kb`](/api/entitylinker#set_kb).
 
 > #### Example
 >
@@ -204,12 +209,12 @@ Before calling this method, a knowledge base should have been defined with [`set
 > optimizer = entity_linker.begin_training(pipeline=nlp.pipeline)
 > ```
 
-| Name          | Type     | Description                                                                                                                                                                                 |
-| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                                           |
-| `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                                        |
-| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`EntityLinker`](/api/entitylinker#create_optimizer) if not set.         |
-| **RETURNS**   | callable | An optimizer.                                                                                                                                                                               |
+| Name          | Type     | Description                                                                                                                                                                         |
+| ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                                   |
+| `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                                |
+| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`EntityLinker`](/api/entitylinker#create_optimizer) if not set. |
+| **RETURNS**   | callable | An optimizer.                                                                                                                                                                       |
 
 ## EntityLinker.create_optimizer {#create_optimizer tag="method"}
 
@@ -242,7 +247,6 @@ Modify the pipe's EL model, to use the given parameter values.
 | -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
 | `params` | dict | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
 
-
 ## EntityLinker.to_disk {#to_disk tag="method"}
 
 Serialize the pipe to disk.
@@ -270,11 +274,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > entity_linker.from_disk("/path/to/entity_linker")
 > ```
 
-| Name        | Type               | Description                                                                |
-| ----------- | ------------------ | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path`   | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list               | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `EntityLinker`     | The modified `EntityLinker` object.                                    |
+| Name        | Type             | Description                                                                |
+| ----------- | ---------------- | -------------------------------------------------------------------------- |
+| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS** | `EntityLinker`   | The modified `EntityLinker` object.                                        |
 
 ## Serialization fields {#serialization-fields}
 
@@ -294,4 +298,3 @@ serialization by passing in the string names via the `exclude` argument.
 | `cfg`   | The config file. You usually don't want to exclude this.       |
 | `model` | The binary model data. You usually don't want to exclude this. |
 | `kb`    | The knowledge base. You usually don't want to exclude this.    |
-

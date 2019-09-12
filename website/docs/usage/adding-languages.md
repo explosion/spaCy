@@ -276,7 +276,7 @@ the lowercase spelling of a word exists, norms should always be in lowercase.
 > #### Norms vs. lemmas
 >
 > ```python
-> doc = nlp(u"I'm gonna realise")
+> doc = nlp("I'm gonna realise")
 > norms = [token.norm_ for token in doc]
 > lemmas = [token.lemma_ for token in doc]
 > assert norms == ["i", "am", "going", "to", "realize"]
@@ -396,10 +396,10 @@ iterators:
 > #### Noun chunks example
 >
 > ```python
-> doc = nlp(u"A phrase with another phrase occurs.")
+> doc = nlp("A phrase with another phrase occurs.")
 > chunks = list(doc.noun_chunks)
-> assert chunks[0].text == u"A phrase"
-> assert chunks[1].text == u"another phrase"
+> assert chunks[0].text == "A phrase"
+> assert chunks[1].text == "another phrase"
 > ```
 
 | Language | Code | Source                                                                                                            |

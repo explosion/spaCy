@@ -12,9 +12,9 @@ Construct a `Token` object.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > token = doc[0]
-> assert token.text == u"Give"
+> assert token.text == "Give"
 > ```
 
 | Name        | Type    | Description                                 |
@@ -31,7 +31,7 @@ The number of unicode characters in the token, i.e. `token.text`.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > token = doc[0]
 > assert len(token) == 4
 > ```
@@ -50,9 +50,9 @@ For details, see the documentation on
 >
 > ```python
 > from spacy.tokens import Token
-> fruit_getter = lambda token: token.text in (u"apple", u"pear", u"banana")
+> fruit_getter = lambda token: token.text in ("apple", "pear", "banana")
 > Token.set_extension("is_fruit", getter=fruit_getter)
-> doc = nlp(u"I have an apple")
+> doc = nlp("I have an apple")
 > assert doc[3]._.is_fruit
 > ```
 
@@ -128,7 +128,7 @@ Check the value of a boolean flag.
 >
 > ```python
 > from spacy.attrs import IS_TITLE
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > token = doc[0]
 > assert token.check_flag(IS_TITLE) == True
 > ```
@@ -145,7 +145,7 @@ Compute a semantic similarity estimate. Defaults to cosine over vectors.
 > #### Example
 >
 > ```python
-> apples, _, oranges = nlp(u"apples and oranges")
+> apples, _, oranges = nlp("apples and oranges")
 > apples_oranges = apples.similarity(oranges)
 > oranges_apples = oranges.similarity(apples)
 > assert apples_oranges == oranges_apples
@@ -163,9 +163,9 @@ Get a neighboring token.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > give_nbor = doc[0].nbor()
-> assert give_nbor.text == u"it"
+> assert give_nbor.text == "it"
 > ```
 
 | Name        | Type    | Description                                                 |
@@ -181,7 +181,7 @@ dependency tree.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > give = doc[0]
 > it = doc[1]
 > assert give.is_ancestor(it)
@@ -199,11 +199,11 @@ The rightmost token of this token's syntactic descendants.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > it_ancestors = doc[1].ancestors
-> assert [t.text for t in it_ancestors] == [u"Give"]
+> assert [t.text for t in it_ancestors] == ["Give"]
 > he_ancestors = doc[4].ancestors
-> assert [t.text for t in he_ancestors] == [u"pleaded"]
+> assert [t.text for t in he_ancestors] == ["pleaded"]
 > ```
 
 | Name       | Type    | Description                                                           |
@@ -217,9 +217,9 @@ A tuple of coordinated tokens, not including the token itself.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples and oranges")
+> doc = nlp("I like apples and oranges")
 > apples_conjuncts = doc[2].conjuncts
-> assert [t.text for t in apples_conjuncts] == [u"oranges"]
+> assert [t.text for t in apples_conjuncts] == ["oranges"]
 > ```
 
 | Name        | Type    | Description             |
@@ -233,9 +233,9 @@ A sequence of the token's immediate syntactic children.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > give_children = doc[0].children
-> assert [t.text for t in give_children] == [u"it", u"back", u"!"]
+> assert [t.text for t in give_children] == ["it", "back", "!"]
 > ```
 
 | Name       | Type    | Description                                 |
@@ -249,9 +249,9 @@ The leftward immediate children of the word, in the syntactic dependency parse.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > lefts = [t.text for t in doc[3].lefts]
-> assert lefts == [u'New']
+> assert lefts == ["New"]
 > ```
 
 | Name       | Type    | Description                |
@@ -265,9 +265,9 @@ The rightward immediate children of the word, in the syntactic dependency parse.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > rights = [t.text for t in doc[3].rights]
-> assert rights == [u"in"]
+> assert rights == ["in"]
 > ```
 
 | Name       | Type    | Description                 |
@@ -282,7 +282,7 @@ dependency parse.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > assert doc[3].n_lefts == 1
 > ```
 
@@ -298,7 +298,7 @@ dependency parse.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > assert doc[3].n_rights == 1
 > ```
 
@@ -313,9 +313,9 @@ A sequence containing the token and all the token's syntactic descendants.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > give_subtree = doc[0].subtree
-> assert [t.text for t in give_subtree] == [u"Give", u"it", u"back", u"!"]
+> assert [t.text for t in give_subtree] == ["Give", "it", "back", "!"]
 > ```
 
 | Name       | Type    | Description                                                                |
@@ -330,7 +330,7 @@ unknown. Defaults to `True` for the first token in the `Doc`.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > assert doc[4].is_sent_start
 > assert not doc[5].is_sent_start
 > ```
@@ -361,7 +361,7 @@ A boolean value indicating whether a word vector is associated with the token.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > apples = doc[2]
 > assert apples.has_vector
 > ```
@@ -377,7 +377,7 @@ A real-valued meaning representation.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > apples = doc[2]
 > assert apples.vector.dtype == "float32"
 > assert apples.vector.shape == (300,)
@@ -394,7 +394,7 @@ The L2 norm of the token's vector representation.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples and pasta")
+> doc = nlp("I like apples and pasta")
 > apples = doc[2]
 > pasta = doc[4]
 > apples.vector_norm  # 6.89589786529541
@@ -425,7 +425,7 @@ The L2 norm of the token's vector representation.
 | `i`                                          | int          | The index of the token within the parent document.                                                                                                                                                                            |
 | `ent_type`                                   | int          | Named entity type.                                                                                                                                                                                                            |
 | `ent_type_`                                  | unicode      | Named entity type.                                                                                                                                                                                                            |
-| `ent_iob`                                    | int          | IOB code of named entity tag. `3` means the token begins an entity, `2` means it is outside an entity, `1` means it is inside an entity, and `0` means no entity tag is set.                                                  | 
+| `ent_iob`                                    | int          | IOB code of named entity tag. `3` means the token begins an entity, `2` means it is outside an entity, `1` means it is inside an entity, and `0` means no entity tag is set.                                                  |
 | `ent_iob_`                                   | unicode      | IOB code of named entity tag. "B" means the token begins an entity, "I" means it is inside an entity, "O" means it is outside an entity, and "" means no entity tag is set.                                                   |
 | `ent_kb_id` <Tag variant="new">2.2</Tag>     | int          | Knowledge base ID that refers to the named entity this token is a part of, if any.                                                                                                                                            |
 | `ent_kb_id_` <Tag variant="new">2.2</Tag>    | unicode      | Knowledge base ID that refers to the named entity this token is a part of, if any.                                                                                                                                            |

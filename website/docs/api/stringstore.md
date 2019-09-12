@@ -16,7 +16,7 @@ Create the `StringStore`.
 >
 > ```python
 > from spacy.strings import StringStore
-> stringstore = StringStore([u"apple", u"orange"])
+> stringstore = StringStore(["apple", "orange"])
 > ```
 
 | Name        | Type          | Description                                        |
@@ -31,7 +31,7 @@ Get the number of strings in the store.
 > #### Example
 >
 > ```python
-> stringstore = StringStore([u"apple", u"orange"])
+> stringstore = StringStore(["apple", "orange"])
 > assert len(stringstore) == 2
 > ```
 
@@ -46,10 +46,10 @@ Retrieve a string from a given hash, or vice versa.
 > #### Example
 >
 > ```python
-> stringstore = StringStore([u"apple", u"orange"])
-> apple_hash = stringstore[u"apple"]
+> stringstore = StringStore(["apple", "orange"])
+> apple_hash = stringstore["apple"]
 > assert apple_hash == 8566208034543834098
-> assert stringstore[apple_hash] == u"apple"
+> assert stringstore[apple_hash] == "apple"
 > ```
 
 | Name           | Type                     | Description                |
@@ -64,9 +64,9 @@ Check whether a string is in the store.
 > #### Example
 >
 > ```python
-> stringstore = StringStore([u"apple", u"orange"])
-> assert u"apple" in stringstore
-> assert not u"cherry" in stringstore
+> stringstore = StringStore(["apple", "orange"])
+> assert "apple" in stringstore
+> assert not "cherry" in stringstore
 > ```
 
 | Name        | Type    | Description                            |
@@ -82,9 +82,9 @@ store will always include an empty string `''` at position `0`.
 > #### Example
 >
 > ```python
-> stringstore = StringStore([u"apple", u"orange"])
+> stringstore = StringStore(["apple", "orange"])
 > all_strings = [s for s in stringstore]
-> assert all_strings == [u"apple", u"orange"]
+> assert all_strings == ["apple", "orange"]
 > ```
 
 | Name       | Type    | Description            |
@@ -98,12 +98,12 @@ Add a string to the `StringStore`.
 > #### Example
 >
 > ```python
-> stringstore = StringStore([u"apple", u"orange"])
-> banana_hash = stringstore.add(u"banana")
+> stringstore = StringStore(["apple", "orange"])
+> banana_hash = stringstore.add("banana")
 > assert len(stringstore) == 3
 > assert banana_hash == 2525716904149915114
-> assert stringstore[banana_hash] == u"banana"
-> assert stringstore[u"banana"] == banana_hash
+> assert stringstore[banana_hash] == "banana"
+> assert stringstore["banana"] == banana_hash
 > ```
 
 | Name        | Type    | Description              |
@@ -182,7 +182,7 @@ Get a 64-bit hash for a given string.
 >
 > ```python
 > from spacy.strings import hash_string
-> assert hash_string(u"apple") == 8566208034543834098
+> assert hash_string("apple") == 8566208034543834098
 > ```
 
 | Name        | Type    | Description         |

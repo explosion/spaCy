@@ -13,13 +13,13 @@ Create a Span object from the slice `doc[start : end]`.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
-> assert [t.text for t in span] ==  [u"it", u"back", u"!"]
+> assert [t.text for t in span] ==  ["it", "back", "!"]
 > ```
 
 | Name        | Type                                     | Description                                                                                                       |
-| ----------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------|
+| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `doc`       | `Doc`                                    | The parent document.                                                                                              |
 | `start`     | int                                      | The index of the first token of the span.                                                                         |
 | `end`       | int                                      | The index of the first token after the span.                                                                      |
@@ -35,7 +35,7 @@ Get a `Token` object.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
 > assert span[1].text == "back"
 > ```
@@ -50,9 +50,9 @@ Get a `Span` object.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
-> assert span[1:3].text == u"back!"
+> assert span[1:3].text == "back!"
 > ```
 
 | Name        | Type   | Description                      |
@@ -67,9 +67,9 @@ Iterate over `Token` objects.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
-> assert [t.text for t in span] == [u"it", u"back", u"!"]
+> assert [t.text for t in span] == ["it", "back", "!"]
 > ```
 
 | Name       | Type    | Description       |
@@ -83,7 +83,7 @@ Get the number of tokens in the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
 > assert len(span) == 3
 > ```
@@ -102,9 +102,9 @@ For details, see the documentation on
 >
 > ```python
 > from spacy.tokens import Span
-> city_getter = lambda span: any(city in span.text for city in (u"New York", u"Paris", u"Berlin"))
+> city_getter = lambda span: any(city in span.text for city in ("New York", "Paris", "Berlin"))
 > Span.set_extension("has_city", getter=city_getter)
-> doc = nlp(u"I like New York in Autumn")
+> doc = nlp("I like New York in Autumn")
 > assert doc[1:4]._.has_city
 > ```
 
@@ -180,7 +180,7 @@ using an average of word vectors.
 > #### Example
 >
 > ```python
-> doc = nlp(u"green apples and red oranges")
+> doc = nlp("green apples and red oranges")
 > green_apples = doc[:2]
 > red_oranges = doc[3:]
 > apples_oranges = green_apples.similarity(red_oranges)
@@ -202,7 +202,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn")
+> doc = nlp("I like New York in Autumn")
 > span = doc[1:4]
 > matrix = span.get_lca_matrix()
 > # array([[0, 0, 0], [0, 1, 2], [0, 2, 2]], dtype=int32)
@@ -222,7 +222,7 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 >
 > ```python
 > from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > span = doc[2:3]
 > # All strings mapped to integers, for easy export to numpy
 > np_array = span.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
@@ -248,11 +248,11 @@ Retokenize the document, such that the span is merged into a single token.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > span = doc[2:4]
 > span.merge()
 > assert len(doc) == 6
-> assert doc[2].text == u"New York"
+> assert doc[2].text == "New York"
 > ```
 
 | Name           | Type    | Description                                                                                                               |
@@ -268,12 +268,12 @@ if the entity recognizer has been applied.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Mr. Best flew to New York on Saturday morning.")
+> doc = nlp("Mr. Best flew to New York on Saturday morning.")
 > span = doc[0:6]
 > ents = list(span.ents)
 > assert ents[0].label == 346
 > assert ents[0].label_ == "PERSON"
-> assert ents[0].text == u"Mr. Best"
+> assert ents[0].text == "Mr. Best"
 > ```
 
 | Name        | Type  | Description                                  |
@@ -287,10 +287,10 @@ Create a new `Doc` object corresponding to the `Span`, with a copy of the data.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > span = doc[2:4]
 > doc2 = span.as_doc()
-> assert doc2.text == u"New York"
+> assert doc2.text == "New York"
 > ```
 
 | Name        | Type  | Description                             |
@@ -306,12 +306,12 @@ taken.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > i, like, new, york, in_, autumn, dot = range(len(doc))
-> assert doc[new].head.text == u"York"
-> assert doc[york].head.text == u"like"
+> assert doc[new].head.text == "York"
+> assert doc[york].head.text == "like"
 > new_york = doc[new:york+1]
-> assert new_york.root.text == u"York"
+> assert new_york.root.text == "York"
 > ```
 
 | Name        | Type    | Description     |
@@ -325,9 +325,9 @@ A tuple of tokens coordinated to `span.root`.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples and oranges")
+> doc = nlp("I like apples and oranges")
 > apples_conjuncts = doc[2:3].conjuncts
-> assert [t.text for t in apples_conjuncts] == [u"oranges"]
+> assert [t.text for t in apples_conjuncts] == ["oranges"]
 > ```
 
 | Name        | Type    | Description             |
@@ -341,9 +341,9 @@ Tokens that are to the left of the span, whose heads are within the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > lefts = [t.text for t in doc[3:7].lefts]
-> assert lefts == [u"New"]
+> assert lefts == ["New"]
 > ```
 
 | Name       | Type    | Description                          |
@@ -357,9 +357,9 @@ Tokens that are to the right of the span, whose heads are within the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > rights = [t.text for t in doc[2:4].rights]
-> assert rights == [u"in"]
+> assert rights == ["in"]
 > ```
 
 | Name       | Type    | Description                           |
@@ -374,7 +374,7 @@ the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > assert doc[3:7].n_lefts == 1
 > ```
 
@@ -390,7 +390,7 @@ the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > assert doc[2:4].n_rights == 1
 > ```
 
@@ -405,9 +405,9 @@ Tokens within the span and tokens which descend from them.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > subtree = [t.text for t in doc[:3].subtree]
-> assert subtree == [u"Give", u"it", u"back", u"!"]
+> assert subtree == ["Give", "it", "back", "!"]
 > ```
 
 | Name       | Type    | Description                                       |
@@ -421,7 +421,7 @@ A boolean value indicating whether a word vector is associated with the object.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > assert doc[1:].has_vector
 > ```
 
@@ -437,7 +437,7 @@ vectors.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > assert doc[1:].vector.dtype == "float32"
 > assert doc[1:].vector.shape == (300,)
 > ```
@@ -453,7 +453,7 @@ The L2 norm of the span's vector representation.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > doc[1:].vector_norm # 4.800883928527915
 > doc[2:].vector_norm # 6.895897646384268
 > assert doc[1:].vector_norm != doc[2:].vector_norm

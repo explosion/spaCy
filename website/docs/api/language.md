@@ -45,7 +45,7 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 > #### Example
 >
 > ```python
-> doc = nlp(u"An example sentence. Another sentence.")
+> doc = nlp("An example sentence. Another sentence.")
 > assert (doc[0].text, doc[0].head.tag_) == ("An", "NN")
 > ```
 
@@ -61,8 +61,8 @@ Pipeline components to prevent from being loaded can now be added as a list to
 `disable`, instead of specifying one keyword argument per component.
 
 ```diff
-- doc = nlp(u"I don't want parsed", parse=False)
-+ doc = nlp(u"I don't want parsed", disable=["parser"])
+- doc = nlp("I don't want parsed", parse=False)
++ doc = nlp("I don't want parsed", disable=["parser"])
 ```
 
 </Infobox>
@@ -86,7 +86,7 @@ multiprocessing.
 > #### Example
 >
 > ```python
-> texts = [u"One document.", u"...", u"Lots of documents"]
+> texts = ["One document.", "...", "Lots of documents"]
 > for doc in nlp.pipe(texts, batch_size=50):
 >     assert doc.is_parsed
 > ```
