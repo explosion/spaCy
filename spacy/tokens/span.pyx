@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 cimport numpy as np
 from libc.math cimport sqrt
-from libcpp cimport bool
 
 import numpy
 import numpy.linalg
@@ -201,7 +200,7 @@ cdef class Span:
         return Underscore(Underscore.span_extensions, self,
                           start=self.start_char, end=self.end_char)
 
-    def as_doc(self, bool copy_user_data=False):
+    def as_doc(self, bint copy_user_data=False):
         """Create a `Doc` object with a copy of the `Span`'s data.
 
         copy_user_data (bool): Whether or not to copy the original doc's user data.
@@ -211,8 +210,7 @@ cdef class Span:
         """
         # TODO: make copy_user_data a keyword-only argument (Python 3 only)
         words = [t.text for t in self]
-        # we can't use bool() because it clashes with the bool import from libcpp
-        spaces = [False if not t.whitespace_ else True for t in self]
+        spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_KB_ID]
         if self.doc.is_tagged:
