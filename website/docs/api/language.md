@@ -443,16 +443,16 @@ per component.
 
 ## Attributes {#attributes}
 
-| Name                                    | Type               | Description                                                                                     |
-| --------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------- |
-| `vocab`                                 | `Vocab`            | A container for the lexical types.                                                              |
-| `tokenizer`                             | `Tokenizer`        | The tokenizer.                                                                                  |
-| `make_doc`                              | `callable` | Callable that takes a unicode text and returns a `Doc`.                                                       |
-| `pipeline`                              | list               | List of `(name, component)` tuples describing the current processing pipeline, in order.        |
-| `pipe_names` <Tag variant="new">2</Tag> | list               | List of pipeline component names, in order.                                                     |
-| `pipe_labels` <Tag variant="new">2.2</Tag> | dict               | List of labels set by the pipeline components, if available, keyed by component name.                                                     |
-| `meta`                                  | dict               | Custom meta data for the Language class. If a model is loaded, contains meta data of the model. |
-| `path` <Tag variant="new">2</Tag>       | `Path`             | Path to the model data directory, if a model is loaded. Otherwise `None`.                       |
+| Name                                       | Type        | Description                                                                                     |
+| ------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------- |
+| `vocab`                                    | `Vocab`     | A container for the lexical types.                                                              |
+| `tokenizer`                                | `Tokenizer` | The tokenizer.                                                                                  |
+| `make_doc`                                 | `callable`  | Callable that takes a unicode text and returns a `Doc`.                                         |
+| `pipeline`                                 | list        | List of `(name, component)` tuples describing the current processing pipeline, in order.        |
+| `pipe_names` <Tag variant="new">2</Tag>    | list        | List of pipeline component names, in order.                                                     |
+| `pipe_labels` <Tag variant="new">2.2</Tag> | dict        | List of labels set by the pipeline components, if available, keyed by component name.           |
+| `meta`                                     | dict        | Custom meta data for the Language class. If a model is loaded, contains meta data of the model. |
+| `path` <Tag variant="new">2</Tag>          | `Path`      | Path to the model data directory, if a model is loaded. Otherwise `None`.                       |
 
 ## Class attributes {#class-attributes}
 
