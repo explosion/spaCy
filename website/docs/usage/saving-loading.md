@@ -491,13 +491,13 @@ SnekLanguage = get_lang_class("snk")
 nlp = SnekLanguage()
 ```
 
-### Custom displaCy colors via entry points {#entry-points-displacy}
+### Custom displaCy colors via entry points {#entry-points-displacy new="2.2"}
 
 If you're training a named entity recognition model for a custom domain, you may
 end up training different labels that don't have pre-defined colors in the
 [`displacy` visualizer](/usage/visualizers#ent). The `spacy_displacy_colors`
 entry point lets you define a dictionary of entity labels mapped to their color
-values. It's added to the existing pre-defined colors and can also overwrite
+values. It's added to the pre-defined colors and can also overwrite
 existing values.
 
 > #### Domain-specific NER labels
