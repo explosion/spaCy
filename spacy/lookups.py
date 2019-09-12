@@ -32,7 +32,7 @@ class Lookups(object):
         Lookups.has_table.
 
         name (unicode): Name of the table.
-        RETURNS (bool): Whether a table of that name exists.
+        RETURNS (bool): Whether a table of that name is in the lookups.
         """
         return self.has_table(name)
 
@@ -72,7 +72,7 @@ class Lookups(object):
     def remove_table(self, name):
         """Remove a table. Raises an error if the table doesn't exist.
 
-        name (unicode): The name to remove.
+        name (unicode): Name of the table to remove.
         RETURNS (Table): The removed table.
         """
         if name not in self._tables:
@@ -87,19 +87,18 @@ class Lookups(object):
         """
         return name in self._tables
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, **kwargs):
         """Serialize the lookups to a bytestring.
 
-        exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized Lookups.
         """
         return srsly.msgpack_dumps(self._tables)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, **kwargs):
         """Load the lookups from a bytestring.
 
-        exclude (list): String names of serialization fields to exclude.
-        RETURNS (bytes): The loaded Lookups.
+        bytes_data (bytes): The data to load.
+        RETURNS (Lookups): The loaded Lookups.
         """
         self._tables = OrderedDict()
         msg = srsly.msgpack_loads(bytes_data)
@@ -108,7 +107,8 @@ class Lookups(object):
         return self
 
     def to_disk(self, path, **kwargs):
-        """Save the lookups to a directory as lookups.bin.
+        """Save the lookups to a directory as lookups.bin. Expects a path to a
+        directory, which will be created if it doesn't exist.
 
         path (unicode / Path): The file path.
         """
@@ -121,9 +121,10 @@ class Lookups(object):
                 file_.write(self.to_bytes())
 
     def from_disk(self, path, **kwargs):
-        """Load lookups from a directory containing a lookups.bin.
+        """Load lookups from a directory containing a lookups.bin. Will skip
+        loading if the file doesn't exist.
 
-        path (unicode / Path): The file path.
+        path (unicode / Path): The directory path.
         RETURNS (Lookups): The loaded lookups.
         """
         path = ensure_path(path)
@@ -136,12 +137,18 @@ class Lookups(object):
 
 
 class Table(OrderedDict):
-    """A table in the lookups. Subclass of builtin dict that implements a
+    """A table in the lookups. Subclass of OrderedDict that implements a
     slightly more consistent and unified API.
     """
 
     @classmethod
     def from_dict(cls, data, name=None):
+        """Initialize a new table from a dict.
+
+        data (dict): The dictionary.
+        name (unicode): Optional table name for reference.
+        RETURNS (Table): The newly created object.
+        """
         self = cls(name=name)
         self.update(data)
         return self

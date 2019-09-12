@@ -293,6 +293,7 @@ Load state from a binary string.
 | `strings`                                     | `StringStore` | A table managing the string-to-int mapping.                  |
 | `vectors` <Tag variant="new">2</Tag>          | `Vectors`     | A table associating word IDs to word vectors.                |
 | `vectors_length`                              | int           | Number of dimensions for each word vector.                   |
+| `lookups`                                     | `Lookups`     | The available lookup tables in this vocab.                   |
 | `writing_system` <Tag variant="new">2.1</Tag> | dict          | A dict with information about the language's writing system. |
 
 ## Serialization fields {#serialization-fields}
@@ -313,3 +314,4 @@ serialization by passing in the string names via the `exclude` argument.
 | `strings` | The strings in the [`StringStore`](/api/stringstore). |
 | `lexemes` | The lexeme data.                                      |
 | `vectors` | The word vectors, if available.                       |
+| `lookups` | The lookup tables, if available.                      |

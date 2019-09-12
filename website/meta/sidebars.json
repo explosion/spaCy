@@ -90,6 +90,7 @@
                     { "text": "Vocab", "url": "/api/vocab" },
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
+                    { "text": "Lookups", "url": "/api/lookups" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "GoldParse", "url": "/api/goldparse" },
                     { "text": "GoldCorpus", "url": "/api/goldcorpus" },
