@@ -211,7 +211,8 @@ cdef class Span:
         """
         # TODO: make copy_user_data a keyword-only argument (Python 3 only)
         words = [t.text for t in self]
-        spaces = [bool(t.whitespace_) for t in self]
+        # we can't use bool() because it clashes with the bool import from libcpp
+        spaces = [False if not t.whitespace_ else True for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_KB_ID]
         if self.doc.is_tagged:
