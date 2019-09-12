@@ -208,6 +208,7 @@ class Language(object):
             "name": self.vocab.vectors.name,
         }
         self._meta["pipeline"] = self.pipe_names
+        self._meta["labels"] = self.pipe_labels
         return self._meta
 
     @meta.setter
