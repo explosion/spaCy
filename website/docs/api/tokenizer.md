@@ -118,8 +118,8 @@ and examples.
 > #### Example
 >
 > ```python
-> from spacy.attrs import ORTH, LEMMA
-> case = [{ORTH: "do"}, {ORTH: "n't", LEMMA: "not"}]
+> from spacy.attrs import ORTH, NORM
+> case = [{ORTH: "do"}, {ORTH: "n't", NORM: "not"}]
 > tokenizer.add_special_case("don't", case)
 > ```
 

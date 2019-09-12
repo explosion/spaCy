@@ -649,7 +649,7 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 data in
 [`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang). The
 tokenizer exceptions define special cases like "don't" in English, which needs
-to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", LEMMA: "not"}`.
+to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", NORM: "not"}`.
 The prefixes, suffixes and infixes mostly define punctuation rules – for
 example, when to split off periods (at the end of a sentence), and when to leave
 tokens containing periods intact (abbreviations like "U.S.").

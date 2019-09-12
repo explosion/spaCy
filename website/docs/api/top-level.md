@@ -514,9 +514,9 @@ an error if key doesn't match `ORTH` values.
 >
 > ```python
 > BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
-> NEW = {"a.": [{ORTH: "a.", LEMMA: "all"}]}
+> NEW = {"a.": [{ORTH: "a.", NORM: "all"}]}
 > exceptions = util.update_exc(BASE, NEW)
-> # {"a.": [{ORTH: "a.", LEMMA: "all"}], ":)": [{ORTH: ":)"}]}
+> # {"a.": [{ORTH: "a.", NORM: "all"}], ":)": [{ORTH: ":)"}]}
 > ```
 
 | Name              | Type  | Description                                                     |
