@@ -18,10 +18,10 @@ from .structs cimport SerializedLexemeC
 from .compat import copy_reg, basestring_
 from .errors import Errors
 from .lemmatizer import Lemmatizer
-from .lookups import Lookups
 from .attrs import intify_attrs, NORM
 from .vectors import Vectors
 from ._ml import link_vectors_to_models
+from .lookups import Lookups
 from . import util
 
 

@@ -273,7 +273,7 @@ cdef class Morphology:
         """
         if token.lemma == 0:
             orth_str = self.strings[token.lex.orth]
-            lemma = self.lemmatizer.lookup(orth_str)
+            lemma = self.lemmatizer.lookup(token.lex.orth, orth_str)
             token.lemma = self.strings.add(lemma)
 
     cdef int assign_tag(self, TokenC* token, tag_str) except -1:

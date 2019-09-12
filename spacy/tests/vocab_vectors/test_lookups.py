@@ -19,9 +19,9 @@ def test_lookups_api():
     table = lookups.get_table(table_name)
     assert table.name == table_name
     assert len(table) == 2
-    assert table.get("hello") == "world"
-    table.set("a", "b")
-    assert table.get("a") == "b"
+    assert table.get_string("hello") == "world"
+    table.set_string("a", "b")
+    assert table.get_string("a") == "b"
     table = lookups.get_table(table_name)
     assert len(table) == 3
     with pytest.raises(KeyError):
@@ -50,10 +50,10 @@ def test_lookups_to_from_bytes():
     assert "table2" in new_lookups
     table1 = new_lookups.get_table("table1")
     assert len(table1) == 2
-    assert table1.get("foo") == "bar"
+    assert table1.get_string("foo") == "bar"
     table2 = new_lookups.get_table("table2")
     assert len(table2) == 3
-    assert table2.get("b") == 2
+    assert table2.get_string("b") == 2
     assert new_lookups.to_bytes() == lookups_bytes
 
 
@@ -72,10 +72,11 @@ def test_lookups_to_from_disk():
     assert "table2" in new_lookups
     table1 = new_lookups.get_table("table1")
     assert len(table1) == 2
-    assert table1.get("foo") == "bar"
+    assert table1.get_string("foo") == "bar"
     table2 = new_lookups.get_table("table2")
     assert len(table2) == 3
-    assert table2.get("b") == 2
+    assert table2.get_string("b") == 2
+
 
 
 # This fails on Python 3.5
@@ -93,9 +94,8 @@ def test_lookups_to_from_bytes_via_vocab():
     assert table_name in new_vocab.lookups
     table = new_vocab.lookups.get_table(table_name)
     assert len(table) == 2
-    assert table.get("hello") == "world"
+    assert table.get_string("hello") == "world"
     assert new_vocab.to_bytes() == vocab_bytes
-
 
 # This fails on Python 3.5
 @pytest.mark.xfail
@@ -113,4 +113,4 @@ def test_lookups_to_from_disk_via_vocab():
     assert table_name in new_vocab.lookups
     table = new_vocab.lookups.get_table(table_name)
     assert len(table) == 2
-    assert table.get("hello") == "world"
+    assert table.get_string("hello") == "world"

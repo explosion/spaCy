@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 from __future__ import unicode_literals
 
 import srsly
@@ -6,7 +6,12 @@ from collections import OrderedDict
 
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path
+from .strings import hash_string
 
+from . import util
+
+import srsly
+from preshed.bloom import BloomFilter
 
 class Lookups(object):
     """Container for large lookup tables and dictionaries, e.g. lemmatization
@@ -14,10 +19,6 @@ class Lookups(object):
     so they can be accessed before the pipeline components are applied (e.g.
     in the tokenizer and lemmatizer), as well as within the pipeline components
     via doc.vocab.lookups.
-
-    Important note: At the moment, this class only performs a very basic
-    dictionary lookup. We're planning to replace this with a more efficient
-    implementation. See #3971 for details.
     """
 
     def __init__(self):
@@ -54,8 +55,7 @@ class Lookups(object):
         """
         if name in self.tables:
             raise ValueError(Errors.E158.format(name=name))
-        table = Table(name=name)
-        table.update(data)
+        table = Table(name=name, data=data)
         self._tables[name] = table
         return table
 
@@ -100,10 +100,9 @@ class Lookups(object):
         bytes_data (bytes): The data to load.
         RETURNS (Lookups): The loaded Lookups.
         """
-        self._tables = OrderedDict()
-        msg = srsly.msgpack_loads(bytes_data)
-        for key, value in msg.items():
-            self._tables[key] = Table.from_dict(value)
+        for key, value in srsly.msgpack_loads(bytes_data).items():
+            self._tables[key] = Table(key)
+            self._tables[key].update_raw(value)
         return self
 
     def to_disk(self, path, **kwargs):
@@ -137,8 +136,10 @@ class Lookups(object):
 
 
 class Table(OrderedDict):
-    """A table in the lookups. Subclass of OrderedDict that implements a
-    slightly more consistent and unified API.
+    """A table in the lookups. Subclass of builtin dict that implements a
+    slightly more consistent and unified API. 
+
+    Includes a Bloom filter to speed up missed lookups.
     """
 
     @classmethod
@@ -153,15 +154,81 @@ class Table(OrderedDict):
         self.update(data)
         return self
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, data=None):
         """Initialize a new table.
 
         name (unicode): Optional table name for reference.
+        data (dict): Initial data, used to hint Bloom Filter.
         RETURNS (Table): The newly created object.
         """
         OrderedDict.__init__(self)
         self.name = name
+        # assume a default size of 1M items
+        size = 1E6
+        if data and len(data) > 0:
+            size = len(data)
 
-    def set(self, key, value):
-        """Set new key/value pair. Same as table[key] = value."""
+        self.bloom = BloomFilter.from_error_rate(size)
+
+        if data:
+            self.update(data)
+
+    def set(self, key, value): 
+        """Set new key/value pair, where key is an integer. Same as
+        table[key] = value.
+        """
         self[key] = value
+
+    def __setitem__(self, key, value):
+        OrderedDict.__setitem__(self, key, value)
+        self.bloom.add(key)
+
+    def set_string(self, key, value):
+        """Set new key/value pair, where key is a string to be hashed.
+        """
+        hkey = hash_string(key)
+        self.set(hkey, value)
+
+    def update(self, data):
+        """Add entries in a dict-like to the table, where keys are strings to
+        be hashed.
+        """
+        for key, val in data.items():
+            self.set_string(key, val)
+
+    def update_raw(self, data):
+        """Add entries in a dict-like to the table, where keys are ints.
+        """
+        for key, val in data.items():
+            self.set(key, val)
+
+    def get(self, key, default=None):
+        return OrderedDict.get(self, key, default)
+
+    def get_string(self, key, default=None):
+        hkey = hash_string(key)
+        return OrderedDict.get(self, hkey, default)
+
+    def __contains__(self, key):
+        # This can give a false positive, so we need to check it after
+        if key not in self.bloom: 
+            return False
+        return OrderedDict.__contains__(self, key)
+
+    def contains_string(self, key):
+        hkey = hash_string(key)
+        return self.__contains__(hkey)
+
+    def to_bytes(self):
+        # TODO: serialize bloom too. For now just reconstruct it.
+        return srsly.msgpack_dumps({'name': self.name, 'dict': dict(self.items())})
+
+    def from_bytes(self, data):
+        loaded = srsly.msgpack_loads(data)
+        self.name = loaded['name']
+        for key, val in loaded['dict'].items():
+            self[key] = val
+            self.bloom.add(key)
+
+        return self
+

@@ -32,6 +32,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS, is_stop
 from .errors import Errors, Warnings, deprecation_warning
+from .strings import hash_string
 from . import util
 from . import about
 
