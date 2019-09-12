@@ -35,8 +35,8 @@ Lemmatize a string.
 >
 > ```python
 > from spacy.lemmatizer import Lemmatizer
-> from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
-> lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
+> rules = {"noun": [["s", ""]]}
+> lemmatizer = Lemmatizer(index={}, exceptions={}, rules=rules)
 > lemmas = lemmatizer("ducks", "NOUN")
 > assert lemmas == ["duck"]
 > ```
