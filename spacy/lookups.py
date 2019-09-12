@@ -114,6 +114,8 @@ class Lookups(object):
         """
         if len(self._tables):
             path = ensure_path(path)
+            if not path.exists():
+                path.mkdir()
             filepath = path / "lookups.bin"
             with filepath.open("wb") as file_:
                 file_.write(self.to_bytes())
