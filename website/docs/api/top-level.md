@@ -266,11 +266,12 @@ If a setting is not present in the options, the default value will be used.
 | -------- | ---- | ------------------------------------------------------------------------------------- | ------- |
 | `ents`   | list | Entity types to highlight (`None` for all types).                                     | `None`  |
 | `colors` | dict | Color overrides. Entity types in uppercase should be mapped to color names or values. | `{}`    |
+| `template` <Tag variant="new">2.2</Tag> | unicode | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. | see [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) |
 
 By default, displaCy comes with colors for all
 [entity types supported by spaCy](/api/annotation#named-entities). If you're
 using custom entity types, you can use the `colors` setting to add your own
-colors for them.
+colors for them. Your application or model package can also expose a [`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy) to add custom labels and their colors automatically.
 
 ## Utility functions {#util source="spacy/util.py"}
 
