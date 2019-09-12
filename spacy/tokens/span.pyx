@@ -200,7 +200,7 @@ cdef class Span:
         return Underscore(Underscore.span_extensions, self,
                           start=self.start_char, end=self.end_char)
 
-    def as_doc(self, copy_user_data=False):
+    def as_doc(self, bool copy_user_data=False):
         """Create a `Doc` object with a copy of the `Span`'s data.
 
         copy_user_data (bool): Whether or not to copy the original doc's user data.
@@ -208,6 +208,7 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#as_doc
         """
+        # TODO: make copy_user_data a keyword-only argument (Python 3 only)
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
