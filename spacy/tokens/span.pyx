@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 cimport numpy as np
 from libc.math cimport sqrt
+from libcpp cimport bool
 
 import numpy
 import numpy.linalg
