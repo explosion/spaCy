@@ -134,6 +134,8 @@ def main(
                     batchnr += 1
                 except Exception as e:
                     logger.error("Error updating batch:" + str(e))
+        if batchnr > 0:
+            logging.info("Epoch {}, train loss {}".format(itn, round(losses["entity_linker"] / batchnr, 2)))
         measure_performance(dev_data, kb, el_pipe)
 
     # STEP 4: measure the performance of our trained pipe on an independent dev set
