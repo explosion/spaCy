@@ -67,7 +67,7 @@ class Pipe(object):
         """
         self.require_model()
         predictions = self.predict([doc])
-        if isinstance(predictions, tuple) and len(tuple) == 2:
+        if isinstance(predictions, tuple) and len(predictions) == 2:
             scores, tensors = predictions
             self.set_annotations([doc], scores, tensor=tensors)
         else:
@@ -1067,7 +1067,7 @@ cdef class DependencyParser(Parser):
     @property
     def labels(self):
         # Get the labels from the model by looking at the available moves
-        return tuple(set(move.split("-")[1] for move in self.move_names))
+        return tuple(set(move.split("-")[1] for move in self.move_names if "-" in move))
 
 
 cdef class EntityRecognizer(Parser):

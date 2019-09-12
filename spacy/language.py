@@ -214,6 +214,7 @@ class Language(object):
             "name": self.vocab.vectors.name,
         }
         self._meta["pipeline"] = self.pipe_names
+        self._meta["labels"] = self.pipe_labels
         return self._meta
 
     @meta.setter
@@ -253,6 +254,18 @@ class Language(object):
         RETURNS (list): List of component name strings, in order.
         """
         return [pipe_name for pipe_name, _ in self.pipeline]
+
+    @property
+    def pipe_labels(self):
+        """Get the labels set by the pipeline components, if available.
+
+        RETURNS (dict): Labels keyed by component name.
+        """
+        labels = OrderedDict()
+        for name, pipe in self.pipeline:
+            if hasattr(pipe, "labels"):
+                labels[name] = list(pipe.labels)
+        return labels
 
     def get_pipe(self, name):
         """Get a pipeline component for a given component name.
