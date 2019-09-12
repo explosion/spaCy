@@ -238,13 +238,31 @@ custom components to spaCy automatically.
 
 ## Using entry points {#entry-points new="2.1"}
 
+Entry points let you expose parts of a Python package you write to other Python
+packages. This lets one application easily customize the behavior of another, by
+exposing an entry point in its `setup.py`. For a quick and fun intro to entry
+points in Python, check out
+[this excellent blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/).
+spaCy can load custom function from several different entry points to add
+pipeline component factories, language classes and other settings. To make spaCy
+use your entry points, your package needs to expose them and it needs to be
+installed in the same environment – that's it.
+
+| Entry point                                                                    | Description                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories to add to [`Language.factories`](/usage/processing-pipelines#custom-components-factories), keyed by component name.                                                                               |
+| [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/adding-languages), keyed by language shortcut.                                                                                                                                           |
+| [`spacy_displacy_colors`](#entry-points-displacy) <Tag variant="new">2.2</Tag> | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
+
+### Custom components via entry points {#entry-points-components}
+
 When you load a model, spaCy will generally use the model's `meta.json` to set
 up the language class and construct the pipeline. The pipeline is specified as a
 list of strings, e.g. `"pipeline": ["tagger", "paser", "ner"]`. For each of
 those strings, spaCy will call `nlp.create_pipe` and look up the name in the
-[built-in factories](#custom-components-factories). If your model wanted to
-specify its own custom components, you usually have to write to
-`Language.factories` _before_ loading the model.
+[built-in factories](/usage/processing-pipelines#custom-components-factories).
+If your model wanted to specify its own custom components, you usually have to
+write to `Language.factories` _before_ loading the model.
 
 ```python
 pipe = nlp.create_pipe("custom_component")  # fails 👎
@@ -260,13 +278,11 @@ added to the built-in factories when the `Language` class is initialized. If a
 package in the same environment exposes spaCy entry points, all of this happens
 automatically and no further user action is required.
 
-#### Custom components via entry points {#entry-points-components}
-
-For a quick and fun intro to entry points in Python, I recommend
-[this excellent blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/).
-To stick with the theme of the post, consider the following custom spaCy
-extension which is initialized with the shared `nlp` object and will print a
-snake when it's called as a pipeline component.
+To stick with the theme of
+[this entry points blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/),
+consider the following custom spaCy extension which is initialized with the
+shared `nlp` object and will print a snake when it's called as a pipeline
+component.
 
 > #### Package directory structure
 >
@@ -304,15 +320,13 @@ entry to the factories, you can now expose it in your `setup.py` via the
 `entry_points` dictionary:
 
 ```python
-### setup.py {highlight="5-8"}
+### setup.py {highlight="5-7"}
 from setuptools import setup
 
 setup(
     name="snek",
     entry_points={
-        "spacy_factories": [
-            "snek = snek:SnekFactory"
-         ]
+        "spacy_factories": ["snek = snek:SnekFactory"]
     }
 )
 ```
@@ -410,7 +424,7 @@ The above example will serialize the current snake in a `snek.txt` in the model
 data directory. When a model using the `snek` component is loaded, it will open
 the `snek.txt` and make it available to the component.
 
-#### Custom language classes via entry points {#entry-points-components}
+### Custom language classes via entry points {#entry-points-languages}
 
 To stay with the theme of the previous example and
 [this blog post on entry points](https://amir.rachum.com/blog/2017/07/28/python-entry-points/),
@@ -446,12 +460,8 @@ from setuptools import setup
 setup(
     name="snek",
     entry_points={
-        "spacy_factories": [
-            "snek = snek:SnekFactory"
-         ]
-+       "spacy_languages": [
-+           "sk = snek:SnekLanguage"
-+       ]
+        "spacy_factories": ["snek = snek:SnekFactory"],
++       "spacy_languages": ["snk = snek:SnekLanguage"]
     }
 )
 ```
@@ -480,6 +490,50 @@ from spacy.util import get_lang_class
 SnekLanguage = get_lang_class("snk")
 nlp = SnekLanguage()
 ```
+
+### Custom displaCy colors via entry points {#entry-points-displacy}
+
+If you're training a named entity recognition model for a custom domain, you may
+end up training different labels that don't have pre-defined colors in the
+[`displacy` visualizer](/usage/visualizers#ent). The `spacy_displacy_colors`
+entry point lets you define a dictionary of entity labels mapped to their color
+values. It's added to the existing pre-defined colors and can also overwrite
+existing values.
+
+> #### Domain-specific NER labels
+>
+> Good examples of models with domain-specific label schemes are
+> [scispaCy](/universe/project/scispacy) and
+> [Blackstone](/universe/project/blackstone).
+
+```python
+### snek.py
+displacy_colors = {"SNEK": "#3dff74", "HUMAN": "#cfc5ff"}
+```
+
+Given the above colors, the entry point can be defined as follows. Entry points
+need to have a name, so we use the key `colors`. However, the name doesn't
+matter and whatever is defined in the entry point group will be used.
+
+```diff
+### setup.py
+from setuptools import setup
+
+setup(
+    name="snek",
+    entry_points={
++       "spacy_displacy_colors": ["colors = snek:displacy_colors"]
+    }
+)
+```
+
+After installing the package, the the custom colors will be used when
+visualizing text with `displacy`. Whenever the label `SNEK` is assigned, it
+will be displayed in `#3dff74`.
+
+import DisplaCyEntSnekHtml from 'images/displacy-ent-snek.html'
+
+<Iframe title="displaCy visualization of entities" html={DisplaCyEntSnekHtml} height={100} />
 
 ## Saving, loading and distributing models {#models}
 
