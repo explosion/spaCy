@@ -317,6 +317,11 @@ def _write_training_entities(outputfile, article_id, clean_text, entities):
 
 
 def read_training(nlp, entity_file_path, dev, limit, kb):
+    """ This method provides training examples that correspond to the entity annotations found by the nlp object.
+     For training,, it will include negative training examples by using the candidate generator,
+     and it will only keep positive training examples that can be found by using the candidate generator.
+     For testing, it will include all positive examples only."""
+
     from tqdm import tqdm
     data = []
     num_entities = 0

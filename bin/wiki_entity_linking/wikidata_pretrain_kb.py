@@ -99,9 +99,9 @@ def main(
     wp.write_entity_counts(prior_prob_path, entity_freq_path, to_print=False)
 
     # STEP 4: reading definitions and (possibly) descriptions from WikiData or from file
+    message = " and descriptions" if not descriptions_from_wikipedia else ""
     if (not entity_defs_path.exists()) or (not descriptions_from_wikipedia and not entity_descr_path.exists()):
         # It takes about 10h to process 55M lines of Wikidata JSON dump
-        message = " and descriptions" if not descriptions_from_wikipedia else ""
         logger.info("STEP 4: parsing wikidata for entity definitions" + message)
         title_to_id, id_to_descr = wd.read_wikidata_entities_json(
             wd_json,
@@ -117,8 +117,8 @@ def main(
 
     # STEP 5: Getting gold entities from wikipedia
     message = " and descriptions" if descriptions_from_wikipedia else ""
-    logger.info("STEP 5: parsing wikipedia for gold entities" + message)
     if (not training_entities_path.exists()) or (descriptions_from_wikipedia and not entity_descr_path.exists()):
+        logger.info("STEP 5: parsing wikipedia for gold entities" + message)
         training_set_creator.create_training_examples_and_descriptions(
             wp_xml,
             entity_defs_path,

@@ -13,6 +13,9 @@ class Metrics(object):
 
     def update_results(self, true_entity, candidate):
         candidate_is_correct = true_entity == candidate
+
+        # Assume that we have no labeled negatives in the data (i.e. cases where true_entity is "NIL")
+        # Therefore, if candidate_is_correct then we have a true positive and never a true negative
         self.true_pos += candidate_is_correct
         self.false_neg += not candidate_is_correct
         if candidate not in {"", "NIL"}:

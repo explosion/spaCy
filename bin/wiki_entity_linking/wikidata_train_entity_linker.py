@@ -134,6 +134,7 @@ def main(
                     batchnr += 1
                 except Exception as e:
                     logger.error("Error updating batch:" + str(e))
+        measure_performance(dev_data, kb, el_pipe)
 
     # STEP 4: measure the performance of our trained pipe on an independent dev set
     logger.info("STEP 4: performance measurement of Entity Linking pipe")
