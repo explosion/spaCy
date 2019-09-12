@@ -10,9 +10,9 @@ menu:
 ---
 
 This guide describes how to train new statistical models for spaCy's
-part-of-speech tagger, named entity recognizer, dependency parser, 
-text classifier and entity linker. Once the model is trained, 
-you can then [save and load](/usage/saving-loading#models) it.
+part-of-speech tagger, named entity recognizer, dependency parser, text
+classifier and entity linker. Once the model is trained, you can then
+[save and load](/usage/saving-loading#models) it.
 
 ## Training basics {#basics}
 
@@ -39,6 +39,19 @@ python -m spacy convert UD_Spanish-AnCora/es_ancora-ud-dev.conllu ancora-json
 mkdir models
 python -m spacy train es models ancora-json/es_ancora-ud-train.json ancora-json/es_ancora-ud-dev.json
 ```
+
+<Infobox title="Tip: Debug your data">
+
+If you're running spaCy v2.2 or above, you can use the
+[`debug-data` command](/api/cli#debug-data) to analyze and validate your
+training and development data, get useful stats, and find problems like invalid
+entity annotations, cyclic dependencies, low data labels and more.
+
+```bash
+$ python -m spacy debug-data en train.json dev.json --verbose
+```
+
+</Infobox>
 
 You can also use the [`gold.docs_to_json`](/api/goldparse#docs_to_json) helper
 to convert a list of `Doc` objects to spaCy's JSON training format.
@@ -222,11 +235,10 @@ of being dropped.
 
 > - [`begin_training()`](/api/language#begin_training): Start the training and
 >   return an optimizer function to update the model's weights. Can take an
->   optional function converting the training data to spaCy's training format. 
-> - [`update()`](/api/language#update): Update the model with the
->   training example and gold data.
-> - [`to_disk()`](/api/language#to_disk): Save
->   the updated model to a directory.
+>   optional function converting the training data to spaCy's training format.
+> - [`update()`](/api/language#update): Update the model with the training
+>   example and gold data.
+> - [`to_disk()`](/api/language#to_disk): Save the updated model to a directory.
 
 ```python
 ### Example training loop
@@ -405,19 +417,20 @@ referred to as the "catastrophic forgetting" problem.
 
 ## Entity linking {#entity-linker}
 
-To train an entity linking model, you first need to define a knowledge base (KB).
+To train an entity linking model, you first need to define a knowledge base
+(KB).
 
 ### Creating a knowledge base {#kb}
 
-A KB consists of a list of entities with unique identifiers. Each such entity 
-has an entity vector that will be used to measure similarity with the context in 
-which an entity is used. These vectors are pretrained and stored in the KB before
-the entity linking model will be trained.
+A KB consists of a list of entities with unique identifiers. Each such entity
+has an entity vector that will be used to measure similarity with the context in
+which an entity is used. These vectors are pretrained and stored in the KB
+before the entity linking model will be trained.
 
-The following example shows how to build a knowledge base from scratch,
-given a list of entities and potential aliases. The script further demonstrates
-how to pretrain and store the entity vectors. To run this example, the script
-needs access to a `vocab` instance or an `nlp` model with pretrained word embeddings.
+The following example shows how to build a knowledge base from scratch, given a
+list of entities and potential aliases. The script further demonstrates how to
+pretrain and store the entity vectors. To run this example, the script needs
+access to a `vocab` instance or an `nlp` model with pretrained word embeddings.
 
 ```python
 https://github.com/explosion/spaCy/tree/master/examples/training/pretrain_kb.py
@@ -428,22 +441,22 @@ https://github.com/explosion/spaCy/tree/master/examples/training/pretrain_kb.py
 1. **Load the model** you want to start with, or create an **empty model** using
    [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language and
    a pre-defined [`vocab`](/api/vocab) object.
-2. **Pretrain the entity embeddings** by running the descriptions of the entities
-   through a simple encoder-decoder network. The current implementation requires 
-   the `nlp` model to have access to pre-trained word embeddings, but a custom 
-   implementation of this enoding step can also be used.
+2. **Pretrain the entity embeddings** by running the descriptions of the
+   entities through a simple encoder-decoder network. The current implementation
+   requires the `nlp` model to have access to pre-trained word embeddings, but a
+   custom implementation of this enoding step can also be used.
 3. **Construct the KB** by defining all entities with their pretrained vectors,
-    and all aliases with their prior probabilities.
+   and all aliases with their prior probabilities.
 4. **Save** the KB using [`kb.dump`](/api/kb#dump).
 5. **Test** the KB to make sure the entities were added correctly.
 
 ### Training an entity linking model {#entity-linker-model}
 
-This example shows how to create an entity linker pipe using a previously created
-knowledge base. The entity linker pipe is then trained with your own
-examples. To do so, you'll need to provide 
-**example texts**, and the **character offsets** and **knowledge base identifiers** 
-of each entity contained in the texts. 
+This example shows how to create an entity linker pipe using a previously
+created knowledge base. The entity linker pipe is then trained with your own
+examples. To do so, you'll need to provide **example texts**, and the
+**character offsets** and **knowledge base identifiers** of each entity
+contained in the texts.
 
 ```python
 https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_linker.py
@@ -451,25 +464,23 @@ https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_li
 
 #### Step by step guide {#step-by-step-entity-linker}
 
-1. **Load the KB** you want to start with, and specify the path
-   to the `Vocab` object that was used to create this KB. 
-   Then, create an **empty model** using
-   [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language. 
-   Don't forget to add the KB to the entity linker,
-   and to add the entity linker to the pipeline.
-   In practical applications, you will want a more advanced pipeline including
-   also a component for [named entity recognition](/usage/training#ner).
-   If you're using a model with additional components, make sure to disable all other
-   pipeline components during training using
-   [`nlp.disable_pipes`](/api/language#disable_pipes). This way, you'll only be
-   training the entity linker.
+1. **Load the KB** you want to start with, and specify the path to the `Vocab`
+   object that was used to create this KB. Then, create an **empty model** using
+   [`spacy.blank`](/api/top-level#spacy.blank) with the ID of your language.
+   Don't forget to add the KB to the entity linker, and to add the entity linker
+   to the pipeline. In practical applications, you will want a more advanced
+   pipeline including also a component for
+   [named entity recognition](/usage/training#ner). If you're using a model with
+   additional components, make sure to disable all other pipeline components
+   during training using [`nlp.disable_pipes`](/api/language#disable_pipes).
+   This way, you'll only be training the entity linker.
 2. **Shuffle and loop over** the examples. For each example, **update the
    model** by calling [`nlp.update`](/api/language#update), which steps through
-   the annotated examples of the input. For each combination of a mention in text and
-   a potential KB identifier, the model makes a **prediction** whether or not 
-   this is the correct match. It then
-   consults the annotations to see whether it was right. If it was wrong, it
-   adjusts its weights so that the correct combination will score higher next time.
+   the annotated examples of the input. For each combination of a mention in
+   text and a potential KB identifier, the model makes a **prediction** whether
+   or not this is the correct match. It then consults the annotations to see
+   whether it was right. If it was wrong, it adjusts its weights so that the
+   correct combination will score higher next time.
 3. **Save** the trained model using [`nlp.to_disk`](/api/language#to_disk).
 4. **Test** the model to make sure the entities in the training data are
    recognized correctly.

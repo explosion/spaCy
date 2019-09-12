@@ -47,6 +47,11 @@ def debug_data(
     verbose=False,
     no_format=False,
 ):
+    """
+    Analyze, debug and validate your training and development data, get useful
+    stats, and find problems like invalid entity annotations, cyclic
+    dependencies, low data labels and more.
+    """
     msg = Printer(pretty=not no_format, ignore_warnings=ignore_warnings)
 
     # Make sure all files and paths exists if they are needed
