@@ -34,12 +34,6 @@ BLANK_MODEL_THRESHOLD = 2000
         str,
     ),
     ignore_warnings=("Ignore warnings, only show stats and errors", "flag", "IW", bool),
-    ignore_validation=(
-        "Don't exit if JSON format validation fails",
-        "flag",
-        "IV",
-        bool,
-    ),
     verbose=("Print additional information and explanations", "flag", "V", bool),
     no_format=("Don't pretty-print the results", "flag", "NF", bool),
 )
@@ -50,7 +44,6 @@ def debug_data(
     base_model=None,
     pipeline="tagger,parser,ner",
     ignore_warnings=False,
-    ignore_validation=False,
     verbose=False,
     no_format=False,
 ):
@@ -72,21 +65,9 @@ def debug_data(
 
     msg.divider("Data format validation")
 
-    # Validate data format using the JSON schema
+    # TODO: Validate data format using the JSON schema
     # TODO: update once the new format is ready
     # TODO: move validation to GoldCorpus in order to be able to load from dir
-    train_data_errors = []  # TODO: validate_json
-    dev_data_errors = []  # TODO: validate_json
-    if not train_data_errors:
-        msg.good("Training data JSON format is valid")
-    if not dev_data_errors:
-        msg.good("Development data JSON format is valid")
-    for error in train_data_errors:
-        msg.fail("Training data: {}".format(error))
-    for error in dev_data_errors:
-        msg.fail("Develoment data: {}".format(error))
-    if (train_data_errors or dev_data_errors) and not ignore_validation:
-        sys.exit(1)
 
     # Create the gold corpus to be able to better analyze data
     loading_train_error_message = ""
