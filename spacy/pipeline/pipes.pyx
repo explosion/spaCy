@@ -1066,8 +1066,15 @@ cdef class DependencyParser(Parser):
 
     @property
     def labels(self):
+        labels = set()
         # Get the labels from the model by looking at the available moves
-        return tuple(set(move.split("-")[1] for move in self.move_names if "-" in move))
+        for move in self.move_names:
+            if "-" in move:
+                label = move.split("-")[1]
+                if "||" in label:
+                    label = label.split("||")[1]
+                labels.add(label)
+        return tuple(sorted(labels))
 
 
 cdef class EntityRecognizer(Parser):
@@ -1102,8 +1109,9 @@ cdef class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        return tuple(set(move.split("-")[1] for move in self.move_names
-                if move[0] in ("B", "I", "L", "U")))
+        labels = set(move.split("-")[1] for move in self.move_names
+                     if move[0] in ("B", "I", "L", "U"))
+        return tuple(sorted(labels))
 
 
 class EntityLinker(Pipe):

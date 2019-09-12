@@ -293,9 +293,10 @@ Create a new `Doc` object corresponding to the `Span`, with a copy of the data.
 > assert doc2.text == "New York"
 > ```
 
-| Name        | Type  | Description                             |
-| ----------- | ----- | --------------------------------------- |
-| **RETURNS** | `Doc` | A `Doc` object of the `Span`'s content. |
+| Name              | Type  | Description                                          |
+| ----------------- | ----- | ---------------------------------------------------- |
+| `copy_user_data`  | bool  | Whether or not to copy the original doc's user data. |
+| **RETURNS**       | `Doc` | A `Doc` object of the `Span`'s content.              |
 
 ## Span.root {#root tag="property" model="parser"}
 
