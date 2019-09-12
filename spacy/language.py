@@ -248,6 +248,18 @@ class Language(object):
         """
         return [pipe_name for pipe_name, _ in self.pipeline]
 
+    @property
+    def pipe_labels(self):
+        """Get the labels set by the pipeline components, if available.
+
+        RETURNS (dict): Labels keyed by component name.
+        """
+        labels = OrderedDict()
+        for name, pipe in self.pipeline:
+            if hasattr(pipe, "labels"):
+                labels[name] = list(pipe.labels)
+        return labels
+
     def get_pipe(self, name):
         """Get a pipeline component for a given component name.
 
