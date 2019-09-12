@@ -257,7 +257,8 @@ class Language(object):
 
     @property
     def pipe_labels(self):
-        """Get the labels set by the pipeline components, if available.
+        """Get the labels set by the pipeline components, if available (if
+        the component exposes a labels property).
 
         RETURNS (dict): Labels keyed by component name.
         """
