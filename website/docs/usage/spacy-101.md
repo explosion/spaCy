@@ -122,6 +122,7 @@ related to more general machine learning functionality.
 | **Lemmatization**                     | Assigning the base forms of words. For example, the lemma of "was" is "be", and the lemma of "rats" is "rat".      |
 | **Sentence Boundary Detection** (SBD) | Finding and segmenting individual sentences.                                                                       |
 | **Named Entity Recognition** (NER)    | Labelling named "real-world" objects, like persons, companies or locations.                                        |
+| **Entity Linking** (EL)               | Disambiguating textual entities to unique identifiers in a Knowledge Base.                                         |
 | **Similarity**                        | Comparing words, text spans and documents and how similar they are to each other.                                  |
 | **Text Classification**               | Assigning categories or labels to a whole document, or parts of a document.                                        |
 | **Rule-based Matching**               | Finding sequences of tokens based on their texts and linguistic annotations, similar to regular expressions.       |
@@ -234,6 +235,15 @@ entities** to a document and how to **train and update** the entity predictions
 of a model, see the usage guides on
 [named entity recognition](/usage/linguistic-features#named-entities) and
 [training the named entity recognizer](/usage/training#ner).
+
+</Infobox>
+
+<Infobox title="📖 Entity Linking">
+
+To learn more about entity linking in spaCy, and how to **train and update** 
+the entity linker predictions, see the usage guides on
+[entity linking](/usage/linguistic-features#entity-linking) and
+[training the entity linker](/usage/training#entity-linker).
 
 </Infobox>
 
@@ -382,6 +392,75 @@ actually _know_ that the document contains that word. To prevent this problem,
 spaCy will also export the `Vocab` when you save a `Doc` or `nlp` object. This
 will give you the object and its encoded annotations, plus the "key" to decode
 it.
+
+## Knowledge Base {#kb}
+
+To support the entity linking task, spaCy stores external knowledge in a
+[`KnowledgeBase`](/api/kb). The knowledge base (KB) uses the `Vocab` to store its
+data efficiently.
+
+> - **Mention**: A textual occurrence of a named entity, e.g. 'Miss Lovelace'.
+> - **KB ID**: A unique identifier refering to a particular real-world concept, e.g. 'Q7259'.
+> - **Alias**: A plausible synonym or description for a certain KB ID, e.g. 'Ada Lovelace'.
+> - **Prior probability**: The probability of a certain mention resolving to a certain KB ID,
+prior to knowing anything about the context in which the mention is used.
+> - **Entity vector**: A pretrained word vector capturing the entity description.
+
+A knowledge base is created by first adding all entities to it. Next, for each 
+potential mention or alias, a list of relevant KB IDs and their prior probabilities 
+is added. The sum of these prior probabilities should never exceed 1 for any given alias.
+
+
+```python
+### {executable="true"}
+import spacy
+from spacy.kb import KnowledgeBase
+
+# load the model and create an empty KB
+nlp = spacy.load('en_core_web_sm')
+kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=3)
+
+# adding entities
+kb.add_entity(entity="Q1004791", freq=6, entity_vector=[0, 3, 5])
+kb.add_entity(entity="Q42", freq=342, entity_vector=[1, 9, -3])
+kb.add_entity(entity="Q5301561", freq=12, entity_vector=[-2, 4, 2])
+
+# adding aliases
+kb.add_alias(alias="Douglas", entities=["Q1004791", "Q42", "Q5301561"], probabilities=[0.6, 0.1, 0.2])
+kb.add_alias(alias="Douglas Adams", entities=["Q42"], probabilities=[0.9])
+
+print()
+print("Number of entities in KB:",kb.get_size_entities()) # 3
+print("Number of aliases in KB:", kb.get_size_aliases()) # 2
+```
+
+### Candidate generation
+
+Given a textual entity, the Knowledge Base can provide a list of plausible candidates or 
+entity identifiers. The [`EntityLinker`](/api/entitylinker) will take this list of candidates
+as input, and disambiguate the mention to the most probable identifier, given the 
+document context.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.kb import KnowledgeBase
+
+nlp = spacy.load('en_core_web_sm')
+kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=3)
+
+# adding entities
+kb.add_entity(entity="Q1004791", freq=6, entity_vector=[0, 3, 5])
+kb.add_entity(entity="Q42", freq=342, entity_vector=[1, 9, -3])
+kb.add_entity(entity="Q5301561", freq=12, entity_vector=[-2, 4, 2])
+
+# adding aliases
+kb.add_alias(alias="Douglas", entities=["Q1004791", "Q42", "Q5301561"], probabilities=[0.6, 0.1, 0.2])
+
+candidates = kb.get_candidates("Douglas")
+for c in candidates:
+    print(" ", c.entity_, c.prior_prob, c.entity_vector)
+```
 
 ## Serialization {#serialization}
 

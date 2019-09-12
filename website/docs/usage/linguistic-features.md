@@ -576,6 +576,54 @@ import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 <Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={180} />
 
+## Entity Linking {#entity-linking}
+
+To ground the named entities into the "real-world",
+spaCy provides functionality to perform entity linking, which resolves a textual entity 
+to a unique identifier from a knowledge base (KB).
+ 
+The default model assigns WikiData identifiers, but you can create your own 
+[`KnowledgeBase`](/api/kb) and [train a new Entity Linking model](/usage/training#entity-linker) using 
+that custom-made KB.
+
+
+### Accessing entity identifiers {#accessing}
+
+The annotated KB identifier is accessible as either a hash value 
+or as a string, using the attributes
+`ent.kb_id` and `ent.kb_id_` of a [`Span`](/api/span) object,
+or the `ent_kb_id` and `ent_kb_id_` attributes of a [`Token`](/api/token) object.
+
+
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.load("my_custom_el_model")
+doc = nlp(u"Ada Lovelace was born in London")
+
+# document level
+ents = [(e.text, e.label_, e.kb_id_) for e in doc.ents]
+print(ents)  # [('Ada Lovelace', 'PERSON', 'Q7259'), ('London', 'GPE', 'Q84')]
+
+# token level
+ent_ada_0 = [doc[0].text, doc[0].ent_type_, doc[0].ent_kb_id_]
+ent_ada_1 = [doc[1].text, doc[1].ent_type_, doc[1].ent_kb_id_]
+ent_london_5 = [doc[5].text, doc[5].ent_type_, doc[5].ent_kb_id_]
+print(ent_ada_0)  # ['Ada', 'PERSON', 'Q7259']
+print(ent_ada_1)  # ['Lovelace', 'PERSON', 'Q7259']
+print(ent_london_5)  # ['London', 'GPE', 'Q84']
+```
+
+| Text      | ent_type\_ | ent_kb_id\_  |
+| --------- | ---------- | ------------ |
+| Ada       | `"PERSON"` | `"Q7259"`    |
+| Lovelace  | `"PERSON"` | `"Q7259"`    |
+| was       | `""`       | `""`         |
+| born      | `""`       | `""`         |
+| in        | `""`       | `""`         |
+| London    | `"GPE"`    | `"Q84"`      |
+
 ## Tokenization {#tokenization}
 
 Tokenization is the task of splitting a text into meaningful segments, called

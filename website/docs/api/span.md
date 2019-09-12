@@ -18,14 +18,15 @@ Create a Span object from the slice `doc[start : end]`.
 > assert [t.text for t in span] ==  [u"it", u"back", u"!"]
 > ```
 
-| Name        | Type                                     | Description                                                                                                 |
-| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`                                    | The parent document.                                                                                        |
-| `start`     | int                                      | The index of the first token of the span.                                                                   |
-| `end`       | int                                      | The index of the first token after the span.                                                                |
-| `label`     | int / unicode                            | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a unicode string. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                       |
-| **RETURNS** | `Span`                                   | The newly constructed object.                                                                               |
+| Name        | Type                                     | Description                                                                                                       |
+| ----------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------|
+| `doc`       | `Doc`                                    | The parent document.                                                                                              |
+| `start`     | int                                      | The index of the first token of the span.                                                                         |
+| `end`       | int                                      | The index of the first token after the span.                                                                      |
+| `label`     | int / unicode                            | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a unicode string.       |
+| `kb_id`     | int / unicode                            | A knowledge base ID to attach to the span, e.g. for named entities. The ID can be an integer or a unicode string. |
+| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                             |
+| **RETURNS** | `Span`                                   | The newly constructed object.                                                                                     |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -477,9 +478,11 @@ The L2 norm of the span's vector representation.
 | `text_with_ws`                          | unicode      | The text content of the span with a trailing whitespace character if the last token has one.                   |
 | `orth`                                  | int          | ID of the verbatim text content.                                                                               |
 | `orth_`                                 | unicode      | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes.     |
-| `label`                                 | int          | The span's label.                                                                                              |
+| `label`                                 | int          | The hash value of the span's label.                                                                            |
 | `label_`                                | unicode      | The span's label.                                                                                              |
 | `lemma_`                                | unicode      | The span's lemma.                                                                                              |
+| `kb_id`                                 | int          | The hash value of the knowledge base ID referred to by the span.                                               |
+| `kb_id_`                                | unicode      | The knowledge base ID referred to by the span.                                                                 |
 | `ent_id`                                | int          | The hash value of the named entity the token is an instance of.                                                |
 | `ent_id_`                               | unicode      | The string ID of the named entity the token is an instance of.                                                 |
 | `sentiment`                             | float        | A scalar value indicating the positivity or negativity of the span.                                            |

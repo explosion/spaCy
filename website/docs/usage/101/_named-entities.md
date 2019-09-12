@@ -1,5 +1,5 @@
 A named entity is a "real-world object" that's assigned a name – for example, a
-person, a country, a product or a book title. spaCy can **recognize**
+person, a country, a product or a book title. spaCy can **recognize** 
 [various types](/api/annotation#named-entities) of named entities in a document,
 by asking the model for a **prediction**. Because models are statistical and
 strongly depend on the examples they were trained on, this doesn't always work
@@ -21,12 +21,12 @@ for ent in doc.ents:
 > - **Text:** The original entity text.
 > - **Start:** Index of start of entity in the `Doc`.
 > - **End:** Index of end of entity in the `Doc`.
-> - **LabeL:** Entity label, i.e. type.
+> - **Label:** Entity label, i.e. type.
 
-| Text        | Start | End | Label   | Description                                          |
-| ----------- | :---: | :-: | ------- | ---------------------------------------------------- |
-| Apple       |   0   |  5  | `ORG`   | Companies, agencies, institutions.                   |
-| U.K.        |  27   | 31  | `GPE`   | Geopolitical entity, i.e. countries, cities, states. |
+| Text        | Start | End | Label   | Description                                          |  
+| ----------- | :---: | :-: | ------- | ---------------------------------------------------- | 
+| Apple       |   0   |  5  | `ORG`   | Companies, agencies, institutions.                   |  
+| U.K.        |  27   | 31  | `GPE`   | Geopolitical entity, i.e. countries, cities, states. | 
 | \$1 billion |  44   | 54  | `MONEY` | Monetary values, including unit.                     |
 
 Using spaCy's built-in [displaCy visualizer](/usage/visualizers), here's what

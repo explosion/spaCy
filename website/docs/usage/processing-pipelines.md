@@ -213,6 +213,7 @@ require them in the pipeline settings in your model's `meta.json`.
 | `tagger`            | [`Tagger`](/api/tagger)                                          | Assign part-of-speech-tags.                                                                   |
 | `parser`            | [`DependencyParser`](/api/dependencyparser)                      | Assign dependency labels.                                                                     |
 | `ner`               | [`EntityRecognizer`](/api/entityrecognizer)                      | Assign named entities.                                                                        |
+| `entity_linker`     | [`EntityLinker`](/api/entitylinker)                              | Assign knowledge base IDs to named entities. Should be added after the entity recognizer.     |
 | `textcat`           | [`TextCategorizer`](/api/textcategorizer)                        | Assign text categories.                                                                       |
 | `entity_ruler`      | [`EntityRuler`](/api/entityruler)                                | Assign named entities based on pattern rules.                                                 |
 | `sentencizer`       | [`Sentencizer`](/api/sentencizer)                                | Add rule-based sentence segmentation without the dependency parse.                            |
