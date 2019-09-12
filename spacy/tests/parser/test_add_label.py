@@ -68,3 +68,20 @@ def test_add_label_deserializes_correctly():
     assert ner1.moves.n_moves == ner2.moves.n_moves
     for i in range(ner1.moves.n_moves):
         assert ner1.moves.get_class_name(i) == ner2.moves.get_class_name(i)
+
+
+@pytest.mark.parametrize(
+    "pipe_cls,n_moves", [(DependencyParser, 5), (EntityRecognizer, 4)]
+)
+def test_add_label_get_label(pipe_cls, n_moves):
+    """Test that added labels are returned correctly. This test was added to
+    test for a bug in DependencyParser.labels that'd cause it to fail when
+    splitting the move names.
+    """
+    labels = ["A", "B", "C"]
+    pipe = pipe_cls(Vocab())
+    for label in labels:
+        pipe.add_label(label)
+    assert len(pipe.move_names) == len(labels) * n_moves
+    pipe_labels = sorted(list(pipe.labels))
+    assert pipe_labels == labels

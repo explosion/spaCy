@@ -309,7 +309,7 @@ indented block as plain text and preserve whitespace.
 ### Using spaCy
 import spacy
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 for token in doc:
     print(token.text, token.pos_)
 ```
@@ -335,9 +335,9 @@ from spacy.matcher import Matcher
 
 nlp = spacy.load('en_core_web_sm')
 matcher = Matcher(nlp.vocab)
-pattern = [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}]
-matcher.add('HelloWorld', None, pattern)
-doc = nlp(u'Hello, world! Hello world!')
+pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"LOWER": "world"}]
+matcher.add("HelloWorld", None, pattern)
+doc = nlp("Hello, world! Hello world!")
 matches = matcher(doc)
 ```
 
@@ -360,7 +360,7 @@ interactive widget defaults to a regular code block.
 ### {executable="true"}
 import spacy
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 for token in doc:
     print(token.text, token.pos_)
 ```
@@ -457,7 +457,8 @@ sit amet dignissim justo congue.
 ## Setup and installation {#setup}
 
 Before running the setup, make sure your versions of
-[Node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) are up to date.  Node v10.15 or later is required.
+[Node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) are up to date.
+Node v10.15 or later is required.
 
 ```bash
 # Clone the repository

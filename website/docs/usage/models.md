@@ -120,7 +120,7 @@ python -m spacy download en_core_web_sm
 ```python
 import spacy
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 ```
 
 <Infobox title="Important note" variant="warning">
@@ -197,7 +197,7 @@ nlp = spacy.load("en_core_web_sm")           # load model package "en_core_web_s
 nlp = spacy.load("/path/to/en_core_web_sm")  # load package from a directory
 nlp = spacy.load("en")                       # load model with shortcut link "en"
 
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 ```
 
 <Infobox title="Tip: Preview model info">
@@ -269,7 +269,7 @@ also `import` it and then call its `load()` method with no arguments:
 import en_core_web_sm
 
 nlp = en_core_web_sm.load()
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 ```
 
 How you choose to load your models ultimately depends on personal preference.
