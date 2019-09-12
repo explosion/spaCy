@@ -20,6 +20,7 @@ cdef class MorphAnalysis:
 
     @classmethod
     def from_id(cls, Vocab vocab, hash_t key):
+        """Create a morphological analysis from a given ID."""
         cdef MorphAnalysis morph = MorphAnalysis.__new__(MorphAnalysis, vocab)
         morph.vocab = vocab
         morph.key = key
@@ -31,15 +32,18 @@ cdef class MorphAnalysis:
         return morph
 
     def __contains__(self, feature):
+        """Test whether the morphological analysis contains some feature."""
         cdef attr_t feat_id = get_string_id(feature)
         return check_feature(&self.c, feat_id)
 
     def __iter__(self):
+        """Iterate over the features in the analysis."""
         cdef attr_t feature
         for feature in list_features(&self.c):
             yield self.vocab.strings[feature]
 
     def __len__(self):
+        """The number of features in the analysis."""
         return self.c.length
 
     def __str__(self):
@@ -52,10 +56,14 @@ cdef class MorphAnalysis:
         return self.key
 
     def get(self, unicode field):
+        """Retrieve a feature by field."""
         cdef int field_id = self.vocab.morphology._feat_map.attr2field[field]
         return self.vocab.strings[get_field(&self.c, field_id)]
 
     def to_json(self):
+        """Produce a json serializable representation, which will be a list of
+        strings.
+        """
         return tag_to_json(&self.c)
 
     @property
