@@ -455,6 +455,8 @@ class Errors(object):
     E158 = ("Can't add table '{name}' to lookups because it already exists.")
     E159 = ("Can't find table '{name}' in lookups. Available tables: {tables}")
     E160 = ("Can't find language data file: {path}")
+    E161 = ("Found an internal inconsistency when predicting entity links. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
 
 
 @add_codes
