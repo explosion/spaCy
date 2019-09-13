@@ -1283,7 +1283,7 @@ class EntityLinker(Pipe):
                         # this will set all prior probabilities to 0 if they should be excluded from the model
                         prior_probs = xp.asarray([c.prior_prob for c in candidates])
                         if not self.cfg.get("incl_prior", True):
-                            prior_probs = xp.asarray([[0.0] for c in candidates])
+                            prior_probs = xp.asarray([0.0 for c in candidates])
                         scores = prior_probs
 
                         # add in similarity from the context
@@ -1296,6 +1296,8 @@ class EntityLinker(Pipe):
 
                              # cosine similarity
                             sims = xp.dot(entity_encodings, context_enc_t) / (norm_1 * norm_2)
+                            if sims.shape != prior_probs.shape:
+                                raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs*sims)
 
                         # TODO: thresholding
