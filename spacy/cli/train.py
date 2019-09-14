@@ -45,7 +45,7 @@ from .. import about
     learn_tokens=("Make parser learn gold-standard tokenization", "flag", "T", bool),
     textcat_multilabel=("Textcat classes aren't mututally exclusive (multilabel)", "flag", "TML", bool),
     textcat_arch=("Textcat model architecture", "option", "ta", str),
-    textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "TPL", str),
+    textcat_positive_label=("Textcat positive label for binary classes with two labels", "option", "tpl", str),
     verbose=("Display more information for debug", "flag", "VV", bool),
     debug=("Run data diagnostics before training", "flag", "D", bool),
     # fmt: on
@@ -227,13 +227,13 @@ def train(
         textcat_labels = nlp.get_pipe("textcat").cfg["labels"]
         if textcat_positive_label and textcat_positive_label not in textcat_labels:
             msg.fail(
-                "The textcat_positive_label (TPL) '{}' does not match any "
+                "The textcat_positive_label (tpl) '{}' does not match any "
                 "label in the training data.".format(textcat_positive_label),
                 exits=1,
             )
         if textcat_positive_label and len(textcat_labels) != 2:
             msg.fail(
-                "A textcat_positive_label (TPL) '{}' was provided for training "
+                "A textcat_positive_label (tpl) '{}' was provided for training "
                 "data that does not appear to be a binary classification "
                 "problem with two labels.".format(textcat_positive_label),
                 exits=1,
