@@ -17,6 +17,4 @@ TEST_CASES = [
 
 @pytest.mark.parametrize("tokens,lemmas", TEST_CASES)
 def test_lt_lemmatizer(lt_lemmatizer, tokens, lemmas):
-    assert lemmas == [
-        lt_lemmatizer.lookup_table.get_string(token, token) for token in tokens
-    ]
+    assert lemmas == [lt_lemmatizer.lookup_table.get(token, token) for token in tokens]
