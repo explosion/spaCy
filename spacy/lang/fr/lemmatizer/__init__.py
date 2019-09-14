@@ -52,7 +52,7 @@ class FrenchLemmatizer(object):
         elif univ_pos in (SCONJ, "SCONJ", "sconj"):
             univ_pos = "sconj"
         else:
-            return [self.lookup(None, string)]
+            return [self.lookup(string)]
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(univ_pos, morphology):
             return list(set([string.lower()]))
@@ -114,7 +114,7 @@ class FrenchLemmatizer(object):
     def punct(self, string, morphology=None):
         return self(string, "punct", morphology)
 
-    def lookup(self, orth, string):
+    def lookup(self, string, orth=None):
         if orth is not None and orth in self.lookup_table:
             return self.lookup_table[orth][0]
         return string

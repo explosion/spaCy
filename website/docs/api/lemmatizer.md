@@ -52,8 +52,8 @@ Lemmatize a string.
 
 Look up a lemma in the lookup table, if available. If no lemma is found, the
 original string is returned. Languages can provide a
-[lookup table](/usage/adding-languages#lemmatizer) via the `lemma_lookup`
-variable, set on the individual `Language` class.
+[lookup table](/usage/adding-languages#lemmatizer) via the `resources`, set on
+the individual `Language` class.
 
 > #### Example
 >
@@ -63,10 +63,11 @@ variable, set on the individual `Language` class.
 > assert lemmatizer.lookup("going") == "go"
 > ```
 
-| Name        | Type    | Description                                                       |
-| ----------- | ------- | ----------------------------------------------------------------- |
-| `string`    | unicode | The string to look up.                                            |
-| **RETURNS** | unicode | The lemma if the string was found, otherwise the original string. |
+| Name        | Type    | Description                                                                                                 |
+| ----------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `string`    | unicode | The string to look up.                                                                                      |
+| `orth`      | int     | Optional hash of the string to look up. If not set, the string will be used and hashed. Defaults to `None`. |
+| **RETURNS** | unicode | The lemma if the string was found, otherwise the original string.                                           |
 
 ## Lemmatizer.is_base_form {#is_base_form tag="method"}
 

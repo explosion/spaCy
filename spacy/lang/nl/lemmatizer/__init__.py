@@ -103,7 +103,7 @@ class DutchLemmatizer(object):
     # Overrides parent method so that a lowercased version of the string is
     # used to search the lookup table. This is necessary because our lookup
     # table consists entirely of lowercase keys.
-    def lookup(self, orth, string):
+    def lookup(self, string, orth=None):
         string = string.lower()
         if orth is not None:
             return self.lookup_table.get(orth, string)

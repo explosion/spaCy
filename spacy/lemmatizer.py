@@ -93,9 +93,19 @@ class Lemmatizer(object):
     def punct(self, string, morphology=None):
         return self(string, "punct", morphology)
 
-    def lookup(self, orth, string):
-        if orth in self.lookup_table:
-            return self.lookup_table[orth]
+    def lookup(self, string, orth=None):
+        """Look up a lemma in the table, if available. If no lemma is found,
+        the original string is returned.
+
+        string (unicode): The original string.
+        orth (int): Optional hash of the string to look up. If not set, the
+            string will be used and hashed.
+        RETURNS (unicode): The lemma if the string was found, otherwise the
+            original string.
+        """
+        key = orth if orth is not None else string
+        if key in self.lookup_table:
+            return self.lookup_table[key]
         return string
 
 

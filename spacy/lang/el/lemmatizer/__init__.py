@@ -46,9 +46,10 @@ class GreekLemmatizer(object):
         )
         return lemmas
 
-    def lookup(self, orth, string):
-        if orth in self.lookup_table:
-            return self.lookup_table[orth]
+    def lookup(self, string, orth=None):
+        key = orth if orth is not None else string
+        if key in self.lookup_table:
+            return self.lookup_table[key]
         return string
 
 
