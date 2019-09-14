@@ -448,6 +448,18 @@ resources = {
 }
 ```
 
+> #### Lookups example
+>
+> ```python
+> table = nlp.vocab.lookups.get_table("my_table")
+> value = table.get("some_key")
+> ```
+
+If your language needs other large dictionaries and resources, you can also add
+those files here. The data will become available via a [`Lookups`](/api/lookups)
+table in `nlp.vocab.lookups`, and you'll be able to access it from the tokenizer
+or a custom pipeline component (via `doc.vocab.lookups`).
+
 ### Tag map {#tag-map}
 
 Most treebanks define a custom part-of-speech tag scheme, striking a balance
