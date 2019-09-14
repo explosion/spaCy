@@ -215,8 +215,10 @@ the file doesn't exist.
 ## Table {#table tag="class, ordererddict"}
 
 A table in the lookups. Subclass of `OrderedDict` that implements a slightly
-more consistent and unified API. Supports all other methods and attributes of
-`OrderedDict` / `dict`, and the customized methods listed here.
+more consistent and unified API. Supports **all other methods and attributes**
+of `OrderedDict` / `dict`, and the customized methods listed here. Methods that
+get or set keys accept both integers and strings (which will be hashed before
+being added to the table).
 
 ### Table.\_\_init\_\_ {#table.init tag="method"}
 
@@ -226,7 +228,10 @@ Initialize a new table.
 >
 > ```python
 > from spacy.lookups import Table
-> table = Table(name="some_table")
+> data = {"foo": "bar", "baz": 100}
+> table = Table(name="some_table", data=data)
+> assert "foo" in table
+> assert table["foo"] == "bar"
 > ```
 
 | Name        | Type    | Description                        |
@@ -252,9 +257,10 @@ Initialize a new table from a dict.
 | `name`      | unicode | Optional table name for reference. |
 | **RETURNS** | `Table` | The newly constructed object.      |
 
-### Table.set {#table.set tag="key"}
+### Table.set {#table.set tag="method"}
 
-Set a new key / value pair. Same as `table[key] = value`.
+Set a new key / value pair. String keys will be hashed. Same as
+`table[key] = value`.
 
 > #### Example
 >
@@ -265,7 +271,38 @@ Set a new key / value pair. Same as `table[key] = value`.
 > assert table["foo"] == "bar"
 > ```
 
-| Name    | Type    | Description |
-| ------- | ------- | ----------- |
-| `key`   | unicode | The key.    |
-| `value` | -       | The value.  |
+| Name    | Type          | Description |
+| ------- | ------------- | ----------- |
+| `key`   | unicode / int | The key.    |
+| `value` | -             | The value.  |
+
+### Table.to_bytes {#table.to_bytes tag="method"}
+
+Serialize the table to a bytestring.
+
+> #### Example
+>
+> ```python
+> table_bytes = table.to_bytes()
+> ```
+
+| Name        | Type  | Description           |
+| ----------- | ----- | --------------------- |
+| **RETURNS** | bytes | The serialized table. |
+
+### Table.from_bytes {#table.from_bytes tag="method"}
+
+Load a table from a bytestring.
+
+> #### Example
+>
+> ```python
+> table_bytes = table.to_bytes()
+> table = Table()
+> table.from_bytes(table_bytes)
+> ```
+
+| Name         | Type    | Description       |
+| ------------ | ------- | ----------------- |
+| `bytes_data` | bytes   | The data to load. |
+| **RETURNS**  | `Table` | The loaded table. |
