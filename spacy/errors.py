@@ -84,6 +84,10 @@ class Warnings(object):
     W018 = ("Entity '{entity}' already exists in the Knowledge base.")
     W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
             "previously loaded vectors. See Issue #3853.")
+    W020 = ("No negative samples in y_true, false positive value should be "
+            "meaningless")
+    W021 = ("No positive samples in y_true, true positive value should be "
+            "meaningless")
 
 
 @add_codes
@@ -460,6 +464,11 @@ class Errors(object):
     E162 = ("Cannot evaluate textcat model on data with different labels.\n"
             "Labels in model: {model_labels}\nLabels in evaluation "
             "data: {eval_labels}")
+    E163 = ("cumsum was found to be unstable: its last element does not "
+            "correspond to sum")
+    E164 = ("At least 2 points are needed to compute area under curve, but "
+            "x.shape = {}")
+    E165 = ("x is neither increasing nor decreasing : {}.")
 
 
 @add_codes
