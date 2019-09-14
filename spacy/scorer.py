@@ -4,7 +4,7 @@ from __future__ import division, print_function, unicode_literals
 import numpy as np
 
 from .gold import tags_to_entities, GoldParse
-from .errors import Errors, Warnings, user_warning
+from .errors import Errors
 
 
 class PRFScore(object):
@@ -389,6 +389,8 @@ def roc_auc_score(y_true, y_score):
     .. [3] `Analyzing a portion of the ROC curve. McClish, 1989
             <https://www.ncbi.nlm.nih.gov/pubmed/2668680>`_
     """
+    if len(np.unique(y_true)) != 2:
+        raise ValueError(Errors.E165)
     fpr, tpr, _ = roc_curve(y_true, y_score)
     return auc(fpr, tpr)
 
@@ -448,13 +450,11 @@ def roc_curve(y_true, y_score):
     thresholds = np.r_[thresholds[0] + 1, thresholds]
 
     if fps[-1] <= 0:
-        user_warning(Warnings.W020)
         fpr = np.repeat(np.nan, fps.shape)
     else:
         fpr = fps / fps[-1]
 
     if tps[-1] <= 0:
-        user_warning(Warnings.W021)
         tpr = np.repeat(np.nan, tps.shape)
     else:
         tpr = tps / tps[-1]
@@ -560,16 +560,13 @@ def auc(x, y):
     x = np.ravel(x)
     y = np.ravel(y)
 
-    if x.shape[0] < 2:
-        raise ValueError(Errors.E164.format(x.shape))
-
     direction = 1
     dx = np.diff(x)
     if np.any(dx < 0):
         if np.all(dx <= 0):
             direction = -1
         else:
-            raise ValueError(Errors.E165.format(x))
+            raise ValueError(Errors.E164.format(x))
 
     area = direction * np.trapz(y, x)
     if isinstance(area, np.memmap):
