@@ -156,13 +156,16 @@ def _merge(Doc doc, merges):
     def _get_start(merge):
         return merge[0].start
 
+    merged_token_index = []
     merges.sort(key=_get_start)
     for merge_index, (span, attributes) in enumerate(merges):
         start = span.start
         end = span.end
         spans.append(span)
         # House the new merged token where it starts
+        print("start=", str(start))
         token = &doc.c[start]
+        merged_token_index.append(start)
         # Initially set attributes to attributes of span root
         token.tag = doc.c[span.root.i].tag
         token.pos = doc.c[span.root.i].pos
@@ -223,19 +226,18 @@ def _merge(Doc doc, merges):
                 # ignore it.
                 Token.set_struct_attr(token, attr_name, attr_value)
                 Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
-    # Begin by setting all the head indices to absolute token positions
-    # This is easier to work with for now than the offsets
-    # Before thinking of something simpler, beware the case where a
-    # dependency bridges over the entity. Here the alignment of the
-    # tokens changes.
-    for i in range(doc.length):
-        doc.c[i].head += i
     # Set the head of the merged token from the Span
     for i in range(len(merges)):
-        tokens[i].head = doc.c[span_roots[i]].head
+        print("doc.c[span_roots[i]].head", str(doc.c[span_roots[i]].head))
+        print("span_roots[i]", str(span_roots[i]))
+        tokens[i].head = doc.c[span_roots[i]].head + span_roots[i] - merged_token_index[i]
+        print(tokens[i].head)
     # Adjust deps before shrinking tokens
     # Tokens which point into the merged token should now point to it
     # Subtract the offset from all tokens which point to >= end
+    print("before substracting offsets")
+    for i in range(doc.length):
+        print("doc.c[i].head", str(doc.c[i].head))
     offsets = []
     current_span_index = 0
     current_offset = 0
@@ -243,14 +245,22 @@ def _merge(Doc doc, merges):
         if current_span_index < len(spans) and i == spans[current_span_index].end:
             # Last token was the last of the span
             current_offset += (spans[current_span_index].end - spans[current_span_index].start) -1
+            # offsets.append(current_offset)
             current_span_index += 1
         if current_span_index < len(spans) and \
                 spans[current_span_index].start <= i < spans[current_span_index].end:
-            offsets.append(spans[current_span_index].start - current_offset)
+            offsets.append(current_offset)
         else:
-            offsets.append(i - current_offset)
+            if current_span_index < len(spans) and \
+                    (spans[current_span_index].start < (doc.c[i].head + i) <= spans[current_span_index].end):
+                offsets.append((spans[current_span_index].end - spans[current_span_index].start) -1)
+            else:
+                offsets.append(current_offset)
     for i in range(doc.length):
-        doc.c[i].head = offsets[doc.c[i].head]
+        doc.c[i].head -= offsets[i]
+    print("after substracting offsets")
+    for i in range(doc.length):
+        print("doc.c[i].head", str(doc.c[i].head))
     # Now compress the token array
     offset = 0
     in_span = False
@@ -271,10 +281,10 @@ def _merge(Doc doc, merges):
     for i in range(doc.length - offset, doc.length):
         memset(&doc.c[i], 0, sizeof(TokenC))
         doc.c[i].lex = &EMPTY_LEXEME
-    doc.length -= offset
-    # ...And, set heads back to a relative position
+    print("after shrink tokens")
     for i in range(doc.length):
-        doc.c[i].head -= i
+        print("doc.c[i].head", str(doc.c[i].head))
+    doc.length -= offset
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
     # Make sure ent_iob remains consistent
