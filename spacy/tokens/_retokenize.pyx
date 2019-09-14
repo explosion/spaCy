@@ -245,19 +245,16 @@ def _merge(Doc doc, merges):
         if current_span_index < len(spans) and i == spans[current_span_index].end:
             # Last token was the last of the span
             current_offset += (spans[current_span_index].end - spans[current_span_index].start) -1
-            # offsets.append(current_offset)
             current_span_index += 1
         if current_span_index < len(spans) and \
                 spans[current_span_index].start <= i < spans[current_span_index].end:
-            offsets.append(current_offset)
+            offsets.append(spans[current_span_index].start - current_offset)
         else:
-            if current_span_index < len(spans) and \
-                    (spans[current_span_index].start < (doc.c[i].head + i) <= spans[current_span_index].end):
-                offsets.append((spans[current_span_index].end - spans[current_span_index].start) -1)
-            else:
-                offsets.append(current_offset)
+            offsets.append(i - current_offset)
     for i in range(doc.length):
-        doc.c[i].head -= offsets[i]
+        doc.c[i].head += i
+        doc.c[i].head = offsets[doc.c[i].head]
+        doc.c[i].head -= i
     print("after substracting offsets")
     for i in range(doc.length):
         print("doc.c[i].head", str(doc.c[i].head))
