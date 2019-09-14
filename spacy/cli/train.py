@@ -238,6 +238,32 @@ def train(
                 "problem with two labels.".format(textcat_positive_label),
                 exits=1,
             )
+        train_docs = corpus.train_docs(
+            nlp, noise_level=noise_level, gold_preproc=gold_preproc, max_length=0
+        )
+        if textcat_multilabel:
+            multilabel_found = False
+            for text, gold in train_docs:
+                if list(gold.cats.values()).count(1.0) != 1:
+                    multilabel_found = True
+            if not multilabel_found:
+                msg.warn(
+                    "The textcat training instances look they have "
+                    "mutually-exclusive classes. Remove the flag "
+                    "'--textcat-multilabel' to train a classifier with "
+                    "mututally-exclusive classes."
+                )
+        if not textcat_multilabel:
+            for text, gold in train_docs:
+                if list(gold.cats.values()).count(1.0) != 1:
+                    msg.warn(
+                        "Some textcat training instances do not have exactly "
+                        "one positive label. Modifying training options to "
+                        "include the flag '--textcat-multilabel' for classes "
+                        "that are not mututally exclusive."
+                    )
+                    textcat_multilabel = True
+                    break
         if textcat_multilabel:
             msg.text(
                 "Textcat evaluation score: ROC AUC score macro-averaged across "
@@ -252,7 +278,7 @@ def train(
             if len(textcat_labels) == 2:
                 msg.warn(
                     "If the textcat component is a binary classifier with "
-                    "exclusive classes, provide 'textcat_positive_label' for "
+                    "exclusive classes, provide '--textcat_positive_label' for "
                     "an evaluation on the positive class."
                 )
             msg.text(
