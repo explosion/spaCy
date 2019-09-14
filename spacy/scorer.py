@@ -57,7 +57,7 @@ class ROCAUCScore(object):
         if len(self.golds) == self.saved_score_at_len:
             return self.saved_score
         try:
-            self.saved_score = roc_auc_score(self.golds, self.cands)
+            self.saved_score = _roc_auc_score(self.golds, self.cands)
         # catch ValueError: Only one class present in y_true.
         # ROC AUC score is not defined in that case.
         except:
@@ -353,7 +353,7 @@ class Scorer(object):
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-def roc_auc_score(y_true, y_score):
+def _roc_auc_score(y_true, y_score):
     """Compute Area Under the Receiver Operating Characteristic Curve (ROC AUC)
     from prediction scores.
 
@@ -391,11 +391,11 @@ def roc_auc_score(y_true, y_score):
     """
     if len(np.unique(y_true)) != 2:
         raise ValueError(Errors.E165)
-    fpr, tpr, _ = roc_curve(y_true, y_score)
-    return auc(fpr, tpr)
+    fpr, tpr, _ = _roc_curve(y_true, y_score)
+    return _auc(fpr, tpr)
 
 
-def roc_curve(y_true, y_score):
+def _roc_curve(y_true, y_score):
     """Compute Receiver operating characteristic (ROC)
 
     Note: this implementation is restricted to the binary classification task.
@@ -511,12 +511,12 @@ def _binary_clf_curve(y_true, y_score):
     threshold_idxs = np.r_[distinct_value_indices, y_true.size - 1]
 
     # accumulate the true positives with decreasing threshold
-    tps = stable_cumsum(y_true * weight)[threshold_idxs]
+    tps = _stable_cumsum(y_true * weight)[threshold_idxs]
     fps = 1 + threshold_idxs - tps
     return fps, tps, y_score[threshold_idxs]
 
 
-def stable_cumsum(arr, axis=None, rtol=1e-05, atol=1e-08):
+def _stable_cumsum(arr, axis=None, rtol=1e-05, atol=1e-08):
     """Use high precision for cumsum and check that final value matches sum
 
     Parameters
@@ -539,7 +539,7 @@ def stable_cumsum(arr, axis=None, rtol=1e-05, atol=1e-08):
     return out
 
 
-def auc(x, y):
+def _auc(x, y):
     """Compute Area Under the Curve (AUC) using the trapezoidal rule
 
     This is a general function, given points on a curve.  For computing the
