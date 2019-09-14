@@ -552,6 +552,10 @@ spaCy's JSON format, you can use the
                 "last": int,        # index of last token
                 "label": string     # phrase label
             }]
+        }],
+        "cats": [{                  # new in v2.2: categories for text classifier
+            "label": string,        # text category label
+            "value": float / bool   # label applies (1.0/true) or not (0.0/false)
         }]
     }]
 }]
